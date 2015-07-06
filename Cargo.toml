@@ -1,0 +1,4 @@
+[package]
+name = "mdbook"
+version = "0.0.1"
+authors = ["Mathieu David <mathieudavid@mathieudavid.org>"]
