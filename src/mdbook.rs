@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 use std::fs::{self, File, metadata};
 use std::io::Write;
+use std::io::{Error, ErrorKind};
+//use std::error::Error;
 
 pub struct MDBook {
     dest: PathBuf,
@@ -8,6 +10,7 @@ pub struct MDBook {
 }
 
 impl MDBook {
+
     pub fn new() -> Self {
         MDBook {
             dest: PathBuf::from("book"),
@@ -15,11 +18,11 @@ impl MDBook {
         }
     }
 
-    pub fn init(&self, dir: &PathBuf) -> Result<(),&str> {
+    pub fn init(&self, dir: &PathBuf) -> Result<(), Error> {
 
         // Hacky way to check if the directory exists... Until PathExt moves to stable
         match metadata(dir) {
-            Err(_) => return Err("Destination path does not exist"),
+            Err(_) => return Err(Error::new(ErrorKind::Other, "Directory does not exist")),
             _ => {}
         }
 
@@ -69,15 +72,20 @@ impl MDBook {
         };
 
         if let Ok(mut f) = summary {
-            writeln!(f, "# Summary");
-            writeln!(f, "");
-            writeln!(f, "[Chapter 1](./chapter_1.md)");
+            try!(writeln!(f, "# Summary"));
+            try!(writeln!(f, ""));
+            try!(writeln!(f, "[Chapter 1](./chapter_1.md)"));
 
             let mut chapter_1 = File::create(&src.join("chapter_1.md")).unwrap();
-            writeln!(chapter_1, "# Chapter 1");
+            try!(writeln!(chapter_1, "# Chapter 1"));
         }
 
         return Ok(());
+    }
+
+    pub fn build(&self, dir: &PathBuf) -> Result<(), Error> {
+
+        Ok(())
     }
 
     pub fn set_dest(mut self, dest: PathBuf) -> Self {
@@ -89,4 +97,5 @@ impl MDBook {
         self.src = src;
         self
     }
+
 }

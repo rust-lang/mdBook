@@ -1,6 +1,7 @@
 extern crate mdbook;
 extern crate getopts;
 use std::env;
+use std::path::PathBuf;
 
 use mdbook::MDBook;
 
@@ -112,7 +113,12 @@ fn init(args: Vec<String>) {
         return;
     }
 
-    let dir = std::env::current_dir().unwrap();
+    let dir = if args.len() <= 2 {
+        std::env::current_dir().unwrap()
+    } else {
+        std::env::current_dir().unwrap().join(&args[2])
+    };
+
     let book = MDBook::new();
 
     if let Err(e) = book.init(&dir) {
@@ -139,6 +145,13 @@ fn build(args: Vec<String>) {
 
     if matches.opt_present("help") {
         println!("{}", usage);
+    }
+
+    let dir = std::env::current_dir().unwrap();
+    let book = MDBook::new();
+
+    if let Err(e) = book.build(&dir) {
+        println!("Error: {}", e);
     }
 }
 
