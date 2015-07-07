@@ -2,7 +2,6 @@ use std::path::PathBuf;
 use std::fs::{self, File, metadata};
 use std::io::Write;
 use std::io::{Error, ErrorKind};
-//use std::error::Error;
 
 pub struct MDBook {
     dest: PathBuf,
@@ -26,6 +25,8 @@ impl MDBook {
             _ => {}
         }
 
+        // Logic problem: When self.dest is absolute, the directory given
+        // as parameter is never used...
         let dest = if self.dest.is_relative() {
             dir.join(&self.dest)
         } else {
