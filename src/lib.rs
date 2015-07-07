@@ -1,3 +1,3 @@
-#[test]
-fn it_works() {
-}
+pub mod mdbook;
+
+pub use mdbook::MDBook;

@@ -2,6 +2,7 @@ extern crate mdbook;
 extern crate getopts;
 use std::env;
 
+use mdbook::MDBook;
 
 const NAME: &'static str = "mdbook";
 const VERSION: &'static str = "0.0.1";
@@ -108,7 +109,14 @@ fn init(args: Vec<String>) {
 
     if matches.opt_present("help") {
         println!("{}", usage);
+        return;
     }
+
+    let dir = std::env::current_dir().unwrap();
+    let book = MDBook::new();
+
+    book.init(&dir);
+
 }
 
 fn build(args: Vec<String>) {
