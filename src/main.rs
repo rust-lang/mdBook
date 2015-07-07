@@ -115,7 +115,9 @@ fn init(args: Vec<String>) {
     let dir = std::env::current_dir().unwrap();
     let book = MDBook::new();
 
-    book.init(&dir);
+    if let Err(e) = book.init(&dir) {
+        println!("Error: {}", e);
+    }
 
 }
 
