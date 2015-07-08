@@ -3,41 +3,40 @@ use std::fs::{self, File, metadata};
 use std::io::Write;
 use std::io::{Error, ErrorKind};
 
+use bookconfig::BookConfig;
+
 pub struct MDBook {
-    dest: PathBuf,
-    src: PathBuf,
+    path: PathBuf,
+    config: BookConfig,
 }
 
 impl MDBook {
 
-    pub fn new() -> Self {
+    pub fn new(path: &PathBuf) -> Self {
+
+        // Hacky way to check if the path exists... Until PathExt moves to stable
+        match metadata(path) {
+            Err(_) => panic!("Directory does not exist"),
+            Ok(f) => {
+                if !f.is_dir() {
+                    panic!("Is not a directory");
+                }
+            }
+        }
+
         MDBook {
-            dest: PathBuf::from("book"),
-            src: PathBuf::from("src"),
+            path: path.to_owned(),
+            config: BookConfig::new(),
         }
     }
 
-    pub fn init(&self, dir: &PathBuf) -> Result<(), Error> {
-
-        // Hacky way to check if the directory exists... Until PathExt moves to stable
-        match metadata(dir) {
-            Err(_) => return Err(Error::new(ErrorKind::Other, "Directory does not exist")),
-            _ => {}
-        }
+    pub fn init(&self) -> Result<(), Error> {
 
         // Logic problem: When self.dest is absolute, the directory given
         // as parameter is never used...
-        let dest = if self.dest.is_relative() {
-            dir.join(&self.dest)
-        } else {
-            self.dest.clone()
-        };
+        let dest = self.path.join(&self.config.dest());
 
-        let src = if self.src.is_relative() {
-            dir.join(&self.src)
-        } else {
-            self.src.clone()
-        };
+        let src = self.path.join(&self.config.src());
 
         // Hacky way to check if the directory exists... Until PathExt moves to stable
         match metadata(&dest) {
@@ -86,16 +85,18 @@ impl MDBook {
 
     pub fn build(&self, dir: &PathBuf) -> Result<(), Error> {
 
+
+
         Ok(())
     }
 
     pub fn set_dest(mut self, dest: PathBuf) -> Self {
-        self.dest =  dest;
+        self.config.set_dest(dest);
         self
     }
 
     pub fn set_src(mut self, src: PathBuf) -> Self {
-        self.src = src;
+        self.config.set_src(src);
         self
     }
 
