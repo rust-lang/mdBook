@@ -1,12 +1,11 @@
 use std::path::PathBuf;
 use std::fs::{self, File, metadata};
 use std::io::Write;
-use std::io::{Error, ErrorKind};
+use std::io::Error;
 
-use bookconfig::BookConfig;
+use mdbook::bookconfig::BookConfig;
 
 pub struct MDBook {
-    path: PathBuf,
     config: BookConfig,
 }
 
@@ -25,18 +24,16 @@ impl MDBook {
         }
 
         MDBook {
-            path: path.to_owned(),
-            config: BookConfig::new(),
+            config: BookConfig::new()
+                        .set_src(path.join("src"))
+                        .set_dest(path.join("book")),
         }
     }
 
     pub fn init(&self) -> Result<(), Error> {
 
-        // Logic problem: When self.dest is absolute, the directory given
-        // as parameter is never used...
-        let dest = self.path.join(&self.config.dest());
-
-        let src = self.path.join(&self.config.src());
+        let dest = self.config.dest();
+        let src = self.config.src();
 
         // Hacky way to check if the directory exists... Until PathExt moves to stable
         match metadata(&dest) {
@@ -91,12 +88,12 @@ impl MDBook {
     }
 
     pub fn set_dest(mut self, dest: PathBuf) -> Self {
-        self.config.set_dest(dest);
+        self.config = self.config.set_dest(dest);
         self
     }
 
     pub fn set_src(mut self, src: PathBuf) -> Self {
-        self.config.set_src(src);
+        self.config = self.config.set_src(src);
         self
     }
 

@@ -40,7 +40,6 @@ fn main() {
         None => no_subcommand(args),
         Some(command) => (command.exec)(args),
     }
-
 }
 
 
@@ -64,7 +63,7 @@ fn no_subcommand(args: Vec<String>) {
     if matches.opt_present("version") {
         println!("{} {}", NAME, VERSION);
     } else {
-        if !matches.opt_present("version"){
+        if !matches.opt_present("version") && args.len() > 0 {
             print!("Try again, `{0}", NAME);
             for index in 1..args.len() {
                 print!(" {}", args[index]);
@@ -88,7 +87,6 @@ fn help(usage: &String) {
     }
     println!("");
     println!("For more information about a specific command, try `mdbook <command> --help`");
-
 }
 
 fn init(args: Vec<String>) {
@@ -123,7 +121,6 @@ fn init(args: Vec<String>) {
     if let Err(e) = book.init() {
         println!("Error: {}", e);
     }
-
 }
 
 fn build(args: Vec<String>) {

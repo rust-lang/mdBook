@@ -1,4 +1,3 @@
-pub mod mdbook;
-mod bookconfig;
+mod mdbook;
 
-pub use mdbook::MDBook;
+pub use mdbook::mdbook::MDBook;
