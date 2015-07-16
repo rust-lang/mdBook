@@ -3,10 +3,14 @@ use std::fs::{self, File, metadata};
 use std::io::Write;
 use std::io::Error;
 
-use mdbook::bookconfig::BookConfig;
+use book::bookconfig::BookConfig;
+use book::bookitem::BookItem;
 
 pub struct MDBook {
+    title: String,
+    author: String,
     config: BookConfig,
+    pub content: Vec<BookItem>
 }
 
 impl MDBook {
@@ -24,6 +28,9 @@ impl MDBook {
         }
 
         MDBook {
+            title: String::from(""),
+            author: String::from(""),
+            content: vec![],
             config: BookConfig::new()
                         .set_src(path.join("src"))
                         .set_dest(path.join("book")),
@@ -80,13 +87,15 @@ impl MDBook {
         return Ok(());
     }
 
-    pub fn build(&self, dir: &PathBuf) -> Result<(), Error> {
+    pub fn build(&self) -> Result<(), Error> {
 
 
 
         Ok(())
     }
 
+
+    // Builder functions
     pub fn set_dest(mut self, dest: PathBuf) -> Self {
         self.config = self.config.set_dest(dest);
         self
@@ -94,6 +103,16 @@ impl MDBook {
 
     pub fn set_src(mut self, src: PathBuf) -> Self {
         self.config = self.config.set_src(src);
+        self
+    }
+
+    pub fn set_title(mut self, title: String) -> Self {
+        self.title = title;
+        self
+    }
+
+    pub fn set_author(mut self, author: String) -> Self {
+        self.author = author;
         self
     }
 

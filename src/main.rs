@@ -146,7 +146,7 @@ fn build(args: Vec<String>) {
     let dir = std::env::current_dir().unwrap();
     let book = MDBook::new(&dir);
 
-    if let Err(e) = book.build(&dir) {
+    if let Err(e) = book.build() {
         println!("Error: {}", e);
     }
 }

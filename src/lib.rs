@@ -1,3 +1,3 @@
-mod mdbook;
+mod book;
 
-pub use mdbook::mdbook::MDBook;
+pub use book::mdbook::MDBook;
