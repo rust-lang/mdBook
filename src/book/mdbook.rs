@@ -78,7 +78,7 @@ impl MDBook {
         if let Ok(mut f) = summary {
             try!(writeln!(f, "# Summary"));
             try!(writeln!(f, ""));
-            try!(writeln!(f, "[Chapter 1](./chapter_1.md)"));
+            try!(writeln!(f, "- [Chapter 1](./chapter_1.md)"));
 
             let mut chapter_1 = File::create(&src.join("chapter_1.md")).unwrap();
             try!(writeln!(chapter_1, "# Chapter 1"));
