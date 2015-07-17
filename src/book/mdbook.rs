@@ -1,10 +1,10 @@
 use std::path::PathBuf;
 use std::fs::{self, File, metadata};
-use std::io::Write;
-use std::io::Error;
+use std::io::{Write, Result};
 
 use book::bookconfig::BookConfig;
 use book::bookitem::BookItem;
+use parse;
 
 pub struct MDBook {
     title: String,
@@ -37,7 +37,7 @@ impl MDBook {
         }
     }
 
-    pub fn init(&self) -> Result<(), Error> {
+    pub fn init(&self) -> Result<()> {
 
         let dest = self.config.dest();
         let src = self.config.src();
@@ -67,11 +67,11 @@ impl MDBook {
             Err(_) => {
                 // There is a very high chance that the error is due to the fact that
                 // the directory / file does not exist
-                Result::Ok(File::create(&src.join("SUMMARY.md")).unwrap())
+                Ok(File::create(&src.join("SUMMARY.md")).unwrap())
             },
             Ok(_) => {
                 /* If there is no error, the directory / file does exist */
-                Result::Err("SUMMARY.md does already exist")
+                Err("SUMMARY.md does already exist")
             }
         };
 
@@ -87,9 +87,9 @@ impl MDBook {
         return Ok(());
     }
 
-    pub fn build(&self) -> Result<(), Error> {
+    pub fn build(&mut self) -> Result<()> {
 
-
+        try!(self.parse_summary());
 
         Ok(())
     }
@@ -114,6 +114,25 @@ impl MDBook {
     pub fn set_author(mut self, author: String) -> Self {
         self.author = author;
         self
+    }
+
+
+    // Construct book
+    fn parse_summary(&mut self) -> Result<()> {
+
+        // When append becomes stale, use self.content.append() ...
+        let book_items = try!(parse::construct_bookitems(&self.config.src().join("SUMMARY.md")));
+
+        for item in book_items {
+            self.content.push(item)
+        }
+
+        // Debug
+        for item in &self.content {
+            println!("name: \"{}\" path: {:?}", item.name, item.path);
+        }
+
+        Ok(())
     }
 
 }

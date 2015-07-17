@@ -3,6 +3,7 @@ use std::path::PathBuf;
 pub struct BookConfig {
     dest: PathBuf,
     src: PathBuf,
+    indent_spaces: i32,
     multilingual: bool,
 }
 
@@ -12,6 +13,7 @@ impl BookConfig {
         BookConfig {
             dest: PathBuf::from("book"),
             src: PathBuf::from("src"),
+            indent_spaces: 4,
             multilingual: false,
         }
     }

@@ -143,8 +143,13 @@ fn build(args: Vec<String>) {
         println!("{}", usage);
     }
 
-    let dir = std::env::current_dir().unwrap();
-    let book = MDBook::new(&dir);
+    let dir = if args.len() <= 2 {
+        std::env::current_dir().unwrap()
+    } else {
+        std::env::current_dir().unwrap().join(&args[2])
+    };
+    
+    let mut book = MDBook::new(&dir);
 
     if let Err(e) = book.build() {
         println!("Error: {}", e);
