@@ -78,11 +78,11 @@ fn level(line: &str, spaces_in_tab: i32) -> Result<i32> {
 }
 
 
-fn parse_line(line: &str) -> Option<BookItem> {
+fn parse_line(l: &str) -> Option<BookItem> {
     let mut name;
     let mut path;
     // Remove leading and trailing spaces or tabs
-    line.trim_matches(|c: char| { c == ' ' || c == '\t' });
+    let mut line = l.trim_matches(|c: char| { c == ' ' || c == '\t' });
 
     if let Some(c) = line.chars().nth(0) {
         match c {
