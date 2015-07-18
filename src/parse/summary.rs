@@ -82,7 +82,7 @@ fn parse_line(l: &str) -> Option<BookItem> {
     let mut name;
     let mut path;
     // Remove leading and trailing spaces or tabs
-    let mut line = l.trim_matches(|c: char| { c == ' ' || c == '\t' });
+    let line = l.trim_matches(|c: char| { c == ' ' || c == '\t' });
 
     if let Some(c) = line.chars().nth(0) {
         match c {

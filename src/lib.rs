@@ -1,5 +1,8 @@
 mod book;
 mod parse;
+pub mod renderer;
+pub mod theme;
 
-pub use book::mdbook::MDBook;
-use book::bookitem::BookItem;
+pub use book::MDBook;
+pub use book::BookItem;
+pub use book::BookConfig;

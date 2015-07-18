@@ -1,21 +1,23 @@
-use std::path::PathBuf;
+use std::path::Path;
 use std::fs::{self, File, metadata};
-use std::io::{Write, Result};
+use std::io::{self, Write};
+use std::error::Error;
 
-use book::bookconfig::BookConfig;
-use book::bookitem::BookItem;
+use {BookConfig, BookItem};
+use book::BookItems;
 use parse;
+use renderer::Renderer;
+use renderer::HtmlHandlebars;
 
 pub struct MDBook {
-    title: String,
-    author: String,
     config: BookConfig,
-    pub content: Vec<BookItem>
+    pub content: Vec<BookItem>,
+    renderer: Box<Renderer>,
 }
 
 impl MDBook {
 
-    pub fn new(path: &PathBuf) -> Self {
+    pub fn new(path: &Path) -> MDBook {
 
         // Hacky way to check if the path exists... Until PathExt moves to stable
         match metadata(path) {
@@ -28,16 +30,24 @@ impl MDBook {
         }
 
         MDBook {
-            title: String::from(""),
-            author: String::from(""),
             content: vec![],
             config: BookConfig::new()
-                        .set_src(path.join("src"))
-                        .set_dest(path.join("book")),
+                        .set_src(&path.join("src"))
+                        .set_dest(&path.join("book"))
+                        .to_owned(),
+            renderer: Box::new(HtmlHandlebars::new()),
         }
     }
 
-    pub fn init(&self) -> Result<()> {
+    pub fn iter(&self) -> BookItems {
+        BookItems {
+            items: &self.content[..],
+            current_index: 0,
+            stack: Vec::new(),
+        }
+    }
+
+    pub fn init(&self) -> Result<(), Box<Error>> {
 
         let dest = self.config.dest();
         let src = self.config.src();
@@ -87,49 +97,49 @@ impl MDBook {
         return Ok(());
     }
 
-    pub fn build(&mut self) -> Result<()> {
+    pub fn build(&mut self) -> Result<(), Box<Error>> {
 
         try!(self.parse_summary());
+
+        try!(self.renderer.render(
+            self.iter(),
+            &self.config,
+        ));
 
         Ok(())
     }
 
 
     // Builder functions
-    pub fn set_dest(mut self, dest: PathBuf) -> Self {
-        self.config = self.config.set_dest(dest);
+    pub fn set_dest(mut self, dest: &Path) -> Self {
+        self.config.set_dest(dest);
         self
     }
 
-    pub fn set_src(mut self, src: PathBuf) -> Self {
-        self.config = self.config.set_src(src);
+    pub fn set_src(mut self, src: &Path) -> Self {
+        self.config.set_src(src);
         self
     }
 
-    pub fn set_title(mut self, title: String) -> Self {
-        self.title = title;
+    pub fn set_title(mut self, title: &str) -> Self {
+        self.config.set_title(title);
         self
     }
 
-    pub fn set_author(mut self, author: String) -> Self {
-        self.author = author;
+    pub fn set_author(mut self, author: &str) -> Self {
+        self.config.set_author(author);
         self
     }
 
 
     // Construct book
-    fn parse_summary(&mut self) -> Result<()> {
+    fn parse_summary(&mut self) -> Result<(), Box<Error>> {
 
         // When append becomes stale, use self.content.append() ...
         let book_items = try!(parse::construct_bookitems(&self.config.src().join("SUMMARY.md")));
 
         for item in book_items {
             self.content.push(item)
-        }
-
-        // Debug
-        for item in &self.content {
-            println!("name: \"{}\" path: {:?}", item.name, item.path);
         }
 
         Ok(())
