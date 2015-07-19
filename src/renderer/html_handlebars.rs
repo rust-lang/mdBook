@@ -26,14 +26,7 @@ impl Renderer for HtmlHandlebars {
         // Register template
         try!(handlebars.register_template_string("index", t.to_owned()));
 
-        let mut data = BTreeMap::new();
-        let mut chapters: Vec<(String, BookItem)> = vec![];
-
-        // Hacky way to prevent move error... Not optimal
-        for (section, item) in book.clone() {
-            chapters.push((section, item.clone()));
-        }
-        data.insert("chapters".to_string(), chapters.to_json());
+    let data = try!(make_data(book.clone(), config));
 
         for (_, item) in book {
 
@@ -118,4 +111,43 @@ fn create_file(working_directory: &Path, path: &Path) -> Result<File, Box<Error>
     ));
 
     Ok(file)
+}
+
+
+fn make_data(book: BookItems, config: &BookConfig) -> Result<Json, Box<Error>> {
+
+    /*
+        Function to make the JSon data for the handlebars template:
+
+        {
+            "language": ???,
+            "chapters": [
+                {
+                    "section": section,
+                    "chapter": BookItem,
+                },
+                {
+                    ...
+                },
+            ],
+        }
+
+    */
+
+    let mut data  = BTreeMap::new();
+    data.insert("language".to_string(), "en".to_json());
+
+    let mut chapters = vec![];
+
+    for (section, item) in book {
+        let mut chapter = BTreeMap::new();
+        chapter.insert("section".to_string(), section.to_json());
+        chapter.insert("chapter".to_string(), item.to_json());
+
+        chapters.push(chapter);
+    }
+
+    data.insert("chapters".to_string(), chapters.to_json());
+
+    Ok(data.to_json())
 }
