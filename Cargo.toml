@@ -7,3 +7,4 @@ authors = ["Mathieu David <mathieudavid@mathieudavid.org>"]
 getopts = "*"
 handlebars = "*"
 rustc-serialize = "*"
+pulldown-cmark = "*"

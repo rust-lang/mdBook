@@ -1,5 +1,6 @@
 extern crate handlebars;
 extern crate rustc_serialize;
+extern crate pulldown_cmark;
 
 use renderer::Renderer;
 use book::{BookItems, BookItem, BookConfig};
@@ -9,9 +10,13 @@ use std::path::{Path, PathBuf, Component};
 use std::fs::{self, File, metadata};
 use std::error::Error;
 use std::io::{self, Read, Write};
+use std::collections::BTreeMap;
+
 use self::handlebars::Handlebars;
 use self::rustc_serialize::json::{Json, ToJson};
-use std::collections::BTreeMap;
+
+use self::pulldown_cmark::Parser;
+use self::pulldown_cmark::html;
 
 pub struct HtmlHandlebars;
 
@@ -26,18 +31,45 @@ impl Renderer for HtmlHandlebars {
         // Register template
         try!(handlebars.register_template_string("index", t.to_owned()));
 
-    let data = try!(make_data(book.clone(), config));
+        let mut data = try!(make_data(book.clone(), config));
 
+        // Render a file for every entry in the book
         for (_, item) in book {
 
             if item.path != PathBuf::new() {
 
+                let path = config.src().join(&item.path);
+                println!("Open file: {:?}", path);
+                let mut f = try!(File::open(&path));
+                let mut content: String = String::new();
+
+                try!(f.read_to_string(&mut content));
+
+                // Render markdown using the pulldown-cmark
+                content = render_html(&content);
+
+                // Remove content from previous file and render content for this one
+                data.remove("content");
+                data.insert("content".to_string(), content.to_json());
+
+                // Rendere the handlebars template with the data
                 let rendered = try!(handlebars.render("index", &data));
 
+                // Write to file
                 let mut file = try!(create_file(config.dest(), &item.path));
                 try!(file.write_all(&rendered.into_bytes()));
             }
         }
+
+        // Copy static files (js, css, images, ...)
+
+        // JavaScript
+        let mut js_file = try!(File::create(config.dest().join("book.js")));
+        try!(js_file.write_all(theme::get_js()));
+
+        // Css
+        let mut css_file = try!(File::create(config.dest().join("book.css")));
+        try!(css_file.write_all(theme::get_css()));
 
         Ok(())
     }
@@ -114,7 +146,7 @@ fn create_file(working_directory: &Path, path: &Path) -> Result<File, Box<Error>
 }
 
 
-fn make_data(book: BookItems, config: &BookConfig) -> Result<Json, Box<Error>> {
+fn make_data(book: BookItems, config: &BookConfig) -> Result<BTreeMap<String,Json>, Box<Error>> {
 
     /*
         Function to make the JSon data for the handlebars template:
@@ -149,5 +181,12 @@ fn make_data(book: BookItems, config: &BookConfig) -> Result<Json, Box<Error>> {
 
     data.insert("chapters".to_string(), chapters.to_json());
 
-    Ok(data.to_json())
+    Ok(data)
+}
+
+fn render_html(text: &str) -> String {
+    let mut s = String::with_capacity(text.len() * 3 / 2);
+    let p = Parser::new(&text);
+    html::push_html(&mut s, p);
+    s
 }

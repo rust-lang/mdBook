@@ -135,7 +135,7 @@ impl MDBook {
     // Construct book
     fn parse_summary(&mut self) -> Result<(), Box<Error>> {
 
-        // When append becomes stale, use self.content.append() ...
+        // When append becomes stable, use self.content.append() ...
         let book_items = try!(parse::construct_bookitems(&self.config.src().join("SUMMARY.md")));
 
         for item in book_items {

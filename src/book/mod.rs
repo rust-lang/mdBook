@@ -1,6 +1,6 @@
 pub mod mdbook;
 pub mod bookitem;
-mod bookconfig;
+pub mod bookconfig;
 
 pub use self::bookitem::{BookItem, BookItems};
 pub use self::bookconfig::BookConfig;

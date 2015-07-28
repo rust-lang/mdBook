@@ -4,12 +4,12 @@ pub fn get_index_hbs() -> &'static str {
     index
 }
 
-pub fn get_css() -> &'static str {
-    let css = include_str!("book.css");
+pub fn get_css() -> &'static [u8] {
+    let css = include_bytes!("book.css");
     css
 }
 
-pub fn get_js() -> &'static str {
-    let js = include_str!("book.js");
+pub fn get_js() -> &'static [u8] {
+    let js = include_bytes!("book.js");
     js
 }
