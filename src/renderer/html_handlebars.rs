@@ -230,12 +230,29 @@ impl HelperDef for RenderToc {
         else {
             try!(rc.writer.write("<li>".as_bytes()));
         }
-        try!(rc.writer.write("<a href=\"#\">".as_bytes()));
+
+        // Link
+        let path_exists = if let Some(path) = item.get("path") {
+            if path.len() > 0 {
+                try!(rc.writer.write("<a href=\"".as_bytes()));
+                try!(rc.writer.write(item.get("path").expect("Error: path should be Some(_)").as_bytes()));
+                try!(rc.writer.write("\">".as_bytes()));
+                true
+            } else {
+                false
+            }
+        }else {
+            false
+        };
+
         try!(rc.writer.write("<strong>".as_bytes()));
         try!(rc.writer.write(item.get("section").expect("Error: section should be Some(_)").as_bytes()));
-        try!(rc.writer.write("</strong>".as_bytes()));
+        try!(rc.writer.write("</strong> ".as_bytes()));
         try!(rc.writer.write(item.get("name").expect("Error: name should be Some(_)").as_bytes()));
-        try!(rc.writer.write("</a>".as_bytes()));
+
+        if path_exists {
+            try!(rc.writer.write("</a>".as_bytes()));
+        }
 
         try!(rc.writer.write("</li>".as_bytes()));
 

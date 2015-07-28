@@ -74,6 +74,10 @@ html, body {
     white-space: nowrap;
 }
 
+.chapter li {
+    color: #AAA;
+}
+
 .chapter li a {
     color: #333;
     padding: 5px 0;
