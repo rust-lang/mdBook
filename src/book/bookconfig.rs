@@ -2,8 +2,8 @@ use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone)]
 pub struct BookConfig {
-    title: String,
-    author: String,
+    pub title: String,
+    pub author: String,
     dest: PathBuf,
     src: PathBuf,
     indent_spaces: i32,
@@ -38,16 +38,6 @@ impl BookConfig {
 
     pub fn set_src(&mut self, src: &Path) -> &mut Self {
         self.src = src.to_owned();
-        self
-    }
-
-    pub fn set_title(&mut self, title: &str) -> &mut Self {
-        self.title = title.to_owned();
-        self
-    }
-
-    pub fn set_author(&mut self, author: &str) -> &mut Self {
-        self.author = author.to_owned();
         self
     }
 }

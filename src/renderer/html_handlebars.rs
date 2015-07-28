@@ -12,9 +12,9 @@ use std::error::Error;
 use std::io::{self, Read, Write};
 use std::collections::BTreeMap;
 
-use self::handlebars::Handlebars;
+use self::handlebars::{Handlebars, HelperDef, RenderError, RenderContext, Helper, Context, JsonRender};
 use self::rustc_serialize::json::{Json, ToJson};
-
+use self::rustc_serialize::{json, Decodable, Decoder};
 use self::pulldown_cmark::Parser;
 use self::pulldown_cmark::html;
 
@@ -30,6 +30,9 @@ impl Renderer for HtmlHandlebars {
 
         // Register template
         try!(handlebars.register_template_string("index", t.to_owned()));
+
+        // Register helper
+        handlebars.register_helper("toc", Box::new(RenderToc));
 
         let mut data = try!(make_data(book.clone(), config));
 
@@ -152,7 +155,8 @@ fn make_data(book: BookItems, config: &BookConfig) -> Result<BTreeMap<String,Jso
         Function to make the JSon data for the handlebars template:
 
         {
-            "language": ???,
+            "language": ...,
+            "title": ...
             "chapters": [
                 {
                     "section": section,
@@ -168,13 +172,15 @@ fn make_data(book: BookItems, config: &BookConfig) -> Result<BTreeMap<String,Jso
 
     let mut data  = BTreeMap::new();
     data.insert("language".to_string(), "en".to_json());
+    data.insert("title".to_string(), config.title.to_json());
 
     let mut chapters = vec![];
 
     for (section, item) in book {
         let mut chapter = BTreeMap::new();
         chapter.insert("section".to_string(), section.to_json());
-        chapter.insert("chapter".to_string(), item.to_json());
+        chapter.insert("name".to_string(), item.name.to_json());
+        chapter.insert("path".to_string(), item.path.to_str().unwrap().to_json());
 
         chapters.push(chapter);
     }
@@ -189,4 +195,53 @@ fn render_html(text: &str) -> String {
     let p = Parser::new(&text);
     html::push_html(&mut s, p);
     s
+}
+
+// Handlebars helper to construct TOC
+// implement by a structure impls HelperDef
+#[derive(Clone, Copy)]
+struct RenderToc;
+
+impl HelperDef for RenderToc {
+  fn call(&self, c: &Context, h: &Helper, _: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
+    let param = h.params().get(0).unwrap();
+
+    // get value from context data
+    // rc.get_path() is current json parent path, you should always use it like this
+    // param is the key of value you want to display
+    let value = c.navigate(rc.get_path(), param);
+    try!(rc.writer.write("<ul class=\"chapter\">".as_bytes()));
+
+    // Decode json format
+    let decoded: Vec<BTreeMap<String,String>> = json::decode(&value.to_string()).unwrap();
+
+    let mut current_level = 1;
+
+    for item in decoded {
+
+        let level = item.get("section").expect("Error: section should be Some(_)").len() / 2;
+        if level > current_level {
+            try!(rc.writer.write("<li>".as_bytes()));
+            try!(rc.writer.write("<ul class=\"section\">".as_bytes()));
+            try!(rc.writer.write("<li>".as_bytes()));
+        } else if level < current_level {
+            try!(rc.writer.write("</ul>".as_bytes()));
+            try!(rc.writer.write("<li>".as_bytes()));
+        }
+        else {
+            try!(rc.writer.write("<li>".as_bytes()));
+        }
+        try!(rc.writer.write("<a href=\"#\">".as_bytes()));
+        try!(rc.writer.write("<strong>".as_bytes()));
+        try!(rc.writer.write(item.get("section").expect("Error: section should be Some(_)").as_bytes()));
+        try!(rc.writer.write("</strong>".as_bytes()));
+        try!(rc.writer.write(item.get("name").expect("Error: name should be Some(_)").as_bytes()));
+        try!(rc.writer.write("</a>".as_bytes()));
+
+        try!(rc.writer.write("</li>".as_bytes()));
+    }
+
+    try!(rc.writer.write("</ul>".as_bytes()));
+    Ok(())
+  }
 }

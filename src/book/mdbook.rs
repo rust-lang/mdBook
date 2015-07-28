@@ -122,12 +122,12 @@ impl MDBook {
     }
 
     pub fn set_title(mut self, title: &str) -> Self {
-        self.config.set_title(title);
+        self.config.title = title.to_owned();
         self
     }
 
     pub fn set_author(mut self, author: &str) -> Self {
-        self.config.set_author(author);
+        self.config.author = author.to_owned();
         self
     }
 

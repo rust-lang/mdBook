@@ -14,13 +14,7 @@
     <body>
 
         <div id="sidebar" class="sidebar">
-            <ul class="chapter">
-                {{#each chapters}}
-                    <li><a href="{{ this.chapter.path }}">
-                        <strong>{{ this.section }}</strong> {{ this.chapter.name }}
-                    </a></li>
-                {{/each}}
-            </ul>
+            {{#toc chapters}}{{/toc}}
         </div>
 
         <div id="page-wrapper" class="page-wrapper">
