@@ -11,9 +11,9 @@ Personal implementation of Gitbook in Rust
 - [x] Create JSon data from book
 - [x] render handlebars template to html
 - [x] create one `html` file for every entry in `SUMMARY.md` that is not an empty link<br><sup>Respecting original directory structure</sup>
-- [ ] page layout
-- [ ] show content on page rendered from markdown
-- [ ] construct sidebar table of contents
+- [x] page layout
+- [x] show content on page rendered from markdown
+- [x] construct sidebar table of contents
 - [ ] support config file
 
 For more information about progress and what is still on my to-do list, check [this issue](../../issues/1)
