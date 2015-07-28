@@ -3,7 +3,7 @@ extern crate rustc_serialize;
 extern crate pulldown_cmark;
 
 use renderer::Renderer;
-use book::{BookItems, BookItem, BookConfig};
+use book::{BookItems, BookConfig};
 use theme;
 
 use std::path::{Path, PathBuf, Component};
@@ -13,8 +13,7 @@ use std::io::{self, Read, Write};
 use std::collections::BTreeMap;
 
 use self::handlebars::{Handlebars, HelperDef, RenderError, RenderContext, Helper, Context, JsonRender};
-use self::rustc_serialize::json::{Json, ToJson};
-use self::rustc_serialize::{json, Decodable, Decoder};
+use self::rustc_serialize::json::{self, Json, ToJson};
 use self::pulldown_cmark::Parser;
 use self::pulldown_cmark::html;
 
@@ -239,6 +238,8 @@ impl HelperDef for RenderToc {
         try!(rc.writer.write("</a>".as_bytes()));
 
         try!(rc.writer.write("</li>".as_bytes()));
+
+        current_level = level;
     }
 
     try!(rc.writer.write("</ul>".as_bytes()));
