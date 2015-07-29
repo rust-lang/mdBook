@@ -7,14 +7,14 @@
         <meta name="description" content="{% block description %}{% endblock %}">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="stylesheet" href="book.css" media="screen" title="no title" charset="utf-8">
+        <link rel="stylesheet" href="{{ path_to_root }}book.css" media="screen" title="no title" charset="utf-8">
         <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
         <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
     </head>
     <body>
 
         <div id="sidebar" class="sidebar">
-            {{#toc chapters}}{{/toc}}
+            {{#toc}}{{/toc}}
         </div>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -31,6 +31,6 @@
         </div>
 
         <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
-        <script src="book.js"></script>
+        <script src="{{ path_to_root }}book.js"></script>
     </body>
 </html>

@@ -55,6 +55,10 @@ impl Renderer for HtmlHandlebars {
                 data.remove("content");
                 data.insert("content".to_string(), content.to_json());
 
+                // Remove path to root from previous file and render content for this one
+                data.remove("path_to_root");
+                data.insert("path_to_root".to_string(), path_to_root(&item.path).to_json());
+
                 // Rendere the handlebars template with the data
                 let rendered = try!(handlebars.render("index", &data));
 
@@ -225,22 +229,35 @@ fn path_to_link(path: &Path) -> Option<PathBuf> {
     Some(path)
 }
 
+fn path_to_root(path: &Path) -> String {
+    // Remove filename and add "../" for every directory
+
+    path.to_path_buf().parent().expect("")
+        .components().fold(String::new(), |mut s, c| {
+            match c {
+                Component::Normal(_) => s.push_str("../"),
+                _ => {}
+            }
+            s
+        })
+}
+
 // Handlebars helper to construct TOC
 #[derive(Clone, Copy)]
 struct RenderToc;
 
 impl HelperDef for RenderToc {
-  fn call(&self, c: &Context, h: &Helper, _: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
-    let param = h.params().get(0).unwrap();
+  fn call(&self, c: &Context, _h: &Helper, _: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
 
     // get value from context data
     // rc.get_path() is current json parent path, you should always use it like this
     // param is the key of value you want to display
-    let value = c.navigate(rc.get_path(), param);
+    let chapters = c.navigate(rc.get_path(), "chapters");
+    let path_to_root = c.navigate(rc.get_path(), "path_to_root").to_string().replace("\"", "");
     try!(rc.writer.write("<ul class=\"chapter\">".as_bytes()));
 
     // Decode json format
-    let decoded: Vec<BTreeMap<String,String>> = json::decode(&value.to_string()).unwrap();
+    let decoded: Vec<BTreeMap<String,String>> = json::decode(&chapters.to_string()).unwrap();
 
     let mut current_level = 1;
 
@@ -265,6 +282,8 @@ impl HelperDef for RenderToc {
                 try!(rc.writer.write("<a href=\"".as_bytes()));
 
                 if let Some(link) = path_to_link(Path::new(item.get("path").expect("Error: path should be Some(_)"))) {
+                    try!(rc.writer.write(path_to_root.as_bytes()));
+                    println!("Path to root: {}", path_to_root);
                     try!(rc.writer.write(link.to_str().unwrap().as_bytes()));
                 } else {
                     try!(rc.writer.write("#".as_bytes()));
