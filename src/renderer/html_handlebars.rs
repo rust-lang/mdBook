@@ -36,6 +36,7 @@ impl Renderer for HtmlHandlebars {
         let mut data = try!(make_data(book.clone(), config));
 
         // Render a file for every entry in the book
+        let mut index = true;
         for (_, item) in book {
 
             if item.path != PathBuf::new() {
@@ -60,6 +61,15 @@ impl Renderer for HtmlHandlebars {
                 // Write to file
                 let mut file = try!(create_file(config.dest(), &item.path));
                 try!(file.write_all(&rendered.into_bytes()));
+
+                // Create an index.html from the first element in SUMMARY.md
+                if index {
+                    try!(fs::copy(
+                        config.dest().join(path_to_link(&item.path).expect("Failed at creation of index.html")),
+                        config.dest().join("index.html")
+                    ));
+                    index = false;
+                }
             }
         }
 
@@ -196,13 +206,13 @@ fn render_html(text: &str) -> String {
     s
 }
 
-fn path_to_link(path: &Path) -> Result<PathBuf, Box<Error>> {
+fn path_to_link(path: &Path) -> Option<PathBuf> {
     // Extract filename
     let mut file_name;
     if let Some(name) = path.file_stem() {
         file_name = String::from(name.to_str().unwrap());
     }
-    else { return Err(Box::new(io::Error::new(io::ErrorKind::Other, "No filename"))) }
+    else { return None }
 
     file_name.push_str(".html");
 
@@ -212,7 +222,7 @@ fn path_to_link(path: &Path) -> Result<PathBuf, Box<Error>> {
 
     // Clean paths with './'
 
-    Ok(path)
+    Some(path)
 }
 
 // Handlebars helper to construct TOC
@@ -254,12 +264,10 @@ impl HelperDef for RenderToc {
             if path.len() > 0 {
                 try!(rc.writer.write("<a href=\"".as_bytes()));
 
-                match path_to_link(Path::new(item.get("path")
-                                                .expect("Error: path should be Some(_)")
-                        )) {
-
-                    Ok(link) => { try!(rc.writer.write(link.to_str().unwrap().as_bytes())); },
-                    Err(_) => { try!(rc.writer.write("#".as_bytes())); },
+                if let Some(link) = path_to_link(Path::new(item.get("path").expect("Error: path should be Some(_)"))) {
+                    try!(rc.writer.write(link.to_str().unwrap().as_bytes()));
+                } else {
+                    try!(rc.writer.write("#".as_bytes()));
                 }
 
                 try!(rc.writer.write("\">".as_bytes()));
