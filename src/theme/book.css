@@ -104,6 +104,13 @@ html, body {
     color: #CCC;
 }
 
+.menu-bar i {
+    -webkit-transition: color 0.5s; /* Safari */
+    -o-transition: color 0.5s; /* Opera */
+    -moz-transition: color 0.5s; /* Mozilla Firefox */
+    transition: color 0.5s;
+}
+
 .menu-bar :hover {
     /* Animate color change */
     color: #333;
@@ -129,4 +136,15 @@ pre {
 
 .right {
     float: right;
+}
+
+/* Content */
+
+.page a {
+    color: #4183c4;
+    text-decoration: none;
+}
+
+.page a:hover {
+    text-decoration: underline;
 }
