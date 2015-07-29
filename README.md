@@ -4,7 +4,13 @@ Personal implementation of Gitbook in Rust
 
 **This is still a work in progress...**
 
-### cli tool
+## Contributions
+
+Contributions are highly apreciated. If you don't know what you could do, take a look at the issue tracker. I try to put all the remaining tasks on it. There are a lot of easy tasks that someone not familiar with the project could tackle.
+
+If you have an idea for improvement, create a new issue. Or a pull request if you can :)
+
+## cli tool
 
 #### init
 
@@ -31,7 +37,7 @@ mdbook init path/to/my/book
 Use `mdbook build` in the directory to render the book. You can also give a path as argument to use instead of the current directory.
 
 
-### lib
+## lib
 
 Aside the command-line tool, this crate can also be used as a library. 
 
