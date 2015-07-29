@@ -2,18 +2,39 @@
 
 Personal implementation of Gitbook in Rust
 
-**This is a work in progress, it's far from being usable at the moment...**
+**This is still a work in progress...**
 
-### Progress
+### cli tool
 
-- [x] `mdbook init` creates boilerplate directory structure and files to start with. <br><sup>Could be tweaked a little bit for improvements, but it works</sup>
-- [x] Parses `SUMMARY.md` and constructs a book data structure.<br><sup>Supports nested levels, empty links. Does not support other lines than list elements, does not suppport plain text. (Does not support = ignore)</sup>
-- [x] Create JSon data from book
-- [x] render handlebars template to html
-- [x] create one `html` file for every entry in `SUMMARY.md` that is not an empty link<br><sup>Respecting original directory structure</sup>
-- [x] page layout
-- [x] show content on page rendered from markdown
-- [x] construct sidebar table of contents
-- [ ] support config file
+#### init
 
-For more information about progress and what is still on my to-do list, check [this issue](../../issues/1)
+If you run `mdbook init` in a directory, it will create a couple of folders and files you can start with.
+This is the strucutre it creates at the moment:
+```
+book-test/
+├── book
+└── src
+    ├── chapter_1.md
+    └── SUMMARY.md
+```
+`book` and `src` are both directories. `src` contains the markdown files that will be used to render the ouput to the `book` directory.
+
+You can also pass a directory to `mdbook init` to use instead of the current directory:
+```
+mdbook init path/to/my/book
+```
+
+<sup>**Not implemented yet:** using `--theme` flag will create a theme folder with the default theme in `src` so that you can customize it.</sup>
+
+#### build
+
+Use `mdbook build` in the directory to render the book. You can also give a path as argument to use instead of the current directory.
+
+
+### lib
+
+Aside the command-line tool, this crate can also be used as a library. 
+
+-------------------------------------------------------
+
+For more information about what is left on my to-do list, check the issue tracker
