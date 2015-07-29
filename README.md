@@ -2,7 +2,8 @@
 
 Personal implementation of Gitbook in Rust
 
-**This is still a work in progress...**
+**This is still a work in progress...**  
+For more information about what is left on my to-do list, check the issue tracker
 
 ## Contributions
 
@@ -45,9 +46,7 @@ Use `mdbook build` in the directory to render the book. You can also give a path
 
 Aside the command-line tool, this crate can also be used as a library. 
 
--------------------------------------------------------
 
-For more information about what is left on my to-do list, check the issue tracker
 
 ## License
 
