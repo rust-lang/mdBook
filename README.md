@@ -38,3 +38,7 @@ Aside the command-line tool, this crate can also be used as a library.
 -------------------------------------------------------
 
 For more information about what is left on my to-do list, check the issue tracker
+
+## License
+
+All the code is released under the ***Mozilla Public License v2.0***, for more information take a look at the [LICENSE](LICENSE) file
