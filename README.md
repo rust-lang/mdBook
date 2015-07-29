@@ -6,7 +6,11 @@ Personal implementation of Gitbook in Rust
 
 ## Contributions
 
-Contributions are highly apreciated. If you don't know what you could do, take a look at the issue tracker. I try to put all the remaining tasks on it. There are a lot of easy tasks that someone not familiar with the project could tackle.
+Contributions are highly apreciated. Here are some ideas:
+
+- **Create new renderers**, at the moment I have only created a renderer that uses handlebars, pulldown-cmark and renders to html. But you could create a renderer that uses another template engine, markdown parser or even outputs to another format like pdf.
+- **Add tests** I have not much experience in writing tests, all help to write meaningful tests is thus very welcome
+- **Smaller tasks** I try to add a lot of the remaining tasks on the issue tracker with the label: `Enhancement`. Just pick one that looks interesting. The majority of the tasks are small enough to be tackled by people who are unfamiliar with the project.
 
 If you have an idea for improvement, create a new issue. Or a pull request if you can :)
 
