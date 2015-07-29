@@ -3,49 +3,54 @@ html, body {
     color: #333;
 }
 
-@media only screen {
-    .sidebar {
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 300px;
-        overflow-y: auto;
-        border-right: 1px solid rgba(0, 0, 0, 0.07);
-        padding: 10px 10px;
-        font-size: 14px;
-        box-sizing: border-box;
-        -webkit-overflow-scrolling: touch;
-        background-color: #fafafa;
-        color: #364149;
-    }
 
-    .page-wrapper {
-        position: absolute;
-        overflow-y: auto;
-        left: 310px;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        box-sizing: border-box;
-        background: none repeat scroll 0 0 #FFF;
-        -webkit-overflow-scrolling: touch;
-    }
+.sidebar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 300px;
+    overflow-y: auto;
+    border-right: 1px solid rgba(0, 0, 0, 0.07);
+    padding: 10px 10px;
+    font-size: 14px;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+    background-color: #fafafa;
+    color: #364149;
+
+    /* Animation: slide away */
+    -webkit-transition: left 0.5s; /* Safari */
+    -o-transition: left 0.5s; /* Opera */
+    -moz-transition: left 0.5s; /* Mozilla Firefox */
+    transition: left 0.5s;
+}
+
+.page-wrapper {
+    position: absolute;
+    overflow-y: auto;
+    left: 315px;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    box-sizing: border-box;
+    background: none repeat scroll 0 0 #FFF;
+    -webkit-overflow-scrolling: touch;
+
+    /* Animation: slide away */
+    -webkit-transition: left 0.5s; /* Safari */
+    -o-transition: left 0.5s; /* Opera */
+    -moz-transition: left 0.5s; /* Mozilla Firefox */
+    transition: left 0.5s;
 }
 
 @media only screen and (max-width: 1060px) {
     .sidebar {
-        width: 100%;
-        margin-right: 0;
-        top: 40px;
+        left: -300px;
     }
     .page-wrapper {
-        top: 40px;
         left: 15px;
         padding-right: 15px;
-    }
-    .mobile-hidden {
-        display: none;
     }
 }
 
