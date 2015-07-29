@@ -196,8 +196,26 @@ fn render_html(text: &str) -> String {
     s
 }
 
+fn path_to_link(path: &Path) -> Result<PathBuf, Box<Error>> {
+    // Extract filename
+    let mut file_name;
+    if let Some(name) = path.file_stem() {
+        file_name = String::from(name.to_str().unwrap());
+    }
+    else { return Err(Box::new(io::Error::new(io::ErrorKind::Other, "No filename"))) }
+
+    file_name.push_str(".html");
+
+    // Change file name to .html
+    let mut path = path.to_path_buf();
+    path.set_file_name(file_name);
+
+    // Clean paths with './'
+
+    Ok(path)
+}
+
 // Handlebars helper to construct TOC
-// implement by a structure impls HelperDef
 #[derive(Clone, Copy)]
 struct RenderToc;
 
@@ -235,7 +253,15 @@ impl HelperDef for RenderToc {
         let path_exists = if let Some(path) = item.get("path") {
             if path.len() > 0 {
                 try!(rc.writer.write("<a href=\"".as_bytes()));
-                try!(rc.writer.write(item.get("path").expect("Error: path should be Some(_)").as_bytes()));
+
+                match path_to_link(Path::new(item.get("path")
+                                                .expect("Error: path should be Some(_)")
+                        )) {
+
+                    Ok(link) => { try!(rc.writer.write(link.to_str().unwrap().as_bytes())); },
+                    Err(_) => { try!(rc.writer.write("#".as_bytes())); },
+                }
+
                 try!(rc.writer.write("\">".as_bytes()));
                 true
             } else {

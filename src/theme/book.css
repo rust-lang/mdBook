@@ -89,8 +89,19 @@ html, body {
 }
 
 .chapter li a:hover {
+    /* Animate color change */
     color: #008cff;
     text-decoration: none;
+}
+
+.menu-bar {
+    height: 50px;
+    color: #CCC;
+}
+
+.menu-bar :hover {
+    /* Animate color change */
+    color: #333;
 }
 
 pre {
