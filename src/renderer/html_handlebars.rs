@@ -4,7 +4,7 @@ extern crate pulldown_cmark;
 
 use renderer::Renderer;
 use book::{BookItems, BookConfig};
-use theme;
+use {theme, utils};
 
 use std::path::{Path, PathBuf, Component};
 use std::fs::{self, File, metadata};
@@ -14,8 +14,7 @@ use std::collections::BTreeMap;
 
 use self::handlebars::{Handlebars, HelperDef, RenderError, RenderContext, Helper, Context, JsonRender};
 use self::rustc_serialize::json::{self, Json, ToJson};
-use self::pulldown_cmark::Parser;
-use self::pulldown_cmark::html;
+use self::pulldown_cmark::{Parser, html};
 
 pub struct HtmlHandlebars;
 
@@ -57,7 +56,7 @@ impl Renderer for HtmlHandlebars {
 
                 // Remove path to root from previous file and render content for this one
                 data.remove("path_to_root");
-                data.insert("path_to_root".to_string(), path_to_root(&item.path).to_json());
+                data.insert("path_to_root".to_string(), utils::path::path_to_root(&item.path).to_json());
 
                 // Rendere the handlebars template with the data
                 let rendered = try!(handlebars.render("index", &data));
@@ -211,19 +210,6 @@ fn render_html(text: &str) -> String {
     let p = Parser::new(&text);
     html::push_html(&mut s, p);
     s
-}
-
-fn path_to_root(path: &Path) -> String {
-    // Remove filename and add "../" for every directory
-
-    path.to_path_buf().parent().expect("")
-        .components().fold(String::new(), |mut s, c| {
-            match c {
-                Component::Normal(_) => s.push_str("../"),
-                _ => {}
-            }
-            s
-        })
 }
 
 // Handlebars helper to construct TOC
