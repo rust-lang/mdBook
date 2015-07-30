@@ -42,7 +42,7 @@ impl Renderer for HtmlHandlebars {
             if item.path != PathBuf::new() {
 
                 let path = config.src().join(&item.path);
-                println!("Open file: {:?}", path);
+
                 let mut f = try!(File::open(&path));
                 let mut content: String = String::new();
 
@@ -68,10 +68,16 @@ impl Renderer for HtmlHandlebars {
 
                 // Create an index.html from the first element in SUMMARY.md
                 if index {
+                    print!(
+                        "Creating index.html from {:?}",
+                        config.dest().join(&item.path.with_extension("html"))
+                        );
+
                     try!(fs::copy(
-                        config.dest().join(path_to_link(&item.path).expect("Failed at creation of index.html")),
+                        config.dest().join(&item.path.with_extension("html")),
                         config.dest().join("index.html")
                     ));
+                    println!(" ✓");
                     index = false;
                 }
             }
@@ -106,8 +112,6 @@ impl HtmlHandlebars {
 
 fn create_file(working_directory: &Path, path: &Path) -> Result<File, Box<Error>> {
 
-    println!("create_file:\n\t{:?}\n\t{:?}", working_directory, path);
-
     // Extract filename
     let mut file_name;
     if let Some(name) = path.file_stem() {
@@ -134,8 +138,6 @@ fn create_file(working_directory: &Path, path: &Path) -> Result<File, Box<Error>
 
         constructed_path.push(&dir);
 
-        println!("constructed path= {:?}\ndir= {:?}", constructed_path, dir.as_os_str());
-
         // Check if path exists
         match metadata(&constructed_path) {
             // Any way to combine the Err and first Ok branch ??
@@ -146,7 +148,6 @@ fn create_file(working_directory: &Path, path: &Path) -> Result<File, Box<Error>
                 if !f.is_dir() {
                     try!(fs::create_dir(&constructed_path))
                 } else {
-                    println!("Exists ??");
                     continue
                 }
             },
@@ -154,9 +155,11 @@ fn create_file(working_directory: &Path, path: &Path) -> Result<File, Box<Error>
 
     }
 
+    print!("Create file: {:?}", constructed_path.join(&file_name));
     let file = try!(File::create(
-        constructed_path.join(file_name)
+        constructed_path.join(&file_name)
     ));
+    println!(" ✓");
 
     Ok(file)
 }
@@ -208,25 +211,6 @@ fn render_html(text: &str) -> String {
     let p = Parser::new(&text);
     html::push_html(&mut s, p);
     s
-}
-
-fn path_to_link(path: &Path) -> Option<PathBuf> {
-    // Extract filename
-    let mut file_name;
-    if let Some(name) = path.file_stem() {
-        file_name = String::from(name.to_str().unwrap());
-    }
-    else { return None }
-
-    file_name.push_str(".html");
-
-    // Change file name to .html
-    let mut path = path.to_path_buf();
-    path.set_file_name(file_name);
-
-    // Clean paths with './'
-
-    Some(path)
 }
 
 fn path_to_root(path: &Path) -> String {
@@ -281,13 +265,17 @@ impl HelperDef for RenderToc {
             if path.len() > 0 {
                 try!(rc.writer.write("<a href=\"".as_bytes()));
 
-                if let Some(link) = path_to_link(Path::new(item.get("path").expect("Error: path should be Some(_)"))) {
-                    try!(rc.writer.write(path_to_root.as_bytes()));
-                    println!("Path to root: {}", path_to_root);
-                    try!(rc.writer.write(link.to_str().unwrap().as_bytes()));
-                } else {
-                    try!(rc.writer.write("#".as_bytes()));
-                }
+                // Prefix with path to root
+                try!(rc.writer.write(path_to_root.as_bytes()));
+
+                // Add link
+                try!(rc.writer.write(
+                    Path::new(
+                        item.get("path")
+                            .expect("Error: path should be Some(_)")
+                        ).with_extension("html")
+                        .to_str().unwrap().as_bytes()
+                    ));
 
                 try!(rc.writer.write("\">".as_bytes()));
                 true
