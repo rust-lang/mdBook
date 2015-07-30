@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title></title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="{% block description %}{% endblock %}">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="stylesheet" href="book.css" media="screen" title="no title" charset="utf-8">
+        <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    </head>
+    <body>
+
+        <div id="sidebar" class="sidebar">
+            <ul class="chapter"><li><a href="README.html"><strong>1.</strong> mdBook</a></li><li><a href="cli/cli-tool.html"><strong>2.</strong> Command Line Tool</a></li><li><ul class="section"><li><a href="cli/init.html"><strong>2.1.</strong> init</a></li><li><a href="cli/build.html"><strong>2.2.</strong> build</a></li></ul><li><strong>3.</strong> Format</li><li><ul class="section"><li><strong>3.1.</strong> SUMMARY.md</li></ul><li><strong>4.</strong> Rust Library</li></ul>
+        </div>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div id="menu-bar" class="menu-bar">
+                <i id="sidebar-toggle" class="fa fa-bars left"></i>
+                <h1 class="menu-title"></h1>
+            </div>
+
+            <div id="page" class="page">
+                <h1>mdBook</h1>
+<p><strong>mdBook</strong> is a command line tool and Rust library to create books using Markdown.
+It's very similar to Gitbook but written in <a href="http://www.rust-lang.org">Rust</a>.</p>
+<p>This book serves as an example of the output of mdBook and as the docs at the same time.</p>
+<p>mdBook is free and open source, you can find the source code on <a href="https://github.com/azerupi/mdBook">Github</a>.
+Issues and feature requests can be posted on the <a href="https://github.com/azerupi/mdBook/issues">Github Issue tracker</a>.</p>
+<h2>License</h2>
+<p>mdBook, all the code and this book, are released under the <a href="https://www.mozilla.org/MPL/2.0/">Mozilla Public License v2.0</a></p>
+
+            </div>
+
+        </div>
+
+        <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script src="book.js"></script>
+    </body>
+</html>

@@ -1,0 +1,13 @@
+# mdBook
+
+**mdBook** is a command line tool and Rust library to create books using Markdown.
+It's very similar to Gitbook but written in [Rust](http://www.rust-lang.org).
+
+This book serves as an example of the output of mdBook and as the docs at the same time.
+
+mdBook is free and open source, you can find the source code on [Github](https://github.com/azerupi/mdBook).
+Issues and feature requests can be posted on the [Github Issue tracker](https://github.com/azerupi/mdBook/issues).
+
+## License
+
+mdBook, all the code and this book, are released under the [Mozilla Public License v2.0](https://www.mozilla.org/MPL/2.0/)
