@@ -2,6 +2,9 @@ extern crate handlebars;
 extern crate rustc_serialize;
 extern crate pulldown_cmark;
 
+mod hbs_toc_helper;
+use self::hbs_toc_helper::RenderToc;
+
 use renderer::Renderer;
 use book::{BookItems, BookConfig};
 use {theme, utils};
@@ -12,8 +15,8 @@ use std::error::Error;
 use std::io::{self, Read, Write};
 use std::collections::BTreeMap;
 
-use self::handlebars::{Handlebars, HelperDef, RenderError, RenderContext, Helper, Context, JsonRender};
-use self::rustc_serialize::json::{self, Json, ToJson};
+use self::handlebars::{Handlebars, JsonRender};
+use self::rustc_serialize::json::{Json, ToJson};
 use self::pulldown_cmark::{Parser, html};
 
 pub struct HtmlHandlebars;
@@ -47,7 +50,7 @@ impl Renderer for HtmlHandlebars {
 
                 try!(f.read_to_string(&mut content));
 
-                // Render markdown using the pulldown-cmark
+                // Render markdown using the pulldown-cmark crate
                 content = render_html(&content);
 
                 // Remove content from previous file and render content for this one
@@ -210,83 +213,4 @@ fn render_html(text: &str) -> String {
     let p = Parser::new(&text);
     html::push_html(&mut s, p);
     s
-}
-
-// Handlebars helper to construct TOC
-#[derive(Clone, Copy)]
-struct RenderToc;
-
-impl HelperDef for RenderToc {
-  fn call(&self, c: &Context, _h: &Helper, _: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
-
-    // get value from context data
-    // rc.get_path() is current json parent path, you should always use it like this
-    // param is the key of value you want to display
-    let chapters = c.navigate(rc.get_path(), "chapters");
-    let path_to_root = c.navigate(rc.get_path(), "path_to_root").to_string().replace("\"", "");
-    try!(rc.writer.write("<ul class=\"chapter\">".as_bytes()));
-
-    // Decode json format
-    let decoded: Vec<BTreeMap<String,String>> = json::decode(&chapters.to_string()).unwrap();
-
-    let mut current_level = 1;
-
-    for item in decoded {
-
-        let level = item.get("section").expect("Error: section should be Some(_)").len() / 2;
-        if level > current_level {
-            try!(rc.writer.write("<li>".as_bytes()));
-            try!(rc.writer.write("<ul class=\"section\">".as_bytes()));
-            try!(rc.writer.write("<li>".as_bytes()));
-        } else if level < current_level {
-            try!(rc.writer.write("</ul>".as_bytes()));
-            try!(rc.writer.write("<li>".as_bytes()));
-        }
-        else {
-            try!(rc.writer.write("<li>".as_bytes()));
-        }
-
-        // Link
-        let path_exists = if let Some(path) = item.get("path") {
-            if path.len() > 0 {
-                try!(rc.writer.write("<a href=\"".as_bytes()));
-
-                // Prefix with path to root
-                try!(rc.writer.write(path_to_root.as_bytes()));
-
-                // Add link
-                try!(rc.writer.write(
-                    Path::new(
-                        item.get("path")
-                            .expect("Error: path should be Some(_)")
-                        ).with_extension("html")
-                        .to_str().unwrap().as_bytes()
-                    ));
-
-                try!(rc.writer.write("\">".as_bytes()));
-                true
-            } else {
-                false
-            }
-        }else {
-            false
-        };
-
-        try!(rc.writer.write("<strong>".as_bytes()));
-        try!(rc.writer.write(item.get("section").expect("Error: section should be Some(_)").as_bytes()));
-        try!(rc.writer.write("</strong> ".as_bytes()));
-        try!(rc.writer.write(item.get("name").expect("Error: name should be Some(_)").as_bytes()));
-
-        if path_exists {
-            try!(rc.writer.write("</a>".as_bytes()));
-        }
-
-        try!(rc.writer.write("</li>".as_bytes()));
-
-        current_level = level;
-    }
-
-    try!(rc.writer.write("</ul>".as_bytes()));
-    Ok(())
-  }
 }
