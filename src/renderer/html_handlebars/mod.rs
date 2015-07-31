@@ -3,6 +3,7 @@ extern crate rustc_serialize;
 extern crate pulldown_cmark;
 
 mod hbs_toc_helper;
+mod hbs_navigation_helper;
 use self::hbs_toc_helper::RenderToc;
 
 use renderer::Renderer;
@@ -32,8 +33,10 @@ impl Renderer for HtmlHandlebars {
         // Register template
         try!(handlebars.register_template_string("index", t.to_owned()));
 
-        // Register helper
+        // Register helpers
         handlebars.register_helper("toc", Box::new(RenderToc));
+        handlebars.register_helper("previous", Box::new(hbs_navigation_helper::previous));
+        handlebars.register_helper("next", Box::new(hbs_navigation_helper::next));
 
         let mut data = try!(make_data(book.clone(), config));
 
