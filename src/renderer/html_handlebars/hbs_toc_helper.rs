@@ -18,6 +18,7 @@ impl HelperDef for RenderToc {
     // rc.get_path() is current json parent path, you should always use it like this
     // param is the key of value you want to display
     let chapters = c.navigate(rc.get_path(), "chapters");
+    let current = c.navigate(rc.get_path(), "path").to_string().replace("\"", "");
     let path_to_root = c.navigate(rc.get_path(), "path_to_root").to_string().replace("\"", "");
     try!(rc.writer.write("<ul class=\"chapter\">".as_bytes()));
 
@@ -58,7 +59,14 @@ impl HelperDef for RenderToc {
                         .to_str().unwrap().as_bytes()
                     ));
 
-                try!(rc.writer.write("\">".as_bytes()));
+                try!(rc.writer.write("\"".as_bytes()));
+
+                println!("[DEBUG] path: {}\n        current: {}", path, &current);
+                if path == &current {
+                    try!(rc.writer.write("class=\"active\"".as_bytes()));
+                }
+
+                try!(rc.writer.write(">".as_bytes()));
                 true
             } else {
                 false

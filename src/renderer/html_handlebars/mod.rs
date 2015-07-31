@@ -54,6 +54,10 @@ impl Renderer for HtmlHandlebars {
                 content = render_html(&content);
 
                 // Remove content from previous file and render content for this one
+                data.remove("path");
+                data.insert("path".to_string(), item.path.to_str().unwrap().to_json());
+
+                // Remove content from previous file and render content for this one
                 data.remove("content");
                 data.insert("content".to_string(), content.to_json());
 
@@ -168,25 +172,6 @@ fn create_file(working_directory: &Path, path: &Path) -> Result<File, Box<Error>
 
 
 fn make_data(book: BookItems, config: &BookConfig) -> Result<BTreeMap<String,Json>, Box<Error>> {
-
-    /*
-        Function to make the JSon data for the handlebars template:
-
-        {
-            "language": ...,
-            "title": ...
-            "chapters": [
-                {
-                    "section": section,
-                    "chapter": BookItem,
-                },
-                {
-                    ...
-                },
-            ],
-        }
-
-    */
 
     let mut data  = BTreeMap::new();
     data.insert("language".to_string(), "en".to_json());
