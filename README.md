@@ -1,4 +1,4 @@
-# mdBook
+# mdBook ![Travis-CI](https://travis-ci.org/azerupi/mdBook.svg)
 
 Personal implementation of Gitbook in Rust
 
