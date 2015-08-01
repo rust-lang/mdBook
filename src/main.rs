@@ -1,178 +1,76 @@
 extern crate mdbook;
-extern crate getopts;
+#[macro_use]
+extern crate clap;
+
 use std::env;
+use std::error::Error;
+use std::io::{self, Write};
+use std::path::{Path, PathBuf};
+
+use clap::{App, ArgMatches, SubCommand};
 
 use mdbook::MDBook;
 
 const NAME: &'static str = "mdbook";
-const VERSION: &'static str = "0.0.1";
-
-#[derive(Clone)]
-struct Subcommand {
-    name: &'static str,
-    help: &'static str,
-    exec: fn(args: Vec<String>)
-}
-
-
-// All subcommands
-static SUBCOMMANDS: &'static [Subcommand] = &[
-    Subcommand{ name: "init", help: " Create boilerplate structure and files in the directory", exec: init },
-    Subcommand{ name: "build", help: "Build the book from the markdown files", exec: build },
-    Subcommand{ name: "watch", help: "Watch the files for changes", exec: watch },
-];
-
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    let mut subcommand: Option<Subcommand> = None;
+    // Create a list of valid arguments and sub-commands
+    let matches = App::new(NAME)
+                    .about("Create a book in form of a static website from markdown files")
+                    .author("Mathieu David <mathieudavid@mathieudavid.org>")
+                    // Get the version from our Cargo.toml using clap's crate_version!() macro
+                    .version(&*format!("v{}", crate_version!()))
+                    .subcommand_required(true)
+                    .after_help("For more information about a specific command, try `mdbook <command> --help`")
+                    .subcommand(SubCommand::with_name("init")
+                        .about("Create boilerplate structure and files in the directory")
+                        // the {n} denotes a newline which will properly aligned in all help
+                        // messages
+                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'"))
+                    .subcommand(SubCommand::with_name("build")
+                        .about("Build the book from the markdown files")
+                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'"))
+                    .subcommand(SubCommand::with_name("watch")
+                        .about("Watch the files for changes"))
+                    .get_matches();
 
-    if args.len() > 1 {
-        // Check if one of the subcommands match
-        for command in SUBCOMMANDS {
-            if args[1] == command.name {
-                subcommand = Some(command.clone());
-            }
+    // Check which subcomamnd the user ran...
+    let res = match matches.subcommand() {
+        ("init", Some(sub_matches))  => init(sub_matches),
+        ("build", Some(sub_matches)) => build(sub_matches),
+        ("watch", _)                 => unimplemented!(),
+        (_, _)                       => unreachable!()
+    };
+
+    if let Err(e) = res {
+        writeln!(&mut io::stderr(), "Error: {}", e).ok();
+    }
+}
+
+fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
+    let book_dir = get_book_dir(args);
+    let book = MDBook::new(&book_dir);
+
+    book.init()
+}
+
+fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
+    let book_dir = get_book_dir(args);
+    let mut book = MDBook::new(&book_dir);
+
+    book.build()
+}
+
+fn get_book_dir(args: &ArgMatches) -> PathBuf {
+    if let Some(dir) = args.value_of("dir") {
+        // Check if path is relative from current dir, or absolute...
+        let p = Path::new(dir);
+        if p.is_relative() {
+           env::current_dir().unwrap().join(dir)
+        } else {
+           p.to_path_buf()
         }
-    }
-
-    match subcommand {
-        None => no_subcommand(args),
-        Some(command) => (command.exec)(args),
-    }
-}
-
-
-fn no_subcommand(args: Vec<String>) {
-    let mut opts = getopts::Options::new();
-
-    opts.optflag("h", "help", "display this help and exit");
-    opts.optflag("", "version", "output version information and exit");
-
-    let usage = opts.usage("Create a book in form of a static website from markdown files");
-
-    let matches = match opts.parse(&args[1..]) {
-        Ok(m) => m,
-        Err(e) => {
-            println!("{}", e);
-            println!("Try `{} --help` for more information", NAME);
-            return;
-        },
-    };
-
-    if matches.opt_present("version") {
-        println!("{} {}", NAME, VERSION);
     } else {
-        if !matches.opt_present("version") && args.len() > 0 {
-            print!("Try again, `{0}", NAME);
-            for index in 1..args.len() {
-                print!(" {}", args[index]);
-            }
-            print!("` is not a valid command... ");
-            println!("\n");
-        }
-        help(&usage);
-    }
-}
-
-fn help(usage: &String) {
-
-    println!("{0} {1} \n", NAME, VERSION);
-    println!("Usage:");
-    println!("    {0} <command> [<args>...]\n    {0} [options]\n", NAME);
-    println!("{0}", usage);
-    println!("Commands:");
-    for subcommand in SUBCOMMANDS {
-        println!("    {0}               {1}", subcommand.name, subcommand.help);
-    }
-    println!("");
-    println!("For more information about a specific command, try `mdbook <command> --help`");
-}
-
-fn init(args: Vec<String>) {
-    let mut opts = getopts::Options::new();
-
-    opts.optflag("h", "help", "display this help and exit");
-
-    let usage = opts.usage("Creates a skeleton structure and some boilerplate files to start with");
-
-    let matches = match opts.parse(&args[1..]) {
-        Ok(m) => m,
-        Err(e) => {
-            println!("{}", e);
-            println!("Try `{} --help` for more information", NAME);
-            return;
-        },
-    };
-
-    if matches.opt_present("help") {
-        println!("{}", usage);
-        return;
-    }
-
-    let dir = if args.len() <= 2 {
-        std::env::current_dir().unwrap()
-    } else {
-        std::env::current_dir().unwrap().join(&args[2])
-    };
-
-    let book = MDBook::new(&dir);
-
-    if let Err(e) = book.init() {
-        println!("Error: {}", e);
-    }
-}
-
-fn build(args: Vec<String>) {
-    let mut opts = getopts::Options::new();
-
-    opts.optflag("h", "help", "display this help and exit");
-
-    let usage = opts.usage("Build the book from the markdown files");
-
-    let matches = match opts.parse(&args[1..]) {
-        Ok(m) => m,
-        Err(e) => {
-            println!("{}", e);
-            println!("Try `{} --help` for more information", NAME);
-            return;
-        },
-    };
-
-    if matches.opt_present("help") {
-        println!("{}", usage);
-    }
-
-    let dir = if args.len() <= 2 {
-        std::env::current_dir().unwrap()
-    } else {
-        std::env::current_dir().unwrap().join(&args[2])
-    };
-    
-    let mut book = MDBook::new(&dir);
-
-    if let Err(e) = book.build() {
-        println!("Error: {}", e);
-    }
-}
-
-fn watch(args: Vec<String>) {
-    let mut opts = getopts::Options::new();
-
-    opts.optflag("h", "help", "display this help and exit");
-
-    let usage = opts.usage("Watch the files for changes");
-
-    let matches = match opts.parse(&args[1..]) {
-        Ok(m) => m,
-        Err(e) => {
-            println!("{}", e);
-            println!("Try `{} --help` for more information", NAME);
-            return;
-        },
-    };
-
-    if matches.opt_present("help") {
-        println!("{}", usage);
+        env::current_dir().unwrap()
     }
 }
