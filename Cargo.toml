@@ -4,7 +4,7 @@ version = "0.0.1"
 authors = ["Mathieu David <mathieudavid@mathieudavid.org>"]
 
 [dependencies]
-getopts = "*"
+clap = "*"
 handlebars = "*"
 rustc-serialize = "*"
 pulldown-cmark = "*"
