@@ -55,6 +55,15 @@ html, body {
 }
 
 .page {
+    position: absolute;
+    top: 50px;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    overflow-y: auto;
+}
+
+.content {
     margin-left: auto;
     margin-right:auto;
     max-width: 750px;
@@ -126,10 +135,6 @@ pre {
     border-radius: 3px;
 }
 
-.nav-previous-next {
-    margin-top: 60px;
-}
-
 .left {
     float: left;
 }
@@ -140,11 +145,48 @@ pre {
 
 /* Content */
 
-.page a {
+.content a {
     color: #4183c4;
     text-decoration: none;
 }
 
-.page a:hover {
+.content a:hover {
     text-decoration: underline;
+}
+
+/* Nav icons */
+.nav-chapters {
+    color: #CCC;
+    font-size: 40px;
+    text-align: center;
+    text-decoration: none;
+
+    position: absolute;
+    top: 50px; /* Height of menu-bar */
+    bottom: 0;
+    margin: 0;
+    max-width: 150px;
+    min-width: 90px;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    flex-direction: column;
+
+    -webkit-transition: color 0.5s; /* Safari */
+    -o-transition: color 0.5s; /* Opera */
+    -moz-transition: color 0.5s; /* Mozilla Firefox */
+    transition: color 0.5s;
+}
+
+.nav-chapters:hover {
+    color: #333;
+    text-decoration: none;
+}
+
+.previous {
+    left: 0;
+}
+
+.next {
+    right: 0;
 }

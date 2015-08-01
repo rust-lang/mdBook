@@ -24,9 +24,26 @@
                 <h1 class="menu-title">{{ title }}</h1>
             </div>
 
-            <div id="page" class="page">
-                {{{ content }}}
+            <div class="page">
+                <div id="content" class="content">
+                    {{{ content }}}
+                </div>
             </div>
+
+            <!--
+                Doesn't seem to work: {{!#if (previous)}} using JavaScript
+                alternative until I find a way to do it in the template
+            -->
+                <a href="{{#previous}}{{/previous}}" class="nav-chapters previous">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+            <!-- {{!/if}} -->
+
+            <!-- {{!#if (next "")}} -->
+                <a href="{{#next}}{{/next}}" class="nav-chapters next">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            <!-- {{!/if}} -->
 
         </div>
 

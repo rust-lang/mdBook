@@ -24,8 +24,9 @@
                 <h1 class="menu-title"></h1>
             </div>
 
-            <div id="page" class="page">
-                <h1>mdBook</h1>
+            <div class="page">
+                <div id="content" class="content">
+                    <h1>mdBook</h1>
 <p><strong>mdBook</strong> is a command line tool and Rust library to create books using Markdown.
 It's very similar to Gitbook but written in <a href="http://www.rust-lang.org">Rust</a>.</p>
 <p>This book serves as an example of the output of mdBook and as the docs at the same time.</p>
@@ -34,7 +35,23 @@ Issues and feature requests can be posted on the <a href="https://github.com/aze
 <h2>License</h2>
 <p>mdBook, all the code and this book, are released under the <a href="https://www.mozilla.org/MPL/2.0/">Mozilla Public License v2.0</a></p>
 
+                </div>
             </div>
+
+            <!--
+                Doesn't seem to work:  using JavaScript
+                alternative until I find a way to do it in the template
+            -->
+                <a href="" class="nav-chapters previous">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+            <!--  -->
+
+            <!--  -->
+                <a href="cli/cli-tool.html" class="nav-chapters next">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            <!--  -->
 
         </div>
 

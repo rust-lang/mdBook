@@ -1,6 +1,6 @@
 use std::path::Path;
 use std::fs::{self, File, metadata};
-use std::io::{self, Write};
+use std::io::Write;
 use std::error::Error;
 
 use {BookConfig, BookItem};

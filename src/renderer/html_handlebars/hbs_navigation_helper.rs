@@ -23,7 +23,7 @@ pub fn previous(c: &Context, _h: &Helper, _: &Handlebars, rc: &mut RenderContext
     // Decode json format
     let decoded: Vec<BTreeMap<String,String>> = json::decode(&chapters.to_string()).unwrap();
 
-    let mut previous = PathBuf::new();
+    let mut previous = PathBuf::from("");
 
     for item in decoded {
 
@@ -56,8 +56,6 @@ pub fn next(c: &Context, _h: &Helper, _: &Handlebars, rc: &mut RenderContext) ->
     let current = c.navigate(rc.get_path(), "path").to_string().replace("\"", "");
     let path_to_root = c.navigate(rc.get_path(), "path_to_root").to_string().replace("\"", "");
 
-    try!(rc.writer.write(path_to_root.as_bytes()));
-
     // Decode json format
     let decoded: Vec<BTreeMap<String,String>> = json::decode(&chapters.to_string()).unwrap();
 
@@ -70,6 +68,7 @@ pub fn next(c: &Context, _h: &Helper, _: &Handlebars, rc: &mut RenderContext) ->
                 if is_current {
                     let mut next = PathBuf::from(path);
                     next.set_extension("html");
+                    try!(rc.writer.write(path_to_root.as_bytes()));
                     try!(rc.writer.write(next.to_str().unwrap().as_bytes()));
                     break;
                 } else if path == &current {

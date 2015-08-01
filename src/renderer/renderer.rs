@@ -1,4 +1,4 @@
-use book::{BookItem, BookItems};
+use book::BookItems;
 use book::BookConfig;
 
 use std::error::Error;
