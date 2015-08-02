@@ -56,7 +56,7 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
 
 fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::new(&book_dir);
+    let mut book = MDBook::new(&book_dir).read_config();
 
     book.build()
 }

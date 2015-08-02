@@ -111,6 +111,11 @@ impl MDBook {
 
 
     // Builder functions
+    pub fn read_config(mut self) -> Self {
+        self.config.read_config();
+        self
+    }
+
     pub fn set_dest(mut self, dest: &Path) -> Self {
         self.config.set_dest(dest);
         self

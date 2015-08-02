@@ -1,3 +1,7 @@
+extern crate rustc_serialize;
+use self::rustc_serialize::json::Json;
+use std::fs::File;
+use std::io::Read;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone)]
@@ -23,6 +27,26 @@ impl BookConfig {
         }
     }
 
+    pub fn read_config(&mut self) -> &mut Self {
+
+        // If the file does not exist, return early
+        let mut config_file = match File::open(self.src.join("book.json")) {
+            Ok(f) => f,
+            Err(_) => return self,
+        };
+
+        let mut data = String::new();
+        config_file.read_to_string(&mut data).unwrap();
+
+        // Convert to JSON
+        let config = Json::from_str(&data).unwrap();
+
+        // Extract data
+        if let Some(a) = config.find_path(&["title"]) { self.title = a.to_string().replace("\"", "") }
+
+        self
+    }
+
     pub fn dest(&self) -> &Path {
         &self.dest
     }
@@ -40,4 +64,5 @@ impl BookConfig {
         self.src = src.to_owned();
         self
     }
+
 }

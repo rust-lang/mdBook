@@ -109,11 +109,13 @@ html, body {
 }
 
 .menu-bar {
+    position: relative;
     height: 50px;
     color: #CCC;
 }
 
 .menu-bar i {
+    line-height: 50px;
     -webkit-transition: color 0.5s; /* Safari */
     -o-transition: color 0.5s; /* Opera */
     -moz-transition: color 0.5s; /* Mozilla Firefox */
@@ -123,6 +125,32 @@ html, body {
 .menu-bar :hover {
     /* Animate color change */
     color: #333;
+}
+
+.menu-title {
+    color: #7E7E7E;
+    display: inline-block;
+    font-weight: 200;
+    font-size: 20px;
+    line-height: 50px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    text-align: center;
+    margin: 0;
+
+    opacity: 0;
+    -webkit-transition: opacity 0.5s ease-in-out; /* Safari */
+    -o-transition: opacity 0.5s ease-in-out; /* Opera */
+    -moz-transition: opacity 0.5s ease-in-out; /* Mozilla Firefox */
+    transition: opacity 0.5s ease-in-out;
+}
+
+.menu-title:hover {
+    color: #7E7E7E;
+    opacity: 1;
 }
 
 pre {
