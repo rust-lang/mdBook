@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::fs::{self, File, metadata};
 use std::io::Write;
 use std::error::Error;
@@ -11,6 +11,7 @@ use renderer::HtmlHandlebars;
 
 pub struct MDBook {
     config: BookConfig,
+    root: PathBuf,
     pub content: Vec<BookItem>,
     renderer: Box<Renderer>,
 }
@@ -30,6 +31,7 @@ impl MDBook {
         }
 
         MDBook {
+            root: path.to_path_buf(),
             content: vec![],
             config: BookConfig::new()
                         .set_src(&path.join("src"))
@@ -120,7 +122,7 @@ impl MDBook {
 
     // Builder functions
     pub fn read_config(mut self) -> Self {
-        self.config.read_config();
+        self.config.read_config(&self.root);
         self
     }
 

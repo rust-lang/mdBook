@@ -27,15 +27,15 @@ impl BookConfig {
         }
     }
 
-    pub fn read_config(&mut self) -> &mut Self {
+    pub fn read_config(&mut self, root: &Path) -> &mut Self {
 
         debug!("[fn]: read_config");
 
         // If the file does not exist, return early
-        let mut config_file = match File::open(self.src.join("book.json")) {
+        let mut config_file = match File::open(root.join("book.json")) {
             Ok(f) => f,
             Err(_) => {
-                debug!("[*]: Failed to open {:?}", self.src.join("book.json"));
+                debug!("[*]: Failed to open {:?}", root.join("book.json"));
                 return self
             },
         };
