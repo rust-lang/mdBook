@@ -115,6 +115,8 @@ html, body {
 }
 
 .menu-bar i {
+    position: relative;
+    z-index: 10;
     line-height: 50px;
     -webkit-transition: color 0.5s; /* Safari */
     -o-transition: color 0.5s; /* Opera */
@@ -128,7 +130,6 @@ html, body {
 }
 
 .menu-title {
-    z-index: -999;
     color: #7E7E7E;
     display: inline-block;
     font-weight: 200;
@@ -149,7 +150,7 @@ html, body {
     transition: opacity 0.5s ease-in-out;
 }
 
-.menu-title:hover {
+.menu-bar:hover .menu-title {
     color: #7E7E7E;
     opacity: 1;
 }
