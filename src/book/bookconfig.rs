@@ -4,6 +4,8 @@ use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
+use utils;
+
 #[derive(Debug, Clone)]
 pub struct BookConfig {
     pub title: String,
@@ -42,7 +44,21 @@ impl BookConfig {
         let config = Json::from_str(&data).unwrap();
 
         // Extract data
+
+        // Title & author
         if let Some(a) = config.find_path(&["title"]) { self.title = a.to_string().replace("\"", "") }
+        if let Some(a) = config.find_path(&["author"]) { self.author = a.to_string().replace("\"", "") }
+
+        // Destination
+        if let Some(a) = config.find_path(&["dest"]) {
+            let dest = PathBuf::from(&a.to_string().replace("\"", ""));
+
+            // If path is relative make it absolute from the parent directory of src
+            if dest.is_relative() {
+                let dest = &self.src().parent().unwrap().join(&dest);
+                self.set_dest(dest);
+            }
+        }
 
         self
     }

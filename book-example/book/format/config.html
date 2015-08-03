@@ -14,7 +14,7 @@
     <body>
 
         <div id="sidebar" class="sidebar">
-            <ul class="chapter"><li><a href="../README.html"><strong>1.</strong> mdBook</a></li><li><a href="../cli/cli-tool.html"class="active"><strong>2.</strong> Command Line Tool</a></li><li><ul class="section"><li><a href="../cli/init.html"><strong>2.1.</strong> init</a></li><li><a href="../cli/build.html"><strong>2.2.</strong> build</a></li></ul><li><strong>3.</strong> Format</li><li><ul class="section"><li><strong>3.1.</strong> SUMMARY.md</li><li><a href="../format/config.html"><strong>3.2.</strong> Configuration</a></li></ul><li><strong>4.</strong> Rust Library</li></ul>
+            <ul class="chapter"><li><a href="../README.html"><strong>1.</strong> mdBook</a></li><li><a href="../cli/cli-tool.html"><strong>2.</strong> Command Line Tool</a></li><li><ul class="section"><li><a href="../cli/init.html"><strong>2.1.</strong> init</a></li><li><a href="../cli/build.html"><strong>2.2.</strong> build</a></li></ul><li><strong>3.</strong> Format</li><li><ul class="section"><li><strong>3.1.</strong> SUMMARY.md</li><li><a href="../format/config.html"class="active"><strong>3.2.</strong> Configuration</a></li></ul><li><strong>4.</strong> Rust Library</li></ul>
         </div>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -26,9 +26,20 @@
                 </div>
                 
                 <div id="content" class="content">
-                    <h1>Command Line Tool</h1>
-<p>mdBook can be used either as a command line tool or a Rust library.
-Let's focus on the command line tool capabilities first.</p>
+                    <h1>Configuration</h1>
+<p>You can configure the parameters for your book in the <code>book.json</code> file.</p>
+<p>Here is an example of what a <code>book.json</code> file might look like:</p>
+<pre><code>{
+    &quot;title&quot;: &quot;Example book&quot;,
+    &quot;author&quot;: &quot;Name&quot;,
+}
+</code></pre>
+<h4>Supported variables</h4>
+<ul>
+<li><strong>title:</strong> title of the book</li>
+<li><strong>author:</strong> author of the book</li>
+<li><strong>dest:</strong> path to the directory where you want your book to be rendered. If a relative path is given it will be relative to the parent directory of <code>src</code></li>
+</ul>
 
                 </div>
             </div>
@@ -37,13 +48,13 @@ Let's focus on the command line tool capabilities first.</p>
                 Doesn't seem to work:  using JavaScript
                 alternative until I find a way to do it in the template
             -->
-                <a href="../README.html" class="nav-chapters previous">
+                <a href="../cli/build.html" class="nav-chapters previous">
                     <i class="fa fa-angle-left"></i>
                 </a>
             <!--  -->
 
             <!--  -->
-                <a href="../cli/init.html" class="nav-chapters next">
+                <a href="" class="nav-chapters next">
                     <i class="fa fa-angle-right"></i>
                 </a>
             <!--  -->

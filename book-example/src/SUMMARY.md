@@ -6,4 +6,5 @@
     - [build](cli/build.md)
 - [Format]()
     - [SUMMARY.md]()
+    - [Configuration](format/config.md)
 - [Rust Library]()

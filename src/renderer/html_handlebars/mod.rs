@@ -40,6 +40,12 @@ impl Renderer for HtmlHandlebars {
 
         let mut data = try!(make_data(book.clone(), config));
 
+        // Check if dest directory exists
+        match utils::path::create_path(config.dest()) {
+            Err(_) => return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Unexcpected error when constructing destination path"))),
+            _ => {},
+        };
+
         // Render a file for every entry in the book
         let mut index = true;
         for (_, item) in book {
@@ -71,6 +77,7 @@ impl Renderer for HtmlHandlebars {
                 // Rendere the handlebars template with the data
                 let rendered = try!(handlebars.render("index", &data));
 
+                println!("Write file...");
                 // Write to file
                 let mut file = try!(create_file(config.dest(), &item.path));
                 try!(file.write_all(&rendered.into_bytes()));
@@ -121,6 +128,8 @@ impl HtmlHandlebars {
 
 fn create_file(working_directory: &Path, path: &Path) -> Result<File, Box<Error>> {
 
+    println!("[fn]: create_file");
+
     // Extract filename
     let mut file_name;
     if let Some(name) = path.file_stem() {
@@ -157,6 +166,7 @@ fn create_file(working_directory: &Path, path: &Path) -> Result<File, Box<Error>
                 if !f.is_dir() {
                     try!(fs::create_dir(&constructed_path))
                 } else {
+                    println!("[*]: {:?} --> exists", constructed_path);
                     continue
                 }
             },
