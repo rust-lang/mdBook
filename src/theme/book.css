@@ -128,6 +128,7 @@ html, body {
 }
 
 .menu-title {
+    z-index: -999;
     color: #7E7E7E;
     display: inline-block;
     font-weight: 200;
