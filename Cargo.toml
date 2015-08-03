@@ -8,3 +8,6 @@ clap = "*"
 handlebars = "*"
 rustc-serialize = "*"
 pulldown-cmark = "*"
+
+[features]
+debug = []

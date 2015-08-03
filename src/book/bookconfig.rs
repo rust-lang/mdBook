@@ -4,8 +4,6 @@ use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
-use utils;
-
 #[derive(Debug, Clone)]
 pub struct BookConfig {
     pub title: String,
@@ -31,12 +29,18 @@ impl BookConfig {
 
     pub fn read_config(&mut self) -> &mut Self {
 
+        debug!("[fn]: read_config");
+
         // If the file does not exist, return early
         let mut config_file = match File::open(self.src.join("book.json")) {
             Ok(f) => f,
-            Err(_) => return self,
+            Err(_) => {
+                debug!("[*]: Failed to open {:?}", self.src.join("book.json"));
+                return self
+            },
         };
 
+        debug!("[*]: Reading config");
         let mut data = String::new();
         config_file.read_to_string(&mut data).unwrap();
 
@@ -45,6 +49,7 @@ impl BookConfig {
 
         // Extract data
 
+        debug!("[*]: Extracting data from config");
         // Title & author
         if let Some(a) = config.find_path(&["title"]) { self.title = a.to_string().replace("\"", "") }
         if let Some(a) = config.find_path(&["author"]) { self.author = a.to_string().replace("\"", "") }

@@ -24,16 +24,18 @@ pub struct HtmlHandlebars;
 
 impl Renderer for HtmlHandlebars {
     fn render(&self, book: BookItems, config: &BookConfig) -> Result<(), Box<Error>> {
-
+        debug!("[fn]: render");
         let mut handlebars = Handlebars::new();
 
         // Load template
         let t = theme::get_index_hbs();
 
         // Register template
+        debug!("[*]: Register handlebars template");
         try!(handlebars.register_template_string("index", t.to_owned()));
 
         // Register helpers
+        debug!("[*]: Register handlebars helpers");
         handlebars.register_helper("toc", Box::new(RenderToc));
         handlebars.register_helper("previous", Box::new(hbs_navigation_helper::previous));
         handlebars.register_helper("next", Box::new(hbs_navigation_helper::next));
@@ -41,6 +43,7 @@ impl Renderer for HtmlHandlebars {
         let mut data = try!(make_data(book.clone(), config));
 
         // Check if dest directory exists
+        debug!("[*]: Check if destination directory exists");
         match utils::path::create_path(config.dest()) {
             Err(_) => return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Unexcpected error when constructing destination path"))),
             _ => {},
@@ -54,9 +57,11 @@ impl Renderer for HtmlHandlebars {
 
                 let path = config.src().join(&item.path);
 
+                debug!("[*]: Opening file: {:?}", path);
                 let mut f = try!(File::open(&path));
                 let mut content: String = String::new();
 
+                debug!("[*]: Reading file");
                 try!(f.read_to_string(&mut content));
 
                 // Render markdown using the pulldown-cmark crate
@@ -75,25 +80,26 @@ impl Renderer for HtmlHandlebars {
                 data.insert("path_to_root".to_string(), utils::path::path_to_root(&item.path).to_json());
 
                 // Rendere the handlebars template with the data
+                debug!("[*]: Render template");
                 let rendered = try!(handlebars.render("index", &data));
 
-                println!("Write file...");
+                debug!("[*] Write to file");
                 // Write to file
                 let mut file = try!(create_file(config.dest(), &item.path));
                 try!(file.write_all(&rendered.into_bytes()));
 
                 // Create an index.html from the first element in SUMMARY.md
                 if index {
-                    print!(
-                        "Creating index.html from {:?}",
-                        config.dest().join(&item.path.with_extension("html"))
-                        );
-
+                    debug!("[*] index.html");
                     try!(fs::copy(
                         config.dest().join(&item.path.with_extension("html")),
                         config.dest().join("index.html")
                     ));
-                    println!(" ✓");
+
+                    println!(
+                        "[*] Creating index.html from {:?} ✓",
+                        config.dest().join(&item.path.with_extension("html"))
+                        );
                     index = false;
                 }
             }
@@ -101,6 +107,7 @@ impl Renderer for HtmlHandlebars {
 
         // Copy static files (js, css, images, ...)
 
+        debug!("[*] Copy static files");
         // JavaScript
         let mut js_file = try!(File::create(config.dest().join("book.js")));
         try!(js_file.write_all(theme::get_js()));
@@ -118,18 +125,19 @@ impl HtmlHandlebars {
         HtmlHandlebars
     }
 
-    fn _load_template(&self, path: &Path) -> Result<String, Box<Error>> {
+    /*fn _load_template(&self, path: &Path) -> Result<String, Box<Error>> {
         let mut file = try!(File::open(path));
         let mut s = String::new();
         try!(file.read_to_string(&mut s));
         Ok(s)
-    }
+    }*/
 }
 
 fn create_file(working_directory: &Path, path: &Path) -> Result<File, Box<Error>> {
 
-    println!("[fn]: create_file");
+    debug!("[fn]: create_file");
 
+    debug!("[*]: extract filename");
     // Extract filename
     let mut file_name;
     if let Some(name) = path.file_stem() {
@@ -160,31 +168,33 @@ fn create_file(working_directory: &Path, path: &Path) -> Result<File, Box<Error>
         match metadata(&constructed_path) {
             // Any way to combine the Err and first Ok branch ??
             Err(_) => {
+                debug!("[*]: Create {:?}", constructed_path);
                 try!(fs::create_dir(&constructed_path))
             },
             Ok(f) => {
                 if !f.is_dir() {
+                    debug!("[*]: Create {:?}", constructed_path);
                     try!(fs::create_dir(&constructed_path))
                 } else {
-                    println!("[*]: {:?} --> exists", constructed_path);
+                    debug!("[*]: Directory exists: {:?}", constructed_path);
                     continue
                 }
             },
         }
 
     }
-
-    print!("Create file: {:?}", constructed_path.join(&file_name));
+    debug!("[*]: Create {:?}", constructed_path.join(&file_name));
     let file = try!(File::create(
         constructed_path.join(&file_name)
     ));
-    println!(" ✓");
+    println!("[*] Create file: {:?} ✓", constructed_path.join(&file_name));
 
     Ok(file)
 }
 
 
 fn make_data(book: BookItems, config: &BookConfig) -> Result<BTreeMap<String,Json>, Box<Error>> {
+    debug!("[fn]: make_data");
 
     let mut data  = BTreeMap::new();
     data.insert("language".to_string(), "en".to_json());
@@ -203,6 +213,7 @@ fn make_data(book: BookItems, config: &BookConfig) -> Result<BTreeMap<String,Jso
 
     data.insert("chapters".to_string(), chapters.to_json());
 
+    debug!("[*]: JSON constructed");
     Ok(data)
 }
 

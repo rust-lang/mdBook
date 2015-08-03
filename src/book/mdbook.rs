@@ -49,6 +49,8 @@ impl MDBook {
 
     pub fn init(&self) -> Result<(), Box<Error>> {
 
+        debug!("[fn]: init");
+
         let dest = self.config.dest();
         let src = self.config.src();
 
@@ -57,6 +59,7 @@ impl MDBook {
             Err(_) => {
                 // There is a very high chance that the error is due to the fact that
                 // the directory / file does not exist
+                debug!("[*]: {:?} does not exist, trying to create directory", dest);
                 fs::create_dir(&dest).unwrap();
             },
             Ok(_) => { /* If there is no error, the directory / file does exist */ }
@@ -67,6 +70,7 @@ impl MDBook {
             Err(_) => {
                 // There is a very high chance that the error is due to the fact that
                 // the directory / file does not exist
+                debug!("[*]: {:?} does not exist, trying to create directory", src);
                 fs::create_dir(&src).unwrap();
             },
             Ok(_) => { /* If there is no error, the directory / file does exist */ }
@@ -77,6 +81,7 @@ impl MDBook {
             Err(_) => {
                 // There is a very high chance that the error is due to the fact that
                 // the directory / file does not exist
+                debug!("[*]: {:?} does not exist, trying to create SUMMARY.md", src.join("SUMMARY.md"));
                 Ok(File::create(&src.join("SUMMARY.md")).unwrap())
             },
             Ok(_) => {
@@ -86,6 +91,8 @@ impl MDBook {
         };
 
         if let Ok(mut f) = summary {
+            debug!("[*]: Writing to SUMMARY.md");
+
             try!(writeln!(f, "# Summary"));
             try!(writeln!(f, ""));
             try!(writeln!(f, "- [Chapter 1](./chapter_1.md)"));
@@ -98,6 +105,7 @@ impl MDBook {
     }
 
     pub fn build(&mut self) -> Result<(), Box<Error>> {
+        debug!("[fn]: build");
 
         try!(self.parse_summary());
 

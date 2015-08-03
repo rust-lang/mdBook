@@ -14,18 +14,18 @@ pub enum LineType {
 */
 
 pub fn construct_bookitems(path: &PathBuf) -> Result<Vec<BookItem>> {
+    debug!("[fn]: construct_bookitems");
     let mut summary = String::new();
     try!(try!(File::open(path)).read_to_string(&mut summary));
 
+    debug!("[*]: Parse SUMMARY.md");
     let top_items = try!(parse_level(&mut summary.split('\n').collect(), 0));
-
-
 
     Ok(top_items)
 }
 
 fn parse_level(summary: &mut Vec<&str>, current_level: i32) -> Result<Vec<BookItem>> {
-
+    debug!("[fn]: parse_level");
     let mut items: Vec<BookItem> = vec![];
 
     loop {
@@ -50,6 +50,7 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32) -> Result<Vec<BookIt
 }
 
 fn level(line: &str, spaces_in_tab: i32) -> Result<i32> {
+    debug!("[fn]: level");
     let mut spaces = 0;
     let mut level = 0;
 
@@ -67,9 +68,12 @@ fn level(line: &str, spaces_in_tab: i32) -> Result<i32> {
 
     // If there are spaces left, there is an indentation error
     if spaces > 0 {
+        debug!("[SUMMARY.md]:");
+        debug!("\t[line]: {}", line);
+        debug!("[*]: There is an indentation error on this line. Indentation should be {} spaces", spaces_in_tab);
         return Err(Error::new(
             ErrorKind::Other,
-            format!("There is an indentation error on line:\n\n{}", line)
+            format!("Indentation error on line:\n\n{}", line)
             )
         )
     }
@@ -79,6 +83,7 @@ fn level(line: &str, spaces_in_tab: i32) -> Result<i32> {
 
 
 fn parse_line(l: &str) -> Option<BookItem> {
+    debug!("[fn]: parse_line");
     let mut name;
     let mut path;
     // Remove leading and trailing spaces or tabs
@@ -88,18 +93,25 @@ fn parse_line(l: &str) -> Option<BookItem> {
         match c {
             // List item
             '-' | '*' => {
+                debug!("[*]: Line is list element");
                 let mut start_delimitor;
                 let mut end_delimitor;
 
                 // In the future, support for list item that is not a link
                 // Not sure if I should error on line I can't parse or just ignore them...
                 if let Some(i) = line.find('[') { start_delimitor = i; }
-                else { return None }
+                else {
+                    debug!("[*]: '[' not found, this line is not a link. Ignoring...");
+                    return None
+                }
 
                 if let Some(i) = line[start_delimitor..].find("](") {
                     end_delimitor = start_delimitor +i;
                 }
-                else { return None }
+                else {
+                    debug!("[*]: '](' not found, this line is not a link. Ignoring...");
+                    return None
+                }
 
                 name = line[start_delimitor + 1 .. end_delimitor].to_string();
 
@@ -107,7 +119,10 @@ fn parse_line(l: &str) -> Option<BookItem> {
                 if let Some(i) = line[start_delimitor..].find(')') {
                     end_delimitor = start_delimitor + i;
                 }
-                else { return None }
+                else {
+                    debug!("[*]: ')' not found, this line is not a link. Ignoring...");
+                    return None
+                }
 
                 path = PathBuf::from(line[start_delimitor + 1 .. end_delimitor].to_string());
 
