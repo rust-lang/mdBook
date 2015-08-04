@@ -24,7 +24,7 @@
                     <i id="sidebar-toggle" class="fa fa-bars left"></i>
                     <h1 class="menu-title">{{ title }}</h1>
                 </div>
-                
+
                 <div id="content" class="content">
                     {{{ content }}}
                 </div>
@@ -34,15 +34,19 @@
                 Doesn't seem to work: {{!#if (previous)}} using JavaScript
                 alternative until I find a way to do it in the template
             -->
-                <a href="{{#previous}}{{/previous}}" class="nav-chapters previous">
+            {{#previous}}
+                <a href="{{link}}" class="nav-chapters previous">
                     <i class="fa fa-angle-left"></i>
                 </a>
+            {{/previous}}
             <!-- {{!/if}} -->
 
             <!-- {{!#if (next "")}} -->
-                <a href="{{#next}}{{/next}}" class="nav-chapters next">
+            {{#next}}
+                <a href="{{link}}" class="nav-chapters next">
                     <i class="fa fa-angle-right"></i>
                 </a>
+            {{/next}}
             <!-- {{!/if}} -->
 
         </div>
