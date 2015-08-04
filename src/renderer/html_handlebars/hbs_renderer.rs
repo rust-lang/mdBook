@@ -2,10 +2,10 @@ extern crate handlebars;
 extern crate rustc_serialize;
 extern crate pulldown_cmark;
 
-use renderer::html_handlebars::helpers;
+use renderer::html_handlebars::{helpers, theme};
 use renderer::Renderer;
 use book::{BookItems, BookConfig};
-use {theme, utils};
+use utils;
 
 use std::path::PathBuf;
 use std::fs::{self, File};
@@ -30,12 +30,12 @@ impl Renderer for HtmlHandlebars {
         debug!("[fn]: render");
         let mut handlebars = Handlebars::new();
 
-        // Load template
-        let t = theme::get_index_hbs();
+        // Load theme
+        let theme = theme::Theme::new(&config.src());
 
         // Register template
         debug!("[*]: Register handlebars template");
-        try!(handlebars.register_template_string("index", t.to_owned()));
+        try!(handlebars.register_template_string("index", theme.index.to_owned()));
 
         // Register helpers
         debug!("[*]: Register handlebars helpers");
@@ -115,11 +115,11 @@ impl Renderer for HtmlHandlebars {
         debug!("[*] Copy static files");
         // JavaScript
         let mut js_file = try!(File::create(config.dest().join("book.js")));
-        try!(js_file.write_all(theme::get_js()));
+        try!(js_file.write_all(&theme.js));
 
         // Css
         let mut css_file = try!(File::create(config.dest().join("book.css")));
-        try!(css_file.write_all(theme::get_css()));
+        try!(css_file.write_all(&theme.css));
 
         Ok(())
     }
