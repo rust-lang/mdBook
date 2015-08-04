@@ -126,6 +126,11 @@ impl MDBook {
         self
     }
 
+    pub fn set_renderer(mut self, renderer: Box<Renderer>) -> Self {
+        self.renderer = renderer;
+        self
+    }
+
     pub fn set_dest(mut self, dest: &Path) -> Self {
         self.config.set_dest(dest);
         self
