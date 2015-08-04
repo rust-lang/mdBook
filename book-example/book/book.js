@@ -14,13 +14,4 @@ $( document ).ready(function() {
         }
     });
 
-
-    // Hide navigation icons when there is no next or previous link
-    // JavaScript Solution until I find a way to do this in the template
-    $(".nav-chapters").each(function(){
-        if(!$(this).attr('href')){
-            this.remove();
-        }
-    });
-
 });

@@ -42,9 +42,11 @@
             <!-- {{!/if}} -->
 
             <!-- {{!#if (next "")}} -->
-                <a href="{{#next}}{{/next}}" class="nav-chapters next">
+            {{#next}}
+                <a href="{{link}}" class="nav-chapters next">
                     <i class="fa fa-angle-right"></i>
                 </a>
+            {{/next}}
             <!-- {{!/if}} -->
 
         </div>
