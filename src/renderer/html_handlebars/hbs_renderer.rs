@@ -7,8 +7,8 @@ use renderer::Renderer;
 use book::{BookItems, BookConfig};
 use {theme, utils};
 
-use std::path::{Path, PathBuf, Component};
-use std::fs::{self, File, metadata};
+use std::path::PathBuf;
+use std::fs::{self, File};
 use std::error::Error;
 use std::io::{self, Read, Write};
 use std::collections::BTreeMap;
@@ -86,20 +86,22 @@ impl Renderer for HtmlHandlebars {
                 debug!("[*]: Render template");
                 let rendered = try!(handlebars.render("index", &data));
 
-                debug!("[*] Write to file");
+                debug!("[*]: Create file {:?}", &config.dest().join(&item.path).with_extension("html"));
                 // Write to file
                 let mut file = try!(utils::path::create_file(&config.dest().join(&item.path).with_extension("html")));
+                output!("[*] Creating {:?} ✓", &config.dest().join(&item.path).with_extension("html"));
+
                 try!(file.write_all(&rendered.into_bytes()));
 
                 // Create an index.html from the first element in SUMMARY.md
                 if index {
-                    debug!("[*] index.html");
+                    debug!("[*]: index.html");
                     try!(fs::copy(
                         config.dest().join(&item.path.with_extension("html")),
                         config.dest().join("index.html")
                     ));
 
-                    println!(
+                    output!(
                         "[*] Creating index.html from {:?} ✓",
                         config.dest().join(&item.path.with_extension("html"))
                         );

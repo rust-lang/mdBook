@@ -10,4 +10,6 @@ rustc-serialize = "*"
 pulldown-cmark = "*"
 
 [features]
+default = ["output"]
 debug = []
+output = []
