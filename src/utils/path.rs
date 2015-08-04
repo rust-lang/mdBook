@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf, Component};
 use std::error::Error;
-use std::fs::{self, metadata};
+use std::fs::{self, metadata, File};
 
 pub fn path_to_root(path: &Path) -> String {
     debug!("[fn]: path_to_root");
@@ -17,7 +17,6 @@ pub fn path_to_root(path: &Path) -> String {
             s
         })
 }
-
 
 pub fn create_path(path: &Path) -> Result<(), Box<Error>> {
     debug!("[fn]: create_path");
@@ -64,4 +63,18 @@ pub fn create_path(path: &Path) -> Result<(), Box<Error>> {
     debug!("[*]: Constructed path: {:?}", constructed_path);
 
     Ok(())
+}
+
+pub fn create_file(path: &Path) -> Result<File, Box<Error>> {
+    debug!("[fn]: create_file");
+
+    // Construct path
+    if let Some(p) = path.parent() {
+        try!(create_path(p));
+    }
+
+    debug!("[*]: Create file: {}", path);
+    let f = try!(File::create(path));
+
+    Ok(f)
 }

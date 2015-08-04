@@ -19,6 +19,12 @@ use self::pulldown_cmark::{Parser, html};
 
 pub struct HtmlHandlebars;
 
+impl HtmlHandlebars {
+    pub fn new() -> Self {
+        HtmlHandlebars
+    }
+}
+
 impl Renderer for HtmlHandlebars {
     fn render(&self, book: BookItems, config: &BookConfig) -> Result<(), Box<Error>> {
         debug!("[fn]: render");
@@ -82,7 +88,7 @@ impl Renderer for HtmlHandlebars {
 
                 debug!("[*] Write to file");
                 // Write to file
-                let mut file = try!(create_file(config.dest(), &item.path));
+                let mut file = try!(utils::path::create_file(&config.dest().join(&item.path).with_extension("html")));
                 try!(file.write_all(&rendered.into_bytes()));
 
                 // Create an index.html from the first element in SUMMARY.md
@@ -116,79 +122,6 @@ impl Renderer for HtmlHandlebars {
         Ok(())
     }
 }
-
-impl HtmlHandlebars {
-    pub fn new() -> Self {
-        HtmlHandlebars
-    }
-
-    /*fn _load_template(&self, path: &Path) -> Result<String, Box<Error>> {
-        let mut file = try!(File::open(path));
-        let mut s = String::new();
-        try!(file.read_to_string(&mut s));
-        Ok(s)
-    }*/
-}
-
-fn create_file(working_directory: &Path, path: &Path) -> Result<File, Box<Error>> {
-
-    debug!("[fn]: create_file");
-
-    debug!("[*]: extract filename");
-    // Extract filename
-    let mut file_name;
-    if let Some(name) = path.file_stem() {
-        file_name = String::from(name.to_str().unwrap());
-    }
-    else { return Err(Box::new(io::Error::new(io::ErrorKind::Other, "No filename"))) }
-
-    file_name.push_str(".html");
-
-    // Delete filename from path
-    let mut path = path.to_path_buf();
-    path.pop();
-
-    // Create directories if they do not exist
-    let mut constructed_path = PathBuf::from(working_directory);
-
-    for component in path.components() {
-
-        let mut dir;
-        match component {
-            Component::Normal(_) => { dir = PathBuf::from(component.as_os_str()); },
-            _ => continue,
-        }
-
-        constructed_path.push(&dir);
-
-        // Check if path exists
-        match metadata(&constructed_path) {
-            // Any way to combine the Err and first Ok branch ??
-            Err(_) => {
-                debug!("[*]: Create {:?}", constructed_path);
-                try!(fs::create_dir(&constructed_path))
-            },
-            Ok(f) => {
-                if !f.is_dir() {
-                    debug!("[*]: Create {:?}", constructed_path);
-                    try!(fs::create_dir(&constructed_path))
-                } else {
-                    debug!("[*]: Directory exists: {:?}", constructed_path);
-                    continue
-                }
-            },
-        }
-
-    }
-    debug!("[*]: Create {:?}", constructed_path.join(&file_name));
-    let file = try!(File::create(
-        constructed_path.join(&file_name)
-    ));
-    println!("[*] Create file: {:?} ✓", constructed_path.join(&file_name));
-
-    Ok(file)
-}
-
 
 fn make_data(book: BookItems, config: &BookConfig) -> Result<BTreeMap<String,Json>, Box<Error>> {
     debug!("[fn]: make_data");
