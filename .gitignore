@@ -2,3 +2,4 @@ target
 Cargo.lock
 
 book-test
+book-example/book
