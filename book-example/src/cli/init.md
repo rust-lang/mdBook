@@ -25,7 +25,7 @@ The `book` directory is where your book is rendered. All the output is ready to 
 to a serer to be seen by the internet.
 
 The `SUMMARY.md` file is the most important file, it's the skeleton of your book.
-It's so important that it has it's own [chapter]().
+It's so important that it has it's own [chapter](../format/summary.html).
 
 #### Specify a directory
 

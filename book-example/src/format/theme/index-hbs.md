@@ -1,40 +1,12 @@
-# Theme
+# index.hbs
 
-The default renderer uses a [handlebars](http://handlebarsjs.com/) template to render your markdown files in and comes with a default theme
-included in the mdBook binary.
+`index.hbs` is the handlebars template that is used to render the book.
+The markdown files are processed to html and then injected in that template.
 
-But the theme is totally customizable, you can replace every file from the theme by your own by adding a
-`theme` directory in your source folder. Create a new file with the name of the file you want to overwrite
-and now that file will be used instead of the default file.
+If you want to change the layout or style of your book, chances are that you will
+have to modify this template a little bit. Here is what you need to know.
 
-Here are the files you can overwrite:
-
-- ***index.hbs*** is the handlebars template.
-- ***book.css*** is the style used in the output. If you want to change the design of your book, this is probably the file you want to modify. Sometimes in conjunction with `index.hbs` when you want to radically change the layout.
-- ***book.js*** is mostly used to add client side functionality.
-
-**Note:**
-
-When you overwrite a file, it is possible that you break some functionality. Therefore I recommend to use the file from the default theme as template and only add / modify what you need. In the future you will be able to copy the default theme into your source directory automatically by using `mdbook init --theme`.
-
-### Syntax Highlighting
-
-For syntax highlighting I use [Highlight.js](https://highlightjs.org) with modified theme.
-But if you want a different theme, just put a `highlight.css` file in your theme folder and your theme will be used.
-
-- ***highlight.js*** normally you shouldn't have to overwrite this file. But if you need to, you can.
-- ***highlight.css*** theme used by highlight.js for syntax highlighting.
-
-When write code blocks in your markdown you will probably want to specify the language you use
-
-```markdown
-```rust
-```
-
-
-## Handlebars
-
-### Data
+## Data
 
 A lot of data is exposed to the handlebars template with the "context".
 In the handlebars template you can access this information by using
@@ -60,7 +32,7 @@ Since the original directory structure is maintained, it is useful to prepend re
   ```
   containing all the chapters of the book. It is used for example to construct the table of contents (sidebar).
 
-### Helpers
+## Handlebars Helpers
 
 In addition to the properties you can access, there are some handlebars helpers at your disposal.
 

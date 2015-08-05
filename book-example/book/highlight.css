@@ -13,6 +13,7 @@
 /* Inline code */
 :not(pre) > .hljs {
     display: inline-block;
+    vertical-align: middle;
     padding: 0.1em 0.3em;
     border-radius: 3px;
 }
@@ -61,7 +62,6 @@
 .hljs-string,
 .hljs-value,
 .hljs-inheritance,
-.hljs-header,
 .ruby .hljs-symbol,
 .xml .hljs-cdata {
   color: #2a9292;
@@ -99,4 +99,17 @@
 .xml .css,
 .xml .hljs-cdata {
   opacity: 0.5;
+}
+
+/* markdown */
+.hljs-header {
+    color: #A30000;
+}
+
+.hljs-link_label {
+    color: #33CCCC;
+}
+
+.hljs-link_url {
+    color: #CC66FF;
 }

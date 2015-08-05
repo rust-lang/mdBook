@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>mdBook Documentation</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="{% block description %}{% endblock %}">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="stylesheet" href="../../book.css" media="screen" title="no title" charset="utf-8">
+        <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="../../highlight.css" media="screen" title="no title" charset="utf-8">
+    </head>
+    <body>
+
+        <div id="sidebar" class="sidebar">
+            <ul class="chapter"><li><a href="../../README.html"><strong>1.</strong> mdBook</a></li><li><a href="../../cli/cli-tool.html"><strong>2.</strong> Command Line Tool</a></li><li><ul class="section"><li><a href="../../cli/init.html"><strong>2.1.</strong> init</a></li><li><a href="../../cli/build.html"><strong>2.2.</strong> build</a></li></ul><li><a href="../../format/format.html"><strong>3.</strong> Format</a></li><li><ul class="section"><li><a href="../../format/summary.html"><strong>3.1.</strong> SUMMARY.md</a></li><li><a href="../../format/config.html"><strong>3.2.</strong> Configuration</a></li><li><a href="../../format/theme/theme.html"><strong>3.3.</strong> Theme</a></li><li><ul class="section"><li><a href="../../format/theme/index-hbs.html"><strong>3.3.1.</strong> index.hbs</a></li><li><a href="../../format/theme/syntax-highlighting.html"class="active"><strong>3.3.2.</strong> Syntax highlighting</a></li></ul><li><strong>4.</strong> Rust Library</li></ul>
+        </div>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar" class="menu-bar">
+                    <i id="sidebar-toggle" class="fa fa-bars left"></i>
+                    <h1 class="menu-title">mdBook Documentation</h1>
+                </div>
+
+                <div id="content" class="content">
+                    <h1>Syntax Highlighting</h1>
+<p>For syntax highlighting I use <a href="https://highlightjs.org">Highlight.js</a> with a custom theme.</p>
+<p>Automatic language detection has been turned off, so you will probably want to
+specify the programming language you use like this</p>
+<pre class="language-markdown"><code class="language-markdown">```rust
+fn main() {
+    // Some code
+}
+```</code></pre>
+<h2>Improve default theme</h2>
+<p>If you think the default theme doesn't look quite right for a specific language, or could be improved.
+Feel free to <a href="https://github.com/azerupi/mdBook/issues">submit a new issue</a> explaining what you have in mind and I will take a look at it.</p>
+<p>You could also create a pull-request with the proposed improvements.</p>
+<p>Overall the theme should be light and sober, without to many flashy colors.</p>
+<h2>Custom theme</h2>
+<p>Like the rest of the theme, the files used for syntax highlighting can be overwritten with your own.</p>
+<ul>
+<li><strong><em>highlight.js</em></strong> normally you shouldn't have to overwrite this file. But if you need to, you can.</li>
+<li><strong><em>highlight.css</em></strong> theme used by highlight.js for syntax highlighting.</li>
+</ul>
+<p>If you want to use another theme for <code>highlight.js</code> download it from their website, or make it yourself,
+rename it to <code>highlight.css</code> and put it in <code>src/theme</code> (or the equivalent if you changed your source folder)</p>
+<p>Now your theme will be used instead of the default theme.</p>
+
+                </div>
+            </div>
+
+            <!--
+                Doesn't seem to work:  using JavaScript
+                alternative until I find a way to do it in the template
+            -->
+            
+                <a href="../../format/theme/index-hbs.html" class="nav-chapters previous">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+            
+            <!--  -->
+
+            <!--  -->
+            
+            <!--  -->
+
+        </div>
+
+        <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script src="../../highlight.js"></script>
+        <script src="../../book.js"></script>
+    </body>
+</html>

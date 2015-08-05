@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>mdBook Documentation</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="{% block description %}{% endblock %}">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="stylesheet" href="../book.css" media="screen" title="no title" charset="utf-8">
+        <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="../highlight.css" media="screen" title="no title" charset="utf-8">
+    </head>
+    <body>
+
+        <div id="sidebar" class="sidebar">
+            <ul class="chapter"><li><a href="../README.html"><strong>1.</strong> mdBook</a></li><li><a href="../cli/cli-tool.html"><strong>2.</strong> Command Line Tool</a></li><li><ul class="section"><li><a href="../cli/init.html"><strong>2.1.</strong> init</a></li><li><a href="../cli/build.html"><strong>2.2.</strong> build</a></li></ul><li><a href="../format/format.html"><strong>3.</strong> Format</a></li><li><ul class="section"><li><a href="../format/summary.html"class="active"><strong>3.1.</strong> SUMMARY.md</a></li><li><a href="../format/config.html"><strong>3.2.</strong> Configuration</a></li><li><a href="../format/theme/theme.html"><strong>3.3.</strong> Theme</a></li><li><ul class="section"><li><a href="../format/theme/index-hbs.html"><strong>3.3.1.</strong> index.hbs</a></li><li><a href="../format/theme/syntax-highlighting.html"><strong>3.3.2.</strong> Syntax highlighting</a></li></ul><li><strong>4.</strong> Rust Library</li></ul>
+        </div>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar" class="menu-bar">
+                    <i id="sidebar-toggle" class="fa fa-bars left"></i>
+                    <h1 class="menu-title">mdBook Documentation</h1>
+                </div>
+
+                <div id="content" class="content">
+                    <h1>SUMMARY.md</h1>
+<p>The summary file is used by mdBook to know what chapters to include,
+in what order they should appear, what their hierarchy is and where the source files are.
+Without this file, there is no book.</p>
+<p>Even though <code>SUMMARY.md</code> is a markdown file, the formatting is very strict to
+allow for easy parsing. Let's see how you should format your <code>SUMMARY.md</code> file.</p>
+<h4>Allowed elements</h4>
+<ol>
+<li>
+<p><strong><em>Title</em></strong> It's common practice to begin with a title, generally
+<code class="language-markdown"># Summary</code>.
+But it is not mandatory, the parser just ignores it. So you can too
+if you feel like it.</p>
+</li>
+<li>
+<p><strong><em>list link</em></strong> the other elements have to be list elements in form of a link</p>
+<pre><code class="language-markdown">- [Title of the Chapter](relative/path/to/markdown.md)
+</code></pre>
+<p>You can either use <code>-</code> or <code>*</code> to indicate a list. The lists can be nested,
+resulting in a nice hierarchy (chapters, sub-chapters, etc.)</p>
+</li>
+</ol>
+<p>All other elements are unsupported and will be ignored at best or result in an error.</p>
+<h4>not yet implemented</h4>
+<p>In the feature I would like to add support for links without the need to be list elements
+at the root level to add chapters that don't need numbering, like an index, appendix,
+contributor list, introduction, foreword, etc.</p>
+
+                </div>
+            </div>
+
+            <!--
+                Doesn't seem to work:  using JavaScript
+                alternative until I find a way to do it in the template
+            -->
+            
+                <a href="../format/format.html" class="nav-chapters previous">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+            
+            <!--  -->
+
+            <!--  -->
+            
+                <a href="../format/config.html" class="nav-chapters next">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            
+            <!--  -->
+
+        </div>
+
+        <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+    </body>
+</html>
