@@ -19,7 +19,7 @@ When you overwrite a file, it is possible that you break some functionality. The
 
 ### Syntax Highlighting
 
-For syntax highlighting I use [Highlight.js](https://highlightjs.org) with the **Monokai Sublime** theme as default.
+For syntax highlighting I use [Highlight.js](https://highlightjs.org) with modified theme.
 But if you want a different theme, just put a `highlight.css` file in your theme folder and your theme will be used.
 
 - ***highlight.js*** normally you shouldn't have to overwrite this file. But if you need to, you can.
