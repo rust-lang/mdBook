@@ -2,10 +2,10 @@ extern crate handlebars;
 extern crate rustc_serialize;
 extern crate pulldown_cmark;
 
-use renderer::html_handlebars::{helpers, theme};
+use renderer::html_handlebars::helpers;
 use renderer::Renderer;
 use book::{BookItems, BookConfig};
-use utils;
+use {utils, theme};
 
 use std::path::PathBuf;
 use std::fs::{self, File};

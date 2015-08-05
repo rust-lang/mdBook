@@ -9,3 +9,4 @@ pub mod utils;
 pub use book::MDBook;
 pub use book::BookItem;
 pub use book::BookConfig;
+pub use renderer::Renderer;

@@ -10,7 +10,7 @@ pub struct BookConfig {
     pub author: String,
     dest: PathBuf,
     src: PathBuf,
-    indent_spaces: i32,
+    pub indent_spaces: i32,
     multilingual: bool,
 }
 

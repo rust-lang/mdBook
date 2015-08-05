@@ -32,7 +32,7 @@ impl BookItem {
         }
     }
 
-    pub fn spacer() -> Self {
+    fn _spacer() -> Self {
         BookItem {
             name: String::from("SPACER"),
             path: PathBuf::new(),

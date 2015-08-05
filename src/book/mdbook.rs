@@ -11,7 +11,7 @@ use renderer::HtmlHandlebars;
 
 pub struct MDBook {
     config: BookConfig,
-    root: PathBuf,
+    pub root: PathBuf,
     pub content: Vec<BookItem>,
     renderer: Box<Renderer>,
 }
