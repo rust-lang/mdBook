@@ -7,4 +7,5 @@
 - [Format]()
     - [SUMMARY.md]()
     - [Configuration](format/config.md)
+    - [Theme](format/theme.md)
 - [Rust Library]()

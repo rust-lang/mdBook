@@ -155,16 +155,6 @@ html, body {
     opacity: 1;
 }
 
-pre {
-    padding: 16px;
-    overflow: auto;
-    font-size: 85%;
-    line-height: 1.45;
-    background-color: #f7f7f7;
-    border: 0;
-    border-radius: 3px;
-}
-
 .left {
     float: left;
 }

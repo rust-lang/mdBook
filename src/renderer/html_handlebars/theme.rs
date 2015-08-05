@@ -7,6 +7,8 @@ pub struct Theme {
     pub index: String,
     pub css: Vec<u8>,
     pub js: Vec<u8>,
+    pub highlight_css: Vec<u8>,
+    pub highlight_js: Vec<u8>,
 }
 
 impl Theme {
@@ -17,6 +19,8 @@ impl Theme {
             index: theme::get_index_hbs().to_owned(),
             css: theme::get_css().to_owned(),
             js: theme::get_js().to_owned(),
+            highlight_css: theme::get_highlight_css().to_owned(),
+            highlight_js: theme::get_highlight_js().to_owned(),
         };
 
         // Check if the given path exists
@@ -64,6 +68,22 @@ impl Theme {
         match File::open(&src.join("book.css")) {
             Ok(mut f) => {
                 f.read_to_end(&mut theme.css).unwrap();
+            },
+            _ => {},
+        }
+
+        // highlight.js
+        match File::open(&src.join("highlight.js")) {
+            Ok(mut f) => {
+                f.read_to_end(&mut theme.highlight_js).unwrap();
+            },
+            _ => {},
+        }
+
+        // highlight.css
+        match File::open(&src.join("highlight.css")) {
+            Ok(mut f) => {
+                f.read_to_end(&mut theme.highlight_css).unwrap();
             },
             _ => {},
         }

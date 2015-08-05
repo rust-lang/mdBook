@@ -1,0 +1,154 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>mdBook Documentation</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="{% block description %}{% endblock %}">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="stylesheet" href="../book.css" media="screen" title="no title" charset="utf-8">
+        <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="../highlight.css" media="screen" title="no title" charset="utf-8">
+    </head>
+    <body>
+
+        <div id="sidebar" class="sidebar">
+            <ul class="chapter"><li><a href="../README.html"><strong>1.</strong> mdBook</a></li><li><a href="../cli/cli-tool.html"><strong>2.</strong> Command Line Tool</a></li><li><ul class="section"><li><a href="../cli/init.html"><strong>2.1.</strong> init</a></li><li><a href="../cli/build.html"><strong>2.2.</strong> build</a></li></ul><li><strong>3.</strong> Format</li><li><ul class="section"><li><strong>3.1.</strong> SUMMARY.md</li><li><a href="../format/config.html"><strong>3.2.</strong> Configuration</a></li><li><a href="../format/theme.html"class="active"><strong>3.3.</strong> Theme</a></li></ul><li><strong>4.</strong> Rust Library</li></ul>
+        </div>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar" class="menu-bar">
+                    <i id="sidebar-toggle" class="fa fa-bars left"></i>
+                    <h1 class="menu-title">mdBook Documentation</h1>
+                </div>
+
+                <div id="content" class="content">
+                    <h1>Theme</h1>
+<p>The default renderer uses a <a href="http://handlebarsjs.com/">handlebars</a> template to render your markdown files in and comes with a default theme
+included in the mdBook binary.</p>
+<p>But the theme is totally customizable, you can replace every file from the theme by your own by adding a
+<code>theme</code> directory in your source folder. Create a new file with the name of the file you want to overwrite
+and now that file will be used instead of the default file.</p>
+<p>Here are the files you can overwrite:</p>
+<ul>
+<li><strong><em>index.hbs</em></strong> is the handlebars template.</li>
+<li><strong><em>book.css</em></strong> is the style used in the output. If you want to change the design of your book, this is probably the file you want to modify. Sometimes in conjunction with <code>index.hbs</code> when you want to radically change the layout.</li>
+<li><strong><em>book.js</em></strong> is mostly used to add client side functionality.</li>
+</ul>
+<p><strong>Note:</strong></p>
+<p>When you overwrite a file, it is possible that you break some functionality. Therefore I recommend to use the file from the default theme as template and only add / modify what you need. In the future you will be able to copy the default theme into your source directory automatically by using <code>mdbook init --theme</code>.</p>
+<h3>Syntax Highlighting</h3>
+<p>For syntax highlighting I use <a href="https://highlightjs.org">Highlight.js</a> with the <strong>Monokai Sublime</strong> theme as default.
+But if you want a different theme, just put a <code>highlight.css</code> file in your theme folder and your theme will be used.</p>
+<ul>
+<li><strong><em>highlight.js</em></strong> normally you shouldn't have to overwrite this file. But if you need to, you can.</li>
+<li><strong><em>highlight.css</em></strong> theme used by highlight.js for syntax highlighting.</li>
+</ul>
+<p>When write code blocks in your markdown you will probably want to specify the language you use</p>
+<pre><code class="language-markdown">```rust
+</code></pre>
+<h2>Handlebars</h2>
+<h3>Data</h3>
+<p>A lot of data is exposed to the handlebars template with the &quot;context&quot;.
+In the handlebars template you can access this information by using</p>
+<pre><code class="language-handlebars">{{name_of_property}}
+</code></pre>
+<p>Here is a list of the properties that are exposed:</p>
+<ul>
+<li>
+<p><strong><em>language</em></strong> Language of the book in the form <code>en</code>. To use in <code class="language-html">&lt;html lang=&quot;{{ language }}&quot;&gt;</code> for example.
+At the moment it is hardcoded.</p>
+</li>
+<li>
+<p><strong><em>title</em></strong> Title of the book, as specified in <code>book.json</code></p>
+</li>
+<li>
+<p><strong><em>path</em></strong> Relative path to the original markdown file from the source directory</p>
+</li>
+<li>
+<p><strong><em>content</em></strong> This is the rendered markdown.</p>
+</li>
+<li>
+<p><strong><em>path_to_root</em></strong> This is a path containing exclusively <code>../</code>'s that points to the root of the book from the current file.
+Since the original directory structure is maintained, it is useful to prepend relative links with this <code>path_to_root</code>.</p>
+</li>
+<li>
+<p><strong><em>chapters</em></strong> Is an array of dictionaries of the form</p>
+<pre><code class="language-json">{&quot;section&quot;: &quot;1.2.1&quot;, &quot;name&quot;: &quot;name of this chapter&quot;, &quot;path&quot;: &quot;dir/markdown.md&quot;}
+</code></pre>
+<p>containing all the chapters of the book. It is used for example to construct the table of contents (sidebar).</p>
+</li>
+</ul>
+<h3>Helpers</h3>
+<p>In addition to the properties you can access, there are some handlebars helpers at your disposal.</p>
+<ol>
+<li>
+<h3>toc</h3>
+<p>The toc helper is used like this</p>
+<pre><code class="language-handlebars">{{#toc}}{{/toc}}
+</code></pre>
+<p>and outputs something that looks like this, depending on the structure of your book</p>
+<pre><code class="language-html">&lt;ul class=&quot;chapter&quot;&gt;
+    &lt;li&gt;&lt;a href=&quot;link/to/file.html&quot;&gt;Some chapter&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;
+        &lt;ul class=&quot;section&quot;&gt;
+            &lt;li&gt;&lt;a href=&quot;link/to/other_file.html&quot;&gt;Some other Chapter&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/li&gt;
+&lt;/ul&gt;
+</code></pre>
+<p>If you would like to make a toc with another structure, you have access to the chapters property containing all the data.
+The only limitation at the moment is that you would have to do it with JavaScript instead of with a handlebars helper.</p>
+<pre><code class="language-html">&lt;script&gt;
+var chapters = {{chapters}};
+// Processing here
+&lt;/script&gt;
+</code></pre>
+</li>
+<li>
+<h3>previous / next</h3>
+<p>The previous and next helpers expose a <code>link</code> and <code>name</code> property to the previous and next chapters.</p>
+<p>They are used like this</p>
+<pre><code class="language-handlebars">{{#previous}}
+    &lt;a href=&quot;{{link}}&quot; class=&quot;nav-chapters previous&quot;&gt;
+        &lt;i class=&quot;fa fa-angle-left&quot;&gt;&lt;/i&gt;
+    &lt;/a&gt;
+{{/previous}}
+</code></pre>
+<p>The inner html will only be rendered if the previous / next chapter exists.
+Of course the inner html can be changed to your liking.</p>
+</li>
+</ol>
+<hr />
+<p>If you would like me to expose other properties or helpers, please <a href="https://github.com/azerupi/mdBook/issues">create a new issue</a>
+and I will consider it.</p>
+
+                </div>
+            </div>
+
+            <!--
+                Doesn't seem to work:  using JavaScript
+                alternative until I find a way to do it in the template
+            -->
+            
+                <a href="../format/config.html" class="nav-chapters previous">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+            
+            <!--  -->
+
+            <!--  -->
+            
+            <!--  -->
+
+        </div>
+
+        <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+    </body>
+</html>
