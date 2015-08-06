@@ -63,7 +63,7 @@
 //! I have regrouped some useful functions in the [utils](utils/index.html) module, like the following function
 //!
 //! ```ignore
-//! utils::path::create_path(path: &Path)
+//! utils::create_path(path: &Path)
 //! ```
 //! This function creates all the directories in a given path if they do not exist
 //!

@@ -47,7 +47,7 @@ impl Renderer for HtmlHandlebars {
 
         // Check if dest directory exists
         debug!("[*]: Check if destination directory exists");
-        match utils::path::create_path(config.dest()) {
+        match utils::create_path(config.dest()) {
             Err(_) => return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Unexcpected error when constructing destination path"))),
             _ => {},
         };
@@ -80,7 +80,7 @@ impl Renderer for HtmlHandlebars {
 
                 // Remove path to root from previous file and render content for this one
                 data.remove("path_to_root");
-                data.insert("path_to_root".to_string(), utils::path::path_to_root(&item.path).to_json());
+                data.insert("path_to_root".to_string(), utils::path_to_root(&item.path).to_json());
 
                 // Rendere the handlebars template with the data
                 debug!("[*]: Render template");
@@ -88,7 +88,7 @@ impl Renderer for HtmlHandlebars {
 
                 debug!("[*]: Create file {:?}", &config.dest().join(&item.path).with_extension("html"));
                 // Write to file
-                let mut file = try!(utils::path::create_file(&config.dest().join(&item.path).with_extension("html")));
+                let mut file = try!(utils::create_file(&config.dest().join(&item.path).with_extension("html")));
                 output!("[*] Creating {:?} ✓", &config.dest().join(&item.path).with_extension("html"));
 
                 try!(file.write_all(&rendered.into_bytes()));
