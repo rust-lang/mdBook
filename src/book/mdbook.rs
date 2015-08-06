@@ -132,12 +132,12 @@ impl MDBook {
     }
 
     pub fn set_dest(mut self, dest: &Path) -> Self {
-        self.config.set_dest(dest);
+        self.config.set_dest(&self.root.join(dest));
         self
     }
 
     pub fn set_src(mut self, src: &Path) -> Self {
-        self.config.set_src(src);
+        self.config.set_src(&self.root.join(src));
         self
     }
 
