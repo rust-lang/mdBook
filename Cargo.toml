@@ -2,6 +2,15 @@
 name = "mdbook"
 version = "0.0.1"
 authors = ["Mathieu David <mathieudavid@mathieudavid.org>"]
+description = "create books from markdown files (like Gitbook)"
+documentation = "http://azerupi.github.io/mdBook/index.html"
+repository = "https://github.com/azerupi/mdBook"
+keywords = ["book", "gitbook", "rustbook", "markdown"]
+license = "MPL"
+readme = "README.md"
+exclude = [
+    "book-example/*",
+]
 
 [dependencies]
 clap = "*"
