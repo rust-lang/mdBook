@@ -17,17 +17,19 @@
 //!
 //! ## Example
 //!
-//! ```
+//! ```ignore
 //! extern crate mdbook;
 //!
 //! use mdbook::MDBook;
+//! use std::path::Path;
 //!
 //! fn main() {
-//!    let book =  MDBook::new("my-book")
-//!                     .set_src("source_dir")
-//!                     .set_dest("output_dir")
-//!                     .read_config() // Reads book.json file for settings
+//!    let mut book =  MDBook::new(Path::new("book-test")) // ERROR directory does not exist...
+//!                     .set_src(Path::new("source"))
+//!                     .set_dest(Path::new("output"))
+//!                     .read_config(); // Reads book.json file for settings
 //!
+//!     book.init().unwrap();
 //!     book.build().unwrap();
 //! }
 //! ```
