@@ -9,6 +9,9 @@ handlebars = "*"
 rustc-serialize = "*"
 pulldown-cmark = "*"
 
+[dev-dependencies]
+tempdir = "*"
+
 [features]
 default = ["output"]
 debug = []

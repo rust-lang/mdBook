@@ -17,7 +17,7 @@
 //!
 //! ## Example
 //!
-//! ```ignore
+//! ```no_run
 //! extern crate mdbook;
 //!
 //! use mdbook::MDBook;
@@ -41,9 +41,23 @@
 //!
 //! And then you can swap in your renderer like this:
 //!
-//! ```ignore
-//! let book =  MDBook::new("my-book").set_renderer(your_renderer)
+//! ```no_run
+//! # extern crate mdbook;
+//! #
+//! # use mdbook::MDBook;
+//! # use mdbook::renderer::HtmlHandlebars;
+//! # use std::path::Path;
+//! #
+//! # fn main() {
+//! #   let your_renderer = HtmlHandlebars::new();
+//! #
+//!     let book =  MDBook::new(Path::new("my-book")).set_renderer(Box::new(your_renderer));
+//! # }
 //! ```
+//! If you make a renderer, you get the book constructed in form of `Vec<BookItems>` and you get
+//! the book config in a `BookConfig` struct.
+//!
+//! It's your responsability to create the necessary files in the correct directories.
 
 
 #[macro_use]
