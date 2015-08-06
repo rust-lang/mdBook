@@ -10,4 +10,4 @@
     - [Theme](format/theme/theme.md)
         - [index.hbs](format/theme/index-hbs.md)
         - [Syntax highlighting](format/theme/syntax-highlighting.md)
-- [Rust Library]()
+- [Rust Library](lib/lib.md)

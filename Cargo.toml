@@ -13,3 +13,8 @@ pulldown-cmark = "*"
 default = ["output"]
 debug = []
 output = []
+
+[[bin]]
+doc = false
+name = "mdbook"
+path = "src/bin/mdbook.rs"

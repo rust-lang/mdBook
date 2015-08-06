@@ -5,10 +5,16 @@ set -o errexit -o nounset
 
 rev=$(git rev-parse --short HEAD)
 
+# Run cargo doc
+cargo doc
+
 # Run mdbook to generate the book
 target/debug/mdbook build book-example/
 
-cd book-example/book
+# Copy files from rendered book to doc root
+cp book-example/book/* target/doc/
+
+cd target/doc
 
 
 git init
