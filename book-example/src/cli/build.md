@@ -23,4 +23,4 @@ mdbook build path/to/book
 
 -------------------
 
-**note:** make sure to run the build command in the root directory and not in the source directory
+***note:*** *make sure to run the build command in the root directory and not in the source directory*

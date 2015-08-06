@@ -31,24 +31,18 @@
                 </div>
             </div>
 
-            <!--
-                Doesn't seem to work: {{!#if (previous)}} using JavaScript
-                alternative until I find a way to do it in the template
-            -->
+
             {{#previous}}
                 <a href="{{link}}" class="nav-chapters previous">
                     <i class="fa fa-angle-left"></i>
                 </a>
             {{/previous}}
-            <!-- {{!/if}} -->
 
-            <!-- {{!#if (next "")}} -->
             {{#next}}
                 <a href="{{link}}" class="nav-chapters next">
                     <i class="fa fa-angle-right"></i>
                 </a>
             {{/next}}
-            <!-- {{!/if}} -->
 
         </div>
 

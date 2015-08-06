@@ -86,5 +86,5 @@ In addition to the properties you can access, there are some handlebars helpers 
 
 ------
 
-If you would like me to expose other properties or helpers, please [create a new issue](https://github.com/azerupi/mdBook/issues)
-and I will consider it.
+*If you would like me to expose other properties or helpers, please [create a new issue](https://github.com/azerupi/mdBook/issues)
+and I will consider it.*
