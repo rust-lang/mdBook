@@ -3,9 +3,9 @@
 # Exit on error or variable unset
 set -o errexit -o nounset
 
-NC = '\e[39m'
-CYAN = '\e[36m'
-GREEN = '\e[32m'
+NC='\e[39m'
+CYAN='\e[36m'
+GREEN='\e[32m'
 
 rev=$(git rev-parse --short HEAD)
 
