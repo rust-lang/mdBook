@@ -18,10 +18,17 @@ pub struct MDBook {
 
 impl MDBook {
 
-    pub fn new(path: &Path) -> MDBook {
+    /// Create a new `MDBook` struct with root directory `root`
+    ///
+    /// - The default source directory is set to `root/src`
+    /// - The default output directory is set to `root/book`
+    ///
+    /// They can both be changed by using [`set_src()`](#method.set_src) and [`set_dest()`](#method.set_dest)
+
+    pub fn new(root: &Path) -> MDBook {
 
         // Hacky way to check if the path exists... Until PathExt moves to stable
-        match metadata(path) {
+        match metadata(root) {
             Err(_) => panic!("Directory does not exist"),
             Ok(f) => {
                 if !f.is_dir() {
@@ -31,15 +38,38 @@ impl MDBook {
         }
 
         MDBook {
-            root: path.to_path_buf(),
+            root: root.to_path_buf(),
             content: vec![],
             config: BookConfig::new()
-                        .set_src(&path.join("src"))
-                        .set_dest(&path.join("book"))
+                        .set_src(&root.join("src"))
+                        .set_dest(&root.join("book"))
                         .to_owned(),
             renderer: Box::new(HtmlHandlebars::new()),
         }
     }
+
+    /// Returns a flat depth-first iterator over the elements of the book in the form of a tuple:
+    /// `(section: String, bookitem: &BookItem)`
+    ///
+    /// ```no_run
+    /// # extern crate mdbook;
+    /// # use mdbook::MDBook;
+    /// # use std::path::Path;
+    /// # fn main() {
+    /// # let mut book = MDBook::new(Path::new("mybook"));
+    /// for (section, element) in book.iter() {
+    ///     println!("{} {}", section, element.name);
+    /// }
+    ///
+    /// // would print something like this:
+    /// // 1. Chapter 1
+    /// // 1.1 Sub Chapter
+    /// // 1.2 Sub Chapter
+    /// // 2. Chapter 2
+    /// //
+    /// // etc.
+    /// # }
+    /// ```
 
     pub fn iter(&self) -> BookItems {
         BookItems {
@@ -48,6 +78,19 @@ impl MDBook {
             stack: Vec::new(),
         }
     }
+
+    /// `init()` creates some boilerplate files and directories to get you started with your book.
+    ///
+    /// ```text
+    /// book-test/
+    /// ├── book
+    /// └── src
+    ///     ├── chapter_1.md
+    ///     └── SUMMARY.md
+    /// ```
+    ///
+    /// It uses the paths given as source and output directories and adds a `SUMMARY.md` and a
+    /// `chapter_1.md` to the source directory.
 
     pub fn init(&self) -> Result<(), Box<Error>> {
 
@@ -106,6 +149,12 @@ impl MDBook {
         return Ok(());
     }
 
+    /// The `build()` method is the one where everything happens. First it parses `SUMMARY.md` to
+    /// construct the book's structure in the form of a `Vec<BookItem>` and then calls `render()`
+    /// method of the current renderer.
+    ///
+    /// It is the renderer who generates all the output files.
+
     pub fn build(&mut self) -> Result<(), Box<Error>> {
         debug!("[fn]: build");
 
@@ -120,11 +169,46 @@ impl MDBook {
     }
 
 
-    // Builder functions
+    /// Parses the `book.json` file (if it exists) to extract the configuration parameters.
+    /// The `book.json` file should be in the root directory of the book.
+    /// The root directory is the one specified when creating a new `MDBook`
+    ///
+    /// ```no_run
+    /// # extern crate mdbook;
+    /// # use mdbook::MDBook;
+    /// # use std::path::Path;
+    /// # fn main() {
+    /// let mut book = MDBook::new(Path::new("root_dir"));
+    /// # }
+    /// ```
+    ///
+    /// In this example, `root_dir` will be the root directory of our book and is specified in function
+    /// of the current working directory by using a relative path instead of an absolute path.
+
     pub fn read_config(mut self) -> Self {
         self.config.read_config(&self.root);
         self
     }
+
+    /// You can change the default renderer to another one by using this method. The only requirement
+    /// is for your renderer to implement the [Renderer trait](../../renderer/renderer/trait.Renderer.html)
+    ///
+    /// ```no_run
+    /// extern crate mdbook;
+    /// use mdbook::MDBook;
+    /// use mdbook::renderer::HtmlHandlebars;
+    /// # use std::path::Path;
+    ///
+    /// fn main() {
+    ///     let mut book = MDBook::new(Path::new("mybook"))
+    ///                         .set_renderer(Box::new(HtmlHandlebars::new()));
+    ///
+    ///     // In this example we replace the default renderer by the default renderer...
+    ///     // Don't forget to put your renderer in a Box
+    /// }
+    /// ```
+    ///
+    /// **note:** Don't forget to put your renderer in a `Box` before passing it to `set_renderer()`
 
     pub fn set_renderer(mut self, renderer: Box<Renderer>) -> Self {
         self.renderer = renderer;

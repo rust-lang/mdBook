@@ -24,13 +24,12 @@
 //! use std::path::Path;
 //!
 //! fn main() {
-//!    let mut book =  MDBook::new(Path::new("book-test")) // ERROR directory does not exist...
-//!                     .set_src(Path::new("source"))
-//!                     .set_dest(Path::new("output"))
-//!                     .read_config(); // Reads book.json file for settings
+//!     let mut book =  MDBook::new(Path::new("my-book"))   // Path to root
+//!                         .set_src(Path::new("src"))      // Path from root to source directory
+//!                         .set_dest(Path::new("book"))    // Path from root to output directory
+//!                         .read_config();                 // Parse book.json file for configuration
 //!
-//!     book.init().unwrap();
-//!     book.build().unwrap();
+//!     book.build().unwrap();                              // Render the book
 //! }
 //! ```
 //!
@@ -58,7 +57,17 @@
 //! the book config in a `BookConfig` struct.
 //!
 //! It's your responsability to create the necessary files in the correct directories.
-
+//!
+//! ## utils
+//!
+//! I have regrouped some useful functions in the [utils](utils/index.html) module, like the following function
+//!
+//! ```ignore
+//! utils::path::create_path(path: &Path)
+//! ```
+//! This function creates all the directories in a given path if they do not exist
+//!
+//! Make sure to take a look at it.
 
 #[macro_use]
 pub mod macros;
