@@ -8,13 +8,14 @@ integrate it in current projects. Here is a short example:
 extern crate mdBook;
 
 use mdBook::MDBook;
+use std::path::Path;
 
 fn main() {
-    let book =  MDBook::new("my-book")  // Path to root
-                    .set_src("src")     // Path from root to source directory
-                    .set_dest("book")   // Path from root to output directory
-                    .read_config()      // Parse book.json file for configuration
+    let book =  MDBook::new(Path::new("my-book"))   // Path to root
+                    .set_src(Path::new("src"))      // Path from root to source directory
+                    .set_dest(Path::new("book"))    // Path from root to output directory
+                    .read_config()                  // Parse book.json file for configuration
 
-    book.build().unwrap();              // Render the book
+    book.build().unwrap();                          // Render the book
 }
 ```

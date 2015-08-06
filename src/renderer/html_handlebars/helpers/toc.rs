@@ -66,7 +66,7 @@ impl HelperDef for RenderToc {
                 try!(rc.writer.write("\"".as_bytes()));
 
                 if path == &current {
-                    try!(rc.writer.write("class=\"active\"".as_bytes()));
+                    try!(rc.writer.write(" class=\"active\"".as_bytes()));
                 }
 
                 try!(rc.writer.write(">".as_bytes()));
