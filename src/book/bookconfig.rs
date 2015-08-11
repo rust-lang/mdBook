@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 pub struct BookConfig {
     pub title: String,
     pub author: String,
+    root: PathBuf,
     dest: PathBuf,
     src: PathBuf,
     pub indent_spaces: i32,
@@ -16,10 +17,11 @@ pub struct BookConfig {
 
 
 impl BookConfig {
-    pub fn new() -> Self {
+    pub fn new(root: &Path) -> Self {
         BookConfig {
             title: String::new(),
             author: String::new(),
+            root: root.to_owned(),
             dest: PathBuf::from("book"),
             src: PathBuf::from("src"),
             indent_spaces: 4,               // indentation used for SUMMARY.md
@@ -42,29 +44,47 @@ impl BookConfig {
 
         debug!("[*]: Reading config");
         let mut data = String::new();
-        config_file.read_to_string(&mut data).unwrap();
+
+        // Just return if an error occured.
+        // I would like to propagate the error, but I have to return `&self`
+        match config_file.read_to_string(&mut data) {
+            Err(_) => return self,
+            _ => {},
+        }
 
         // Convert to JSON
-        let config = Json::from_str(&data).unwrap();
+        if let Ok(config) = Json::from_str(&data) {
+            // Extract data
 
-        // Extract data
+            debug!("[*]: Extracting data from config");
+            // Title & author
+            if let Some(a) = config.find_path(&["title"]) { self.title = a.to_string().replace("\"", "") }
+            if let Some(a) = config.find_path(&["author"]) { self.author = a.to_string().replace("\"", "") }
 
-        debug!("[*]: Extracting data from config");
-        // Title & author
-        if let Some(a) = config.find_path(&["title"]) { self.title = a.to_string().replace("\"", "") }
-        if let Some(a) = config.find_path(&["author"]) { self.author = a.to_string().replace("\"", "") }
+            // Destination
+            if let Some(a) = config.find_path(&["dest"]) {
+                let dest = PathBuf::from(&a.to_string().replace("\"", ""));
 
-        // Destination
-        if let Some(a) = config.find_path(&["dest"]) {
-            let dest = PathBuf::from(&a.to_string().replace("\"", ""));
-
-            // If path is relative make it absolute from the parent directory of src
-            if dest.is_relative() {
-                let dest = &self.get_src().parent().unwrap().join(&dest);
-                self.set_dest(dest);
+                // If path is relative make it absolute from the parent directory of src
+                match dest.is_relative() {
+                    true => {
+                        let dest = self.get_root().join(&dest).to_owned();
+                        self.set_dest(&dest);
+                    },
+                    false => { self.set_dest(&dest); },
+                }
             }
         }
 
+        self
+    }
+
+    pub fn get_root(&self) -> &Path {
+        &self.root
+    }
+
+    pub fn set_root(&mut self, root: &Path) -> &mut Self {
+        self.root = root.to_owned();
         self
     }
 

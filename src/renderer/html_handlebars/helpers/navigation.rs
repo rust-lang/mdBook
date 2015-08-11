@@ -30,8 +30,12 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
 
     debug!("[*]: Decode chapters from JSON");
     // Decode json format
-    let decoded: Vec<BTreeMap<String, String>> = json::decode(&chapters.to_string()).unwrap();
+    let decoded: Vec<BTreeMap<String, String>> = match json::decode(&chapters.to_string()) {
+        Ok(data) => data,
+        Err(_) => return Err(RenderError{ desc: "Could not decode the JSON data"}),
+    };
     let mut previous: Option<BTreeMap<String, String>> = None;
+
 
     debug!("[*]: Search for current Chapter");
     // Search for current chapter and return previous entry
@@ -48,22 +52,32 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
                         // Create new BTreeMap to extend the context: 'title' and 'link'
                         let mut previous_chapter = BTreeMap::new();
 
-                        debug!("[*]: Inserting title: {}", previous.get("name").unwrap());
-                        previous_chapter.insert("title".to_string(), previous.get("name").unwrap().to_json());
+                        // Chapter title
+                        match previous.get("name") {
+                            Some(n) => {
+                                debug!("[*]: Inserting title: {}", n);
+                                previous_chapter.insert("title".to_string(), n.to_json())
+                            },
+                            None => {
+                                debug!("[*]: No title found for chapter");
+                                return Err(RenderError{ desc: "No title found for chapter in JSON data" })
+                            }
+                        };
 
-                        debug!("[*]: Inserting link: {}",
-                            path_to_root.join(
-                                Path::new(previous.get("path").unwrap())
-                                    .with_extension("html")
-                            ).to_str().unwrap());
+                        // Chapter link
 
-                        previous_chapter.insert(
-                            "link".to_string(),
-                            path_to_root.join(
-                                Path::new(previous.get("path").unwrap())
-                                    .with_extension("html")
-                            ).to_str().unwrap().to_json()
-                        );
+                        match previous.get("path") {
+                            Some(p) => {
+                                let path = path_to_root.join(Path::new(p).with_extension("html"));
+                                debug!("[*]: Inserting link: {:?}", path);
+
+                                match path.to_str() {
+                                    Some(p) => { previous_chapter.insert("link".to_string(), p.to_json()); },
+                                    None => return Err(RenderError{ desc: "Link could not be converted to str" })
+                                }
+                            },
+                            None => return Err(RenderError{ desc: "No path found for chapter in JSON data" })
+                        }
 
                         debug!("[*]: Inject in context");
                         // Inject in current context
@@ -71,7 +85,13 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
 
                         debug!("[*]: Render template");
                         // Render template
-                        _h.template().unwrap().render(&updated_context, r, rc).unwrap();
+                        match _h.template() {
+                            Some(t) => {
+                                try!(t.render(&updated_context, r, rc));
+                            },
+                            None => return Err(RenderError{ desc: "Error with the handlebars template" })
+                        }
+
                     }
 
                     break;
@@ -81,8 +101,11 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
                 }
             },
             _ => continue,
+
         }
+
     }
+
     Ok(())
 }
 
@@ -110,7 +133,10 @@ pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) ->
 
     debug!("[*]: Decode chapters from JSON");
     // Decode json format
-    let decoded: Vec<BTreeMap<String, String>> = json::decode(&chapters.to_string()).unwrap();
+    let decoded: Vec<BTreeMap<String, String>> = match json::decode(&chapters.to_string()) {
+        Ok(data) => data,
+        Err(_) => return Err(RenderError{ desc: "Could not decode the JSON data"}),
+    };
     let mut previous: Option<BTreeMap<String, String>> = None;
 
     debug!("[*]: Search for current Chapter");
@@ -122,37 +148,48 @@ pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) ->
             Some(path) if path.len() > 0 => {
 
                 if let Some(previous) = previous {
-                    if previous.get("path").unwrap() == &current {
+
+                    let path = match previous.get("path") {
+                        Some(p) => p,
+                        None => return Err(RenderError{ desc: "No path found for chapter in JSON data"})
+                    };
+
+                    if path == &current {
 
                         debug!("[*]: Found current chapter");
                         debug!("[*]: Creating BTreeMap to inject in context");
                         // Create new BTreeMap to extend the context: 'title' and 'link'
                         let mut next_chapter = BTreeMap::new();
 
-                        debug!("[*]: Inserting title: {}", item.get("name").unwrap());
-                        next_chapter.insert("title".to_string(), item.get("name").unwrap().to_json());
+                        match item.get("name") {
+                            Some(n) => {
+                                debug!("[*]: Inserting title: {}", n);
+                                next_chapter.insert("title".to_string(), n.to_json());
+                            }
+                            None => return Err(RenderError{ desc: "No title found for chapter in JSON data"})
+                        }
 
-                        debug!("[*]: Inserting link: {}",
-                            path_to_root.join(
-                                Path::new(item.get("path").unwrap())
-                                    .with_extension("html")
-                            ).to_str().unwrap());
+                        let link = path_to_root.join(Path::new(path).with_extension("html"));
+                        debug!("[*]: Inserting link: {:?}", link);
 
-                        next_chapter.insert(
-                            "link".to_string(),
-                            path_to_root.join(
-                                Path::new(item.get("path").unwrap())
-                                    .with_extension("html")
-                            ).to_str().unwrap().to_json()
-                        );
+                        match link.to_str() {
+                            Some(l) => { next_chapter.insert("link".to_string(), l.to_json()); },
+                            None => return Err(RenderError{ desc: "Link could not converted to str"})
+                        }
 
                         debug!("[*]: Inject in context");
                         // Inject in current context
                         let updated_context = c.extend(&next_chapter);
 
                         debug!("[*]: Render template");
+
                         // Render template
-                        _h.template().unwrap().render(&updated_context, r, rc).unwrap();
+                        match _h.template() {
+                            Some(t) => {
+                                try!(t.render(&updated_context, r, rc));
+                            },
+                            None => return Err(RenderError{ desc: "Error with the handlebars template" })
+                        }
 
                         break
                     }
@@ -160,7 +197,7 @@ pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) ->
 
                 previous = Some(item.clone());
             },
-            
+
             _ => continue,
         }
     }

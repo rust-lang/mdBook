@@ -72,7 +72,11 @@ impl Renderer for HtmlHandlebars {
 
                 // Remove content from previous file and render content for this one
                 data.remove("path");
-                data.insert("path".to_string(), item.path.to_str().unwrap().to_json());
+                match item.path.to_str() {
+                    Some(p) => { data.insert("path".to_string(), p.to_json()); },
+                    None => return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))),
+                }
+
 
                 // Remove content from previous file and render content for this one
                 data.remove("content");
@@ -144,7 +148,10 @@ fn make_data(book: BookItems, config: &BookConfig) -> Result<BTreeMap<String,Jso
         let mut chapter = BTreeMap::new();
         chapter.insert("section".to_string(), section.to_json());
         chapter.insert("name".to_string(), item.name.to_json());
-        chapter.insert("path".to_string(), item.path.to_str().unwrap().to_json());
+        match item.path.to_str() {
+            Some(p) => { chapter.insert("path".to_string(), p.to_json()); },
+            None => return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))),
+        }
 
         chapters.push(chapter);
     }

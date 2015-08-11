@@ -63,7 +63,9 @@ impl Theme {
         match File::open(&src.join("index.hbs")) {
             Ok(mut f) => {
                 theme.index.clear(); // Reset the value, because read_to_string appends...
-                f.read_to_end(&mut theme.index).unwrap();
+                match f.read_to_end(&mut theme.index) {
+                    _ => {}
+                };
             },
             _ => {},
         }
@@ -72,7 +74,9 @@ impl Theme {
         match File::open(&src.join("book.js")) {
             Ok(mut f) => {
                 theme.js.clear();
-                f.read_to_end(&mut theme.js).unwrap();
+                match f.read_to_end(&mut theme.js){
+                    _ => {}
+                }
             },
             _ => {},
         }
@@ -81,7 +85,9 @@ impl Theme {
         match File::open(&src.join("book.css")) {
             Ok(mut f) => {
                 theme.css.clear();
-                f.read_to_end(&mut theme.css).unwrap();
+                match f.read_to_end(&mut theme.css) {
+                    _ => {}
+                }
             },
             _ => {},
         }
@@ -90,7 +96,9 @@ impl Theme {
         match File::open(&src.join("highlight.js")) {
             Ok(mut f) => {
                 theme.highlight_js.clear();
-                f.read_to_end(&mut theme.highlight_js).unwrap();
+                match f.read_to_end(&mut theme.highlight_js) {
+                    _ => {}
+                }
             },
             _ => {},
         }
@@ -99,7 +107,9 @@ impl Theme {
         match File::open(&src.join("highlight.css")) {
             Ok(mut f) => {
                 theme.highlight_css.clear();
-                f.read_to_end(&mut theme.highlight_css).unwrap();
+                match f.read_to_end(&mut theme.highlight_css) {
+                    _ => {}
+                }
             },
             _ => {},
         }

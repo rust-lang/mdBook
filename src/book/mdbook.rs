@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::fs::{self, File, metadata};
 use std::io::Write;
 use std::error::Error;
@@ -12,7 +12,6 @@ use renderer::HtmlHandlebars;
 
 pub struct MDBook {
     config: BookConfig,
-    pub root: PathBuf,
     pub content: Vec<BookItem>,
     renderer: Box<Renderer>,
 }
@@ -39,9 +38,8 @@ impl MDBook {
         }
 
         MDBook {
-            root: root.to_path_buf(),
             content: vec![],
-            config: BookConfig::new()
+            config: BookConfig::new(root)
                         .set_src(&root.join("src"))
                         .set_dest(&root.join("book"))
                         .to_owned(),
@@ -106,7 +104,7 @@ impl MDBook {
                 // There is a very high chance that the error is due to the fact that
                 // the directory / file does not exist
                 debug!("[*]: {:?} does not exist, trying to create directory", dest);
-                fs::create_dir(&dest).unwrap();
+                try!(fs::create_dir(&dest));
             },
             Ok(_) => { /* If there is no error, the directory / file does exist */ }
         }
@@ -117,7 +115,7 @@ impl MDBook {
                 // There is a very high chance that the error is due to the fact that
                 // the directory / file does not exist
                 debug!("[*]: {:?} does not exist, trying to create directory", src);
-                fs::create_dir(&src).unwrap();
+                try!(fs::create_dir(&src));
             },
             Ok(_) => { /* If there is no error, the directory / file does exist */ }
         }
@@ -128,7 +126,7 @@ impl MDBook {
                 // There is a very high chance that the error is due to the fact that
                 // the directory / file does not exist
                 debug!("[*]: {:?} does not exist, trying to create SUMMARY.md", src.join("SUMMARY.md"));
-                Ok(File::create(&src.join("SUMMARY.md")).unwrap())
+                Ok(try!(File::create(&src.join("SUMMARY.md"))))
             },
             Ok(_) => {
                 /* If there is no error, the directory / file does exist */
@@ -143,7 +141,7 @@ impl MDBook {
             try!(writeln!(f, ""));
             try!(writeln!(f, "- [Chapter 1](./chapter_1.md)"));
 
-            let mut chapter_1 = File::create(&src.join("chapter_1.md")).unwrap();
+            let mut chapter_1 = try!(File::create(&src.join("chapter_1.md")));
             try!(writeln!(chapter_1, "# Chapter 1"));
         }
 
@@ -181,7 +179,7 @@ impl MDBook {
                 // There is a very high chance that the error is due to the fact that
                 // the directory / file does not exist
                 debug!("[*]: {:?} does not exist, trying to create directory", theme_dir);
-                fs::create_dir(&theme_dir).unwrap();
+                try!(fs::create_dir(&theme_dir));
             },
             Ok(_) => { /* If there is no error, the directory / file does exist */ }
         }
@@ -226,7 +224,8 @@ impl MDBook {
     /// of the current working directory by using a relative path instead of an absolute path.
 
     pub fn read_config(mut self) -> Self {
-        self.config.read_config(&self.root);
+        let root = self.config.get_root().to_owned();
+        self.config.read_config(&root);
         self
     }
 
@@ -256,7 +255,16 @@ impl MDBook {
     }
 
     pub fn set_dest(mut self, dest: &Path) -> Self {
-        self.config.set_dest(&self.root.join(dest));
+
+        // Handle absolute and relative paths
+        match dest.is_absolute() {
+            true => { self.config.set_dest(dest); },
+            false => {
+                let dest = self.config.get_root().join(dest).to_owned();
+                self.config.set_dest(&dest);
+            }
+        }
+
         self
     }
 
@@ -265,7 +273,16 @@ impl MDBook {
     }
 
     pub fn set_src(mut self, src: &Path) -> Self {
-        self.config.set_src(&self.root.join(src));
+
+        // Handle absolute and relative paths
+        match src.is_absolute() {
+            true => { self.config.set_src(src); },
+            false => {
+                let src = self.config.get_root().join(src).to_owned();
+                self.config.set_src(&src);
+            }
+        }
+
         self
     }
 

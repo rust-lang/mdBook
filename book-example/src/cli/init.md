@@ -36,7 +36,7 @@ by appending a path to the command:
 mdbook init path/to/book
 ```
 
-#### --theme
+## --theme
 
 When you use the `--theme` argument, the default theme will be copied into a directory
 called `theme` in your source directory so that you can modify it.
