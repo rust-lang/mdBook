@@ -26,7 +26,8 @@ fn main() {
                         .about("Create boilerplate structure and files in the directory")
                         // the {n} denotes a newline which will properly aligned in all help messages
                         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'")
-                        .arg_from_usage("--theme 'Copies the default theme into your source folder'"))
+                        .arg_from_usage("--theme 'Copies the default theme into your source folder'")
+                        .arg_from_usage("--force 'skip confirmation prompts'"))
                     .subcommand(SubCommand::with_name("build")
                         .about("Build the book from the markdown files")
                         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'"))
@@ -47,6 +48,16 @@ fn main() {
     }
 }
 
+fn confirm() -> bool {
+    io::stdout().flush().unwrap();
+    let mut s = String::new();
+    io::stdin().read_line(&mut s).ok();
+    match &*s.trim() {
+        "Y" | "y" | "yes" | "Yes" => true,
+        _ => false
+    }
+}
+
 fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
 
     let book_dir = get_book_dir(args);
@@ -58,18 +69,23 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
     // If flag `--theme` is present, copy theme to src
     if args.is_present("theme") {
 
-        // Print warning
-        print!("\nCopying the default theme to {:?}", book.get_src());
-        println!("could potentially overwrite files already present in that directory.");
-        print!("\nAre you sure you want to continue? (y/n) ");
+        // Skip this id `--force` is present
+        if !args.is_present("force") {
+            // Print warning
+            print!("\nCopying the default theme to {:?}", book.get_src());
+            println!("could potentially overwrite files already present in that directory.");
+            print!("\nAre you sure you want to continue? (y/n) ");
 
-        // Read answer from user
-
-        // Joke while I don't read user response, has to be deleted when merged into master !!!
-        println!("\n\nI am doing it anyways... (at the moment)");
+            // Read answer from user and exit if it's not 'yes'
+            if !confirm() {
+                println!("\nexiting...\n");
+                ::std::process::exit(0);
+            }
+        }
 
         // Call the function that copies the theme
         try!(book.copy_theme());
+        println!("\nTheme copied.");
 
         println!("");
     }
