@@ -36,11 +36,17 @@ by appending a path to the command:
 mdbook init path/to/book
 ```
 
+#### --theme
+
+When you use the `--theme` argument, the default theme will be copied into a directory
+called `theme` in your source directory so that you can modify it.
+
+The theme is selectively overwritten, this means that if you don't want to overwrite a
+specific file, just delete it and the default file will be used.
+
 ## Not yet implemented
 
 In the future I would like `mdBook init` to be able to:
 
-- Copy the default theme to the `src` directory in a `theme` directory when using a flag like `--theme`.
-The user could then tweak the theme to his needs.
 - Generate files that are in `SUMMARY.md`. If the user has already created a `SUMMARY.md` file and added some entries but did
 not create the corresponding files, init command should create the files for him.
