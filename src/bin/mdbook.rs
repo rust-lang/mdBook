@@ -24,9 +24,9 @@ fn main() {
                     .after_help("For more information about a specific command, try `mdbook <command> --help`")
                     .subcommand(SubCommand::with_name("init")
                         .about("Create boilerplate structure and files in the directory")
-                        // the {n} denotes a newline which will properly aligned in all help
-                        // messages
-                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'"))
+                        // the {n} denotes a newline which will properly aligned in all help messages
+                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'")
+                        .arg_from_usage("--theme 'Copies the default theme into your source folder'"))
                     .subcommand(SubCommand::with_name("build")
                         .about("Build the book from the markdown files")
                         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'"))
@@ -43,22 +43,47 @@ fn main() {
     };
 
     if let Err(e) = res {
-        writeln!(&mut io::stderr(), "Error: {}", e).ok();
+        writeln!(&mut io::stderr(), "An error occured:\n{}", e).ok();
     }
 }
 
 fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
+
     let book_dir = get_book_dir(args);
     let book = MDBook::new(&book_dir);
 
-    book.init()
+    // Call the function that does the initialization
+    try!(book.init());
+
+    // If flag `--theme` is present, copy theme to src
+    if args.is_present("theme") {
+
+        // Print warning
+        print!("\nCopying the default theme to {:?}", book.get_src());
+        println!("could potentially overwrite files already present in that directory.");
+        print!("\nAre you sure you want to continue? (y/n) ");
+
+        // Read answer from user
+
+        // Joke while I don't read user response, has to be deleted when merged into master !!!
+        println!("\n\nI am doing it anyways... (at the moment)");
+
+        // Call the function that copies the theme
+        try!(book.copy_theme());
+
+        println!("");
+    }
+
+    Ok(())
 }
 
 fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book_dir = get_book_dir(args);
     let mut book = MDBook::new(&book_dir).read_config();
 
-    book.build()
+    try!(book.build());
+
+    Ok(())
 }
 
 fn get_book_dir(args: &ArgMatches) -> PathBuf {

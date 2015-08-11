@@ -6,6 +6,7 @@ use std::error::Error;
 use {BookConfig, BookItem};
 use book::BookItems;
 use parse;
+use theme;
 use renderer::Renderer;
 use renderer::HtmlHandlebars;
 
@@ -96,8 +97,8 @@ impl MDBook {
 
         debug!("[fn]: init");
 
-        let dest = self.config.dest();
-        let src = self.config.src();
+        let dest = self.config.get_dest();
+        let src = self.config.get_src();
 
         // Hacky way to check if the directory exists... Until PathExt moves to stable
         match metadata(&dest) {
@@ -169,6 +170,45 @@ impl MDBook {
     }
 
 
+    pub fn copy_theme(&self) -> Result<(), Box<Error>> {
+        debug!("[fn]: copy_theme");
+
+        let theme_dir = self.config.get_src().join("theme");
+
+        // Hacky way to check if the directory exists... Until PathExt moves to stable
+        match metadata(&theme_dir) {
+            Err(_) => {
+                // There is a very high chance that the error is due to the fact that
+                // the directory / file does not exist
+                debug!("[*]: {:?} does not exist, trying to create directory", theme_dir);
+                fs::create_dir(&theme_dir).unwrap();
+            },
+            Ok(_) => { /* If there is no error, the directory / file does exist */ }
+        }
+
+        // index.hbs
+        let mut index = try!(File::create(&theme_dir.join("index.hbs")));
+        try!(index.write_all(theme::INDEX));
+
+        // book.css
+        let mut css = try!(File::create(&theme_dir.join("book.css")));
+        try!(css.write_all(theme::CSS));
+
+        // book.js
+        let mut js = try!(File::create(&theme_dir.join("book.js")));
+        try!(js.write_all(theme::JS));
+
+        // highlight.css
+        let mut highlight_css = try!(File::create(&theme_dir.join("highlight.css")));
+        try!(highlight_css.write_all(theme::HIGHLIGHT_CSS));
+
+        // highlight.js
+        let mut highlight_js = try!(File::create(&theme_dir.join("highlight.js")));
+        try!(highlight_js.write_all(theme::HIGHLIGHT_JS));
+
+        Ok(())
+    }
+
     /// Parses the `book.json` file (if it exists) to extract the configuration parameters.
     /// The `book.json` file should be in the root directory of the book.
     /// The root directory is the one specified when creating a new `MDBook`
@@ -220,9 +260,17 @@ impl MDBook {
         self
     }
 
+    pub fn get_dest(&self) -> &Path {
+        self.config.get_dest()
+    }
+
     pub fn set_src(mut self, src: &Path) -> Self {
         self.config.set_src(&self.root.join(src));
         self
+    }
+
+    pub fn get_src(&self) -> &Path {
+        self.config.get_src()
     }
 
     pub fn set_title(mut self, title: &str) -> Self {
@@ -240,7 +288,7 @@ impl MDBook {
     fn parse_summary(&mut self) -> Result<(), Box<Error>> {
 
         // When append becomes stable, use self.content.append() ...
-        let book_items = try!(parse::construct_bookitems(&self.config.src().join("SUMMARY.md")));
+        let book_items = try!(parse::construct_bookitems(&self.config.get_src().join("SUMMARY.md")));
 
         for item in book_items {
             self.content.push(item)

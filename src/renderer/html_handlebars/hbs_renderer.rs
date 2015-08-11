@@ -31,11 +31,11 @@ impl Renderer for HtmlHandlebars {
         let mut handlebars = Handlebars::new();
 
         // Load theme
-        let theme = theme::Theme::new(&config.src());
+        let theme = theme::Theme::new(&config.get_src());
 
         // Register template
         debug!("[*]: Register handlebars template");
-        try!(handlebars.register_template_string("index", theme.index.to_owned()));
+        try!(handlebars.register_template_string("index", try!(String::from_utf8(theme.index))));
 
         // Register helpers
         debug!("[*]: Register handlebars helpers");
@@ -47,7 +47,7 @@ impl Renderer for HtmlHandlebars {
 
         // Check if dest directory exists
         debug!("[*]: Check if destination directory exists");
-        match utils::create_path(config.dest()) {
+        match utils::create_path(config.get_dest()) {
             Err(_) => return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Unexcpected error when constructing destination path"))),
             _ => {},
         };
@@ -58,7 +58,7 @@ impl Renderer for HtmlHandlebars {
 
             if item.path != PathBuf::new() {
 
-                let path = config.src().join(&item.path);
+                let path = config.get_src().join(&item.path);
 
                 debug!("[*]: Opening file: {:?}", path);
                 let mut f = try!(File::open(&path));
@@ -86,10 +86,10 @@ impl Renderer for HtmlHandlebars {
                 debug!("[*]: Render template");
                 let rendered = try!(handlebars.render("index", &data));
 
-                debug!("[*]: Create file {:?}", &config.dest().join(&item.path).with_extension("html"));
+                debug!("[*]: Create file {:?}", &config.get_dest().join(&item.path).with_extension("html"));
                 // Write to file
-                let mut file = try!(utils::create_file(&config.dest().join(&item.path).with_extension("html")));
-                output!("[*] Creating {:?} ✓", &config.dest().join(&item.path).with_extension("html"));
+                let mut file = try!(utils::create_file(&config.get_dest().join(&item.path).with_extension("html")));
+                output!("[*] Creating {:?} ✓", &config.get_dest().join(&item.path).with_extension("html"));
 
                 try!(file.write_all(&rendered.into_bytes()));
 
@@ -97,13 +97,13 @@ impl Renderer for HtmlHandlebars {
                 if index {
                     debug!("[*]: index.html");
                     try!(fs::copy(
-                        config.dest().join(&item.path.with_extension("html")),
-                        config.dest().join("index.html")
+                        config.get_dest().join(&item.path.with_extension("html")),
+                        config.get_dest().join("index.html")
                     ));
 
                     output!(
                         "[*] Creating index.html from {:?} ✓",
-                        config.dest().join(&item.path.with_extension("html"))
+                        config.get_dest().join(&item.path.with_extension("html"))
                         );
                     index = false;
                 }
@@ -114,17 +114,17 @@ impl Renderer for HtmlHandlebars {
 
         debug!("[*] Copy static files");
         // JavaScript
-        let mut js_file = try!(File::create(config.dest().join("book.js")));
+        let mut js_file = try!(File::create(config.get_dest().join("book.js")));
         try!(js_file.write_all(&theme.js));
 
         // Css
-        let mut css_file = try!(File::create(config.dest().join("book.css")));
+        let mut css_file = try!(File::create(config.get_dest().join("book.css")));
         try!(css_file.write_all(&theme.css));
 
         // syntax highlighting
-        let mut highlight_css = try!(File::create(config.dest().join("highlight.css")));
+        let mut highlight_css = try!(File::create(config.get_dest().join("highlight.css")));
         try!(highlight_css.write_all(&theme.highlight_css));
-        let mut highlight_js = try!(File::create(config.dest().join("highlight.js")));
+        let mut highlight_js = try!(File::create(config.get_dest().join("highlight.js")));
         try!(highlight_js.write_all(&theme.highlight_js));
 
         Ok(())

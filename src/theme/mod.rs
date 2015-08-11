@@ -2,14 +2,20 @@ use std::path::Path;
 use std::fs::{File, metadata};
 use std::io::Read;
 
-static INDEX: &'static str = include_str!("index.hbs");
-static CSS: &'static [u8] = include_bytes!("book.css");
-static JS: &'static [u8] = include_bytes!("book.js");
-static HIGHLIGHT_JS: &'static [u8] = include_bytes!("highlight.js");
-static HIGHLIGHT_CSS: &'static [u8] = include_bytes!("highlight.css");
+pub static INDEX: &'static [u8] = include_bytes!("index.hbs");
+pub static CSS: &'static [u8] = include_bytes!("book.css");
+pub static JS: &'static [u8] = include_bytes!("book.js");
+pub static HIGHLIGHT_JS: &'static [u8] = include_bytes!("highlight.js");
+pub static HIGHLIGHT_CSS: &'static [u8] = include_bytes!("highlight.css");
 
+/// The `Theme` struct should be used instead of the static variables because the `new()` method
+/// will look if the user has a theme directory in his source folder and use the users theme instead
+/// of the default.
+///
+/// You should exceptionnaly use the static variables only if you need the default theme even if the
+/// user has specified another theme.
 pub struct Theme {
-    pub index: String,
+    pub index: Vec<u8>,
     pub css: Vec<u8>,
     pub js: Vec<u8>,
     pub highlight_css: Vec<u8>,
@@ -56,8 +62,8 @@ impl Theme {
         // index.hbs
         match File::open(&src.join("index.hbs")) {
             Ok(mut f) => {
-                theme.index = String::new(); // Reset the value, because read_to_string appends...
-                f.read_to_string(&mut theme.index).unwrap();
+                theme.index.clear(); // Reset the value, because read_to_string appends...
+                f.read_to_end(&mut theme.index).unwrap();
             },
             _ => {},
         }

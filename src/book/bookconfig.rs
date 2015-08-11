@@ -22,7 +22,7 @@ impl BookConfig {
             author: String::new(),
             dest: PathBuf::from("book"),
             src: PathBuf::from("src"),
-            indent_spaces: 4,
+            indent_spaces: 4,               // indentation used for SUMMARY.md
             multilingual: false,
         }
     }
@@ -60,7 +60,7 @@ impl BookConfig {
 
             // If path is relative make it absolute from the parent directory of src
             if dest.is_relative() {
-                let dest = &self.src().parent().unwrap().join(&dest);
+                let dest = &self.get_src().parent().unwrap().join(&dest);
                 self.set_dest(dest);
             }
         }
@@ -68,7 +68,7 @@ impl BookConfig {
         self
     }
 
-    pub fn dest(&self) -> &Path {
+    pub fn get_dest(&self) -> &Path {
         &self.dest
     }
 
@@ -77,7 +77,7 @@ impl BookConfig {
         self
     }
 
-    pub fn src(&self) -> &Path {
+    pub fn get_src(&self) -> &Path {
         &self.src
     }
 
