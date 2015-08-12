@@ -10,6 +10,16 @@ For more information about what is left on my to-do list, check the issue tracke
 
 To have an idea of what a rendered book looks like,take a look at the [**Documentation**](http://azerupi.github.io/mdBook/). It is rendered by the latest version of mdBook.
 
+## Installation
+
+```
+git clone --depth=1 https://github.com/azerupi/mdBook.git
+cd mdBook
+cargo build --release
+```
+
+The executable `mdbook` will be in the `./target/release` folder, this should be added to the path.
+
 ## Structure
 
 There are two main parts of this project:
