@@ -149,12 +149,12 @@ pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) ->
 
                 if let Some(previous) = previous {
 
-                    let path = match previous.get("path") {
+                    let previous_path = match previous.get("path") {
                         Some(p) => p,
                         None => return Err(RenderError{ desc: "No path found for chapter in JSON data"})
                     };
 
-                    if path == &current {
+                    if previous_path == &current {
 
                         debug!("[*]: Found current chapter");
                         debug!("[*]: Creating BTreeMap to inject in context");
@@ -168,6 +168,7 @@ pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) ->
                             }
                             None => return Err(RenderError{ desc: "No title found for chapter in JSON data"})
                         }
+
 
                         let link = path_to_root.join(Path::new(path).with_extension("html"));
                         debug!("[*]: Inserting link: {:?}", link);
