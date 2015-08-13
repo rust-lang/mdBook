@@ -78,7 +78,8 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
 
             // Read answer from user and exit if it's not 'yes'
             if !confirm() {
-                println!("\nexiting...\n");
+                println!("\nSkipping...\n");
+                println!("All done, no errors...");
                 ::std::process::exit(0);
             }
         }
@@ -87,8 +88,9 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
         try!(book.copy_theme());
         println!("\nTheme copied.");
 
-        println!("");
     }
+
+    println!("\nAll done, no errors...");
 
     Ok(())
 }

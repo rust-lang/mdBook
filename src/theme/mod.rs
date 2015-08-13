@@ -1,6 +1,8 @@
 use std::path::Path;
-use std::fs::{File, metadata};
+use std::fs::File;
 use std::io::Read;
+
+use utils::{PathExt};
 
 pub static INDEX: &'static [u8] = include_bytes!("index.hbs");
 pub static CSS: &'static [u8] = include_bytes!("book.css");
@@ -35,26 +37,14 @@ impl Theme {
         };
 
         // Check if the given path exists
-        // Hacky way to check if the path exists... Until PathExt moves to stable
-        match metadata(&src) {
-            Err(_) => return theme,
-            Ok(f) => {
-                if !f.is_dir() {
-                    return theme;
-                }
-            },
+        if !src.exists() || !src.is_dir() {
+            return theme
         }
 
         let src = src.join("theme");
         // If src does exist, check if there is a theme directory in it
-        // Hacky way to check if the path exists... Until PathExt moves to stable
-        match metadata(&src) {
-            Err(_) => return theme,
-            Ok(f) => {
-                if !f.is_dir() {
-                    return theme;
-                }
-            }
+        if !src.exists() || !src.is_dir() {
+            return theme
         }
 
         // Check for individual files if they exist

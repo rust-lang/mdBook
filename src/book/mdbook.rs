@@ -1,14 +1,12 @@
 use std::path::Path;
-use std::fs::{self, File, metadata};
+use std::fs::{self, File};
 use std::io::Write;
 use std::error::Error;
 
-use {BookConfig, BookItem};
+use {BookConfig, BookItem, theme, parse};
 use book::BookItems;
-use parse;
-use theme;
-use renderer::Renderer;
-use renderer::HtmlHandlebars;
+use renderer::{Renderer, HtmlHandlebars};
+use utils::{PathExt, create_path};
 
 pub struct MDBook {
     config: BookConfig,
@@ -27,14 +25,8 @@ impl MDBook {
 
     pub fn new(root: &Path) -> MDBook {
 
-        // Hacky way to check if the path exists... Until PathExt moves to stable
-        match metadata(root) {
-            Err(_) => panic!("Directory does not exist"),
-            Ok(f) => {
-                if !f.is_dir() {
-                    panic!("Is not a directory");
-                }
-            }
+        if !root.exists() || !root.is_dir() {
+            output!("{:?} No directory with that name", root);
         }
 
         MDBook {
@@ -95,46 +87,33 @@ impl MDBook {
 
         debug!("[fn]: init");
 
+        if !self.config.get_root().exists() {
+            create_path(self.config.get_root()).unwrap();
+            output!("{:?} created", self.config.get_root());
+        }
+
         let dest = self.config.get_dest();
         let src = self.config.get_src();
 
-        // Hacky way to check if the directory exists... Until PathExt moves to stable
-        match metadata(&dest) {
-            Err(_) => {
-                // There is a very high chance that the error is due to the fact that
-                // the directory / file does not exist
-                debug!("[*]: {:?} does not exist, trying to create directory", dest);
-                try!(fs::create_dir(&dest));
-            },
-            Ok(_) => { /* If there is no error, the directory / file does exist */ }
+        if !dest.exists() {
+            debug!("[*]: {:?} does not exist, trying to create directory", dest);
+            try!(fs::create_dir(&dest));
         }
 
-        // Hacky way to check if the directory exists... Until PathExt moves to stable
-        match metadata(&src) {
-            Err(_) => {
-                // There is a very high chance that the error is due to the fact that
-                // the directory / file does not exist
-                debug!("[*]: {:?} does not exist, trying to create directory", src);
-                try!(fs::create_dir(&src));
-            },
-            Ok(_) => { /* If there is no error, the directory / file does exist */ }
+        if !src.exists() {
+            debug!("[*]: {:?} does not exist, trying to create directory", src);
+            try!(fs::create_dir(&src));
         }
 
-        // Hacky way to check if the directory exists... Until PathExt moves to stable
-        let summary = match metadata(&src.join("SUMMARY.md")) {
-            Err(_) => {
-                // There is a very high chance that the error is due to the fact that
-                // the directory / file does not exist
-                debug!("[*]: {:?} does not exist, trying to create SUMMARY.md", src.join("SUMMARY.md"));
-                Ok(try!(File::create(&src.join("SUMMARY.md"))))
-            },
-            Ok(_) => {
-                /* If there is no error, the directory / file does exist */
-                Err("SUMMARY.md does already exist")
-            }
-        };
+        let summary = src.join("SUMMARY.md");
 
-        if let Ok(mut f) = summary {
+        if !summary.exists() {
+
+            // Summary does not exist, create it and populate it
+
+            debug!("[*]: {:?} does not exist, trying to create SUMMARY.md", src.join("SUMMARY.md"));
+            let mut f = try!(File::create(&src.join("SUMMARY.md")));
+
             debug!("[*]: Writing to SUMMARY.md");
 
             try!(writeln!(f, "# Summary"));
@@ -143,6 +122,10 @@ impl MDBook {
 
             let mut chapter_1 = try!(File::create(&src.join("chapter_1.md")));
             try!(writeln!(chapter_1, "# Chapter 1"));
+        } else {
+
+            // Summary does exist, read it and create the missing files
+
         }
 
         return Ok(());
@@ -173,15 +156,9 @@ impl MDBook {
 
         let theme_dir = self.config.get_src().join("theme");
 
-        // Hacky way to check if the directory exists... Until PathExt moves to stable
-        match metadata(&theme_dir) {
-            Err(_) => {
-                // There is a very high chance that the error is due to the fact that
-                // the directory / file does not exist
-                debug!("[*]: {:?} does not exist, trying to create directory", theme_dir);
-                try!(fs::create_dir(&theme_dir));
-            },
-            Ok(_) => { /* If there is no error, the directory / file does exist */ }
+        if !theme_dir.exists() {
+            debug!("[*]: {:?} does not exist, trying to create directory", theme_dir);
+            try!(fs::create_dir(&theme_dir));
         }
 
         // index.hbs

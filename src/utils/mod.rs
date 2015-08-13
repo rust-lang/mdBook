@@ -87,23 +87,14 @@ pub fn create_path(path: &Path) -> Result<(), Box<Error>> {
         constructed_path.push(&dir);
         debug!("[*]: {:?}", constructed_path);
 
-        // Check if path exists
-        match metadata(&constructed_path) {
-            // Any way to combine the Err and first Ok branch ??
-            Err(_) => {
-                try!(fs::create_dir(&constructed_path));
-                debug!("[*]: Directory created {:?}", constructed_path);
-            },
-            Ok(f) => {
-                if !f.is_dir() {
-                    try!(fs::create_dir(&constructed_path));
-                    debug!("[*]: Directory created {:?}", constructed_path);
-                } else {
-                    debug!("[*]: Directory exists {:?}", constructed_path);
-                    continue
-                }
-            },
+        if !constructed_path.exists() || !constructed_path.is_dir() {
+            try!(fs::create_dir(&constructed_path));
+            debug!("[*]: Directory created {:?}", constructed_path);
+        } else {
+            debug!("[*]: Directory exists {:?}", constructed_path);
+            continue
         }
+
     }
 
     debug!("[*]: Constructed path: {:?}", constructed_path);
@@ -122,7 +113,7 @@ pub fn create_file(path: &Path) -> Result<File, Box<Error>> {
         try!(create_path(p));
     }
 
-    debug!("[*]: Create file: {}", path);
+    debug!("[*]: Create file: {:?}", path);
     let f = try!(File::create(path));
 
     Ok(f)
