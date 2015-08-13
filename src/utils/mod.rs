@@ -2,6 +2,27 @@ use std::path::{Path, PathBuf, Component};
 use std::error::Error;
 use std::fs::{self, metadata, File};
 
+/// This is copied from the rust source code until Path_ Ext stabilizes.
+/// You can use it, but be aware that it will be removed when those features go to rust stable
+pub trait PathExt {
+    fn exists(&self) -> bool;
+    fn is_file(&self) -> bool;
+    fn is_dir(&self) -> bool;
+}
+
+impl PathExt for Path {
+    fn exists(&self) -> bool {
+        metadata(self).is_ok()
+    }
+
+    fn is_file(&self) -> bool {
+       metadata(self).map(|s| s.is_file()).unwrap_or(false)
+    }
+
+    fn is_dir(&self) -> bool {
+       metadata(self).map(|s| s.is_dir()).unwrap_or(false)
+    }
+}
 
 /// Takes a path and returns a path containing just enough `../` to point to the root of the given path.
 ///
