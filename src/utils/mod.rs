@@ -118,3 +118,15 @@ pub fn create_file(path: &Path) -> Result<File, Box<Error>> {
 
     Ok(f)
 }
+
+/// Removes all the content of a directory but not the directory itself
+
+pub fn remove_dir_content(dir: &Path) -> Result<(), Box<Error>> {
+    for item in try!(fs::read_dir(dir)) {
+        if let Ok(item) = item {
+            let item = item.path();
+            if item.is_dir() { try!(fs::remove_dir_all(item)); } else { try!(fs::remove_file(item)); }
+        }
+    }
+    Ok(())
+}

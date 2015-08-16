@@ -3,7 +3,7 @@ use std::fs::{self, File};
 use std::io::Write;
 use std::error::Error;
 
-use {BookConfig, BookItem, theme, parse};
+use {BookConfig, BookItem, theme, parse, utils};
 use book::BookItems;
 use renderer::{Renderer, HtmlHandlebars};
 use utils::{PathExt, create_path};
@@ -141,6 +141,9 @@ impl MDBook {
         debug!("[fn]: build");
 
         try!(self.parse_summary());
+
+        // Clean output directory
+        try!(utils::remove_dir_content(&self.config.get_dest()));
 
         try!(self.renderer.render(
             self.iter(),
