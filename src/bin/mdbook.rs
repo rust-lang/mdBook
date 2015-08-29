@@ -61,7 +61,7 @@ fn confirm() -> bool {
 fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
 
     let book_dir = get_book_dir(args);
-    let book = MDBook::new(&book_dir);
+    let mut book = MDBook::new(&book_dir);
 
     // Call the function that does the initialization
     try!(book.init());
