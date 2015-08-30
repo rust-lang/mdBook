@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::fs::{self, File};
 use std::io::Write;
 use std::error::Error;
@@ -83,7 +83,7 @@ impl MDBook {
     /// It uses the paths given as source and output directories and adds a `SUMMARY.md` and a
     /// `chapter_1.md` to the source directory.
 
-    pub fn init(&self) -> Result<(), Box<Error>> {
+    pub fn init(&mut self) -> Result<(), Box<Error>> {
 
         debug!("[fn]: init");
 
@@ -92,40 +92,53 @@ impl MDBook {
             output!("{:?} created", self.config.get_root());
         }
 
-        let dest = self.config.get_dest();
-        let src = self.config.get_src();
+        {
+            let dest = self.config.get_dest();
+            let src = self.config.get_src();
 
-        if !dest.exists() {
-            debug!("[*]: {:?} does not exist, trying to create directory", dest);
-            try!(fs::create_dir(&dest));
+            if !dest.exists() {
+                debug!("[*]: {:?} does not exist, trying to create directory", dest);
+                try!(fs::create_dir(&dest));
+            }
+
+            if !src.exists() {
+                debug!("[*]: {:?} does not exist, trying to create directory", src);
+                try!(fs::create_dir(&src));
+            }
+
+            let summary = src.join("SUMMARY.md");
+
+            if !summary.exists() {
+
+                // Summary does not exist, create it
+
+                debug!("[*]: {:?} does not exist, trying to create SUMMARY.md", src.join("SUMMARY.md"));
+                let mut f = try!(File::create(&src.join("SUMMARY.md")));
+
+                debug!("[*]: Writing to SUMMARY.md");
+
+                try!(writeln!(f, "# Summary"));
+                try!(writeln!(f, ""));
+                try!(writeln!(f, "- [Chapter 1](./chapter_1.md)"));
+            }
         }
 
-        if !src.exists() {
-            debug!("[*]: {:?} does not exist, trying to create directory", src);
-            try!(fs::create_dir(&src));
-        }
+        // parse SUMMARY.md, and create the missing item related file
+        try!(self.parse_summary());
 
-        let summary = src.join("SUMMARY.md");
+        for (_, item) in self.iter() {
+            if item.path != PathBuf::new() {
+                let path = self.config.get_src().join(&item.path);
 
-        if !summary.exists() {
+                if !path.exists() {
+                    debug!("[*]: {:?} does not exist, trying to create file", path);
+                    ::std::fs::create_dir_all(path.parent().unwrap());
+                    let mut f = try!(File::create(path));
 
-            // Summary does not exist, create it and populate it
-
-            debug!("[*]: {:?} does not exist, trying to create SUMMARY.md", src.join("SUMMARY.md"));
-            let mut f = try!(File::create(&src.join("SUMMARY.md")));
-
-            debug!("[*]: Writing to SUMMARY.md");
-
-            try!(writeln!(f, "# Summary"));
-            try!(writeln!(f, ""));
-            try!(writeln!(f, "- [Chapter 1](./chapter_1.md)"));
-
-            let mut chapter_1 = try!(File::create(&src.join("chapter_1.md")));
-            try!(writeln!(chapter_1, "# Chapter 1"));
-        } else {
-
-            // Summary does exist, read it and create the missing files
-
+                    debug!("[*]: Writing to {:?}", path);
+                    try!(writeln!(f, "# {}", item.name));
+                }
+            }
         }
 
         return Ok(());
@@ -140,7 +153,7 @@ impl MDBook {
     pub fn build(&mut self) -> Result<(), Box<Error>> {
         debug!("[fn]: build");
 
-        try!(self.parse_summary());
+        self.init();
 
         // Clean output directory
         try!(utils::remove_dir_content(&self.config.get_dest()));
