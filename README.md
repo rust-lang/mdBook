@@ -1,8 +1,8 @@
-# mdBook ![Travis-CI](https://travis-ci.org/azerupi/mdBook.svg?branch=master) [![Crates.io version](https://img.shields.io/crates/v/mdbook.svg)](https://crates.io/crates/mdbook) [![License](https://img.shields.io/crates/l/mdbook.svg)](LICENSE)
+# mdBook [![Travis-CI](https://travis-ci.org/azerupi/mdBook.svg?branch=master)](https://travis-ci.org/azerupi/mdBook) [![Crates.io version](https://img.shields.io/crates/v/mdbook.svg)](https://crates.io/crates/mdbook) [![License](https://img.shields.io/crates/l/mdbook.svg)](LICENSE)
 
 Personal implementation of Gitbook in Rust
 
-**This project is still in it's early days.** 
+**This project is still in it's early days.**
 For more information about what is left on my to-do list, check the issue tracker
 
 
