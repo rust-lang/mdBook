@@ -129,6 +129,10 @@ html, body {
     color: #333;
 }
 
+.menu-bar i:hover {
+    cursor: pointer;
+}
+
 .menu-title {
     color: #7E7E7E;
     display: inline-block;
