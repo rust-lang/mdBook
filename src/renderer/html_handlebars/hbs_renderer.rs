@@ -4,7 +4,7 @@ extern crate pulldown_cmark;
 
 use renderer::html_handlebars::helpers;
 use renderer::Renderer;
-use book::{BookItems, BookConfig};
+use book::MDBook;
 use {utils, theme};
 
 use std::path::PathBuf;
@@ -26,12 +26,12 @@ impl HtmlHandlebars {
 }
 
 impl Renderer for HtmlHandlebars {
-    fn render(&self, book: BookItems, config: &BookConfig) -> Result<(), Box<Error>> {
+    fn render(&self, book: &MDBook) -> Result<(), Box<Error>> {
         debug!("[fn]: render");
         let mut handlebars = Handlebars::new();
 
         // Load theme
-        let theme = theme::Theme::new(&config.get_src());
+        let theme = theme::Theme::new(book.get_src());
 
         // Register template
         debug!("[*]: Register handlebars template");
@@ -43,22 +43,22 @@ impl Renderer for HtmlHandlebars {
         handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
         handlebars.register_helper("next", Box::new(helpers::navigation::next));
 
-        let mut data = try!(make_data(book.clone(), config));
+        let mut data = try!(make_data(book));
 
         // Check if dest directory exists
         debug!("[*]: Check if destination directory exists");
-        match utils::create_path(config.get_dest()) {
+        match utils::create_path(book.get_dest()) {
             Err(_) => return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Unexcpected error when constructing destination path"))),
             _ => {},
         };
 
         // Render a file for every entry in the book
         let mut index = true;
-        for (_, item) in book {
+        for (_, item) in book.iter() {
 
             if item.path != PathBuf::new() {
 
-                let path = config.get_src().join(&item.path);
+                let path = book.get_src().join(&item.path);
 
                 debug!("[*]: Opening file: {:?}", path);
                 let mut f = try!(File::open(&path));
@@ -90,10 +90,10 @@ impl Renderer for HtmlHandlebars {
                 debug!("[*]: Render template");
                 let rendered = try!(handlebars.render("index", &data));
 
-                debug!("[*]: Create file {:?}", &config.get_dest().join(&item.path).with_extension("html"));
+                debug!("[*]: Create file {:?}", &book.get_dest().join(&item.path).with_extension("html"));
                 // Write to file
-                let mut file = try!(utils::create_file(&config.get_dest().join(&item.path).with_extension("html")));
-                output!("[*] Creating {:?} ✓", &config.get_dest().join(&item.path).with_extension("html"));
+                let mut file = try!(utils::create_file(&book.get_dest().join(&item.path).with_extension("html")));
+                output!("[*] Creating {:?} ✓", &book.get_dest().join(&item.path).with_extension("html"));
 
                 try!(file.write_all(&rendered.into_bytes()));
 
@@ -101,13 +101,13 @@ impl Renderer for HtmlHandlebars {
                 if index {
                     debug!("[*]: index.html");
                     try!(fs::copy(
-                        config.get_dest().join(&item.path.with_extension("html")),
-                        config.get_dest().join("index.html")
+                        book.get_dest().join(&item.path.with_extension("html")),
+                        book.get_dest().join("index.html")
                     ));
 
                     output!(
                         "[*] Creating index.html from {:?} ✓",
-                        config.get_dest().join(&item.path.with_extension("html"))
+                        book.get_dest().join(&item.path.with_extension("html"))
                         );
                     index = false;
                 }
@@ -118,33 +118,33 @@ impl Renderer for HtmlHandlebars {
 
         debug!("[*] Copy static files");
         // JavaScript
-        let mut js_file = try!(File::create(config.get_dest().join("book.js")));
+        let mut js_file = try!(File::create(book.get_dest().join("book.js")));
         try!(js_file.write_all(&theme.js));
 
         // Css
-        let mut css_file = try!(File::create(config.get_dest().join("book.css")));
+        let mut css_file = try!(File::create(book.get_dest().join("book.css")));
         try!(css_file.write_all(&theme.css));
 
         // syntax highlighting
-        let mut highlight_css = try!(File::create(config.get_dest().join("highlight.css")));
+        let mut highlight_css = try!(File::create(book.get_dest().join("highlight.css")));
         try!(highlight_css.write_all(&theme.highlight_css));
-        let mut highlight_js = try!(File::create(config.get_dest().join("highlight.js")));
+        let mut highlight_js = try!(File::create(book.get_dest().join("highlight.js")));
         try!(highlight_js.write_all(&theme.highlight_js));
 
         Ok(())
     }
 }
 
-fn make_data(book: BookItems, config: &BookConfig) -> Result<BTreeMap<String,Json>, Box<Error>> {
+fn make_data(book: &MDBook) -> Result<BTreeMap<String,Json>, Box<Error>> {
     debug!("[fn]: make_data");
 
     let mut data  = BTreeMap::new();
     data.insert("language".to_string(), "en".to_json());
-    data.insert("title".to_string(), config.title.to_json());
+    data.insert("title".to_string(), book.get_title().to_json());
 
     let mut chapters = vec![];
 
-    for (section, item) in book {
+    for (section, item) in book.iter() {
         let mut chapter = BTreeMap::new();
         chapter.insert("section".to_string(), section.to_json());
         chapter.insert("name".to_string(), item.name.to_json());

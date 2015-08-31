@@ -132,7 +132,7 @@ impl MDBook {
 
                 if !path.exists() {
                     debug!("[*]: {:?} does not exist, trying to create file", path);
-                    ::std::fs::create_dir_all(path.parent().unwrap());
+                    try!(::std::fs::create_dir_all(path.parent().unwrap()));
                     let mut f = try!(File::create(path));
 
                     debug!("[*]: Writing to {:?}", path);
@@ -153,15 +153,12 @@ impl MDBook {
     pub fn build(&mut self) -> Result<(), Box<Error>> {
         debug!("[fn]: build");
 
-        self.init();
+        try!(self.init());
 
         // Clean output directory
         try!(utils::remove_dir_content(&self.config.get_dest()));
 
-        try!(self.renderer.render(
-            self.iter(),
-            &self.config,
-        ));
+        try!(self.renderer.render(&self));
 
         Ok(())
     }
@@ -288,11 +285,18 @@ impl MDBook {
         self
     }
 
+    pub fn get_title(&self) -> &str {
+        &self.config.title
+    }
+
     pub fn set_author(mut self, author: &str) -> Self {
         self.config.author = author.to_owned();
         self
     }
 
+    pub fn get_author(&self) -> &str {
+        &self.config.author
+    }
 
     // Construct book
     fn parse_summary(&mut self) -> Result<(), Box<Error>> {
