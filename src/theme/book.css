@@ -37,21 +37,13 @@ html, body {
     background: none repeat scroll 0 0 #FFF;
     -webkit-overflow-scrolling: touch;
 
+    min-height: 100%;
+
     /* Animation: slide away */
     -webkit-transition: left 0.5s; /* Safari */
     -o-transition: left 0.5s; /* Opera */
     -moz-transition: left 0.5s; /* Mozilla Firefox */
     transition: left 0.5s;
-}
-
-@media only screen and (max-width: 1060px) {
-    .sidebar {
-        left: -300px;
-    }
-    .page-wrapper {
-        left: 15px;
-        padding-right: 15px;
-    }
 }
 
 .page {
@@ -60,6 +52,8 @@ html, body {
     right: 0;
     left: 0;
     bottom: 0;
+
+    padding-right: 15px;
     overflow-y: auto;
 }
 
@@ -202,6 +196,8 @@ html, body {
     transition: color 0.5s;
 }
 
+.mobile-nav-chapters { display: none; }
+
 .nav-chapters:hover {
     color: #333;
     text-decoration: none;
@@ -213,4 +209,52 @@ html, body {
 
 .next {
     right: 0;
+}
+
+
+@media only screen and (max-width: 1060px) {
+    .sidebar {
+        left: -300px;
+    }
+    .page-wrapper {
+        left: 15px;
+        padding-right: 15px;
+    }
+}
+
+/* Fix the navigation arrows that collapsed with the text on smaller screens */
+
+@media only screen and (max-width: 1250px) {
+    .nav-chapters {
+        display: none;
+    }
+
+    .mobile-nav-chapters {
+        color: #CCC;
+        font-size: 40px;
+        text-align: center;
+        text-decoration: none;
+
+        max-width: 150px;
+        min-width: 90px;
+
+        justify-content: center;
+        align-content: center;
+
+        position: relative;
+        display: inline-block;
+        margin-bottom: 50px;
+
+        border-radius: 5px;
+        background-color: #E0E0E0;
+        color: #999;
+    }
+
+    .next {
+        float: right;
+    }
+
+    .previous {
+        float: left;
+    }
 }
