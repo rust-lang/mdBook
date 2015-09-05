@@ -110,12 +110,17 @@ html, body {
 
     .menu-bar i {
         position: relative;
+        margin: 0 10px;
         z-index: 10;
         line-height: 50px;
         -webkit-transition: color 0.5s; /* Safari */
         -o-transition: color 0.5s; /* Opera */
         -moz-transition: color 0.5s; /* Mozilla Firefox */
         transition: color 0.5s;
+    }
+
+    .menu-bar .right-buttons {
+        float: right;
     }
 
     .menu-bar :hover {
@@ -284,5 +289,11 @@ html, body {
     a, a:visited, a:active, a:hover {
       color: #4183c4;
       text-decoration: none;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        page-break-inside: avoid;
+        page-break-after: avoid;
+        /*break-after: avoid;*/
     }
 }
