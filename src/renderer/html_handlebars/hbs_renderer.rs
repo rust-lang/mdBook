@@ -137,6 +137,7 @@ impl Renderer for HtmlHandlebars {
         let rendered = try!(handlebars.render("index", &data));
         let mut file = try!(utils::create_file(&book.get_dest().join("print").with_extension("html")));
         try!(file.write_all(&rendered.into_bytes()));
+        output!("[*] Creating print.html ✓");
 
         // Copy static files (js, css, images, ...)
 
