@@ -19,7 +19,6 @@ impl HelperDef for RenderToc {
     // param is the key of value you want to display
     let chapters = c.navigate(rc.get_path(), "chapters");
     let current = c.navigate(rc.get_path(), "path").to_string().replace("\"", "");
-    let path_to_root = c.navigate(rc.get_path(), "path_to_root").to_string().replace("\"", "");
     try!(rc.writer.write("<ul class=\"chapter\">".as_bytes()));
 
     // Decode json format
@@ -50,9 +49,6 @@ impl HelperDef for RenderToc {
         let path_exists = if let Some(path) = item.get("path") {
             if path.len() > 0 {
                 try!(rc.writer.write("<a href=\"".as_bytes()));
-
-                // Prefix with path to root
-                try!(rc.writer.write(path_to_root.as_bytes()));
 
                 // Add link
                 try!(rc.writer.write(

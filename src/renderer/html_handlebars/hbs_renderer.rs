@@ -7,7 +7,7 @@ use renderer::Renderer;
 use book::MDBook;
 use {utils, theme};
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::fs::{self, File};
 use std::error::Error;
 use std::io::{self, Read, Write};
@@ -45,6 +45,9 @@ impl Renderer for HtmlHandlebars {
 
         let mut data = try!(make_data(book));
 
+        // Print version
+        let mut print_content: String = String::new();
+
         // Check if dest directory exists
         debug!("[*]: Check if destination directory exists");
         match utils::create_path(book.get_dest()) {
@@ -69,6 +72,7 @@ impl Renderer for HtmlHandlebars {
 
                 // Render markdown using the pulldown-cmark crate
                 content = render_html(&content);
+                print_content.push_str(&content);
 
                 // Remove content from previous file and render content for this one
                 data.remove("path");
@@ -113,6 +117,26 @@ impl Renderer for HtmlHandlebars {
                 }
             }
         }
+
+        // Print version
+
+        // Remove content from previous file and render content for this one
+        data.remove("path");
+        data.insert("path".to_string(), "print.md".to_json());
+
+        // Remove content from previous file and render content for this one
+        data.remove("content");
+        data.insert("content".to_string(), print_content.to_json());
+
+        // Remove path to root from previous file and render content for this one
+        data.remove("path_to_root");
+        data.insert("path_to_root".to_string(), utils::path_to_root(Path::new("print.md")).to_json());
+
+        // Rendere the handlebars template with the data
+        debug!("[*]: Render template");
+        let rendered = try!(handlebars.render("index", &data));
+        let mut file = try!(utils::create_file(&book.get_dest().join("print").with_extension("html")));
+        try!(file.write_all(&rendered.into_bytes()));
 
         // Copy static files (js, css, images, ...)
 

@@ -1,7 +1,7 @@
 extern crate handlebars;
 extern crate rustc_serialize;
 
-use std::path::{PathBuf, Path};
+use std::path::Path;
 use std::collections::BTreeMap;
 
 use self::rustc_serialize::json::{self, ToJson};
@@ -22,11 +22,6 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
         .to_string()
         .replace("\"", "");
 
-    let path_to_root = PathBuf::from(
-        c.navigate(rc.get_path(), "path_to_root")
-            .to_string()
-            .replace("\"", "")
-    );
 
     debug!("[*]: Decode chapters from JSON");
     // Decode json format
@@ -68,7 +63,7 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
 
                         match previous.get("path") {
                             Some(p) => {
-                                let path = path_to_root.join(Path::new(p).with_extension("html"));
+                                let path = Path::new(p).with_extension("html");
                                 debug!("[*]: Inserting link: {:?}", path);
 
                                 match path.to_str() {
@@ -125,12 +120,6 @@ pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) ->
         .to_string()
         .replace("\"", "");
 
-    let path_to_root = PathBuf::from(
-        c.navigate(rc.get_path(), "path_to_root")
-            .to_string()
-            .replace("\"", "")
-    );
-
     debug!("[*]: Decode chapters from JSON");
     // Decode json format
     let decoded: Vec<BTreeMap<String, String>> = match json::decode(&chapters.to_string()) {
@@ -170,7 +159,7 @@ pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) ->
                         }
 
 
-                        let link = path_to_root.join(Path::new(path).with_extension("html"));
+                        let link = Path::new(path).with_extension("html");
                         debug!("[*]: Inserting link: {:?}", link);
 
                         match link.to_str() {
