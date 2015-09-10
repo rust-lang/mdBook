@@ -3,16 +3,6 @@ use std::fs::File;
 use std::io::{Read, Result, Error, ErrorKind};
 use book::bookitem::BookItem;
 
-/*
-pub enum LineType {
-    Blank,
-    Header,
-    Link(String, PathBuf), // Name, Path
-    ListItem(String, PathBuf, i32), // Name, Path, Level
-    Other,
-}
-*/
-
 pub fn construct_bookitems(path: &PathBuf) -> Result<Vec<BookItem>> {
     debug!("[fn]: construct_bookitems");
     let mut summary = String::new();
