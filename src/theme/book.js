@@ -37,4 +37,24 @@ $( document ).ready(function() {
         window.print();
     }
 
+    // Theme button
+    $("#theme-toggle").click(function(){
+        if($('.theme-popup').length) {
+            $('.theme-popup').remove();
+        } else {
+            var popup = $('<div class="theme-popup"></div>')
+                .append($('<div class="theme" id="light">Light (default)<div>'))
+                .append($('<div class="theme" id="dark">Dark</div>'));
+
+
+            $(this).append(popup);
+
+            $('.theme').click(function(){
+                var theme = $(this).attr('id');
+                $('body').removeClass().addClass(theme);
+            });
+        }
+
+    });
+
 });

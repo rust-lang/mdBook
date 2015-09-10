@@ -130,6 +130,10 @@ html, body {
         transition: color 0.5s;
     }
 
+    .menu-bar .left-buttons {
+        float: left;
+    }
+
     .menu-bar .right-buttons {
         float: right;
     }
@@ -226,6 +230,30 @@ html, body {
     .next {
         right: 0;
     }
+
+
+    /* Theme Popup */
+    .theme-popup {
+        position: fixed;
+        left: -40px;
+
+        border: 1px solid #fafafa;
+        border-radius: 4px;
+
+        font-size: 0.7em;
+    }
+
+    .theme-popup .theme {
+        margin: 0;
+        padding: 2px 10px;
+        line-height: 25px;
+        white-space: nowrap;
+    }
+
+    .theme-popup .theme:hover {
+        background-color: #fafafa;
+    }
+
 }
 
 
