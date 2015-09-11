@@ -45,15 +45,15 @@ impl MDBook {
     /// ```no_run
     /// # extern crate mdbook;
     /// # use mdbook::MDBook;
-    /// # use bookitem::BookItem;
+    /// # use mdbook::BookItem;
     /// # use std::path::Path;
     /// # fn main() {
     /// # let mut book = MDBook::new(Path::new("mybook"));
     /// for item in book.iter() {
     ///     match item {
-    ///         BookItem::Chapter(section, chapter) => {},
-    ///         BookItem::Affix(chapter) => {},
-    ///         BookItem::Spacer => {},
+    ///         &BookItem::Chapter(ref section, ref chapter) => {},
+    ///         &BookItem::Affix(ref chapter) => {},
+    ///         &BookItem::Spacer => {},
     ///     }
     /// }
     ///
