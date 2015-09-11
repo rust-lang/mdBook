@@ -39,17 +39,22 @@ impl MDBook {
         }
     }
 
-    /// Returns a flat depth-first iterator over the elements of the book in the form of a tuple:
+    /// Returns a flat depth-first iterator over the elements of the book, it returns an [BookItem enum](bookitem.html):
     /// `(section: String, bookitem: &BookItem)`
     ///
     /// ```no_run
     /// # extern crate mdbook;
     /// # use mdbook::MDBook;
+    /// # use bookitem::BookItem;
     /// # use std::path::Path;
     /// # fn main() {
     /// # let mut book = MDBook::new(Path::new("mybook"));
-    /// for (section, element) in book.iter() {
-    ///     println!("{} {}", section, element.name);
+    /// for item in book.iter() {
+    ///     match item {
+    ///         BookItem::Chapter(section, chapter) => {},
+    ///         BookItem::Affix(chapter) => {},
+    ///         BookItem::Spacer => {},
+    ///     }
     /// }
     ///
     /// // would print something like this:
