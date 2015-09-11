@@ -28,7 +28,14 @@ impl HelperDef for RenderToc {
 
     for item in decoded {
 
-        let level = item.get("section").expect("Error: section should be Some(_)").len() / 2;
+        // Spacer
+        if let Some(_) = item.get("spacer") {
+            try!(rc.writer.write("<li class=\"spacer\"></li>".as_bytes()));
+            continue
+        }
+
+        let level = if let Some(s) = item.get("section") { s.len() / 2 } else { 1 };
+
         if level > current_level {
             try!(rc.writer.write("<li>".as_bytes()));
             try!(rc.writer.write("<ul class=\"section\">".as_bytes()));
@@ -42,7 +49,11 @@ impl HelperDef for RenderToc {
             try!(rc.writer.write("<li>".as_bytes()));
         }
         else {
-            try!(rc.writer.write("<li>".as_bytes()));
+            try!(rc.writer.write("<li".as_bytes()));
+            if let None = item.get("section") {
+                try!(rc.writer.write(" class=\"affix\"".as_bytes()));
+            }
+            try!(rc.writer.write(">".as_bytes()));
         }
 
         // Link
@@ -74,10 +85,16 @@ impl HelperDef for RenderToc {
             false
         };
 
-        try!(rc.writer.write("<strong>".as_bytes()));
-        try!(rc.writer.write(item.get("section").expect("Error: section should be Some(_)").as_bytes()));
-        try!(rc.writer.write("</strong> ".as_bytes()));
-        try!(rc.writer.write(item.get("name").expect("Error: name should be Some(_)").as_bytes()));
+        // Section does not necessarily exist
+        if let Some(section) = item.get("section") {
+            try!(rc.writer.write("<strong>".as_bytes()));
+            try!(rc.writer.write(section.as_bytes()));
+            try!(rc.writer.write("</strong> ".as_bytes()));
+        }
+
+        if let Some(name) = item.get("name") {
+            try!(rc.writer.write(name.as_bytes()));
+        }
 
         if path_exists {
             try!(rc.writer.write("</a>".as_bytes()));

@@ -102,6 +102,17 @@ html, body {
         text-decoration: none;
     }
 
+    .chapter .affix {
+
+    }
+
+    .chapter .spacer {
+        width: 100%;
+        height: 3px;
+        background-color: #f4f4f4;
+        margin: 10px 0px;
+    }
+
     .menu-bar {
         position: relative;
         height: 50px;

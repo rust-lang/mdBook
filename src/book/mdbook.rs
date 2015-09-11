@@ -126,21 +126,29 @@ impl MDBook {
         // parse SUMMARY.md, and create the missing item related file
         try!(self.parse_summary());
 
-        for (_, item) in self.iter() {
-            if item.path != PathBuf::new() {
-                let path = self.config.get_src().join(&item.path);
+        debug!("[*]: constructing paths for missing files");
+        for item in self.iter() {
+            debug!("[*]: item: {:?}", item);
+            match item {
+                &BookItem::Spacer => continue,
+                &BookItem::Chapter(_, ref ch) | &BookItem::Affix(ref ch) => {
+                    if ch.path != PathBuf::new() {
+                        let path = self.config.get_src().join(&ch.path);
 
-                if !path.exists() {
-                    debug!("[*]: {:?} does not exist, trying to create file", path);
-                    try!(::std::fs::create_dir_all(path.parent().unwrap()));
-                    let mut f = try!(File::create(path));
+                        if !path.exists() {
+                            debug!("[*]: {:?} does not exist, trying to create file", path);
+                            try!(::std::fs::create_dir_all(path.parent().unwrap()));
+                            let mut f = try!(File::create(path));
 
-                    debug!("[*]: Writing to {:?}", path);
-                    try!(writeln!(f, "# {}", item.name));
+                            //debug!("[*]: Writing to {:?}", path);
+                            try!(writeln!(f, "# {}", ch.name));
+                        }
+                    }
                 }
             }
         }
 
+        debug!("[*]: init done");
         return Ok(());
     }
 
@@ -300,14 +308,8 @@ impl MDBook {
 
     // Construct book
     fn parse_summary(&mut self) -> Result<(), Box<Error>> {
-
         // When append becomes stable, use self.content.append() ...
-        let book_items = try!(parse::construct_bookitems(&self.config.get_src().join("SUMMARY.md")));
-
-        for item in book_items {
-            self.content.push(item)
-        }
-
+        self.content = try!(parse::construct_bookitems(&self.config.get_src().join("SUMMARY.md")));
         Ok(())
     }
 

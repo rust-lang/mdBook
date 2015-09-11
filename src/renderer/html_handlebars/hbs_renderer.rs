@@ -5,6 +5,7 @@ extern crate pulldown_cmark;
 use renderer::html_handlebars::helpers;
 use renderer::Renderer;
 use book::MDBook;
+use book::bookitem::BookItem;
 use {utils, theme};
 
 use std::path::{Path, PathBuf};
@@ -57,64 +58,69 @@ impl Renderer for HtmlHandlebars {
 
         // Render a file for every entry in the book
         let mut index = true;
-        for (_, item) in book.iter() {
+        for item in book.iter() {
 
-            if item.path != PathBuf::new() {
+            match item {
+                &BookItem::Chapter(_, ref ch) | &BookItem::Affix(ref ch) => {
+                    if ch.path != PathBuf::new() {
 
-                let path = book.get_src().join(&item.path);
+                        let path = book.get_src().join(&ch.path);
 
-                debug!("[*]: Opening file: {:?}", path);
-                let mut f = try!(File::open(&path));
-                let mut content: String = String::new();
+                        debug!("[*]: Opening file: {:?}", path);
+                        let mut f = try!(File::open(&path));
+                        let mut content: String = String::new();
 
-                debug!("[*]: Reading file");
-                try!(f.read_to_string(&mut content));
+                        debug!("[*]: Reading file");
+                        try!(f.read_to_string(&mut content));
 
-                // Render markdown using the pulldown-cmark crate
-                content = render_html(&content);
-                print_content.push_str(&content);
+                        // Render markdown using the pulldown-cmark crate
+                        content = render_html(&content);
+                        print_content.push_str(&content);
 
-                // Remove content from previous file and render content for this one
-                data.remove("path");
-                match item.path.to_str() {
-                    Some(p) => { data.insert("path".to_string(), p.to_json()); },
-                    None => return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))),
+                        // Remove content from previous file and render content for this one
+                        data.remove("path");
+                        match ch.path.to_str() {
+                            Some(p) => { data.insert("path".to_string(), p.to_json()); },
+                            None => return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))),
+                        }
+
+
+                        // Remove content from previous file and render content for this one
+                        data.remove("content");
+                        data.insert("content".to_string(), content.to_json());
+
+                        // Remove path to root from previous file and render content for this one
+                        data.remove("path_to_root");
+                        data.insert("path_to_root".to_string(), utils::path_to_root(&ch.path).to_json());
+
+                        // Rendere the handlebars template with the data
+                        debug!("[*]: Render template");
+                        let rendered = try!(handlebars.render("index", &data));
+
+                        debug!("[*]: Create file {:?}", &book.get_dest().join(&ch.path).with_extension("html"));
+                        // Write to file
+                        let mut file = try!(utils::create_file(&book.get_dest().join(&ch.path).with_extension("html")));
+                        output!("[*] Creating {:?} ✓", &book.get_dest().join(&ch.path).with_extension("html"));
+
+                        try!(file.write_all(&rendered.into_bytes()));
+
+                        // Create an index.html from the first element in SUMMARY.md
+                        if index {
+                            debug!("[*]: index.html");
+                            try!(fs::copy(
+                                book.get_dest().join(&ch.path.with_extension("html")),
+                                book.get_dest().join("index.html")
+                            ));
+
+                            output!(
+                                "[*] Creating index.html from {:?} ✓",
+                                book.get_dest().join(&ch.path.with_extension("html"))
+                                );
+                            index = false;
+                        }
+                    }
                 }
-
-
-                // Remove content from previous file and render content for this one
-                data.remove("content");
-                data.insert("content".to_string(), content.to_json());
-
-                // Remove path to root from previous file and render content for this one
-                data.remove("path_to_root");
-                data.insert("path_to_root".to_string(), utils::path_to_root(&item.path).to_json());
-
-                // Rendere the handlebars template with the data
-                debug!("[*]: Render template");
-                let rendered = try!(handlebars.render("index", &data));
-
-                debug!("[*]: Create file {:?}", &book.get_dest().join(&item.path).with_extension("html"));
-                // Write to file
-                let mut file = try!(utils::create_file(&book.get_dest().join(&item.path).with_extension("html")));
-                output!("[*] Creating {:?} ✓", &book.get_dest().join(&item.path).with_extension("html"));
-
-                try!(file.write_all(&rendered.into_bytes()));
-
-                // Create an index.html from the first element in SUMMARY.md
-                if index {
-                    debug!("[*]: index.html");
-                    try!(fs::copy(
-                        book.get_dest().join(&item.path.with_extension("html")),
-                        book.get_dest().join("index.html")
-                    ));
-
-                    output!(
-                        "[*] Creating index.html from {:?} ✓",
-                        book.get_dest().join(&item.path.with_extension("html"))
-                        );
-                    index = false;
-                }
+                _ => {}
             }
         }
 
@@ -169,13 +175,30 @@ fn make_data(book: &MDBook) -> Result<BTreeMap<String,Json>, Box<Error>> {
 
     let mut chapters = vec![];
 
-    for (section, item) in book.iter() {
+    for item in book.iter() {
+        // Create the data to inject in the template
         let mut chapter = BTreeMap::new();
-        chapter.insert("section".to_string(), section.to_json());
-        chapter.insert("name".to_string(), item.name.to_json());
-        match item.path.to_str() {
-            Some(p) => { chapter.insert("path".to_string(), p.to_json()); },
-            None => return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))),
+
+        match item {
+            &BookItem::Affix(ref ch) => {
+                chapter.insert("name".to_string(), ch.name.to_json());
+                match ch.path.to_str() {
+                    Some(p) => { chapter.insert("path".to_string(), p.to_json()); },
+                    None => return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))),
+                }
+            },
+            &BookItem::Chapter(ref s, ref ch) => {
+                chapter.insert("section".to_string(), s.to_json());
+                chapter.insert("name".to_string(), ch.name.to_json());
+                match ch.path.to_str() {
+                    Some(p) => { chapter.insert("path".to_string(), p.to_json()); },
+                    None => return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))),
+                }
+            },
+            &BookItem::Spacer => {
+                chapter.insert("spacer".to_string(), "_spacer_".to_json());
+            }
+
         }
 
         chapters.push(chapter);

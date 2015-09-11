@@ -11,3 +11,5 @@
         - [index.hbs](format/theme/index-hbs.md)
         - [Syntax highlighting](format/theme/syntax-highlighting.md)
 - [Rust Library](lib/lib.md)
+-----------
+[Contributors](misc/contributors.md)
