@@ -156,9 +156,25 @@ impl Renderer for HtmlHandlebars {
         let mut css_file = try!(File::create(book.get_dest().join("book.css")));
         try!(css_file.write_all(&theme.css));
 
-        // JQuery
+        // JQuery local fallback
         let mut jquery = try!(File::create(book.get_dest().join("jquery.js")));
         try!(jquery.write_all(&theme.jquery));
+
+        // Font Awesome local fallback
+        let mut font_awesome = try!(utils::create_file(&book.get_dest().join("_FontAwesome/css/font-awesome").with_extension("css")));
+        try!(font_awesome.write_all(theme::FONT_AWESOME));
+        let mut font_awesome = try!(utils::create_file(&book.get_dest().join("_FontAwesome/fonts/fontawesome-webfont.eot")));
+        try!(font_awesome.write_all(theme::FONT_AWESOME_EOT));
+        let mut font_awesome = try!(utils::create_file(&book.get_dest().join("_FontAwesome/fonts/fontawesome-webfont.svg")));
+        try!(font_awesome.write_all(theme::FONT_AWESOME_SVG));
+        let mut font_awesome = try!(utils::create_file(&book.get_dest().join("_FontAwesome/fonts/fontawesome-webfont.ttf")));
+        try!(font_awesome.write_all(theme::FONT_AWESOME_TTF));
+        let mut font_awesome = try!(utils::create_file(&book.get_dest().join("_FontAwesome/fonts/fontawesome-webfont.woff")));
+        try!(font_awesome.write_all(theme::FONT_AWESOME_WOFF));
+        let mut font_awesome = try!(utils::create_file(&book.get_dest().join("_FontAwesome/fonts/fontawesome-webfont.woff2")));
+        try!(font_awesome.write_all(theme::FONT_AWESOME_WOFF2));
+        let mut font_awesome = try!(utils::create_file(&book.get_dest().join("_FontAwesome/fonts/FontAwesome.ttf")));
+        try!(font_awesome.write_all(theme::FONT_AWESOME_TTF));
 
         // syntax highlighting
         let mut highlight_css = try!(File::create(book.get_dest().join("highlight.css")));
