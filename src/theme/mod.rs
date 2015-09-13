@@ -34,7 +34,7 @@ pub struct Theme {
 }
 
 impl Theme {
-    pub fn new(src: &Path) -> Self{
+    pub fn new(src: &Path) -> Self {
 
         // Default theme
         let mut theme = Theme {
@@ -60,58 +60,33 @@ impl Theme {
         // Check for individual files if they exist
 
         // index.hbs
-        match File::open(&src.join("index.hbs")) {
-            Ok(mut f) => {
-                theme.index.clear(); // Reset the value, because read_to_string appends...
-                match f.read_to_end(&mut theme.index) {
-                    _ => {}
-                };
-            },
-            _ => {},
+        if let Ok(mut f) = File::open(&src.join("index.hbs")) {
+            theme.index.clear(); // Reset the value, because read_to_string appends...
+            let _ = f.read_to_end(&mut theme.index);
         }
 
         // book.js
-        match File::open(&src.join("book.js")) {
-            Ok(mut f) => {
-                theme.js.clear();
-                match f.read_to_end(&mut theme.js){
-                    _ => {}
-                }
-            },
-            _ => {},
+        if let Ok(mut f) = File::open(&src.join("book.js")) {
+            theme.js.clear();
+            let _ =  f.read_to_end(&mut theme.js);
         }
 
         // book.css
-        match File::open(&src.join("book.css")) {
-            Ok(mut f) => {
-                theme.css.clear();
-                match f.read_to_end(&mut theme.css) {
-                    _ => {}
-                }
-            },
-            _ => {},
+        if let Ok(mut f) = File::open(&src.join("book.css")) {
+            theme.css.clear();
+            let _ = f.read_to_end(&mut theme.css);
         }
 
         // highlight.js
-        match File::open(&src.join("highlight.js")) {
-            Ok(mut f) => {
-                theme.highlight_js.clear();
-                match f.read_to_end(&mut theme.highlight_js) {
-                    _ => {}
-                }
-            },
-            _ => {},
+        if let Ok(mut f) = File::open(&src.join("highlight.js")) {
+            theme.highlight_js.clear();
+            let _ = f.read_to_end(&mut theme.highlight_js);
         }
 
         // highlight.css
-        match File::open(&src.join("highlight.css")) {
-            Ok(mut f) => {
-                theme.highlight_css.clear();
-                match f.read_to_end(&mut theme.highlight_css) {
-                    _ => {}
-                }
-            },
-            _ => {},
+        if let Ok(mut f) = File::open(&src.join("highlight.css")) {
+            theme.highlight_css.clear();
+            let _ = f.read_to_end(&mut theme.highlight_css);
         }
 
         theme
