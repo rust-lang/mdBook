@@ -9,6 +9,7 @@ pub static CSS: &'static [u8] = include_bytes!("book.css");
 pub static JS: &'static [u8] = include_bytes!("book.js");
 pub static HIGHLIGHT_JS: &'static [u8] = include_bytes!("highlight.js");
 pub static HIGHLIGHT_CSS: &'static [u8] = include_bytes!("highlight.css");
+pub static JQUERY: &'static [u8] = include_bytes!("jquery-2.1.4.min.js");
 
 /// The `Theme` struct should be used instead of the static variables because the `new()` method
 /// will look if the user has a theme directory in his source folder and use the users theme instead
@@ -22,6 +23,7 @@ pub struct Theme {
     pub js: Vec<u8>,
     pub highlight_css: Vec<u8>,
     pub highlight_js: Vec<u8>,
+    pub jquery: Vec<u8>,
 }
 
 impl Theme {
@@ -34,6 +36,7 @@ impl Theme {
             js: JS.to_owned(),
             highlight_css: HIGHLIGHT_CSS.to_owned(),
             highlight_js: HIGHLIGHT_JS.to_owned(),
+            jquery: JQUERY.to_owned(),
         };
 
         // Check if the given path exists

@@ -156,6 +156,10 @@ impl Renderer for HtmlHandlebars {
         let mut css_file = try!(File::create(book.get_dest().join("book.css")));
         try!(css_file.write_all(&theme.css));
 
+        // JQuery
+        let mut jquery = try!(File::create(book.get_dest().join("jquery.js")));
+        try!(jquery.write_all(&theme.jquery));
+
         // syntax highlighting
         let mut highlight_css = try!(File::create(book.get_dest().join("highlight.css")));
         try!(highlight_css.write_all(&theme.highlight_css));
