@@ -39,6 +39,40 @@ html, body {
     .light .theme-popup .theme:hover {
         background-color: #e6e6e6;
     }
+
+    /* Coal theme */
+    .coal {
+        color: #98a3ad;
+        background-color: #141617;
+    }
+    .coal .sidebar {
+        background-color: #292c2f;
+        color: #a1adb8;
+    }
+    .coal .chapter li .active,
+    .coal .chapter li a:hover {
+        /* Animate color change */
+        color: #3473ad;
+    }
+    .coal .menu-bar,
+    .coal .nav-chapters {
+        color: #43484d;
+    }
+    .coal .chapter li a,
+    .coal .menu-bar i:hover,
+    .coal .nav-chapters:hover {
+        color: #b3c0cc;
+    }
+    .coal .content a {
+        color: #2b79a2;
+    }
+    /* Theme changer */
+    .coal .theme-popup {
+        background: #141617;
+        border: 1px solid #43484d;
+    }
+    .coal .theme-popup .theme:hover {
+        background-color: #1f2124;
     }
     .sidebar {
         position: absolute;
@@ -283,6 +317,7 @@ html, body {
     .light .mobile-nav-chapters i:hover {
         color: #333;
     }
+    /* Coal theme */
     .coal .mobile-nav-chapters {
         background-color: #212426;
         color: #43484d;
