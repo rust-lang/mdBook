@@ -344,7 +344,6 @@ html, body {
 @media only screen and (max-width: 1250px) {
     /* Light theme */
     .light .mobile-nav-chapters {
-        color: #CCC;
         background-color: #E0E0E0;
         color: #999;
     }
