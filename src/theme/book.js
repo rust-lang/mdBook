@@ -50,6 +50,7 @@ $( document ).ready(function() {
         } else {
             var popup = $('<div class="theme-popup"></div>')
                 .append($('<div class="theme" id="light">Light (default)<div>'))
+                .append($('<div class="theme" id="rust">Rust</div>'))
                 .append($('<div class="theme" id="coal">Coal</div>'))
                 .append($('<div class="theme" id="navy">Navy</div>'));
 

@@ -108,6 +108,42 @@ html, body {
     .navy .theme-popup .theme:hover {
         background-color: #282e40;
     }
+    /* Rust theme */
+    .rust {
+        background-color: #e1e1db;
+        color: #262625;
+    }
+    .rust .sidebar {
+        background-color: #3b2e2a;
+        color: #c8c9db;
+    }
+    .rust .chapter li .active,
+    .rust .chapter li a:hover {
+        /* Animate color change */
+        color: #e69f67;
+    }
+    .rust .menu-bar,
+    .rust .nav-chapters {
+        color: #737480;
+    }
+    .rust .chapter li a {
+        color: #bfbfba;
+    }
+    .rust .menu-bar i:hover,
+    .rust .nav-chapters:hover {
+        color: #262625;
+    }
+    .rust .content a {
+        color: #2b79a2;
+    }
+    /* Theme changer */
+    .rust .theme-popup {
+        background: #e1e1db;
+        border: 1px solid #b38f6b;
+    }
+    .rust .theme-popup .theme:hover {
+        background-color: #99908a;
+    }
     .sidebar {
         position: absolute;
         left: 0;
@@ -366,7 +402,14 @@ html, body {
     .navy .mobile-nav-chapters i:hover {
         color: #b7b9cc;
     }
-
+    /* Rust theme */
+    .rust .mobile-nav-chapters {
+        background-color: #4d413d;
+        color: #737480;
+    }
+    .rust .mobile-nav-chapters i:hover {
+        color: #b7b9cc;
+    }
     .nav-chapters {
         display: none;
     }
