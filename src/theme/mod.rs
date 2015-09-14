@@ -8,6 +8,7 @@ pub static INDEX: &'static [u8] = include_bytes!("index.hbs");
 pub static CSS: &'static [u8] = include_bytes!("book.css");
 pub static JS: &'static [u8] = include_bytes!("book.js");
 pub static HIGHLIGHT_JS: &'static [u8] = include_bytes!("highlight.js");
+pub static TOMORROW_NIGHT_CSS: &'static [u8] = include_bytes!("tomorrow-night.css");
 pub static HIGHLIGHT_CSS: &'static [u8] = include_bytes!("highlight.css");
 pub static JQUERY: &'static [u8] = include_bytes!("jquery-2.1.4.min.js");
 pub static FONT_AWESOME: &'static [u8] = include_bytes!("_FontAwesome/css/font-awesome.min.css");
@@ -29,12 +30,13 @@ pub struct Theme {
     pub css: Vec<u8>,
     pub js: Vec<u8>,
     pub highlight_css: Vec<u8>,
+    pub tomorrow_night_css: Vec<u8>,
     pub highlight_js: Vec<u8>,
     pub jquery: Vec<u8>,
 }
 
 impl Theme {
-    pub fn new(src: &Path) -> Self{
+    pub fn new(src: &Path) -> Self {
 
         // Default theme
         let mut theme = Theme {
@@ -42,6 +44,7 @@ impl Theme {
             css: CSS.to_owned(),
             js: JS.to_owned(),
             highlight_css: HIGHLIGHT_CSS.to_owned(),
+            tomorrow_night_css: TOMORROW_NIGHT_CSS.to_owned(),
             highlight_js: HIGHLIGHT_JS.to_owned(),
             jquery: JQUERY.to_owned(),
         };
@@ -60,58 +63,39 @@ impl Theme {
         // Check for individual files if they exist
 
         // index.hbs
-        match File::open(&src.join("index.hbs")) {
-            Ok(mut f) => {
-                theme.index.clear(); // Reset the value, because read_to_string appends...
-                match f.read_to_end(&mut theme.index) {
-                    _ => {}
-                };
-            },
-            _ => {},
+        if let Ok(mut f) = File::open(&src.join("index.hbs")) {
+            theme.index.clear(); // Reset the value, because read_to_string appends...
+            let _ = f.read_to_end(&mut theme.index);
         }
 
         // book.js
-        match File::open(&src.join("book.js")) {
-            Ok(mut f) => {
-                theme.js.clear();
-                match f.read_to_end(&mut theme.js){
-                    _ => {}
-                }
-            },
-            _ => {},
+        if let Ok(mut f) = File::open(&src.join("book.js")) {
+            theme.js.clear();
+            let _ =  f.read_to_end(&mut theme.js);
         }
 
         // book.css
-        match File::open(&src.join("book.css")) {
-            Ok(mut f) => {
-                theme.css.clear();
-                match f.read_to_end(&mut theme.css) {
-                    _ => {}
-                }
-            },
-            _ => {},
+        if let Ok(mut f) = File::open(&src.join("book.css")) {
+            theme.css.clear();
+            let _ = f.read_to_end(&mut theme.css);
         }
 
         // highlight.js
-        match File::open(&src.join("highlight.js")) {
-            Ok(mut f) => {
-                theme.highlight_js.clear();
-                match f.read_to_end(&mut theme.highlight_js) {
-                    _ => {}
-                }
-            },
-            _ => {},
+        if let Ok(mut f) = File::open(&src.join("highlight.js")) {
+            theme.highlight_js.clear();
+            let _ = f.read_to_end(&mut theme.highlight_js);
         }
 
         // highlight.css
-        match File::open(&src.join("highlight.css")) {
-            Ok(mut f) => {
-                theme.highlight_css.clear();
-                match f.read_to_end(&mut theme.highlight_css) {
-                    _ => {}
-                }
-            },
-            _ => {},
+        if let Ok(mut f) = File::open(&src.join("highlight.css")) {
+            theme.highlight_css.clear();
+            let _ = f.read_to_end(&mut theme.highlight_css);
+        }
+
+        // tomorrow-night.css
+        if let Ok(mut f) = File::open(&src.join("tomorrow-night.css")) {
+            theme.tomorrow_night_css.clear();
+            let _ = f.read_to_end(&mut theme.tomorrow_night_css);
         }
 
         theme

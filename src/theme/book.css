@@ -4,6 +4,146 @@ html, body {
 }
 
 @media only screen {
+    /* Light theme */
+    .light .sidebar {
+        border-right: 1px solid rgba(0, 0, 0, 0.07);
+        background-color: #fafafa;
+        color: #364149;
+    }
+    .light .page-wrapper {
+        background: none repeat scroll 0 0 #FFF;
+    }
+    .light .chapter li .active,
+    .light .chapter li a:hover {
+        /* Animate color change */
+        color: #008cff;
+    }
+    .light .menu-bar,
+    .light .nav-chapters {
+        color: #CCC;
+    }
+    .light .chapter li a,
+    .light .menu-bar i:hover,
+    .light .nav-chapters:hover {
+        /* Animate color change */
+        color: #333;
+    }
+    .light .content a {
+        color: #4183c4;
+    }
+    /* Theme changer */
+    .light .theme-popup {
+        background: #fafafa;
+        border: 1px solid #ccc;
+    }
+    .light .theme-popup .theme:hover {
+        background-color: #e6e6e6;
+    }
+
+    /* Coal theme */
+    .coal {
+        color: #98a3ad;
+        background-color: #141617;
+    }
+    .coal .sidebar {
+        background-color: #292c2f;
+        color: #a1adb8;
+    }
+    .coal .chapter li .active,
+    .coal .chapter li a:hover {
+        /* Animate color change */
+        color: #3473ad;
+    }
+    .coal .menu-bar,
+    .coal .nav-chapters {
+        color: #43484d;
+    }
+    .coal .chapter li a,
+    .coal .menu-bar i:hover,
+    .coal .nav-chapters:hover {
+        color: #b3c0cc;
+    }
+    .coal .content a {
+        color: #2b79a2;
+    }
+    /* Theme changer */
+    .coal .theme-popup {
+        background: #141617;
+        border: 1px solid #43484d;
+    }
+    .coal .theme-popup .theme:hover {
+        background-color: #1f2124;
+    }
+    /* Dark blue colored theme */
+    .navy {
+        background-color: #161923;
+        color: #bcbdd0;
+    }
+    .navy .sidebar {
+        background-color: #282d3f;
+        color: #c8c9db;
+    }
+    .navy .chapter li .active,
+    .navy .chapter li a:hover {
+        /* Animate color change */
+        color: #2b79a2;
+    }
+    .navy .menu-bar,
+    .navy .nav-chapters {
+        color: #737480;
+    }
+    .navy .chapter li a,
+    .navy .menu-bar i:hover,
+    .navy .nav-chapters:hover {
+        color: #b7b9cc;
+    }
+    .navy .content a {
+        color: #2b79a2;
+    }
+    /* Theme changer */
+    .navy .theme-popup {
+        background: #161923;
+        border: 1px solid #737480;
+    }
+    .navy .theme-popup .theme:hover {
+        background-color: #282e40;
+    }
+    /* Rust theme */
+    .rust {
+        background-color: #e1e1db;
+        color: #262625;
+    }
+    .rust .sidebar {
+        background-color: #3b2e2a;
+        color: #c8c9db;
+    }
+    .rust .chapter li .active,
+    .rust .chapter li a:hover {
+        /* Animate color change */
+        color: #e69f67;
+    }
+    .rust .menu-bar,
+    .rust .nav-chapters {
+        color: #737480;
+    }
+    .rust .chapter li a {
+        color: #bfbfba;
+    }
+    .rust .menu-bar i:hover,
+    .rust .nav-chapters:hover {
+        color: #262625;
+    }
+    .rust .content a {
+        color: #2b79a2;
+    }
+    /* Theme changer */
+    .rust .theme-popup {
+        background: #e1e1db;
+        border: 1px solid #b38f6b;
+    }
+    .rust .theme-popup .theme:hover {
+        background-color: #99908a;
+    }
     .sidebar {
         position: absolute;
         left: 0;
@@ -11,13 +151,10 @@ html, body {
         bottom: 0;
         width: 300px;
         overflow-y: auto;
-        border-right: 1px solid rgba(0, 0, 0, 0.07);
         padding: 10px 10px;
         font-size: 14px;
         box-sizing: border-box;
         -webkit-overflow-scrolling: touch;
-        background-color: #fafafa;
-        color: #364149;
 
         /* Animation: slide away */
         -webkit-transition: left 0.5s; /* Safari */
@@ -34,7 +171,6 @@ html, body {
         top: 0;
         bottom: 0;
         box-sizing: border-box;
-        background: none repeat scroll 0 0 #FFF;
         -webkit-overflow-scrolling: touch;
 
         min-height: 100%;
@@ -82,23 +218,12 @@ html, body {
         white-space: nowrap;
     }
 
-    .chapter li {
-        color: #AAA;
-    }
-
     .chapter li a {
-        color: #333;
         padding: 5px 0;
         text-decoration: none;
     }
 
-    .chapter li .active {
-        color: #008cff;
-    }
-
     .chapter li a:hover {
-        /* Animate color change */
-        color: #008cff;
         text-decoration: none;
     }
 
@@ -116,7 +241,6 @@ html, body {
     .menu-bar {
         position: relative;
         height: 50px;
-        color: #CCC;
     }
 
     .menu-bar i {
@@ -130,13 +254,12 @@ html, body {
         transition: color 0.5s;
     }
 
-    .menu-bar .right-buttons {
-        float: right;
+    .menu-bar .left-buttons {
+        float: left;
     }
 
-    .menu-bar :hover {
-        /* Animate color change */
-        color: #333;
+    .menu-bar .right-buttons {
+        float: right;
     }
 
     .menu-bar i:hover {
@@ -144,7 +267,6 @@ html, body {
     }
 
     .menu-title {
-        color: #7E7E7E;
         display: inline-block;
         font-weight: 200;
         font-size: 20px;
@@ -165,7 +287,6 @@ html, body {
     }
 
     .menu-bar:hover .menu-title {
-        color: #7E7E7E;
         opacity: 1;
     }
 
@@ -180,7 +301,6 @@ html, body {
     /* Content */
 
     .content a {
-        color: #4183c4;
         text-decoration: none;
     }
 
@@ -190,7 +310,6 @@ html, body {
 
     /* Nav icons */
     .nav-chapters {
-        color: #CCC;
         font-size: 40px;
         text-align: center;
         text-decoration: none;
@@ -215,7 +334,6 @@ html, body {
     .mobile-nav-chapters { display: none; }
 
     .nav-chapters:hover {
-        color: #333;
         text-decoration: none;
     }
 
@@ -225,6 +343,24 @@ html, body {
 
     .next {
         right: 0;
+    }
+
+
+    /* Theme Popup */
+    .theme-popup {
+        position: fixed;
+        left: -40px;
+
+        border-radius: 4px;
+
+        font-size: 0.7em;
+    }
+
+    .theme-popup .theme {
+        margin: 0;
+        padding: 2px 10px;
+        line-height: 25px;
+        white-space: nowrap;
     }
 }
 
@@ -242,12 +378,43 @@ html, body {
 /* Fix the navigation arrows that collapsed with the text on smaller screens */
 
 @media only screen and (max-width: 1250px) {
+    /* Light theme */
+    .light .mobile-nav-chapters {
+        background-color: #E0E0E0;
+        color: #999;
+    }
+    .light .mobile-nav-chapters i:hover {
+        color: #333;
+    }
+    /* Coal theme */
+    .coal .mobile-nav-chapters {
+        background-color: #212426;
+        color: #43484d;
+    }
+    .coal .mobile-nav-chapters i:hover {
+        color: #b3c0cc;
+    }
+    /* Navy theme */
+    .navy .mobile-nav-chapters {
+        background-color: #242838;
+        color: #737480;
+    }
+    .navy .mobile-nav-chapters i:hover {
+        color: #b7b9cc;
+    }
+    /* Rust theme */
+    .rust .mobile-nav-chapters {
+        background-color: #4d413d;
+        color: #737480;
+    }
+    .rust .mobile-nav-chapters i:hover {
+        color: #b7b9cc;
+    }
     .nav-chapters {
         display: none;
     }
 
     .mobile-nav-chapters {
-        color: #CCC;
         font-size: 40px;
         text-align: center;
         text-decoration: none;
@@ -263,8 +430,6 @@ html, body {
         margin-bottom: 50px;
 
         border-radius: 5px;
-        background-color: #E0E0E0;
-        color: #999;
     }
 
     .next {
