@@ -9,7 +9,7 @@ use book::bookitem::BookItem;
 use {utils, theme};
 
 use std::path::{Path, PathBuf};
-use std::fs::{self, File};
+use std::fs::File;
 use std::error::Error;
 use std::io::{self, Read, Write};
 use std::collections::BTreeMap;
@@ -107,10 +107,17 @@ impl Renderer for HtmlHandlebars {
                         // Create an index.html from the first element in SUMMARY.md
                         if index {
                             debug!("[*]: index.html");
-                            try!(fs::copy(
-                                book.get_dest().join(&ch.path.with_extension("html")),
-                                book.get_dest().join("index.html")
-                            ));
+
+                            let mut index_file = try!(File::create(book.get_dest().join("index.html")));
+                            let mut content = String::new();
+                            let _source = try!(File::open(book.get_dest().join(&ch.path.with_extension("html"))))
+                                                        .read_to_string(&mut content);
+
+                            // This could cause a problem when someone displays code containing <base href=...>
+                            // on the front page, however this case should be very very rare...
+                            content = content.lines().filter(|line| !line.contains("<base href=")).collect();
+
+                            try!(index_file.write_all(content.as_bytes()));
 
                             output!(
                                 "[*] Creating index.html from {:?} ✓",
