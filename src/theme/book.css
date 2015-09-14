@@ -238,6 +238,18 @@ html, body {
         margin: 10px 0px;
     }
 
+    .navy .chapter .spacer {
+        background-color: #2d334f;
+    }
+
+    .coal .chapter .spacer {
+        background-color: #393939;
+    }
+
+    .rust .chapter .spacer {
+        background-color: #45373a;
+    }
+
     .menu-bar {
         position: relative;
         height: 50px;
