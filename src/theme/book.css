@@ -13,6 +13,9 @@ html, body {
     .light .page-wrapper {
         background: none repeat scroll 0 0 #FFF;
     }
+    .light .chapter li {
+        color: #aaa;
+    }
     .light .chapter li .active,
     .light .chapter li a:hover {
         /* Animate color change */
@@ -49,6 +52,9 @@ html, body {
         background-color: #292c2f;
         color: #a1adb8;
     }
+    .coal .chapter li {
+        color: #505254;
+    }
     .coal .chapter li .active,
     .coal .chapter li a:hover {
         /* Animate color change */
@@ -83,6 +89,9 @@ html, body {
         background-color: #282d3f;
         color: #c8c9db;
     }
+    .navy .chapter li {
+        color: #505274;
+    }
     .navy .chapter li .active,
     .navy .chapter li a:hover {
         /* Animate color change */
@@ -116,6 +125,9 @@ html, body {
     .rust .sidebar {
         background-color: #3b2e2a;
         color: #c8c9db;
+    }
+    .rust .chapter li {
+        color: #505254;
     }
     .rust .chapter li .active,
     .rust .chapter li a:hover {
