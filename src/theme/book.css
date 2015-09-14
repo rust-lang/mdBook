@@ -13,46 +13,32 @@ html, body {
     .light .page-wrapper {
         background: none repeat scroll 0 0 #FFF;
     }
-    .light .chapter li {
-        color: #AAA;
-    }
-    .light .chapter li a {
-        color: #333;
-    }
-    .light .chapter li .active {
-        color: #008cff;
-    }
+    .light .chapter li .active,
     .light .chapter li a:hover {
         /* Animate color change */
         color: #008cff;
     }
-    .light .menu-bar {
+    .light .menu-bar,
+    .light .nav-chapters {
         color: #CCC;
     }
-    .light .menu-bar :hover {
+    .light .chapter li a,
+    .light .menu-bar i:hover,
+    .light .nav-chapters:hover {
         /* Animate color change */
         color: #333;
-    }
-    .light .menu-title {
-        color: #7E7E7E;
-    }
-    .light .menu-bar:hover .menu-title {
-        color: #7E7E7E;
     }
     .light .content a {
         color: #4183c4;
     }
-    .light .nav-chapters {
-        color: #CCC;
-    }
-    .light .nav-chapters:hover {
-        color: #333;
-    }
+    /* Theme changer */
     .light .theme-popup {
-        border: 1px solid #fafafa;
+        background: #fafafa;
+        border: 1px solid #ccc;
     }
     .light .theme-popup .theme:hover {
-        background-color: #fafafa;
+        background-color: #e6e6e6;
+    }
     }
     .sidebar {
         position: absolute;
@@ -294,7 +280,16 @@ html, body {
         background-color: #E0E0E0;
         color: #999;
     }
-
+    .light .mobile-nav-chapters i:hover {
+        color: #333;
+    }
+    .coal .mobile-nav-chapters {
+        background-color: #212426;
+        color: #43484d;
+    }
+    .coal .mobile-nav-chapters i:hover {
+        color: #b3c0cc;
+    }
 
     .nav-chapters {
         display: none;
