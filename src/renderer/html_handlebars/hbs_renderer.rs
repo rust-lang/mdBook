@@ -179,6 +179,8 @@ impl Renderer for HtmlHandlebars {
         // syntax highlighting
         let mut highlight_css = try!(File::create(book.get_dest().join("highlight.css")));
         try!(highlight_css.write_all(&theme.highlight_css));
+        let mut tomorrow_night_css = try!(File::create(book.get_dest().join("tomorrow-night.css")));
+        try!(tomorrow_night_css.write_all(&theme.tomorrow_night_css));
         let mut highlight_js = try!(File::create(book.get_dest().join("highlight.js")));
         try!(highlight_js.write_all(&theme.highlight_js));
 

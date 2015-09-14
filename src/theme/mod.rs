@@ -8,6 +8,7 @@ pub static INDEX: &'static [u8] = include_bytes!("index.hbs");
 pub static CSS: &'static [u8] = include_bytes!("book.css");
 pub static JS: &'static [u8] = include_bytes!("book.js");
 pub static HIGHLIGHT_JS: &'static [u8] = include_bytes!("highlight.js");
+pub static TOMORROW_NIGHT_CSS: &'static [u8] = include_bytes!("tomorrow-night.css");
 pub static HIGHLIGHT_CSS: &'static [u8] = include_bytes!("highlight.css");
 pub static JQUERY: &'static [u8] = include_bytes!("jquery-2.1.4.min.js");
 pub static FONT_AWESOME: &'static [u8] = include_bytes!("_FontAwesome/css/font-awesome.min.css");
@@ -29,6 +30,7 @@ pub struct Theme {
     pub css: Vec<u8>,
     pub js: Vec<u8>,
     pub highlight_css: Vec<u8>,
+    pub tomorrow_night_css: Vec<u8>,
     pub highlight_js: Vec<u8>,
     pub jquery: Vec<u8>,
 }
@@ -42,6 +44,7 @@ impl Theme {
             css: CSS.to_owned(),
             js: JS.to_owned(),
             highlight_css: HIGHLIGHT_CSS.to_owned(),
+            tomorrow_night_css: TOMORROW_NIGHT_CSS.to_owned(),
             highlight_js: HIGHLIGHT_JS.to_owned(),
             jquery: JQUERY.to_owned(),
         };
@@ -87,6 +90,12 @@ impl Theme {
         if let Ok(mut f) = File::open(&src.join("highlight.css")) {
             theme.highlight_css.clear();
             let _ = f.read_to_end(&mut theme.highlight_css);
+        }
+
+        // tomorrow-night.css
+        if let Ok(mut f) = File::open(&src.join("tomorrow-night.css")) {
+            theme.tomorrow_night_css.clear();
+            let _ = f.read_to_end(&mut theme.tomorrow_night_css);
         }
 
         theme
