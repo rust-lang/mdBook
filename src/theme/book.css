@@ -4,6 +4,56 @@ html, body {
 }
 
 @media only screen {
+    /* Light theme */
+    .light .sidebar {
+        border-right: 1px solid rgba(0, 0, 0, 0.07);
+        background-color: #fafafa;
+        color: #364149;
+    }
+    .light .page-wrapper {
+        background: none repeat scroll 0 0 #FFF;
+    }
+    .light .chapter li {
+        color: #AAA;
+    }
+    .light .chapter li a {
+        color: #333;
+    }
+    .light .chapter li .active {
+        color: #008cff;
+    }
+    .light .chapter li a:hover {
+        /* Animate color change */
+        color: #008cff;
+    }
+    .light .menu-bar {
+        color: #CCC;
+    }
+    .light .menu-bar :hover {
+        /* Animate color change */
+        color: #333;
+    }
+    .light .menu-title {
+        color: #7E7E7E;
+    }
+    .light .menu-bar:hover .menu-title {
+        color: #7E7E7E;
+    }
+    .light .content a {
+        color: #4183c4;
+    }
+    .light .nav-chapters {
+        color: #CCC;
+    }
+    .light .nav-chapters:hover {
+        color: #333;
+    }
+    .light .theme-popup {
+        border: 1px solid #fafafa;
+    }
+    .light .theme-popup .theme:hover {
+        background-color: #fafafa;
+    }
     .sidebar {
         position: absolute;
         left: 0;
@@ -11,13 +61,10 @@ html, body {
         bottom: 0;
         width: 300px;
         overflow-y: auto;
-        border-right: 1px solid rgba(0, 0, 0, 0.07);
         padding: 10px 10px;
         font-size: 14px;
         box-sizing: border-box;
         -webkit-overflow-scrolling: touch;
-        background-color: #fafafa;
-        color: #364149;
 
         /* Animation: slide away */
         -webkit-transition: left 0.5s; /* Safari */
@@ -34,7 +81,6 @@ html, body {
         top: 0;
         bottom: 0;
         box-sizing: border-box;
-        background: none repeat scroll 0 0 #FFF;
         -webkit-overflow-scrolling: touch;
 
         min-height: 100%;
@@ -82,23 +128,12 @@ html, body {
         white-space: nowrap;
     }
 
-    .chapter li {
-        color: #AAA;
-    }
-
     .chapter li a {
-        color: #333;
         padding: 5px 0;
         text-decoration: none;
     }
 
-    .chapter li .active {
-        color: #008cff;
-    }
-
     .chapter li a:hover {
-        /* Animate color change */
-        color: #008cff;
         text-decoration: none;
     }
 
@@ -116,7 +151,6 @@ html, body {
     .menu-bar {
         position: relative;
         height: 50px;
-        color: #CCC;
     }
 
     .menu-bar i {
@@ -138,17 +172,11 @@ html, body {
         float: right;
     }
 
-    .menu-bar :hover {
-        /* Animate color change */
-        color: #333;
-    }
-
     .menu-bar i:hover {
         cursor: pointer;
     }
 
     .menu-title {
-        color: #7E7E7E;
         display: inline-block;
         font-weight: 200;
         font-size: 20px;
@@ -169,7 +197,6 @@ html, body {
     }
 
     .menu-bar:hover .menu-title {
-        color: #7E7E7E;
         opacity: 1;
     }
 
@@ -184,7 +211,6 @@ html, body {
     /* Content */
 
     .content a {
-        color: #4183c4;
         text-decoration: none;
     }
 
@@ -194,7 +220,6 @@ html, body {
 
     /* Nav icons */
     .nav-chapters {
-        color: #CCC;
         font-size: 40px;
         text-align: center;
         text-decoration: none;
@@ -219,7 +244,6 @@ html, body {
     .mobile-nav-chapters { display: none; }
 
     .nav-chapters:hover {
-        color: #333;
         text-decoration: none;
     }
 
@@ -237,7 +261,6 @@ html, body {
         position: fixed;
         left: -40px;
 
-        border: 1px solid #fafafa;
         border-radius: 4px;
 
         font-size: 0.7em;
@@ -249,11 +272,6 @@ html, body {
         line-height: 25px;
         white-space: nowrap;
     }
-
-    .theme-popup .theme:hover {
-        background-color: #fafafa;
-    }
-
 }
 
 
@@ -270,12 +288,19 @@ html, body {
 /* Fix the navigation arrows that collapsed with the text on smaller screens */
 
 @media only screen and (max-width: 1250px) {
+    /* Light theme */
+    .light .mobile-nav-chapters {
+        color: #CCC;
+        background-color: #E0E0E0;
+        color: #999;
+    }
+
+
     .nav-chapters {
         display: none;
     }
 
     .mobile-nav-chapters {
-        color: #CCC;
         font-size: 40px;
         text-align: center;
         text-decoration: none;
@@ -291,8 +316,6 @@ html, body {
         margin-bottom: 50px;
 
         border-radius: 5px;
-        background-color: #E0E0E0;
-        color: #999;
     }
 
     .next {
