@@ -3,6 +3,12 @@ $( document ).ready(function() {
     // url
     var url = window.location.pathname;
 
+    // Set theme
+    var theme = localStorage.getItem('theme');
+    if (theme == null) { theme = 'light'; }
+
+    set_theme(theme);
+
     // Syntax highlighting Configuration
     hljs.configure({
         tabReplace: '    ', // 4 spaces
@@ -44,17 +50,32 @@ $( document ).ready(function() {
         } else {
             var popup = $('<div class="theme-popup"></div>')
                 .append($('<div class="theme" id="light">Light (default)<div>'))
-                .append($('<div class="theme" id="dark">Dark</div>'));
+                .append($('<div class="theme" id="coal">Coal</div>'))
+                .append($('<div class="theme" id="navy">Navy</div>'));
 
 
             $(this).append(popup);
 
             $('.theme').click(function(){
                 var theme = $(this).attr('id');
-                $('body').removeClass().addClass(theme);
+
+                set_theme(theme)
             });
         }
 
     });
 
+    function set_theme(theme) {
+        if (theme == 'coal' || theme == 'navy') {
+            $("[href='tomorrow-night.css']").prop('disabled', false);
+            $("[href='highlight.css']").prop('disabled', true);
+        } else {
+            $("[href='tomorrow-night.css']").prop('disabled', true);
+            $("[href='highlight.css']").prop('disabled', false);
+        }
+
+        localStorage.setItem('theme', theme);
+
+        $('body').removeClass().addClass(theme);
+    }
 });
