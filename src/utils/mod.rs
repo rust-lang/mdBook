@@ -130,3 +130,38 @@ pub fn remove_dir_content(dir: &Path) -> Result<(), Box<Error>> {
     }
     Ok(())
 }
+
+/// **Untested!**
+///
+/// Copies all files of a directory to another one except the files with the extensions given in the
+/// `ext_blacklist` array
+
+pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blacklist: &[String]) -> Result<(), Box<Error>> {
+
+    // Check that from and to are different
+    if from == to { return Ok(()) }
+
+    for entry in try!(fs::read_dir(from)) {
+        let entry = try!(entry);
+        let metadata = try!(entry.metadata());
+
+        // If the entry is a dir and the recursive option is enabled, call itself
+        if metadata.is_dir() && recursive {
+            try!(copy_files_except_ext(
+                &from.join(entry.file_name()),
+                &to.join(entry.file_name()),
+                true,
+                ext_blacklist
+            ));
+        } else if metadata.is_file() {
+
+            // Check if it is in the blacklist
+            if let Some(ext) = entry.path().extension() {
+                if ext_blacklist.contains(&String::from(ext.to_str().unwrap())) { continue }
+
+                try!(fs::copy(entry.path(), &to.join(entry.path().file_name().expect("a file should have a file name..."))));
+            }
+        }
+    }
+    Ok(())
+}
