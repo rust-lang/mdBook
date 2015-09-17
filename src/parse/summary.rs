@@ -19,7 +19,7 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
     let mut items: Vec<BookItem> = vec![];
 
     // Construct the book recursively
-    while summary.len() > 0 {
+    while !summary.is_empty() {
         let item: BookItem;
         // Indentation level of the line to parse
         let level = try!(level(summary[0], 4));
@@ -199,7 +199,7 @@ fn read_link(line: &str) -> Option<(String, PathBuf)> {
         return None
     }
 
-    let name = line[start_delimitor + 1 .. end_delimitor].to_string();
+    let name = line[start_delimitor + 1 .. end_delimitor].to_owned();
 
     start_delimitor = end_delimitor + 1;
     if let Some(i) = line[start_delimitor..].find(')') {
@@ -210,7 +210,7 @@ fn read_link(line: &str) -> Option<(String, PathBuf)> {
         return None
     }
 
-    let path = PathBuf::from(line[start_delimitor + 1 .. end_delimitor].to_string());
+    let path = PathBuf::from(line[start_delimitor + 1 .. end_delimitor].to_owned());
 
     Some((name, path))
 }

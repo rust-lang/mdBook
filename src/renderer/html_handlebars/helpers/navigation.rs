@@ -37,7 +37,7 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
     for item in decoded {
 
         match item.get("path") {
-            Some(path) if path.len() > 0 => {
+            Some(path) if !path.is_empty() => {
                 if path == &current {
 
                     debug!("[*]: Found current chapter");
@@ -51,7 +51,7 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
                         match previous.get("name") {
                             Some(n) => {
                                 debug!("[*]: Inserting title: {}", n);
-                                previous_chapter.insert("title".to_string(), n.to_json())
+                                previous_chapter.insert("title".to_owned(), n.to_json())
                             },
                             None => {
                                 debug!("[*]: No title found for chapter");
@@ -67,7 +67,7 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
                                 debug!("[*]: Inserting link: {:?}", path);
 
                                 match path.to_str() {
-                                    Some(p) => { previous_chapter.insert("link".to_string(), p.to_json()); },
+                                    Some(p) => { previous_chapter.insert("link".to_owned(), p.to_json()); },
                                     None => return Err(RenderError{ desc: "Link could not be converted to str" })
                                 }
                             },
@@ -134,7 +134,7 @@ pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) ->
 
         match item.get("path") {
 
-            Some(path) if path.len() > 0 => {
+            Some(path) if !path.is_empty() => {
 
                 if let Some(previous) = previous {
 
@@ -153,7 +153,7 @@ pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) ->
                         match item.get("name") {
                             Some(n) => {
                                 debug!("[*]: Inserting title: {}", n);
-                                next_chapter.insert("title".to_string(), n.to_json());
+                                next_chapter.insert("title".to_owned(), n.to_json());
                             }
                             None => return Err(RenderError{ desc: "No title found for chapter in JSON data"})
                         }
@@ -163,7 +163,7 @@ pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) ->
                         debug!("[*]: Inserting link: {:?}", link);
 
                         match link.to_str() {
-                            Some(l) => { next_chapter.insert("link".to_string(), l.to_json()); },
+                            Some(l) => { next_chapter.insert("link".to_owned(), l.to_json()); },
                             None => return Err(RenderError{ desc: "Link could not converted to str"})
                         }
 
