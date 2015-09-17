@@ -43,8 +43,8 @@ impl ToJson for Chapter {
 
     fn to_json(&self) -> Json {
         let mut m: BTreeMap<String, Json> = BTreeMap::new();
-        m.insert("name".to_string(), self.name.to_json());
-        m.insert("path".to_string(),self.path.to_str()
+        m.insert("name".to_owned(), self.name.to_json());
+        m.insert("path".to_owned(),self.path.to_str()
             .expect("Json conversion failed for path").to_json()
         );
         m.to_json()
@@ -71,13 +71,13 @@ impl<'a> Iterator for BookItems<'a> {
             } else {
                 let cur = self.items.get(self.current_index).unwrap();
 
-                match cur {
-                    &BookItem::Chapter(_, ref ch) | &BookItem::Affix(ref ch) => {
+                match *cur {
+                    BookItem::Chapter(_, ref ch) | BookItem::Affix(ref ch) => {
                         self.stack.push((self.items, self.current_index));
                         self.items = &ch.sub_items[..];
                         self.current_index = 0;
                     },
-                    &BookItem::Spacer => {
+                    BookItem::Spacer => {
                         self.current_index += 1;
                     }
                 }

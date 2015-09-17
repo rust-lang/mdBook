@@ -51,17 +51,16 @@ impl Renderer for HtmlHandlebars {
 
         // Check if dest directory exists
         debug!("[*]: Check if destination directory exists");
-        match utils::create_path(book.get_dest()) {
-            Err(_) => return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Unexcpected error when constructing destination path"))),
-            _ => {},
-        };
+        if let Err(_) = utils::create_path(book.get_dest()) {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Unexpected error when constructing destination path")))
+        }
 
         // Render a file for every entry in the book
         let mut index = true;
         for item in book.iter() {
 
-            match item {
-                &BookItem::Chapter(_, ref ch) | &BookItem::Affix(ref ch) => {
+            match *item {
+                BookItem::Chapter(_, ref ch) | BookItem::Affix(ref ch) => {
                     if ch.path != PathBuf::new() {
 
                         let path = book.get_src().join(&ch.path);
@@ -80,18 +79,18 @@ impl Renderer for HtmlHandlebars {
                         // Remove content from previous file and render content for this one
                         data.remove("path");
                         match ch.path.to_str() {
-                            Some(p) => { data.insert("path".to_string(), p.to_json()); },
+                            Some(p) => { data.insert("path".to_owned(), p.to_json()); },
                             None => return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))),
                         }
 
 
                         // Remove content from previous file and render content for this one
                         data.remove("content");
-                        data.insert("content".to_string(), content.to_json());
+                        data.insert("content".to_owned(), content.to_json());
 
                         // Remove path to root from previous file and render content for this one
                         data.remove("path_to_root");
-                        data.insert("path_to_root".to_string(), utils::path_to_root(&ch.path).to_json());
+                        data.insert("path_to_root".to_owned(), utils::path_to_root(&ch.path).to_json());
 
                         // Rendere the handlebars template with the data
                         debug!("[*]: Render template");
@@ -135,15 +134,15 @@ impl Renderer for HtmlHandlebars {
 
         // Remove content from previous file and render content for this one
         data.remove("path");
-        data.insert("path".to_string(), "print.md".to_json());
+        data.insert("path".to_owned(), "print.md".to_json());
 
         // Remove content from previous file and render content for this one
         data.remove("content");
-        data.insert("content".to_string(), print_content.to_json());
+        data.insert("content".to_owned(), print_content.to_json());
 
         // Remove path to root from previous file and render content for this one
         data.remove("path_to_root");
-        data.insert("path_to_root".to_string(), utils::path_to_root(Path::new("print.md")).to_json());
+        data.insert("path_to_root".to_owned(), utils::path_to_root(Path::new("print.md")).to_json());
 
         // Rendere the handlebars template with the data
         debug!("[*]: Render template");
@@ -203,8 +202,8 @@ fn make_data(book: &MDBook) -> Result<BTreeMap<String,Json>, Box<Error>> {
     debug!("[fn]: make_data");
 
     let mut data  = BTreeMap::new();
-    data.insert("language".to_string(), "en".to_json());
-    data.insert("title".to_string(), book.get_title().to_json());
+    data.insert("language".to_owned(), "en".to_json());
+    data.insert("title".to_owned(), book.get_title().to_json());
 
     let mut chapters = vec![];
 
@@ -212,24 +211,24 @@ fn make_data(book: &MDBook) -> Result<BTreeMap<String,Json>, Box<Error>> {
         // Create the data to inject in the template
         let mut chapter = BTreeMap::new();
 
-        match item {
-            &BookItem::Affix(ref ch) => {
-                chapter.insert("name".to_string(), ch.name.to_json());
+        match *item {
+            BookItem::Affix(ref ch) => {
+                chapter.insert("name".to_owned(), ch.name.to_json());
                 match ch.path.to_str() {
-                    Some(p) => { chapter.insert("path".to_string(), p.to_json()); },
+                    Some(p) => { chapter.insert("path".to_owned(), p.to_json()); },
                     None => return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))),
                 }
             },
-            &BookItem::Chapter(ref s, ref ch) => {
-                chapter.insert("section".to_string(), s.to_json());
-                chapter.insert("name".to_string(), ch.name.to_json());
+            BookItem::Chapter(ref s, ref ch) => {
+                chapter.insert("section".to_owned(), s.to_json());
+                chapter.insert("name".to_owned(), ch.name.to_json());
                 match ch.path.to_str() {
-                    Some(p) => { chapter.insert("path".to_string(), p.to_json()); },
+                    Some(p) => { chapter.insert("path".to_owned(), p.to_json()); },
                     None => return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))),
                 }
             },
-            &BookItem::Spacer => {
-                chapter.insert("spacer".to_string(), "_spacer_".to_json());
+            BookItem::Spacer => {
+                chapter.insert("spacer".to_owned(), "_spacer_".to_json());
             }
 
         }
@@ -237,7 +236,7 @@ fn make_data(book: &MDBook) -> Result<BTreeMap<String,Json>, Box<Error>> {
         chapters.push(chapter);
     }
 
-    data.insert("chapters".to_string(), chapters.to_json());
+    data.insert("chapters".to_owned(), chapters.to_json());
 
     debug!("[*]: JSON constructed");
     Ok(data)

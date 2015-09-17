@@ -72,7 +72,7 @@ pub fn create_path(path: &Path) -> Result<(), Box<Error>> {
 
     for component in path.components() {
 
-        let mut dir;
+        let dir;
         match component {
             Component::Normal(_) => { dir = PathBuf::from(component.as_os_str()); },
             Component::RootDir => {
