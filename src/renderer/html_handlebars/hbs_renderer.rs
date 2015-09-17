@@ -191,6 +191,10 @@ impl Renderer for HtmlHandlebars {
         let mut highlight_js = try!(File::create(book.get_dest().join("highlight.js")));
         try!(highlight_js.write_all(&theme.highlight_js));
 
+
+        // Copy all remaining files
+        try!(utils::copy_files_except_ext(book.get_src(), book.get_dest(), true, &["md"]));
+
         Ok(())
     }
 }

@@ -332,6 +332,10 @@ html, body {
         text-decoration: underline;
     }
 
+    .content img {
+        max-width: 100%;
+    }
+
     /* Nav icons */
     .nav-chapters {
         font-size: 40px;

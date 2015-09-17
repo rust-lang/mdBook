@@ -137,19 +137,19 @@ pub fn remove_dir_content(dir: &Path) -> Result<(), Box<Error>> {
 /// `ext_blacklist` array
 
 pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blacklist: &[&str]) -> Result<(), Box<Error>> {
-
+    debug!("[fn] copy_files_except_ext");
     // Check that from and to are different
     if from == to { return Ok(()) }
-    println!("[*] Loop");
+    debug!("[*] Loop");
     for entry in try!(fs::read_dir(from)) {
         let entry = try!(entry);
-        println!("[*] {:?}", entry.path());
+        debug!("[*] {:?}", entry.path());
         let metadata = try!(entry.metadata());
 
         // If the entry is a dir and the recursive option is enabled, call itself
         if metadata.is_dir() && recursive {
             if entry.path() == to.to_path_buf() { continue }
-            println!("[*] is dir");
+            debug!("[*] is dir");
             try!(fs::create_dir(&to.join(entry.file_name())));
             try!(copy_files_except_ext(
                 &from.join(entry.file_name()),
@@ -162,9 +162,9 @@ pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blackl
             // Check if it is in the blacklist
             if let Some(ext) = entry.path().extension() {
                 if ext_blacklist.contains(&ext.to_str().unwrap()) { continue }
-                println!("[*] creating path for file: {:?}", &to.join(entry.path().file_name().expect("a file should have a file name...")));
+                debug!("[*] creating path for file: {:?}", &to.join(entry.path().file_name().expect("a file should have a file name...")));
                 //try!(create_path(&to.join(entry.path())));
-                println!("[*] creating file: {:?}", &to.join(entry.path().file_name().expect("a file should have a file name...")));
+                output!("[*] copying file: {:?}\n    to {:?}", entry.path(), &to.join(entry.path().file_name().expect("a file should have a file name...")));
                 try!(fs::copy(entry.path(), &to.join(entry.path().file_name().expect("a file should have a file name..."))));
             }
         }
@@ -210,10 +210,6 @@ mod tests {
         }
 
         // Check if the correct files where created
-        for entry in fs::read_dir(&tmp.path().join("output")).unwrap() {
-            println!("{:?}", entry.ok().unwrap().path())
-        }
-
         if !(&tmp.path().join("output/file.txt")).exists() { panic!("output/file.txt should exist") }
         if (&tmp.path().join("output/file.md")).exists() { panic!("output/file.md should not exist") }
         if !(&tmp.path().join("output/file.png")).exists() { panic!("output/file.png should exist") }
