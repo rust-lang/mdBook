@@ -134,9 +134,9 @@ impl MDBook {
         debug!("[*]: constructing paths for missing files");
         for item in self.iter() {
             debug!("[*]: item: {:?}", item);
-            match item {
-                &BookItem::Spacer => continue,
-                &BookItem::Chapter(_, ref ch) | &BookItem::Affix(ref ch) => {
+            match *item {
+                BookItem::Spacer => continue,
+                BookItem::Chapter(_, ref ch) | BookItem::Affix(ref ch) => {
                     if ch.path != PathBuf::new() {
                         let path = self.config.get_src().join(&ch.path);
 
@@ -154,7 +154,7 @@ impl MDBook {
         }
 
         debug!("[*]: init done");
-        return Ok(());
+        Ok(())
     }
 
     /// The `build()` method is the one where everything happens. First it parses `SUMMARY.md` to

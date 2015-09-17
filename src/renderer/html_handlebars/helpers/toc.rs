@@ -58,7 +58,7 @@ impl HelperDef for RenderToc {
 
         // Link
         let path_exists = if let Some(path) = item.get("path") {
-            if path.len() > 0 {
+            if !path.is_empty() {
                 try!(rc.writer.write("<a href=\"".as_bytes()));
 
                 // Add link

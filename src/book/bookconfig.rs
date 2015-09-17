@@ -47,10 +47,7 @@ impl BookConfig {
 
         // Just return if an error occured.
         // I would like to propagate the error, but I have to return `&self`
-        match config_file.read_to_string(&mut data) {
-            Err(_) => return self,
-            _ => {},
-        }
+        if let Err(_) = config_file.read_to_string(&mut data) { return self }
 
         // Convert to JSON
         if let Ok(config) = Json::from_str(&data) {
