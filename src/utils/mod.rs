@@ -150,7 +150,12 @@ pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blackl
         if metadata.is_dir() && recursive {
             if entry.path() == to.to_path_buf() { continue }
             debug!("[*] is dir");
-            try!(fs::create_dir(&to.join(entry.file_name())));
+
+            // check if output dir already exists
+            if !to.join(entry.file_name()).exists() {
+                try!(fs::create_dir(&to.join(entry.file_name())));
+            }
+
             try!(copy_files_except_ext(
                 &from.join(entry.file_name()),
                 &to.join(entry.file_name()),
