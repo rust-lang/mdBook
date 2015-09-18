@@ -32,7 +32,7 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
         if level > current_level {
             // Level can not be root level !!
             // Add a sub-number to section
-            section.push(1);
+            section.push(0);
             let last = items.pop().expect("There should be at least one item since this can't be the root level");
 
             item = if let BookItem::Chapter(ref s, ref ch) = last {
