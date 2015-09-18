@@ -12,6 +12,14 @@ To have an idea of what a rendered book looks like,take a look at the [**Documen
 
 ## Installation
 
+Before building mdBook, make sure that you installed `stylus` from `npm` because it is used to compile the stylesheets
+
+Install [node.js](https://nodejs.org/en/)
+
+```
+npm install -g stylus
+```
+
 ```
 git clone --depth=1 https://github.com/azerupi/mdBook.git
 cd mdBook

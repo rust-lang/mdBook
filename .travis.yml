@@ -9,5 +9,12 @@ matrix:
 env:
   global:
     secure: l3/qEC4krRerllLQzni8j5AjngFi6pluWvBWj//1mJLoIEYwxlQ9mYxEdd9BqccWWFn3K0bVYCVC/64+tP6sRfLkZCe2gPUtwe7ITwCDbapUxmkiRObVJCs5yMQZt6idyhHUDKAXKgNCrusfI2BM3tKGBfRK7Cnn/R/7p/U9+q7D1sgJtUKp6ypVzK6A3jLNp3dFLFI19a5KmbZMVsaa7tOhtdDJjjr7ebsc9z7HMW5/OItiWU3FSauVQQlUMaCiEgFuIG7H7OnBAYWB/gNEtLuwfLqU9UjtWk/njNNRnmJ7m3y5HbQhv5H5F5mJUOq9XFlPLwPwyTeVztSGdQm6k8Pp2pgKBUjY27afBl9BWU+msmN6k0oXfhvIebiBPe/x2udiKeFik1xqOOEU1q9dF0sZiuPxCSM1n7tgWklJ8epgaRQaMPPQw9pO/2H5/ynHCJqBlw6WcdiqWtwAyyr/GEx62u/cg5IVkqb7KLmYsWzjS8wYG4CYs1eIxCw2xPZxP0FGuUXvxTBUPipFze6Z7FqxVauXtVe2D7c1P4738HZP660rmR0GYtHtKLny1QxCCK9sxd9JmcezFCSz4YeQ1od9xc0OzGJ2ullKNGizmGfYmgL6X8faNylLIEdaiHAcY16xV3L0g3fXL1Qg360UHQyj7GIv+0nqQnf+H9xRTTU=
+addons:
+  apt:
+    packages:
+    - nodejs
+    - npm
+install:
+    - npm install stylus
 after_success:
   - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && bash deploy.sh
