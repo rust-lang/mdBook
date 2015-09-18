@@ -1,0 +1,39 @@
+.menu-bar {
+    position: relative
+    height: 50px
+
+    i {
+        position: relative
+        margin: 0 10px
+        z-index: 10
+        line-height: 50px
+
+        transition: color 0.5s
+
+        &:hover { cursor: pointer }
+    }
+
+    .left-buttons { float: left }
+    .right-buttons { float: right }
+}
+
+.menu-title {
+    display: inline-block
+    font-weight: 200
+    font-size: 20px
+    line-height: 50px
+    position: absolute
+    top: 0
+    left: 0
+    right: 0
+    bottom: 0
+    text-align: center
+    margin: 0
+
+    opacity: 0
+    transition: opacity 0.5s ease-in-out
+}
+
+.menu-bar:hover .menu-title {
+    opacity: 1
+}

@@ -3,3 +3,5 @@ Cargo.lock
 
 book-test
 book-example/book
+
+src/theme/book.css
