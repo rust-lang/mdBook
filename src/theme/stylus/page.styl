@@ -1,7 +1,9 @@
+@require 'variables'
+
 .page-wrapper {
     position: absolute
     overflow-y: auto
-    left: 315px
+    left: $sidebar-width + 15px
     right: 0
     top: 0
     bottom: 0
@@ -17,6 +19,14 @@
         left: 15px;
         padding-right: 15px;
     }
+}
+
+.sidebar-hidden .page-wrapper {
+    left: 15px
+}
+
+.sidebar-visible .page-wrapper {
+    left: $sidebar-width + 15px
 }
 
 .page {

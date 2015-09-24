@@ -37,6 +37,13 @@
             $('body').removeClass().addClass(theme);
         </script>
 
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var sidebar = localStorage.getItem('sidebar');
+            if (sidebar === "hidden") { $("html").addClass("sidebar-hidden") }
+            else if (sidebar === "visible") { $("html").addClass("sidebar-visible") }
+        </script>
+
         <div id="sidebar" class="sidebar">
             {{#toc}}{{/toc}}
         </div>

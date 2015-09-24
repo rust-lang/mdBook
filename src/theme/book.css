@@ -30,8 +30,14 @@ body {
 }
 @media only screen and (max-width: 1060px) {
   .sidebar {
-    left: -300px;
+    left: -$sidebar-width;
   }
+}
+.sidebar-hidden .sidebar {
+  left: -300px;
+}
+.sidebar-visible . sidebar {
+  left: 0;
 }
 .chapter {
   list-style: none outside none;
@@ -84,6 +90,12 @@ body {
     left: 15px;
     padding-right: 15px;
   }
+}
+.sidebar-hidden .page-wrapper {
+  left: 15px;
+}
+.sidebar-visible .page-wrapper {
+  left: 315px;
 }
 .page {
   position: absolute;

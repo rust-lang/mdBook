@@ -1,9 +1,11 @@
+@require 'variables'
+
 .sidebar {
     position: absolute
     left: 0
     top: 0
     bottom: 0
-    width: 300px
+    width: $sidebar-width
     overflow-y: auto
     padding: 10px 10px
     font-size: 0.875em
@@ -14,8 +16,16 @@
     transition: left 0.5s
 
     @media only screen and (max-width: 1060px) {
-        left: -300px
+        left: -$sidebar-width
     }
+}
+
+.sidebar-hidden .sidebar {
+    left: - $sidebar-width
+}
+
+.sidebar-visible . sidebar {
+    left: 0
 }
 
 .chapter {

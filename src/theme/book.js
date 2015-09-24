@@ -3,11 +3,13 @@ $( document ).ready(function() {
     // url
     var url = window.location.pathname;
 
+
     // Set theme
     var theme = localStorage.getItem('theme');
     if (theme == null) { theme = 'light'; }
 
     set_theme(theme);
+
 
     // Syntax highlighting Configuration
     hljs.configure({
@@ -21,18 +23,30 @@ $( document ).ready(function() {
 
 
     // Interesting DOM Elements
+    var html = $("html");
     var sidebar = $("#sidebar");
     var page_wrapper = $("#page-wrapper");
 
+
+    // Toggle sidebar
     $("#sidebar-toggle").click(function(event){
-        if(sidebar.position().left === 0){
-            sidebar.css({left: "-300px"});
-            page_wrapper.css({left: "15px"});
+        if ( html.hasClass("sidebar-hidden") ) {
+            html.removeClass("sidebar-hidden").addClass("sidebar-visible");
+            localStorage.setItem('sidebar', 'visible');
+        } else if ( html.hasClass("sidebar-visible") ) {
+            html.removeClass("sidebar-visible").addClass("sidebar-hidden");
+            localStorage.setItem('sidebar', 'hidden');
         } else {
-            sidebar.css({left: "0"});
-            page_wrapper.css({left: "315px"});
+            if(sidebar.position().left === 0){
+                html.addClass("sidebar-hidden");
+                localStorage.setItem('sidebar', 'hidden');
+            } else {
+                html.addClass("sidebar-visible");
+                localStorage.setItem('sidebar', 'visible');
+            }
         }
     });
+
 
     // Print button
     $("#print-button").click(function(){
@@ -42,6 +56,7 @@ $( document ).ready(function() {
     if( url.substring(url.lastIndexOf('/')+1) == "print.html" ) {
         window.print();
     }
+
 
     // Theme button
     $("#theme-toggle").click(function(){
