@@ -1,0 +1,45 @@
+@media only print {
+
+    .sidebar,
+    .menu-bar,
+    .nav-chapters,
+    .mobile-nav-chapters {
+      display: none
+    }
+
+    .page-wrapper {
+      left: 0
+    }
+
+    .content {
+      max-width: 100%
+    }
+
+    code {
+      background-color: #666666
+      border-radius: 5px
+
+      /* Force background to be printed in Chrome */
+      -webkit-print-color-adjust: exact
+    }
+
+    a, a:visited, a:active, a:hover {
+      color: #4183c4
+      text-decoration: none
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        page-break-inside: avoid
+        page-break-after: avoid
+        /*break-after: avoid*/
+    }
+
+    pre, code {
+        page-break-inside: avoid
+        white-space: pre-wrap       /* CSS 3 */
+        white-space: -moz-pre-wrap  /* Mozilla, since 1999 */
+        white-space: -pre-wrap      /* Opera 4-6 */
+        white-space: -o-pre-wrap    /* Opera 7 */
+        word-wrap: break-word       /* Internet Explorer 5.5+ */
+    }
+}

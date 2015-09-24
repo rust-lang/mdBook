@@ -8,6 +8,7 @@ repository = "https://github.com/azerupi/mdBook"
 keywords = ["book", "gitbook", "rustbook", "markdown"]
 license = "MPL-2.0"
 readme = "README.md"
+build = "build.rs"
 exclude = [
     "book-example/*",
 ]
@@ -25,6 +26,7 @@ tempdir = "*"
 default = ["output"]
 debug = []
 output = []
+regenerate-css = []
 
 [[bin]]
 doc = false

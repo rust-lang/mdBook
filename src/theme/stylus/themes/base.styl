@@ -1,0 +1,56 @@
+.{unquote($theme-name)} {
+    color: $fg
+    background-color: $bg
+
+    .sidebar {
+        background-color: $sidebar-bg
+        color: $sidebar-fg
+    }
+
+    .chapter li {
+        color: $sidebar-non-existant
+
+        a { color: $sidebar-fg }
+
+        .active,
+         a:hover {
+            /* Animate color change */
+            color: $sidebar-active
+        }
+    }
+
+    .chapter .spacer {
+        background-color: $sidebar-spacer
+    }
+
+    .menu-bar,
+    .nav-chapters,
+    .mobile-nav-chapters {
+        color: $icons
+    }
+
+    .menu-bar i:hover,
+    .nav-chapters:hover,
+    .mobile-nav-chapters i:hover {
+        color: $icons-hover
+    }
+
+    .mobile-nav-chapters i:hover {
+        color: $sidebar-fg
+    }
+
+    .mobile-nav-chapters {
+        background-color: $sidebar-bg
+    }
+
+    .content a {
+        color: $links
+    }
+
+    .theme-popup {
+        background: $theme-popup-bg
+        border: 1px solid $theme-popup-border
+
+        .theme:hover { background-color: $theme-hover }
+    }
+}
