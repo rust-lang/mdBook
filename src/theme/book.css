@@ -30,13 +30,13 @@ body {
 }
 @media only screen and (max-width: 1060px) {
   .sidebar {
-    left: -$sidebar-width;
+    left: -300px;
   }
 }
 .sidebar-hidden .sidebar {
   left: -300px;
 }
-.sidebar-visible . sidebar {
+.sidebar-visible .sidebar {
   left: 0;
 }
 .chapter {
