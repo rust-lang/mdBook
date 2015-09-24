@@ -3,6 +3,8 @@ $( document ).ready(function() {
     // url
     var url = window.location.pathname;
 
+    // Fix back button cache problem
+    window.onunload = function(){};
 
     // Set theme
     var theme = localStorage.getItem('theme');
