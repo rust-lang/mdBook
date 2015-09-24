@@ -14,17 +14,19 @@ allow for easy parsing. Let's see how you should format your `SUMMARY.md` file.
    But it is not mandatory, the parser just ignores it. So you can too
    if you feel like it.
 
-2. ***list link*** the other elements have to be list elements in form of a link
+2. ***Prefix Chapter*** Before the main numbered chapters you can add a couple of elements that will not be numbered. This is useful for
+   forewords, introductions, etc. There are however some constraints. You can not nest prefix chapters, they should all be on the root level. And you can not add prefix chapters once you have added numbered chapters.
+   ```markdown
+   [Title of prefix element](relative/path/to/markdown.md)
+   ```
+
+3. ***Numbered Chapter*** Numbered chapters are the main content of the book, they will be numbered and can be nested,
+   resulting in a nice hierarchy (chapters, sub-chapters, etc.)
    ```markdown
    - [Title of the Chapter](relative/path/to/markdown.md)
    ```
-   You can either use `-` or `*` to indicate a list. The lists can be nested,
-   resulting in a nice hierarchy (chapters, sub-chapters, etc.)
+   You can either use `-` or `*` to indicate a numbered chapter.
+
+4. ***Sufix Chapter*** After the numbered chapters you can add a couple of non-numbered chapters. They are the same as prefix chapters but come after the numbered chapters instead of before.
 
 All other elements are unsupported and will be ignored at best or result in an error.
-
-#### not yet implemented
-
-In the feature I would like to add support for links without the need to be list elements
-at the root level to add chapters that don't need numbering, like an index, appendix,
-contributor list, introduction, foreword, etc.
