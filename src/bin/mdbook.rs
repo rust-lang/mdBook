@@ -1,6 +1,8 @@
 extern crate mdbook;
 #[macro_use]
 extern crate clap;
+#[cfg(feature = "watch")]
+extern crate notify;
 
 use std::env;
 use std::error::Error;
@@ -8,6 +10,11 @@ use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
 use clap::{App, ArgMatches, SubCommand};
+
+#[cfg(feature = "watch")]
+use notify::Watcher;
+#[cfg(feature = "watch")]
+use std::sync::mpsc::channel;
 
 use mdbook::MDBook;
 
@@ -32,14 +39,16 @@ fn main() {
                         .about("Build the book from the markdown files")
                         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'"))
                     .subcommand(SubCommand::with_name("watch")
-                        .about("Watch the files for changes"))
+                        .about("Watch the files for changes")
+                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'"))
                     .get_matches();
 
     // Check which subcomamnd the user ran...
     let res = match matches.subcommand() {
         ("init", Some(sub_matches))  => init(sub_matches),
         ("build", Some(sub_matches)) => build(sub_matches),
-        ("watch", _)                 => unimplemented!(),
+        #[cfg(feature = "watch")]
+        ("watch", Some(sub_matches)) => watch(sub_matches),
         (_, _)                       => unreachable!()
     };
 
@@ -103,6 +112,51 @@ fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
 
     Ok(())
 }
+
+#[cfg(feature = "watch")]
+fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
+    let book_dir = get_book_dir(args);
+    let book = MDBook::new(&book_dir).read_config();
+
+    // Create a channel to receive the events.
+     let (tx, rx) = channel();
+
+     let w: Result<notify::RecommendedWatcher, notify::Error> = notify::Watcher::new(tx);
+
+     match w {
+         Ok(mut watcher) => {
+
+             watcher.watch(book.get_src()).unwrap();
+
+             loop {
+                 match rx.recv() {
+                     Ok(event) => {
+                         if let Some(path) = event.path {
+                             println!("File changed: {:?}\nBuilding book...\n", path);
+                             try!(build(args));
+                             println!("");
+                             // Hack to prevent receiving the event 4 times, probably a bug in notify
+                             return watch(args);
+                         } else {
+                             continue;
+                         }
+                     },
+                     Err(e) => {
+                         println!("An error occured: {:?}", e);
+                     }
+                 }
+             }
+
+         },
+         Err(e) => {
+             println!("Error while trying to watch the files:\n\n\t{:?}", e);
+             ::std::process::exit(0);
+         }
+     }
+
+    Ok(())
+}
+
 
 fn get_book_dir(args: &ArgMatches) -> PathBuf {
     if let Some(dir) = args.value_of("dir") {

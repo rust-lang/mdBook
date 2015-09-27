@@ -4,6 +4,7 @@
 - [Command Line Tool](cli/cli-tool.md)
     - [init](cli/init.md)
     - [build](cli/build.md)
+    - [watch]()
 - [Format](format/format.md)
     - [SUMMARY.md](format/summary.md)
     - [Configuration](format/config.md)

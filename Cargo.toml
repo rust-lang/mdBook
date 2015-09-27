@@ -1,6 +1,6 @@
 [package]
 name = "mdbook"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Mathieu David <mathieudavid@mathieudavid.org>"]
 description = "create books from markdown files (like Gitbook)"
 documentation = "http://azerupi.github.io/mdBook/index.html"
@@ -11,6 +11,7 @@ readme = "README.md"
 build = "build.rs"
 exclude = [
     "book-example/*",
+    "src/theme/stylus",
 ]
 
 [dependencies]
@@ -22,11 +23,16 @@ pulldown-cmark = "*"
 [dev-dependencies]
 tempdir = "*"
 
+[dependencies.notify]
+notify = "*"
+optional = true
+
 [features]
-default = ["output"]
+default = ["output", "watch"]
 debug = []
 output = []
 regenerate-css = []
+watch = ["notify"]
 
 [[bin]]
 doc = false
