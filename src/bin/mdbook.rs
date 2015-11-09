@@ -1,8 +1,14 @@
 extern crate mdbook;
 #[macro_use]
 extern crate clap;
+extern crate crossbeam;
+
+// Dependencies for the Watch feature
 #[cfg(feature = "watch")]
 extern crate notify;
+#[cfg(feature = "watch")]
+extern crate time;
+
 
 use std::env;
 use std::error::Error;
@@ -11,10 +17,12 @@ use std::path::{Path, PathBuf};
 
 use clap::{App, ArgMatches, SubCommand};
 
+// Uses for the Watch feature
 #[cfg(feature = "watch")]
 use notify::Watcher;
 #[cfg(feature = "watch")]
 use std::sync::mpsc::channel;
+
 
 use mdbook::MDBook;
 
@@ -57,6 +65,8 @@ fn main() {
     }
 }
 
+
+// Simple function that user comfirmation
 fn confirm() -> bool {
     io::stdout().flush().unwrap();
     let mut s = String::new();
@@ -67,6 +77,8 @@ fn confirm() -> bool {
     }
 }
 
+
+// Init command implementation
 fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
 
     let book_dir = get_book_dir(args);
@@ -104,6 +116,8 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
     Ok(())
 }
 
+
+// Build command implementation
 fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book_dir = get_book_dir(args);
     let mut book = MDBook::new(&book_dir).read_config();
@@ -113,6 +127,8 @@ fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
     Ok(())
 }
 
+
+// Watch command implementation
 #[cfg(feature = "watch")]
 fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book_dir = get_book_dir(args);
@@ -127,25 +143,39 @@ fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
          Ok(mut watcher) => {
 
              watcher.watch(book.get_src()).unwrap();
+             watcher.watch(book_dir.join("book.json")).unwrap();
 
-             loop {
-                 match rx.recv() {
-                     Ok(event) => {
-                         if let Some(path) = event.path {
-                             println!("File changed: {:?}\nBuilding book...\n", path);
-                             try!(build(args));
-                             println!("");
-                             // Hack to prevent receiving the event 4 times, probably a bug in notify
-                             return watch(args);
-                         } else {
-                             continue;
+             let previous_time = time::get_time().sec;
+
+             crossbeam::scope(|scope| {
+                 loop {
+                     match rx.recv() {
+                         Ok(event) => {
+
+                             // Skip the event if an event has already been issued in the last second
+                             if time::get_time().sec - previous_time < 1 { continue }
+
+                             if let Some(path) = event.path {
+                                 // Trigger the build process in a new thread (to keep receiving events)
+                                 scope.spawn(move || {
+                                     println!("File changed: {:?}\nBuilding book...\n", path);
+                                     match build(args) {
+                                         Err(e) => println!("Error while building: {:?}", e),
+                                         _ => {}
+                                     }
+                                     println!("");
+                                 });
+
+                             } else {
+                                 continue;
+                             }
+                         },
+                         Err(e) => {
+                             println!("An error occured: {:?}", e);
                          }
-                     },
-                     Err(e) => {
-                         println!("An error occured: {:?}", e);
                      }
                  }
-             }
+             });
 
          },
          Err(e) => {
@@ -158,6 +188,7 @@ fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
 }
 
 
+// Helper function that returns the right path if either a relative or absolute path is passed
 fn get_book_dir(args: &ArgMatches) -> PathBuf {
     if let Some(dir) = args.value_of("dir") {
         // Check if path is relative from current dir, or absolute...

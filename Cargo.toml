@@ -19,20 +19,28 @@ clap = "*"
 handlebars = "*"
 rustc-serialize = "*"
 pulldown-cmark = "*"
+crossbeam = "^0.1.5"
 
+# Watch feature
+[dependencies.notify]
+notify = "^2.4.1"
+optional = true
+
+[dependencies.time]
+time = "^0.1.33"
+optional = true
+
+# Tests
 [dev-dependencies]
 tempdir = "*"
 
-[dependencies.notify]
-notify = "*"
-optional = true
 
 [features]
 default = ["output", "watch"]
 debug = []
 output = []
 regenerate-css = []
-watch = ["notify"]
+watch = ["notify", "time"]
 
 [[bin]]
 doc = false
