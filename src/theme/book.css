@@ -9,6 +9,10 @@ body {
 .right {
   float: right;
 }
+h2,
+h3 {
+  margin-top: 2.5em;
+}
 .sidebar {
   position: absolute;
   left: 0;
