@@ -14,13 +14,13 @@ exclude = [
 ]
 
 [dependencies]
-clap = "*"
-handlebars = "*"
-rustc-serialize = "*"
-pulldown-cmark = "*"
+clap = "~1.5.3"
+handlebars = "=0.11.2"
+rustc-serialize = "~0.3.16"
+pulldown-cmark = "~0.0.3"
 
 [dev-dependencies]
-tempdir = "*"
+tempdir = "~0.3.4"
 
 [features]
 default = ["output"]
