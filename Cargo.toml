@@ -15,7 +15,7 @@ exclude = [
 
 [dependencies]
 clap = "~1.5.3"
-handlebars = "=0.11.2"
+handlebars = "~0.12.0"
 rustc-serialize = "~0.3.16"
 pulldown-cmark = "~0.0.3"
 
