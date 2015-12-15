@@ -33,6 +33,8 @@ fn main() {
                         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'"))
                     .subcommand(SubCommand::with_name("watch")
                         .about("Watch the files for changes"))
+                    .subcommand(SubCommand::with_name("test")
+                        .about("Test that code samples compile"))
                     .get_matches();
 
     // Check which subcomamnd the user ran...
@@ -40,6 +42,7 @@ fn main() {
         ("init", Some(sub_matches))  => init(sub_matches),
         ("build", Some(sub_matches)) => build(sub_matches),
         ("watch", _)                 => unimplemented!(),
+        ("test", Some(sub_matches)) => test(sub_matches),
         (_, _)                       => unreachable!()
     };
 
@@ -100,6 +103,15 @@ fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
     let mut book = MDBook::new(&book_dir).read_config();
 
     try!(book.build());
+
+    Ok(())
+}
+
+fn test(args: &ArgMatches) -> Result<(), Box<Error>> {
+    let book_dir = get_book_dir(args);
+    let mut book = MDBook::new(&book_dir).read_config();
+
+    try!(book.test());
 
     Ok(())
 }
