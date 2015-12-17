@@ -222,7 +222,7 @@ h3 {
   left: 0;
 }
 .next {
-  right: 0;
+  right: 15px;
 }
 .theme-popup {
   position: fixed;
