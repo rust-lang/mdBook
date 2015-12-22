@@ -10,14 +10,6 @@
   -webkit-text-size-adjust: none;
 }
 
-/* Inline code */
-:not(pre) > .hljs {
-    display: inline-block;
-    vertical-align: middle;
-    padding: 0.1em 0.3em;
-    border-radius: 3px;
-}
-
 
 /* Atelier-Dune Comment */
 .hljs-comment {
