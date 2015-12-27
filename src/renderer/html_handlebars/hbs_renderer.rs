@@ -114,7 +114,7 @@ impl Renderer for HtmlHandlebars {
 
                             // This could cause a problem when someone displays code containing <base href=...>
                             // on the front page, however this case should be very very rare...
-                            content = content.lines().filter(|line| !line.contains("<base href=")).collect();
+                            content = content.lines().filter(|line| !line.contains("<base href=")).map(|line| line.to_string() + "\n").collect();
 
                             try!(index_file.write_all(content.as_bytes()));
 
