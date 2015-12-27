@@ -50,6 +50,13 @@ $( document ).ready(function() {
     });
 
 
+    // Scroll sidebar to current active section
+    var activeSection = sidebar.find(".active");
+    if(activeSection.length) {
+        sidebar.scrollTop(activeSection.offset().top);
+    }
+
+
     // Print button
     $("#print-button").click(function(){
         var printWindow = window.open("print.html");
