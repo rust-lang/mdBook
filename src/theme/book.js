@@ -8,7 +8,7 @@ $( document ).ready(function() {
 
     // Set theme
     var theme = localStorage.getItem('theme');
-    if (theme == null) { theme = 'light'; }
+    if (theme === null) { theme = 'light'; }
 
     set_theme(theme);
 
@@ -84,7 +84,7 @@ $( document ).ready(function() {
             $('.theme').click(function(){
                 var theme = $(this).attr('id');
 
-                set_theme(theme)
+                set_theme(theme);
             });
         }
 
