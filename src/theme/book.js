@@ -112,4 +112,21 @@ $( document ).ready(function() {
 
         $('body').removeClass().addClass(theme);
     }
+
+
+    // Hide Rust code lines prepended with a specific character
+    var hiding_character = "#";
+
+    $("code.language-rust").each(function(i, block){
+        var lines = $(this).html().split("\n");
+
+        for(var n = 0; n < lines.length; n++){
+            if($.trim(lines[n])[0] == hiding_character){
+                lines[n] = "<span class=\"hidden\">" + lines[n] + "</span>"
+            }
+        }
+        $(this).html(lines.join());
+    });
+
+
 });
