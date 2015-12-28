@@ -315,7 +315,7 @@ h3 {
 .light .mobile-nav-chapters {
   background-color: #fafafa;
 }
-.light .content a {
+.light .content a:link {
   color: #4183c4;
 }
 .light .theme-popup {
@@ -371,7 +371,7 @@ h3 {
 .coal .mobile-nav-chapters {
   background-color: #292c2f;
 }
-.coal .content a {
+.coal .content a:link {
   color: #2b79a2;
 }
 .coal .theme-popup {
@@ -427,7 +427,7 @@ h3 {
 .navy .mobile-nav-chapters {
   background-color: #282d3f;
 }
-.navy .content a {
+.navy .content a:link {
   color: #2b79a2;
 }
 .navy .theme-popup {
@@ -483,7 +483,7 @@ h3 {
 .rust .mobile-nav-chapters {
   background-color: #3b2e2a;
 }
-.rust .content a {
+.rust .content a:link {
   color: #2b79a2;
 }
 .rust .theme-popup {

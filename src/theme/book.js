@@ -28,6 +28,15 @@ $( document ).ready(function() {
     var html = $("html");
     var sidebar = $("#sidebar");
     var page_wrapper = $("#page-wrapper");
+    var content = $("#content");
+
+
+    // Add anchors for all content headers
+    content.find("h1, h2, h3, h4, h5").wrap(function(){
+        var wrapper = $("<a>");
+        wrapper.attr("name", $(this).text());
+        return wrapper;
+    });
 
 
     // Toggle sidebar
