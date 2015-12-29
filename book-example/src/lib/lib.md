@@ -3,7 +3,7 @@
 mdBook is not only a command line tool, it can be used as a crate. You can extend it,
 integrate it in current projects. Here is a short example:
 
-```rust
+```rust,ignore
 extern crate mdbook;
 
 use mdbook::MDBook;

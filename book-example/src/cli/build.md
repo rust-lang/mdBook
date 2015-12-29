@@ -2,7 +2,7 @@
 
 The build command is used to render your book:
 
-```
+```bash
 mdbook build
 ```
 
@@ -17,7 +17,7 @@ convenience. Large books will therefore remain structured when rendered.
 Like `init`, the `build` command can take a directory as argument to use instead of the
 current working directory.
 
-```
+```bash
 mdbook build path/to/book
 ```
 
