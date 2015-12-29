@@ -1,4 +1,28 @@
 .{unquote($theme-name)} {
+    /* Inline code */
+    :not(pre) > .hljs {
+        display: inline-block;
+        vertical-align: middle;
+        padding: 0.1em 0.3em;
+        border-radius: 3px;
+    }
+
+    pre {
+        position: relative;
+    }
+    pre > i {
+        position: absolute;
+        right: 5px;
+        top: 5px;
+
+        color: $sidebar-fg;
+        cursor: pointer;
+
+        :hover {
+            color: $sidebar-active;
+        }
+    }
+
     color: $fg
     background-color: $bg
 
@@ -43,7 +67,7 @@
         background-color: $sidebar-bg
     }
 
-    .content a {
+    .content a:link {
         color: $links
     }
 

@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate mdbook;
 #[macro_use]
 extern crate clap;
@@ -49,6 +50,8 @@ fn main() {
                     .subcommand(SubCommand::with_name("watch")
                         .about("Watch the files for changes")
                         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'"))
+                    .subcommand(SubCommand::with_name("test")
+                        .about("Test that code samples compile"))
                     .get_matches();
 
     // Check which subcomamnd the user ran...
@@ -57,6 +60,7 @@ fn main() {
         ("build", Some(sub_matches)) => build(sub_matches),
         #[cfg(feature = "watch")]
         ("watch", Some(sub_matches)) => watch(sub_matches),
+        ("test", Some(sub_matches)) => test(sub_matches),
         (_, _)                       => unreachable!()
     };
 
@@ -142,8 +146,17 @@ fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
      match w {
          Ok(mut watcher) => {
 
-             watcher.watch(book.get_src()).unwrap();
-             watcher.watch(book_dir.join("book.json")).unwrap();
+             // Add the source directory to the watcher
+             if let Err(e) = watcher.watch(book.get_src()) {
+                 println!("Error while watching {:?}:\n    {:?}", book.get_src(), e);
+                 ::std::process::exit(0);
+             };
+
+             // Add the book.json file to the watcher if it exists, because it's not
+             // located in the source directory
+             if let Err(_) = watcher.watch(book_dir.join("book.json")) {
+                 // do nothing if book.json is not found
+             }
 
              let previous_time = time::get_time().sec;
 
@@ -184,11 +197,22 @@ fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
          }
      }
 
+     Ok(())
+ }
+
+
+
+fn test(args: &ArgMatches) -> Result<(), Box<Error>> {
+    let book_dir = get_book_dir(args);
+    let mut book = MDBook::new(&book_dir).read_config();
+
+    try!(book.test());
+
     Ok(())
 }
 
 
-// Helper function that returns the right path if either a relative or absolute path is passed
+
 fn get_book_dir(args: &ArgMatches) -> PathBuf {
     if let Some(dir) = args.value_of("dir") {
         // Check if path is relative from current dir, or absolute...

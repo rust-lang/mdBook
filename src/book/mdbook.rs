@@ -1,7 +1,10 @@
 use std::path::{Path, PathBuf};
 use std::fs::{self, File};
-use std::io::Write;
 use std::error::Error;
+use std::io;
+use std::io::Write;
+use std::io::ErrorKind;
+use std::process::Command;
 
 use {BookConfig, BookItem, theme, parse, utils};
 use book::BookItems;
@@ -255,6 +258,39 @@ impl MDBook {
     pub fn set_renderer(mut self, renderer: Box<Renderer>) -> Self {
         self.renderer = renderer;
         self
+    }
+
+    pub fn test(&mut self) -> Result<(), Box<Error>> {
+        // read in the chapters
+        try!(self.parse_summary());
+        for item in self.iter() {
+
+            match *item {
+                BookItem::Chapter(_, ref ch) => {
+                    if ch.path != PathBuf::new() {
+
+                        let path = self.get_src().join(&ch.path);
+
+                        println!("[*]: Testing file: {:?}", path);
+
+                        let output_result = Command::new("rustdoc")
+                            .arg(&path)
+                            .arg("--test")
+                            .output();
+                        let output = try!(output_result);
+
+                        if !output.status.success() {
+                            return Err(Box::new(io::Error::new(ErrorKind::Other, format!(
+                                            "{}\n{}",
+                                            String::from_utf8_lossy(&output.stdout),
+                                            String::from_utf8_lossy(&output.stderr)))) as Box<Error>);
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        Ok(())
     }
 
     pub fn set_dest(mut self, dest: &Path) -> Self {

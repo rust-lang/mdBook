@@ -1,6 +1,6 @@
 [package]
 name = "mdbook"
-version = "0.0.3"
+version = "0.0.4"
 authors = ["Mathieu David <mathieudavid@mathieudavid.org>"]
 description = "create books from markdown files (like Gitbook)"
 documentation = "http://azerupi.github.io/mdBook/index.html"
@@ -15,11 +15,11 @@ exclude = [
 ]
 
 [dependencies]
-clap = "*"
-handlebars = "*"
-rustc-serialize = "*"
-pulldown-cmark = "*"
-crossbeam = "^0.1.5"
+clap = "~1.5.3"
+handlebars = "~0.12.0"
+rustc-serialize = "~0.3.16"
+pulldown-cmark = "~0.0.3"
+
 
 # Watch feature
 [dependencies.notify]
@@ -30,9 +30,13 @@ optional = true
 time = "^0.1.33"
 optional = true
 
+[dependencies.crossbeam]
+time = "^0.2.0"
+optional = true
+
 # Tests
 [dev-dependencies]
-tempdir = "*"
+tempdir = "~0.3.4"
 
 
 [features]
@@ -40,7 +44,7 @@ default = ["output", "watch"]
 debug = []
 output = []
 regenerate-css = []
-watch = ["notify", "time"]
+watch = ["notify", "time", "crossbeam"]
 
 [[bin]]
 doc = false

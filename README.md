@@ -13,14 +13,10 @@ To have an idea of what a rendered book looks like,take a look at the [**Documen
 ## Installation
 
 ```
-git clone --depth=1 https://github.com/azerupi/mdBook.git
-cd mdBook
-cargo build --release
+cargo install mdbook
 ```
 
-The executable `mdbook` will be in the `./target/release` folder, this should be added to the path.
-
-If you want to regenerate the css (stylesheet), make sure that you installed `stylus` and `nib` from `npm` because it is used to compile the stylesheets
+If you want to regenerate the css (stylesheet), clone the git repo locally and make sure that you installed `stylus` and `nib` from `npm` because it is used to compile the stylesheets
 
 Install [node.js](https://nodejs.org/en/)
 
