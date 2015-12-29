@@ -40,6 +40,9 @@ h3 {
     left: -300px;
   }
 }
+.sidebar code {
+  line-height: 2em;
+}
 .sidebar-hidden .sidebar {
   left: -300px;
 }
