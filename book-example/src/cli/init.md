@@ -2,7 +2,7 @@
 
 The `init` command is used like this:
 
-```
+```bash
 mdbook init
 ```
 
@@ -11,7 +11,7 @@ spend more time writing your book and less setting it up.
 
 The files set up for you are the following:
 
-```
+```text
 book-test/
 ├── book
 └── src
@@ -34,7 +34,7 @@ When a `SUMMARY.md` file already exists, the `init` command will generate the fi
 When using the `init` command, you can also specify a directory, instead of using the current working directory,
 by appending a path to the command:
 
-```
+```bash
 mdbook init path/to/book
 ```
 

@@ -8,6 +8,6 @@ You could issue `mdbook build` everytime you change a file. But using `mdbook wa
 Like `init` and `build`, `watch` can take a directory as argument to use instead of the
 current working directory.
 
-```
+```bash
 mdbook watch path/to/book
 ```

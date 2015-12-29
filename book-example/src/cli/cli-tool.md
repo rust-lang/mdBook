@@ -12,7 +12,7 @@ If you haven't already, you should begin by installing [Rust](https://www.rust-l
 
 Open your terminal and navigate to the directory of you choice. We need to clone the git repository and then build it with Cargo.
 
-```
+```bash
 git clone --depth=1 https://github.com/azerupi/mdBook.git
 cd mdBook
 cargo build --release
