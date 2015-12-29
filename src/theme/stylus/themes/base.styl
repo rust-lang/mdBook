@@ -7,6 +7,22 @@
         border-radius: 3px;
     }
 
+    pre {
+        position: relative;
+    }
+    pre > i {
+        position: absolute;
+        right: 5px;
+        top: 5px;
+
+        color: $sidebar-fg;
+        cursor: pointer;
+
+        :hover {
+            color: $sidebar-active;
+        }
+    }
+
     color: $fg
     background-color: $bg
 

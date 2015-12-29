@@ -284,6 +284,19 @@ h3 {
   -webkit-border-radius: 3px;
   border-radius: 3px;
 }
+.light pre {
+  position: relative;
+}
+.light pre > i {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  color: #364149;
+  cursor: pointer;
+}
+.light pre > i :hover {
+  color: #008cff;
+}
 .light .sidebar {
   background-color: #fafafa;
   color: #364149;
@@ -339,6 +352,19 @@ h3 {
   padding: 0.1em 0.3em;
   -webkit-border-radius: 3px;
   border-radius: 3px;
+}
+.coal pre {
+  position: relative;
+}
+.coal pre > i {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  color: #a1adb8;
+  cursor: pointer;
+}
+.coal pre > i :hover {
+  color: #3473ad;
 }
 .coal .sidebar {
   background-color: #292c2f;
@@ -396,6 +422,19 @@ h3 {
   -webkit-border-radius: 3px;
   border-radius: 3px;
 }
+.navy pre {
+  position: relative;
+}
+.navy pre > i {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  color: #c8c9db;
+  cursor: pointer;
+}
+.navy pre > i :hover {
+  color: #2b79a2;
+}
 .navy .sidebar {
   background-color: #282d3f;
   color: #c8c9db;
@@ -451,6 +490,19 @@ h3 {
   padding: 0.1em 0.3em;
   -webkit-border-radius: 3px;
   border-radius: 3px;
+}
+.rust pre {
+  position: relative;
+}
+.rust pre > i {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  color: #c8c9db;
+  cursor: pointer;
+}
+.rust pre > i :hover {
+  color: #e69f67;
 }
 .rust .sidebar {
   background-color: #3b2e2a;
