@@ -1,11 +1,13 @@
 extern crate handlebars;
 extern crate rustc_serialize;
+extern crate pulldown_cmark;
 
 use std::path::Path;
 use std::collections::BTreeMap;
 
 use self::rustc_serialize::json;
 use self::handlebars::{Handlebars, HelperDef, RenderError, RenderContext, Helper, Context};
+use self::pulldown_cmark::{Parser, html, Event, Tag};
 
 // Handlebars helper to construct TOC
 #[derive(Clone, Copy)]
@@ -93,7 +95,24 @@ impl HelperDef for RenderToc {
         }
 
         if let Some(name) = item.get("name") {
-            try!(rc.writer.write(name.as_bytes()));
+            // Render only inline code blocks
+
+            // filter all events that are not inline code blocks
+            let parser = Parser::new(&name).filter(|event|{
+                match event {
+                    &Event::Start(Tag::Code) | &Event::End(Tag::Code) => true,
+                    &Event::InlineHtml(_) => true,
+                    &Event::Text(_) => true,
+                    _ => false,
+                }
+            });
+
+            // render markdown to html
+            let mut markdown_parsed_name =  String::with_capacity(name.len() * 3 / 2);
+            html::push_html(&mut markdown_parsed_name, parser);
+
+            // write to the handlebars template
+            try!(rc.writer.write(markdown_parsed_name.as_bytes()));
         }
 
         if path_exists {

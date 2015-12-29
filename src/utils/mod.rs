@@ -1,6 +1,10 @@
+extern crate pulldown_cmark;
+
 use std::path::{Path, PathBuf, Component};
 use std::error::Error;
 use std::fs::{self, metadata, File};
+
+use self::pulldown_cmark::{Parser, html};
 
 /// This is copied from the rust source code until Path_ Ext stabilizes.
 /// You can use it, but be aware that it will be removed when those features go to rust stable
@@ -131,7 +135,7 @@ pub fn remove_dir_content(dir: &Path) -> Result<(), Box<Error>> {
     Ok(())
 }
 
-/// **Untested!**
+///
 ///
 /// Copies all files of a directory to another one except the files with the extensions given in the
 /// `ext_blacklist` array
@@ -175,6 +179,18 @@ pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blackl
         }
     }
     Ok(())
+}
+
+
+///
+///
+/// Wrapper around the pulldown-cmark parser and renderer to render markdown
+
+pub fn render_markdown(text: &str) -> String {
+    let mut s = String::with_capacity(text.len() * 3 / 2);
+    let p = Parser::new(&text);
+    html::push_html(&mut s, p);
+    s
 }
 
 

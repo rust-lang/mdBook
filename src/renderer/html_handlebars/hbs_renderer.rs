@@ -1,6 +1,5 @@
 extern crate handlebars;
 extern crate rustc_serialize;
-extern crate pulldown_cmark;
 
 use renderer::html_handlebars::helpers;
 use renderer::Renderer;
@@ -16,7 +15,7 @@ use std::collections::BTreeMap;
 
 use self::handlebars::{Handlebars, JsonRender};
 use self::rustc_serialize::json::{Json, ToJson};
-use self::pulldown_cmark::{Parser, html};
+
 
 pub struct HtmlHandlebars;
 
@@ -73,7 +72,7 @@ impl Renderer for HtmlHandlebars {
                         try!(f.read_to_string(&mut content));
 
                         // Render markdown using the pulldown-cmark crate
-                        content = render_html(&content);
+                        content = utils::render_markdown(&content);
                         print_content.push_str(&content);
 
                         // Remove content from previous file and render content for this one
@@ -240,11 +239,4 @@ fn make_data(book: &MDBook) -> Result<BTreeMap<String,Json>, Box<Error>> {
 
     debug!("[*]: JSON constructed");
     Ok(data)
-}
-
-fn render_html(text: &str) -> String {
-    let mut s = String::with_capacity(text.len() * 3 / 2);
-    let p = Parser::new(&text);
-    html::push_html(&mut s, p);
-    s
 }
