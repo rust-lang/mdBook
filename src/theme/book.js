@@ -119,13 +119,20 @@ $( document ).ready(function() {
 
     $("code.language-rust").each(function(i, block){
         var lines = $(this).html().split("\n");
+        var first_non_hidden_line = false;
 
         for(var n = 0; n < lines.length; n++){
             if($.trim(lines[n])[0] == hiding_character){
-                lines[n] = "<span class=\"hidden\">" + lines[n] + "</span>"
+                lines[n] = "<span class=\"hidden\">" + lines[n] + "</span>";
+            }
+            else if(first_non_hidden_line) {
+                lines[n] = "\n" + lines[n];
+            }
+            else {
+                first_non_hidden_line = true;
             }
         }
-        $(this).html(lines.join());
+        $(this).html(lines.join(""));
     });
 
 
