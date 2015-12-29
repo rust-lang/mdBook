@@ -5,6 +5,7 @@
     - [init](cli/init.md)
     - [build](cli/build.md)
     - [watch](cli/watch.md)
+    - [test](cli/test.md)
 - [Format](format/format.md)
     - [SUMMARY.md](format/summary.md)
     - [Configuration](format/config.md)
