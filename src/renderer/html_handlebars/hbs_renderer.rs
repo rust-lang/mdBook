@@ -72,6 +72,7 @@ impl Renderer for HtmlHandlebars {
                         try!(f.read_to_string(&mut content));
 
                         // Render markdown using the pulldown-cmark crate
+                        helpers::playpen::render_playpen(&mut content);
                         content = utils::render_markdown(&content);
                         print_content.push_str(&content);
 
