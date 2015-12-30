@@ -1,4 +1,5 @@
 # The init command
+There is some minimal boilerplate that is the same for every new book. It's for this purpose that mdBook includes an `init` command.
 
 The `init` command is used like this:
 
@@ -6,12 +7,8 @@ The `init` command is used like this:
 mdbook init
 ```
 
-It will create a couple of files and directories in the working directory so that you can
-spend more time writing your book and less setting it up.
-
-The files set up for you are the following:
-
-```text
+When using the `init` command for the first time, a couple of files will be set up for you:
+```bash
 book-test/
 ├── book
 └── src
@@ -19,15 +16,16 @@ book-test/
     └── SUMMARY.md
 ```
 
-The `src` directory is were you write your book in markdown. It contains all the source files,
+- The `src` directory is were you write your book in markdown. It contains all the source files,
 configuration files, etc.
 
-The `book` directory is where your book is rendered. All the output is ready to be uploaded
-to a server to be seen by the internet.
+- The `book` directory is where your book is rendered. All the output is ready to be uploaded
+to a server to be seen by your audience.
 
-The `SUMMARY.md` file is the most important file, it's the skeleton of your book and is discussed in more detail in another  [chapter](../format/summary.html).
+- The `SUMMARY.md` file is the most important file, it's the skeleton of your book and is discussed in more detail in another  [chapter](../format/summary.html).
 
-When a `SUMMARY.md` file already exists, the `init` command will generate the files according to the paths used in the `SUMMARY.md`
+#### Tip & Trick: Hidden Feature
+When a `SUMMARY.md` file already exists, the `init` command will first parse it and generate the missing files according to the paths used in the `SUMMARY.md`. This allows you to think and create the whole structure of your book and then let mdBook generate it for you.
 
 #### Specify a directory
 

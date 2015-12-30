@@ -5,12 +5,26 @@ Let's focus on the command line tool capabilities first.
 
 ## Install
 
-At the moment, the only way to install mdBook is by downloading the source code from Github and building it yourself. Fortunately
-this is made very easy with Cargo.
+### Pre-requisite
 
-If you haven't already, you should begin by installing [Rust](https://www.rust-lang.org/install.html) and [Git](https://git-scm.com/downloads)
+mdBook is written in **[Rust](https://www.rust-lang.org/)** and therefore needs to be compiled with **Cargo**, because we don't yet offer ready-to-go binaries. If you haven't already installed Rust, please go ahead and [install it](https://www.rust-lang.org/downloads.html) now.
 
-Open your terminal and navigate to the directory of you choice. We need to clone the git repository and then build it with Cargo.
+### Install Crates.io version
+
+Installing mdBook is relatively easy if you already have Rust and Cargo installed. You just have to type this snippet in your terminal:
+
+```bash
+cargo install mdbook
+```
+
+This will fetch the source code from [Crates.io](https://crates.io/) and compile it. You will have to add Cargo's `bin` directory to your `PATH`.
+
+Run `mdbook help` in your terminal to verify if it works. Congratulations, you have installed mdBook!
+
+
+### Install Git version
+
+The **[git version](https://github.com/azerupi/mdBook)** contains all the latest bug-fixes and features, that will be released in the next version on **Crates.io**, if you can't wait until the next release. You can build the git version yourself. Open your terminal and navigate to the directory of you choice. We need to clone the git repository and then build it with Cargo.
 
 ```bash
 git clone --depth=1 https://github.com/azerupi/mdBook.git
