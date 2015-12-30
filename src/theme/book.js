@@ -33,7 +33,7 @@ $( document ).ready(function() {
 
     // Add anchors for all content headers
     content.find("h1, h2, h3, h4, h5").wrap(function(){
-        var wrapper = $("<a>");
+        var wrapper = $("<a class=\"header\">");
         wrapper.attr("name", $(this).text());
         return wrapper;
     });
