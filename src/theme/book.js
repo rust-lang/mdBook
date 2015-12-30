@@ -23,6 +23,23 @@ $( document ).ready(function() {
         hljs.highlightBlock(block);
     });
 
+    var KEY_CODES = {
+        PREVIOUS_KEY: 37,
+        NEXT_KEY: 39
+    };
+
+    $(document).on('keydown', function (e) {
+        switch (e.keyCode) {
+            case KEY_CODES.NEXT_KEY:
+                e.preventDefault();
+                window.location.href = $('.nav-chapters.next').attr('href');
+                break;
+            case KEY_CODES.PREVIOUS_KEY:
+                e.preventDefault();
+                window.location.href = $('.nav-chapters.previous').attr('href');
+                break;
+        }
+    });
 
     // Interesting DOM Elements
     var html = $("html");
