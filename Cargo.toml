@@ -20,6 +20,9 @@ handlebars = "~0.12.0"
 rustc-serialize = "~0.3.16"
 pulldown-cmark = "~0.0.3"
 
+[build-dependencies]
+sass-rs = "0.0.18"
+
 
 # Watch feature
 [dependencies.notify]

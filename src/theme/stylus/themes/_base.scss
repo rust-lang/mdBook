@@ -1,4 +1,4 @@
-.{unquote($theme-name)} {
+.#{$theme-name} {
     /* Inline code */
     :not(pre) > .hljs {
         display: inline-block;
@@ -23,58 +23,58 @@
         }
     }
 
-    color: $fg
-    background-color: $bg
+    color: $fg;
+    background-color: $bg;
 
     .sidebar {
-        background-color: $sidebar-bg
-        color: $sidebar-fg
+        background-color: $sidebar-bg;
+        color: $sidebar-fg;
     }
 
     .chapter li {
-        color: $sidebar-non-existant
+        color: $sidebar-non-existant;
 
-        a { color: $sidebar-fg }
+        a { color: $sidebar-fg; }
 
         .active,
          a:hover {
             /* Animate color change */
-            color: $sidebar-active
+            color: $sidebar-active;
         }
     }
 
     .chapter .spacer {
-        background-color: $sidebar-spacer
+        background-color: $sidebar-spacer;
     }
 
     .menu-bar,
     .nav-chapters,
     .mobile-nav-chapters {
-        color: $icons
+        color: $icons;
     }
 
     .menu-bar i:hover,
     .nav-chapters:hover,
     .mobile-nav-chapters i:hover {
-        color: $icons-hover
+        color: $icons-hover;
     }
 
     .mobile-nav-chapters i:hover {
-        color: $sidebar-fg
+        color: $sidebar-fg;
     }
 
     .mobile-nav-chapters {
-        background-color: $sidebar-bg
+        background-color: $sidebar-bg;
     }
 
     .content a:link {
-        color: $links
+        color: $links;
     }
 
     .theme-popup {
-        background: $theme-popup-bg
-        border: 1px solid $theme-popup-border
+        background: $theme-popup-bg;
+        border: 1px solid $theme-popup-border;
 
-        .theme:hover { background-color: $theme-hover }
+        .theme:hover { background-color: $theme-hover; }
     }
 }
