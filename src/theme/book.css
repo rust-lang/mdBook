@@ -328,8 +328,11 @@ h5 {
   background-color: #f4f4f4;
 }
 .light .menu-bar,
+.light .menu-bar:visited,
 .light .nav-chapters,
-.light .mobile-nav-chapters {
+.light .nav-chapters:visited,
+.light .mobile-nav-chapters,
+.light .mobile-nav-chapters:visited {
   color: #ccc;
 }
 .light .menu-bar i:hover,
@@ -398,8 +401,11 @@ h5 {
   background-color: #393939;
 }
 .coal .menu-bar,
+.coal .menu-bar:visited,
 .coal .nav-chapters,
-.coal .mobile-nav-chapters {
+.coal .nav-chapters:visited,
+.coal .mobile-nav-chapters,
+.coal .mobile-nav-chapters:visited {
   color: #43484d;
 }
 .coal .menu-bar i:hover,
@@ -468,8 +474,11 @@ h5 {
   background-color: #2d334f;
 }
 .navy .menu-bar,
+.navy .menu-bar:visited,
 .navy .nav-chapters,
-.navy .mobile-nav-chapters {
+.navy .nav-chapters:visited,
+.navy .mobile-nav-chapters,
+.navy .mobile-nav-chapters:visited {
   color: #737480;
 }
 .navy .menu-bar i:hover,
@@ -538,8 +547,11 @@ h5 {
   background-color: #45373a;
 }
 .rust .menu-bar,
+.rust .menu-bar:visited,
 .rust .nav-chapters,
-.rust .mobile-nav-chapters {
+.rust .nav-chapters:visited,
+.rust .mobile-nav-chapters,
+.rust .mobile-nav-chapters:visited {
   color: #737480;
 }
 .rust .menu-bar i:hover,
