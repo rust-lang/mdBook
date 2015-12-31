@@ -1,11 +1,15 @@
+extern crate handlebars;
+
 use std::path::{Path, PathBuf};
 use std::fs::File;
 use std::io::Read;
 
-pub fn render_playpen(s: &mut str, path: &Path) {
+
+pub fn render_playpen(s: &str, path: &Path) -> String {
     // When replacing one thing in a string by something with a different length, the indices
     // after that will not correspond, we therefore have to store the difference to correct this
-    let difference_index = 0;
+    let mut previous_end_index = 0;
+    let mut replaced = String::new();
 
     for playpen in find_playpens(s, path) {
 
@@ -20,15 +24,23 @@ pub fn render_playpen(s: &mut str, path: &Path) {
         let mut file_content = String::new();
         if let Err(_) = file.read_to_string(&mut file_content) { continue };
 
+        let replacement = String::new() + "<pre class=\"playpen\"><code class=\"language-rust\">" + &file_content + "</code></pre>";
+
+        replaced.push_str(&s[previous_end_index..playpen.start_index]);
+        replaced.push_str(&replacement);
+        previous_end_index = playpen.end_index;
         //println!("Playpen{{ {}, {}, {:?}, {} }}", playpen.start_index, playpen.end_index, playpen.rust_file, playpen.editable);
     }
 
+    replaced.push_str(&s[previous_end_index..]);
+
+    replaced
 }
 
 #[derive(PartialOrd, PartialEq, Debug)]
 struct Playpen{
-    start_index: u32,
-    end_index: u32,
+    start_index: usize,
+    end_index: usize,
     rust_file: PathBuf,
     editable: bool
 }
@@ -59,8 +71,8 @@ fn find_playpens(s: &str, base_path: &Path) -> Vec<Playpen> {
 
         playpens.push(
             Playpen{
-                start_index: i as u32,
-                end_index: end_i as u32,
+                start_index: i,
+                end_index: end_i,
                 rust_file: base_path.join(PathBuf::from(params[0])),
                 editable: editable,
             }
