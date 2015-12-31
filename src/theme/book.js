@@ -140,18 +140,20 @@ $( document ).ready(function() {
 
     $("code.language-rust").each(function(i, block){
 
+        var code_block = $(this);
+        var pre_block = $(this).parent();
         // hide lines
-        var lines = $(this).html().split("\n");
+        var lines = code_block.html().split("\n");
         var first_non_hidden_line = false;
         var lines_hidden = false;
 
         for(var n = 0; n < lines.length; n++){
             if($.trim(lines[n])[0] == hiding_character){
                 if(first_non_hidden_line){
-                    lines[n] = "<span class=\"hidden\">" + "\n" + lines[n].substr(1) + "</span>";
+                    lines[n] = "<span class=\"hidden\">" + "\n" + lines[n].replace(/(\s*)#/, "$1") + "</span>";
                 }
                 else {
-                    lines[n] = "<span class=\"hidden\">" + lines[n].substr(1) + "\n"  +  "</span>";
+                    lines[n] = "<span class=\"hidden\">" + lines[n].replace(/(\s*)#/, "$1") + "\n"  +  "</span>";
                 }
                 lines_hidden = true;
             }
@@ -162,25 +164,65 @@ $( document ).ready(function() {
                 first_non_hidden_line = true;
             }
         }
-        $(this).html(lines.join(""));
+        code_block.html(lines.join(""));
 
         // If no lines were hidden, return
         if(!lines_hidden) { return; }
 
         // add expand button
-        $(this).parent().prepend("<i class=\"fa fa-expand\"></i>");
+        pre_block.prepend("<div class=\"buttons\"><i class=\"fa fa-expand\"></i></div>");
 
-        $(this).parent().find("i").click(function(e){
+        pre_block.find("i").click(function(e){
             if( $(this).hasClass("fa-expand") ) {
                 $(this).removeClass("fa-expand").addClass("fa-compress");
-                $(this).parent().find("span.hidden").removeClass("hidden").addClass("unhidden");
+                pre_block.find("span.hidden").removeClass("hidden").addClass("unhidden");
             }
             else {
                 $(this).removeClass("fa-compress").addClass("fa-expand");
-                $(this).parent().find("span.unhidden").removeClass("unhidden").addClass("hidden");
+                pre_block.find("span.unhidden").removeClass("unhidden").addClass("hidden");
             }
         });
     });
 
 
+    // Process playpen code blocks
+    $(".playpen").each(function(block){
+        var pre_block = $(this);
+        // Add play button
+        var buttons = pre_block.find(".buttons");
+        if( buttons.length === 0 ) {
+            pre_block.prepend("<div class=\"buttons\"></div>");
+            buttons = pre_block.find(".buttons");
+        }
+        buttons.prepend("<i class=\"fa fa-play play-button\"></i>");
+
+        buttons.find(".play-button").click(function(e){
+            run_rust_code(pre_block);
+        });
+    });
+
+
 });
+
+
+function run_rust_code(code_block) {
+    var result_block = code_block.find(".result");
+    if(result_block.length === 0) {
+        code_block.append("<code class=\"result hljs language-bash\"></code>");
+        result_block = code_block.find(".result");
+    }
+
+    result_block.text("Running...");
+
+    $.ajax({
+        url: "https://play.rust-lang.org/evaluate.json",
+        method: "POST",
+        crossDomain: true,
+        dataType: "json",
+        contentType: "application/json",
+        data: JSON.stringify({version: "stable", optimize: "0", code: code_block.find(".language-rust").text() }),
+        success: function(response){
+            result_block.text(response.result);
+        }
+    });
+}

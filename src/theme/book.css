@@ -299,15 +299,21 @@ h5 {
 .light pre {
   position: relative;
 }
-.light pre > i {
+.light pre > .buttons {
   position: absolute;
   right: 5px;
   top: 5px;
   color: #364149;
   cursor: pointer;
 }
-.light pre > i :hover {
+.light pre > .buttons :hover {
   color: #008cff;
+}
+.light pre > .buttons i {
+  margin-left: 8px;
+}
+.light pre > .result {
+  margin-top: 10px;
 }
 .light .sidebar {
   background-color: #fafafa;
@@ -372,15 +378,21 @@ h5 {
 .coal pre {
   position: relative;
 }
-.coal pre > i {
+.coal pre > .buttons {
   position: absolute;
   right: 5px;
   top: 5px;
   color: #a1adb8;
   cursor: pointer;
 }
-.coal pre > i :hover {
+.coal pre > .buttons :hover {
   color: #3473ad;
+}
+.coal pre > .buttons i {
+  margin-left: 8px;
+}
+.coal pre > .result {
+  margin-top: 10px;
 }
 .coal .sidebar {
   background-color: #292c2f;
@@ -445,15 +457,21 @@ h5 {
 .navy pre {
   position: relative;
 }
-.navy pre > i {
+.navy pre > .buttons {
   position: absolute;
   right: 5px;
   top: 5px;
   color: #c8c9db;
   cursor: pointer;
 }
-.navy pre > i :hover {
+.navy pre > .buttons :hover {
   color: #2b79a2;
+}
+.navy pre > .buttons i {
+  margin-left: 8px;
+}
+.navy pre > .result {
+  margin-top: 10px;
 }
 .navy .sidebar {
   background-color: #282d3f;
@@ -518,15 +536,21 @@ h5 {
 .rust pre {
   position: relative;
 }
-.rust pre > i {
+.rust pre > .buttons {
   position: absolute;
   right: 5px;
   top: 5px;
   color: #c8c9db;
   cursor: pointer;
 }
-.rust pre > i :hover {
+.rust pre > .buttons :hover {
   color: #e69f67;
+}
+.rust pre > .buttons i {
+  margin-left: 8px;
+}
+.rust pre > .result {
+  margin-top: 10px;
 }
 .rust .sidebar {
   background-color: #3b2e2a;
