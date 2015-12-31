@@ -8,6 +8,7 @@ pub fn render_playpen(s: &mut str) {
 
 }
 
+#[derive(PartialOrd, PartialEq, Debug)]
 struct Playpen{
     start_index: u32,
     end_index: u32,
@@ -50,4 +51,54 @@ fn find_playpens(s: &str) -> Vec<Playpen> {
     }
 
     playpens
+}
+
+
+
+
+//
+//---------------------------------------------------------------------------------
+//      Tests
+//
+
+#[test]
+fn test_find_playpens_no_playpen() {
+    let s = "Some random text without playpen...";
+    assert!(find_playpens(s) == vec![]);
+}
+
+#[test]
+fn test_find_playpens_partial_playpen() {
+    let s = "Some random text with {{#playpen...";
+    assert!(find_playpens(s) == vec![]);
+}
+
+#[test]
+fn test_find_playpens_empty_playpen() {
+    let s = "Some random text with {{#playpen}} and {{#playpen   }}...";
+    assert!(find_playpens(s) == vec![]);
+}
+
+#[test]
+fn test_find_playpens_simple_playpen() {
+    let s = "Some random text with {{#playpen file.rs}} and {{#playpen test.rs }}...";
+
+    println!("\nOUTPUT: {:?}\n", find_playpens(s));
+
+    assert!(find_playpens(s) == vec![
+        Playpen{start_index: 22, end_index: 42, rust_file: PathBuf::from("file.rs"), editable: false},
+        Playpen{start_index: 47, end_index: 68, rust_file: PathBuf::from("test.rs"), editable: false}
+    ]);
+}
+
+#[test]
+fn test_find_playpens_complex_playpen() {
+    let s = "Some random text with {{#playpen file.rs editable}} and {{#playpen test.rs editable }}...";
+
+    println!("\nOUTPUT: {:?}\n", find_playpens(s));
+
+    assert!(find_playpens(s) == vec![
+        Playpen{start_index: 22, end_index: 51, rust_file: PathBuf::from("file.rs"), editable: true},
+        Playpen{start_index: 56, end_index: 86, rust_file: PathBuf::from("test.rs"), editable: true}
+    ]);
 }
