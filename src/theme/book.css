@@ -12,14 +12,6 @@ body {
 .hidden {
   display: none;
 }
-a h1,
-a h2,
-a h3,
-a h4,
-a h5 {
-  color: #000;
-  pointer: cursor;
-}
 h2,
 h3 {
   margin-top: 2.5em;
@@ -323,6 +315,15 @@ h5 {
 .light pre > .result {
   margin-top: 10px;
 }
+.light .content .header:link,
+.light .content .header:visited {
+  color: #333;
+  pointer: cursor;
+}
+.light .content .header:link:hover,
+.light .content .header:visited:hover {
+  text-decoration: none;
+}
 .light .sidebar {
   background-color: #fafafa;
   color: #364149;
@@ -401,6 +402,15 @@ h5 {
 }
 .coal pre > .result {
   margin-top: 10px;
+}
+.coal .content .header:link,
+.coal .content .header:visited {
+  color: #98a3ad;
+  pointer: cursor;
+}
+.coal .content .header:link:hover,
+.coal .content .header:visited:hover {
+  text-decoration: none;
 }
 .coal .sidebar {
   background-color: #292c2f;
@@ -481,6 +491,15 @@ h5 {
 .navy pre > .result {
   margin-top: 10px;
 }
+.navy .content .header:link,
+.navy .content .header:visited {
+  color: #bcbdd0;
+  pointer: cursor;
+}
+.navy .content .header:link:hover,
+.navy .content .header:visited:hover {
+  text-decoration: none;
+}
 .navy .sidebar {
   background-color: #282d3f;
   color: #c8c9db;
@@ -559,6 +578,15 @@ h5 {
 }
 .rust pre > .result {
   margin-top: 10px;
+}
+.rust .content .header:link,
+.rust .content .header:visited {
+  color: #262625;
+  pointer: cursor;
+}
+.rust .content .header:link:hover,
+.rust .content .header:visited:hover {
+  text-decoration: none;
 }
 .rust .sidebar {
   background-color: #3b2e2a;
