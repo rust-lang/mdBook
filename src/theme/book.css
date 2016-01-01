@@ -12,6 +12,14 @@ body {
 .hidden {
   display: none;
 }
+a h1,
+a h2,
+a h3,
+a h4,
+a h5 {
+  color: #000;
+  pointer: cursor;
+}
 h2,
 h3 {
   margin-top: 2.5em;

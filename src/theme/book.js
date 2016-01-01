@@ -56,6 +56,8 @@ $( document ).ready(function() {
     content.find("h1, h2, h3, h4, h5").wrap(function(){
         var wrapper = $("<a class=\"header\">");
         wrapper.attr("name", $(this).text());
+        // Add so that when you click the link actually shows up in the url bar...
+        wrapper.attr("href", $(location).attr('href') + "#" + $(this).text()); 
         return wrapper;
     });
 
