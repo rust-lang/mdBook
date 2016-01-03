@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf, Component};
 use std::error::Error;
 use std::fs::{self, metadata, File};
 
-use self::pulldown_cmark::{Parser, html};
+use self::pulldown_cmark::{Parser, html, Options, OPTION_ENABLE_TABLES, OPTION_ENABLE_FOOTNOTES};
 
 /// This is copied from the rust source code until Path_ Ext stabilizes.
 /// You can use it, but be aware that it will be removed when those features go to rust stable
@@ -188,7 +188,12 @@ pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blackl
 
 pub fn render_markdown(text: &str) -> String {
     let mut s = String::with_capacity(text.len() * 3 / 2);
-    let p = Parser::new(&text);
+
+    let mut opts = Options::empty();
+    opts.insert(OPTION_ENABLE_TABLES);
+    opts.insert(OPTION_ENABLE_FOOTNOTES);
+
+    let p = Parser::new_ext(&text, opts);
     html::push_html(&mut s, p);
     s
 }
