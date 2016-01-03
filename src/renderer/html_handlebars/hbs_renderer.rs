@@ -8,7 +8,7 @@ use book::bookitem::BookItem;
 use {utils, theme};
 
 use std::path::{Path, PathBuf};
-use std::fs::File;
+use std::fs::{self, File};
 use std::error::Error;
 use std::io::{self, Read, Write};
 use std::collections::BTreeMap;
@@ -50,7 +50,7 @@ impl Renderer for HtmlHandlebars {
 
         // Check if dest directory exists
         debug!("[*]: Check if destination directory exists");
-        if let Err(_) = utils::create_path(book.get_dest()) {
+        if let Err(_) = fs::create_dir_all(book.get_dest()) {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Unexpected error when constructing destination path")))
         }
 
@@ -159,41 +159,68 @@ impl Renderer for HtmlHandlebars {
 
         debug!("[*] Copy static files");
         // JavaScript
-        let mut js_file = try!(File::create(book.get_dest().join("book.js")));
+        let mut js_file = if let Ok(f) = File::create(book.get_dest().join("book.js")) { f } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create book.js")))
+        };
         try!(js_file.write_all(&theme.js));
 
         // Css
-        let mut css_file = try!(File::create(book.get_dest().join("book.css")));
+        let mut css_file = if let Ok(f) = File::create(book.get_dest().join("book.css")) { f } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create book.css")))
+        };
         try!(css_file.write_all(&theme.css));
 
         // JQuery local fallback
-        let mut jquery = try!(File::create(book.get_dest().join("jquery.js")));
+        let mut jquery = if let Ok(f) = File::create(book.get_dest().join("jquery.js")) { f } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create jquery.js")))
+        };
         try!(jquery.write_all(&theme.jquery));
 
-        // Font Awesome local fallback
-        let mut font_awesome = try!(utils::create_file(&book.get_dest().join("_FontAwesome/css/font-awesome").with_extension("css")));
-        try!(font_awesome.write_all(theme::FONT_AWESOME));
-        let mut font_awesome = try!(utils::create_file(&book.get_dest().join("_FontAwesome/fonts/fontawesome-webfont.eot")));
-        try!(font_awesome.write_all(theme::FONT_AWESOME_EOT));
-        let mut font_awesome = try!(utils::create_file(&book.get_dest().join("_FontAwesome/fonts/fontawesome-webfont.svg")));
-        try!(font_awesome.write_all(theme::FONT_AWESOME_SVG));
-        let mut font_awesome = try!(utils::create_file(&book.get_dest().join("_FontAwesome/fonts/fontawesome-webfont.ttf")));
-        try!(font_awesome.write_all(theme::FONT_AWESOME_TTF));
-        let mut font_awesome = try!(utils::create_file(&book.get_dest().join("_FontAwesome/fonts/fontawesome-webfont.woff")));
-        try!(font_awesome.write_all(theme::FONT_AWESOME_WOFF));
-        let mut font_awesome = try!(utils::create_file(&book.get_dest().join("_FontAwesome/fonts/fontawesome-webfont.woff2")));
-        try!(font_awesome.write_all(theme::FONT_AWESOME_WOFF2));
-        let mut font_awesome = try!(utils::create_file(&book.get_dest().join("_FontAwesome/fonts/FontAwesome.ttf")));
-        try!(font_awesome.write_all(theme::FONT_AWESOME_TTF));
-
         // syntax highlighting
-        let mut highlight_css = try!(File::create(book.get_dest().join("highlight.css")));
+        let mut highlight_css = if let Ok(f) = File::create(book.get_dest().join("highlight.css")) { f } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create highlight.css")))
+        };
         try!(highlight_css.write_all(&theme.highlight_css));
-        let mut tomorrow_night_css = try!(File::create(book.get_dest().join("tomorrow-night.css")));
+
+        let mut tomorrow_night_css = if let Ok(f) = File::create(book.get_dest().join("tomorrow-night.css")) { f } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create tomorrow-night.css")))
+        };
         try!(tomorrow_night_css.write_all(&theme.tomorrow_night_css));
-        let mut highlight_js = try!(File::create(book.get_dest().join("highlight.js")));
+
+        let mut highlight_js = if let Ok(f) = File::create(book.get_dest().join("highlight.js")) { f } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create highlight.js")))
+        };
         try!(highlight_js.write_all(&theme.highlight_js));
 
+        // Font Awesome local fallback
+        let mut font_awesome = if let Ok(f) = utils::create_file(&book.get_dest().join("_FontAwesome/css/font-awesome.css")) { f } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create font-awesome.css")))
+        };
+        try!(font_awesome.write_all(theme::FONT_AWESOME));
+        let mut font_awesome = if let Ok(f) = utils::create_file(&book.get_dest().join("_FontAwesome/fonts/fontawesome-webfont.eot")) { f } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.eot")))
+        };
+        try!(font_awesome.write_all(theme::FONT_AWESOME_EOT));
+        let mut font_awesome = if let Ok(f) = utils::create_file(&book.get_dest().join("_FontAwesome/fonts/fontawesome-webfont.svg")) { f } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.svg")))
+        };
+        try!(font_awesome.write_all(theme::FONT_AWESOME_SVG));
+        let mut font_awesome = if let Ok(f) = utils::create_file(&book.get_dest().join("_FontAwesome/fonts/fontawesome-webfont.ttf")) { f } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.ttf")))
+        };
+        try!(font_awesome.write_all(theme::FONT_AWESOME_TTF));
+        let mut font_awesome = if let Ok(f) = utils::create_file(&book.get_dest().join("_FontAwesome/fonts/fontawesome-webfont.woff")) { f } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.woff")))
+        };
+        try!(font_awesome.write_all(theme::FONT_AWESOME_WOFF));
+        let mut font_awesome = if let Ok(f) = utils::create_file(&book.get_dest().join("_FontAwesome/fonts/fontawesome-webfont.woff2")) { f } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.woff2")))
+        };
+        try!(font_awesome.write_all(theme::FONT_AWESOME_WOFF2));
+        let mut font_awesome = if let Ok(f) = utils::create_file(&book.get_dest().join("_FontAwesome/fonts/FontAwesome.ttf")) { f } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create FontAwesome.ttf")))
+        };
+        try!(font_awesome.write_all(theme::FONT_AWESOME_TTF));
 
         // Copy all remaining files
         try!(utils::copy_files_except_ext(book.get_src(), book.get_dest(), true, &["md"]));

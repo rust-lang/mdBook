@@ -9,7 +9,7 @@ use std::process::Command;
 use {BookConfig, BookItem, theme, parse, utils};
 use book::BookItems;
 use renderer::{Renderer, HtmlHandlebars};
-use utils::{PathExt, create_path};
+
 
 pub struct MDBook {
     config: BookConfig,
@@ -96,7 +96,7 @@ impl MDBook {
         debug!("[fn]: init");
 
         if !self.config.get_root().exists() {
-            create_path(self.config.get_root()).unwrap();
+            fs::create_dir_all(self.config.get_root()).unwrap();
             output!("{:?} created", self.config.get_root());
         }
 

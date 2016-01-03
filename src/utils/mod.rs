@@ -1,32 +1,11 @@
 extern crate pulldown_cmark;
 
-use std::path::{Path, PathBuf, Component};
+use std::path::{Path, Component};
 use std::error::Error;
+use std::io;
 use std::fs::{self, metadata, File};
 
 use self::pulldown_cmark::{Parser, html, Options, OPTION_ENABLE_TABLES, OPTION_ENABLE_FOOTNOTES};
-
-/// This is copied from the rust source code until Path_ Ext stabilizes.
-/// You can use it, but be aware that it will be removed when those features go to rust stable
-pub trait PathExt {
-    fn exists(&self) -> bool;
-    fn is_file(&self) -> bool;
-    fn is_dir(&self) -> bool;
-}
-
-impl PathExt for Path {
-    fn exists(&self) -> bool {
-        metadata(self).is_ok()
-    }
-
-    fn is_file(&self) -> bool {
-       metadata(self).map(|s| s.is_file()).unwrap_or(false)
-    }
-
-    fn is_dir(&self) -> bool {
-       metadata(self).map(|s| s.is_dir()).unwrap_or(false)
-    }
-}
 
 /// Takes a path and returns a path containing just enough `../` to point to the root of the given path.
 ///
@@ -65,46 +44,7 @@ pub fn path_to_root(path: &Path) -> String {
         })
 }
 
-/// This function checks for every component in a path if the directory exists,
-/// if it does not it is created.
 
-pub fn create_path(path: &Path) -> Result<(), Box<Error>> {
-    debug!("[fn]: create_path");
-
-    // Create directories if they do not exist
-    let mut constructed_path = PathBuf::new();
-
-    for component in path.components() {
-
-        let dir;
-        match component {
-            Component::Normal(_) => { dir = PathBuf::from(component.as_os_str()); },
-            Component::RootDir => {
-                debug!("[*]: Root directory");
-                // This doesn't look very compatible with Windows...
-                constructed_path.push("/");
-                continue
-            },
-            _ => continue,
-        }
-
-        constructed_path.push(&dir);
-        debug!("[*]: {:?}", constructed_path);
-
-        if !constructed_path.exists() || !constructed_path.is_dir() {
-            try!(fs::create_dir(&constructed_path));
-            debug!("[*]: Directory created {:?}", constructed_path);
-        } else {
-            debug!("[*]: Directory exists {:?}", constructed_path);
-            continue
-        }
-
-    }
-
-    debug!("[*]: Constructed path: {:?}", constructed_path);
-
-    Ok(())
-}
 
 /// This function creates a file and returns it. But before creating the file it checks every
 /// directory in the path to see if it exists, and if it does not it will be created.
@@ -114,11 +54,19 @@ pub fn create_file(path: &Path) -> Result<File, Box<Error>> {
 
     // Construct path
     if let Some(p) = path.parent() {
-        try!(create_path(p));
+        debug!("Parent directory is: {:?}", p);
+
+        try!(fs::create_dir_all(p));
     }
 
     debug!("[*]: Create file: {:?}", path);
-    let f = try!(File::create(path));
+    let f = match File::create(path) {
+        Ok(f) => f,
+        Err(e) => {
+            debug!("File::create:    {}", e);
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, format!("{}", e))))
+        },
+    };
 
     Ok(f)
 }
@@ -172,7 +120,7 @@ pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blackl
             if let Some(ext) = entry.path().extension() {
                 if ext_blacklist.contains(&ext.to_str().unwrap()) { continue }
                 debug!("[*] creating path for file: {:?}", &to.join(entry.path().file_name().expect("a file should have a file name...")));
-                //try!(create_path(&to.join(entry.path())));
+
                 output!("[*] copying file: {:?}\n    to {:?}", entry.path(), &to.join(entry.path().file_name().expect("a file should have a file name...")));
                 try!(fs::copy(entry.path(), &to.join(entry.path().file_name().expect("a file should have a file name..."))));
             }
