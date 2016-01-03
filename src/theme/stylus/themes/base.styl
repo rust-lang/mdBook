@@ -1,35 +1,4 @@
 .{unquote($theme-name)} {
-    /* Inline code */
-    :not(pre) > .hljs {
-        display: inline-block;
-        vertical-align: middle;
-        padding: 0.1em 0.3em;
-        border-radius: 3px;
-    }
-
-    pre {
-        position: relative;
-    }
-    pre > .buttons {
-        position: absolute;
-        right: 5px;
-        top: 5px;
-
-        color: $sidebar-fg;
-        cursor: pointer;
-
-        :hover {
-            color: $sidebar-active;
-        }
-
-        i {
-            margin-left: 8px;
-        }
-    }
-
-    pre > .result {
-        margin-top: 10px;
-    }
 
     color: $fg
     background-color: $bg
@@ -96,5 +65,50 @@
         border: 1px solid $theme-popup-border
 
         .theme:hover { background-color: $theme-hover }
+    }
+
+    blockquote {
+        margin: 20px 0;
+        padding: 0 20px;
+        color: $fg;
+        background-color: $quote-bg;
+        border-top: .1em solid $quote-border;
+        border-bottom: .1em solid $quote-border;
+    }
+
+    /*
+    table {
+        thead td {
+            color: $table-header-fg;
+            backrgound: $table-header-bg;
+        }
+    }
+    */
+
+    /* Inline code */
+    :not(pre) > .hljs {
+        display: inline-block;
+        vertical-align: middle;
+        padding: 0.1em 0.3em;
+        border-radius: 3px;
+    }
+
+    pre {
+        position: relative;
+
+        & > .buttons {
+            position: absolute;
+            right: 5px;
+            top: 5px;
+
+            color: $sidebar-fg;
+            cursor: pointer;
+
+            :hover { color: $sidebar-active; }
+            i { margin-left: 8px; }
+        }
+
+        & > .result { margin-top: 10px; }
+
     }
 }

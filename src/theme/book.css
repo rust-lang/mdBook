@@ -25,6 +25,15 @@ h5 {
 .header + .header h5 {
   margin-top: 1em;
 }
+table {
+  margin: 0 auto;
+}
+table thead td {
+  font-weight: 700;
+}
+table td {
+  padding: 3px 20px;
+}
 .sidebar {
   position: absolute;
   left: 0;
@@ -285,35 +294,17 @@ h5 {
   }
 }
 .light {
-/* Inline code */
   color: #333;
   background-color: #fff;
-}
-.light :not(pre) > .hljs {
-  display: inline-block;
-  vertical-align: middle;
-  padding: 0.1em 0.3em;
-  -webkit-border-radius: 3px;
-  border-radius: 3px;
-}
-.light pre {
-  position: relative;
-}
-.light pre > .buttons {
-  position: absolute;
-  right: 5px;
-  top: 5px;
-  color: #364149;
-  cursor: pointer;
-}
-.light pre > .buttons :hover {
-  color: #008cff;
-}
-.light pre > .buttons i {
-  margin-left: 8px;
-}
-.light pre > .result {
-  margin-top: 10px;
+/*
+    table {
+        thead td {
+            color: $table-header-fg;
+            backrgound: $table-header-bg;
+        }
+    }
+    */
+/* Inline code */
 }
 .light .content .header:link,
 .light .content .header:visited {
@@ -372,36 +363,52 @@ h5 {
 .light .theme-popup .theme:hover {
   background-color: #e6e6e6;
 }
-.coal {
-/* Inline code */
-  color: #98a3ad;
-  background-color: #141617;
+.light blockquote {
+  margin: 20px 0;
+  padding: 0 20px;
+  color: #333;
+  background-color: #f2f7f9;
+  border-top: 0.1em solid #e1edf1;
+  border-bottom: 0.1em solid #e1edf1;
 }
-.coal :not(pre) > .hljs {
+.light :not(pre) > .hljs {
   display: inline-block;
   vertical-align: middle;
   padding: 0.1em 0.3em;
   -webkit-border-radius: 3px;
   border-radius: 3px;
 }
-.coal pre {
+.light pre {
   position: relative;
 }
-.coal pre > .buttons {
+.light pre > .buttons {
   position: absolute;
   right: 5px;
   top: 5px;
-  color: #a1adb8;
+  color: #364149;
   cursor: pointer;
 }
-.coal pre > .buttons :hover {
-  color: #3473ad;
+.light pre > .buttons :hover {
+  color: #008cff;
 }
-.coal pre > .buttons i {
+.light pre > .buttons i {
   margin-left: 8px;
 }
-.coal pre > .result {
+.light pre > .result {
   margin-top: 10px;
+}
+.coal {
+  color: #98a3ad;
+  background-color: #141617;
+/*
+    table {
+        thead td {
+            color: $table-header-fg;
+            backrgound: $table-header-bg;
+        }
+    }
+    */
+/* Inline code */
 }
 .coal .content .header:link,
 .coal .content .header:visited {
@@ -460,36 +467,52 @@ h5 {
 .coal .theme-popup .theme:hover {
   background-color: #1f2124;
 }
-.navy {
-/* Inline code */
-  color: #bcbdd0;
-  background-color: #161923;
+.coal blockquote {
+  margin: 20px 0;
+  padding: 0 20px;
+  color: #98a3ad;
+  background-color: #242637;
+  border-top: 0.1em solid #2c2f44;
+  border-bottom: 0.1em solid #2c2f44;
 }
-.navy :not(pre) > .hljs {
+.coal :not(pre) > .hljs {
   display: inline-block;
   vertical-align: middle;
   padding: 0.1em 0.3em;
   -webkit-border-radius: 3px;
   border-radius: 3px;
 }
-.navy pre {
+.coal pre {
   position: relative;
 }
-.navy pre > .buttons {
+.coal pre > .buttons {
   position: absolute;
   right: 5px;
   top: 5px;
-  color: #c8c9db;
+  color: #a1adb8;
   cursor: pointer;
 }
-.navy pre > .buttons :hover {
-  color: #2b79a2;
+.coal pre > .buttons :hover {
+  color: #3473ad;
 }
-.navy pre > .buttons i {
+.coal pre > .buttons i {
   margin-left: 8px;
 }
-.navy pre > .result {
+.coal pre > .result {
   margin-top: 10px;
+}
+.navy {
+  color: #bcbdd0;
+  background-color: #161923;
+/*
+    table {
+        thead td {
+            color: $table-header-fg;
+            backrgound: $table-header-bg;
+        }
+    }
+    */
+/* Inline code */
 }
 .navy .content .header:link,
 .navy .content .header:visited {
@@ -548,36 +571,52 @@ h5 {
 .navy .theme-popup .theme:hover {
   background-color: #282e40;
 }
-.rust {
-/* Inline code */
-  color: #262625;
-  background-color: #e1e1db;
+.navy blockquote {
+  margin: 20px 0;
+  padding: 0 20px;
+  color: #bcbdd0;
+  background-color: #262933;
+  border-top: 0.1em solid #2f333f;
+  border-bottom: 0.1em solid #2f333f;
 }
-.rust :not(pre) > .hljs {
+.navy :not(pre) > .hljs {
   display: inline-block;
   vertical-align: middle;
   padding: 0.1em 0.3em;
   -webkit-border-radius: 3px;
   border-radius: 3px;
 }
-.rust pre {
+.navy pre {
   position: relative;
 }
-.rust pre > .buttons {
+.navy pre > .buttons {
   position: absolute;
   right: 5px;
   top: 5px;
   color: #c8c9db;
   cursor: pointer;
 }
-.rust pre > .buttons :hover {
-  color: #e69f67;
+.navy pre > .buttons :hover {
+  color: #2b79a2;
 }
-.rust pre > .buttons i {
+.navy pre > .buttons i {
   margin-left: 8px;
 }
-.rust pre > .result {
+.navy pre > .result {
   margin-top: 10px;
+}
+.rust {
+  color: #262625;
+  background-color: #e1e1db;
+/*
+    table {
+        thead td {
+            color: $table-header-fg;
+            backrgound: $table-header-bg;
+        }
+    }
+    */
+/* Inline code */
 }
 .rust .content .header:link,
 .rust .content .header:visited {
@@ -635,4 +674,38 @@ h5 {
 }
 .rust .theme-popup .theme:hover {
   background-color: #99908a;
+}
+.rust blockquote {
+  margin: 20px 0;
+  padding: 0 20px;
+  color: #262625;
+  background-color: #c1c1bb;
+  border-top: 0.1em solid #b8b8b1;
+  border-bottom: 0.1em solid #b8b8b1;
+}
+.rust :not(pre) > .hljs {
+  display: inline-block;
+  vertical-align: middle;
+  padding: 0.1em 0.3em;
+  -webkit-border-radius: 3px;
+  border-radius: 3px;
+}
+.rust pre {
+  position: relative;
+}
+.rust pre > .buttons {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  color: #c8c9db;
+  cursor: pointer;
+}
+.rust pre > .buttons :hover {
+  color: #e69f67;
+}
+.rust pre > .buttons i {
+  margin-left: 8px;
+}
+.rust pre > .result {
+  margin-top: 10px;
 }
