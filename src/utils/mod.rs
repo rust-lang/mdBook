@@ -158,7 +158,6 @@ mod tests {
     extern crate tempdir;
 
     use super::copy_files_except_ext;
-    use super::PathExt;
     use std::fs;
 
     #[test]
