@@ -8,7 +8,7 @@ use std::process::Command;
 
 use {BookConfig, BookItem, theme, parse, utils};
 use book::BookItems;
-use renderer::{Renderer, HtmlHandlebars};
+use renderer::{Renderer, HtmlHandlebars, Pandoc};
 
 
 pub struct MDBook {
@@ -38,7 +38,7 @@ impl MDBook {
                         .set_src(&root.join("src"))
                         .set_dest(&root.join("book"))
                         .to_owned(),
-            renderer: Box::new(HtmlHandlebars::new()),
+            renderer: Box::new(Pandoc::new()),
         }
     }
 
