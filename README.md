@@ -1,79 +1,92 @@
 # mdBook [![Travis-CI](https://travis-ci.org/azerupi/mdBook.svg?branch=master)](https://travis-ci.org/azerupi/mdBook) [![Crates.io version](https://img.shields.io/crates/v/mdbook.svg)](https://crates.io/crates/mdbook) [![License](https://img.shields.io/crates/l/mdbook.svg)](LICENSE)
 
-Personal implementation of Gitbook in Rust
+mdBook is a utility to create modern online books from markdown files.
 
 **This project is still in it's early days.**
 For more information about what is left on my to-do list, check the issue tracker
 
 
-## Example
+## What does it look like?
 
-To have an idea of what a rendered book looks like,take a look at the [**Documentation**](http://azerupi.github.io/mdBook/). It is rendered by the latest version of mdBook.
+The [**Documentation**](http://azerupi.github.io/mdBook/) for mdBook has been written in markdown and is using mdBook to generate the online book-like website you can read. The documentation uses the latest version on github and showcases the available features.
 
 ## Installation
 
+There are 2 ways to install mdBook but both require [Rust and Cargo](https://www.rust-lang.org/) to be installed.
+
+##### Install from Crates.io
+
+Once you have installed Rust, type the following in the terminal:
 ```
 cargo install mdbook
 ```
 
-If you want to regenerate the css (stylesheet), clone the git repo locally and make sure that you installed `stylus` and `nib` from `npm` because it is used to compile the stylesheets
+This will download and compile mdBook for you, the only thing you that will be left to do is add the Cargo bin directory to your path.
 
-Install [node.js](https://nodejs.org/en/)
+##### Install from git
 
-```
-npm install -g stylus nib
-```
+The version published to Crates.io will ever so slightly be behind the version hosted here on Github. If you need the latest version you can build the git version of mdBook yourself. Cargo makes this ***super easy***!
 
-Then build with the `regenerate-css` feature:
+First, clone the repository on your computer:
 
 ```
-cargo build --release --features="regenerate-css"
+git clone --depth 1 https://github.com/azerupi/mdBook.git
 ```
 
-## Structure
+Then `cd` into the directory and run:
 
-There are two main parts of this project:
-
-- **The library:** The crate is structured so that all the code that actually does something is part of the library. You could therefore easily hook mdbook into your existing project, extend it's functionality by wrapping it in some other code, etc.
-- **The binary:** Is just a wrapper around the library functionality providing a nice and easy command line interface.
-
-### Command line interface
-
-#### init
-
-If you run `mdbook init` in a directory, it will create a couple of folders and files you can start with.
-This is the strucutre it creates at the moment:
 ```
-book-test/
-├── book
-└── src
-    ├── chapter_1.md
-    └── SUMMARY.md
+cargo build --release
 ```
-`book` and `src` are both directories. `src` contains the markdown files that will be used to render the ouput to the `book` directory.
 
-Please, take a look at the [**Documentation**](http://azerupi.github.io/mdBook/cli/init.html) for more information.
+The executable will be in `./target/release/mdbook`.
 
-#### build
 
-Use `mdbook build` in the directory to render the book. You can find more information in the [**Documentation**](http://azerupi.github.io/mdBook/cli/build.html)
+
+## Usage
+
+mdBook will primaraly be used as a command line tool, even though it exposes all it's functionality as a Rust crate for integration in other projects.
+
+Here are the main commands you will want to run, for a more exhaustive explanation, check out the [documentation](http://azerupi.github.io/mdBook/).
+
+- `mdbook init`
+
+    The init command will create a directory with the minimal boilerplate to start with.
+
+    ```
+    book-test/
+    ├── book
+    └── src
+        ├── chapter_1.md
+        └── SUMMARY.md
+    ```
+
+    `book` and `src` are both directories. `src` contains the markdown files that will be used to render the ouput to the `book` directory.
+
+    Please, take a look at the [**Documentation**](http://azerupi.github.io/mdBook/cli/init.html) for more information and some neat tricks.
+
+- `mdbook build`
+
+    This is the command you will run to render your book, it reads the `SUMMARY.md` file to understand the structure of your book, takes the markdown files in the source directory as input and outputs static html pages that you can upload to a server.
+
+- `mdbook watch`
+
+    When you run this command, mdbook will watch your markdown files to rebuild the book on every change. This avoids having to come back to the terminal to type `mdbook build` over and over again.
 
 ### As a library
 
-Aside from the command line interface, this crate can also be used as a library. This means that you could integrate it in an existing project, like a webapp for example. Since the command line interface is just a wrapper around the library functionality, when you use this crate as a library you have full access to all the functionality of the command line interface with and easy to use API and more!
+Aside from the command line interface, this crate can also be used as a library. This means that you could integrate it in an existing project, like a web-app for example. Since the command line interface is just a wrapper around the library functionality, when you use this crate as a library you have full access to all the functionality of the command line interface with and easy to use API and more!
 
-See the [**Documentation**](http://azerupi.github.io/mdBook/lib/lib.html) and the [**API docs**](http://azerupi.github.io/mdBook/mdbook/index.html) for more information.
+See the [Documentation](http://azerupi.github.io/mdBook/lib/lib.html) and the [API docs](http://azerupi.github.io/mdBook/mdbook/index.html) for more information.
 
 ## Contributions
 
-Contributions are highly apreciated. Here are some ideas:
+Contributions are highly appreciated and encouraged! Don't hesitate to participate to discussions in the issues, propose new features and ask for help.
 
-- **Create new renderers**, at the moment I have only created a renderer that uses [handlebars](https://github.com/sunng87/handlebars-rust), [pulldown-cmark](https://github.com/google/pulldown-cmark) and renders to html. But you could create a renderer that uses another template engine, markdown parser or even outputs to another format like pdf.
-- **Add tests** I have not much experience in writing tests, all help to write meaningful tests is thus very welcome
-- **write documentation** documentation can always be improved
-- **Smaller tasks** I try to add a lot of the remaining tasks on the issue tracker with the label: [`Enhancement`](https://github.com/azerupi/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AEnhancement). Just pick one that looks interesting. The majority of the tasks are small enough to be tackled by people who are unfamiliar with the project.
+People who are not familiar with the code can look at [issues that are tagged **easy**](https://github.com/azerupi/mdBook/labels/Easy). A lot of issues are also related to web development, so people that are not comfortable with Rust can also participate! :wink:
 
-If you have an idea for improvement, create a new issue. Or a pull request if you can :)
+You can pick any issue you want to work on. Usually it's a good idea to ask if someone is already working on it and if not to claim the issue.
+
 
 ## License
 
