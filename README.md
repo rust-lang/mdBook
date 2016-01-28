@@ -2,7 +2,7 @@
 
 mdBook is a utility to create modern online books from markdown files.
 
-**This project is still in it's early days.**
+**This project is still in its early days.**
 For more information about what is left on my to-do list, check the issue tracker
 
 
@@ -45,7 +45,7 @@ The executable will be in `./target/release/mdbook`.
 
 ## Usage
 
-mdBook will primaraly be used as a command line tool, even though it exposes all it's functionality as a Rust crate for integration in other projects.
+mdBook will primaraly be used as a command line tool, even though it exposes all its functionality as a Rust crate for integration in other projects.
 
 Here are the main commands you will want to run, for a more exhaustive explanation, check out the [documentation](http://azerupi.github.io/mdBook/).
 
