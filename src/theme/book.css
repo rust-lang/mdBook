@@ -249,8 +249,8 @@ table td {
   right: 15px;
 }
 .theme-popup {
-  position: fixed;
-  left: -40px;
+  position: relative;
+  left: 10px;
   -webkit-border-radius: 4px;
   border-radius: 4px;
   font-size: 0.7em;
@@ -357,11 +357,15 @@ table td {
   color: #4183c4;
 }
 .light .theme-popup {
+  color: #333;
   background: #fafafa;
   border: 1px solid #ccc;
 }
 .light .theme-popup .theme:hover {
   background-color: #e6e6e6;
+}
+.light .theme-popup .default {
+  color: #ccc;
 }
 .light blockquote {
   margin: 20px 0;
@@ -461,11 +465,15 @@ table td {
   color: #2b79a2;
 }
 .coal .theme-popup {
+  color: #98a3ad;
   background: #141617;
   border: 1px solid #43484d;
 }
 .coal .theme-popup .theme:hover {
   background-color: #1f2124;
+}
+.coal .theme-popup .default {
+  color: #43484d;
 }
 .coal blockquote {
   margin: 20px 0;
@@ -565,11 +573,15 @@ table td {
   color: #2b79a2;
 }
 .navy .theme-popup {
+  color: #bcbdd0;
   background: #161923;
   border: 1px solid #737480;
 }
 .navy .theme-popup .theme:hover {
   background-color: #282e40;
+}
+.navy .theme-popup .default {
+  color: #737480;
 }
 .navy blockquote {
   margin: 20px 0;
@@ -669,11 +681,15 @@ table td {
   color: #2b79a2;
 }
 .rust .theme-popup {
+  color: #262625;
   background: #e1e1db;
   border: 1px solid #b38f6b;
 }
 .rust .theme-popup .theme:hover {
   background-color: #99908a;
+}
+.rust .theme-popup .default {
+  color: #737480;
 }
 .rust blockquote {
   margin: 20px 0;

@@ -57,7 +57,7 @@ $( document ).ready(function() {
         var wrapper = $("<a class=\"header\">");
         wrapper.attr("name", $(this).text());
         // Add so that when you click the link actually shows up in the url bar...
-        wrapper.attr("href", $(location).attr('href') + "#" + $(this).text()); 
+        wrapper.attr("href", $(location).attr('href') + "#" + $(this).text());
         return wrapper;
     });
 
@@ -105,13 +105,13 @@ $( document ).ready(function() {
             $('.theme-popup').remove();
         } else {
             var popup = $('<div class="theme-popup"></div>')
-                .append($('<div class="theme" id="light">Light (default)<div>'))
+                .append($('<div class="theme" id="light">Light <span class="default">(default)</span><div>'))
                 .append($('<div class="theme" id="rust">Rust</div>'))
                 .append($('<div class="theme" id="coal">Coal</div>'))
                 .append($('<div class="theme" id="navy">Navy</div>'));
 
 
-            $(this).append(popup);
+            popup.insertAfter(this);
 
             $('.theme').click(function(){
                 var theme = $(this).attr('id');
