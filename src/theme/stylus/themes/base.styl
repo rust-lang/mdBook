@@ -79,14 +79,25 @@
         border-bottom: .1em solid $quote-border;
     }
 
-    /*
+
     table {
-        thead td {
-            color: $table-header-fg;
-            backrgound: $table-header-bg;
+
+        td {
+            border-color: $table-border-color;
+        }
+
+        // Alternate background colors for rows
+        tbody tr:nth-child(2n) {
+            background: $table-alternate-bg;
+        }
+
+        thead {
+            background: $table-header-bg;
+            td { border: none; }
+            tr { border: 1px $table-header-bg solid; }
         }
     }
-    */
+
 
     /* Inline code */
     :not(pre) > .hljs {
