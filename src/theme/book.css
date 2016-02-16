@@ -264,6 +264,15 @@ table thead td {
   line-height: 25px;
   white-space: nowrap;
 }
+.theme-popup .theme:hover:first-child {
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+.theme-popup .theme:hover:last-child {
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+}
+
 @media only screen and (max-width: 1250px) {
   .nav-chapters {
     display: none;
