@@ -253,6 +253,7 @@ table thead td {
 .theme-popup {
   position: relative;
   left: 10px;
+  z-index: 1000;
   -webkit-border-radius: 4px;
   border-radius: 4px;
   font-size: 0.7em;
