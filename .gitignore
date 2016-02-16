@@ -1,5 +1,11 @@
 Cargo.lock
 target
 
+# Test book to test new features
 book-test
+
+# Output of example book
 book-example/book
+
+# rustfmt backup files
+*.rs.bk

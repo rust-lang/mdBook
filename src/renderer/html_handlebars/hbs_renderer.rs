@@ -51,7 +51,8 @@ impl Renderer for HtmlHandlebars {
         // Check if dest directory exists
         debug!("[*]: Check if destination directory exists");
         if let Err(_) = fs::create_dir_all(book.get_dest()) {
-            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Unexpected error when constructing destination path")))
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other,
+                                               "Unexpected error when constructing destination path")));
         }
 
         // Render a file for every entry in the book
@@ -83,8 +84,13 @@ impl Renderer for HtmlHandlebars {
                         // Remove content from previous file and render content for this one
                         data.remove("path");
                         match ch.path.to_str() {
-                            Some(p) => { data.insert("path".to_owned(), p.to_json()); },
-                            None => return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))),
+                            Some(p) => {
+                                data.insert("path".to_owned(), p.to_json());
+                            },
+                            None => {
+                                return Err(Box::new(io::Error::new(io::ErrorKind::Other,
+                                                                   "Could not convert path to str")))
+                            },
                         }
 
 
@@ -102,7 +108,9 @@ impl Renderer for HtmlHandlebars {
 
                         debug!("[*]: Create file {:?}", &book.get_dest().join(&ch.path).with_extension("html"));
                         // Write to file
-                        let mut file = try!(utils::create_file(&book.get_dest().join(&ch.path).with_extension("html")));
+                        let mut file = try!(utils::fs::create_file(&book.get_dest()
+                                                                        .join(&ch.path)
+                                                                        .with_extension("html")));
                         output!("[*] Creating {:?} ✓", &book.get_dest().join(&ch.path).with_extension("html"));
 
                         try!(file.write_all(&rendered.into_bytes()));
@@ -114,23 +122,24 @@ impl Renderer for HtmlHandlebars {
                             let mut index_file = try!(File::create(book.get_dest().join("index.html")));
                             let mut content = String::new();
                             let _source = try!(File::open(book.get_dest().join(&ch.path.with_extension("html"))))
-                                                        .read_to_string(&mut content);
+                                              .read_to_string(&mut content);
 
                             // This could cause a problem when someone displays code containing <base href=...>
                             // on the front page, however this case should be very very rare...
-                            content = content.lines().filter(|line| !line.contains("<base href=")).collect::<Vec<&str>>().join("\n");
+                            content = content.lines()
+                                             .filter(|line| !line.contains("<base href="))
+                                             .collect::<Vec<&str>>()
+                                             .join("\n");
 
                             try!(index_file.write_all(content.as_bytes()));
 
-                            output!(
-                                "[*] Creating index.html from {:?} ✓",
-                                book.get_dest().join(&ch.path.with_extension("html"))
-                                );
+                            output!("[*] Creating index.html from {:?} ✓",
+                                    book.get_dest().join(&ch.path.with_extension("html")));
                             index = false;
                         }
                     }
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
 
@@ -159,14 +168,18 @@ impl Renderer for HtmlHandlebars {
 
         debug!("[*] Copy static files");
         // JavaScript
-        let mut js_file = if let Ok(f) = File::create(book.get_dest().join("book.js")) { f } else {
-            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create book.js")))
+        let mut js_file = if let Ok(f) = File::create(book.get_dest().join("book.js")) {
+            f
+        } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create book.js")));
         };
         try!(js_file.write_all(&theme.js));
 
         // Css
-        let mut css_file = if let Ok(f) = File::create(book.get_dest().join("book.css")) { f } else {
-            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create book.css")))
+        let mut css_file = if let Ok(f) = File::create(book.get_dest().join("book.css")) {
+            f
+        } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create book.css")));
         };
         try!(css_file.write_all(&theme.css));
 
@@ -177,54 +190,89 @@ impl Renderer for HtmlHandlebars {
         try!(favicon_file.write_all(&theme.favicon));
 
         // JQuery local fallback
-        let mut jquery = if let Ok(f) = File::create(book.get_dest().join("jquery.js")) { f } else {
-            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create jquery.js")))
+        let mut jquery = if let Ok(f) = File::create(book.get_dest().join("jquery.js")) {
+            f
+        } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create jquery.js")));
         };
         try!(jquery.write_all(&theme.jquery));
 
         // syntax highlighting
-        let mut highlight_css = if let Ok(f) = File::create(book.get_dest().join("highlight.css")) { f } else {
-            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create highlight.css")))
+        let mut highlight_css = if let Ok(f) = File::create(book.get_dest().join("highlight.css")) {
+            f
+        } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create highlight.css")));
         };
         try!(highlight_css.write_all(&theme.highlight_css));
 
-        let mut tomorrow_night_css = if let Ok(f) = File::create(book.get_dest().join("tomorrow-night.css")) { f } else {
-            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create tomorrow-night.css")))
+        let mut tomorrow_night_css = if let Ok(f) = File::create(book.get_dest().join("tomorrow-night.css")) {
+            f
+        } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create tomorrow-night.css")));
         };
         try!(tomorrow_night_css.write_all(&theme.tomorrow_night_css));
 
-        let mut highlight_js = if let Ok(f) = File::create(book.get_dest().join("highlight.js")) { f } else {
-            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create highlight.js")))
+        let mut highlight_js = if let Ok(f) = File::create(book.get_dest().join("highlight.js")) {
+            f
+        } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create highlight.js")));
         };
         try!(highlight_js.write_all(&theme.highlight_js));
 
         // Font Awesome local fallback
-        let mut font_awesome = if let Ok(f) = utils::create_file(&book.get_dest().join("_FontAwesome/css/font-awesome.css")) { f } else {
-            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create font-awesome.css")))
+        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
+                                                                          .join("_FontAwesome/css/font-awesome.css")) {
+            f
+        } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create font-awesome.css")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME));
-        let mut font_awesome = if let Ok(f) = utils::create_file(&book.get_dest().join("_FontAwesome/fonts/fontawesome-webfont.eot")) { f } else {
-            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.eot")))
+        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
+                                                                          .join("_FontAwesome/fonts/fontawesome-we\
+                                                                                 bfont.eot")) {
+            f
+        } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.eot")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_EOT));
-        let mut font_awesome = if let Ok(f) = utils::create_file(&book.get_dest().join("_FontAwesome/fonts/fontawesome-webfont.svg")) { f } else {
-            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.svg")))
+        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
+                                                                          .join("_FontAwesome/fonts/fontawesome-we\
+                                                                                 bfont.svg")) {
+            f
+        } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.svg")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_SVG));
-        let mut font_awesome = if let Ok(f) = utils::create_file(&book.get_dest().join("_FontAwesome/fonts/fontawesome-webfont.ttf")) { f } else {
-            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.ttf")))
+        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
+                                                                          .join("_FontAwesome/fonts/fontawesome-we\
+                                                                                 bfont.ttf")) {
+            f
+        } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.ttf")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_TTF));
-        let mut font_awesome = if let Ok(f) = utils::create_file(&book.get_dest().join("_FontAwesome/fonts/fontawesome-webfont.woff")) { f } else {
-            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.woff")))
+        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
+                                                                          .join("_FontAwesome/fonts/fontawesome-we\
+                                                                                 bfont.woff")) {
+            f
+        } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.woff")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_WOFF));
-        let mut font_awesome = if let Ok(f) = utils::create_file(&book.get_dest().join("_FontAwesome/fonts/fontawesome-webfont.woff2")) { f } else {
-            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.woff2")))
+        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
+                                                                          .join("_FontAwesome/fonts/fontawesome-we\
+                                                                                 bfont.woff2")) {
+            f
+        } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.woff2")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_WOFF2));
-        let mut font_awesome = if let Ok(f) = utils::create_file(&book.get_dest().join("_FontAwesome/fonts/FontAwesome.ttf")) { f } else {
-            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create FontAwesome.ttf")))
+        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
+                                                                          .join("_FontAwesome/fonts/FontAwesome.\
+                                                                                 ttf")) {
+            f
+        } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create FontAwesome.ttf")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_TTF));
 
@@ -235,10 +283,10 @@ impl Renderer for HtmlHandlebars {
     }
 }
 
-fn make_data(book: &MDBook) -> Result<BTreeMap<String,Json>, Box<Error>> {
+fn make_data(book: &MDBook) -> Result<BTreeMap<String, Json>, Box<Error>> {
     debug!("[fn]: make_data");
 
-    let mut data  = BTreeMap::new();
+    let mut data = BTreeMap::new();
     data.insert("language".to_owned(), "en".to_json());
     data.insert("title".to_owned(), book.get_title().to_json());
     data.insert("description".to_owned(), book.get_description().to_json());
@@ -254,7 +302,9 @@ fn make_data(book: &MDBook) -> Result<BTreeMap<String,Json>, Box<Error>> {
             BookItem::Affix(ref ch) => {
                 chapter.insert("name".to_owned(), ch.name.to_json());
                 match ch.path.to_str() {
-                    Some(p) => { chapter.insert("path".to_owned(), p.to_json()); },
+                    Some(p) => {
+                        chapter.insert("path".to_owned(), p.to_json());
+                    },
                     None => return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))),
                 }
             },
@@ -262,13 +312,15 @@ fn make_data(book: &MDBook) -> Result<BTreeMap<String,Json>, Box<Error>> {
                 chapter.insert("section".to_owned(), s.to_json());
                 chapter.insert("name".to_owned(), ch.name.to_json());
                 match ch.path.to_str() {
-                    Some(p) => { chapter.insert("path".to_owned(), p.to_json()); },
+                    Some(p) => {
+                        chapter.insert("path".to_owned(), p.to_json());
+                    },
                     None => return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))),
                 }
             },
             BookItem::Spacer => {
                 chapter.insert("spacer".to_owned(), "_spacer_".to_json());
-            }
+            },
 
         }
 
