@@ -1,6 +1,6 @@
 [package]
 name = "mdbook"
-version = "0.0.11"
+version = "0.1.0"
 authors = ["Mathieu David <mathieudavid@mathieudavid.org>"]
 description = "create books from markdown files (like Gitbook)"
 documentation = "http://azerupi.github.io/mdBook/index.html"
@@ -15,8 +15,9 @@ exclude = [
 ]
 
 [dependencies]
-clap = "1.5.3"
-handlebars = "0.12.0"
+clap = "2.1.2"
+toml = "0.1.27"
+handlebars = "0.14.0"
 rustc-serialize = "0.3.16"
 pulldown-cmark = "0.0.6"
 
