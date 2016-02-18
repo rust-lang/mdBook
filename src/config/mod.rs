@@ -1,3 +1,53 @@
+//! # Configuration file
+//!
+//! This module handles the loading of the configuration from the `book.toml` configuration file.
+//! The configuration file looks like this:
+//!
+//! ```toml
+//! title = "mdBook"
+//! description = """
+//! This is a command line utility to generate books from markdown files
+//! """
+//!
+//! [[author]]
+//! name = "Mathieu David"
+//! email = "mathieudavid@mathieudavid.org"
+//! # other fields could be added in the future
+//!
+//! [source]
+//! path = "src/"
+//!
+//! # "outputs" is a table where each entry is the identifier of a renderer
+//! # containing the configuration options for that renderer
+//! [outputs]
+//! html = { path = "book/" }
+//! # OR alternatively
+//! # [outputs.html]
+//! # path = "book/"
+//!
+//! [languages]
+//! en = { name = "English", default = true }
+//! fr = { name = "Français" }
+//! # OR alternatively
+//! # [languages.en]
+//! # name = "English"
+//! # default = true
+//! #
+//! # [languages.fr]
+//! # name = "Français"
+//!
+//! [plugins]
+//! syntax-highlighting = { enabled = true, default_language = "rust" }
+//! code-line-hiding = { enabled = true, hide_pattern = "#" }
+//! rust-playpen = { enabled = true }
+//! # OR alternatively
+//! # [plugins.syntax-highlighting]
+//! # enabled = true
+//! # default_language = "rust"
+//! #
+//! # [plugins.code-line-hiding]
+//! # ...
+
 extern crate toml;
 
 use std::path::{Path, PathBuf};
@@ -217,5 +267,71 @@ impl Plugin {
 
     pub fn config(&self) -> Option<&toml::Table> {
         self.config.as_ref().map(|x| &*x)
+    }
+}
+
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fill_config() {
+        let mut config = Config::new();
+
+        let toml = r##"title = "mdBook"
+description = """
+This is a command line utility to generate books from markdown files
+"""
+
+[[author]]
+name = "Mathieu David"
+email = "mathieudavid@mathieudavid.org"
+# other fields could be added
+
+[source]
+path = "src/"
+
+# "outputs" is a table where each entry is the identifier of a renderer
+# containing the configuration options for that renderer
+[outputs]
+html = { path = "book/" }
+pdf = { path = "pdf/mdBook.pdf" }
+# OR alternatively
+# [outputs.html]
+# path = "book/"
+#
+# [outputs.pdf]
+# path = "pdf/mdBook.pdf"
+
+[languages]
+en = { name = "English", default = true }
+fr = { name = "Français" }
+# OR alternatively
+# [languages.en]
+# name = "English"
+# default = true
+#
+# [languages.fr]
+# name = "Français"
+
+[plugins]
+syntax-highlighting = { enabled = true, default_language = "rust" }
+code-line-hiding = { enabled = true, hide_pattern = "#" }
+rust-playpen = { enabled = true }
+# OR alternatively
+# [plugins.syntax-highlighting]
+# enabled = true
+# default_language = "rust"
+#
+# [plugins.code-line-hiding]
+# ...
+"##;
+
+        config.fill_config(toml);
+
+        assert_eq!(config.title(), "mdBook");
+        assert_eq!(config.description(), "mdBook is a utility to create books from markdown files");
     }
 }
