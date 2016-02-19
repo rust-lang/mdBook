@@ -1,7 +1,29 @@
 use std::path::{Path, Component};
 use std::fs::{self, metadata, File};
 use std::error::Error;
-use std::io;
+use std::io::{self, Read};
+
+/// Takes a path to a file and try to read the file into a String
+
+pub fn file_to_string(path: &Path) -> Result<String, Box<Error>> {
+    let mut file = match File::open(path) {
+        Ok(f) => f,
+        Err(e) => {
+            debug!("[*]: Failed to open {:?}", path);
+            return Err(Box::new(e));
+        },
+    };
+
+    let mut content = String::new();
+
+    if let Err(e) = file.read_to_string(&mut content) {
+        debug!("[*]: Failed to read {:?}", path);
+        return Err(Box::new(e));
+    }
+
+    Ok(content)
+}
+
 
 /// Takes a path and returns a path containing just enough `../` to point to the root of the given path.
 ///
