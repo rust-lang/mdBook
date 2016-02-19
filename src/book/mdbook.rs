@@ -199,7 +199,7 @@ impl MDBook {
         try!(self.init());
 
         // Clean output directory
-        try!(utils::remove_dir_content(&self.config.get_dest()));
+        try!(utils::fs::remove_dir_content(&self.config.get_dest()));
 
         try!(self.renderer.render(&self));
 

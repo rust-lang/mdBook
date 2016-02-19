@@ -100,7 +100,7 @@ impl Renderer for HtmlHandlebars {
 
                         // Remove path to root from previous file and render content for this one
                         data.remove("path_to_root");
-                        data.insert("path_to_root".to_owned(), utils::path_to_root(&ch.path).to_json());
+                        data.insert("path_to_root".to_owned(), utils::fs::path_to_root(&ch.path).to_json());
 
                         // Rendere the handlebars template with the data
                         debug!("[*]: Render template");
@@ -155,12 +155,12 @@ impl Renderer for HtmlHandlebars {
 
         // Remove path to root from previous file and render content for this one
         data.remove("path_to_root");
-        data.insert("path_to_root".to_owned(), utils::path_to_root(Path::new("print.md")).to_json());
+        data.insert("path_to_root".to_owned(), utils::fs::path_to_root(Path::new("print.md")).to_json());
 
         // Rendere the handlebars template with the data
         debug!("[*]: Render template");
         let rendered = try!(handlebars.render("index", &data));
-        let mut file = try!(utils::create_file(&book.get_dest().join("print").with_extension("html")));
+        let mut file = try!(utils::fs::create_file(&book.get_dest().join("print").with_extension("html")));
         try!(file.write_all(&rendered.into_bytes()));
         output!("[*] Creating print.html ✓");
 
@@ -277,7 +277,7 @@ impl Renderer for HtmlHandlebars {
         try!(font_awesome.write_all(theme::FONT_AWESOME_TTF));
 
         // Copy all remaining files
-        try!(utils::copy_files_except_ext(book.get_src(), book.get_dest(), true, &["md"]));
+        try!(utils::fs::copy_files_except_ext(book.get_src(), book.get_dest(), true, &["md"]));
 
         Ok(())
     }
