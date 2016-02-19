@@ -116,7 +116,34 @@ impl Config {
     }
 
     fn fill_config(&mut self, toml: &str) -> Result<(), Box<Error>> {
-        unimplemented!()
+        let mut toml_parser = toml::Parser::new(toml);
+
+        // Handle errors in the toml file
+        let config = match toml_parser.parse() {
+            Some(c) => c,
+            None => {
+                let mut error_str = format!("could not parse input as TOML\n");
+                for error in toml_parser.errors.iter() {
+                    let (loline, locol) = toml_parser.to_linecol(error.lo);
+                    let (hiline, hicol) = toml_parser.to_linecol(error.hi);
+                    error_str.push_str(&format!("{}:{}{} {}\n",
+                                                loline + 1, locol + 1,
+                                                if loline != hiline || locol != hicol {
+                                                    format!("-{}:{}", hiline + 1,
+                                                            hicol + 1)
+                                                } else {
+                                                    "".to_string()
+                                                },
+                                                error.desc));
+                }
+
+                return Err(Box::new(::std::io::Error::new(::std::io::ErrorKind::InvalidInput, error_str)))
+            },
+        };
+
+        // Retrieve toml values
+
+        Ok(())
     }
 
     pub fn title(&self) -> &str {
