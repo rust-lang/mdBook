@@ -141,7 +141,19 @@ impl Config {
             },
         };
 
-        // Retrieve toml values
+        // Retrieve toml value
+        if let Some(value) = config.get("title") {
+            if let Some(title) = value.as_str() {
+                self.title = String::from(title)
+            }
+        }
+
+        if let Some(value) = config.get("description") {
+            if let Some(description) = value.as_str() {
+                self.description = String::from(description)
+            }
+        }
+
 
         Ok(())
     }
@@ -309,8 +321,7 @@ mod tests {
 
         let toml = r##"title = "mdBook"
 description = """
-This is a command line utility to generate books from markdown files
-"""
+This is a command line utility to generate books from markdown files"""
 
 [[author]]
 name = "Mathieu David"
@@ -359,6 +370,6 @@ rust-playpen = { enabled = true }
         config.fill_config(toml);
 
         assert_eq!(config.title(), "mdBook");
-        assert_eq!(config.description(), "mdBook is a utility to create books from markdown files");
+        assert_eq!(config.description(), "This is a command line utility to generate books from markdown files");
     }
 }
