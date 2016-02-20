@@ -53,12 +53,15 @@ extern crate toml;
 use std::path::{Path, PathBuf};
 use std::error::Error;
 
+use utils;
+
 pub struct Config {
     title: String,
     description: String,
 
     authors: Vec<Author>,
 
+    root: PathBuf,
     source: PathBuf,
 
     outputs: Vec<Output>,
@@ -100,6 +103,7 @@ impl Config {
 
             authors: vec![],
 
+            root: PathBuf::new(),
             source: PathBuf::new(),
 
             outputs: vec![],
@@ -111,8 +115,16 @@ impl Config {
         }
     }
 
-    pub fn read_config(&mut self) -> Result<(), Box<Error>> {
-        unimplemented!()
+    pub fn read_config(&mut self, path: &Path) -> Result<(), Box<Error>> {
+        let config_content = try!(utils::fs::file_to_string(path));
+        try!(self.fill_config(&config_content));
+
+        // When all the rest succeeded, set the root path
+        self.root = path.parent()
+                        .expect("How can an existing file not have a parent directory?")
+                        .to_owned();
+
+        Ok(())
     }
 
     fn fill_config(&mut self, toml: &str) -> Result<(), Box<Error>> {
@@ -141,19 +153,14 @@ impl Config {
             },
         };
 
-        // Retrieve toml value
-        if let Some(value) = config.get("title") {
-            if let Some(title) = value.as_str() {
-                self.title = String::from(title)
-            }
-        }
 
-        if let Some(value) = config.get("description") {
-            if let Some(description) = value.as_str() {
-                self.description = String::from(description)
-            }
-        }
+        // Retrieve toml values
 
+        self.title = title_from_toml(&config)
+                        .unwrap_or(String::from("Book"));
+
+        self.description = description_from_toml(&config)
+                                .unwrap_or(String::new());
 
         Ok(())
     }
@@ -310,6 +317,27 @@ impl Plugin {
 }
 
 
+// Helper functions to extract values from toml
+fn title_from_toml(toml: &toml::Table) -> Option<String> {
+    if let Some(value) = toml.get("title") {
+        if let Some(title) = value.as_str() {
+            return Some(String::from(title))
+        }
+    }
+
+    None
+}
+
+fn description_from_toml(toml: &toml::Table) -> Option<String> {
+    if let Some(value) = toml.get("description") {
+        if let Some(description) = value.as_str() {
+            return Some(String::from(description))
+        }
+    }
+
+    None
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -371,5 +399,18 @@ rust-playpen = { enabled = true }
 
         assert_eq!(config.title(), "mdBook");
         assert_eq!(config.description(), "This is a command line utility to generate books from markdown files");
+    }
+
+
+    #[test]
+    fn fill_config_empty() {
+        let mut config = Config::new();
+
+        let toml = r#""#;
+
+        config.fill_config(toml);
+
+        assert_eq!(config.title(), "Book");
+        assert_eq!(config.description(), "");
     }
 }
