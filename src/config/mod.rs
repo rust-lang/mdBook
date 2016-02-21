@@ -162,6 +162,10 @@ impl Config {
         self.description = description_from_toml(&config)
                                 .unwrap_or(String::new());
 
+        self.source = source_from_toml(&config)
+                        .and_then(|s| source_path_from_toml(&s))
+                        .unwrap_or(PathBuf::from("src/"));
+
         Ok(())
     }
 
@@ -338,10 +342,32 @@ fn description_from_toml(toml: &toml::Table) -> Option<String> {
     None
 }
 
+fn source_from_toml(toml: &toml::Table) -> Option<toml::Table> {
+    if let Some(value) = toml.get("source") {
+        if let Some(source) = value.as_table() {
+            return Some(source.to_owned())
+        }
+    }
+
+    None
+}
+
+fn source_path_from_toml(source: &toml::Table) -> Option<PathBuf> {
+    if let Some(value) = source.get("path") {
+        if let Some(path) = value.as_str() {
+            return Some(PathBuf::from(path))
+        }
+    }
+
+    None
+}
+
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use std::path::PathBuf;
 
     #[test]
     fn fill_config() {
@@ -357,7 +383,7 @@ email = "mathieudavid@mathieudavid.org"
 # other fields could be added
 
 [source]
-path = "src/"
+path = "custom_source/"
 
 # "outputs" is a table where each entry is the identifier of a renderer
 # containing the configuration options for that renderer
@@ -399,6 +425,7 @@ rust-playpen = { enabled = true }
 
         assert_eq!(config.title(), "mdBook");
         assert_eq!(config.description(), "This is a command line utility to generate books from markdown files");
+        assert_eq!(config.source(), PathBuf::from("custom_source/"));
     }
 
 
@@ -412,5 +439,6 @@ rust-playpen = { enabled = true }
 
         assert_eq!(config.title(), "Book");
         assert_eq!(config.description(), "");
+        assert_eq!(config.source(), PathBuf::from("src/"));
     }
 }
