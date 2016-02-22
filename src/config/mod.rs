@@ -173,6 +173,8 @@ impl Config {
 
         self.authors = authors_from_toml(&config);
 
+        self.outputs = outputs_from_toml(&config);
+
         Ok(())
     }
 
@@ -234,8 +236,7 @@ impl Config {
     }
 
     pub fn outputs(&self) -> &[Output] {
-        unimplemented!();
-        // &self.outputs
+        &self.outputs
     }
 
     pub fn language(&self) -> &Language {
@@ -421,6 +422,39 @@ fn authors_from_toml(toml: &toml::Table) -> Vec<Author> {
     authors
 }
 
+fn outputs_from_toml(toml: &toml::Table) -> Vec<Output> {
+    let table = toml.get("outputs")
+                    .and_then(|v| v.as_table())
+                    .map(|v| v.to_owned());
+
+    if let None = table { return Vec::new() }
+
+    let mut outputs = Vec::new();
+
+    for (key, config) in table.unwrap() {
+        let config = if let Some(c) = config.as_table() { c } else { continue };
+
+        // The renderer can be specifier explicitely else the key is used to match the renderer
+        let renderer = config.get("renderer")
+                             .and_then(|v| v.as_str())
+                             .unwrap_or(&key);
+
+        let path = config.get("path")
+                         .and_then(|v| v.as_str())
+                         .map(|v| PathBuf::from(v));
+
+        if let None = path { continue }
+
+        let mut c = config.clone();
+        c.remove("path");
+        c.remove("renderer");
+
+        outputs.push(Output::new(renderer, &path.unwrap()).set_config(c));
+    }
+
+    outputs
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -448,6 +482,7 @@ path = "custom_source/"
 # containing the configuration options for that renderer
 [outputs]
 html = { path = "book/" }
+html2 = { renderer = "html", path = "book2/" }
 pdf = { path = "pdf/mdBook.pdf" }
 # OR alternatively
 # [outputs.html]
@@ -487,6 +522,12 @@ rust-playpen = { enabled = true }
         assert_eq!(config.source(), PathBuf::from("custom_source/"));
         assert_eq!(config.authors()[0].name, "Mathieu David".to_owned());
         assert_eq!(config.authors()[0].email, Some("mathieudavid@mathieudavid.org".to_owned()));
+        assert_eq!(config.outputs()[0].identifier, "html");
+        assert_eq!(config.outputs()[0].destination, PathBuf::from("book/"));
+        assert_eq!(config.outputs()[1].identifier, "html");
+        assert_eq!(config.outputs()[1].destination, PathBuf::from("book2/"));
+        assert_eq!(config.outputs()[2].identifier, "pdf");
+        assert_eq!(config.outputs()[2].destination, PathBuf::from("pdf/mdBook.pdf"));
     }
 
 
