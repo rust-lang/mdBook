@@ -198,6 +198,10 @@ impl MDBook {
         let mut css = try!(File::create(&theme_dir.join("book.css")));
         try!(css.write_all(theme::CSS));
 
+        // favicon.png
+        let mut favicon = try!(File::create(&theme_dir.join("favicon.png")));
+        try!(favicon.write_all(theme::FAVICON));
+
         // book.js
         let mut js = try!(File::create(&theme_dir.join("book.js")));
         try!(js.write_all(theme::JS));
