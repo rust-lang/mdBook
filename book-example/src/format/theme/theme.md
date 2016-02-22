@@ -14,6 +14,7 @@ Here are the files you can override:
 - ***book.js*** is mostly used to add client side functionality, like hiding / un-hiding the sidebar, changing the theme, ...
 - ***highlight.js*** is the JavaScript that is used to highlight code snippets, you should not need to modify this.  
 - ***highlight.css*** is the theme used for the code highlighting
+- ***favicon.png*** the favicon that will be used
 
 Generally, when you want to tweak the theme, you don't need to override all the files. If you only need changes in the stylesheet,
 there is no point in overriding all the other files. Because custom files take precedence over built-in ones, they will not get updated with new fixes / features.
