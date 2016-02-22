@@ -570,7 +570,7 @@ rust-playpen = { enabled = true }
 # ...
 "##;
 
-        config.fill_config(toml);
+        config.fill_config(toml).expect("Error while parsing the config");
 
         assert_eq!(config.title(), "mdBook");
         assert_eq!(config.description(), "This is a command line utility to generate books from markdown files");
@@ -594,7 +594,7 @@ rust-playpen = { enabled = true }
 
         let toml = r#""#;
 
-        config.fill_config(toml);
+        config.fill_config(toml).expect("Error while parsing the config");;
 
         assert_eq!(config.title(), "Book");
         assert_eq!(config.description(), "");
