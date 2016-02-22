@@ -170,6 +170,12 @@ impl Renderer for HtmlHandlebars {
         };
         try!(css_file.write_all(&theme.css));
 
+        // Favicon
+        let mut favicon_file = if let Ok(f) = File::create(book.get_dest().join("favicon.png")) { f } else {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create favicon.png")))
+        };
+        try!(favicon_file.write_all(&theme.favicon));
+
         // JQuery local fallback
         let mut jquery = if let Ok(f) = File::create(book.get_dest().join("jquery.js")) { f } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create jquery.js")))
@@ -235,6 +241,7 @@ fn make_data(book: &MDBook) -> Result<BTreeMap<String,Json>, Box<Error>> {
     let mut data  = BTreeMap::new();
     data.insert("language".to_owned(), "en".to_json());
     data.insert("title".to_owned(), book.get_title().to_json());
+    data.insert("favicon".to_owned(), "favicon.png".to_json());
 
     let mut chapters = vec![];
 

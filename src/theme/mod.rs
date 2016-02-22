@@ -5,6 +5,7 @@ use std::io::Read;
 
 pub static INDEX: &'static [u8] = include_bytes!("index.hbs");
 pub static CSS: &'static [u8] = include_bytes!("book.css");
+pub static FAVICON: &'static [u8] = include_bytes!("favicon.png");
 pub static JS: &'static [u8] = include_bytes!("book.js");
 pub static HIGHLIGHT_JS: &'static [u8] = include_bytes!("highlight.js");
 pub static TOMORROW_NIGHT_CSS: &'static [u8] = include_bytes!("tomorrow-night.css");
@@ -27,6 +28,7 @@ pub static FONT_AWESOME_OTF: &'static [u8] = include_bytes!("_FontAwesome/fonts/
 pub struct Theme {
     pub index: Vec<u8>,
     pub css: Vec<u8>,
+    pub favicon: Vec<u8>,
     pub js: Vec<u8>,
     pub highlight_css: Vec<u8>,
     pub tomorrow_night_css: Vec<u8>,
@@ -41,6 +43,7 @@ impl Theme {
         let mut theme = Theme {
             index: INDEX.to_owned(),
             css: CSS.to_owned(),
+            favicon: FAVICON.to_owned(),
             js: JS.to_owned(),
             highlight_css: HIGHLIGHT_CSS.to_owned(),
             tomorrow_night_css: TOMORROW_NIGHT_CSS.to_owned(),
@@ -77,6 +80,12 @@ impl Theme {
         if let Ok(mut f) = File::open(&src.join("book.css")) {
             theme.css.clear();
             let _ = f.read_to_end(&mut theme.css);
+        }
+
+        // favicon.png
+        if let Ok(mut f) = File::open(&src.join("favicon.png")) {
+            theme.favicon.clear();
+            let _ = f.read_to_end(&mut theme.favicon);
         }
 
         // highlight.js
