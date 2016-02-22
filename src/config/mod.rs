@@ -82,7 +82,7 @@ pub struct Author {
 #[derive(Debug, Clone)]
 pub struct Output {
     identifier: String,
-    destination: PathBuf,
+    destination: Option<PathBuf>,
     config: Option<toml::Table>,
 }
 
@@ -175,6 +175,11 @@ impl Config {
 
         self.outputs = outputs_from_toml(&config);
 
+        self.language = default_language_from_toml(&config)
+                            .unwrap_or(Language::new("English", "en"));
+
+        self.translations = translations_from_toml(&config);
+
         Ok(())
     }
 
@@ -240,18 +245,15 @@ impl Config {
     }
 
     pub fn language(&self) -> &Language {
-        unimplemented!();
-        // &self.language
+        &self.language
     }
 
     pub fn translations(&self) -> &[Language] {
-        unimplemented!();
-        // &self.translations
+        &self.translations
     }
 
     pub fn plugins(&self) -> &[Plugin] {
-        unimplemented!();
-        // &self.plugins
+        &self.plugins
     }
 }
 
@@ -292,12 +294,17 @@ impl Author {
 
 
 impl Output {
-    pub fn new(identifier: &str, destination: &Path) -> Self {
+    pub fn new(identifier: &str) -> Self {
         Output {
             identifier: String::from(identifier),
-            destination: PathBuf::from(destination),
+            destination: None,
             config: None,
         }
+    }
+
+    pub fn set_output_destination(mut self, path: Option<&Path>) -> Self {
+        self.destination = path.map(|p| PathBuf::from(p));
+        self
     }
 
     pub fn set_config(mut self, config: toml::Table) -> Self {
@@ -309,8 +316,8 @@ impl Output {
         &self.identifier
     }
 
-    pub fn destination(&self) -> &Path {
-        &self.destination
+    pub fn destination(&self) -> Option<&PathBuf> {
+        self.destination.as_ref()
     }
 
     pub fn config(&self) -> Option<&toml::Table> {
@@ -434,25 +441,73 @@ fn outputs_from_toml(toml: &toml::Table) -> Vec<Output> {
     for (key, config) in table.unwrap() {
         let config = if let Some(c) = config.as_table() { c } else { continue };
 
-        // The renderer can be specifier explicitely else the key is used to match the renderer
+        // The renderer can be specified explicitely else the key is used to match the renderer
         let renderer = config.get("renderer")
                              .and_then(|v| v.as_str())
                              .unwrap_or(&key);
 
         let path = config.get("path")
                          .and_then(|v| v.as_str())
-                         .map(|v| PathBuf::from(v));
-
-        if let None = path { continue }
+                         .map(|v| Path::new(v));
 
         let mut c = config.clone();
         c.remove("path");
         c.remove("renderer");
 
-        outputs.push(Output::new(renderer, &path.unwrap()).set_config(c));
+        outputs.push(Output::new(renderer).set_output_destination(path).set_config(c));
     }
 
     outputs
+}
+
+fn default_language_from_toml(toml: &toml::Table) -> Option<Language> {
+    let table = toml.get("languages")
+                    .and_then(|v| v.as_table())
+                    .map(|v| v.to_owned());
+
+    if let None = table { return None }
+
+    for (language_code, language) in table.unwrap() {
+        let language = if let Some(l) = language.as_table() { l } else { continue };
+
+        if let Some(true) = language.get("default").and_then(|d| d.as_bool()) {
+            let name = language.get("name")
+                               .and_then(|v| v.as_str());
+
+            if let None = name { continue }
+
+            return Some(Language::new(name.unwrap(), &language_code));
+        }
+    }
+
+    None
+}
+
+fn translations_from_toml(toml: &toml::Table) -> Vec<Language> {
+    let table = toml.get("languages")
+                    .and_then(|v| v.as_table())
+                    .map(|v| v.to_owned());
+
+    if let None = table { return Vec::new() }
+
+    let mut translations = Vec::new();
+
+    for (language_code, language) in table.unwrap() {
+        let language = if let Some(l) = language.as_table() { l } else { continue };
+
+        // Skip default language
+        if let Some(true) = language.get("default").and_then(|d| d.as_bool()) { continue }
+
+        let name = language.get("name")
+                           .and_then(|v| v.as_str());
+
+        if let None = name { continue }
+
+        translations.push(Language::new(name.unwrap(), &language_code));
+
+    }
+
+    translations
 }
 
 
@@ -523,11 +578,13 @@ rust-playpen = { enabled = true }
         assert_eq!(config.authors()[0].name, "Mathieu David".to_owned());
         assert_eq!(config.authors()[0].email, Some("mathieudavid@mathieudavid.org".to_owned()));
         assert_eq!(config.outputs()[0].identifier, "html");
-        assert_eq!(config.outputs()[0].destination, PathBuf::from("book/"));
+        assert_eq!(config.outputs()[0].destination, Some(PathBuf::from("book/")));
         assert_eq!(config.outputs()[1].identifier, "html");
-        assert_eq!(config.outputs()[1].destination, PathBuf::from("book2/"));
+        assert_eq!(config.outputs()[1].destination, Some(PathBuf::from("book2/")));
         assert_eq!(config.outputs()[2].identifier, "pdf");
-        assert_eq!(config.outputs()[2].destination, PathBuf::from("pdf/mdBook.pdf"));
+        assert_eq!(config.outputs()[2].destination, Some(PathBuf::from("pdf/mdBook.pdf")));
+        assert_eq!(config.language.name, "English");
+        assert_eq!(config.translations()[0].name, "Français");
     }
 
 
