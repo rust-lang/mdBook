@@ -55,6 +55,7 @@ use std::error::Error;
 
 use utils;
 
+#[derive(Debug, Clone)]
 pub struct Config {
     title: String,
     description: String,
@@ -72,22 +73,26 @@ pub struct Config {
     plugins: Vec<Plugin>,
 }
 
+#[derive(Debug, Clone)]
 pub struct Author {
     name: String,
     email: Option<String>,
 }
 
+#[derive(Debug, Clone)]
 pub struct Output {
     identifier: String,
     destination: PathBuf,
     config: Option<toml::Table>,
 }
 
+#[derive(Debug, Clone)]
 pub struct Language {
     name: String,
     code: String,
 }
 
+#[derive(Debug, Clone)]
 pub struct Plugin {
     identifier: String,
     enabled: bool,
@@ -165,6 +170,8 @@ impl Config {
         self.source = source_from_toml(&config)
                         .and_then(|s| source_path_from_toml(&s))
                         .unwrap_or(PathBuf::from("src/"));
+
+        self.authors = authors_from_toml(&config);
 
         Ok(())
     }
@@ -263,11 +270,11 @@ impl Author {
     /// #extern crate mdbook;
     /// #
     /// #fn main() {
-    ///     let author = mdbook::config::Author::new("John Doe").set_email("john@doe.org");
+    ///     let author = mdbook::config::Author::new("John Doe").set_email(Some("john@doe.org"));
     /// #}
     ///
-    pub fn set_email(mut self, email: &str) -> Self {
-        self.email = Some(String::from(email));
+    pub fn set_email(mut self, email: Option<&str>) -> Self {
+        self.email = email.map(|s| String::from(s));
         self
     }
 
@@ -368,43 +375,50 @@ impl Plugin {
 
 // Helper functions to extract values from toml
 fn title_from_toml(toml: &toml::Table) -> Option<String> {
-    if let Some(value) = toml.get("title") {
-        if let Some(title) = value.as_str() {
-            return Some(String::from(title))
-        }
-    }
-
-    None
+    toml.get("title")
+        .and_then(|v| v.as_str())
+        .map(|v| v.to_owned())
 }
 
 fn description_from_toml(toml: &toml::Table) -> Option<String> {
-    if let Some(value) = toml.get("description") {
-        if let Some(description) = value.as_str() {
-            return Some(String::from(description))
-        }
-    }
-
-    None
+    toml.get("description")
+        .and_then(|v| v.as_str())
+        .map(|v| v.to_owned())
 }
 
 fn source_from_toml(toml: &toml::Table) -> Option<toml::Table> {
-    if let Some(value) = toml.get("source") {
-        if let Some(source) = value.as_table() {
-            return Some(source.to_owned())
-        }
-    }
-
-    None
+    toml.get("source")
+        .and_then(|v| v.as_table())
+        .map(|v| v.to_owned())
 }
 
 fn source_path_from_toml(source: &toml::Table) -> Option<PathBuf> {
-    if let Some(value) = source.get("path") {
-        if let Some(path) = value.as_str() {
-            return Some(PathBuf::from(path))
-        }
+    source.get("path")
+          .and_then(|v| v.as_str())
+          .map(|v| PathBuf::from(v))
+}
+
+fn authors_from_toml(toml: &toml::Table) -> Vec<Author> {
+    let array = toml.get("author")
+                    .and_then(|v| v.as_slice())
+                    .unwrap_or(&[]);
+
+    let mut authors: Vec<Author> = vec![];
+
+    for author in array {
+        let author = if let Some(t) = author.as_table() { t } else { continue };
+
+        let name = author.get("name")
+                         .and_then(|v| v.as_str())
+                         .unwrap_or("Anonymous");
+
+        let email = author.get("email")
+                          .and_then(|v| v.as_str());
+
+        authors.push(Author::new(name).set_email(email));
     }
 
-    None
+    authors
 }
 
 
@@ -471,6 +485,8 @@ rust-playpen = { enabled = true }
         assert_eq!(config.title(), "mdBook");
         assert_eq!(config.description(), "This is a command line utility to generate books from markdown files");
         assert_eq!(config.source(), PathBuf::from("custom_source/"));
+        assert_eq!(config.authors()[0].name, "Mathieu David".to_owned());
+        assert_eq!(config.authors()[0].email, Some("mathieudavid@mathieudavid.org".to_owned()));
     }
 
 
@@ -485,5 +501,6 @@ rust-playpen = { enabled = true }
         assert_eq!(config.title(), "Book");
         assert_eq!(config.description(), "");
         assert_eq!(config.source(), PathBuf::from("src/"));
+        assert!(config.authors().is_empty());
     }
 }
