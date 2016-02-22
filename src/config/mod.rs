@@ -169,16 +169,57 @@ impl Config {
         Ok(())
     }
 
+    // Title
+    pub fn set_title(&mut self, title: &str) -> &mut Self {
+        self.title = String::from(title);
+        self
+    }
+
     pub fn title(&self) -> &str {
         &self.title
+    }
+
+
+    // Description
+    pub fn set_description(&mut self, description: &str) -> &mut Self {
+        self.description = String::from(description);
+        self
     }
 
     pub fn description(&self) -> &str {
         &self.description
     }
 
+
+    // Authors
+    pub fn add_author(&mut self, author: Author) -> &mut Self {
+        self.authors.push(author);
+        self
+    }
+
     pub fn authors(&self) -> &[Author] {
         &self.authors
+    }
+
+    // Root
+    pub fn set_root(&mut self, root: &Path) -> &mut Self {
+        self.root = PathBuf::from(root);
+        self
+    }
+
+    pub fn root(&self) -> &Path {
+        &self.root
+    }
+
+    // Source
+    pub fn set_source(&mut self, source: &Path) -> &mut Self {
+        if source.is_relative() {
+            self.source = self.root.join(self.source.clone());
+        } else {
+            self.source = PathBuf::from(source);
+        }
+
+        self
     }
 
     pub fn source(&self) -> &Path {
@@ -186,19 +227,23 @@ impl Config {
     }
 
     pub fn outputs(&self) -> &[Output] {
-        &self.outputs
+        unimplemented!();
+        // &self.outputs
     }
 
     pub fn language(&self) -> &Language {
-        &self.language
+        unimplemented!();
+        // &self.language
     }
 
     pub fn translations(&self) -> &[Language] {
-        &self.translations
+        unimplemented!();
+        // &self.translations
     }
 
     pub fn plugins(&self) -> &[Plugin] {
-        &self.plugins
+        unimplemented!();
+        // &self.plugins
     }
 }
 

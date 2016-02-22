@@ -97,7 +97,7 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
         // Skip this if `--force` is present
         if !args.is_present("force") {
             // Print warning
-            print!("\nCopying the default theme to {:?}", book.get_src());
+            print!("\nCopying the default theme to {:?}", book.source());
             println!("could potentially overwrite files already present in that directory.");
             print!("\nAre you sure you want to continue? (y/n) ");
 
@@ -159,8 +159,8 @@ fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
         Ok(mut watcher) => {
 
             // Add the source directory to the watcher
-            if let Err(e) = watcher.watch(book.get_src()) {
-                println!("Error while watching {:?}:\n    {:?}", book.get_src(), e);
+            if let Err(e) = watcher.watch(book.source()) {
+                println!("Error while watching {:?}:\n    {:?}", book.source(), e);
                 ::std::process::exit(0);
             };
 

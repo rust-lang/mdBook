@@ -27,11 +27,16 @@ impl HtmlHandlebars {
 
 impl Renderer for HtmlHandlebars {
     fn render(&self, book: &MDBook) -> Result<(), Box<Error>> {
+
+        // Temporary fix while refactoring
+        // FIXME: When the new renderers are done, use the destination set in the renderer
+        let dest = book.config().root().join("book/");
+
         debug!("[fn]: render");
         let mut handlebars = Handlebars::new();
 
         // Load theme
-        let theme = theme::Theme::new(book.get_src());
+        let theme = theme::Theme::new(book.source());
 
         // Register template
         debug!("[*]: Register handlebars template");
@@ -50,7 +55,7 @@ impl Renderer for HtmlHandlebars {
 
         // Check if dest directory exists
         debug!("[*]: Check if destination directory exists");
-        if let Err(_) = fs::create_dir_all(book.get_dest()) {
+        if let Err(_) = fs::create_dir_all(dest.clone()) {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other,
                                                "Unexpected error when constructing destination path")));
         }
@@ -63,7 +68,7 @@ impl Renderer for HtmlHandlebars {
                 BookItem::Chapter(_, ref ch) | BookItem::Affix(ref ch) => {
                     if ch.path != PathBuf::new() {
 
-                        let path = book.get_src().join(&ch.path);
+                        let path = book.source().join(&ch.path);
 
                         debug!("[*]: Opening file: {:?}", path);
                         let mut f = try!(File::open(&path));
@@ -108,10 +113,10 @@ impl Renderer for HtmlHandlebars {
 
                         debug!("[*]: Create file {:?}", &book.get_dest().join(&ch.path).with_extension("html"));
                         // Write to file
-                        let mut file = try!(utils::fs::create_file(&book.get_dest()
-                                                                        .join(&ch.path)
-                                                                        .with_extension("html")));
-                        output!("[*] Creating {:?} ✓", &book.get_dest().join(&ch.path).with_extension("html"));
+                        let mut file = try!(utils::fs::create_file(&dest.clone().join(&ch.path)
+                                                                       .with_extension("html")));
+
+                        output!("[*] Creating {:?} ✓", dest.join(&ch.path).with_extension("html"));
 
                         try!(file.write_all(&rendered.into_bytes()));
 
@@ -119,9 +124,9 @@ impl Renderer for HtmlHandlebars {
                         if index {
                             debug!("[*]: index.html");
 
-                            let mut index_file = try!(File::create(book.get_dest().join("index.html")));
+                            let mut index_file = try!(File::create(dest.join("index.html")));
                             let mut content = String::new();
-                            let _source = try!(File::open(book.get_dest().join(&ch.path.with_extension("html"))))
+                            let _source = try!(File::open(dest.join(&ch.path.with_extension("html"))))
                                               .read_to_string(&mut content);
 
                             // This could cause a problem when someone displays code containing <base href=...>
@@ -134,7 +139,7 @@ impl Renderer for HtmlHandlebars {
                             try!(index_file.write_all(content.as_bytes()));
 
                             output!("[*] Creating index.html from {:?} ✓",
-                                    book.get_dest().join(&ch.path.with_extension("html")));
+                                    dest.join(&ch.path.with_extension("html")));
                             index = false;
                         }
                     }
@@ -160,7 +165,7 @@ impl Renderer for HtmlHandlebars {
         // Rendere the handlebars template with the data
         debug!("[*]: Render template");
         let rendered = try!(handlebars.render("index", &data));
-        let mut file = try!(utils::fs::create_file(&book.get_dest().join("print").with_extension("html")));
+        let mut file = try!(utils::fs::create_file(&dest.join("print").with_extension("html")));
         try!(file.write_all(&rendered.into_bytes()));
         output!("[*] Creating print.html ✓");
 
@@ -168,7 +173,7 @@ impl Renderer for HtmlHandlebars {
 
         debug!("[*] Copy static files");
         // JavaScript
-        let mut js_file = if let Ok(f) = File::create(book.get_dest().join("book.js")) {
+        let mut js_file = if let Ok(f) = File::create(dest.join("book.js")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create book.js")));
@@ -176,7 +181,7 @@ impl Renderer for HtmlHandlebars {
         try!(js_file.write_all(&theme.js));
 
         // Css
-        let mut css_file = if let Ok(f) = File::create(book.get_dest().join("book.css")) {
+        let mut css_file = if let Ok(f) = File::create(dest.join("book.css")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create book.css")));
@@ -190,7 +195,7 @@ impl Renderer for HtmlHandlebars {
         try!(favicon_file.write_all(&theme.favicon));
 
         // JQuery local fallback
-        let mut jquery = if let Ok(f) = File::create(book.get_dest().join("jquery.js")) {
+        let mut jquery = if let Ok(f) = File::create(dest.join("jquery.js")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create jquery.js")));
@@ -198,21 +203,21 @@ impl Renderer for HtmlHandlebars {
         try!(jquery.write_all(&theme.jquery));
 
         // syntax highlighting
-        let mut highlight_css = if let Ok(f) = File::create(book.get_dest().join("highlight.css")) {
+        let mut highlight_css = if let Ok(f) = File::create(dest.join("highlight.css")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create highlight.css")));
         };
         try!(highlight_css.write_all(&theme.highlight_css));
 
-        let mut tomorrow_night_css = if let Ok(f) = File::create(book.get_dest().join("tomorrow-night.css")) {
+        let mut tomorrow_night_css = if let Ok(f) = File::create(dest.join("tomorrow-night.css")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create tomorrow-night.css")));
         };
         try!(tomorrow_night_css.write_all(&theme.tomorrow_night_css));
 
-        let mut highlight_js = if let Ok(f) = File::create(book.get_dest().join("highlight.js")) {
+        let mut highlight_js = if let Ok(f) = File::create(dest.join("highlight.js")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create highlight.js")));
@@ -220,14 +225,14 @@ impl Renderer for HtmlHandlebars {
         try!(highlight_js.write_all(&theme.highlight_js));
 
         // Font Awesome local fallback
-        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
+        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&dest
                                                                           .join("_FontAwesome/css/font-awesome.css")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create font-awesome.css")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME));
-        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
+        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&dest
                                                                           .join("_FontAwesome/fonts/fontawesome-we\
                                                                                  bfont.eot")) {
             f
@@ -235,7 +240,7 @@ impl Renderer for HtmlHandlebars {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.eot")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_EOT));
-        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
+        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&dest
                                                                           .join("_FontAwesome/fonts/fontawesome-we\
                                                                                  bfont.svg")) {
             f
@@ -243,7 +248,7 @@ impl Renderer for HtmlHandlebars {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.svg")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_SVG));
-        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
+        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&dest
                                                                           .join("_FontAwesome/fonts/fontawesome-we\
                                                                                  bfont.ttf")) {
             f
@@ -251,7 +256,7 @@ impl Renderer for HtmlHandlebars {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.ttf")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_TTF));
-        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
+        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&dest
                                                                           .join("_FontAwesome/fonts/fontawesome-we\
                                                                                  bfont.woff")) {
             f
@@ -259,7 +264,7 @@ impl Renderer for HtmlHandlebars {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.woff")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_WOFF));
-        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
+        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&dest
                                                                           .join("_FontAwesome/fonts/fontawesome-we\
                                                                                  bfont.woff2")) {
             f
@@ -267,7 +272,7 @@ impl Renderer for HtmlHandlebars {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.woff2")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_WOFF2));
-        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
+        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&dest
                                                                           .join("_FontAwesome/fonts/FontAwesome.\
                                                                                  ttf")) {
             f
@@ -277,7 +282,7 @@ impl Renderer for HtmlHandlebars {
         try!(font_awesome.write_all(theme::FONT_AWESOME_TTF));
 
         // Copy all remaining files
-        try!(utils::fs::copy_files_except_ext(book.get_src(), book.get_dest(), true, &["md"]));
+        try!(utils::fs::copy_files_except_ext(book.source(), &dest, true, &["md"]));
 
         Ok(())
     }
