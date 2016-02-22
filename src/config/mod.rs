@@ -95,7 +95,6 @@ pub struct Language {
 #[derive(Debug, Clone)]
 pub struct Plugin {
     identifier: String,
-    enabled: bool,
     config: Option<toml::Table>,
 }
 
@@ -179,6 +178,8 @@ impl Config {
                             .unwrap_or(Language::new("English", "en"));
 
         self.translations = translations_from_toml(&config);
+
+        self.plugins = plugins_from_toml(&config);
 
         Ok(())
     }
@@ -354,10 +355,9 @@ impl Default for Language {
 
 
 impl Plugin {
-    pub fn new(identifier: &str, enabled: bool) -> Self {
+    pub fn new(identifier: &str) -> Self {
         Plugin {
             identifier: String::from(identifier),
-            enabled: enabled,
             config: None,
         }
     }
@@ -369,10 +369,6 @@ impl Plugin {
 
     pub fn identifier(&self) -> &str {
         &self.identifier
-    }
-
-    pub fn enabled(&self) -> bool {
-        self.enabled
     }
 
     pub fn config(&self) -> Option<&toml::Table> {
@@ -510,6 +506,37 @@ fn translations_from_toml(toml: &toml::Table) -> Vec<Language> {
     translations
 }
 
+fn plugins_from_toml(toml: &toml::Table) -> Vec<Plugin> {
+    let table = toml.get("plugins")
+                    .and_then(|v| v.as_table())
+                    .map(|v| v.to_owned());
+
+    if let None = table { return Vec::new() }
+
+    let mut plugins = Vec::new();
+
+    for (id, plugin) in table.unwrap() {
+        let plugin = if let Some(l) = plugin.as_table() { l } else { continue };
+
+        // Skip if plugin is disabled
+        if let Some(false) = plugin.get("enabled").and_then(|d| d.as_bool()) { continue }
+
+        let mut config = plugin.clone();
+        config.remove("enabled");
+
+        let mut p = Plugin::new(&id);
+
+        if !config.is_empty() {
+            p = p.set_config(config);
+        }
+
+        plugins.push(p);
+
+    }
+
+    plugins
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -585,6 +612,7 @@ rust-playpen = { enabled = true }
         assert_eq!(config.outputs()[2].destination, Some(PathBuf::from("pdf/mdBook.pdf")));
         assert_eq!(config.language.name, "English");
         assert_eq!(config.translations()[0].name, "Français");
+        assert_eq!(config.plugins()[2].identifier, "syntax-highlighting");
     }
 
 
