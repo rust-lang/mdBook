@@ -101,6 +101,32 @@ impl MDBook {
         }
 
         {
+            let root = self.config.get_root();
+            let gitignore = root.join(".gitignore");
+
+            if !gitignore.exists() {
+
+                // Gitignore does not exist, create it
+
+                debug!("[*]: {:?} does not exist, trying to create .gitignore", root.join(".gitignore"));
+
+                let dest = self.config.get_dest();
+                // `relative_from` is marked as unstable
+                // http://doc.rust-lang.org/std/path/struct.PathBuf.html#method.relative_from
+                let dest = dest.relative_from(root)
+                    .expect("Destination path does not start with root path.");
+                let dest = dest.to_str()
+                    .expect("No destination path found.");
+
+                let mut f = try!(File::create(&root.join(".gitignore")));
+
+                debug!("[*]: Writing to .gitignore");
+
+                try!(writeln!(f, "{}", dest));
+            }
+        }
+
+        {
             let dest = self.config.get_dest();
             let src = self.config.get_src();
 
