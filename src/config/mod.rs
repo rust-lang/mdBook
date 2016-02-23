@@ -628,5 +628,9 @@ rust-playpen = { enabled = true }
         assert_eq!(config.description(), "");
         assert_eq!(config.source(), PathBuf::from("src/"));
         assert!(config.authors().is_empty());
+        assert!(config.outputs().is_empty());
+        assert_eq!(config.language().name, "English");
+        assert!(config.translations().is_empty());
+        assert!(config.plugins().is_empty());
     }
 }
