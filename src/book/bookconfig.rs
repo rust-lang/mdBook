@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 pub struct BookConfig {
     pub title: String,
     pub author: String,
+    pub description: String,
     root: PathBuf,
     dest: PathBuf,
     src: PathBuf,
@@ -21,6 +22,7 @@ impl BookConfig {
         BookConfig {
             title: String::new(),
             author: String::new(),
+            description: String::new(),
             root: root.to_owned(),
             dest: PathBuf::from("book"),
             src: PathBuf::from("src"),
@@ -54,9 +56,10 @@ impl BookConfig {
             // Extract data
 
             debug!("[*]: Extracting data from config");
-            // Title & author
+            // Title, author, description
             if let Some(a) = config.find_path(&["title"]) { self.title = a.to_string().replace("\"", "") }
             if let Some(a) = config.find_path(&["author"]) { self.author = a.to_string().replace("\"", "") }
+            if let Some(a) = config.find_path(&["description"]) { self.description = a.to_string().replace("\"", "") }
 
             // Destination
             if let Some(a) = config.find_path(&["dest"]) {

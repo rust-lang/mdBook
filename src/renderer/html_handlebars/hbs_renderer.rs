@@ -241,6 +241,7 @@ fn make_data(book: &MDBook) -> Result<BTreeMap<String,Json>, Box<Error>> {
     let mut data  = BTreeMap::new();
     data.insert("language".to_owned(), "en".to_json());
     data.insert("title".to_owned(), book.get_title().to_json());
+    data.insert("description".to_owned(), book.get_description().to_json());
     data.insert("favicon".to_owned(), "favicon.png".to_json());
 
     let mut chapters = vec![];
