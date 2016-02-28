@@ -69,9 +69,6 @@
 //!
 //! Make sure to take a look at it.
 
-// Used in `MDBook.init()`
-#![feature(path_relative_from)]
-
 #[macro_use]
 pub mod macros;
 pub mod book;

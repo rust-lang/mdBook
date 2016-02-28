@@ -94,7 +94,7 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
     // If flag `--theme` is present, copy theme to src
     if args.is_present("theme") {
 
-        // Skip this id `--force` is present
+        // Skip this if `--force` is present
         if !args.is_present("force") {
             // Print warning
             print!("\nCopying the default theme to {:?}", book.get_src());
@@ -113,6 +113,22 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
         try!(book.copy_theme());
         println!("\nTheme copied.");
 
+    }
+
+    // Because of `src/book/mdbook.rs#L37-L39`, the following will always evaluate to `true`
+    let is_dest_inside_root = book.get_dest().starts_with(book.get_root());
+
+    if !args.is_present("force") && is_dest_inside_root {
+        let gitignore = book.get_dest().join(".gitignore");
+        println!("\nCreating default .gitignore at {:?}", gitignore);
+        print!("\nAre you sure you want to continue? (y/n) ");
+
+        if confirm() {
+            book.create_gitignore();
+            println!("\n.gitignore created.");
+        } else {
+            println!("\nSkipping...\n");
+        }
     }
 
     println!("\nAll done, no errors...");
