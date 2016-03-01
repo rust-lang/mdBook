@@ -15,20 +15,20 @@ exclude = [
 ]
 
 [dependencies]
-clap = "~1.5.3"
-handlebars = "~0.12.0"
-rustc-serialize = "~0.3.16"
-pulldown-cmark = "~0.0.6"
+clap = "1.5.3"
+handlebars = "0.12.0"
+rustc-serialize = "0.3.16"
+pulldown-cmark = "0.0.6"
 
 # Watch feature
-notify = { version = "~2.4.1", optional = true }
-time = { version = "~0.1.33", optional = true }
-crossbeam = { version = "~0.2.8", optional = true }
+notify = { version = "2.5.4", optional = true }
+time = { version = "0.1.33", optional = true }
+crossbeam = { version = "0.2.8", optional = true }
 
 
 # Tests
 [dev-dependencies]
-tempdir = "~0.3.4"
+tempdir = "0.3.4"
 
 
 [features]
