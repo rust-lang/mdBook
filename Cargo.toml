@@ -1,6 +1,6 @@
 [package]
 name = "mdbook"
-version = "0.0.10"
+version = "0.0.11"
 authors = ["Mathieu David <mathieudavid@mathieudavid.org>"]
 description = "create books from markdown files (like Gitbook)"
 documentation = "http://azerupi.github.io/mdBook/index.html"
