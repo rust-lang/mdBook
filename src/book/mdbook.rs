@@ -351,6 +351,15 @@ impl MDBook {
         &self.config.author
     }
 
+    pub fn set_description(mut self, description: &str) -> Self {
+        self.config.description = description.to_owned();
+        self
+    }
+    
+    pub fn get_description(&self) -> &str {
+        &self.config.description
+    }
+
     // Construct book
     fn parse_summary(&mut self) -> Result<(), Box<Error>> {
         // When append becomes stable, use self.content.append() ...
