@@ -160,12 +160,37 @@ impl MDBook {
         Ok(())
     }
 
+    pub fn create_gitignore(&self) {
+        let gitignore = self.get_gitignore();
+
+        if !gitignore.exists() {
+            // Gitignore does not exist, create it
+
+            debug!("[*]: {:?} does not exist, trying to create .gitignore", gitignore);
+
+            let mut f = File::create(&gitignore)
+                .expect("Could not create file.");
+
+            debug!("[*]: Writing to .gitignore");
+
+            writeln!(f, "# Ignore everything within this folder")
+                .expect("Could not write to file.");
+            writeln!(f, "*")
+                .expect("Could not write to file.");
+            writeln!(f, "")
+                .expect("Could not write to file.");
+            writeln!(f, "# Except this file")
+                .expect("Could not write to file.");
+            writeln!(f, "!.gitignore")
+                .expect("Could not write to file.");
+        }
+    }
+
     /// The `build()` method is the one where everything happens. First it parses `SUMMARY.md` to
     /// construct the book's structure in the form of a `Vec<BookItem>` and then calls `render()`
     /// method of the current renderer.
     ///
     /// It is the renderer who generates all the output files.
-
     pub fn build(&mut self) -> Result<(), Box<Error>> {
         debug!("[fn]: build");
 
@@ -179,6 +204,10 @@ impl MDBook {
         Ok(())
     }
 
+
+    pub fn get_gitignore(&self) -> PathBuf {
+        self.config.get_dest().join(".gitignore")
+    }
 
     pub fn copy_theme(&self) -> Result<(), Box<Error>> {
         debug!("[fn]: copy_theme");
@@ -295,6 +324,10 @@ impl MDBook {
             }
         }
         Ok(())
+    }
+
+    pub fn get_root(&self) -> &Path {
+        self.config.get_root()
     }
 
     pub fn set_dest(mut self, dest: &Path) -> Self {
