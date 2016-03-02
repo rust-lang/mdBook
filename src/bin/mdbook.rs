@@ -119,16 +119,12 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
     let is_dest_inside_root = book.get_dest().starts_with(book.get_root());
 
     if !args.is_present("force") && is_dest_inside_root {
-        let gitignore = book.get_dest().join(".gitignore");
-        println!("\nCreating default .gitignore at {:?}", gitignore);
-        print!("\nAre you sure you want to continue? (y/n) ");
+        println!("\nDo you want a .gitignore to be created? (y/n)");
 
         if confirm() {
             book.create_gitignore();
             println!("\n.gitignore created.");
-        } else {
-            println!("\nSkipping...\n");
-        }
+        } 
     }
 
     println!("\nAll done, no errors...");
