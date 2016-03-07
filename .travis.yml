@@ -8,6 +8,8 @@ matrix:
   - rust: nightly
 env:
   global:
+    - PROJECT_NAME=mdbook
+    - TARGET=x86_64-unknown-linux-gnu
     secure: l3/qEC4krRerllLQzni8j5AjngFi6pluWvBWj//1mJLoIEYwxlQ9mYxEdd9BqccWWFn3K0bVYCVC/64+tP6sRfLkZCe2gPUtwe7ITwCDbapUxmkiRObVJCs5yMQZt6idyhHUDKAXKgNCrusfI2BM3tKGBfRK7Cnn/R/7p/U9+q7D1sgJtUKp6ypVzK6A3jLNp3dFLFI19a5KmbZMVsaa7tOhtdDJjjr7ebsc9z7HMW5/OItiWU3FSauVQQlUMaCiEgFuIG7H7OnBAYWB/gNEtLuwfLqU9UjtWk/njNNRnmJ7m3y5HbQhv5H5F5mJUOq9XFlPLwPwyTeVztSGdQm6k8Pp2pgKBUjY27afBl9BWU+msmN6k0oXfhvIebiBPe/x2udiKeFik1xqOOEU1q9dF0sZiuPxCSM1n7tgWklJ8epgaRQaMPPQw9pO/2H5/ynHCJqBlw6WcdiqWtwAyyr/GEx62u/cg5IVkqb7KLmYsWzjS8wYG4CYs1eIxCw2xPZxP0FGuUXvxTBUPipFze6Z7FqxVauXtVe2D7c1P4738HZP660rmR0GYtHtKLny1QxCCK9sxd9JmcezFCSz4YeQ1od9xc0OzGJ2ullKNGizmGfYmgL6X8faNylLIEdaiHAcY16xV3L0g3fXL1Qg360UHQyj7GIv+0nqQnf+H9xRTTU=
 addons:
   apt:
@@ -18,3 +20,16 @@ install:
     - npm install stylus nib
 after_success:
   - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && bash deploy.sh
+before_deploy:
+  - sh before_deploy.sh
+deploy:
+  provider: releases
+  api_key:
+    secure: I1s9z8TUFG3lctVlo0emgpL9T5DiDmrreAlAcxPIWIlRcmVAdjfpSEjQZptDEO/5rMYjcPyRjYkPhZWoFikT74LxRy7ENgLJ9PsxnVwDfGtz+B0n1LiPe214we1Z0SglFoG9C+68pdHIyv+p0tjG7rWK0Eqfm/19E46iR/v+dC7DTK2BVpIALrCQQDAZYQ2rxZukMiRlwlEuqmSQN+uT9dStsf6Uo+KowjSrUnEA5bvzixTKr0cQaudIoLGUMaGhxv0xxRcSK978MGx3w2Es6FmNxSPpOZXdSG+z6CuNWqfrDXcyOJ00LH/MLOBELgM5Lrn3w0S5LiTs6sRn/iwxGCnVbmDJA+qMgjqXgos/W1MrlTmn7FQ5dCDxQjsgNmYDze73FCGQYc/lLs3RYeFXKJHVjif0HCCbVZXfy4YLCWBEVT4ke4/UlCqTFIfXJm+Y/4dU6pa1+FLeaU2647PowLdTHLKYvCmyoqHOBxjAlt82/Im8jP7lBHDOclPepEy9ri4+Z/NCl5AApgNZvdZWjJlgmHXLYkxJAt7kOgehkYRotIQ1hcRckSv1dZwb/QyA3/fpHke3l4WIKofCTCAOzxXnbYc/5Z0arzCOQj4pkLW6nSv1bNhFivwe6qPtFdFHDSNSOPqHoqvXGpHzqtUslFRxYOANPxKvhX4eRRO0dzE=
+  file: ${PROJECT_NAME}-${TRAVIS_TAG}-${TARGET}.tar.gz
+  # don't delete the artifacts from previous phases
+  skip_cleanup: true
+  # deploy when a new tag is pushed
+  on:
+    condition: $TRAVIS_RUST_VERSION = stable
+    tags: true
