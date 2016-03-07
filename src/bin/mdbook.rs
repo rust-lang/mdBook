@@ -115,7 +115,7 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
 
     }
 
-    // Because of `src/book/mdbook.rs#L37-L39`, the following will always evaluate to `true`
+    // Because of `src/book/mdbook.rs#L37-L39`, `dest` will always start with `root`
     let is_dest_inside_root = book.get_dest().starts_with(book.get_root());
 
     if !args.is_present("force") && is_dest_inside_root {

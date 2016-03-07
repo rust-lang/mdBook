@@ -166,6 +166,17 @@ impl MDBook {
         if !gitignore.exists() {
             // Gitignore does not exist, create it
 
+            // Because of `src/book/mdbook.rs#L37-L39`, `dest` will always start with `root`. If it
+            // is not, `strip_prefix` will return an Error.
+            if !self.get_dest().starts_with(self.get_root()) {
+                return;
+            }
+
+            let relative = self.get_dest().strip_prefix(self.get_root())
+                .expect("Destination is not relative to root.");
+            let relative = relative.to_str()
+                .expect("Path could not be yielded into a string slice.");
+
             debug!("[*]: {:?} does not exist, trying to create .gitignore", gitignore);
 
             let mut f = File::create(&gitignore)
@@ -173,15 +184,7 @@ impl MDBook {
 
             debug!("[*]: Writing to .gitignore");
 
-            writeln!(f, "# Ignore everything within this folder")
-                .expect("Could not write to file.");
-            writeln!(f, "*")
-                .expect("Could not write to file.");
-            writeln!(f, "")
-                .expect("Could not write to file.");
-            writeln!(f, "# Except this file")
-                .expect("Could not write to file.");
-            writeln!(f, "!.gitignore")
+            writeln!(f, "{}", relative)
                 .expect("Could not write to file.");
         }
     }
@@ -206,7 +209,7 @@ impl MDBook {
 
 
     pub fn get_gitignore(&self) -> PathBuf {
-        self.config.get_dest().join(".gitignore")
+        self.config.get_root().join(".gitignore")
     }
 
     pub fn copy_theme(&self) -> Result<(), Box<Error>> {
