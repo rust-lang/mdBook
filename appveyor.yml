@@ -43,11 +43,7 @@ before_deploy:
   - copy target\release\mdbook.exe staging
   - cd staging
   - 7z a ../%PROJECT_NAME%-%APPVEYOR_REPO_TAG_NAME%-%TARGET%.zip *
-
-artifacts:
-  - path: $(PROJECT_NAME)-$(APPVEYOR_REPO_TAG_NAME)-$(TARGET).zip
-    name: $(PROJECT_NAME)-$(APPVEYOR_REPO_TAG_NAME)-$(TARGET).zip
-    type: zip
+  - appveyor PushArtifact ../%PROJECT_NAME%-%APPVEYOR_REPO_TAG_NAME%-%TARGET%.zip
 
 deploy:
   description: 'Windows release'
