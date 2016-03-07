@@ -1,0 +1,60 @@
+environment:
+  global:
+    PROJECT_NAME: mdBook
+  matrix:
+    # Stable channel
+    - TARGET: i686-pc-windows-msvc
+      RUST_CHANNEL: stable
+    - TARGET: x86_64-pc-windows-msvc
+      RUST_CHANNEL: stable
+    # Beta channel
+    - TARGET: i686-pc-windows-msvc
+      RUST_CHANNEL: beta
+    - TARGET: x86_64-pc-windows-msvc
+      RUST_CHANNEL: beta
+    # Nightly channel
+    - TARGET: i686-pc-windows-msvc
+      RUST_CHANNEL: nightly
+    - TARGET: x86_64-pc-windows-msvc
+      RUST_CHANNEL: nightly
+
+# Install Rust and Cargo
+install:
+  - ps: Start-FileDownload "https://static.rust-lang.org/dist/channel-rust-stable"
+  - ps: $env:RUST_VERSION = Get-Content channel-rust-stable | select -first 1 | %{$_.split('-')[1]}
+  - if NOT "%RUST_CHANNEL%" == "stable" set RUST_VERSION=%RUST_CHANNEL%
+  - ps: Start-FileDownload "https://static.rust-lang.org/dist/rust-${env:RUST_VERSION}-${env:TARGET}.exe"
+  - rust-%RUST_VERSION%-%TARGET%.exe /VERYSILENT /NORESTART /DIR="C:\Program Files (x86)\Rust"
+  - SET PATH=%PATH%;C:\Program Files (x86)\Rust\bin
+  - rustc -V
+  - cargo -V
+
+build: false
+
+# Equivalent to Travis' `script` phase
+test_script:
+  - cargo build --verbose
+  - cargo test --verbose
+
+before_deploy:
+  # Generate artifacts for release
+  - cargo build --release
+  - mkdir staging
+  - copy target\release\mdbook.exe staging
+  - cd staging
+  - 7z a ../%PROJECT_NAME%-%APPVEYOR_REPO_TAG_NAME%-%TARGET%.zip *
+  - appveyor PushArtifact ../%PROJECT_NAME%-%APPVEYOR_REPO_TAG_NAME%-%TARGET%.zip
+
+deploy:
+  description: 'Windows release'
+  artifact: /.*\.zip/
+  auth_token:
+    secure: QQhjKVyz7mpjlyGhlXytbFQQfKFQWTahHkD+B0NzIUoEVqO7ZLWjnoWasvLqW4nE
+  provider: GitHub
+  on:
+    RUST_CHANNEL: stable
+    appveyor_repo_tag: true
+
+branches:
+  only:
+    - master
