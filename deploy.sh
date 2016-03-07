@@ -15,13 +15,13 @@ cargo doc
 
 echo -e "${CYAN}Running mdbook build${NC}"
 # Run mdbook to generate the book
-target/debug/mdbook build book-example/
+target/$TARGET/debug/mdbook build book-example/
 
 echo -e "${CYAN}Copying book to target/doc${NC}"
 # Copy files from rendered book to doc root
-cp -R book-example/book/* target/doc/
+cp -R book-example/book/* target/$TARGET/doc/
 
-cd target/doc
+cd target/$TARGET/doc
 
 echo -e "${CYAN}Initializing Git${NC}"
 git init
