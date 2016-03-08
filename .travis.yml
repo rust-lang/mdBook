@@ -1,20 +1,107 @@
+sudo: false
+
 language: rust
-rust:
-- stable
-- beta
-- nightly
-matrix:
-  allow_failure:
-  - rust: nightly
+
 env:
   global:
-    secure: l3/qEC4krRerllLQzni8j5AjngFi6pluWvBWj//1mJLoIEYwxlQ9mYxEdd9BqccWWFn3K0bVYCVC/64+tP6sRfLkZCe2gPUtwe7ITwCDbapUxmkiRObVJCs5yMQZt6idyhHUDKAXKgNCrusfI2BM3tKGBfRK7Cnn/R/7p/U9+q7D1sgJtUKp6ypVzK6A3jLNp3dFLFI19a5KmbZMVsaa7tOhtdDJjjr7ebsc9z7HMW5/OItiWU3FSauVQQlUMaCiEgFuIG7H7OnBAYWB/gNEtLuwfLqU9UjtWk/njNNRnmJ7m3y5HbQhv5H5F5mJUOq9XFlPLwPwyTeVztSGdQm6k8Pp2pgKBUjY27afBl9BWU+msmN6k0oXfhvIebiBPe/x2udiKeFik1xqOOEU1q9dF0sZiuPxCSM1n7tgWklJ8epgaRQaMPPQw9pO/2H5/ynHCJqBlw6WcdiqWtwAyyr/GEx62u/cg5IVkqb7KLmYsWzjS8wYG4CYs1eIxCw2xPZxP0FGuUXvxTBUPipFze6Z7FqxVauXtVe2D7c1P4738HZP660rmR0GYtHtKLny1QxCCK9sxd9JmcezFCSz4YeQ1od9xc0OzGJ2ullKNGizmGfYmgL6X8faNylLIEdaiHAcY16xV3L0g3fXL1Qg360UHQyj7GIv+0nqQnf+H9xRTTU=
-addons:
-  apt:
-    packages:
-    - nodejs
-    - npm
+    - PROJECT_NAME=mdBook
+
+matrix:
+  include:
+    # Stable channel
+    # TODO re-enable the i686-apple-darwin target when passcod/rsnotify#53 is fixed
+    #- os: osx
+      #env: TARGET=i686-apple-darwin
+      #rust: stable
+    - os: linux
+      env: TARGET=i686-unknown-linux-gnu
+      rust: stable
+      addons:
+        apt:
+          packages: &i686_unknown_linux_gnu
+            - gcc-multilib
+    - os: osx
+      env: TARGET=x86_64-apple-darwin
+      rust: stable
+    - os: linux
+      env: TARGET=x86_64-unknown-linux-gnu
+      rust: stable
+      addons:
+        apt:
+          packages:
+            - nodejs
+            - npm
+    - os: linux
+      env: TARGET=x86_64-unknown-linux-musl
+      rust: stable
+    # Beta channel
+    #- os: osx
+      #env: TARGET=i686-apple-darwin
+      #rust: beta
+    - os: linux
+      env: TARGET=i686-unknown-linux-gnu
+      rust: beta
+      addons:
+        apt:
+          packages: *i686_unknown_linux_gnu
+    - os: osx
+      env: TARGET=x86_64-apple-darwin
+      rust: beta
+    - os: linux
+      env: TARGET=x86_64-unknown-linux-gnu
+      rust: beta
+    - os: linux
+      env: TARGET=x86_64-unknown-linux-musl
+      rust: beta
+    # Nightly channel
+    #- os: osx
+      #env: TARGET=i686-apple-darwin
+      #rust: nightly
+    - os: linux
+      env: TARGET=i686-unknown-linux-gnu
+      rust: nightly
+      addons:
+        apt:
+          packages: *i686_unknown_linux_gnu
+    - os: osx
+      env: TARGET=x86_64-apple-darwin
+      rust: nightly
+    - os: linux
+      env: TARGET=x86_64-unknown-linux-gnu
+      rust: nightly
+    - os: linux
+      env: TARGET=x86_64-unknown-linux-musl
+      rust: nightly
+
 install:
-    - npm install stylus nib
+  - sh ci/install.sh
+
+script:
+  - sh ci/script.sh
+
 after_success:
-  - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && bash deploy.sh
+  - test $TRAVIS_PULL_REQUEST == "false" &&
+    test $TRAVIS_BRANCH == "master" &&
+    test $TARGET == "x86_64-unknown-linux-gnu" &&
+    test $TRAVIS_RUST_VERSION = "stable" &&
+    npm install stylus nib &&
+    bash deploy.sh
+
+before_deploy:
+  - sh ci/before_deploy.sh
+
+deploy:
+  provider: releases
+  api_key:
+    secure: Z1k7WqX7z+tT4+SzTh4tBBzf11VaADB4AWuEczHtylaEb/0hRs8gaiHCNSVHm/QTp0QPWQR2Vw7uKMhVuxG7I8X7h31j3A7ulYBh/iVk0DVIrtrn2Q4WOED9CpoXLuLtk2nxo9MBViFW7mw4nJe9H2Tn9o/9oEYBuwzekvW5mh4muqUuCVTr8eQVYbs3jbC9pQy5oYjOLeUnlL9Cey5VN/nAhzAtyFP+6lIMri0PKit4JtkFou/O1MEpFYlP3VGC2lFiWuByocPKBT/L45FecS9qoHq+i6+ZCPDH2eu46nuYsDbLKAkPdGvf1MdPBPwoj0vSnZbgaTisQ4hIoBngQQQPZlPaGtcdd6g6asxSfnbA9cQhClI5oZJmg+ksxQE+peE8pnbmZ10Ix0PpIkkfWdQeMdUUCQarOTkTK54Munw+X+kp1lH19j6+krQPLBYr95fPRd4b5tWsJD2+pb/UOYFEEJxMNoUHyLCrtdCO7imOwrSUcv51+Z8UudqfPpKQeszrJcntL4owip35r3sF5TsE9YfW5qssLC164IylvP32y1AcfL1jqg8b+zrqLZKanjvDOJ1dtHHuwKqxcwf7PhAf0YjAtVSH9OIYcDzmDa0EMLrq7EK0fs6NAeb5qt6CML7pZrRS3fmOxN53Fbmj81qm6TmjQjDe4dmZlELgNow=
+  file: ${PROJECT_NAME}-${TRAVIS_TAG}-${TARGET}.tar.gz
+  # don't delete the artifacts from previous phases
+  skip_cleanup: true
+  # deploy when a new tag is pushed
+  on:
+    condition: $TRAVIS_RUST_VERSION = stable
+    tags: true
+
+notifications:
+  email:
+    on_success: never
