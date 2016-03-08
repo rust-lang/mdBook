@@ -1,4 +1,25 @@
-# mdBook [![Travis-CI](https://travis-ci.org/azerupi/mdBook.svg?branch=master)](https://travis-ci.org/azerupi/mdBook) [![Crates.io version](https://img.shields.io/crates/v/mdbook.svg)](https://crates.io/crates/mdbook) [![License](https://img.shields.io/crates/l/mdbook.svg)](LICENSE)
+# mdBook  
+
+<table> 
+    <tr>
+        <td><strong>Linux / OS X</strong></td>
+        <td>
+            <a href="https://travis-ci.org/azerupi/mdBook"><img src="https://travis-ci.org/azerupi/mdBook.svg?branch=master"></a>
+        </td>
+    </tr>
+    <tr>
+        <td><strong>Windows</strong></td>
+        <td>
+            <a href="https://ci.appveyor.com/project/azerupi/mdbook/"><img src="https://ci.appveyor.com/api/projects/status/o38racsnbcospyc8/branch/master?svg=true"></a>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            <a href="https://crates.io/crates/mdbook"><img src="https://img.shields.io/crates/v/mdbook.svg"></a>
+            <a href="LICENSE"><img src="https://img.shields.io/crates/l/mdbook.svg"></a>
+        </td>
+    </tr>
+</table>
 
 mdBook is a utility to create modern online books from markdown files.
 
