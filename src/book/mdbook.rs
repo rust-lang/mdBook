@@ -6,38 +6,35 @@ use std::io::Write;
 use std::io::ErrorKind;
 use std::process::Command;
 
-use {BookConfig, BookItem, theme, parse, utils};
+use {BookItem, Config, theme, parse};
 use book::BookItems;
 use renderer::{Renderer, HtmlHandlebars};
 
 
 pub struct MDBook {
-    config: BookConfig,
+    config: Config,
     pub content: Vec<BookItem>,
     renderer: Box<Renderer>,
 }
 
 impl MDBook {
-
     /// Create a new `MDBook` struct with root directory `root`
     ///
     /// - The default source directory is set to `root/src`
     /// - The default output directory is set to `root/book`
     ///
-    /// They can both be changed by using [`set_src()`](#method.set_src) and [`set_dest()`](#method.set_dest)
+    /// They can both be changed by using [`set_source()`](#method.set_source) and [`set_dest()`](#method.set_dest)
 
     pub fn new(root: &Path) -> MDBook {
 
-        if !root.exists() || !root.is_dir() {
-            output!("{:?} No directory with that name", root);
-        }
+        let mut config = Config::new();
+
+        config.set_root(root)
+              .set_source(Path::new("src/"));
 
         MDBook {
             content: vec![],
-            config: BookConfig::new(root)
-                        .set_src(&root.join("src"))
-                        .set_dest(&root.join("book"))
-                        .to_owned(),
+            config: config,
             renderer: Box::new(HtmlHandlebars::new()),
         }
     }
@@ -95,19 +92,13 @@ impl MDBook {
 
         debug!("[fn]: init");
 
-        if !self.config.get_root().exists() {
-            fs::create_dir_all(self.config.get_root()).unwrap();
-            output!("{:?} created", self.config.get_root());
+        if !self.config.root().exists() {
+            fs::create_dir_all(self.config.root()).unwrap();
+            output!("{:?} created", self.config.root());
         }
 
         {
-            let dest = self.config.get_dest();
-            let src = self.config.get_src();
-
-            if !dest.exists() {
-                debug!("[*]: {:?} does not exist, trying to create directory", dest);
-                try!(fs::create_dir(&dest));
-            }
+            let src = self.config.source();
 
             if !src.exists() {
                 debug!("[*]: {:?} does not exist, trying to create directory", src);
@@ -141,18 +132,18 @@ impl MDBook {
                 BookItem::Spacer => continue,
                 BookItem::Chapter(_, ref ch) | BookItem::Affix(ref ch) => {
                     if ch.path != PathBuf::new() {
-                        let path = self.config.get_src().join(&ch.path);
+                        let path = self.config.source().join(&ch.path);
 
                         if !path.exists() {
                             debug!("[*]: {:?} does not exist, trying to create file", path);
                             try!(::std::fs::create_dir_all(path.parent().unwrap()));
                             let mut f = try!(File::create(path));
 
-                            //debug!("[*]: Writing to {:?}", path);
+                            // debug!("[*]: Writing to {:?}", path);
                             try!(writeln!(f, "# {}", ch.name));
                         }
                     }
-                }
+                },
             }
         }
 
@@ -199,8 +190,7 @@ impl MDBook {
 
         try!(self.init());
 
-        // Clean output directory
-        try!(utils::remove_dir_content(&self.config.get_dest()));
+        // TODO: Clean output directory for all renderers
 
         try!(self.renderer.render(&self));
 
@@ -215,7 +205,7 @@ impl MDBook {
     pub fn copy_theme(&self) -> Result<(), Box<Error>> {
         debug!("[fn]: copy_theme");
 
-        let theme_dir = self.config.get_src().join("theme");
+        let theme_dir = self.config.source().join("theme");
 
         if !theme_dir.exists() {
             debug!("[*]: {:?} does not exist, trying to create directory", theme_dir);
@@ -266,8 +256,12 @@ impl MDBook {
     /// of the current working directory by using a relative path instead of an absolute path.
 
     pub fn read_config(mut self) -> Self {
-        let root = self.config.get_root().to_owned();
-        self.config.read_config(&root);
+        let root = self.config.root().to_owned();
+
+        if let Err(e) = self.config.read_config(&root) {
+            output!("Error: could not read config\n   {:?}", e);
+        };
+
         self
     }
 
@@ -305,14 +299,14 @@ impl MDBook {
                 BookItem::Chapter(_, ref ch) => {
                     if ch.path != PathBuf::new() {
 
-                        let path = self.get_src().join(&ch.path);
+                        let path = self.source().join(&ch.path);
 
                         println!("[*]: Testing file: {:?}", path);
 
                         let output_result = Command::new("rustdoc")
-                            .arg(&path)
-                            .arg("--test")
-                            .output();
+                                                .arg(&path)
+                                                .arg("--test")
+                                                .output();
                         let output = try!(output_result);
 
                         if !output.status.success() {
@@ -322,76 +316,52 @@ impl MDBook {
                                             String::from_utf8_lossy(&output.stderr)))) as Box<Error>);
                         }
                     }
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
         Ok(())
     }
 
-    pub fn get_root(&self) -> &Path {
-        self.config.get_root()
+    pub fn config(&self) -> &Config {
+        &self.config
     }
 
-    pub fn set_dest(mut self, dest: &Path) -> Self {
-
-        // Handle absolute and relative paths
-        match dest.is_absolute() {
-            true => { self.config.set_dest(dest); },
-            false => {
-                let dest = self.config.get_root().join(dest).to_owned();
-                self.config.set_dest(&dest);
-            }
-        }
-
-        self
-    }
-
-    pub fn get_dest(&self) -> &Path {
-        self.config.get_dest()
-    }
-
-    pub fn set_src(mut self, src: &Path) -> Self {
+    pub fn set_source(mut self, src: &Path) -> Self {
 
         // Handle absolute and relative paths
         match src.is_absolute() {
-            true => { self.config.set_src(src); },
+            true => {
+                self.config.set_source(src);
+            },
             false => {
-                let src = self.config.get_root().join(src).to_owned();
-                self.config.set_src(&src);
-            }
+                let src = self.config.root().join(src).to_owned();
+                self.config.set_source(&src);
+            },
         }
 
         self
     }
 
-    pub fn get_src(&self) -> &Path {
-        self.config.get_src()
+    pub fn source(&self) -> &Path {
+        self.config.source()
     }
 
     pub fn set_title(mut self, title: &str) -> Self {
-        self.config.title = title.to_owned();
+        self.config.set_title(title);
         self
     }
 
     pub fn get_title(&self) -> &str {
-        &self.config.title
+        self.config.title()
     }
 
-    pub fn set_author(mut self, author: &str) -> Self {
-        self.config.author = author.to_owned();
-        self
-    }
-
-    pub fn get_author(&self) -> &str {
-        &self.config.author
-    }
 
     pub fn set_description(mut self, description: &str) -> Self {
         self.config.description = description.to_owned();
         self
     }
-    
+
     pub fn get_description(&self) -> &str {
         &self.config.description
     }
@@ -399,8 +369,7 @@ impl MDBook {
     // Construct book
     fn parse_summary(&mut self) -> Result<(), Box<Error>> {
         // When append becomes stable, use self.content.append() ...
-        self.content = try!(parse::construct_bookitems(&self.config.get_src().join("SUMMARY.md")));
+        self.content = try!(parse::construct_bookitems(&self.config.source().join("SUMMARY.md")));
         Ok(())
     }
-
 }

@@ -25,8 +25,6 @@
 //!
 //! fn main() {
 //!     let mut book =  MDBook::new(Path::new("my-book"))   // Path to root
-//!                         .set_src(Path::new("src"))      // Path from root to source directory
-//!                         .set_dest(Path::new("book"))    // Path from root to output directory
 //!                         .read_config();                 // Parse book.json file for configuration
 //!
 //!     book.build().unwrap();                              // Render the book
@@ -63,7 +61,7 @@
 //! I have regrouped some useful functions in the [utils](utils/index.html) module, like the following function
 //!
 //! ```ignore
-//! utils::create_path(path: &Path)
+//! utils::fs::create_path(path: &Path)
 //! ```
 //! This function creates all the directories in a given path if they do not exist
 //!
@@ -72,6 +70,7 @@
 #[macro_use]
 pub mod macros;
 pub mod book;
+pub mod config;
 mod parse;
 pub mod renderer;
 pub mod theme;
@@ -79,5 +78,5 @@ pub mod utils;
 
 pub use book::MDBook;
 pub use book::BookItem;
-pub use book::BookConfig;
+pub use config::Config;
 pub use renderer::Renderer;

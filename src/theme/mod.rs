@@ -53,13 +53,13 @@ impl Theme {
 
         // Check if the given path exists
         if !src.exists() || !src.is_dir() {
-            return theme
+            return theme;
         }
 
         let src = src.join("theme");
         // If src does exist, check if there is a theme directory in it
         if !src.exists() || !src.is_dir() {
-            return theme
+            return theme;
         }
 
         // Check for individual files if they exist
@@ -73,7 +73,7 @@ impl Theme {
         // book.js
         if let Ok(mut f) = File::open(&src.join("book.js")) {
             theme.js.clear();
-            let _ =  f.read_to_end(&mut theme.js);
+            let _ = f.read_to_end(&mut theme.js);
         }
 
         // book.css

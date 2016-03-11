@@ -16,7 +16,7 @@ use std::error::Error;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
-use clap::{App, ArgMatches, SubCommand};
+use clap::{App, ArgMatches, SubCommand, AppSettings};
 
 // Uses for the Watch feature
 #[cfg(feature = "watch")]
@@ -36,7 +36,7 @@ fn main() {
                     .author("Mathieu David <mathieudavid@mathieudavid.org>")
                     // Get the version from our Cargo.toml using clap's crate_version!() macro
                     .version(&*format!("v{}", crate_version!()))
-                    .subcommand_required(true)
+                    .setting(AppSettings::SubcommandRequired)
                     .after_help("For more information about a specific command, try `mdbook <command> --help`")
                     .subcommand(SubCommand::with_name("init")
                         .about("Create boilerplate structure and files in the directory")
@@ -56,12 +56,12 @@ fn main() {
 
     // Check which subcomamnd the user ran...
     let res = match matches.subcommand() {
-        ("init", Some(sub_matches))  => init(sub_matches),
+        ("init", Some(sub_matches)) => init(sub_matches),
         ("build", Some(sub_matches)) => build(sub_matches),
         #[cfg(feature = "watch")]
         ("watch", Some(sub_matches)) => watch(sub_matches),
         ("test", Some(sub_matches)) => test(sub_matches),
-        (_, _)                       => unreachable!()
+        (_, _) => unreachable!(),
     };
 
     if let Err(e) = res {
@@ -77,7 +77,7 @@ fn confirm() -> bool {
     io::stdin().read_line(&mut s).ok();
     match &*s.trim() {
         "Y" | "y" | "yes" | "Yes" => true,
-        _ => false
+        _ => false,
     }
 }
 
@@ -97,7 +97,7 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
         // Skip this if `--force` is present
         if !args.is_present("force") {
             // Print warning
-            print!("\nCopying the default theme to {:?}", book.get_src());
+            print!("\nCopying the default theme to {:?}", book.source());
             println!("could potentially overwrite files already present in that directory.");
             print!("\nAre you sure you want to continue? (y/n) ");
 
@@ -151,66 +151,68 @@ fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book = MDBook::new(&book_dir).read_config();
 
     // Create a channel to receive the events.
-     let (tx, rx) = channel();
+    let (tx, rx) = channel();
 
-     let w: Result<notify::RecommendedWatcher, notify::Error> = notify::Watcher::new(tx);
+    let w: Result<notify::RecommendedWatcher, notify::Error> = notify::Watcher::new(tx);
 
-     match w {
-         Ok(mut watcher) => {
+    match w {
+        Ok(mut watcher) => {
 
-             // Add the source directory to the watcher
-             if let Err(e) = watcher.watch(book.get_src()) {
-                 println!("Error while watching {:?}:\n    {:?}", book.get_src(), e);
-                 ::std::process::exit(0);
-             };
+            // Add the source directory to the watcher
+            if let Err(e) = watcher.watch(book.source()) {
+                println!("Error while watching {:?}:\n    {:?}", book.source(), e);
+                ::std::process::exit(0);
+            };
 
-             // Add the book.json file to the watcher if it exists, because it's not
-             // located in the source directory
-             if let Err(_) = watcher.watch(book_dir.join("book.json")) {
-                 // do nothing if book.json is not found
-             }
+            // Add the book.json file to the watcher if it exists, because it's not
+            // located in the source directory
+            if let Err(_) = watcher.watch(book_dir.join("book.json")) {
+                // do nothing if book.json is not found
+            }
 
-             let previous_time = time::get_time().sec;
+            let previous_time = time::get_time().sec;
 
-             crossbeam::scope(|scope| {
-                 loop {
-                     match rx.recv() {
-                         Ok(event) => {
+            crossbeam::scope(|scope| {
+                loop {
+                    match rx.recv() {
+                        Ok(event) => {
 
-                             // Skip the event if an event has already been issued in the last second
-                             if time::get_time().sec - previous_time < 1 { continue }
+                            // Skip the event if an event has already been issued in the last second
+                            if time::get_time().sec - previous_time < 1 {
+                                continue;
+                            }
 
-                             if let Some(path) = event.path {
-                                 // Trigger the build process in a new thread (to keep receiving events)
-                                 scope.spawn(move || {
-                                     println!("File changed: {:?}\nBuilding book...\n", path);
-                                     match build(args) {
-                                         Err(e) => println!("Error while building: {:?}", e),
-                                         _ => {}
-                                     }
-                                     println!("");
-                                 });
+                            if let Some(path) = event.path {
+                                // Trigger the build process in a new thread (to keep receiving events)
+                                scope.spawn(move || {
+                                    println!("File changed: {:?}\nBuilding book...\n", path);
+                                    match build(args) {
+                                        Err(e) => println!("Error while building: {:?}", e),
+                                        _ => {},
+                                    }
+                                    println!("");
+                                });
 
-                             } else {
-                                 continue;
-                             }
-                         },
-                         Err(e) => {
-                             println!("An error occured: {:?}", e);
-                         }
-                     }
-                 }
-             });
+                            } else {
+                                continue;
+                            }
+                        },
+                        Err(e) => {
+                            println!("An error occured: {:?}", e);
+                        },
+                    }
+                }
+            });
 
-         },
-         Err(e) => {
-             println!("Error while trying to watch the files:\n\n\t{:?}", e);
-             ::std::process::exit(0);
-         }
-     }
+        },
+        Err(e) => {
+            println!("Error while trying to watch the files:\n\n\t{:?}", e);
+            ::std::process::exit(0);
+        },
+    }
 
-     Ok(())
- }
+    Ok(())
+}
 
 
 
@@ -230,9 +232,9 @@ fn get_book_dir(args: &ArgMatches) -> PathBuf {
         // Check if path is relative from current dir, or absolute...
         let p = Path::new(dir);
         if p.is_relative() {
-           env::current_dir().unwrap().join(dir)
+            env::current_dir().unwrap().join(dir)
         } else {
-           p.to_path_buf()
+            p.to_path_buf()
         }
     } else {
         env::current_dir().unwrap()
