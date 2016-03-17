@@ -100,7 +100,7 @@ impl Renderer for HtmlHandlebars {
 
                         // Remove path to root from previous file and render content for this one
                         data.remove("path_to_root");
-                        data.insert("path_to_root".to_owned(), utils::path_to_root(&ch.path).to_json());
+                        data.insert("path_to_root".to_owned(), utils::fs::path_to_root(&ch.path).to_json());
 
                         // Rendere the handlebars template with the data
                         debug!("[*]: Render template");
@@ -108,7 +108,7 @@ impl Renderer for HtmlHandlebars {
 
                         debug!("[*]: Create file {:?}", &book.get_dest().join(&ch.path).with_extension("html"));
                         // Write to file
-                        let mut file = try!(utils::create_file(&book.get_dest().join(&ch.path).with_extension("html")));
+                        let mut file = try!(utils::fs::create_file(&book.get_dest().join(&ch.path).with_extension("html")));
                         output!("[*] Creating {:?} ✓", &book.get_dest().join(&ch.path).with_extension("html"));
 
                         try!(file.write_all(&rendered.into_bytes()));
@@ -153,12 +153,12 @@ impl Renderer for HtmlHandlebars {
 
         // Remove path to root from previous file and render content for this one
         data.remove("path_to_root");
-        data.insert("path_to_root".to_owned(), utils::path_to_root(Path::new("print.md")).to_json());
+        data.insert("path_to_root".to_owned(), utils::fs::path_to_root(Path::new("print.md")).to_json());
 
         // Rendere the handlebars template with the data
         debug!("[*]: Render template");
         let rendered = try!(handlebars.render("index", &data));
-        let mut file = try!(utils::create_file(&book.get_dest().join("print").with_extension("html")));
+        let mut file = try!(utils::fs::create_file(&book.get_dest().join("print").with_extension("html")));
         try!(file.write_all(&rendered.into_bytes()));
         output!("[*] Creating print.html ✓");
 
@@ -220,14 +220,14 @@ impl Renderer for HtmlHandlebars {
         try!(highlight_js.write_all(&theme.highlight_js));
 
         // Font Awesome local fallback
-        let mut font_awesome = if let Ok(f) = utils::create_file(&book.get_dest()
+        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
                                                                       .join("_FontAwesome/css/font-awesome.css")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create font-awesome.css")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME));
-        let mut font_awesome = if let Ok(f) = utils::create_file(&book.get_dest()
+        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
                                                                       .join("_FontAwesome/fonts/fontawesome-webfon\
                                                                              t.eot")) {
             f
@@ -235,7 +235,7 @@ impl Renderer for HtmlHandlebars {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.eot")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_EOT));
-        let mut font_awesome = if let Ok(f) = utils::create_file(&book.get_dest()
+        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
                                                                       .join("_FontAwesome/fonts/fontawesome-webfon\
                                                                              t.svg")) {
             f
@@ -243,7 +243,7 @@ impl Renderer for HtmlHandlebars {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.svg")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_SVG));
-        let mut font_awesome = if let Ok(f) = utils::create_file(&book.get_dest()
+        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
                                                                       .join("_FontAwesome/fonts/fontawesome-webfon\
                                                                              t.ttf")) {
             f
@@ -251,7 +251,7 @@ impl Renderer for HtmlHandlebars {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.ttf")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_TTF));
-        let mut font_awesome = if let Ok(f) = utils::create_file(&book.get_dest()
+        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
                                                                       .join("_FontAwesome/fonts/fontawesome-webfon\
                                                                              t.woff")) {
             f
@@ -259,7 +259,7 @@ impl Renderer for HtmlHandlebars {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.woff")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_WOFF));
-        let mut font_awesome = if let Ok(f) = utils::create_file(&book.get_dest()
+        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
                                                                       .join("_FontAwesome/fonts/fontawesome-webfon\
                                                                              t.woff2")) {
             f
@@ -267,7 +267,7 @@ impl Renderer for HtmlHandlebars {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.woff2")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_WOFF2));
-        let mut font_awesome = if let Ok(f) = utils::create_file(&book.get_dest()
+        let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
                                                                       .join("_FontAwesome/fonts/FontAwesome.ttf")) {
             f
         } else {
@@ -276,7 +276,7 @@ impl Renderer for HtmlHandlebars {
         try!(font_awesome.write_all(theme::FONT_AWESOME_TTF));
 
         // Copy all remaining files
-        try!(utils::copy_files_except_ext(book.get_src(), book.get_dest(), true, &["md"]));
+        try!(utils::fs::copy_files_except_ext(book.get_src(), book.get_dest(), true, &["md"]));
 
         Ok(())
     }
