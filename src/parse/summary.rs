@@ -26,7 +26,9 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
 
         // if level < current_level we remove the last digit of section, exit the current function,
         // and return the parsed level to the calling function.
-        if level < current_level { break }
+        if level < current_level {
+            break;
+        }
 
         // if level > current_level we call ourselves to go one level deeper
         if level > current_level {
@@ -42,13 +44,15 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
 
                 // Remove the last number from the section, because we got back to our level..
                 section.pop();
-                continue
+                continue;
             } else {
-                return Err(Error::new( ErrorKind::Other, format!(
-                        "Your summary.md is messed up\n\n
-                        Prefix, Suffix and Spacer elements can only exist on the root level.\n
-                        Prefix elements can only exist before any chapter and there can be no chapters after suffix elements."
-                        )))
+                return Err(Error::new(ErrorKind::Other,
+                                      format!("Your summary.md is messed up\n\n
+                        Prefix, \
+                                               Suffix and Spacer elements can only exist on the root level.\n
+                        \
+                                               Prefix elements can only exist before any chapter and there can be \
+                                               no chapters after suffix elements.")));
             };
 
         } else {
@@ -59,26 +63,32 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
                 match parsed_item {
                     // error if level != 0 and BookItem is != Chapter
                     BookItem::Affix(_) | BookItem::Spacer if level > 0 => {
-                        return Err(Error::new( ErrorKind::Other, format!(
-                                "Your summary.md is messed up\n\n
-                                Prefix, Suffix and Spacer elements can only exist on the root level.\n
-                                Prefix elements can only exist before any chapter and there can be no chapters after suffix elements."
-                                )))
+                        return Err(Error::new(ErrorKind::Other,
+                                              format!("Your summary.md is messed up\n\n
+                                \
+                                                       Prefix, Suffix and Spacer elements can only exist on the \
+                                                       root level.\n
+                                Prefix \
+                                                       elements can only exist before any chapter and there can be \
+                                                       no chapters after suffix elements.")))
                     },
 
                     // error if BookItem == Chapter and section == -1
                     BookItem::Chapter(_, _) if section[0] == -1 => {
-                        return Err(Error::new( ErrorKind::Other, format!(
-                                "Your summary.md is messed up\n\n
-                                Prefix, Suffix and Spacer elements can only exist on the root level.\n
-                                Prefix elements can only exist before any chapter and there can be no chapters after suffix elements."
-                                )))
+                        return Err(Error::new(ErrorKind::Other,
+                                              format!("Your summary.md is messed up\n\n
+                                \
+                                                       Prefix, Suffix and Spacer elements can only exist on the \
+                                                       root level.\n
+                                Prefix \
+                                                       elements can only exist before any chapter and there can be \
+                                                       no chapters after suffix elements.")))
                     },
 
                     // Set section = -1 after suffix
                     BookItem::Affix(_) if section[0] > 0 => {
                         section[0] = -1;
-                    }
+                    },
 
                     _ => {},
                 }
@@ -86,12 +96,12 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
                 match parsed_item {
                     BookItem::Chapter(_, ch) => {
                         // Increment section
-                        let len = section.len() -1;
+                        let len = section.len() - 1;
                         section[len] += 1;
                         let s = section.iter().fold("".to_owned(), |s, i| s + &i.to_string() + ".");
                         BookItem::Chapter(s, ch)
-                    }
-                    _ => parsed_item
+                    },
+                    _ => parsed_item,
                 }
 
             } else {
@@ -131,11 +141,7 @@ fn level(line: &str, spaces_in_tab: i32) -> Result<i32> {
         debug!("[SUMMARY.md]:");
         debug!("\t[line]: {}", line);
         debug!("[*]: There is an indentation error on this line. Indentation should be {} spaces", spaces_in_tab);
-        return Err(Error::new(
-            ErrorKind::Other,
-            format!("Indentation error on line:\n\n{}", line)
-            )
-        )
+        return Err(Error::new(ErrorKind::Other, format!("Indentation error on line:\n\n{}", line)));
     }
 
     Ok(level)
@@ -146,12 +152,12 @@ fn parse_line(l: &str) -> Option<BookItem> {
     debug!("[fn]: parse_line");
 
     // Remove leading and trailing spaces or tabs
-    let line = l.trim_matches(|c: char| { c == ' ' || c == '\t' });
+    let line = l.trim_matches(|c: char| c == ' ' || c == '\t');
 
     // Spacers are "------"
     if line.starts_with("--") {
         debug!("[*]: Line is spacer");
-        return Some(BookItem::Spacer)
+        return Some(BookItem::Spacer);
     }
 
     if let Some(c) = line.chars().nth(0) {
@@ -161,18 +167,22 @@ fn parse_line(l: &str) -> Option<BookItem> {
                 debug!("[*]: Line is list element");
 
                 if let Some((name, path)) = read_link(line) {
-                    return Some(BookItem::Chapter("0".to_owned(), Chapter::new(name, path)))
-                } else { return None }
+                    return Some(BookItem::Chapter("0".to_owned(), Chapter::new(name, path)));
+                } else {
+                    return None;
+                }
             },
             // Non-list element
             '[' => {
                 debug!("[*]: Line is a link element");
 
                 if let Some((name, path)) = read_link(line) {
-                    return Some(BookItem::Affix(Chapter::new(name, path)))
-                } else { return None }
-            }
-            _ => {}
+                    return Some(BookItem::Affix(Chapter::new(name, path)));
+                } else {
+                    return None;
+                }
+            },
+            _ => {},
         }
     }
 
@@ -185,32 +195,31 @@ fn read_link(line: &str) -> Option<(String, PathBuf)> {
 
     // In the future, support for list item that is not a link
     // Not sure if I should error on line I can't parse or just ignore them...
-    if let Some(i) = line.find('[') { start_delimitor = i; }
-    else {
+    if let Some(i) = line.find('[') {
+        start_delimitor = i;
+    } else {
         debug!("[*]: '[' not found, this line is not a link. Ignoring...");
-        return None
+        return None;
     }
 
     if let Some(i) = line[start_delimitor..].find("](") {
-        end_delimitor = start_delimitor +i;
-    }
-    else {
+        end_delimitor = start_delimitor + i;
+    } else {
         debug!("[*]: '](' not found, this line is not a link. Ignoring...");
-        return None
+        return None;
     }
 
-    let name = line[start_delimitor + 1 .. end_delimitor].to_owned();
+    let name = line[start_delimitor + 1..end_delimitor].to_owned();
 
     start_delimitor = end_delimitor + 1;
     if let Some(i) = line[start_delimitor..].find(')') {
         end_delimitor = start_delimitor + i;
-    }
-    else {
+    } else {
         debug!("[*]: ')' not found, this line is not a link. Ignoring...");
-        return None
+        return None;
     }
 
-    let path = PathBuf::from(line[start_delimitor + 1 .. end_delimitor].to_owned());
+    let path = PathBuf::from(line[start_delimitor + 1..end_delimitor].to_owned());
 
     Some((name, path))
 }

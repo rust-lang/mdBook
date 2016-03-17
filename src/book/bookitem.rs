@@ -27,7 +27,6 @@ pub struct BookItems<'a> {
 
 
 impl Chapter {
-
     pub fn new(name: String, path: PathBuf) -> Self {
 
         Chapter {
@@ -40,13 +39,14 @@ impl Chapter {
 
 
 impl ToJson for Chapter {
-
     fn to_json(&self) -> Json {
         let mut m: BTreeMap<String, Json> = BTreeMap::new();
         m.insert("name".to_owned(), self.name.to_json());
-        m.insert("path".to_owned(),self.path.to_str()
-            .expect("Json conversion failed for path").to_json()
-        );
+        m.insert("path".to_owned(),
+                 self.path
+                     .to_str()
+                     .expect("Json conversion failed for path")
+                     .to_json());
         m.to_json()
     }
 }
@@ -66,7 +66,7 @@ impl<'a> Iterator for BookItems<'a> {
                     Some((parent_items, parent_idx)) => {
                         self.items = parent_items;
                         self.current_index = parent_idx + 1;
-                    }
+                    },
                 }
             } else {
                 let cur = self.items.get(self.current_index).unwrap();
@@ -79,10 +79,10 @@ impl<'a> Iterator for BookItems<'a> {
                     },
                     BookItem::Spacer => {
                         self.current_index += 1;
-                    }
+                    },
                 }
 
-                return Some(cur)
+                return Some(cur);
             }
         }
     }

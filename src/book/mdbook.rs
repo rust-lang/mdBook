@@ -18,7 +18,6 @@ pub struct MDBook {
 }
 
 impl MDBook {
-
     /// Create a new `MDBook` struct with root directory `root`
     ///
     /// - The default source directory is set to `root/src`
@@ -148,11 +147,11 @@ impl MDBook {
                             try!(::std::fs::create_dir_all(path.parent().unwrap()));
                             let mut f = try!(File::create(path));
 
-                            //debug!("[*]: Writing to {:?}", path);
+                            // debug!("[*]: Writing to {:?}", path);
                             try!(writeln!(f, "# {}", ch.name));
                         }
                     }
-                }
+                },
             }
         }
 
@@ -172,20 +171,19 @@ impl MDBook {
                 return;
             }
 
-            let relative = self.get_dest().strip_prefix(self.get_root())
-                .expect("Destination is not relative to root.");
+            let relative = self.get_dest()
+                               .strip_prefix(self.get_root())
+                               .expect("Destination is not relative to root.");
             let relative = relative.to_str()
-                .expect("Path could not be yielded into a string slice.");
+                                   .expect("Path could not be yielded into a string slice.");
 
             debug!("[*]: {:?} does not exist, trying to create .gitignore", gitignore);
 
-            let mut f = File::create(&gitignore)
-                .expect("Could not create file.");
+            let mut f = File::create(&gitignore).expect("Could not create file.");
 
             debug!("[*]: Writing to .gitignore");
 
-            writeln!(f, "{}", relative)
-                .expect("Could not write to file.");
+            writeln!(f, "{}", relative).expect("Could not write to file.");
         }
     }
 
@@ -310,9 +308,9 @@ impl MDBook {
                         println!("[*]: Testing file: {:?}", path);
 
                         let output_result = Command::new("rustdoc")
-                            .arg(&path)
-                            .arg("--test")
-                            .output();
+                                                .arg(&path)
+                                                .arg("--test")
+                                                .output();
                         let output = try!(output_result);
 
                         if !output.status.success() {
@@ -322,8 +320,8 @@ impl MDBook {
                                             String::from_utf8_lossy(&output.stderr)))) as Box<Error>);
                         }
                     }
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
         Ok(())
@@ -337,11 +335,13 @@ impl MDBook {
 
         // Handle absolute and relative paths
         match dest.is_absolute() {
-            true => { self.config.set_dest(dest); },
+            true => {
+                self.config.set_dest(dest);
+            },
             false => {
                 let dest = self.config.get_root().join(dest).to_owned();
                 self.config.set_dest(&dest);
-            }
+            },
         }
 
         self
@@ -355,11 +355,13 @@ impl MDBook {
 
         // Handle absolute and relative paths
         match src.is_absolute() {
-            true => { self.config.set_src(src); },
+            true => {
+                self.config.set_src(src);
+            },
             false => {
                 let src = self.config.get_root().join(src).to_owned();
                 self.config.set_src(&src);
-            }
+            },
         }
 
         self
@@ -391,7 +393,7 @@ impl MDBook {
         self.config.description = description.to_owned();
         self
     }
-    
+
     pub fn get_description(&self) -> &str {
         &self.config.description
     }
@@ -402,5 +404,4 @@ impl MDBook {
         self.content = try!(parse::construct_bookitems(&self.config.get_src().join("SUMMARY.md")));
         Ok(())
     }
-
 }

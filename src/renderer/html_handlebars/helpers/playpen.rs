@@ -14,29 +14,37 @@ pub fn render_playpen(s: &str, path: &Path) -> String {
     for playpen in find_playpens(s, path) {
 
         if playpen.escaped {
-            replaced.push_str(&s[previous_end_index..playpen.start_index-1]);
+            replaced.push_str(&s[previous_end_index..playpen.start_index - 1]);
             replaced.push_str(&s[playpen.start_index..playpen.end_index]);
             previous_end_index = playpen.end_index;
-            continue
+            continue;
         }
 
         // Check if the file exists
         if !playpen.rust_file.exists() || !playpen.rust_file.is_file() {
             output!("[-] No file exists for {{{{#playpen }}}}\n    {}", playpen.rust_file.to_str().unwrap());
-            continue
+            continue;
         }
 
         // Open file & read file
-        let mut file = if let Ok(f) = File::open(&playpen.rust_file) { f } else { continue };
+        let mut file = if let Ok(f) = File::open(&playpen.rust_file) {
+            f
+        } else {
+            continue;
+        };
         let mut file_content = String::new();
-        if let Err(_) = file.read_to_string(&mut file_content) { continue };
+        if let Err(_) = file.read_to_string(&mut file_content) {
+            continue;
+        };
 
-        let replacement = String::new() + "<pre class=\"playpen\"><code class=\"language-rust\">" + &file_content + "</code></pre>";
+        let replacement = String::new() + "<pre class=\"playpen\"><code class=\"language-rust\">" + &file_content +
+                          "</code></pre>";
 
         replaced.push_str(&s[previous_end_index..playpen.start_index]);
         replaced.push_str(&replacement);
         previous_end_index = playpen.end_index;
-        //println!("Playpen{{ {}, {}, {:?}, {} }}", playpen.start_index, playpen.end_index, playpen.rust_file, playpen.editable);
+        // println!("Playpen{{ {}, {}, {:?}, {} }}", playpen.start_index, playpen.end_index, playpen.rust_file,
+        // playpen.editable);
     }
 
     replaced.push_str(&s[previous_end_index..]);
@@ -45,7 +53,7 @@ pub fn render_playpen(s: &str, path: &Path) -> String {
 }
 
 #[derive(PartialOrd, PartialEq, Debug)]
-struct Playpen{
+struct Playpen {
     start_index: usize,
     end_index: usize,
     rust_file: PathBuf,
@@ -61,38 +69,50 @@ fn find_playpens(s: &str, base_path: &Path) -> Vec<Playpen> {
         let mut escaped = false;
 
         if i > 0 {
-            if let Some(c) = s[i-1..].chars().nth(0) {
-                if c == '\\' { escaped = true }
+            if let Some(c) = s[i - 1..].chars().nth(0) {
+                if c == '\\' {
+                    escaped = true
+                }
             }
         }
         // DON'T forget the "+ i" else you have an index out of bounds error !!
-        let end_i = if let Some(n) = s[i..].find("}}") { n } else { continue } + i + 2;
+        let end_i = if let Some(n) = s[i..].find("}}") {
+            n
+        } else {
+            continue;
+        } + i + 2;
 
         debug!("s[{}..{}] = {}", i, end_i, s[i..end_i].to_string());
 
         // If there is nothing between "{{#playpen" and "}}" skip
-        if end_i-2 - (i+10) < 1 { continue }
-        if s[i+10..end_i-2].trim().len() == 0 { continue }
+        if end_i - 2 - (i + 10) < 1 {
+            continue;
+        }
+        if s[i + 10..end_i - 2].trim().len() == 0 {
+            continue;
+        }
 
-        debug!("{}", s[i+10..end_i-2].to_string());
+        debug!("{}", s[i + 10..end_i - 2].to_string());
 
         // Split on whitespaces
-        let params: Vec<&str> = s[i+10..end_i-2].split_whitespace().collect();
+        let params: Vec<&str> = s[i + 10..end_i - 2].split_whitespace().collect();
         let mut editable = false;
 
         if params.len() > 1 {
-            editable = if let Some(_) = params[1].find("editable") {true} else {false};
+            editable = if let Some(_) = params[1].find("editable") {
+                true
+            } else {
+                false
+            };
         }
 
-        playpens.push(
-            Playpen{
-                start_index: i,
-                end_index: end_i,
-                rust_file: base_path.join(PathBuf::from(params[0])),
-                editable: editable,
-                escaped: escaped
-            }
-        )
+        playpens.push(Playpen {
+            start_index: i,
+            end_index: end_i,
+            rust_file: base_path.join(PathBuf::from(params[0])),
+            editable: editable,
+            escaped: escaped,
+        })
     }
 
     playpens
@@ -101,8 +121,7 @@ fn find_playpens(s: &str, base_path: &Path) -> Vec<Playpen> {
 
 
 
-//
-//---------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------
 //      Tests
 //
 
@@ -130,10 +149,21 @@ fn test_find_playpens_simple_playpen() {
 
     println!("\nOUTPUT: {:?}\n", find_playpens(s, Path::new("")));
 
-    assert!(find_playpens(s, Path::new("")) == vec![
-        Playpen{start_index: 22, end_index: 42, rust_file: PathBuf::from("file.rs"), editable: false, escaped: false},
-        Playpen{start_index: 47, end_index: 68, rust_file: PathBuf::from("test.rs"), editable: false, escaped: false}
-    ]);
+    assert!(find_playpens(s, Path::new("")) ==
+            vec![Playpen {
+                     start_index: 22,
+                     end_index: 42,
+                     rust_file: PathBuf::from("file.rs"),
+                     editable: false,
+                     escaped: false,
+                 },
+                 Playpen {
+                     start_index: 47,
+                     end_index: 68,
+                     rust_file: PathBuf::from("test.rs"),
+                     editable: false,
+                     escaped: false,
+                 }]);
 }
 
 #[test]
@@ -142,10 +172,21 @@ fn test_find_playpens_complex_playpen() {
 
     println!("\nOUTPUT: {:?}\n", find_playpens(s, Path::new("dir")));
 
-    assert!(find_playpens(s, Path::new("dir")) == vec![
-        Playpen{start_index: 22, end_index: 51, rust_file: PathBuf::from("dir/file.rs"), editable: true, escaped: false},
-        Playpen{start_index: 56, end_index: 86, rust_file: PathBuf::from("dir/test.rs"), editable: true, escaped: false}
-    ]);
+    assert!(find_playpens(s, Path::new("dir")) ==
+            vec![Playpen {
+                     start_index: 22,
+                     end_index: 51,
+                     rust_file: PathBuf::from("dir/file.rs"),
+                     editable: true,
+                     escaped: false,
+                 },
+                 Playpen {
+                     start_index: 56,
+                     end_index: 86,
+                     rust_file: PathBuf::from("dir/test.rs"),
+                     editable: true,
+                     escaped: false,
+                 }]);
 }
 
 #[test]
@@ -154,7 +195,8 @@ fn test_find_playpens_escaped_playpen() {
 
     println!("\nOUTPUT: {:?}\n", find_playpens(s, Path::new("")));
 
-    assert!(find_playpens(s, Path::new("")) == vec![
+    assert!(find_playpens(s, Path::new("")) ==
+            vec![
         Playpen{start_index: 39, end_index: 68, rust_file: PathBuf::from("file.rs"), editable: true, escaped: true},
     ]);
 }
