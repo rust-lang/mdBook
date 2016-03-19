@@ -16,7 +16,7 @@ use std::error::Error;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
-use clap::{App, ArgMatches, SubCommand};
+use clap::{App, ArgMatches, SubCommand, AppSettings};
 
 // Uses for the Watch feature
 #[cfg(feature = "watch")]
@@ -36,7 +36,7 @@ fn main() {
                     .author("Mathieu David <mathieudavid@mathieudavid.org>")
                     // Get the version from our Cargo.toml using clap's crate_version!() macro
                     .version(&*format!("v{}", crate_version!()))
-                    .subcommand_required(true)
+                    .setting(AppSettings::SubcommandRequired)
                     .after_help("For more information about a specific command, try `mdbook <command> --help`")
                     .subcommand(SubCommand::with_name("init")
                         .about("Create boilerplate structure and files in the directory")
