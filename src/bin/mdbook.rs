@@ -170,7 +170,7 @@ fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
                 // do nothing if book.json is not found
             }
 
-            let previous_time = time::get_time().sec;
+            let mut previous_time = time::get_time();
 
             crossbeam::scope(|scope| {
                 loop {
@@ -178,8 +178,11 @@ fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
                         Ok(event) => {
 
                             // Skip the event if an event has already been issued in the last second
-                            if time::get_time().sec - previous_time < 1 {
+                            let time = time::get_time();
+                            if time - previous_time < time::Duration::seconds(1) {
                                 continue;
+                            } else {
+                                previous_time = time;
                             }
 
                             if let Some(path) = event.path {
