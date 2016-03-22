@@ -1,6 +1,6 @@
 # mdBook  
 
-<table> 
+<table>
     <tr>
         <td><strong>Linux / OS X</strong></td>
         <td>
@@ -23,8 +23,8 @@
 
 mdBook is a utility to create modern online books from markdown files.
 
-**This project is still in its early days.**
-For more information about what is left on my to-do list, check the issue tracker
+**This project is still evolving.**
+For more information, check the issue tracker.
 
 
 ## What does it look like?
@@ -33,34 +33,40 @@ The [**Documentation**](http://azerupi.github.io/mdBook/) for mdBook has been wr
 
 ## Installation
 
-There are 2 ways to install mdBook but both require [Rust and Cargo](https://www.rust-lang.org/) to be installed.
+There are multiple ways to install mdBook.
 
-##### Install from Crates.io
+1. **Binaries**  
+   Binaries are available for download [here](https://github.com/azerupi/mdBook/releases). Make sure to put the path to the binary into your `PATH`.
 
-Once you have installed Rust, type the following in the terminal:
-```
-cargo install mdbook
-```
+2. **From Crates.io**  
+   This requires [Rust and Cargo](https://www.rust-lang.org/) to be installed. Once you have installed Rust, type the following in the terminal:
+   ```
+   cargo install mdbook
+   ```
 
-This will download and compile mdBook for you, the only thing you that will be left to do is add the Cargo bin directory to your path.
+   This will download and compile mdBook for you, the only thing left to do is to add the Cargo bin directory to your `PATH`.
 
-##### Install from git
+3. **From Git**  
+   The version published to Crates.io will ever so slightly be behind the version hosted here on Github. If you need the latest version you can build the git version of mdBook yourself. Cargo makes this ***super easy***!
 
-The version published to Crates.io will ever so slightly be behind the version hosted here on Github. If you need the latest version you can build the git version of mdBook yourself. Cargo makes this ***super easy***!
+   ```
+   cargo install --git https://github.com/azerupi/mdBook.git
+   ```
+   Again, make sure to add the Cargo bin directory to your `PATH`
 
-First, clone the repository on your computer:
+4. **For Contributions**  
+   If you want to contribute to mdBook you will have to clone the repository on your local machine:
 
-```
-git clone --depth 1 https://github.com/azerupi/mdBook.git
-```
+   ```
+   git clone https://github.com/azerupi/mdBook.git
+   ```
+   `cd` into `mdBook/` and run
 
-Then `cd` into the directory and run:
+   ```
+   cargo build
+   ```
 
-```
-cargo build --release
-```
-
-The executable will be in `./target/release/mdbook`.
+   the resulting binary can be found in `mdBook/target/debug/` under the name `mdBook` or `mdBook.exe`
 
 
 
@@ -103,6 +109,8 @@ See the [Documentation](http://azerupi.github.io/mdBook/lib/lib.html) and the [A
 ## Contributions
 
 Contributions are highly appreciated and encouraged! Don't hesitate to participate to discussions in the issues, propose new features and ask for help.
+
+If you are not very confident with Rust, **I will be glad to mentor as best as I can if you decide to tackle an issue or new feature.**
 
 People who are not familiar with the code can look at [issues that are tagged **easy**](https://github.com/azerupi/mdBook/labels/Easy). A lot of issues are also related to web development, so people that are not comfortable with Rust can also participate! :wink:
 
