@@ -1,13 +1,9 @@
-extern crate handlebars;
-extern crate rustc_serialize;
-extern crate pulldown_cmark;
-
 use std::path::Path;
 use std::collections::BTreeMap;
 
-use self::rustc_serialize::json;
-use self::handlebars::{Handlebars, HelperDef, RenderError, RenderContext, Helper, Context};
-use self::pulldown_cmark::{Parser, html, Event, Tag};
+use rustc_serialize::json;
+use handlebars::{Handlebars, HelperDef, RenderError, RenderContext, Helper, Context};
+use pulldown_cmark::{Parser, html, Event, Tag};
 
 // Handlebars helper to construct TOC
 #[derive(Clone, Copy)]

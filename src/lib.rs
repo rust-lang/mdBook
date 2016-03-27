@@ -69,8 +69,11 @@
 //!
 //! Make sure to take a look at it.
 
-#[macro_use]
-pub mod macros;
+extern crate rustc_serialize;
+extern crate handlebars;
+extern crate pulldown_cmark;
+
+#[macro_use] pub mod macros;
 pub mod book;
 mod parse;
 pub mod renderer;

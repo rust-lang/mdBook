@@ -1,9 +1,6 @@
-extern crate pulldown_cmark;
-
 pub mod fs;
 
-use self::pulldown_cmark::{Parser, html, Options, OPTION_ENABLE_TABLES, OPTION_ENABLE_FOOTNOTES};
-
+use pulldown_cmark::{Parser, html, Options, OPTION_ENABLE_TABLES, OPTION_ENABLE_FOOTNOTES};
 
 
 ///

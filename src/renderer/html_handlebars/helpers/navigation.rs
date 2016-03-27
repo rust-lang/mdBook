@@ -1,11 +1,8 @@
-extern crate handlebars;
-extern crate rustc_serialize;
-
 use std::path::Path;
 use std::collections::BTreeMap;
 
-use self::rustc_serialize::json::{self, ToJson};
-use self::handlebars::{Handlebars, RenderError, RenderContext, Helper, Context, Renderable};
+use rustc_serialize::json::{self, ToJson};
+use handlebars::{Handlebars, RenderError, RenderContext, Helper, Context, Renderable};
 
 // Handlebars helper for navigation
 

@@ -1,6 +1,4 @@
-extern crate rustc_serialize;
-
-use self::rustc_serialize::json::{Json, ToJson};
+use rustc_serialize::json::{Json, ToJson};
 use std::path::PathBuf;
 use std::collections::BTreeMap;
 

@@ -1,5 +1,4 @@
-extern crate rustc_serialize;
-use self::rustc_serialize::json::Json;
+use rustc_serialize::json::Json;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};

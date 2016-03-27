@@ -1,6 +1,3 @@
-extern crate handlebars;
-extern crate rustc_serialize;
-
 use renderer::html_handlebars::helpers;
 use renderer::Renderer;
 use book::MDBook;
@@ -13,8 +10,8 @@ use std::error::Error;
 use std::io::{self, Read, Write};
 use std::collections::BTreeMap;
 
-use self::handlebars::{Handlebars, JsonRender};
-use self::rustc_serialize::json::{Json, ToJson};
+use handlebars::{Handlebars, JsonRender};
+use rustc_serialize::json::{Json, ToJson};
 
 
 pub struct HtmlHandlebars;
