@@ -15,6 +15,8 @@ pub struct MDBook {
     config: BookConfig,
     pub content: Vec<BookItem>,
     renderer: Box<Renderer>,
+    #[cfg(feature = "serve")]
+    livereload: Option<String>,
 }
 
 impl MDBook {
@@ -38,6 +40,7 @@ impl MDBook {
                         .set_dest(&root.join("book"))
                         .to_owned(),
             renderer: Box::new(HtmlHandlebars::new()),
+            livereload: None,
         }
     }
 
@@ -396,6 +399,23 @@ impl MDBook {
 
     pub fn get_description(&self) -> &str {
         &self.config.description
+    }
+
+    pub fn set_livereload(&mut self, livereload: String) -> &mut Self {
+        self.livereload = Some(livereload);
+        self
+    }
+
+    pub fn unset_livereload(&mut self) -> &Self {
+        self.livereload = None;
+        self
+    }
+
+    pub fn get_livereload(&self) -> Option<&String> {
+        match self.livereload {
+            Some(ref livereload) => Some(&livereload),
+            None => None,
+        }
     }
 
     // Construct book
