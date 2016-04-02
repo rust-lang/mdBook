@@ -1,4 +1,4 @@
-# mdBook  
+# mdBook
 
 <table>
     <tr>
@@ -99,6 +99,10 @@ Here are the main commands you will want to run, for a more exhaustive explanati
 - `mdbook watch`
 
     When you run this command, mdbook will watch your markdown files to rebuild the book on every change. This avoids having to come back to the terminal to type `mdbook build` over and over again.
+
+- `mdbook serve`
+
+    Does the same thing as `mdbook watch` but additionally serves the book at `http://localhost:3000` (port is changeable) and reloads the browser when a change occures.
 
 ### As a library
 
