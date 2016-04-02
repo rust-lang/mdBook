@@ -15,9 +15,8 @@ extern crate time;
 extern crate iron;
 #[cfg(feature = "serve")]
 extern crate staticfile;
-
 #[cfg(feature = "serve")]
-mod livereload;
+extern crate ws;
 
 use std::env;
 use std::error::Error;
@@ -31,10 +30,6 @@ use clap::{App, ArgMatches, SubCommand, AppSettings};
 use notify::Watcher;
 #[cfg(feature = "watch")]
 use std::sync::mpsc::channel;
-
-// Uses for the Serve feature
-#[cfg(feature = "serve")]
-use livereload::LiveReload;
 
 
 use mdbook::MDBook;
@@ -187,16 +182,21 @@ fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
 // Watch command implementation
 #[cfg(feature = "serve")]
 fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
+    const RELOAD_COMMAND: &'static str = "reload";
+
     let book_dir = get_book_dir(args);
     let mut book = MDBook::new(&book_dir).read_config();
     let port = args.value_of("port").unwrap_or("3000");
     let ws_port = args.value_of("ws-port").unwrap_or("3001");
 
+    let address = format!("localhost:{}", port);
+    let ws_address = format!("localhost:{}", ws_port);
+
     book.set_livereload(format!(r#"
         <script type="text/javascript">
-            var socket = new WebSocket("ws://localhost:{}", "livereload");
+            var socket = new WebSocket("ws://localhost:{}");
             socket.onmessage = function (event) {{
-                if (event.data === "reload") {{
+                if (event.data === "{}") {{
                     socket.close();
                     location.reload(true); // force reload from server (not from cache)
                 }}
@@ -206,23 +206,32 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
                 socket.close();
             }}
         </script>
-    "#, ws_port).to_owned());
+    "#, ws_port, RELOAD_COMMAND).to_owned());
 
     try!(book.build());
 
     let staticfile = staticfile::Static::new(book.get_dest());
     let iron = iron::Iron::new(staticfile);
-    let _iron = iron.http(&*format!("localhost:{}", port)).unwrap();
+    let _iron = iron.http(&*address).unwrap();
 
-    let lr = LiveReload::new(&format!("localhost:{}", ws_port)).unwrap();
+    let ws_server = ws::WebSocket::new(|_| {
+        |_| {
+            Ok(())
+        }
+    }).unwrap();
 
-    println!("{:?}", "Registering change trigger");
+    let broadcaster = ws_server.broadcaster();
+
+    std::thread::spawn(move || {
+        ws_server.listen(&*ws_address).unwrap();
+    });
+
     trigger_on_change(&mut book, move |event, book| {
         if let Some(path) = event.path {
             println!("File changed: {:?}\nBuilding book...\n", path);
             match book.build() {
                 Err(e) => println!("Error while building: {:?}", e),
-                _ => lr.trigger_reload(),
+                _ => broadcaster.send(RELOAD_COMMAND).unwrap(),
             }
             println!("");
         }
@@ -281,6 +290,8 @@ fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
             }
 
             let mut previous_time = time::get_time();
+
+            println!("\nListening for changes...\n");
 
             loop {
                 match rx.recv() {
