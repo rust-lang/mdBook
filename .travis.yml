@@ -9,10 +9,9 @@ env:
 matrix:
   include:
     # Stable channel
-    # TODO re-enable the i686-apple-darwin target when passcod/rsnotify#53 is fixed
-    #- os: osx
-      #env: TARGET=i686-apple-darwin
-      #rust: stable
+    - os: osx
+      env: TARGET=i686-apple-darwin
+      rust: stable
     - os: linux
       env: TARGET=i686-unknown-linux-gnu
       rust: stable
@@ -35,9 +34,9 @@ matrix:
       env: TARGET=x86_64-unknown-linux-musl
       rust: stable
     # Beta channel
-    #- os: osx
-      #env: TARGET=i686-apple-darwin
-      #rust: beta
+    - os: osx
+      env: TARGET=i686-apple-darwin
+      rust: beta
     - os: linux
       env: TARGET=i686-unknown-linux-gnu
       rust: beta
@@ -54,9 +53,9 @@ matrix:
       env: TARGET=x86_64-unknown-linux-musl
       rust: beta
     # Nightly channel
-    #- os: osx
-      #env: TARGET=i686-apple-darwin
-      #rust: nightly
+    - os: osx
+      env: TARGET=i686-apple-darwin
+      rust: nightly
     - os: linux
       env: TARGET=i686-unknown-linux-gnu
       rust: nightly
