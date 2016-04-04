@@ -10,6 +10,13 @@ extern crate notify;
 #[cfg(feature = "watch")]
 extern crate time;
 
+// Dependencies for the Serve feature
+#[cfg(feature = "serve")]
+extern crate iron;
+#[cfg(feature = "serve")]
+extern crate staticfile;
+#[cfg(feature = "serve")]
+extern crate ws;
 
 use std::env;
 use std::error::Error;
@@ -50,6 +57,11 @@ fn main() {
                     .subcommand(SubCommand::with_name("watch")
                         .about("Watch the files for changes")
                         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'"))
+                    .subcommand(SubCommand::with_name("serve")
+                        .about("Serve the book at http://localhost:3000. Rebuild and reload on change.")
+                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'")
+                        .arg_from_usage("-p, --port=[port] 'Use another port{n}(Defaults to 3000)'")
+                        .arg_from_usage("-w, --websocket-port=[ws-port] 'Use another port for the websocket connection (livereload){n}(Defaults to 3001)'"))
                     .subcommand(SubCommand::with_name("test")
                         .about("Test that code samples compile"))
                     .get_matches();
@@ -60,6 +72,8 @@ fn main() {
         ("build", Some(sub_matches)) => build(sub_matches),
         #[cfg(feature = "watch")]
         ("watch", Some(sub_matches)) => watch(sub_matches),
+        #[cfg(feature = "serve")]
+        ("serve", Some(sub_matches)) => serve(sub_matches),
         ("test", Some(sub_matches)) => test(sub_matches),
         (_, _) => unreachable!(),
     };
@@ -148,75 +162,83 @@ fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
 #[cfg(feature = "watch")]
 fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book_dir = get_book_dir(args);
-    let book = MDBook::new(&book_dir).read_config();
+    let mut book = MDBook::new(&book_dir).read_config();
 
-    // Create a channel to receive the events.
-    let (tx, rx) = channel();
-
-    let w: Result<notify::RecommendedWatcher, notify::Error> = notify::Watcher::new(tx);
-
-    match w {
-        Ok(mut watcher) => {
-
-            // Add the source directory to the watcher
-            if let Err(e) = watcher.watch(book.get_src()) {
-                println!("Error while watching {:?}:\n    {:?}", book.get_src(), e);
-                ::std::process::exit(0);
-            };
-
-            // Add the book.json file to the watcher if it exists, because it's not
-            // located in the source directory
-            if let Err(_) = watcher.watch(book_dir.join("book.json")) {
-                // do nothing if book.json is not found
+    trigger_on_change(&mut book, |event, book| {
+        if let Some(path) = event.path {
+            println!("File changed: {:?}\nBuilding book...\n", path);
+            match book.build() {
+                Err(e) => println!("Error while building: {:?}", e),
+                _ => {},
             }
-
-            let mut previous_time = time::get_time();
-
-            crossbeam::scope(|scope| {
-                loop {
-                    match rx.recv() {
-                        Ok(event) => {
-
-                            // Skip the event if an event has already been issued in the last second
-                            let time = time::get_time();
-                            if time - previous_time < time::Duration::seconds(1) {
-                                continue;
-                            } else {
-                                previous_time = time;
-                            }
-
-                            if let Some(path) = event.path {
-                                // Trigger the build process in a new thread (to keep receiving events)
-                                scope.spawn(move || {
-                                    println!("File changed: {:?}\nBuilding book...\n", path);
-                                    match build(args) {
-                                        Err(e) => println!("Error while building: {:?}", e),
-                                        _ => {},
-                                    }
-                                    println!("");
-                                });
-
-                            } else {
-                                continue;
-                            }
-                        },
-                        Err(e) => {
-                            println!("An error occured: {:?}", e);
-                        },
-                    }
-                }
-            });
-
-        },
-        Err(e) => {
-            println!("Error while trying to watch the files:\n\n\t{:?}", e);
-            ::std::process::exit(0);
-        },
-    }
+            println!("");
+        }
+    });
 
     Ok(())
 }
 
+
+// Watch command implementation
+#[cfg(feature = "serve")]
+fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
+    const RELOAD_COMMAND: &'static str = "reload";
+
+    let book_dir = get_book_dir(args);
+    let mut book = MDBook::new(&book_dir).read_config();
+    let port = args.value_of("port").unwrap_or("3000");
+    let ws_port = args.value_of("ws-port").unwrap_or("3001");
+
+    let address = format!("localhost:{}", port);
+    let ws_address = format!("localhost:{}", ws_port);
+
+    book.set_livereload(format!(r#"
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:{}");
+            socket.onmessage = function (event) {{
+                if (event.data === "{}") {{
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }}
+            }};
+
+            window.onbeforeunload = function() {{
+                socket.close();
+            }}
+        </script>
+    "#, ws_port, RELOAD_COMMAND).to_owned());
+
+    try!(book.build());
+
+    let staticfile = staticfile::Static::new(book.get_dest());
+    let iron = iron::Iron::new(staticfile);
+    let _iron = iron.http(&*address).unwrap();
+
+    let ws_server = ws::WebSocket::new(|_| {
+        |_| {
+            Ok(())
+        }
+    }).unwrap();
+
+    let broadcaster = ws_server.broadcaster();
+
+    std::thread::spawn(move || {
+        ws_server.listen(&*ws_address).unwrap();
+    });
+
+    trigger_on_change(&mut book, move |event, book| {
+        if let Some(path) = event.path {
+            println!("File changed: {:?}\nBuilding book...\n", path);
+            match book.build() {
+                Err(e) => println!("Error while building: {:?}", e),
+                _ => broadcaster.send(RELOAD_COMMAND).unwrap(),
+            }
+            println!("");
+        }
+    });
+
+    Ok(())
+}
 
 
 fn test(args: &ArgMatches) -> Result<(), Box<Error>> {
@@ -227,7 +249,6 @@ fn test(args: &ArgMatches) -> Result<(), Box<Error>> {
 
     Ok(())
 }
-
 
 
 fn get_book_dir(args: &ArgMatches) -> PathBuf {
@@ -241,5 +262,59 @@ fn get_book_dir(args: &ArgMatches) -> PathBuf {
         }
     } else {
         env::current_dir().unwrap()
+    }
+}
+
+
+// Calls the closure when a book source file is changed. This is blocking!
+fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
+    where F: Fn(notify::Event, &mut MDBook) -> ()
+{
+    // Create a channel to receive the events.
+    let (tx, rx) = channel();
+
+    let w: Result<notify::RecommendedWatcher, notify::Error> = notify::Watcher::new(tx);
+
+    match w {
+        Ok(mut watcher) => {
+            // Add the source directory to the watcher
+            if let Err(e) = watcher.watch(book.get_src()) {
+                println!("Error while watching {:?}:\n    {:?}", book.get_src(), e);
+                ::std::process::exit(0);
+            };
+
+            // Add the book.json file to the watcher if it exists, because it's not
+            // located in the source directory
+            if let Err(_) = watcher.watch(book.get_root().join("book.json")) {
+                // do nothing if book.json is not found
+            }
+
+            let mut previous_time = time::get_time();
+
+            println!("\nListening for changes...\n");
+
+            loop {
+                match rx.recv() {
+                    Ok(event) => {
+                        // Skip the event if an event has already been issued in the last second
+                        let time = time::get_time();
+                        if time - previous_time < time::Duration::seconds(1) {
+                            continue;
+                        } else {
+                            previous_time = time;
+                        }
+
+                        closure(event, book);
+                    },
+                    Err(e) => {
+                        println!("An error occured: {:?}", e);
+                    },
+                }
+            }
+        },
+        Err(e) => {
+            println!("Error while trying to watch the files:\n\n\t{:?}", e);
+            ::std::process::exit(0);
+        },
     }
 }
