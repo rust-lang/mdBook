@@ -9,8 +9,8 @@ pub struct BookConfig {
     pub author: String,
     pub description: String,
     root: PathBuf,
-    dest: PathBuf,
-    src: PathBuf,
+    pub dest: PathBuf,
+    pub src: PathBuf,
     pub indent_spaces: i32,
     multilingual: bool,
 }

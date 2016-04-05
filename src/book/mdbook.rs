@@ -12,9 +12,17 @@ use renderer::{Renderer, HtmlHandlebars};
 
 
 pub struct MDBook {
-    config: BookConfig,
+    root: PathBuf,
+    dest: PathBuf,
+    src: PathBuf,
+
+    pub title: String,
+    pub author: String,
+    pub description: String,
+
     pub content: Vec<BookItem>,
     renderer: Box<Renderer>,
+
     #[cfg(feature = "serve")]
     livereload: Option<String>,
 }
@@ -34,11 +42,15 @@ impl MDBook {
         }
 
         MDBook {
+            root: root.to_owned(),
+            dest: PathBuf::from("book"),
+            src: PathBuf::from("src"),
+
+            title: String::new(),
+            author: String::new(),
+            description: String::new(),
+
             content: vec![],
-            config: BookConfig::new(root)
-                        .set_src(&root.join("src"))
-                        .set_dest(&root.join("book"))
-                        .to_owned(),
             renderer: Box::new(HtmlHandlebars::new()),
             livereload: None,
         }
@@ -97,33 +109,31 @@ impl MDBook {
 
         debug!("[fn]: init");
 
-        if !self.config.get_root().exists() {
-            fs::create_dir_all(self.config.get_root()).unwrap();
-            output!("{:?} created", self.config.get_root());
+        if !self.root.exists() {
+            fs::create_dir_all(&self.root).unwrap();
+            output!("{:?} created", &self.root);
         }
 
         {
-            let dest = self.config.get_dest();
-            let src = self.config.get_src();
 
-            if !dest.exists() {
-                debug!("[*]: {:?} does not exist, trying to create directory", dest);
-                try!(fs::create_dir(&dest));
+            if !self.dest.exists() {
+                debug!("[*]: {:?} does not exist, trying to create directory", self.dest);
+                try!(fs::create_dir(&self.dest));
             }
 
-            if !src.exists() {
-                debug!("[*]: {:?} does not exist, trying to create directory", src);
-                try!(fs::create_dir(&src));
+            if !self.src.exists() {
+                debug!("[*]: {:?} does not exist, trying to create directory", self.src);
+                try!(fs::create_dir(&self.src));
             }
 
-            let summary = src.join("SUMMARY.md");
+            let summary = self.src.join("SUMMARY.md");
 
             if !summary.exists() {
 
                 // Summary does not exist, create it
 
                 debug!("[*]: {:?} does not exist, trying to create SUMMARY.md", src.join("SUMMARY.md"));
-                let mut f = try!(File::create(&src.join("SUMMARY.md")));
+                let mut f = try!(File::create(&self.src.join("SUMMARY.md")));
 
                 debug!("[*]: Writing to SUMMARY.md");
 
@@ -143,7 +153,7 @@ impl MDBook {
                 BookItem::Spacer => continue,
                 BookItem::Chapter(_, ref ch) | BookItem::Affix(ref ch) => {
                     if ch.path != PathBuf::new() {
-                        let path = self.config.get_src().join(&ch.path);
+                        let path = self.src.join(&ch.path);
 
                         if !path.exists() {
                             debug!("[*]: {:?} does not exist, trying to create file", path);
@@ -170,12 +180,12 @@ impl MDBook {
 
             // Because of `src/book/mdbook.rs#L37-L39`, `dest` will always start with `root`. If it
             // is not, `strip_prefix` will return an Error.
-            if !self.get_dest().starts_with(self.get_root()) {
+            if !self.get_dest().starts_with(&self.root) {
                 return;
             }
 
             let relative = self.get_dest()
-                               .strip_prefix(self.get_root())
+                               .strip_prefix(&self.root)
                                .expect("Destination is not relative to root.");
             let relative = relative.to_str()
                                    .expect("Path could not be yielded into a string slice.");
@@ -201,7 +211,7 @@ impl MDBook {
         try!(self.init());
 
         // Clean output directory
-        try!(utils::fs::remove_dir_content(&self.config.get_dest()));
+        try!(utils::fs::remove_dir_content(&self.dest));
 
         try!(self.renderer.render(&self));
 
@@ -210,13 +220,13 @@ impl MDBook {
 
 
     pub fn get_gitignore(&self) -> PathBuf {
-        self.config.get_root().join(".gitignore")
+        self.root.join(".gitignore")
     }
 
     pub fn copy_theme(&self) -> Result<(), Box<Error>> {
         debug!("[fn]: copy_theme");
 
-        let theme_dir = self.config.get_src().join("theme");
+        let theme_dir = self.src.join("theme");
 
         if !theme_dir.exists() {
             debug!("[*]: {:?} does not exist, trying to create directory", theme_dir);
@@ -267,8 +277,18 @@ impl MDBook {
     /// of the current working directory by using a relative path instead of an absolute path.
 
     pub fn read_config(mut self) -> Self {
-        let root = self.config.get_root().to_owned();
-        self.config.read_config(&root);
+
+        let config = BookConfig::new(&self.root)
+                                .read_config(&self.root)
+                                .to_owned();
+
+        self.title = config.title;
+        self.description = config.description;
+        self.author = config.author;
+
+        self.dest = config.dest;
+        self.src = config.src;
+
         self
     }
 
@@ -331,7 +351,7 @@ impl MDBook {
     }
 
     pub fn get_root(&self) -> &Path {
-        self.config.get_root()
+        &self.root
     }
 
     pub fn set_dest(mut self, dest: &Path) -> Self {
@@ -339,11 +359,11 @@ impl MDBook {
         // Handle absolute and relative paths
         match dest.is_absolute() {
             true => {
-                self.config.set_dest(dest);
+                self.dest = dest.to_owned();
             },
             false => {
-                let dest = self.config.get_root().join(dest).to_owned();
-                self.config.set_dest(&dest);
+                let dest = self.root.join(dest).to_owned();
+                self.dest = dest;
             },
         }
 
@@ -351,7 +371,7 @@ impl MDBook {
     }
 
     pub fn get_dest(&self) -> &Path {
-        self.config.get_dest()
+        &self.dest
     }
 
     pub fn set_src(mut self, src: &Path) -> Self {
@@ -359,11 +379,11 @@ impl MDBook {
         // Handle absolute and relative paths
         match src.is_absolute() {
             true => {
-                self.config.set_src(src);
+                self.src = src.to_owned();
             },
             false => {
-                let src = self.config.get_root().join(src).to_owned();
-                self.config.set_src(&src);
+                let src = self.root.join(src).to_owned();
+                self.src = src;
             },
         }
 
@@ -371,34 +391,34 @@ impl MDBook {
     }
 
     pub fn get_src(&self) -> &Path {
-        self.config.get_src()
+        &self.src
     }
 
     pub fn set_title(mut self, title: &str) -> Self {
-        self.config.title = title.to_owned();
+        self.title = title.to_owned();
         self
     }
 
     pub fn get_title(&self) -> &str {
-        &self.config.title
+        &self.title
     }
 
     pub fn set_author(mut self, author: &str) -> Self {
-        self.config.author = author.to_owned();
+        self.author = author.to_owned();
         self
     }
 
     pub fn get_author(&self) -> &str {
-        &self.config.author
+        &self.author
     }
 
     pub fn set_description(mut self, description: &str) -> Self {
-        self.config.description = description.to_owned();
+        self.description = description.to_owned();
         self
     }
 
     pub fn get_description(&self) -> &str {
-        &self.config.description
+        &self.description
     }
 
     pub fn set_livereload(&mut self, livereload: String) -> &mut Self {
@@ -421,7 +441,7 @@ impl MDBook {
     // Construct book
     fn parse_summary(&mut self) -> Result<(), Box<Error>> {
         // When append becomes stable, use self.content.append() ...
-        self.content = try!(parse::construct_bookitems(&self.config.get_src().join("SUMMARY.md")));
+        self.content = try!(parse::construct_bookitems(&self.src.join("SUMMARY.md")));
         Ok(())
     }
 }
