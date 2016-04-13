@@ -1,6 +1,6 @@
 sudo: false
 
-language: rust
+language: generic
 
 env:
   global:
@@ -10,73 +10,59 @@ matrix:
   include:
     # Stable channel
     - os: osx
-      env: TARGET=i686-apple-darwin
-      rust: stable
+      env: TARGET=i686-apple-darwin CHANNEL=stable
     - os: linux
-      env: TARGET=i686-unknown-linux-gnu
-      rust: stable
+      env: TARGET=i686-unknown-linux-gnu CHANNEL=stable
       addons:
         apt:
           packages: &i686_unknown_linux_gnu
             - gcc-multilib
     - os: osx
-      env: TARGET=x86_64-apple-darwin
-      rust: stable
+      env: TARGET=x86_64-apple-darwin CHANNEL=stable
     - os: linux
-      env: TARGET=x86_64-unknown-linux-gnu
-      rust: stable
+      env: TARGET=x86_64-unknown-linux-gnu CHANNEL=stable
       addons:
         apt:
           packages:
             - nodejs
             - npm
     - os: linux
-      env: TARGET=x86_64-unknown-linux-musl
-      rust: stable
+      env: TARGET=x86_64-unknown-linux-musl CHANNEL=stable
     # Beta channel
     - os: osx
-      env: TARGET=i686-apple-darwin
-      rust: beta
+      env: TARGET=i686-apple-darwin CHANNEL=beta
     - os: linux
-      env: TARGET=i686-unknown-linux-gnu
-      rust: beta
+      env: TARGET=i686-unknown-linux-gnu CHANNEL=beta
       addons:
         apt:
           packages: *i686_unknown_linux_gnu
     - os: osx
-      env: TARGET=x86_64-apple-darwin
-      rust: beta
+      env: TARGET=x86_64-apple-darwin CHANNEL=beta
     - os: linux
-      env: TARGET=x86_64-unknown-linux-gnu
-      rust: beta
+      env: TARGET=x86_64-unknown-linux-gnu CHANNEL=beta
     - os: linux
-      env: TARGET=x86_64-unknown-linux-musl
-      rust: beta
+      env: TARGET=x86_64-unknown-linux-musl CHANNEL=beta
     # Nightly channel
     - os: osx
-      env: TARGET=i686-apple-darwin
-      rust: nightly
+      env: TARGET=i686-apple-darwin CHANNEL=nightly
     - os: linux
-      env: TARGET=i686-unknown-linux-gnu
-      rust: nightly
+      env: TARGET=i686-unknown-linux-gnu CHANNEL=nightly
       addons:
         apt:
           packages: *i686_unknown_linux_gnu
     - os: osx
-      env: TARGET=x86_64-apple-darwin
-      rust: nightly
+      env: TARGET=x86_64-apple-darwin CHANNEL=nightly
     - os: linux
-      env: TARGET=x86_64-unknown-linux-gnu
-      rust: nightly
+      env: TARGET=x86_64-unknown-linux-gnu CHANNEL=nightly
     - os: linux
-      env: TARGET=x86_64-unknown-linux-musl
-      rust: nightly
+      env: TARGET=x86_64-unknown-linux-musl CHANNEL=nightly
 
 install:
-  - sh ci/install.sh
+  - export PATH="$PATH:$HOME/.cargo/bin"
+  - bash ci/install.sh
 
 script:
-  - sh ci/script.sh
+  - bash ci/script.sh
 
 after_success:
   - test $TRAVIS_PULL_REQUEST == "false" &&
@@ -87,7 +73,7 @@ after_success:
     bash deploy.sh
 
 before_deploy:
-  - sh ci/before_deploy.sh
+  - bash ci/before_deploy.sh
 
 deploy:
   provider: releases
@@ -98,7 +84,7 @@ deploy:
   skip_cleanup: true
   # deploy when a new tag is pushed
   on:
-    condition: $TRAVIS_RUST_VERSION = stable
+    condition: $CHANNEL = stable
     tags: true
 
 notifications:
