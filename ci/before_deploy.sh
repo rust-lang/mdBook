@@ -2,12 +2,31 @@
 
 set -ex
 
-cargo build --target $TARGET --release
+mktempd() {
+  echo $(mktemp -d 2>/dev/null || mktemp -d -t tmp)
+}
 
-mkdir staging
+mk_artifacts() {
+  cargo build --target $TARGET --release
+}
 
-cp target/$TARGET/release/mdbook staging
+mk_tarball() {
+  local td=$(mktempd)
+  local out_dir=$(pwd)
 
-cd staging
+  cp target/$TARGET/release/mdbook $td
 
-tar czf ../${PROJECT_NAME}-${TRAVIS_TAG}-${TARGET}.tar.gz *
+  pushd $td
+
+  tar czf $out_dir/${PROJECT_NAME}-${TRAVIS_TAG}-${TARGET}.tar.gz *
+
+  popd $td
+  rm -r $td
+}
+
+main() {
+  mk_artifacts
+  mk_tarball
+}
+
+main
