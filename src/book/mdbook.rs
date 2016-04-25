@@ -43,8 +43,8 @@ impl MDBook {
 
         MDBook {
             root: root.to_owned(),
-            dest: PathBuf::from("book"),
-            src: PathBuf::from("src"),
+            dest: root.join("book"),
+            src: root.join("src"),
 
             title: String::new(),
             author: String::new(),
@@ -151,7 +151,8 @@ impl MDBook {
             debug!("[*]: item: {:?}", item);
             match *item {
                 BookItem::Spacer => continue,
-                BookItem::Chapter(_, ref ch) | BookItem::Affix(ref ch) => {
+                BookItem::Chapter(_, ref ch) |
+                BookItem::Affix(ref ch) => {
                     if ch.path != PathBuf::new() {
                         let path = self.src.join(&ch.path);
 
@@ -279,8 +280,8 @@ impl MDBook {
     pub fn read_config(mut self) -> Self {
 
         let config = BookConfig::new(&self.root)
-                                .read_config(&self.root)
-                                .to_owned();
+                         .read_config(&self.root)
+                         .to_owned();
 
         self.title = config.title;
         self.description = config.description;

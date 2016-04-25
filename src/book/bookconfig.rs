@@ -23,8 +23,8 @@ impl BookConfig {
             author: String::new(),
             description: String::new(),
             root: root.to_owned(),
-            dest: PathBuf::from("book"),
-            src: PathBuf::from("src"),
+            dest: root.join("book"),
+            src: root.join("src"),
             indent_spaces: 4, // indentation used for SUMMARY.md
             multilingual: false,
         }
