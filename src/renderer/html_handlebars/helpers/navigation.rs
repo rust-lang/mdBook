@@ -60,12 +60,13 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
 
                         match previous.get("path") {
                             Some(p) => {
+                                // Hack for windows who tends to use `\` as separator instead of `/`
                                 let path = Path::new(p).with_extension("html");
                                 debug!("[*]: Inserting link: {:?}", path);
 
                                 match path.to_str() {
                                     Some(p) => {
-                                        previous_chapter.insert("link".to_owned(), p.to_json());
+                                        previous_chapter.insert("link".to_owned(), p.replace("\\", "/").to_json());
                                     },
                                     None => {
                                         return Err(RenderError {
@@ -170,7 +171,8 @@ pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) ->
 
                         match link.to_str() {
                             Some(l) => {
-                                next_chapter.insert("link".to_owned(), l.to_json());
+                                // Hack for windows who tends to use `\` as separator instead of `/`
+                                next_chapter.insert("link".to_owned(), l.replace("\\", "/").to_json());
                             },
                             None => return Err(RenderError { desc: "Link could not converted to str".to_owned() }),
                         }

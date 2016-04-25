@@ -68,6 +68,8 @@ impl HelperDef for RenderToc {
                                              .with_extension("html")
                                              .to_str()
                                              .unwrap()
+                                             // Hack for windows who tends to use `\` as separator instead of `/`
+                                             .replace("\\", "/")
                                              .as_bytes()));
 
                     try!(rc.writer.write("\"".as_bytes()));
@@ -98,7 +100,8 @@ impl HelperDef for RenderToc {
                 // filter all events that are not inline code blocks
                 let parser = Parser::new(&name).filter(|event| {
                     match event {
-                        &Event::Start(Tag::Code) | &Event::End(Tag::Code) => true,
+                        &Event::Start(Tag::Code) |
+                        &Event::End(Tag::Code) => true,
                         &Event::InlineHtml(_) => true,
                         &Event::Text(_) => true,
                         _ => false,
