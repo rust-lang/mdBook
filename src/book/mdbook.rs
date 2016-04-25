@@ -118,12 +118,12 @@ impl MDBook {
 
             if !self.dest.exists() {
                 debug!("[*]: {:?} does not exist, trying to create directory", self.dest);
-                try!(fs::create_dir(&self.dest));
+                try!(fs::create_dir_all(&self.dest));
             }
 
             if !self.src.exists() {
                 debug!("[*]: {:?} does not exist, trying to create directory", self.src);
-                try!(fs::create_dir(&self.src));
+                try!(fs::create_dir_all(&self.src));
             }
 
             let summary = self.src.join("SUMMARY.md");
@@ -132,7 +132,7 @@ impl MDBook {
 
                 // Summary does not exist, create it
 
-                debug!("[*]: {:?} does not exist, trying to create SUMMARY.md", src.join("SUMMARY.md"));
+                debug!("[*]: {:?} does not exist, trying to create SUMMARY.md", self.src.join("SUMMARY.md"));
                 let mut f = try!(File::create(&self.src.join("SUMMARY.md")));
 
                 debug!("[*]: Writing to SUMMARY.md");
