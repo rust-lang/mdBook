@@ -226,6 +226,8 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
         ws_server.listen(&*ws_address).unwrap();
     });
 
+    println!("\nServing on {}", address);
+
     trigger_on_change(&mut book, move |event, book| {
         if let Some(path) = event.path {
             println!("File changed: {:?}\nBuilding book...\n", path);
