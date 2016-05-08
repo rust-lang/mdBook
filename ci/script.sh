@@ -25,6 +25,14 @@ disable_cross_doctests() {
 }
 
 run_test_suite() {
+  # Extra test without default features to avoid bitrot. We only test on a single target (but with
+  # all the channels) to avoid significantly increasing the build times
+  if [ $TARGET = x86_64-unknown-linux-gnu ]; then
+    cargo build --target $TARGET --no-default-features --verbose
+    cargo test --target $TARGET --no-default-features --verbose
+    cargo clean
+  fi
+
   cargo build --target $TARGET --verbose
   cargo test --target $TARGET --verbose
 }
