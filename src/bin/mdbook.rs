@@ -2,13 +2,14 @@
 extern crate mdbook;
 #[macro_use]
 extern crate clap;
-extern crate crossbeam;
 
 // Dependencies for the Watch feature
 #[cfg(feature = "watch")]
 extern crate notify;
 #[cfg(feature = "watch")]
 extern crate time;
+#[cfg(feature = "watch")]
+extern crate crossbeam;
 
 // Dependencies for the Serve feature
 #[cfg(feature = "serve")]
@@ -269,6 +270,7 @@ fn get_book_dir(args: &ArgMatches) -> PathBuf {
 
 
 // Calls the closure when a book source file is changed. This is blocking!
+#[cfg(feature = "watch")]
 fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
     where F: Fn(notify::Event, &mut MDBook) -> ()
 {

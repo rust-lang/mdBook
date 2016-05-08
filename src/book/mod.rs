@@ -28,7 +28,6 @@ pub struct MDBook {
     pub content: Vec<BookItem>,
     renderer: Box<Renderer>,
 
-    #[cfg(feature = "serve")]
     livereload: Option<String>,
 }
 
@@ -57,6 +56,7 @@ impl MDBook {
 
             content: vec![],
             renderer: Box::new(HtmlHandlebars::new()),
+
             livereload: None,
         }
     }
