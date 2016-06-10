@@ -765,3 +765,30 @@ table thead td {
 .rust pre > .result {
   margin-top: 10px;
 }
+
+@media print {
+  #sidebar {
+    display: none;
+  }
+  #page-wrapper {
+    left: 0;
+    overflow-y: initial;
+  }
+  #content {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+  #menu-bar {
+    display: none;
+  }
+  .page {
+    overflow-y: initial;
+  }
+  .nav-chapters {
+    display: none;
+  }
+  .mobile-nav-chapters {
+    display: none;
+  }
+}
