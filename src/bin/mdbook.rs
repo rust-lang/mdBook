@@ -45,7 +45,7 @@ fn main() {
                     // Get the version from our Cargo.toml using clap's crate_version!() macro
                     .version(&*format!("v{}", crate_version!()))
                     .setting(AppSettings::SubcommandRequired)
-                    .after_help("For more information about a specific command, try `mdbook <command> --help`")
+                    .after_help("For more information about a specific command, try `mdbook <command> --help`\nSource code for mdbook available at: https://github.com/azerupi/mdBook")
                     .subcommand(SubCommand::with_name("init")
                         .about("Create boilerplate structure and files in the directory")
                         // the {n} denotes a newline which will properly aligned in all help messages
