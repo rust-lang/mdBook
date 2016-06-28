@@ -1,5 +1,3 @@
-use book::metadata::BookMetadata;
-
 use std::path;
 
 /// The Chapter struct holds the title of the chapter as written in the SUMMARY.md file,
