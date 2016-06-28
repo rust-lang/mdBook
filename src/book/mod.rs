@@ -18,12 +18,13 @@ use std::io;
 use std::io::Write;
 use std::io::ErrorKind;
 use std::process::Command;
+use std::collections::HashMap;
 
 use {theme, parse, utils};
 use renderer::{Renderer, HtmlHandlebars};
 
 
-pub struct MDBook {
+pub struct MDBook<'a> {
     root: PathBuf,
     dest: PathBuf,
     src: PathBuf,
@@ -33,12 +34,13 @@ pub struct MDBook {
     pub description: String,
 
     pub content: Vec<BookItem>,
+    books: HashMap<&'a str, Book>,
     renderer: Box<Renderer>,
 
     livereload: Option<String>,
 }
 
-impl MDBook {
+impl<'a> MDBook<'a> {
     /// Create a new `MDBook` struct with root directory `root`
     ///
     /// - The default source directory is set to `root/src`
@@ -62,6 +64,7 @@ impl MDBook {
             description: String::new(),
 
             content: vec![],
+            books: HashMap::new(),
             renderer: Box::new(HtmlHandlebars::new()),
 
             livereload: None,
