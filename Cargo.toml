@@ -19,6 +19,7 @@ clap = "2.2.1"
 handlebars = "0.20.0"
 rustc-serialize = "0.3.18"
 pulldown-cmark = "0.0.8"
+nom = "1.2.3"
 
 # Watch feature
 notify = { version = "2.5.5", optional = true }
