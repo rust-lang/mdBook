@@ -4,6 +4,7 @@ use book::chapter::Chapter;
 
 /// The `Book` struct contains the metadata and chapters for one language of the book.
 /// Multiple `Book` structs are combined in the `MDBook` struct to support multi-language books.
+#[derive(Debug, Clone)]
 pub struct Book {
     metadata: BookMetadata,
 
