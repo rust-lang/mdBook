@@ -2,6 +2,7 @@ use std::path;
 
 /// The Chapter struct holds the title of the chapter as written in the SUMMARY.md file,
 /// the location of the markdown file containing the content and eventually sub-chapters
+#[derive(Debug, Clone)]
 pub struct Chapter {
     title: String,
     file: path::PathBuf,
