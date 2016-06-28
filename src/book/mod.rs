@@ -1,5 +1,12 @@
 pub mod bookitem;
 pub mod bookconfig;
+pub mod metadata;
+pub mod chapter;
+pub mod book;
+
+pub use self::metadata::{Author, Language, BookMetadata};
+pub use self::chapter::Chapter;
+pub use self::book::Book;
 
 pub mod bookconfig_test;
 
