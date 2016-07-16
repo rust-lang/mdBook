@@ -39,14 +39,17 @@ impl HelperDef for RenderToc {
             };
 
             if level > current_level {
-                try!(rc.writer.write("<li>".as_bytes()));
-                try!(rc.writer.write("<ul class=\"section\">".as_bytes()));
+                while level > current_level {
+                    try!(rc.writer.write("<li>".as_bytes()));
+                    try!(rc.writer.write("<ul class=\"section\">".as_bytes()));
+                    current_level += 1;
+                }
                 try!(rc.writer.write("<li>".as_bytes()));
             } else if level < current_level {
                 while level < current_level {
                     try!(rc.writer.write("</ul>".as_bytes()));
                     try!(rc.writer.write("</li>".as_bytes()));
-                    current_level = current_level - 1;
+                    current_level -= 1;
                 }
                 try!(rc.writer.write("<li>".as_bytes()));
             } else {
@@ -122,7 +125,11 @@ impl HelperDef for RenderToc {
 
             try!(rc.writer.write("</li>".as_bytes()));
 
-            current_level = level;
+        }
+        while current_level > 1 {
+            try!(rc.writer.write("</ul>".as_bytes()));
+            try!(rc.writer.write("</li>".as_bytes()));
+            current_level -= 1;
         }
 
         try!(rc.writer.write("</ul>".as_bytes()));
