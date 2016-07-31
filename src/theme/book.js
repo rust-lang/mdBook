@@ -57,7 +57,9 @@ $( document ).ready(function() {
         var wrapper = $("<a class=\"header\">");
         wrapper.attr("name", $(this).text());
         // Add so that when you click the link actually shows up in the url bar...
-        wrapper.attr("href", $(location).attr('href') + "#" + $(this).text());
+        // Remove any existing anchor then append the new one
+        // ensuring eg. no spaces are present within it ie. they become %20
+        wrapper.attr("href", $(location).attr('href').split("#")[0] + "#" + encodeURIComponent($(this).text().trim()) );
         return wrapper;
     });
 
