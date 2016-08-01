@@ -10,19 +10,19 @@ struct Link {
 }
 
 /// Parser for markdown links:  `[title](destination)`
-/// From the Common Mark spec:
-///
-/// Brackets are allowed in the link text only if
-///   (a) they are backslash-escaped or
-///   (b) they appear as a matched pair of brackets,
-///       with an open bracket [, a sequence of zero or more inlines, and a close bracket ].
-///
 fn link(i: &[u8]) -> IResult<&[u8], Link> {
     unimplemented!();
 }
 
 /// Parser for parsing the title part of the link: [title](destination)
-///                                                ^^^^^^^
+///
+/// From the Common Mark spec (http://spec.commonmark.org/0.26/#links):
+///
+/// Brackets are allowed in the link text only if
+///   (a) they are backslash-escaped or
+///   (b) they appear as a matched pair of brackets,
+///       with an open bracket [, a sequence of zero or more inlines, and a close bracket ].
+///                                        ^^^^^^^
 fn link_text(i: &[u8]) -> IResult<&[u8], String> {
     map_res!(i, map_res!(delimited!(char!('['), is_not!("[]"), char!(']')), str::from_utf8), FromStr::from_str)
 }
