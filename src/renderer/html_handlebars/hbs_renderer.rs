@@ -10,7 +10,7 @@ use std::error::Error;
 use std::io::{self, Read, Write};
 use std::collections::BTreeMap;
 
-use handlebars::{Handlebars, JsonRender};
+use handlebars::Handlebars;
 use rustc_serialize::json::{Json, ToJson};
 
 
@@ -57,7 +57,8 @@ impl Renderer for HtmlHandlebars {
         for item in book.iter() {
 
             match *item {
-                BookItem::Chapter(_, ref ch) | BookItem::Affix(ref ch) => {
+                BookItem::Chapter(_, ref ch) |
+                BookItem::Affix(ref ch) => {
                     if ch.path != PathBuf::new() {
 
                         let path = book.get_src().join(&ch.path);
@@ -105,7 +106,8 @@ impl Renderer for HtmlHandlebars {
 
                         debug!("[*]: Create file {:?}", &book.get_dest().join(&ch.path).with_extension("html"));
                         // Write to file
-                        let mut file = try!(utils::fs::create_file(&book.get_dest().join(&ch.path).with_extension("html")));
+                        let mut file =
+                            try!(utils::fs::create_file(&book.get_dest().join(&ch.path).with_extension("html")));
                         output!("[*] Creating {:?} ✓", &book.get_dest().join(&ch.path).with_extension("html"));
 
                         try!(file.write_all(&rendered.into_bytes()));
@@ -117,14 +119,14 @@ impl Renderer for HtmlHandlebars {
                             let mut index_file = try!(File::create(book.get_dest().join("index.html")));
                             let mut content = String::new();
                             let _source = try!(File::open(book.get_dest().join(&ch.path.with_extension("html"))))
-                                              .read_to_string(&mut content);
+                                .read_to_string(&mut content);
 
                             // This could cause a problem when someone displays code containing <base href=...>
                             // on the front page, however this case should be very very rare...
                             content = content.lines()
-                                             .filter(|line| !line.contains("<base href="))
-                                             .collect::<Vec<&str>>()
-                                             .join("\n");
+                                .filter(|line| !line.contains("<base href="))
+                                .collect::<Vec<&str>>()
+                                .join("\n");
 
                             try!(index_file.write_all(content.as_bytes()));
 
@@ -218,54 +220,49 @@ impl Renderer for HtmlHandlebars {
 
         // Font Awesome local fallback
         let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
-                                                                      .join("_FontAwesome/css/font-awesome.css")) {
+            .join("_FontAwesome/css/font-awesome.css")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create font-awesome.css")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME));
         let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
-                                                                      .join("_FontAwesome/fonts/fontawesome-webfon\
-                                                                             t.eot")) {
+            .join("_FontAwesome/fonts/fontawesome-webfont.eot")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.eot")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_EOT));
         let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
-                                                                      .join("_FontAwesome/fonts/fontawesome-webfon\
-                                                                             t.svg")) {
+            .join("_FontAwesome/fonts/fontawesome-webfont.svg")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.svg")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_SVG));
         let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
-                                                                      .join("_FontAwesome/fonts/fontawesome-webfon\
-                                                                             t.ttf")) {
+            .join("_FontAwesome/fonts/fontawesome-webfont.ttf")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.ttf")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_TTF));
         let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
-                                                                      .join("_FontAwesome/fonts/fontawesome-webfon\
-                                                                             t.woff")) {
+            .join("_FontAwesome/fonts/fontawesome-webfont.woff")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.woff")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_WOFF));
         let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
-                                                                      .join("_FontAwesome/fonts/fontawesome-webfon\
-                                                                             t.woff2")) {
+            .join("_FontAwesome/fonts/fontawesome-webfont.woff2")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.woff2")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_WOFF2));
         let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
-                                                                      .join("_FontAwesome/fonts/FontAwesome.ttf")) {
+            .join("_FontAwesome/fonts/FontAwesome.ttf")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create FontAwesome.ttf")));
