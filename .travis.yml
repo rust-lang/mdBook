@@ -27,6 +27,8 @@ matrix:
           packages:
             - nodejs
             - npm
+    - os: linux
+      env: TARGET=x86_64-unknown-linux-musl CHANNEL=stable
     # Beta channel
     - os: osx
       env: TARGET=i686-apple-darwin CHANNEL=beta
@@ -39,6 +41,8 @@ matrix:
       env: TARGET=x86_64-apple-darwin CHANNEL=beta
     - os: linux
       env: TARGET=x86_64-unknown-linux-gnu CHANNEL=beta
+    - os: linux
+      env: TARGET=x86_64-unknown-linux-musl CHANNEL=beta
     # Nightly channel
     - os: osx
       env: TARGET=i686-apple-darwin CHANNEL=nightly
@@ -51,6 +55,8 @@ matrix:
       env: TARGET=x86_64-apple-darwin CHANNEL=nightly
     - os: linux
       env: TARGET=x86_64-unknown-linux-gnu CHANNEL=nightly
+    - os: linux
+      env: TARGET=x86_64-unknown-linux-musl CHANNEL=nightly
 
   # Musl builds fail due to a bug in Rust (https://github.com/azerupi/mdBook/issues/158)
   allow_failures:
