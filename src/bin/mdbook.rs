@@ -83,6 +83,7 @@ fn main() {
 
     if let Err(e) = res {
         writeln!(&mut io::stderr(), "An error occured:\n{}", e).ok();
+        ::std::process::exit(101);
     }
 }
 
