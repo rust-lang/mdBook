@@ -28,23 +28,23 @@ There is a feature in mdBook that let's you hide code lines by prepending them w
 
 
 ```bash
-#fn main() {
+# fn main() {
     let x = 5;
     let y = 6;
 
     println!("{}", x + y);
-#}
+# }
 ```
 
 Will render as
 
 ```rust
-#fn main() {
+# fn main() {
     let x = 5;
     let y = 7;
 
     println!("{}", x + y);
-#}
+# }
 ```
 
 **At the moment, this only works for code examples that are annotated with `rust`. Because it would collide with semantics of some programming languages. In the future, we want to make this configurable through the `book.json` so that everyone can benefit from it.**
