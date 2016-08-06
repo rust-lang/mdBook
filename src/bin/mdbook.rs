@@ -62,7 +62,9 @@ fn main() {
                         .about("Serve the book at http://localhost:3000. Rebuild and reload on change.")
                         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'")
                         .arg_from_usage("-p, --port=[port] 'Use another port{n}(Defaults to 3000)'")
-                        .arg_from_usage("-w, --websocket-port=[ws-port] 'Use another port for the websocket connection (livereload){n}(Defaults to 3001)'"))
+                        .arg_from_usage("-w, --websocket-port=[ws-port] 'Use another port for the websocket connection (livereload){n}(Defaults to 3001)'")
+                        .arg_from_usage("-i, --interface=[interface] 'Interface to listen on{n}(Defaults to localhost)'")
+                        .arg_from_usage("-a, --address=[address] 'Address that the browser can reach the websocket server from{n}(Defaults to the interface addres)'"))
                     .subcommand(SubCommand::with_name("test")
                         .about("Test that code samples compile"))
                     .get_matches();
@@ -189,13 +191,15 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
     let mut book = MDBook::new(&book_dir).read_config();
     let port = args.value_of("port").unwrap_or("3000");
     let ws_port = args.value_of("ws-port").unwrap_or("3001");
+    let interface = args.value_of("interface").unwrap_or("localhost");
+    let public_address = args.value_of("address").unwrap_or(interface);
 
-    let address = format!("localhost:{}", port);
-    let ws_address = format!("localhost:{}", ws_port);
+    let address = format!("{}:{}", interface, port);
+    let ws_address = format!("{}:{}", interface, ws_port);
 
     book.set_livereload(format!(r#"
         <script type="text/javascript">
-            var socket = new WebSocket("ws://localhost:{}");
+            var socket = new WebSocket("ws://{}:{}");
             socket.onmessage = function (event) {{
                 if (event.data === "{}") {{
                     socket.close();
@@ -207,7 +211,7 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
                 socket.close();
             }}
         </script>
-    "#, ws_port, RELOAD_COMMAND).to_owned());
+    "#, public_address, ws_port, RELOAD_COMMAND).to_owned());
 
     try!(book.build());
 
