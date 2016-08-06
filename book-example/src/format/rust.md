@@ -5,23 +5,23 @@
 There is a feature in mdBook that let's you hide code lines by prepending them with a `#`.
 
 ```bash
-#fn main() {
+# fn main() {
     let x = 5;
     let y = 6;
 
     println!("{}", x + y);
-#}
+# }
 ```
 
 Will render as
 
 ```rust
-#fn main() {
+# fn main() {
     let x = 5;
     let y = 7;
 
     println!("{}", x + y);
-#}
+# }
 ```
 
 
