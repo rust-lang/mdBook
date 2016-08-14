@@ -20,6 +20,7 @@ handlebars = "0.20.0"
 rustc-serialize = "0.3.18"
 pulldown-cmark = "0.0.8"
 log = "0.3"
+env_logger = "0.3.4"
 
 # Watch feature
 notify = { version = "2.5.5", optional = true }

@@ -2,6 +2,9 @@
 extern crate mdbook;
 #[macro_use]
 extern crate clap;
+#[macro_use]
+extern crate log;
+extern crate env_logger;
 
 // Dependencies for the Watch feature
 #[cfg(feature = "watch")]
@@ -38,6 +41,8 @@ use mdbook::MDBook;
 const NAME: &'static str = "mdbook";
 
 fn main() {
+    env_logger::init().unwrap();
+
     // Create a list of valid arguments and sub-commands
     let matches = App::new(NAME)
                     .about("Create a book in form of a static website from markdown files")
