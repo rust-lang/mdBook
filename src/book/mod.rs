@@ -42,7 +42,7 @@ impl MDBook {
     pub fn new(root: &Path) -> MDBook {
 
         if !root.exists() || !root.is_dir() {
-            info!("{:?} No directory with that name", root);
+            warn!("{:?} No directory with that name", root);
         }
 
         MDBook {
