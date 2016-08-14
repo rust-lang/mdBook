@@ -108,7 +108,7 @@ impl Renderer for HtmlHandlebars {
                         // Write to file
                         let mut file =
                             try!(utils::fs::create_file(&book.get_dest().join(&ch.path).with_extension("html")));
-                        output!("[*] Creating {:?} ✓", &book.get_dest().join(&ch.path).with_extension("html"));
+                        info!("[*] Creating {:?} ✓", &book.get_dest().join(&ch.path).with_extension("html"));
 
                         try!(file.write_all(&rendered.into_bytes()));
 
@@ -130,8 +130,8 @@ impl Renderer for HtmlHandlebars {
 
                             try!(index_file.write_all(content.as_bytes()));
 
-                            output!("[*] Creating index.html from {:?} ✓",
-                                    book.get_dest().join(&ch.path.with_extension("html")));
+                            info!("[*] Creating index.html from {:?} ✓",
+                                  book.get_dest().join(&ch.path.with_extension("html")));
                             index = false;
                         }
                     }
@@ -159,7 +159,7 @@ impl Renderer for HtmlHandlebars {
         let rendered = try!(handlebars.render("index", &data));
         let mut file = try!(utils::fs::create_file(&book.get_dest().join("print").with_extension("html")));
         try!(file.write_all(&rendered.into_bytes()));
-        output!("[*] Creating print.html ✓");
+        info!("[*] Creating print.html ✓");
 
         // Copy static files (js, css, images, ...)
 

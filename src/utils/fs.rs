@@ -150,9 +150,9 @@ pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blackl
                 debug!("[*] creating path for file: {:?}",
                        &to.join(entry.path().file_name().expect("a file should have a file name...")));
 
-                output!("[*] Copying file: {:?}\n    to {:?}",
-                        entry.path(),
-                        &to.join(entry.path().file_name().expect("a file should have a file name...")));
+                info!("[*] Copying file: {:?}\n    to {:?}",
+                      entry.path(),
+                      &to.join(entry.path().file_name().expect("a file should have a file name...")));
                 try!(fs::copy(entry.path(),
                               &to.join(entry.path().file_name().expect("a file should have a file name..."))));
             }

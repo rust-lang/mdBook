@@ -73,7 +73,7 @@ extern crate rustc_serialize;
 extern crate handlebars;
 extern crate pulldown_cmark;
 
-#[macro_use] pub mod macros;
+#[macro_use] extern crate log;
 pub mod book;
 mod parse;
 pub mod renderer;

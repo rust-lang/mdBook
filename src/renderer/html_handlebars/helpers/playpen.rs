@@ -20,7 +20,7 @@ pub fn render_playpen(s: &str, path: &Path) -> String {
 
         // Check if the file exists
         if !playpen.rust_file.exists() || !playpen.rust_file.is_file() {
-            output!("[-] No file exists for {{{{#playpen }}}}\n    {}", playpen.rust_file.to_str().unwrap());
+            info!("[-] No file exists for {{{{#playpen }}}}\n    {}", playpen.rust_file.to_str().unwrap());
             continue;
         }
 

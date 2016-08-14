@@ -42,7 +42,7 @@ impl MDBook {
     pub fn new(root: &Path) -> MDBook {
 
         if !root.exists() || !root.is_dir() {
-            output!("{:?} No directory with that name", root);
+            info!("{:?} No directory with that name", root);
         }
 
         MDBook {
@@ -116,7 +116,7 @@ impl MDBook {
 
         if !self.root.exists() {
             fs::create_dir_all(&self.root).unwrap();
-            output!("{:?} created", &self.root);
+            info!("{:?} created", &self.root);
         }
 
         {
