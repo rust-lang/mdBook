@@ -27,6 +27,6 @@ allow for easy parsing. Let's see how you should format your `SUMMARY.md` file.
    ```
    You can either use `-` or `*` to indicate a numbered chapter.
 
-4. ***Sufix Chapter*** After the numbered chapters you can add a couple of non-numbered chapters. They are the same as prefix chapters but come after the numbered chapters instead of before.
+4. ***Suffix Chapter*** After the numbered chapters you can add a couple of non-numbered chapters. They are the same as prefix chapters but come after the numbered chapters instead of before.
 
 All other elements are unsupported and will be ignored at best or result in an error.
