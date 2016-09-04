@@ -72,7 +72,7 @@ table thead td {
 .chapter {
   list-style: none outside none;
   padding-left: 0;
-  line-height: 1.9em;
+  line-height: 2.2em;
 }
 .chapter li a {
   padding: 5px 0;
@@ -89,7 +89,7 @@ table thead td {
 .section {
   list-style: none outside none;
   padding-left: 20px;
-  line-height: 2.5em;
+  line-height: 1.9em;
 }
 .section li {
   -o-text-overflow: ellipsis;
@@ -254,7 +254,6 @@ table thead td {
   position: relative;
   left: 10px;
   z-index: 1000;
-  -webkit-border-radius: 4px;
   border-radius: 4px;
   font-size: 0.7em;
 }
@@ -264,15 +263,6 @@ table thead td {
   line-height: 25px;
   white-space: nowrap;
 }
-.theme-popup .theme:hover:first-child {
-  border-top-left-radius: inherit;
-  border-top-right-radius: inherit;
-}
-.theme-popup .theme:hover:last-child {
-  border-bottom-left-radius: inherit;
-  border-bottom-right-radius: inherit;
-}
-
 @media only screen and (max-width: 1250px) {
   .nav-chapters {
     display: none;
@@ -295,7 +285,6 @@ table thead td {
     position: relative;
     display: inline-block;
     margin-bottom: 50px;
-    -webkit-border-radius: 5px;
     border-radius: 5px;
   }
   .next {
@@ -398,7 +387,6 @@ table thead td {
   display: inline-block;
   vertical-align: middle;
   padding: 0.1em 0.3em;
-  -webkit-border-radius: 3px;
   border-radius: 3px;
 }
 .light pre {
@@ -513,7 +501,6 @@ table thead td {
   display: inline-block;
   vertical-align: middle;
   padding: 0.1em 0.3em;
-  -webkit-border-radius: 3px;
   border-radius: 3px;
 }
 .coal pre {
@@ -628,7 +615,6 @@ table thead td {
   display: inline-block;
   vertical-align: middle;
   padding: 0.1em 0.3em;
-  -webkit-border-radius: 3px;
   border-radius: 3px;
 }
 .navy pre {
@@ -743,7 +729,6 @@ table thead td {
   display: inline-block;
   vertical-align: middle;
   padding: 0.1em 0.3em;
-  -webkit-border-radius: 3px;
   border-radius: 3px;
 }
 .rust pre {
@@ -764,31 +749,4 @@ table thead td {
 }
 .rust pre > .result {
   margin-top: 10px;
-}
-
-@media print {
-  #sidebar {
-    display: none;
-  }
-  #page-wrapper {
-    left: 0;
-    overflow-y: initial;
-  }
-  #content {
-    max-width: none;
-    margin: 0;
-    padding: 0;
-  }
-  #menu-bar {
-    display: none;
-  }
-  .page {
-    overflow-y: initial;
-  }
-  .nav-chapters {
-    display: none;
-  }
-  .mobile-nav-chapters {
-    display: none;
-  }
 }
