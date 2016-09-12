@@ -1,31 +1,38 @@
 @media only print {
 
-    .sidebar,
-    .menu-bar,
+    #sidebar,
+    #menu-bar,
     .nav-chapters,
     .mobile-nav-chapters {
-      display: none
+        display: none
     }
 
-    .page-wrapper {
-      left: 0
+    #page-wrapper {
+        left: 0;
+        overflow-y: initial;
     }
 
-    .content {
-      max-width: 100%
+    #content {
+        max-width: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .page {
+        overflow-y: initial;
     }
 
     code {
-      background-color: #666666
-      border-radius: 5px
+        background-color: #666666
+        border-radius: 5px
 
-      /* Force background to be printed in Chrome */
-      -webkit-print-color-adjust: exact
+        /* Force background to be printed in Chrome */
+        -webkit-print-color-adjust: exact
     }
 
     a, a:visited, a:active, a:hover {
-      color: #4183c4
-      text-decoration: none
+        color: #4183c4
+        text-decoration: none
     }
 
     h1, h2, h3, h4, h5, h6 {
