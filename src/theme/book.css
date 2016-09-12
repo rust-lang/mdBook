@@ -72,7 +72,7 @@ table thead td {
 .chapter {
   list-style: none outside none;
   padding-left: 0;
-  line-height: 1.9em;
+  line-height: 2.2em;
 }
 .chapter li a {
   padding: 5px 0;
@@ -89,7 +89,7 @@ table thead td {
 .section {
   list-style: none outside none;
   padding-left: 20px;
-  line-height: 2.5em;
+  line-height: 1.9em;
 }
 .section li {
   -o-text-overflow: ellipsis;
