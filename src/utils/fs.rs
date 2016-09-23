@@ -147,15 +147,15 @@ pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blackl
                 if ext_blacklist.contains(&ext.to_str().unwrap()) {
                     continue;
                 }
-                debug!("[*] creating path for file: {:?}",
-                       &to.join(entry.path().file_name().expect("a file should have a file name...")));
-
-                info!("[*] Copying file: {:?}\n    to {:?}",
-                      entry.path(),
-                      &to.join(entry.path().file_name().expect("a file should have a file name...")));
-                try!(fs::copy(entry.path(),
-                              &to.join(entry.path().file_name().expect("a file should have a file name..."))));
             }
+            debug!("[*] creating path for file: {:?}",
+                   &to.join(entry.path().file_name().expect("a file should have a file name...")));
+
+            info!("[*] Copying file: {:?}\n    to {:?}",
+                  entry.path(),
+                  &to.join(entry.path().file_name().expect("a file should have a file name...")));
+            try!(fs::copy(entry.path(),
+                          &to.join(entry.path().file_name().expect("a file should have a file name..."))));
         }
     }
     Ok(())
