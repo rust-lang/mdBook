@@ -1,7 +1,7 @@
 use std::path::{Path, Component};
 use std::error::Error;
 use std::io::{self, Read};
-use std::fs::{self, metadata, File};
+use std::fs::{self, File};
 
 /// Takes a path to a file and try to read the file into a String
 
