@@ -69,7 +69,8 @@
 //!
 //! Make sure to take a look at it.
 
-extern crate rustc_serialize;
+extern crate serde;
+extern crate serde_json;
 extern crate handlebars;
 extern crate pulldown_cmark;
 

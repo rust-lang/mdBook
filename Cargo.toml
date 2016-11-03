@@ -16,8 +16,9 @@ exclude = [
 
 [dependencies]
 clap = "2.2.1"
-handlebars = "0.20.0"
-rustc-serialize = "0.3.18"
+handlebars = { version = "0.20.0", features = ["serde_type"] }
+serde = "0.8.17"
+serde_json = "0.8.3"
 pulldown-cmark = "0.0.8"
 log = "0.3"
 env_logger = "0.3.4"

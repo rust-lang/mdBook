@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::collections::BTreeMap;
 
-use rustc_serialize::json;
+use serde_json;
 use handlebars::{Handlebars, HelperDef, RenderError, RenderContext, Helper, Context};
 use pulldown_cmark::{Parser, html, Event, Tag};
 
@@ -20,7 +20,7 @@ impl HelperDef for RenderToc {
         try!(rc.writer.write("<ul class=\"chapter\">".as_bytes()));
 
         // Decode json format
-        let decoded: Vec<BTreeMap<String, String>> = json::decode(&chapters.to_string()).unwrap();
+        let decoded: Vec<BTreeMap<String, String>> = serde_json::from_str(&chapters.to_string()).unwrap();
 
         let mut current_level = 1;
 
