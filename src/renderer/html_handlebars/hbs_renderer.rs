@@ -12,7 +12,6 @@ use std::collections::BTreeMap;
 
 use handlebars::Handlebars;
 
-use serde::Serialize;
 use serde_json;
 use serde_json::value::ToJson;
 

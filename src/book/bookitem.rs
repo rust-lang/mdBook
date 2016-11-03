@@ -1,6 +1,5 @@
 use serde::{Serialize, Serializer};
 use std::path::PathBuf;
-use std::collections::BTreeMap;
 
 #[derive(Debug, Clone)]
 pub enum BookItem {

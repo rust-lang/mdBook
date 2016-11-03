@@ -1,5 +1,4 @@
 use serde_json;
-use serde_json::Value;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
