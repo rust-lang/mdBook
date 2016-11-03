@@ -11,7 +11,9 @@ use std::io::{self, Read, Write};
 use std::collections::BTreeMap;
 
 use handlebars::Handlebars;
-use rustc_serialize::json::{Json, ToJson};
+
+use serde_json;
+use serde_json::value::ToJson;
 
 
 pub struct HtmlHandlebars;
@@ -276,10 +278,10 @@ impl Renderer for HtmlHandlebars {
     }
 }
 
-fn make_data(book: &MDBook) -> Result<BTreeMap<String, Json>, Box<Error>> {
+fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>, Box<Error>> {
     debug!("[fn]: make_data");
 
-    let mut data = BTreeMap::new();
+    let mut data = serde_json::Map::new();
     data.insert("language".to_owned(), "en".to_json());
     data.insert("title".to_owned(), book.get_title().to_json());
     data.insert("description".to_owned(), book.get_description().to_json());

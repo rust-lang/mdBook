@@ -1,6 +1,5 @@
-use rustc_serialize::json::{Json, ToJson};
+use serde::{Serialize, Serializer};
 use std::path::PathBuf;
-use std::collections::BTreeMap;
 
 #[derive(Debug, Clone)]
 pub enum BookItem {
@@ -36,16 +35,12 @@ impl Chapter {
 }
 
 
-impl ToJson for Chapter {
-    fn to_json(&self) -> Json {
-        let mut m: BTreeMap<String, Json> = BTreeMap::new();
-        m.insert("name".to_owned(), self.name.to_json());
-        m.insert("path".to_owned(),
-                 self.path
-                     .to_str()
-                     .expect("Json conversion failed for path")
-                     .to_json());
-        m.to_json()
+impl Serialize for Chapter {
+    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error> where S: Serializer {
+        let mut state = try!(serializer.serialize_struct("Chapter", 2));
+        try!(serializer.serialize_struct_elt(&mut state, "name", self.name.clone()));
+        try!(serializer.serialize_struct_elt(&mut state, "path", self.path.clone()));
+        serializer.serialize_struct_end(state)
     }
 }
 

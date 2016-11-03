@@ -1,7 +1,8 @@
 use std::path::Path;
 use std::collections::BTreeMap;
 
-use rustc_serialize::json::{self, ToJson};
+use serde_json;
+use serde_json::value::ToJson;
 use handlebars::{Handlebars, RenderError, RenderContext, Helper, Context, Renderable};
 
 // Handlebars helper for navigation
@@ -22,7 +23,7 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
 
     debug!("[*]: Decode chapters from JSON");
     // Decode json format
-    let decoded: Vec<BTreeMap<String, String>> = match json::decode(&chapters.to_string()) {
+    let decoded: Vec<BTreeMap<String, String>> = match serde_json::from_str(&chapters.to_string()) {
         Ok(data) => data,
         Err(_) => return Err(RenderError::new("Could not decode the JSON data")),
     };
@@ -121,7 +122,7 @@ pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) ->
 
     debug!("[*]: Decode chapters from JSON");
     // Decode json format
-    let decoded: Vec<BTreeMap<String, String>> = match json::decode(&chapters.to_string()) {
+    let decoded: Vec<BTreeMap<String, String>> = match serde_json::from_str(&chapters.to_string()) {
         Ok(data) => data,
         Err(_) => return Err(RenderError::new("Could not decode the JSON data")),
     };

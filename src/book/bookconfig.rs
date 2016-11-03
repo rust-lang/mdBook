@@ -1,4 +1,4 @@
-use rustc_serialize::json::Json;
+use serde_json;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -53,23 +53,25 @@ impl BookConfig {
         }
 
         // Convert to JSON
-        if let Ok(config) = Json::from_str(&data) {
+        if let Ok(config) = serde_json::from_str::<serde_json::Value>(&data) {
             // Extract data
+
+            let config = config.as_object().unwrap();
 
             debug!("[*]: Extracting data from config");
             // Title, author, description
-            if let Some(a) = config.find_path(&["title"]) {
+            if let Some(a) = config.get("title") {
                 self.title = a.to_string().replace("\"", "")
             }
-            if let Some(a) = config.find_path(&["author"]) {
+            if let Some(a) = config.get("author") {
                 self.author = a.to_string().replace("\"", "")
             }
-            if let Some(a) = config.find_path(&["description"]) {
+            if let Some(a) = config.get("description") {
                 self.description = a.to_string().replace("\"", "")
             }
 
             // Destination
-            if let Some(a) = config.find_path(&["dest"]) {
+            if let Some(a) = config.get("dest") {
                 let dest = PathBuf::from(&a.to_string().replace("\"", ""));
 
                 // If path is relative make it absolute from the parent directory of src
