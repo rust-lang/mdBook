@@ -37,7 +37,7 @@ table thead td {
   font-weight: 700;
 }
 .sidebar {
-  position: absolute;
+  position: fixed;
   left: 0;
   top: 0;
   bottom: 0;
@@ -99,7 +99,6 @@ table thead td {
 }
 .page-wrapper {
   position: absolute;
-  overflow-y: auto;
   left: 315px;
   right: 0;
   top: 0;
@@ -134,7 +133,14 @@ table thead td {
   left: 0;
   bottom: 0;
   padding-right: 15px;
-  overflow-y: auto;
+}
+@media only screen and (max-width: 400px) {
+  .page {
+    /* Only prevent horizontal scrolling on screens with less than 100px for the content
+       A better way would be to somehow prevent horizontal scrolling all the time, but this causes scrolling problems on iOS Safari.
+       Also, would be better to only enable horizontal scrolling when it is needed (content does not fit on page) but I have no idea how to do that. */
+    overflow-x: hidden;
+  }
 }
 .content {
   margin-left: auto;
@@ -205,7 +211,7 @@ table thead td {
   font-size: 2.5em;
   text-align: center;
   text-decoration: none;
-  position: absolute;
+  position: fixed;
   top: 50px /* Height of menu-bar */;
   bottom: 0;
   margin: 0;
@@ -244,7 +250,13 @@ table thead td {
 .nav-chapters:hover {
   text-decoration: none;
 }
-.previous {
+.sidebar-hidden .previous {
+  left: 0;
+}
+.sidebar-visible .nav-chapters .previous {
+  left: 300px;
+}
+.sidebar-visible .mobile-nav-chapters .previous {
   left: 0;
 }
 .next {
