@@ -70,7 +70,7 @@ impl BookConfig {
                 self.description = a.to_string().replace("\"", "")
             }
 
-            // Destination
+            // Destination folder
             if let Some(a) = config.get("dest") {
                 let dest = PathBuf::from(&a.to_string().replace("\"", ""));
 
@@ -83,6 +83,20 @@ impl BookConfig {
                     false => {
                         self.set_dest(&dest);
                     },
+                }
+            }
+
+            // Source folder
+            if let Some(a) = config.get("src") {
+                let src = PathBuf::from(&a.to_string().replace("\"", ""));
+                match src.is_relative() {
+                    true => {
+                        let src = self.get_root().join(&src).to_owned();
+                        self.set_src(&src);
+                    },
+                    false => {
+                        self.set_src(&src);
+                    }
                 }
             }
         }
