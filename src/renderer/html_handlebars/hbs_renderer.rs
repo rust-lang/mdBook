@@ -30,7 +30,7 @@ impl Renderer for HtmlHandlebars {
         let mut handlebars = Handlebars::new();
 
         // Load theme
-        let theme = theme::Theme::new(book.get_src());
+        let theme = theme::Theme::new(book.get_theme_path());
 
         // Register template
         debug!("[*]: Register handlebars template");

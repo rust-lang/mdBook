@@ -20,6 +20,7 @@ pub struct MDBook {
     root: PathBuf,
     dest: PathBuf,
     src: PathBuf,
+    theme_path: PathBuf,
 
     pub title: String,
     pub author: String,
@@ -34,8 +35,11 @@ pub struct MDBook {
 impl MDBook {
     /// Create a new `MDBook` struct with root directory `root`
     ///
-    /// - The default source directory is set to `root/src`
-    /// - The default output directory is set to `root/book`
+    /// Default directory paths:
+    ///
+    /// - source: `root/src`
+    /// - output: `root/book`
+    /// - theme: `root/theme`
     ///
     /// They can both be changed by using [`set_src()`](#method.set_src) and [`set_dest()`](#method.set_dest)
 
@@ -49,6 +53,7 @@ impl MDBook {
             root: root.to_owned(),
             dest: root.join("book"),
             src: root.join("src"),
+            theme_path: root.join("theme"),
 
             title: String::new(),
             author: String::new(),
@@ -294,6 +299,7 @@ impl MDBook {
 
         self.dest = config.dest;
         self.src = config.src;
+        self.theme_path = config.theme_path;
 
         self
     }
@@ -442,6 +448,18 @@ impl MDBook {
             Some(ref livereload) => Some(&livereload),
             None => None,
         }
+    }
+
+    pub fn set_theme_path(mut self, theme_path: &Path) -> Self {
+        self.theme_path = match theme_path.is_absolute() {
+            true => theme_path.to_owned(),
+            false => self.root.join(theme_path).to_owned(),
+        };
+        self
+    }
+
+    pub fn get_theme_path(&self) -> &Path {
+        &self.theme_path
     }
 
     // Construct book
