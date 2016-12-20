@@ -1,16 +1,19 @@
-use rustc_serialize::json::Json;
+use serde_json;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone)]
 pub struct BookConfig {
-    pub title: String,
-    pub author: String,
-    pub description: String,
     root: PathBuf,
     pub dest: PathBuf,
     pub src: PathBuf,
+    pub theme_path: PathBuf,
+
+    pub title: String,
+    pub author: String,
+    pub description: String,
+
     pub indent_spaces: i32,
     multilingual: bool,
 }
@@ -19,12 +22,15 @@ pub struct BookConfig {
 impl BookConfig {
     pub fn new(root: &Path) -> Self {
         BookConfig {
-            title: String::new(),
-            author: String::new(),
-            description: String::new(),
             root: root.to_owned(),
             dest: root.join("book"),
             src: root.join("src"),
+            theme_path: root.join("theme"),
+
+            title: String::new(),
+            author: String::new(),
+            description: String::new(),
+
             indent_spaces: 4, // indentation used for SUMMARY.md
             multilingual: false,
         }
@@ -53,36 +59,52 @@ impl BookConfig {
         }
 
         // Convert to JSON
-        if let Ok(config) = Json::from_str(&data) {
+        if let Ok(config) = serde_json::from_str::<serde_json::Value>(&data) {
             // Extract data
+
+            let config = config.as_object().unwrap();
 
             debug!("[*]: Extracting data from config");
             // Title, author, description
-            if let Some(a) = config.find_path(&["title"]) {
+            if let Some(a) = config.get("title") {
                 self.title = a.to_string().replace("\"", "")
             }
-            if let Some(a) = config.find_path(&["author"]) {
+            if let Some(a) = config.get("author") {
                 self.author = a.to_string().replace("\"", "")
             }
-            if let Some(a) = config.find_path(&["description"]) {
+            if let Some(a) = config.get("description") {
                 self.description = a.to_string().replace("\"", "")
             }
 
-            // Destination
-            if let Some(a) = config.find_path(&["dest"]) {
-                let dest = PathBuf::from(&a.to_string().replace("\"", ""));
+            // Destination folder
+            if let Some(a) = config.get("dest") {
+                let mut dest = PathBuf::from(&a.to_string().replace("\"", ""));
 
                 // If path is relative make it absolute from the parent directory of src
-                match dest.is_relative() {
-                    true => {
-                        let dest = self.get_root().join(&dest).to_owned();
-                        self.set_dest(&dest);
-                    },
-                    false => {
-                        self.set_dest(&dest);
-                    },
+                if dest.is_relative() {
+                    dest = self.get_root().join(&dest);
                 }
+                self.set_dest(&dest);
             }
+
+            // Source folder
+            if let Some(a) = config.get("src") {
+                let mut src = PathBuf::from(&a.to_string().replace("\"", ""));
+                if src.is_relative() {
+                    src = self.get_root().join(&src);
+                }
+                self.set_src(&src);
+            }
+
+            // Theme path folder
+            if let Some(a) = config.get("theme_path") {
+                let mut theme_path = PathBuf::from(&a.to_string().replace("\"", ""));
+                if theme_path.is_relative() {
+                    theme_path = self.get_root().join(&theme_path);
+                }
+                self.set_theme_path(&theme_path);
+            }
+
         }
 
         self
@@ -112,6 +134,15 @@ impl BookConfig {
 
     pub fn set_src(&mut self, src: &Path) -> &mut Self {
         self.src = src.to_owned();
+        self
+    }
+
+    pub fn get_theme_path(&self) -> &Path {
+        &self.theme_path
+    }
+
+    pub fn set_theme_path(&mut self, theme_path: &Path) -> &mut Self {
+        self.theme_path = theme_path.to_owned();
         self
     }
 }

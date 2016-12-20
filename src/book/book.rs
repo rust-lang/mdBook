@@ -8,38 +8,40 @@ use book::chapter::Chapter;
 pub struct Book {
     metadata: BookMetadata,
 
-    preface: Vec<Chapter>,
-    chapters: Vec<Chapter>,
-    appendix: Vec<Chapter>,
+    frontmatter: Vec<Chapter>,
+    mainmatter: Vec<Chapter>,
+    backmatter: Vec<Chapter>,
 }
 
 impl Book {
-    /// Creates a new book with the given title, chapters are added with the `add_chapter` method
+    /// Creates a new book with the given title, chapters are added with the
+    /// `add_frontmatter_chapter`, `add_mainmatter_chapter`,
+    /// `add_backmatter_chapter` methods
     pub fn new(title: &str) -> Self {
         Book {
             metadata: BookMetadata::new(title),
 
-            preface: Vec::new(),
-            chapters: Vec::new(),
-            appendix: Vec::new(),
+            frontmatter: Vec::new(),
+            mainmatter: Vec::new(),
+            backmatter: Vec::new(),
         }
     }
 
-    /// Adds a new chapter at the end of the book
-    pub fn add_chapter(&mut self, chapter: Chapter) -> &mut Self {
-        self.chapters.push(chapter);
+    /// Adds a new mainmatter chapter
+    pub fn add_mainmatter_chapter(&mut self, chapter: Chapter) -> &mut Self {
+        self.mainmatter.push(chapter);
         self
     }
 
-    /// Adds a new preface chapter to the book, the preface chapters are in the order they were added
-    pub fn add_preface_chapter(&mut self, chapter: Chapter) -> &mut Self {
-        self.preface.push(chapter);
+    /// Adds a new frontmatter chapter
+    pub fn add_frontmatter_chapter(&mut self, chapter: Chapter) -> &mut Self {
+        self.frontmatter.push(chapter);
         self
     }
 
-    /// Adds a new appendix chapter to the book, they are in de order they are added
-    pub fn add_appendix_chapter(&mut self, chapter: Chapter) -> &mut Self {
-        self.appendix.push(chapter);
+    /// Adds a new backmatter chapter
+    pub fn add_backmatter_chapter(&mut self, chapter: Chapter) -> &mut Self {
+        self.backmatter.push(chapter);
         self
     }
 
@@ -57,9 +59,9 @@ impl Book {
     pub fn get_chapter(&self, section: &[usize]) -> Option<&Chapter> {
         match section.len() {
             0 => None,
-            1 => self.chapters.get(section[0]),
+            1 => self.mainmatter.get(section[0]),
             _ => {
-                self.chapters
+                self.mainmatter
                     .get(section[0])
                     .and_then(|ch| ch.get_sub_chapter(&section[1..]))
             },

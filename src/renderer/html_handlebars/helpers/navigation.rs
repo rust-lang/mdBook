@@ -1,7 +1,8 @@
 use std::path::Path;
 use std::collections::BTreeMap;
 
-use rustc_serialize::json::{self, ToJson};
+use serde_json;
+use serde_json::value::ToJson;
 use handlebars::{Handlebars, RenderError, RenderContext, Helper, Context, Renderable};
 
 // Handlebars helper for navigation
@@ -16,15 +17,15 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
     let chapters = c.navigate(rc.get_path(), "chapters");
 
     let current = c.navigate(rc.get_path(), "path")
-                   .to_string()
-                   .replace("\"", "");
+        .to_string()
+        .replace("\"", "");
 
 
     debug!("[*]: Decode chapters from JSON");
     // Decode json format
-    let decoded: Vec<BTreeMap<String, String>> = match json::decode(&chapters.to_string()) {
+    let decoded: Vec<BTreeMap<String, String>> = match serde_json::from_str(&chapters.to_string()) {
         Ok(data) => data,
-        Err(_) => return Err(RenderError { desc: "Could not decode the JSON data".to_owned() }),
+        Err(_) => return Err(RenderError::new("Could not decode the JSON data")),
     };
     let mut previous: Option<BTreeMap<String, String>> = None;
 
@@ -52,7 +53,7 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
                             },
                             None => {
                                 debug!("[*]: No title found for chapter");
-                                return Err(RenderError { desc: "No title found for chapter in JSON data".to_owned() });
+                                return Err(RenderError::new("No title found for chapter in JSON data"));
                             },
                         };
 
@@ -68,16 +69,10 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
                                     Some(p) => {
                                         previous_chapter.insert("link".to_owned(), p.replace("\\", "/").to_json());
                                     },
-                                    None => {
-                                        return Err(RenderError {
-                                            desc: "Link could not be converted to str".to_owned(),
-                                        })
-                                    },
+                                    None => return Err(RenderError::new("Link could not be converted to str")),
                                 }
                             },
-                            None => {
-                                return Err(RenderError { desc: "No path found for chapter in JSON data".to_owned() })
-                            },
+                            None => return Err(RenderError::new("No path found for chapter in JSON data")),
                         }
 
                         debug!("[*]: Inject in context");
@@ -90,7 +85,7 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
                             Some(t) => {
                                 try!(t.render(&updated_context, r, rc));
                             },
-                            None => return Err(RenderError { desc: "Error with the handlebars template".to_owned() }),
+                            None => return Err(RenderError::new("Error with the handlebars template")),
                         }
 
                     }
@@ -122,14 +117,14 @@ pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) ->
     let chapters = c.navigate(rc.get_path(), "chapters");
 
     let current = c.navigate(rc.get_path(), "path")
-                   .to_string()
-                   .replace("\"", "");
+        .to_string()
+        .replace("\"", "");
 
     debug!("[*]: Decode chapters from JSON");
     // Decode json format
-    let decoded: Vec<BTreeMap<String, String>> = match json::decode(&chapters.to_string()) {
+    let decoded: Vec<BTreeMap<String, String>> = match serde_json::from_str(&chapters.to_string()) {
         Ok(data) => data,
-        Err(_) => return Err(RenderError { desc: "Could not decode the JSON data".to_owned() }),
+        Err(_) => return Err(RenderError::new("Could not decode the JSON data")),
     };
     let mut previous: Option<BTreeMap<String, String>> = None;
 
@@ -145,7 +140,7 @@ pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) ->
 
                     let previous_path = match previous.get("path") {
                         Some(p) => p,
-                        None => return Err(RenderError { desc: "No path found for chapter in JSON data".to_owned() }),
+                        None => return Err(RenderError::new("No path found for chapter in JSON data")),
                     };
 
                     if previous_path == &current {
@@ -160,9 +155,7 @@ pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) ->
                                 debug!("[*]: Inserting title: {}", n);
                                 next_chapter.insert("title".to_owned(), n.to_json());
                             },
-                            None => {
-                                return Err(RenderError { desc: "No title found for chapter in JSON data".to_owned() })
-                            },
+                            None => return Err(RenderError::new("No title found for chapter in JSON data")),
                         }
 
 
@@ -174,7 +167,7 @@ pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) ->
                                 // Hack for windows who tends to use `\` as separator instead of `/`
                                 next_chapter.insert("link".to_owned(), l.replace("\\", "/").to_json());
                             },
-                            None => return Err(RenderError { desc: "Link could not converted to str".to_owned() }),
+                            None => return Err(RenderError::new("Link could not converted to str")),
                         }
 
                         debug!("[*]: Inject in context");
@@ -188,7 +181,7 @@ pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) ->
                             Some(t) => {
                                 try!(t.render(&updated_context, r, rc));
                             },
-                            None => return Err(RenderError { desc: "Error with the handlebars template".to_owned() }),
+                            None => return Err(RenderError::new("Error with the handlebars template")),
                         }
 
                         break;

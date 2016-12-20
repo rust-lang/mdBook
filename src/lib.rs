@@ -69,11 +69,12 @@
 //!
 //! Make sure to take a look at it.
 
-extern crate rustc_serialize;
+extern crate serde;
+extern crate serde_json;
 extern crate handlebars;
 extern crate pulldown_cmark;
 
-#[macro_use] pub mod macros;
+#[macro_use] extern crate log;
 pub mod book;
 mod parse;
 pub mod renderer;

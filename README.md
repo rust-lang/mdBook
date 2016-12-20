@@ -23,8 +23,8 @@
 
 mdBook is a utility to create modern online books from markdown files.
 
-**This project is still evolving.**
-For more information, check the issue tracker.
+**This project is still evolving.**  
+See [#90](https://github.com/azerupi/mdBook/issues/90)
 
 
 ## What does it look like?

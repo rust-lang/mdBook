@@ -56,12 +56,6 @@ impl Theme {
             return theme;
         }
 
-        let src = src.join("theme");
-        // If src does exist, check if there is a theme directory in it
-        if !src.exists() || !src.is_dir() {
-            return theme;
-        }
-
         // Check for individual files if they exist
 
         // index.hbs

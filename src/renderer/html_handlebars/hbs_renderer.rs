@@ -10,8 +10,10 @@ use std::error::Error;
 use std::io::{self, Read, Write};
 use std::collections::BTreeMap;
 
-use handlebars::{Handlebars, JsonRender};
-use rustc_serialize::json::{Json, ToJson};
+use handlebars::Handlebars;
+
+use serde_json;
+use serde_json::value::ToJson;
 
 
 pub struct HtmlHandlebars;
@@ -28,7 +30,7 @@ impl Renderer for HtmlHandlebars {
         let mut handlebars = Handlebars::new();
 
         // Load theme
-        let theme = theme::Theme::new(book.get_src());
+        let theme = theme::Theme::new(book.get_theme_path());
 
         // Register template
         debug!("[*]: Register handlebars template");
@@ -57,7 +59,8 @@ impl Renderer for HtmlHandlebars {
         for item in book.iter() {
 
             match *item {
-                BookItem::Chapter(_, ref ch) | BookItem::Affix(ref ch) => {
+                BookItem::Chapter(_, ref ch) |
+                BookItem::Affix(ref ch) => {
                     if ch.path != PathBuf::new() {
 
                         let path = book.get_src().join(&ch.path);
@@ -105,8 +108,9 @@ impl Renderer for HtmlHandlebars {
 
                         debug!("[*]: Create file {:?}", &book.get_dest().join(&ch.path).with_extension("html"));
                         // Write to file
-                        let mut file = try!(utils::fs::create_file(&book.get_dest().join(&ch.path).with_extension("html")));
-                        output!("[*] Creating {:?} ✓", &book.get_dest().join(&ch.path).with_extension("html"));
+                        let mut file =
+                            try!(utils::fs::create_file(&book.get_dest().join(&ch.path).with_extension("html")));
+                        info!("[*] Creating {:?} ✓", &book.get_dest().join(&ch.path).with_extension("html"));
 
                         try!(file.write_all(&rendered.into_bytes()));
 
@@ -117,19 +121,19 @@ impl Renderer for HtmlHandlebars {
                             let mut index_file = try!(File::create(book.get_dest().join("index.html")));
                             let mut content = String::new();
                             let _source = try!(File::open(book.get_dest().join(&ch.path.with_extension("html"))))
-                                              .read_to_string(&mut content);
+                                .read_to_string(&mut content);
 
                             // This could cause a problem when someone displays code containing <base href=...>
                             // on the front page, however this case should be very very rare...
                             content = content.lines()
-                                             .filter(|line| !line.contains("<base href="))
-                                             .collect::<Vec<&str>>()
-                                             .join("\n");
+                                .filter(|line| !line.contains("<base href="))
+                                .collect::<Vec<&str>>()
+                                .join("\n");
 
                             try!(index_file.write_all(content.as_bytes()));
 
-                            output!("[*] Creating index.html from {:?} ✓",
-                                    book.get_dest().join(&ch.path.with_extension("html")));
+                            info!("[*] Creating index.html from {:?} ✓",
+                                  book.get_dest().join(&ch.path.with_extension("html")));
                             index = false;
                         }
                     }
@@ -157,7 +161,7 @@ impl Renderer for HtmlHandlebars {
         let rendered = try!(handlebars.render("index", &data));
         let mut file = try!(utils::fs::create_file(&book.get_dest().join("print").with_extension("html")));
         try!(file.write_all(&rendered.into_bytes()));
-        output!("[*] Creating print.html ✓");
+        info!("[*] Creating print.html ✓");
 
         // Copy static files (js, css, images, ...)
 
@@ -218,54 +222,49 @@ impl Renderer for HtmlHandlebars {
 
         // Font Awesome local fallback
         let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
-                                                                      .join("_FontAwesome/css/font-awesome.css")) {
+            .join("_FontAwesome/css/font-awesome.css")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create font-awesome.css")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME));
         let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
-                                                                      .join("_FontAwesome/fonts/fontawesome-webfon\
-                                                                             t.eot")) {
+            .join("_FontAwesome/fonts/fontawesome-webfont.eot")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.eot")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_EOT));
         let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
-                                                                      .join("_FontAwesome/fonts/fontawesome-webfon\
-                                                                             t.svg")) {
+            .join("_FontAwesome/fonts/fontawesome-webfont.svg")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.svg")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_SVG));
         let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
-                                                                      .join("_FontAwesome/fonts/fontawesome-webfon\
-                                                                             t.ttf")) {
+            .join("_FontAwesome/fonts/fontawesome-webfont.ttf")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.ttf")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_TTF));
         let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
-                                                                      .join("_FontAwesome/fonts/fontawesome-webfon\
-                                                                             t.woff")) {
+            .join("_FontAwesome/fonts/fontawesome-webfont.woff")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.woff")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_WOFF));
         let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
-                                                                      .join("_FontAwesome/fonts/fontawesome-webfon\
-                                                                             t.woff2")) {
+            .join("_FontAwesome/fonts/fontawesome-webfont.woff2")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create fontawesome-webfont.woff2")));
         };
         try!(font_awesome.write_all(theme::FONT_AWESOME_WOFF2));
         let mut font_awesome = if let Ok(f) = utils::fs::create_file(&book.get_dest()
-                                                                      .join("_FontAwesome/fonts/FontAwesome.ttf")) {
+            .join("_FontAwesome/fonts/FontAwesome.ttf")) {
             f
         } else {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other, "Could not create FontAwesome.ttf")));
@@ -279,10 +278,10 @@ impl Renderer for HtmlHandlebars {
     }
 }
 
-fn make_data(book: &MDBook) -> Result<BTreeMap<String, Json>, Box<Error>> {
+fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>, Box<Error>> {
     debug!("[fn]: make_data");
 
-    let mut data = BTreeMap::new();
+    let mut data = serde_json::Map::new();
     data.insert("language".to_owned(), "en".to_json());
     data.insert("title".to_owned(), book.get_title().to_json());
     data.insert("description".to_owned(), book.get_description().to_json());

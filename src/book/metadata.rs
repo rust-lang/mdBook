@@ -1,12 +1,32 @@
+use std::path::PathBuf;
+
+/// TODO use in template: subtitle, description, publisher, number_format, section_names
+
 #[derive(Debug, Clone)]
 pub struct BookMetadata {
+    /// The title of the book.
     pub title: String,
+
+    /// TODO The subtitle, when titles are in the form of "The Immense Journey: An
+    /// Imaginative Naturalist Explores the Mysteries of Man and Nature"
+    pub subtitle: String,
+
+    /// TODO A brief description or summary.
     pub description: String,
+
+    /// TODO Publisher's info
+    pub publisher: Publisher,
 
     pub language: Language,
 
     authors: Vec<Author>,
     translators: Vec<Author>,
+
+    /// TODO Chapter numbering scheme
+    number_format: NumberFormat,
+    /// TODO Section names for nested Vec<Chapter> structures, such as `[
+    /// "Part", "Chapter", "Section" ]`
+    section_names: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -21,6 +41,38 @@ pub struct Language {
     code: String,
 }
 
+/// TODO use Publisher in template.
+
+#[derive(Debug, Clone)]
+pub struct Publisher {
+    name: String,
+    /// link to the sublisher's site
+    url: String,
+    /// path to publisher's logo image
+    logo_src: PathBuf,
+}
+
+impl Publisher {
+    pub fn default() -> Publisher {
+        Publisher {
+            name: "".to_string(),
+            url: "".to_string(),
+            logo_src: PathBuf::new(),
+        }
+    }
+}
+
+/// TODO use NumberFormat when rendering chapter titles.
+
+#[derive(Debug, Clone)]
+pub enum NumberFormat {
+    /// 19
+    Arabic,
+    /// XIX
+    Roman,
+    /// Nineteen
+    Word,
+}
 
 impl BookMetadata {
     pub fn new(title: &str) -> Self {
@@ -32,6 +84,12 @@ impl BookMetadata {
 
             authors: Vec::new(),
             translators: Vec::new(),
+
+            // TODO placeholder values for now
+            subtitle: "".to_string(),
+            publisher: Publisher::default(),
+            number_format: NumberFormat::Arabic,
+            section_names: vec![],
         }
     }
 
