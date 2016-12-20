@@ -8,11 +8,8 @@ use book::chapter::Chapter;
 pub struct Book {
     metadata: BookMetadata,
 
-    //preface: Vec<Chapter>,
     frontmatter: Vec<Chapter>,
-    //chapters: Vec<Chapter>,
     mainmatter: Vec<Chapter>,
-    //appendix: Vec<Chapter>,
     backmatter: Vec<Chapter>,
 }
 
