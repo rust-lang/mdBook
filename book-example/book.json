@@ -1,5 +1,0 @@
-{
-    "title": "mdBook Documentation",
-    "description": "Create book from markdown files. Like Gitbook but implemented in Rust",
-    "author": "Mathieu David"
-}

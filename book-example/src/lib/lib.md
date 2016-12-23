@@ -13,7 +13,7 @@ fn main() {
     let mut book =  MDBook::new(Path::new("my-book"))   // Path to root
                         .set_src(Path::new("src"))      // Path from root to source directory
                         .set_dest(Path::new("book"))    // Path from root to output directory
-                        .read_config();                 // Parse book.json file for configuration
+                        .read_config();                 // Parse book.toml or book.json file for configuration
 
     book.build().unwrap();                              // Render the book
 }
