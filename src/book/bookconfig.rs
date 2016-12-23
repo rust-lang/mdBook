@@ -1,7 +1,12 @@
-use serde_json;
+extern crate toml;
+
+use std::process::exit;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
+
+//use serde::{Serialize, Deserialize};
+use serde_json;
 
 #[derive(Debug, Clone)]
 pub struct BookConfig {
@@ -17,7 +22,6 @@ pub struct BookConfig {
     pub indent_spaces: i32,
     multilingual: bool,
 }
-
 
 impl BookConfig {
     pub fn new(root: &Path) -> Self {
@@ -40,71 +44,154 @@ impl BookConfig {
 
         debug!("[fn]: read_config");
 
-        // If the file does not exist, return early
-        let mut config_file = match File::open(root.join("book.json")) {
-            Ok(f) => f,
-            Err(_) => {
-                debug!("[*]: Failed to open {:?}", root.join("book.json"));
-                return self;
-            },
+        let read_file = |path: PathBuf| -> String {
+            let mut data = String::new();
+            let mut f: File = match File::open(&path) {
+                Ok(x) => x,
+                Err(_) => {
+                    error!("[*]: Failed to open {:?}", &path);
+                    exit(2);
+                }
+            };
+            if let Err(_) = f.read_to_string(&mut data) {
+                error!("[*]: Failed to read {:?}", &path);
+                exit(2);
+            }
+            data
         };
 
-        debug!("[*]: Reading config");
-        let mut data = String::new();
+        // Read book.toml or book.json if exists
 
-        // Just return if an error occured.
-        // I would like to propagate the error, but I have to return `&self`
-        if let Err(_) = config_file.read_to_string(&mut data) {
-            return self;
+        if Path::new(root.join("book.toml").as_os_str()).exists() {
+
+            debug!("[*]: Reading config");
+            let data = read_file(root.join("book.toml"));
+            self.parse_from_toml_string(&data);
+
+        } else if Path::new(root.join("book.json").as_os_str()).exists() {
+
+            debug!("[*]: Reading config");
+            let data = read_file(root.join("book.json"));
+            self.parse_from_json_string(&data);
+
+        } else {
+            debug!("[*]: No book.toml or book.json was found, using defaults.");
         }
 
-        // Convert to JSON
-        if let Ok(config) = serde_json::from_str::<serde_json::Value>(&data) {
-            // Extract data
+        self
+    }
 
-            let config = config.as_object().unwrap();
+    pub fn parse_from_toml_string(&mut self, data: &String) -> &mut Self {
 
-            debug!("[*]: Extracting data from config");
-            // Title, author, description
-            if let Some(a) = config.get("title") {
-                self.title = a.to_string().replace("\"", "")
+        let mut parser = toml::Parser::new(&data);
+
+        let config = match parser.parse() {
+            Some(x) => {x},
+            None => {
+                error!("[*]: Toml parse errors in book.toml: {:?}", parser.errors);
+                exit(2);
             }
-            if let Some(a) = config.get("author") {
-                self.author = a.to_string().replace("\"", "")
-            }
-            if let Some(a) = config.get("description") {
-                self.description = a.to_string().replace("\"", "")
-            }
+        };
 
-            // Destination folder
-            if let Some(a) = config.get("dest") {
-                let mut dest = PathBuf::from(&a.to_string().replace("\"", ""));
+        // TODO this is very similar to how the JSON is parsed. Combine somehow?
 
-                // If path is relative make it absolute from the parent directory of src
-                if dest.is_relative() {
-                    dest = self.get_root().join(&dest);
-                }
-                self.set_dest(&dest);
+        // Title, author, description
+        if let Some(a) = config.get("title") {
+            self.title = a.to_string().replace("\"", "");
+        }
+        if let Some(a) = config.get("author") {
+            self.author = a.to_string().replace("\"", "");
+        }
+        if let Some(a) = config.get("description") {
+            self.description = a.to_string().replace("\"", "");
+        }
+
+        // Destination folder
+        if let Some(a) = config.get("dest") {
+            let mut dest = PathBuf::from(&a.to_string().replace("\"", ""));
+
+            // If path is relative make it absolute from the parent directory of src
+            if dest.is_relative() {
+                dest = self.get_root().join(&dest);
             }
+            self.set_dest(&dest);
+        }
 
-            // Source folder
-            if let Some(a) = config.get("src") {
-                let mut src = PathBuf::from(&a.to_string().replace("\"", ""));
-                if src.is_relative() {
-                    src = self.get_root().join(&src);
-                }
-                self.set_src(&src);
+        // Source folder
+        if let Some(a) = config.get("src") {
+            let mut src = PathBuf::from(&a.to_string().replace("\"", ""));
+            if src.is_relative() {
+                src = self.get_root().join(&src);
             }
+            self.set_src(&src);
+        }
 
-            // Theme path folder
-            if let Some(a) = config.get("theme_path") {
-                let mut theme_path = PathBuf::from(&a.to_string().replace("\"", ""));
-                if theme_path.is_relative() {
-                    theme_path = self.get_root().join(&theme_path);
-                }
-                self.set_theme_path(&theme_path);
+        // Theme path folder
+        if let Some(a) = config.get("theme_path") {
+            let mut theme_path = PathBuf::from(&a.to_string().replace("\"", ""));
+            if theme_path.is_relative() {
+                theme_path = self.get_root().join(&theme_path);
             }
+            self.set_theme_path(&theme_path);
+        }
 
+        self
+    }
+
+    pub fn parse_from_json_string(&mut self, data: &String) -> &mut Self {
+
+        let config: serde_json::Value = match serde_json::from_str(&data) {
+            Ok(x) => {x},
+            Err(e) => {
+                error!("[*]: JSON parse errors in book.json: {:?}", e);
+                exit(2);
+            }
+        };
+
+        // Extract data
+
+        let config = config.as_object().unwrap();
+
+        debug!("[*]: Extracting data from config");
+
+        // Title, author, description
+        if let Some(a) = config.get("title") {
+            self.title = a.to_string().replace("\"", "")
+        }
+        if let Some(a) = config.get("author") {
+            self.author = a.to_string().replace("\"", "")
+        }
+        if let Some(a) = config.get("description") {
+            self.description = a.to_string().replace("\"", "")
+        }
+
+        // Destination folder
+        if let Some(a) = config.get("dest") {
+            let mut dest = PathBuf::from(&a.to_string().replace("\"", ""));
+
+            // If path is relative make it absolute from the parent directory of src
+            if dest.is_relative() {
+                dest = self.get_root().join(&dest);
+            }
+            self.set_dest(&dest);
+        }
+
+        // Source folder
+        if let Some(a) = config.get("src") {
+            let mut src = PathBuf::from(&a.to_string().replace("\"", ""));
+            if src.is_relative() {
+                src = self.get_root().join(&src);
+            }
+            self.set_src(&src);
+        }
+
+        // Theme path folder
+        if let Some(a) = config.get("theme_path") {
+            let mut theme_path = PathBuf::from(&a.to_string().replace("\"", ""));
+            if theme_path.is_relative() {
+                theme_path = self.get_root().join(&theme_path);
+            }
+            self.set_theme_path(&theme_path);
         }
 
         self
