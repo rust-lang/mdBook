@@ -15,13 +15,14 @@ exclude = [
 ]
 
 [dependencies]
-clap = "2.2.1"
-handlebars = { version = "0.20.0", features = ["serde_type"] }
-serde = "0.8.17"
-serde_json = "0.8.3"
+clap = "2.19.2"
+handlebars = { version = "0.23.0", features = ["serde_type"] }
+serde = "0.8"
+serde_json = "0.8"
 pulldown-cmark = "0.0.8"
 log = "0.3"
-env_logger = "0.3.4"
+env_logger = "0.3"
+toml = { version = "0.2", features = ["serde"] }
 
 # Watch feature
 notify = { version = "2.5.5", optional = true }
@@ -33,11 +34,9 @@ iron = { version = "0.4", optional = true }
 staticfile = { version = "0.3", optional = true }
 ws = { version = "0.5.1", optional = true}
 
-
 # Tests
 [dev-dependencies]
 tempdir = "0.3.4"
-
 
 [features]
 default = ["output", "watch", "serve"]
