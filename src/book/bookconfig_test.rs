@@ -18,19 +18,12 @@ fn it_parses_json_config() {
 
     config.parse_from_json_string(&text.to_string());
 
-    let expected = r#"BookConfig {
-    root: ".",
-    dest: "book",
-    src: "src",
-    theme_path: "theme",
-    title: "mdBook Documentation",
-    author: "Mathieu David",
-    description: "Create book from markdown files. Like Gitbook but implemented in Rust",
-    indent_spaces: 4,
-    multilingual: false
-}"#;
+    let mut expected = BookConfig::new(Path::new("."));
+    expected.title = "mdBook Documentation".to_string();
+    expected.author = "Mathieu David".to_string();
+    expected.description = "Create book from markdown files. Like Gitbook but implemented in Rust".to_string();
 
-    assert_eq!(format!("{:#?}", config), expected);
+    assert_eq!(format!("{:#?}", config), format!("{:#?}", expected));
 }
 
 #[test]
@@ -46,19 +39,12 @@ author = "Mathieu David"
 
     config.parse_from_toml_string(&text.to_string());
 
-    let expected = r#"BookConfig {
-    root: ".",
-    dest: "book",
-    src: "src",
-    theme_path: "theme",
-    title: "mdBook Documentation",
-    author: "Mathieu David",
-    description: "Create book from markdown files. Like Gitbook but implemented in Rust",
-    indent_spaces: 4,
-    multilingual: false
-}"#;
+    let mut expected = BookConfig::new(Path::new("."));
+    expected.title = "mdBook Documentation".to_string();
+    expected.author = "Mathieu David".to_string();
+    expected.description = "Create book from markdown files. Like Gitbook but implemented in Rust".to_string();
 
-    assert_eq!(format!("{:#?}", config), expected);
+    assert_eq!(format!("{:#?}", config), format!("{:#?}", expected));
 }
 
 #[test]
