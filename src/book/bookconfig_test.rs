@@ -20,9 +20,9 @@ fn it_parses_json_config() {
 
     let expected = r#"BookConfig {
     root: ".",
-    dest: "./book",
-    src: "./src",
-    theme_path: "./theme",
+    dest: "book",
+    src: "src",
+    theme_path: "theme",
     title: "mdBook Documentation",
     author: "Mathieu David",
     description: "Create book from markdown files. Like Gitbook but implemented in Rust",
@@ -46,13 +46,11 @@ author = "Mathieu David"
 
     config.parse_from_toml_string(&text.to_string());
 
-    println!("{:#?}", config);
-
     let expected = r#"BookConfig {
     root: ".",
-    dest: "./book",
-    src: "./src",
-    theme_path: "./theme",
+    dest: "book",
+    src: "src",
+    theme_path: "theme",
     title: "mdBook Documentation",
     author: "Mathieu David",
     description: "Create book from markdown files. Like Gitbook but implemented in Rust",
