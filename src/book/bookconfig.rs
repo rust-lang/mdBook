@@ -4,8 +4,8 @@ use std::process::exit;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
-
-//use serde::{Serialize, Deserialize};
+use std::collections::BTreeMap;
+use std::str::FromStr;
 use serde_json;
 
 #[derive(Debug, Clone)]
@@ -93,7 +93,29 @@ impl BookConfig {
             }
         };
 
-        // TODO this is very similar to how the JSON is parsed. Combine somehow?
+        self.parse_from_btreemap(&config);
+
+        self
+    }
+
+    /// Parses the string to JSON and converts it to BTreeMap<String, toml::Value>.
+    pub fn parse_from_json_string(&mut self, data: &String) -> &mut Self {
+
+        let c: serde_json::Value = match serde_json::from_str(&data) {
+            Ok(x) => x,
+            Err(e) => {
+                error!("[*]: JSON parse errors in book.json: {:?}", e);
+                exit(2);
+            }
+        };
+
+        let config = json_object_to_btreemap(&c.as_object().unwrap());
+        self.parse_from_btreemap(&config);
+
+        self
+    }
+
+    pub fn parse_from_btreemap(&mut self, config: &BTreeMap<String, toml::Value>) -> &mut Self {
 
         // Title, author, description
         if let Some(a) = config.get("title") {
@@ -104,65 +126,6 @@ impl BookConfig {
         }
         if let Some(a) = config.get("description") {
             self.description = a.to_string().replace("\"", "");
-        }
-
-        // Destination folder
-        if let Some(a) = config.get("dest") {
-            let mut dest = PathBuf::from(&a.to_string().replace("\"", ""));
-
-            // If path is relative make it absolute from the parent directory of src
-            if dest.is_relative() {
-                dest = self.get_root().join(&dest);
-            }
-            self.set_dest(&dest);
-        }
-
-        // Source folder
-        if let Some(a) = config.get("src") {
-            let mut src = PathBuf::from(&a.to_string().replace("\"", ""));
-            if src.is_relative() {
-                src = self.get_root().join(&src);
-            }
-            self.set_src(&src);
-        }
-
-        // Theme path folder
-        if let Some(a) = config.get("theme_path") {
-            let mut theme_path = PathBuf::from(&a.to_string().replace("\"", ""));
-            if theme_path.is_relative() {
-                theme_path = self.get_root().join(&theme_path);
-            }
-            self.set_theme_path(&theme_path);
-        }
-
-        self
-    }
-
-    pub fn parse_from_json_string(&mut self, data: &String) -> &mut Self {
-
-        let config: serde_json::Value = match serde_json::from_str(&data) {
-            Ok(x) => {x},
-            Err(e) => {
-                error!("[*]: JSON parse errors in book.json: {:?}", e);
-                exit(2);
-            }
-        };
-
-        // Extract data
-
-        let config = config.as_object().unwrap();
-
-        debug!("[*]: Extracting data from config");
-
-        // Title, author, description
-        if let Some(a) = config.get("title") {
-            self.title = a.to_string().replace("\"", "")
-        }
-        if let Some(a) = config.get("author") {
-            self.author = a.to_string().replace("\"", "")
-        }
-        if let Some(a) = config.get("description") {
-            self.description = a.to_string().replace("\"", "")
         }
 
         // Destination folder
@@ -231,5 +194,35 @@ impl BookConfig {
     pub fn set_theme_path(&mut self, theme_path: &Path) -> &mut Self {
         self.theme_path = theme_path.to_owned();
         self
+    }
+}
+
+pub fn json_object_to_btreemap(json: &serde_json::Map<String, serde_json::Value>) -> BTreeMap<String, toml::Value> {
+    let mut config: BTreeMap<String, toml::Value> = BTreeMap::new();
+
+    for (key, value) in json.iter() {
+        config.insert(
+            String::from_str(key).unwrap(),
+            json_value_to_toml_value(value.to_owned())
+        );
+    }
+
+    config
+}
+
+pub fn json_value_to_toml_value(json: serde_json::Value) -> toml::Value {
+    match json {
+        serde_json::Value::Null => toml::Value::String("".to_string()),
+        serde_json::Value::Bool(x) => toml::Value::Boolean(x),
+        serde_json::Value::I64(x) => toml::Value::Integer(x),
+        serde_json::Value::U64(x) => toml::Value::Integer(x as i64),
+        serde_json::Value::F64(x) => toml::Value::Float(x),
+        serde_json::Value::String(x) => toml::Value::String(x),
+        serde_json::Value::Array(x) => {
+            toml::Value::Array(x.iter().map(|v| json_value_to_toml_value(v.to_owned())).collect())
+        },
+        serde_json::Value::Object(x) => {
+            toml::Value::Table(json_object_to_btreemap(&x))
+        },
     }
 }
