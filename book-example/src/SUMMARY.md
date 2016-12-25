@@ -1,5 +1,7 @@
 # Summary
 
+[Introduction](misc/introduction.md)
+
 - [mdBook](README.md)
 - [Command Line Tool](cli/cli-tool.md)
     - [init](cli/init.md)
