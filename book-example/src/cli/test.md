@@ -10,7 +10,7 @@ mdBook supports a `test` command that will run all available tests in mdBook. At
 - checking for unused files
 - ...
 
-In the future I would like the user to be able to enable / disable test from the `book.json` configuration file and support custom tests.
+In the future I would like the user to be able to enable / disable test from the `book.toml` configuration file and support custom tests.
 
 **How to use it:**
 ```bash

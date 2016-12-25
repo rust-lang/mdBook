@@ -47,7 +47,7 @@ Will render as
 # }
 ```
 
-**At the moment, this only works for code examples that are annotated with `rust`. Because it would collide with semantics of some programming languages. In the future, we want to make this configurable through the `book.json` so that everyone can benefit from it.**
+**At the moment, this only works for code examples that are annotated with `rust`. Because it would collide with semantics of some programming languages. In the future, we want to make this configurable through the `book.toml` so that everyone can benefit from it.**
 
 
 ## Improve default theme
