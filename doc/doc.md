@@ -1,17 +1,38 @@
 # Doc
 
-Diagrams are with [yEd](http://www.yworks.com/products/yed) and [plantuml](http://plantuml.com).
+Diagrams are with [yEd](http://www.yworks.com/products/yed)
+and [plantuml](http://plantuml.com).
 
 ## Data
+
+`MDBook::new(root)` parses CLI args and `book.toml` to create:
+
+- app config settings
+- `Book` for each language
+
+Each `Book` is given their config setting with their source- and destination
+paths.
+
+The renderer can then render each book.
+
+To render the TOC, renderer gets a Vec<TocItem> from summary parser.
+
+The renderer walks through the Vec. It can match content kinds in an enum and
+this way knows whether to render:
+
+- front- back- or mainmatter
+- spacer elements (vertical space in TOC but no chapter output)
+- insert chapters (no TOC link, but the chapter is part of the reading sequence)
 
 ![book data](assets/bookdata.png)
 
 ### Renderer
 
-Takes data from:
+Takes a book, which knows:
 
-- a book's metadata and chapters (`Book`)
-- paths and behaviour config (`BookConfig`)
+- metadata
+- toc with chapters
+- config for paths
 - template assets (`template_path`)
 
 For generating pages:
@@ -22,7 +43,8 @@ those properties which can be easily anticipated.
 If Renderer needs more specific data, it can be supplied in `book.toml`. It's
 the Renderer's job to open that and parse it out.
 
-Chapters, `Vec<Chapter>`.
+Chapters are represented in a `Vec<TocItem>`, each item has the chapter content
+as payload.
 
 If the user wants to store attributes that are not anticipated with structs,
 they can go in a hashmap with string keys, let them be accessible from the
@@ -41,25 +63,19 @@ renderer.
 Takes data from:
 
 - CLI args
-- book.json
+- book.toml
 
 ## Structs
 
+### Reorganized
+
+![structs reorganized](assets/structs-reorganized.png)
+
 ### Currently
-
-Already almost good for implementing the above.
-
-Storing data attributes can be reorganized.
-
-Modules could be refactored to express intention more clearly.
 
 ![structs](assets/structs.png)
 
 ## Notes
-
-There could be less modules. Merge modules which express one intention.
-
-The two Chapter structs could be refactored out.
 
 Take config paths for as many things as possible. Let the user organize their
 project folder differently, or allow `mdbook` to function in existing projects
