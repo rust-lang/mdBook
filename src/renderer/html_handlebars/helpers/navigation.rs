@@ -1,9 +1,10 @@
 use std::path::Path;
-use std::collections::BTreeMap;
+use std::collections::{VecDeque, BTreeMap};
 
 use serde_json;
 use serde_json::value::ToJson;
 use handlebars::{Handlebars, RenderError, RenderContext, Helper, Context, Renderable};
+
 
 // Handlebars helper for navigation
 
@@ -14,9 +15,9 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
     // get value from context data
     // rc.get_path() is current json parent path, you should always use it like this
     // param is the key of value you want to display
-    let chapters = c.navigate(rc.get_path(), "chapters");
+    let chapters = c.navigate(rc.get_path(), &VecDeque::new(), "chapters");
 
-    let current = c.navigate(rc.get_path(), "path")
+    let current = c.navigate(rc.get_path(), &VecDeque::new(), "path")
         .to_string()
         .replace("\"", "");
 
@@ -114,9 +115,9 @@ pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) ->
     // get value from context data
     // rc.get_path() is current json parent path, you should always use it like this
     // param is the key of value you want to display
-    let chapters = c.navigate(rc.get_path(), "chapters");
+    let chapters = c.navigate(rc.get_path(), &VecDeque::new(), "chapters");
 
-    let current = c.navigate(rc.get_path(), "path")
+    let current = c.navigate(rc.get_path(), &VecDeque::new(), "path")
         .to_string()
         .replace("\"", "");
 

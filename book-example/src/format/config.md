@@ -1,16 +1,16 @@
 # Configuration
 
-You can configure the parameters for your book in the ***book.json*** file.
+You can configure the parameters for your book in the ***book.toml*** file.
 
-Here is an example of what a ***book.json*** file might look like:
+We encourage using the TOML format, but JSON is also recognized and parsed.
 
-```json
-{
-    "title": "Example book",
-    "author": "Name",
-    "description": "The example book covers examples.",
-    "dest": "output/my-book"
-}
+Here is an example of what a ***book.toml*** file might look like:
+
+```toml
+title = "Example book"
+author = "Name"
+description = "The example book covers examples."
+dest = "output/my-book"
 ```
 
 #### Supported variables

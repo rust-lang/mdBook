@@ -1,6 +1,8 @@
 pub mod bookitem;
 pub mod bookconfig;
 
+pub mod bookconfig_test;
+
 pub use self::bookitem::{BookItem, BookItems};
 pub use self::bookconfig::BookConfig;
 

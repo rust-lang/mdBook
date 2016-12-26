@@ -1,5 +1,5 @@
 use std::path::Path;
-use std::collections::BTreeMap;
+use std::collections::{VecDeque, BTreeMap};
 
 use serde_json;
 use handlebars::{Handlebars, HelperDef, RenderError, RenderContext, Helper, Context};
@@ -15,8 +15,8 @@ impl HelperDef for RenderToc {
         // get value from context data
         // rc.get_path() is current json parent path, you should always use it like this
         // param is the key of value you want to display
-        let chapters = c.navigate(rc.get_path(), "chapters");
-        let current = c.navigate(rc.get_path(), "path").to_string().replace("\"", "");
+        let chapters = c.navigate(rc.get_path(), &VecDeque::new(), "chapters");
+        let current = c.navigate(rc.get_path(), &VecDeque::new(), "path").to_string().replace("\"", "");
         try!(rc.writer.write("<ul class=\"chapter\">".as_bytes()));
 
         // Decode json format
