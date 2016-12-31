@@ -1,0 +1,17 @@
+# Source: https://en.wikisource.org/wiki/Alice%27s_Adventures_in_Wonderland_(1866)"
+
+[[translations.en]]
+title = "Alice's Adventures in Wonderland"
+author = "Lewis Carroll"
+language = { name = "English", code = "en" }
+is_main_book = true
+
+[[translations.fr]]
+title = "Alice au pays des merveilles"
+author = "Lewis Carroll"
+language = { name = "Français", code = "fr" }
+
+[[translations.hu]]
+title = "Alice Csodaországban"
+author = "Lewis Carroll"
+language = { name = "Magyar", code = "hu" }

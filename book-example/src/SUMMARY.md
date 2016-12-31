@@ -1,7 +1,5 @@
 # Summary
 
-[Introduction](misc/introduction.md)
-
 - [mdBook](README.md)
 - [Command Line Tool](cli/cli-tool.md)
     - [init](cli/init.md)
@@ -18,5 +16,6 @@
     - [MathJax Support](format/mathjax.md)
     - [Rust code specific features](format/rust.md)
 - [Rust Library](lib/lib.md)
+- [Structs](structs/structs.md)
 -----------
 [Contributors](misc/contributors.md)

@@ -69,19 +69,23 @@
 //!
 //! Make sure to take a look at it.
 
+extern crate includedir;
+extern crate phf;
+
+include!(concat!(env!("OUT_DIR"), "/data.rs"));
+
 extern crate serde;
 extern crate serde_json;
 extern crate handlebars;
 extern crate pulldown_cmark;
+extern crate regex;
+extern crate glob;
 
 #[macro_use] extern crate log;
 pub mod book;
 mod parse;
 pub mod renderer;
-pub mod theme;
 pub mod utils;
+pub mod tests;
 
 pub use book::MDBook;
-pub use book::BookItem;
-pub use book::BookConfig;
-pub use renderer::Renderer;

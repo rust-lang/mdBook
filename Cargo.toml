@@ -1,6 +1,6 @@
 [package]
 name = "mdbook"
-version = "0.0.15"
+version = "0.0.16"
 authors = ["Mathieu David <mathieudavid@mathieudavid.org>"]
 description = "create books from markdown files (like Gitbook)"
 documentation = "http://azerupi.github.io/mdBook/index.html"
@@ -9,10 +9,12 @@ keywords = ["book", "gitbook", "rustbook", "markdown"]
 license = "MPL-2.0"
 readme = "README.md"
 build = "build.rs"
+include = ["data"]
 exclude = [
     "book-example/*",
-    "src/theme/stylus",
+    "data/html-template/_stylus",
 ]
+
 
 [dependencies]
 clap = "2.19.2"
@@ -20,9 +22,13 @@ handlebars = { version = "0.23.0", features = ["serde_type"] }
 serde = "0.8"
 serde_json = "0.8"
 pulldown-cmark = "0.0.8"
+regex = "0.1"
+glob = "0.2"
 log = "0.3"
 env_logger = "0.3"
 toml = { version = "0.2", features = ["serde"] }
+phf = "0.7"
+includedir = "0.2"
 
 # Watch feature
 notify = { version = "2.5.5", optional = true }
@@ -33,6 +39,9 @@ crossbeam = { version = "0.2.8", optional = true }
 iron = { version = "0.4", optional = true }
 staticfile = { version = "0.3", optional = true }
 ws = { version = "0.5.1", optional = true}
+
+[build-dependencies]
+includedir_codegen = "0.2"
 
 # Tests
 [dev-dependencies]

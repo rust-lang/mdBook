@@ -1,10 +1,15 @@
-use std::path::{Path, Component};
+use book::MDBook;
+
+use std::path::{Path, PathBuf, Component};
 use std::error::Error;
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
 use std::fs::{self, File};
 
-/// Takes a path to a file and try to read the file into a String
+use glob::{glob, Pattern};
 
+use FILES;
+
+/// Takes a path to a file and try to read the file into a String
 pub fn file_to_string(path: &Path) -> Result<String, Box<Error>> {
     let mut file = match File::open(path) {
         Ok(f) => f,
@@ -22,6 +27,156 @@ pub fn file_to_string(path: &Path) -> Result<String, Box<Error>> {
     }
 
     Ok(content)
+}
+
+/// Returns the contents of a static asset file by its path as &str. The path
+/// should include "data/".
+pub fn get_data_file(path: &str) -> Result<String, Box<Error>> {
+    let content = match FILES.get(&path) {
+        Ok(x) => String::from_utf8(x.into_owned()).unwrap_or("".to_string()),
+        Err(e) => return Err(Box::new(e)),
+    };
+    Ok(content)
+}
+
+/// Writes the content of a data file from the embedded static assets to the
+/// given destination path. Necessary folders will be created.
+pub fn copy_data_file(src_path: &str, dest_path: &Path) -> Result<(), Box<Error>> {
+    let content = match FILES.get(&src_path) {
+        Ok(x) => x.into_owned(),
+        Err(e) => return Err(Box::new(e)),
+    };
+
+    let mut f: File = try!(create_file(dest_path));
+
+    match f.write_all(&content) {
+        Ok(x) => Ok(x),
+        Err(e) => Err(Box::new(e))
+    }
+}
+
+/// Writes selected data files from the embedded static assets to the given
+/// destination path.
+///
+/// `include_base` will be removed from the source path. This way the path
+/// relative to the `dest_path` can be controlled.
+///
+/// The following will copy all files under "data/html-template/", excluding
+/// folders that start with "_", take the "data/html-template/" part off the
+/// source path, and write the entries to "assets" folder.
+///
+/// I.e. "data/html-template/css/book.css" will be written to
+/// "assets/css/book.css".
+///
+/// ```no_run
+/// utils::fs::copy_data("data/html-template/**/*",
+///                      "data/html-template/",
+///                      vec!["data/html-template/_*"],
+///                      &Path::new("assets"));
+/// ```
+pub fn copy_data(include_glob: &str,
+                 include_base: &str,
+                 exclude_globs: Vec<&str>,
+                 dest_base: &Path)
+                 -> Result<(), Box<Error>> {
+
+    let results = FILES.file_names()
+        // narrow to files that match any of the include patterns
+        .filter(|x| glob_matches(x, &vec![include_glob]))
+        // exclude those which match any of the exclude patterns
+        .filter(|x| !glob_matches(x, &exclude_globs))
+        // copy each to the destination such that `include_base` is removed from the source path
+        .map(|x| {
+            let mut s: &str = &x.replace(include_base, "");
+            s = s.trim_left_matches("/");
+
+            let p = Path::new(s);
+            let dest_path = dest_base.join(p);
+
+            copy_data_file(x, &dest_path)
+        })
+        // only error results should remain
+        .filter(|x| !x.is_ok());
+
+    // collect errors as a String
+    let mut s = String::new();
+    for i in results {
+        s.push_str(&format!("{:?}\n", i));
+    }
+
+    if s.len() > 1 as usize {
+        Err(Box::new(io::Error::new(io::ErrorKind::Other, s)))
+    } else {
+        Ok(())
+    }
+}
+
+/// Is there a match in any of the glob patterns?
+pub fn glob_matches(text: &str, globs: &Vec<&str>) -> bool {
+    let patterns = globs.iter().map(|x| Pattern::new(x).unwrap());
+    for pat in patterns {
+        if pat.matches(text) {
+            return true;
+        }
+    }
+    false
+}
+
+/// Same logic as `copy_data()` but operating on actual files instead of
+/// embedded static assets.
+pub fn copy_files(include_glob: &str,
+                  include_base: &str,
+                  exclude_globs: Vec<&str>,
+                  dest_base: &Path)
+                  -> Result<(), Box<Error>> {
+
+    let pathbufs: Vec<PathBuf> = try!(glob(include_glob))
+        .filter(|x| x.is_ok())
+        .map(|x| x.unwrap())
+        .collect::<Vec<PathBuf>>();
+
+    let files = pathbufs.iter().filter_map(|x| x.to_str());
+
+    let results =
+    // narrow to files that match any of the include patterns
+        files.filter(|x| glob_matches(x, &vec![include_glob]))
+        // exclude those which match any of the exclude patterns
+        .filter(|x| !glob_matches(x, &exclude_globs))
+        // copy each to the destination such that `include_base` is removed from the source path
+        .map(|x| {
+            let mut s: &str = &x.replace(include_base, "");
+            s = s.trim_left_matches("/");
+
+            let p = Path::new(s);
+            let dest_path = dest_base.join(p);
+
+            // make sure parent exists
+            if let Some(p) = dest_path.parent() {
+                try!(fs::create_dir_all(p));
+            }
+
+            if dest_path.is_dir() {
+                // if it is an already created dir
+                Ok(0)
+            } else {
+                // this will error on folders, so don't try!() on results
+                fs::copy(&x, &dest_path)
+            }
+        })
+        // only error results should remain
+        .filter(|x| !x.is_ok());
+
+    // collect errors as a String
+    let mut s = String::new();
+    for i in results {
+        s.push_str(&format!("{:?}\n", i));
+    }
+
+    if s.len() > 1 as usize {
+        Err(Box::new(io::Error::new(io::ErrorKind::Other, s)))
+    } else {
+        Ok(())
+    }
 }
 
 /// Takes a path and returns a path containing just enough `../` to point to the root of the given path.
@@ -44,7 +199,6 @@ pub fn file_to_string(path: &Path) -> Result<String, Box<Error>> {
 /// **note:** it's not very fool-proof, if you find a situation where it doesn't return the correct
 /// path. Consider [submitting a new issue](https://github.com/azerupi/mdBook/issues) or a
 /// [pull-request](https://github.com/azerupi/mdBook/pulls) to improve it.
-
 pub fn path_to_root(path: &Path) -> String {
     debug!("[fn]: path_to_root");
     // Remove filename and add "../" for every directory
@@ -64,11 +218,8 @@ pub fn path_to_root(path: &Path) -> String {
         })
 }
 
-
-
 /// This function creates a file and returns it. But before creating the file it checks every
 /// directory in the path to see if it exists, and if it does not it will be created.
-
 pub fn create_file(path: &Path) -> Result<File, Box<Error>> {
     debug!("[fn]: create_file");
 
@@ -91,9 +242,14 @@ pub fn create_file(path: &Path) -> Result<File, Box<Error>> {
     Ok(f)
 }
 
-/// Removes all the content of a directory but not the directory itself
+// TODO why not just delete the folder and re-create it?
 
+/// Removes all the content of a directory but not the directory itself
 pub fn remove_dir_content(dir: &Path) -> Result<(), Box<Error>> {
+    if !dir.exists() {
+        return Ok(());
+    }
+
     for item in try!(fs::read_dir(dir)) {
         if let Ok(item) = item {
             let item = item.path();
@@ -107,11 +263,8 @@ pub fn remove_dir_content(dir: &Path) -> Result<(), Box<Error>> {
     Ok(())
 }
 
-///
-///
 /// Copies all files of a directory to another one except the files with the extensions given in the
 /// `ext_blacklist` array
-
 pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blacklist: &[&str]) -> Result<(), Box<Error>> {
     debug!("[fn] copy_files_except_ext");
     // Check that from and to are different
@@ -161,6 +314,53 @@ pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blackl
     Ok(())
 }
 
+pub fn create_with_str(path: &PathBuf, text: &str) -> Result<File, String> {
+    match File::create(path) {
+        Err(e) => {
+            return Err(format!("File doesn't exist, error in creating: {:?}", e));
+        },
+        Ok(mut f) => {
+            let s = text.as_bytes();
+            match f.write_all(s) {
+                Ok(_) => Ok(f),
+                Err(e) => Err(format!("File doesn't exist, error in writing: {:?}", e))
+            }
+        },
+    }
+}
+
+/// Creates .gitignore in the project root folder.
+pub fn create_gitignore(proj: &MDBook) {
+    let gitignore = proj.get_project_root().join(".gitignore");
+
+    if gitignore.exists() {
+        return;
+    }
+
+    // Gitignore does not exist, create it
+
+    // Figure out what is the user's output folder (can be default "book" or
+    // custom config). This will be a full path, so remove the project_root from
+    // it.
+    let a = proj.get_project_root();
+    let b = proj.get_dest_base();
+    let c = b.strip_prefix(&a).unwrap();
+    let relative_dest = c.to_str().expect("Path could not be yielded into a string slice.");
+
+    debug!("[*]: {:?} does not exist, trying to create .gitignore", gitignore);
+
+    let mut f = File::create(&gitignore).expect("Could not create file.");
+
+    let text = format!("*.swp
+.#*
+*~
+.DS_Store
+{}", relative_dest);
+
+    debug!("[*]: Writing to .gitignore");
+
+    f.write_all(&text.into_bytes()).expect("Could not write to file.");
+}
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------

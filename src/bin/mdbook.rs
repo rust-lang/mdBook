@@ -29,14 +29,9 @@ use std::path::{Path, PathBuf};
 
 use clap::{App, ArgMatches, SubCommand, AppSettings};
 
-// Uses for the Watch feature
-#[cfg(feature = "watch")]
-use notify::Watcher;
-#[cfg(feature = "watch")]
-use std::sync::mpsc::channel;
-
-
 use mdbook::MDBook;
+use mdbook::renderer::{Renderer, HtmlHandlebars};
+use mdbook::utils;
 
 const NAME: &'static str = "mdbook";
 
@@ -55,7 +50,7 @@ fn main() {
                         .about("Create boilerplate structure and files in the directory")
                         // the {n} denotes a newline which will properly aligned in all help messages
                         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'")
-                        .arg_from_usage("--theme 'Copies the default theme into your source folder'")
+                        .arg_from_usage("--copy-assets 'Copies the default assets (css, layout template, etc.) into your project folder'")
                         .arg_from_usage("--force 'skip confirmation prompts'"))
                     .subcommand(SubCommand::with_name("build")
                         .about("Build the book from the markdown files")
@@ -92,7 +87,6 @@ fn main() {
     }
 }
 
-
 // Simple function that user comfirmation
 fn confirm() -> bool {
     io::stdout().flush().unwrap();
@@ -104,25 +98,24 @@ fn confirm() -> bool {
     }
 }
 
-
 // Init command implementation
 fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
 
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::new(&book_dir);
+    let mut book_project = MDBook::new(&book_dir);
 
-    // Call the function that does the initialization
-    try!(book.init());
+    book_project.read_config();
+    book_project.parse_books();
 
-    // If flag `--theme` is present, copy theme to src
-    if args.is_present("theme") {
+    // If flag `--copy-assets` is present, copy embedded assets to project root
+    if args.is_present("copy-assets") {
 
         // Skip this if `--force` is present
-        if !args.is_present("force") {
+        if book_project.get_project_root().join("assets").exists() && !args.is_present("force") {
             // Print warning
-            print!("\nCopying the default theme to {:?}", book.get_src());
-            println!("could potentially overwrite files already present in that directory.");
-            print!("\nAre you sure you want to continue? (y/n) ");
+            println!("\nCopying the default assets to {:?}", book_project.get_project_root());
+            println!("This will overwrite files already present in that directory.");
+            print!("Are you sure you want to continue? (y/n) ");
 
             // Read answer from user and exit if it's not 'yes'
             if !confirm() {
@@ -132,20 +125,21 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
             }
         }
 
-        // Call the function that copies the theme
-        try!(book.copy_theme());
-        println!("\nTheme copied.");
+        // Copy the assets
+        try!(utils::fs::copy_data("data/**/*",
+                                  "data/",
+                                  vec![],
+                                  &book_project.get_project_root().join("assets")));
+
+        println!("\nAssets copied.");
 
     }
 
-    // Because of `src/book/mdbook.rs#L37-L39`, `dest` will always start with `root`
-    let is_dest_inside_root = book.get_dest().starts_with(book.get_root());
-
-    if !args.is_present("force") && is_dest_inside_root {
+    if !args.is_present("force") {
         println!("\nDo you want a .gitignore to be created? (y/n)");
 
         if confirm() {
-            book.create_gitignore();
+            utils::fs::create_gitignore(&book_project);
             println!("\n.gitignore created.");
         }
     }
@@ -155,114 +149,39 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
     Ok(())
 }
 
-
 // Build command implementation
 fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::new(&book_dir).read_config();
 
-    try!(book.build());
+    // TODO figure out render format intent when we acutally have different renderers
+
+    let renderer = HtmlHandlebars::new();
+    try!(renderer.build(&book_dir));
 
     Ok(())
 }
-
 
 // Watch command implementation
 #[cfg(feature = "watch")]
 fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
-    let book_dir = get_book_dir(args);
-    let mut book = MDBook::new(&book_dir).read_config();
-
-    trigger_on_change(&mut book, |event, book| {
-        if let Some(path) = event.path {
-            println!("File changed: {:?}\nBuilding book...\n", path);
-            match book.build() {
-                Err(e) => println!("Error while building: {:?}", e),
-                _ => {},
-            }
-            println!("");
-        }
-    });
-
+    // TODO watch
+    println!("watch");
     Ok(())
 }
 
-
-// Watch command implementation
+// Serve command implementation
 #[cfg(feature = "serve")]
 fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
-    const RELOAD_COMMAND: &'static str = "reload";
-
-    let book_dir = get_book_dir(args);
-    let mut book = MDBook::new(&book_dir).read_config();
-    let port = args.value_of("port").unwrap_or("3000");
-    let ws_port = args.value_of("ws-port").unwrap_or("3001");
-    let interface = args.value_of("interface").unwrap_or("localhost");
-    let public_address = args.value_of("address").unwrap_or(interface);
-
-    let address = format!("{}:{}", interface, port);
-    let ws_address = format!("{}:{}", interface, ws_port);
-
-    book.set_livereload(format!(r#"
-        <script type="text/javascript">
-            var socket = new WebSocket("ws://{}:{}");
-            socket.onmessage = function (event) {{
-                if (event.data === "{}") {{
-                    socket.close();
-                    location.reload(true); // force reload from server (not from cache)
-                }}
-            }};
-
-            window.onbeforeunload = function() {{
-                socket.close();
-            }}
-        </script>
-    "#, public_address, ws_port, RELOAD_COMMAND).to_owned());
-
-    try!(book.build());
-
-    let staticfile = staticfile::Static::new(book.get_dest());
-    let iron = iron::Iron::new(staticfile);
-    let _iron = iron.http(&*address).unwrap();
-
-    let ws_server = ws::WebSocket::new(|_| {
-        |_| {
-            Ok(())
-        }
-    }).unwrap();
-
-    let broadcaster = ws_server.broadcaster();
-
-    std::thread::spawn(move || {
-        ws_server.listen(&*ws_address).unwrap();
-    });
-
-    println!("\nServing on {}", address);
-
-    trigger_on_change(&mut book, move |event, book| {
-        if let Some(path) = event.path {
-            println!("File changed: {:?}\nBuilding book...\n", path);
-            match book.build() {
-                Err(e) => println!("Error while building: {:?}", e),
-                _ => broadcaster.send(RELOAD_COMMAND).unwrap(),
-            }
-            println!("");
-        }
-    });
-
+    // TODO serve
+    println!("serve");
     Ok(())
 }
-
 
 fn test(args: &ArgMatches) -> Result<(), Box<Error>> {
-    let book_dir = get_book_dir(args);
-    let mut book = MDBook::new(&book_dir).read_config();
-
-    try!(book.test());
-
+    // TODO test
+    println!("test");
     Ok(())
 }
-
 
 fn get_book_dir(args: &ArgMatches) -> PathBuf {
     if let Some(dir) = args.value_of("dir") {
@@ -275,60 +194,5 @@ fn get_book_dir(args: &ArgMatches) -> PathBuf {
         }
     } else {
         env::current_dir().unwrap()
-    }
-}
-
-
-// Calls the closure when a book source file is changed. This is blocking!
-#[cfg(feature = "watch")]
-fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
-    where F: Fn(notify::Event, &mut MDBook) -> ()
-{
-    // Create a channel to receive the events.
-    let (tx, rx) = channel();
-
-    let w: Result<notify::RecommendedWatcher, notify::Error> = notify::Watcher::new(tx);
-
-    match w {
-        Ok(mut watcher) => {
-            // Add the source directory to the watcher
-            if let Err(e) = watcher.watch(book.get_src()) {
-                println!("Error while watching {:?}:\n    {:?}", book.get_src(), e);
-                ::std::process::exit(0);
-            };
-
-            // Add the book.json file to the watcher if it exists, because it's not
-            // located in the source directory
-            if let Err(_) = watcher.watch(book.get_root().join("book.json")) {
-                // do nothing if book.json is not found
-            }
-
-            let mut previous_time = time::get_time();
-
-            println!("\nListening for changes...\n");
-
-            loop {
-                match rx.recv() {
-                    Ok(event) => {
-                        // Skip the event if an event has already been issued in the last second
-                        let time = time::get_time();
-                        if time - previous_time < time::Duration::seconds(1) {
-                            continue;
-                        } else {
-                            previous_time = time;
-                        }
-
-                        closure(event, book);
-                    },
-                    Err(e) => {
-                        println!("An error occured: {:?}", e);
-                    },
-                }
-            }
-        },
-        Err(e) => {
-            println!("Error while trying to watch the files:\n\n\t{:?}", e);
-            ::std::process::exit(0);
-        },
     }
 }

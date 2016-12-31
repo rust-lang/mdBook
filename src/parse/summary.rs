@@ -1,26 +1,41 @@
 use std::path::PathBuf;
 use std::fs::File;
 use std::io::{Read, Result, Error, ErrorKind};
-use book::bookitem::{BookItem, Chapter};
 
-pub fn construct_bookitems(path: &PathBuf) -> Result<Vec<BookItem>> {
-    debug!("[fn]: construct_bookitems");
+use book::chapter::Chapter;
+use book::toc::{TocItem, TocContent};
+
+pub fn construct_tocitems(summary_path: &PathBuf, first_as_index: bool) -> Result<Vec<TocItem>> {
+    debug!("[fn]: construct_tocitems");
     let mut summary = String::new();
-    try!(try!(File::open(path)).read_to_string(&mut summary));
+    try!(try!(File::open(summary_path)).read_to_string(&mut summary));
 
     debug!("[*]: Parse SUMMARY.md");
-    let top_items = try!(parse_level(&mut summary.split('\n').collect(), 0, vec![0]));
+
+    let top_items = try!(parse_level(&mut summary.split('\n').collect(), 0, vec![0], first_as_index));
     debug!("[*]: Done parsing SUMMARY.md");
     Ok(top_items)
 }
 
-fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32>) -> Result<Vec<BookItem>> {
+pub fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32>, first_as_index: bool) -> Result<Vec<TocItem>> {
     debug!("[fn]: parse_level");
-    let mut items: Vec<BookItem> = vec![];
+    let mut items: Vec<TocItem> = vec![];
+
+    let mut found_first = false;
+
+    let ohnoes = r#"Your SUMMARY.md is messed up
+
+Unnumbered and Spacer items can only exist on the root level.
+
+Unnumbered items can only exist before or after Numbered items, since these
+items are in the frontmatter of a book.
+
+There can be no Numbered items after Unnumbered items, as they are in the
+backmatter."#;
 
     // Construct the book recursively
     while !summary.is_empty() {
-        let item: BookItem;
+        let item: TocItem;
         // Indentation level of the line to parse
         let level = try!(level(summary[0], 4));
 
@@ -35,58 +50,58 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
             // Level can not be root level !!
             // Add a sub-number to section
             section.push(0);
+
             let last = items.pop().expect("There should be at least one item since this can't be the root level");
 
-            item = if let BookItem::Chapter(ref s, ref ch) = last {
-                let mut ch = ch.clone();
-                ch.sub_items = try!(parse_level(summary, level, section.clone()));
-                items.push(BookItem::Chapter(s.clone(), ch));
+            item = match last {
+                TocItem::Numbered(mut a) => {
+                    let sec = section.clone();
+                    a.sub_items = Some(try!(parse_level(summary, level, sec.clone(), false)));
+                    items.push(TocItem::Numbered(a));
 
-                // Remove the last number from the section, because we got back to our level..
-                section.pop();
-                continue;
-            } else {
-                return Err(Error::new(ErrorKind::Other,
-                                      format!("Your summary.md is messed up\n\n
-                        Prefix, \
-                                               Suffix and Spacer elements can only exist on the root level.\n
-                        \
-                                               Prefix elements can only exist before any chapter and there can be \
-                                               no chapters after suffix elements.")));
+                    // Remove the last number from the section, because we got
+                    // back to our level...
+                    section.pop();
+                    continue;
+                },
+                TocItem::Unnumbered(mut a) => {
+                    let sec = section.clone();
+                    a.sub_items = Some(try!(parse_level(summary, level, sec.clone(), false)));
+                    items.push(TocItem::Unnumbered(a));
+                    section.pop();
+                    continue;
+                },
+                TocItem::Unlisted(mut a) => {
+                    let sec = section.clone();
+                    a.sub_items = Some(try!(parse_level(summary, level, sec.clone(), false)));
+                    items.push(TocItem::Unlisted(a));
+                    section.pop();
+                    continue;
+                },
+                _ => {
+                    return Err(Error::new(ErrorKind::Other, ohnoes));
+                }
             };
 
         } else {
             // level and current_level are the same, parse the line
             item = if let Some(parsed_item) = parse_line(summary[0]) {
 
-                // Eliminate possible errors and set section to -1 after suffix
+                // Eliminate possible errors and set section to -1 after unnumbered
                 match parsed_item {
-                    // error if level != 0 and BookItem is != Chapter
-                    BookItem::Affix(_) | BookItem::Spacer if level > 0 => {
-                        return Err(Error::new(ErrorKind::Other,
-                                              format!("Your summary.md is messed up\n\n
-                                \
-                                                       Prefix, Suffix and Spacer elements can only exist on the \
-                                                       root level.\n
-                                Prefix \
-                                                       elements can only exist before any chapter and there can be \
-                                                       no chapters after suffix elements.")))
+
+                    // error if level != 0 and TocItem is != Numbered
+                    TocItem::Unnumbered(_) | TocItem::Spacer if level > 0 => {
+                        return Err(Error::new(ErrorKind::Other, ohnoes))
                     },
 
-                    // error if BookItem == Chapter and section == -1
-                    BookItem::Chapter(_, _) if section[0] == -1 => {
-                        return Err(Error::new(ErrorKind::Other,
-                                              format!("Your summary.md is messed up\n\n
-                                \
-                                                       Prefix, Suffix and Spacer elements can only exist on the \
-                                                       root level.\n
-                                Prefix \
-                                                       elements can only exist before any chapter and there can be \
-                                                       no chapters after suffix elements.")))
+                    // error if TocItem == Numbered or Unlisted and section == -1
+                    TocItem::Numbered(_) | TocItem::Unlisted(_) if section[0] == -1 => {
+                        return Err(Error::new(ErrorKind::Other, ohnoes))
                     },
 
-                    // Set section = -1 after suffix
-                    BookItem::Affix(_) if section[0] > 0 => {
+                    // Set section = -1 after unnumbered
+                    TocItem::Unnumbered(_) if section[0] > 0 => {
                         section[0] = -1;
                     },
 
@@ -94,12 +109,14 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
                 }
 
                 match parsed_item {
-                    BookItem::Chapter(_, ch) => {
+                    TocItem::Numbered(mut content) => {
                         // Increment section
                         let len = section.len() - 1;
                         section[len] += 1;
-                        let s = section.iter().fold("".to_owned(), |s, i| s + &i.to_string() + ".");
-                        BookItem::Chapter(s, ch)
+
+                        content.section = Some(section.clone());
+
+                        TocItem::Numbered(content)
                     },
                     _ => parsed_item,
                 }
@@ -112,12 +129,32 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
         }
 
         summary.remove(0);
-        items.push(item)
+
+        if first_as_index && !found_first {
+            let i = match item {
+                TocItem::Numbered(mut content) => {
+                    found_first = true;
+                    content.chapter.dest_path = Some(PathBuf::from("index.html".to_string()));
+                    TocItem::Numbered(content)
+                },
+                TocItem::Unnumbered(mut content) => {
+                    found_first = true;
+                    content.chapter.dest_path = Some(PathBuf::from("index.html".to_string()));
+                    TocItem::Unnumbered(content)
+                },
+                TocItem::Unlisted(content) => {
+                    TocItem::Unlisted(content)
+                },
+                TocItem::Spacer => TocItem::Spacer,
+            };
+            items.push(i);
+        } else {
+            items.push(item);
+        }
     }
     debug!("[*]: Level: {:?}", items);
     Ok(items)
 }
-
 
 fn level(line: &str, spaces_in_tab: i32) -> Result<i32> {
     debug!("[fn]: level");
@@ -147,8 +184,7 @@ fn level(line: &str, spaces_in_tab: i32) -> Result<i32> {
     Ok(level)
 }
 
-
-fn parse_line(l: &str) -> Option<BookItem> {
+fn parse_line(l: &str) -> Option<TocItem> {
     debug!("[fn]: parse_line");
 
     // Remove leading and trailing spaces or tabs
@@ -157,7 +193,7 @@ fn parse_line(l: &str) -> Option<BookItem> {
     // Spacers are "------"
     if line.starts_with("--") {
         debug!("[*]: Line is spacer");
-        return Some(BookItem::Spacer);
+        return Some(TocItem::Spacer);
     }
 
     if let Some(c) = line.chars().nth(0) {
@@ -166,8 +202,9 @@ fn parse_line(l: &str) -> Option<BookItem> {
             '-' | '*' => {
                 debug!("[*]: Line is list element");
 
-                if let Some((name, path)) = read_link(line) {
-                    return Some(BookItem::Chapter("0".to_owned(), Chapter::new(name, path)));
+                if let Some((title, path)) = read_link(line) {
+                    let chapter = Chapter::new(title, path);
+                    return Some(TocItem::Numbered(TocContent::new(chapter)));
                 } else {
                     return None;
                 }
@@ -176,8 +213,9 @@ fn parse_line(l: &str) -> Option<BookItem> {
             '[' => {
                 debug!("[*]: Line is a link element");
 
-                if let Some((name, path)) = read_link(line) {
-                    return Some(BookItem::Affix(Chapter::new(name, path)));
+                if let Some((title, path)) = read_link(line) {
+                    let chapter = Chapter::new(title, path);
+                    return Some(TocItem::Unnumbered(TocContent::new(chapter)));
                 } else {
                     return None;
                 }
@@ -209,7 +247,7 @@ fn read_link(line: &str) -> Option<(String, PathBuf)> {
         return None;
     }
 
-    let name = line[start_delimitor + 1..end_delimitor].to_owned();
+    let title = line[start_delimitor + 1..end_delimitor].to_owned();
 
     start_delimitor = end_delimitor + 1;
     if let Some(i) = line[start_delimitor..].find(')') {
@@ -221,5 +259,5 @@ fn read_link(line: &str) -> Option<(String, PathBuf)> {
 
     let path = PathBuf::from(line[start_delimitor + 1..end_delimitor].to_owned());
 
-    Some((name, path))
+    Some((title, path))
 }

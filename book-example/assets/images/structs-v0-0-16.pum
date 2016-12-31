@@ -1,0 +1,114 @@
+@startuml
+
+namespace book {
+
+class MDBook {
+  project_root: PathBuf,
+  template_dir: PathBuf,
+  dest_base: PathBuf,
+  render_intent: RenderIntent,
+
+  translations: HashMap<String, Book>,
+
+  indent_spaces: i32,
+  livereload: bool,
+
+  new(project_root)
+}
+
+class book::Book {
+  config: BookConfig,
+  toc: Vec<TocItem>,
+
+  new(project_root)
+}
+
+class book::Chapter {
+  title: String,
+  path: PathBuf,
+  dest_path: Option<PathBuf>,
+  authors: Option<Vec<Author>>,
+  translators: Option<Vec<Author>>,
+  description: Option<String>,
+  css_class: Option<String>,
+
+  new(title, path)
+}
+
+}
+
+namespace book::bookconfig {
+
+class BookConfig {
+  dest: PathBuf,
+  src: PathBuf,
+
+  title: String,
+  subtitle: Option<String>,
+  description: Option<String>,
+  language: Language,
+  authors: Vec<Author>,
+  translators: Option<Vec<Author>>,
+  publisher: Option<Publisher>,
+  number_format: NumberFormat,
+  section_names: Vec<String>,
+  is_main_book: bool,
+  is_multilang: bool,
+
+  new(project_root)
+}
+
+class Author {
+  name: String,
+  file_as: String,
+  email: Option<String>,
+
+  new(name)
+}
+
+class Language {
+  name: String,
+  code: String,
+
+  new(name, code)
+}
+
+class Publisher {
+  name: String,
+  url: Option<String>,
+  logo_src: Option<PathBuf>,
+
+  new(name)
+}
+
+enum NumberFormat {
+  Arabic
+  Roman
+  Word
+}
+
+}
+
+namespace book::toc {
+
+class TocContent {
+  chapter: Chapter,
+  sub_items: Option<Vec<TocItem>>,
+  section: Option<Vec<i32>>,
+}
+
+enum TocItem {
+  Numbered "TocContent",
+  Unnumbered "TocContent",
+  Unlisted "TocContent",
+  Spacer,
+}
+
+}
+
+class Renderer {
+   build(&self, project_root: &PathBuf),
+   render(&self, book_project: &MDBook),
+}
+
+@enduml

@@ -1,123 +1,144 @@
-pub mod bookitem;
-pub mod bookconfig;
-pub mod metadata;
-pub mod chapter;
+extern crate toml;
+
 pub mod book;
+pub mod bookconfig;
+pub mod toc;
+pub mod chapter;
 
-pub use self::metadata::{Author, Language, BookMetadata};
-pub use self::chapter::Chapter;
 pub use self::book::Book;
+use renderer::{Renderer, HtmlHandlebars};
+use utils;
 
-pub mod bookconfig_test;
-
-pub use self::bookitem::{BookItem, BookItems};
-pub use self::bookconfig::BookConfig;
-
+use std::env;
+use std::process::exit;
+use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::fs::{self, File};
+use std::io::Read;
 use std::error::Error;
-use std::io;
-use std::io::Write;
-use std::io::ErrorKind;
-use std::process::Command;
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeMap};
 
-use {theme, parse, utils};
-use renderer::{Renderer, HtmlHandlebars};
+#[derive(Debug, Clone)]
+pub struct MDBook {
 
+    /// Top-level directory of the book project, as an absolute path. Defaults
+    /// to the current directory. `set_project_root()` converts relative paths
+    /// to absolute.
+    project_root: PathBuf,
 
-pub struct MDBook<'a> {
-    root: PathBuf,
-    dest: PathBuf,
-    src: PathBuf,
-    theme_path: PathBuf,
+    /// Path to the template for the renderer, relative to `project_root`.
+    /// The `render_intent` determines its default value.
+    ///
+    /// A book doesn't necessarily has to have the template files. When not
+    /// found in the book's folder, the embedded static assets will be used.
+    ///
+    /// Html Handlebars: `project_root` + `assets/html-template`.
+    template_dir: PathBuf,
 
-    pub title: String,
-    pub author: String,
-    pub description: String,
+    /// Output base for all books, relative to `project_root`. Defaults to
+    /// `book`.
+    dest_base: PathBuf,
 
-    pub content: Vec<BookItem>,
-    books: HashMap<&'a str, Book>,
-    renderer: Box<Renderer>,
+    /// Informs other functions which renderer has been selected, either by
+    /// default or CLI argument.
+    render_intent: RenderIntent,
 
-    livereload: Option<String>,
+    // TODO Identify and cross-link translations either by file name, or an id
+    // string.
+
+    /// The book, or books in case of translations, accessible with a String
+    /// key. The keys can be two-letter codes of the translation such as 'en' or
+    /// 'fr', but this is not enforced.
+    ///
+    /// The String keys will be sub-folders where the translation's Markdown
+    /// sources are expected.
+    ///
+    /// Each translation should have its own SUMMARY.md file, in its source
+    /// folder with the chapter files.
+    ///
+    /// In the case of a single language, it is the sole item in the HashMap,
+    /// and its source is not expected to be under a sub-folder, just simply in
+    /// `./src`.
+    ///
+    /// Translations have to be declared in `book.toml` in their separate
+    /// blocks. In this case `is_main_book = true` has to be set to mark the
+    /// main book to avoid ambiguity.
+    ///
+    /// For a single language, the book's properties can be set on the main
+    /// block:
+    ///
+    /// ```toml
+    /// livereload = true
+    /// title = "Alice in Wonderland"
+    /// author = "Lewis Carroll"
+    /// ```
+    ///
+    /// For multiple languages, declare them in blocks:
+    ///
+    /// ```toml
+    /// livereload = true
+    ///
+    /// [translations.en]
+    /// title = "Alice in Wonderland"
+    /// author = "Lewis Carroll"
+    /// language = { name = "English", code = "en" }
+    /// is_main_book = true
+    ///
+    /// [translations.fr]
+    /// title = "Alice au pays des merveilles"
+    /// author = "Lewis Carroll"
+    /// translator = "Henri Bué"
+    /// language = { name = "Français", code = "fr" }
+    ///
+    /// [translations.hu]
+    /// title = "Alice Csodaországban"
+    /// author = "Lewis Carroll"
+    /// translator = "Kosztolányi Dezső"
+    /// language = { name = "Hungarian", code = "hu" }
+    /// ```
+    pub translations: HashMap<String, Book>,
+
+    /// Space indentation in SUMMARY.md, defaults to 4 spaces.
+    pub indent_spaces: i32,
+
+    /// Whether to include the livereload snippet in the output html.
+    pub livereload: bool,
 }
 
-impl<'a> MDBook<'a> {
-    /// Create a new `MDBook` struct with root directory `root`
-    ///
-    /// Default directory paths:
-    ///
-    /// - source: `root/src`
-    /// - output: `root/book`
-    /// - theme: `root/theme`
-    ///
-    /// They can both be changed by using [`set_src()`](#method.set_src) and [`set_dest()`](#method.set_dest)
-
-    pub fn new(root: &Path) -> MDBook {
-
-        if !root.exists() || !root.is_dir() {
-            warn!("{:?} No directory with that name", root);
-        }
-
-        MDBook {
-            root: root.to_owned(),
-            dest: root.join("book"),
-            src: root.join("src"),
-            theme_path: root.join("theme"),
-
-            title: String::new(),
-            author: String::new(),
-            description: String::new(),
-
-            content: vec![],
-            books: HashMap::new(),
-            renderer: Box::new(HtmlHandlebars::new()),
-
-            livereload: None,
-        }
+impl Default for MDBook {
+    fn default() -> MDBook {
+        let mut proj: MDBook = MDBook {
+            project_root: PathBuf::from("".to_string()),
+            template_dir: PathBuf::from("".to_string()),
+            dest_base: PathBuf::from("book".to_string()),
+            render_intent: RenderIntent::HtmlHandlebars,
+            translations: HashMap::new(),
+            indent_spaces: 4,
+            livereload: false,
+        };
+        proj.set_project_root(&env::current_dir().unwrap());
+        // sets default template_dir
+        proj.set_render_intent(RenderIntent::HtmlHandlebars);
+        proj
     }
+}
 
-    /// Returns a flat depth-first iterator over the elements of the book, it returns an [BookItem enum](bookitem.html):
-    /// `(section: String, bookitem: &BookItem)`
-    ///
-    /// ```no_run
-    /// # extern crate mdbook;
-    /// # use mdbook::MDBook;
-    /// # use mdbook::BookItem;
-    /// # use std::path::Path;
-    /// # fn main() {
-    /// # let mut book = MDBook::new(Path::new("mybook"));
-    /// for item in book.iter() {
-    ///     match item {
-    ///         &BookItem::Chapter(ref section, ref chapter) => {},
-    ///         &BookItem::Affix(ref chapter) => {},
-    ///         &BookItem::Spacer => {},
-    ///     }
-    /// }
-    ///
-    /// // would print something like this:
-    /// // 1. Chapter 1
-    /// // 1.1 Sub Chapter
-    /// // 1.2 Sub Chapter
-    /// // 2. Chapter 2
-    /// //
-    /// // etc.
-    /// # }
-    /// ```
+#[derive(Debug, Clone)]
+pub enum RenderIntent {
+    HtmlHandlebars,
+}
 
-    pub fn iter(&self) -> BookItems {
-        BookItems {
-            items: &self.content[..],
-            current_index: 0,
-            stack: Vec::new(),
-        }
+impl MDBook {
+
+    /// Create a new `MDBook` struct with top-level project directory `project_root`
+    pub fn new(project_root: &PathBuf) -> MDBook {
+        MDBook::default().set_project_root(project_root).clone()
     }
 
     /// `init()` creates some boilerplate files and directories to get you started with your book.
     ///
     /// ```text
-    /// book-test/
+    /// book-example/
     /// ├── book
     /// └── src
     ///     ├── chapter_1.md
@@ -126,358 +147,348 @@ impl<'a> MDBook<'a> {
     ///
     /// It uses the paths given as source and output directories and adds a `SUMMARY.md` and a
     /// `chapter_1.md` to the source directory.
-
     pub fn init(&mut self) -> Result<(), Box<Error>> {
 
         debug!("[fn]: init");
 
-        if !self.root.exists() {
-            fs::create_dir_all(&self.root).unwrap();
-            info!("{:?} created", &self.root);
+        if !self.project_root.exists() {
+            fs::create_dir_all(&self.project_root).unwrap();
+            info!("{:?} created", &self.project_root);
         }
 
-        {
-
-            if !self.dest.exists() {
-                debug!("[*]: {:?} does not exist, trying to create directory", self.dest);
-                try!(fs::create_dir_all(&self.dest));
-            }
-
-            if !self.src.exists() {
-                debug!("[*]: {:?} does not exist, trying to create directory", self.src);
-                try!(fs::create_dir_all(&self.src));
-            }
-
-            let summary = self.src.join("SUMMARY.md");
-
-            if !summary.exists() {
-
-                // Summary does not exist, create it
-
-                debug!("[*]: {:?} does not exist, trying to create SUMMARY.md", self.src.join("SUMMARY.md"));
-                let mut f = try!(File::create(&self.src.join("SUMMARY.md")));
-
-                debug!("[*]: Writing to SUMMARY.md");
-
-                try!(writeln!(f, "# Summary"));
-                try!(writeln!(f, ""));
-                try!(writeln!(f, "- [Chapter 1](./chapter_1.md)"));
-            }
-        }
-
-        // parse SUMMARY.md, and create the missing item related file
-        try!(self.parse_summary());
-
-        debug!("[*]: constructing paths for missing files");
-        for item in self.iter() {
-            debug!("[*]: item: {:?}", item);
-            match *item {
-                BookItem::Spacer => continue,
-                BookItem::Chapter(_, ref ch) |
-                BookItem::Affix(ref ch) => {
-                    if ch.path != PathBuf::new() {
-                        let path = self.src.join(&ch.path);
-
-                        if !path.exists() {
-                            debug!("[*]: {:?} does not exist, trying to create file", path);
-                            try!(::std::fs::create_dir_all(path.parent().unwrap()));
-                            let mut f = try!(File::create(path));
-
-                            // debug!("[*]: Writing to {:?}", path);
-                            try!(writeln!(f, "# {}", ch.name));
-                        }
-                    }
-                },
-            }
-        }
+        // Read book.toml if exists and populate .translations
+        self.read_config();
 
         debug!("[*]: init done");
         Ok(())
     }
 
-    pub fn create_gitignore(&self) {
-        let gitignore = self.get_gitignore();
-
-        if !gitignore.exists() {
-            // Gitignore does not exist, create it
-
-            // Because of `src/book/mdbook.rs#L37-L39`, `dest` will always start with `root`. If it
-            // is not, `strip_prefix` will return an Error.
-            if !self.get_dest().starts_with(&self.root) {
-                return;
-            }
-
-            let relative = self.get_dest()
-                               .strip_prefix(&self.root)
-                               .expect("Destination is not relative to root.");
-            let relative = relative.to_str()
-                                   .expect("Path could not be yielded into a string slice.");
-
-            debug!("[*]: {:?} does not exist, trying to create .gitignore", gitignore);
-
-            let mut f = File::create(&gitignore).expect("Could not create file.");
-
-            debug!("[*]: Writing to .gitignore");
-
-            writeln!(f, "{}", relative).expect("Could not write to file.");
-        }
-    }
-
-    /// The `build()` method is the one where everything happens. First it parses `SUMMARY.md` to
-    /// construct the book's structure in the form of a `Vec<BookItem>` and then calls `render()`
-    /// method of the current renderer.
-    ///
-    /// It is the renderer who generates all the output files.
-    pub fn build(&mut self) -> Result<(), Box<Error>> {
-        debug!("[fn]: build");
-
-        try!(self.init());
-
-        // Clean output directory
-        try!(utils::fs::remove_dir_content(&self.dest));
-
-        try!(self.renderer.render(&self));
-
-        Ok(())
-    }
-
-
-    pub fn get_gitignore(&self) -> PathBuf {
-        self.root.join(".gitignore")
-    }
-
-    pub fn copy_theme(&self) -> Result<(), Box<Error>> {
-        debug!("[fn]: copy_theme");
-
-        let theme_dir = self.src.join("theme");
-
-        if !theme_dir.exists() {
-            debug!("[*]: {:?} does not exist, trying to create directory", theme_dir);
-            try!(fs::create_dir(&theme_dir));
-        }
-
-        // index.hbs
-        let mut index = try!(File::create(&theme_dir.join("index.hbs")));
-        try!(index.write_all(theme::INDEX));
-
-        // book.css
-        let mut css = try!(File::create(&theme_dir.join("book.css")));
-        try!(css.write_all(theme::CSS));
-
-        // favicon.png
-        let mut favicon = try!(File::create(&theme_dir.join("favicon.png")));
-        try!(favicon.write_all(theme::FAVICON));
-
-        // book.js
-        let mut js = try!(File::create(&theme_dir.join("book.js")));
-        try!(js.write_all(theme::JS));
-
-        // highlight.css
-        let mut highlight_css = try!(File::create(&theme_dir.join("highlight.css")));
-        try!(highlight_css.write_all(theme::HIGHLIGHT_CSS));
-
-        // highlight.js
-        let mut highlight_js = try!(File::create(&theme_dir.join("highlight.js")));
-        try!(highlight_js.write_all(theme::HIGHLIGHT_JS));
-
-        Ok(())
-    }
-
-    /// Parses the `book.json` file (if it exists) to extract the configuration parameters.
-    /// The `book.json` file should be in the root directory of the book.
-    /// The root directory is the one specified when creating a new `MDBook`
+    /// Parses the `book.toml` file (if it exists) to extract the configuration parameters.
+    /// The `book.toml` file should be in the root directory of the book project.
+    /// The project root directory is the one specified when creating a new `MDBook`
     ///
     /// ```no_run
     /// # extern crate mdbook;
     /// # use mdbook::MDBook;
     /// # use std::path::Path;
     /// # fn main() {
-    /// let mut book = MDBook::new(Path::new("root_dir"));
+    /// let mut book = MDBook::new(Path::new("project_root_dir"));
     /// # }
     /// ```
     ///
-    /// In this example, `root_dir` will be the root directory of our book and is specified in function
+    /// In this example, `project_root_dir` will be the root directory of our book and is specified in function
     /// of the current working directory by using a relative path instead of an absolute path.
+    pub fn read_config(&mut self) -> &mut Self {
 
-    pub fn read_config(mut self) -> Self {
+        debug!("[fn]: read_config");
 
-        let config = BookConfig::new(&self.root)
-                         .read_config(&self.root)
-                         .to_owned();
+        // TODO refactor to a helper that returns Result?
 
-        self.title = config.title;
-        self.description = config.description;
-        self.author = config.author;
+        // TODO Maybe some error handling instead of exit(2), although it is a
+        // clear indication for the user that something is wrong and we can't
+        // fix it for them.
 
-        self.dest = config.dest;
-        self.src = config.src;
-        self.theme_path = config.theme_path;
+        let read_file = |path: PathBuf| -> String {
+            let mut data = String::new();
+            let mut f: File = match File::open(&path) {
+                Ok(x) => x,
+                Err(_) => {
+                    error!("[*]: Failed to open {:?}", &path);
+                    exit(2);
+                }
+            };
+            if let Err(_) = f.read_to_string(&mut data) {
+                error!("[*]: Failed to read {:?}", &path);
+                exit(2);
+            }
+            data
+        };
+
+        // Read book.toml or book.json if exists to a BTreeMap
+
+        if Path::new(self.project_root.join("book.toml").as_os_str()).exists() {
+
+            debug!("[*]: Reading config");
+            let text = read_file(self.project_root.join("book.toml"));
+
+            match utils::toml_str_to_btreemap(&text) {
+                Ok(x) => {self.parse_from_btreemap(&x);},
+                Err(e) => {
+                    error!("[*] Errors while parsing TOML: {:?}", e);
+                    exit(2);
+                }
+            }
+
+        } else if Path::new(self.project_root.join("book.json").as_os_str()).exists() {
+
+            debug!("[*]: Reading config");
+            let text = read_file(self.project_root.join("book.json"));
+
+            match utils::json_str_to_btreemap(&text) {
+                Ok(x) => {self.parse_from_btreemap(&x);},
+                Err(e) => {
+                    error!("[*] Errors while parsing JSON: {:?}", e);
+                    exit(2);
+                }
+            }
+
+        } else {
+            debug!("[*]: No book.toml or book.json was found, using defaults.");
+        }
 
         self
     }
 
-    /// You can change the default renderer to another one by using this method. The only requirement
-    /// is for your renderer to implement the [Renderer trait](../../renderer/renderer/trait.Renderer.html)
+    /// Configures MDBook properties and translations.
     ///
-    /// ```no_run
-    /// extern crate mdbook;
-    /// use mdbook::MDBook;
-    /// use mdbook::renderer::HtmlHandlebars;
-    /// # use std::path::Path;
+    /// After parsing properties for MDBook struct, it removes them from the
+    /// config (template_dir, livereload, etc.). The remaining keys on the main
+    /// block will be interpreted as properties of the main book.
     ///
-    /// fn main() {
-    ///     let mut book = MDBook::new(Path::new("mybook"))
-    ///                         .set_renderer(Box::new(HtmlHandlebars::new()));
+    /// `project_root` is ignored.
     ///
-    ///     // In this example we replace the default renderer by the default renderer...
-    ///     // Don't forget to put your renderer in a Box
-    /// }
-    /// ```
-    ///
-    /// **note:** Don't forget to put your renderer in a `Box` before passing it to `set_renderer()`
+    /// - dest_base
+    /// - render_intent
+    /// - template_dir
+    /// - indent_spaces
+    /// - livereload
+    pub fn parse_from_btreemap(&mut self, conf: &BTreeMap<String, toml::Value>) -> &mut Self {
 
-    pub fn set_renderer(mut self, renderer: Box<Renderer>) -> Self {
-        self.renderer = renderer;
-        self
-    }
+        let mut config = conf.clone();
 
-    pub fn test(&mut self) -> Result<(), Box<Error>> {
-        // read in the chapters
-        try!(self.parse_summary());
-        for item in self.iter() {
+        if config.contains_key("project_root") {
+            config.remove("project_root");
+        }
 
-            match *item {
-                BookItem::Chapter(_, ref ch) => {
-                    if ch.path != PathBuf::new() {
+        if let Some(a) = config.get("dest_base") {
+            self.set_dest_base(&PathBuf::from(&a.to_string()));
+        }
+        config.remove("dest_base");
 
-                        let path = self.get_src().join(&ch.path);
-
-                        println!("[*]: Testing file: {:?}", path);
-
-                        let output_result = Command::new("rustdoc")
-                                                .arg(&path)
-                                                .arg("--test")
-                                                .output();
-                        let output = try!(output_result);
-
-                        if !output.status.success() {
-                            return Err(Box::new(io::Error::new(ErrorKind::Other, format!(
-                                            "{}\n{}",
-                                            String::from_utf8_lossy(&output.stdout),
-                                            String::from_utf8_lossy(&output.stderr)))) as Box<Error>);
-                        }
-                    }
-                },
-                _ => {},
+        if let Some(a) = config.get("render_intent") {
+            if a.to_string() == "html".to_string() {
+                self.set_render_intent(RenderIntent::HtmlHandlebars);
+            } else {
+                // offer some real choices later on...
+                self.set_render_intent(RenderIntent::HtmlHandlebars);
             }
         }
-        Ok(())
-    }
+        config.remove("render_intent");
 
-    pub fn get_root(&self) -> &Path {
-        &self.root
-    }
+        // Parsing template_dir must be after render_intent, otherwise
+        // .set_render_intent() will always override template_dir with its
+        // default setting.
+        if let Some(a) = config.get("template_dir") {
+            self.set_template_dir(&PathBuf::from(&a.to_string()));
+        }
+        config.remove("template_dir");
 
-    pub fn set_dest(mut self, dest: &Path) -> Self {
+        if let Some(a) = config.get("indent_spaces") {
+            if let Some(b) = a.as_integer() {
+                self.indent_spaces = b as i32;
+            }
+        }
+        config.remove("indent_spaces");
 
-        // Handle absolute and relative paths
-        match dest.is_absolute() {
-            true => {
-                self.dest = dest.to_owned();
-            },
-            false => {
-                let dest = self.root.join(dest).to_owned();
-                self.dest = dest;
-            },
+        if let Some(a) = config.get("livereload") {
+            if let Some(b) = a.as_bool() {
+                self.livereload = b;
+            }
+        }
+        config.remove("livereload");
+
+        // If there is a 'translations' table, configugre each book from that.
+        // If there isn't, take the rest of the config as one book.
+
+        // If there is only one book, leave its source and destination folder as
+        // the default `./src` and `./book`. If there are more, join their hash
+        // keys to the default source and destination folder such as `/src/en`
+        // and `./book/en`. This may be overridden if set specifically.
+
+        if let Some(a) = config.get("translations") {
+            if let Some(b) = a.as_table() {
+
+                let is_multilang: bool = b.iter().count() > 1;
+
+                for (key, conf) in b.iter() {
+                    let mut book = Book::new(&self.project_root);
+
+                    if let Some(c) = conf.as_slice() {
+                        if let Some(d) = c[0].as_table() {
+                            if is_multilang {
+                                book.config.src = book.config.src.join(key);
+                                book.config.dest = book.config.dest.join(key);
+                            }
+                            book.config.is_multilang = is_multilang;
+                            book.config.parse_from_btreemap(&d);
+                            self.translations.insert(key.to_owned(), book);
+                        }
+                    }
+                }
+            }
+        } else {
+            let mut book = Book::new(&self.project_root);
+
+            book.config.parse_from_btreemap(&config);
+            let key = book.config.language.code.clone();
+            self.translations.insert(key, book);
         }
 
         self
     }
 
-    pub fn get_dest(&self) -> &Path {
-        &self.dest
-    }
+    pub fn parse_books(&mut self) -> &mut Self {
+        debug!("[fn]: parse_books");
 
-    pub fn set_src(mut self, src: &Path) -> Self {
+        for key in self.translations.clone().keys() {
+            if let Some(mut b) = self.translations.clone().get_mut(key) {
 
-        // Handle absolute and relative paths
-        match src.is_absolute() {
-            true => {
-                self.src = src.to_owned();
-            },
-            false => {
-                let src = self.root.join(src).to_owned();
-                self.src = src;
-            },
+                // TODO error handling could be better here
+
+                let first_as_index = match self.render_intent {
+                    RenderIntent::HtmlHandlebars => true,
+                };
+
+                match b.parse_or_create_summary_file(first_as_index) {
+                    Ok(_) => {},
+                    Err(e) => {println!("{}", e);},
+                }
+
+                match b.parse_or_create_chapter_files() {
+                    Ok(_) => {},
+                    Err(e) => {println!("{}", e);},
+                }
+
+                self.translations.remove(key);
+                self.translations.insert(key.to_owned(), b.clone());
+            }
         }
 
         self
     }
 
-    pub fn get_src(&self) -> &Path {
-        &self.src
+    pub fn get_project_root(&self) -> &Path {
+        &self.project_root
     }
 
-    pub fn set_title(mut self, title: &str) -> Self {
-        self.title = title.to_owned();
-        self
-    }
-
-    pub fn get_title(&self) -> &str {
-        &self.title
-    }
-
-    pub fn set_author(mut self, author: &str) -> Self {
-        self.author = author.to_owned();
-        self
-    }
-
-    pub fn get_author(&self) -> &str {
-        &self.author
-    }
-
-    pub fn set_description(mut self, description: &str) -> Self {
-        self.description = description.to_owned();
-        self
-    }
-
-    pub fn get_description(&self) -> &str {
-        &self.description
-    }
-
-    pub fn set_livereload(&mut self, livereload: String) -> &mut Self {
-        self.livereload = Some(livereload);
-        self
-    }
-
-    pub fn unset_livereload(&mut self) -> &Self {
-        self.livereload = None;
-        self
-    }
-
-    pub fn get_livereload(&self) -> Option<&String> {
-        match self.livereload {
-            Some(ref livereload) => Some(&livereload),
-            None => None,
+    pub fn set_project_root(&mut self, path: &PathBuf) -> &mut MDBook {
+        if path.is_absolute() {
+            self.project_root = path.to_owned();
+        } else {
+            self.project_root = env::current_dir().unwrap().join(path).to_owned();
         }
-    }
-
-    pub fn set_theme_path(mut self, theme_path: &Path) -> Self {
-        self.theme_path = match theme_path.is_absolute() {
-            true => theme_path.to_owned(),
-            false => self.root.join(theme_path).to_owned(),
-        };
         self
     }
 
-    pub fn get_theme_path(&self) -> &Path {
-        &self.theme_path
+    pub fn get_template_dir(&self) -> PathBuf {
+        self.project_root.join(&self.template_dir)
     }
 
-    // Construct book
-    fn parse_summary(&mut self) -> Result<(), Box<Error>> {
-        // When append becomes stable, use self.content.append() ...
-        self.content = try!(parse::construct_bookitems(&self.src.join("SUMMARY.md")));
-        Ok(())
+    pub fn set_template_dir(&mut self, path: &PathBuf) -> &mut MDBook {
+        if path.as_os_str() == OsStr::new(".") {
+            self.template_dir = PathBuf::from("".to_string());
+        } else {
+            self.template_dir = path.to_owned();
+        }
+        self
     }
+
+    pub fn get_dest_base(&self) -> PathBuf {
+        self.project_root.join(&self.dest_base)
+    }
+
+    pub fn set_dest_base(&mut self, path: &PathBuf) -> &mut MDBook {
+        if path.as_os_str() == OsStr::new(".") {
+            self.dest_base = PathBuf::from("".to_string());
+        } else {
+            self.dest_base = path.to_owned();
+        }
+        self
+    }
+
+    pub fn get_render_intent(&self) -> &RenderIntent {
+        &self.render_intent
+    }
+
+    pub fn set_render_intent(&mut self, intent: RenderIntent) -> &mut MDBook {
+        self.render_intent = intent;
+        match self.render_intent {
+            RenderIntent::HtmlHandlebars => {
+                self.set_template_dir(&PathBuf::from("assets").join("html-template"));
+            },
+        }
+        self
+    }
+
+    // TODO update
+
+    // pub fn test(&mut self) -> Result<(), Box<Error>> {
+    //     // read in the chapters
+    //     try!(self.parse_summary());
+    //     for item in self.iter() {
+
+    //         match *item {
+    //             BookItem::Chapter(_, ref ch) => {
+    //                 if ch.path != PathBuf::new() {
+
+    //                     let path = self.get_src().join(&ch.path);
+
+    //                     println!("[*]: Testing file: {:?}", path);
+
+    //                     let output_result = Command::new("rustdoc")
+    //                                             .arg(&path)
+    //                                             .arg("--test")
+    //                                             .output();
+    //                     let output = try!(output_result);
+
+    //                     if !output.status.success() {
+    //                         return Err(Box::new(io::Error::new(ErrorKind::Other, format!(
+    //                                         "{}\n{}",
+    //                                         String::from_utf8_lossy(&output.stdout),
+    //                                         String::from_utf8_lossy(&output.stderr)))) as Box<Error>);
+    //                     }
+    //                 }
+    //             },
+    //             _ => {},
+    //         }
+    //     }
+    //     Ok(())
+    // }
+
+    // /// Returns a flat depth-first iterator over the elements of the book, it returns an [BookItem enum](bookitem.html):
+    // /// `(section: String, bookitem: &BookItem)`
+    // ///
+    // /// ```no_run
+    // /// # extern crate mdbook;
+    // /// # use mdbook::MDBook;
+    // /// # use mdbook::BookItem;
+    // /// # use std::path::Path;
+    // /// # fn main() {
+    // /// # let mut book = MDBook::new(Path::new("mybook"));
+    // /// for item in book.iter() {
+    // ///     match item {
+    // ///         &BookItem::Chapter(ref section, ref chapter) => {},
+    // ///         &BookItem::Affix(ref chapter) => {},
+    // ///         &BookItem::Spacer => {},
+    // ///     }
+    // /// }
+    // ///
+    // /// // would print something like this:
+    // /// // 1. Chapter 1
+    // /// // 1.1 Sub Chapter
+    // /// // 1.2 Sub Chapter
+    // /// // 2. Chapter 2
+    // /// //
+    // /// // etc.
+    // /// # }
+    // /// ```
+
+    // pub fn iter(&self) -> BookItems {
+    //     BookItems {
+    //         items: &self.content[..],
+    //         current_index: 0,
+    //         stack: Vec::new(),
+    //     }
+    // }
+
 }
