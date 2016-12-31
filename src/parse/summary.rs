@@ -37,7 +37,7 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
             section.push(0);
             let last = items.pop().expect("There should be at least one item since this can't be the root level");
 
-            item = if let BookItem::Chapter(ref s, ref ch) = last {
+            if let BookItem::Chapter(ref s, ref ch) = last {
                 let mut ch = ch.clone();
                 ch.sub_items = try!(parse_level(summary, level, section.clone()));
                 items.push(BookItem::Chapter(s.clone(), ch));
