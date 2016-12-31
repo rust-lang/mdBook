@@ -20,6 +20,7 @@ Here is a list of the properties that are exposed:
 - ***language*** Language of the book in the form `en`. To use in <code class="language-html">\<html lang="{{ language }}"></code> for example.
 At the moment it is hardcoded.
 - ***title*** Title of the book, as specified in `book.toml`
+- ***chapter_title*** Title of the current chapter, as listed in `SUMMARY.md`
 
 - ***path*** Relative path to the original markdown file from the source directory
 - ***content*** This is the rendered markdown.
