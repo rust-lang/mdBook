@@ -1,4 +1,4 @@
-#[cfg(test)]
+#![cfg(test)]
 
 use std::path::Path;
 use serde_json;
