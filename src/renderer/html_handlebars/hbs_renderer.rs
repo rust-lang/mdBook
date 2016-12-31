@@ -93,10 +93,13 @@ impl Renderer for HtmlHandlebars {
                             },
                         }
 
-
                         // Remove content from previous file and render content for this one
                         data.remove("content");
                         data.insert("content".to_owned(), content.to_json());
+
+                        // Remove chapter title from previous file and add title for this one
+                        data.remove("chapter_title");
+                        data.insert("chapter_title".to_owned(), ch.name.to_json());
 
                         // Remove path to root from previous file and render content for this one
                         data.remove("path_to_root");
