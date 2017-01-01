@@ -35,6 +35,8 @@ use clap::{App, ArgMatches, SubCommand, AppSettings};
 #[cfg(feature = "watch")]
 use notify::Watcher;
 #[cfg(feature = "watch")]
+use std::time::Duration;
+#[cfg(feature = "watch")]
 use std::sync::mpsc::channel;
 
 
@@ -187,15 +189,13 @@ fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
         open(book.get_dest().join("index.html"));
     }
 
-    trigger_on_change(&mut book, |event, book| {
-        if let Some(path) = event.path {
-            println!("File changed: {:?}\nBuilding book...\n", path);
-            match book.build() {
-                Err(e) => println!("Error while building: {:?}", e),
-                _ => {},
-            }
-            println!("");
+    trigger_on_change(&mut book, |path, book| {
+        println!("File changed: {:?}\nBuilding book...\n", path);
+        match book.build() {
+            Err(e) => println!("Error while building: {:?}", e),
+            _ => {},
         }
+        println!("");
     });
 
     Ok(())
@@ -258,15 +258,13 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
         open(format!("http://{}", address));
     }
 
-    trigger_on_change(&mut book, move |event, book| {
-        if let Some(path) = event.path {
-            println!("File changed: {:?}\nBuilding book...\n", path);
-            match book.build() {
-                Err(e) => println!("Error while building: {:?}", e),
-                _ => broadcaster.send(RELOAD_COMMAND).unwrap(),
-            }
-            println!("");
+    trigger_on_change(&mut book, move |path, book| {
+        println!("File changed: {:?}\nBuilding book...\n", path);
+        match book.build() {
+            Err(e) => println!("Error while building: {:?}", e),
+            _ => broadcaster.send(RELOAD_COMMAND).unwrap(),
         }
+        println!("");
     });
 
     Ok(())
@@ -307,53 +305,51 @@ fn open<P: AsRef<OsStr>>(path: P) {
 // Calls the closure when a book source file is changed. This is blocking!
 #[cfg(feature = "watch")]
 fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
-    where F: Fn(notify::Event, &mut MDBook) -> ()
+    where F: Fn(&Path, &mut MDBook) -> ()
 {
+    use notify::RecursiveMode::*;
+    use notify::DebouncedEvent::*;
+
     // Create a channel to receive the events.
     let (tx, rx) = channel();
 
-    let w: Result<notify::RecommendedWatcher, notify::Error> = notify::Watcher::new(tx);
-
-    match w {
-        Ok(mut watcher) => {
-            // Add the source directory to the watcher
-            if let Err(e) = watcher.watch(book.get_src()) {
-                println!("Error while watching {:?}:\n    {:?}", book.get_src(), e);
-                ::std::process::exit(0);
-            };
-
-            // Add the book.json file to the watcher if it exists, because it's not
-            // located in the source directory
-            if let Err(_) = watcher.watch(book.get_root().join("book.json")) {
-                // do nothing if book.json is not found
-            }
-
-            let mut previous_time = time::get_time();
-
-            println!("\nListening for changes...\n");
-
-            loop {
-                match rx.recv() {
-                    Ok(event) => {
-                        // Skip the event if an event has already been issued in the last second
-                        let time = time::get_time();
-                        if time - previous_time < time::Duration::seconds(1) {
-                            continue;
-                        } else {
-                            previous_time = time;
-                        }
-
-                        closure(event, book);
-                    },
-                    Err(e) => {
-                        println!("An error occured: {:?}", e);
-                    },
-                }
-            }
-        },
+    let mut watcher = match notify::watcher(tx, Duration::from_secs(1)) {
+        Ok(w) => w,
         Err(e) => {
             println!("Error while trying to watch the files:\n\n\t{:?}", e);
             ::std::process::exit(0);
-        },
+        }
+    };
+
+    // Add the source directory to the watcher
+    if let Err(e) = watcher.watch(book.get_src(), Recursive) {
+        println!("Error while watching {:?}:\n    {:?}", book.get_src(), e);
+        ::std::process::exit(0);
+    };
+
+    // Add the book.{json,toml} file to the watcher if it exists, because it's not
+    // located in the source directory
+    if let Err(_) = watcher.watch(book.get_root().join("book.json"), NonRecursive) {
+        // do nothing if book.json is not found
+    }
+    println!("\nListening for changes...\n");
+
+    loop {
+        match rx.recv() {
+            Ok(event) => match event {
+                NoticeWrite(path) |
+                NoticeRemove(path) |
+                Create(path) |
+                Write(path) |
+                Remove(path) |
+                Rename(_, path) => {
+                    closure(&path, book);
+                }
+                _ => {}
+            },
+            Err(e) => {
+                println!("An error occured: {:?}", e);
+            },
+        }
     }
 }
