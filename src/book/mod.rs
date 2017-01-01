@@ -273,6 +273,16 @@ impl MDBook {
         Ok(())
     }
 
+    pub fn write_file<P: AsRef<Path>>(&self, filename: P, content: &[u8]) -> Result<(), Box<Error>> {
+        let path = self.get_dest().join(filename);
+        try!(utils::fs::create_file(&path).and_then(|mut file| {
+            file.write_all(content)
+        }).map_err(|e| {
+            io::Error::new(io::ErrorKind::Other, format!("Could not create {}: {}", path.display(), e))
+        }));
+        Ok(())
+    }
+
     /// Parses the `book.json` file (if it exists) to extract the configuration parameters.
     /// The `book.json` file should be in the root directory of the book.
     /// The root directory is the one specified when creating a new `MDBook`
