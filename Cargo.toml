@@ -23,6 +23,7 @@ pulldown-cmark = "0.0.8"
 log = "0.3"
 env_logger = "0.3"
 toml = { version = "0.2", features = ["serde"] }
+open = "1.1"
 
 # Watch feature
 notify = { version = "2.5.5", optional = true }

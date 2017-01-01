@@ -26,6 +26,11 @@ mdbook server path/to/book -p 8000 -i 127.0.0.1 -a 192.168.1.100
 
 If you were to want live reloading for this you would need to proxy the websocket calls through nginx as well from `192.168.1.100:<WS_PORT>` to `127.0.0.1:<WS_PORT>`. The `-w` flag allows for the websocket port to be configured.
 
+#### --open
+
+When you use the `--open` (`-o`) option, mdbook will open the book in your
+your default web browser after starting the server.
+
 -----
 
 ***note:*** *the `serve` command has not gotten a lot of testing yet, there could be some rough edges. If you discover a problem, please report it [on Github](https://github.com/azerupi/mdBook/issues)*
