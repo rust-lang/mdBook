@@ -69,7 +69,7 @@ pub fn path_to_root(path: &Path) -> String {
 /// This function creates a file and returns it. But before creating the file it checks every
 /// directory in the path to see if it exists, and if it does not it will be created.
 
-pub fn create_file(path: &Path) -> Result<File, Box<Error>> {
+pub fn create_file(path: &Path) -> io::Result<File> {
     debug!("[fn]: create_file");
 
     // Construct path
@@ -80,15 +80,7 @@ pub fn create_file(path: &Path) -> Result<File, Box<Error>> {
     }
 
     debug!("[*]: Create file: {:?}", path);
-    let f = match File::create(path) {
-        Ok(f) => f,
-        Err(e) => {
-            debug!("File::create:    {}", e);
-            return Err(Box::new(io::Error::new(io::ErrorKind::Other, format!("{}", e))));
-        },
-    };
-
-    Ok(f)
+    File::create(path)
 }
 
 /// Removes all the content of a directory but not the directory itself
