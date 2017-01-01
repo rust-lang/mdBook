@@ -81,8 +81,7 @@ impl Renderer for HtmlHandlebars {
                         content = utils::render_markdown(&content);
                         print_content.push_str(&content);
 
-                        // Remove content from previous file and render content for this one
-                        data.remove("path");
+                        // Update the context with data for this file
                         match ch.path.to_str() {
                             Some(p) => {
                                 data.insert("path".to_owned(), p.to_json());
@@ -92,20 +91,11 @@ impl Renderer for HtmlHandlebars {
                                                                    "Could not convert path to str")))
                             },
                         }
-
-                        // Remove content from previous file and render content for this one
-                        data.remove("content");
                         data.insert("content".to_owned(), content.to_json());
-
-                        // Remove chapter title from previous file and add title for this one
-                        data.remove("chapter_title");
                         data.insert("chapter_title".to_owned(), ch.name.to_json());
-
-                        // Remove path to root from previous file and render content for this one
-                        data.remove("path_to_root");
                         data.insert("path_to_root".to_owned(), utils::fs::path_to_root(&ch.path).to_json());
 
-                        // Rendere the handlebars template with the data
+                        // Render the handlebars template with the data
                         debug!("[*]: Render template");
                         let rendered = try!(handlebars.render("index", &data));
 
@@ -147,19 +137,12 @@ impl Renderer for HtmlHandlebars {
 
         // Print version
 
-        // Remove content from previous file and render content for this one
-        data.remove("path");
+        // Update the context with data for this file
         data.insert("path".to_owned(), "print.md".to_json());
-
-        // Remove content from previous file and render content for this one
-        data.remove("content");
         data.insert("content".to_owned(), print_content.to_json());
-
-        // Remove path to root from previous file and render content for this one
-        data.remove("path_to_root");
         data.insert("path_to_root".to_owned(), utils::fs::path_to_root(Path::new("print.md")).to_json());
 
-        // Rendere the handlebars template with the data
+        // Render the handlebars template with the data
         debug!("[*]: Render template");
         let rendered = try!(handlebars.render("index", &data));
         let mut file = try!(utils::fs::create_file(&book.get_dest().join("print").with_extension("html")));
