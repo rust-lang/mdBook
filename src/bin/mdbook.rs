@@ -5,6 +5,7 @@ extern crate clap;
 #[macro_use]
 extern crate log;
 extern crate env_logger;
+extern crate open;
 
 // Dependencies for the Watch feature
 #[cfg(feature = "watch")]
@@ -24,6 +25,7 @@ extern crate ws;
 
 use std::env;
 use std::error::Error;
+use std::ffi::OsStr;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
@@ -59,9 +61,11 @@ fn main() {
                         .arg_from_usage("--force 'skip confirmation prompts'"))
                     .subcommand(SubCommand::with_name("build")
                         .about("Build the book from the markdown files")
+                        .arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
                         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'"))
                     .subcommand(SubCommand::with_name("watch")
                         .about("Watch the files for changes")
+                        .arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
                         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'"))
                     .subcommand(SubCommand::with_name("serve")
                         .about("Serve the book at http://localhost:3000. Rebuild and reload on change.")
@@ -69,7 +73,8 @@ fn main() {
                         .arg_from_usage("-p, --port=[port] 'Use another port{n}(Defaults to 3000)'")
                         .arg_from_usage("-w, --websocket-port=[ws-port] 'Use another port for the websocket connection (livereload){n}(Defaults to 3001)'")
                         .arg_from_usage("-i, --interface=[interface] 'Interface to listen on{n}(Defaults to localhost)'")
-                        .arg_from_usage("-a, --address=[address] 'Address that the browser can reach the websocket server from{n}(Defaults to the interface addres)'"))
+                        .arg_from_usage("-a, --address=[address] 'Address that the browser can reach the websocket server from{n}(Defaults to the interface address)'")
+                        .arg_from_usage("-o, --open 'Open the book server in a web browser'"))
                     .subcommand(SubCommand::with_name("test")
                         .about("Test that code samples compile"))
                     .get_matches();
@@ -163,6 +168,10 @@ fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
 
     try!(book.build());
 
+    if args.is_present("open") {
+        open(book.get_dest().join("index.html"));
+    }
+
     Ok(())
 }
 
@@ -172,6 +181,11 @@ fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
 fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book_dir = get_book_dir(args);
     let mut book = MDBook::new(&book_dir).read_config();
+
+    if args.is_present("open") {
+        try!(book.build());
+        open(book.get_dest().join("index.html"));
+    }
 
     trigger_on_change(&mut book, |event, book| {
         if let Some(path) = event.path {
@@ -199,6 +213,7 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
     let ws_port = args.value_of("ws-port").unwrap_or("3001");
     let interface = args.value_of("interface").unwrap_or("localhost");
     let public_address = args.value_of("address").unwrap_or(interface);
+    let open_browser = args.is_present("open");
 
     let address = format!("{}:{}", interface, port);
     let ws_address = format!("{}:{}", interface, ws_port);
@@ -239,6 +254,10 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
 
     println!("\nServing on {}", address);
 
+    if open_browser {
+        open(format!("http://{}", address));
+    }
+
     trigger_on_change(&mut book, move |event, book| {
         if let Some(path) = event.path {
             println!("File changed: {:?}\nBuilding book...\n", path);
@@ -275,6 +294,12 @@ fn get_book_dir(args: &ArgMatches) -> PathBuf {
         }
     } else {
         env::current_dir().unwrap()
+    }
+}
+
+fn open<P: AsRef<OsStr>>(path: P) {
+    if let Err(e) = open::that(path) {
+        println!("Error opening web browser: {}", e);
     }
 }
 
