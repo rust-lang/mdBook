@@ -332,6 +332,10 @@ fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
     if let Err(_) = watcher.watch(book.get_root().join("book.json"), NonRecursive) {
         // do nothing if book.json is not found
     }
+    if let Err(_) = watcher.watch(book.get_root().join("book.toml"), NonRecursive) {
+        // do nothing if book.toml is not found
+    }
+
     println!("\nListening for changes...\n");
 
     loop {
