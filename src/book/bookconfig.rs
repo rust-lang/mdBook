@@ -62,13 +62,13 @@ impl BookConfig {
 
         // Read book.toml or book.json if exists
 
-        if Path::new(root.join("book.toml").as_os_str()).exists() {
+        if root.join("book.toml").exists() {
 
             debug!("[*]: Reading config");
             let data = read_file(root.join("book.toml"));
             self.parse_from_toml_string(&data);
 
-        } else if Path::new(root.join("book.json").as_os_str()).exists() {
+        } else if root.join("book.json").exists() {
 
             debug!("[*]: Reading config");
             let data = read_file(root.join("book.json"));
