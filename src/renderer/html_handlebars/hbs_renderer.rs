@@ -36,9 +36,14 @@ impl Renderer for HtmlHandlebars {
 
         book_project.read_config();
         book_project.parse_books();
+        book_project.link_translations();
 
         // Clean output directory
-        try!(utils::fs::remove_dir_content(&book_project.get_dest_base()));
+
+        // FIXME don't remove dotfiles such as .git/ folder. It's a common
+        // practice to track gh-pages in a versioned output folder.
+
+        //try!(utils::fs::remove_dir_content(&book_project.get_dest_base()));
 
         try!(self.render(&book_project));
 
@@ -116,9 +121,9 @@ impl Renderer for HtmlHandlebars {
                                   &book_project.get_dest_base());
 
         } else {
-            try!(utils::fs::copy_data("data/html-template/**/*",
-                                      "data/html-template/",
-                                      vec!["data/html-template/_*"],
+            try!(utils::fs::copy_data("data/_html-template/**/*",
+                                      "data/_html-template/",
+                                      vec!["data/_html-template/_*"],
                                       &book_project.get_dest_base()));
         }
 
@@ -133,7 +138,7 @@ impl Renderer for HtmlHandlebars {
             let s = if tmpl_path.exists() {
                 try!(utils::fs::file_to_string(&tmpl_path))
             } else {
-                try!(utils::fs::get_data_file("data/html-template/_layouts/page.hbs"))
+                try!(utils::fs::get_data_file("data/_html-template/_layouts/page.hbs"))
             };
 
             // Register template
@@ -145,6 +150,7 @@ impl Renderer for HtmlHandlebars {
             handlebars.register_helper("toc", Box::new(helpers::toc::RenderToc));
             handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
             handlebars.register_helper("next", Box::new(helpers::navigation::next));
+            handlebars.register_helper("translations", Box::new(helpers::translations::TranslationsHelper));
 
             // Check if book's dest directory exists
 
@@ -331,6 +337,10 @@ fn make_data(book: &Book,
     data.insert("content".to_owned(), content.to_json());
 
     data.insert("path_to_root".to_owned(), utils::fs::path_to_root(&path).to_json());
+
+    if let Some(ref links) = chapter.translation_links {
+        data.insert("translation_links".to_owned(), links.to_json());
+    }
 
     let chapters = try!(items_to_chapters(&book.toc, &book));
 

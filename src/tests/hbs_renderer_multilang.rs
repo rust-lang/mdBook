@@ -50,4 +50,20 @@ fn it_renders_multilanguage_book() {
 
     assert!(proj.get_dest_base().join("images").join("Queen.jpg").exists());
 
+    // Test if translation links given in the TOML header were rendered
+
+    book_path = proj.translations.get("en").unwrap().config.get_dest();
+    chapter_path = book_path.join("rabbit-hole.html");
+    s = utils::fs::file_to_string(&chapter_path).unwrap();
+    assert!(s.contains("<a href=\"hu/nyuszi.html\">hu</a>"));
+    assert!(s.contains("<a href=\"fr/terrier.html\">fr</a>"));
+
+    // Test if default translation links are set
+
+    book_path = proj.translations.get("hu").unwrap().config.get_dest();
+    chapter_path = book_path.join("tarka-farka.html");
+    s = utils::fs::file_to_string(&chapter_path).unwrap();
+    assert!(s.contains("<a href=\"en/index.html\">en</a>"));
+    assert!(s.contains("<a href=\"hu/index.html\">hu</a>"));
+    assert!(s.contains("<a href=\"fr/index.html\">fr</a>"));
 }

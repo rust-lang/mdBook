@@ -24,7 +24,7 @@ fn main() {
         // Compile stylus stylesheet to css
         let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
 
-        let template_dir = Path::new(&manifest_dir).join("data/html-template/");
+        let template_dir = Path::new(&manifest_dir).join("data/_html-template/");
         let stylus_dir = template_dir.join("_stylus/book.styl");
 
         if !Command::new("stylus")

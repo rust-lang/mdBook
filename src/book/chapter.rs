@@ -53,6 +53,9 @@ pub struct Chapter {
     /// chapter's path to index.html.
     pub dest_path: Option<PathBuf>,
 
+    /// Links to the corresponding translations.
+    pub translation_links: Option<Vec<TranslationLink>>,
+
     /// The author of the chapter, or the book.
     pub authors: Option<Vec<Author>>,
 
@@ -73,6 +76,7 @@ impl Default for Chapter {
             title: "Untitled".to_string(),
             path: PathBuf::from("src".to_string()).join("untitled.md"),
             dest_path: None,
+            translation_links: None,
             authors: None,
             translators: None,
             description: None,
@@ -153,6 +157,17 @@ impl Chapter {
             self.css_class = Some(a.to_string());
         }
 
+        if let Some(a) = data.get("translation_links") {
+            if let Some(b) = a.as_slice() {
+                let links: Vec<TranslationLink> = b.iter()
+                    .filter_map(|x| x.as_table())
+                    .map(|x| TranslationLink::from(x.to_owned()))
+                    .collect::<Vec<TranslationLink>>();
+
+                self.translation_links = Some(links);
+            }
+        }
+
         // Author name as a hash key.
         if let Some(a) = data.get("author") {
             if let Some(b) = a.as_str() {
@@ -212,4 +227,41 @@ impl Chapter {
         Ok(content)
     }
 
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TranslationLink {
+    pub code: String,
+    pub link: String,
+}
+
+impl Default for TranslationLink {
+    fn default() -> TranslationLink {
+        TranslationLink {
+            code: "".to_string(),
+            link: "".to_string(),
+        }
+    }
+}
+
+impl TranslationLink {
+    pub fn new(code: String, link: String) -> TranslationLink {
+        TranslationLink {
+            code: code,
+            link: link,
+        }
+    }
+}
+
+impl From<toml::Table> for TranslationLink {
+    fn from(data: toml::Table) -> TranslationLink {
+        let mut link = TranslationLink::default();
+        if let Some(x) = data.get("code") {
+            link.code = x.to_string().replace("\"", "");
+        }
+        if let Some(x) = data.get("link") {
+            link.link = x.to_string().replace("\"", "");
+        }
+        link
+    }
 }

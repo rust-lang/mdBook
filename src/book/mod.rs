@@ -7,6 +7,9 @@ pub mod chapter;
 
 pub use self::book::Book;
 use renderer::{Renderer, HtmlHandlebars};
+
+use self::chapter::TranslationLink;
+use self::toc::{TocItem, TocContent};
 use utils;
 
 use std::env;
@@ -32,7 +35,7 @@ pub struct MDBook {
     /// A book doesn't necessarily has to have the template files. When not
     /// found in the book's folder, the embedded static assets will be used.
     ///
-    /// Html Handlebars: `project_root` + `assets/html-template`.
+    /// Html Handlebars: `project_root` + `assets/_html-template`.
     template_dir: PathBuf,
 
     /// Output base for all books, relative to `project_root`. Defaults to
@@ -367,6 +370,69 @@ impl MDBook {
         self
     }
 
+    pub fn link_translations(&mut self) -> &mut MDBook {
+        for (key, book) in self.translations.clone() {
+            let mut newbook: Book = book.clone();
+
+            newbook.toc = book.toc.iter()
+                .map(|item| {
+                    match *item {
+                        TocItem::Numbered(ref i) =>
+                            TocItem::Numbered(self.set_translation_links(i)),
+                        TocItem::Unnumbered(ref i) =>
+                            TocItem::Unnumbered(self.set_translation_links(i)),
+                        TocItem::Unlisted(ref i) =>
+                            TocItem::Unlisted(self.set_translation_links(i)),
+                        TocItem::Spacer =>
+                            TocItem::Spacer,
+                    }
+                }).collect::<Vec<TocItem>>();
+
+            self.translations.remove(&key);
+            self.translations.insert(key, newbook);
+        }
+
+        self
+    }
+
+    /// prepare a Vec of default links to point to the index.html of each translation
+    fn translation_index_links(&mut self) -> Vec<TranslationLink> {
+        let mut default_links: Vec<TranslationLink> = vec![];
+
+        let mut keys = self.translations.keys()
+            .map(|x| x.to_string())
+            .collect::<Vec<String>>();
+        keys.sort();
+
+        for key in keys {
+            let book = self.translations.get(&key).unwrap();
+
+            let z = self.get_dest_base();
+            let a = book.config.dest.strip_prefix(&z).unwrap();
+            let b = a.join("index.html");
+            let c = b.to_str().unwrap();
+            let link = TranslationLink::new(key, c.to_string());
+            default_links.push(link);
+        }
+
+        default_links
+    }
+
+    fn set_translation_links(&mut self, content: &TocContent) -> TocContent {
+        let default_links = self.translation_index_links();
+
+        let mut newcontent: TocContent = content.clone();
+
+        match newcontent.chapter.translation_links {
+            Some(_) => {},
+            None => {
+                newcontent.chapter.translation_links = Some(default_links);
+            }
+        }
+
+        newcontent
+    }
+
     pub fn get_project_root(&self) -> &Path {
         &self.project_root
     }
@@ -414,7 +480,7 @@ impl MDBook {
         self.render_intent = intent;
         match self.render_intent {
             RenderIntent::HtmlHandlebars => {
-                self.set_template_dir(&PathBuf::from("assets").join("html-template"));
+                self.set_template_dir(&PathBuf::from("assets").join("_html-template"));
             },
         }
         self

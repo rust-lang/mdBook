@@ -53,3 +53,21 @@
 
     img { max-width: 100%; }
 }
+
+div.translations {
+  float: left
+  height: 50px
+  ul {
+      margin: 10px 0 0 0
+      display: inline-block
+      list-style-type: none
+      li {
+          display: inline-block
+          padding: 0.2em 0.5em
+          a {
+              text-decoration: none
+              &:hover { text-decoration: underline; }
+          }
+      }
+  }
+}

@@ -37,7 +37,7 @@ table thead td {
   font-weight: 700;
 }
 .sidebar {
-  position: fixed;
+  position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
@@ -99,6 +99,7 @@ table thead td {
 }
 .page-wrapper {
   position: absolute;
+  overflow-y: auto;
   left: 315px;
   right: 0;
   top: 0;
@@ -133,14 +134,7 @@ table thead td {
   left: 0;
   bottom: 0;
   padding-right: 15px;
-}
-@media only screen and (max-width: 400px) {
-  .page {
-    /* Only prevent horizontal scrolling on screens with less than 100px for the content
-       A better way would be to somehow prevent horizontal scrolling all the time, but this causes scrolling problems on iOS Safari.
-       Also, would be better to only enable horizontal scrolling when it is needed (content does not fit on page) but I have no idea how to do that. */
-    overflow-x: hidden;
-  }
+  overflow-y: auto;
 }
 .content {
   margin-left: auto;
@@ -156,6 +150,25 @@ table thead td {
 }
 .content img {
   max-width: 100%;
+}
+div.translations {
+  float: left;
+  height: 50px;
+}
+div.translations ul {
+  margin: 10px 0 0 0;
+  display: inline-block;
+  list-style-type: none;
+}
+div.translations ul li {
+  display: inline-block;
+  padding: 0.2em 0.5em;
+}
+div.translations ul li a {
+  text-decoration: none;
+}
+div.translations ul li a:hover {
+  text-decoration: underline;
 }
 .menu-bar {
   position: relative;
@@ -181,18 +194,13 @@ table thead td {
 .menu-bar .right-buttons {
   float: right;
 }
-.menu-title {
-  display: inline-block;
+h1.menu-title {
+  float: left;
+  margin: 0 0 0 2em;
+  padding: 0;
   font-weight: 200;
   font-size: 20px;
   line-height: 50px;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  text-align: center;
-  margin: 0;
   opacity: 0;
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
   filter: alpha(opacity=0);
@@ -211,7 +219,7 @@ table thead td {
   font-size: 2.5em;
   text-align: center;
   text-decoration: none;
-  position: fixed;
+  position: absolute;
   top: 50px /* Height of menu-bar */;
   bottom: 0;
   margin: 0;
@@ -250,13 +258,7 @@ table thead td {
 .nav-chapters:hover {
   text-decoration: none;
 }
-.sidebar-hidden .previous {
-  left: 0;
-}
-.sidebar-visible .nav-chapters .previous {
-  left: 300px;
-}
-.sidebar-visible .mobile-nav-chapters .previous {
+.previous {
   left: 0;
 }
 .next {
@@ -266,7 +268,6 @@ table thead td {
   position: relative;
   left: 10px;
   z-index: 1000;
-  -webkit-border-radius: 4px;
   border-radius: 4px;
   font-size: 0.7em;
 }
@@ -303,7 +304,6 @@ table thead td {
     position: relative;
     display: inline-block;
     margin-bottom: 50px;
-    -webkit-border-radius: 5px;
     border-radius: 5px;
   }
   .next {
@@ -406,7 +406,6 @@ table thead td {
   display: inline-block;
   vertical-align: middle;
   padding: 0.1em 0.3em;
-  -webkit-border-radius: 3px;
   border-radius: 3px;
 }
 .light pre {
@@ -521,7 +520,6 @@ table thead td {
   display: inline-block;
   vertical-align: middle;
   padding: 0.1em 0.3em;
-  -webkit-border-radius: 3px;
   border-radius: 3px;
 }
 .coal pre {
@@ -636,7 +634,6 @@ table thead td {
   display: inline-block;
   vertical-align: middle;
   padding: 0.1em 0.3em;
-  -webkit-border-radius: 3px;
   border-radius: 3px;
 }
 .navy pre {
@@ -751,7 +748,6 @@ table thead td {
   display: inline-block;
   vertical-align: middle;
   padding: 0.1em 0.3em;
-  -webkit-border-radius: 3px;
   border-radius: 3px;
 }
 .rust pre {
@@ -794,7 +790,6 @@ table thead td {
   }
   code {
     background-color: #666;
-    -webkit-border-radius: 5px;
     border-radius: 5px;
 /* Force background to be printed in Chrome */
     -webkit-print-color-adjust: exact;

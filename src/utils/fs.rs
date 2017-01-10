@@ -61,17 +61,17 @@ pub fn copy_data_file(src_path: &str, dest_path: &Path) -> Result<(), Box<Error>
 /// `include_base` will be removed from the source path. This way the path
 /// relative to the `dest_path` can be controlled.
 ///
-/// The following will copy all files under "data/html-template/", excluding
-/// folders that start with "_", take the "data/html-template/" part off the
+/// The following will copy all files under "data/_html-template/", excluding
+/// folders that start with "_", take the "data/_html-template/" part off the
 /// source path, and write the entries to "assets" folder.
 ///
-/// I.e. "data/html-template/css/book.css" will be written to
+/// I.e. "data/_html-template/css/book.css" will be written to
 /// "assets/css/book.css".
 ///
 /// ```no_run
-/// utils::fs::copy_data("data/html-template/**/*",
-///                      "data/html-template/",
-///                      vec!["data/html-template/_*"],
+/// utils::fs::copy_data("data/_html-template/**/*",
+///                      "data/_html-template/",
+///                      vec!["data/_html-template/_*"],
 ///                      &Path::new("assets"));
 /// ```
 pub fn copy_data(include_glob: &str,

@@ -12,7 +12,7 @@ build = "build.rs"
 include = ["data"]
 exclude = [
     "book-example/*",
-    "data/html-template/_stylus",
+    "data/_html-template/_stylus",
 ]
 
 
@@ -20,6 +20,7 @@ exclude = [
 clap = "2.19.2"
 handlebars = { version = "0.23.0", features = ["serde_type"] }
 serde = "0.8"
+serde_derive = "0.8"
 serde_json = "0.8"
 pulldown-cmark = "0.0.8"
 regex = "0.1"

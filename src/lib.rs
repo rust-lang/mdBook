@@ -69,6 +69,11 @@
 //!
 //! Make sure to take a look at it.
 
+#![feature(proc_macro)]
+
+#[macro_use]
+extern crate serde_derive;
+
 extern crate includedir;
 extern crate phf;
 

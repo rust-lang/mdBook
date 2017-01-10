@@ -9,7 +9,7 @@ use utils;
 #[test]
 fn it_copies_data_file() {
     let dest_path = Path::new("the place was dark").join("and dusty and half-lost").join("book.css");
-    utils::fs::copy_data_file("data/html-template/css/books.css", &dest_path);
+    utils::fs::copy_data_file("data/_html-template/css/books.css", &dest_path);
 
     let mut file = match File::open(&dest_path) {
         Ok(f) => f,
@@ -32,9 +32,9 @@ fn it_copies_data_file() {
 fn it_copies_data_by_pattern() {
     let dest_base = Path::new("in tangles of old alleys").join("near the quays");
 
-    if let Err(e) = utils::fs::copy_data("data/html-template/**/*",
-                                         "data/html-template/",
-                                         vec!["data/html-template/_*"],
+    if let Err(e) = utils::fs::copy_data("data/_html-template/**/*",
+                                         "data/_html-template/",
+                                         vec!["data/_html-template/_*"],
                                          &dest_base) {
         println!("Error: {:#?}", e);
         return;

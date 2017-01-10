@@ -1,3 +1,13 @@
++++
+[[translation_links]]
+code = "fr"
+link = "fr/terrier.html"
+
+[[translation_links]]
+code = "hu"
+link = "hu/nyuszi.html"
++++
+
 # Down The Rabbit-Hole
 
 ![Rabbit](images/Rabbit.png)
