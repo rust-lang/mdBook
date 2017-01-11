@@ -131,10 +131,27 @@ impl Renderer for HtmlHandlebars {
         // Render the chapters of each book
         for (key, book) in &book_project.translations {
 
-            // Read in the page template
-            let tmpl_path: &PathBuf = &book_project.get_template_dir().join("_layouts").join("page.hbs");
-            let s = if tmpl_path.exists() {
-                try!(utils::fs::file_to_string(&tmpl_path))
+            // Look for the page template in these paths
+            let mut tmpl_paths: Vec<PathBuf> = vec![];
+
+            // default scheme: assets/_html-template/_layouts/page.hbs
+            tmpl_paths.push(book_project.get_template_dir().join("_layouts").join("page.hbs"));
+            // maybe the user doesn't use _layouts folder: assets/_html-template/page.hbs
+            tmpl_paths.push(book_project.get_template_dir().join("page.hbs"));
+            // also look for index.hbs which was the template name in v0.0.15
+            tmpl_paths.push(book_project.get_template_dir().join("index.hbs"));
+
+            let first_path_that_exists = |paths: &Vec<PathBuf>| -> Option<PathBuf> {
+                for p in paths.iter() {
+                    if p.exists() {
+                        return Some(PathBuf::from(p));
+                    }
+                }
+                None
+            };
+
+            let s = if let Some(p) = first_path_that_exists(&tmpl_paths) {
+                try!(utils::fs::file_to_string(&p))
             } else {
                 try!(utils::fs::get_data_file("data/_html-template/_layouts/page.hbs"))
             };
