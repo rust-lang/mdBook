@@ -29,6 +29,12 @@ use std::path::{Path, PathBuf};
 
 use clap::{App, ArgMatches, SubCommand, AppSettings};
 
+// Uses for the Watch feature
+#[cfg(feature = "watch")]
+use notify::Watcher;
+#[cfg(feature = "watch")]
+use std::sync::mpsc::channel;
+
 use mdbook::MDBook;
 use mdbook::renderer::{Renderer, HtmlHandlebars};
 use mdbook::utils;
@@ -164,7 +170,24 @@ fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
 // Watch command implementation
 #[cfg(feature = "watch")]
 fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
-    // TODO watch
+    let book_dir = get_book_dir(args);
+    let mut book = MDBook::new(&book_dir);
+    book.read_config();
+
+    trigger_on_change(&mut book, |event, book| {
+        if let Some(path) = event.path {
+            println!("File changed: {:?}\nBuilding book...\n", path);
+
+            // TODO figure out render format intent when we acutally have different renderers
+            let renderer = HtmlHandlebars::new();
+            match renderer.build(&book_dir) {
+                Err(e) => println!("Error while building: {:?}", e),
+                _ => {},
+            }
+            println!("");
+        }
+    });
+
     println!("watch");
     Ok(())
 }
@@ -172,8 +195,72 @@ fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
 // Serve command implementation
 #[cfg(feature = "serve")]
 fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
-    // TODO serve
-    println!("serve");
+    const RELOAD_COMMAND: &'static str = "reload";
+
+    let book_dir = get_book_dir(args);
+    let mut book = MDBook::new(&book_dir);
+    book.read_config();
+    book.parse_books();
+    book.link_translations();
+
+    let port = args.value_of("port").unwrap_or("3000");
+    let ws_port = args.value_of("ws-port").unwrap_or("3001");
+    let interface = args.value_of("interface").unwrap_or("localhost");
+    let public_address = args.value_of("address").unwrap_or(interface);
+
+    let address = format!("{}:{}", interface, port);
+    let ws_address = format!("{}:{}", interface, ws_port);
+
+    book.livereload_script = Some(format!(r#"
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://{}:{}");
+            socket.onmessage = function (event) {{
+                if (event.data === "{}") {{
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }}
+            }};
+
+            window.onbeforeunload = function() {{
+                socket.close();
+            }}
+        </script>
+    "#, public_address, ws_port, RELOAD_COMMAND));
+
+    // TODO it's OK that serve only makes sense for the html output format, but formatlize that selection
+    let renderer = HtmlHandlebars::new();
+    try!(renderer.render(&book));
+
+    let staticfile = staticfile::Static::new(book.get_dest_base());
+    let iron = iron::Iron::new(staticfile);
+    let _iron = iron.http(&*address).unwrap();
+
+    let ws_server = ws::WebSocket::new(|_| {
+        |_| {
+            Ok(())
+        }
+    }).unwrap();
+
+    let broadcaster = ws_server.broadcaster();
+
+    std::thread::spawn(move || {
+        ws_server.listen(&*ws_address).unwrap();
+    });
+
+    println!("\nServing on {}", address);
+
+    trigger_on_change(&mut book, move |event, book| {
+        if let Some(path) = event.path {
+            println!("File changed: {:?}\nBuilding book...\n", path);
+            let renderer = HtmlHandlebars::new();
+            match renderer.render(&book) {
+                Err(e) => println!("Error while building: {:?}", e),
+                _ => broadcaster.send(RELOAD_COMMAND).unwrap(),
+            }
+            println!("");
+        }
+    });
+
     Ok(())
 }
 
@@ -194,5 +281,64 @@ fn get_book_dir(args: &ArgMatches) -> PathBuf {
         }
     } else {
         env::current_dir().unwrap()
+    }
+}
+
+// Calls the closure when a book source file is changed. This is blocking!
+#[cfg(feature = "watch")]
+fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
+    where F: Fn(notify::Event, &mut MDBook) -> ()
+{
+    // Create a channel to receive the events.
+    let (tx, rx) = channel();
+
+    let w: Result<notify::RecommendedWatcher, notify::Error> = notify::Watcher::new(tx);
+
+    match w {
+        Ok(mut watcher) => {
+            // Add the source directory to the watcher
+            if let Err(e) = watcher.watch(book.get_src_base()) {
+                println!("Error while watching {:?}:\n    {:?}", book.get_src_base(), e);
+                ::std::process::exit(0);
+            };
+
+            // Add the book.toml or book.json file to the watcher if it exists,
+            // because it's not located in the source directory
+
+            if let Err(_) = watcher.watch(book.get_project_root().join("book.toml")) {
+                // do nothing if book.toml is not found
+            }
+
+            if let Err(_) = watcher.watch(book.get_project_root().join("book.json")) {
+                // do nothing if book.json is not found
+            }
+
+            let mut previous_time = time::get_time();
+
+            println!("\nListening for changes...\n");
+
+            loop {
+                match rx.recv() {
+                    Ok(event) => {
+                        // Skip the event if an event has already been issued in the last second
+                        let time = time::get_time();
+                        if time - previous_time < time::Duration::seconds(1) {
+                            continue;
+                        } else {
+                            previous_time = time;
+                        }
+
+                        closure(event, book);
+                    },
+                    Err(e) => {
+                        println!("An error occured: {:?}", e);
+                    },
+                }
+            }
+        },
+        Err(e) => {
+            println!("Error while trying to watch the files:\n\n\t{:?}", e);
+            ::std::process::exit(0);
+        },
     }
 }

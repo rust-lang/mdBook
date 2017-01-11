@@ -38,6 +38,9 @@ pub struct MDBook {
     /// Html Handlebars: `project_root` + `assets/_html-template`.
     template_dir: PathBuf,
 
+    /// Input base for all books, relative to `project_root`. Defaults to `src`.
+    src_base: PathBuf,// FIXME use this
+
     /// Output base for all books, relative to `project_root`. Defaults to
     /// `book`.
     dest_base: PathBuf,
@@ -45,9 +48,6 @@ pub struct MDBook {
     /// Informs other functions which renderer has been selected, either by
     /// default or CLI argument.
     render_intent: RenderIntent,
-
-    // TODO Identify and cross-link translations either by file name, or an id
-    // string.
 
     /// The book, or books in case of translations, accessible with a String
     /// key. The keys can be two-letter codes of the translation such as 'en' or
@@ -71,7 +71,6 @@ pub struct MDBook {
     /// block:
     ///
     /// ```toml
-    /// livereload = true
     /// title = "Alice in Wonderland"
     /// author = "Lewis Carroll"
     /// ```
@@ -79,21 +78,19 @@ pub struct MDBook {
     /// For multiple languages, declare them in blocks:
     ///
     /// ```toml
-    /// livereload = true
-    ///
-    /// [translations.en]
+    /// [[translations.en]]
     /// title = "Alice in Wonderland"
     /// author = "Lewis Carroll"
     /// language = { name = "English", code = "en" }
     /// is_main_book = true
     ///
-    /// [translations.fr]
+    /// [[translations.fr]]
     /// title = "Alice au pays des merveilles"
     /// author = "Lewis Carroll"
     /// translator = "Henri Bué"
     /// language = { name = "Français", code = "fr" }
     ///
-    /// [translations.hu]
+    /// [[translations.hu]]
     /// title = "Alice Csodaországban"
     /// author = "Lewis Carroll"
     /// translator = "Kosztolányi Dezső"
@@ -104,8 +101,9 @@ pub struct MDBook {
     /// Space indentation in SUMMARY.md, defaults to 4 spaces.
     pub indent_spaces: i32,
 
-    /// Whether to include the livereload snippet in the output html.
-    pub livereload: bool,
+    /// The `<script>` tag to insert in the render template. It is used with the
+    /// 'serve' command, which is responsible for setting it.
+    pub livereload_script: Option<String>,
 }
 
 impl Default for MDBook {
@@ -113,11 +111,12 @@ impl Default for MDBook {
         let mut proj: MDBook = MDBook {
             project_root: PathBuf::from("".to_string()),
             template_dir: PathBuf::from("".to_string()),
+            src_base: PathBuf::from("src".to_string()),
             dest_base: PathBuf::from("book".to_string()),
             render_intent: RenderIntent::HtmlHandlebars,
             translations: HashMap::new(),
             indent_spaces: 4,
-            livereload: false,
+            livereload_script: None,
         };
         proj.set_project_root(&env::current_dir().unwrap());
         // sets default template_dir
@@ -293,13 +292,6 @@ impl MDBook {
         }
         config.remove("indent_spaces");
 
-        if let Some(a) = config.get("livereload") {
-            if let Some(b) = a.as_bool() {
-                self.livereload = b;
-            }
-        }
-        config.remove("livereload");
-
         // If there is a 'translations' table, configugre each book from that.
         // If there isn't, take the rest of the config as one book.
 
@@ -455,6 +447,19 @@ impl MDBook {
             self.template_dir = PathBuf::from("".to_string());
         } else {
             self.template_dir = path.to_owned();
+        }
+        self
+    }
+
+    pub fn get_src_base(&self) -> PathBuf {
+        self.project_root.join(&self.src_base)
+    }
+
+    pub fn set_src_base(&mut self, path: &PathBuf) -> &mut MDBook {
+        if path.as_os_str() == OsStr::new(".") {
+            self.src_base = PathBuf::from("".to_string());
+        } else {
+            self.src_base = path.to_owned();
         }
         self
     }

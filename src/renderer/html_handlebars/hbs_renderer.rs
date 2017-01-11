@@ -189,7 +189,7 @@ impl Renderer for HtmlHandlebars {
                             content = helpers::playpen::render_playpen(&content, p);
                         }
 
-                        let mut data = try!(make_data(&book, &chapter, &content));
+                        let mut data = try!(make_data(&book, &chapter, &content, &book_project.livereload_script));
 
                         data.remove("path_to_root");
                         data.insert("path_to_root".to_owned(), "".to_json());
@@ -214,7 +214,7 @@ impl Renderer for HtmlHandlebars {
             }
 
             // Render a file for every entry in the book
-            try!(self.process_items(&book.toc, &book, &handlebars));
+            try!(self.process_items(&book.toc, &book, &book_project.livereload_script, &handlebars));
         }
 
         Ok(())
@@ -226,6 +226,7 @@ impl HtmlHandlebars {
     fn process_items(&self,
                      items: &Vec<TocItem>,
                      book: &Book,
+                     livereload_script: &Option<String>,
                      handlebars: &Handlebars)
                      -> Result<(), Box<Error>> {
 
@@ -241,11 +242,11 @@ impl HtmlHandlebars {
                     // Option but currently only used for rendering a chapter as
                     // index.html.
                     if i.chapter.path.as_os_str().len() > 0 {
-                        try!(self.process_chapter(&i.chapter, book, handlebars));
+                        try!(self.process_chapter(&i.chapter, book, livereload_script, handlebars));
                     }
 
                     if let Some(ref subs) = i.sub_items {
-                        try!(self.process_items(&subs, book, handlebars));
+                        try!(self.process_items(&subs, book, livereload_script, handlebars));
                     }
 
                 },
@@ -259,6 +260,7 @@ impl HtmlHandlebars {
     fn process_chapter(&self,
                        chapter: &Chapter,
                        book: &Book,
+                       livereload_script: &Option<String>,
                        handlebars: &Handlebars)
                        -> Result<(), Box<Error>> {
 
@@ -269,7 +271,7 @@ impl HtmlHandlebars {
             content = helpers::playpen::render_playpen(&content, p);
         }
 
-        let data = try!(make_data(book, chapter, &content));
+        let data = try!(make_data(book, chapter, &content, livereload_script));
 
         // Rendere the handlebars template with the data
         debug!("[*]: Render template");
@@ -296,7 +298,8 @@ impl HtmlHandlebars {
 
 fn make_data(book: &Book,
              chapter: &Chapter,
-             content: &str)
+             content: &str,
+             livereload_script: &Option<String>)
              -> Result<serde_json::Map<String, serde_json::Value>, Box<Error>> {
 
     debug!("[fn]: make_data");
@@ -308,6 +311,10 @@ fn make_data(book: &Book,
     data.insert("language".to_owned(), "en".to_json());
     data.insert("title".to_owned(), book.config.title.to_json());
     data.insert("description".to_owned(), book.config.description.to_json());
+
+    if let Some(ref x) = *livereload_script {
+        data.insert("livereload".to_owned(), x.to_json());
+    }
 
     // Chapter data
 
