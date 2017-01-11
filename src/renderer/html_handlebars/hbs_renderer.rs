@@ -63,8 +63,6 @@ impl Renderer for HtmlHandlebars {
 
         // TODO write print version html
 
-        // TODO livereload
-
         // Copy book's static assets
 
         if book_project.get_project_root().join("assets").exists() {
