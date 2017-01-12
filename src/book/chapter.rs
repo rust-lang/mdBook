@@ -220,9 +220,7 @@ impl Chapter {
         debug!("[*]: Reading file");
         try!(f.read_to_string(&mut content));
 
-        // Render markdown using the pulldown-cmark crate
         content = utils::strip_toml_header(&content);
-        content = utils::render_markdown(&content);
 
         Ok(content)
     }

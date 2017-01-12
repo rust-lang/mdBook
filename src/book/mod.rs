@@ -50,8 +50,8 @@ pub struct MDBook {
     render_intent: RenderIntent,
 
     /// The book, or books in case of translations, accessible with a String
-    /// key. The keys can be two-letter codes of the translation such as 'en' or
-    /// 'fr', but this is not enforced.
+    /// key. The keys are expected to be the same as the two-letter codes of the
+    /// language, such as 'en' or 'fr'.
     ///
     /// The String keys will be sub-folders where the translation's Markdown
     /// sources are expected.

@@ -125,6 +125,10 @@ impl Renderer for HtmlHandlebars {
                                       &book_project.get_dest_base()));
         }
 
+        // Concatenate the content (as rendered from Markdown) of each chapter
+        // for writing print.html in the end
+        let mut print_content: String = String::new();
+
         debug!("[fn]: render");
         let mut handlebars = Handlebars::new();
 
@@ -204,7 +208,7 @@ impl Renderer for HtmlHandlebars {
                             content = helpers::playpen::render_playpen(&content, p);
                         }
 
-                        let mut data = try!(make_data(&book, &chapter, &content, &book_project.livereload_script));
+                        let mut data = try!(make_data(&book, &chapter, &book_project.livereload_script));
 
                         data.remove("path_to_root");
                         data.insert("path_to_root".to_owned(), "".to_json());
@@ -279,14 +283,7 @@ impl HtmlHandlebars {
                        handlebars: &Handlebars)
                        -> Result<(), Box<Error>> {
 
-        let mut content = try!(chapter.read_content_using(&book.config.src));
-
-        // Parse for playpen links
-        if let Some(p) = book.config.get_src().join(&chapter.path).parent() {
-            content = helpers::playpen::render_playpen(&content, p);
-        }
-
-        let data = try!(make_data(book, chapter, &content, livereload_script));
+        let data = try!(make_data(book, chapter, livereload_script));
 
         // Rendere the handlebars template with the data
         debug!("[*]: Render template");
@@ -313,7 +310,6 @@ impl HtmlHandlebars {
 
 fn make_data(book: &Book,
              chapter: &Chapter,
-             content: &str,
              livereload_script: &Option<String>)
              -> Result<serde_json::Map<String, serde_json::Value>, Box<Error>> {
 
@@ -354,6 +350,14 @@ fn make_data(book: &Book,
                 "Could not convert path to str")
             ))
         },
+    }
+
+    let mut content = try!(chapter.read_content_using(&book.config.src));
+    content = utils::render_markdown(&content);
+
+    // Parse for playpen links
+    if let Some(p) = book.config.get_src().join(&chapter.path).parent() {
+        content = helpers::playpen::render_playpen(&content, p);
     }
 
     data.insert("content".to_owned(), content.to_json());
