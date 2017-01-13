@@ -58,20 +58,23 @@ fn main() {
                     .subcommand(SubCommand::with_name("init")
                         .about("Create boilerplate structure and files in the directory")
                         // the {n} denotes a newline which will properly aligned in all help messages
-                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'")
+                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'")
                         .arg_from_usage("--theme 'Copies the default theme into your source folder'")
                         .arg_from_usage("--force 'skip confirmation prompts'"))
                     .subcommand(SubCommand::with_name("build")
                         .about("Build the book from the markdown files")
                         .arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
-                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'"))
+                        .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
+                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'"))
                     .subcommand(SubCommand::with_name("watch")
                         .about("Watch the files for changes")
                         .arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
-                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'"))
+                        .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
+                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'"))
                     .subcommand(SubCommand::with_name("serve")
                         .about("Serve the book at http://localhost:3000. Rebuild and reload on change.")
-                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'")
+                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'")
+                        .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
                         .arg_from_usage("-p, --port=[port] 'Use another port{n}(Defaults to 3000)'")
                         .arg_from_usage("-w, --websocket-port=[ws-port] 'Use another port for the websocket connection (livereload){n}(Defaults to 3001)'")
                         .arg_from_usage("-i, --interface=[interface] 'Interface to listen on{n}(Defaults to localhost)'")
@@ -166,7 +169,12 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
 // Build command implementation
 fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::new(&book_dir).read_config();
+    let book = MDBook::new(&book_dir).read_config();
+
+    let mut book = match args.value_of("dest-dir") {
+        Some(dest_dir) => book.set_dest(Path::new(dest_dir)),
+        None => book
+    };
 
     try!(book.build());
 
@@ -182,7 +190,12 @@ fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
 #[cfg(feature = "watch")]
 fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::new(&book_dir).read_config();
+    let book = MDBook::new(&book_dir).read_config();
+
+    let mut book = match args.value_of("dest-dir") {
+        Some(dest_dir) => book.set_dest(Path::new(dest_dir)),
+        None => book
+    };
 
     if args.is_present("open") {
         try!(book.build());
@@ -208,7 +221,13 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
     const RELOAD_COMMAND: &'static str = "reload";
 
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::new(&book_dir).read_config();
+    let book = MDBook::new(&book_dir).read_config();
+
+    let mut book = match args.value_of("dest-dir") {
+        Some(dest_dir) => book.set_dest(Path::new(dest_dir)),
+        None => book
+    };
+
     let port = args.value_of("port").unwrap_or("3000");
     let ws_port = args.value_of("ws-port").unwrap_or("3001");
     let interface = args.value_of("interface").unwrap_or("localhost");
