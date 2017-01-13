@@ -107,6 +107,7 @@ indent_spaces = 2
 [[translations.en]]
 title = "Alice's Adventures in Wonderland"
 author = "Lewis Carroll"
+is_main_book = true
 
 [[translations.hu]]
 title = "Alice Csodaországban"
@@ -141,6 +142,8 @@ name = "Kosztolányi Dezső"
         conf.authors = vec![Author::new("Lewis Carroll")];
         conf.src = expected.get_project_root().join("src").join("en");
         conf.dest = expected.get_project_root().join("book").join("en");
+        conf.is_multilang = true;
+        conf.is_main_book = true;
 
         let mut book = Book::default();
         book.config = conf;
@@ -155,6 +158,8 @@ name = "Kosztolányi Dezső"
         conf.translators = Some(vec![Author::new("Kosztolányi Dezső")]);
         conf.src = expected.get_project_root().join("src").join("hu");
         conf.dest = expected.get_project_root().join("book").join("hu");
+        conf.is_multilang = true;
+        conf.is_main_book = false;
 
         let mut book = Book::default();
         book.config = conf;

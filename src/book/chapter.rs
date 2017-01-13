@@ -3,6 +3,7 @@ extern crate toml;
 
 use regex::Regex;
 
+use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::fs::File;
 use std::error::Error;
@@ -40,18 +41,30 @@ pub struct Chapter {
     /// The title of the chapter.
     pub title: String,
 
+    /// The Markdown content of the chapter without the optional TOML header.
+    pub content: Option<String>,
+
     /// Path to the chapter's markdown file, relative to the book's source
     /// directory.
     ///
-    /// `book.src.join(chapter.path)` points to the Markdown file, and
-    /// `book.dest.join(chapter.path).with_extension("html")` points to the
-    /// output html file. This way if the user had a custom folder structure in
-    /// their source folder, this is re-created in the destination folder.
-    pub path: PathBuf,
+    /// Use `.content` to access the Markdown text when possible, instead of
+    /// reading the Markdown file with `.src_path`.
+    ///
+    /// `book.get_src_base().join(chapter.get_src_path())` should point to the
+    /// Markdown file.
+    ///
+    /// This way if the user had a custom folder structure in their source
+    /// folder, this is re-created in the destination folder.
+    ///
+    /// When this is `None`, the chapter is treated as as draft. An output file
+    /// is not rendered, but it appears in the TOC grayed out.
+    src_path: Option<PathBuf>,
 
-    /// Optional destination path to write to. Used when changing the first
-    /// chapter's path to index.html.
-    pub dest_path: Option<PathBuf>,
+    /// Destination path to write to, relative to the book's source directory.
+    ///
+    /// `book.get_dest_base().join(chapter.get_dest_path())` should point to the
+    /// output HTML file.
+    dest_path: Option<PathBuf>,
 
     /// Links to the corresponding translations.
     pub translation_links: Option<Vec<TranslationLink>>,
@@ -65,6 +78,8 @@ pub struct Chapter {
     /// The description of the chapter.
     pub description: Option<String>,
 
+    /// TODO use this in the template
+
     /// CSS class that will be added to the page-level wrap div to allow
     /// customized chapter styles.
     pub css_class: Option<String>,
@@ -74,7 +89,8 @@ impl Default for Chapter {
     fn default() -> Chapter {
         Chapter {
             title: "Untitled".to_string(),
-            path: PathBuf::from("src".to_string()).join("untitled.md"),
+            content: None,
+            src_path: None,
             dest_path: None,
             translation_links: None,
             authors: None,
@@ -87,10 +103,18 @@ impl Default for Chapter {
 
 impl Chapter {
 
-    pub fn new(title: String, path: PathBuf) -> Chapter {
+    pub fn new(title: String, src_path: PathBuf) -> Chapter {
         let mut chapter = Chapter::default();
         chapter.title = title;
-        chapter.path = path;
+
+        if src_path.as_os_str().len() > 0 {
+            chapter.src_path = Some(src_path.clone());
+            chapter.dest_path = Some(src_path.clone().with_extension("html"));
+        } else {
+            chapter.src_path = None;
+            chapter.dest_path = None;
+        }
+
         chapter
     }
 
@@ -98,39 +122,43 @@ impl Chapter {
 
         debug!("[fn] Chapter::parse_or_create() : {:?}", &self);
 
-        let src_path = &book_src_dir.join(&self.path).to_owned();
-        if !src_path.exists() {
-            debug!("[*] Creating: {:?}", src_path);
-            match create_with_str(src_path, &format!("# {}", self.title)) {
-                Ok(_) => { return Ok(self); },
-                Err(e) => {
-                    return Err(format!("Could not create: {:?}", src_path));
-                },
-            }
-        }
-
-        let mut text = String::new();
-        match File::open(src_path) {
-            Err(e) => { return Err(format!("Read error: {:?}", e)); },
-            Ok(mut f) => {
-                f.read_to_string(&mut text);
-            }
-        }
-
-        let re: Regex = Regex::new(r"(?ms)^\+\+\+\n(?P<toml>.*)\n\+\+\+\n").unwrap();
-
-        match re.captures(&text) {
-            Some(caps) => {
-                let toml = caps.name("toml").unwrap();
-                match utils::toml_str_to_btreemap(&toml) {
-                    Ok(x) => {self.parse_from_btreemap(&x);},
+        if let Some(p) = self.get_src_path() {
+            let src_path = &book_src_dir.join(&p).to_owned();
+            if !src_path.exists() {
+                debug!("[*] Creating: {:?}", src_path);
+                match create_with_str(src_path, &format!("# {}", self.title)) {
+                    Ok(_) => { return Ok(self); },
                     Err(e) => {
-                        error!("[*] Errors while parsing TOML: {:?}", e);
-                        return Err(e);
-                    }
+                        return Err(format!("Could not create: {:?}", src_path));
+                    },
                 }
             }
-            None => {},
+
+            let mut text = String::new();
+            match File::open(src_path) {
+                Err(e) => { return Err(format!("Read error: {:?}", e)); },
+                Ok(mut f) => {
+                    // TODO try! here and return error
+                    f.read_to_string(&mut text);
+                    self.content = Some(utils::strip_toml_header(&text));
+                }
+            }
+
+            let re: Regex = Regex::new(r"(?ms)^\+\+\+\n(?P<toml>.*)\n\+\+\+\n").unwrap();
+
+            match re.captures(&text) {
+                Some(caps) => {
+                    let toml = caps.name("toml").unwrap();
+                    match utils::toml_str_to_btreemap(&toml) {
+                        Ok(x) => {self.parse_from_btreemap(&x);},
+                        Err(e) => {
+                            error!("[*] Errors while parsing TOML: {:?}", e);
+                            return Err(e);
+                        }
+                    }
+                }
+                None => {},
+            }
         }
 
         Ok(self)
@@ -199,33 +227,67 @@ impl Chapter {
         self
     }
 
-    /// FIXME chapter content should be read when parsing SUMMARY.md so that you
-    /// don't have to pass around the Book struct for getting the src dir
+    // TODO not being used?
 
-    /// Reads in the chapter's content from the markdown file. Chapter doesn't
-    /// know the book's src folder, hence the `book_src_dir` argument.
-    pub fn read_content_using(&self, book_src_dir: &PathBuf) -> Result<String, Box<Error>> {
+    // /// Reads in the chapter's content from the markdown file. Chapter doesn't
+    // /// know the book's src folder, hence the `book_src_dir` argument.
+    // pub fn read_content_using(&self, book_src_dir: &PathBuf) -> Result<String, Box<Error>> {
+    //     let p = match self.get_src_path() {
+    //         Some(x) => x,
+    //         None => {
+    //             return Err(Box::new(io::Error::new(
+    //                 io::ErrorKind::Other,
+    //                 format!("src_path is None"))
+    //             ));
+    //         }
+    //     };
 
-        let src_path = book_src_dir.join(&self.path);
+    //     let src_path = book_src_dir.join(&p);
 
-        if !src_path.exists() {
-            return Err(Box::new(io::Error::new(
-                io::ErrorKind::Other,
-                format!("Doesn't exist: {:?}", src_path))
-            ));
+    //     if !src_path.exists() {
+    //         return Err(Box::new(io::Error::new(
+    //             io::ErrorKind::Other,
+    //             format!("Doesn't exist: {:?}", src_path))
+    //         ));
+    //     }
+
+    //     debug!("[*]: Opening file: {:?}", src_path);
+
+    //     let mut f = try!(File::open(&src_path));
+    //     let mut content: String = String::new();
+
+    //     debug!("[*]: Reading file");
+    //     try!(f.read_to_string(&mut content));
+
+    //     content = utils::strip_toml_header(&content);
+
+    //     Ok(content)
+    // }
+
+    pub fn get_src_path(&self) -> Option<PathBuf> {
+        self.src_path.clone()
+    }
+
+    pub fn set_src_path(&mut self, path: PathBuf) -> &mut Chapter {
+        if path.as_os_str() == OsStr::new(".") {
+            self.src_path = Some(PathBuf::from("".to_string()));
+        } else {
+            self.src_path = Some(path.to_owned());
         }
+        self
+    }
 
-        debug!("[*]: Opening file: {:?}", src_path);
+    pub fn get_dest_path(&self) -> Option<PathBuf> {
+        self.dest_path.clone()
+    }
 
-        let mut f = try!(File::open(&src_path));
-        let mut content: String = String::new();
-
-        debug!("[*]: Reading file");
-        try!(f.read_to_string(&mut content));
-
-        content = utils::strip_toml_header(&content);
-
-        Ok(content)
+    pub fn set_dest_path(&mut self, path: PathBuf) -> &mut Chapter {
+        if path.as_os_str() == OsStr::new(".") {
+            self.dest_path = Some(PathBuf::from("".to_string()));
+        } else {
+            self.dest_path = Some(path.to_owned());
+        }
+        self
     }
 
 }

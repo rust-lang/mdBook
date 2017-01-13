@@ -16,6 +16,8 @@ pub struct BookConfig {
 
     // Paths
 
+    // TODO test if dest and src behaves correctly when mdbook.dest_base and mdbook.src_base is not 'book' and 'src'
+
     pub dest: PathBuf,
     pub src: PathBuf,
 
@@ -84,9 +86,9 @@ impl BookConfig {
         conf
     }
 
-    /// Parses recognized keys from a BTreeMap one by one. Not trying to
-    /// directly de-serialize to `BookConfig` so that we can provide some
-    /// convenient shorthands for the user.
+    /// Parses keys from a BTreeMap one by one. Not trying to directly
+    /// de-serialize to `BookConfig` so that we can provide some convenient
+    /// shorthands for the user.
     ///
     /// `book.toml` is a user interface, not an app data store, we never have to
     /// write data back to it.

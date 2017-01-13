@@ -39,7 +39,7 @@ pub struct MDBook {
     template_dir: PathBuf,
 
     /// Input base for all books, relative to `project_root`. Defaults to `src`.
-    src_base: PathBuf,// FIXME use this
+    src_base: PathBuf,
 
     /// Output base for all books, relative to `project_root`. Defaults to
     /// `book`.
@@ -262,6 +262,11 @@ impl MDBook {
             config.remove("project_root");
         }
 
+        if let Some(a) = config.get("src_base") {
+            self.set_src_base(&PathBuf::from(&a.to_string()));
+        }
+        config.remove("src_base");
+
         if let Some(a) = config.get("dest_base") {
             self.set_dest_base(&PathBuf::from(&a.to_string()));
         }
@@ -299,6 +304,9 @@ impl MDBook {
         // the default `./src` and `./book`. If there are more, join their hash
         // keys to the default source and destination folder such as `/src/en`
         // and `./book/en`. This may be overridden if set specifically.
+
+        // TODO if no is_main_book = true was set in the config, find the first
+        // translation (as in the config) and mark it as the main.
 
         if let Some(a) = config.get("translations") {
             if let Some(b) = a.as_table() {

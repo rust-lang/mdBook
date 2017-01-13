@@ -134,12 +134,12 @@ backmatter."#;
             let i = match item {
                 TocItem::Numbered(mut content) => {
                     found_first = true;
-                    content.chapter.dest_path = Some(PathBuf::from("index.html".to_string()));
+                    content.chapter.set_dest_path(PathBuf::from("index.html".to_string()));
                     TocItem::Numbered(content)
                 },
                 TocItem::Unnumbered(mut content) => {
                     found_first = true;
-                    content.chapter.dest_path = Some(PathBuf::from("index.html".to_string()));
+                    content.chapter.set_dest_path(PathBuf::from("index.html".to_string()));
                     TocItem::Unnumbered(content)
                 },
                 TocItem::Unlisted(content) => {

@@ -38,10 +38,14 @@ fn it_parses_summary_to_tocitems() {
         TocContent {
             chapter: Chapter {
                 title: "Introduction",
-                path: "misc/introduction.md",
+                content: None,
+                src_path: Some(
+                    "misc/introduction.md"
+                ),
                 dest_path: Some(
                     "index.html"
                 ),
+                translation_links: None,
                 authors: None,
                 translators: None,
                 description: None,
@@ -55,8 +59,14 @@ fn it_parses_summary_to_tocitems() {
         TocContent {
             chapter: Chapter {
                 title: "mdBook",
-                path: "README.md",
-                dest_path: None,
+                content: None,
+                src_path: Some(
+                    "README.md"
+                ),
+                dest_path: Some(
+                    "README.html"
+                ),
+                translation_links: None,
                 authors: None,
                 translators: None,
                 description: None,
@@ -74,8 +84,14 @@ fn it_parses_summary_to_tocitems() {
         TocContent {
             chapter: Chapter {
                 title: "Command Line Tool",
-                path: "cli/cli-tool.md",
-                dest_path: None,
+                content: None,
+                src_path: Some(
+                    "cli/cli-tool.md"
+                ),
+                dest_path: Some(
+                    "cli/cli-tool.html"
+                ),
+                translation_links: None,
                 authors: None,
                 translators: None,
                 description: None,
@@ -87,8 +103,14 @@ fn it_parses_summary_to_tocitems() {
                         TocContent {
                             chapter: Chapter {
                                 title: "init",
-                                path: "cli/init.md",
-                                dest_path: None,
+                                content: None,
+                                src_path: Some(
+                                    "cli/init.md"
+                                ),
+                                dest_path: Some(
+                                    "cli/init.html"
+                                ),
+                                translation_links: None,
                                 authors: None,
                                 translators: None,
                                 description: None,
@@ -107,8 +129,14 @@ fn it_parses_summary_to_tocitems() {
                         TocContent {
                             chapter: Chapter {
                                 title: "build",
-                                path: "cli/build.md",
-                                dest_path: None,
+                                content: None,
+                                src_path: Some(
+                                    "cli/build.md"
+                                ),
+                                dest_path: Some(
+                                    "cli/build.html"
+                                ),
+                                translation_links: None,
                                 authors: None,
                                 translators: None,
                                 description: None,
@@ -127,8 +155,14 @@ fn it_parses_summary_to_tocitems() {
                         TocContent {
                             chapter: Chapter {
                                 title: "watch",
-                                path: "cli/watch.md",
-                                dest_path: None,
+                                content: None,
+                                src_path: Some(
+                                    "cli/watch.md"
+                                ),
+                                dest_path: Some(
+                                    "cli/watch.html"
+                                ),
+                                translation_links: None,
                                 authors: None,
                                 translators: None,
                                 description: None,
@@ -147,8 +181,14 @@ fn it_parses_summary_to_tocitems() {
                         TocContent {
                             chapter: Chapter {
                                 title: "serve",
-                                path: "cli/serve.md",
-                                dest_path: None,
+                                content: None,
+                                src_path: Some(
+                                    "cli/serve.md"
+                                ),
+                                dest_path: Some(
+                                    "cli/serve.html"
+                                ),
+                                translation_links: None,
                                 authors: None,
                                 translators: None,
                                 description: None,
@@ -167,8 +207,14 @@ fn it_parses_summary_to_tocitems() {
                         TocContent {
                             chapter: Chapter {
                                 title: "test",
-                                path: "cli/test.md",
-                                dest_path: None,
+                                content: None,
+                                src_path: Some(
+                                    "cli/test.md"
+                                ),
+                                dest_path: Some(
+                                    "cli/test.html"
+                                ),
+                                translation_links: None,
                                 authors: None,
                                 translators: None,
                                 description: None,
@@ -196,8 +242,14 @@ fn it_parses_summary_to_tocitems() {
         TocContent {
             chapter: Chapter {
                 title: "Format",
-                path: "format/format.md",
-                dest_path: None,
+                content: None,
+                src_path: Some(
+                    "format/format.md"
+                ),
+                dest_path: Some(
+                    "format/format.html"
+                ),
+                translation_links: None,
                 authors: None,
                 translators: None,
                 description: None,
@@ -209,8 +261,14 @@ fn it_parses_summary_to_tocitems() {
                         TocContent {
                             chapter: Chapter {
                                 title: "SUMMARY.md",
-                                path: "format/summary.md",
-                                dest_path: None,
+                                content: None,
+                                src_path: Some(
+                                    "format/summary.md"
+                                ),
+                                dest_path: Some(
+                                    "format/summary.html"
+                                ),
+                                translation_links: None,
                                 authors: None,
                                 translators: None,
                                 description: None,
@@ -229,8 +287,14 @@ fn it_parses_summary_to_tocitems() {
                         TocContent {
                             chapter: Chapter {
                                 title: "Configuration",
-                                path: "format/config.md",
-                                dest_path: None,
+                                content: None,
+                                src_path: Some(
+                                    "format/config.md"
+                                ),
+                                dest_path: Some(
+                                    "format/config.html"
+                                ),
+                                translation_links: None,
                                 authors: None,
                                 translators: None,
                                 description: None,
@@ -249,8 +313,14 @@ fn it_parses_summary_to_tocitems() {
                         TocContent {
                             chapter: Chapter {
                                 title: "Theme",
-                                path: "format/theme/theme.md",
-                                dest_path: None,
+                                content: None,
+                                src_path: Some(
+                                    "format/theme/theme.md"
+                                ),
+                                dest_path: Some(
+                                    "format/theme/theme.html"
+                                ),
+                                translation_links: None,
                                 authors: None,
                                 translators: None,
                                 description: None,
@@ -262,8 +332,14 @@ fn it_parses_summary_to_tocitems() {
                                         TocContent {
                                             chapter: Chapter {
                                                 title: "index.hbs",
-                                                path: "format/theme/index-hbs.md",
-                                                dest_path: None,
+                                                content: None,
+                                                src_path: Some(
+                                                    "format/theme/index-hbs.md"
+                                                ),
+                                                dest_path: Some(
+                                                    "format/theme/index-hbs.html"
+                                                ),
+                                                translation_links: None,
                                                 authors: None,
                                                 translators: None,
                                                 description: None,
@@ -283,8 +359,14 @@ fn it_parses_summary_to_tocitems() {
                                         TocContent {
                                             chapter: Chapter {
                                                 title: "Syntax highlighting",
-                                                path: "format/theme/syntax-highlighting.md",
-                                                dest_path: None,
+                                                content: None,
+                                                src_path: Some(
+                                                    "format/theme/syntax-highlighting.md"
+                                                ),
+                                                dest_path: Some(
+                                                    "format/theme/syntax-highlighting.html"
+                                                ),
+                                                translation_links: None,
                                                 authors: None,
                                                 translators: None,
                                                 description: None,
@@ -314,8 +396,14 @@ fn it_parses_summary_to_tocitems() {
                         TocContent {
                             chapter: Chapter {
                                 title: "MathJax Support",
-                                path: "format/mathjax.md",
-                                dest_path: None,
+                                content: None,
+                                src_path: Some(
+                                    "format/mathjax.md"
+                                ),
+                                dest_path: Some(
+                                    "format/mathjax.html"
+                                ),
+                                translation_links: None,
                                 authors: None,
                                 translators: None,
                                 description: None,
@@ -334,8 +422,14 @@ fn it_parses_summary_to_tocitems() {
                         TocContent {
                             chapter: Chapter {
                                 title: "Rust code specific features",
-                                path: "format/rust.md",
-                                dest_path: None,
+                                content: None,
+                                src_path: Some(
+                                    "format/rust.md"
+                                ),
+                                dest_path: Some(
+                                    "format/rust.html"
+                                ),
+                                translation_links: None,
                                 authors: None,
                                 translators: None,
                                 description: None,
@@ -363,8 +457,14 @@ fn it_parses_summary_to_tocitems() {
         TocContent {
             chapter: Chapter {
                 title: "Rust Library",
-                path: "lib/lib.md",
-                dest_path: None,
+                content: None,
+                src_path: Some(
+                    "lib/lib.md"
+                ),
+                dest_path: Some(
+                    "lib/lib.html"
+                ),
+                translation_links: None,
                 authors: None,
                 translators: None,
                 description: None,
@@ -383,8 +483,14 @@ fn it_parses_summary_to_tocitems() {
         TocContent {
             chapter: Chapter {
                 title: "Contributors",
-                path: "misc/contributors.md",
-                dest_path: None,
+                content: None,
+                src_path: Some(
+                    "misc/contributors.md"
+                ),
+                dest_path: Some(
+                    "misc/contributors.html"
+                ),
+                translation_links: None,
                 authors: None,
                 translators: None,
                 description: None,

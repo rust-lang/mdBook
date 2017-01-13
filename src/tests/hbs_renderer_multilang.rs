@@ -12,7 +12,7 @@ fn it_renders_multilanguage_book() {
 
     let renderer = HtmlHandlebars::new();
     if let Err(e) = renderer.build(&path) {
-        println!("{:#?}", e);
+        panic!("{:#?}", e);
     }
 
     let mut proj = MDBook::new(&path);
@@ -29,22 +29,27 @@ fn it_renders_multilanguage_book() {
     s = utils::fs::file_to_string(&chapter_path).unwrap();
     assert!(s.contains("<title>Alice's Adventures in Wonderland</title>"));
     assert!(s.contains("<h1>Alice's Adventures in Wonderland</h1>"));
+    assert!(s.contains("<base href=\"\">"));
 
     // Test if each translation was rendered
 
     chapter_path = book_path.join("tears.html");
     s = utils::fs::file_to_string(&chapter_path).unwrap();
     assert!(s.contains("<h1>The Pool of Tears</h1>"));
+    assert!(s.contains("<base href=\"../\">"));
+    assert!(s.contains("li><a href=\"en/tears.html\" class=\"active\"><strong>2.</strong> The Pool of Tears</a></li>"));
 
     book_path = proj.translations.get("fr").unwrap().config.get_dest();
     chapter_path = book_path.join("larmes.html");
     s = utils::fs::file_to_string(&chapter_path).unwrap();
     assert!(s.contains("<h1>La mare aux larmes</h1>"));
+    assert!(s.contains("<base href=\"../\">"));
 
     book_path = proj.translations.get("hu").unwrap().config.get_dest();
     chapter_path = book_path.join("konnyto.html");
     s = utils::fs::file_to_string(&chapter_path).unwrap();
     assert!(s.contains("<h1>Könnytó</h1>"));
+    assert!(s.contains("<base href=\"../\">"));
 
     // Test if book's asset files were copied
 
@@ -66,4 +71,21 @@ fn it_renders_multilanguage_book() {
     assert!(s.contains("<a href=\"en/index.html\">en</a>"));
     assert!(s.contains("<a href=\"hu/index.html\">hu</a>"));
     assert!(s.contains("<a href=\"fr/index.html\">fr</a>"));
+
+    // Test if print.html is produced for each translations
+
+    book_path = proj.translations.get("en").unwrap().config.get_dest();
+    chapter_path = book_path.join("print.html");
+    s = utils::fs::file_to_string(&chapter_path).unwrap();
+    assert!(s.contains("<h1>The Pool of Tears</h1>"));
+
+    book_path = proj.translations.get("fr").unwrap().config.get_dest();
+    chapter_path = book_path.join("print.html");
+    s = utils::fs::file_to_string(&chapter_path).unwrap();
+    assert!(s.contains("<h1>La mare aux larmes</h1>"));
+
+    book_path = proj.translations.get("hu").unwrap().config.get_dest();
+    chapter_path = book_path.join("print.html");
+    s = utils::fs::file_to_string(&chapter_path).unwrap();
+    assert!(s.contains("<h1>Könnytó</h1>"));
 }

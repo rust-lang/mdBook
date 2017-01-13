@@ -18,5 +18,6 @@ fn it_parses_when_exists() {
     // test that the author is parsed from the TOML header
     expected.authors = Some(vec![Author::new("H.P. Lovecraft")]);
 
-    assert_eq!(format!("{:?}", result), format!("{:?}", expected));
+    assert!(result.content.unwrap().contains("Nemesis, 1917"));
+    assert_eq!(format!("{:?}", result.authors), format!("{:?}", expected.authors));
 }
