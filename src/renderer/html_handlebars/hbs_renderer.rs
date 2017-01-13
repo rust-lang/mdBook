@@ -61,8 +61,6 @@ impl Renderer for HtmlHandlebars {
             ));
         }
 
-        // TODO write print version html
-
         // Copy book's static assets
 
         if book_project.get_project_root().join("assets").exists() {
@@ -124,10 +122,6 @@ impl Renderer for HtmlHandlebars {
                                       vec!["data/_html-template/_*"],
                                       &book_project.get_dest_base()));
         }
-
-        // Concatenate the content (as rendered from Markdown) of each chapter
-        // for writing print.html in the end
-        let mut print_content: String = String::new();
 
         debug!("[fn]: render");
         let mut handlebars = Handlebars::new();
@@ -234,6 +228,41 @@ impl Renderer for HtmlHandlebars {
 
             // Render a file for every entry in the book
             try!(self.process_items(&book.toc, &book, &book_project.livereload_script, &handlebars));
+
+            // Write print.html
+            // FIXME chapter should have its content so that we don't have to duplicate process_chapter() here
+            if let Some(mut content) = self.collect_print_content_markdown(&book.toc, &book) {
+
+                let mut chapter: Chapter = Chapter::new(book.config.title.to_owned(), PathBuf::from(""));
+
+                chapter.dest_path = Some(PathBuf::from("print.html"));
+
+                // FIXME this is process_chapter() except we replace content in data
+
+                let mut data = try!(make_data(&book, &chapter, &None));
+
+                content = utils::render_markdown(&content);
+
+                if let Some(p) = book.config.get_src().join(&chapter.path).parent() {
+                    content = helpers::playpen::render_playpen(&content, p);
+                }
+
+                data.remove("content");
+                data.insert("content".to_owned(), content.to_json());
+
+                let rendered_content = try!(handlebars.render("page", &data));
+
+                let p = match chapter.dest_path.clone() {
+                    Some(x) => x,
+                    None => chapter.path.with_extension("html")
+                };
+
+                let rendered_path = &book.config.get_dest().join(&p);
+
+                let mut file = try!(utils::fs::create_file(rendered_path));
+
+                try!(file.write_all(&rendered_content.into_bytes()));
+            }
         }
 
         Ok(())
@@ -269,11 +298,44 @@ impl HtmlHandlebars {
                     }
 
                 },
-                _ => {},
+                TocItem::Spacer => {},
             }
         }
 
         Ok(())
+    }
+
+    fn collect_print_content_markdown(&self, items: &Vec<TocItem>, book: &Book) -> Option<String> {
+        let mut text = "".to_string();
+
+        for item in items.iter() {
+            match *item {
+                TocItem::Numbered(ref i) |
+                TocItem::Unnumbered(ref i) |
+                TocItem::Unlisted(ref i) => {
+                    if i.chapter.path.as_os_str().len() > 0 {
+                        if let Ok(x) = i.chapter.read_content_using(&book.config.src) {
+                            text.push_str(&x);
+                        }
+                    }
+
+                    if let Some(ref subs) = i.sub_items {
+                        if let Some(x) = self.collect_print_content_markdown(subs, book) {
+                            text.push_str(&x);
+                        }
+                    }
+
+                },
+                TocItem::Spacer => {},
+            }
+        }
+
+        if text.len() > 0 {
+            Some(text)
+        } else {
+            None
+        }
+
     }
 
     fn process_chapter(&self,
@@ -285,7 +347,7 @@ impl HtmlHandlebars {
 
         let data = try!(make_data(book, chapter, livereload_script));
 
-        // Rendere the handlebars template with the data
+        // Render the handlebars template with the data
         debug!("[*]: Render template");
         let rendered_content = try!(handlebars.render("page", &data));
 
@@ -352,15 +414,21 @@ fn make_data(book: &Book,
         },
     }
 
-    let mut content = try!(chapter.read_content_using(&book.config.src));
-    content = utils::render_markdown(&content);
+    match chapter.read_content_using(&book.config.src) {
+        Ok(mut content) => {
+            content = utils::render_markdown(&content);
 
-    // Parse for playpen links
-    if let Some(p) = book.config.get_src().join(&chapter.path).parent() {
-        content = helpers::playpen::render_playpen(&content, p);
+            // Parse for playpen links
+            if let Some(p) = book.config.get_src().join(&chapter.path).parent() {
+                content = helpers::playpen::render_playpen(&content, p);
+            }
+
+            data.insert("content".to_owned(), content.to_json());
+        },
+        Err(e) => {
+            debug!("Couldn't read chapter content: {:#?}", e);
+        },
     }
-
-    data.insert("content".to_owned(), content.to_json());
 
     data.insert("path_to_root".to_owned(), utils::fs::path_to_root(&path).to_json());
 

@@ -199,6 +199,9 @@ impl Chapter {
         self
     }
 
+    /// FIXME chapter content should be read when parsing SUMMARY.md so that you
+    /// don't have to pass around the Book struct for getting the src dir
+
     /// Reads in the chapter's content from the markdown file. Chapter doesn't
     /// know the book's src folder, hence the `book_src_dir` argument.
     pub fn read_content_using(&self, book_src_dir: &PathBuf) -> Result<String, Box<Error>> {
