@@ -5,13 +5,14 @@ namespace book {
 class MDBook {
   project_root: PathBuf,
   template_dir: PathBuf,
+  src_base: PathBuf,
   dest_base: PathBuf,
   render_intent: RenderIntent,
 
   translations: HashMap<String, Book>,
 
   indent_spaces: i32,
-  livereload: bool,
+  pub livereload_script: Option<String>,
 
   new(project_root)
 }
@@ -24,15 +25,19 @@ class book::Book {
 }
 
 class book::Chapter {
-  title: String,
-  path: PathBuf,
-  dest_path: Option<PathBuf>,
-  authors: Option<Vec<Author>>,
-  translators: Option<Vec<Author>>,
-  description: Option<String>,
-  css_class: Option<String>,
+  pub title: String,
+  pub content: Option<String>,
 
-  new(title, path)
+  src_path: Option<PathBuf>,
+  dest_path: Option<PathBuf>,
+
+  pub translation_links: Option<Vec<TranslationLink>>,
+  pub authors: Option<Vec<Author>>,
+  pub translators: Option<Vec<Author>>,
+  pub description: Option<String>,
+  pub css_class: Option<String>,
+
+  new(title, src_path)
 }
 
 }
@@ -40,20 +45,20 @@ class book::Chapter {
 namespace book::bookconfig {
 
 class BookConfig {
-  dest: PathBuf,
-  src: PathBuf,
+  pub dest: PathBuf,
+  pub src: PathBuf,
 
-  title: String,
-  subtitle: Option<String>,
-  description: Option<String>,
-  language: Language,
-  authors: Vec<Author>,
-  translators: Option<Vec<Author>>,
-  publisher: Option<Publisher>,
-  number_format: NumberFormat,
-  section_names: Vec<String>,
-  is_main_book: bool,
-  is_multilang: bool,
+  pub title: String,
+  pub subtitle: Option<String>,
+  pub description: Option<String>,
+  pub language: Language,
+  pub authors: Vec<Author>,
+  pub translators: Option<Vec<Author>>,
+  pub publisher: Option<Publisher>,
+  pub number_format: NumberFormat,
+  pub section_names: Vec<String>,
+  pub is_main_book: bool,
+  pub is_multilang: bool,
 
   new(project_root)
 }
@@ -92,9 +97,9 @@ enum NumberFormat {
 namespace book::toc {
 
 class TocContent {
-  chapter: Chapter,
-  sub_items: Option<Vec<TocItem>>,
-  section: Option<Vec<i32>>,
+  pub chapter: Chapter,
+  pub sub_items: Option<Vec<TocItem>>,
+  pub section: Option<Vec<i32>>,
 }
 
 enum TocItem {
