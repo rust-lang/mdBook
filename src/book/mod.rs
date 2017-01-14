@@ -371,6 +371,10 @@ impl MDBook {
     }
 
     pub fn link_translations(&mut self) -> &mut MDBook {
+        if self.translations.keys().count() == 1 {
+            return self;
+        }
+
         for (key, book) in self.translations.clone() {
             let mut newbook: Book = book.clone();
 
