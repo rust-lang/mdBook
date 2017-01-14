@@ -131,11 +131,11 @@ $( document ).ready(function() {
 
     function set_theme(theme) {
         if (theme == 'coal' || theme == 'navy') {
-            $("[href='tomorrow-night.css']").prop('disabled', false);
-            $("[href='highlight.css']").prop('disabled', true);
+            $("[href='css/tomorrow-night.css']").prop('disabled', false);
+            $("[href='css/highlight.css']").prop('disabled', true);
         } else {
-            $("[href='tomorrow-night.css']").prop('disabled', true);
-            $("[href='highlight.css']").prop('disabled', false);
+            $("[href='css/tomorrow-night.css']").prop('disabled', true);
+            $("[href='css/highlight.css']").prop('disabled', false);
         }
 
         localStorage.setItem('theme', theme);
