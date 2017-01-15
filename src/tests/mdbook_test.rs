@@ -107,7 +107,6 @@ indent_spaces = 2
 [[translations.en]]
 title = "Alice's Adventures in Wonderland"
 author = "Lewis Carroll"
-is_main_book = true
 
 [[translations.hu]]
 title = "Alice Csodaországban"

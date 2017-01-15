@@ -1,4 +1,7 @@
+extern crate regex;
 extern crate toml;
+
+use regex::Regex;
 
 pub mod book;
 pub mod bookconfig;
@@ -64,8 +67,12 @@ pub struct MDBook {
     /// `./src`.
     ///
     /// Translations have to be declared in `book.toml` in their separate
-    /// blocks. In this case `is_main_book = true` has to be set to mark the
-    /// main book to avoid ambiguity.
+    /// blocks. The first in the TOML config will be recognized as the main
+    /// translation, `is_main_book` will be set to true on it.
+    ///
+    /// If the first in the TOML config is not the main translation, the user
+    /// has to set `is_main_book = true` to mark the main book to avoid
+    /// ambiguity.
     ///
     /// For a single language, the book's properties can be set on the main
     /// block:
@@ -82,7 +89,6 @@ pub struct MDBook {
     /// title = "Alice in Wonderland"
     /// author = "Lewis Carroll"
     /// language = { name = "English", code = "en" }
-    /// is_main_book = true
     ///
     /// [[translations.fr]]
     /// title = "Alice au pays des merveilles"
@@ -184,34 +190,21 @@ impl MDBook {
 
         debug!("[fn]: read_config");
 
-        // TODO refactor to a helper that returns Result?
-
-        // TODO Maybe some error handling instead of exit(2), although it is a
-        // clear indication for the user that something is wrong and we can't
-        // fix it for them.
-
-        let read_file = |path: PathBuf| -> String {
-            let mut data = String::new();
-            let mut f: File = match File::open(&path) {
-                Ok(x) => x,
-                Err(_) => {
-                    error!("[*]: Failed to open {:?}", &path);
-                    exit(2);
-                }
-            };
-            if let Err(_) = f.read_to_string(&mut data) {
-                error!("[*]: Failed to read {:?}", &path);
-                exit(2);
-            }
-            data
-        };
+        // exit(2) is a clear indication for the user that something is wrong
+        // and we can't fix it for them.
 
         // Read book.toml or book.json if exists to a BTreeMap
 
         if Path::new(self.project_root.join("book.toml").as_os_str()).exists() {
 
             debug!("[*]: Reading config");
-            let text = read_file(self.project_root.join("book.toml"));
+            let text = match utils::fs::file_to_string(&self.project_root.join("book.toml")) {
+                Ok(x) => x,
+                Err(e) => {
+                    error!("[*] Read error: {:#?}", e);
+                    exit(2);
+                }
+            };
 
             match utils::toml_str_to_btreemap(&text) {
                 Ok(x) => {self.parse_from_btreemap(&x);},
@@ -224,7 +217,13 @@ impl MDBook {
         } else if Path::new(self.project_root.join("book.json").as_os_str()).exists() {
 
             debug!("[*]: Reading config");
-            let text = read_file(self.project_root.join("book.json"));
+            let text = match utils::fs::file_to_string(&self.project_root.join("book.json")) {
+                Ok(x) => x,
+                Err(e) => {
+                    error!("[*] Read error: {:#?}", e);
+                    exit(2);
+                }
+            };
 
             match utils::json_str_to_btreemap(&text) {
                 Ok(x) => {self.parse_from_btreemap(&x);},
@@ -305,13 +304,12 @@ impl MDBook {
         // keys to the default source and destination folder such as `/src/en`
         // and `./book/en`. This may be overridden if set specifically.
 
-        // TODO if no is_main_book = true was set in the config, find the first
-        // translation (as in the config) and mark it as the main.
-
         if let Some(a) = config.get("translations") {
             if let Some(b) = a.as_table() {
 
                 let is_multilang: bool = b.iter().count() > 1;
+
+                let mut has_main_book_already = false;
 
                 for (key, conf) in b.iter() {
                     let mut book = Book::new(&self.project_root);
@@ -324,10 +322,59 @@ impl MDBook {
                             }
                             book.config.is_multilang = is_multilang;
                             book.config.parse_from_btreemap(&d);
+                            if book.config.is_main_book {
+                                has_main_book_already = true;
+                            }
                             self.translations.insert(key.to_owned(), book);
                         }
                     }
                 }
+
+                // If there hasn't been a 'is_main_book = true' set in the
+                // config, we have to find the first translation as given in the
+                // config and assume it to be the main book.
+                //
+                // Since the config is a BTreeMap, in which entries are ordered
+                // by the keys, the order in which they appear in the book.toml
+                // file has to be deduced by matching the file contents with a
+                // Regex.
+
+                if !has_main_book_already {
+                    if Path::new(self.project_root.join("book.toml").as_os_str()).exists() {
+
+                        let text = match utils::fs::file_to_string(&self.project_root.join("book.toml")) {
+                            Ok(x) => x,
+                            Err(e) => {
+                                error!("[*] Read error: {:#?}", e);
+                                exit(2);
+                            }
+                        };
+
+                        let re: Regex = Regex::new(r"\[\[translations\.(?P<key>[^]]+)\]\]").unwrap();
+
+                        match re.captures(&text) {
+                            Some(caps) => {
+                                if let Some(key) = caps.name("key") {
+                                    if let Some(mut a) = self.translations.get_mut(key) {
+                                        a.config.is_main_book = true;
+                                    }
+                                }
+                            },
+                            None => {},
+                        }
+
+                    } else if Path::new(self.project_root.join("book.json").as_os_str()).exists() {
+
+                        // Not going to bother with Regex-parsing JSON. We're
+                        // only supporting it for <= v0.0.15 books where the format
+                        // was simple and the translations key hasn't been introduced.
+
+                        error!("When using the JSON file format for configuration, mark the main trainslation by setting the \"is_main_book\": \"true\" property. Or use the TOML format and the first translation will be recognized as the main language.");
+
+                        exit(2);
+                    }
+                }
+
             }
         } else {
             let mut book = Book::new(&self.project_root);
@@ -336,6 +383,7 @@ impl MDBook {
             let key = book.config.language.code.clone();
             self.translations.insert(key, book);
         }
+
 
         self
     }

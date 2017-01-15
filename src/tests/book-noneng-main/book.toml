@@ -1,0 +1,12 @@
+# Source: http://www.babelmatrix.org/works/en/Hardy%2C_Thomas-1840/At_a_Lunar_Eclipse/hu/31879-Egy_holdfogyatkoz%C3%A1skor?tr_id=585
+
+[[translations.hu]]
+title = "Egy holdfogyatkozáskor"
+author = "Szabó Lőrinc"
+language = { name = "Magyar", code = "hu" }
+
+[[translations.en]]
+title = "At a Lunar Eclipse"
+translator = "Thomas Hardy"
+language = { name = "English", code = "en" }
+

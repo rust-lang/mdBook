@@ -4,7 +4,6 @@
 title = "Alice's Adventures in Wonderland"
 author = "Lewis Carroll"
 language = { name = "English", code = "en" }
-is_main_book = true
 
 [[translations.fr]]
 title = "Alice au pays des merveilles"

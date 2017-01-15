@@ -89,3 +89,14 @@ fn it_renders_multilanguage_book() {
     s = utils::fs::file_to_string(&chapter_path).unwrap();
     assert!(s.contains("<h1>Könnytó</h1>"));
 }
+
+#[test]
+fn it_recognizes_first_translation_as_main() {
+    let path = PathBuf::from(".").join("src").join("tests").join("book-noneng-main");
+
+    let mut proj = MDBook::new(&path);
+    proj.read_config();
+
+    let t = proj.translations.get("hu").unwrap();
+    assert!(t.config.is_main_book);
+}
