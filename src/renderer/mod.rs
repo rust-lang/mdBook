@@ -8,9 +8,12 @@ use std::path::PathBuf;
 
 pub trait Renderer {
 
-    /// Responsible for creating an `MDBook` struct from path, preparing the
-    /// project and calling `render()`, doing what is necessary for the
-    /// particular output format.
+    /// When the output format is determined (by a CLI argument for example),
+    /// call `.build()` of the selected Renderer implementation.
+    ///
+    /// Constructs an `MDBook` struct given the path of the book project,
+    /// preparing the project and calling `render()`, doing what is necessary
+    /// for the particular output format.
     ///
     /// This involves parsing config options from `book.toml` and parsing the
     /// `SUMMARY.md` of each translation to a nested `Vec<TocItem>`.
