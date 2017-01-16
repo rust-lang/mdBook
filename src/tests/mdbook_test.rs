@@ -107,6 +107,7 @@ indent_spaces = 2
 [[translations.en]]
 title = "Alice's Adventures in Wonderland"
 author = "Lewis Carroll"
+is_main_book = true
 
 [[translations.hu]]
 title = "Alice Csodaországban"
@@ -168,10 +169,18 @@ name = "Kosztolányi Dezső"
 
     // Hashmaps are unordered. They don't always print their keys in the same order.
 
+    assert_eq!(result.indent_spaces, expected.indent_spaces);
+
     assert_eq!(
-        format!("{:#?} {:#?} {:#?}", result.indent_spaces, result.translations.get("en").unwrap(), result.translations.get("hu").unwrap()),
-        format!("{:#?} {:#?} {:#?}", expected.indent_spaces, expected.translations.get("en").unwrap(), expected.translations.get("hu").unwrap())
+        format!("{:#?}", result.translations.get("en").unwrap()),
+        format!("{:#?}", expected.translations.get("en").unwrap())
     );
+
+    assert_eq!(
+        format!("{:#?}", result.translations.get("hu").unwrap()),
+        format!("{:#?}", expected.translations.get("hu").unwrap())
+    );
+
 }
 
 #[test]

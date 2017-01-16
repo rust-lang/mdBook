@@ -3,7 +3,7 @@
 [Titre](titre.md)
 
 - [Au fond du terrier](terrier.md)
-- [La mare aux larmes](larmes.md)
+- [La mare aux larmes](tears.md)
 - [La course cocasse](cocasse.md)
 - [L'habitation du lapin blanc]()
 - [Conseils d'une chenille]()

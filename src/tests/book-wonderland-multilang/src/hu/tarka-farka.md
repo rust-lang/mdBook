@@ -1,3 +1,7 @@
++++
+translation_id = "caucus race"
++++
+
 # Körbecsukó meg az egér hosszú tarka farka
 
 ![Tarka-farka](images/Tail.png)

@@ -46,6 +46,7 @@ fn it_parses_summary_to_tocitems() {
                     "index.html"
                 ),
                 translation_links: None,
+                translation_id: None,
                 authors: None,
                 translators: None,
                 description: None,
@@ -67,6 +68,7 @@ fn it_parses_summary_to_tocitems() {
                     "README.html"
                 ),
                 translation_links: None,
+                translation_id: None,
                 authors: None,
                 translators: None,
                 description: None,
@@ -92,6 +94,7 @@ fn it_parses_summary_to_tocitems() {
                     "cli/cli-tool.html"
                 ),
                 translation_links: None,
+                translation_id: None,
                 authors: None,
                 translators: None,
                 description: None,
@@ -111,6 +114,7 @@ fn it_parses_summary_to_tocitems() {
                                     "cli/init.html"
                                 ),
                                 translation_links: None,
+                                translation_id: None,
                                 authors: None,
                                 translators: None,
                                 description: None,
@@ -137,6 +141,7 @@ fn it_parses_summary_to_tocitems() {
                                     "cli/build.html"
                                 ),
                                 translation_links: None,
+                                translation_id: None,
                                 authors: None,
                                 translators: None,
                                 description: None,
@@ -163,6 +168,7 @@ fn it_parses_summary_to_tocitems() {
                                     "cli/watch.html"
                                 ),
                                 translation_links: None,
+                                translation_id: None,
                                 authors: None,
                                 translators: None,
                                 description: None,
@@ -189,6 +195,7 @@ fn it_parses_summary_to_tocitems() {
                                     "cli/serve.html"
                                 ),
                                 translation_links: None,
+                                translation_id: None,
                                 authors: None,
                                 translators: None,
                                 description: None,
@@ -215,6 +222,7 @@ fn it_parses_summary_to_tocitems() {
                                     "cli/test.html"
                                 ),
                                 translation_links: None,
+                                translation_id: None,
                                 authors: None,
                                 translators: None,
                                 description: None,
@@ -250,6 +258,7 @@ fn it_parses_summary_to_tocitems() {
                     "format/format.html"
                 ),
                 translation_links: None,
+                translation_id: None,
                 authors: None,
                 translators: None,
                 description: None,
@@ -269,6 +278,7 @@ fn it_parses_summary_to_tocitems() {
                                     "format/summary.html"
                                 ),
                                 translation_links: None,
+                                translation_id: None,
                                 authors: None,
                                 translators: None,
                                 description: None,
@@ -295,6 +305,7 @@ fn it_parses_summary_to_tocitems() {
                                     "format/config.html"
                                 ),
                                 translation_links: None,
+                                translation_id: None,
                                 authors: None,
                                 translators: None,
                                 description: None,
@@ -321,6 +332,7 @@ fn it_parses_summary_to_tocitems() {
                                     "format/theme/theme.html"
                                 ),
                                 translation_links: None,
+                                translation_id: None,
                                 authors: None,
                                 translators: None,
                                 description: None,
@@ -340,6 +352,7 @@ fn it_parses_summary_to_tocitems() {
                                                     "format/theme/index-hbs.html"
                                                 ),
                                                 translation_links: None,
+                                                translation_id: None,
                                                 authors: None,
                                                 translators: None,
                                                 description: None,
@@ -367,6 +380,7 @@ fn it_parses_summary_to_tocitems() {
                                                     "format/theme/syntax-highlighting.html"
                                                 ),
                                                 translation_links: None,
+                                                translation_id: None,
                                                 authors: None,
                                                 translators: None,
                                                 description: None,
@@ -404,6 +418,7 @@ fn it_parses_summary_to_tocitems() {
                                     "format/mathjax.html"
                                 ),
                                 translation_links: None,
+                                translation_id: None,
                                 authors: None,
                                 translators: None,
                                 description: None,
@@ -430,6 +445,7 @@ fn it_parses_summary_to_tocitems() {
                                     "format/rust.html"
                                 ),
                                 translation_links: None,
+                                translation_id: None,
                                 authors: None,
                                 translators: None,
                                 description: None,
@@ -465,6 +481,7 @@ fn it_parses_summary_to_tocitems() {
                     "lib/lib.html"
                 ),
                 translation_links: None,
+                translation_id: None,
                 authors: None,
                 translators: None,
                 description: None,
@@ -491,6 +508,7 @@ fn it_parses_summary_to_tocitems() {
                     "misc/contributors.html"
                 ),
                 translation_links: None,
+                translation_id: None,
                 authors: None,
                 translators: None,
                 description: None,

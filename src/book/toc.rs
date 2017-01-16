@@ -55,6 +55,28 @@ impl TocContent {
         }
     }
 
+    pub fn is_it_a_translation_of(&self, checking: &TocContent) -> bool {
+        // if the user has set the same translation_id on them
+        if let Some(ref a) = self.chapter.translation_id {
+            if let Some(ref b) = checking.chapter.translation_id {
+                if a == b {
+                    return true;
+                }
+            }
+        }
+
+        // if src_path matches
+        if let Some(ref a) = self.chapter.get_src_path() {
+            if let Some(ref b) = checking.chapter.get_src_path() {
+                if a == b {
+                    return true;
+                }
+            }
+        }
+
+        false
+    }
+
     // TODO update
 
     // /// This function takes a slice `&[x,y,z]` and returns the corresponding sub-chapter if it exists.
@@ -73,4 +95,23 @@ impl TocContent {
     //         },
     //     }
     // }
+}
+
+pub fn flat_toc(toc: &Vec<TocItem>) -> Vec<TocItem> {
+    let mut flattened: Vec<TocItem> = vec![];
+    for i in toc.iter() {
+        match *i {
+            TocItem::Numbered(ref x) |
+            TocItem::Unnumbered(ref x) |
+            TocItem::Unlisted(ref x) => {
+                flattened.push(i.clone());
+                if let Some(ref subs) = x.sub_items {
+                    let mut a = flat_toc(subs);
+                    flattened.append(&mut a);
+                }
+            },
+            TocItem::Spacer => { flattened.push(i.clone()); },
+        }
+    }
+    flattened
 }

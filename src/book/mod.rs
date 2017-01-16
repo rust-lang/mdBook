@@ -496,6 +496,46 @@ impl MDBook {
             None => {},
         }
 
+        // Find a translation for the links that are still None
+
+        for (key, trl) in final_links.clone().iter() {
+            match trl.link {
+                Some(_) => { continue; },
+                None => {},
+            }
+
+            let b: &Book = self.translations.get(key).unwrap();
+            let flat_toc = toc::flat_toc(&b.toc);
+
+            for item in flat_toc.iter() {
+                match *item {
+                    TocItem::Numbered(ref i) |
+                    TocItem::Unnumbered(ref i) |
+                    TocItem::Unlisted(ref i) => {
+
+                        // Note that this will also add a link to itself, which is good.
+
+                        if content.is_it_a_translation_of(i) {
+                            if let Some(mut a) = i.chapter.get_dest_path() {
+                                // Join the path to the language code, i.e. en/tears.html
+                                a = PathBuf::from(key.to_string()).join(a);
+                                let path = String::from(a.to_str().unwrap());
+
+                                final_links.insert(
+                                    key.to_owned(),
+                                    TranslationLink::new_with_link(key.to_owned(), path)
+                                );
+                            } else {
+                                debug!("It's a translation but dest_path is not set: {:#?}", i);
+                            }
+                            break;
+                        }
+                    },
+                    TocItem::Spacer => {},
+                }
+            }
+        }
+
         let a: Vec<TranslationLink> = final_links.values().map(|x| x.clone()).collect();
         newcontent.chapter.translation_links = Some(a);
 
@@ -640,3 +680,4 @@ impl MDBook {
     // }
 
 }
+

@@ -3,7 +3,7 @@
 [Címoldal](cimoldal.md)
 
 - [Lenn, a Nyuszi barlangjában](nyuszi.md)
-- [Könnytó](konnyto.md)
+- [Könnytó](tears.md)
 - [Körbecsukó meg az egér hosszú tarka farka](tarka-farka.md)
 - [Gyíkocska]()
 - [A hernyó tanácsot ad]()
