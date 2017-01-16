@@ -43,6 +43,10 @@
         </script>
 
         <div id="sidebar" class="sidebar">
+            <div class="translation-indexes">
+                {{#translation-indexes}}{{/translation-indexes}}
+            </div>
+
             {{#toc}}{{/toc}}
         </div>
 
@@ -55,8 +59,8 @@
                         <i id="theme-toggle" class="fa fa-paint-brush"></i>
                     </div>
 
-                   <div class="translations">
-                       {{#translations}}{{/translations}}
+                   <div class="translation-links">
+                       {{#translation-links}}{{/translation-links}}
                    </div>
 
                     <h1 class="menu-title">{{ title }}</h1>

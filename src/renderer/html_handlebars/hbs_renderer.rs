@@ -1,7 +1,7 @@
 use renderer::html_handlebars::helpers;
 use renderer::Renderer;
 use book::{MDBook, Book};
-use book::chapter::Chapter;
+use book::chapter::{Chapter, TranslationLink};
 use book::toc::{TocItem, TocContent};
 use utils;
 use FILES;
@@ -127,6 +127,8 @@ impl Renderer for HtmlHandlebars {
         debug!("[fn]: render");
         let mut handlebars = Handlebars::new();
 
+        let translation_indexes = book_project.translation_index_links();
+
         // Render the chapters of each book
         for (key, book) in &book_project.translations {
 
@@ -164,7 +166,8 @@ impl Renderer for HtmlHandlebars {
             handlebars.register_helper("toc", Box::new(helpers::toc::RenderToc));
             handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
             handlebars.register_helper("next", Box::new(helpers::navigation::next));
-            handlebars.register_helper("translations", Box::new(helpers::translations::TranslationsHelper));
+            handlebars.register_helper("translation-links", Box::new(helpers::translations::TranslationLinksHelper));
+            handlebars.register_helper("translation-indexes", Box::new(helpers::translations::TranslationIndexesHelper));
 
             // Check if book's dest directory exists
 
@@ -196,12 +199,12 @@ impl Renderer for HtmlHandlebars {
                         // almost the same as process_chapter(), but we have to
                         // manipulate path_to_root in data and rendered_path
 
-                        let mut data = try!(make_data(&book, &chapter, &book_project.livereload_script));
+                        let mut data = try!(make_data(&book, &chapter, &translation_indexes, &book_project.livereload_script));
 
                         data.remove("path_to_root");
                         data.insert("path_to_root".to_owned(), "".to_json());
 
-                        // Rendere the handlebars template with the data
+                        // Render the handlebars template with the data
                         debug!("[*]: Render template");
                         let rendered_content = try!(handlebars.render("page", &data));
 
@@ -221,7 +224,7 @@ impl Renderer for HtmlHandlebars {
             }
 
             // Render a file for every entry in the book
-            try!(self.process_items(&book.toc, &book, &book_project.livereload_script, &handlebars));
+            try!(self.process_items(&book.toc, &book, &translation_indexes, &book_project.livereload_script, &handlebars));
 
             // Write print.html
             if let Some(content) = self.collect_print_content_markdown(&book.toc, &book) {
@@ -231,7 +234,7 @@ impl Renderer for HtmlHandlebars {
                 chapter.set_dest_path(PathBuf::from("print.html"));
                 chapter.content = Some(content);
 
-                try!(self.process_chapter(&chapter, &book, &None, &handlebars));
+                try!(self.process_chapter(&chapter, &book, &None, &None, &handlebars));
             }
         }
 
@@ -244,6 +247,7 @@ impl HtmlHandlebars {
     fn process_items(&self,
                      items: &Vec<TocItem>,
                      book: &Book,
+                     translation_indexes: &Option<Vec<TranslationLink>>,
                      livereload_script: &Option<String>,
                      handlebars: &Handlebars)
                      -> Result<(), Box<Error>> {
@@ -254,11 +258,11 @@ impl HtmlHandlebars {
                 TocItem::Unnumbered(ref i) |
                 TocItem::Unlisted(ref i) => {
                     if let Some(_) = i.chapter.get_dest_path() {
-                        try!(self.process_chapter(&i.chapter, book, livereload_script, handlebars));
+                        try!(self.process_chapter(&i.chapter, book, translation_indexes, livereload_script, handlebars));
                     }
 
                     if let Some(ref subs) = i.sub_items {
-                        try!(self.process_items(&subs, book, livereload_script, handlebars));
+                        try!(self.process_items(&subs, book, translation_indexes, livereload_script, handlebars));
                     }
 
                 },
@@ -303,11 +307,12 @@ impl HtmlHandlebars {
     fn process_chapter(&self,
                        chapter: &Chapter,
                        book: &Book,
+                       translation_indexes: &Option<Vec<TranslationLink>>,
                        livereload_script: &Option<String>,
                        handlebars: &Handlebars)
                        -> Result<(), Box<Error>> {
 
-        let data = try!(make_data(book, chapter, livereload_script));
+        let data = try!(make_data(book, chapter, translation_indexes, livereload_script));
 
         // Render the handlebars template with the data
         debug!("[*]: Render template");
@@ -339,6 +344,7 @@ impl HtmlHandlebars {
 
 fn make_data(book: &Book,
              chapter: &Chapter,
+             translation_indexes: &Option<Vec<TranslationLink>>,
              livereload_script: &Option<String>)
              -> Result<serde_json::Map<String, serde_json::Value>, Box<Error>> {
 
@@ -402,8 +408,12 @@ fn make_data(book: &Book,
         },
     }
 
+    if let Some(ref links) = *translation_indexes {
+        data.insert("translation-indexes".to_owned(), links.to_json());
+    }
+
     if let Some(ref links) = chapter.translation_links {
-        data.insert("translation_links".to_owned(), links.to_json());
+        data.insert("translation-links".to_owned(), links.to_json());
     }
 
     let chapters = try!(items_to_chapters(&book.toc, &book));

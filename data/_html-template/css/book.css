@@ -151,23 +151,40 @@ table thead td {
 .content img {
   max-width: 100%;
 }
-div.translations {
-  float: left;
-  height: 50px;
-}
-div.translations ul {
+div.translation-indexes ul {
   margin: 10px 0 0 0;
-  display: inline-block;
+  padding: 0;
+  text-align: center;
   list-style-type: none;
 }
-div.translations ul li {
+div.translation-indexes ul li {
   display: inline-block;
   padding: 0.2em 0.5em;
 }
-div.translations ul li a {
+div.translation-indexes ul li a {
   text-decoration: none;
 }
-div.translations ul li a:hover {
+div.translation-indexes ul li a:hover {
+  text-decoration: underline;
+}
+div.translation-links {
+  float: left;
+  height: 50px;
+}
+div.translation-links ul {
+  margin: 10px 0 0 0;
+  padding: 0 0 0 1em;
+  text-align: left;
+  list-style-type: none;
+}
+div.translation-links ul li {
+  display: inline-block;
+  padding: 0.2em 0.5em;
+}
+div.translation-links ul li a {
+  text-decoration: none;
+}
+div.translation-links ul li a:hover {
   text-decoration: underline;
 }
 .menu-bar {

@@ -69,6 +69,9 @@ pub struct Chapter {
     /// Links to the corresponding translations.
     pub translation_links: Option<Vec<TranslationLink>>,
 
+    /// An identifier string that can allow linking translations with different paths.
+    pub translation_id: Option<String>,
+
     /// The author of the chapter, or the book.
     pub authors: Option<Vec<Author>>,
 
@@ -93,6 +96,7 @@ impl Default for Chapter {
             src_path: None,
             dest_path: None,
             translation_links: None,
+            translation_id: None,
             authors: None,
             translators: None,
             description: None,
@@ -196,6 +200,10 @@ impl Chapter {
             }
         }
 
+        if let Some(a) = data.get("translation_id") {
+            self.translation_id = Some(a.to_string().replace("\"", ""));
+        }
+
         // Author name as a hash key.
         if let Some(a) = data.get("author") {
             if let Some(b) = a.as_str() {
@@ -294,24 +302,35 @@ impl Chapter {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TranslationLink {
+    /// Language code, such as 'en' or 'fr'.
     pub code: String,
-    pub link: String,
+    /// The `<a href="">` link to the translation. `None` indicates that the
+    /// language is part of the book, but there isn't a translation for this
+    /// chapter.
+    pub link: Option<String>,
 }
 
 impl Default for TranslationLink {
     fn default() -> TranslationLink {
         TranslationLink {
-            code: "".to_string(),
-            link: "".to_string(),
+            code: "--".to_string(),
+            link: None,
         }
     }
 }
 
 impl TranslationLink {
-    pub fn new(code: String, link: String) -> TranslationLink {
+    pub fn new(code: String) -> TranslationLink {
         TranslationLink {
             code: code,
-            link: link,
+            link: None,
+        }
+    }
+
+    pub fn new_with_link(code: String, link: String) -> TranslationLink {
+        TranslationLink {
+            code: code,
+            link: Some(link),
         }
     }
 }
@@ -323,7 +342,9 @@ impl From<toml::Table> for TranslationLink {
             link.code = x.to_string().replace("\"", "");
         }
         if let Some(x) = data.get("link") {
-            link.link = x.to_string().replace("\"", "");
+            link.link = Some(x.to_string().replace("\"", ""));
+        } else {
+            link.link = None;
         }
         link
     }

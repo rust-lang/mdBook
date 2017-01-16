@@ -448,13 +448,18 @@ impl MDBook {
     }
 
     /// prepare a Vec of default links to point to the index.html of each translation
-    fn translation_index_links(&mut self) -> Vec<TranslationLink> {
+    pub fn translation_index_links(&self) -> Option<Vec<TranslationLink>> {
         let mut default_links: Vec<TranslationLink> = vec![];
 
         let mut keys = self.translations.keys()
             .map(|x| x.to_string())
             .collect::<Vec<String>>();
         keys.sort();
+
+        if keys.len() < 2 {
+            // There is only one language. No need to display translation links.
+            return None;
+        }
 
         for key in keys {
             let book = self.translations.get(&key).unwrap();
@@ -463,24 +468,36 @@ impl MDBook {
             let a = book.config.dest.strip_prefix(&z).unwrap();
             let b = a.join("index.html");
             let c = b.to_str().unwrap();
-            let link = TranslationLink::new(key, c.to_string());
+            let link = TranslationLink::new_with_link(key, c.to_string());
             default_links.push(link);
         }
 
-        default_links
+        Some(default_links)
     }
 
     fn set_translation_links(&mut self, content: &TocContent) -> TocContent {
-        let default_links = self.translation_index_links();
-
+        let mut final_links: BTreeMap<String, TranslationLink> = BTreeMap::new();
         let mut newcontent: TocContent = content.clone();
 
-        match newcontent.chapter.translation_links {
-            Some(_) => {},
-            None => {
-                newcontent.chapter.translation_links = Some(default_links);
-            }
+        // Start by adding the code of each language but no links. These will
+        // render as gray <span> tags.
+        for key in self.translations.keys() {
+            final_links.insert(key.clone(), TranslationLink::new(key.clone()));
         }
+
+        // Take the links parsed from the chapter's TOML header
+
+        match newcontent.chapter.translation_links {
+            Some(links) => {
+                for i in links.iter() {
+                    final_links.insert(i.clone().code, i.clone());
+                }
+            },
+            None => {},
+        }
+
+        let a: Vec<TranslationLink> = final_links.values().map(|x| x.clone()).collect();
+        newcontent.chapter.translation_links = Some(a);
 
         newcontent
     }
