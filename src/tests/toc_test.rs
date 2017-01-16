@@ -1,7 +1,7 @@
 #[cfg(test)]
 
 use book::chapter::Chapter;
-use book::toc::{TocItem, TocContent, flat_toc};
+use book::toc::{TocItem, TocContent, flat_toc, toc_node_count_id};
 use parse::summary::parse_level;
 
 #[test]
@@ -76,4 +76,38 @@ fn it_flattens_toc() {
 ]"#;
 
     assert_eq!(format!("{:#?}", result), expected);
+}
+
+#[test]
+fn it_counts_toc_id_string() {
+    let text = r#"
+# Summary
+
+[Introduction](misc/introduction.md)
+
+- [mdBook](README.md)
+- [Command Line Tool](cli/cli-tool.md)
+    - [init](cli/init.md)
+    - [build](cli/build.md)
+    - [watch](cli/watch.md)
+    - [serve](cli/serve.md)
+    - [test](cli/test.md)
+- [Format](format/format.md)
+    - [SUMMARY.md](format/summary.md)
+    - [Configuration](format/config.md)
+    - [Theme](format/theme/theme.md)
+        - [index.hbs](format/theme/index-hbs.md)
+        - [Syntax highlighting](format/theme/syntax-highlighting.md)
+    - [MathJax Support](format/mathjax.md)
+    - [Rust code specific features](format/rust.md)
+- [Rust Library](lib/lib.md)
+-----------
+[Contributors](misc/contributors.md)
+"#;
+
+    let toc = parse_level(&mut text.split('\n').collect(), 0, vec![0], true).unwrap();
+
+    let counters = toc_node_count_id(&toc);
+
+    assert_eq!(counters, "6552".to_string());
 }

@@ -55,21 +55,45 @@ impl TocContent {
         }
     }
 
-    pub fn is_it_a_translation_of(&self, checking: &TocContent) -> bool {
+    pub fn is_it_a_translation_of(&self,
+                                  checking: &TocContent,
+                                  by_tr_id: bool,
+                                  by_src_path: bool,
+                                  by_section: bool) -> bool {
+
         // if the user has set the same translation_id on them
-        if let Some(ref a) = self.chapter.translation_id {
-            if let Some(ref b) = checking.chapter.translation_id {
-                if a == b {
-                    return true;
+        if by_tr_id {
+            if let Some(ref a) = self.chapter.translation_id {
+                if let Some(ref b) = checking.chapter.translation_id {
+                    if a == b {
+                        return true;
+                    }
                 }
             }
         }
 
         // if src_path matches
-        if let Some(ref a) = self.chapter.get_src_path() {
-            if let Some(ref b) = checking.chapter.get_src_path() {
-                if a == b {
-                    return true;
+        if by_src_path {
+            if let Some(ref a) = self.chapter.get_src_path() {
+                if let Some(ref b) = checking.chapter.get_src_path() {
+                    if a == b {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        // if section string matches, useful when TOC structure matches but
+        // titles and paths are translated. Can test that with
+        // toc_node_count_id().
+        if by_section {
+            if let Some(_) = self.section {
+                let a = self.section_as_string();
+                if let Some(_) = checking.section {
+                    let b = checking.section_as_string();
+                    if a == b {
+                        return true;
+                    }
                 }
             }
         }
@@ -114,4 +138,35 @@ pub fn flat_toc(toc: &Vec<TocItem>) -> Vec<TocItem> {
         }
     }
     flattened
+}
+
+/// Produces a String that can be used to check if two TOCs have the same
+/// structure. It recursively counts the items at each level, ignoring Spacer
+/// items.
+pub fn toc_node_count_id(toc: &Vec<TocItem>) -> String {
+    let mut counters = String::new();
+
+    let c = toc.iter().filter(|x| {
+        match **x {
+            TocItem::Spacer => { false },
+            _ => { true },
+        }}).count();
+
+    counters.push_str(&format!("{}", c));
+
+    for i in toc.iter() {
+        match *i {
+            TocItem::Numbered(ref x) |
+            TocItem::Unnumbered(ref x) |
+            TocItem::Unlisted(ref x) => {
+                if let Some(ref subs) = x.sub_items {
+                    let a = toc_node_count_id(subs);
+                    counters.push_str(&a);
+                }
+            },
+            TocItem::Spacer => {},
+        }
+    }
+
+    counters
 }

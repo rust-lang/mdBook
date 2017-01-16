@@ -430,11 +430,11 @@ impl MDBook {
                 .map(|item| {
                     match *item {
                         TocItem::Numbered(ref i) =>
-                            TocItem::Numbered(self.set_translation_links(i)),
+                            TocItem::Numbered(self.set_translation_links(i, key.to_owned())),
                         TocItem::Unnumbered(ref i) =>
-                            TocItem::Unnumbered(self.set_translation_links(i)),
+                            TocItem::Unnumbered(self.set_translation_links(i, key.to_owned())),
                         TocItem::Unlisted(ref i) =>
-                            TocItem::Unlisted(self.set_translation_links(i)),
+                            TocItem::Unlisted(self.set_translation_links(i, key.to_owned())),
                         TocItem::Spacer =>
                             TocItem::Spacer,
                     }
@@ -475,7 +475,7 @@ impl MDBook {
         Some(default_links)
     }
 
-    fn set_translation_links(&mut self, content: &TocContent) -> TocContent {
+    fn set_translation_links(&mut self, content: &TocContent, key: String) -> TocContent {
         let mut final_links: BTreeMap<String, TranslationLink> = BTreeMap::new();
         let mut newcontent: TocContent = content.clone();
 
@@ -498,6 +498,9 @@ impl MDBook {
 
         // Find a translation for the links that are still None
 
+        let orig_book: &Book = self.translations.get(&key).unwrap();
+        let orig_toc_id = toc::toc_node_count_id(&orig_book.toc);
+
         for (key, trl) in final_links.clone().iter() {
             match trl.link {
                 Some(_) => { continue; },
@@ -507,6 +510,8 @@ impl MDBook {
             let b: &Book = self.translations.get(key).unwrap();
             let flat_toc = toc::flat_toc(&b.toc);
 
+            let by_section: bool = toc::toc_node_count_id(&b.toc) == orig_toc_id;
+
             for item in flat_toc.iter() {
                 match *item {
                     TocItem::Numbered(ref i) |
@@ -515,7 +520,7 @@ impl MDBook {
 
                         // Note that this will also add a link to itself, which is good.
 
-                        if content.is_it_a_translation_of(i) {
+                        if content.is_it_a_translation_of(i, true, true, by_section) {
                             if let Some(mut a) = i.chapter.get_dest_path() {
                                 // Join the path to the language code, i.e. en/tears.html
                                 a = PathBuf::from(key.to_string()).join(a);
