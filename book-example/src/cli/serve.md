@@ -38,5 +38,3 @@ The `--dest-dir` (`-d`) option allows you to change the output directory for you
 -----
 
 ***note:*** *the `serve` command has not gotten a lot of testing yet, there could be some rough edges. If you discover a problem, please report it [on Github](https://github.com/azerupi/mdBook/issues)*
-
-***note***:
