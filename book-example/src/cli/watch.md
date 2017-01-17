@@ -17,6 +17,10 @@ mdbook watch path/to/book
 When you use the `--open` (`-o`) option, mdbook will open the rendered book in
 your default web browser.
 
+#### --dest-dir
+
+The `--dest-dir` (`-d`) option allows you to change the output directory for your book.
+
 -----
 
 ***note:*** *the `watch` command has not gotten a lot of testing yet, there could be some rough edges. If you discover a problem, please report it [on Github](https://github.com/azerupi/mdBook/issues)*
