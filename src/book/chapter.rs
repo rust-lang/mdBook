@@ -21,7 +21,7 @@ use utils::fs::create_with_str;
 /// If the markdown file starts with a TOML header, it will be parsed to set the
 /// chapter's properties. A TOML header should start and end with `+++` lines:
 ///
-/// ```
+/// ```text
 /// +++
 /// title = "The Library of Babel"
 /// author = "Jorge Luis Borges"
@@ -80,8 +80,6 @@ pub struct Chapter {
 
     /// The description of the chapter.
     pub description: Option<String>,
-
-    /// TODO use this in the template
 
     /// CSS class that will be added to the page-level wrap div to allow
     /// customized chapter styles.
@@ -234,43 +232,6 @@ impl Chapter {
 
         self
     }
-
-    // TODO not being used?
-
-    // /// Reads in the chapter's content from the markdown file. Chapter doesn't
-    // /// know the book's src folder, hence the `book_src_dir` argument.
-    // pub fn read_content_using(&self, book_src_dir: &PathBuf) -> Result<String, Box<Error>> {
-    //     let p = match self.get_src_path() {
-    //         Some(x) => x,
-    //         None => {
-    //             return Err(Box::new(io::Error::new(
-    //                 io::ErrorKind::Other,
-    //                 format!("src_path is None"))
-    //             ));
-    //         }
-    //     };
-
-    //     let src_path = book_src_dir.join(&p);
-
-    //     if !src_path.exists() {
-    //         return Err(Box::new(io::Error::new(
-    //             io::ErrorKind::Other,
-    //             format!("Doesn't exist: {:?}", src_path))
-    //         ));
-    //     }
-
-    //     debug!("[*]: Opening file: {:?}", src_path);
-
-    //     let mut f = try!(File::open(&src_path));
-    //     let mut content: String = String::new();
-
-    //     debug!("[*]: Reading file");
-    //     try!(f.read_to_string(&mut content));
-
-    //     content = utils::strip_toml_header(&content);
-
-    //     Ok(content)
-    // }
 
     pub fn get_src_path(&self) -> Option<PathBuf> {
         self.src_path.clone()

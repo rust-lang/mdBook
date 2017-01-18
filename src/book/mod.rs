@@ -63,8 +63,8 @@ pub struct MDBook {
     /// folder with the chapter files.
     ///
     /// In the case of a single language, it is the sole item in the HashMap,
-    /// and its source is not expected to be under a sub-folder, just simply in
-    /// `./src`.
+    /// and its Markdown files are not expected to be under a sub-folder, just
+    /// simply in `./src`.
     ///
     /// Translations have to be declared in `book.toml` in their separate
     /// blocks. The first in the TOML config will be recognized as the main
@@ -82,25 +82,24 @@ pub struct MDBook {
     /// author = "Lewis Carroll"
     /// ```
     ///
-    /// For multiple languages, declare them in blocks:
+    /// For multiple languages, declare them in blocks. The translation key will
+    /// be the language code. Optionally, the language name can be set as well.
     ///
     /// ```toml
     /// [[translations.en]]
     /// title = "Alice in Wonderland"
     /// author = "Lewis Carroll"
-    /// language = { name = "English", code = "en" }
     ///
     /// [[translations.fr]]
     /// title = "Alice au pays des merveilles"
     /// author = "Lewis Carroll"
     /// translator = "Henri Bué"
-    /// language = { name = "Français", code = "fr" }
+    /// language_name = "Français"
     ///
     /// [[translations.hu]]
     /// title = "Alice Csodaországban"
     /// author = "Lewis Carroll"
     /// translator = "Kosztolányi Dezső"
-    /// language = { name = "Hungarian", code = "hu" }
     /// ```
     pub translations: HashMap<String, Book>,
 
@@ -175,12 +174,12 @@ impl MDBook {
     /// The `book.toml` file should be in the root directory of the book project.
     /// The project root directory is the one specified when creating a new `MDBook`
     ///
-    /// ```no_run
+    /// ```ignore
     /// # extern crate mdbook;
     /// # use mdbook::MDBook;
-    /// # use std::path::Path;
+    /// # use std::path::PathBuf;
     /// # fn main() {
-    /// let mut book = MDBook::new(Path::new("project_root_dir"));
+    /// let mut book = MDBook::new(&PathBuf::from("project_root_dir"));
     /// # }
     /// ```
     ///
@@ -247,12 +246,6 @@ impl MDBook {
     /// block will be interpreted as properties of the main book.
     ///
     /// `project_root` is ignored.
-    ///
-    /// - dest_base
-    /// - render_intent
-    /// - template_dir
-    /// - indent_spaces
-    /// - livereload
     pub fn parse_from_btreemap(&mut self, conf: &BTreeMap<String, toml::Value>) -> &mut Self {
 
         let mut config = conf.clone();
@@ -397,8 +390,6 @@ impl MDBook {
 
         for key in self.translations.clone().keys() {
             if let Some(mut b) = self.translations.clone().get_mut(key) {
-
-                // TODO error handling could be better here
 
                 let first_as_index = match self.render_intent {
                     RenderIntent::HtmlHandlebars => true,
@@ -616,77 +607,6 @@ impl MDBook {
         }
         self
     }
-
-    // TODO update
-
-    // pub fn test(&mut self) -> Result<(), Box<Error>> {
-    //     // read in the chapters
-    //     try!(self.parse_summary());
-    //     for item in self.iter() {
-
-    //         match *item {
-    //             BookItem::Chapter(_, ref ch) => {
-    //                 if ch.path != PathBuf::new() {
-
-    //                     let path = self.get_src().join(&ch.path);
-
-    //                     println!("[*]: Testing file: {:?}", path);
-
-    //                     let output_result = Command::new("rustdoc")
-    //                                             .arg(&path)
-    //                                             .arg("--test")
-    //                                             .output();
-    //                     let output = try!(output_result);
-
-    //                     if !output.status.success() {
-    //                         return Err(Box::new(io::Error::new(ErrorKind::Other, format!(
-    //                                         "{}\n{}",
-    //                                         String::from_utf8_lossy(&output.stdout),
-    //                                         String::from_utf8_lossy(&output.stderr)))) as Box<Error>);
-    //                     }
-    //                 }
-    //             },
-    //             _ => {},
-    //         }
-    //     }
-    //     Ok(())
-    // }
-
-    // /// Returns a flat depth-first iterator over the elements of the book, it returns an [BookItem enum](bookitem.html):
-    // /// `(section: String, bookitem: &BookItem)`
-    // ///
-    // /// ```no_run
-    // /// # extern crate mdbook;
-    // /// # use mdbook::MDBook;
-    // /// # use mdbook::BookItem;
-    // /// # use std::path::Path;
-    // /// # fn main() {
-    // /// # let mut book = MDBook::new(Path::new("mybook"));
-    // /// for item in book.iter() {
-    // ///     match item {
-    // ///         &BookItem::Chapter(ref section, ref chapter) => {},
-    // ///         &BookItem::Affix(ref chapter) => {},
-    // ///         &BookItem::Spacer => {},
-    // ///     }
-    // /// }
-    // ///
-    // /// // would print something like this:
-    // /// // 1. Chapter 1
-    // /// // 1.1 Sub Chapter
-    // /// // 1.2 Sub Chapter
-    // /// // 2. Chapter 2
-    // /// //
-    // /// // etc.
-    // /// # }
-    // /// ```
-
-    // pub fn iter(&self) -> BookItems {
-    //     BookItems {
-    //         items: &self.content[..],
-    //         current_index: 0,
-    //         stack: Vec::new(),
-    //     }
-    // }
 
 }
 

@@ -15,10 +15,6 @@ fn main() {
         .build("data.rs")
         .unwrap();
 
-    // TODO this using cargo as a Makefile. This is only for development, it
-    // doesn't have to be part of the production auto-build. Use either a
-    // Makefile or an npm command if stylus comes from npm anyway.
-
     if let Ok(_) = env::var("CARGO_FEATURE_REGENERATE_CSS") {
 
         // Compile stylus stylesheet to css

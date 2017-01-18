@@ -5,7 +5,7 @@
 //!
 //! This is the API doc, but you can find a [less "low-level" documentation here](../index.html) that
 //! contains information about the command line tool, format, structure etc.
-//! It is also rendered with mdBook to showcase the features and default theme.
+//! It is also rendered with mdBook to showcase the features and default html template.
 //!
 //! Some reasons why you would want to use the crate (over the cli):
 //!
@@ -17,57 +17,49 @@
 //!
 //! ## Example
 //!
-//! ```no_run
+//! Building a book by the path to its directory:
+//!
+//! ```ignore
 //! extern crate mdbook;
 //!
 //! use mdbook::MDBook;
-//! use std::path::Path;
+//! use mdbook::renderer::HtmlHandlebars;
+//! use std::path::PathBuf;
 //!
 //! fn main() {
-//!     let mut book =  MDBook::new(Path::new("my-book"))   // Path to root
-//!                         .set_src(Path::new("src"))      // Path from root to source directory
-//!                         .set_dest(Path::new("book"))    // Path from root to output directory
-//!                         .read_config();                 // Parse book.json file for configuration
+//!     let path = PathBuf::from("my-book");  // Path to the book project's root
+//!     let renderer = HtmlHandlebars::new();
+//!     try!(renderer.build(&path));          // Build the book
+//! }
+//! ```
 //!
-//!     book.build().unwrap();                              // Render the book
+//! Or, preparing an `MDBook` struct step-by-step and passing it to a renderer:
+//!
+//! ```ignore
+//! extern crate mdbook;
+//!
+//! use mdbook::MDBook;
+//! use mdbook::renderer::HtmlHandlebars;
+//! use std::path::PathBuf;
+//!
+//! fn main() {
+//!     let path = PathBuf::from("my-book");        // Path to the book project's root
+//!     let mut book_project = MDBook::new(&path);
+//!     book_project.read_config();                 // Parse book.toml file for configuration
+//!     book_project.parse_books();                 // Parse SUMMARY.md, build TOC, parse chapters
+//!     book_project.link_translations();           // Identity links between translations
+//!
+//!     let renderer = HtmlHandlebars::new();
+//!     try!(renderer.render(&book_project));       // Render the book
 //! }
 //! ```
 //!
 //! ## Implementing a new Renderer
 //!
-//! If you want to create a new renderer for mdBook, the only thing you have to do is to implement
-//! the [Renderer trait](renderer/renderer/trait.Renderer.html)
-//!
-//! And then you can swap in your renderer like this:
-//!
-//! ```no_run
-//! # extern crate mdbook;
-//! #
-//! # use mdbook::MDBook;
-//! # use mdbook::renderer::HtmlHandlebars;
-//! # use std::path::Path;
-//! #
-//! # fn main() {
-//! #   let your_renderer = HtmlHandlebars::new();
-//! #
-//!     let book =  MDBook::new(Path::new("my-book")).set_renderer(Box::new(your_renderer));
-//! # }
+//! If you want to create a new renderer for mdBook, implement the [Renderer
+//! trait](renderer/renderer/trait.Renderer.html), which is composed of two
+//! functions, `.build()` and `.render()`.
 //! ```
-//! If you make a renderer, you get the book constructed in form of `Vec<BookItems>` and you get
-//! the book config in a `BookConfig` struct.
-//!
-//! It's your responsability to create the necessary files in the correct directories.
-//!
-//! ## utils
-//!
-//! I have regrouped some useful functions in the [utils](utils/index.html) module, like the following function
-//!
-//! ```ignore
-//! utils::fs::create_path(path: &Path)
-//! ```
-//! This function creates all the directories in a given path if they do not exist
-//!
-//! Make sure to take a look at it.
 
 #[macro_use]
 extern crate serde_derive;

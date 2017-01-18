@@ -47,8 +47,13 @@ impl Renderer for HtmlHandlebars {
 
         try!(utils::fs::clean_output_dir(&book_project.get_dest_base()));
 
-        // TODO talk to the user
-        try!(self.render(&book_project));
+        match self.render(&book_project) {
+            Ok(_) => {},
+            Err(e) => {
+                println!("Error: {:#?}", e);
+                return Err(e);
+            }
+        }
 
         Ok(())
     }

@@ -101,7 +101,7 @@ impl TocContent {
         false
     }
 
-    // TODO update
+    // This doesn't seem to be used.
 
     // /// This function takes a slice `&[x,y,z]` and returns the corresponding sub-chapter if it exists.
     // ///

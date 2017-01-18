@@ -16,8 +16,6 @@ pub struct BookConfig {
 
     // Paths
 
-    // TODO test if dest and src behaves correctly when mdbook.dest_base and mdbook.src_base is not 'book' and 'src'
-
     pub dest: PathBuf,
     pub src: PathBuf,
 
@@ -25,8 +23,9 @@ pub struct BookConfig {
 
     /// The title of the book.
     pub title: String,
-    /// The subtitle, when titles are in the form of "The Immense Journey: An
-    /// Imaginative Naturalist Explores the Mysteries of Man and Nature"
+    /// The subtitle, when the book's full title is in the form of "The Immense
+    /// Journey: An Imaginative Naturalist Explores the Mysteries of Man and
+    /// Nature"
     pub subtitle: Option<String>,
     /// A brief description or summary of the book.
     pub description: Option<String>,
@@ -94,7 +93,7 @@ impl BookConfig {
     /// write data back to it.
     ///
     /// Parses author when given as an array, or when given as a hash key to
-    /// make declaring just an author name easy.
+    /// make declaring a single author easy.
     ///
     /// Both of these express a single author:
     ///

@@ -35,7 +35,7 @@ impl Book {
         book
     }
 
-    /// Parses in the SUMMARY.md or creates one
+    /// Parses the SUMMARY.md or creates one
     pub fn parse_or_create_summary_file(&mut self, first_as_index: bool) -> Result<&mut Self, String> {
 
         let summary_path = self.config.src.join("SUMMARY.md");
@@ -81,7 +81,7 @@ impl Book {
         content
     }
 
-    // TODO update
+    // These don't seem to be used.
 
     // /// This method takes a slice `&[x, y, z]` as parameter and returns the corresponding chapter.
     // /// For example, to retrieve chapter 2.3 we would use:

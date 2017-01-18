@@ -1,11 +1,14 @@
 #[cfg(test)]
 
+extern crate tempdir;
+
 use std;
 use std::fs::{self, File};
 use std::io::Read;
 use std::path::Path;
 
 use utils;
+use utils::fs::copy_files_except_ext;
 
 #[test]
 fn it_copies_data_file() {
@@ -78,4 +81,66 @@ fn it_doesnt_delete_toplevel_dotfiles() {
     if dest_base.exists() {
         fs::remove_dir_all(dest_base);
     }
+}
+
+#[test]
+fn copy_files_except_ext_test() {
+    let tmp = match tempdir::TempDir::new("") {
+        Ok(t) => t,
+        Err(_) => panic!("Could not create a temp dir"),
+    };
+
+    // Create a couple of files
+    if let Err(_) = fs::File::create(&tmp.path().join("file.txt")) {
+        panic!("Could not create file.txt")
+    }
+    if let Err(_) = fs::File::create(&tmp.path().join("file.md")) {
+        panic!("Could not create file.md")
+    }
+    if let Err(_) = fs::File::create(&tmp.path().join("file.png")) {
+        panic!("Could not create file.png")
+    }
+    if let Err(_) = fs::create_dir(&tmp.path().join("sub_dir")) {
+        panic!("Could not create sub_dir")
+    }
+    if let Err(_) = fs::File::create(&tmp.path().join("sub_dir/file.png")) {
+        panic!("Could not create sub_dir/file.png")
+    }
+    if let Err(_) = fs::create_dir(&tmp.path().join("sub_dir_exists")) {
+        panic!("Could not create sub_dir_exists")
+    }
+    if let Err(_) = fs::File::create(&tmp.path().join("sub_dir_exists/file.txt")) {
+        panic!("Could not create sub_dir_exists/file.txt")
+    }
+
+    // Create output dir
+    if let Err(_) = fs::create_dir(&tmp.path().join("output")) {
+        panic!("Could not create output")
+    }
+    if let Err(_) = fs::create_dir(&tmp.path().join("output/sub_dir_exists")) {
+        panic!("Could not create output/sub_dir_exists")
+    }
+
+    match copy_files_except_ext(&tmp.path(), &tmp.path().join("output"), true, &["md"]) {
+        Err(e) => panic!("Error while executing the function:\n{:?}", e),
+        Ok(_) => {},
+    }
+
+    // Check if the correct files where created
+    if !(&tmp.path().join("output/file.txt")).exists() {
+        panic!("output/file.txt should exist")
+    }
+    if (&tmp.path().join("output/file.md")).exists() {
+        panic!("output/file.md should not exist")
+    }
+    if !(&tmp.path().join("output/file.png")).exists() {
+        panic!("output/file.png should exist")
+    }
+    if !(&tmp.path().join("output/sub_dir/file.png")).exists() {
+        panic!("output/sub_dir/file.png should exist")
+    }
+    if !(&tmp.path().join("output/sub_dir_exists/file.txt")).exists() {
+        panic!("output/sub_dir/file.png should exist")
+    }
+
 }
