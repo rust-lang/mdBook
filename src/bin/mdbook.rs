@@ -24,8 +24,9 @@ extern crate ws;
 
 use std::env;
 use std::error::Error;
-use std::io::{self, Write};
+use std::io::{self, Write, ErrorKind};
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 use clap::{App, ArgMatches, SubCommand, AppSettings};
 
@@ -37,6 +38,7 @@ use std::sync::mpsc::channel;
 
 use mdbook::MDBook;
 use mdbook::renderer::{Renderer, HtmlHandlebars};
+use mdbook::book::toc::TocItem;
 use mdbook::utils;
 
 const NAME: &'static str = "mdbook";
@@ -159,8 +161,7 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
 fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book_dir = get_book_dir(args);
 
-    // TODO figure out render format intent when we acutally have different renderers
-
+    // TODO select render format intent when we acutally have different renderers
     let renderer = HtmlHandlebars::new();
     try!(renderer.build(&book_dir));
 
@@ -174,11 +175,12 @@ fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
     let mut book = MDBook::new(&book_dir);
     book.read_config();
 
-    trigger_on_change(&mut book, |event, book| {
+    // |event, book|
+    trigger_on_change(&mut book, |event, _| {
         if let Some(path) = event.path {
             println!("File changed: {:?}\nBuilding book...\n", path);
 
-            // TODO figure out render format intent when we acutally have different renderers
+            // TODO select render format intent when we acutally have different renderers
             let renderer = HtmlHandlebars::new();
             match renderer.build(&book_dir) {
                 Err(e) => println!("Error while building: {:?}", e),
@@ -227,7 +229,6 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
         </script>
     "#, public_address, ws_port, RELOAD_COMMAND));
 
-    // TODO it's OK that serve only makes sense for the html output format, but formatlize that selection
     let renderer = HtmlHandlebars::new();
     try!(renderer.render(&book));
 
@@ -264,9 +265,43 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
     Ok(())
 }
 
+/// Run the code examples in the book's chapters as tests with rustdoc
 fn test(args: &ArgMatches) -> Result<(), Box<Error>> {
-    // TODO test
-    println!("test");
+    let book_dir = get_book_dir(args);
+    let mut proj = MDBook::new(&book_dir);
+    proj.read_config();
+    proj.parse_books();
+
+    for (_, book) in proj.translations.iter() {
+        for item in book.toc.iter() {
+            match *item {
+                TocItem::Numbered(ref i) |
+                TocItem::Unnumbered(ref i) |
+                TocItem::Unlisted(ref i) => {
+                    if let Some(p) = i.chapter.get_src_path() {
+                        let path = book.config.get_src().join(&p);
+
+                        println!("[*]: Testing file: {:?}", path);
+
+                        let output_result = Command::new("rustdoc")
+                            .arg(&path)
+                            .arg("--test")
+                            .output();
+                        let output = try!(output_result);
+
+                        if !output.status.success() {
+                            return Err(Box::new(io::Error::new(ErrorKind::Other, format!(
+                                "{}\n{}",
+                                String::from_utf8_lossy(&output.stdout),
+                                String::from_utf8_lossy(&output.stderr)))) as Box<Error>);
+                        }
+                    }
+                },
+                TocItem::Spacer => {},
+            }
+        }
+    }
+
     Ok(())
 }
 
