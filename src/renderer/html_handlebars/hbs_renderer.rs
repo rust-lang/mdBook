@@ -6,6 +6,7 @@ use book::toc::{TocItem, TocContent};
 use utils;
 use FILES;
 
+use std::process::exit;
 use std::path::{Path, PathBuf};
 use std::ffi::OsStr;
 use std::fs::{self, File};
@@ -35,15 +36,16 @@ impl Renderer for HtmlHandlebars {
         let mut book_project = MDBook::new(&project_root);
 
         book_project.read_config();
+
+        if !book_project.get_src_base().exists() {
+            println!("Source folder doesn't exist: {:?}", book_project.get_src_base());
+            exit(2);
+        }
+
         book_project.parse_books();
         book_project.link_translations();
 
-        // Clean output directory
-
-        // FIXME don't remove dotfiles such as .git/ folder. It's a common
-        // practice to track gh-pages in a versioned output folder.
-
-        //try!(utils::fs::remove_dir_content(&book_project.get_dest_base()));
+        try!(utils::fs::clean_output_dir(&book_project.get_dest_base()));
 
         // TODO talk to the user
         try!(self.render(&book_project));

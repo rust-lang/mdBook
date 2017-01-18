@@ -89,6 +89,7 @@ pub fn copy_data(include_glob: &str,
         .map(|x| {
             let mut s: &str = &x.replace(include_base, "");
             s = s.trim_left_matches("/");
+            s = s.trim_left_matches(r"\");
 
             let p = Path::new(s);
             let dest_path = dest_base.join(p);
@@ -242,21 +243,37 @@ pub fn create_file(path: &Path) -> Result<File, Box<Error>> {
     Ok(f)
 }
 
-// TODO why not just delete the folder and re-create it?
-
-/// Removes all the content of a directory but not the directory itself
-pub fn remove_dir_content(dir: &Path) -> Result<(), Box<Error>> {
+/// A cleaning operation intended to be used on the output directory of a book
+/// before producing new output files. It removes the content of the directory,
+/// except for dotfiles at the toplevel.
+///
+/// This keeps VCS files intact such as `.git/, .gitignore`, and the output
+/// folder can be used to track the gh-pages branch of the repository, which is
+/// a common practice.
+pub fn clean_output_dir(dir: &Path) -> Result<(), Box<Error>> {
     if !dir.exists() {
         return Ok(());
     }
 
+    let exclude_pat = Pattern::new(".*").unwrap();
+
     for item in try!(fs::read_dir(dir)) {
         if let Ok(item) = item {
-            let item = item.path();
-            if item.is_dir() {
-                try!(fs::remove_dir_all(item));
-            } else {
-                try!(fs::remove_file(item));
+            if let Some(a) = item.path().to_str() {
+                if let Some(d) = dir.as_os_str().to_str() {
+                    let mut s: &str = &a.replace(d, "");
+                    s = s.trim_left_matches("/");
+                    s = s.trim_left_matches(r"\");
+
+                    if !exclude_pat.matches(s) {
+                        let p = item.path();
+                        if p.is_dir() {
+                            try!(fs::remove_dir_all(p));
+                        } else {
+                            try!(fs::remove_file(p));
+                        }
+                    }
+                }
             }
         }
     }
