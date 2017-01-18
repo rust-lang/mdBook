@@ -136,29 +136,27 @@ impl Renderer for HtmlHandlebars {
 
         let translation_indexes = book_project.translation_index_links();
 
-        // Render the chapters of each book
-        for (key, book) in &book_project.translations {
+        let first_path_that_exists = |paths: &Vec<PathBuf>| -> Option<PathBuf> {
+            for p in paths.iter() {
+                if p.exists() {
+                    return Some(PathBuf::from(p));
+                }
+            }
+            None
+        };
 
+        {
             // Look for the page template in these paths
-            let mut tmpl_paths: Vec<PathBuf> = vec![];
+            let mut search_paths: Vec<PathBuf> = vec![];
 
             // default scheme: assets/_html-template/_layouts/page.hbs
-            tmpl_paths.push(book_project.get_template_dir().join("_layouts").join("page.hbs"));
+            search_paths.push(book_project.get_template_dir().join("_layouts").join("page.hbs"));
             // maybe the user doesn't use _layouts folder: assets/_html-template/page.hbs
-            tmpl_paths.push(book_project.get_template_dir().join("page.hbs"));
+            search_paths.push(book_project.get_template_dir().join("page.hbs"));
             // also look for index.hbs which was the template name in v0.0.15
-            tmpl_paths.push(book_project.get_template_dir().join("index.hbs"));
+            search_paths.push(book_project.get_template_dir().join("index.hbs"));
 
-            let first_path_that_exists = |paths: &Vec<PathBuf>| -> Option<PathBuf> {
-                for p in paths.iter() {
-                    if p.exists() {
-                        return Some(PathBuf::from(p));
-                    }
-                }
-                None
-            };
-
-            let s = if let Some(p) = first_path_that_exists(&tmpl_paths) {
+            let s = if let Some(p) = first_path_that_exists(&search_paths) {
                 try!(utils::fs::file_to_string(&p))
             } else {
                 try!(utils::fs::get_data_file("data/_html-template/_layouts/page.hbs"))
@@ -167,14 +165,36 @@ impl Renderer for HtmlHandlebars {
             // Register template
             debug!("[*]: Register handlebars template");
             try!(handlebars.register_template_string("page", s));
+        }
 
-            // Register helpers
-            debug!("[*]: Register handlebars helpers");
-            handlebars.register_helper("toc", Box::new(helpers::toc::RenderToc));
-            handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
-            handlebars.register_helper("next", Box::new(helpers::navigation::next));
-            handlebars.register_helper("translation-links", Box::new(helpers::translations::TranslationLinksHelper));
-            handlebars.register_helper("translation-indexes", Box::new(helpers::translations::TranslationIndexesHelper));
+        // Register helpers
+        debug!("[*]: Register handlebars helpers");
+        handlebars.register_helper("toc", Box::new(helpers::toc::RenderToc));
+        handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
+        handlebars.register_helper("next", Box::new(helpers::navigation::next));
+        handlebars.register_helper("translation-links", Box::new(helpers::translations::TranslationLinksHelper));
+        handlebars.register_helper("translation-indexes", Box::new(helpers::translations::TranslationIndexesHelper));
+        handlebars.register_helper("customcss", Box::new(helpers::customcss::CustomCssHelper));
+
+        let mut custom_css_path: Option<PathBuf> = None;
+        {
+            // See if the user has a custom.css
+            let mut search_paths: Vec<PathBuf> = vec![];
+
+            search_paths.push(book_project.get_project_root().join("assets").join("css").join("custom.css"));
+            search_paths.push(book_project.get_project_root().join("assets").join("stylesheets").join("custom.css"));
+            search_paths.push(book_project.get_project_root().join("assets").join("custom.css"));
+
+            if let Some(p) = first_path_that_exists(&search_paths) {
+                match p.strip_prefix(&book_project.get_project_root().join("assets")) {
+                    Ok(x) => { custom_css_path = Some(PathBuf::from(x)); },
+                    Err(_) => {},
+                }
+            }
+        }
+
+        // Render the chapters of each book
+        for (key, book) in &book_project.translations {
 
             // Check if book's dest directory exists
 
@@ -206,7 +226,7 @@ impl Renderer for HtmlHandlebars {
                         // almost the same as process_chapter(), but we have to
                         // manipulate path_to_root in data and rendered_path
 
-                        let mut data = try!(make_data(&book, &chapter, &translation_indexes, &book_project.livereload_script));
+                        let mut data = try!(make_data(&book, &chapter, &translation_indexes, &book_project.livereload_script, &custom_css_path));
 
                         data.remove("path_to_root");
                         data.insert("path_to_root".to_owned(), "".to_json());
@@ -231,7 +251,7 @@ impl Renderer for HtmlHandlebars {
             }
 
             // Render a file for every entry in the book
-            try!(self.process_items(&book.toc, &book, &translation_indexes, &book_project.livereload_script, &handlebars));
+            try!(self.process_items(&book.toc, &book, &translation_indexes, &book_project.livereload_script, &custom_css_path, &handlebars));
 
             // Write print.html
             if let Some(content) = self.collect_print_content_markdown(&book.toc, &book) {
@@ -241,7 +261,7 @@ impl Renderer for HtmlHandlebars {
                 chapter.set_dest_path(PathBuf::from("print.html"));
                 chapter.content = Some(content);
 
-                try!(self.process_chapter(&chapter, &book, &None, &None, &handlebars));
+                try!(self.process_chapter(&chapter, &book, &None, &None, &custom_css_path, &handlebars));
             }
         }
 
@@ -256,6 +276,7 @@ impl HtmlHandlebars {
                      book: &Book,
                      translation_indexes: &Option<Vec<TranslationLink>>,
                      livereload_script: &Option<String>,
+                     custom_css_path: &Option<PathBuf>,
                      handlebars: &Handlebars)
                      -> Result<(), Box<Error>> {
 
@@ -265,11 +286,11 @@ impl HtmlHandlebars {
                 TocItem::Unnumbered(ref i) |
                 TocItem::Unlisted(ref i) => {
                     if let Some(_) = i.chapter.get_dest_path() {
-                        try!(self.process_chapter(&i.chapter, book, translation_indexes, livereload_script, handlebars));
+                        try!(self.process_chapter(&i.chapter, book, translation_indexes, livereload_script, custom_css_path, handlebars));
                     }
 
                     if let Some(ref subs) = i.sub_items {
-                        try!(self.process_items(&subs, book, translation_indexes, livereload_script, handlebars));
+                        try!(self.process_items(&subs, book, translation_indexes, livereload_script, custom_css_path, handlebars));
                     }
 
                 },
@@ -316,10 +337,11 @@ impl HtmlHandlebars {
                        book: &Book,
                        translation_indexes: &Option<Vec<TranslationLink>>,
                        livereload_script: &Option<String>,
+                       custom_css_path: &Option<PathBuf>,
                        handlebars: &Handlebars)
                        -> Result<(), Box<Error>> {
 
-        let data = try!(make_data(book, chapter, translation_indexes, livereload_script));
+        let data = try!(make_data(book, chapter, translation_indexes, livereload_script, custom_css_path));
 
         // Render the handlebars template with the data
         debug!("[*]: Render template");
@@ -352,7 +374,8 @@ impl HtmlHandlebars {
 fn make_data(book: &Book,
              chapter: &Chapter,
              translation_indexes: &Option<Vec<TranslationLink>>,
-             livereload_script: &Option<String>)
+             livereload_script: &Option<String>,
+             custom_css_path: &Option<PathBuf>)
              -> Result<serde_json::Map<String, serde_json::Value>, Box<Error>> {
 
     debug!("[fn]: make_data");
@@ -365,6 +388,7 @@ fn make_data(book: &Book,
     data.insert("page-title".to_owned(), format!("{} - {}", chapter.title, book.config.title).to_json());
     data.insert("chapter-title".to_owned(), chapter.title.to_json());
     data.insert("description".to_owned(), book.config.description.to_json());
+    data.insert("custom-css-path".to_owned(), custom_css_path.to_json());
 
     if let Some(ref x) = *livereload_script {
         data.insert("livereload".to_owned(), x.to_json());
