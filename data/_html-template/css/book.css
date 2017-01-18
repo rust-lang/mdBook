@@ -1,3 +1,162 @@
+body.highlightjs-light .hljs {
+  display: block;
+  overflow-x: auto;
+  background: #f1f1f1;
+  color: #6e6b5e;
+  padding: 0.5em;
+  -webkit-text-size-adjust: none;
+}
+body.highlightjs-light .hljs-comment {
+  color: #aaa;
+}
+body.highlightjs-light .hljs-variable,
+body.highlightjs-light .hljs-tag,
+body.highlightjs-light .hljs-regexp,
+body.highlightjs-light .hljs-name,
+body.highlightjs-light .ruby .hljs-constant,
+body.highlightjs-light .xml .hljs-tag .hljs-title,
+body.highlightjs-light .xml .hljs-pi,
+body.highlightjs-light .xml .hljs-doctype,
+body.highlightjs-light .html .hljs-doctype,
+body.highlightjs-light .css .hljs-id,
+body.highlightjs-light .css .hljs-class,
+body.highlightjs-light .css .hljs-pseudo {
+  color: #d73737;
+}
+body.highlightjs-light .hljs-number,
+body.highlightjs-light .hljs-preprocessor,
+body.highlightjs-light .hljs-built_in,
+body.highlightjs-light .hljs-literal,
+body.highlightjs-light .hljs-params,
+body.highlightjs-light .hljs-attribute,
+body.highlightjs-light .hljs-constant {
+  color: #b65611;
+}
+body.highlightjs-light .ruby .hljs-class .hljs-title,
+body.highlightjs-light .css .hljs-rule .hljs-attribute {
+  color: #ae9513;
+}
+body.highlightjs-light .hljs-string,
+body.highlightjs-light .hljs-value,
+body.highlightjs-light .hljs-inheritance,
+body.highlightjs-light .ruby .hljs-symbol,
+body.highlightjs-light .xml .hljs-cdata {
+  color: #2a9292;
+}
+body.highlightjs-light .hljs-title,
+body.highlightjs-light .css .hljs-hexcolor {
+  color: #1fad83;
+}
+body.highlightjs-light .hljs-function,
+body.highlightjs-light .python .hljs-decorator,
+body.highlightjs-light .python .hljs-title,
+body.highlightjs-light .ruby .hljs-function .hljs-title,
+body.highlightjs-light .ruby .hljs-title .hljs-keyword,
+body.highlightjs-light .perl .hljs-sub,
+body.highlightjs-light .javascript .hljs-title,
+body.highlightjs-light .coffeescript .hljs-title {
+  color: #6684e1;
+}
+body.highlightjs-light .hljs-keyword,
+body.highlightjs-light .javascript .hljs-function {
+  color: #b854d4;
+}
+body.highlightjs-light .coffeescript .javascript,
+body.highlightjs-light .javascript .xml,
+body.highlightjs-light .tex .hljs-formula,
+body.highlightjs-light .xml .javascript,
+body.highlightjs-light .xml .vbscript,
+body.highlightjs-light .xml .css,
+body.highlightjs-light .xml .hljs-cdata {
+  opacity: 0.5;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+  filter: alpha(opacity=50);
+}
+body.highlightjs-light .hljs-header {
+  color: #a30000;
+}
+body.highlightjs-light .hljs-link_label {
+  color: #3cc;
+}
+body.highlightjs-light .hljs-link_url {
+  color: #c6f;
+}
+body.highlightjs-dark .hljs-comment {
+  color: #969896;
+}
+body.highlightjs-dark .hljs-variable,
+body.highlightjs-dark .hljs-attribute,
+body.highlightjs-dark .hljs-tag,
+body.highlightjs-dark .hljs-regexp,
+body.highlightjs-dark .ruby .hljs-constant,
+body.highlightjs-dark .xml .hljs-tag .hljs-title,
+body.highlightjs-dark .xml .hljs-pi,
+body.highlightjs-dark .xml .hljs-doctype,
+body.highlightjs-dark .html .hljs-doctype,
+body.highlightjs-dark .css .hljs-id,
+body.highlightjs-dark .css .hljs-class,
+body.highlightjs-dark .css .hljs-pseudo {
+  color: #c66;
+}
+body.highlightjs-dark .hljs-number,
+body.highlightjs-dark .hljs-preprocessor,
+body.highlightjs-dark .hljs-pragma,
+body.highlightjs-dark .hljs-built_in,
+body.highlightjs-dark .hljs-literal,
+body.highlightjs-dark .hljs-params,
+body.highlightjs-dark .hljs-constant {
+  color: #de935f;
+}
+body.highlightjs-dark .ruby .hljs-class .hljs-title,
+body.highlightjs-dark .css .hljs-rule .hljs-attribute {
+  color: #f0c674;
+}
+body.highlightjs-dark .hljs-string,
+body.highlightjs-dark .hljs-value,
+body.highlightjs-dark .hljs-inheritance,
+body.highlightjs-dark .hljs-header,
+body.highlightjs-dark .hljs-name,
+body.highlightjs-dark .ruby .hljs-symbol,
+body.highlightjs-dark .xml .hljs-cdata {
+  color: #b5bd68;
+}
+body.highlightjs-dark .hljs-title,
+body.highlightjs-dark .css .hljs-hexcolor {
+  color: #8abeb7;
+}
+body.highlightjs-dark .hljs-function,
+body.highlightjs-dark .python .hljs-decorator,
+body.highlightjs-dark .python .hljs-title,
+body.highlightjs-dark .ruby .hljs-function .hljs-title,
+body.highlightjs-dark .ruby .hljs-title .hljs-keyword,
+body.highlightjs-dark .perl .hljs-sub,
+body.highlightjs-dark .javascript .hljs-title,
+body.highlightjs-dark .coffeescript .hljs-title {
+  color: #81a2be;
+}
+body.highlightjs-dark .hljs-keyword,
+body.highlightjs-dark .javascript .hljs-function {
+  color: #b294bb;
+}
+body.highlightjs-dark .hljs {
+  display: block;
+  overflow-x: auto;
+  background: #1d1f21;
+  color: #c5c8c6;
+  padding: 0.5em;
+  -webkit-text-size-adjust: none;
+}
+body.highlightjs-dark .coffeescript .javascript,
+body.highlightjs-dark .javascript .xml,
+body.highlightjs-dark .tex .hljs-formula,
+body.highlightjs-dark .xml .javascript,
+body.highlightjs-dark .xml .vbscript,
+body.highlightjs-dark .xml .css,
+body.highlightjs-dark .xml .hljs-cdata {
+  opacity: 0.5;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+  filter: alpha(opacity=50);
+}
 html,
 body {
   font-family: "Open Sans", sans-serif;

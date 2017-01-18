@@ -16,13 +16,13 @@ $( document ).ready(function() {
     // Syntax highlighting Configuration
     hljs.configure({
         tabReplace: '    ', // 4 spaces
-        languages: [],      // Languages used for auto-detection
+        languages: []      // Languages used for auto-detection
     });
 
     $('code').each(function(i, block) {
         hljs.highlightBlock(block);
     });
-    
+
     // Adding the hljs class gives code blocks the color css
     // even if highlighting doesn't apply
     $('code').addClass('hljs');
@@ -55,11 +55,10 @@ $( document ).ready(function() {
     var page_wrapper = $("#page-wrapper");
     var content = $("#content");
 
-
     // Add anchors for all content headers
     content.find("h1, h2, h3, h4, h5").wrap(function(){
         var wrapper = $("<a class=\"header\">");
-        var header_name = $(this).text().trim().replace(/\W/g, '-')
+        var header_name = $(this).text().trim().replace(/\W/g, '-');
         wrapper.attr("name", header_name);
         // Add so that when you click the link actually shows up in the url bar...
         // Remove any existing anchor then append the new one
@@ -67,7 +66,6 @@ $( document ).ready(function() {
         wrapper.attr("href", $(location).attr('href').split("#")[0] + "#" + header_name );
         return wrapper;
     });
-
 
     // Toggle sidebar
     $("#sidebar-toggle").click(function(event){
@@ -88,13 +86,11 @@ $( document ).ready(function() {
         }
     });
 
-
     // Scroll sidebar to current active section
     var activeSection = sidebar.find(".active");
     if(activeSection.length) {
         sidebar.scrollTop(activeSection.offset().top);
     }
-
 
     // Print button
     $("#print-button").click(function(){
@@ -104,7 +100,6 @@ $( document ).ready(function() {
     if( url.substring(url.lastIndexOf('/')+1) == "print.html" ) {
         window.print();
     }
-
 
     // Theme button
     $("#theme-toggle").click(function(){
@@ -116,7 +111,6 @@ $( document ).ready(function() {
                 .append($('<div class="theme" id="rust">Rust</div>'))
                 .append($('<div class="theme" id="coal">Coal</div>'))
                 .append($('<div class="theme" id="navy">Navy</div>'));
-
 
             popup.insertAfter(this);
 
@@ -130,19 +124,16 @@ $( document ).ready(function() {
     });
 
     function set_theme(theme) {
+        $('body').removeClass().addClass(theme);
+
         if (theme == 'coal' || theme == 'navy') {
-            $("[href='css/tomorrow-night.css']").prop('disabled', false);
-            $("[href='css/highlight.css']").prop('disabled', true);
+            $("body").addClass("highlightjs-dark");
         } else {
-            $("[href='css/tomorrow-night.css']").prop('disabled', true);
-            $("[href='css/highlight.css']").prop('disabled', false);
+            $("body").addClass("highlightjs-light");
         }
 
         localStorage.setItem('theme', theme);
-
-        $('body').removeClass().addClass(theme);
     }
-
 
     // Hide Rust code lines prepended with a specific character
     var hiding_character = "#";
@@ -193,7 +184,6 @@ $( document ).ready(function() {
         });
     });
 
-
     // Process playpen code blocks
     $(".playpen").each(function(block){
         var pre_block = $(this);
@@ -210,9 +200,7 @@ $( document ).ready(function() {
         });
     });
 
-
 });
-
 
 function run_rust_code(code_block) {
     var result_block = code_block.find(".result");
