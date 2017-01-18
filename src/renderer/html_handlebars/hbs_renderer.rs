@@ -356,7 +356,7 @@ fn make_data(book: &Book,
 
     // Book data
 
-    data.insert("language".to_owned(), "en".to_json());
+    data.insert("language".to_owned(), book.config.language.code.to_json());
     data.insert("page-title".to_owned(), format!("{} - {}", chapter.title, book.config.title).to_json());
     data.insert("chapter-title".to_owned(), chapter.title.to_json());
     data.insert("description".to_owned(), book.config.description.to_json());

@@ -109,7 +109,9 @@ impl BookConfig {
     /// name = "Marcus Aurelius Antoninus"
     /// ```
     ///
-    pub fn parse_from_btreemap(&mut self, config: &BTreeMap<String, toml::Value>) -> &mut Self {
+    pub fn parse_from_btreemap(&mut self,
+                               default_language_code: String,
+                               config: &BTreeMap<String, toml::Value>) -> &mut Self {
 
         // Paths
 
@@ -134,6 +136,8 @@ impl BookConfig {
                 .collect::<Vec<Author>>()
         };
 
+        self.language = Language::new(&default_language_code);
+
         if let Some(a) = config.get("title") {
             self.title = a.to_string().replace("\"", "");
         }
@@ -150,6 +154,14 @@ impl BookConfig {
             if let Some(b) = a.as_table() {
                 self.language = Language::from(b.to_owned());
             }
+        }
+
+        if let Some(a) = config.get("language_code") {
+            self.language.code = a.to_string().replace("\"", "");
+        }
+
+        if let Some(a) = config.get("language_name") {
+            self.language.name = Some(a.to_string().replace("\"", ""));
         }
 
         // Author name as a hash key.
@@ -286,24 +298,31 @@ impl From<toml::Table> for Author {
 
 #[derive(Debug, Clone)]
 pub struct Language {
-    pub name: String,
     pub code: String,
+    pub name: Option<String>,
 }
 
 impl Default for Language {
     fn default() -> Self {
         Language {
-            name: String::from("English"),
             code: String::from("en"),
+            name: Some(String::from("English")),
         }
     }
 }
 
 impl Language {
-    pub fn new(name: &str, code: &str) -> Language {
+    pub fn new(code: &str) -> Language {
         Language{
-            name: name.to_string(),
             code: code.to_string(),
+            name: None,
+        }
+    }
+
+    pub fn new_with_name(code: &str, name: &str) -> Language {
+        Language{
+            code: code.to_string(),
+            name: Some(name.to_string()),
         }
     }
 }
@@ -311,11 +330,13 @@ impl Language {
 impl From<toml::Table> for Language {
     fn from(data: toml::Table) -> Language {
         let mut language = Language::default();
-        if let Some(x) = data.get("name") {
-            language.name = x.to_string().replace("\"", "");
-        }
         if let Some(x) = data.get("code") {
             language.code = x.to_string().replace("\"", "");
+        }
+        if let Some(x) = data.get("name") {
+            language.name = Some(x.to_string().replace("\"", ""));
+        } else {
+            language.name = None;
         }
         language
     }

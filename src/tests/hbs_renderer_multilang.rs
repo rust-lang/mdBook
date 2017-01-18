@@ -35,6 +35,7 @@ fn it_renders_multilanguage_book() {
 
     chapter_path = book_path.join("tears.html");
     s = utils::fs::file_to_string(&chapter_path).unwrap();
+    assert!(s.contains("<html lang=\"en\">"));
     assert!(s.contains("<h1>The Pool of Tears</h1>"));
     assert!(s.contains("<base href=\"../\">"));
     assert!(s.contains("li><a href=\"en/tears.html\" class=\"active\"><strong>2.</strong> The Pool of Tears</a></li>"));
@@ -42,12 +43,14 @@ fn it_renders_multilanguage_book() {
     book_path = proj.translations.get("fr").unwrap().config.get_dest();
     chapter_path = book_path.join("tears.html");
     s = utils::fs::file_to_string(&chapter_path).unwrap();
+    assert!(s.contains("<html lang=\"fr\">"));
     assert!(s.contains("<h1>La mare aux larmes</h1>"));
     assert!(s.contains("<base href=\"../\">"));
 
     book_path = proj.translations.get("hu").unwrap().config.get_dest();
     chapter_path = book_path.join("tears.html");
     s = utils::fs::file_to_string(&chapter_path).unwrap();
+    assert!(s.contains("<html lang=\"hu\">"));
     assert!(s.contains("<h1>Könnytó</h1>"));
     assert!(s.contains("<base href=\"../\">"));
 

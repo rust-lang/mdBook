@@ -10,8 +10,7 @@ use serde_json;
 use utils;
 use book::MDBook;
 use book::book::Book;
-use book::bookconfig::BookConfig;
-use book::bookconfig::Author;
+use book::bookconfig::{BookConfig, Author, Language};
 use book::chapter::Chapter;
 use book::toc::{TocItem, TocContent};
 
@@ -36,6 +35,7 @@ fn it_parses_simple_json_config() {
         book.config.title =  "mdBook Documentation".to_string();
         book.config.description =  Some("Create books from markdown files.".to_string());
         book.config.authors = vec![Author::new("Mathieu David")];
+        book.config.language = Language::new("en");
 
         expected.translations.insert("en".to_string(), book);
     }
@@ -63,6 +63,7 @@ author = "Mathieu David"
         book.config.title =  "mdBook Documentation".to_string();
         book.config.description =  Some("Create books from markdown files.".to_string());
         book.config.authors = vec![Author::new("Mathieu David")];
+        book.config.language = Language::new("en");
 
         expected.translations.insert("en".to_string(), book);
     }
@@ -92,6 +93,7 @@ name = "Mathieu David"
         book.config.title =  "mdBook Documentation".to_string();
         book.config.description =  Some("Create books from markdown files.".to_string());
         book.config.authors = vec![Author::new("Mathieu David")];
+        book.config.language = Language::new("en");
 
         expected.translations.insert("en".to_string(), book);
     }
@@ -144,6 +146,7 @@ name = "Kosztolányi Dezső"
         conf.dest = expected.get_project_root().join("book").join("en");
         conf.is_multilang = true;
         conf.is_main_book = true;
+        conf.language = Language::new("en");
 
         let mut book = Book::default();
         book.config = conf;
@@ -160,6 +163,7 @@ name = "Kosztolányi Dezső"
         conf.dest = expected.get_project_root().join("book").join("hu");
         conf.is_multilang = true;
         conf.is_main_book = false;
+        conf.language = Language::new("hu");
 
         let mut book = Book::default();
         book.config = conf;
@@ -219,7 +223,7 @@ name = "Kosztolányi Dezső"
         book.config.title = "Alice Csodaországban".to_string();
         book.config.authors = vec![Author::new("Lewis Carroll")];
         book.config.translators = Some(vec![Author::new("Kosztolányi Dezső")]);
-        book.config.language.name = "Hungarian".to_string();
+        book.config.language.name = Some("Hungarian".to_string());
         book.config.language.code = "hu".to_string();
 
         expected.translations.insert("hu".to_string(), book);

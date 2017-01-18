@@ -321,7 +321,10 @@ impl MDBook {
                                 book.config.dest = book.config.dest.join(key);
                             }
                             book.config.is_multilang = is_multilang;
-                            book.config.parse_from_btreemap(&d);
+                            book.config.parse_from_btreemap(key.to_owned(), &d);
+                            // the language code and translation key must agree
+                            // even after parsing the user's settings
+                            book.config.language.code = key.to_owned();
                             if book.config.is_main_book {
                                 has_main_book_already = true;
                             }
@@ -379,7 +382,8 @@ impl MDBook {
         } else {
             let mut book = Book::new(&self.project_root);
 
-            book.config.parse_from_btreemap(&config);
+            // take "en" as default code, will override if user sets it
+            book.config.parse_from_btreemap("en".to_owned(), &config);
             let key = book.config.language.code.clone();
             self.translations.insert(key, book);
         }
