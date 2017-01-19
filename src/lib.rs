@@ -29,7 +29,7 @@
 //! fn main() {
 //!     let path = PathBuf::from("my-book");  // Path to the book project's root
 //!     let renderer = HtmlHandlebars::new();
-//!     try!(renderer.build(&path));          // Build the book
+//!     try!(renderer.build(&path, &None));   // Build the book
 //! }
 //! ```
 //!

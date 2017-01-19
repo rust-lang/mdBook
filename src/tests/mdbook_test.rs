@@ -1,18 +1,16 @@
-#[cfg(test)]
+#![cfg(test)]
 
 extern crate toml;
 
 use std::process::exit;
 use std::path::PathBuf;
 
-use serde_json;
-
 use utils;
 use book::MDBook;
 use book::book::Book;
 use book::bookconfig::{BookConfig, Author, Language};
 use book::chapter::Chapter;
-use book::toc::{TocItem, TocContent};
+use book::toc::TocItem;
 
 #[test]
 fn it_parses_simple_json_config() {

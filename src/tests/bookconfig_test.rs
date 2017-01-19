@@ -1,7 +1,6 @@
-#[cfg(test)]
+#![cfg(test)]
 
 use std::path::PathBuf;
-
 use book::bookconfig::BookConfig;
 
 #[test]

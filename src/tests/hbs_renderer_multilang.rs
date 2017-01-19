@@ -1,4 +1,4 @@
-#[cfg(test)]
+#![cfg(test)]
 
 use std::path::{Path, PathBuf};
 
@@ -11,7 +11,7 @@ fn it_renders_multilanguage_book() {
     let path = PathBuf::from(".").join("src").join("tests").join("book-wonderland-multilang");
 
     let renderer = HtmlHandlebars::new();
-    if let Err(e) = renderer.build(&path) {
+    if let Err(e) = renderer.build(&path, &None) {
         panic!("{:#?}", e);
     }
 
@@ -20,8 +20,8 @@ fn it_renders_multilanguage_book() {
     proj.parse_books();
 
     let mut book_path: &Path = proj.translations.get("en").unwrap().config.get_dest();
-    let mut chapter_path: PathBuf = PathBuf::from("".to_string());
-    let mut s: String = String::new();
+    let mut chapter_path: PathBuf;
+    let mut s: String;
 
     // Test if index.html in the project dest folder is the main book's first chapter
 

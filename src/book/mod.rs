@@ -9,8 +9,6 @@ pub mod toc;
 pub mod chapter;
 
 pub use self::book::Book;
-use renderer::{Renderer, HtmlHandlebars};
-
 use self::chapter::TranslationLink;
 use self::toc::{TocItem, TocContent};
 use utils;
@@ -19,9 +17,6 @@ use std::env;
 use std::process::exit;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
-use std::fs::{self, File};
-use std::io::Read;
-use std::error::Error;
 use std::collections::{HashMap, BTreeMap};
 
 #[derive(Debug, Clone)]
@@ -142,34 +137,6 @@ impl MDBook {
         MDBook::default().set_project_root(project_root).clone()
     }
 
-    /// `init()` creates some boilerplate files and directories to get you started with your book.
-    ///
-    /// ```text
-    /// book-example/
-    /// ├── book
-    /// └── src
-    ///     ├── chapter_1.md
-    ///     └── SUMMARY.md
-    /// ```
-    ///
-    /// It uses the paths given as source and output directories and adds a `SUMMARY.md` and a
-    /// `chapter_1.md` to the source directory.
-    pub fn init(&mut self) -> Result<(), Box<Error>> {
-
-        debug!("[fn]: init");
-
-        if !self.project_root.exists() {
-            fs::create_dir_all(&self.project_root).unwrap();
-            info!("{:?} created", &self.project_root);
-        }
-
-        // Read book.toml if exists and populate .translations
-        self.read_config();
-
-        debug!("[*]: init done");
-        Ok(())
-    }
-
     /// Parses the `book.toml` file (if it exists) to extract the configuration parameters.
     /// The `book.toml` file should be in the root directory of the book project.
     /// The project root directory is the one specified when creating a new `MDBook`
@@ -186,7 +153,6 @@ impl MDBook {
     /// In this example, `project_root_dir` will be the root directory of our book and is specified in function
     /// of the current working directory by using a relative path instead of an absolute path.
     pub fn read_config(&mut self) -> &mut Self {
-
         debug!("[fn]: read_config");
 
         // exit(2) is a clear indication for the user that something is wrong
@@ -194,7 +160,7 @@ impl MDBook {
 
         // Read book.toml or book.json if exists to a BTreeMap
 
-        if Path::new(self.project_root.join("book.toml").as_os_str()).exists() {
+        if self.project_root.join("book.toml").exists() {
 
             debug!("[*]: Reading config");
             let text = match utils::fs::file_to_string(&self.project_root.join("book.toml")) {
@@ -213,7 +179,7 @@ impl MDBook {
                 }
             }
 
-        } else if Path::new(self.project_root.join("book.json").as_os_str()).exists() {
+        } else if self.project_root.join("book.json").exists() {
 
             debug!("[*]: Reading config");
             let text = match utils::fs::file_to_string(&self.project_root.join("book.json")) {
@@ -444,6 +410,8 @@ impl MDBook {
 
     /// prepare a Vec of default links to point to the index.html of each translation
     pub fn translation_index_links(&self) -> Option<Vec<TranslationLink>> {
+        debug!("[fn] translation_index_links()");
+
         let mut default_links: Vec<TranslationLink> = vec![];
 
         let mut keys = self.translations.keys()
@@ -578,6 +546,22 @@ impl MDBook {
         } else {
             self.src_base = path.to_owned();
         }
+
+        let a = self.translations.clone();
+        let keys = a.keys();
+        let is_multilang: bool = keys.clone().count() > 1;
+
+        for key in keys {
+            if let Some(mut book) = self.translations.get_mut(key) {
+                if is_multilang {
+                    book.config.src = self.src_base.join(key);
+                    book.config.is_multilang = is_multilang;
+                } else {
+                    book.config.src = self.src_base.to_owned();
+                }
+            }
+        }
+
         self
     }
 
@@ -591,6 +575,22 @@ impl MDBook {
         } else {
             self.dest_base = path.to_owned();
         }
+
+        let a = self.translations.clone();
+        let keys = a.keys();
+        let is_multilang: bool = keys.clone().count() > 1;
+
+        for key in keys {
+            if let Some(mut book) = self.translations.get_mut(key) {
+                if is_multilang {
+                    book.config.dest = self.dest_base.join(key);
+                    book.config.is_multilang = is_multilang;
+                } else {
+                    book.config.dest = self.dest_base.to_owned();
+                }
+            }
+        }
+
         self
     }
 

@@ -1,7 +1,6 @@
-#[cfg(test)]
+#![cfg(test)]
 
 use std::path::PathBuf;
-
 use book::bookconfig::Author;
 use book::chapter::Chapter;
 
@@ -11,7 +10,12 @@ fn it_parses_when_exists() {
     let path = PathBuf::from("at-the-mountains-of-madness.md");
 
     let mut result = Chapter::new("Mountains".to_string(), path.clone());
-    result.parse_or_create_using(&src_path);
+    match result.parse_or_create_using(&src_path) {
+        Ok(_) => {},
+        Err(e) => {
+            println!("Error: {:#?}", e);
+        }
+    }
 
     let mut expected = Chapter::new("Mountains".to_string(), path.clone());
 

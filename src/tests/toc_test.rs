@@ -1,6 +1,5 @@
-#[cfg(test)]
+#![cfg(test)]
 
-use book::chapter::Chapter;
 use book::toc::{TocItem, TocContent, flat_toc, toc_node_count_id};
 use parse::summary::parse_level;
 

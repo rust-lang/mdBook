@@ -1,6 +1,4 @@
-#[cfg(test)]
-
-use std::path::PathBuf;
+#![cfg(test)]
 
 use parse::summary::parse_level;
 

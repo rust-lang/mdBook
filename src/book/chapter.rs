@@ -4,10 +4,9 @@ extern crate toml;
 use regex::Regex;
 
 use std::ffi::OsStr;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::fs::File;
-use std::error::Error;
-use std::io::{self, Read};
+use std::io::Read;
 use std::collections::BTreeMap;
 
 use utils;
@@ -130,7 +129,7 @@ impl Chapter {
                 debug!("[*] Creating: {:?}", src_path);
                 match create_with_str(src_path, &format!("# {}", self.title)) {
                     Ok(_) => { return Ok(self); },
-                    Err(e) => {
+                    Err(_) => {
                         return Err(format!("Could not create: {:?}", src_path));
                     },
                 }
@@ -140,8 +139,12 @@ impl Chapter {
             match File::open(src_path) {
                 Err(e) => { return Err(format!("Read error: {:?}", e)); },
                 Ok(mut f) => {
-                    // TODO try! here and return error
-                    f.read_to_string(&mut text);
+                    match f.read_to_string(&mut text) {
+                        Ok(_) => {},
+                        Err(e) => {
+                            return Err(format!("Error: {:#?}", e));
+                        },
+                    }
                     self.content = Some(utils::strip_toml_header(&text));
                 }
             }

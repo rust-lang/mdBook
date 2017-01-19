@@ -4,15 +4,12 @@ use book::{MDBook, Book};
 use book::chapter::{Chapter, TranslationLink};
 use book::toc::{TocItem, TocContent};
 use utils;
-use FILES;
 
 use std::process::exit;
-use std::path::{Path, PathBuf};
-use std::ffi::OsStr;
-use std::fs::{self, File};
+use std::path::PathBuf;
+use std::fs;
 use std::error::Error;
-use std::io::{self, Read, Write};
-use std::collections::BTreeMap;
+use std::io::{self, Write};
 
 use handlebars::Handlebars;
 
@@ -30,12 +27,16 @@ impl HtmlHandlebars {
 impl Renderer for HtmlHandlebars {
 
     /// Prepares the project and calls `render()`.
-    fn build(&self, project_root: &PathBuf) -> Result<(), Box<Error>> {
+    fn build(&self, project_root: &PathBuf, dest_base: &Option<PathBuf>) -> Result<MDBook, Box<Error>> {
         debug!("[fn]: build");
 
         let mut book_project = MDBook::new(&project_root);
 
         book_project.read_config();
+
+        if let Some(p) = dest_base.clone() {
+            book_project.set_dest_base(&p);
+        }
 
         if !book_project.get_src_base().exists() {
             println!("Source folder doesn't exist: {:?}", book_project.get_src_base());
@@ -55,11 +56,12 @@ impl Renderer for HtmlHandlebars {
             }
         }
 
-        Ok(())
+        Ok(book_project)
     }
 
     /// Renders the chapters and copies static assets.
     fn render(&self, book_project: &MDBook) -> Result<(), Box<Error>> {
+        debug!("[fn]: render");
 
         debug!("[*]: Check if book's base output folder exists");
         if let Err(_) = fs::create_dir_all(&book_project.get_dest_base()) {
@@ -82,11 +84,15 @@ impl Renderer for HtmlHandlebars {
             let c = a.join("_*");
             let exclude_glob = c.to_str().unwrap();
 
-            // anyone wants to catch errors?
-            utils::fs::copy_files(include_glob,
-                                  base,
-                                  vec![exclude_glob],
-                                  &book_project.get_dest_base());
+            // Ignoring all errors. Should try to see which types are worth returning.
+
+            match utils::fs::copy_files(include_glob,
+                                        base,
+                                        vec![exclude_glob],
+                                        &book_project.get_dest_base()) {
+                Ok(_) => {},
+                Err(_) => {},
+            }
         }
 
         // Copy template's static assets
@@ -118,20 +124,23 @@ impl Renderer for HtmlHandlebars {
             //     )
             // }
 
-            // anyone wants to catch errors?
-            utils::fs::copy_files(include_glob,
-                                  base,
-                                  vec![exclude_glob],
-                                  &book_project.get_dest_base());
+            // Ignoring all errors. Should try to see which types are worth returning.
 
+            match utils::fs::copy_files(include_glob,
+                                        base,
+                                        vec![exclude_glob],
+                                        &book_project.get_dest_base()) {
+                Ok(_) => {},
+                Err(_) => {},
+            }
         } else {
-            try!(utils::fs::copy_data("data/_html-template/**/*",
-                                      "data/_html-template/",
-                                      vec!["data/_html-template/_*"],
+            try!(utils::fs::copy_data("data/assets/_html-template/**/*",
+                                      "data/assets/_html-template/",
+                                      vec!["data/assets/_html-template/_*"],
                                       &book_project.get_dest_base()));
         }
 
-        debug!("[fn]: render");
+        debug!("[*]: start rendering");
         let mut handlebars = Handlebars::new();
 
         let translation_indexes = book_project.translation_index_links();
@@ -159,7 +168,7 @@ impl Renderer for HtmlHandlebars {
             let s = if let Some(p) = first_path_that_exists(&search_paths) {
                 try!(utils::fs::file_to_string(&p))
             } else {
-                try!(utils::fs::get_data_file("data/_html-template/_layouts/page.hbs"))
+                try!(utils::fs::get_data_file("data/assets/_html-template/_layouts/page.hbs"))
             };
 
             // Register template
@@ -194,7 +203,7 @@ impl Renderer for HtmlHandlebars {
         }
 
         // Render the chapters of each book
-        for (key, book) in &book_project.translations {
+        for (_, book) in &book_project.translations {
 
             // Check if book's dest directory exists
 

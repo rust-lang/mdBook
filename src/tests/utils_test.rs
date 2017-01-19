@@ -1,9 +1,6 @@
-#[cfg(test)]
-
-use std::collections::BTreeMap;
+#![cfg(test)]
 
 use serde_json;
-
 use utils::*;
 
 #[test]

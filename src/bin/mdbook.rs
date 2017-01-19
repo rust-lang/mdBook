@@ -5,6 +5,7 @@ extern crate clap;
 #[macro_use]
 extern crate log;
 extern crate env_logger;
+extern crate open;
 
 // Dependencies for the Watch feature
 #[cfg(feature = "watch")]
@@ -23,7 +24,9 @@ extern crate staticfile;
 extern crate ws;
 
 use std::env;
+use std::fs;
 use std::error::Error;
+use std::ffi::OsStr;
 use std::io::{self, Write, ErrorKind};
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -33,6 +36,8 @@ use clap::{App, ArgMatches, SubCommand, AppSettings};
 // Uses for the Watch feature
 #[cfg(feature = "watch")]
 use notify::Watcher;
+#[cfg(feature = "watch")]
+use std::time::Duration;
 #[cfg(feature = "watch")]
 use std::sync::mpsc::channel;
 
@@ -57,22 +62,28 @@ fn main() {
                     .subcommand(SubCommand::with_name("init")
                         .about("Create boilerplate structure and files in the directory")
                         // the {n} denotes a newline which will properly aligned in all help messages
-                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'")
+                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'")
                         .arg_from_usage("--copy-assets 'Copies the default assets (css, layout template, etc.) into your project folder'")
                         .arg_from_usage("--force 'skip confirmation prompts'"))
                     .subcommand(SubCommand::with_name("build")
                         .about("Build the book from the markdown files")
-                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'"))
+                        .arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
+                        .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
+                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'"))
                     .subcommand(SubCommand::with_name("watch")
                         .about("Watch the files for changes")
-                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'"))
+                        .arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
+                        .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
+                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'"))
                     .subcommand(SubCommand::with_name("serve")
                         .about("Serve the book at http://localhost:3000. Rebuild and reload on change.")
-                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when ommitted)'")
+                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'")
+                        .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
                         .arg_from_usage("-p, --port=[port] 'Use another port{n}(Defaults to 3000)'")
                         .arg_from_usage("-w, --websocket-port=[ws-port] 'Use another port for the websocket connection (livereload){n}(Defaults to 3001)'")
                         .arg_from_usage("-i, --interface=[interface] 'Interface to listen on{n}(Defaults to localhost)'")
-                        .arg_from_usage("-a, --address=[address] 'Address that the browser can reach the websocket server from{n}(Defaults to the interface addres)'"))
+                        .arg_from_usage("-a, --address=[address] 'Address that the browser can reach the websocket server from{n}(Defaults to the interface addres)'")
+                        .arg_from_usage("-o, --open 'Open the compiled book in a web browser'"))
                     .subcommand(SubCommand::with_name("test")
                         .about("Test that code samples compile"))
                     .get_matches();
@@ -106,10 +117,36 @@ fn confirm() -> bool {
     }
 }
 
-// Init command implementation
+/// Init command implementation
+///
+/// It creates some boilerplate files and directories to get you started with your book.
+///
+/// ```text
+/// thebook/
+/// ├── book.toml
+/// └── src
+///     ├── SUMMARY.md
+///     ├── first-chapter.md
+///     ├── glossary.md
+///     └── introduction.md
+/// ```
+///
+/// It copies the embedded starter book as stored in data/book-init.
 fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
+    debug!("[fn]: init");
 
     let book_dir = get_book_dir(args);
+
+    if !book_dir.exists() {
+        fs::create_dir_all(&book_dir).unwrap();
+        info!("{:?} created", &book_dir);
+    }
+
+    try!(utils::fs::copy_data("data/book-init/*",
+                              "data/book-init/",
+                              vec![],
+                              &book_dir));
+
     let mut book_project = MDBook::new(&book_dir);
 
     book_project.read_config();
@@ -134,8 +171,8 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
         }
 
         // Copy the assets
-        try!(utils::fs::copy_data("data/**/*",
-                                  "data/",
+        try!(utils::fs::copy_data("data/assets/**/*",
+                                  "data/assets/",
                                   vec![],
                                   &book_project.get_project_root().join("assets")));
 
@@ -154,6 +191,7 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
 
     println!("\nAll done, no errors...");
 
+    debug!("[*]: init done");
     Ok(())
 }
 
@@ -161,9 +199,18 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
 fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book_dir = get_book_dir(args);
 
+    let mut dest_base: Option<PathBuf> = None;
+    if let Some(p) = args.value_of("dest-dir") {
+        dest_base = Some(PathBuf::from(p));
+    }
+
     // TODO select render format intent when we acutally have different renderers
     let renderer = HtmlHandlebars::new();
-    try!(renderer.build(&book_dir));
+    let book_project: MDBook = try!(renderer.build(&book_dir, &dest_base));
+
+    if args.is_present("open") {
+        open(book_project.get_dest_base().join("index.html"));
+    }
 
     Ok(())
 }
@@ -172,22 +219,28 @@ fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
 #[cfg(feature = "watch")]
 fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::new(&book_dir);
-    book.read_config();
 
-    // |event, book|
-    trigger_on_change(&mut book, |event, _| {
-        if let Some(path) = event.path {
-            println!("File changed: {:?}\nBuilding book...\n", path);
+    let mut dest_base: Option<PathBuf> = None;
+    if let Some(p) = args.value_of("dest-dir") {
+        dest_base = Some(PathBuf::from(p));
+    }
 
-            // TODO select render format intent when we acutally have different renderers
-            let renderer = HtmlHandlebars::new();
-            match renderer.build(&book_dir) {
-                Err(e) => println!("Error while building: {:?}", e),
-                _ => {},
-            }
-            println!("");
+    let renderer = HtmlHandlebars::new();
+    let mut book_project: MDBook = try!(renderer.build(&book_dir, &dest_base));
+
+    if args.is_present("open") {
+        open(book_project.get_dest_base().join("index.html"));
+    }
+
+    trigger_on_change(&mut book_project, |path, _| {
+        println!("File changed: {:?}\nBuilding book...\n", path);
+        // TODO select render format intent when we acutally have different renderers
+        let renderer = HtmlHandlebars::new();
+        match renderer.build(&book_dir, &dest_base) {
+            Err(e) => println!("Error while building: {:?}", e),
+            _ => {},
         }
+        println!("");
     });
 
     println!("watch");
@@ -200,8 +253,20 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
     const RELOAD_COMMAND: &'static str = "reload";
 
     let book_dir = get_book_dir(args);
+
+    let mut dest_base: Option<PathBuf> = None;
+    if let Some(p) = args.value_of("dest-dir") {
+        dest_base = Some(PathBuf::from(p));
+    }
+
     let mut book = MDBook::new(&book_dir);
+
     book.read_config();
+
+    if let Some(p) = dest_base {
+        book.set_dest_base(&p);
+    }
+
     book.parse_books();
     book.link_translations();
 
@@ -209,6 +274,7 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
     let ws_port = args.value_of("ws-port").unwrap_or("3001");
     let interface = args.value_of("interface").unwrap_or("localhost");
     let public_address = args.value_of("address").unwrap_or(interface);
+    let open_browser = args.is_present("open");
 
     let address = format!("{}:{}", interface, port);
     let ws_address = format!("{}:{}", interface, ws_port);
@@ -250,16 +316,18 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
 
     println!("\nServing on {}", address);
 
-    trigger_on_change(&mut book, move |event, book| {
-        if let Some(path) = event.path {
-            println!("File changed: {:?}\nBuilding book...\n", path);
-            let renderer = HtmlHandlebars::new();
-            match renderer.render(&book) {
-                Err(e) => println!("Error while building: {:?}", e),
-                _ => broadcaster.send(RELOAD_COMMAND).unwrap(),
-            }
-            println!("");
+    if open_browser {
+        open(format!("http://{}", address));
+    }
+
+    trigger_on_change(&mut book, move |path, book| {
+        println!("File changed: {:?}\nBuilding book...\n", path);
+        let renderer = HtmlHandlebars::new();
+        match renderer.render(&book) {
+            Err(e) => println!("Error while building: {:?}", e),
+            _ => broadcaster.send(RELOAD_COMMAND).unwrap(),
         }
+        println!("");
     });
 
     Ok(())
@@ -319,61 +387,64 @@ fn get_book_dir(args: &ArgMatches) -> PathBuf {
     }
 }
 
+fn open<P: AsRef<OsStr>>(path: P) {
+    if let Err(e) = open::that(path) {
+        println!("Error opening web browser: {}", e);
+    }
+}
+
 // Calls the closure when a book source file is changed. This is blocking!
 #[cfg(feature = "watch")]
 fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
-    where F: Fn(notify::Event, &mut MDBook) -> ()
+    where F: Fn(&Path, &mut MDBook) -> ()
 {
+    use notify::RecursiveMode::*;
+    use notify::DebouncedEvent::*;
+
     // Create a channel to receive the events.
     let (tx, rx) = channel();
 
-    let w: Result<notify::RecommendedWatcher, notify::Error> = notify::Watcher::new(tx);
-
-    match w {
-        Ok(mut watcher) => {
-            // Add the source directory to the watcher
-            if let Err(e) = watcher.watch(book.get_src_base()) {
-                println!("Error while watching {:?}:\n    {:?}", book.get_src_base(), e);
-                ::std::process::exit(0);
-            };
-
-            // Add the book.toml or book.json file to the watcher if it exists,
-            // because it's not located in the source directory
-
-            if let Err(_) = watcher.watch(book.get_project_root().join("book.toml")) {
-                // do nothing if book.toml is not found
-            }
-
-            if let Err(_) = watcher.watch(book.get_project_root().join("book.json")) {
-                // do nothing if book.json is not found
-            }
-
-            let mut previous_time = time::get_time();
-
-            println!("\nListening for changes...\n");
-
-            loop {
-                match rx.recv() {
-                    Ok(event) => {
-                        // Skip the event if an event has already been issued in the last second
-                        let time = time::get_time();
-                        if time - previous_time < time::Duration::seconds(1) {
-                            continue;
-                        } else {
-                            previous_time = time;
-                        }
-
-                        closure(event, book);
-                    },
-                    Err(e) => {
-                        println!("An error occured: {:?}", e);
-                    },
-                }
-            }
-        },
+    let mut watcher = match notify::watcher(tx, Duration::from_secs(1)) {
+        Ok(w) => w,
         Err(e) => {
             println!("Error while trying to watch the files:\n\n\t{:?}", e);
-            ::std::process::exit(0);
-        },
+            ::std::process::exit(2);
+        }
+    };
+
+    // Add the source directory to the watcher
+    if let Err(e) = watcher.watch(book.get_src_base(), Recursive) {
+        println!("Error while watching {:?}:\n    {:?}", book.get_src_base(), e);
+        ::std::process::exit(2);
+    };
+
+    // Add the book.{json,toml} file to the watcher if it exists, because it's not
+    // located in the source directory
+    if let Err(_) = watcher.watch(book.get_project_root().join("book.json"), NonRecursive) {
+        // do nothing if book.json is not found
+    }
+    if let Err(_) = watcher.watch(book.get_project_root().join("book.toml"), NonRecursive) {
+        // do nothing if book.toml is not found
+    }
+
+    println!("\nListening for changes...\n");
+
+    loop {
+        match rx.recv() {
+            Ok(event) => match event {
+                NoticeWrite(path) |
+                NoticeRemove(path) |
+                Create(path) |
+                Write(path) |
+                Remove(path) |
+                Rename(_, path) => {
+                    closure(&path, book);
+                }
+                _ => {}
+            },
+            Err(e) => {
+                println!("An error occured: {:?}", e);
+            },
+        }
     }
 }

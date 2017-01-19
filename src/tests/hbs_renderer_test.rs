@@ -1,4 +1,4 @@
-#[cfg(test)]
+#![cfg(test)]
 
 use std::path::{Path, PathBuf};
 
@@ -11,7 +11,7 @@ fn it_renders_html_from_minimal_book() {
     let path = PathBuf::from(".").join("src").join("tests").join("book-minimal");
 
     let renderer = HtmlHandlebars::new();
-    if let Err(e) = renderer.build(&path) {
+    if let Err(e) = renderer.build(&path, &None) {
         println!("{:#?}", e);
     }
 
@@ -20,8 +20,8 @@ fn it_renders_html_from_minimal_book() {
     proj.parse_books();
 
     let book_path: &Path = proj.translations.get("en").unwrap().config.get_dest();
-    let mut chapter_path: PathBuf = PathBuf::from("".to_string());
-    let mut s: String = String::new();
+    let mut chapter_path: PathBuf;
+    let mut s: String;
 
     // Test if "Library of Babel" was rendered
 
@@ -54,7 +54,7 @@ fn it_copies_local_assets_when_found() {
     let path = PathBuf::from(".").join("src").join("tests").join("book-minimal-with-assets");
 
     let renderer = HtmlHandlebars::new();
-    if let Err(e) = renderer.build(&path) {
+    if let Err(e) = renderer.build(&path, &None) {
         println!("{:#?}", e);
     }
 
@@ -64,13 +64,11 @@ fn it_copies_local_assets_when_found() {
 
 
     let book_path: &Path = proj.translations.get("en").unwrap().config.get_dest();
-    let mut chapter_path: PathBuf = PathBuf::from("".to_string());
-    let mut s: String = String::new();
 
     // Test if "Library of Babel" was rendered
 
-    chapter_path = book_path.join("fictions").join("babel").with_extension("html");
-    s = utils::fs::file_to_string(&chapter_path).unwrap();
+    let chapter_path = book_path.join("fictions").join("babel").with_extension("html");
+    let s = utils::fs::file_to_string(&chapter_path).unwrap();
     assert!(s.contains("The Library of Babel"));
 
     assert_eq!(book_path.join("css").join("book.css").exists(), true);

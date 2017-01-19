@@ -1,11 +1,10 @@
-#[cfg(test)]
+#![cfg(test)]
 
 extern crate tempdir;
 
 use std;
 use std::fs::{self, File};
 use std::io::Read;
-use std::path::Path;
 
 use utils;
 use utils::fs::copy_files_except_ext;
@@ -15,18 +14,21 @@ fn it_copies_data_file() {
     let dest_base = std::env::temp_dir().join("in tangles of old alleys");
     let dest_path = dest_base.join("book.css");
 
-    utils::fs::copy_data_file("data/_html-template/css/books.css", &dest_path);
+    match utils::fs::copy_data_file("data/assets/_html-template/css/books.css", &dest_path) {
+        Ok(_) => {},
+        Err(e) => { println!("{:#?}", e); }
+    }
 
     let mut file = match File::open(&dest_path) {
         Ok(f) => f,
-        Err(e) => {
+        Err(_) => {
             println!("Failed to open {:?}", dest_path);
             return;
         },
     };
 
     let mut content = String::new();
-    if let Err(e) = file.read_to_string(&mut content) {
+    if let Err(_) = file.read_to_string(&mut content) {
         println!("Failed to read {:?}", dest_path);
         return;
     }
@@ -34,7 +36,10 @@ fn it_copies_data_file() {
     assert!(content.as_str().contains("Open Sans"));
 
     if dest_base.exists() {
-        fs::remove_dir_all(dest_base);
+        match fs::remove_dir_all(dest_base) {
+            Ok(_) => {},
+            Err(e) => { println!("{:#?}", e); },
+        }
     }
 }
 
@@ -42,9 +47,9 @@ fn it_copies_data_file() {
 fn it_copies_data_by_pattern() {
     let dest_base = std::env::temp_dir().join("near the quays");
 
-    if let Err(e) = utils::fs::copy_data("data/_html-template/**/*",
-                                         "data/_html-template/",
-                                         vec!["data/_html-template/_*"],
+    if let Err(e) = utils::fs::copy_data("data/assets/_html-template/**/*",
+                                         "data/assets/_html-template/",
+                                         vec!["data/assets/_html-template/_*"],
                                          &dest_base) {
         println!("Error: {:#?}", e);
         return;
@@ -54,7 +59,10 @@ fn it_copies_data_by_pattern() {
     assert!(!dest_base.join("_layouts").exists());
 
     if dest_base.exists() {
-        fs::remove_dir_all(dest_base);
+        match fs::remove_dir_all(dest_base) {
+            Ok(_) => {},
+            Err(e) => { println!("{:#?}", e); },
+        }
     }
 }
 
@@ -72,14 +80,20 @@ fn it_doesnt_delete_toplevel_dotfiles() {
         Ok(_) => {},
     }
 
-    utils::fs::clean_output_dir(&dest_base);
+    match utils::fs::clean_output_dir(&dest_base) {
+        Ok(_) => {},
+        Err(e) => { println!("{:#?}", e); }
+    }
 
     assert!(dest_base.exists());
     assert!(dest_base.join(".dotfile").exists());
     assert!(!dest_base.join("door.html").exists());
 
     if dest_base.exists() {
-        fs::remove_dir_all(dest_base);
+        match fs::remove_dir_all(dest_base) {
+            Ok(_) => {},
+            Err(e) => { println!("{:#?}", e); },
+        }
     }
 }
 

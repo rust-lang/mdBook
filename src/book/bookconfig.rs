@@ -1,13 +1,8 @@
 extern crate toml;
 
-use std::process::exit;
-use std::fs::File;
-use std::io::Read;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::collections::BTreeMap;
-use std::str::FromStr;
-use serde_json;
 
 use utils;
 

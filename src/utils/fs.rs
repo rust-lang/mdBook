@@ -61,17 +61,17 @@ pub fn copy_data_file(src_path: &str, dest_path: &Path) -> Result<(), Box<Error>
 /// `include_base` will be removed from the source path. This way the path
 /// relative to the `dest_path` can be controlled.
 ///
-/// The following will copy all files under "data/_html-template/", excluding
-/// folders that start with "_", take the "data/_html-template/" part off the
+/// The following will copy all files under "data/assets/_html-template/", excluding
+/// folders that start with "_", take the "data/assets/_html-template/" part off the
 /// source path, and write the entries to "assets" folder.
 ///
-/// I.e. "data/_html-template/css/book.css" will be written to
+/// I.e. "data/assets/_html-template/css/book.css" will be written to
 /// "assets/css/book.css".
 ///
 /// ```ignore
-/// utils::fs::copy_data("data/_html-template/**/*",
-///                      "data/_html-template/",
-///                      vec!["data/_html-template/_*"],
+/// utils::fs::copy_data("data/assets/_html-template/**/*",
+///                      "data/assets/_html-template/",
+///                      vec!["data/assets/_html-template/_*"],
 ///                      &Path::new("assets"));
 /// ```
 pub fn copy_data(include_glob: &str,
@@ -221,7 +221,7 @@ pub fn path_to_root(path: &Path) -> String {
 
 /// This function creates a file and returns it. But before creating the file it checks every
 /// directory in the path to see if it exists, and if it does not it will be created.
-pub fn create_file(path: &Path) -> Result<File, Box<Error>> {
+pub fn create_file(path: &Path) -> io::Result<File> {
     debug!("[fn]: create_file");
 
     // Construct path
@@ -232,15 +232,7 @@ pub fn create_file(path: &Path) -> Result<File, Box<Error>> {
     }
 
     debug!("[*]: Create file: {:?}", path);
-    let f = match File::create(path) {
-        Ok(f) => f,
-        Err(e) => {
-            debug!("File::create:    {}", e);
-            return Err(Box::new(io::Error::new(io::ErrorKind::Other, format!("{}", e))));
-        },
-    };
-
-    Ok(f)
+    File::create(path)
 }
 
 /// A cleaning operation intended to be used on the output directory of a book

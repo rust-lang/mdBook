@@ -21,6 +21,15 @@ current working directory.
 mdbook build path/to/book
 ```
 
+#### --open
+
+When you use the `--open` (`-o`) option, mdbook will open the rendered book in
+your default web browser after building it.
+
+#### --dest-dir
+
+The `--dest-dir` (`-d`) option allows you to change the output directory for your book.
+
 -------------------
 
 ***note:*** *make sure to run the build command in the root directory and not in the source directory*

@@ -4,7 +4,6 @@ extern crate toml;
 use regex::Regex;
 
 use std::str::FromStr;
-use std::error::Error;
 use std::collections::BTreeMap;
 
 use serde_json;
