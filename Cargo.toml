@@ -12,7 +12,7 @@ build = "build.rs"
 include = ["data"]
 exclude = [
     "book-example/*",
-    "data/_html-template/_stylus",
+    "data/assets/_html-template/_stylus",
 ]
 
 

@@ -66,7 +66,7 @@ There are multiple ways to install mdBook.
    cargo build
    ```
 
-   the resulting binary can be found in `mdBook/target/debug/` under the name `mdBook` or `mdBook.exe`
+   The resulting binary can be found in `mdBook/target/debug/` under the name `mdBook` or `mdBook.exe`.
 
 
 
