@@ -9,26 +9,6 @@ env:
 
 matrix:
   include:
-    # Stable channel
-    - os: osx
-      env: TARGET=i686-apple-darwin CHANNEL=stable
-    - os: linux
-      env: TARGET=i686-unknown-linux-gnu CHANNEL=stable
-      addons:
-        apt:
-          packages: &i686_unknown_linux_gnu
-            - gcc-multilib
-    - os: osx
-      env: TARGET=x86_64-apple-darwin CHANNEL=stable
-    - os: linux
-      env: TARGET=x86_64-unknown-linux-gnu CHANNEL=stable
-      addons:
-        apt:
-          packages:
-            - nodejs
-            - npm
-    - os: linux
-      env: TARGET=x86_64-unknown-linux-musl CHANNEL=stable
     # Beta channel
     - os: osx
       env: TARGET=i686-apple-darwin CHANNEL=beta
@@ -57,6 +37,28 @@ matrix:
       env: TARGET=x86_64-unknown-linux-gnu CHANNEL=nightly
     - os: linux
       env: TARGET=x86_64-unknown-linux-musl CHANNEL=nightly
+
+    # Not testing on stable channel until proc_macro lands there in the next release.
+    # # Stable channel
+    # - os: osx
+    #   env: TARGET=i686-apple-darwin CHANNEL=stable
+    # - os: linux
+    #   env: TARGET=i686-unknown-linux-gnu CHANNEL=stable
+    #   addons:
+    #     apt:
+    #       packages: &i686_unknown_linux_gnu
+    #         - gcc-multilib
+    # - os: osx
+    #   env: TARGET=x86_64-apple-darwin CHANNEL=stable
+    # - os: linux
+    #   env: TARGET=x86_64-unknown-linux-gnu CHANNEL=stable
+    #   addons:
+    #     apt:
+    #       packages:
+    #         - nodejs
+    #         - npm
+    # - os: linux
+    #   env: TARGET=x86_64-unknown-linux-musl CHANNEL=stable
 
   # Musl builds fail due to a bug in Rust (https://github.com/azerupi/mdBook/issues/158)
   allow_failures:

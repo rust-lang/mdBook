@@ -2,11 +2,6 @@ environment:
   global:
     PROJECT_NAME: mdBook
   matrix:
-    # Stable channel
-    - TARGET: i686-pc-windows-msvc
-      RUST_CHANNEL: stable
-    - TARGET: x86_64-pc-windows-msvc
-      RUST_CHANNEL: stable
     # Beta channel
     - TARGET: i686-pc-windows-msvc
       RUST_CHANNEL: beta
@@ -17,6 +12,13 @@ environment:
       RUST_CHANNEL: nightly
     - TARGET: x86_64-pc-windows-msvc
       RUST_CHANNEL: nightly
+
+# Not testing on stable channel until proc_macro lands there in the next release.
+#    # Stable channel
+#    - TARGET: i686-pc-windows-msvc
+#      RUST_CHANNEL: stable
+#    - TARGET: x86_64-pc-windows-msvc
+#      RUST_CHANNEL: stable
 
 # Install Rust and Cargo
 install:
