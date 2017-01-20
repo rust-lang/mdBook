@@ -38,7 +38,22 @@ fn it_renders_multilanguage_book() {
     assert!(s.contains("<html lang=\"en\">"));
     assert!(s.contains("<h1>The Pool of Tears</h1>"));
     assert!(s.contains("<base href=\"../\">"));
-    assert!(s.contains("li><a href=\"en/tears.html\" class=\"active\"><strong>2.</strong> The Pool of Tears</a></li>"));
+
+    let does_it_contain = |check_str: &str, fmt_str: &str, path_parts: Vec<&str>| -> bool {
+        let mut p = PathBuf::from("");
+        for i in path_parts.iter() {
+            p = p.join(i);
+        }
+        let ps = p.to_str().unwrap();
+        // Handmade formatting with replace. For anything more, it'll need Handlebars.
+        let text = fmt_str.replace("{}", ps);
+        check_str.contains(&text)
+    };
+
+    assert!(does_it_contain(
+        &s, "<li><a href=\"{}\" class=\"active\"><strong>2.</strong> The Pool of Tears</a></li>",
+        vec!["en", "tears.html"]
+    ));
 
     book_path = proj.translations.get("fr").unwrap().config.get_dest();
     chapter_path = book_path.join("tears.html");
@@ -63,9 +78,10 @@ fn it_renders_multilanguage_book() {
     book_path = proj.translations.get("hu").unwrap().config.get_dest();
     chapter_path = book_path.join("tarka-farka.html");
     s = utils::fs::file_to_string(&chapter_path).unwrap();
-    assert!(s.contains("<a href=\"en/index.html\">en</a>"));
-    assert!(s.contains("<a href=\"hu/index.html\">hu</a>"));
-    assert!(s.contains("<a href=\"fr/index.html\">fr</a>"));
+
+    assert!(does_it_contain(&s, "<a href=\"{}\">en</a>", vec!["en", "index.html"]));
+    assert!(does_it_contain(&s, "<a href=\"{}\">hu</a>", vec!["hu", "index.html"]));
+    assert!(does_it_contain(&s, "<a href=\"{}\">fr</a>", vec!["fr", "index.html"]));
 
     // Test if translation links are found
 
@@ -73,21 +89,24 @@ fn it_renders_multilanguage_book() {
 
     chapter_path = book_path.join("rabbit-hole.html");
     s = utils::fs::file_to_string(&chapter_path).unwrap();
-    assert!(s.contains("<a href=\"en/rabbit-hole.html\">en</a>"));
-    assert!(s.contains("<a href=\"hu/nyuszi.html\">hu</a>"));
-    assert!(s.contains("<a href=\"fr/terrier.html\">fr</a>"));
+
+    assert!(does_it_contain(&s, "<a href=\"{}\">en</a>", vec!["en", "rabbit-hole.html"]));
+    assert!(does_it_contain(&s, "<a href=\"{}\">hu</a>", vec!["hu", "nyuszi.html"]));
+    assert!(does_it_contain(&s, "<a href=\"{}\">fr</a>", vec!["fr", "terrier.html"]));
 
     chapter_path = book_path.join("tears.html");
     s = utils::fs::file_to_string(&chapter_path).unwrap();
-    assert!(s.contains("<a href=\"en/tears.html\">en</a>"));
-    assert!(s.contains("<a href=\"fr/tears.html\">fr</a>"));
-    assert!(s.contains("<a href=\"hu/tears.html\">hu</a>"));
+
+    assert!(does_it_contain(&s, "<a href=\"{}\">en</a>", vec!["en", "tears.html"]));
+    assert!(does_it_contain(&s, "<a href=\"{}\">fr</a>", vec!["fr", "tears.html"]));
+    assert!(does_it_contain(&s, "<a href=\"{}\">hu</a>", vec!["hu", "tears.html"]));
 
     chapter_path = book_path.join("long-tale.html");
     s = utils::fs::file_to_string(&chapter_path).unwrap();
-    assert!(s.contains("<a href=\"en/long-tale.html\">en</a>"));
-    assert!(s.contains("<a href=\"fr/cocasse.html\">fr</a>"));
-    assert!(s.contains("<a href=\"hu/tarka-farka.html\">hu</a>"));
+
+    assert!(does_it_contain(&s, "<a href=\"{}\">en</a>", vec!["en", "long-tale.html"]));
+    assert!(does_it_contain(&s, "<a href=\"{}\">fr</a>", vec!["fr", "cocasse.html"]));
+    assert!(does_it_contain(&s, "<a href=\"{}\">hu</a>", vec!["hu", "tarka-farka.html"]));
 
     // Test if print.html is produced for each translations
 

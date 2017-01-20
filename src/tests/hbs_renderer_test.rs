@@ -54,14 +54,11 @@ fn it_copies_local_assets_when_found() {
     let path = PathBuf::from(".").join("src").join("tests").join("book-minimal-with-assets");
 
     let renderer = HtmlHandlebars::new();
-    if let Err(e) = renderer.build(&path, &None) {
-        println!("{:#?}", e);
-    }
 
-    let mut proj = MDBook::new(&path);
-    proj.read_config();
-    proj.parse_books();
-
+    let proj = match renderer.build(&path, &None) {
+        Ok(x) => x,
+        Err(e) => { panic!("{:#?}", e); },
+    };
 
     let book_path: &Path = proj.translations.get("en").unwrap().config.get_dest();
 
@@ -72,6 +69,8 @@ fn it_copies_local_assets_when_found() {
     assert!(s.contains("The Library of Babel"));
 
     assert_eq!(book_path.join("css").join("book.css").exists(), true);
-    assert_eq!(book_path.join("css").join("highlight.css").exists(), false);
+
+    // we left this out from the local assets for testing
+    assert_eq!(book_path.join("css").join("font-awesome.min.css").exists(), false);
 }
 
