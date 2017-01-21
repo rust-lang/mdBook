@@ -10,7 +10,7 @@ Here is an example of what a ***book.toml*** file might look like:
 title = "Example book"
 author = "Name"
 description = "The example book covers examples."
-dest = "output/my-book"
+dest_base = "output/my-book"
 ```
 
 #### Supported variables
