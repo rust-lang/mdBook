@@ -7,6 +7,7 @@ use std::ffi::OsStr;
 use std::path::PathBuf;
 use std::fs::File;
 use std::io::Read;
+use std::str;
 use std::collections::BTreeMap;
 
 use utils;
@@ -135,34 +136,49 @@ impl Chapter {
                 }
             }
 
-            let mut text = String::new();
             match File::open(src_path) {
                 Err(e) => { return Err(format!("Read error: {:?}", e)); },
                 Ok(mut f) => {
+                    let mut text = String::new();
                     match f.read_to_string(&mut text) {
                         Ok(_) => {},
                         Err(e) => {
                             return Err(format!("Error: {:#?}", e));
                         },
                     }
-                    self.content = Some(utils::strip_toml_header(&text));
-                }
-            }
 
-            let re: Regex = Regex::new(r"(?ms)^\+\+\+\n(?P<toml>.*)\n\+\+\+\n").unwrap();
+                    // it must only have whitespace before +++ to be a TOML header
+                    match text.as_str().trim().find("+++") {
+                        Some(n) => {
+                            if n == 0 {
+                                let re: Regex = Regex::new(r"(?ms)^\+\+\+\n(?P<toml>.*)\n\+\+\+\n").unwrap();
 
-            match re.captures(&text) {
-                Some(caps) => {
-                    let toml = caps.name("toml").unwrap();
-                    match utils::toml_str_to_btreemap(&toml) {
-                        Ok(x) => {self.parse_from_btreemap(&x);},
-                        Err(e) => {
-                            error!("[*] Errors while parsing TOML: {:?}", e);
-                            return Err(e);
+                                match re.captures(&text) {
+                                    Some(caps) => {
+                                        let toml = caps.name("toml").unwrap();
+                                        match utils::toml_str_to_btreemap(&toml) {
+                                            Ok(x) => {self.parse_from_btreemap(&x);},
+                                            Err(e) => {
+                                                error!("[*] Errors while parsing TOML: {:?}", e);
+                                                return Err(e);
+                                            }
+                                        }
+                                    }
+                                    None => {},
+                                }
+
+                                self.content = Some(utils::strip_toml_header(&text));
+                            } else {
+                                // no TOML header
+                                self.content = Some(text);
+                            }
+                        },
+                        None => {
+                            // no TOML header
+                            self.content = Some(text);
                         }
                     }
                 }
-                None => {},
             }
         }
 
