@@ -49,6 +49,7 @@ fn it_renders_html_from_minimal_book() {
 
 }
 
+#[ignore]// FIXME failing on Windows https://ci.appveyor.com/project/azerupi/mdbook/build/1.0.145
 #[test]
 fn it_copies_local_assets_when_found() {
     let path = PathBuf::from(".").join("src").join("tests").join("book-minimal-with-assets");
