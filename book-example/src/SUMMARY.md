@@ -1,7 +1,5 @@
 # Summary
 
-[Introduction](misc/introduction.md)
-
 - [mdBook](README.md)
 - [Command Line Tool](cli/cli-tool.md)
     - [init](cli/init.md)
@@ -9,14 +7,16 @@
     - [watch](cli/watch.md)
     - [serve](cli/serve.md)
     - [test](cli/test.md)
+- [Files and Folders](folders/folders.md)
 - [Format](format/format.md)
     - [SUMMARY.md](format/summary.md)
     - [Configuration](format/config.md)
-    - [Theme](format/theme/theme.md)
-        - [index.hbs](format/theme/index-hbs.md)
-        - [Syntax highlighting](format/theme/syntax-highlighting.md)
+    - [Template](format/template/template.md)
+        - [page.hbs](format/template/page-hbs.md)
+        - [Syntax highlighting](format/template/syntax-highlighting.md)
     - [MathJax Support](format/mathjax.md)
     - [Rust code specific features](format/rust.md)
 - [Rust Library](lib/lib.md)
+- [Structs](structs/structs.md)
 -----------
 [Contributors](misc/contributors.md)

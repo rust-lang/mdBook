@@ -47,7 +47,7 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
                         let mut previous_chapter = BTreeMap::new();
 
                         // Chapter title
-                        match previous.get("name") {
+                        match previous.get("title") {
                             Some(n) => {
                                 debug!("[*]: Inserting title: {}", n);
                                 previous_chapter.insert("title".to_owned(), n.to_json())
@@ -105,9 +105,6 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
     Ok(())
 }
 
-
-
-
 pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
     debug!("[fn]: next (handlebars helper)");
 
@@ -151,7 +148,7 @@ pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) ->
                         // Create new BTreeMap to extend the context: 'title' and 'link'
                         let mut next_chapter = BTreeMap::new();
 
-                        match item.get("name") {
+                        match item.get("title") {
                             Some(n) => {
                                 debug!("[*]: Inserting title: {}", n);
                                 next_chapter.insert("title".to_owned(), n.to_json());

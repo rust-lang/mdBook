@@ -1,5 +1,9 @@
+*.swp
+.#*
 Cargo.lock
 target
-
-book-test
+TAGS
+src/tests/book-minimal/book
+src/tests/book-minimal-with-assets/book
+src/tests/book-wonderland-multilang/book
 book-example/book

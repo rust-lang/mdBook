@@ -1,31 +1,38 @@
 # The init command
+
 There is some minimal boilerplate that is the same for every new book. It's for this purpose that mdBook includes an `init` command.
 
-The `init` command is used like this:
+Use this in an empty folder that you intend to use for your book.
+
+Create a folder and invoke `init`:
 
 ```bash
+mkdir thebook
+cd ./thebook
 mdbook init
 ```
 
 When using the `init` command for the first time, a couple of files will be set up for you:
-```bash
-book-test/
-├── book
+
+```
+thebook
+├── book.toml
 └── src
-    ├── chapter_1.md
-    └── SUMMARY.md
+    ├── SUMMARY.md
+    ├── first-chapter.md
+    ├── glossary.md
+    └── introduction.md
 ```
 
-- The `src` directory is were you write your book in markdown. It contains all the source files,
-configuration files, etc.
+In brief, `book.toml` has the book's general details and configuration, `src/` contains the chapters and `SUMMARY.md` defines the order of chapters as a Table of Contents.
 
-- The `book` directory is where your book is rendered. All the output is ready to be uploaded
-to a server to be seen by your audience.
+`mdbook build` will generate the HTML format in the `book/` folder. This can be read locally in a brower or uploaded to be served as a static site.
 
-- The `SUMMARY.md` file is the most important file, it's the skeleton of your book and is discussed in more detail in another  [chapter](format/summary.html).
+See [Files and Folders](folders/folders.html) for more details on the conventions.
 
-#### Tip & Trick: Hidden Feature
-When a `SUMMARY.md` file already exists, the `init` command will first parse it and generate the missing files according to the paths used in the `SUMMARY.md`. This allows you to think and create the whole structure of your book and then let mdBook generate it for you.
+#### Tip & Trick: Outline Creation
+
+Chapters files in the `SUMMARY.md` will be created if they don't exist. This allows you to outline the structure of the book and let mdBook create the files an folders as described.
 
 #### Specify a directory
 
@@ -36,10 +43,10 @@ by appending a path to the command:
 mdbook init path/to/book
 ```
 
-## --theme
+## --copy-assets
 
-When you use the `--theme` argument, the default theme will be copied into a directory
-called `theme` in your source directory so that you can modify it.
+When you use the `--copy-assets` argument, the default template with its static
+assets will be copied to the `assets/` folder. When a local template is found,
+it will be used instead of the default. Modifying the template and static assets
+this way allows customisation.
 
-The theme is selectively overwritten, this means that if you don't want to overwrite a
-specific file, just delete it and the default file will be used.

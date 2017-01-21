@@ -1,3 +1,3 @@
-pub use self::summary::construct_bookitems;
+pub use self::summary::construct_tocitems;
 
 pub mod summary;

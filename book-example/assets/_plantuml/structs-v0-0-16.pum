@@ -1,0 +1,120 @@
+@startuml
+
+namespace book {
+
+class MDBook {
+  project_root: PathBuf,
+  template_dir: PathBuf,
+  src_base: PathBuf,
+  dest_base: PathBuf,
+  render_intent: RenderIntent,
+
+  translations: HashMap<String, Book>,
+
+  indent_spaces: i32,
+  pub livereload_script: Option<String>,
+
+  new(project_root)
+}
+
+class book::Book {
+  config: BookConfig,
+  toc: Vec<TocItem>,
+
+  new(project_root)
+}
+
+class book::Chapter {
+  pub title: String,
+  pub content: Option<String>,
+
+  src_path: Option<PathBuf>,
+  dest_path: Option<PathBuf>,
+
+  pub translation_links: Option<Vec<TranslationLink>>,
+  pub translation_id: Option<String>,
+  pub authors: Option<Vec<Author>>,
+  pub translators: Option<Vec<Author>>,
+  pub description: Option<String>,
+  pub css_class: Option<String>,
+
+  new(title, src_path)
+}
+
+}
+
+namespace book::bookconfig {
+
+class BookConfig {
+  pub dest: PathBuf,
+  pub src: PathBuf,
+
+  pub title: String,
+  pub subtitle: Option<String>,
+  pub description: Option<String>,
+  pub language: Language,
+  pub authors: Vec<Author>,
+  pub translators: Option<Vec<Author>>,
+  pub publisher: Option<Publisher>,
+  pub number_format: NumberFormat,
+  pub section_names: Vec<String>,
+  pub is_main_book: bool,
+  pub is_multilang: bool,
+
+  new(project_root)
+}
+
+class Author {
+  name: String,
+  file_as: String,
+  email: Option<String>,
+
+  new(name)
+}
+
+class Language {
+  pub code: String,
+  pub name: Option<String>,
+
+  new(code)
+}
+
+class Publisher {
+  name: String,
+  url: Option<String>,
+  logo_src: Option<PathBuf>,
+
+  new(name)
+}
+
+enum NumberFormat {
+  Arabic
+  Roman
+  Word
+}
+
+}
+
+namespace book::toc {
+
+class TocContent {
+  pub chapter: Chapter,
+  pub sub_items: Option<Vec<TocItem>>,
+  pub section: Option<Vec<i32>>,
+}
+
+enum TocItem {
+  Numbered "TocContent",
+  Unnumbered "TocContent",
+  Unlisted "TocContent",
+  Spacer,
+}
+
+}
+
+class Renderer {
+   build(&self, project_root: &PathBuf, dest_base: &Option<PathBuf>),
+   render(&self, book_project: &MDBook),
+}
+
+@enduml

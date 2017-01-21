@@ -97,11 +97,11 @@ impl HelperDef for RenderToc {
                 try!(rc.writer.write("</strong> ".as_bytes()));
             }
 
-            if let Some(name) = item.get("name") {
+            if let Some(title) = item.get("title") {
                 // Render only inline code blocks
 
                 // filter all events that are not inline code blocks
-                let parser = Parser::new(&name).filter(|event| {
+                let parser = Parser::new(&title).filter(|event| {
                     match event {
                         &Event::Start(Tag::Code) |
                         &Event::End(Tag::Code) => true,
@@ -112,7 +112,7 @@ impl HelperDef for RenderToc {
                 });
 
                 // render markdown to html
-                let mut markdown_parsed_name = String::with_capacity(name.len() * 3 / 2);
+                let mut markdown_parsed_name = String::with_capacity(title.len() * 3 / 2);
                 html::push_html(&mut markdown_parsed_name, parser);
 
                 // write to the handlebars template

@@ -1,0 +1,19 @@
+# Source: https://en.wikisource.org/wiki/Alice%27s_Adventures_in_Wonderland_(1866)"
+
+# The language code will be the translation key.
+
+[[translations.en]]
+title = "Alice's Adventures in Wonderland"
+author = "Lewis Carroll"
+
+[[translations.fr]]
+title = "Alice au pays des merveilles"
+author = "Lewis Carroll"
+
+# Optionally you can provide the language name.
+
+language_name = "Français"
+
+[[translations.hu]]
+title = "Alice Csodaországban"
+author = "Lewis Carroll"

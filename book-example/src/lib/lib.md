@@ -7,15 +7,13 @@ integrate it in current projects. Here is a short example:
 extern crate mdbook;
 
 use mdbook::MDBook;
-use std::path::Path;
+use mdbook::renderer::HtmlHandlebars;
+use std::path::PathBuf;
 
 fn main() {
-    let mut book =  MDBook::new(Path::new("my-book"))   // Path to root
-                        .set_src(Path::new("src"))      // Path from root to source directory
-                        .set_dest(Path::new("book"))    // Path from root to output directory
-                        .read_config();                 // Parse book.toml or book.json file for configuration
-
-    book.build().unwrap();                              // Render the book
+    let path = PathBuf::from("my-book");  // Path to the book project's root
+    let renderer = HtmlHandlebars::new();
+    try!(renderer.build(&path, &None));   // Build the book
 }
 ```
 
