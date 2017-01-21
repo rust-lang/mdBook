@@ -122,7 +122,7 @@ fn confirm() -> bool {
 /// It creates some boilerplate files and directories to get you started with your book.
 ///
 /// ```text
-/// thebook/
+/// thebook
 /// ├── book.toml
 /// └── src
 ///     ├── SUMMARY.md

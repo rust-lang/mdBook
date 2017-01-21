@@ -32,6 +32,7 @@ class book::Chapter {
   dest_path: Option<PathBuf>,
 
   pub translation_links: Option<Vec<TranslationLink>>,
+  pub translation_id: Option<String>,
   pub authors: Option<Vec<Author>>,
   pub translators: Option<Vec<Author>>,
   pub description: Option<String>,
@@ -72,10 +73,10 @@ class Author {
 }
 
 class Language {
-  name: String,
-  code: String,
+  pub code: String,
+  pub name: Option<String>,
 
-  new(name, code)
+  new(code)
 }
 
 class Publisher {
@@ -112,7 +113,7 @@ enum TocItem {
 }
 
 class Renderer {
-   build(&self, project_root: &PathBuf),
+   build(&self, project_root: &PathBuf, dest_base: &Option<PathBuf>),
    render(&self, book_project: &MDBook),
 }
 

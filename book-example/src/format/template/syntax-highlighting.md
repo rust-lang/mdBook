@@ -12,15 +12,12 @@ fn main() {
 ```</code></pre>
 
 ## Custom theme
-Like the rest of the theme, the files used for syntax highlighting can be overridden with your own.
 
-- ***highlight.js*** normally you shouldn't have to overwrite this file, unless you want to use a more recent version.
-- ***highlight.css*** theme used by highlight.js for syntax highlighting.
+To customise its CSS, call `mdbook init --copy-assets` to get the default static assets including the stylus files. Edit these and regenerate `book.css`:
 
-If you want to use another theme for `highlight.js` download it from their website, or make it yourself,
-rename it to `highlight.css` and put it in `src/theme` (or the equivalent if you changed your source folder)
-
-Now your theme will be used instead of the default theme.
+```
+stylus book.styl -o ../css/book.css --use nib
+```
 
 ## Hiding code lines
 
