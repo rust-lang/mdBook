@@ -163,7 +163,7 @@ table thead td {
 }
 .menu-bar i {
   position: relative;
-  margin: 0 10px;
+  padding: 0 10px;
   z-index: 10;
   line-height: 50px;
   -webkit-transition: color 0.5s;
