@@ -14,7 +14,7 @@ pub fn render_markdown(text: &str) -> String {
     opts.insert(OPTION_ENABLE_TABLES);
     opts.insert(OPTION_ENABLE_FOOTNOTES);
 
-    let p = Parser::new_ext(&text, opts);
+    let p = Parser::new_ext(text, opts);
     html::push_html(&mut s, p);
     s
 }

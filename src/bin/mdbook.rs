@@ -1,8 +1,6 @@
-#[macro_use]
 extern crate mdbook;
 #[macro_use]
 extern crate clap;
-#[macro_use]
 extern crate log;
 extern crate env_logger;
 extern crate open;
@@ -204,9 +202,8 @@ fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
 
     trigger_on_change(&mut book, |path, book| {
         println!("File changed: {:?}\nBuilding book...\n", path);
-        match book.build() {
-            Err(e) => println!("Error while building: {:?}", e),
-            _ => {},
+        if let Err(e) = book.build() {
+            println!("Error while building: {:?}", e);
         }
         println!("");
     });
@@ -348,10 +345,10 @@ fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
 
     // Add the book.{json,toml} file to the watcher if it exists, because it's not
     // located in the source directory
-    if let Err(_) = watcher.watch(book.get_root().join("book.json"), NonRecursive) {
+    if watcher.watch(book.get_root().join("book.json"), NonRecursive).is_err() {
         // do nothing if book.json is not found
     }
-    if let Err(_) = watcher.watch(book.get_root().join("book.toml"), NonRecursive) {
+    if watcher.watch(book.get_root().join("book.toml"), NonRecursive).is_err() {
         // do nothing if book.toml is not found
     }
 

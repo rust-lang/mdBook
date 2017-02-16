@@ -47,12 +47,12 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
                 continue;
             } else {
                 return Err(Error::new(ErrorKind::Other,
-                                      format!("Your summary.md is messed up\n\n
+                                      "Your summary.md is messed up\n\n
                         Prefix, \
-                                               Suffix and Spacer elements can only exist on the root level.\n
+                                       Suffix and Spacer elements can only exist on the root level.\n
                         \
-                                               Prefix elements can only exist before any chapter and there can be \
-                                               no chapters after suffix elements.")));
+                                       Prefix elements can only exist before any chapter and there can be \
+                                       no chapters after suffix elements."));
             };
 
         } else {
@@ -64,25 +64,25 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
                     // error if level != 0 and BookItem is != Chapter
                     BookItem::Affix(_) | BookItem::Spacer if level > 0 => {
                         return Err(Error::new(ErrorKind::Other,
-                                              format!("Your summary.md is messed up\n\n
+                                              "Your summary.md is messed up\n\n
                                 \
-                                                       Prefix, Suffix and Spacer elements can only exist on the \
-                                                       root level.\n
+                                               Prefix, Suffix and Spacer elements can only exist on the \
+                                               root level.\n
                                 Prefix \
-                                                       elements can only exist before any chapter and there can be \
-                                                       no chapters after suffix elements.")))
+                                               elements can only exist before any chapter and there can be \
+                                               no chapters after suffix elements."))
                     },
 
                     // error if BookItem == Chapter and section == -1
                     BookItem::Chapter(_, _) if section[0] == -1 => {
                         return Err(Error::new(ErrorKind::Other,
-                                              format!("Your summary.md is messed up\n\n
+                                              "Your summary.md is messed up\n\n
                                 \
-                                                       Prefix, Suffix and Spacer elements can only exist on the \
-                                                       root level.\n
+                                               Prefix, Suffix and Spacer elements can only exist on the \
+                                               root level.\n
                                 Prefix \
-                                                       elements can only exist before any chapter and there can be \
-                                                       no chapters after suffix elements.")))
+                                               elements can only exist before any chapter and there can be \
+                                               no chapters after suffix elements."))
                     },
 
                     // Set section = -1 after suffix

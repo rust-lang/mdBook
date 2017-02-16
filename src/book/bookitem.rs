@@ -63,7 +63,7 @@ impl<'a> Iterator for BookItems<'a> {
                     },
                 }
             } else {
-                let cur = self.items.get(self.current_index).unwrap();
+                let cur = &self.items[self.current_index];
 
                 match *cur {
                     BookItem::Chapter(_, ref ch) | BookItem::Affix(ref ch) => {

@@ -346,29 +346,26 @@ impl MDBook {
         try!(self.parse_summary());
         for item in self.iter() {
 
-            match *item {
-                BookItem::Chapter(_, ref ch) => {
-                    if ch.path != PathBuf::new() {
+            if let BookItem::Chapter(_, ref ch) = *item {
+                if ch.path != PathBuf::new() {
 
-                        let path = self.get_src().join(&ch.path);
+                    let path = self.get_src().join(&ch.path);
 
-                        println!("[*]: Testing file: {:?}", path);
+                    println!("[*]: Testing file: {:?}", path);
 
-                        let output_result = Command::new("rustdoc")
-                                                .arg(&path)
-                                                .arg("--test")
-                                                .output();
-                        let output = try!(output_result);
+                    let output_result = Command::new("rustdoc")
+                                            .arg(&path)
+                                            .arg("--test")
+                                            .output();
+                    let output = try!(output_result);
 
-                        if !output.status.success() {
-                            return Err(Box::new(io::Error::new(ErrorKind::Other, format!(
-                                            "{}\n{}",
-                                            String::from_utf8_lossy(&output.stdout),
-                                            String::from_utf8_lossy(&output.stderr)))) as Box<Error>);
-                        }
+                    if !output.status.success() {
+                        return Err(Box::new(io::Error::new(ErrorKind::Other, format!(
+                                        "{}\n{}",
+                                        String::from_utf8_lossy(&output.stdout),
+                                        String::from_utf8_lossy(&output.stderr)))) as Box<Error>);
                     }
-                },
-                _ => {},
+                }
             }
         }
         Ok(())
@@ -381,14 +378,11 @@ impl MDBook {
     pub fn set_dest(mut self, dest: &Path) -> Self {
 
         // Handle absolute and relative paths
-        match dest.is_absolute() {
-            true => {
-                self.dest = dest.to_owned();
-            },
-            false => {
-                let dest = self.root.join(dest).to_owned();
-                self.dest = dest;
-            },
+        if dest.is_absolute() {
+            self.dest = dest.to_owned();
+        } else {
+            let dest = self.root.join(dest).to_owned();
+            self.dest = dest;
         }
 
         self
@@ -401,14 +395,11 @@ impl MDBook {
     pub fn set_src(mut self, src: &Path) -> Self {
 
         // Handle absolute and relative paths
-        match src.is_absolute() {
-            true => {
-                self.src = src.to_owned();
-            },
-            false => {
-                let src = self.root.join(src).to_owned();
-                self.src = src;
-            },
+        if src.is_absolute() {
+            self.src = src.to_owned();
+        } else {
+            let src = self.root.join(src).to_owned();
+            self.src = src;
         }
 
         self
@@ -456,16 +447,14 @@ impl MDBook {
     }
 
     pub fn get_livereload(&self) -> Option<&String> {
-        match self.livereload {
-            Some(ref livereload) => Some(&livereload),
-            None => None,
-        }
+        self.livereload.as_ref()
     }
 
     pub fn set_theme_path(mut self, theme_path: &Path) -> Self {
-        self.theme_path = match theme_path.is_absolute() {
-            true => theme_path.to_owned(),
-            false => self.root.join(theme_path).to_owned(),
+        self.theme_path = if theme_path.is_absolute() {
+            theme_path.to_owned()
+        } else {
+            self.root.join(theme_path).to_owned()
         };
         self
     }

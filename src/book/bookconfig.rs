@@ -53,7 +53,7 @@ impl BookConfig {
                     exit(2);
                 }
             };
-            if let Err(_) = f.read_to_string(&mut data) {
+            if f.read_to_string(&mut data).is_err() {
                 error!("[*]: Failed to read {:?}", &path);
                 exit(2);
             }
@@ -81,9 +81,9 @@ impl BookConfig {
         self
     }
 
-    pub fn parse_from_toml_string(&mut self, data: &String) -> &mut Self {
+    pub fn parse_from_toml_string(&mut self, data: &str) -> &mut Self {
 
-        let mut parser = toml::Parser::new(&data);
+        let mut parser = toml::Parser::new(data);
 
         let config = match parser.parse() {
             Some(x) => {x},
@@ -99,9 +99,9 @@ impl BookConfig {
     }
 
     /// Parses the string to JSON and converts it to BTreeMap<String, toml::Value>.
-    pub fn parse_from_json_string(&mut self, data: &String) -> &mut Self {
+    pub fn parse_from_json_string(&mut self, data: &str) -> &mut Self {
 
-        let c: serde_json::Value = match serde_json::from_str(&data) {
+        let c: serde_json::Value = match serde_json::from_str(data) {
             Ok(x) => x,
             Err(e) => {
                 error!("[*]: JSON parse errors in book.json: {:?}", e);
@@ -109,7 +109,7 @@ impl BookConfig {
             }
         };
 
-        let config = json_object_to_btreemap(&c.as_object().unwrap());
+        let config = json_object_to_btreemap(c.as_object().unwrap());
         self.parse_from_btreemap(&config);
 
         self

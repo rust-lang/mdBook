@@ -15,6 +15,7 @@ use handlebars::Handlebars;
 use serde_json;
 
 
+#[derive(Default)]
 pub struct HtmlHandlebars;
 
 impl HtmlHandlebars {
@@ -48,7 +49,7 @@ impl Renderer for HtmlHandlebars {
 
         // Check if dest directory exists
         debug!("[*]: Check if destination directory exists");
-        if let Err(_) = fs::create_dir_all(book.get_dest()) {
+        if fs::create_dir_all(book.get_dest()).is_err() {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other,
                                                "Unexpected error when constructing destination path")));
         }
@@ -81,8 +82,8 @@ impl Renderer for HtmlHandlebars {
                         print_content.push_str(&content);
 
                         // Update the context with data for this file
-                        let path = ch.path.to_str().ok_or(io::Error::new(io::ErrorKind::Other,
-                                                          "Could not convert path to str"))?;
+                        let path = ch.path.to_str().ok_or_else(||
+                            io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))?;
                         data.insert("path".to_owned(), json!(path));
                         data.insert("content".to_owned(), json!(content));
                         data.insert("chapter_title".to_owned(), json!(ch.name));
@@ -183,15 +184,15 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
         match *item {
             BookItem::Affix(ref ch) => {
                 chapter.insert("name".to_owned(), json!(ch.name));
-                let path = ch.path.to_str().ok_or(io::Error::new(io::ErrorKind::Other,
-                                                                 "Could not convert path to str"))?;
+                let path = ch.path.to_str().ok_or_else(||
+                    io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))?;
                 chapter.insert("path".to_owned(), json!(path));
             },
             BookItem::Chapter(ref s, ref ch) => {
                 chapter.insert("section".to_owned(), json!(s));
                 chapter.insert("name".to_owned(), json!(ch.name));
-                let path = ch.path.to_str().ok_or(io::Error::new(io::ErrorKind::Other,
-                                                                 "Could not convert path to str"))?;
+                let path = ch.path.to_str().ok_or_else(||
+                    io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))?;
                 chapter.insert("path".to_owned(), json!(path));
             },
             BookItem::Spacer => {

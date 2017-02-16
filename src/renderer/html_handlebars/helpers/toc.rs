@@ -17,7 +17,7 @@ impl HelperDef for RenderToc {
         // param is the key of value you want to display
         let chapters = rc.context().navigate(rc.get_path(), &VecDeque::new(), "chapters").to_owned();
         let current = rc.context().navigate(rc.get_path(), &VecDeque::new(), "path").to_string().replace("\"", "");
-        try!(rc.writer.write("<ul class=\"chapter\">".as_bytes()));
+        try!(rc.writer.write_all("<ul class=\"chapter\">".as_bytes()));
 
         // Decode json format
         let decoded: Vec<BTreeMap<String, String>> = serde_json::from_str(&chapters.to_string()).unwrap();
@@ -27,8 +27,8 @@ impl HelperDef for RenderToc {
         for item in decoded {
 
             // Spacer
-            if let Some(_) = item.get("spacer") {
-                try!(rc.writer.write("<li class=\"spacer\"></li>".as_bytes()));
+            if item.get("spacer").is_some() {
+                try!(rc.writer.write_all("<li class=\"spacer\"></li>".as_bytes()));
                 continue;
             }
 
@@ -40,33 +40,33 @@ impl HelperDef for RenderToc {
 
             if level > current_level {
                 while level > current_level {
-                    try!(rc.writer.write("<li>".as_bytes()));
-                    try!(rc.writer.write("<ul class=\"section\">".as_bytes()));
+                    try!(rc.writer.write_all("<li>".as_bytes()));
+                    try!(rc.writer.write_all("<ul class=\"section\">".as_bytes()));
                     current_level += 1;
                 }
-                try!(rc.writer.write("<li>".as_bytes()));
+                try!(rc.writer.write_all("<li>".as_bytes()));
             } else if level < current_level {
                 while level < current_level {
-                    try!(rc.writer.write("</ul>".as_bytes()));
-                    try!(rc.writer.write("</li>".as_bytes()));
+                    try!(rc.writer.write_all("</ul>".as_bytes()));
+                    try!(rc.writer.write_all("</li>".as_bytes()));
                     current_level -= 1;
                 }
-                try!(rc.writer.write("<li>".as_bytes()));
+                try!(rc.writer.write_all("<li>".as_bytes()));
             } else {
-                try!(rc.writer.write("<li".as_bytes()));
-                if let None = item.get("section") {
-                    try!(rc.writer.write(" class=\"affix\"".as_bytes()));
+                try!(rc.writer.write_all("<li".as_bytes()));
+                if item.get("section").is_none() {
+                    try!(rc.writer.write_all(" class=\"affix\"".as_bytes()));
                 }
-                try!(rc.writer.write(">".as_bytes()));
+                try!(rc.writer.write_all(">".as_bytes()));
             }
 
             // Link
             let path_exists = if let Some(path) = item.get("path") {
                 if !path.is_empty() {
-                    try!(rc.writer.write("<a href=\"".as_bytes()));
+                    try!(rc.writer.write_all("<a href=\"".as_bytes()));
 
                     // Add link
-                    try!(rc.writer.write(Path::new(item.get("path")
+                    try!(rc.writer.write_all(Path::new(item.get("path")
                                                        .expect("Error: path should be Some(_)"))
                                              .with_extension("html")
                                              .to_str()
@@ -75,13 +75,13 @@ impl HelperDef for RenderToc {
                                              .replace("\\", "/")
                                              .as_bytes()));
 
-                    try!(rc.writer.write("\"".as_bytes()));
+                    try!(rc.writer.write_all("\"".as_bytes()));
 
                     if path == &current {
-                        try!(rc.writer.write(" class=\"active\"".as_bytes()));
+                        try!(rc.writer.write_all(" class=\"active\"".as_bytes()));
                     }
 
-                    try!(rc.writer.write(">".as_bytes()));
+                    try!(rc.writer.write_all(">".as_bytes()));
                     true
                 } else {
                     false
@@ -92,21 +92,21 @@ impl HelperDef for RenderToc {
 
             // Section does not necessarily exist
             if let Some(section) = item.get("section") {
-                try!(rc.writer.write("<strong>".as_bytes()));
-                try!(rc.writer.write(section.as_bytes()));
-                try!(rc.writer.write("</strong> ".as_bytes()));
+                try!(rc.writer.write_all("<strong>".as_bytes()));
+                try!(rc.writer.write_all(section.as_bytes()));
+                try!(rc.writer.write_all("</strong> ".as_bytes()));
             }
 
             if let Some(name) = item.get("name") {
                 // Render only inline code blocks
 
                 // filter all events that are not inline code blocks
-                let parser = Parser::new(&name).filter(|event| {
-                    match event {
-                        &Event::Start(Tag::Code) |
-                        &Event::End(Tag::Code) => true,
-                        &Event::InlineHtml(_) => true,
-                        &Event::Text(_) => true,
+                let parser = Parser::new(name).filter(|event| {
+                    match *event {
+                        Event::Start(Tag::Code) |
+                        Event::End(Tag::Code) |
+                        Event::InlineHtml(_) |
+                        Event::Text(_) => true,
                         _ => false,
                     }
                 });
@@ -116,23 +116,23 @@ impl HelperDef for RenderToc {
                 html::push_html(&mut markdown_parsed_name, parser);
 
                 // write to the handlebars template
-                try!(rc.writer.write(markdown_parsed_name.as_bytes()));
+                try!(rc.writer.write_all(markdown_parsed_name.as_bytes()));
             }
 
             if path_exists {
-                try!(rc.writer.write("</a>".as_bytes()));
+                try!(rc.writer.write_all("</a>".as_bytes()));
             }
 
-            try!(rc.writer.write("</li>".as_bytes()));
+            try!(rc.writer.write_all("</li>".as_bytes()));
 
         }
         while current_level > 1 {
-            try!(rc.writer.write("</ul>".as_bytes()));
-            try!(rc.writer.write("</li>".as_bytes()));
+            try!(rc.writer.write_all("</ul>".as_bytes()));
+            try!(rc.writer.write_all("</li>".as_bytes()));
             current_level -= 1;
         }
 
-        try!(rc.writer.write("</ul>".as_bytes()));
+        try!(rc.writer.write_all("</ul>".as_bytes()));
         Ok(())
     }
 }
