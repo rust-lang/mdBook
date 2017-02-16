@@ -55,20 +55,6 @@ $( document ).ready(function() {
     var page_wrapper = $("#page-wrapper");
     var content = $("#content");
 
-
-    // Add anchors for all content headers
-    content.find("h1, h2, h3, h4, h5").wrap(function(){
-        var wrapper = $("<a class=\"header\">");
-        var header_name = $(this).text().trim().replace(/\W/g, '-')
-        wrapper.attr("name", header_name);
-        // Add so that when you click the link actually shows up in the url bar...
-        // Remove any existing anchor then append the new one
-        // ensuring eg. no spaces are present within it ie. they become %20
-        wrapper.attr("href", $(location).attr('href').split("#")[0] + "#" + header_name );
-        return wrapper;
-    });
-
-
     // Toggle sidebar
     $("#sidebar-toggle").click(function(event){
         if ( html.hasClass("sidebar-hidden") ) {
