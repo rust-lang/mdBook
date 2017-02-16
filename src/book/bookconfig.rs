@@ -214,9 +214,9 @@ pub fn json_value_to_toml_value(json: serde_json::Value) -> toml::Value {
     match json {
         serde_json::Value::Null => toml::Value::String("".to_string()),
         serde_json::Value::Bool(x) => toml::Value::Boolean(x),
-        serde_json::Value::I64(x) => toml::Value::Integer(x),
-        serde_json::Value::U64(x) => toml::Value::Integer(x as i64),
-        serde_json::Value::F64(x) => toml::Value::Float(x),
+        serde_json::Value::Number(ref x) if x.is_i64() => toml::Value::Integer(x.as_i64().unwrap()),
+        serde_json::Value::Number(ref x) if x.is_u64() => toml::Value::Integer(x.as_i64().unwrap()),
+        serde_json::Value::Number(x) => toml::Value::Float(x.as_f64().unwrap()),
         serde_json::Value::String(x) => toml::Value::String(x),
         serde_json::Value::Array(x) => {
             toml::Value::Array(x.iter().map(|v| json_value_to_toml_value(v.to_owned())).collect())

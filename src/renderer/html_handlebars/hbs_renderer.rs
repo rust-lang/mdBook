@@ -13,7 +13,6 @@ use std::collections::BTreeMap;
 use handlebars::Handlebars;
 
 use serde_json;
-use serde_json::value::ToJson;
 
 
 pub struct HtmlHandlebars;
@@ -84,10 +83,10 @@ impl Renderer for HtmlHandlebars {
                         // Update the context with data for this file
                         let path = ch.path.to_str().ok_or(io::Error::new(io::ErrorKind::Other,
                                                           "Could not convert path to str"))?;
-                        data.insert("path".to_owned(), path.to_json());
-                        data.insert("content".to_owned(), content.to_json());
-                        data.insert("chapter_title".to_owned(), ch.name.to_json());
-                        data.insert("path_to_root".to_owned(), utils::fs::path_to_root(&ch.path).to_json());
+                        data.insert("path".to_owned(), json!(path));
+                        data.insert("content".to_owned(), json!(content));
+                        data.insert("chapter_title".to_owned(), json!(ch.name));
+                        data.insert("path_to_root".to_owned(), json!(utils::fs::path_to_root(&ch.path)));
 
                         // Render the handlebars template with the data
                         debug!("[*]: Render template");
@@ -128,9 +127,9 @@ impl Renderer for HtmlHandlebars {
         // Print version
 
         // Update the context with data for this file
-        data.insert("path".to_owned(), "print.md".to_json());
-        data.insert("content".to_owned(), print_content.to_json());
-        data.insert("path_to_root".to_owned(), utils::fs::path_to_root(Path::new("print.md")).to_json());
+        data.insert("path".to_owned(), json!("print.md"));
+        data.insert("content".to_owned(), json!(print_content));
+        data.insert("path_to_root".to_owned(), json!(utils::fs::path_to_root(Path::new("print.md"))));
 
         // Render the handlebars template with the data
         debug!("[*]: Render template");
@@ -167,12 +166,12 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
     debug!("[fn]: make_data");
 
     let mut data = serde_json::Map::new();
-    data.insert("language".to_owned(), "en".to_json());
-    data.insert("title".to_owned(), book.get_title().to_json());
-    data.insert("description".to_owned(), book.get_description().to_json());
-    data.insert("favicon".to_owned(), "favicon.png".to_json());
+    data.insert("language".to_owned(), json!("en"));
+    data.insert("title".to_owned(), json!(book.get_title()));
+    data.insert("description".to_owned(), json!(book.get_description()));
+    data.insert("favicon".to_owned(), json!("favicon.png"));
     if let Some(livereload) = book.get_livereload() {
-        data.insert("livereload".to_owned(), livereload.to_json());
+        data.insert("livereload".to_owned(), json!(livereload));
     }
 
     let mut chapters = vec![];
@@ -183,20 +182,20 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
 
         match *item {
             BookItem::Affix(ref ch) => {
-                chapter.insert("name".to_owned(), ch.name.to_json());
+                chapter.insert("name".to_owned(), json!(ch.name));
                 let path = ch.path.to_str().ok_or(io::Error::new(io::ErrorKind::Other,
                                                                  "Could not convert path to str"))?;
-                chapter.insert("path".to_owned(), path.to_json());
+                chapter.insert("path".to_owned(), json!(path));
             },
             BookItem::Chapter(ref s, ref ch) => {
-                chapter.insert("section".to_owned(), s.to_json());
-                chapter.insert("name".to_owned(), ch.name.to_json());
+                chapter.insert("section".to_owned(), json!(s));
+                chapter.insert("name".to_owned(), json!(ch.name));
                 let path = ch.path.to_str().ok_or(io::Error::new(io::ErrorKind::Other,
                                                                  "Could not convert path to str"))?;
-                chapter.insert("path".to_owned(), path.to_json());
+                chapter.insert("path".to_owned(), json!(path));
             },
             BookItem::Spacer => {
-                chapter.insert("spacer".to_owned(), "_spacer_".to_json());
+                chapter.insert("spacer".to_owned(), json!("_spacer_"));
             },
 
         }
@@ -204,7 +203,7 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
         chapters.push(chapter);
     }
 
-    data.insert("chapters".to_owned(), chapters.to_json());
+    data.insert("chapters".to_owned(), json!(chapters));
 
     debug!("[*]: JSON constructed");
     Ok(data)

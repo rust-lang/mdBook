@@ -2,7 +2,7 @@ use std::path::Path;
 use std::collections::{VecDeque, BTreeMap};
 
 use serde_json;
-use handlebars::{Handlebars, HelperDef, RenderError, RenderContext, Helper, Context};
+use handlebars::{Handlebars, HelperDef, RenderError, RenderContext, Helper};
 use pulldown_cmark::{Parser, html, Event, Tag};
 
 // Handlebars helper to construct TOC
@@ -10,13 +10,13 @@ use pulldown_cmark::{Parser, html, Event, Tag};
 pub struct RenderToc;
 
 impl HelperDef for RenderToc {
-    fn call(&self, c: &Context, _h: &Helper, _: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
+    fn call(&self, _h: &Helper, _: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
 
         // get value from context data
         // rc.get_path() is current json parent path, you should always use it like this
         // param is the key of value you want to display
-        let chapters = c.navigate(rc.get_path(), &VecDeque::new(), "chapters");
-        let current = c.navigate(rc.get_path(), &VecDeque::new(), "path").to_string().replace("\"", "");
+        let chapters = rc.context().navigate(rc.get_path(), &VecDeque::new(), "chapters").to_owned();
+        let current = rc.context().navigate(rc.get_path(), &VecDeque::new(), "path").to_string().replace("\"", "");
         try!(rc.writer.write("<ul class=\"chapter\">".as_bytes()));
 
         // Decode json format

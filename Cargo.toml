@@ -16,9 +16,9 @@ exclude = [
 
 [dependencies]
 clap = "2.19.2"
-handlebars = { version = "0.23.0", features = ["serde_type"] }
-serde = "0.8"
-serde_json = "0.8"
+handlebars = { version = "0.25.0", features = ["serde_type"] }
+serde = "0.9"
+serde_json = "0.9"
 pulldown-cmark = "0.0.8"
 log = "0.3"
 env_logger = "0.3"
