@@ -1,4 +1,5 @@
 use serde::{Serialize, Serializer};
+use serde::ser::SerializeStruct;
 use std::path::PathBuf;
 
 #[derive(Debug, Clone)]
@@ -36,11 +37,11 @@ impl Chapter {
 
 
 impl Serialize for Chapter {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error> where S: Serializer {
-        let mut state = try!(serializer.serialize_struct("Chapter", 2));
-        try!(serializer.serialize_struct_elt(&mut state, "name", self.name.clone()));
-        try!(serializer.serialize_struct_elt(&mut state, "path", self.path.clone()));
-        serializer.serialize_struct_end(state)
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+        let mut struct_ = try!(serializer.serialize_struct("Chapter", 2));
+        try!(struct_.serialize_field("name", &self.name));
+        try!(struct_.serialize_field("path", &self.path));
+        struct_.end()
     }
 }
 

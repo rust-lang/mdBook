@@ -2,22 +2,21 @@ use std::path::Path;
 use std::collections::{VecDeque, BTreeMap};
 
 use serde_json;
-use serde_json::value::ToJson;
-use handlebars::{Handlebars, RenderError, RenderContext, Helper, Context, Renderable};
+use handlebars::{Handlebars, RenderError, RenderContext, Helper, Renderable};
 
 
 // Handlebars helper for navigation
 
-pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
+pub fn previous(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
     debug!("[fn]: previous (handlebars helper)");
 
     debug!("[*]: Get data from context");
     // get value from context data
     // rc.get_path() is current json parent path, you should always use it like this
     // param is the key of value you want to display
-    let chapters = c.navigate(rc.get_path(), &VecDeque::new(), "chapters");
+    let chapters = rc.context().navigate(rc.get_path(), &VecDeque::new(), "chapters").to_owned();
 
-    let current = c.navigate(rc.get_path(), &VecDeque::new(), "path")
+    let current = rc.context().navigate(rc.get_path(), &VecDeque::new(), "path")
         .to_string()
         .replace("\"", "");
 
@@ -50,7 +49,7 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
                         match previous.get("name") {
                             Some(n) => {
                                 debug!("[*]: Inserting title: {}", n);
-                                previous_chapter.insert("title".to_owned(), n.to_json())
+                                previous_chapter.insert("title".to_owned(), json!(n))
                             },
                             None => {
                                 debug!("[*]: No title found for chapter");
@@ -68,7 +67,7 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
 
                                 match path.to_str() {
                                     Some(p) => {
-                                        previous_chapter.insert("link".to_owned(), p.replace("\\", "/").to_json());
+                                        previous_chapter.insert("link".to_owned(), json!(p.replace("\\", "/")));
                                     },
                                     None => return Err(RenderError::new("Link could not be converted to str")),
                                 }
@@ -78,13 +77,14 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
 
                         debug!("[*]: Inject in context");
                         // Inject in current context
-                        let updated_context = c.extend(&previous_chapter);
+                        let updated_context = rc.context().extend(&previous_chapter);
 
                         debug!("[*]: Render template");
                         // Render template
                         match _h.template() {
                             Some(t) => {
-                                try!(t.render(&updated_context, r, rc));
+                                *rc.context_mut() = updated_context;
+                                try!(t.render(r, rc));
                             },
                             None => return Err(RenderError::new("Error with the handlebars template")),
                         }
@@ -108,16 +108,16 @@ pub fn previous(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext
 
 
 
-pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
+pub fn next(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
     debug!("[fn]: next (handlebars helper)");
 
     debug!("[*]: Get data from context");
     // get value from context data
     // rc.get_path() is current json parent path, you should always use it like this
     // param is the key of value you want to display
-    let chapters = c.navigate(rc.get_path(), &VecDeque::new(), "chapters");
+    let chapters = rc.context().navigate(rc.get_path(), &VecDeque::new(), "chapters").to_owned();
 
-    let current = c.navigate(rc.get_path(), &VecDeque::new(), "path")
+    let current = rc.context().navigate(rc.get_path(), &VecDeque::new(), "path")
         .to_string()
         .replace("\"", "");
 
@@ -154,7 +154,7 @@ pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) ->
                         match item.get("name") {
                             Some(n) => {
                                 debug!("[*]: Inserting title: {}", n);
-                                next_chapter.insert("title".to_owned(), n.to_json());
+                                next_chapter.insert("title".to_owned(), json!(n));
                             },
                             None => return Err(RenderError::new("No title found for chapter in JSON data")),
                         }
@@ -166,21 +166,22 @@ pub fn next(c: &Context, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) ->
                         match link.to_str() {
                             Some(l) => {
                                 // Hack for windows who tends to use `\` as separator instead of `/`
-                                next_chapter.insert("link".to_owned(), l.replace("\\", "/").to_json());
+                                next_chapter.insert("link".to_owned(), json!(l.replace("\\", "/")));
                             },
                             None => return Err(RenderError::new("Link could not converted to str")),
                         }
 
                         debug!("[*]: Inject in context");
                         // Inject in current context
-                        let updated_context = c.extend(&next_chapter);
+                        let updated_context = rc.context().extend(&next_chapter);
 
                         debug!("[*]: Render template");
 
                         // Render template
                         match _h.template() {
                             Some(t) => {
-                                try!(t.render(&updated_context, r, rc));
+                                *rc.context_mut() = updated_context;
+                                try!(t.render(r, rc));
                             },
                             None => return Err(RenderError::new("Error with the handlebars template")),
                         }
