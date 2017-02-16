@@ -21,7 +21,7 @@ serde = "0.9"
 serde_json = "0.9"
 pulldown-cmark = "0.0.8"
 log = "0.3"
-env_logger = "0.3"
+env_logger = "0.4.0"
 toml = { version = "0.2", features = ["serde"] }
 open = "1.1"
 regex = "0.2.1"
