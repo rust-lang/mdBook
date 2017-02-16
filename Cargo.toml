@@ -24,7 +24,7 @@ log = "0.3"
 env_logger = "0.3"
 toml = { version = "0.2", features = ["serde"] }
 open = "1.1"
-regex = "0.1.80"
+regex = "0.2.1"
 
 # Watch feature
 notify = { version = "3.0", optional = true }

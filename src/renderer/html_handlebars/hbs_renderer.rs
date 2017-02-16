@@ -242,7 +242,7 @@ fn build_header_links(mut html: String) -> String {
             }).collect::<String>();
 
             format!("<a class=\"header\" href=\"#{id}\" name=\"{id}\"><{h}>{text}</{h}></a>", h=header, id=id, text=text)
-        });
+        }).into_owned();
     }
 
     html
