@@ -31,7 +31,7 @@ pub fn render_playpen(s: &str, path: &Path) -> String {
             continue;
         };
         let mut file_content = String::new();
-        if let Err(_) = file.read_to_string(&mut file_content) {
+        if file.read_to_string(&mut file_content).is_err() {
             continue;
         };
 
@@ -86,7 +86,7 @@ fn find_playpens(s: &str, base_path: &Path) -> Vec<Playpen> {
         if end_i - 2 - (i + 10) < 1 {
             continue;
         }
-        if s[i + 10..end_i - 2].trim().len() == 0 {
+        if s[i + 10..end_i - 2].trim().is_empty() {
             continue;
         }
 
@@ -94,15 +94,10 @@ fn find_playpens(s: &str, base_path: &Path) -> Vec<Playpen> {
 
         // Split on whitespaces
         let params: Vec<&str> = s[i + 10..end_i - 2].split_whitespace().collect();
-        let mut editable = false;
-
-        if params.len() > 1 {
-            editable = if let Some(_) = params[1].find("editable") {
-                true
-            } else {
-                false
-            };
-        }
+        let editable = params
+            .get(1)
+            .map(|p| p.find("editable").is_some())
+            .unwrap_or(false);
 
         playpens.push(Playpen {
             start_index: i,
