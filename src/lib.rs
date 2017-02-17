@@ -74,6 +74,7 @@ extern crate serde;
 extern crate serde_json;
 extern crate handlebars;
 extern crate pulldown_cmark;
+extern crate regex;
 
 #[macro_use] extern crate log;
 pub mod book;

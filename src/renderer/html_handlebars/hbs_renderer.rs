@@ -3,7 +3,9 @@ use renderer::Renderer;
 use book::MDBook;
 use book::bookitem::BookItem;
 use {utils, theme};
+use regex::{Regex, Captures};
 
+use std::ascii::AsciiExt;
 use std::path::{Path, PathBuf};
 use std::fs::{self, File};
 use std::error::Error;
@@ -91,6 +93,9 @@ impl Renderer for HtmlHandlebars {
                         // Render the handlebars template with the data
                         debug!("[*]: Render template");
                         let rendered = try!(handlebars.render("index", &data));
+                        
+                        // create links for headers
+                        let rendered = build_header_links(rendered);
 
                         // Write to file
                         let filename = Path::new(&ch.path).with_extension("html");
@@ -207,4 +212,35 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
 
     debug!("[*]: JSON constructed");
     Ok(data)
+}
+
+fn build_header_links(html: String) -> String {
+    let regex = Regex::new(r"<h(\d)>(.*?)</h\d>").unwrap();
+
+    regex.replace_all(&html, |caps: &Captures| {
+        let level = &caps[1];
+        let text = &caps[2];
+        let mut id = text.to_string();
+        let repl_sub = vec!["<em>", "</em>", "<code>", "</code>",
+                            "<strong>", "</strong>",
+                            "&lt;", "&gt;", "&amp;", "&#39;", "&quot;"];
+        for sub in repl_sub {
+            id = id.replace(sub, "");
+        }
+        let id = id.chars().filter_map(|c| {
+            if c.is_alphanumeric() || c == '-' || c == '_' {
+                if c.is_ascii() {
+                    Some(c.to_ascii_lowercase())
+                } else {
+                    Some(c)
+                }
+            } else if c.is_whitespace() && c.is_ascii() {
+                Some('-')
+            } else {
+                None
+            }
+        }).collect::<String>();
+
+        format!("<a class=\"header\" href=\"#{id}\" name=\"{id}\"><h{level}>{text}</h{level}></a>", level=level, id=id, text=text)
+    }).into_owned()
 }
