@@ -214,36 +214,33 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
     Ok(data)
 }
 
-fn build_header_links(mut html: String) -> String {
-    for header in &["h1", "h2", "h3", "h4", "h5"] {
-        let regex = Regex::new(&format!("<{h}>(.*?)</{h}>", h=header)).unwrap();
+fn build_header_links(html: String) -> String {
+    let regex = Regex::new(r"<h(\d)>(.*?)</h\d>").unwrap();
 
-        html = regex.replace_all(&html, |caps: &Captures| {
-            let text = &caps[1];
-            let mut id = text.to_string();
-            let repl_sub = vec!["<em>", "</em>", "<code>", "</code>",
-                                "<strong>", "</strong>",
-                                "&lt;", "&gt;", "&amp;", "&#39;", "&quot;"];
-            for sub in repl_sub {
-                id = id.replace(sub, "");
-            }
-            let id = id.chars().filter_map(|c| {
-                if c.is_alphanumeric() || c == '-' || c == '_' {
-                    if c.is_ascii() {
-                        Some(c.to_ascii_lowercase())
-                    } else {
-                        Some(c)
-                    }
-                } else if c.is_whitespace() && c.is_ascii() {
-                    Some('-')
+    regex.replace_all(&html, |caps: &Captures| {
+        let level = &caps[1];
+        let text = &caps[2];
+        let mut id = text.to_string();
+        let repl_sub = vec!["<em>", "</em>", "<code>", "</code>",
+                            "<strong>", "</strong>",
+                            "&lt;", "&gt;", "&amp;", "&#39;", "&quot;"];
+        for sub in repl_sub {
+            id = id.replace(sub, "");
+        }
+        let id = id.chars().filter_map(|c| {
+            if c.is_alphanumeric() || c == '-' || c == '_' {
+                if c.is_ascii() {
+                    Some(c.to_ascii_lowercase())
                 } else {
-                    None
+                    Some(c)
                 }
-            }).collect::<String>();
+            } else if c.is_whitespace() && c.is_ascii() {
+                Some('-')
+            } else {
+                None
+            }
+        }).collect::<String>();
 
-            format!("<a class=\"header\" href=\"#{id}\" name=\"{id}\"><{h}>{text}</{h}></a>", h=header, id=id, text=text)
-        }).into_owned();
-    }
-
-    html
+        format!("<a class=\"header\" href=\"#{id}\" name=\"{id}\"><h{level}>{text}</h{level}></a>", level=level, id=id, text=text)
+    }).into_owned()
 }
