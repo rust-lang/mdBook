@@ -82,13 +82,10 @@ impl BookConfig {
     }
 
     pub fn parse_from_toml_string(&mut self, data: &str) -> &mut Self {
-
-        let mut parser = toml::Parser::new(data);
-
-        let config = match parser.parse() {
-            Some(x) => {x},
-            None => {
-                error!("[*]: Toml parse errors in book.toml: {:?}", parser.errors);
+        let config = match toml::from_str(data) {
+            Ok(x) => {x},
+            Err(e) => {
+                error!("[*]: Toml parse errors in book.toml: {:?}", e);
                 exit(2);
             }
         };
