@@ -138,7 +138,10 @@ impl Renderer for HtmlHandlebars {
 
         // Render the handlebars template with the data
         debug!("[*]: Render template");
+
         let rendered = try!(handlebars.render("index", &data));
+        let rendered = build_header_links(rendered);
+
         try!(book.write_file(Path::new("print").with_extension("html"), &rendered.into_bytes()));
         info!("[*] Creating print.html ✓");
 
