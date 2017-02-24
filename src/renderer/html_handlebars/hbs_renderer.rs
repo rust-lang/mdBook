@@ -95,14 +95,15 @@ impl Renderer for HtmlHandlebars {
                         debug!("[*]: Render template");
                         let rendered = try!(handlebars.render("index", &data));
 
+                        let filename = Path::new(&ch.path).with_extension("html");
+
                         // create links for headers
-                        let rendered = build_header_links(rendered);
+                        let rendered = build_header_links(rendered, filename.to_str().unwrap_or(""));
 
                         // fix code blocks
                         let rendered = fix_code_blocks(rendered);
 
                         // Write to file
-                        let filename = Path::new(&ch.path).with_extension("html");
                         info!("[*] Creating {:?} ✓", filename.display());
                         try!(book.write_file(filename, &rendered.into_bytes()));
 
@@ -144,7 +145,7 @@ impl Renderer for HtmlHandlebars {
         debug!("[*]: Render template");
 
         let rendered = try!(handlebars.render("index", &data));
-        let rendered = build_header_links(rendered);
+        let rendered = build_header_links(rendered, "print.html");
 
         // fix code blocks
         let rendered = fix_code_blocks(rendered);
@@ -224,7 +225,7 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
     Ok(data)
 }
 
-fn build_header_links(html: String) -> String {
+fn build_header_links(html: String, filename: &str) -> String {
     let regex = Regex::new(r"<h(\d)>(.*?)</h\d>").unwrap();
 
     regex.replace_all(&html, |caps: &Captures| {
@@ -251,7 +252,8 @@ fn build_header_links(html: String) -> String {
             }
         }).collect::<String>();
 
-        format!("<a class=\"header\" href=\"#{id}\" name=\"{id}\"><h{level}>{text}</h{level}></a>", level=level, id=id, text=text)
+        format!("<a class=\"header\" href=\"{filename}#{id}\" name=\"{id}\"><h{level}>{text}</h{level}></a>",
+            level=level, id=id, text=text, filename=filename)
     }).into_owned()
 }
 
