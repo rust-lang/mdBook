@@ -147,7 +147,12 @@ $( document ).ready(function() {
     // Hide Rust code lines prepended with a specific character
     var hiding_character = "#";
 
-    $("code.language-rust").each(function(i, block){
+    $("code").each(function(i, block){
+	var clss = $(this).attr("class");
+	if(clss && !clss.includes("language-rust")) {
+		alert("zomg " + $(this).attr("class"));
+		            return true;
+	}
 
         var code_block = $(this);
         var pre_block = $(this).parent();
