@@ -97,8 +97,9 @@ impl Renderer for HtmlHandlebars {
 
                         let filename = Path::new(&ch.path).with_extension("html");
 
-                        // create links for headers
+                        // create links for headers and fix anchors
                         let rendered = build_header_links(rendered, filename.to_str().unwrap_or(""));
+                        let rendered = fix_anchor_links(rendered, filename.to_str().unwrap_or(""));
 
                         // fix code blocks
                         let rendered = fix_code_blocks(rendered);
@@ -146,6 +147,7 @@ impl Renderer for HtmlHandlebars {
 
         let rendered = try!(handlebars.render("index", &data));
         let rendered = build_header_links(rendered, "print.html");
+        let rendered = fix_anchor_links(rendered, "print.html");
 
         // fix code blocks
         let rendered = fix_code_blocks(rendered);
@@ -256,6 +258,22 @@ fn build_header_links(html: String, filename: &str) -> String {
             level=level, id=id, text=text, filename=filename)
     }).into_owned()
 }
+
+// anchors to the same page (href="#anchor") do not work because of
+// <base href="../"> pointing to the root folder. This function *fixes*
+// that in a very inelegant way
+fn fix_anchor_links(html: String, filename: &str) -> String {
+    let regex = Regex::new(r##"<a([^>]+)href="#([^"]+)"([^>]*)>"##).unwrap();
+    regex.replace_all(&html, |caps: &Captures| {
+        let before = &caps[1];
+        let anchor = &caps[2];
+        let after = &caps[3];
+
+        format!("<a{before}href=\"{filename}#{anchor}\"{after}>",
+            before=before, filename=filename, anchor=anchor, after=after)
+    }).into_owned()
+}
+
 
 // The rust book uses annotations for rustdoc to test code snippets, like the following:
 // ```rust,should_panic
