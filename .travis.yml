@@ -26,7 +26,6 @@ matrix:
         apt:
           packages:
             - nodejs
-            - npm
     - os: linux
       env: TARGET=x86_64-unknown-linux-musl CHANNEL=stable
     # Beta channel
