@@ -94,9 +94,12 @@ impl Renderer for HtmlHandlebars {
                         // Render the handlebars template with the data
                         debug!("[*]: Render template");
                         let rendered = try!(handlebars.render("index", &data));
-                        
+
                         // create links for headers
                         let rendered = build_header_links(rendered);
+
+                        // fix code blocks
+                        let rendered = fix_code_blocks(rendered);
 
                         // Write to file
                         let filename = Path::new(&ch.path).with_extension("html");
@@ -142,6 +145,9 @@ impl Renderer for HtmlHandlebars {
 
         let rendered = try!(handlebars.render("index", &data));
         let rendered = build_header_links(rendered);
+
+        // fix code blocks
+        let rendered = fix_code_blocks(rendered);
 
         try!(book.write_file(Path::new("print").with_extension("html"), &rendered.into_bytes()));
         info!("[*] Creating print.html ✓");
@@ -246,5 +252,23 @@ fn build_header_links(html: String) -> String {
         }).collect::<String>();
 
         format!("<a class=\"header\" href=\"#{id}\" name=\"{id}\"><h{level}>{text}</h{level}></a>", level=level, id=id, text=text)
+    }).into_owned()
+}
+
+// The rust book uses annotations for rustdoc to test code snippets, like the following:
+// ```rust,should_panic
+// fn main() {
+//     // Code here
+// }
+// ```
+// This function replaces all commas by spaces in the code block classes
+fn fix_code_blocks(html: String) -> String {
+    let regex = Regex::new(r##"<code([^>]+)class="([^"]+)"([^>]*)>"##).unwrap();
+    regex.replace_all(&html, |caps: &Captures| {
+        let before = &caps[1];
+        let classes = &caps[2].replace(",", " ");
+        let after = &caps[3];
+
+        format!("<code{before}class=\"{classes}\"{after}>", before=before, classes=classes, after=after)
     }).into_owned()
 }
