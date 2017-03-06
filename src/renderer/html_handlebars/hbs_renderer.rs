@@ -294,14 +294,23 @@ fn fix_code_blocks(html: String) -> String {
 }
 
 fn add_playpen_pre(html: String) -> String {
-    let regex = Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>.*?</code>)"##).unwrap();
+    let regex = Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap();
     regex.replace_all(&html, |caps: &Captures| {
         let text = &caps[1];
         let classes = &caps[2];
+        let code = &caps[3];
 
         if classes.contains("language-rust") && !classes.contains("ignore") {
             // wrap the contents in an external pre block
-            format!("<pre class=\"playpen\">{}</pre>", text)
+
+            if text.contains("fn main") {
+                format!("<pre class=\"playpen\">{}</pre>", text)
+            } else {
+                // we need to inject our own main
+                format!("<pre class=\"playpen\"><code class=\"{}\">#fn main() {{
+{}
+#}}</code></pre>", classes, code)
+            }
         } else {
             // not language-rust, so no-op
             format!("{}", text)
