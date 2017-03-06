@@ -97,12 +97,11 @@ impl Renderer for HtmlHandlebars {
 
                         let filename = Path::new(&ch.path).with_extension("html");
 
-                        // create links for headers and fix anchors
+                        // Do several kinds of post-processing
                         let rendered = build_header_links(rendered, filename.to_str().unwrap_or(""));
                         let rendered = fix_anchor_links(rendered, filename.to_str().unwrap_or(""));
-
-                        // fix code blocks
                         let rendered = fix_code_blocks(rendered);
+                        let rendered = add_playpen_pre(rendered);
 
                         // Write to file
                         info!("[*] Creating {:?} ✓", filename.display());
@@ -146,11 +145,12 @@ impl Renderer for HtmlHandlebars {
         debug!("[*]: Render template");
 
         let rendered = try!(handlebars.render("index", &data));
+
+        // do several kinds of post-processing
         let rendered = build_header_links(rendered, "print.html");
         let rendered = fix_anchor_links(rendered, "print.html");
-
-        // fix code blocks
         let rendered = fix_code_blocks(rendered);
+        let rendered = add_playpen_pre(rendered);
 
         try!(book.write_file(Path::new("print").with_extension("html"), &rendered.into_bytes()));
         info!("[*] Creating print.html ✓");
@@ -290,5 +290,21 @@ fn fix_code_blocks(html: String) -> String {
         let after = &caps[3];
 
         format!("<code{before}class=\"{classes}\"{after}>", before=before, classes=classes, after=after)
+    }).into_owned()
+}
+
+fn add_playpen_pre(html: String) -> String {
+    let regex = Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>.*?</code>)"##).unwrap();
+    regex.replace_all(&html, |caps: &Captures| {
+        let text = &caps[1];
+        let classes = &caps[2];
+
+        if classes.contains("language-rust") && !classes.contains("ignore") {
+            // wrap the contents in an external pre block
+            format!("<pre class=\"playpen\">{}</pre>", text)
+        } else {
+            // not language-rust, so no-op
+            format!("{}", text)
+        }
     }).into_owned()
 }
