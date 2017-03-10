@@ -307,7 +307,9 @@ fn add_playpen_pre(html: String) -> String {
                 format!("<pre class=\"playpen\">{}</pre>", text)
             } else {
                 // we need to inject our own main
-                format!("<pre class=\"playpen\"><code class=\"{}\">#fn main() {{
+                format!("<pre class=\"playpen\"><code class=\"{}\"># #![allow(unused_variables)]
+# 
+#fn main() {{
 {}
 #}}</code></pre>", classes, code)
             }
