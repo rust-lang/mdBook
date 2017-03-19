@@ -21,11 +21,9 @@
         <link rel="stylesheet" href="tomorrow-night.css">
 
         {{#previous}}
-	<link rel="prev" href="{{link}}#content">
         {{/previous}}
 	
         {{#next}}
-	<link rel="next" href="{{link}}#content">
         {{/next}}
 
         <!-- MathJax -->
@@ -80,13 +78,13 @@
 
                 <!-- Mobile navigation buttons -->
                 {{#previous}}
-                    <a href="{{link}}" class="mobile-nav-chapters previous">
+                    <a rel="prev" href="{{link}}#content" class="mobile-nav-chapters previous">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 {{/previous}}
 
                 {{#next}}
-                    <a href="{{link}}" class="mobile-nav-chapters next">
+                    <a rel="next" href="{{link}}#content" class="mobile-nav-chapters next">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 {{/next}}
