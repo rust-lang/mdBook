@@ -1,54 +1,71 @@
 [package]
-name = "mdbook"
-version = "0.0.18"
 authors = ["Mathieu David <mathieudavid@mathieudavid.org>"]
+build = "build.rs"
 description = "create books from markdown files (like Gitbook)"
 documentation = "http://azerupi.github.io/mdBook/index.html"
-repository = "https://github.com/azerupi/mdBook"
+exclude = ["book-example/*", "src/theme/stylus"]
 keywords = ["book", "gitbook", "rustbook", "markdown"]
 license = "MPL-2.0"
+name = "mdbook"
 readme = "README.md"
-build = "build.rs"
-exclude = [
-    "book-example/*",
-    "src/theme/stylus",
-]
-
-[dependencies]
-clap = "2.19.2"
-handlebars = { version = "0.25.0", features = ["serde_type"] }
-serde = "0.9"
-serde_json = "0.9"
-pulldown-cmark = "0.0.8"
-log = "0.3"
-env_logger = "0.4.0"
-toml = { version = "0.3", features = ["serde"] }
-open = "1.1"
-regex = "0.2.1"
-
-# Watch feature
-notify = { version = "4.0", optional = true }
-time = { version = "0.1.34", optional = true }
-crossbeam = { version = "0.2.8", optional = true }
-
-# Serve feature
-iron = { version = "0.5", optional = true }
-staticfile = { version = "0.4", optional = true }
-ws = { version = "0.6", optional = true}
-
-# Tests
-[dev-dependencies]
-tempdir = "0.3.4"
-
-[features]
-default = ["output", "watch", "serve"]
-debug = []
-output = []
-regenerate-css = []
-watch = ["notify", "time", "crossbeam"]
-serve = ["iron", "staticfile", "ws"]
+repository = "https://github.com/azerupi/mdBook"
+version = "0.0.18"
 
 [[bin]]
 doc = false
 name = "mdbook"
 path = "src/bin/mdbook.rs"
+
+[dependencies]
+clap = "2.19.2"
+env_logger = "0.4.0"
+log = "0.3"
+open = "1.1"
+pulldown-cmark = "0.0.8"
+regex = "0.2.1"
+serde = "0.9"
+serde_json = "0.9"
+
+[dependencies.crossbeam]
+optional = true
+version = "0.2.8"
+
+[dependencies.handlebars]
+features = ["serde_type"]
+version = "0.25.0"
+
+[dependencies.iron]
+optional = true
+version = "0.5"
+
+[dependencies.notify]
+optional = true
+version = "4.0"
+
+[dependencies.staticfile]
+optional = true
+version = "0.4"
+
+[dependencies.time]
+optional = true
+version = "0.1.34"
+
+[dependencies.toml]
+features = ["serde"]
+version = "0.3"
+
+[dependencies.ws]
+optional = true
+version = "0.6"
+
+[dev-dependencies]
+tempdir = "0.3.4"
+dir-diff = "0.2.0"
+
+[features]
+debug = []
+default = ["output", "watch", "serve"]
+output = []
+regenerate-css = []
+serve = ["iron", "staticfile", "ws"]
+watch = ["notify", "time", "crossbeam"]
