@@ -72,7 +72,7 @@ There are multiple ways to install mdBook.
 
 ## Usage
 
-mdBook will primaraly be used as a command line tool, even though it exposes all its functionality as a Rust crate for integration in other projects.
+mdBook will primarily be used as a command line tool, even though it exposes all its functionality as a Rust crate for integration in other projects.
 
 Here are the main commands you will want to run. For a more exhaustive explanation, check out the [documentation](http://azerupi.github.io/mdBook/).
 
@@ -88,7 +88,7 @@ Here are the main commands you will want to run. For a more exhaustive explanati
         └── SUMMARY.md
     ```
 
-    `book` and `src` are both directories. `src` contains the markdown files that will be used to render the ouput to the `book` directory.
+    `book` and `src` are both directories. `src` contains the markdown files that will be used to render the output to the `book` directory.
 
     Please, take a look at the [**Documentation**](http://azerupi.github.io/mdBook/cli/init.html) for more information and some neat tricks.
 
@@ -102,7 +102,7 @@ Here are the main commands you will want to run. For a more exhaustive explanati
 
 - `mdbook serve`
 
-    Does the same thing as `mdbook watch` but additionally serves the book at `http://localhost:3000` (port is changeable) and reloads the browser when a change occures.
+    Does the same thing as `mdbook watch` but additionally serves the book at `http://localhost:3000` (port is changeable) and reloads the browser when a change occurs.
 
 ### As a library
 
