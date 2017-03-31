@@ -37,6 +37,20 @@ pub struct MDBook {
 impl MDBook {
     /// Create a new `MDBook` struct with root directory `root`
     ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # extern crate mdbook;
+    /// # use mdbook::MDBook;
+    /// # use std::path::Path;
+    /// # fn main() {
+    /// let book = MDBook::new(Path::new("root_dir"));
+    /// # }
+    /// ```
+    ///
+    /// In this example, `root_dir` will be the root directory of our book and is specified in function
+    /// of the current working directory by using a relative path instead of an absolute path.
+    ///
     /// Default directory paths:
     ///
     /// - source: `root/src`
@@ -286,18 +300,6 @@ impl MDBook {
     /// Parses the `book.json` file (if it exists) to extract the configuration parameters.
     /// The `book.json` file should be in the root directory of the book.
     /// The root directory is the one specified when creating a new `MDBook`
-    ///
-    /// ```no_run
-    /// # extern crate mdbook;
-    /// # use mdbook::MDBook;
-    /// # use std::path::Path;
-    /// # fn main() {
-    /// let mut book = MDBook::new(Path::new("root_dir"));
-    /// # }
-    /// ```
-    ///
-    /// In this example, `root_dir` will be the root directory of our book and is specified in function
-    /// of the current working directory by using a relative path instead of an absolute path.
 
     pub fn read_config(mut self) -> Self {
 
