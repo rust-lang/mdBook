@@ -208,6 +208,18 @@ function run_rust_code(code_block) {
         result_block = code_block.find(".result");
     }
 
+    let text = code_block.find(".language-rust").text();
+
+    let params = {
+        version: "stable",
+        optimize: "0",
+        code: text,
+    };
+
+    if(text.includes("#![feature")) {
+        params.version = "nightly";
+    }
+
     result_block.text("Running...");
 
     $.ajax({
@@ -216,7 +228,7 @@ function run_rust_code(code_block) {
         crossDomain: true,
         dataType: "json",
         contentType: "application/json",
-        data: JSON.stringify({version: "stable", optimize: "0", code: code_block.find(".language-rust").text() }),
+        data: JSON.stringify(params),
         success: function(response){
             result_block.text(response.result);
         }
