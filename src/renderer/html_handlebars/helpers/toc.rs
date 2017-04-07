@@ -33,7 +33,7 @@ impl HelperDef for RenderToc {
             }
 
             let level = if let Some(s) = item.get("section") {
-                s.matches(".").count()
+                s.len() / 2
             } else {
                 1
             };
