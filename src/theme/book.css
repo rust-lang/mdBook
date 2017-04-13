@@ -3,6 +3,10 @@ body {
   font-family: "Open Sans", sans-serif;
   color: #333;
 }
+code {
+  font-family: "Source Code Pro", "Menlo", "DejaVu Sans Mono", monospace;
+  font-size: 0.875em;
+}
 .left {
   float: left;
 }
