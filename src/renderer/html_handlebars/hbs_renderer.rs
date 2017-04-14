@@ -318,15 +318,37 @@ fn add_playpen_pre(html: String) -> String {
                 format!("<pre class=\"playpen\">{}</pre>", text)
             } else {
                 // we need to inject our own main
+                let (attrs, code) = partition_source(code);
                 format!("<pre class=\"playpen\"><code class=\"{}\"># #![allow(unused_variables)]
-# 
-#fn main() {{
+{}#fn main() {{
 {}
-#}}</code></pre>", classes, code)
+#}}</code></pre>", classes, attrs, code)
             }
         } else {
             // not language-rust, so no-op
             format!("{}", text)
         }
     }).into_owned()
+}
+
+fn partition_source(s: &str) -> (String, String) {
+    let mut after_header = false;
+    let mut before = String::new();
+    let mut after = String::new();
+
+    for line in s.lines() {
+        let trimline = line.trim();
+        let header = trimline.chars().all(|c| c.is_whitespace()) ||
+            trimline.starts_with("#![");
+        if !header || after_header {
+            after_header = true;
+            after.push_str(line);
+            after.push_str("\n");
+        } else {
+            before.push_str(line);
+            before.push_str("\n");
+        }
+    }
+
+    (before, after)
 }
