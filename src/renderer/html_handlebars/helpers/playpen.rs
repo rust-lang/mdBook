@@ -35,7 +35,7 @@ pub fn render_playpen(s: &str, path: &Path) -> String {
             continue;
         };
 
-        let replacement = String::new() + "<pre class=\"playpen\"><code class=\"language-rust\">" + &file_content +
+        let replacement = String::new() + "<pre><code class=\"language-rust\">" + &file_content +
                           "</code></pre>";
 
         replaced.push_str(&s[previous_end_index..playpen.start_index]);
