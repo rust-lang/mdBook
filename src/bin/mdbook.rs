@@ -63,6 +63,7 @@ fn main() {
                         .about("Build the book from the markdown files")
                         .arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
                         .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
+                        .arg_from_usage("--no-create 'Will not create non-existent files linked from SUMMARY.md'")
                         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'"))
                     .subcommand(SubCommand::with_name("watch")
                         .about("Watch the files for changes")
@@ -173,6 +174,10 @@ fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
         Some(dest_dir) => book.set_dest(Path::new(dest_dir)),
         None => book
     };
+
+    if args.is_present("no-create") {
+        book.create_missing = false;
+    }
 
     try!(book.build());
 
