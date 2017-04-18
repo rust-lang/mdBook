@@ -190,7 +190,9 @@ impl MDBook {
 
                 if !path.exists() {
                     if !self.create_missing {
-                        return Err(format!("'{}' referenced from SUMMARY.md does not exist.", path.to_string_lossy()).into());
+                        return Err(format!(
+                            "'{}' referenced from SUMMARY.md does not exist.",
+                            path.to_string_lossy()).into());
                     }
                     debug!("[*]: {:?} does not exist, trying to create file", path);
                     try!(::std::fs::create_dir_all(path.parent().unwrap()));
