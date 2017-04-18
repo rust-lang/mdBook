@@ -180,26 +180,25 @@ impl MDBook {
         debug!("[*]: constructing paths for missing files");
         for item in self.iter() {
             debug!("[*]: item: {:?}", item);
-            match *item {
+            let ch = match *item {
                 BookItem::Spacer => continue,
                 BookItem::Chapter(_, ref ch) |
-                BookItem::Affix(ref ch) => {
-                    if ch.path != PathBuf::new() {
-                        let path = self.src.join(&ch.path);
+                BookItem::Affix(ref ch) => ch,
+            };
+            if ch.path != PathBuf::new() {
+                let path = self.src.join(&ch.path);
 
-                        if !path.exists() {
-                            if !self.create_missing {
-                                return Err(format!("'{}' referenced from SUMMARY.md does not exist.", path.to_string_lossy()).into());
-                            }
-                            debug!("[*]: {:?} does not exist, trying to create file", path);
-                            try!(::std::fs::create_dir_all(path.parent().unwrap()));
-                            let mut f = try!(File::create(path));
-
-                            // debug!("[*]: Writing to {:?}", path);
-                            try!(writeln!(f, "# {}", ch.name));
-                        }
+                if !path.exists() {
+                    if !self.create_missing {
+                        return Err(format!("'{}' referenced from SUMMARY.md does not exist.", path.to_string_lossy()).into());
                     }
-                },
+                    debug!("[*]: {:?} does not exist, trying to create file", path);
+                    try!(::std::fs::create_dir_all(path.parent().unwrap()));
+                    let mut f = try!(File::create(path));
+
+                    // debug!("[*]: Writing to {:?}", path);
+                    try!(writeln!(f, "# {}", ch.name));
+                }
             }
         }
 
