@@ -185,7 +185,7 @@ impl MDBook {
                 BookItem::Chapter(_, ref ch) |
                 BookItem::Affix(ref ch) => ch,
             };
-            if ch.path != PathBuf::new() {
+            if ch.path.as_os_str().is_empty() {
                 let path = self.src.join(&ch.path);
 
                 if !path.exists() {
