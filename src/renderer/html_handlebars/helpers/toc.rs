@@ -15,8 +15,13 @@ impl HelperDef for RenderToc {
         // get value from context data
         // rc.get_path() is current json parent path, you should always use it like this
         // param is the key of value you want to display
-        let chapters = rc.context().navigate(rc.get_path(), &VecDeque::new(), "chapters").to_owned();
-        let current = rc.context().navigate(rc.get_path(), &VecDeque::new(), "path").to_string().replace("\"", "");
+        let chapters = rc.context()
+            .navigate(rc.get_path(), &VecDeque::new(), "chapters")?
+            .to_owned();
+        let current = rc.context()
+            .navigate(rc.get_path(), &VecDeque::new(), "path")?
+            .to_string()
+            .replace("\"", "");
         try!(rc.writer.write_all("<ul class=\"chapter\">".as_bytes()));
 
         // Decode json format
@@ -28,7 +33,8 @@ impl HelperDef for RenderToc {
 
             // Spacer
             if item.get("spacer").is_some() {
-                try!(rc.writer.write_all("<li class=\"spacer\"></li>".as_bytes()));
+                try!(rc.writer
+                         .write_all("<li class=\"spacer\"></li>".as_bytes()));
                 continue;
             }
 
@@ -66,7 +72,8 @@ impl HelperDef for RenderToc {
                     try!(rc.writer.write_all("<a href=\"".as_bytes()));
 
                     // Add link
-                    try!(rc.writer.write_all(Path::new(item.get("path")
+                    try!(rc.writer
+                             .write_all(Path::new(item.get("path")
                                                        .expect("Error: path should be Some(_)"))
                                              .with_extension("html")
                                              .to_str()
@@ -101,15 +108,13 @@ impl HelperDef for RenderToc {
                 // Render only inline code blocks
 
                 // filter all events that are not inline code blocks
-                let parser = Parser::new(name).filter(|event| {
-                    match *event {
-                        Event::Start(Tag::Code) |
-                        Event::End(Tag::Code) |
-                        Event::InlineHtml(_) |
-                        Event::Text(_) => true,
-                        _ => false,
-                    }
-                });
+                let parser = Parser::new(name).filter(|event| match *event {
+                                                          Event::Start(Tag::Code) |
+                                                          Event::End(Tag::Code) |
+                                                          Event::InlineHtml(_) |
+                                                          Event::Text(_) => true,
+                                                          _ => false,
+                                                      });
 
                 // render markdown to html
                 let mut markdown_parsed_name = String::with_capacity(name.len() * 3 / 2);

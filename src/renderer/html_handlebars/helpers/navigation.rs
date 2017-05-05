@@ -14,9 +14,12 @@ pub fn previous(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(
     // get value from context data
     // rc.get_path() is current json parent path, you should always use it like this
     // param is the key of value you want to display
-    let chapters = rc.context().navigate(rc.get_path(), &VecDeque::new(), "chapters").to_owned();
+    let chapters = rc.context()
+        .navigate(rc.get_path(), &VecDeque::new(), "chapters")?
+        .to_owned();
 
-    let current = rc.context().navigate(rc.get_path(), &VecDeque::new(), "path")
+    let current = rc.context()
+        .navigate(rc.get_path(), &VecDeque::new(), "path")?
         .to_string()
         .replace("\"", "");
 
@@ -115,9 +118,12 @@ pub fn next(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), R
     // get value from context data
     // rc.get_path() is current json parent path, you should always use it like this
     // param is the key of value you want to display
-    let chapters = rc.context().navigate(rc.get_path(), &VecDeque::new(), "chapters").to_owned();
+    let chapters = rc.context()
+        .navigate(rc.get_path(), &VecDeque::new(), "chapters")?
+        .to_owned();
 
-    let current = rc.context().navigate(rc.get_path(), &VecDeque::new(), "path")
+    let current = rc.context()
+        .navigate(rc.get_path(), &VecDeque::new(), "path")?
         .to_string()
         .replace("\"", "");
 
