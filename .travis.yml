@@ -57,15 +57,6 @@ matrix:
     - os: linux
       env: TARGET=x86_64-unknown-linux-musl CHANNEL=nightly
 
-  # Musl builds fail due to a bug in Rust (https://github.com/azerupi/mdBook/issues/158)
-  allow_failures:
-    - os: linux
-      env: TARGET=x86_64-unknown-linux-musl CHANNEL=stable
-    - os: linux
-      env: TARGET=x86_64-unknown-linux-musl CHANNEL=beta
-    - os: linux
-      env: TARGET=x86_64-unknown-linux-musl CHANNEL=nightly
-
 install:
   - export PATH="$PATH:$HOME/.cargo/bin"
   - bash ci/install.sh
