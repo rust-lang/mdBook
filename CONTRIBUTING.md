@@ -8,7 +8,7 @@ First of all, don't hesitate to ask questions! Use the [issue tracker](https://g
 
 ### Issues to work on
 
-Any issue is up for the grabbing, but if you are starting out, you might be interested in the [E-Easy issues](https://github.com/azerupi/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AE-Easy). Those are issues that are considered more straightforward for beginners to Rust or the codebase itself. These issues can be a good launching pad for more involved issues. Simple documentation improvements are also very highly appreciated!
+Any issue is up for the grabbing, but if you are starting out, you might be interested in the [E-Easy issues](https://github.com/azerupi/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AE-Easy). Those are issues that are considered more straightforward for beginners to Rust or the codebase itself. These issues can be a good launching pad for more involved issues. Easy tasks for a first time contribution include documentation improvements, new tests, examples, updating dependencies, etc. 
 
 If you come from a web development background, you might be interested in issues related to web technologies tagged [A-JavaScript](https://github.com/azerupi/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AA-JavaScript), [A-Style](https://github.com/azerupi/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AA-Style), [A-HTML](https://github.com/azerupi/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AA-HTML) or [A-Mobile](https://github.com/azerupi/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AA-Mobile).
 
