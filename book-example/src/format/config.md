@@ -24,5 +24,6 @@ parent directory of the source directory.
 - **src:** The path to the book's source files (chapters in Markdown, SUMMARY.md, etc.). Defaults to `root/src`.
 - **dest:** The path to the directory where you want your book to be rendered. Defaults to `root/book`.
 - **theme_path:** The path to a custom theme directory. Defaults to `root/theme`.
+- **google_analytics_id:** If included, google analytics will be added to each page and use the provided ID.
 
 ***note:*** *the supported configurable parameters are scarce at the moment, but more will be added in the future*
