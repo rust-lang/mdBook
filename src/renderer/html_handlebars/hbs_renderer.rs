@@ -193,6 +193,9 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
         data.insert("livereload".to_owned(), json!(livereload));
     }
 
+    // Add google analytics tag
+    data.insert("google_analytics".to_owned(), json!("INSERT_GA_ID_HERE"));
+
     let mut chapters = vec![];
 
     for item in book.iter() {
