@@ -36,6 +36,8 @@ pub struct MDBook {
     /// Should `mdbook build` create files referenced from SUMMARY.md if they
     /// don't exist
     pub create_missing: bool,
+
+    pub google_analytics: Option<String>,
 }
 
 impl MDBook {
@@ -84,6 +86,7 @@ impl MDBook {
 
             livereload: None,
             create_missing: true,
+            google_analytics: None,
         }
     }
 

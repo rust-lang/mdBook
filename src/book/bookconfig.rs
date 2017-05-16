@@ -21,6 +21,7 @@ pub struct BookConfig {
 
     pub indent_spaces: i32,
     multilingual: bool,
+    pub google_analytics: Option<String>,
 }
 
 impl BookConfig {
@@ -37,6 +38,7 @@ impl BookConfig {
 
             indent_spaces: 4, // indentation used for SUMMARY.md
             multilingual: false,
+            google_analytics: None,
         }
     }
 
@@ -152,6 +154,11 @@ impl BookConfig {
                 theme_path = self.get_root().join(&theme_path);
             }
             self.set_theme_path(&theme_path);
+        }
+
+        // Google analytics code
+        if let Some(id) = config.get("google_analytics_id") {
+            self.google_analytics = Some(id.to_string().replace("\"", ""));
         }
 
         self

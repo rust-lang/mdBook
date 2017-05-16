@@ -347,3 +347,25 @@ fn it_parses_json_arrays_to_toml() {
 
     assert_eq!(format!("{:#?}", result), expected);
 }
+
+#[test]
+fn it_fetches_google_analytics_from_toml() {
+    let text = r#"
+title = "mdBook Documentation"
+description = "Create book from markdown files. Like Gitbook but implemented in Rust"
+author = "Mathieu David"
+google_analytics_id = "123456"
+"#;
+
+    let mut config = BookConfig::new(Path::new("."));
+
+    config.parse_from_toml_string(&text.to_string());
+
+    let mut expected = BookConfig::new(Path::new("."));
+    expected.title = "mdBook Documentation".to_string();
+    expected.author = "Mathieu David".to_string();
+    expected.description = "Create book from markdown files. Like Gitbook but implemented in Rust".to_string();
+    expected.google_analytics = Some("123456".to_string());
+
+    assert_eq!(format!("{:#?}", config), format!("{:#?}", expected));
+}
