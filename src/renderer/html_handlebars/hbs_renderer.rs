@@ -319,7 +319,7 @@ fn add_playpen_pre(html: String) -> String {
         if classes.contains("language-rust") && !classes.contains("ignore") {
             // wrap the contents in an external pre block
 
-            if text.contains("fn main") {
+            if text.contains("fn main") || text.contains("quick_main!") {
                 format!("<pre class=\"playpen\">{}</pre>", text)
             } else {
                 // we need to inject our own main
