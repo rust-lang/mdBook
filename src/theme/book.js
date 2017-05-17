@@ -146,10 +146,10 @@ $( document ).ready(function() {
         for(var n = 0; n < lines.length; n++){
             if($.trim(lines[n])[0] == hiding_character){
                 if(first_non_hidden_line){
-                    lines[n] = "<span class=\"hidden\">" + "\n" + lines[n].replace(/(\s*)#/, "$1") + "</span>";
+                    lines[n] = "<span class=\"hidden\">" + "\n" + lines[n].replace(/(\s*)# ?/, "$1") + "</span>";
                 }
                 else {
-                    lines[n] = "<span class=\"hidden\">" + lines[n].replace(/(\s*)#/, "$1") + "\n"  +  "</span>";
+                    lines[n] = "<span class=\"hidden\">" + lines[n].replace(/(\s*)# ?/, "$1") + "\n"  +  "</span>";
                 }
                 lines_hidden = true;
             }
