@@ -69,9 +69,11 @@
 //!
 //! Make sure to take a look at it.
 
-extern crate serde;
 #[macro_use]
-extern crate serde_json;
+extern crate serde_derive;
+extern crate serde;
+#[macro_use] extern crate serde_json;
+
 extern crate handlebars;
 extern crate pulldown_cmark;
 extern crate regex;
@@ -79,6 +81,7 @@ extern crate regex;
 #[macro_use]
 extern crate log;
 pub mod book;
+pub mod config;
 mod parse;
 pub mod renderer;
 pub mod theme;
