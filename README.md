@@ -23,9 +23,6 @@
 
 mdBook is a utility to create modern online books from Markdown files.
 
-**This project is still evolving.**  
-See [#90](https://github.com/azerupi/mdBook/issues/90)
-
 
 ## What does it look like?
 
@@ -114,13 +111,11 @@ See the [Documentation](http://azerupi.github.io/mdBook/lib/lib.html) and the [A
 
 Contributions are highly appreciated and encouraged! Don't hesitate to participate to discussions in the issues, propose new features and ask for help.
 
-If you are not very confident with Rust, **I will be glad to mentor as best as I can if you decide to tackle an issue or new feature.**
+If you are just starting out with Rust, there are a series of issus that are tagged [E-Easy](https://github.com/azerupi/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AE-Easy) and **we will gladly mentor you** so that you can successfully go through the process of fixing a bug or adding a new feature! Let us know if you need any help.
 
-People who are not familiar with the code can look at [issues that are tagged **easy**](https://github.com/azerupi/mdBook/labels/Easy). A lot of issues are also related to web development, so people that are not comfortable with Rust can also participate! :wink:
-
-You can pick any issue you want to work on. Usually it's a good idea to ask if someone is already working on it and if not to claim the issue.
+For more info about contributing, check out our [contribution guide](CONTRIBUTING.md) who helps you go through the build and contribution process!
 
 
 ## License
 
-All the code is released under the ***Mozilla Public License v2.0***, for more information take a look at the [LICENSE](LICENSE) file.
+All the code in this repository is released under the ***Mozilla Public License v2.0***, for more information take a look at the [LICENSE](LICENSE) file.
