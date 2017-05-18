@@ -33,7 +33,7 @@ impl Renderer for HtmlHandlebars {
         let mut handlebars = Handlebars::new();
 
         // Load theme
-        let theme = theme::Theme::new(book.get_theme_path());
+        let theme = theme::Theme::new(book.get_theme_path().expect("If the HTML renderer is called, one would assume the HtmlConfig is set..."));
 
         // Register template
         debug!("[*]: Register handlebars template");
@@ -53,7 +53,7 @@ impl Renderer for HtmlHandlebars {
 
         // Check if dest directory exists
         debug!("[*]: Check if destination directory exists");
-        if fs::create_dir_all(book.get_dest()).is_err() {
+        if fs::create_dir_all(book.get_destination().expect("If the HTML renderer is called, one would assume the HtmlConfig is set...")).is_err() {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other,
                                                "Unexpected error when constructing destination path")));
         }
@@ -67,7 +67,7 @@ impl Renderer for HtmlHandlebars {
                 BookItem::Affix(ref ch) => {
                     if ch.path != PathBuf::new() {
 
-                        let path = book.get_src().join(&ch.path);
+                        let path = book.get_source().join(&ch.path);
 
                         debug!("[*]: Opening file: {:?}", path);
                         let mut f = File::open(&path)?;
@@ -116,8 +116,12 @@ impl Renderer for HtmlHandlebars {
                             debug!("[*]: index.html");
 
                             let mut content = String::new();
-                            let _source = File::open(book.get_dest().join(&ch.path.with_extension("html")))?
-                                .read_to_string(&mut content);
+
+                            let _source = File::open(
+                                book.get_destination()
+                                    .expect("If the HTML renderer is called, one would assume the HtmlConfig is set...")
+                                    .join(&ch.path.with_extension("html"))
+                            )?.read_to_string(&mut content);
 
                             // This could cause a problem when someone displays
                             // code containing <base href=...>
@@ -131,7 +135,10 @@ impl Renderer for HtmlHandlebars {
                             book.write_file("index.html", content.as_bytes())?;
 
                             info!("[*] Creating index.html from {:?} ✓",
-                                  book.get_dest().join(&ch.path.with_extension("html")));
+                                  book.get_destination()
+                                      .expect("If the HTML renderer is called, one would assume the HtmlConfig is set...")
+                                      .join(&ch.path.with_extension("html"))
+                            );
                             index = false;
                         }
                     }
@@ -181,7 +188,12 @@ impl Renderer for HtmlHandlebars {
         book.write_file("_FontAwesome/fonts/FontAwesome.ttf", theme::FONT_AWESOME_TTF)?;
 
         // Copy all remaining files
-        utils::fs::copy_files_except_ext(book.get_src(), book.get_dest(), true, &["md"])?;
+        utils::fs::copy_files_except_ext(
+            book.get_source(), 
+            book.get_destination()
+                .expect("If the HTML renderer is called, one would assume the HtmlConfig is set..."), true, &["md"]
+        )?;
+
 
         Ok(())
     }

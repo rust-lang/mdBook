@@ -29,10 +29,12 @@ impl HtmlConfig {
         }
     }
 
-    pub fn fill_from_tomlconfig<T: Into<PathBuf>>(&mut self, root: T, source: T, tomlconfig: TomlHtmlConfig) -> &mut Self {
+    pub fn fill_from_tomlconfig<T: Into<PathBuf>>(&mut self, root: T, tomlconfig: TomlHtmlConfig) -> &mut Self {
+        let root = root.into();
+
         if let Some(d) = tomlconfig.destination {
             if d.is_relative() {
-                self.destination = root.into().join(d);
+                self.destination = root.join(d);
             } else {
                 self.destination = d;
             }
@@ -40,7 +42,7 @@ impl HtmlConfig {
 
         if let Some(t) = tomlconfig.theme {
             if t.is_relative() {
-                self.theme = Some(source.into().join(t));
+                self.theme = Some(root.join(t));
             } else {
                 self.theme = Some(t);
             }
@@ -53,6 +55,17 @@ impl HtmlConfig {
         self
     }
 
+    pub fn set_destination<T: Into<PathBuf>>(&mut self, root: T, destination: T) -> &mut Self {
+        let d = destination.into();
+        if d.is_relative() {
+            self.destination = root.into().join(d);
+        } else {
+            self.destination = d;
+        }
+
+        self
+    }
+
     pub fn get_destination(&self) -> &Path {
         &self.destination
     }
@@ -60,5 +73,16 @@ impl HtmlConfig {
     // FIXME: How to get a `Option<&Path>` ?
     pub fn get_theme(&self) -> Option<&PathBuf> {
         self.theme.as_ref()
+    }
+
+    pub fn set_theme<T: Into<PathBuf>>(&mut self, root: T, theme: T) -> &mut Self {
+        let d = theme.into();
+        if d.is_relative() {
+            self.theme = Some(root.into().join(d));
+        } else {
+            self.theme = Some(d);
+        }
+
+        self
     }
 }

@@ -129,7 +129,7 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
         // Skip this if `--force` is present
         if !args.is_present("force") {
             // Print warning
-            print!("\nCopying the default theme to {:?}", book.get_src());
+            print!("\nCopying the default theme to {:?}", book.get_source());
             println!("could potentially overwrite files already present in that directory.");
             print!("\nAre you sure you want to continue? (y/n) ");
 
@@ -148,7 +148,9 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
     }
 
     // Because of `src/book/mdbook.rs#L37-L39`, `dest` will always start with `root`
-    let is_dest_inside_root = book.get_dest().starts_with(book.get_root());
+    let is_dest_inside_root = book.get_destination()
+                                  .map(|p| p.starts_with(book.get_root()))
+                                  .unwrap_or(false);
 
     if !args.is_present("force") && is_dest_inside_root {
         println!("\nDo you want a .gitignore to be created? (y/n)");
@@ -168,10 +170,10 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
 // Build command implementation
 fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book_dir = get_book_dir(args);
-    let book = MDBook::new(&book_dir).read_config();
+    let book = MDBook::new(&book_dir).read_config()?;
 
     let mut book = match args.value_of("dest-dir") {
-        Some(dest_dir) => book.set_dest(Path::new(dest_dir)),
+        Some(dest_dir) => book.with_destination(Path::new(dest_dir)),
         None => book,
     };
 
@@ -181,8 +183,10 @@ fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
 
     book.build()?;
 
-    if args.is_present("open") {
-        open(book.get_dest().join("index.html"));
+    if let Some(d) = book.get_destination() {
+        if args.is_present("open") {
+            open(d.join("index.html"));
+        }
     }
 
     Ok(())
@@ -193,16 +197,18 @@ fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
 #[cfg(feature = "watch")]
 fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book_dir = get_book_dir(args);
-    let book = MDBook::new(&book_dir).read_config();
+    let book = MDBook::new(&book_dir).read_config()?;
 
     let mut book = match args.value_of("dest-dir") {
-        Some(dest_dir) => book.set_dest(Path::new(dest_dir)),
+        Some(dest_dir) => book.with_destination(Path::new(dest_dir)),
         None => book,
     };
 
     if args.is_present("open") {
         book.build()?;
-        open(book.get_dest().join("index.html"));
+        if let Some(d) = book.get_destination() {
+            open(d.join("index.html"));
+        }
     }
 
     trigger_on_change(&mut book, |path, book| {
@@ -223,12 +229,17 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
     const RELOAD_COMMAND: &'static str = "reload";
 
     let book_dir = get_book_dir(args);
-    let book = MDBook::new(&book_dir).read_config();
+    let book = MDBook::new(&book_dir).read_config()?;
 
     let mut book = match args.value_of("dest-dir") {
-        Some(dest_dir) => book.set_dest(Path::new(dest_dir)),
+        Some(dest_dir) => book.with_destination(Path::new(dest_dir)),
         None => book,
     };
+
+    if let None = book.get_destination() {
+        println!("The HTML renderer is not set up, impossible to serve the files.");
+        std::process::exit(2);
+    }
 
     let port = args.value_of("port").unwrap_or("3000");
     let ws_port = args.value_of("websocket-port").unwrap_or("3001");
@@ -260,7 +271,7 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
 
     book.build()?;
 
-    let staticfile = staticfile::Static::new(book.get_dest());
+    let staticfile = staticfile::Static::new(book.get_destination().expect("destination is present, checked before"));
     let iron = iron::Iron::new(staticfile);
     let _iron = iron.http(&*address).unwrap();
 
@@ -292,7 +303,7 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
 
 fn test(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::new(&book_dir).read_config();
+    let mut book = MDBook::new(&book_dir).read_config()?;
 
     book.test()?;
 
@@ -341,8 +352,8 @@ fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
     };
 
     // Add the source directory to the watcher
-    if let Err(e) = watcher.watch(book.get_src(), Recursive) {
-        println!("Error while watching {:?}:\n    {:?}", book.get_src(), e);
+    if let Err(e) = watcher.watch(book.get_source(), Recursive) {
+        println!("Error while watching {:?}:\n    {:?}", book.get_source(), e);
         ::std::process::exit(0);
     };
 

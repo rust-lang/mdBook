@@ -102,12 +102,43 @@ impl BookConfig {
         }
 
         if let Some(tomlhtmlconfig) = tomlconfig.output.and_then(|o| o.html) {
-            let source = config.get_source().to_owned();
             let mut htmlconfig = config.get_mut_html_config().expect("We just created a new config and it creates a default HtmlConfig");
-            htmlconfig.fill_from_tomlconfig(&root, &source, tomlhtmlconfig);
+            htmlconfig.fill_from_tomlconfig(&root, tomlhtmlconfig);
         }
         
         config
+    }
+
+    pub fn fill_from_tomlconfig(&mut self, tomlconfig: TomlConfig) -> &mut Self {
+
+        if let Some(s) = tomlconfig.source {
+            self.set_source(s);
+        }
+
+        if let Some(t) = tomlconfig.title {
+            self.set_title(t);
+        }
+
+        if let Some(d) = tomlconfig.description {
+            self.set_description(d);
+        }
+
+        if let Some(a) = tomlconfig.authors {
+            self.set_authors(a);
+        }
+
+        if let Some(a) = tomlconfig.author {
+            self.set_authors(vec![a]);
+        }
+
+        if let Some(tomlhtmlconfig) = tomlconfig.output.and_then(|o| o.html) {
+            let root = self.root.clone();
+            if let Some(htmlconfig) = self.get_mut_html_config() {
+                htmlconfig.fill_from_tomlconfig(root, tomlhtmlconfig);
+            }
+        }
+        
+        self
     }
 
     pub fn set_root<T: Into<PathBuf>>(&mut self, root: T) -> &mut Self {
