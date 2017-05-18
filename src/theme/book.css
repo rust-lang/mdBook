@@ -40,6 +40,9 @@ table td {
 table thead td {
   font-weight: 700;
 }
+details > summary {
+  outline: none;
+}
 .sidebar {
   position: absolute;
   left: 0;

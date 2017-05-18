@@ -24,7 +24,9 @@ impl HelperDef for RenderToc {
 
         let mut current_level = 1;
 
-        for item in decoded {
+        let mut peekable = decoded.into_iter().peekable();
+        while let Some(item) = peekable.next() {
+            let next_item = peekable.peek();
 
             // Spacer
             if item.get("spacer").is_some() {
@@ -32,15 +34,13 @@ impl HelperDef for RenderToc {
                 continue;
             }
 
-            let level = if let Some(s) = item.get("section") {
-                s.matches(".").count()
-            } else {
-                1
-            };
+            let level = item.get("section").map(|s| s.matches(".").count()).unwrap_or(1);
+            let next_level = next_item.map(|i| {
+                i.get("section").map(|s| s.matches(".").count()).unwrap_or(1)
+            }).unwrap_or(level);
 
             if level > current_level {
                 while level > current_level {
-                    try!(rc.writer.write_all("<li>".as_bytes()));
                     try!(rc.writer.write_all("<ul class=\"section\">".as_bytes()));
                     current_level += 1;
                 }
@@ -48,6 +48,7 @@ impl HelperDef for RenderToc {
             } else if level < current_level {
                 while level < current_level {
                     try!(rc.writer.write_all("</ul>".as_bytes()));
+                    try!(rc.writer.write_all("</details>".as_bytes()));
                     try!(rc.writer.write_all("</li>".as_bytes()));
                     current_level -= 1;
                 }
@@ -58,6 +59,11 @@ impl HelperDef for RenderToc {
                     try!(rc.writer.write_all(" class=\"affix\"".as_bytes()));
                 }
                 try!(rc.writer.write_all(">".as_bytes()));
+            }
+
+            if level < next_level {
+                try!(rc.writer.write_all("<details open>".as_bytes()));
+                try!(rc.writer.write_all("<summary>".as_bytes()));
             }
 
             // Link
@@ -122,12 +128,15 @@ impl HelperDef for RenderToc {
             if path_exists {
                 try!(rc.writer.write_all("</a>".as_bytes()));
             }
-
-            try!(rc.writer.write_all("</li>".as_bytes()));
-
+            if level < next_level {
+                try!(rc.writer.write_all("</summary>".as_bytes()));
+            } else {
+                try!(rc.writer.write_all("</li>".as_bytes()));
+            }
         }
         while current_level > 1 {
             try!(rc.writer.write_all("</ul>".as_bytes()));
+            try!(rc.writer.write_all("</details>".as_bytes()));
             try!(rc.writer.write_all("</li>".as_bytes()));
             current_level -= 1;
         }
