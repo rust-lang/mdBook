@@ -18,6 +18,7 @@ pub struct TomlOutputConfig {
     pub html: Option<TomlHtmlConfig>,
 }
 
+#[serde(rename_all = "kebab-case")]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct TomlHtmlConfig {
     pub destination: Option<PathBuf>,

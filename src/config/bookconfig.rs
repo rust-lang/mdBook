@@ -2,6 +2,7 @@ use std::path::{PathBuf, Path};
 
 use super::HtmlConfig;
 use super::tomlconfig::TomlConfig;
+use super::jsonconfig::JsonConfig;
 
 /// Configuration struct containing all the configuration options available in mdBook.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -80,32 +81,7 @@ impl BookConfig {
     pub fn from_tomlconfig<T: Into<PathBuf>>(root: T, tomlconfig: TomlConfig) -> Self {
         let root = root.into();
         let mut config = BookConfig::new(&root);
-
-        if let Some(s) = tomlconfig.source {
-            config.set_source(s);
-        }
-
-        if let Some(t) = tomlconfig.title {
-            config.set_title(t);
-        }
-
-        if let Some(d) = tomlconfig.description {
-            config.set_description(d);
-        }
-
-        if let Some(a) = tomlconfig.authors {
-            config.set_authors(a);
-        }
-
-        if let Some(a) = tomlconfig.author {
-            config.set_authors(vec![a]);
-        }
-
-        if let Some(tomlhtmlconfig) = tomlconfig.output.and_then(|o| o.html) {
-            let mut htmlconfig = config.get_mut_html_config().expect("We just created a new config and it creates a default HtmlConfig");
-            htmlconfig.fill_from_tomlconfig(&root, tomlhtmlconfig);
-        }
-        
+        config.fill_from_tomlconfig(tomlconfig);
         config
     }
 
@@ -135,6 +111,52 @@ impl BookConfig {
             let root = self.root.clone();
             if let Some(htmlconfig) = self.get_mut_html_config() {
                 htmlconfig.fill_from_tomlconfig(root, tomlhtmlconfig);
+            }
+        }
+        
+        self
+    }
+
+    /// The JSON configuration file is **deprecated** and should not be used anymore.
+    /// Please, migrate to the TOML configuration file.
+    pub fn from_jsonconfig<T: Into<PathBuf>>(root: T, jsonconfig: JsonConfig) -> Self {
+        let root = root.into();
+        let mut config = BookConfig::new(&root);
+        config.fill_from_jsonconfig(jsonconfig);
+        config
+    }
+
+    /// The JSON configuration file is **deprecated** and should not be used anymore.
+    /// Please, migrate to the TOML configuration file.
+    pub fn fill_from_jsonconfig(&mut self, jsonconfig: JsonConfig) -> &mut Self {
+
+        if let Some(s) = jsonconfig.src {
+            self.set_source(s);
+        }
+
+        if let Some(t) = jsonconfig.title {
+            self.set_title(t);
+        }
+
+        if let Some(d) = jsonconfig.description {
+            self.set_description(d);
+        }
+
+        if let Some(a) = jsonconfig.author {
+            self.set_authors(vec![a]);
+        }
+
+        if let Some(d) = jsonconfig.dest {
+            let root = self.get_root().to_owned();
+            if let Some(htmlconfig) = self.get_mut_html_config() {
+                htmlconfig.set_destination(&root, &d);
+            }
+        }
+
+        if let Some(d) = jsonconfig.theme_path {
+            let root = self.get_root().to_owned();
+            if let Some(htmlconfig) = self.get_mut_html_config() {
+                htmlconfig.set_theme(&root, &d);
             }
         }
         

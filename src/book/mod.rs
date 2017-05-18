@@ -1,7 +1,4 @@
 pub mod bookitem;
-pub mod bookconfig;
-
-pub mod bookconfig_test;
 
 pub use self::bookitem::{BookItem, BookItems};
 
@@ -18,6 +15,7 @@ use renderer::{Renderer, HtmlHandlebars};
 
 use config::{BookConfig, HtmlConfig};
 use config::tomlconfig::TomlConfig;
+use config::jsonconfig::JsonConfig;
 
 
 pub struct MDBook {
@@ -45,7 +43,7 @@ impl MDBook {
     /// # use mdbook::MDBook;
     /// # use std::path::Path;
     /// # fn main() {
-    /// let book = MDBook::new("root_dir");
+    /// let book = MDBook::new(Path::new("root_dir"));
     /// # }
     /// ```
     ///
@@ -331,7 +329,13 @@ impl MDBook {
             let parsed_config = TomlConfig::from_toml(&content)?;
             self.config.fill_from_tomlconfig(parsed_config);
         } else if json.exists() {
-            unimplemented!();
+            warn!("The JSON configuration file is deprecated, please use the TOML configuration.");
+            let mut file = File::open(json)?;
+            let mut content = String::new();
+            file.read_to_string(&mut content)?;
+
+            let parsed_config = JsonConfig::from_json(&content)?;
+            self.config.fill_from_jsonconfig(parsed_config);
         }
 
         Ok(self)

@@ -85,4 +85,8 @@ impl HtmlConfig {
 
         self
     }
+
+    pub fn get_google_analytics_id(&self) -> Option<String> {
+        self.google_analytics.clone()
+    }
 }

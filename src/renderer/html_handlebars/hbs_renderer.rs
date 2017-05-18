@@ -33,7 +33,7 @@ impl Renderer for HtmlHandlebars {
         let mut handlebars = Handlebars::new();
 
         // Load theme
-        let theme = theme::Theme::new(book.get_theme_path().expect("If the HTML renderer is called, one would assume the HtmlConfig is set..."));
+        let theme = theme::Theme::new(book.get_theme_path());
 
         // Register template
         debug!("[*]: Register handlebars template");
@@ -53,7 +53,7 @@ impl Renderer for HtmlHandlebars {
 
         // Check if dest directory exists
         debug!("[*]: Check if destination directory exists");
-        if fs::create_dir_all(book.get_destination().expect("If the HTML renderer is called, one would assume the HtmlConfig is set...")).is_err() {
+        if fs::create_dir_all(book.get_destination().expect("If the HTML renderer is called, one would assume the HtmlConfig is set... (2)")).is_err() {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other,
                                                "Unexpected error when constructing destination path")));
         }
@@ -119,7 +119,7 @@ impl Renderer for HtmlHandlebars {
 
                             let _source = File::open(
                                 book.get_destination()
-                                    .expect("If the HTML renderer is called, one would assume the HtmlConfig is set...")
+                                    .expect("If the HTML renderer is called, one would assume the HtmlConfig is set... (3)")
                                     .join(&ch.path.with_extension("html"))
                             )?.read_to_string(&mut content);
 
@@ -136,7 +136,7 @@ impl Renderer for HtmlHandlebars {
 
                             info!("[*] Creating index.html from {:?} ✓",
                                   book.get_destination()
-                                      .expect("If the HTML renderer is called, one would assume the HtmlConfig is set...")
+                                      .expect("If the HTML renderer is called, one would assume the HtmlConfig is set... (4)")
                                       .join(&ch.path.with_extension("html"))
                             );
                             index = false;
@@ -191,9 +191,8 @@ impl Renderer for HtmlHandlebars {
         utils::fs::copy_files_except_ext(
             book.get_source(), 
             book.get_destination()
-                .expect("If the HTML renderer is called, one would assume the HtmlConfig is set..."), true, &["md"]
+                .expect("If the HTML renderer is called, one would assume the HtmlConfig is set... (5)"), true, &["md"]
         )?;
-
 
         Ok(())
     }

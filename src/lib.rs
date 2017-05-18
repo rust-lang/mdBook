@@ -24,12 +24,13 @@
 //! use std::path::Path;
 //!
 //! fn main() {
-//!     let mut book =  MDBook::new(Path::new("my-book"))   // Path to root
-//!                         .set_src(Path::new("src"))      // Path from root to source directory
-//!                         .set_dest(Path::new("book"))    // Path from root to output directory
-//!                         .read_config();                 // Parse book.json file for configuration
+//!     let mut book =  MDBook::new(Path::new("my-book"))           // Path to root
+//!                         .with_source(Path::new("src"))          // Path from root to source directory
+//!                         .with_destination(Path::new("book"))    // Path from root to output directory
+//!                         .read_config()                          // Parse book.json file for configuration
+//!                         .expect("I don't handle the error for the configuration file, but you should!");
 //!
-//!     book.build().unwrap();                              // Render the book
+//!     book.build().unwrap();                                      // Render the book
 //! }
 //! ```
 //!

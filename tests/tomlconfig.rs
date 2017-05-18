@@ -84,5 +84,19 @@ fn from_toml_output_html_theme() {
 
     let htmlconfig = config.get_html_config().expect("There should be an HtmlConfig");
 
-    assert_eq!(htmlconfig.get_theme().expect("the theme key was provided"), &PathBuf::from("root/src/theme"));
+    assert_eq!(htmlconfig.get_theme().expect("the theme key was provided"), &PathBuf::from("root/theme"));
+}
+
+// Tests that the `output.html.google-analytics` key is correcly parsed in the TOML config
+#[test]
+fn from_toml_output_html_google_analytics() {
+    let toml = r#"[output.html]
+    google-analytics = "123456""#;
+
+    let parsed = TomlConfig::from_toml(&toml).expect("This should parse");
+    let config = BookConfig::from_tomlconfig("root", parsed);
+
+    let htmlconfig = config.get_html_config().expect("There should be an HtmlConfig");
+
+    assert_eq!(htmlconfig.get_google_analytics_id().expect("the google-analytics key was provided"), String::from("123456"));
 }
