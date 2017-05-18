@@ -211,7 +211,7 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
     }
 
     // Add google analytics tag
-    if let Some(ref ga) = book.google_analytics {
+    if let Some(ref ga) = book.get_google_analytics_id() {
         data.insert("google_analytics".to_owned(), json!(ga));
     }
 

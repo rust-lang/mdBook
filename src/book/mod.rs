@@ -29,8 +29,6 @@ pub struct MDBook {
     /// Should `mdbook build` create files referenced from SUMMARY.md if they
     /// don't exist
     pub create_missing: bool,
-
-    pub google_analytics: Option<String>,
 }
 
 impl MDBook {
@@ -75,7 +73,6 @@ impl MDBook {
 
             livereload: None,
             create_missing: true,
-            google_analytics: None,
         }
     }
 
@@ -487,6 +484,14 @@ impl MDBook {
     pub fn get_theme_path(&self) -> Option<&PathBuf> {
         if let Some(htmlconfig) = self.config.get_html_config() {
             return htmlconfig.get_theme();
+        }
+
+        None
+    }
+
+    pub fn get_google_analytics_id(&self) -> Option<String> {
+        if let Some(htmlconfig) = self.config.get_html_config() {
+            return htmlconfig.get_google_analytics_id();
         }
 
         None
