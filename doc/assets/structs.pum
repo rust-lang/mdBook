@@ -1,0 +1,142 @@
+@startuml
+
+class book::MDBook {
+  root
+  dest
+  src
+  theme_path
+  title
+  author
+  description
+  content : Vec<BookItem>
+  books : HashMap<&'a str, Book>
+  renderer
+  livereload
+}
+
+class book::book.Book {
+  metadata
+  frontmatter
+  mainmatter
+  backmatter
+
+  new(title)
+}
+
+class book::bookconfig.BookConfig {
+  root
+  dest
+  src
+  theme_path
+  title
+  author
+  description
+  indent_spaces
+  multilingual
+
+  new(root)
+}
+
+class book::chapter.Chapter {
+  title
+  file
+  author
+  description
+  index
+  class
+  sub_chapters
+
+  new(title, file)
+}
+
+namespace book::bookitem {
+
+enum BookItem {
+  Chapter "String, Chapter"
+  Affix "Chapter"
+  Spacer
+}
+
+class BookItems {
+  items : &'a [BookItem]
+  current_index
+  stack : Vec<"&'a [BookItem], usize">
+}
+
+class Chapter {
+  name
+  path
+  sub_items
+
+  new(name, path)
+}
+
+}
+
+namespace book::metadata {
+
+class BookMetadata {
+  title
+  subtitle
+  description
+  publisher
+  language
+  authors
+  translators
+  number_format
+  section_names
+  new(title)
+}
+
+class Author {
+  name
+  email
+  new(name)
+}
+
+class Language {
+  name
+  code
+}
+
+class Publisher {
+  name
+  url
+  logo_src
+}
+
+enum NumberFormat {
+  Arabic
+  Roman
+  Word
+}
+
+}
+
+class renderer::html_handlebars::HtmlHandlebars {
+  new()
+  render(book: MDBook)
+}
+
+class theme::Theme {
+  index
+  css
+  favicon
+  js
+  highlight_css
+  tomorrow_night_css
+  highlight_js
+  jquery
+  new(src)
+}
+
+book::book-[hidden]->book::bookconfig
+book::book-[hidden]->book::chapter
+book::book-[hidden]->book::bookitem
+book::book-[hidden]->book::metadata
+
+book::bookitem.BookItems-[hidden]->book::bookitem.BookItem
+
+renderer::html_handlebars::HtmlHandlebars-[hidden]->theme::Theme
+
+@enduml
