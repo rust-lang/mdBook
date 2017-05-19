@@ -21,12 +21,12 @@
 
 use std::env;
 
-pub static JQUERY_URL: &str = &"https://code.jquery.com/jquery-2.1.4.min.js";
-pub static MATHJAX_URL: &str = &"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
-pub static HIGHLIGHT_URL: &str = &"highlight.js";
-pub static AWESOME_URL: &str = &"https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css";
-pub static OPEN_SANS_URL: &str = &"https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800";
-pub static SOURCE_CODE_PRO_URL: &str = &"https://fonts.googleapis.com/css?family=Source+Code+Pro:500";
+pub static JQUERY_URL: &'static str = &"https://code.jquery.com/jquery-2.1.4.min.js";
+pub static MATHJAX_URL: &'static str = &"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+pub static HIGHLIGHT_URL: &'static str = &"highlight.js";
+pub static AWESOME_URL: &'static str = &"https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css";
+pub static OPEN_SANS_URL: &'static str = &"https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800";
+pub static SOURCE_CODE_PRO_URL: &'static str = &"https://fonts.googleapis.com/css?family=Source+Code+Pro:500";
 
 /// A third-party resource
 pub trait Resource {
