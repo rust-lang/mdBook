@@ -10,27 +10,40 @@
         <base href="{{ path_to_root }}">
 
         <link rel="stylesheet" href="book.css">
-        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
-        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+        {{#if open_sans_render_url}}
+        <link href="{{open_sans_url}}" rel="stylesheet" type="text/css">
+        {{/if}}
+        {{#if source_code_pro_render_url}}
+        <link href="{{source_code_pro_url}}" rel="stylesheet" type="text/css">
+        {{/if}}
 
         <link rel="shortcut icon" href="{{ favicon }}">
 
+        {{#if awesome_render_url}}
         <!-- Font Awesome -->
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="{{awesome_url}}">
+        {{/if}}
 
         <link rel="stylesheet" href="highlight.css">
         <link rel="stylesheet" href="tomorrow-night.css">
 
+        {{#if mathjax_render_url}}
         <!-- MathJax -->
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="{{mathjax_url}}"></script>
+        {{/if}}
 
-        <!-- Fetch JQuery from CDN but have a local fallback -->
-        <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        {{#if jquery_render_url }}
+        <!-- Fetch JQuery -->
+        <script src="{{jquery_url}}"></script>
+        {{/if}}
+        {{#if jquery_render_embed }}
+	<!-- local fallback for jquery -->
         <script>
             if (typeof jQuery == 'undefined') {
                 document.write(unescape("%3Cscript src='jquery.js'%3E%3C/script%3E"));
             }
         </script>
+        {{/if}}
     </head>
     <body class="light">
         <!-- Set the theme before any content is loaded, prevents flash -->
@@ -101,12 +114,14 @@
         </div>
 
 
+        {{#if awesome_render_embed}}
         <!-- Local fallback for Font Awesome -->
         <script>
             if ($(".fa").css("font-family") !== "FontAwesome") {
                 $('<link rel="stylesheet" type="text/css" href="_FontAwesome/css/font-awesome.css">').prependTo('head');
             }
         </script>
+        {{/if}}
 
         <!-- Livereload script (if served using the cli tool) -->
         {{{livereload}}}
@@ -124,7 +139,9 @@
       {{/if}}
 
 
-        <script src="highlight.js"></script>
+        {{#if highlight_render_url}}
+        <script src="{{highlight_url}}"></script>
+        {{/if}}
         <script src="book.js"></script>
     </body>
 </html>
