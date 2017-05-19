@@ -20,7 +20,8 @@ fn main() {
                 .arg(format!("{}", theme_dir.to_str().unwrap()))
                 .arg("--use")
                 .arg("nib")
-                .status().unwrap()
+                .status()
+                .unwrap()
                 .success() {
             panic!("Stylus encoutered an error");
         }

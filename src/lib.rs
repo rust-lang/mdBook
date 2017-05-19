@@ -76,7 +76,8 @@ extern crate handlebars;
 extern crate pulldown_cmark;
 extern crate regex;
 
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
 pub mod book;
 mod parse;
 pub mod renderer;

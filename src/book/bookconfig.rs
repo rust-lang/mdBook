@@ -53,7 +53,7 @@ impl BookConfig {
                 Err(_) => {
                     error!("[*]: Failed to open {:?}", &path);
                     exit(2);
-                }
+                },
             };
             if f.read_to_string(&mut data).is_err() {
                 error!("[*]: Failed to read {:?}", &path);
@@ -85,11 +85,11 @@ impl BookConfig {
 
     pub fn parse_from_toml_string(&mut self, data: &str) -> &mut Self {
         let config = match toml::from_str(data) {
-            Ok(x) => {x},
+            Ok(x) => x,
             Err(e) => {
                 error!("[*]: Toml parse errors in book.toml: {:?}", e);
                 exit(2);
-            }
+            },
         };
 
         self.parse_from_btreemap(&config);
@@ -97,7 +97,8 @@ impl BookConfig {
         self
     }
 
-    /// Parses the string to JSON and converts it to BTreeMap<String, toml::Value>.
+    /// Parses the string to JSON and converts it
+    /// to BTreeMap<String, toml::Value>.
     pub fn parse_from_json_string(&mut self, data: &str) -> &mut Self {
 
         let c: serde_json::Value = match serde_json::from_str(data) {
@@ -105,7 +106,7 @@ impl BookConfig {
             Err(e) => {
                 error!("[*]: JSON parse errors in book.json: {:?}", e);
                 exit(2);
-            }
+            },
         };
 
         let config = json_object_to_btreemap(c.as_object().unwrap());
@@ -205,10 +206,7 @@ pub fn json_object_to_btreemap(json: &serde_json::Map<String, serde_json::Value>
     let mut config: BTreeMap<String, toml::Value> = BTreeMap::new();
 
     for (key, value) in json.iter() {
-        config.insert(
-            String::from_str(key).unwrap(),
-            json_value_to_toml_value(value.to_owned())
-        );
+        config.insert(String::from_str(key).unwrap(), json_value_to_toml_value(value.to_owned()));
     }
 
     config
@@ -223,10 +221,10 @@ pub fn json_value_to_toml_value(json: serde_json::Value) -> toml::Value {
         serde_json::Value::Number(x) => toml::Value::Float(x.as_f64().unwrap()),
         serde_json::Value::String(x) => toml::Value::String(x),
         serde_json::Value::Array(x) => {
-            toml::Value::Array(x.iter().map(|v| json_value_to_toml_value(v.to_owned())).collect())
+            toml::Value::Array(x.iter()
+                                   .map(|v| json_value_to_toml_value(v.to_owned()))
+                                   .collect())
         },
-        serde_json::Value::Object(x) => {
-            toml::Value::Table(json_object_to_btreemap(&x))
-        },
+        serde_json::Value::Object(x) => toml::Value::Table(json_object_to_btreemap(&x)),
     }
 }
