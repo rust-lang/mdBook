@@ -37,10 +37,12 @@ impl Chapter {
 
 
 impl Serialize for Chapter {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
-        let mut struct_ = try!(serializer.serialize_struct("Chapter", 2));
-        try!(struct_.serialize_field("name", &self.name));
-        try!(struct_.serialize_field("path", &self.path));
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let mut struct_ = serializer.serialize_struct("Chapter", 2)?;
+        struct_.serialize_field("name", &self.name)?;
+        struct_.serialize_field("path", &self.path)?;
         struct_.end()
     }
 }
@@ -66,7 +68,8 @@ impl<'a> Iterator for BookItems<'a> {
                 let cur = &self.items[self.current_index];
 
                 match *cur {
-                    BookItem::Chapter(_, ref ch) | BookItem::Affix(ref ch) => {
+                    BookItem::Chapter(_, ref ch) |
+                    BookItem::Affix(ref ch) => {
                         self.stack.push((self.items, self.current_index));
                         self.items = &ch.sub_items[..];
                         self.current_index = 0;

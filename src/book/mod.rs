@@ -54,8 +54,10 @@ impl MDBook {
     /// # }
     /// ```
     ///
-    /// In this example, `root_dir` will be the root directory of our book and is specified in function
-    /// of the current working directory by using a relative path instead of an absolute path.
+    /// In this example, `root_dir` will be the root directory of our book
+    /// and is specified in function of the current working directory
+    /// by using a relative path instead of an
+    /// absolute path.
     ///
     /// Default directory paths:
     ///
@@ -63,7 +65,8 @@ impl MDBook {
     /// - output: `root/book`
     /// - theme: `root/theme`
     ///
-    /// They can both be changed by using [`set_src()`](#method.set_src) and [`set_dest()`](#method.set_dest)
+    /// They can both be changed by using [`set_src()`](#method.set_src) and
+    /// [`set_dest()`](#method.set_dest)
 
     pub fn new(root: &Path) -> MDBook {
 
@@ -90,7 +93,8 @@ impl MDBook {
         }
     }
 
-    /// Returns a flat depth-first iterator over the elements of the book, it returns an [BookItem enum](bookitem.html):
+    /// Returns a flat depth-first iterator over the elements of the book,
+    /// it returns an [BookItem enum](bookitem.html):
     /// `(section: String, bookitem: &BookItem)`
     ///
     /// ```no_run
@@ -126,7 +130,8 @@ impl MDBook {
         }
     }
 
-    /// `init()` creates some boilerplate files and directories to get you started with your book.
+    /// `init()` creates some boilerplate files and directories
+    /// to get you started with your book.
     ///
     /// ```text
     /// book-test/
@@ -136,7 +141,8 @@ impl MDBook {
     ///     └── SUMMARY.md
     /// ```
     ///
-    /// It uses the paths given as source and output directories and adds a `SUMMARY.md` and a
+    /// It uses the paths given as source and output directories
+    /// and adds a `SUMMARY.md` and a
     /// `chapter_1.md` to the source directory.
 
     pub fn init(&mut self) -> Result<(), Box<Error>> {
@@ -152,12 +158,12 @@ impl MDBook {
 
             if !self.dest.exists() {
                 debug!("[*]: {:?} does not exist, trying to create directory", self.dest);
-                try!(fs::create_dir_all(&self.dest));
+                fs::create_dir_all(&self.dest)?;
             }
 
             if !self.src.exists() {
                 debug!("[*]: {:?} does not exist, trying to create directory", self.src);
-                try!(fs::create_dir_all(&self.src));
+                fs::create_dir_all(&self.src)?;
             }
 
             let summary = self.src.join("SUMMARY.md");
@@ -167,18 +173,18 @@ impl MDBook {
                 // Summary does not exist, create it
 
                 debug!("[*]: {:?} does not exist, trying to create SUMMARY.md", self.src.join("SUMMARY.md"));
-                let mut f = try!(File::create(&self.src.join("SUMMARY.md")));
+                let mut f = File::create(&self.src.join("SUMMARY.md"))?;
 
                 debug!("[*]: Writing to SUMMARY.md");
 
-                try!(writeln!(f, "# Summary"));
-                try!(writeln!(f, ""));
-                try!(writeln!(f, "- [Chapter 1](./chapter_1.md)"));
+                writeln!(f, "# Summary")?;
+                writeln!(f, "")?;
+                writeln!(f, "- [Chapter 1](./chapter_1.md)")?;
             }
         }
 
         // parse SUMMARY.md, and create the missing item related file
-        try!(self.parse_summary());
+        self.parse_summary()?;
 
         debug!("[*]: constructing paths for missing files");
         for item in self.iter() {
@@ -193,16 +199,15 @@ impl MDBook {
 
                 if !path.exists() {
                     if !self.create_missing {
-                        return Err(format!(
-                            "'{}' referenced from SUMMARY.md does not exist.",
-                            path.to_string_lossy()).into());
+                        return Err(format!("'{}' referenced from SUMMARY.md does not exist.", path.to_string_lossy())
+                                       .into());
                     }
                     debug!("[*]: {:?} does not exist, trying to create file", path);
-                    try!(::std::fs::create_dir_all(path.parent().unwrap()));
-                    let mut f = try!(File::create(path));
+                    ::std::fs::create_dir_all(path.parent().unwrap())?;
+                    let mut f = File::create(path)?;
 
                     // debug!("[*]: Writing to {:?}", path);
-                    try!(writeln!(f, "# {}", ch.name));
+                    writeln!(f, "# {}", ch.name)?;
                 }
             }
         }
@@ -217,17 +222,19 @@ impl MDBook {
         if !gitignore.exists() {
             // Gitignore does not exist, create it
 
-            // Because of `src/book/mdbook.rs#L37-L39`, `dest` will always start with `root`. If it
-            // is not, `strip_prefix` will return an Error.
+            // Because of `src/book/mdbook.rs#L37-L39`,
+            // `dest` will always start with `root`.
+            // If it is not, `strip_prefix` will return an Error.
             if !self.get_dest().starts_with(&self.root) {
                 return;
             }
 
             let relative = self.get_dest()
-                               .strip_prefix(&self.root)
-                               .expect("Destination is not relative to root.");
-            let relative = relative.to_str()
-                                   .expect("Path could not be yielded into a string slice.");
+                .strip_prefix(&self.root)
+                .expect("Destination is not relative to root.");
+            let relative = relative
+                .to_str()
+                .expect("Path could not be yielded into a string slice.");
 
             debug!("[*]: {:?} does not exist, trying to create .gitignore", gitignore);
 
@@ -239,20 +246,21 @@ impl MDBook {
         }
     }
 
-    /// The `build()` method is the one where everything happens. First it parses `SUMMARY.md` to
-    /// construct the book's structure in the form of a `Vec<BookItem>` and then calls `render()`
+    /// The `build()` method is the one where everything happens.
+    /// First it parses `SUMMARY.md` to construct the book's structure
+    /// in the form of a `Vec<BookItem>` and then calls `render()`
     /// method of the current renderer.
     ///
     /// It is the renderer who generates all the output files.
     pub fn build(&mut self) -> Result<(), Box<Error>> {
         debug!("[fn]: build");
 
-        try!(self.init());
+        self.init()?;
 
         // Clean output directory
-        try!(utils::fs::remove_dir_content(&self.dest));
+        utils::fs::remove_dir_content(&self.dest)?;
 
-        try!(self.renderer.render(&self));
+        self.renderer.render(&self)?;
 
         Ok(())
     }
@@ -269,55 +277,54 @@ impl MDBook {
 
         if !theme_dir.exists() {
             debug!("[*]: {:?} does not exist, trying to create directory", theme_dir);
-            try!(fs::create_dir(&theme_dir));
+            fs::create_dir(&theme_dir)?;
         }
 
         // index.hbs
-        let mut index = try!(File::create(&theme_dir.join("index.hbs")));
-        try!(index.write_all(theme::INDEX));
+        let mut index = File::create(&theme_dir.join("index.hbs"))?;
+        index.write_all(theme::INDEX)?;
 
         // book.css
-        let mut css = try!(File::create(&theme_dir.join("book.css")));
-        try!(css.write_all(theme::CSS));
+        let mut css = File::create(&theme_dir.join("book.css"))?;
+        css.write_all(theme::CSS)?;
 
         // favicon.png
-        let mut favicon = try!(File::create(&theme_dir.join("favicon.png")));
-        try!(favicon.write_all(theme::FAVICON));
+        let mut favicon = File::create(&theme_dir.join("favicon.png"))?;
+        favicon.write_all(theme::FAVICON)?;
 
         // book.js
-        let mut js = try!(File::create(&theme_dir.join("book.js")));
-        try!(js.write_all(theme::JS));
+        let mut js = File::create(&theme_dir.join("book.js"))?;
+        js.write_all(theme::JS)?;
 
         // highlight.css
-        let mut highlight_css = try!(File::create(&theme_dir.join("highlight.css")));
-        try!(highlight_css.write_all(theme::HIGHLIGHT_CSS));
+        let mut highlight_css = File::create(&theme_dir.join("highlight.css"))?;
+        highlight_css.write_all(theme::HIGHLIGHT_CSS)?;
 
         // highlight.js
-        let mut highlight_js = try!(File::create(&theme_dir.join("highlight.js")));
-        try!(highlight_js.write_all(theme::HIGHLIGHT_JS));
+        let mut highlight_js = File::create(&theme_dir.join("highlight.js"))?;
+        highlight_js.write_all(theme::HIGHLIGHT_JS)?;
 
         Ok(())
     }
 
     pub fn write_file<P: AsRef<Path>>(&self, filename: P, content: &[u8]) -> Result<(), Box<Error>> {
         let path = self.get_dest().join(filename);
-        try!(utils::fs::create_file(&path).and_then(|mut file| {
-            file.write_all(content)
-        }).map_err(|e| {
-            io::Error::new(io::ErrorKind::Other, format!("Could not create {}: {}", path.display(), e))
-        }));
+        utils::fs::create_file(&path)
+            .and_then(|mut file| file.write_all(content))
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Could not create {}: {}", path.display(), e)))?;
         Ok(())
     }
 
-    /// Parses the `book.json` file (if it exists) to extract the configuration parameters.
+    /// Parses the `book.json` file (if it exists) to extract
+    /// the configuration parameters.
     /// The `book.json` file should be in the root directory of the book.
     /// The root directory is the one specified when creating a new `MDBook`
 
     pub fn read_config(mut self) -> Self {
 
         let config = BookConfig::new(&self.root)
-                         .read_config(&self.root)
-                         .to_owned();
+            .read_config(&self.root)
+            .to_owned();
 
         self.title = config.title;
         self.description = config.description;
@@ -330,8 +337,10 @@ impl MDBook {
         self
     }
 
-    /// You can change the default renderer to another one by using this method. The only requirement
-    /// is for your renderer to implement the [Renderer trait](../../renderer/renderer/trait.Renderer.html)
+    /// You can change the default renderer to another one
+    /// by using this method. The only requirement
+    /// is for your renderer to implement the
+    /// [Renderer trait](../../renderer/renderer/trait.Renderer.html)
     ///
     /// ```no_run
     /// extern crate mdbook;
@@ -343,12 +352,14 @@ impl MDBook {
     ///     let mut book = MDBook::new(Path::new("mybook"))
     ///                         .set_renderer(Box::new(HtmlHandlebars::new()));
     ///
-    ///     // In this example we replace the default renderer by the default renderer...
-    ///     // Don't forget to put your renderer in a Box
+    /// // In this example we replace the default renderer
+    /// // by the default renderer...
+    /// // Don't forget to put your renderer in a Box
     /// }
     /// ```
     ///
-    /// **note:** Don't forget to put your renderer in a `Box` before passing it to `set_renderer()`
+    /// **note:** Don't forget to put your renderer in a `Box`
+    /// before passing it to `set_renderer()`
 
     pub fn set_renderer(mut self, renderer: Box<Renderer>) -> Self {
         self.renderer = renderer;
@@ -357,7 +368,7 @@ impl MDBook {
 
     pub fn test(&mut self) -> Result<(), Box<Error>> {
         // read in the chapters
-        try!(self.parse_summary());
+        self.parse_summary()?;
         for item in self.iter() {
 
             if let BookItem::Chapter(_, ref ch) = *item {
@@ -367,17 +378,15 @@ impl MDBook {
 
                     println!("[*]: Testing file: {:?}", path);
 
-                    let output_result = Command::new("rustdoc")
-                                            .arg(&path)
-                                            .arg("--test")
-                                            .output();
-                    let output = try!(output_result);
+                    let output_result = Command::new("rustdoc").arg(&path).arg("--test").output();
+                    let output = output_result?;
 
                     if !output.status.success() {
-                        return Err(Box::new(io::Error::new(ErrorKind::Other, format!(
-                                        "{}\n{}",
-                                        String::from_utf8_lossy(&output.stdout),
-                                        String::from_utf8_lossy(&output.stderr)))) as Box<Error>);
+                        return Err(Box::new(io::Error::new(ErrorKind::Other,
+                                                           format!("{}\n{}",
+                                                                   String::from_utf8_lossy(&output.stdout),
+                                                                   String::from_utf8_lossy(&output.stderr)))) as
+                                   Box<Error>);
                     }
                 }
             }
@@ -480,7 +489,7 @@ impl MDBook {
     // Construct book
     fn parse_summary(&mut self) -> Result<(), Box<Error>> {
         // When append becomes stable, use self.content.append() ...
-        self.content = try!(parse::construct_bookitems(&self.src.join("SUMMARY.md")));
+        self.content = parse::construct_bookitems(&self.src.join("SUMMARY.md"))?;
         Ok(())
     }
 }

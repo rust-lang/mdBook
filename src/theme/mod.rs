@@ -19,11 +19,14 @@ pub static FONT_AWESOME_WOFF: &'static [u8] = include_bytes!("_FontAwesome/fonts
 pub static FONT_AWESOME_WOFF2: &'static [u8] = include_bytes!("_FontAwesome/fonts/fontawesome-webfont.woff2");
 pub static FONT_AWESOME_OTF: &'static [u8] = include_bytes!("_FontAwesome/fonts/FontAwesome.otf");
 
-/// The `Theme` struct should be used instead of the static variables because the `new()` method
-/// will look if the user has a theme directory in his source folder and use the users theme instead
+/// The `Theme` struct should be used instead of the static variables because
+/// the `new()` method
+/// will look if the user has a theme directory in his source folder and use
+/// the users theme instead
 /// of the default.
 ///
-/// You should exceptionnaly use the static variables only if you need the default theme even if the
+/// You should exceptionnaly use the static variables only if you need the
+/// default theme even if the
 /// user has specified another theme.
 pub struct Theme {
     pub index: Vec<u8>,

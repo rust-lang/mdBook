@@ -121,7 +121,7 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
     let mut book = MDBook::new(&book_dir);
 
     // Call the function that does the initialization
-    try!(book.init());
+    book.init()?;
 
     // If flag `--theme` is present, copy theme to src
     if args.is_present("theme") {
@@ -142,7 +142,7 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
         }
 
         // Call the function that copies the theme
-        try!(book.copy_theme());
+        book.copy_theme()?;
         println!("\nTheme copied.");
 
     }
@@ -172,14 +172,14 @@ fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
 
     let mut book = match args.value_of("dest-dir") {
         Some(dest_dir) => book.set_dest(Path::new(dest_dir)),
-        None => book
+        None => book,
     };
 
     if args.is_present("no-create") {
         book.create_missing = false;
     }
 
-    try!(book.build());
+    book.build()?;
 
     if args.is_present("open") {
         open(book.get_dest().join("index.html"));
@@ -197,11 +197,11 @@ fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
 
     let mut book = match args.value_of("dest-dir") {
         Some(dest_dir) => book.set_dest(Path::new(dest_dir)),
-        None => book
+        None => book,
     };
 
     if args.is_present("open") {
-        try!(book.build());
+        book.build()?;
         open(book.get_dest().join("index.html"));
     }
 
@@ -227,7 +227,7 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
 
     let mut book = match args.value_of("dest-dir") {
         Some(dest_dir) => book.set_dest(Path::new(dest_dir)),
-        None => book
+        None => book,
     };
 
     let port = args.value_of("port").unwrap_or("3000");
@@ -253,25 +253,22 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
                 socket.close();
             }}
         </script>
-    "#, public_address, ws_port, RELOAD_COMMAND).to_owned());
+    "#,
+                                public_address,
+                                ws_port,
+                                RELOAD_COMMAND));
 
-    try!(book.build());
+    book.build()?;
 
     let staticfile = staticfile::Static::new(book.get_dest());
     let iron = iron::Iron::new(staticfile);
     let _iron = iron.http(&*address).unwrap();
 
-    let ws_server = ws::WebSocket::new(|_| {
-        |_| {
-            Ok(())
-        }
-    }).unwrap();
+    let ws_server = ws::WebSocket::new(|_| |_| Ok(())).unwrap();
 
     let broadcaster = ws_server.broadcaster();
 
-    std::thread::spawn(move || {
-        ws_server.listen(&*ws_address).unwrap();
-    });
+    std::thread::spawn(move || { ws_server.listen(&*ws_address).unwrap(); });
 
     println!("\nServing on {}", address);
 
@@ -296,7 +293,7 @@ fn test(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book_dir = get_book_dir(args);
     let mut book = MDBook::new(&book_dir).read_config();
 
-    try!(book.test());
+    book.test()?;
 
     Ok(())
 }
@@ -339,7 +336,7 @@ fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
         Err(e) => {
             println!("Error while trying to watch the files:\n\n\t{:?}", e);
             ::std::process::exit(0);
-        }
+        },
     };
 
     // Add the source directory to the watcher
@@ -350,10 +347,14 @@ fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
 
     // Add the book.{json,toml} file to the watcher if it exists, because it's not
     // located in the source directory
-    if watcher.watch(book.get_root().join("book.json"), NonRecursive).is_err() {
+    if watcher
+           .watch(book.get_root().join("book.json"), NonRecursive)
+           .is_err() {
         // do nothing if book.json is not found
     }
-    if watcher.watch(book.get_root().join("book.toml"), NonRecursive).is_err() {
+    if watcher
+           .watch(book.get_root().join("book.toml"), NonRecursive)
+           .is_err() {
         // do nothing if book.toml is not found
     }
 
@@ -361,16 +362,18 @@ fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
 
     loop {
         match rx.recv() {
-            Ok(event) => match event {
-                NoticeWrite(path) |
-                NoticeRemove(path) |
-                Create(path) |
-                Write(path) |
-                Remove(path) |
-                Rename(_, path) => {
-                    closure(&path, book);
+            Ok(event) => {
+                match event {
+                    NoticeWrite(path) |
+                    NoticeRemove(path) |
+                    Create(path) |
+                    Write(path) |
+                    Remove(path) |
+                    Rename(_, path) => {
+                        closure(&path, book);
+                    },
+                    _ => {},
                 }
-                _ => {}
             },
             Err(e) => {
                 println!("An error occured: {:?}", e);
