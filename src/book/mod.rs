@@ -497,6 +497,22 @@ impl MDBook {
         None
     }
 
+    pub fn has_additional_css(&self) -> bool {
+        if let Some(htmlconfig) = self.config.get_html_config() {
+            return htmlconfig.has_additional_css();
+        }
+
+        false
+    }
+
+    pub fn get_additional_css(&self) -> &[PathBuf] {
+        if let Some(htmlconfig) = self.config.get_html_config() {
+            return htmlconfig.get_additional_css();
+        }
+
+        &[]
+    }
+
     // Construct book
     fn parse_summary(&mut self) -> Result<(), Box<Error>> {
         // When append becomes stable, use self.content.append() ...

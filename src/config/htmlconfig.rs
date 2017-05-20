@@ -7,6 +7,7 @@ pub struct HtmlConfig {
     destination: PathBuf,
     theme: Option<PathBuf>,
     google_analytics: Option<String>,
+    additional_css: Vec<PathBuf>,
 }
 
 impl HtmlConfig {
@@ -26,6 +27,7 @@ impl HtmlConfig {
             destination: root.into().join("book"),
             theme: None,
             google_analytics: None,
+            additional_css: Vec::new(),
         }
     }
 
@@ -50,6 +52,16 @@ impl HtmlConfig {
 
         if tomlconfig.google_analytics.is_some() {
             self.google_analytics = tomlconfig.google_analytics;
+        }
+
+        if let Some(stylepaths) = tomlconfig.additional_css {
+            for path in stylepaths {
+                if path.is_relative() {
+                    self.additional_css.push(root.join(path));
+                } else {
+                    self.additional_css.push(path);
+                }
+            }
         }
 
         self
@@ -88,5 +100,18 @@ impl HtmlConfig {
 
     pub fn get_google_analytics_id(&self) -> Option<String> {
         self.google_analytics.clone()
+    }
+
+    pub fn set_google_analytics_id(&mut self, id: Option<String>) -> &mut Self {
+        self.google_analytics = id;
+        self
+    }
+
+    pub fn has_additional_css(&self) -> bool {
+        !self.additional_css.is_empty()
+    }
+
+    pub fn get_additional_css(&self) -> &[PathBuf] {
+        &self.additional_css
     }
 }

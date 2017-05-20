@@ -187,6 +187,19 @@ impl Renderer for HtmlHandlebars {
         book.write_file("_FontAwesome/fonts/fontawesome-webfont.woff2", theme::FONT_AWESOME_WOFF2)?;
         book.write_file("_FontAwesome/fonts/FontAwesome.ttf", theme::FONT_AWESOME_TTF)?;
 
+        for style in book.get_additional_css() {
+            let mut data = Vec::new();
+            let mut f = File::open(style)?;
+            f.read_to_end(&mut data)?;
+
+            let name = match style.strip_prefix(book.get_root()) {
+                Ok(p) => p.to_str().expect("Could not convert to str"),
+                Err(_) => style.file_name().expect("File has a file name").to_str().expect("Could not convert to str"),
+            };
+
+            book.write_file(name, &data)?;
+        }
+
         // Copy all remaining files
         utils::fs::copy_files_except_ext(
             book.get_source(), 
@@ -213,6 +226,18 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
     // Add google analytics tag
     if let Some(ref ga) = book.get_google_analytics_id() {
         data.insert("google_analytics".to_owned(), json!(ga));
+    }
+
+    // Add check to see if there is an additional style
+    if book.has_additional_css() {
+        let mut css = Vec::new();
+        for style in book.get_additional_css() {
+            match style.strip_prefix(book.get_root()) {
+                Ok(p) => css.push(p.to_str().expect("Could not convert to str")),
+                Err(_) => css.push(style.file_name().expect("File has a file name").to_str().expect("Could not convert to str")),
+            }
+        }
+        data.insert("additional_css".to_owned(), json!(css));
     }
 
     let mut chapters = vec![];

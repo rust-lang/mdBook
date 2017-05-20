@@ -100,3 +100,18 @@ fn from_toml_output_html_google_analytics() {
 
     assert_eq!(htmlconfig.get_google_analytics_id().expect("the google-analytics key was provided"), String::from("123456"));
 }
+
+
+// Tests that the `output.html.additional-css` key is correcly parsed in the TOML config
+#[test]
+fn from_toml_output_html_additional_stylesheet() {
+    let toml = r#"[output.html]
+    additional-css = ["custom.css", "two/custom.css"]"#;
+
+    let parsed = TomlConfig::from_toml(&toml).expect("This should parse");
+    let config = BookConfig::from_tomlconfig("root", parsed);
+
+    let htmlconfig = config.get_html_config().expect("There should be an HtmlConfig");
+
+    assert_eq!(htmlconfig.get_additional_css(), &[PathBuf::from("root/custom.css"), PathBuf::from("root/two/custom.css")]);
+}
