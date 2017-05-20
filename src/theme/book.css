@@ -258,7 +258,6 @@ table thead td {
   position: relative;
   left: 10px;
   z-index: 1000;
-  -webkit-border-radius: 4px;
   border-radius: 4px;
   font-size: 0.7em;
 }
@@ -295,7 +294,6 @@ table thead td {
     position: relative;
     display: inline-block;
     margin-bottom: 50px;
-    -webkit-border-radius: 5px;
     border-radius: 5px;
   }
   .next {
@@ -357,7 +355,8 @@ table thead td {
   background-color: #fafafa;
 }
 .light .content a:link,
-.light a:visited {
+.light a:visited,
+.light a > .hljs {
   color: #4183c4;
 }
 .light .theme-popup {
@@ -398,8 +397,10 @@ table thead td {
   display: inline-block;
   vertical-align: middle;
   padding: 0.1em 0.3em;
-  -webkit-border-radius: 3px;
   border-radius: 3px;
+}
+.light a:hover > .hljs {
+  text-decoration: underline;
 }
 .light pre {
   position: relative;
@@ -472,7 +473,8 @@ table thead td {
   background-color: #292c2f;
 }
 .coal .content a:link,
-.coal a:visited {
+.coal a:visited,
+.coal a > .hljs {
   color: #2b79a2;
 }
 .coal .theme-popup {
@@ -513,8 +515,10 @@ table thead td {
   display: inline-block;
   vertical-align: middle;
   padding: 0.1em 0.3em;
-  -webkit-border-radius: 3px;
   border-radius: 3px;
+}
+.coal a:hover > .hljs {
+  text-decoration: underline;
 }
 .coal pre {
   position: relative;
@@ -587,7 +591,8 @@ table thead td {
   background-color: #282d3f;
 }
 .navy .content a:link,
-.navy a:visited {
+.navy a:visited,
+.navy a > .hljs {
   color: #2b79a2;
 }
 .navy .theme-popup {
@@ -628,8 +633,10 @@ table thead td {
   display: inline-block;
   vertical-align: middle;
   padding: 0.1em 0.3em;
-  -webkit-border-radius: 3px;
   border-radius: 3px;
+}
+.navy a:hover > .hljs {
+  text-decoration: underline;
 }
 .navy pre {
   position: relative;
@@ -702,7 +709,8 @@ table thead td {
   background-color: #3b2e2a;
 }
 .rust .content a:link,
-.rust a:visited {
+.rust a:visited,
+.rust a > .hljs {
   color: #2b79a2;
 }
 .rust .theme-popup {
@@ -743,8 +751,10 @@ table thead td {
   display: inline-block;
   vertical-align: middle;
   padding: 0.1em 0.3em;
-  -webkit-border-radius: 3px;
   border-radius: 3px;
+}
+.rust a:hover > .hljs {
+  text-decoration: underline;
 }
 .rust pre {
   position: relative;
@@ -786,7 +796,6 @@ table thead td {
   }
   code {
     background-color: #666;
-    -webkit-border-radius: 5px;
     border-radius: 5px;
 /* Force background to be printed in Chrome */
     -webkit-print-color-adjust: exact;
