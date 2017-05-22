@@ -6,6 +6,18 @@ use std::path::Path;
 #[macro_use]
 extern crate error_chain;
 
+#[cfg(windows)]
+mod execs {
+    pub const NPM: &str = "npm.cmd";
+    pub const STYLUS: &str = "stylus.cmd";
+}
+#[cfg(not(windows))]
+mod execs {
+    pub const NPM: &str = "npm";
+    pub const STYLUS: &str = "stylus";
+}
+
+
 error_chain!{
  foreign_links {
         Io(std::io::Error);
@@ -21,7 +33,7 @@ fn program_exists(program: &str) -> Result<()> {
 }
 
 fn npm_package_exists(package: &str) -> Result<()> {
-    let status = Command::new("npm")
+    let status = Command::new(execs::NPM)
         .args(&["list", "-g"])
         .arg(package)
         .output();
@@ -55,7 +67,7 @@ fn run() -> Result<()> {
 
     if let Ok(_) = env::var("CARGO_FEATURE_REGENERATE_CSS") {
         // Check dependencies
-        Program("npm").exists()?;
+        Program(execs::NPM).exists()?;
         Program("node").exists()?;
         Package("nib").exists()?;
         Package("stylus").exists()?;
@@ -66,7 +78,7 @@ fn run() -> Result<()> {
         let theme_dir = Path::new(&manifest_dir).join("src/theme/");
         let stylus_dir = theme_dir.join("stylus/book.styl");
 
-        if !Command::new("stylus")
+        if !Command::new(execs::STYLUS)
                 .arg(stylus_dir)
                 .arg("--out")
                 .arg(theme_dir)
