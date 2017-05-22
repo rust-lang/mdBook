@@ -40,6 +40,9 @@ ws = { version = "0.7", optional = true}
 [dev-dependencies]
 tempdir = "0.3.4"
 
+[build-dependencies]
+error-chain = "0.10"
+
 [features]
 default = ["output", "watch", "serve"]
 debug = []
