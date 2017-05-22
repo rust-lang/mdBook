@@ -8,13 +8,13 @@ extern crate error_chain;
 
 #[cfg(windows)]
 mod execs {
-    pub const NPM: &str = "npm.cmd";
-    pub const STYLUS: &str = "stylus.cmd";
+    pub const NPM: &'static str = "npm.cmd";
+    pub const STYLUS: &'static str = "stylus.cmd";
 }
 #[cfg(not(windows))]
 mod execs {
-    pub const NPM: &str = "npm";
-    pub const STYLUS: &str = "stylus";
+    pub const NPM: &'static str = "npm";
+    pub const STYLUS: &'static str = "stylus";
 }
 
 
@@ -68,7 +68,7 @@ fn run() -> Result<()> {
     if let Ok(_) = env::var("CARGO_FEATURE_REGENERATE_CSS") {
         // Check dependencies
         Program(execs::NPM).exists()?;
-        Program("node").exists()?;
+        Program("node").exists().or(Program("nodejs").exists())?;
         Package("nib").exists()?;
         Package("stylus").exists()?;
 
