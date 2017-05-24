@@ -4,7 +4,7 @@ body {
   color: #333;
 }
 code {
-  font-family: "Source Code Pro", "Menlo", "DejaVu Sans Mono", monospace;
+  font-family: "Source Code Pro", Consolas, "Ubuntu Mono", Menlo, "DejaVu Sans Mono", monospace, monospace;
   font-size: 0.875em;
 }
 .left {
