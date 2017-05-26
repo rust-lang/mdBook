@@ -75,7 +75,7 @@ fn main() {
                         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'")
                         .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
                         .arg_from_usage("-p, --port=[port] 'Use another port{n}(Defaults to 3000)'")
-                        .arg_from_usage("-w, --ws-port=[ws-port] 'Use another port for the websocket connection (livereload){n}(Defaults to 3001)'")
+                        .arg_from_usage("-w, --websocket-port=[ws-port] 'Use another port for the websocket connection (livereload){n}(Defaults to 3001)'")
                         .arg_from_usage("-i, --interface=[interface] 'Interface to listen on{n}(Defaults to localhost)'")
                         .arg_from_usage("-a, --address=[address] 'Address that the browser can reach the websocket server from{n}(Defaults to the interface address)'")
                         .arg_from_usage("-o, --open 'Open the book server in a web browser'"))
@@ -231,7 +231,7 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
     };
 
     let port = args.value_of("port").unwrap_or("3000");
-    let ws_port = args.value_of("ws-port").unwrap_or("3001");
+    let ws_port = args.value_of("websocket-port").unwrap_or("3001");
     let interface = args.value_of("interface").unwrap_or("localhost");
     let public_address = args.value_of("address").unwrap_or(interface);
     let open_browser = args.is_present("open");
