@@ -231,7 +231,7 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
     };
 
     let port = args.value_of("port").unwrap_or("3000");
-    let ws_port = args.value_of("ws-port").unwrap_or("3001");
+    let ws_port = args.value_of("websocket-port").unwrap_or("3001");
     let interface = args.value_of("interface").unwrap_or("localhost");
     let public_address = args.value_of("address").unwrap_or(interface);
     let open_browser = args.is_present("open");
