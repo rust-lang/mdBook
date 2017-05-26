@@ -75,7 +75,7 @@ fn main() {
                         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'")
                         .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
                         .arg_from_usage("-p, --port=[port] 'Use another port{n}(Defaults to 3000)'")
-                        .arg_from_usage("-w, --websocket-port=[ws-port] 'Use another port for the websocket connection (livereload){n}(Defaults to 3001)'")
+                        .arg_from_usage("-w, --ws-port=[ws-port] 'Use another port for the websocket connection (livereload){n}(Defaults to 3001)'")
                         .arg_from_usage("-i, --interface=[interface] 'Interface to listen on{n}(Defaults to localhost)'")
                         .arg_from_usage("-a, --address=[address] 'Address that the browser can reach the websocket server from{n}(Defaults to the interface address)'")
                         .arg_from_usage("-o, --open 'Open the book server in a web browser'"))
