@@ -7,17 +7,8 @@ pub static INDEX: &'static [u8] = include_bytes!("index.hbs");
 pub static CSS: &'static [u8] = include_bytes!("book.css");
 pub static FAVICON: &'static [u8] = include_bytes!("favicon.png");
 pub static JS: &'static [u8] = include_bytes!("book.js");
-pub static HIGHLIGHT_JS: &'static [u8] = include_bytes!("highlight.js");
 pub static TOMORROW_NIGHT_CSS: &'static [u8] = include_bytes!("tomorrow-night.css");
 pub static HIGHLIGHT_CSS: &'static [u8] = include_bytes!("highlight.css");
-pub static JQUERY: &'static [u8] = include_bytes!("jquery-2.1.4.min.js");
-pub static FONT_AWESOME: &'static [u8] = include_bytes!("_FontAwesome/css/font-awesome.min.css");
-pub static FONT_AWESOME_EOT: &'static [u8] = include_bytes!("_FontAwesome/fonts/fontawesome-webfont.eot");
-pub static FONT_AWESOME_SVG: &'static [u8] = include_bytes!("_FontAwesome/fonts/fontawesome-webfont.svg");
-pub static FONT_AWESOME_TTF: &'static [u8] = include_bytes!("_FontAwesome/fonts/fontawesome-webfont.ttf");
-pub static FONT_AWESOME_WOFF: &'static [u8] = include_bytes!("_FontAwesome/fonts/fontawesome-webfont.woff");
-pub static FONT_AWESOME_WOFF2: &'static [u8] = include_bytes!("_FontAwesome/fonts/fontawesome-webfont.woff2");
-pub static FONT_AWESOME_OTF: &'static [u8] = include_bytes!("_FontAwesome/fonts/FontAwesome.otf");
 
 /// The `Theme` struct should be used instead of the static variables because
 /// the `new()` method
@@ -35,8 +26,6 @@ pub struct Theme {
     pub js: Vec<u8>,
     pub highlight_css: Vec<u8>,
     pub tomorrow_night_css: Vec<u8>,
-    pub highlight_js: Vec<u8>,
-    pub jquery: Vec<u8>,
 }
 
 impl Theme {
@@ -50,8 +39,6 @@ impl Theme {
             js: JS.to_owned(),
             highlight_css: HIGHLIGHT_CSS.to_owned(),
             tomorrow_night_css: TOMORROW_NIGHT_CSS.to_owned(),
-            highlight_js: HIGHLIGHT_JS.to_owned(),
-            jquery: JQUERY.to_owned(),
         };
 
         // Check if the given path exists
@@ -83,12 +70,6 @@ impl Theme {
         if let Ok(mut f) = File::open(&src.join("favicon.png")) {
             theme.favicon.clear();
             let _ = f.read_to_end(&mut theme.favicon);
-        }
-
-        // highlight.js
-        if let Ok(mut f) = File::open(&src.join("highlight.js")) {
-            theme.highlight_js.clear();
-            let _ = f.read_to_end(&mut theme.highlight_js);
         }
 
         // highlight.css

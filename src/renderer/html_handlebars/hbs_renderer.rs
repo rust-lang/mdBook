@@ -3,6 +3,7 @@ use renderer::Renderer;
 use book::MDBook;
 use book::bookitem::BookItem;
 use {utils, theme};
+use resources::{Resources,Resource};
 use regex::{Regex, Captures};
 
 use std::ascii::AsciiExt;
@@ -30,6 +31,7 @@ impl HtmlHandlebars {
 impl Renderer for HtmlHandlebars {
     fn render(&self, book: &MDBook) -> Result<(), Box<Error>> {
         debug!("[fn]: render");
+        let res = Resources::new();
         let mut handlebars = Handlebars::new();
 
         // Load theme
@@ -94,6 +96,22 @@ impl Renderer for HtmlHandlebars {
                         data.insert("content".to_owned(), json!(content));
                         data.insert("chapter_title".to_owned(), json!(ch.name));
                         data.insert("path_to_root".to_owned(), json!(utils::fs::path_to_root(&ch.path)));
+
+                        {
+                            let mut insert_from_env = |name: &str, conf: &Resource| {
+                                data.insert(name.to_owned() + "_render_url", json!(conf.must_render_url()));
+                                data.insert(name.to_owned() + "_render_embed", json!(conf.must_embed()));
+                                if conf.must_render_url() {
+                                    data.insert(name.to_owned() + "_url", json!(conf.url()));
+                                }
+                            };
+                            insert_from_env("highlight", &res.conf.highlight);
+                            insert_from_env("jquery", &res.conf.jquery);
+                            insert_from_env("mathjax", &res.conf.mathjax);
+                            insert_from_env("awesome", &res.conf.awesome);
+                            insert_from_env("source_code_pro", &res.conf.source_code_pro);
+                            insert_from_env("open_sans", &res.conf.open_sans);
+                        }
 
                         // Render the handlebars template with the data
                         debug!("[*]: Render template");
@@ -167,17 +185,26 @@ impl Renderer for HtmlHandlebars {
         book.write_file("book.js", &theme.js)?;
         book.write_file("book.css", &theme.css)?;
         book.write_file("favicon.png", &theme.favicon)?;
-        book.write_file("jquery.js", &theme.jquery)?;
         book.write_file("highlight.css", &theme.highlight_css)?;
         book.write_file("tomorrow-night.css", &theme.tomorrow_night_css)?;
-        book.write_file("highlight.js", &theme.highlight_js)?;
-        book.write_file("_FontAwesome/css/font-awesome.css", theme::FONT_AWESOME)?;
-        book.write_file("_FontAwesome/fonts/fontawesome-webfont.eot", theme::FONT_AWESOME_EOT)?;
-        book.write_file("_FontAwesome/fonts/fontawesome-webfont.svg", theme::FONT_AWESOME_SVG)?;
-        book.write_file("_FontAwesome/fonts/fontawesome-webfont.ttf", theme::FONT_AWESOME_TTF)?;
-        book.write_file("_FontAwesome/fonts/fontawesome-webfont.woff", theme::FONT_AWESOME_WOFF)?;
-        book.write_file("_FontAwesome/fonts/fontawesome-webfont.woff2", theme::FONT_AWESOME_WOFF2)?;
-        book.write_file("_FontAwesome/fonts/FontAwesome.ttf", theme::FONT_AWESOME_TTF)?;
+
+        if res.conf.jquery.must_embed() {
+            book.write_file("jquery.js", &res.jquery())?;
+        }
+
+        if res.conf.highlight.must_embed() {
+            book.write_file("highlight.js", &res.highlight_js())?;
+        }
+
+        if res.conf.awesome.must_embed() {
+            book.write_file("_FontAwesome/css/font-awesome.css", &res.awesome_css())?;
+            book.write_file("_FontAwesome/fonts/fontawesome-webfont.eot", &res.awesome_eot())?;
+            book.write_file("_FontAwesome/fonts/fontawesome-webfont.svg", &res.awesome_svg())?;
+            book.write_file("_FontAwesome/fonts/fontawesome-webfont.ttf", &res.awesome_ttf())?;
+            book.write_file("_FontAwesome/fonts/fontawesome-webfont.woff", &res.awesome_woff())?;
+            book.write_file("_FontAwesome/fonts/fontawesome-webfont.woff2", &res.awesome_woff2())?;
+            book.write_file("_FontAwesome/fonts/FontAwesome.ttf", &res.awesome_ttf())?;
+        }
 
         // Copy all remaining files
         utils::fs::copy_files_except_ext(book.get_src(), book.get_dest(), true, &["md"])?;
