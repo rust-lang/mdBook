@@ -270,10 +270,11 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
 
     std::thread::spawn(move || { ws_server.listen(&*ws_address).unwrap(); });
 
-    println!("\nServing on {}", address);
+    let serving_url = format!("http://{}", address);
+    println!("\nServing on: {}", serving_url);
 
     if open_browser {
-        open(format!("http://{}", address));
+        open(serving_url);
     }
 
     trigger_on_change(&mut book, move |path, book| {
