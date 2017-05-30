@@ -191,15 +191,35 @@ $( document ).ready(function() {
             buttons = pre_block.find(".buttons");
         }
         buttons.prepend("<i class=\"fa fa-play play-button\"></i>");
+        buttons.prepend("<i class=\"fa fa-copy clip-button\"><i class=\"tooltiptext\"></i></i>");
 
         buttons.find(".play-button").click(function(e){
             run_rust_code(pre_block);
         });
+        buttons.find(".clip-button").mouseout(function(e){
+            e.currentTarget.setAttribute('class', 'fa fa-copy clip-button');
+        });
     });
 
+    var clipboardSnippets = new Clipboard('.clip-button', {
+        text: function(trigger) {
+           return trigger.parentElement.parentElement.textContent;
+        }
+    });
+    clipboardSnippets.on('success', function(e) {
+            e.clearSelection();
+            showTooltip(e, "Copied!");
+    });
+    clipboardSnippets.on('error', function(e) {
+            showTooltip(e, "Clipboard error!");
+    });
 
 });
 
+function showTooltip(elem, msg) {
+    elem.trigger.firstChild.innerText=msg;
+    elem.trigger.setAttribute('class', 'fa fa-copy tooltipped');
+}
 
 function run_rust_code(code_block) {
     var result_block = code_block.find(".result");
