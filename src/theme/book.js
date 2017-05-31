@@ -197,28 +197,34 @@ $( document ).ready(function() {
             run_rust_code(pre_block);
         });
         buttons.find(".clip-button").mouseout(function(e){
-            e.currentTarget.setAttribute('class', 'fa fa-copy clip-button');
+            hideTooltip(e.currentTarget);
         });
     });
 
     var clipboardSnippets = new Clipboard('.clip-button', {
         text: function(trigger) {
-           return trigger.parentElement.parentElement.textContent;
+            hideTooltip(trigger);
+            return trigger.parentElement.parentElement.textContent;
         }
     });
     clipboardSnippets.on('success', function(e) {
             e.clearSelection();
-            showTooltip(e, "Copied!");
+            showTooltip(e.trigger, "Copied!");
     });
     clipboardSnippets.on('error', function(e) {
-            showTooltip(e, "Clipboard error!");
+            showTooltip(e.trigger, "Clipboard error!");
     });
 
 });
 
+function hideTooltip(elem) {
+    elem.firstChild.innerText="";
+    elem.setAttribute('class', 'fa fa-copy clip-button');
+}
+
 function showTooltip(elem, msg) {
-    elem.trigger.firstChild.innerText=msg;
-    elem.trigger.setAttribute('class', 'fa fa-copy tooltipped');
+    elem.firstChild.innerText=msg;
+    elem.setAttribute('class', 'fa fa-copy tooltipped');
 }
 
 function run_rust_code(code_block) {
