@@ -346,6 +346,9 @@ fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
         ::std::process::exit(0);
     };
 
+    // Add the theme directory to the watcher
+    watcher.watch(book.get_theme_path(), Recursive).unwrap_or_default();
+
     // Add the book.{json,toml} file to the watcher if it exists, because it's not
     // located in the source directory
     if watcher

@@ -4,7 +4,7 @@ The default renderer uses a [handlebars](http://handlebarsjs.com/) template to r
 included in the mdBook binary.
 
 The theme is totally customizable, you can selectively replace every file from the theme by your own by adding a
-`theme` directory in your source folder. Create a new file with the name of the file you want to override
+`theme` directory next to `src` folder in your project root. Create a new file with the name of the file you want to override
 and now that file will be used instead of the default file.
 
 Here are the files you can override:
