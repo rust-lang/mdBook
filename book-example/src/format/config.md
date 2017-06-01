@@ -66,6 +66,7 @@ The following configuration options are available:
 - **destination:** By default, the HTML book will be rendered in the `root/book` directory, but this option lets you specify another
   destination fodler.
 - **theme:** mdBook comes with a default theme and all the resource files needed for it. But if this option is set, mdBook will selectively overwrite the theme files with the ones found in the specified folder. 
+- **curly-quotes:** Convert straight quotes to curly quotes, except for those that occur in code blocks and code spans. Defaults to `false`.
 - **google-analytics:** If you use Google Analytics, this option lets you enable it by simply specifying your ID in the configuration file.
 - **additional-css:** If you need to slightly change the appearance of your book without overwriting the whole style, you can specify a set of stylesheets that will be loaded after the default ones where you can surgically change the style.
 
@@ -78,6 +79,7 @@ description = "The example book covers examples."
 [output.html]
 destination = "my-book" # the output files will be generated in `root/my-book` instead of `root/book`
 theme = "my-theme"
+curly-quotes = true
 google-analytics = "123456"
 additional-css = ["custom.css", "custom2.css"]
 ```

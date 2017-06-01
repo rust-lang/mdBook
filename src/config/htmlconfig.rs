@@ -6,6 +6,7 @@ use super::tomlconfig::TomlHtmlConfig;
 pub struct HtmlConfig {
     destination: PathBuf,
     theme: Option<PathBuf>,
+    curly_quotes: bool,
     google_analytics: Option<String>,
     additional_css: Vec<PathBuf>,
     additional_js: Vec<PathBuf>,
@@ -27,6 +28,7 @@ impl HtmlConfig {
         HtmlConfig {
             destination: root.into().join("book"),
             theme: None,
+            curly_quotes: false,
             google_analytics: None,
             additional_css: Vec::new(),
             additional_js: Vec::new(),
@@ -50,6 +52,10 @@ impl HtmlConfig {
             } else {
                 self.theme = Some(t);
             }
+        }
+
+        if let Some(curly_quotes) = tomlconfig.curly_quotes {
+            self.curly_quotes = curly_quotes;
         }
 
         if tomlconfig.google_analytics.is_some() {
@@ -108,6 +114,14 @@ impl HtmlConfig {
         }
 
         self
+    }
+
+    pub fn get_curly_quotes(&self) -> bool {
+        self.curly_quotes
+    }
+
+    pub fn set_curly_quotes(&mut self, curly_quotes: bool) {
+        self.curly_quotes = curly_quotes;
     }
 
     pub fn get_google_analytics_id(&self) -> Option<String> {
