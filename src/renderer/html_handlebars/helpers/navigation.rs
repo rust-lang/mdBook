@@ -1,8 +1,8 @@
 use std::path::Path;
-use std::collections::{VecDeque, BTreeMap};
+use std::collections::BTreeMap;
 
 use serde_json;
-use handlebars::{Handlebars, RenderError, RenderContext, Helper, Renderable};
+use handlebars::{Handlebars, RenderError, RenderContext, Helper, Renderable, Context};
 
 
 // Handlebars helper for navigation
@@ -11,31 +11,22 @@ pub fn previous(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(
     debug!("[fn]: previous (handlebars helper)");
 
     debug!("[*]: Get data from context");
-    // get value from context data
-    // rc.get_path() is current json parent path, you should always use it like this
-    // param is the key of value you want to display
-    let chapters = rc.context()
-        .navigate(rc.get_path(), &VecDeque::new(), "chapters")?
-        .to_owned();
+    let chapters = rc.evaluate_absolute("chapters")
+        .and_then(|c| {
+                      serde_json::value::from_value::<Vec<BTreeMap<String, String>>>(c.clone())
+                          .map_err(|_| RenderError::new("Could not decode the JSON data"))
+                  })?;
 
-    let current = rc.context()
-        .navigate(rc.get_path(), &VecDeque::new(), "path")?
-        .to_string()
+    let current = rc.evaluate_absolute("path")?
+        .as_str()
+        .ok_or(RenderError::new("Type error for `path`, string expected"))?
         .replace("\"", "");
 
-
-    debug!("[*]: Decode chapters from JSON");
-    // Decode json format
-    let decoded: Vec<BTreeMap<String, String>> = match serde_json::from_str(&chapters.to_string()) {
-        Ok(data) => data,
-        Err(_) => return Err(RenderError::new("Could not decode the JSON data")),
-    };
     let mut previous: Option<BTreeMap<String, String>> = None;
-
 
     debug!("[*]: Search for current Chapter");
     // Search for current chapter and return previous entry
-    for item in decoded {
+    for item in chapters {
 
         match item.get("path") {
             Some(path) if !path.is_empty() => {
@@ -49,51 +40,41 @@ pub fn previous(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(
                         let mut previous_chapter = BTreeMap::new();
 
                         // Chapter title
-                        match previous.get("name") {
-                            Some(n) => {
-                                debug!("[*]: Inserting title: {}", n);
-                                previous_chapter.insert("title".to_owned(), json!(n))
-                            },
-                            None => {
-                                debug!("[*]: No title found for chapter");
-                                return Err(RenderError::new("No title found for chapter in JSON data"));
-                            },
-                        };
+                        previous
+                            .get("name")
+                            .ok_or(RenderError::new("No title found for chapter in JSON data"))
+                            .and_then(|n| {
+                                          previous_chapter.insert("title".to_owned(), json!(n));
+                                          Ok(())
+                                      })?;
+
 
                         // Chapter link
+                        previous
+                            .get("path")
+                            .ok_or(RenderError::new("No path found for chapter in JSON data"))
+                            .and_then(|p| {
+                                Path::new(p)
+                                    .with_extension("html")
+                                    .to_str()
+                                    .ok_or(RenderError::new("Link could not be converted to str"))
+                                    .and_then(|p| {
+                                                  previous_chapter
+                                                      .insert("link".to_owned(), json!(p.replace("\\", "/")));
+                                                  Ok(())
+                                              })
+                            })?;
 
-                        match previous.get("path") {
-                            Some(p) => {
-                                // Hack for windows who tends to use `\` as separator instead of `/`
-                                let path = Path::new(p).with_extension("html");
-                                debug!("[*]: Inserting link: {:?}", path);
-
-                                match path.to_str() {
-                                    Some(p) => {
-                                        previous_chapter.insert("link".to_owned(), json!(p.replace("\\", "/")));
-                                    },
-                                    None => return Err(RenderError::new("Link could not be converted to str")),
-                                }
-                            },
-                            None => return Err(RenderError::new("No path found for chapter in JSON data")),
-                        }
-
-                        debug!("[*]: Inject in context");
-                        // Inject in current context
-                        let updated_context = rc.context().extend(&previous_chapter);
 
                         debug!("[*]: Render template");
                         // Render template
-                        match _h.template() {
-                            Some(t) => {
-                                *rc.context_mut() = updated_context;
-                                t.render(r, rc)?;
-                            },
-                            None => return Err(RenderError::new("Error with the handlebars template")),
-                        }
-
+                        _h.template()
+                            .ok_or(RenderError::new("Error with the handlebars template"))
+                            .and_then(|t| {
+                                          let mut local_rc = rc.with_context(Context::wraps(&previous_chapter));
+                                          t.render(r, &mut local_rc)
+                                      })?;
                     }
-
                     break;
                 } else {
                     previous = Some(item.clone());
@@ -102,7 +83,6 @@ pub fn previous(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(
             _ => continue,
 
         }
-
     }
 
     Ok(())
@@ -115,29 +95,21 @@ pub fn next(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), R
     debug!("[fn]: next (handlebars helper)");
 
     debug!("[*]: Get data from context");
-    // get value from context data
-    // rc.get_path() is current json parent path, you should always use it like this
-    // param is the key of value you want to display
-    let chapters = rc.context()
-        .navigate(rc.get_path(), &VecDeque::new(), "chapters")?
-        .to_owned();
-
-    let current = rc.context()
-        .navigate(rc.get_path(), &VecDeque::new(), "path")?
-        .to_string()
+    let chapters = rc.evaluate_absolute("chapters")
+        .and_then(|c| {
+                      serde_json::value::from_value::<Vec<BTreeMap<String, String>>>(c.clone())
+                          .map_err(|_| RenderError::new("Could not decode the JSON data"))
+                  })?;
+    let current = rc.evaluate_absolute("path")?
+        .as_str()
+        .ok_or(RenderError::new("Type error for `path`, string expected"))?
         .replace("\"", "");
 
-    debug!("[*]: Decode chapters from JSON");
-    // Decode json format
-    let decoded: Vec<BTreeMap<String, String>> = match serde_json::from_str(&chapters.to_string()) {
-        Ok(data) => data,
-        Err(_) => return Err(RenderError::new("Could not decode the JSON data")),
-    };
     let mut previous: Option<BTreeMap<String, String>> = None;
 
     debug!("[*]: Search for current Chapter");
     // Search for current chapter and return previous entry
-    for item in decoded {
+    for item in chapters {
 
         match item.get("path") {
 
@@ -145,10 +117,9 @@ pub fn next(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), R
 
                 if let Some(previous) = previous {
 
-                    let previous_path = match previous.get("path") {
-                        Some(p) => p,
-                        None => return Err(RenderError::new("No path found for chapter in JSON data")),
-                    };
+                    let previous_path = previous
+                        .get("path")
+                        .ok_or(RenderError::new("No path found for chapter in JSON data"))?;
 
                     if previous_path == &current {
 
@@ -157,41 +128,33 @@ pub fn next(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), R
                         // Create new BTreeMap to extend the context: 'title' and 'link'
                         let mut next_chapter = BTreeMap::new();
 
-                        match item.get("name") {
-                            Some(n) => {
-                                debug!("[*]: Inserting title: {}", n);
-                                next_chapter.insert("title".to_owned(), json!(n));
-                            },
-                            None => return Err(RenderError::new("No title found for chapter in JSON data")),
-                        }
+                        item.get("name")
+                            .ok_or(RenderError::new("No title found for chapter in JSON data"))
+                            .and_then(|n| {
+                                          next_chapter.insert("title".to_owned(), json!(n));
+                                          Ok(())
+                                      })?;
 
-
-                        let link = Path::new(path).with_extension("html");
-                        debug!("[*]: Inserting link: {:?}", link);
-
-                        match link.to_str() {
-                            Some(l) => {
-                                // Hack for windows who tends to use `\` as separator instead of `/`
-                                next_chapter.insert("link".to_owned(), json!(l.replace("\\", "/")));
-                            },
-                            None => return Err(RenderError::new("Link could not converted to str")),
-                        }
-
-                        debug!("[*]: Inject in context");
-                        // Inject in current context
-                        let updated_context = rc.context().extend(&next_chapter);
+                        Path::new(path)
+                            .with_extension("html")
+                            .to_str()
+                            .ok_or(RenderError::new("Link could not converted to str"))
+                            .and_then(|l| {
+                                          debug!("[*]: Inserting link: {:?}", l);
+                                          // Hack for windows who tends to use `\` as separator instead of `/`
+                                          next_chapter.insert("link".to_owned(), json!(l.replace("\\", "/")));
+                                          Ok(())
+                                      })?;
 
                         debug!("[*]: Render template");
 
                         // Render template
-                        match _h.template() {
-                            Some(t) => {
-                                *rc.context_mut() = updated_context;
-                                t.render(r, rc)?;
-                            },
-                            None => return Err(RenderError::new("Error with the handlebars template")),
-                        }
-
+                        _h.template()
+                            .ok_or(RenderError::new("Error with the handlebars template"))
+                            .and_then(|t| {
+                                          let mut local_rc = rc.with_context(Context::wraps(&next_chapter));
+                                          t.render(r, &mut local_rc)
+                                      })?;
                         break;
                     }
                 }
