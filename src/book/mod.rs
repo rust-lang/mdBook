@@ -145,7 +145,7 @@ impl MDBook {
                     fs::create_dir_all(htmlconfig.get_destination())?;
                 }
             }
-            
+
 
             if !self.config.get_source().exists() {
                 debug!("[*]: {:?} does not exist, trying to create directory", self.config.get_source());
@@ -206,11 +206,11 @@ impl MDBook {
 
         // If the HTML renderer is not set, return
         if self.config.get_html_config().is_none() { return; }
-        
+
         let destination = self.config.get_html_config()
                                      .expect("The HtmlConfig does exist, checked just before")
                                      .get_destination();
-        
+
         // Check that the gitignore does not extist and that the destination path begins with the root path
         // We assume tha if it does begin with the root path it is contained within. This assumption
         // will not hold true for paths containing double dots to go back up e.g. `root/../destination`
@@ -247,7 +247,7 @@ impl MDBook {
         if let Some(htmlconfig) = self.config.get_html_config() {
             utils::fs::remove_dir_content(htmlconfig.get_destination())?;
         }
-        
+
         self.renderer.render(&self)?;
 
         Ok(())
@@ -292,7 +292,7 @@ impl MDBook {
             let mut highlight_js = File::create(&themedir.join("highlight.js"))?;
             highlight_js.write_all(theme::HIGHLIGHT_JS)?;
         }
-        
+
         Ok(())
     }
 
@@ -399,7 +399,7 @@ impl MDBook {
         self.config.get_root()
     }
 
-    
+
     pub fn with_destination<T: Into<PathBuf>>(mut self, destination: T) -> Self {
         let root = self.config.get_root().to_owned();
         if let Some(htmlconfig) = self.config.get_mut_html_config() {
@@ -410,7 +410,7 @@ impl MDBook {
 
         self
     }
-    
+
 
     pub fn get_destination(&self) -> Option<&Path> {
         if let Some(htmlconfig) = self.config.get_html_config() {
@@ -438,16 +438,6 @@ impl MDBook {
         self.config.get_title()
     }
 
-/*
-    pub fn set_author(mut self, author: &str) -> Self {
-        self.author = author.to_owned();
-        self
-    }
-
-    pub fn get_author(&self) -> &str {
-        &self.author
-    }
-*/
     pub fn with_description<T: Into<String>>(mut self, description: T) -> Self {
         self.config.set_description(description);
         self
