@@ -1,44 +1,30 @@
 @require 'variables'
 
 .page-wrapper {
-    position: absolute
-    overflow-y: auto
-    left: $sidebar-width + 15px
-    right: 0
-    top: 0
-    bottom: 0
+    padding-left: $sidebar-width
     box-sizing: border-box
-    -webkit-overflow-scrolling: touch
 
     min-height: 100%
 
     // Animation: slide away
-    transition: left 0.5s
+    transition: padding-left 0.5s
 
-    @media only screen and (max-width: 1060px) {
-        left: 15px;
-        padding-right: 15px;
+    @media only screen and (max-width: $max-page-width-with-hidden-sidebar) {
+        padding-left: 0
     }
 }
 
 .sidebar-hidden .page-wrapper {
-    left: 15px
+    padding-left: 0
 }
 
 .sidebar-visible .page-wrapper {
-    left: $sidebar-width + 15px
+    padding-left: $sidebar-width
 }
 
 .page {
-    position: absolute
-    top: 0
-    right: 0
-    left: 0
-    bottom: 0
     outline: 0
-
-    padding-right: 15px
-    overflow-y: auto
+    padding: 0 $page-padding
 }
 
 .content {

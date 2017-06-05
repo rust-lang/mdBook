@@ -1,7 +1,7 @@
 @require 'variables'
 
 .sidebar {
-    position: absolute
+    position: fixed
     left: 0
     top: 0
     bottom: 0
@@ -15,7 +15,7 @@
     // Animation: slide away
     transition: left 0.5s
 
-    @media only screen and (max-width: 1060px) {
+    @media only screen and (max-width: $max-page-width-with-hidden-sidebar) {
         left: - $sidebar-width
     }
 
