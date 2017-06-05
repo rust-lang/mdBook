@@ -21,6 +21,11 @@
         <link rel="stylesheet" href="highlight.css">
         <link rel="stylesheet" href="tomorrow-night.css">
 
+        <!-- Custom theme -->
+        {{#each additional_css}}
+        <link rel="stylesheet" href="{{this}}">
+        {{/each}}
+
         <!-- MathJax -->
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 

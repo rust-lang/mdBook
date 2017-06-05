@@ -53,7 +53,7 @@ impl Renderer for HtmlHandlebars {
 
         // Check if dest directory exists
         debug!("[*]: Check if destination directory exists");
-        if fs::create_dir_all(book.get_dest()).is_err() {
+        if fs::create_dir_all(book.get_destination().expect("If the HTML renderer is called, one would assume the HtmlConfig is set... (2)")).is_err() {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other,
                                                "Unexpected error when constructing destination path")));
         }
@@ -67,7 +67,7 @@ impl Renderer for HtmlHandlebars {
                 BookItem::Affix(ref ch) => {
                     if ch.path != PathBuf::new() {
 
-                        let path = book.get_src().join(&ch.path);
+                        let path = book.get_source().join(&ch.path);
 
                         debug!("[*]: Opening file: {:?}", path);
                         let mut f = File::open(&path)?;
@@ -116,8 +116,12 @@ impl Renderer for HtmlHandlebars {
                             debug!("[*]: index.html");
 
                             let mut content = String::new();
-                            let _source = File::open(book.get_dest().join(&ch.path.with_extension("html")))?
-                                .read_to_string(&mut content);
+
+                            let _source = File::open(
+                                book.get_destination()
+                                    .expect("If the HTML renderer is called, one would assume the HtmlConfig is set... (3)")
+                                    .join(&ch.path.with_extension("html"))
+                            )?.read_to_string(&mut content);
 
                             // This could cause a problem when someone displays
                             // code containing <base href=...>
@@ -131,7 +135,10 @@ impl Renderer for HtmlHandlebars {
                             book.write_file("index.html", content.as_bytes())?;
 
                             info!("[*] Creating index.html from {:?} ✓",
-                                  book.get_dest().join(&ch.path.with_extension("html")));
+                                  book.get_destination()
+                                      .expect("If the HTML renderer is called, one would assume the HtmlConfig is set... (4)")
+                                      .join(&ch.path.with_extension("html"))
+                            );
                             index = false;
                         }
                     }
@@ -180,8 +187,25 @@ impl Renderer for HtmlHandlebars {
         book.write_file("_FontAwesome/fonts/fontawesome-webfont.woff2", theme::FONT_AWESOME_WOFF2)?;
         book.write_file("_FontAwesome/fonts/FontAwesome.ttf", theme::FONT_AWESOME_TTF)?;
 
+        for style in book.get_additional_css() {
+            let mut data = Vec::new();
+            let mut f = File::open(style)?;
+            f.read_to_end(&mut data)?;
+
+            let name = match style.strip_prefix(book.get_root()) {
+                Ok(p) => p.to_str().expect("Could not convert to str"),
+                Err(_) => style.file_name().expect("File has a file name").to_str().expect("Could not convert to str"),
+            };
+
+            book.write_file(name, &data)?;
+        }
+
         // Copy all remaining files
-        utils::fs::copy_files_except_ext(book.get_src(), book.get_dest(), true, &["md"])?;
+        utils::fs::copy_files_except_ext(
+            book.get_source(), 
+            book.get_destination()
+                .expect("If the HTML renderer is called, one would assume the HtmlConfig is set... (5)"), true, &["md"]
+        )?;
 
         Ok(())
     }
@@ -200,8 +224,20 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
     }
 
     // Add google analytics tag
-    if let Some(ref ga) = book.google_analytics {
+    if let Some(ref ga) = book.get_google_analytics_id() {
         data.insert("google_analytics".to_owned(), json!(ga));
+    }
+
+    // Add check to see if there is an additional style
+    if book.has_additional_css() {
+        let mut css = Vec::new();
+        for style in book.get_additional_css() {
+            match style.strip_prefix(book.get_root()) {
+                Ok(p) => css.push(p.to_str().expect("Could not convert to str")),
+                Err(_) => css.push(style.file_name().expect("File has a file name").to_str().expect("Could not convert to str")),
+            }
+        }
+        data.insert("additional_css".to_owned(), json!(css));
     }
 
     let mut chapters = vec![];

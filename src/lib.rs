@@ -24,12 +24,13 @@
 //! use std::path::Path;
 //!
 //! fn main() {
-//!     let mut book =  MDBook::new(Path::new("my-book"))   // Path to root
-//!                         .set_src(Path::new("src"))      // Path from root to source directory
-//!                         .set_dest(Path::new("book"))    // Path from root to output directory
-//!                         .read_config();                 // Parse book.json file for configuration
+//!     let mut book =  MDBook::new(Path::new("my-book"))           // Path to root
+//!                         .with_source(Path::new("src"))          // Path from root to source directory
+//!                         .with_destination(Path::new("book"))    // Path from root to output directory
+//!                         .read_config()                          // Parse book.json file for configuration
+//!                         .expect("I don't handle the error for the configuration file, but you should!");
 //!
-//!     book.build().unwrap();                              // Render the book
+//!     book.build().unwrap();                                      // Render the book
 //! }
 //! ```
 //!
@@ -69,9 +70,11 @@
 //!
 //! Make sure to take a look at it.
 
-extern crate serde;
 #[macro_use]
-extern crate serde_json;
+extern crate serde_derive;
+extern crate serde;
+#[macro_use] extern crate serde_json;
+
 extern crate handlebars;
 extern crate pulldown_cmark;
 extern crate regex;
@@ -79,6 +82,7 @@ extern crate regex;
 #[macro_use]
 extern crate log;
 pub mod book;
+pub mod config;
 mod parse;
 pub mod renderer;
 pub mod theme;
@@ -86,5 +90,4 @@ pub mod utils;
 
 pub use book::MDBook;
 pub use book::BookItem;
-pub use book::BookConfig;
 pub use renderer::Renderer;

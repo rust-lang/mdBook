@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::PathBuf;
 use std::fs::File;
 use std::io::Read;
 
@@ -42,7 +42,7 @@ pub struct Theme {
 }
 
 impl Theme {
-    pub fn new(src: &Path) -> Self {
+    pub fn new(src: Option<&PathBuf>) -> Self {
 
         // Default theme
         let mut theme = Theme {
@@ -58,9 +58,11 @@ impl Theme {
         };
 
         // Check if the given path exists
-        if !src.exists() || !src.is_dir() {
+        if src.is_none() || !src.unwrap().exists() || !src.unwrap().is_dir() {
             return theme;
         }
+
+        let src = src.unwrap();
 
         // Check for individual files if they exist
 
