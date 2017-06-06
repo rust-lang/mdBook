@@ -1,7 +1,6 @@
 extern crate mdbook;
 extern crate tempdir;
 
-use std::path::Path;
 use std::fs::File;
 use std::io::Write;
 
@@ -13,10 +12,10 @@ use tempdir::TempDir;
 #[test]
 fn do_not_overwrite_unspecified_config_values() {
     let dir = TempDir::new("mdbook").expect("Could not create a temp dir");
-    
+
     let book = MDBook::new(dir.path())
-        .with_source(Path::new("bar"))
-        .with_destination(Path::new("baz"));
+        .with_source("bar")
+        .with_destination("baz");
 
     assert_eq!(book.get_root(), dir.path());
     assert_eq!(book.get_source(), dir.path().join("bar"));

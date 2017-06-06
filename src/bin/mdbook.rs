@@ -173,7 +173,7 @@ fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book = MDBook::new(&book_dir).read_config()?;
 
     let mut book = match args.value_of("dest-dir") {
-        Some(dest_dir) => book.with_destination(Path::new(dest_dir)),
+        Some(dest_dir) => book.with_destination(dest_dir),
         None => book,
     };
 
@@ -200,7 +200,7 @@ fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book = MDBook::new(&book_dir).read_config()?;
 
     let mut book = match args.value_of("dest-dir") {
-        Some(dest_dir) => book.with_destination(Path::new(dest_dir)),
+        Some(dest_dir) => book.with_destination(dest_dir),
         None => book,
     };
 
@@ -232,7 +232,7 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book = MDBook::new(&book_dir).read_config()?;
 
     let mut book = match args.value_of("dest-dir") {
-        Some(dest_dir) => book.with_destination(Path::new(dest_dir)),
+        Some(dest_dir) => book.with_destination(dest_dir),
         None => book,
     };
 

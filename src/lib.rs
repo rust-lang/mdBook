@@ -21,16 +21,16 @@
 //! extern crate mdbook;
 //!
 //! use mdbook::MDBook;
-//! use std::path::Path;
 //!
+//! # #[allow(unused_variables)]
 //! fn main() {
-//!     let mut book =  MDBook::new(Path::new("my-book"))           // Path to root
-//!                         .with_source(Path::new("src"))          // Path from root to source directory
-//!                         .with_destination(Path::new("book"))    // Path from root to output directory
-//!                         .read_config()                          // Parse book.json file for configuration
-//!                         .expect("I don't handle the error for the configuration file, but you should!");
+//!     let mut book =  MDBook::new("my-book")        // Path to root
+//!                         .with_source("src")       // Path from root to source directory
+//!                         .with_destination("book") // Path from root to output directory
+//!                         .read_config()            // Parse book.toml configuration file
+//!                         .expect("I don't handle configuration file error, but you should!");
 //!
-//!     book.build().unwrap();                                      // Render the book
+//!     book.build().unwrap();                        // Render the book
 //! }
 //! ```
 //!
@@ -46,12 +46,12 @@
 //! #
 //! # use mdbook::MDBook;
 //! # use mdbook::renderer::HtmlHandlebars;
-//! # use std::path::Path;
 //! #
+//! # #[allow(unused_variables)]
 //! # fn main() {
 //! #   let your_renderer = HtmlHandlebars::new();
 //! #
-//!     let book =  MDBook::new(Path::new("my-book")).set_renderer(Box::new(your_renderer));
+//!     let book =  MDBook::new("my-book").set_renderer(Box::new(your_renderer));
 //! # }
 //! ```
 //! If you make a renderer, you get the book constructed in form of `Vec<BookItems>` and you get
@@ -61,12 +61,11 @@
 //!
 //! ## utils
 //!
-//! I have regrouped some useful functions in the [utils](utils/index.html) module, like the following function
+//! I have regrouped some useful functions in the [utils](utils/index.html) module, like the
+//! following function [`utils::fs::create_file(path:
+//! &Path)`](utils/fs/fn.create_file.html)
 //!
-//! ```ignore
-//! utils::fs::create_path(path: &Path)
-//! ```
-//! This function creates all the directories in a given path if they do not exist
+//! This function creates a file and returns it. But before creating the file it checks every directory in the path to see if it exists, and if it does not it will be created.
 //!
 //! Make sure to take a look at it.
 
