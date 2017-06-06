@@ -102,7 +102,8 @@ $( document ).ready(function() {
                 .append($('<div class="theme" id="light">Light <span class="default">(default)</span><div>'))
                 .append($('<div class="theme" id="rust">Rust</div>'))
                 .append($('<div class="theme" id="coal">Coal</div>'))
-                .append($('<div class="theme" id="navy">Navy</div>'));
+                .append($('<div class="theme" id="navy">Navy</div>'))
+                .append($('<div class="theme" id="ayu">Ayu</div>'));
 
 
             popup.insertAfter(this);
@@ -118,9 +119,15 @@ $( document ).ready(function() {
 
     function set_theme(theme) {
         if (theme == 'coal' || theme == 'navy') {
+            $("[href='ayu-highlight.css']").prop('disabled', true);
             $("[href='tomorrow-night.css']").prop('disabled', false);
             $("[href='highlight.css']").prop('disabled', true);
+        } else if (theme == 'ayu') {
+            $("[href='ayu-highlight.css']").prop('disabled', false);
+            $("[href='tomorrow-night.css']").prop('disabled', true);
+            $("[href='highlight.css']").prop('disabled', true);
         } else {
+            $("[href='ayu-highlight.css']").prop('disabled', true);
             $("[href='tomorrow-night.css']").prop('disabled', true);
             $("[href='highlight.css']").prop('disabled', false);
         }
