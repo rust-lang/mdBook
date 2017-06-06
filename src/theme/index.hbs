@@ -44,6 +44,12 @@
                 document.write(unescape("%3Cscript src='jquery.js'%3E%3C/script%3E"));
             }
         </script>
+
+        <!-- Custom JS script -->
+        {{#each additional_js}}
+        <script type="text/javascript" src="{{this}}"></script>
+        {{/each}}
+
     </head>
     <body class="light">
         <!-- Set the theme before any content is loaded, prevents flash -->

@@ -187,14 +187,22 @@ impl Renderer for HtmlHandlebars {
         book.write_file("_FontAwesome/fonts/fontawesome-webfont.woff2", theme::FONT_AWESOME_WOFF2)?;
         book.write_file("_FontAwesome/fonts/FontAwesome.ttf", theme::FONT_AWESOME_TTF)?;
 
-        for style in book.get_additional_css() {
+        for custom_file in book.get_additional_css()
+                .iter()
+                .chain(book.get_additional_js().iter()) {
             let mut data = Vec::new();
-            let mut f = File::open(style)?;
+            let mut f = File::open(custom_file)?;
             f.read_to_end(&mut data)?;
 
-            let name = match style.strip_prefix(book.get_root()) {
+            let name = match custom_file.strip_prefix(book.get_root()) {
                 Ok(p) => p.to_str().expect("Could not convert to str"),
-                Err(_) => style.file_name().expect("File has a file name").to_str().expect("Could not convert to str"),
+                Err(_) => {
+                    custom_file
+                        .file_name()
+                        .expect("File has a file name")
+                        .to_str()
+                        .expect("Could not convert to str")
+                }
             };
 
             book.write_file(name, &data)?;
@@ -238,6 +246,18 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
             }
         }
         data.insert("additional_css".to_owned(), json!(css));
+    }
+
+    // Add check to see if there is an additional script
+    if book.has_additional_js() {
+        let mut js = Vec::new();
+        for script in book.get_additional_js() {
+            match script.strip_prefix(book.get_root()) {
+                Ok(p) => js.push(p.to_str().expect("Could not convert to str")),
+                Err(_) => js.push(script.file_name().expect("File has a file name").to_str().expect("Could not convert to str")),
+            }
+        }
+        data.insert("additional_js".to_owned(), json!(js));
     }
 
     let mut chapters = vec![];
