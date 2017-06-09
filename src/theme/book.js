@@ -234,9 +234,9 @@ function run_rust_code(code_block) {
         result_block = code_block.find(".result");
     }
 
-    let text = code_block.find(".language-rust").text();
+    var text = code_block.find(".language-rust").text();
 
-    let params = {
+    var params = {
         version: "stable",
         optimize: "0",
         code: text,
