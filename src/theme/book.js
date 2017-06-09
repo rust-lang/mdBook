@@ -242,7 +242,7 @@ function run_rust_code(code_block) {
         code: text,
     };
 
-    if(text.includes("#![feature")) {
+    if(text.indexOf("#![feature") !== -1) {
         params.version = "nightly";
     }
 
