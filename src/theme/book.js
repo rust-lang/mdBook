@@ -7,8 +7,8 @@ $( document ).ready(function() {
     window.onunload = function(){};
 
     // Set theme
-    var theme = localStorage.getItem('theme');
-    if (theme === null) { theme = 'light'; }
+    var theme = store.get('theme');
+    if (theme === null || theme === undefined) { theme = 'light'; }
 
     set_theme(theme);
 
@@ -115,7 +115,7 @@ $( document ).ready(function() {
             $("[href='highlight.css']").prop('disabled', false);
         }
 
-        localStorage.setItem('theme', theme);
+        store.set('theme', theme);
 
         $('body').removeClass().addClass(theme);
     }
@@ -221,17 +221,17 @@ function sidebarToggle() {
     var html = $("html");
     if ( html.hasClass("sidebar-hidden") ) {
         html.removeClass("sidebar-hidden").addClass("sidebar-visible");
-        localStorage.setItem('sidebar', 'visible');
+        store.set('sidebar', 'visible');
     } else if ( html.hasClass("sidebar-visible") ) {
         html.removeClass("sidebar-visible").addClass("sidebar-hidden");
-        localStorage.setItem('sidebar', 'hidden');
+        store.set('sidebar', 'hidden');
     } else {
         if($("#sidebar").position().left === 0){
             html.addClass("sidebar-hidden");
-            localStorage.setItem('sidebar', 'hidden');
+            store.set('sidebar', 'hidden');
         } else {
             html.addClass("sidebar-visible");
-            localStorage.setItem('sidebar', 'visible');
+            store.set('sidebar', 'visible');
         }
     }
 }

@@ -12,6 +12,7 @@ pub static TOMORROW_NIGHT_CSS: &'static [u8] = include_bytes!("tomorrow-night.cs
 pub static HIGHLIGHT_CSS: &'static [u8] = include_bytes!("highlight.css");
 pub static JQUERY: &'static [u8] = include_bytes!("jquery-2.1.4.min.js");
 pub static CLIPBOARD_JS: &'static [u8] = include_bytes!("clipboard.min.js");
+pub static STORE_JS: &'static [u8] = include_bytes!("store.js");
 pub static FONT_AWESOME: &'static [u8] = include_bytes!("_FontAwesome/css/font-awesome.min.css");
 pub static FONT_AWESOME_EOT: &'static [u8] = include_bytes!("_FontAwesome/fonts/fontawesome-webfont.eot");
 pub static FONT_AWESOME_SVG: &'static [u8] = include_bytes!("_FontAwesome/fonts/fontawesome-webfont.svg");
@@ -38,6 +39,7 @@ pub struct Theme {
     pub tomorrow_night_css: Vec<u8>,
     pub highlight_js: Vec<u8>,
     pub clipboard_js: Vec<u8>,
+    pub store_js: Vec<u8>,
     pub jquery: Vec<u8>,
 }
 
@@ -54,6 +56,7 @@ impl Theme {
             tomorrow_night_css: TOMORROW_NIGHT_CSS.to_owned(),
             highlight_js: HIGHLIGHT_JS.to_owned(),
             clipboard_js: CLIPBOARD_JS.to_owned(),
+            store_js: STORE_JS.to_owned(),
             jquery: JQUERY.to_owned(),
         };
 
@@ -100,6 +103,12 @@ impl Theme {
         if let Ok(mut f) = File::open(&src.join("clipboard.min.js")) {
             theme.clipboard_js.clear();
             let _ = f.read_to_end(&mut theme.clipboard_js);
+        }
+
+        // store.js
+        if let Ok(mut f) = File::open(&src.join("store.js")) {
+            theme.store_js.clear();
+            let _ = f.read_to_end(&mut theme.store_js);
         }
 
         // highlight.css

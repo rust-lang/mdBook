@@ -179,6 +179,7 @@ impl Renderer for HtmlHandlebars {
         book.write_file("tomorrow-night.css", &theme.tomorrow_night_css)?;
         book.write_file("highlight.js", &theme.highlight_js)?;
         book.write_file("clipboard.min.js", &theme.clipboard_js)?;
+        book.write_file("store.js", &theme.store_js)?;
         book.write_file("_FontAwesome/css/font-awesome.css", theme::FONT_AWESOME)?;
         book.write_file("_FontAwesome/fonts/fontawesome-webfont.eot", theme::FONT_AWESOME_EOT)?;
         book.write_file("_FontAwesome/fonts/fontawesome-webfont.svg", theme::FONT_AWESOME_SVG)?;
