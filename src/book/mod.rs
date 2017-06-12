@@ -487,6 +487,22 @@ impl MDBook {
         None
     }
 
+    pub fn has_additional_js(&self) -> bool {
+        if let Some(htmlconfig) = self.config.get_html_config() {
+            return htmlconfig.has_additional_js();
+        }
+
+        false
+    }
+
+    pub fn get_additional_js(&self) -> &[PathBuf] {
+        if let Some(htmlconfig) = self.config.get_html_config() {
+            return htmlconfig.get_additional_js();
+        }
+
+        &[]
+    }
+
     pub fn has_additional_css(&self) -> bool {
         if let Some(htmlconfig) = self.config.get_html_config() {
             return htmlconfig.has_additional_css();

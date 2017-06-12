@@ -8,6 +8,7 @@ pub struct HtmlConfig {
     theme: Option<PathBuf>,
     google_analytics: Option<String>,
     additional_css: Vec<PathBuf>,
+    additional_js: Vec<PathBuf>,
 }
 
 impl HtmlConfig {
@@ -28,6 +29,7 @@ impl HtmlConfig {
             theme: None,
             google_analytics: None,
             additional_css: Vec::new(),
+            additional_js: Vec::new(),
         }
     }
 
@@ -60,6 +62,16 @@ impl HtmlConfig {
                     self.additional_css.push(root.join(path));
                 } else {
                     self.additional_css.push(path);
+                }
+            }
+        }
+
+        if let Some(scriptpaths) = tomlconfig.additional_js {
+            for path in scriptpaths {
+                if path.is_relative() {
+                    self.additional_js.push(root.join(path));
+                } else {
+                    self.additional_js.push(path);
                 }
             }
         }
@@ -113,5 +125,13 @@ impl HtmlConfig {
 
     pub fn get_additional_css(&self) -> &[PathBuf] {
         &self.additional_css
+    }
+
+    pub fn has_additional_js(&self) -> bool {
+        !self.additional_js.is_empty()
+    }
+
+    pub fn get_additional_js(&self) -> &[PathBuf] {
+        &self.additional_js
     }
 }
