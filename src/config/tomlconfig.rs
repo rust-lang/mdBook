@@ -25,6 +25,7 @@ pub struct TomlHtmlConfig {
     pub theme: Option<PathBuf>,
     pub google_analytics: Option<String>,
     pub additional_css: Option<Vec<PathBuf>>,
+    pub additional_js: Option<Vec<PathBuf>>,
 }
 
 /// Returns a TomlConfig from a TOML string

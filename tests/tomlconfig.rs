@@ -115,3 +115,17 @@ fn from_toml_output_html_additional_stylesheet() {
 
     assert_eq!(htmlconfig.get_additional_css(), &[PathBuf::from("root/custom.css"), PathBuf::from("root/two/custom.css")]);
 }
+
+// Tests that the `output.html.additional-js` key is correcly parsed in the TOML config
+#[test]
+fn from_toml_output_html_additional_scripts() {
+    let toml = r#"[output.html]
+    additional-js = ["custom.js", "two/custom.js"]"#;
+
+    let parsed = TomlConfig::from_toml(&toml).expect("This should parse");
+    let config = BookConfig::from_tomlconfig("root", parsed);
+
+    let htmlconfig = config.get_html_config().expect("There should be an HtmlConfig");
+
+    assert_eq!(htmlconfig.get_additional_js(), &[PathBuf::from("root/custom.js"), PathBuf::from("root/two/custom.js")]);
+}
