@@ -7,8 +7,8 @@ $( document ).ready(function() {
     window.onunload = function(){};
 
     // Set theme
-    var theme = localStorage.getItem('theme');
-    if (theme === null) { theme = 'light'; }
+    var theme = store.get('theme');
+    if (theme === null || theme === undefined) { theme = 'light'; }
 
     set_theme(theme);
 
@@ -51,30 +51,20 @@ $( document ).ready(function() {
     });
 
     // Interesting DOM Elements
-    var html = $("html");
     var sidebar = $("#sidebar");
     var page_wrapper = $("#page-wrapper");
     var content = $("#content");
 
     // Toggle sidebar
-    $("#sidebar-toggle").click(function(event){
-        if ( html.hasClass("sidebar-hidden") ) {
-            html.removeClass("sidebar-hidden").addClass("sidebar-visible");
-            localStorage.setItem('sidebar', 'visible');
-        } else if ( html.hasClass("sidebar-visible") ) {
-            html.removeClass("sidebar-visible").addClass("sidebar-hidden");
-            localStorage.setItem('sidebar', 'hidden');
-        } else {
-            if(sidebar.position().left === 0){
-                html.addClass("sidebar-hidden");
-                localStorage.setItem('sidebar', 'hidden');
-            } else {
-                html.addClass("sidebar-visible");
-                localStorage.setItem('sidebar', 'visible');
-            }
+    $("#sidebar-toggle").click(sidebarToggle);
+
+    // Hide sidebar on section link click if it occupies large space
+    // in relation to the whole screen (phone in portrait)
+    $("#sidebar a").click(function(event){
+        if (sidebar.width() > window.screen.width * 0.4) {
+            sidebarToggle();
         }
     });
-
 
     // Scroll sidebar to current active section
     var activeSection = sidebar.find(".active");
@@ -125,7 +115,7 @@ $( document ).ready(function() {
             $("[href='highlight.css']").prop('disabled', false);
         }
 
-        localStorage.setItem('theme', theme);
+        store.set('theme', theme);
 
         $('body').removeClass().addClass(theme);
     }
@@ -225,6 +215,25 @@ function hideTooltip(elem) {
 function showTooltip(elem, msg) {
     elem.firstChild.innerText=msg;
     elem.setAttribute('class', 'fa fa-copy tooltipped');
+}
+
+function sidebarToggle() {
+    var html = $("html");
+    if ( html.hasClass("sidebar-hidden") ) {
+        html.removeClass("sidebar-hidden").addClass("sidebar-visible");
+        store.set('sidebar', 'visible');
+    } else if ( html.hasClass("sidebar-visible") ) {
+        html.removeClass("sidebar-visible").addClass("sidebar-hidden");
+        store.set('sidebar', 'hidden');
+    } else {
+        if($("#sidebar").position().left === 0){
+            html.addClass("sidebar-hidden");
+            store.set('sidebar', 'hidden');
+        } else {
+            html.addClass("sidebar-visible");
+            store.set('sidebar', 'visible');
+        }
+    }
 }
 
 function run_rust_code(code_block) {
