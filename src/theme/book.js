@@ -201,7 +201,7 @@ $( document ).ready(function() {
     var clipboardSnippets = new Clipboard('.clip-button', {
         text: function(trigger) {
             hideTooltip(trigger);
-            return trigger.parentElement.parentElement.textContent;
+            return $(trigger).parents(".playpen").find("code.language-rust.hljs")[0].textContent;
         }
     });
     clipboardSnippets.on('success', function(e) {
