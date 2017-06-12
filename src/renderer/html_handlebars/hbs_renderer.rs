@@ -177,6 +177,7 @@ impl Renderer for HtmlHandlebars {
         book.write_file("jquery.js", &theme.jquery)?;
         book.write_file("highlight.css", &theme.highlight_css)?;
         book.write_file("tomorrow-night.css", &theme.tomorrow_night_css)?;
+        book.write_file("ayu-highlight.css", &theme.ayu_highlight_css)?;
         book.write_file("highlight.js", &theme.highlight_js)?;
         book.write_file("clipboard.min.js", &theme.clipboard_js)?;
         book.write_file("store.js", &theme.store_js)?;
