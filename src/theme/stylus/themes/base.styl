@@ -56,7 +56,7 @@
         background-color: $sidebar-bg
     }
 
-    .content a:link, a:visited {
+    .content a:link, a:visited, a > .hljs {
         color: $links
     }
 
@@ -105,6 +105,11 @@
         vertical-align: middle;
         padding: 0.1em 0.3em;
         border-radius: 3px;
+        color: $inline-code-color;
+    }
+
+    a:hover > .hljs {
+        text-decoration: underline;
     }
 
     pre {

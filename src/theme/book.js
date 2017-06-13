@@ -7,8 +7,8 @@ $( document ).ready(function() {
     window.onunload = function(){};
 
     // Set theme
-    var theme = localStorage.getItem('theme');
-    if (theme === null) { theme = 'light'; }
+    var theme = store.get('theme');
+    if (theme === null || theme === undefined) { theme = 'light'; }
 
     set_theme(theme);
 
@@ -51,30 +51,20 @@ $( document ).ready(function() {
     });
 
     // Interesting DOM Elements
-    var html = $("html");
     var sidebar = $("#sidebar");
     var page_wrapper = $("#page-wrapper");
     var content = $("#content");
 
     // Toggle sidebar
-    $("#sidebar-toggle").click(function(event){
-        if ( html.hasClass("sidebar-hidden") ) {
-            html.removeClass("sidebar-hidden").addClass("sidebar-visible");
-            localStorage.setItem('sidebar', 'visible');
-        } else if ( html.hasClass("sidebar-visible") ) {
-            html.removeClass("sidebar-visible").addClass("sidebar-hidden");
-            localStorage.setItem('sidebar', 'hidden');
-        } else {
-            if(sidebar.position().left === 0){
-                html.addClass("sidebar-hidden");
-                localStorage.setItem('sidebar', 'hidden');
-            } else {
-                html.addClass("sidebar-visible");
-                localStorage.setItem('sidebar', 'visible');
-            }
+    $("#sidebar-toggle").click(sidebarToggle);
+
+    // Hide sidebar on section link click if it occupies large space
+    // in relation to the whole screen (phone in portrait)
+    $("#sidebar a").click(function(event){
+        if (sidebar.width() > window.screen.width * 0.4) {
+            sidebarToggle();
         }
     });
-
 
     // Scroll sidebar to current active section
     var activeSection = sidebar.find(".active");
@@ -102,7 +92,8 @@ $( document ).ready(function() {
                 .append($('<div class="theme" id="light">Light <span class="default">(default)</span><div>'))
                 .append($('<div class="theme" id="rust">Rust</div>'))
                 .append($('<div class="theme" id="coal">Coal</div>'))
-                .append($('<div class="theme" id="navy">Navy</div>'));
+                .append($('<div class="theme" id="navy">Navy</div>'))
+                .append($('<div class="theme" id="ayu">Ayu</div>'));
 
 
             popup.insertAfter(this);
@@ -118,14 +109,20 @@ $( document ).ready(function() {
 
     function set_theme(theme) {
         if (theme == 'coal' || theme == 'navy') {
+            $("[href='ayu-highlight.css']").prop('disabled', true);
             $("[href='tomorrow-night.css']").prop('disabled', false);
             $("[href='highlight.css']").prop('disabled', true);
+        } else if (theme == 'ayu') {
+            $("[href='ayu-highlight.css']").prop('disabled', false);
+            $("[href='tomorrow-night.css']").prop('disabled', true);
+            $("[href='highlight.css']").prop('disabled', true);
         } else {
+            $("[href='ayu-highlight.css']").prop('disabled', true);
             $("[href='tomorrow-night.css']").prop('disabled', true);
             $("[href='highlight.css']").prop('disabled', false);
         }
 
-        localStorage.setItem('theme', theme);
+        store.set('theme', theme);
 
         $('body').removeClass().addClass(theme);
     }
@@ -146,10 +143,10 @@ $( document ).ready(function() {
         for(var n = 0; n < lines.length; n++){
             if($.trim(lines[n])[0] == hiding_character){
                 if(first_non_hidden_line){
-                    lines[n] = "<span class=\"hidden\">" + "\n" + lines[n].replace(/(\s*)#/, "$1") + "</span>";
+                    lines[n] = "<span class=\"hidden\">" + "\n" + lines[n].replace(/(\s*)# ?/, "$1") + "</span>";
                 }
                 else {
-                    lines[n] = "<span class=\"hidden\">" + lines[n].replace(/(\s*)#/, "$1") + "\n"  +  "</span>";
+                    lines[n] = "<span class=\"hidden\">" + lines[n].replace(/(\s*)# ?/, "$1") + "\n"  +  "</span>";
                 }
                 lines_hidden = true;
             }
@@ -191,15 +188,60 @@ $( document ).ready(function() {
             buttons = pre_block.find(".buttons");
         }
         buttons.prepend("<i class=\"fa fa-play play-button\"></i>");
+        buttons.prepend("<i class=\"fa fa-copy clip-button\"><i class=\"tooltiptext\"></i></i>");
 
         buttons.find(".play-button").click(function(e){
             run_rust_code(pre_block);
         });
+        buttons.find(".clip-button").mouseout(function(e){
+            hideTooltip(e.currentTarget);
+        });
     });
 
+    var clipboardSnippets = new Clipboard('.clip-button', {
+        text: function(trigger) {
+            hideTooltip(trigger);
+            return $(trigger).parents(".playpen").find("code.language-rust.hljs")[0].textContent;
+        }
+    });
+    clipboardSnippets.on('success', function(e) {
+            e.clearSelection();
+            showTooltip(e.trigger, "Copied!");
+    });
+    clipboardSnippets.on('error', function(e) {
+            showTooltip(e.trigger, "Clipboard error!");
+    });
 
 });
 
+function hideTooltip(elem) {
+    elem.firstChild.innerText="";
+    elem.setAttribute('class', 'fa fa-copy clip-button');
+}
+
+function showTooltip(elem, msg) {
+    elem.firstChild.innerText=msg;
+    elem.setAttribute('class', 'fa fa-copy tooltipped');
+}
+
+function sidebarToggle() {
+    var html = $("html");
+    if ( html.hasClass("sidebar-hidden") ) {
+        html.removeClass("sidebar-hidden").addClass("sidebar-visible");
+        store.set('sidebar', 'visible');
+    } else if ( html.hasClass("sidebar-visible") ) {
+        html.removeClass("sidebar-visible").addClass("sidebar-hidden");
+        store.set('sidebar', 'hidden');
+    } else {
+        if($("#sidebar").position().left === 0){
+            html.addClass("sidebar-hidden");
+            store.set('sidebar', 'hidden');
+        } else {
+            html.addClass("sidebar-visible");
+            store.set('sidebar', 'visible');
+        }
+    }
+}
 
 function run_rust_code(code_block) {
     var result_block = code_block.find(".result");
@@ -208,15 +250,15 @@ function run_rust_code(code_block) {
         result_block = code_block.find(".result");
     }
 
-    let text = code_block.find(".language-rust").text();
+    var text = code_block.find(".language-rust").text();
 
-    let params = {
+    var params = {
         version: "stable",
         optimize: "0",
         code: text,
     };
 
-    if(text.includes("#![feature")) {
+    if(text.indexOf("#![feature") !== -1) {
         params.version = "nightly";
     }
 

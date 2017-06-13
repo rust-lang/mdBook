@@ -6,10 +6,10 @@ use book::bookitem::{BookItem, Chapter};
 pub fn construct_bookitems(path: &PathBuf) -> Result<Vec<BookItem>> {
     debug!("[fn]: construct_bookitems");
     let mut summary = String::new();
-    try!(try!(File::open(path)).read_to_string(&mut summary));
+    File::open(path)?.read_to_string(&mut summary)?;
 
     debug!("[*]: Parse SUMMARY.md");
-    let top_items = try!(parse_level(&mut summary.split('\n').collect(), 0, vec![0]));
+    let top_items = parse_level(&mut summary.split('\n').collect(), 0, vec![0])?;
     debug!("[*]: Done parsing SUMMARY.md");
     Ok(top_items)
 }
@@ -22,9 +22,10 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
     while !summary.is_empty() {
         let item: BookItem;
         // Indentation level of the line to parse
-        let level = try!(level(summary[0], 4));
+        let level = level(summary[0], 4)?;
 
-        // if level < current_level we remove the last digit of section, exit the current function,
+        // if level < current_level we remove the last digit of section,
+        // exit the current function,
         // and return the parsed level to the calling function.
         if level < current_level {
             break;
@@ -35,11 +36,13 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
             // Level can not be root level !!
             // Add a sub-number to section
             section.push(0);
-            let last = items.pop().expect("There should be at least one item since this can't be the root level");
+            let last = items
+                .pop()
+                .expect("There should be at least one item since this can't be the root level");
 
             if let BookItem::Chapter(ref s, ref ch) = last {
                 let mut ch = ch.clone();
-                ch.sub_items = try!(parse_level(summary, level, section.clone()));
+                ch.sub_items = parse_level(summary, level, section.clone())?;
                 items.push(BookItem::Chapter(s.clone(), ch));
 
                 // Remove the last number from the section, because we got back to our level..
@@ -62,7 +65,8 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
                 // Eliminate possible errors and set section to -1 after suffix
                 match parsed_item {
                     // error if level != 0 and BookItem is != Chapter
-                    BookItem::Affix(_) | BookItem::Spacer if level > 0 => {
+                    BookItem::Affix(_) |
+                    BookItem::Spacer if level > 0 => {
                         return Err(Error::new(ErrorKind::Other,
                                               "Your summary.md is messed up\n\n
                                 \
@@ -98,7 +102,9 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
                         // Increment section
                         let len = section.len() - 1;
                         section[len] += 1;
-                        let s = section.iter().fold("".to_owned(), |s, i| s + &i.to_string() + ".");
+                        let s = section
+                            .iter()
+                            .fold("".to_owned(), |s, i| s + &i.to_string() + ".");
                         BookItem::Chapter(s, ch)
                     },
                     _ => parsed_item,

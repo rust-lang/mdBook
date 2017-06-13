@@ -87,7 +87,7 @@ pub fn previous(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(
                         match _h.template() {
                             Some(t) => {
                                 *rc.context_mut() = updated_context;
-                                try!(t.render(r, rc));
+                                t.render(r, rc)?;
                             },
                             None => return Err(RenderError::new("Error with the handlebars template")),
                         }
@@ -187,7 +187,7 @@ pub fn next(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), R
                         match _h.template() {
                             Some(t) => {
                                 *rc.context_mut() = updated_context;
-                                try!(t.render(r, rc));
+                                t.render(r, rc)?;
                             },
                             None => return Err(RenderError::new("Error with the handlebars template")),
                         }

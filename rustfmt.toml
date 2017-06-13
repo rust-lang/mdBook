@@ -10,6 +10,7 @@ enum_trailing_comma = true
 match_block_trailing_comma = true
 struct_trailing_comma = "Always"
 wrap_comments = true
+use_try_shorthand = true
 
 report_todo = "Always"
 report_fixme = "Always"
