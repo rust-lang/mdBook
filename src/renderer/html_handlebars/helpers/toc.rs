@@ -1,5 +1,5 @@
 use std::path::Path;
-use std::collections::{VecDeque, BTreeMap};
+use std::collections::BTreeMap;
 
 use serde_json;
 use handlebars::{Handlebars, HelperDef, RenderError, RenderContext, Helper};
@@ -29,7 +29,7 @@ impl HelperDef for RenderToc {
 
         let mut current_level = 1;
 
-        for item in chatpers {
+        for item in chapters {
 
             // Spacer
             if item.get("spacer").is_some() {
