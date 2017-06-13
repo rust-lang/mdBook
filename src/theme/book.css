@@ -408,6 +408,7 @@ table thead td {
 }
 .light pre > .buttons {
   position: absolute;
+  z-index: 100;
   right: 5px;
   top: 5px;
   color: #364149;
@@ -527,6 +528,7 @@ table thead td {
 }
 .coal pre > .buttons {
   position: absolute;
+  z-index: 100;
   right: 5px;
   top: 5px;
   color: #a1adb8;
@@ -646,6 +648,7 @@ table thead td {
 }
 .navy pre > .buttons {
   position: absolute;
+  z-index: 100;
   right: 5px;
   top: 5px;
   color: #c8c9db;
@@ -765,6 +768,7 @@ table thead td {
 }
 .rust pre > .buttons {
   position: absolute;
+  z-index: 100;
   right: 5px;
   top: 5px;
   color: #c8c9db;
@@ -884,6 +888,7 @@ table thead td {
 }
 .ayu pre > .buttons {
   position: absolute;
+  z-index: 100;
   right: 5px;
   top: 5px;
   color: #c8c9db;
