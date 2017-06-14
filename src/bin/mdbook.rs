@@ -21,6 +21,9 @@ extern crate staticfile;
 #[cfg(feature = "serve")]
 extern crate ws;
 
+#[cfg(feature = "serve")]
+use iron::{Iron, AfterMiddleware, IronResult, IronError, Request, Response, status, Set, Chain};
+
 use std::env;
 use std::error::Error;
 use std::ffi::OsStr;
@@ -233,6 +236,18 @@ fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
     Ok(())
 }
 
+#[cfg(feature = "serve")]
+struct ErrorRecover;
+
+#[cfg(feature = "serve")]
+impl AfterMiddleware for ErrorRecover {
+    fn catch(&self, _: &mut Request, err: IronError) -> IronResult<Response> {
+        match err.response.status {
+            Some(_) => Ok(err.response.set(status::NotFound)),
+            _ => Err(err)
+        }
+    }
+}
 
 // Watch command implementation
 #[cfg(feature = "serve")]
@@ -286,9 +301,9 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
 
     book.build()?;
 
-    let staticfile = staticfile::Static::new(book.get_destination().expect("destination is present, checked before"));
-    let iron = iron::Iron::new(staticfile);
-    let _iron = iron.http(&*address).unwrap();
+    let mut chain = Chain::new(staticfile::Static::new(book.get_destination().expect("destination is present, checked before")));
+    chain.link_after(ErrorRecover);
+    let _iron = Iron::new(chain).http(&*address).unwrap();
 
     let ws_server = ws::WebSocket::new(|_| |_| Ok(())).unwrap();
 
