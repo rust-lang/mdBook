@@ -28,7 +28,7 @@ impl HtmlHandlebars {
     }
 
     fn render_item(&self, item: &BookItem, book: &MDBook, data: &mut serde_json::Map<String, serde_json::Value>,
-                   print_content: &mut String, handlebars: &mut Handlebars, index: &mut bool)
+                   print_content: &mut String, handlebars: &mut Handlebars, index: &mut bool, destination: &Path)
                    -> Result<(), Box<Error>> {
         match *item {
             BookItem::Chapter(_, ref ch) |
@@ -66,14 +66,9 @@ impl HtmlHandlebars {
                     // Render the handlebars template with the data
                     debug!("[*]: Render template");
                     let rendered = handlebars.render("index", &data)?;
+                    let rendered = self.post_processing(rendered);
 
                     let filename = Path::new(&ch.path).with_extension("html");
-
-                    // Do several kinds of post-processing
-                    let rendered = build_header_links(rendered, filename.to_str().unwrap_or(""));
-                    let rendered = fix_anchor_links(rendered, filename.to_str().unwrap_or(""));
-                    let rendered = fix_code_blocks(rendered);
-                    let rendered = add_playpen_pre(rendered);
 
                     // Write to file
                     info!("[*] Creating {:?} ✓", filename.display());
@@ -86,9 +81,7 @@ impl HtmlHandlebars {
                         let mut content = String::new();
 
                         let _source = File::open(
-                                book.get_destination()
-                                    .expect("If the HTML renderer is called, one would assume the HtmlConfig is set... (3)")
-                                    .join(&ch.path.with_extension("html"))
+                                destination.join(&ch.path.with_extension("html"))
                             )?.read_to_string(&mut content);
 
                         // This could cause a problem when someone displays
@@ -148,7 +141,6 @@ impl HtmlHandlebars {
         Ok(())
     }
 
-
     fn write_custom_file(&self, custom_file: &Path, book: &MDBook) -> Result<(), Box<Error>> {
             let mut data = Vec::new();
             let mut f = File::open(custom_file)?;
@@ -200,10 +192,8 @@ impl Renderer for HtmlHandlebars {
         debug!("[fn]: render");
         let mut handlebars = Handlebars::new();
 
-        // Load theme
         let theme = theme::Theme::new(book.get_theme_path());
 
-        // Register template
         debug!("[*]: Register handlebars template");
         handlebars
             .register_template_string("index", String::from_utf8(theme.index.clone())?)?;
@@ -214,12 +204,12 @@ impl Renderer for HtmlHandlebars {
         let mut data = make_data(book)?;
 
         // Print version
-        let mut print_content: String = String::new();
+        let mut print_content = String::new();
 
-        debug!("[*]: Check if destination directory exists");
         let destination = book.get_destination()
                 .expect("If the HTML renderer is called, one would assume the HtmlConfig is set... (2)");
 
+        debug!("[*]: Check if destination directory exists");
         if fs::create_dir_all(&destination).is_err() {
             return Err(Box::new(io::Error::new(io::ErrorKind::Other,
                                                "Unexpected error when constructing destination path")));
@@ -227,7 +217,7 @@ impl Renderer for HtmlHandlebars {
 
         let mut index = true;
         for item in book.iter() {
-            self.render_item(item, book, &mut data, &mut print_content, &mut handlebars, &mut index)?;
+            self.render_item(item, book, &mut data, &mut print_content, &mut handlebars, &mut index, &destination)?;
         }
 
         // Print version
