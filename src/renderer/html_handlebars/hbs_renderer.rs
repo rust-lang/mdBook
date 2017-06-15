@@ -25,6 +25,96 @@ impl HtmlHandlebars {
     pub fn new() -> Self {
         HtmlHandlebars
     }
+
+    fn render_item(&self, item: &BookItem, book: &MDBook, data: &mut serde_json::Map<String, serde_json::Value>,
+                   print_content: &mut String, handlebars: &mut Handlebars, index: &mut bool)
+                   -> Result<(), Box<Error>> {
+        match *item {
+            BookItem::Chapter(_, ref ch) |
+            BookItem::Affix(ref ch) => {
+                if ch.path != PathBuf::new() {
+
+                    let path = book.get_source().join(&ch.path);
+
+                    debug!("[*]: Opening file: {:?}", path);
+                    let mut f = File::open(&path)?;
+                    let mut content: String = String::new();
+
+                    debug!("[*]: Reading file");
+                    f.read_to_string(&mut content)?;
+
+                    // Parse for playpen links
+                    if let Some(p) = path.parent() {
+                        content = helpers::playpen::render_playpen(&content, p);
+                    }
+
+                    // Render markdown using the pulldown-cmark crate
+                    content = utils::render_markdown(&content);
+                    print_content.push_str(&content);
+
+                    // Update the context with data for this file
+                    let path =
+                        ch.path
+                            .to_str()
+                            .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))?;
+                    data.insert("path".to_owned(), json!(path));
+                    data.insert("content".to_owned(), json!(content));
+                    data.insert("chapter_title".to_owned(), json!(ch.name));
+                    data.insert("path_to_root".to_owned(), json!(utils::fs::path_to_root(&ch.path)));
+
+                    // Render the handlebars template with the data
+                    debug!("[*]: Render template");
+                    let rendered = handlebars.render("index", &data)?;
+
+                    let filename = Path::new(&ch.path).with_extension("html");
+
+                    // Do several kinds of post-processing
+                    let rendered = build_header_links(rendered, filename.to_str().unwrap_or(""));
+                    let rendered = fix_anchor_links(rendered, filename.to_str().unwrap_or(""));
+                    let rendered = fix_code_blocks(rendered);
+                    let rendered = add_playpen_pre(rendered);
+
+                    // Write to file
+                    info!("[*] Creating {:?} ✓", filename.display());
+                    book.write_file(filename, &rendered.into_bytes())?;
+
+                    // Create an index.html from the first element in SUMMARY.md
+                    if *index {
+                        debug!("[*]: index.html");
+
+                        let mut content = String::new();
+
+                        let _source = File::open(
+                                book.get_destination()
+                                    .expect("If the HTML renderer is called, one would assume the HtmlConfig is set... (3)")
+                                    .join(&ch.path.with_extension("html"))
+                            )?.read_to_string(&mut content);
+
+                        // This could cause a problem when someone displays
+                        // code containing <base href=...>
+                        // on the front page, however this case should be very very rare...
+                        content = content
+                            .lines()
+                            .filter(|line| !line.contains("<base href="))
+                            .collect::<Vec<&str>>()
+                            .join("\n");
+
+                        book.write_file("index.html", content.as_bytes())?;
+
+                        info!("[*] Creating index.html from {:?} ✓",
+                                  book.get_destination()
+                                      .expect("If the HTML renderer is called, one would assume the HtmlConfig is set... (4)")
+                                      .join(&ch.path.with_extension("html"))
+                            );
+                        *index = false;
+                    }
+                }
+            },
+            _ => {},
+        }
+
+        Ok(())
+    }
 }
 
 impl Renderer for HtmlHandlebars {
@@ -61,90 +151,7 @@ impl Renderer for HtmlHandlebars {
         // Render a file for every entry in the book
         let mut index = true;
         for item in book.iter() {
-
-            match *item {
-                BookItem::Chapter(_, ref ch) |
-                BookItem::Affix(ref ch) => {
-                    if ch.path != PathBuf::new() {
-
-                        let path = book.get_source().join(&ch.path);
-
-                        debug!("[*]: Opening file: {:?}", path);
-                        let mut f = File::open(&path)?;
-                        let mut content: String = String::new();
-
-                        debug!("[*]: Reading file");
-                        f.read_to_string(&mut content)?;
-
-                        // Parse for playpen links
-                        if let Some(p) = path.parent() {
-                            content = helpers::playpen::render_playpen(&content, p);
-                        }
-
-                        // Render markdown using the pulldown-cmark crate
-                        content = utils::render_markdown(&content);
-                        print_content.push_str(&content);
-
-                        // Update the context with data for this file
-                        let path =
-                            ch.path
-                                .to_str()
-                                .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))?;
-                        data.insert("path".to_owned(), json!(path));
-                        data.insert("content".to_owned(), json!(content));
-                        data.insert("chapter_title".to_owned(), json!(ch.name));
-                        data.insert("path_to_root".to_owned(), json!(utils::fs::path_to_root(&ch.path)));
-
-                        // Render the handlebars template with the data
-                        debug!("[*]: Render template");
-                        let rendered = handlebars.render("index", &data)?;
-
-                        let filename = Path::new(&ch.path).with_extension("html");
-
-                        // Do several kinds of post-processing
-                        let rendered = build_header_links(rendered, filename.to_str().unwrap_or(""));
-                        let rendered = fix_anchor_links(rendered, filename.to_str().unwrap_or(""));
-                        let rendered = fix_code_blocks(rendered);
-                        let rendered = add_playpen_pre(rendered);
-
-                        // Write to file
-                        info!("[*] Creating {:?} ✓", filename.display());
-                        book.write_file(filename, &rendered.into_bytes())?;
-
-                        // Create an index.html from the first element in SUMMARY.md
-                        if index {
-                            debug!("[*]: index.html");
-
-                            let mut content = String::new();
-
-                            let _source = File::open(
-                                book.get_destination()
-                                    .expect("If the HTML renderer is called, one would assume the HtmlConfig is set... (3)")
-                                    .join(&ch.path.with_extension("html"))
-                            )?.read_to_string(&mut content);
-
-                            // This could cause a problem when someone displays
-                            // code containing <base href=...>
-                            // on the front page, however this case should be very very rare...
-                            content = content
-                                .lines()
-                                .filter(|line| !line.contains("<base href="))
-                                .collect::<Vec<&str>>()
-                                .join("\n");
-
-                            book.write_file("index.html", content.as_bytes())?;
-
-                            info!("[*] Creating index.html from {:?} ✓",
-                                  book.get_destination()
-                                      .expect("If the HTML renderer is called, one would assume the HtmlConfig is set... (4)")
-                                      .join(&ch.path.with_extension("html"))
-                            );
-                            index = false;
-                        }
-                    }
-                },
-                _ => {},
-            }
+            self.render_item(item, book, &mut data, &mut print_content, &mut handlebars, &mut index)?;
         }
 
         // Print version
@@ -204,7 +211,7 @@ impl Renderer for HtmlHandlebars {
                         .expect("File has a file name")
                         .to_str()
                         .expect("Could not convert to str")
-                }
+                },
             };
 
             book.write_file(name, &data)?;
@@ -244,7 +251,13 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
         for style in book.get_additional_css() {
             match style.strip_prefix(book.get_root()) {
                 Ok(p) => css.push(p.to_str().expect("Could not convert to str")),
-                Err(_) => css.push(style.file_name().expect("File has a file name").to_str().expect("Could not convert to str")),
+                Err(_) => {
+                    css.push(style
+                                 .file_name()
+                                 .expect("File has a file name")
+                                 .to_str()
+                                 .expect("Could not convert to str"))
+                },
             }
         }
         data.insert("additional_css".to_owned(), json!(css));
@@ -256,7 +269,13 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
         for script in book.get_additional_js() {
             match script.strip_prefix(book.get_root()) {
                 Ok(p) => js.push(p.to_str().expect("Could not convert to str")),
-                Err(_) => js.push(script.file_name().expect("File has a file name").to_str().expect("Could not convert to str")),
+                Err(_) => {
+                    js.push(script
+                                .file_name()
+                                .expect("File has a file name")
+                                .to_str()
+                                .expect("Could not convert to str"))
+                },
             }
         }
         data.insert("additional_js".to_owned(), json!(js));
