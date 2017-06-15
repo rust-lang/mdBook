@@ -182,6 +182,16 @@ impl HtmlHandlebars {
         handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
         handlebars.register_helper("next", Box::new(helpers::navigation::next));
     }
+
+    fn copy_additional_css(&self, book: &MDBook) -> Result<(), Box<Error>> {
+        for custom_file in book.get_additional_css()
+                .iter()
+                .chain(book.get_additional_js().iter()) {
+                    self.write_custom_file(custom_file, book)?;
+        }
+
+        Ok(())
+    }
 }
 
 
@@ -198,7 +208,6 @@ impl Renderer for HtmlHandlebars {
         handlebars
             .register_template_string("index", String::from_utf8(theme.index.clone())?)?;
 
-        // Register helpers
         debug!("[*]: Register handlebars helpers");
         self.register_hbs_helpers(&mut handlebars);
 
@@ -236,12 +245,7 @@ impl Renderer for HtmlHandlebars {
         // Copy static files (js, css, images, ...)
         debug!("[*] Copy static files");
         self.copy_static_files(book, &theme)?;
-
-        for custom_file in book.get_additional_css()
-                .iter()
-                .chain(book.get_additional_js().iter()) {
-                    self.write_custom_file(custom_file, book)?;
-        }
+        self.copy_additional_css(book)?;
 
         // Copy all remaining files
         utils::fs::copy_files_except_ext(book.get_source(), &destination, true, &["md"])?;
