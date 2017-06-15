@@ -1,5 +1,5 @@
 use renderer::html_handlebars::helpers;
-use renderer::Renderer;
+use renderer::{Plugin, Renderer};
 use book::MDBook;
 use book::bookitem::BookItem;
 use utils;
@@ -20,14 +20,16 @@ use serde_json;
 
 
 #[derive(Default)]
-pub struct HtmlHandlebars;
+pub struct HtmlHandlebars {
+    plugins: Vec<Box<Plugin>>,
+}
 
 impl HtmlHandlebars {
     pub fn new() -> Self {
-        HtmlHandlebars
+        Default::default()
     }
 
-    fn render_item(&self, item: &BookItem, book: &MDBook, data: &mut serde_json::Map<String, serde_json::Value>,
+    fn render_item(&mut self, item: &BookItem, book: &MDBook, data: &mut serde_json::Map<String, serde_json::Value>,
                    print_content: &mut String, handlebars: &mut Handlebars, index: &mut bool, destination: &Path)
                    -> Result<(), Box<Error>> {
         match *item {
@@ -43,6 +45,9 @@ impl HtmlHandlebars {
 
                     debug!("[*]: Reading file");
                     f.read_to_string(&mut content)?;
+
+                    debug!("[*] Running preprocessors on chapter {}", ch.name);
+                    content = self.run_preprocessors(content);
 
                     // Parse for playpen links
                     if let Some(p) = path.parent() {
@@ -184,11 +189,23 @@ impl HtmlHandlebars {
 
         Ok(())
     }
+
+    fn run_preprocessors(&mut self, input: String) -> String {
+        let mut input = input;
+        for plugin in self.plugins.iter_mut() {
+            match plugin.preprocess_file(&input) {
+                Some(i) => input = i,
+                None => {},
+            }
+        }
+
+        input
+    }
 }
 
 
 impl Renderer for HtmlHandlebars {
-    fn render(&self, book: &MDBook) -> Result<(), Box<Error>> {
+    fn render(&mut self, book: &MDBook) -> Result<(), Box<Error>> {
         debug!("[fn]: render");
         let mut handlebars = Handlebars::new();
 

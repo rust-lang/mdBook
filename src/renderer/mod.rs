@@ -6,7 +6,7 @@ use std::error::Error;
 use std::io::{self, ErrorKind};
 
 pub trait Renderer {
-    fn render(&self, book: &::book::MDBook) -> Result<(), Box<Error>>;
+    fn render(&mut self, book: &::book::MDBook) -> Result<(), Box<Error>>;
 
     fn register_plugin(&mut self, _plugin: Box<Plugin>) -> Result<(), Box<Error>> {
         Err(Box::new(io::Error::new(ErrorKind::Other, 
