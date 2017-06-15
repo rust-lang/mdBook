@@ -49,7 +49,6 @@ impl HtmlHandlebars {
                         content = helpers::playpen::render_playpen(&content, p);
                     }
 
-                    // Render markdown using the pulldown-cmark crate
                     content = utils::render_markdown(&content);
                     print_content.push_str(&content);
 
@@ -58,6 +57,7 @@ impl HtmlHandlebars {
                         ch.path
                             .to_str()
                             .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))?;
+
                     data.insert("path".to_owned(), json!(path));
                     data.insert("content".to_owned(), json!(content));
                     data.insert("chapter_title".to_owned(), json!(ch.name));
