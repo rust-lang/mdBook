@@ -2,7 +2,8 @@ use renderer::html_handlebars::helpers;
 use renderer::Renderer;
 use book::MDBook;
 use book::bookitem::BookItem;
-use {utils, theme};
+use utils;
+use theme::{self, Theme};
 use regex::{Regex, Captures};
 
 use std::ascii::AsciiExt;
@@ -115,69 +116,17 @@ impl HtmlHandlebars {
 
         Ok(())
     }
-}
 
-impl Renderer for HtmlHandlebars {
-    fn render(&self, book: &MDBook) -> Result<(), Box<Error>> {
-        debug!("[fn]: render");
-        let mut handlebars = Handlebars::new();
-
-        // Load theme
-        let theme = theme::Theme::new(book.get_theme_path());
-
-        // Register template
-        debug!("[*]: Register handlebars template");
-        handlebars
-            .register_template_string("index", String::from_utf8(theme.index)?)?;
-
-        // Register helpers
-        debug!("[*]: Register handlebars helpers");
-        handlebars.register_helper("toc", Box::new(helpers::toc::RenderToc));
-        handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
-        handlebars.register_helper("next", Box::new(helpers::navigation::next));
-
-        let mut data = make_data(book)?;
-
-        // Print version
-        let mut print_content: String = String::new();
-
-        // Check if dest directory exists
-        debug!("[*]: Check if destination directory exists");
-        if fs::create_dir_all(book.get_destination().expect("If the HTML renderer is called, one would assume the HtmlConfig is set... (2)")).is_err() {
-            return Err(Box::new(io::Error::new(io::ErrorKind::Other,
-                                               "Unexpected error when constructing destination path")));
-        }
-
-        // Render a file for every entry in the book
-        let mut index = true;
-        for item in book.iter() {
-            self.render_item(item, book, &mut data, &mut print_content, &mut handlebars, &mut index)?;
-        }
-
-        // Print version
-
-        // Update the context with data for this file
-        data.insert("path".to_owned(), json!("print.md"));
-        data.insert("content".to_owned(), json!(print_content));
-        data.insert("path_to_root".to_owned(), json!(utils::fs::path_to_root(Path::new("print.md"))));
-
-        // Render the handlebars template with the data
-        debug!("[*]: Render template");
-
-        let rendered = handlebars.render("index", &data)?;
-
-        // do several kinds of post-processing
+    fn post_processing(&self, rendered: String) -> String {
         let rendered = build_header_links(rendered, "print.html");
         let rendered = fix_anchor_links(rendered, "print.html");
         let rendered = fix_code_blocks(rendered);
         let rendered = add_playpen_pre(rendered);
 
-        book.write_file(Path::new("print").with_extension("html"), &rendered.into_bytes())?;
-        info!("[*] Creating print.html ✓");
+        rendered
+    }
 
-        // Copy static files (js, css, images, ...)
-
-        debug!("[*] Copy static files");
+    fn copy_static_files(&self, book: &MDBook, theme: &Theme) -> Result<(), Box<Error>> {
         book.write_file("book.js", &theme.js)?;
         book.write_file("book.css", &theme.css)?;
         book.write_file("favicon.png", &theme.favicon)?;
@@ -196,9 +145,11 @@ impl Renderer for HtmlHandlebars {
         book.write_file("_FontAwesome/fonts/fontawesome-webfont.woff2", theme::FONT_AWESOME_WOFF2)?;
         book.write_file("_FontAwesome/fonts/FontAwesome.ttf", theme::FONT_AWESOME_TTF)?;
 
-        for custom_file in book.get_additional_css()
-                .iter()
-                .chain(book.get_additional_js().iter()) {
+        Ok(())
+    }
+
+
+    fn write_custom_file(&self, custom_file: &Path, book: &MDBook) -> Result<(), Box<Error>> {
             let mut data = Vec::new();
             let mut f = File::open(custom_file)?;
             f.read_to_end(&mut data)?;
@@ -215,14 +166,85 @@ impl Renderer for HtmlHandlebars {
             };
 
             book.write_file(name, &data)?;
+
+            Ok(())
+    }
+
+    /// Update the context with data for this file
+    fn configure_print_version(&self, data: &mut serde_json::Map<String, serde_json::Value>, print_content: &str) {
+        data.insert("path".to_owned(), json!("print.md"));
+        data.insert("content".to_owned(), json!(print_content));
+        data.insert("path_to_root".to_owned(), json!(utils::fs::path_to_root(Path::new("print.md"))));
+    }
+
+    fn register_hbs_helpers(&self, handlebars: &mut Handlebars) {
+        handlebars.register_helper("toc", Box::new(helpers::toc::RenderToc));
+        handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
+        handlebars.register_helper("next", Box::new(helpers::navigation::next));
+    }
+}
+
+
+impl Renderer for HtmlHandlebars {
+    fn render(&self, book: &MDBook) -> Result<(), Box<Error>> {
+        debug!("[fn]: render");
+        let mut handlebars = Handlebars::new();
+
+        // Load theme
+        let theme = theme::Theme::new(book.get_theme_path());
+
+        // Register template
+        debug!("[*]: Register handlebars template");
+        handlebars
+            .register_template_string("index", String::from_utf8(theme.index.clone())?)?;
+
+        // Register helpers
+        debug!("[*]: Register handlebars helpers");
+        self.register_hbs_helpers(&mut handlebars);
+
+        let mut data = make_data(book)?;
+
+        // Print version
+        let mut print_content: String = String::new();
+
+        debug!("[*]: Check if destination directory exists");
+        let destination = book.get_destination()
+                .expect("If the HTML renderer is called, one would assume the HtmlConfig is set... (2)");
+
+        if fs::create_dir_all(&destination).is_err() {
+            return Err(Box::new(io::Error::new(io::ErrorKind::Other,
+                                               "Unexpected error when constructing destination path")));
+        }
+
+        let mut index = true;
+        for item in book.iter() {
+            self.render_item(item, book, &mut data, &mut print_content, &mut handlebars, &mut index)?;
+        }
+
+        // Print version
+        self.configure_print_version(&mut data, &print_content);
+
+        // Render the handlebars template with the data
+        debug!("[*]: Render template");
+
+        let rendered = handlebars.render("index", &data)?;
+        let rendered = self.post_processing(rendered);
+
+        book.write_file(Path::new("print").with_extension("html"), &rendered.into_bytes())?;
+        info!("[*] Creating print.html ✓");
+
+        // Copy static files (js, css, images, ...)
+        debug!("[*] Copy static files");
+        self.copy_static_files(book, &theme)?;
+
+        for custom_file in book.get_additional_css()
+                .iter()
+                .chain(book.get_additional_js().iter()) {
+                    self.write_custom_file(custom_file, book)?;
         }
 
         // Copy all remaining files
-        utils::fs::copy_files_except_ext(
-            book.get_source(), 
-            book.get_destination()
-                .expect("If the HTML renderer is called, one would assume the HtmlConfig is set... (5)"), true, &["md"]
-        )?;
+        utils::fs::copy_files_except_ext(book.get_source(), &destination, true, &["md"])?;
 
         Ok(())
     }
