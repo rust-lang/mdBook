@@ -9,12 +9,12 @@ use errors::*;
 /// The object in charge of coordinating all the individual components necessary
 /// to turn your source code into a rendered book.
 ///
-/// It will:
+/// The `Runner`'s responsibilities are:
 ///
-/// - Defers to the DirectoryManager to load the `Book` and config from disk
-/// - set up the rendering pipeline so the Renderer can transform source text
+/// - Defers to the `DirectoryManager` to load the `Book` and config from disk
+/// - set up the rendering pipeline so the `Renderer` can transform source text
 ///   into the final product
-/// - Make sure each Plugin is called so they can do their pre/post-processing
+/// - Make sure each `Plugin` is called so they can do their pre/post-processing
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Runner {
     loader: Loader,
@@ -23,7 +23,7 @@ pub struct Runner {
 impl Runner {
     pub fn new<P: AsRef<Path>>(root: P) -> Result<Runner> {
         let loader = Loader::new(root).chain_err(|| "Couldn't create the loader")?;
-        Ok(Runner { loader })
+        Ok(Runner { loader: loader })
     }
 
     /// Initialize a new project directory.

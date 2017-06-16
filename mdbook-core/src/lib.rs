@@ -25,6 +25,8 @@ extern crate toml;
 pub mod runner;
 pub mod config;
 pub mod loader;
+pub mod book;
+pub mod renderer;
 
 
 pub mod errors {

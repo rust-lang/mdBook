@@ -9,7 +9,7 @@ use errors::*;
 
 pub type RendererConfig = HashMap<String, String>;
 
-/// Try to load the config file from the provided directory, automatically 
+/// Try to load the config file from the provided directory, automatically
 /// detecting the supported formats.
 pub fn load_config<P: AsRef<Path>>(root: P) -> Result<Config> {
     // TODO: add a `Config::from_json()` call here if the toml one fails
@@ -43,8 +43,7 @@ impl Config {
         }
 
         let mut contents = String::new();
-        File::open(&path)
-            .chain_err(|| "Couldn't open the config file for reading")?
+        File::open(&path).chain_err(|| "Couldn't open the config file for reading")?
             .read_to_string(&mut contents)?;
 
         toml::from_str(&contents).chain_err(|| "Config parsing failed")
@@ -88,7 +87,8 @@ mod tests {
     #[test]
     fn read_a_working_config_toml() {
         let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent().unwrap()
+            .parent()
+            .unwrap()
             .join("book-example")
             .join("book.toml");
         println!("{}", path.display());
@@ -96,7 +96,8 @@ mod tests {
         let got = Config::from_toml(&path).unwrap();
 
         assert_eq!(got.title, "mdBook Documentation");
-        assert_eq!(got.description, Some("Create book from markdown files. Like Gitbook but implemented in Rust".to_string()));
+        assert_eq!(got.description,
+                   Some("Create book from markdown files. Like Gitbook but implemented in Rust".to_string()));
         assert_eq!(got.author, Some("Mathieu David".to_string()));
     }
 }

@@ -10,10 +10,10 @@ use errors::*;
 /// - Initialize a new project
 /// - Parse `SUMMARY.md`
 /// - Traverse the source directory, looking for markdown files
-/// - Turn all of that into a single data structure which is an in-memory 
+/// - Turn all of that into a single data structure which is an in-memory
 ///   representation of the book
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct Loader{
+pub struct Loader {
     root: PathBuf,
     config: Config,
 }
@@ -24,6 +24,9 @@ impl Loader {
         let root = PathBuf::from(root.as_ref());
 
         let config = load_config(&root)?;
-        Ok(Loader { root, config })
+        Ok(Loader {
+            root: root,
+            config: config,
+        })
     }
 }
