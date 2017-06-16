@@ -13,16 +13,18 @@
 //         unstable_features)]
 
 #[macro_use]
+extern crate log;
+#[macro_use]
 extern crate error_chain;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
 
-#[cfg(test)]
 extern crate toml;
 
 pub mod runner;
 pub mod config;
+pub mod loader;
 
 
 pub mod errors {
