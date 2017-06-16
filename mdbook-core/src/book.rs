@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::fs::File;
 use std::io::Read;
 
@@ -39,6 +39,6 @@ impl Chapter {
             path: path,
             contents: contents,
             items: Vec::new(),
-        })        
+        })
     }
 }

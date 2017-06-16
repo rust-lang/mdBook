@@ -2,6 +2,7 @@ use std::path::{Path, PathBuf};
 use std::fs::File;
 use std::collections::HashMap;
 use std::io::Read;
+use std::ops::Deref;
 
 use toml;
 use errors::*;
@@ -47,6 +48,18 @@ impl Config {
             .read_to_string(&mut contents)?;
 
         toml::from_str(&contents).chain_err(|| "Config parsing failed")
+    }
+
+    pub fn source_directory(&self) -> &Path {
+        &self.source
+    }
+
+    pub fn title(&self) -> &str {
+        &self.title
+    }
+
+    pub fn author(&self) -> Option<&str> {
+        self.author.as_ref().map(Deref::deref)
     }
 }
 

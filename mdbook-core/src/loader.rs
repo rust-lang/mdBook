@@ -1,4 +1,8 @@
+#![allow(unused_variables, dead_code)]
+
 use std::path::{Path, PathBuf};
+use std::fs::File;
+use std::io::Read;
 
 use config::{load_config, Config};
 use book::{Chapter, BookItem};
@@ -21,25 +25,50 @@ pub struct Loader {
 
 impl Loader {
     /// Create a new `Loader` with `root` as the book's root directory.
+    ///
+    /// # Note
+    ///
+    /// This constructor will automatically parse the config file, so it may 
+    /// fail if the config file doesn't exist or is corrupted.
     pub fn new<P: AsRef<Path>>(root: P) -> Result<Loader> {
         let root = PathBuf::from(root.as_ref());
 
-        let config = load_config(&root)?;
+        let config = load_config(&root).chain_err(|| "Couldn't load the config file")?;
         Ok(Loader {
             root: root,
             config: config,
         })
     }
 
+    fn summary_toml(&self) -> PathBuf {
+        self.root.join(self.config.source_directory()).join("SUMMARY.md")
+    }
+
     fn parse_summary(&self) -> Result<Summary> {
-        unimplemented!()
+        let mut summary = String::new();
+        File::open(self.summary_toml())
+            .chain_err(|| "Couldn't open the SUMMARY.toml")?
+            .read_to_string(&mut summary)?;
+
+        let top_items = parse_level(&mut summary.split('\n').collect(), 0, vec![0])
+        .chain_err(|| "Parsing failed")?;
+        Ok(Summary { items: top_items })
     }
 }
 
-struct Summary{}
+
+#[derive(Clone, Debug, Default, PartialEq)]
+struct Summary {
+    items: Vec<BookItem>,
+}
 
 
+/// Recursively parse each level in the `SUMMARY.md`, constructing the `BookItems`
+/// as you go.
 fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32>) -> Result<Vec<BookItem>> {
+    // FIXME: Return an in-memory representation of the summary instead of directly constructing the book
+    // At the moment, if you wanted to test *just* the SUMMARY.md parsing, you'd
+    // need a complete working book on disk. Preferably in a tempdir. Ewwww...
     debug!("[fn]: parse_level");
     let mut items: Vec<BookItem> = vec![];
 
@@ -47,6 +76,7 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
     while !summary.is_empty() {
         let item: BookItem;
         // Indentation level of the line to parse
+        debug_assert!(summary.len() > 0);
         let level = level(summary[0], 4)?;
 
         // if level < current_level we remove the last digit of section,
@@ -61,58 +91,52 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
             // Level can not be root level !!
             // Add a sub-number to section
             section.push(0);
-            let last = items
-                .pop()
+            let last = items.pop()
                 .expect("There should be at least one item since this can't be the root level");
 
             if let BookItem::Chapter(ref s, ref ch) = last {
                 let mut ch = ch.clone();
-                ch.items = parse_level(summary, level, section.clone())?;
+                ch.items = parse_level(summary, level, section.clone())
+                    .chain_err(|| format!("Couldn't parse level {}", level))?;
                 items.push(BookItem::Chapter(s.clone(), ch));
 
                 // Remove the last number from the section, because we got back to our level..
                 section.pop();
                 continue;
             } else {
-                bail!(
-                                      "Your summary.md is messed up\n\n
-                        Prefix, \
-                                       Suffix and Spacer elements can only exist on the root level.\n
-                        \
-                                       Prefix elements can only exist before any chapter and there can be \
-                                       no chapters after suffix elements.");
+                bail!("Your summary.md is messed up\n\n
+                        Prefix, Suffix and Spacer elements \
+                       can only exist on the root level.\n
+                        Prefix elements can only exist \
+                       before any chapter and there can be no chapters after suffix elements.");
             };
 
         } else {
             // level and current_level are the same, parse the line
             item = if let Some(parsed_item) = parse_line(summary[0]) {
-                let parsed_item = parsed_item?;
+                let parsed_item = parsed_item.chain_err(|| format!("Couldn't parse item: {:?}", summary[0]))?;
 
                 // Eliminate possible errors and set section to -1 after suffix
                 match parsed_item {
                     // error if level != 0 and BookItem is != Chapter
                     BookItem::Affix(_) |
                     BookItem::Spacer if level > 0 => {
-                        bail!(
-                                              "Your summary.md is messed up\n\n
+                        bail!("Your summary.md is messed up\n\n
+                                Prefix, Suffix and \
+                               Spacer elements can only exist on the root level.\n
                                 \
-                                               Prefix, Suffix and Spacer elements can only exist on the \
-                                               root level.\n
-                                Prefix \
-                                               elements can only exist before any chapter and there can be \
-                                               no chapters after suffix elements.");
+                               Prefix elements can only exist before any chapter and there can be no chapters after \
+                               suffix elements.");
                     },
 
                     // error if BookItem == Chapter and section == -1
                     BookItem::Chapter(_, _) if section[0] == -1 => {
-                        bail!(
-                                              "Your summary.md is messed up\n\n
+                        bail!("Your summary.md is messed up\n\n
+                                Prefix, Suffix and \
+                               Spacer elements can only exist on the root level.\n
                                 \
-                                               Prefix, Suffix and Spacer elements can only exist on the \
-                                               root level.\n
-                                Prefix \
-                                               elements can only exist before any chapter and there can be \
-                                               no chapters after suffix elements.");
+                               Prefix elements can only exist before any chapter and there can be no chapters after \
+                               suffix elements.");
                     },
 
                     // Set section = -1 after suffix
@@ -128,8 +152,7 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
                         // Increment section
                         let len = section.len() - 1;
                         section[len] += 1;
-                        let s = section
-                            .iter()
+                        let s = section.iter()
                             .fold("".to_owned(), |s, i| s + &i.to_string() + ".");
                         BookItem::Chapter(s, ch)
                     },
@@ -180,6 +203,10 @@ fn level(line: &str, spaces_in_tab: i32) -> Result<i32> {
 
 
 fn parse_line(l: &str) -> Option<Result<BookItem>> {
+    // FIXME: Parsing a line shouldn't construct a chapter (i.e. no side-effects)
+    // instead, it should say what was on the line so the caller can choose what
+    // to do with it. Because it'll try to construct a BookItem (reading the file
+    // contents in the process) testing gets pretty annoying.
     debug!("[fn]: parse_line");
 
     // Remove leading and trailing spaces or tabs
@@ -198,8 +225,7 @@ fn parse_line(l: &str) -> Option<Result<BookItem>> {
                 debug!("[*]: Line is list element");
 
                 if let Some((name, path)) = read_link(line) {
-                    return Some(Chapter::new(name, path)
-                        .map(|ch| BookItem::Chapter("0".to_owned(), ch)));
+                    return Some(Chapter::new(name, path).map(|ch| BookItem::Chapter("0".to_owned(), ch)));
                 } else {
                     return None;
                 }
@@ -257,4 +283,78 @@ fn read_link(line: &str) -> Option<(String, PathBuf)> {
     let path = PathBuf::from(line[start_delimitor + 1..end_delimitor].to_owned());
 
     Some((name, path))
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempdir::TempDir;
+    use std::fs;
+
+    /// A crappy `cp -r` clone
+    fn copy_dir<P, Q>(from: P, to: Q) -> Result<()>
+        where P: AsRef<Path>,
+              Q: AsRef<Path>
+    {
+        assert!(from.as_ref().exists());
+
+        let to = to.as_ref();
+        fs::create_dir_all(to)?;        
+
+        for entry in from.as_ref().read_dir()? {
+            let original = entry?.path();
+            let name = original.file_name()
+                .expect("Files in a directory must have a name")
+                .to_str()
+                .unwrap();
+            let new_path = to.join(name);
+
+            if original.is_file() {
+                fs::copy(&original, new_path)?;
+            } else if original.is_dir() {
+                copy_dir(&original, new_path)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    fn new_book_directory() -> TempDir {
+        let book_example_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .join("book-example");
+
+        let temp = TempDir::new("book-example").unwrap();
+        copy_dir(&book_example_dir, temp.path()).unwrap();
+
+        temp
+    }
+
+    #[test]
+    fn read_lines() {
+        let inputs = vec![
+            ("[First](first.md)", Some(("First", "first.md"))),
+            ("[First]", None),
+            ("[First][second.md]", None),
+            ("other stuff", None),
+            ("- [dot point](dot_point.md)", Some(("dot point", "dot_point.md"))),
+        ];
+
+        for (src, should_be) in inputs {
+            let got = read_link(src);
+
+            let should_be = should_be.map(|s| (s.0.to_string(), PathBuf::from(s.1)));
+            assert_eq!(got, should_be);
+        }
+    }
+
+    // #[test]
+    // fn parse_book_example_summary() {
+    //     let temp = new_book_directory();
+    //     let loader = Loader::new(temp.path()).unwrap();
+
+    //     let summary = loader.parse_summary().unwrap();
+    // }
 }

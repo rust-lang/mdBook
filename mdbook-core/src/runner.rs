@@ -1,8 +1,7 @@
 #![allow(missing_docs, unused_variables)]
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-use config::Config;
 use loader::Loader;
 use errors::*;
 

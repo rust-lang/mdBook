@@ -11,3 +11,6 @@ serde_derive = "*"
 serde = "*"
 toml = "*"
 log = "*"
+
+[dev-dependencies]
+tempdir = "*"

@@ -1,6 +1,20 @@
 //! This crate contains the core components of `mdbook`, allowing third parties
 //! to seamlessly integrate with the rest of the project while generating a
 //! rendered version of your document.
+//!
+//!
+//! # Getting Started
+//!
+//! ```rust,no_run
+//! use mdbook_core::Runner;
+//! # use mdbook_core::errors::*;
+//! # fn run() -> Result<()> {
+//! let mut runner = Runner::new("/path/to/book/directory/")?;
+//! runner.build()?;
+//! # Ok(())
+//! # }
+//! # fn main() {run().unwrap()}
+//! ```
 
 // #![deny(missing_docs,
 //         missing_debug_implementations,
@@ -22,12 +36,17 @@ extern crate serde;
 
 extern crate toml;
 
+#[cfg(test)]
+extern crate tempdir;
+
 pub mod runner;
 pub mod config;
 pub mod loader;
 pub mod book;
 pub mod renderer;
 
+pub use runner::Runner;
+pub use book::Book;
 
 pub mod errors {
     error_chain!{
