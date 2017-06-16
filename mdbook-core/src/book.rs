@@ -1,4 +1,9 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::fs::File;
+use std::io::Read;
+
+use errors::*;
+
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Book {
@@ -7,18 +12,33 @@ pub struct Book {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum BookItem {
-    Chapter(Chapter),
+    Chapter(String, Chapter),
+    Affix(Chapter),
     Spacer,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct Chapter {
     /// The chapter name as specified in the `SUMMARY.md`.
-    name: String,
+    pub name: String,
     /// The file's location relative to the project root.
-    path: PathBuf,
+    pub path: PathBuf,
     /// The chapter's raw text.
-    contents: String,
+    pub contents: String,
     /// Any sub-items in the chapter.
-    items: Vec<BookItem>,
+    pub items: Vec<BookItem>,
+}
+
+impl Chapter {
+    pub fn new(name: String, path: PathBuf) -> Result<Chapter> {
+        let mut contents = String::new();
+        File::open(&path)?.read_to_string(&mut contents)?;
+
+        Ok(Chapter {
+            name: name,
+            path: path,
+            contents: contents,
+            items: Vec::new(),
+        })        
+    }
 }
