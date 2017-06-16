@@ -137,6 +137,7 @@ table thead td {
   right: 0;
   left: 0;
   bottom: 0;
+  outline: 0;
   padding-right: 15px;
   overflow-y: auto;
 }
