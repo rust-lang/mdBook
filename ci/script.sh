@@ -29,7 +29,8 @@ run_test_suite() {
   # all the channels) to avoid significantly increasing the build times
   if [ $TARGET = x86_64-unknown-linux-gnu ]; then
     cargo build --target $TARGET --no-default-features --verbose
-    cargo test --target $TARGET --no-default-features --verbose
+    cargo test --target $TARGET --no-default-features --verbose --all
+    # note: we need the "--all" flag to tell travis to test both mdbook and mdbook-core
     cargo clean
   fi
 

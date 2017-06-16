@@ -34,7 +34,7 @@ build: false
 # Equivalent to Travis' `script` phase
 test_script:
   - cargo build --verbose
-  - cargo test --verbose
+  - cargo test --verbose --all
 
 before_deploy:
   # Generate artifacts for release
