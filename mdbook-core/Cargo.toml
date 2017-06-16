@@ -1,0 +1,12 @@
+[package]
+name = "mdbook-core"
+version = "0.1.0"
+authors = ["Michael Bryan <michaelfbryan@gmail.com>"]
+workspace = ".."
+description = "The core components of MDBook"
+
+[dependencies]
+error-chain = "*"
+serde_derive = "*"
+serde = "*"
+toml = "*"

@@ -56,3 +56,6 @@ serve = ["iron", "staticfile", "ws"]
 doc = false
 name = "mdbook"
 path = "src/bin/mdbook.rs"
+
+[workspace]
+members = ["mdbook-core"]
