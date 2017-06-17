@@ -30,6 +30,7 @@ impl HtmlHandlebars {
     fn render_item(&self, item: &BookItem, book: &MDBook, data: &mut serde_json::Map<String, serde_json::Value>,
                    print_content: &mut String, handlebars: &mut Handlebars, index: &mut bool, destination: &Path)
                    -> Result<(), Box<Error>> {
+        // FIXME: This should be made DRY-er and rely less on mutable state
         match *item {
             BookItem::Chapter(_, ref ch) |
             BookItem::Affix(ref ch) => {
@@ -53,10 +54,9 @@ impl HtmlHandlebars {
                     print_content.push_str(&content);
 
                     // Update the context with data for this file
-                    let path =
-                        ch.path
-                            .to_str()
-                            .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))?;
+                    let path = ch.path
+                        .to_str()
+                        .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))?;
 
                     data.insert("path".to_owned(), json!(path));
                     data.insert("content".to_owned(), json!(content));
@@ -66,7 +66,7 @@ impl HtmlHandlebars {
                     // Render the handlebars template with the data
                     debug!("[*]: Render template");
                     let rendered = handlebars.render("index", &data)?;
-                    let rendered = self.post_processing(rendered);
+                    let rendered = self.post_process(rendered);
 
                     let filename = Path::new(&ch.path).with_extension("html");
 
@@ -80,15 +80,14 @@ impl HtmlHandlebars {
 
                         let mut content = String::new();
 
-                        let _source = File::open(
-                                destination.join(&ch.path.with_extension("html"))
-                            )?.read_to_string(&mut content);
+                        let _source = File::open(destination.join(&ch.path.with_extension("html")))
+                            ?
+                            .read_to_string(&mut content);
 
                         // This could cause a problem when someone displays
                         // code containing <base href=...>
                         // on the front page, however this case should be very very rare...
-                        content = content
-                            .lines()
+                        content = content.lines()
                             .filter(|line| !line.contains("<base href="))
                             .collect::<Vec<&str>>()
                             .join("\n");
@@ -96,10 +95,10 @@ impl HtmlHandlebars {
                         book.write_file("index.html", content.as_bytes())?;
 
                         info!("[*] Creating index.html from {:?} ✓",
-                                  book.get_destination()
-                                      .expect("If the HTML renderer is called, one would assume the HtmlConfig is set... (4)")
-                                      .join(&ch.path.with_extension("html"))
-                            );
+                              book.get_destination()
+                                  .expect("If the HTML renderer is called, one would assume the HtmlConfig is \
+                                           set... (4)")
+                                  .join(&ch.path.with_extension("html")));
                         *index = false;
                     }
                 }
@@ -110,7 +109,7 @@ impl HtmlHandlebars {
         Ok(())
     }
 
-    fn post_processing(&self, rendered: String) -> String {
+    fn post_process(&self, rendered: String) -> String {
         let rendered = build_header_links(rendered, "print.html");
         let rendered = fix_anchor_links(rendered, "print.html");
         let rendered = fix_code_blocks(rendered);
@@ -142,24 +141,23 @@ impl HtmlHandlebars {
     }
 
     fn write_custom_file(&self, custom_file: &Path, book: &MDBook) -> Result<(), Box<Error>> {
-            let mut data = Vec::new();
-            let mut f = File::open(custom_file)?;
-            f.read_to_end(&mut data)?;
+        let mut data = Vec::new();
+        let mut f = File::open(custom_file)?;
+        f.read_to_end(&mut data)?;
 
-            let name = match custom_file.strip_prefix(book.get_root()) {
-                Ok(p) => p.to_str().expect("Could not convert to str"),
-                Err(_) => {
-                    custom_file
-                        .file_name()
-                        .expect("File has a file name")
-                        .to_str()
-                        .expect("Could not convert to str")
-                },
-            };
+        let name = match custom_file.strip_prefix(book.get_root()) {
+            Ok(p) => p.to_str().expect("Could not convert to str"),
+            Err(_) => {
+                custom_file.file_name()
+                    .expect("File has a file name")
+                    .to_str()
+                    .expect("Could not convert to str")
+            },
+        };
 
-            book.write_file(name, &data)?;
+        book.write_file(name, &data)?;
 
-            Ok(())
+        Ok(())
     }
 
     /// Update the context with data for this file
@@ -175,11 +173,15 @@ impl HtmlHandlebars {
         handlebars.register_helper("next", Box::new(helpers::navigation::next));
     }
 
-    fn copy_additional_css(&self, book: &MDBook) -> Result<(), Box<Error>> {
-        for custom_file in book.get_additional_css()
-                .iter()
-                .chain(book.get_additional_js().iter()) {
-                    self.write_custom_file(custom_file, book)?;
+    /// Copy across any additional CSS and JavaScript files which the book
+    /// has been configured to use.
+    fn copy_additional_css_and_js(&self, book: &MDBook) -> Result<(), Box<Error>> {
+        let custom_files = book.get_additional_css()
+            .iter()
+            .chain(book.get_additional_js().iter());
+
+        for custom_file in custom_files {
+            self.write_custom_file(custom_file, book)?;
         }
 
         Ok(())
@@ -195,8 +197,7 @@ impl Renderer for HtmlHandlebars {
         let theme = theme::Theme::new(book.get_theme_path());
 
         debug!("[*]: Register handlebars template");
-        handlebars
-            .register_template_string("index", String::from_utf8(theme.index.clone())?)?;
+        handlebars.register_template_string("index", String::from_utf8(theme.index.clone())?)?;
 
         debug!("[*]: Register handlebars helpers");
         self.register_hbs_helpers(&mut handlebars);
@@ -207,7 +208,7 @@ impl Renderer for HtmlHandlebars {
         let mut print_content = String::new();
 
         let destination = book.get_destination()
-                .expect("If the HTML renderer is called, one would assume the HtmlConfig is set... (2)");
+            .expect("If the HTML renderer is called, one would assume the HtmlConfig is set... (2)");
 
         debug!("[*]: Check if destination directory exists");
         if fs::create_dir_all(&destination).is_err() {
@@ -227,7 +228,7 @@ impl Renderer for HtmlHandlebars {
         debug!("[*]: Render template");
 
         let rendered = handlebars.render("index", &data)?;
-        let rendered = self.post_processing(rendered);
+        let rendered = self.post_process(rendered);
 
         book.write_file(Path::new("print").with_extension("html"), &rendered.into_bytes())?;
         info!("[*] Creating print.html ✓");
@@ -235,7 +236,7 @@ impl Renderer for HtmlHandlebars {
         // Copy static files (js, css, images, ...)
         debug!("[*] Copy static files");
         self.copy_static_files(book, &theme)?;
-        self.copy_additional_css(book)?;
+        self.copy_additional_css_and_js(book)?;
 
         // Copy all remaining files
         utils::fs::copy_files_except_ext(book.get_source(), &destination, true, &["md"])?;
@@ -268,11 +269,10 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
             match style.strip_prefix(book.get_root()) {
                 Ok(p) => css.push(p.to_str().expect("Could not convert to str")),
                 Err(_) => {
-                    css.push(style
-                                 .file_name()
-                                 .expect("File has a file name")
-                                 .to_str()
-                                 .expect("Could not convert to str"))
+                    css.push(style.file_name()
+                        .expect("File has a file name")
+                        .to_str()
+                        .expect("Could not convert to str"))
                 },
             }
         }
@@ -286,11 +286,10 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
             match script.strip_prefix(book.get_root()) {
                 Ok(p) => js.push(p.to_str().expect("Could not convert to str")),
                 Err(_) => {
-                    js.push(script
-                                .file_name()
-                                .expect("File has a file name")
-                                .to_str()
-                                .expect("Could not convert to str"))
+                    js.push(script.file_name()
+                        .expect("File has a file name")
+                        .to_str()
+                        .expect("Could not convert to str"))
                 },
             }
         }
@@ -338,8 +337,7 @@ fn build_header_links(html: String, filename: &str) -> String {
     let regex = Regex::new(r"<h(\d)>(.*?)</h\d>").unwrap();
     let mut id_counter = HashMap::new();
 
-    regex
-        .replace_all(&html, |caps: &Captures| {
+    regex.replace_all(&html, |caps: &Captures| {
             let level = &caps[1];
             let text = &caps[2];
             let mut id = text.to_string();
@@ -359,16 +357,16 @@ fn build_header_links(html: String, filename: &str) -> String {
             }
             let id = id.chars()
                 .filter_map(|c| if c.is_alphanumeric() || c == '-' || c == '_' {
-                                if c.is_ascii() {
-                                    Some(c.to_ascii_lowercase())
-                                } else {
-                                    Some(c)
-                                }
-                            } else if c.is_whitespace() && c.is_ascii() {
-                                Some('-')
-                            } else {
-                                None
-                            })
+                    if c.is_ascii() {
+                        Some(c.to_ascii_lowercase())
+                    } else {
+                        Some(c)
+                    }
+                } else if c.is_whitespace() && c.is_ascii() {
+                    Some('-')
+                } else {
+                    None
+                })
                 .collect::<String>();
 
             let id_count = *id_counter.get(&id).unwrap_or(&0);
@@ -394,8 +392,7 @@ fn build_header_links(html: String, filename: &str) -> String {
 // that in a very inelegant way
 fn fix_anchor_links(html: String, filename: &str) -> String {
     let regex = Regex::new(r##"<a([^>]+)href="#([^"]+)"([^>]*)>"##).unwrap();
-    regex
-        .replace_all(&html, |caps: &Captures| {
+    regex.replace_all(&html, |caps: &Captures| {
             let before = &caps[1];
             let anchor = &caps[2];
             let after = &caps[3];
@@ -420,8 +417,7 @@ fn fix_anchor_links(html: String, filename: &str) -> String {
 // This function replaces all commas by spaces in the code block classes
 fn fix_code_blocks(html: String) -> String {
     let regex = Regex::new(r##"<code([^>]+)class="([^"]+)"([^>]*)>"##).unwrap();
-    regex
-        .replace_all(&html, |caps: &Captures| {
+    regex.replace_all(&html, |caps: &Captures| {
             let before = &caps[1];
             let classes = &caps[2].replace(",", " ");
             let after = &caps[3];
@@ -433,8 +429,7 @@ fn fix_code_blocks(html: String) -> String {
 
 fn add_playpen_pre(html: String) -> String {
     let regex = Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap();
-    regex
-        .replace_all(&html, |caps: &Captures| {
+    regex.replace_all(&html, |caps: &Captures| {
             let text = &caps[1];
             let classes = &caps[2];
             let code = &caps[3];
