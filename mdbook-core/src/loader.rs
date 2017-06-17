@@ -33,7 +33,9 @@ impl Loader {
     pub fn new<P: AsRef<Path>>(root: P) -> Result<Loader> {
         let root = PathBuf::from(root.as_ref());
 
-        let config = load_config(&root).chain_err(|| "Couldn't load the config file")?;
+        let config = load_config(&root).chain_err(
+            || "Couldn't load the config file",
+        )?;
         Ok(Loader {
             root: root,
             config: config,
@@ -41,15 +43,19 @@ impl Loader {
     }
 
     fn summary_toml(&self) -> PathBuf {
-        self.root.join(self.config.source_directory()).join("SUMMARY.md")
+        self.root.join(self.config.source_directory()).join(
+            "SUMMARY.md",
+        )
     }
 
     fn parse_summary(&self) -> Result<Summary> {
         let mut summary = String::new();
-        File::open(self.summary_toml()).chain_err(|| "Couldn't open the SUMMARY.toml")?
+        File::open(self.summary_toml())
+            .chain_err(|| "Couldn't open the SUMMARY.toml")?
             .read_to_string(&mut summary)?;
 
-        // TODO: The existing `parse_level()` function needs to be adapted to the new types
+        // TODO: The existing `parse_level()` function needs to be adapted to the new
+        // types
         unimplemented!()
     }
 }
@@ -76,12 +82,17 @@ enum SummaryItem {
 // suffix elements.
 // ";
 
-// /// Recursively parse each level in the `SUMMARY.md`, constructing the `BookItems`
+// /// Recursively parse each level in the `SUMMARY.md`, constructing the
+// `BookItems`
 // /// as you go.
-// fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32>) -> Result<Vec<SummaryItem>> {
-//     // FIXME: Return an in-memory representation of the summary instead of directly constructing the book
-//     // At the moment, if you wanted to test *just* the SUMMARY.md parsing, you'd
-//     // need a complete working book on disk. Preferably in a tempdir. Ewwww...
+// fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section:
+// Vec<i32>) -> Result<Vec<SummaryItem>> {
+// // FIXME: Return an in-memory representation of the summary instead of
+// directly constructing the book
+// // At the moment, if you wanted to test *just* the SUMMARY.md parsing,
+// you'd
+// // need a complete working book on disk. Preferably in a tempdir.
+// Ewwww...
 //     debug!("[fn]: parse_level");
 //     let mut items: Vec<SummaryItem> = Vec::new();
 
@@ -105,15 +116,18 @@ enum SummaryItem {
 //             // Add a sub-number to section
 //             section.push(0);
 //             let last = items.pop()
-//                 .expect("There should be at least one item since this can't be the root level");
+// .expect("There should be at least one item since this can't
+// be the root level");
 
 //             if let SummaryItem::Chapter(ref s, ref ch) = last {
 //                 let mut ch = ch.clone();
 //                 ch.items = parse_level(summary, level, section.clone())
-//                     .chain_err(|| format!("Couldn't parse level {}", level))?;
+// .chain_err(|| format!("Couldn't parse level {}",
+// level))?;
 //                 items.push(SummaryItem::Chapter(s.clone(), ch));
 
-//                 // Remove the last number from the section, because we got back to our level..
+// // Remove the last number from the section, because we got
+// back to our level..
 //                 section.pop();
 //                 continue;
 //             } else {
@@ -124,7 +138,8 @@ enum SummaryItem {
 //             // level and current_level are the same, parse the line
 //             item = if let Some(parsed_item) = parse_line(summary[0]) {
 
-//                 // Eliminate possible errors and set section to -1 after suffix
+// // Eliminate possible errors and set section to -1 after
+// suffix
 //                 match parsed_item {
 //                     // error if level != 0 and BookItem is != Chapter
 //                     SummaryItem::Affix(_, _) |
@@ -151,7 +166,8 @@ enum SummaryItem {
 //                         let len = section.len() - 1;
 //                         section[len] += 1;
 //                         let s = section.iter()
-//                             .fold("".to_owned(), |s, i| s + &i.to_string() + ".");
+// .fold("".to_owned(), |s, i| s + &i.to_string() +
+// ".");
 //                         SummaryItem::Chapter(s, ch)
 //                     },
 //                     other => other,
@@ -286,8 +302,9 @@ mod tests {
 
     /// A crappy `cp -r` clone
     fn copy_dir<P, Q>(from: P, to: Q) -> Result<()>
-        where P: AsRef<Path>,
-              Q: AsRef<Path>
+    where
+        P: AsRef<Path>,
+        Q: AsRef<Path>,
     {
         assert!(from.as_ref().exists());
 
@@ -296,7 +313,8 @@ mod tests {
 
         for entry in from.as_ref().read_dir()? {
             let original = entry?.path();
-            let name = original.file_name()
+            let name = original
+                .file_name()
                 .expect("Files in a directory must have a name")
                 .to_str()
                 .unwrap();
@@ -342,7 +360,8 @@ mod tests {
         }
     }
 
-    /// This checks that the SUMMARY.md parser can correctly parse the SUMMARY.md
+    /// This checks that the SUMMARY.md parser can correctly parse the
+    /// SUMMARY.md
     /// in `book-example`. This should help to prevent regression bugs.
     #[test]
     #[ignore]

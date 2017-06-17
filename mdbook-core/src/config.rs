@@ -44,7 +44,8 @@ impl Config {
         }
 
         let mut contents = String::new();
-        File::open(&path).chain_err(|| "Couldn't open the config file for reading")?
+        File::open(&path)
+            .chain_err(|| "Couldn't open the config file for reading")?
             .read_to_string(&mut contents)?;
 
         toml::from_str(&contents).chain_err(|| "Config parsing failed")
@@ -109,8 +110,10 @@ mod tests {
         let got = Config::from_toml(&path).unwrap();
 
         assert_eq!(got.title, "mdBook Documentation");
-        assert_eq!(got.description,
-                   Some("Create book from markdown files. Like Gitbook but implemented in Rust".to_string()));
+        assert_eq!(
+            got.description,
+            Some("Create book from markdown files. Like Gitbook but implemented in Rust".to_string())
+        );
         assert_eq!(got.author, Some("Mathieu David".to_string()));
     }
 }

@@ -20,6 +20,7 @@ pub struct Runner {
 }
 
 impl Runner {
+    /// Create a new runner with `root` as the book's root directory.
     pub fn new<P: AsRef<Path>>(root: P) -> Result<Runner> {
         let loader = Loader::new(root).chain_err(|| "Couldn't create the loader")?;
         Ok(Runner { loader: loader })

@@ -5,11 +5,13 @@ use std::io::Read;
 use errors::*;
 
 
+/// An in-memory representation of the entire book.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Book {
-    sections: Vec<BookItem>,
+    pub sections: Vec<BookItem>,
 }
 
+/// Any item which the book may contain.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum BookItem {
     Chapter(String, Chapter),
@@ -17,6 +19,7 @@ pub enum BookItem {
     Spacer,
 }
 
+/// A single chapter, which may or may not have sub-chapters.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Chapter {
     /// The chapter name as specified in the `SUMMARY.md`.
@@ -40,5 +43,65 @@ impl Chapter {
             contents: contents,
             items: Vec::new(),
         })
+    }
+}
+
+/// Each method of a `Visitor` is a hook which can potentially be overridden,
+/// with the default methods simply recursively visiting each node in a `Book`
+/// (e.g. the visit_section method by default calls visit::walk_section).
+///
+/// This is the main trait you'll want to implement for doing manipulations on
+/// a `Book` or its items.
+///
+/// Each overridden visit method has full control over what happens with its
+/// node, it can do its own traversal of the node's children, call visit::walk_*
+/// to apply the default traversal algorithm, or prevent deeper traversal by
+/// doing nothing.
+///
+/// > **Note:** The idea for this was shamelessly copied from [syn].
+///
+/// [syn]: https://docs.serde.rs/syn/visit/trait.Visitor.html
+pub trait Visitor: Sized {
+    fn visit_book(&mut self, book: &mut Book) {
+        visit::walk_book(self, book);
+    }
+    fn visit_section(&mut self, section: &mut BookItem) {
+        visit::walk_section(self, section);
+    }
+    fn visit_chapter(&mut self, ch: &mut Chapter) {
+        visit::walk_chapter(self, ch);
+    }
+}
+
+
+/// Helper functions which may be called by a `Visitor` to continue the default
+/// traversal.
+pub mod visit {
+    use super::{Chapter, Book, BookItem, Visitor};
+
+    /// A function a `Visitor` may call to make sure the rest of the `Book` gets
+    /// visited.
+    pub fn walk_book<V: Visitor>(visitor: &mut V, book: &mut Book) {
+        for section in book.sections.iter_mut() {
+            visitor.visit_section(section);
+        }
+    }
+
+    /// A function a `Visitor` may call to make sure the `Chapter` inside this
+    /// `BookItem` (if there is one) gets visited.
+    pub fn walk_section<V: Visitor>(visitor: &mut V, section: &mut BookItem) {
+        match *section {
+            BookItem::Chapter(_, ref mut ch) |
+            BookItem::Affix(ref mut ch) => visitor.visit_chapter(ch),
+            _ => {},
+        }
+    }
+
+    /// A function a `Visitor` may call to make sure the rest of the items in a
+    /// `Chapter` get visited.
+    pub fn walk_chapter<V: Visitor>(visitor: &mut V, chapter: &mut Chapter) {
+        for item in chapter.items.iter_mut() {
+            visitor.visit_section(item);
+        }
     }
 }
