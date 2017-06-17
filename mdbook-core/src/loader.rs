@@ -17,7 +17,7 @@ use errors::*;
 /// - Traverse the source directory, looking for markdown files
 /// - Turn all of that into a single data structure which is an in-memory
 ///   representation of the book
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Loader {
     root: PathBuf,
     config: Config,

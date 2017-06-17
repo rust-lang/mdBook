@@ -14,7 +14,7 @@ use errors::*;
 /// - set up the rendering pipeline so the `Renderer` can transform source text
 ///   into the final product
 /// - Make sure each `Plugin` is called so they can do their pre/post-processing
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Runner {
     loader: Loader,
 }
