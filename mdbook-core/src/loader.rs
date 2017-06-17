@@ -8,6 +8,13 @@ use config::{load_config, Config};
 use book::{Chapter, BookItem};
 use errors::*;
 
+const CORRUPTED_SUMMARY_ERROR_MSG: &str = "Your summary.md is messed up.
+
+Prefix, Suffix and Spacer elements can only exist on the root level. Prefix 
+elements can only exist before any chapter and there can be no chapters after 
+suffix elements.
+";
+
 /// Loader is the object in charge of loading the source documents from disk.
 ///
 /// It Will:
@@ -50,130 +57,136 @@ impl Loader {
             .chain_err(|| "Couldn't open the SUMMARY.toml")?
             .read_to_string(&mut summary)?;
 
-        let top_items = parse_level(&mut summary.split('\n').collect(), 0, vec![0])
-        .chain_err(|| "Parsing failed")?;
-        Ok(Summary { items: top_items })
+        let items = parse_summary_levels(summary.lines()).chain_err(|| "Parsing failed")?;
+        Ok(Summary { items: items })
     }
 }
 
 
 #[derive(Clone, Debug, Default, PartialEq)]
 struct Summary {
-    items: Vec<BookItem>,
+    /// The summary items and which "level" they are on
+    items: Vec<SummaryItem>,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+enum SummaryItem {
+    /// A chapter containing its name, "level", and the location on disk.
+    Chapter(String, u32, PathBuf),
+    Affix(String, PathBuf),
+    Spacer,
+}
 
-/// Recursively parse each level in the `SUMMARY.md`, constructing the `BookItems`
-/// as you go.
-fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32>) -> Result<Vec<BookItem>> {
-    // FIXME: Return an in-memory representation of the summary instead of directly constructing the book
-    // At the moment, if you wanted to test *just* the SUMMARY.md parsing, you'd
-    // need a complete working book on disk. Preferably in a tempdir. Ewwww...
-    debug!("[fn]: parse_level");
-    let mut items: Vec<BookItem> = vec![];
+fn parse_summary_levels<'a, I>(lines: I) -> Result<Vec<SummaryItem>> 
+where I: Iterator<Item = &'a str>
+{
+    let mut items = Vec::new();
 
-    // Construct the book recursively
-    while !summary.is_empty() {
-        let item: BookItem;
-        // Indentation level of the line to parse
-        debug_assert!(summary.len() > 0);
-        let level = level(summary[0], 4)?;
-
-        // if level < current_level we remove the last digit of section,
-        // exit the current function,
-        // and return the parsed level to the calling function.
-        if level < current_level {
-            break;
+    for (i, line) in lines.enumerate() {
+        if let Some(item) = parse_line(line) {
+            items.push(item);
         }
-
-        // if level > current_level we call ourselves to go one level deeper
-        if level > current_level {
-            // Level can not be root level !!
-            // Add a sub-number to section
-            section.push(0);
-            let last = items.pop()
-                .expect("There should be at least one item since this can't be the root level");
-
-            if let BookItem::Chapter(ref s, ref ch) = last {
-                let mut ch = ch.clone();
-                ch.items = parse_level(summary, level, section.clone())
-                    .chain_err(|| format!("Couldn't parse level {}", level))?;
-                items.push(BookItem::Chapter(s.clone(), ch));
-
-                // Remove the last number from the section, because we got back to our level..
-                section.pop();
-                continue;
-            } else {
-                bail!("Your summary.md is messed up\n\n
-                        Prefix, Suffix and Spacer elements \
-                       can only exist on the root level.\n
-                        Prefix elements can only exist \
-                       before any chapter and there can be no chapters after suffix elements.");
-            };
-
-        } else {
-            // level and current_level are the same, parse the line
-            item = if let Some(parsed_item) = parse_line(summary[0]) {
-                let parsed_item = parsed_item.chain_err(|| format!("Couldn't parse item: {:?}", summary[0]))?;
-
-                // Eliminate possible errors and set section to -1 after suffix
-                match parsed_item {
-                    // error if level != 0 and BookItem is != Chapter
-                    BookItem::Affix(_) |
-                    BookItem::Spacer if level > 0 => {
-                        bail!("Your summary.md is messed up\n\n
-                                Prefix, Suffix and \
-                               Spacer elements can only exist on the root level.\n
-                                \
-                               Prefix elements can only exist before any chapter and there can be no chapters after \
-                               suffix elements.");
-                    },
-
-                    // error if BookItem == Chapter and section == -1
-                    BookItem::Chapter(_, _) if section[0] == -1 => {
-                        bail!("Your summary.md is messed up\n\n
-                                Prefix, Suffix and \
-                               Spacer elements can only exist on the root level.\n
-                                \
-                               Prefix elements can only exist before any chapter and there can be no chapters after \
-                               suffix elements.");
-                    },
-
-                    // Set section = -1 after suffix
-                    BookItem::Affix(_) if section[0] > 0 => {
-                        section[0] = -1;
-                    },
-
-                    _ => {},
-                }
-
-                match parsed_item {
-                    BookItem::Chapter(_, ch) => {
-                        // Increment section
-                        let len = section.len() - 1;
-                        section[len] += 1;
-                        let s = section.iter()
-                            .fold("".to_owned(), |s, i| s + &i.to_string() + ".");
-                        BookItem::Chapter(s, ch)
-                    },
-                    other => other,
-                }
-
-            } else {
-                // If parse_line does not return Some(_) continue...
-                summary.remove(0);
-                continue;
-            };
-        }
-
-        summary.remove(0);
-        items.push(item);
     }
-    debug!("[*]: Level: {:?}", items);
+
     Ok(items)
 }
 
-fn level(line: &str, spaces_in_tab: i32) -> Result<i32> {
+// /// Recursively parse each level in the `SUMMARY.md`, constructing the `BookItems`
+// /// as you go.
+// fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32>) -> Result<Vec<SummaryItem>> {
+//     // FIXME: Return an in-memory representation of the summary instead of directly constructing the book
+//     // At the moment, if you wanted to test *just* the SUMMARY.md parsing, you'd
+//     // need a complete working book on disk. Preferably in a tempdir. Ewwww...
+//     debug!("[fn]: parse_level");
+//     let mut items: Vec<SummaryItem> = Vec::new();
+
+//     // Construct the book recursively
+//     while !summary.is_empty() {
+//         let item: SummaryItem;
+
+//         // Indentation level of the line to parse
+//         let level = level(summary[0], 4)?;
+
+//         // if level < current_level we remove the last digit of section,
+//         // exit the current function,
+//         // and return the parsed level to the calling function.
+//         if level < current_level {
+//             break;
+//         }
+
+//         // if level > current_level we call ourselves to go one level deeper
+//         if level > current_level {
+//             // Level can not be root level !!
+//             // Add a sub-number to section
+//             section.push(0);
+//             let last = items.pop()
+//                 .expect("There should be at least one item since this can't be the root level");
+
+//             if let SummaryItem::Chapter(ref s, ref ch) = last {
+//                 let mut ch = ch.clone();
+//                 ch.items = parse_level(summary, level, section.clone())
+//                     .chain_err(|| format!("Couldn't parse level {}", level))?;
+//                 items.push(SummaryItem::Chapter(s.clone(), ch));
+
+//                 // Remove the last number from the section, because we got back to our level..
+//                 section.pop();
+//                 continue;
+//             } else {
+//                 bail!(CORRUPTED_SUMMARY_ERROR_MSG);
+//             };
+
+//         } else {
+//             // level and current_level are the same, parse the line
+//             item = if let Some(parsed_item) = parse_line(summary[0]) {
+
+//                 // Eliminate possible errors and set section to -1 after suffix
+//                 match parsed_item {
+//                     // error if level != 0 and BookItem is != Chapter
+//                     SummaryItem::Affix(_, _) |
+//                     SummaryItem::Spacer if level > 0 => {
+//                         bail!(CORRUPTED_SUMMARY_ERROR_MSG);
+//                     },
+
+//                     // error if BookItem == Chapter and section == -1
+//                     SummaryItem::Chapter(_, _) if section[0] == -1 => {
+//                         bail!(CORRUPTED_SUMMARY_ERROR_MSG);
+//                     },
+
+//                     // Set section = -1 after suffix
+//                     SummaryItem::Affix(_, _) if section[0] > 0 => {
+//                         section[0] = -1;
+//                     },
+
+//                     _ => {},
+//                 }
+
+//                 match parsed_item {
+//                     SummaryItem::Chapter(_, ch) => {
+//                         // Increment section
+//                         let len = section.len() - 1;
+//                         section[len] += 1;
+//                         let s = section.iter()
+//                             .fold("".to_owned(), |s, i| s + &i.to_string() + ".");
+//                         SummaryItem::Chapter(s, ch)
+//                     },
+//                     other => other,
+//                 }
+
+//             } else {
+//                 // If parse_line does not return Some(_) continue...
+//                 summary.remove(0);
+//                 continue;
+//             };
+//         }
+
+//         summary.remove(0);
+//         items.push(item);
+//     }
+//     debug!("[*]: Level: {:?}", items);
+//     Ok(items)
+// }
+
+fn level(line: &str, spaces_in_tab: u32) -> Result<u32> {
     debug!("[fn]: level");
     let mut spaces = 0;
     let mut level = 0;
@@ -193,7 +206,7 @@ fn level(line: &str, spaces_in_tab: i32) -> Result<i32> {
     // If there are spaces left, there is an indentation error
     if spaces > 0 {
         debug!("[SUMMARY.md]:");
-        debug!("\t[line]: {}", line);
+        debug!("\t[line]: {:?}", line);
         debug!("[*]: There is an indentation error on this line. Indentation should be {} spaces", spaces_in_tab);
         bail!("Indentation error on line:\n\n{}", line);
     }
@@ -202,11 +215,8 @@ fn level(line: &str, spaces_in_tab: i32) -> Result<i32> {
 }
 
 
-fn parse_line(l: &str) -> Option<Result<BookItem>> {
-    // FIXME: Parsing a line shouldn't construct a chapter (i.e. no side-effects)
-    // instead, it should say what was on the line so the caller can choose what
-    // to do with it. Because it'll try to construct a BookItem (reading the file
-    // contents in the process) testing gets pretty annoying.
+/// Parse a single line and figure out what kind of item it is.
+fn parse_line(l: &str) -> Option<SummaryItem> {
     debug!("[fn]: parse_line");
 
     // Remove leading and trailing spaces or tabs
@@ -215,7 +225,7 @@ fn parse_line(l: &str) -> Option<Result<BookItem>> {
     // Spacers are "------"
     if line.starts_with("--") {
         debug!("[*]: Line is spacer");
-        return Some(Ok(BookItem::Spacer));
+        return Some(SummaryItem::Spacer);
     }
 
     if let Some(c) = line.chars().nth(0) {
@@ -225,7 +235,7 @@ fn parse_line(l: &str) -> Option<Result<BookItem>> {
                 debug!("[*]: Line is list element");
 
                 if let Some((name, path)) = read_link(line) {
-                    return Some(Chapter::new(name, path).map(|ch| BookItem::Chapter("0".to_owned(), ch)));
+                    return Some(SummaryItem::Chapter(name, path));
                 } else {
                     return None;
                 }
@@ -235,10 +245,7 @@ fn parse_line(l: &str) -> Option<Result<BookItem>> {
                 debug!("[*]: Line is a link element");
 
                 if let Some((name, path)) = read_link(line) {
-                    match Chapter::new(name, path) {
-                        Ok(ch) => return Some(Ok(BookItem::Affix(ch))),
-                        Err(e) => return Some(Err(e)),
-                    }
+                    return Some(SummaryItem::Affix(name, path));
                 } else {
                     return None;
                 }
@@ -350,11 +357,11 @@ mod tests {
         }
     }
 
-    // #[test]
-    // fn parse_book_example_summary() {
-    //     let temp = new_book_directory();
-    //     let loader = Loader::new(temp.path()).unwrap();
+    #[test]
+    fn parse_book_example_summary() {
+        let temp = new_book_directory();
+        let loader = Loader::new(temp.path()).unwrap();
 
-    //     let summary = loader.parse_summary().unwrap();
-    // }
+        let summary = loader.parse_summary().unwrap();
+    }
 }
