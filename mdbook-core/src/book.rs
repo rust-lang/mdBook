@@ -17,7 +17,7 @@ pub enum BookItem {
     Spacer,
 }
 
-#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Chapter {
     /// The chapter name as specified in the `SUMMARY.md`.
     pub name: String,
