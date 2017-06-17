@@ -1,3 +1,5 @@
+//! The datatypes used to describe a `Book` in memory.
+
 use std::path::PathBuf;
 use std::fs::File;
 use std::io::Read;
@@ -46,21 +48,23 @@ impl Chapter {
     }
 }
 
+/// Book walker implemented using the [Visitor Pattern] for performing
+/// manipulations on a `Book`.
+///
 /// Each method of a `Visitor` is a hook which can potentially be overridden,
 /// with the default methods simply recursively visiting each node in a `Book`
 /// (e.g. the visit_section method by default calls visit::walk_section).
-///
-/// This is the main trait you'll want to implement for doing manipulations on
-/// a `Book` or its items.
 ///
 /// Each overridden visit method has full control over what happens with its
 /// node, it can do its own traversal of the node's children, call visit::walk_*
 /// to apply the default traversal algorithm, or prevent deeper traversal by
 /// doing nothing.
 ///
-/// > **Note:** The idea for this was shamelessly copied from [syn].
+/// > **Note:** The idea for implementing this was shamelessly stolen from
+/// [syn].
 ///
 /// [syn]: https://docs.serde.rs/syn/visit/trait.Visitor.html
+/// [Visitor Pattern]: https://en.wikipedia.org/wiki/Visitor_pattern
 pub trait Visitor: Sized {
     fn visit_book(&mut self, book: &mut Book) {
         visit::walk_book(self, book);

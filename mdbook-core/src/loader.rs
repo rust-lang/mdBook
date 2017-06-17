@@ -1,3 +1,6 @@
+//! Functionality for inspecting the source for a book and generating an
+//! in-memory representation.
+
 #![allow(unused_variables, dead_code)]
 
 use std::path::{Path, PathBuf};

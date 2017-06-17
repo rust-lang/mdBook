@@ -1,3 +1,5 @@
+//! Functionality for coordinating the entire building and rendering process.
+
 #![allow(missing_docs, unused_variables)]
 
 use std::path::Path;
@@ -10,7 +12,7 @@ use errors::*;
 ///
 /// The `Runner`'s responsibilities are:
 ///
-/// - Defers to the `DirectoryManager` to load the `Book` and config from disk
+/// - Defers to the `Loader` to load the `Book` and config from disk
 /// - set up the rendering pipeline so the `Renderer` can transform source text
 ///   into the final product
 /// - Make sure each `Plugin` is called so they can do their pre/post-processing
