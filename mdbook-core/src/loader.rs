@@ -8,7 +8,7 @@ use std::fs::File;
 use std::io::Read;
 
 use config::{load_config, Config};
-use book::{Chapter, BookItem};
+use book::{Chapter, Book, BookItem};
 use errors::*;
 
 /// Loader is the object in charge of loading the source documents from disk.
@@ -36,9 +36,7 @@ impl Loader {
     pub fn new<P: AsRef<Path>>(root: P) -> Result<Loader> {
         let root = PathBuf::from(root.as_ref());
 
-        let config = load_config(&root).chain_err(
-            || "Couldn't load the config file",
-        )?;
+        let config = load_config(&root).chain_err(|| "Couldn't load the config file")?;
         Ok(Loader {
             root: root,
             config: config,
@@ -60,6 +58,32 @@ impl Loader {
         // TODO: The existing `parse_level()` function needs to be adapted to the new
         // types
         unimplemented!()
+    }
+
+    /// Load the entire book from disk and fetch the config.
+    pub fn load(&self) -> Result<Book> {
+        let summary = self.parse_summary()?;
+        self.load_book_from_summary(&summary)
+    }
+
+    /// Constructs a new `Book` from the provided `Summary`.
+    fn load_book_from_summary(&self, summary: &Summary) -> Result<Book> {
+        let mut sections = Vec::new();
+
+        for item in &summary.items {
+            self.load_item(item)?;
+        }
+
+        Ok(Book { sections: sections })        
+    }
+
+    fn load_item(&self, item: &SummaryItem) -> Result<BookItem> {
+        unimplemented!()
+    }
+
+    /// The configuration file for this book.
+    pub fn config(&self) -> &Config {
+        &self.config
     }
 }
 

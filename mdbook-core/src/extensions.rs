@@ -20,13 +20,14 @@ pub trait Plugin {
     // TODO: How can a plugin apply renderer-specific operations?
     // e.g. check for dead/broken links in the HTML renderer
 
-    /// A function which is run immediately after loading a file from disk.
+    /// A function which is run on the book's raw content immediately after 
+    /// being loaded from disk.
     ///
     /// This allows plugin creators to do any special preprocessing before it
     /// reaches the markdown parser (e.g. MathJax substitution). The plugin may
     /// or may not decide to make changes.
-    fn preprocess_file(&mut self, _src: &str) -> Option<String> {
-        None
+    fn preprocess_book(&mut self, book: &mut Book) -> Result<()> {
+        Ok(())
     }
 
     /// The plugin function called after `mdbook` has loaded the book into

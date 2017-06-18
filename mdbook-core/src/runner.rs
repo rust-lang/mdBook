@@ -1,10 +1,11 @@
-//! Functionality for coordinating the entire building and rendering process.
+//! Coordination of the entire building and rendering process.
 
 #![allow(missing_docs, unused_variables)]
 
 use std::path::Path;
 
 use loader::Loader;
+use config::Config;
 use errors::*;
 
 /// The object in charge of coordinating all the individual components necessary
@@ -26,6 +27,11 @@ impl Runner {
     pub fn new<P: AsRef<Path>>(root: P) -> Result<Runner> {
         let loader = Loader::new(root).chain_err(|| "Couldn't create the loader")?;
         Ok(Runner { loader: loader })
+    }
+
+    /// Get the book's config.
+    fn config(&self) -> &Config {
+        self.loader.config()
     }
 
     /// Initialize a new project directory.

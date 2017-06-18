@@ -16,6 +16,7 @@ pub struct Book {
 /// Any item which the book may contain.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum BookItem {
+    // TODO: what on earth is this String for?
     Chapter(String, Chapter),
     Affix(Chapter),
     Spacer,
