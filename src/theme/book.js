@@ -52,8 +52,9 @@ $( document ).ready(function() {
 
     // Interesting DOM Elements
     var sidebar = $("#sidebar");
-    var page_wrapper = $("#page-wrapper");
-    var content = $("#content");
+
+    // Help keyboard navigation by always focusing on page content
+    $(".page").focus();
 
     // Toggle sidebar
     $("#sidebar-toggle").click(sidebarToggle);
@@ -201,7 +202,7 @@ $( document ).ready(function() {
     var clipboardSnippets = new Clipboard('.clip-button', {
         text: function(trigger) {
             hideTooltip(trigger);
-            return trigger.parentElement.parentElement.textContent;
+            return $(trigger).parents(".playpen").find("code.language-rust.hljs")[0].textContent;
         }
     });
     clipboardSnippets.on('success', function(e) {
