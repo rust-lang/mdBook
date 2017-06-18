@@ -4,8 +4,9 @@ use std::io::Read;
 
 
 pub fn render_playpen(s: &str, path: &Path) -> String {
-    // When replacing one thing in a string by something with a different length, the indices
-    // after that will not correspond, we therefore have to store the difference to correct this
+    // When replacing one thing in a string by something with a different length,
+    // the indices after that will not correspond,
+    // we therefore have to store the difference to correct this
     let mut previous_end_index = 0;
     let mut replaced = String::new();
 
@@ -35,13 +36,13 @@ pub fn render_playpen(s: &str, path: &Path) -> String {
             continue;
         };
 
-        let replacement = String::new() + "<pre><code class=\"language-rust\">" + &file_content +
-                          "</code></pre>";
+        let replacement = String::new() + "<pre><code class=\"language-rust\">" + &file_content + "</code></pre>";
 
         replaced.push_str(&s[previous_end_index..playpen.start_index]);
         replaced.push_str(&replacement);
         previous_end_index = playpen.end_index;
-        // println!("Playpen{{ {}, {}, {:?}, {} }}", playpen.start_index, playpen.end_index, playpen.rust_file,
+        // println!("Playpen{{ {}, {}, {:?}, {} }}", playpen.start_index,
+        // playpen.end_index, playpen.rust_file,
         // playpen.editable);
     }
 
@@ -100,12 +101,12 @@ fn find_playpens(s: &str, base_path: &Path) -> Vec<Playpen> {
             .unwrap_or(false);
 
         playpens.push(Playpen {
-            start_index: i,
-            end_index: end_i,
-            rust_file: base_path.join(PathBuf::from(params[0])),
-            editable: editable,
-            escaped: escaped,
-        })
+                          start_index: i,
+                          end_index: end_i,
+                          rust_file: base_path.join(PathBuf::from(params[0])),
+                          editable: editable,
+                          escaped: escaped,
+                      })
     }
 
     playpens
@@ -189,7 +190,11 @@ fn test_find_playpens_escaped_playpen() {
     println!("\nOUTPUT: {:?}\n", find_playpens(s, Path::new("")));
 
     assert!(find_playpens(s, Path::new("")) ==
-            vec![
-        Playpen{start_index: 39, end_index: 68, rust_file: PathBuf::from("file.rs"), editable: true, escaped: true},
-    ]);
+            vec![Playpen {
+                     start_index: 39,
+                     end_index: 68,
+                     rust_file: PathBuf::from("file.rs"),
+                     editable: true,
+                     escaped: true,
+                 }]);
 }

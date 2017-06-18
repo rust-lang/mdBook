@@ -124,7 +124,7 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
     let mut book = MDBook::new(&book_dir);
 
     // Call the function that does the initialization
-    try!(book.init());
+    book.init()?;
 
     // If flag `--theme` is present, copy theme to src
     if args.is_present("theme") {
@@ -132,7 +132,7 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
         // Skip this if `--force` is present
         if !args.is_present("force") {
             // Print warning
-            print!("\nCopying the default theme to {:?}", book.get_src());
+            print!("\nCopying the default theme to {:?}", book.get_source());
             println!("could potentially overwrite files already present in that directory.");
             print!("\nAre you sure you want to continue? (y/n) ");
 
@@ -145,13 +145,15 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
         }
 
         // Call the function that copies the theme
-        try!(book.copy_theme());
+        book.copy_theme()?;
         println!("\nTheme copied.");
 
     }
 
     // Because of `src/book/mdbook.rs#L37-L39`, `dest` will always start with `root`
-    let is_dest_inside_root = book.get_dest().starts_with(book.get_root());
+    let is_dest_inside_root = book.get_destination()
+                                  .map(|p| p.starts_with(book.get_root()))
+                                  .unwrap_or(false);
 
     if !args.is_present("force") && is_dest_inside_root {
         println!("\nDo you want a .gitignore to be created? (y/n)");
@@ -171,21 +173,23 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
 // Build command implementation
 fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book_dir = get_book_dir(args);
-    let book = MDBook::new(&book_dir).read_config();
+    let book = MDBook::new(&book_dir).read_config()?;
 
     let mut book = match args.value_of("dest-dir") {
-        Some(dest_dir) => book.set_dest(Path::new(dest_dir)),
-        None => book
+        Some(dest_dir) => book.with_destination(Path::new(dest_dir)),
+        None => book,
     };
 
     if args.is_present("no-create") {
         book.create_missing = false;
     }
 
-    try!(book.build());
+    book.build()?;
 
-    if args.is_present("open") {
-        open(book.get_dest().join("index.html"));
+    if let Some(d) = book.get_destination() {
+        if args.is_present("open") {
+            open(d.join("index.html"));
+        }
     }
 
     Ok(())
@@ -196,16 +200,18 @@ fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
 #[cfg(feature = "watch")]
 fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book_dir = get_book_dir(args);
-    let book = MDBook::new(&book_dir).read_config();
+    let book = MDBook::new(&book_dir).read_config()?;
 
     let mut book = match args.value_of("dest-dir") {
-        Some(dest_dir) => book.set_dest(Path::new(dest_dir)),
-        None => book
+        Some(dest_dir) => book.with_destination(Path::new(dest_dir)),
+        None => book,
     };
 
     if args.is_present("open") {
-        try!(book.build());
-        open(book.get_dest().join("index.html"));
+        book.build()?;
+        if let Some(d) = book.get_destination() {
+            open(d.join("index.html"));
+        }
     }
 
     trigger_on_change(&mut book, |path, book| {
@@ -226,15 +232,20 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
     const RELOAD_COMMAND: &'static str = "reload";
 
     let book_dir = get_book_dir(args);
-    let book = MDBook::new(&book_dir).read_config();
+    let book = MDBook::new(&book_dir).read_config()?;
 
     let mut book = match args.value_of("dest-dir") {
-        Some(dest_dir) => book.set_dest(Path::new(dest_dir)),
-        None => book
+        Some(dest_dir) => book.with_destination(Path::new(dest_dir)),
+        None => book,
     };
 
+    if let None = book.get_destination() {
+        println!("The HTML renderer is not set up, impossible to serve the files.");
+        std::process::exit(2);
+    }
+
     let port = args.value_of("port").unwrap_or("3000");
-    let ws_port = args.value_of("ws-port").unwrap_or("3001");
+    let ws_port = args.value_of("websocket-port").unwrap_or("3001");
     let interface = args.value_of("interface").unwrap_or("localhost");
     let public_address = args.value_of("address").unwrap_or(interface);
     let open_browser = args.is_present("open");
@@ -257,12 +268,16 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
                 socket.close();
             }}
         </script>
-    "#, public_address, ws_port, RELOAD_COMMAND).to_owned());
+    "#,
+                                public_address,
+                                ws_port,
+                                RELOAD_COMMAND));
 
-    try!(book.build());
+    book.build()?;
 
+    let staticfile = staticfile::Static::new(book.get_destination().expect("destination is present, checked before"));
     let mut mount = mount::Mount::new();
-    mount.mount("/", staticfile::Static::new(book.get_dest()));
+    mount.mount("/", staticfile);
     if let Some(values) = static_objs {
         for value in values {
             let path = Path::new(value);
@@ -276,24 +291,20 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
         }
     }
     let iron = iron::Iron::new(mount);
+
     let _iron = iron.http(&*address).unwrap();
 
-    let ws_server = ws::WebSocket::new(|_| {
-        |_| {
-            Ok(())
-        }
-    }).unwrap();
+    let ws_server = ws::WebSocket::new(|_| |_| Ok(())).unwrap();
 
     let broadcaster = ws_server.broadcaster();
 
-    std::thread::spawn(move || {
-        ws_server.listen(&*ws_address).unwrap();
-    });
+    std::thread::spawn(move || { ws_server.listen(&*ws_address).unwrap(); });
 
-    println!("\nServing on {}", address);
+    let serving_url = format!("http://{}", address);
+    println!("\nServing on: {}", serving_url);
 
     if open_browser {
-        open(format!("http://{}", address));
+        open(serving_url);
     }
 
     trigger_on_change(&mut book, move |path, book| {
@@ -311,9 +322,9 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
 
 fn test(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::new(&book_dir).read_config();
+    let mut book = MDBook::new(&book_dir).read_config()?;
 
-    try!(book.test());
+    book.test()?;
 
     Ok(())
 }
@@ -356,21 +367,31 @@ fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
         Err(e) => {
             println!("Error while trying to watch the files:\n\n\t{:?}", e);
             ::std::process::exit(0);
-        }
+        },
     };
 
     // Add the source directory to the watcher
-    if let Err(e) = watcher.watch(book.get_src(), Recursive) {
-        println!("Error while watching {:?}:\n    {:?}", book.get_src(), e);
+    if let Err(e) = watcher.watch(book.get_source(), Recursive) {
+        println!("Error while watching {:?}:\n    {:?}", book.get_source(), e);
         ::std::process::exit(0);
     };
 
+    // Add the theme directory to the watcher
+    if let Some(t) = book.get_theme_path() {
+        watcher.watch(t, Recursive).unwrap_or_default();
+    }
+
+
     // Add the book.{json,toml} file to the watcher if it exists, because it's not
     // located in the source directory
-    if watcher.watch(book.get_root().join("book.json"), NonRecursive).is_err() {
+    if watcher
+           .watch(book.get_root().join("book.json"), NonRecursive)
+           .is_err() {
         // do nothing if book.json is not found
     }
-    if watcher.watch(book.get_root().join("book.toml"), NonRecursive).is_err() {
+    if watcher
+           .watch(book.get_root().join("book.toml"), NonRecursive)
+           .is_err() {
         // do nothing if book.toml is not found
     }
 
@@ -378,16 +399,18 @@ fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
 
     loop {
         match rx.recv() {
-            Ok(event) => match event {
-                NoticeWrite(path) |
-                NoticeRemove(path) |
-                Create(path) |
-                Write(path) |
-                Remove(path) |
-                Rename(_, path) => {
-                    closure(&path, book);
+            Ok(event) => {
+                match event {
+                    NoticeWrite(path) |
+                    NoticeRemove(path) |
+                    Create(path) |
+                    Write(path) |
+                    Remove(path) |
+                    Rename(_, path) => {
+                        closure(&path, book);
+                    },
+                    _ => {},
                 }
-                _ => {}
             },
             Err(e) => {
                 println!("An error occured: {:?}", e);

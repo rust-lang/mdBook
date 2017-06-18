@@ -4,7 +4,7 @@ body {
   color: #333;
 }
 code {
-  font-family: "Source Code Pro", "Menlo", "DejaVu Sans Mono", monospace;
+  font-family: "Source Code Pro", Consolas, "Ubuntu Mono", Menlo, "DejaVu Sans Mono", monospace, monospace;
   font-size: 0.875em;
 }
 .left {
@@ -137,6 +137,7 @@ table thead td {
   right: 0;
   left: 0;
   bottom: 0;
+  outline: 0;
   padding-right: 15px;
   overflow-y: auto;
 }
@@ -258,7 +259,6 @@ table thead td {
   position: relative;
   left: 10px;
   z-index: 1000;
-  -webkit-border-radius: 4px;
   border-radius: 4px;
   font-size: 0.7em;
 }
@@ -295,7 +295,6 @@ table thead td {
     position: relative;
     display: inline-block;
     margin-bottom: 50px;
-    -webkit-border-radius: 5px;
     border-radius: 5px;
   }
   .next {
@@ -357,7 +356,8 @@ table thead td {
   background-color: #fafafa;
 }
 .light .content a:link,
-.light a:visited {
+.light a:visited,
+.light a > .hljs {
   color: #4183c4;
 }
 .light .theme-popup {
@@ -398,14 +398,18 @@ table thead td {
   display: inline-block;
   vertical-align: middle;
   padding: 0.1em 0.3em;
-  -webkit-border-radius: 3px;
   border-radius: 3px;
+  color: #6e6b5e;
+}
+.light a:hover > .hljs {
+  text-decoration: underline;
 }
 .light pre {
   position: relative;
 }
 .light pre > .buttons {
   position: absolute;
+  z-index: 100;
   right: 5px;
   top: 5px;
   color: #364149;
@@ -472,7 +476,8 @@ table thead td {
   background-color: #292c2f;
 }
 .coal .content a:link,
-.coal a:visited {
+.coal a:visited,
+.coal a > .hljs {
   color: #2b79a2;
 }
 .coal .theme-popup {
@@ -513,14 +518,18 @@ table thead td {
   display: inline-block;
   vertical-align: middle;
   padding: 0.1em 0.3em;
-  -webkit-border-radius: 3px;
   border-radius: 3px;
+  color: #c5c8c6;
+}
+.coal a:hover > .hljs {
+  text-decoration: underline;
 }
 .coal pre {
   position: relative;
 }
 .coal pre > .buttons {
   position: absolute;
+  z-index: 100;
   right: 5px;
   top: 5px;
   color: #a1adb8;
@@ -587,7 +596,8 @@ table thead td {
   background-color: #282d3f;
 }
 .navy .content a:link,
-.navy a:visited {
+.navy a:visited,
+.navy a > .hljs {
   color: #2b79a2;
 }
 .navy .theme-popup {
@@ -628,14 +638,18 @@ table thead td {
   display: inline-block;
   vertical-align: middle;
   padding: 0.1em 0.3em;
-  -webkit-border-radius: 3px;
   border-radius: 3px;
+  color: #c5c8c6;
+}
+.navy a:hover > .hljs {
+  text-decoration: underline;
 }
 .navy pre {
   position: relative;
 }
 .navy pre > .buttons {
   position: absolute;
+  z-index: 100;
   right: 5px;
   top: 5px;
   color: #c8c9db;
@@ -702,7 +716,8 @@ table thead td {
   background-color: #3b2e2a;
 }
 .rust .content a:link,
-.rust a:visited {
+.rust a:visited,
+.rust a > .hljs {
   color: #2b79a2;
 }
 .rust .theme-popup {
@@ -743,14 +758,18 @@ table thead td {
   display: inline-block;
   vertical-align: middle;
   padding: 0.1em 0.3em;
-  -webkit-border-radius: 3px;
   border-radius: 3px;
+  color: #6e6b5e;
+}
+.rust a:hover > .hljs {
+  text-decoration: underline;
 }
 .rust pre {
   position: relative;
 }
 .rust pre > .buttons {
   position: absolute;
+  z-index: 100;
   right: 5px;
   top: 5px;
   color: #c8c9db;
@@ -763,6 +782,126 @@ table thead td {
   margin-left: 8px;
 }
 .rust pre > .result {
+  margin-top: 10px;
+}
+.ayu {
+  color: #c5c5c5;
+  background-color: #0f1419;
+/* Inline code */
+}
+.ayu .content .header:link,
+.ayu .content .header:visited {
+  color: #c5c5c5;
+  pointer: cursor;
+}
+.ayu .content .header:link:hover,
+.ayu .content .header:visited:hover {
+  text-decoration: none;
+}
+.ayu .sidebar {
+  background-color: #14191f;
+  color: #c8c9db;
+}
+.ayu .chapter li {
+  color: #5c6773;
+}
+.ayu .chapter li a {
+  color: #c8c9db;
+}
+.ayu .chapter li .active,
+.ayu .chapter li a:hover {
+/* Animate color change */
+  color: #ffb454;
+}
+.ayu .chapter .spacer {
+  background-color: #2d334f;
+}
+.ayu .menu-bar,
+.ayu .menu-bar:visited,
+.ayu .nav-chapters,
+.ayu .nav-chapters:visited,
+.ayu .mobile-nav-chapters,
+.ayu .mobile-nav-chapters:visited {
+  color: #737480;
+}
+.ayu .menu-bar i:hover,
+.ayu .nav-chapters:hover,
+.ayu .mobile-nav-chapters i:hover {
+  color: #b7b9cc;
+}
+.ayu .mobile-nav-chapters i:hover {
+  color: #c8c9db;
+}
+.ayu .mobile-nav-chapters {
+  background-color: #14191f;
+}
+.ayu .content a:link,
+.ayu a:visited,
+.ayu a > .hljs {
+  color: #0096cf;
+}
+.ayu .theme-popup {
+  color: #c5c5c5;
+  background: #14191f;
+  border: 1px solid #5c6773;
+}
+.ayu .theme-popup .theme:hover {
+  background-color: #191f26;
+}
+.ayu .theme-popup .default {
+  color: #737480;
+}
+.ayu blockquote {
+  margin: 20px 0;
+  padding: 0 20px;
+  color: #c5c5c5;
+  background-color: #262933;
+  border-top: 0.1em solid #2f333f;
+  border-bottom: 0.1em solid #2f333f;
+}
+.ayu table td {
+  border-color: #182028;
+}
+.ayu table tbody tr:nth-child(2n) {
+  background: #141b22;
+}
+.ayu table thead {
+  background: #324354;
+}
+.ayu table thead td {
+  border: none;
+}
+.ayu table thead tr {
+  border: 1px #324354 solid;
+}
+.ayu :not(pre) > .hljs {
+  display: inline-block;
+  vertical-align: middle;
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  color: #ffb454;
+}
+.ayu a:hover > .hljs {
+  text-decoration: underline;
+}
+.ayu pre {
+  position: relative;
+}
+.ayu pre > .buttons {
+  position: absolute;
+  z-index: 100;
+  right: 5px;
+  top: 5px;
+  color: #c8c9db;
+  cursor: pointer;
+}
+.ayu pre > .buttons :hover {
+  color: #ffb454;
+}
+.ayu pre > .buttons i {
+  margin-left: 8px;
+}
+.ayu pre > .result {
   margin-top: 10px;
 }
 @media only print {
@@ -786,7 +925,6 @@ table thead td {
   }
   code {
     background-color: #666;
-    -webkit-border-radius: 5px;
     border-radius: 5px;
 /* Force background to be printed in Chrome */
     -webkit-print-color-adjust: exact;
@@ -817,4 +955,26 @@ table thead td {
     white-space: -o-pre-wrap /* Opera 7 */;
     word-wrap: break-word /* Internet Explorer 5.5+ */;
   }
+}
+.tooltiptext {
+  position: absolute;
+  visibility: hidden;
+  color: #fff;
+  background-color: #333;
+  -webkit-transform: translateX(-50%);
+  -moz-transform: translateX(-50%);
+  -o-transform: translateX(-50%);
+  -ms-transform: translateX(-50%);
+  transform: translateX(-50%); /* Center by moving tooltip 50% of its width left */
+  left: -8px; /* Half of the width of the icon */
+  top: -35px;
+  font-size: 0.8em;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 8px;
+  margin: 5px;
+  z-index: 1000;
+}
+.tooltipped .tooltiptext {
+  visibility: visible;
 }

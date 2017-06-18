@@ -15,14 +15,15 @@ exclude = [
 ]
 
 [dependencies]
-clap = "2.19.2"
-handlebars = { version = "0.25.0", features = ["serde_type"] }
-serde = "0.9"
-serde_json = "0.9"
-pulldown-cmark = "0.0.8"
+clap = "2.24"
+handlebars = "0.26"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+pulldown-cmark = "0.0.14"
 log = "0.3"
 env_logger = "0.4.0"
-toml = { version = "0.3", features = ["serde"] }
+toml = { version = "0.4", features = ["serde"] }
 open = "1.1"
 regex = "0.2.1"
 
@@ -35,11 +36,14 @@ crossbeam = { version = "0.2.8", optional = true }
 iron = { version = "0.5", optional = true }
 mount = { version = "0.3", optional = true }
 staticfile = { version = "0.4", optional = true }
-ws = { version = "0.6", optional = true}
+ws = { version = "0.7", optional = true}
 
 # Tests
 [dev-dependencies]
 tempdir = "0.3.4"
+
+[build-dependencies]
+error-chain = "0.10"
 
 [features]
 default = ["output", "watch", "serve"]

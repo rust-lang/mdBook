@@ -24,10 +24,11 @@ pub fn file_to_string(path: &Path) -> Result<String, Box<Error>> {
     Ok(content)
 }
 
-/// Takes a path and returns a path containing just enough `../` to point to the root of the given path.
+/// Takes a path and returns a path containing just enough `../` to point to
+/// the root of the given path.
 ///
-/// This is mostly interesting for a relative path to point back to the directory from where the
-/// path starts.
+/// This is mostly interesting for a relative path to point back to the
+/// directory from where the path starts.
 ///
 /// ```ignore
 /// let mut path = Path::new("some/relative/path");
@@ -41,9 +42,10 @@ pub fn file_to_string(path: &Path) -> Result<String, Box<Error>> {
 /// "../../"
 /// ```
 ///
-/// **note:** it's not very fool-proof, if you find a situation where it doesn't return the correct
-/// path. Consider [submitting a new issue](https://github.com/azerupi/mdBook/issues) or a
-/// [pull-request](https://github.com/azerupi/mdBook/pulls) to improve it.
+/// **note:** it's not very fool-proof, if you find a situation where
+/// it doesn't return the correct path.
+/// Consider [submitting a new issue](https://github.com/azerupi/mdBook/issues)
+/// or a [pull-request](https://github.com/azerupi/mdBook/pulls) to improve it.
 
 pub fn path_to_root(path: &Path) -> String {
     debug!("[fn]: path_to_root");
@@ -66,8 +68,9 @@ pub fn path_to_root(path: &Path) -> String {
 
 
 
-/// This function creates a file and returns it. But before creating the file it checks every
-/// directory in the path to see if it exists, and if it does not it will be created.
+/// This function creates a file and returns it. But before creating the file
+/// it checks every directory in the path to see if it exists,
+/// and if it does not it will be created.
 
 pub fn create_file(path: &Path) -> io::Result<File> {
     debug!("[fn]: create_file");
@@ -76,7 +79,7 @@ pub fn create_file(path: &Path) -> io::Result<File> {
     if let Some(p) = path.parent() {
         debug!("Parent directory is: {:?}", p);
 
-        try!(fs::create_dir_all(p));
+        fs::create_dir_all(p)?;
     }
 
     debug!("[*]: Create file: {:?}", path);
@@ -86,13 +89,13 @@ pub fn create_file(path: &Path) -> io::Result<File> {
 /// Removes all the content of a directory but not the directory itself
 
 pub fn remove_dir_content(dir: &Path) -> Result<(), Box<Error>> {
-    for item in try!(fs::read_dir(dir)) {
+    for item in fs::read_dir(dir)? {
         if let Ok(item) = item {
             let item = item.path();
             if item.is_dir() {
-                try!(fs::remove_dir_all(item));
+                fs::remove_dir_all(item)?;
             } else {
-                try!(fs::remove_file(item));
+                fs::remove_file(item)?;
             }
         }
     }
@@ -101,20 +104,21 @@ pub fn remove_dir_content(dir: &Path) -> Result<(), Box<Error>> {
 
 ///
 ///
-/// Copies all files of a directory to another one except the files with the extensions given in the
-/// `ext_blacklist` array
+/// Copies all files of a directory to another one except the files
+/// with the extensions given in the `ext_blacklist` array
 
-pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blacklist: &[&str]) -> Result<(), Box<Error>> {
+pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blacklist: &[&str])
+                             -> Result<(), Box<Error>> {
     debug!("[fn] copy_files_except_ext");
     // Check that from and to are different
     if from == to {
         return Ok(());
     }
     debug!("[*] Loop");
-    for entry in try!(fs::read_dir(from)) {
-        let entry = try!(entry);
+    for entry in fs::read_dir(from)? {
+        let entry = entry?;
         debug!("[*] {:?}", entry.path());
-        let metadata = try!(entry.metadata());
+        let metadata = entry.metadata()?;
 
         // If the entry is a dir and the recursive option is enabled, call itself
         if metadata.is_dir() && recursive {
@@ -125,13 +129,10 @@ pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blackl
 
             // check if output dir already exists
             if !to.join(entry.file_name()).exists() {
-                try!(fs::create_dir(&to.join(entry.file_name())));
+                fs::create_dir(&to.join(entry.file_name()))?;
             }
 
-            try!(copy_files_except_ext(&from.join(entry.file_name()),
-                                       &to.join(entry.file_name()),
-                                       true,
-                                       ext_blacklist));
+            copy_files_except_ext(&from.join(entry.file_name()), &to.join(entry.file_name()), true, ext_blacklist)?;
         } else if metadata.is_file() {
 
             // Check if it is in the blacklist
@@ -141,13 +142,22 @@ pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blackl
                 }
             }
             debug!("[*] creating path for file: {:?}",
-                   &to.join(entry.path().file_name().expect("a file should have a file name...")));
+                   &to.join(entry
+                                .path()
+                                .file_name()
+                                .expect("a file should have a file name...")));
 
             info!("[*] Copying file: {:?}\n    to {:?}",
                   entry.path(),
-                  &to.join(entry.path().file_name().expect("a file should have a file name...")));
-            try!(fs::copy(entry.path(),
-                          &to.join(entry.path().file_name().expect("a file should have a file name..."))));
+                  &to.join(entry
+                               .path()
+                               .file_name()
+                               .expect("a file should have a file name...")));
+            fs::copy(entry.path(),
+                     &to.join(entry
+                                  .path()
+                                  .file_name()
+                                  .expect("a file should have a file name...")))?;
         }
     }
     Ok(())
