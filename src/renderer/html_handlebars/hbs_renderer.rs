@@ -1,7 +1,7 @@
 use renderer::html_handlebars::helpers;
 use renderer::Renderer;
 use book::MDBook;
-use book::bookitem::BookItem;
+use book::bookitem::{BookItem, Chapter};
 use utils;
 use theme::{self, Theme};
 use regex::{Regex, Captures};
@@ -28,7 +28,7 @@ impl HtmlHandlebars {
     }
 
     fn render_item(&self, item: &BookItem, book: &MDBook, data: &mut serde_json::Map<String, serde_json::Value>,
-                   print_content: &mut String, handlebars: &mut Handlebars, index: &mut bool, destination: &Path)
+                   print_content: &mut String, handlebars: &mut Handlebars, is_index: bool, destination: &Path)
                    -> Result<(), Box<Error>> {
         // FIXME: This should be made DRY-er and rely less on mutable state
         match *item {
@@ -75,31 +75,8 @@ impl HtmlHandlebars {
                     book.write_file(filename, &rendered.into_bytes())?;
 
                     // Create an index.html from the first element in SUMMARY.md
-                    if *index {
-                        debug!("[*]: index.html");
-
-                        let mut content = String::new();
-
-                        let _source = File::open(destination.join(&ch.path.with_extension("html")))
-                            ?
-                            .read_to_string(&mut content);
-
-                        // This could cause a problem when someone displays
-                        // code containing <base href=...>
-                        // on the front page, however this case should be very very rare...
-                        content = content.lines()
-                            .filter(|line| !line.contains("<base href="))
-                            .collect::<Vec<&str>>()
-                            .join("\n");
-
-                        book.write_file("index.html", content.as_bytes())?;
-
-                        info!("[*] Creating index.html from {:?} ✓",
-                              book.get_destination()
-                                  .expect("If the HTML renderer is called, one would assume the HtmlConfig is \
-                                           set... (4)")
-                                  .join(&ch.path.with_extension("html")));
-                        *index = false;
+                    if is_index {
+                        self.render_index(book, ch, destination)?;
                     }
                 }
             },
@@ -107,6 +84,34 @@ impl HtmlHandlebars {
         }
 
         Ok(())
+    }
+
+    fn render_index(&self, book: &MDBook, ch: &Chapter, destination: &Path) -> Result<(), Box<Error>> {
+                            debug!("[*]: index.html");
+
+                            let mut content = String::new();
+
+                            let _source = File::open(destination.join(&ch.path.with_extension("html")))
+                                ?
+                                .read_to_string(&mut content);
+
+                            // This could cause a problem when someone displays
+                            // code containing <base href=...>
+                            // on the front page, however this case should be very very rare...
+                            content = content.lines()
+                                .filter(|line| !line.contains("<base href="))
+                                .collect::<Vec<&str>>()
+                                .join("\n");
+
+                            book.write_file("index.html", content.as_bytes())?;
+
+                            info!("[*] Creating index.html from {:?} ✓",
+                                book.get_destination()
+                                    .expect("If the HTML renderer is called, one would assume the HtmlConfig is \
+                                            set... (4)")
+                                    .join(&ch.path.with_extension("html")));
+
+                                    Ok(())
     }
 
     fn post_process(&self, rendered: String) -> String {
@@ -216,9 +221,9 @@ impl Renderer for HtmlHandlebars {
                                                "Unexpected error when constructing destination path")));
         }
 
-        let mut index = true;
-        for item in book.iter() {
-            self.render_item(item, book, &mut data, &mut print_content, &mut handlebars, &mut index, &destination)?;
+        for (i, item) in book.iter().enumerate() {
+            let is_index = i == 0;
+            self.render_item(item, book, &mut data, &mut print_content, &mut handlebars, is_index, &destination)?;
         }
 
         // Print version
