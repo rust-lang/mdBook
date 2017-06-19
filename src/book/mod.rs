@@ -351,9 +351,13 @@ impl MDBook {
         self
     }
 
-    pub fn test(&mut self) -> Result<()> {
+    pub fn test(&mut self, library_paths: Vec<&str>) -> Result<()> {
         // read in the chapters
         self.parse_summary().chain_err(|| "Couldn't parse summary")?;
+        let library_args: Vec<&str> = (0..library_paths.len()).map(|_| "-L")
+                                                              .zip(library_paths.into_iter())
+                                                              .flat_map(|x| vec![x.0, x.1])
+                                                              .collect();
         for item in self.iter() {
 
             if let BookItem::Chapter(_, ref ch) = *item {
@@ -363,7 +367,7 @@ impl MDBook {
 
                     println!("[*]: Testing file: {:?}", path);
 
-                    let output = Command::new("rustdoc").arg(&path).arg("--test").output()?;
+                    let output = Command::new("rustdoc").arg(&path).arg("--test").args(&library_args).output()?;
 
                     if !output.status.success() {
                         bail!(ErrorKind::Subprocess("Rustdoc returned an error".to_string(), output));
