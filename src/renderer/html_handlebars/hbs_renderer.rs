@@ -393,6 +393,8 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
     Ok(data)
 }
 
+/// Goes through the rendered HTML, making sure all header tags are wrapped in
+/// an anchor so people can link to sections directly.
 fn build_header_links(html: String, filename: &str) -> String {
     let regex = Regex::new(r"<h(\d)>(.*?)</h\d>").unwrap();
     let mut id_counter = HashMap::new();
@@ -408,18 +410,20 @@ fn build_header_links(html: String, filename: &str) -> String {
         .into_owned()
 }
 
+/// Wraps a single header tag with a link, making sure each tag gets its own 
+/// unique ID by appending an auto-incremented number (if necessary).
 fn wrap_header_with_link(level: usize, content: &str, id_counter: &mut HashMap<String, usize>, filename: &str)
     -> String {
-    let id = id_from_content(content);
+    let raw_id = id_from_content(content);
 
-    let id_count = *id_counter.get(&id).unwrap_or(&0);
-    id_counter.insert(id.clone(), id_count + 1);
+    let id_count = id_counter.entry(raw_id.clone()).or_insert(0);
 
-    let id = if id_count > 0 {
-        format!("{}-{}", id, id_count)
-    } else {
-        id
+    let id = match *id_count {
+        0 => raw_id,
+        other => format!("{}-{}", raw_id, other),
     };
+
+    *id_count += 1;
 
     format!(
         r#"<a class="header" href="{filename}#{id}" id="{id}"><h{level}>{text}</h{level}></a>"#,
