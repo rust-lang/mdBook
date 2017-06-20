@@ -87,7 +87,7 @@ impl HtmlHandlebars {
         Ok(())
     }
 
-                    /// Create an index.html from the first element in SUMMARY.md
+    /// Create an index.html from the first element in SUMMARY.md
     fn render_index(&self, book: &MDBook, ch: &Chapter, destination: &Path) -> Result<(), Box<Error>> {
         debug!("[*]: index.html");
 
@@ -399,57 +399,71 @@ fn build_header_links(html: String, filename: &str) -> String {
 
     regex
         .replace_all(&html, |caps: &Captures| {
-            let level = &caps[1];
-            let text = &caps[2];
-            let mut id = text.to_string();
-            let repl_sub = vec![
-                "<em>",
-                "</em>",
-                "<code>",
-                "</code>",
-                "<strong>",
-                "</strong>",
-                "&lt;",
-                "&gt;",
-                "&amp;",
-                "&#39;",
-                "&quot;",
-            ];
-            for sub in repl_sub {
-                id = id.replace(sub, "");
-            }
-            let id = id.chars()
-                .filter_map(|c| if c.is_alphanumeric() || c == '-' || c == '_' {
-                    if c.is_ascii() {
-                        Some(c.to_ascii_lowercase())
-                    } else {
-                        Some(c)
-                    }
-                } else if c.is_whitespace() && c.is_ascii() {
-                    Some('-')
-                } else {
-                    None
-                })
-                .collect::<String>();
+            let level = caps[1].parse().expect(
+                "Regex should ensure we only ever get numbers here",
+            );
 
-            let id_count = *id_counter.get(&id).unwrap_or(&0);
-            id_counter.insert(id.clone(), id_count + 1);
-
-            let id = if id_count > 0 {
-                format!("{}-{}", id, id_count)
-            } else {
-                id
-            };
-
-            format!(
-                "<a class=\"header\" href=\"{filename}#{id}\" id=\"{id}\"><h{level}>{text}</h{level}></a>",
-                level = level,
-                id = id,
-                text = text,
-                filename = filename
-            )
+            wrap_header_with_link(level, &caps[2], &mut id_counter, filename)
         })
         .into_owned()
+}
+
+fn wrap_header_with_link(level: usize, content: &str, id_counter: &mut HashMap<String, usize>, filename: &str)
+    -> String {
+    let id = id_from_content(content);
+
+    let id_count = *id_counter.get(&id).unwrap_or(&0);
+    id_counter.insert(id.clone(), id_count + 1);
+
+    let id = if id_count > 0 {
+        format!("{}-{}", id, id_count)
+    } else {
+        id
+    };
+
+    format!(
+        r#"<a class="header" href="{filename}#{id}" id="{id}"><h{level}>{text}</h{level}></a>"#,
+        level = level,
+        id = id,
+        text = content,
+        filename = filename
+    )
+}
+
+fn id_from_content(content: &str) -> String {
+    let mut content = content.to_string();
+
+    // Skip any tags or html-encoded stuff
+    let repl_sub = vec![
+        "<em>",
+        "</em>",
+        "<code>",
+        "</code>",
+        "<strong>",
+        "</strong>",
+        "&lt;",
+        "&gt;",
+        "&amp;",
+        "&#39;",
+        "&quot;",
+    ];
+    for sub in repl_sub {
+        content = content.replace(sub, "");
+    }
+
+    content.chars()
+        .filter_map(|c| if c.is_alphanumeric() || c == '-' || c == '_' {
+            if c.is_ascii() {
+                Some(c.to_ascii_lowercase())
+            } else {
+                Some(c)
+            }
+        } else if c.is_whitespace() && c.is_ascii() {
+            Some('-')
+        } else {
+            None
+        })
+        .collect()
 }
 
 // anchors to the same page (href="#anchor") do not work because of
