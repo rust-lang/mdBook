@@ -419,8 +419,7 @@ fn build_header_links(html: String, filename: &str) -> String {
                 id = id.replace(sub, "");
             }
             let id = id.chars()
-                .filter(|c| if c.is_alphanumeric() || c == '-' || c == '_')
-                .map(|c| {
+                .filter_map(|c| if c.is_alphanumeric() || c == '-' || c == '_' {
                     if c.is_ascii() {
                         Some(c.to_ascii_lowercase())
                     } else {
@@ -560,4 +559,28 @@ struct RenderItemContext<'a> {
     destination: PathBuf,
     data: serde_json::Map<String, serde_json::Value>,
     is_index: bool,
+}
+
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn original_build_header_links() {
+        let inputs = vec![
+            ("blah blah <h1>Foo</h1>", r#"blah blah <a class="header" href="bar.rs#foo" id="foo"><h1>Foo</h1></a>"#),
+            ("<h1>Foo</h1>", r#"<a class="header" href="bar.rs#foo" id="foo"><h1>Foo</h1></a>"#),
+            ("<h3>Foo^bar</h3>", r#"<a class="header" href="bar.rs#foobar" id="foobar"><h3>Foo^bar</h3></a>"#),
+            ("<h4></h4>", r#"<a class="header" href="bar.rs#" id=""><h4></h4></a>"#),
+            ("<h4><em>Hï</em></h4>", r#"<a class="header" href="bar.rs#hï" id="hï"><h4><em>Hï</em></h4></a>"#),
+            ("<h1>Foo</h1><h3>Foo</h3>", r#"<a class="header" href="bar.rs#foo" id="foo"><h1>Foo</h1></a><a class="header" href="bar.rs#foo-1" id="foo-1"><h3>Foo</h3></a>"#),
+        ];
+
+        for (src, should_be) in inputs {
+            let got = build_header_links(src.to_string(), "bar.rs");
+            assert_eq!(got, should_be);
+        }
+    }
 }
