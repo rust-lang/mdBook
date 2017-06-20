@@ -27,16 +27,15 @@ impl HtmlHandlebars {
         HtmlHandlebars
     }
 
-    fn render_item(&self, item: &BookItem, book: &MDBook, data: &mut serde_json::Map<String, serde_json::Value>,
-                   print_content: &mut String, handlebars: &mut Handlebars, is_index: bool, destination: &Path)
-                   -> Result<(), Box<Error>> {
+    fn render_item(&self, item: &BookItem, mut ctx: RenderItemContext, print_content: &mut String)
+        -> Result<(), Box<Error>> {
         // FIXME: This should be made DRY-er and rely less on mutable state
         match *item {
             BookItem::Chapter(_, ref ch) |
             BookItem::Affix(ref ch) => {
                 if ch.path != PathBuf::new() {
 
-                    let path = book.get_source().join(&ch.path);
+                    let path = ctx.book.get_source().join(&ch.path);
 
                     debug!("[*]: Opening file: {:?}", path);
                     let mut f = File::open(&path)?;
@@ -54,29 +53,31 @@ impl HtmlHandlebars {
                     print_content.push_str(&content);
 
                     // Update the context with data for this file
-                    let path = ch.path
-                        .to_str()
-                        .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))?;
+                    let path = ch.path.to_str().ok_or_else(|| {
+                        io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
+                    })?;
 
-                    data.insert("path".to_owned(), json!(path));
-                    data.insert("content".to_owned(), json!(content));
-                    data.insert("chapter_title".to_owned(), json!(ch.name));
-                    data.insert("path_to_root".to_owned(), json!(utils::fs::path_to_root(&ch.path)));
+                    ctx.data.insert("path".to_owned(), json!(path));
+                    ctx.data.insert("content".to_owned(), json!(content));
+                    ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
+                    ctx.data.insert(
+                        "path_to_root".to_owned(),
+                        json!(utils::fs::path_to_root(&ch.path)),
+                    );
 
                     // Render the handlebars template with the data
                     debug!("[*]: Render template");
-                    let rendered = handlebars.render("index", &data)?;
+                    let rendered = ctx.handlebars.render("index", &ctx.data)?;
                     let rendered = self.post_process(rendered);
 
                     let filename = Path::new(&ch.path).with_extension("html");
 
                     // Write to file
                     info!("[*] Creating {:?} ✓", filename.display());
-                    book.write_file(filename, &rendered.into_bytes())?;
+                    ctx.book.write_file(filename, &rendered.into_bytes())?;
 
-                    // Create an index.html from the first element in SUMMARY.md
-                    if is_index {
-                        self.render_index(book, ch, destination)?;
+                    if ctx.is_index {
+                        self.render_index(&ctx.book, ch, &ctx.destination)?;
                     }
                 }
             },
@@ -86,32 +87,37 @@ impl HtmlHandlebars {
         Ok(())
     }
 
+                    /// Create an index.html from the first element in SUMMARY.md
     fn render_index(&self, book: &MDBook, ch: &Chapter, destination: &Path) -> Result<(), Box<Error>> {
-                            debug!("[*]: index.html");
+        debug!("[*]: index.html");
 
-                            let mut content = String::new();
+        let mut content = String::new();
 
-                            let _source = File::open(destination.join(&ch.path.with_extension("html")))
-                                ?
-                                .read_to_string(&mut content);
+        File::open(destination.join(&ch.path.with_extension("html")))?
+            .read_to_string(&mut content)?;
 
-                            // This could cause a problem when someone displays
-                            // code containing <base href=...>
-                            // on the front page, however this case should be very very rare...
-                            content = content.lines()
-                                .filter(|line| !line.contains("<base href="))
-                                .collect::<Vec<&str>>()
-                                .join("\n");
+        // This could cause a problem when someone displays
+        // code containing <base href=...>
+        // on the front page, however this case should be very very rare...
+        content = content
+            .lines()
+            .filter(|line| !line.contains("<base href="))
+            .collect::<Vec<&str>>()
+            .join("\n");
 
-                            book.write_file("index.html", content.as_bytes())?;
+        book.write_file("index.html", content.as_bytes())?;
 
-                            info!("[*] Creating index.html from {:?} ✓",
-                                book.get_destination()
-                                    .expect("If the HTML renderer is called, one would assume the HtmlConfig is \
-                                            set... (4)")
-                                    .join(&ch.path.with_extension("html")));
+        info!(
+            "[*] Creating index.html from {:?} ✓",
+            book.get_destination()
+                .expect(
+                    "If the HTML renderer is called, one would assume the HtmlConfig is \
+                                            set... (4)",
+                )
+                .join(&ch.path.with_extension("html"))
+        );
 
-                                    Ok(())
+        Ok(())
     }
 
     fn post_process(&self, rendered: String) -> String {
@@ -129,18 +135,45 @@ impl HtmlHandlebars {
         book.write_file("favicon.png", &theme.favicon)?;
         book.write_file("jquery.js", &theme.jquery)?;
         book.write_file("highlight.css", &theme.highlight_css)?;
-        book.write_file("tomorrow-night.css", &theme.tomorrow_night_css)?;
-        book.write_file("ayu-highlight.css", &theme.ayu_highlight_css)?;
+        book.write_file(
+            "tomorrow-night.css",
+            &theme.tomorrow_night_css,
+        )?;
+        book.write_file(
+            "ayu-highlight.css",
+            &theme.ayu_highlight_css,
+        )?;
         book.write_file("highlight.js", &theme.highlight_js)?;
         book.write_file("clipboard.min.js", &theme.clipboard_js)?;
         book.write_file("store.js", &theme.store_js)?;
-        book.write_file("_FontAwesome/css/font-awesome.css", theme::FONT_AWESOME)?;
-        book.write_file("_FontAwesome/fonts/fontawesome-webfont.eot", theme::FONT_AWESOME_EOT)?;
-        book.write_file("_FontAwesome/fonts/fontawesome-webfont.svg", theme::FONT_AWESOME_SVG)?;
-        book.write_file("_FontAwesome/fonts/fontawesome-webfont.ttf", theme::FONT_AWESOME_TTF)?;
-        book.write_file("_FontAwesome/fonts/fontawesome-webfont.woff", theme::FONT_AWESOME_WOFF)?;
-        book.write_file("_FontAwesome/fonts/fontawesome-webfont.woff2", theme::FONT_AWESOME_WOFF2)?;
-        book.write_file("_FontAwesome/fonts/FontAwesome.ttf", theme::FONT_AWESOME_TTF)?;
+        book.write_file(
+            "_FontAwesome/css/font-awesome.css",
+            theme::FONT_AWESOME,
+        )?;
+        book.write_file(
+            "_FontAwesome/fonts/fontawesome-webfont.eot",
+            theme::FONT_AWESOME_EOT,
+        )?;
+        book.write_file(
+            "_FontAwesome/fonts/fontawesome-webfont.svg",
+            theme::FONT_AWESOME_SVG,
+        )?;
+        book.write_file(
+            "_FontAwesome/fonts/fontawesome-webfont.ttf",
+            theme::FONT_AWESOME_TTF,
+        )?;
+        book.write_file(
+            "_FontAwesome/fonts/fontawesome-webfont.woff",
+            theme::FONT_AWESOME_WOFF,
+        )?;
+        book.write_file(
+            "_FontAwesome/fonts/fontawesome-webfont.woff2",
+            theme::FONT_AWESOME_WOFF2,
+        )?;
+        book.write_file(
+            "_FontAwesome/fonts/FontAwesome.ttf",
+            theme::FONT_AWESOME_TTF,
+        )?;
 
         Ok(())
     }
@@ -153,7 +186,8 @@ impl HtmlHandlebars {
         let name = match custom_file.strip_prefix(book.get_root()) {
             Ok(p) => p.to_str().expect("Could not convert to str"),
             Err(_) => {
-                custom_file.file_name()
+                custom_file
+                    .file_name()
                     .expect("File has a file name")
                     .to_str()
                     .expect("Could not convert to str")
@@ -181,9 +215,10 @@ impl HtmlHandlebars {
     /// Copy across any additional CSS and JavaScript files which the book
     /// has been configured to use.
     fn copy_additional_css_and_js(&self, book: &MDBook) -> Result<(), Box<Error>> {
-        let custom_files = book.get_additional_css()
-            .iter()
-            .chain(book.get_additional_js().iter());
+        let custom_files = book.get_additional_css().iter().chain(
+            book.get_additional_js()
+                .iter(),
+        );
 
         for custom_file in custom_files {
             self.write_custom_file(custom_file, book)?;
@@ -202,7 +237,10 @@ impl Renderer for HtmlHandlebars {
         let theme = theme::Theme::new(book.get_theme_path());
 
         debug!("[*]: Register handlebars template");
-        handlebars.register_template_string("index", String::from_utf8(theme.index.clone())?)?;
+        handlebars.register_template_string(
+            "index",
+            String::from_utf8(theme.index.clone())?,
+        )?;
 
         debug!("[*]: Register handlebars helpers");
         self.register_hbs_helpers(&mut handlebars);
@@ -212,18 +250,26 @@ impl Renderer for HtmlHandlebars {
         // Print version
         let mut print_content = String::new();
 
-        let destination = book.get_destination()
-            .expect("If the HTML renderer is called, one would assume the HtmlConfig is set... (2)");
+        let destination = book.get_destination().expect(
+            "If the HTML renderer is called, one would assume the HtmlConfig is set... (2)",
+        );
 
         debug!("[*]: Check if destination directory exists");
         if fs::create_dir_all(&destination).is_err() {
-            return Err(Box::new(io::Error::new(io::ErrorKind::Other,
-                                               "Unexpected error when constructing destination path")));
+            return Err(Box::new(
+                io::Error::new(io::ErrorKind::Other, "Unexpected error when constructing destination path"),
+            ));
         }
 
         for (i, item) in book.iter().enumerate() {
-            let is_index = i == 0;
-            self.render_item(item, book, &mut data, &mut print_content, &mut handlebars, is_index, &destination)?;
+            let ctx = RenderItemContext {
+                book: book,
+                handlebars: &handlebars,
+                destination: destination.to_path_buf(),
+                data: data.clone(),
+                is_index: i == 0,
+            };
+            self.render_item(item, ctx, &mut print_content)?;
         }
 
         // Print version
@@ -235,7 +281,10 @@ impl Renderer for HtmlHandlebars {
         let rendered = handlebars.render("index", &data)?;
         let rendered = self.post_process(rendered);
 
-        book.write_file(Path::new("print").with_extension("html"), &rendered.into_bytes())?;
+        book.write_file(
+            Path::new("print").with_extension("html"),
+            &rendered.into_bytes(),
+        )?;
         info!("[*] Creating print.html ✓");
 
         // Copy static files (js, css, images, ...)
@@ -274,10 +323,13 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
             match style.strip_prefix(book.get_root()) {
                 Ok(p) => css.push(p.to_str().expect("Could not convert to str")),
                 Err(_) => {
-                    css.push(style.file_name()
-                        .expect("File has a file name")
-                        .to_str()
-                        .expect("Could not convert to str"))
+                    css.push(
+                        style
+                            .file_name()
+                            .expect("File has a file name")
+                            .to_str()
+                            .expect("Could not convert to str"),
+                    )
                 },
             }
         }
@@ -291,10 +343,13 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
             match script.strip_prefix(book.get_root()) {
                 Ok(p) => js.push(p.to_str().expect("Could not convert to str")),
                 Err(_) => {
-                    js.push(script.file_name()
-                        .expect("File has a file name")
-                        .to_str()
-                        .expect("Could not convert to str"))
+                    js.push(
+                        script
+                            .file_name()
+                            .expect("File has a file name")
+                            .to_str()
+                            .expect("Could not convert to str"),
+                    )
                 },
             }
         }
@@ -310,17 +365,17 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
         match *item {
             BookItem::Affix(ref ch) => {
                 chapter.insert("name".to_owned(), json!(ch.name));
-                let path = ch.path
-                    .to_str()
-                    .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))?;
+                let path = ch.path.to_str().ok_or_else(|| {
+                    io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
+                })?;
                 chapter.insert("path".to_owned(), json!(path));
             },
             BookItem::Chapter(ref s, ref ch) => {
                 chapter.insert("section".to_owned(), json!(s));
                 chapter.insert("name".to_owned(), json!(ch.name));
-                let path = ch.path
-                    .to_str()
-                    .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Could not convert path to str"))?;
+                let path = ch.path.to_str().ok_or_else(|| {
+                    io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
+                })?;
                 chapter.insert("path".to_owned(), json!(path));
             },
             BookItem::Spacer => {
@@ -342,26 +397,30 @@ fn build_header_links(html: String, filename: &str) -> String {
     let regex = Regex::new(r"<h(\d)>(.*?)</h\d>").unwrap();
     let mut id_counter = HashMap::new();
 
-    regex.replace_all(&html, |caps: &Captures| {
+    regex
+        .replace_all(&html, |caps: &Captures| {
             let level = &caps[1];
             let text = &caps[2];
             let mut id = text.to_string();
-            let repl_sub = vec!["<em>",
-                                "</em>",
-                                "<code>",
-                                "</code>",
-                                "<strong>",
-                                "</strong>",
-                                "&lt;",
-                                "&gt;",
-                                "&amp;",
-                                "&#39;",
-                                "&quot;"];
+            let repl_sub = vec![
+                "<em>",
+                "</em>",
+                "<code>",
+                "</code>",
+                "<strong>",
+                "</strong>",
+                "&lt;",
+                "&gt;",
+                "&amp;",
+                "&#39;",
+                "&quot;",
+            ];
             for sub in repl_sub {
                 id = id.replace(sub, "");
             }
             let id = id.chars()
-                .filter_map(|c| if c.is_alphanumeric() || c == '-' || c == '_' {
+                .filter(|c| if c.is_alphanumeric() || c == '-' || c == '_')
+                .map(|c| {
                     if c.is_ascii() {
                         Some(c.to_ascii_lowercase())
                     } else {
@@ -383,11 +442,13 @@ fn build_header_links(html: String, filename: &str) -> String {
                 id
             };
 
-            format!("<a class=\"header\" href=\"{filename}#{id}\" id=\"{id}\"><h{level}>{text}</h{level}></a>",
-                    level = level,
-                    id = id,
-                    text = text,
-                    filename = filename)
+            format!(
+                "<a class=\"header\" href=\"{filename}#{id}\" id=\"{id}\"><h{level}>{text}</h{level}></a>",
+                level = level,
+                id = id,
+                text = text,
+                filename = filename
+            )
         })
         .into_owned()
 }
@@ -397,16 +458,19 @@ fn build_header_links(html: String, filename: &str) -> String {
 // that in a very inelegant way
 fn fix_anchor_links(html: String, filename: &str) -> String {
     let regex = Regex::new(r##"<a([^>]+)href="#([^"]+)"([^>]*)>"##).unwrap();
-    regex.replace_all(&html, |caps: &Captures| {
+    regex
+        .replace_all(&html, |caps: &Captures| {
             let before = &caps[1];
             let anchor = &caps[2];
             let after = &caps[3];
 
-            format!("<a{before}href=\"{filename}#{anchor}\"{after}>",
-                    before = before,
-                    filename = filename,
-                    anchor = anchor,
-                    after = after)
+            format!(
+                "<a{before}href=\"{filename}#{anchor}\"{after}>",
+                before = before,
+                filename = filename,
+                anchor = anchor,
+                after = after
+            )
         })
         .into_owned()
 }
@@ -422,7 +486,8 @@ fn fix_anchor_links(html: String, filename: &str) -> String {
 // This function replaces all commas by spaces in the code block classes
 fn fix_code_blocks(html: String) -> String {
     let regex = Regex::new(r##"<code([^>]+)class="([^"]+)"([^>]*)>"##).unwrap();
-    regex.replace_all(&html, |caps: &Captures| {
+    regex
+        .replace_all(&html, |caps: &Captures| {
             let before = &caps[1];
             let classes = &caps[2].replace(",", " ");
             let after = &caps[3];
@@ -434,7 +499,8 @@ fn fix_code_blocks(html: String) -> String {
 
 fn add_playpen_pre(html: String) -> String {
     let regex = Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap();
-    regex.replace_all(&html, |caps: &Captures| {
+    regex
+        .replace_all(&html, |caps: &Captures| {
             let text = &caps[1];
             let classes = &caps[2];
             let code = &caps[3];
@@ -447,14 +513,16 @@ fn add_playpen_pre(html: String) -> String {
                 } else {
                     // we need to inject our own main
                     let (attrs, code) = partition_source(code);
-                    format!("<pre class=\"playpen\"><code class=\"{}\"># #![allow(unused_variables)]
+                    format!(
+                        "<pre class=\"playpen\"><code class=\"{}\"># #![allow(unused_variables)]
 {}#fn main() {{
 \
                              {}
 #}}</code></pre>",
-                            classes,
-                            attrs,
-                            code)
+                        classes,
+                        attrs,
+                        code
+                    )
                 }
             } else {
                 // not language-rust, so no-op
@@ -483,4 +551,13 @@ fn partition_source(s: &str) -> (String, String) {
     }
 
     (before, after)
+}
+
+
+struct RenderItemContext<'a> {
+    handlebars: &'a Handlebars,
+    book: &'a MDBook,
+    destination: PathBuf,
+    data: serde_json::Map<String, serde_json::Value>,
+    is_index: bool,
 }
