@@ -410,7 +410,7 @@ fn build_header_links(html: String, filename: &str) -> String {
         .into_owned()
 }
 
-/// Wraps a single header tag with a link, making sure each tag gets its own 
+/// Wraps a single header tag with a link, making sure each tag gets its own
 /// unique ID by appending an auto-incremented number (if necessary).
 fn wrap_header_with_link(level: usize, content: &str, id_counter: &mut HashMap<String, usize>, filename: &str)
     -> String {
@@ -434,6 +434,8 @@ fn wrap_header_with_link(level: usize, content: &str, id_counter: &mut HashMap<S
     )
 }
 
+/// Generate an id for use with anchors which is derived from a "normalised"
+/// string.
 fn id_from_content(content: &str) -> String {
     let mut content = content.to_string();
 
@@ -455,19 +457,17 @@ fn id_from_content(content: &str) -> String {
         content = content.replace(sub, "");
     }
 
-    content.chars()
-        .filter_map(|c| if c.is_alphanumeric() || c == '-' || c == '_' {
-            if c.is_ascii() {
-                Some(c.to_ascii_lowercase())
-            } else {
-                Some(c)
-            }
-        } else if c.is_whitespace() && c.is_ascii() {
-            Some('-')
-        } else {
-            None
-        })
-        .collect()
+    let mut id = String::new();
+
+    for c in content.chars() {
+        if c.is_alphanumeric() || c == '-' || c == '_' {
+            id.push(c.to_ascii_lowercase());
+        } else if c.is_whitespace() {
+            id.push(c);
+        }
+    }
+
+    id
 }
 
 // anchors to the same page (href="#anchor") do not work because of
@@ -509,7 +509,7 @@ fn fix_code_blocks(html: String) -> String {
             let classes = &caps[2].replace(",", " ");
             let after = &caps[3];
 
-            format!("<code{before}class=\"{classes}\"{after}>", before = before, classes = classes, after = after)
+            format!(r#"<code{before}class="{classes}"{after}>"#, before = before, classes = classes, after = after)
         })
         .into_owned()
 }
@@ -593,7 +593,8 @@ mod tests {
             ("<h3>Foo^bar</h3>", r#"<a class="header" href="bar.rs#foobar" id="foobar"><h3>Foo^bar</h3></a>"#),
             ("<h4></h4>", r#"<a class="header" href="bar.rs#" id=""><h4></h4></a>"#),
             ("<h4><em>Hï</em></h4>", r#"<a class="header" href="bar.rs#hï" id="hï"><h4><em>Hï</em></h4></a>"#),
-            ("<h1>Foo</h1><h3>Foo</h3>", r#"<a class="header" href="bar.rs#foo" id="foo"><h1>Foo</h1></a><a class="header" href="bar.rs#foo-1" id="foo-1"><h3>Foo</h3></a>"#),
+            ("<h1>Foo</h1><h3>Foo</h3>", 
+                r#"<a class="header" href="bar.rs#foo" id="foo"><h1>Foo</h1></a><a class="header" href="bar.rs#foo-1" id="foo-1"><h3>Foo</h3></a>"#),
         ];
 
         for (src, should_be) in inputs {
