@@ -28,7 +28,7 @@
 //!                         .with_source("src")       // Path from root to source directory
 //!                         .with_destination("book") // Path from root to output directory
 //!                         .read_config()            // Parse book.toml configuration file
-//!                         .expect("I don't handle configuration file error, but you should!");
+//!                         .expect("I don't handle configuration file errors, but you should!");
 //!
 //!     book.build().unwrap();                        // Render the book
 //! }
