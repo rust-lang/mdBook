@@ -113,7 +113,7 @@ impl BookConfig {
                 htmlconfig.fill_from_tomlconfig(root, tomlhtmlconfig);
             }
         }
-        
+
         self
     }
 
@@ -159,7 +159,7 @@ impl BookConfig {
                 htmlconfig.set_theme(&root, &d);
             }
         }
-        
+
         self
     }
 
@@ -171,16 +171,16 @@ impl BookConfig {
     pub fn get_root(&self) -> &Path {
         &self.root
     }
-    
+
     pub fn set_source<T: Into<PathBuf>>(&mut self, source: T) -> &mut Self {
         let mut source = source.into();
-        
+
         // If the source path is relative, start with the root path
         if source.is_relative() {
             source = self.root.join(source);
         }
 
-        self.source = source; 
+        self.source = source;
         self
     }
 

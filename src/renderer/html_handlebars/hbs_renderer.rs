@@ -82,7 +82,7 @@ impl Renderer for HtmlHandlebars {
                         }
 
                         // Render markdown using the pulldown-cmark crate
-                        content = utils::render_markdown(&content);
+                        content = utils::render_markdown(&content, book.get_curly_quotes());
                         print_content.push_str(&content);
 
                         // Update the context with data for this file

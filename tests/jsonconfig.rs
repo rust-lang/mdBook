@@ -4,7 +4,7 @@ use mdbook::config::jsonconfig::JsonConfig;
 
 use std::path::PathBuf;
 
-// Tests that the `title` key is correcly parsed in the TOML config
+// Tests that the `src` key is correctly parsed in the JSON config
 #[test]
 fn from_json_source() {
     let json = r#"{
@@ -17,7 +17,7 @@ fn from_json_source() {
     assert_eq!(config.get_source(), PathBuf::from("root/source"));
 }
 
-// Tests that the `title` key is correcly parsed in the TOML config
+// Tests that the `title` key is correctly parsed in the JSON config
 #[test]
 fn from_json_title() {
     let json = r#"{
@@ -30,7 +30,7 @@ fn from_json_title() {
     assert_eq!(config.get_title(), "Some title");
 }
 
-// Tests that the `description` key is correcly parsed in the TOML config
+// Tests that the `description` key is correctly parsed in the JSON config
 #[test]
 fn from_json_description() {
     let json = r#"{
@@ -43,7 +43,7 @@ fn from_json_description() {
     assert_eq!(config.get_description(), "This is a description");
 }
 
-// Tests that the `author` key is correcly parsed in the TOML config
+// Tests that the `author` key is correctly parsed in the JSON config
 #[test]
 fn from_json_author() {
     let json = r#"{
@@ -56,7 +56,7 @@ fn from_json_author() {
     assert_eq!(config.get_authors(), &[String::from("John Doe")]);
 }
 
-// Tests that the `output.html.destination` key is correcly parsed in the TOML config
+// Tests that the `dest` key is correctly parsed in the JSON config
 #[test]
 fn from_json_destination() {
     let json = r#"{
@@ -71,7 +71,7 @@ fn from_json_destination() {
     assert_eq!(htmlconfig.get_destination(), PathBuf::from("root/htmlbook"));
 }
 
-// Tests that the `output.html.theme` key is correcly parsed in the TOML config
+// Tests that the `theme_path` key is correctly parsed in the JSON config
 #[test]
 fn from_json_output_html_theme() {
     let json = r#"{
