@@ -85,18 +85,3 @@ fn from_json_output_html_theme() {
 
     assert_eq!(htmlconfig.get_theme().expect("the theme key was provided"), &PathBuf::from("root/theme"));
 }
-
-// Tests that the `curly_quotes` key is correctly parsed in the JSON config
-#[test]
-fn from_json_output_html_curly_quotes() {
-    let json = r#"{
-        "curly_quotes": true
-    }"#;
-
-    let parsed = JsonConfig::from_json(&json).expect("This should parse");
-    let config = BookConfig::from_jsonconfig("root", parsed);
-
-    let htmlconfig = config.get_html_config().expect("There should be an HtmlConfig");
-
-    assert_eq!(htmlconfig.get_curly_quotes(), true);
-}
