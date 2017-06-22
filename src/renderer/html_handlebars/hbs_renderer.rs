@@ -152,7 +152,7 @@ impl Renderer for HtmlHandlebars {
         // Update the context with data for this file
         data.insert("path".to_owned(), json!("print.md"));
         data.insert("content".to_owned(), json!(print_content));
-        data.insert("path_to_root".to_owned(), json!(utils::fs::path_to_root(Path::new("print.md"))));
+        data.insert("path_to_root".to_owned(), json!(utils::fs::path_to_root("print.md")));
 
         // Render the handlebars template with the data
         debug!("[*]: Render template");
