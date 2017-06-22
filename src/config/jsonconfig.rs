@@ -13,6 +13,7 @@ pub struct JsonConfig {
     pub description: Option<String>,
 
     pub theme_path: Option<PathBuf>,
+    pub curly_quotes: Option<bool>,
     pub google_analytics: Option<String>,
 }
 

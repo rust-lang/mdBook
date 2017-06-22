@@ -479,6 +479,23 @@ impl MDBook {
         None
     }
 
+    pub fn with_curly_quotes(mut self, curly_quotes: bool) -> Self {
+        if let Some(htmlconfig) = self.config.get_mut_html_config() {
+            htmlconfig.set_curly_quotes(curly_quotes);
+        } else {
+            error!("There is no HTML renderer set...");
+        }
+        self
+    }
+
+    pub fn get_curly_quotes(&self) -> bool {
+        if let Some(htmlconfig) = self.config.get_html_config() {
+            return htmlconfig.get_curly_quotes();
+        }
+
+        false
+    }
+
     pub fn get_google_analytics_id(&self) -> Option<String> {
         if let Some(htmlconfig) = self.config.get_html_config() {
             return htmlconfig.get_google_analytics_id();

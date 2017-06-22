@@ -159,6 +159,12 @@ impl BookConfig {
                 htmlconfig.set_theme(&root, &d);
             }
         }
+
+        if let Some(curly_quotes) = jsonconfig.curly_quotes {
+            if let Some(htmlconfig) = self.get_mut_html_config() {
+                htmlconfig.set_curly_quotes(curly_quotes);
+            }
+        }
         
         self
     }

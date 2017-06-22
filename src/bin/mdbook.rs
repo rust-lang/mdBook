@@ -64,16 +64,19 @@ fn main() {
                         .arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
                         .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
                         .arg_from_usage("--no-create 'Will not create non-existent files linked from SUMMARY.md'")
+                        .arg_from_usage("--curly-quotes 'Convert straight quotes to curly quotes, except for those that occur in code blocks and code spans'")
                         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'"))
                     .subcommand(SubCommand::with_name("watch")
                         .about("Watch the files for changes")
                         .arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
                         .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
+                        .arg_from_usage("--curly-quotes 'Convert straight quotes to curly quotes, except for those that occur in code blocks and code spans'")
                         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'"))
                     .subcommand(SubCommand::with_name("serve")
                         .about("Serve the book at http://localhost:3000. Rebuild and reload on change.")
                         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'")
                         .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
+                        .arg_from_usage("--curly-quotes 'Convert straight quotes to curly quotes, except for those that occur in code blocks and code spans'")
                         .arg_from_usage("-p, --port=[port] 'Use another port{n}(Defaults to 3000)'")
                         .arg_from_usage("-w, --websocket-port=[ws-port] 'Use another port for the websocket connection (livereload){n}(Defaults to 3001)'")
                         .arg_from_usage("-i, --interface=[interface] 'Interface to listen on{n}(Defaults to localhost)'")
@@ -181,6 +184,10 @@ fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
         book.create_missing = false;
     }
 
+    if args.is_present("curly-quotes") {
+        book = book.with_curly_quotes(true);
+    }
+
     book.build()?;
 
     if let Some(d) = book.get_destination() {
@@ -203,6 +210,10 @@ fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
         Some(dest_dir) => book.with_destination(Path::new(dest_dir)),
         None => book,
     };
+
+    if args.is_present("curly-quotes") {
+        book = book.with_curly_quotes(true);
+    }
 
     if args.is_present("open") {
         book.build()?;
@@ -239,6 +250,10 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
     if let None = book.get_destination() {
         println!("The HTML renderer is not set up, impossible to serve the files.");
         std::process::exit(2);
+    }
+
+    if args.is_present("curly-quotes") {
+        book = book.with_curly_quotes(true);
     }
 
     let port = args.value_of("port").unwrap_or("3000");
