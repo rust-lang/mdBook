@@ -3,6 +3,9 @@ body {
   font-family: "Open Sans", sans-serif;
   color: #333;
 }
+body {
+  margin: 0;
+}
 code {
   font-family: "Source Code Pro", Consolas, "Ubuntu Mono", Menlo, "DejaVu Sans Mono", monospace, monospace;
   font-size: 0.875em;
@@ -41,7 +44,7 @@ table thead td {
   font-weight: 700;
 }
 .sidebar {
-  position: absolute;
+  position: fixed;
   left: 0;
   top: 0;
   bottom: 0;
@@ -102,44 +105,31 @@ table thead td {
   white-space: nowrap;
 }
 .page-wrapper {
-  position: absolute;
-  overflow-y: auto;
-  left: 315px;
-  right: 0;
-  top: 0;
-  bottom: 0;
+  padding-left: 300px;
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
-  -webkit-overflow-scrolling: touch;
   min-height: 100%;
-  -webkit-transition: left 0.5s;
-  -moz-transition: left 0.5s;
-  -o-transition: left 0.5s;
-  -ms-transition: left 0.5s;
-  transition: left 0.5s;
+  -webkit-transition: padding-left 0.5s;
+  -moz-transition: padding-left 0.5s;
+  -o-transition: padding-left 0.5s;
+  -ms-transition: padding-left 0.5s;
+  transition: padding-left 0.5s;
 }
 @media only screen and (max-width: 1060px) {
   .page-wrapper {
-    left: 15px;
-    padding-right: 15px;
+    padding-left: 0;
   }
 }
 .sidebar-hidden .page-wrapper {
-  left: 15px;
+  padding-left: 0;
 }
 .sidebar-visible .page-wrapper {
-  left: 315px;
+  padding-left: 300px;
 }
 .page {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  bottom: 0;
   outline: 0;
-  padding-right: 15px;
-  overflow-y: auto;
+  padding: 0 15px;
 }
 .content {
   margin-left: auto;
@@ -210,7 +200,7 @@ table thead td {
   font-size: 2.5em;
   text-align: center;
   text-decoration: none;
-  position: absolute;
+  position: fixed;
   top: 50px /* Height of menu-bar */;
   bottom: 0;
   margin: 0;
@@ -250,10 +240,26 @@ table thead td {
   text-decoration: none;
 }
 .previous {
-  left: 0;
+  left: 315px;
+  -webkit-transition: left 0.5s;
+  -moz-transition: left 0.5s;
+  -o-transition: left 0.5s;
+  -ms-transition: left 0.5s;
+  transition: left 0.5s;
+}
+@media only screen and (max-width: 1060px) {
+  .previous {
+    left: 15px;
+  }
 }
 .next {
   right: 15px;
+}
+.sidebar-hidden .previous {
+  left: 15px;
+}
+.sidebar-visible .previous {
+  left: 315px;
 }
 .theme-popup {
   position: relative;
