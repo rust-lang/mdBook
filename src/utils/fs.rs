@@ -1,4 +1,4 @@
-use std::path::{Path, Component};
+use std::path::{Path, PathBuf, Component};
 use std::error::Error;
 use std::io::{self, Read};
 use std::fs::{self, File};
@@ -30,16 +30,16 @@ pub fn file_to_string(path: &Path) -> Result<String, Box<Error>> {
 /// This is mostly interesting for a relative path to point back to the
 /// directory from where the path starts.
 ///
-/// ```ignore
-/// let mut path = Path::new("some/relative/path");
-///
-/// println!("{}", path_to_root(&path));
-/// ```
-///
-/// **Outputs**
-///
-/// ```text
-/// "../../"
+/// ```rust
+/// # extern crate mdbook;
+/// #
+/// # use std::path::Path;
+/// # use mdbook::utils::fs::path_to_root;
+/// #
+/// # fn main() {
+/// let path = Path::new("some/relative/path");
+/// assert_eq!(path_to_root(path), "../../");
+/// # }
 /// ```
 ///
 /// **note:** it's not very fool-proof, if you find a situation where
@@ -47,11 +47,11 @@ pub fn file_to_string(path: &Path) -> Result<String, Box<Error>> {
 /// Consider [submitting a new issue](https://github.com/azerupi/mdBook/issues)
 /// or a [pull-request](https://github.com/azerupi/mdBook/pulls) to improve it.
 
-pub fn path_to_root(path: &Path) -> String {
+pub fn path_to_root<P: Into<PathBuf>>(path: P) -> String {
     debug!("[fn]: path_to_root");
     // Remove filename and add "../" for every directory
 
-    path.to_path_buf()
+    path.into()
         .parent()
         .expect("")
         .components()

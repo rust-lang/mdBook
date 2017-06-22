@@ -9,13 +9,15 @@ extern crate mdbook;
 use mdbook::MDBook;
 use std::path::Path;
 
+# #[allow(unused_variables)]
 fn main() {
-    let mut book =  MDBook::new(Path::new("my-book"))   // Path to root
-                        .set_src(Path::new("src"))      // Path from root to source directory
-                        .set_dest(Path::new("book"))    // Path from root to output directory
-                        .read_config();                 // Parse book.toml or book.json file for configuration
+    let mut book =  MDBook::new("my-book")        // Path to root
+                        .with_source("src")       // Path from root to source directory
+                        .with_destination("book") // Path from root to output directory
+                        .read_config()            // Parse book.toml or book.json configuration file
+                        .expect("I don't handle configuration file error, but you should!");
 
-    book.build().unwrap();                              // Render the book
+    book.build().unwrap();                        // Render the book
 }
 ```
 
