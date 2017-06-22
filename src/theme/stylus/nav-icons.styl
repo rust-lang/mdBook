@@ -3,7 +3,7 @@
     text-align: center
     text-decoration: none
 
-    position: absolute
+    position: fixed
     top: 50px /* Height of menu-bar */
     bottom: 0
     margin: 0
@@ -19,5 +19,20 @@
 
 .mobile-nav-chapters { display: none }
 .nav-chapters:hover { text-decoration: none }
-.previous { left: 0 }
-.next { right: 15px }
+.previous {
+    left: $sidebar-width + $page-padding
+    transition: left 0.5s
+
+    @media only screen and (max-width: $max-page-width-with-hidden-sidebar) {
+        left: $page-padding
+    }
+}
+.next { right: $page-padding }
+
+.sidebar-hidden .previous {
+  left: $page-padding
+}
+
+.sidebar-visible .previous {
+  left: $sidebar-width + $page-padding
+}
