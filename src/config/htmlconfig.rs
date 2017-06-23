@@ -5,7 +5,7 @@ use super::tomlconfig::TomlHtmlConfig;
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct HtmlConfig {
     destination: PathBuf,
-    theme: Option<PathBuf>,
+    theme: PathBuf,
     curly_quotes: bool,
     google_analytics: Option<String>,
     additional_css: Vec<PathBuf>,
@@ -25,9 +25,10 @@ impl HtmlConfig {
     /// assert_eq!(config.get_destination(), &output);
     /// ```
     pub fn new<T: Into<PathBuf>>(root: T) -> Self {
+        let root = root.into();
         HtmlConfig {
-            destination: root.into().join("book"),
-            theme: None,
+            destination: root.clone().join("book"),
+            theme: root.join("theme"),
             curly_quotes: false,
             google_analytics: None,
             additional_css: Vec::new(),
@@ -48,9 +49,9 @@ impl HtmlConfig {
 
         if let Some(t) = tomlconfig.theme {
             if t.is_relative() {
-                self.theme = Some(root.join(t));
+                self.theme = root.join(t);
             } else {
-                self.theme = Some(t);
+                self.theme = t;
             }
         }
 
@@ -100,17 +101,16 @@ impl HtmlConfig {
         &self.destination
     }
 
-    // FIXME: How to get a `Option<&Path>` ?
-    pub fn get_theme(&self) -> Option<&PathBuf> {
-        self.theme.as_ref()
+    pub fn get_theme(&self) -> &Path {
+        &self.theme
     }
 
     pub fn set_theme<T: Into<PathBuf>>(&mut self, root: T, theme: T) -> &mut Self {
         let d = theme.into();
         if d.is_relative() {
-            self.theme = Some(root.into().join(d));
+            self.theme = root.into().join(d);
         } else {
-            self.theme = Some(d);
+            self.theme = d;
         }
 
         self
