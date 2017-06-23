@@ -101,11 +101,20 @@ $( document ).ready(function() {
 
             $('.theme').click(function(){
                 var theme = $(this).attr('id');
-
                 set_theme(theme);
             });
         }
+    });
 
+    // Hide theme selector popup when clicking outside of it
+    $(document).click(function(event){
+        var popup = $('.theme-popup');
+        if(popup.length) {
+            var target = $(event.target);
+            if(!target.closest('.theme').length && !target.closest('#theme-toggle').length) {
+                popup.remove();
+            }
+        }
     });
 
     function set_theme(theme) {

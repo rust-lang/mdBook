@@ -273,6 +273,7 @@ table thead td {
   padding: 2px 10px;
   line-height: 25px;
   white-space: nowrap;
+  cursor: pointer;
 }
 .theme-popup .theme:hover:first-child,
 .theme-popup .theme:hover:last-child {
