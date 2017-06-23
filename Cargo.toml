@@ -34,6 +34,7 @@ crossbeam = { version = "0.2.8", optional = true }
 
 # Serve feature
 iron = { version = "0.5", optional = true }
+mount = { version = "0.3", optional = true }
 staticfile = { version = "0.4", optional = true }
 ws = { version = "0.7", optional = true}
 
@@ -50,7 +51,7 @@ debug = []
 output = []
 regenerate-css = []
 watch = ["notify", "time", "crossbeam"]
-serve = ["iron", "staticfile", "ws"]
+serve = ["iron", "mount", "staticfile", "ws"]
 
 [[bin]]
 doc = false

@@ -17,6 +17,8 @@ extern crate crossbeam;
 #[cfg(feature = "serve")]
 extern crate iron;
 #[cfg(feature = "serve")]
+extern crate mount;
+#[cfg(feature = "serve")]
 extern crate staticfile;
 #[cfg(feature = "serve")]
 extern crate ws;
@@ -81,7 +83,8 @@ fn main() {
                         .arg_from_usage("-w, --websocket-port=[ws-port] 'Use another port for the websocket connection (livereload){n}(Defaults to 3001)'")
                         .arg_from_usage("-i, --interface=[interface] 'Interface to listen on{n}(Defaults to localhost)'")
                         .arg_from_usage("-a, --address=[address] 'Address that the browser can reach the websocket server from{n}(Defaults to the interface address)'")
-                        .arg_from_usage("-o, --open 'Open the book server in a web browser'"))
+                        .arg_from_usage("-o, --open 'Open the book server in a web browser'")
+                        .arg_from_usage("-s, --static=[static]... 'Include a file or folder as static content on the webserver'"))
                     .subcommand(SubCommand::with_name("test")
                         .about("Test that code samples compile"))
                     .get_matches();
@@ -261,6 +264,7 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
     let interface = args.value_of("interface").unwrap_or("localhost");
     let public_address = args.value_of("address").unwrap_or(interface);
     let open_browser = args.is_present("open");
+    let static_objs = args.values_of("static");
 
     let address = format!("{}:{}", interface, port);
     let ws_address = format!("{}:{}", interface, ws_port);
@@ -287,7 +291,22 @@ fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
     book.build()?;
 
     let staticfile = staticfile::Static::new(book.get_destination().expect("destination is present, checked before"));
-    let iron = iron::Iron::new(staticfile);
+    let mut mount = mount::Mount::new();
+    mount.mount("/", staticfile);
+    if let Some(values) = static_objs {
+        for value in values {
+            let path = Path::new(value);
+            if path.exists() {
+                if let Some(filename) = path.file_name() {
+                    mount.mount(&filename.to_string_lossy(), staticfile::Static::new(path));
+                }
+            } else {
+                println!("Static path {} not found on file system, skipping...", path.display());
+            }
+        }
+    }
+    let iron = iron::Iron::new(mount);
+
     let _iron = iron.http(&*address).unwrap();
 
     let ws_server = ws::WebSocket::new(|_| |_| Ok(())).unwrap();
