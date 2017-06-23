@@ -40,19 +40,11 @@ impl HtmlConfig {
         let root = root.into();
 
         if let Some(d) = tomlconfig.destination {
-            if d.is_relative() {
-                self.destination = root.join(d);
-            } else {
-                self.destination = d;
-            }
+            self.set_destination(&root, &d);
         }
 
         if let Some(t) = tomlconfig.theme {
-            if t.is_relative() {
-                self.theme = root.join(t);
-            } else {
-                self.theme = t;
-            }
+            self.set_theme(&root, &t);
         }
 
         if let Some(curly_quotes) = tomlconfig.curly_quotes {
