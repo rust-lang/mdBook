@@ -4,6 +4,12 @@
 
 use std::path::{Path, PathBuf};
 use std::error::Error;
+use std::fs::File;
+use std::io::Read;
+
+mod summary;
+
+pub use self::summary::Summary;
 
 
 /// The object in charge of parsing the source directory into a usable
@@ -21,9 +27,11 @@ impl Loader {
 
     /// Parse the `SUMMARY.md` file.
     pub fn parse_summary(&self) -> Result<Summary, Box<Error>> {
-        unimplemented!()
+        let path = self.source_directory.join("SUMMARY.md");
+
+        let mut summary_content = String::new();
+        File::open(&path)?.read_to_string(&mut summary_content)?;
+
+        summary::parse_summary(&summary_content)
     }
 }
-
-/// The parsed `SUMMARY.md`, specifying how the book should be laid out.
-pub struct Summary;
