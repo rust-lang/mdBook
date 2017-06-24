@@ -2,8 +2,8 @@ pub use self::html_handlebars::HtmlHandlebars;
 
 mod html_handlebars;
 
-use std::error::Error;
+use errors::*;
 
 pub trait Renderer {
-    fn render(&self, book: &::book::MDBook) -> Result<(), Box<Error>>;
+    fn render(&self, book: &::book::MDBook) -> Result<()>;
 }
