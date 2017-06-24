@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::Path;
 use std::fs::File;
 use std::io::Read;
 
@@ -46,7 +46,7 @@ pub struct Theme {
 }
 
 impl Theme {
-    pub fn new(src: Option<&PathBuf>) -> Self {
+    pub fn new(src: Option<&Path>) -> Self {
 
         // Default theme
         let mut theme = Theme {

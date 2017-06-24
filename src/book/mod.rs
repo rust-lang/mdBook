@@ -13,7 +13,7 @@ use std::process::Command;
 use {theme, parse, utils};
 use renderer::{Renderer, HtmlHandlebars};
 
-use config::{BookConfig, HtmlConfig};
+use config::BookConfig;
 use config::tomlconfig::TomlConfig;
 use config::jsonconfig::JsonConfig;
 
@@ -262,8 +262,9 @@ impl MDBook {
     pub fn copy_theme(&self) -> Result<(), Box<Error>> {
         debug!("[fn]: copy_theme");
 
-        if let Some(themedir) = self.config.get_html_config().and_then(HtmlConfig::get_theme) {
+        if let Some(htmlconfig) = self.config.get_html_config() {
 
+            let themedir = htmlconfig.get_theme();
             if !themedir.exists() {
                 debug!("[*]: {:?} does not exist, trying to create directory", themedir);
                 fs::create_dir(&themedir)?;
@@ -472,9 +473,9 @@ impl MDBook {
         self
     }
 
-    pub fn get_theme_path(&self) -> Option<&PathBuf> {
+    pub fn get_theme_path(&self) -> Option<&Path> {
         if let Some(htmlconfig) = self.config.get_html_config() {
-            return htmlconfig.get_theme();
+            return Some(htmlconfig.get_theme());
         }
 
         None

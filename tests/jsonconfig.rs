@@ -83,5 +83,5 @@ fn from_json_output_html_theme() {
 
     let htmlconfig = config.get_html_config().expect("There should be an HtmlConfig");
 
-    assert_eq!(htmlconfig.get_theme().expect("the theme key was provided"), &PathBuf::from("root/theme"));
+    assert_eq!(htmlconfig.get_theme(), &PathBuf::from("root/theme"));
 }
