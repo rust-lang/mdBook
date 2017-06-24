@@ -70,9 +70,12 @@
 //! Make sure to take a look at it.
 
 #[macro_use]
+extern crate error_chain;
+#[macro_use]
 extern crate serde_derive;
 extern crate serde;
-#[macro_use] extern crate serde_json;
+#[macro_use] 
+extern crate serde_json;
 
 extern crate handlebars;
 extern crate pulldown_cmark;
@@ -90,3 +93,12 @@ pub mod utils;
 pub use book::MDBook;
 pub use book::BookItem;
 pub use renderer::Renderer;
+
+/// The error types used through out this crate.
+pub mod errors {
+    error_chain!{
+        foreign_links {
+            Io(::std::io::Error);
+        }
+    }
+}
