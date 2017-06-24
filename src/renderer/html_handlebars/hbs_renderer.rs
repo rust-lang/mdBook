@@ -178,6 +178,8 @@ impl HtmlHandlebars {
         Ok(())
     }
 
+    /// Helper function to write a file to the build directory, normalizing 
+    /// the path to be relative to the book root.
     fn write_custom_file(&self, custom_file: &Path, book: &MDBook) -> Result<(), Box<Error>> {
         let mut data = Vec::new();
         let mut f = File::open(custom_file)?;
