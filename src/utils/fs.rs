@@ -1,16 +1,16 @@
 use std::path::{Path, PathBuf, Component};
-use std::error::Error;
+use errors::*;
 use std::io::{self, Read};
 use std::fs::{self, File};
 
 /// Takes a path to a file and try to read the file into a String
 
-pub fn file_to_string(path: &Path) -> Result<String, Box<Error>> {
+pub fn file_to_string(path: &Path) -> Result<String> {
     let mut file = match File::open(path) {
         Ok(f) => f,
         Err(e) => {
             debug!("[*]: Failed to open {:?}", path);
-            return Err(Box::new(e));
+            bail!(e);
         },
     };
 
@@ -18,7 +18,7 @@ pub fn file_to_string(path: &Path) -> Result<String, Box<Error>> {
 
     if let Err(e) = file.read_to_string(&mut content) {
         debug!("[*]: Failed to read {:?}", path);
-        return Err(Box::new(e));
+        bail!(e);
     }
 
     Ok(content)
@@ -72,7 +72,7 @@ pub fn path_to_root<P: Into<PathBuf>>(path: P) -> String {
 /// it checks every directory in the path to see if it exists,
 /// and if it does not it will be created.
 
-pub fn create_file(path: &Path) -> io::Result<File> {
+pub fn create_file(path: &Path) -> Result<File> {
     debug!("[fn]: create_file");
 
     // Construct path
@@ -83,12 +83,12 @@ pub fn create_file(path: &Path) -> io::Result<File> {
     }
 
     debug!("[*]: Create file: {:?}", path);
-    File::create(path)
+    File::create(path).map_err(|e| e.into())
 }
 
 /// Removes all the content of a directory but not the directory itself
 
-pub fn remove_dir_content(dir: &Path) -> Result<(), Box<Error>> {
+pub fn remove_dir_content(dir: &Path) -> Result<()> {
     for item in fs::read_dir(dir)? {
         if let Ok(item) = item {
             let item = item.path();
@@ -108,7 +108,7 @@ pub fn remove_dir_content(dir: &Path) -> Result<(), Box<Error>> {
 /// with the extensions given in the `ext_blacklist` array
 
 pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blacklist: &[&str])
-                             -> Result<(), Box<Error>> {
+                             -> Result<()> {
     debug!("[fn] copy_files_except_ext");
     // Check that from and to are different
     if from == to {

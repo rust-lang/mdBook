@@ -100,5 +100,11 @@ pub mod errors {
         foreign_links {
             Io(::std::io::Error);
         }
+
+        errors {
+            Subprocess(message: String, output: ::std::process::Output) {
+                description("A subprocess failed")
+            }
+        }
     }
 }

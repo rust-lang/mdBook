@@ -2,6 +2,8 @@ use serde::{Serialize, Serializer};
 use serde::ser::SerializeStruct;
 use std::path::PathBuf;
 
+use errors::*;
+
 #[derive(Debug, Clone)]
 pub enum BookItem {
     Chapter(String, Chapter), // String = section
@@ -37,7 +39,7 @@ impl Chapter {
 
 
 impl Serialize for Chapter {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> ::std::result::Result<S::Ok, S::Error>
         where S: Serializer
     {
         let mut struct_ = serializer.serialize_struct("Chapter", 2)?;

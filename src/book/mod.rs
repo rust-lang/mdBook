@@ -4,14 +4,12 @@ pub use self::bookitem::{BookItem, BookItems};
 
 use std::path::{Path, PathBuf};
 use std::fs::{self, File};
-use std::error::Error;
-use std::io;
-use std::io::{Read, Write};
-use std::io::ErrorKind;
+use std::io::{self, Read, Write};
 use std::process::Command;
 
 use {theme, parse, utils};
 use renderer::{Renderer, HtmlHandlebars};
+use errors::*;
 
 use config::BookConfig;
 use config::tomlconfig::TomlConfig;
@@ -129,7 +127,7 @@ impl MDBook {
     /// and adds a `SUMMARY.md` and a
     /// `chapter_1.md` to the source directory.
 
-    pub fn init(&mut self) -> Result<(), Box<Error>> {
+    pub fn init(&mut self) -> Result<()> {
 
         debug!("[fn]: init");
 
@@ -239,7 +237,7 @@ impl MDBook {
     /// method of the current renderer.
     ///
     /// It is the renderer who generates all the output files.
-    pub fn build(&mut self) -> Result<(), Box<Error>> {
+    pub fn build(&mut self) -> Result<()> {
         debug!("[fn]: build");
 
         self.init()?;
@@ -249,9 +247,7 @@ impl MDBook {
             utils::fs::remove_dir_content(htmlconfig.get_destination())?;
         }
 
-        self.renderer.render(&self)?;
-
-        Ok(())
+        self.renderer.render(&self)
     }
 
 
@@ -259,7 +255,7 @@ impl MDBook {
         self.config.get_root().join(".gitignore")
     }
 
-    pub fn copy_theme(&self) -> Result<(), Box<Error>> {
+    pub fn copy_theme(&self) -> Result<()> {
         debug!("[fn]: copy_theme");
 
         if let Some(htmlconfig) = self.config.get_html_config() {
@@ -298,16 +294,14 @@ impl MDBook {
         Ok(())
     }
 
-    pub fn write_file<P: AsRef<Path>>(&self, filename: P, content: &[u8]) -> Result<(), Box<Error>> {
+    pub fn write_file<P: AsRef<Path>>(&self, filename: P, content: &[u8]) -> Result<()> {
         let path = self.get_destination()
             .ok_or(String::from("HtmlConfig not set, could not find a destination"))?
             .join(filename);
 
-        utils::fs::create_file(&path)
-            .and_then(|mut file| file.write_all(content))
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Could not create {}: {}", path.display(), e)))?;
-
-        Ok(())
+        utils::fs::create_file(&path)?
+            .write_all(content)
+            .map_err(|e| e.into())
     }
 
     /// Parses the `book.json` file (if it exists) to extract
@@ -315,7 +309,7 @@ impl MDBook {
     /// The `book.json` file should be in the root directory of the book.
     /// The root directory is the one specified when creating a new `MDBook`
 
-    pub fn read_config(mut self) -> Result<Self, Box<Error>> {
+    pub fn read_config(mut self) -> Result<Self> {
 
         let toml = self.get_root().join("book.toml");
         let json = self.get_root().join("book.json");
@@ -369,9 +363,9 @@ impl MDBook {
         self
     }
 
-    pub fn test(&mut self) -> Result<(), Box<Error>> {
+    pub fn test(&mut self) -> Result<()> {
         // read in the chapters
-        self.parse_summary()?;
+        self.parse_summary().chain_err(|| "Couldn't parse summary")?;
         for item in self.iter() {
 
             if let BookItem::Chapter(_, ref ch) = *item {
@@ -381,15 +375,10 @@ impl MDBook {
 
                     println!("[*]: Testing file: {:?}", path);
 
-                    let output_result = Command::new("rustdoc").arg(&path).arg("--test").output();
-                    let output = output_result?;
+                    let output = Command::new("rustdoc").arg(&path).arg("--test").output()?;
 
                     if !output.status.success() {
-                        return Err(Box::new(io::Error::new(ErrorKind::Other,
-                                                           format!("{}\n{}",
-                                                                   String::from_utf8_lossy(&output.stdout),
-                                                                   String::from_utf8_lossy(&output.stderr)))) as
-                                   Box<Error>);
+                        bail!(ErrorKind::Subprocess("Rustdoc returned an error".to_string(), output));
                     }
                 }
             }
@@ -539,7 +528,7 @@ impl MDBook {
     }
 
     // Construct book
-    fn parse_summary(&mut self) -> Result<(), Box<Error>> {
+    fn parse_summary(&mut self) -> Result<()> {
         // When append becomes stable, use self.content.append() ...
         self.content = parse::construct_bookitems(&self.get_source().join("SUMMARY.md"))?;
         Ok(())
