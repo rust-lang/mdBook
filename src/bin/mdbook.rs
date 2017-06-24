@@ -14,10 +14,10 @@ extern crate time;
 extern crate crossbeam;
 
 use std::env;
-use std::error::Error;
 use std::ffi::OsStr;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
+use mdbook::errors::*;
 
 use clap::{App, ArgMatches, SubCommand, AppSettings};
 
@@ -110,7 +110,7 @@ fn confirm() -> bool {
 
 
 // Init command implementation
-fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
+fn init(args: &ArgMatches) -> Result<()> {
 
     let book_dir = get_book_dir(args);
     let mut book = MDBook::new(&book_dir);
@@ -163,7 +163,7 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
 
 
 // Build command implementation
-fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
+fn build(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
     let book = MDBook::new(&book_dir).read_config()?;
 
@@ -194,7 +194,7 @@ fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
 
 // Watch command implementation
 #[cfg(feature = "watch")]
-fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
+fn watch(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
     let book = MDBook::new(&book_dir).read_config()?;
 
@@ -233,7 +233,7 @@ mod serve {
 
     use std;
     use std::path::Path;
-    use std::error::Error;
+    use mdbook::errors::*;
     use self::iron::{Iron, AfterMiddleware, IronResult, IronError, Request, Response, status, Set, Chain};
     use clap::ArgMatches;
     use mdbook::MDBook;
@@ -253,7 +253,7 @@ mod serve {
     }
 
     // Watch command implementation
-    pub fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
+    pub fn serve(args: &ArgMatches) -> Result<()> {
         const RELOAD_COMMAND: &'static str = "reload";
 
         let book_dir = get_book_dir(args);
@@ -334,7 +334,7 @@ mod serve {
     }
 }
 
-fn test(args: &ArgMatches) -> Result<(), Box<Error>> {
+fn test(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
     let mut book = MDBook::new(&book_dir).read_config()?;
 
