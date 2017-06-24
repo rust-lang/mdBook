@@ -39,9 +39,9 @@ impl MDBook {
     /// ```no_run
     /// # extern crate mdbook;
     /// # use mdbook::MDBook;
-    /// # use std::path::Path;
+    /// # #[allow(unused_variables)]
     /// # fn main() {
-    /// let book = MDBook::new(Path::new("root_dir"));
+    /// let book = MDBook::new("root_dir");
     /// # }
     /// ```
     ///
@@ -59,8 +59,9 @@ impl MDBook {
     /// They can both be changed by using [`set_src()`](#method.set_src) and
     /// [`set_dest()`](#method.set_dest)
 
-    pub fn new(root: &Path) -> MDBook {
+    pub fn new<P: Into<PathBuf>>(root: P) -> MDBook {
 
+        let root = root.into();
         if !root.exists() || !root.is_dir() {
             warn!("{:?} No directory with that name", root);
         }
@@ -84,9 +85,9 @@ impl MDBook {
     /// # extern crate mdbook;
     /// # use mdbook::MDBook;
     /// # use mdbook::BookItem;
-    /// # use std::path::Path;
+    /// # #[allow(unused_variables)]
     /// # fn main() {
-    /// # let mut book = MDBook::new(Path::new("mybook"));
+    /// # let book = MDBook::new("mybook");
     /// for item in book.iter() {
     ///     match item {
     ///         &BookItem::Chapter(ref section, ref chapter) => {},
@@ -347,10 +348,10 @@ impl MDBook {
     /// extern crate mdbook;
     /// use mdbook::MDBook;
     /// use mdbook::renderer::HtmlHandlebars;
-    /// # use std::path::Path;
     ///
+    /// # #[allow(unused_variables)]
     /// fn main() {
-    ///     let mut book = MDBook::new(Path::new("mybook"))
+    ///     let book = MDBook::new("mybook")
     ///                         .set_renderer(Box::new(HtmlHandlebars::new()));
     ///
     /// // In this example we replace the default renderer
@@ -477,6 +478,23 @@ impl MDBook {
         }
 
         None
+    }
+
+    pub fn with_curly_quotes(mut self, curly_quotes: bool) -> Self {
+        if let Some(htmlconfig) = self.config.get_mut_html_config() {
+            htmlconfig.set_curly_quotes(curly_quotes);
+        } else {
+            error!("There is no HTML renderer set...");
+        }
+        self
+    }
+
+    pub fn get_curly_quotes(&self) -> bool {
+        if let Some(htmlconfig) = self.config.get_html_config() {
+            return htmlconfig.get_curly_quotes();
+        }
+
+        false
     }
 
     pub fn get_google_analytics_id(&self) -> Option<String> {

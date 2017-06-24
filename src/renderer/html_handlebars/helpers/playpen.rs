@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::Read;
 
 
-pub fn render_playpen(s: &str, path: &Path) -> String {
+pub fn render_playpen<P: AsRef<Path>>(s: &str, path: P) -> String {
     // When replacing one thing in a string by something with a different length,
     // the indices after that will not correspond,
     // we therefore have to store the difference to correct this
@@ -36,7 +36,12 @@ pub fn render_playpen(s: &str, path: &Path) -> String {
             continue;
         };
 
-        let replacement = String::new() + "<pre><code class=\"language-rust\">" + &file_content + "</code></pre>";
+        let mut editable = "";
+        if playpen.editable {
+            editable = ",editable";
+        }
+
+        let replacement = String::new() + "``` rust" + editable + "\n" + &file_content + "\n```\n";
 
         replaced.push_str(&s[previous_end_index..playpen.start_index]);
         replaced.push_str(&replacement);
@@ -60,7 +65,8 @@ struct Playpen {
     escaped: bool,
 }
 
-fn find_playpens(s: &str, base_path: &Path) -> Vec<Playpen> {
+fn find_playpens<P: AsRef<Path>>(s: &str, base_path: P) -> Vec<Playpen> {
+    let base_path = base_path.as_ref();
     let mut playpens = vec![];
     for (i, _) in s.match_indices("{{#playpen") {
         debug!("[*]: find_playpen");
@@ -122,28 +128,28 @@ fn find_playpens(s: &str, base_path: &Path) -> Vec<Playpen> {
 #[test]
 fn test_find_playpens_no_playpen() {
     let s = "Some random text without playpen...";
-    assert!(find_playpens(s, Path::new("")) == vec![]);
+    assert!(find_playpens(s, "") == vec![]);
 }
 
 #[test]
 fn test_find_playpens_partial_playpen() {
     let s = "Some random text with {{#playpen...";
-    assert!(find_playpens(s, Path::new("")) == vec![]);
+    assert!(find_playpens(s, "") == vec![]);
 }
 
 #[test]
 fn test_find_playpens_empty_playpen() {
     let s = "Some random text with {{#playpen}} and {{#playpen   }}...";
-    assert!(find_playpens(s, Path::new("")) == vec![]);
+    assert!(find_playpens(s, "") == vec![]);
 }
 
 #[test]
 fn test_find_playpens_simple_playpen() {
     let s = "Some random text with {{#playpen file.rs}} and {{#playpen test.rs }}...";
 
-    println!("\nOUTPUT: {:?}\n", find_playpens(s, Path::new("")));
+    println!("\nOUTPUT: {:?}\n", find_playpens(s, ""));
 
-    assert!(find_playpens(s, Path::new("")) ==
+    assert!(find_playpens(s, "") ==
             vec![Playpen {
                      start_index: 22,
                      end_index: 42,
@@ -164,9 +170,9 @@ fn test_find_playpens_simple_playpen() {
 fn test_find_playpens_complex_playpen() {
     let s = "Some random text with {{#playpen file.rs editable}} and {{#playpen test.rs editable }}...";
 
-    println!("\nOUTPUT: {:?}\n", find_playpens(s, Path::new("dir")));
+    println!("\nOUTPUT: {:?}\n", find_playpens(s, "dir"));
 
-    assert!(find_playpens(s, Path::new("dir")) ==
+    assert!(find_playpens(s, "dir") ==
             vec![Playpen {
                      start_index: 22,
                      end_index: 51,
@@ -187,9 +193,9 @@ fn test_find_playpens_complex_playpen() {
 fn test_find_playpens_escaped_playpen() {
     let s = "Some random text with escaped playpen \\{{#playpen file.rs editable}} ...";
 
-    println!("\nOUTPUT: {:?}\n", find_playpens(s, Path::new("")));
+    println!("\nOUTPUT: {:?}\n", find_playpens(s, ""));
 
-    assert!(find_playpens(s, Path::new("")) ==
+    assert!(find_playpens(s, "") ==
             vec![Playpen {
                      start_index: 39,
                      end_index: 68,

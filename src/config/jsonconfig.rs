@@ -24,9 +24,9 @@ pub struct JsonConfig {
 /// # use std::path::PathBuf;
 /// let json = r#"{
 ///     "title": "Some title",
-///     "dest": "htmlbook" 
+///     "dest": "htmlbook"
 /// }"#;
-/// 
+///
 /// let config = JsonConfig::from_json(&json).expect("Should parse correctly");
 /// assert_eq!(config.title, Some(String::from("Some title")));
 /// assert_eq!(config.dest, Some(PathBuf::from("htmlbook")));
@@ -35,9 +35,7 @@ impl JsonConfig {
     pub fn from_json(input: &str) -> Result<Self, String> {
         let config: JsonConfig = serde_json::from_str(input)
                                         .map_err(|e| format!("Could not parse JSON: {}", e))?;
-        
+
         return Ok(config);
     }
 }
-
-

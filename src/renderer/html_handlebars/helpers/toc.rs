@@ -1,5 +1,5 @@
 use std::path::Path;
-use std::collections::{VecDeque, BTreeMap};
+use std::collections::BTreeMap;
 
 use serde_json;
 use handlebars::{Handlebars, HelperDef, RenderError, RenderContext, Helper};
@@ -15,21 +15,21 @@ impl HelperDef for RenderToc {
         // get value from context data
         // rc.get_path() is current json parent path, you should always use it like this
         // param is the key of value you want to display
-        let chapters = rc.context()
-            .navigate(rc.get_path(), &VecDeque::new(), "chapters")
-            .to_owned();
-        let current = rc.context()
-            .navigate(rc.get_path(), &VecDeque::new(), "path")
-            .to_string()
+        let chapters = rc.evaluate_absolute("chapters")
+            .and_then(|c| {
+                          serde_json::value::from_value::<Vec<BTreeMap<String, String>>>(c.clone())
+                              .map_err(|_| RenderError::new("Could not decode the JSON data"))
+                      })?;
+        let current = rc.evaluate_absolute("path")?
+            .as_str()
+            .ok_or(RenderError::new("Type error for `path`, string expected"))?
             .replace("\"", "");
-        rc.writer.write_all("<ul class=\"chapter\">".as_bytes())?;
 
-        // Decode json format
-        let decoded: Vec<BTreeMap<String, String>> = serde_json::from_str(&chapters.to_string()).unwrap();
+        rc.writer.write_all("<ul class=\"chapter\">".as_bytes())?;
 
         let mut current_level = 1;
 
-        for item in decoded {
+        for item in chapters {
 
             // Spacer
             if item.get("spacer").is_some() {

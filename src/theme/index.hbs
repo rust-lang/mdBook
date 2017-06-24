@@ -76,7 +76,7 @@
 
         <div id="page-wrapper" class="page-wrapper">
 
-            <div class="page">
+            <div class="page" tabindex="-1">
                 <div id="menu-bar" class="menu-bar">
                     <div class="left-buttons">
                         <i id="sidebar-toggle" class="fa fa-bars"></i>
@@ -96,13 +96,13 @@
 
                 <!-- Mobile navigation buttons -->
                 {{#previous}}
-                    <a href="{{link}}" class="mobile-nav-chapters previous">
+                    <a rel="prev" href="{{link}}" class="mobile-nav-chapters previous">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 {{/previous}}
 
                 {{#next}}
-                    <a href="{{link}}" class="mobile-nav-chapters next">
+                    <a rel="next" href="{{link}}" class="mobile-nav-chapters next">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 {{/next}}

@@ -49,7 +49,7 @@ impl HtmlHandlebars {
                         content = helpers::playpen::render_playpen(&content, p);
                     }
 
-                    content = utils::render_markdown(&content);
+                    content = utils::render_markdown(&content, ctx.book.get_curly_quotes());
                     print_content.push_str(&content);
 
                     // Update the context with data for this file

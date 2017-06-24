@@ -24,6 +24,7 @@ pub struct TomlHtmlConfig {
     pub destination: Option<PathBuf>,
     pub theme: Option<PathBuf>,
     pub google_analytics: Option<String>,
+    pub curly_quotes: Option<bool>,
     pub additional_css: Option<Vec<PathBuf>>,
     pub additional_js: Option<Vec<PathBuf>>,
 }
