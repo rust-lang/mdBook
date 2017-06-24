@@ -318,6 +318,10 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
         data.insert("google_analytics".to_owned(), json!(ga));
     }
 
+    if book.get_mathjax_support() {
+        data.insert("mathjax_support".to_owned(), json!(true));
+    }
+
     // Add check to see if there is an additional style
     if book.has_additional_css() {
         let mut css = Vec::new();
