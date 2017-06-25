@@ -1,9 +1,11 @@
+use std::io;
+use std::io::Write;
 use std::error::Error;
 
 use clap::{ArgMatches, SubCommand, App};
 use mdbook::MDBook;
 
-use {get_book_dir, confirm};
+use get_book_dir;
 
 // Init command implementation
 pub fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
@@ -55,6 +57,17 @@ pub fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
     println!("\nAll done, no errors...");
 
     Ok(())
+}
+
+// Simple function that user comfirmation
+fn confirm() -> bool {
+    io::stdout().flush().unwrap();
+    let mut s = String::new();
+    io::stdin().read_line(&mut s).ok();
+    match &*s.trim() {
+        "Y" | "y" | "yes" | "Yes" => true,
+        _ => false,
+    }
 }
 
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
