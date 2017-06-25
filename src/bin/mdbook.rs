@@ -13,6 +13,7 @@ use std::path::{Path, PathBuf};
 
 use clap::{App, ArgMatches, SubCommand, AppSettings};
 
+pub mod build;
 #[cfg(feature = "serve")]
 pub mod serve;
 #[cfg(feature = "watch")]
@@ -39,13 +40,7 @@ fn main() {
                         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'")
                         .arg_from_usage("--theme 'Copies the default theme into your source folder'")
                         .arg_from_usage("--force 'skip confirmation prompts'"))
-                    .subcommand(SubCommand::with_name("build")
-                        .about("Build the book from the markdown files")
-                        .arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
-                        .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
-                        .arg_from_usage("--no-create 'Will not create non-existent files linked from SUMMARY.md'")
-                        .arg_from_usage("--curly-quotes 'Convert straight quotes to curly quotes, except for those that occur in code blocks and code spans'")
-                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'"))
+                    .subcommand(build::make_subcommand())
                     .subcommand(SubCommand::with_name("test")
                         .about("Test that code samples compile"));
 
@@ -57,7 +52,7 @@ fn main() {
     // Check which subcomamnd the user ran...
     let res = match app.get_matches().subcommand() {
         ("init", Some(sub_matches)) => init(sub_matches),
-        ("build", Some(sub_matches)) => build(sub_matches),
+        ("build", Some(sub_matches)) => build::build(sub_matches),
         #[cfg(feature = "watch")]
         ("watch", Some(sub_matches)) => watch::watch(sub_matches),
         #[cfg(feature = "serve")]
@@ -133,36 +128,6 @@ fn init(args: &ArgMatches) -> Result<(), Box<Error>> {
     }
 
     println!("\nAll done, no errors...");
-
-    Ok(())
-}
-
-
-// Build command implementation
-fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
-    let book_dir = get_book_dir(args);
-    let book = MDBook::new(&book_dir).read_config()?;
-
-    let mut book = match args.value_of("dest-dir") {
-        Some(dest_dir) => book.with_destination(dest_dir),
-        None => book,
-    };
-
-    if args.is_present("no-create") {
-        book.create_missing = false;
-    }
-
-    if args.is_present("curly-quotes") {
-        book = book.with_curly_quotes(true);
-    }
-
-    book.build()?;
-
-    if let Some(d) = book.get_destination() {
-        if args.is_present("open") {
-            open(d.join("index.html"));
-        }
-    }
 
     Ok(())
 }
