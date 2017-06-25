@@ -6,7 +6,7 @@ use std;
 use std::path::Path;
 use std::error::Error;
 use self::iron::{Iron, AfterMiddleware, IronResult, IronError, Request, Response, status, Set, Chain};
-use clap::ArgMatches;
+use clap::{ArgMatches, SubCommand, App};
 use mdbook::MDBook;
 
 use {get_book_dir, open};
@@ -106,4 +106,17 @@ pub fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
     });
 
     Ok(())
+}
+
+pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
+    SubCommand::with_name("serve")
+                        .about("Serve the book at http://localhost:3000. Rebuild and reload on change.")
+                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'")
+                        .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
+                        .arg_from_usage("--curly-quotes 'Convert straight quotes to curly quotes, except for those that occur in code blocks and code spans'")
+                        .arg_from_usage("-p, --port=[port] 'Use another port{n}(Defaults to 3000)'")
+                        .arg_from_usage("-w, --websocket-port=[ws-port] 'Use another port for the websocket connection (livereload){n}(Defaults to 3001)'")
+                        .arg_from_usage("-i, --interface=[interface] 'Interface to listen on{n}(Defaults to localhost)'")
+                        .arg_from_usage("-a, --address=[address] 'Address that the browser can reach the websocket server from{n}(Defaults to the interface address)'")
+                        .arg_from_usage("-o, --open 'Open the book server in a web browser'")
 }

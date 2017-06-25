@@ -26,11 +26,11 @@ fn main() {
     env_logger::init().unwrap();
 
     // Create a list of valid arguments and sub-commands
-    let matches = App::new(NAME)
+    let app = App::new(NAME)
                     .about("Create a book in form of a static website from markdown files")
                     .author("Mathieu David <mathieudavid@mathieudavid.org>")
                     // Get the version from our Cargo.toml using clap's crate_version!() macro
-                    .version(&*format!("v{}", crate_version!()))
+                    .version(concat!("v",crate_version!()))
                     .setting(AppSettings::SubcommandRequired)
                     .after_help("For more information about a specific command, try `mdbook <command> --help`\nSource code for mdbook available at: https://github.com/azerupi/mdBook")
                     .subcommand(SubCommand::with_name("init")
@@ -46,28 +46,16 @@ fn main() {
                         .arg_from_usage("--no-create 'Will not create non-existent files linked from SUMMARY.md'")
                         .arg_from_usage("--curly-quotes 'Convert straight quotes to curly quotes, except for those that occur in code blocks and code spans'")
                         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'"))
-                    .subcommand(SubCommand::with_name("watch")
-                        .about("Watch the files for changes")
-                        .arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
-                        .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
-                        .arg_from_usage("--curly-quotes 'Convert straight quotes to curly quotes, except for those that occur in code blocks and code spans'")
-                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'"))
-                    .subcommand(SubCommand::with_name("serve")
-                        .about("Serve the book at http://localhost:3000. Rebuild and reload on change.")
-                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'")
-                        .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
-                        .arg_from_usage("--curly-quotes 'Convert straight quotes to curly quotes, except for those that occur in code blocks and code spans'")
-                        .arg_from_usage("-p, --port=[port] 'Use another port{n}(Defaults to 3000)'")
-                        .arg_from_usage("-w, --websocket-port=[ws-port] 'Use another port for the websocket connection (livereload){n}(Defaults to 3001)'")
-                        .arg_from_usage("-i, --interface=[interface] 'Interface to listen on{n}(Defaults to localhost)'")
-                        .arg_from_usage("-a, --address=[address] 'Address that the browser can reach the websocket server from{n}(Defaults to the interface address)'")
-                        .arg_from_usage("-o, --open 'Open the book server in a web browser'"))
                     .subcommand(SubCommand::with_name("test")
-                        .about("Test that code samples compile"))
-                    .get_matches();
+                        .about("Test that code samples compile"));
+
+    #[cfg(feature = "watch")]
+    let app = app.subcommand(watch::make_subcommand());
+    #[cfg(feature = "serve")]
+    let app = app.subcommand(serve::make_subcommand());
 
     // Check which subcomamnd the user ran...
-    let res = match matches.subcommand() {
+    let res = match app.get_matches().subcommand() {
         ("init", Some(sub_matches)) => init(sub_matches),
         ("build", Some(sub_matches)) => build(sub_matches),
         #[cfg(feature = "watch")]

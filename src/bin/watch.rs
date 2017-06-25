@@ -8,7 +8,7 @@ use std::error::Error;
 use self::notify::Watcher;
 use std::time::Duration;
 use std::sync::mpsc::channel;
-use clap::ArgMatches;
+use clap::{ArgMatches, SubCommand, App};
 use mdbook::MDBook;
 
 use {get_book_dir, open};
@@ -110,4 +110,13 @@ pub fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
             },
         }
     }
+}
+
+pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
+    SubCommand::with_name("watch")
+                        .about("Watch the files for changes")
+                        .arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
+                        .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
+                        .arg_from_usage("--curly-quotes 'Convert straight quotes to curly quotes, except for those that occur in code blocks and code spans'")
+                        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'")
 }
