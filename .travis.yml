@@ -28,6 +28,10 @@ matrix:
             - nodejs
     - os: linux
       env: TARGET=x86_64-unknown-linux-musl CHANNEL=stable
+      addons:
+        apt:
+          packages:
+            - musl
     # Beta channel
     - os: osx
       env: TARGET=i686-apple-darwin CHANNEL=beta
@@ -42,6 +46,10 @@ matrix:
       env: TARGET=x86_64-unknown-linux-gnu CHANNEL=beta
     - os: linux
       env: TARGET=x86_64-unknown-linux-musl CHANNEL=beta
+      addons:
+        apt:
+          packages:
+            - musl
     # Nightly channel
     - os: osx
       env: TARGET=i686-apple-darwin CHANNEL=nightly
@@ -56,6 +64,10 @@ matrix:
       env: TARGET=x86_64-unknown-linux-gnu CHANNEL=nightly
     - os: linux
       env: TARGET=x86_64-unknown-linux-musl CHANNEL=nightly
+      addons:
+        apt:
+          packages:
+            - musl
 
 install:
   - export PATH="$PATH:$HOME/.cargo/bin"
