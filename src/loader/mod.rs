@@ -9,7 +9,7 @@ use std::io::Read;
 
 mod summary;
 
-pub use self::summary::Summary;
+pub use self::summary::{Summary, parse_summary};
 
 
 /// The object in charge of parsing the source directory into a usable
