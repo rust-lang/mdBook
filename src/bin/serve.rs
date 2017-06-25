@@ -9,7 +9,10 @@ use self::iron::{Iron, AfterMiddleware, IronResult, IronError, Request, Response
 use clap::ArgMatches;
 use mdbook::MDBook;
 
-use {get_book_dir, open, trigger_on_change};
+use {get_book_dir, open};
+
+#[cfg(feature = "watch")]
+use watch;
 
 struct ErrorRecover;
 
@@ -92,7 +95,8 @@ pub fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
         open(serving_url);
     }
 
-    trigger_on_change(&mut book, move |path, book| {
+    #[cfg(feature = "watch")]
+    watch::trigger_on_change(&mut book, move |path, book| {
         println!("File changed: {:?}\nBuilding book...\n", path);
         match book.build() {
             Err(e) => println!("Error while building: {:?}", e),

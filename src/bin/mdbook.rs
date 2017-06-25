@@ -5,14 +5,6 @@ extern crate log;
 extern crate env_logger;
 extern crate open;
 
-// Dependencies for the Watch feature
-#[cfg(feature = "watch")]
-extern crate notify;
-#[cfg(feature = "watch")]
-extern crate time;
-#[cfg(feature = "watch")]
-extern crate crossbeam;
-
 use std::env;
 use std::error::Error;
 use std::ffi::OsStr;
@@ -23,15 +15,8 @@ use clap::{App, ArgMatches, SubCommand, AppSettings};
 
 #[cfg(feature = "serve")]
 pub mod serve;
-
-// Uses for the Watch feature
 #[cfg(feature = "watch")]
-use notify::Watcher;
-#[cfg(feature = "watch")]
-use std::time::Duration;
-#[cfg(feature = "watch")]
-use std::sync::mpsc::channel;
-
+pub mod watch;
 
 use mdbook::MDBook;
 
@@ -86,7 +71,7 @@ fn main() {
         ("init", Some(sub_matches)) => init(sub_matches),
         ("build", Some(sub_matches)) => build(sub_matches),
         #[cfg(feature = "watch")]
-        ("watch", Some(sub_matches)) => watch(sub_matches),
+        ("watch", Some(sub_matches)) => watch::watch(sub_matches),
         #[cfg(feature = "serve")]
         ("serve", Some(sub_matches)) => serve::serve(sub_matches),
         ("test", Some(sub_matches)) => test(sub_matches),
@@ -194,40 +179,6 @@ fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
     Ok(())
 }
 
-
-// Watch command implementation
-#[cfg(feature = "watch")]
-fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
-    let book_dir = get_book_dir(args);
-    let book = MDBook::new(&book_dir).read_config()?;
-
-    let mut book = match args.value_of("dest-dir") {
-        Some(dest_dir) => book.with_destination(dest_dir),
-        None => book,
-    };
-
-    if args.is_present("curly-quotes") {
-        book = book.with_curly_quotes(true);
-    }
-
-    if args.is_present("open") {
-        book.build()?;
-        if let Some(d) = book.get_destination() {
-            open(d.join("index.html"));
-        }
-    }
-
-    trigger_on_change(&mut book, |path, book| {
-        println!("File changed: {:?}\nBuilding book...\n", path);
-        if let Err(e) = book.build() {
-            println!("Error while building: {:?}", e);
-        }
-        println!("");
-    });
-
-    Ok(())
-}
-
 fn test(args: &ArgMatches) -> Result<(), Box<Error>> {
     let book_dir = get_book_dir(args);
     let mut book = MDBook::new(&book_dir).read_config()?;
@@ -255,74 +206,5 @@ fn get_book_dir(args: &ArgMatches) -> PathBuf {
 fn open<P: AsRef<OsStr>>(path: P) {
     if let Err(e) = open::that(path) {
         println!("Error opening web browser: {}", e);
-    }
-}
-
-
-// Calls the closure when a book source file is changed. This is blocking!
-#[cfg(feature = "watch")]
-fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
-    where F: Fn(&Path, &mut MDBook) -> ()
-{
-    use notify::RecursiveMode::*;
-    use notify::DebouncedEvent::*;
-
-    // Create a channel to receive the events.
-    let (tx, rx) = channel();
-
-    let mut watcher = match notify::watcher(tx, Duration::from_secs(1)) {
-        Ok(w) => w,
-        Err(e) => {
-            println!("Error while trying to watch the files:\n\n\t{:?}", e);
-            ::std::process::exit(0);
-        },
-    };
-
-    // Add the source directory to the watcher
-    if let Err(e) = watcher.watch(book.get_source(), Recursive) {
-        println!("Error while watching {:?}:\n    {:?}", book.get_source(), e);
-        ::std::process::exit(0);
-    };
-
-    // Add the theme directory to the watcher
-    if let Some(t) = book.get_theme_path() {
-        watcher.watch(t, Recursive).unwrap_or_default();
-    }
-
-
-    // Add the book.{json,toml} file to the watcher if it exists, because it's not
-    // located in the source directory
-    if watcher
-           .watch(book.get_root().join("book.json"), NonRecursive)
-           .is_err() {
-        // do nothing if book.json is not found
-    }
-    if watcher
-           .watch(book.get_root().join("book.toml"), NonRecursive)
-           .is_err() {
-        // do nothing if book.toml is not found
-    }
-
-    println!("\nListening for changes...\n");
-
-    loop {
-        match rx.recv() {
-            Ok(event) => {
-                match event {
-                    NoticeWrite(path) |
-                    NoticeRemove(path) |
-                    Create(path) |
-                    Write(path) |
-                    Remove(path) |
-                    Rename(_, path) => {
-                        closure(&path, book);
-                    },
-                    _ => {},
-                }
-            },
-            Err(e) => {
-                println!("An error occured: {:?}", e);
-            },
-        }
     }
 }
