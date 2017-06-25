@@ -1,6 +1,8 @@
 use std::error::Error;
 use std::fmt::{self, Formatter, Display};
+use std::io::{Error as IoError, ErrorKind};
 use std::ops::{Deref, DerefMut};
+use std::path::PathBuf;
 use pulldown_cmark::{self, Event, Tag};
 
 
@@ -50,6 +52,23 @@ pub struct Summary {
     title: Option<String>,
 }
 
+/// A struct representing an entry in the `SUMMARY.md`, possibly with nested 
+/// entries.
+///
+/// This is roughly the equivalent of `[Some section](./path/to/file.md)`.
+#[derive(Debug, Clone, Default, PartialEq)]
+struct Link {
+    name: String,
+    location: PathBuf,
+    nested_items: Vec<SummaryItem>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+enum SummaryItem {
+    Link(Link),
+    Separator,
+}
+
 /// A stateful parser for parsing a `SUMMARY.md` file.
 ///
 /// # Grammar
@@ -79,6 +98,35 @@ struct SummaryParser<'a> {
     summary: Summary,
 }
 
+/// Reads `Events` from the provided stream until the corresponding
+/// `Event::End` is encountered which matches the `$delimiter` pattern.
+///
+/// This is the equivalent of doing 
+/// `$stream.take_while(|e| e != $delimeter).collect()` but it allows you to 
+/// use pattern matching and you won't get errors because `take_while()` 
+/// moves `$stream` out of self.
+macro_rules! collect_events {
+    ($stream:expr, $delimiter:pat) => {
+        {
+            let mut events = Vec::new();
+
+            loop {
+                let event = $stream.next();
+                match event {
+                    Some(Event::End($delimiter)) => break,
+                    Some(other) => events.push(other),
+                    None => {
+                        debug!("Reached end of stream without finding the closing pattern, {}", stringify!($delimiter));
+                        break;
+                    }
+                }
+            }
+
+            events
+        }
+    }
+}
+
 impl<'a> SummaryParser<'a> 
 {
     fn new(text: &str) -> SummaryParser {
@@ -91,6 +139,7 @@ impl<'a> SummaryParser<'a>
         }
     }
 
+    /// Parse the text the `SummaryParser` was created with.
     fn parse(mut self) -> Result<Summary, Box<Error>> {
         self.summary.title = self.parse_title();
 
@@ -101,41 +150,44 @@ impl<'a> SummaryParser<'a>
         if let Some(Event::Start(Tag::Header(1))) = self.stream.next() {
             debug!("[*] Found a h1 in the SUMMARY");
             
-            let mut tags = Vec::new();
-
-            loop {
-                let next_event = self.stream.next();
-                match next_event {
-                    Some(Event::End(Tag::Header(1))) => break,
-                    Some(other) => tags.push(other),
-                    None => {
-                        // If we ever get here then changes are pulldown_cmark 
-                        // is seriously broken. It means there's an opening 
-                        // <h1> tag but not a closing one. It also means 
-                        // we've consumed the entire stream of events, so
-                        // chances are any parsing after this will just hit
-                        // EOF and end early :(
-                        warn!("[*] No closing <h1> tag in the SUMMARY.md file");
-                        break;
-                    }
-                }
-            }
+            let tags = collect_events!(self.stream, Tag::Header(1));
 
             // TODO: How do we deal with headings like "# My **awesome** summary"?
             // for now, I'm just going to scan through and concatenate the 
             // Event::Text tags, skipping any styling.
-            let title: String = tags.into_iter()
-                .filter_map(|t| match t {
-                    Event::Text(text) => Some(text),
-                    _ => None,
-                })
-                .collect();
-
-            Some(title)
+            Some(stringify_events(tags))
         } else {
             None
         }
     }
+
+    /// Parse a single item (`[Some Chapter Name](./path/to/chapter.md)`).
+    fn parse_item(&mut self) -> Result<Link, Box<Error>> {
+        let next = self.stream.next();
+
+        if let Some(Event::Start(Tag::Link(dest, _))) = next {
+            let content = collect_events!(self.stream, Tag::Link(..));
+
+            Ok(Link {
+                name: stringify_events(content),
+                location: PathBuf::from(dest.to_string()),
+                nested_items: Vec::new(),
+            })
+        } else {
+            Err(Box::new(IoError::new(ErrorKind::Other, format!("Expected a link, got {:?}", next))))
+        }
+    }
+}
+
+/// Extract just the text from a bunch of events and concatenate it into a
+/// single string.
+fn stringify_events<'a>(events: Vec<Event<'a>>) -> String {
+    events.into_iter()
+                .filter_map(|t| match t {
+                    Event::Text(text) => Some(text),
+                    _ => None,
+                })
+                .collect()
 }
 
 /// A section number like "1.2.3", basically just a newtype'd `Vec<u32>`.
@@ -203,6 +255,22 @@ mod tests {
 
         let mut parser = SummaryParser::new(src);
         let got = parser.parse_title().unwrap();
+
+        assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn parse_a_single_item() {
+        let src = "[A Chapter](./path/to/chapter)";
+        let should_be = Link {
+            name: String::from("A Chapter"),
+            location: PathBuf::from("./path/to/chapter"),
+            nested_items: Vec::new(),
+        };
+
+        let mut parser = SummaryParser::new(src);
+        let _ = parser.stream.next(); // skip the opening paragraph tag
+        let got = parser.parse_item().unwrap();
 
         assert_eq!(got, should_be);
     }
