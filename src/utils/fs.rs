@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf, Component};
 use errors::*;
-use std::io::{self, Read};
+use std::io::Read;
 use std::fs::{self, File};
 
 /// Takes a path to a file and try to read the file into a String

@@ -2,7 +2,6 @@ use serde::{Serialize, Serializer};
 use serde::ser::SerializeStruct;
 use std::path::PathBuf;
 
-use errors::*;
 
 #[derive(Debug, Clone)]
 pub enum BookItem {
