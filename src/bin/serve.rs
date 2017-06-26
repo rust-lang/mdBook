@@ -7,7 +7,7 @@ use std::path::Path;
 use self::iron::{Iron, AfterMiddleware, IronResult, IronError, Request, Response, status, Set, Chain};
 use clap::{ArgMatches, SubCommand, App};
 use mdbook::MDBook;
-use mdbook::errors::*;
+use mdbook::errors::Result;
 use {get_book_dir, open};
 #[cfg(feature = "watch")]
 use watch;

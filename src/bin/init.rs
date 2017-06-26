@@ -2,7 +2,7 @@ use std::io;
 use std::io::Write;
 use clap::{ArgMatches, SubCommand, App};
 use mdbook::MDBook;
-use mdbook::errors::*;
+use mdbook::errors::Result;
 use get_book_dir;
 
 // Init command implementation
