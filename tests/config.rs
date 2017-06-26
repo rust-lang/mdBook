@@ -15,7 +15,8 @@ fn do_not_overwrite_unspecified_config_values() {
 
     let book = MDBook::new(dir.path())
         .with_source("bar")
-        .with_destination("baz");
+        .with_destination("baz")
+        .with_mathjax_support(true);
 
     assert_eq!(book.get_root(), dir.path());
     assert_eq!(book.get_source(), dir.path().join("bar"));
@@ -27,6 +28,7 @@ fn do_not_overwrite_unspecified_config_values() {
     assert_eq!(book.get_root(), dir.path());
     assert_eq!(book.get_source(), dir.path().join("bar"));
     assert_eq!(book.get_destination().unwrap(), dir.path().join("baz"));
+    assert_eq!(book.get_mathjax_support(), true);
 
     // Try with a partial config file
     let file_path = dir.path().join("book.toml");
@@ -39,5 +41,6 @@ fn do_not_overwrite_unspecified_config_values() {
     assert_eq!(book.get_root(), dir.path());
     assert_eq!(book.get_source(), dir.path().join("barbaz"));
     assert_eq!(book.get_destination().unwrap(), dir.path().join("baz"));
+    assert_eq!(book.get_mathjax_support(), true);
 }
 

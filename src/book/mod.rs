@@ -498,6 +498,23 @@ impl MDBook {
         false
     }
 
+    pub fn with_mathjax_support(mut self, mathjax_support: bool) -> Self {
+        if let Some(htmlconfig) = self.config.get_mut_html_config() {
+            htmlconfig.set_mathjax_support(mathjax_support);
+        } else {
+            error!("There is no HTML renderer set...");
+        }
+        self
+    }
+
+    pub fn get_mathjax_support(&self) -> bool {
+        if let Some(htmlconfig) = self.config.get_html_config() {
+            return htmlconfig.get_mathjax_support();
+        }
+
+        false
+    }
+
     pub fn get_google_analytics_id(&self) -> Option<String> {
         if let Some(htmlconfig) = self.config.get_html_config() {
             return htmlconfig.get_google_analytics_id();

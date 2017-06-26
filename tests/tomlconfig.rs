@@ -101,6 +101,20 @@ fn from_toml_output_html_curly_quotes() {
     assert_eq!(htmlconfig.get_curly_quotes(), true);
 }
 
+// Tests that the `output.html.mathjax-support` key is correctly parsed in the TOML config
+#[test]
+fn from_toml_output_html_mathjax_support() {
+    let toml = r#"[output.html]
+    mathjax-support = true"#;
+
+    let parsed = TomlConfig::from_toml(&toml).expect("This should parse");
+    let config = BookConfig::from_tomlconfig("root", parsed);
+
+    let htmlconfig = config.get_html_config().expect("There should be an HtmlConfig");
+
+    assert_eq!(htmlconfig.get_mathjax_support(), true);
+}
+
 // Tests that the `output.html.google-analytics` key is correctly parsed in the TOML config
 #[test]
 fn from_toml_output_html_google_analytics() {

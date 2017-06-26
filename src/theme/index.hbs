@@ -27,8 +27,10 @@
         <link rel="stylesheet" href="{{this}}">
         {{/each}}
 
+        {{#if mathjax_support}}
         <!-- MathJax -->
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        {{/if}}
 
         <!-- Fetch Clipboard.js from CDN but have a local fallback -->
         <script src="https://cdn.jsdelivr.net/clipboard.js/1.6.1/clipboard.min.js"></script>

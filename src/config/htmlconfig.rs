@@ -7,6 +7,7 @@ pub struct HtmlConfig {
     destination: PathBuf,
     theme: PathBuf,
     curly_quotes: bool,
+    mathjax_support: bool,
     google_analytics: Option<String>,
     additional_css: Vec<PathBuf>,
     additional_js: Vec<PathBuf>,
@@ -30,6 +31,7 @@ impl HtmlConfig {
             destination: root.clone().join("book"),
             theme: root.join("theme"),
             curly_quotes: false,
+            mathjax_support: false,
             google_analytics: None,
             additional_css: Vec::new(),
             additional_js: Vec::new(),
@@ -49,6 +51,10 @@ impl HtmlConfig {
 
         if let Some(curly_quotes) = tomlconfig.curly_quotes {
             self.curly_quotes = curly_quotes;
+        }
+
+        if let Some(mathjax_support) = tomlconfig.mathjax_support {
+            self.mathjax_support = mathjax_support;
         }
 
         if tomlconfig.google_analytics.is_some() {
@@ -114,6 +120,14 @@ impl HtmlConfig {
 
     pub fn set_curly_quotes(&mut self, curly_quotes: bool) {
         self.curly_quotes = curly_quotes;
+    }
+
+    pub fn get_mathjax_support(&self) -> bool {
+        self.mathjax_support
+    }
+
+    pub fn set_mathjax_support(&mut self, mathjax_support: bool) {
+        self.mathjax_support = mathjax_support;
     }
 
     pub fn get_google_analytics_id(&self) -> Option<String> {
