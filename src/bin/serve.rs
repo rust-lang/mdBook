@@ -4,13 +4,11 @@ extern crate ws;
 
 use std;
 use std::path::Path;
-use std::error::Error;
 use self::iron::{Iron, AfterMiddleware, IronResult, IronError, Request, Response, status, Set, Chain};
 use clap::{ArgMatches, SubCommand, App};
 use mdbook::MDBook;
-
+use mdbook::errors::*;
 use {get_book_dir, open};
-
 #[cfg(feature = "watch")]
 use watch;
 
@@ -27,7 +25,7 @@ impl AfterMiddleware for ErrorRecover {
 }
 
 // Watch command implementation
-pub fn serve(args: &ArgMatches) -> Result<(), Box<Error>> {
+pub fn serve(args: &ArgMatches) -> Result<()> {
     const RELOAD_COMMAND: &'static str = "reload";
 
     let book_dir = get_book_dir(args);

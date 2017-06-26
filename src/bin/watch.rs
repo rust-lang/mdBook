@@ -3,18 +3,16 @@ extern crate time;
 extern crate crossbeam;
 
 use std::path::Path;
-use std::error::Error;
-
 use self::notify::Watcher;
 use std::time::Duration;
 use std::sync::mpsc::channel;
 use clap::{ArgMatches, SubCommand, App};
 use mdbook::MDBook;
-
+use mdbook::errors::*;
 use {get_book_dir, open};
 
 // Watch command implementation
-pub fn watch(args: &ArgMatches) -> Result<(), Box<Error>> {
+pub fn watch(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
     let book = MDBook::new(&book_dir).read_config()?;
 

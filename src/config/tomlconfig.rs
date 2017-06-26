@@ -1,5 +1,6 @@
 extern crate toml;
 use std::path::PathBuf;
+use errors::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct TomlConfig {
@@ -25,6 +26,7 @@ pub struct TomlHtmlConfig {
     pub theme: Option<PathBuf>,
     pub google_analytics: Option<String>,
     pub curly_quotes: Option<bool>,
+    pub mathjax_support: Option<bool>,
     pub additional_css: Option<Vec<PathBuf>>,
     pub additional_js: Option<Vec<PathBuf>>,
 }
@@ -43,9 +45,9 @@ pub struct TomlHtmlConfig {
 /// assert_eq!(config.output.unwrap().html.unwrap().destination, Some(PathBuf::from("htmlbook")));
 /// ```
 impl TomlConfig {
-    pub fn from_toml(input: &str) -> Result<Self, String> {
+    pub fn from_toml(input: &str) -> Result<Self> {
         let config: TomlConfig = toml::from_str(input)
-                                        .map_err(|e| format!("Could not parse TOML: {}", e))?;
+                                        .chain_err(|| "Could not parse TOML")?;
         
         return Ok(config);
     }

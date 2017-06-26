@@ -4,12 +4,12 @@ use book::MDBook;
 use book::bookitem::{BookItem, Chapter};
 use utils;
 use theme::{self, Theme};
+use errors::*;
 use regex::{Regex, Captures};
 
 use std::ascii::AsciiExt;
 use std::path::{Path, PathBuf};
 use std::fs::{self, File};
-use std::error::Error;
 use std::io::{self, Read};
 use std::collections::BTreeMap;
 use std::collections::HashMap;
@@ -28,7 +28,7 @@ impl HtmlHandlebars {
     }
 
     fn render_item(&self, item: &BookItem, mut ctx: RenderItemContext, print_content: &mut String)
-        -> Result<(), Box<Error>> {
+        -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
         match *item {
             BookItem::Chapter(_, ref ch) |
@@ -88,7 +88,7 @@ impl HtmlHandlebars {
     }
 
     /// Create an index.html from the first element in SUMMARY.md
-    fn render_index(&self, book: &MDBook, ch: &Chapter, destination: &Path) -> Result<(), Box<Error>> {
+    fn render_index(&self, book: &MDBook, ch: &Chapter, destination: &Path) -> Result<()> {
         debug!("[*]: index.html");
 
         let mut content = String::new();
@@ -129,7 +129,7 @@ impl HtmlHandlebars {
         rendered
     }
 
-    fn copy_static_files(&self, book: &MDBook, theme: &Theme) -> Result<(), Box<Error>> {
+    fn copy_static_files(&self, book: &MDBook, theme: &Theme) -> Result<()> {
         book.write_file("book.js", &theme.js)?;
         book.write_file("book.css", &theme.css)?;
         book.write_file("favicon.png", &theme.favicon)?;
@@ -180,7 +180,7 @@ impl HtmlHandlebars {
 
     /// Helper function to write a file to the build directory, normalizing 
     /// the path to be relative to the book root.
-    fn write_custom_file(&self, custom_file: &Path, book: &MDBook) -> Result<(), Box<Error>> {
+    fn write_custom_file(&self, custom_file: &Path, book: &MDBook) -> Result<()> {
         let mut data = Vec::new();
         let mut f = File::open(custom_file)?;
         f.read_to_end(&mut data)?;
@@ -216,7 +216,7 @@ impl HtmlHandlebars {
 
     /// Copy across any additional CSS and JavaScript files which the book
     /// has been configured to use.
-    fn copy_additional_css_and_js(&self, book: &MDBook) -> Result<(), Box<Error>> {
+    fn copy_additional_css_and_js(&self, book: &MDBook) -> Result<()> {
         let custom_files = book.get_additional_css().iter().chain(
             book.get_additional_js()
                 .iter(),
@@ -232,7 +232,7 @@ impl HtmlHandlebars {
 
 
 impl Renderer for HtmlHandlebars {
-    fn render(&self, book: &MDBook) -> Result<(), Box<Error>> {
+    fn render(&self, book: &MDBook) -> Result<()> {
         debug!("[fn]: render");
         let mut handlebars = Handlebars::new();
 
@@ -258,9 +258,7 @@ impl Renderer for HtmlHandlebars {
 
         debug!("[*]: Check if destination directory exists");
         if fs::create_dir_all(&destination).is_err() {
-            return Err(Box::new(
-                io::Error::new(io::ErrorKind::Other, "Unexpected error when constructing destination path"),
-            ));
+            bail!("Unexpected error when constructing destination path");
         }
 
         for (i, item) in book.iter().enumerate() {
@@ -301,7 +299,7 @@ impl Renderer for HtmlHandlebars {
     }
 }
 
-fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>, Box<Error>> {
+fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>> {
     debug!("[fn]: make_data");
 
     let mut data = serde_json::Map::new();
@@ -316,6 +314,10 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
     // Add google analytics tag
     if let Some(ref ga) = book.get_google_analytics_id() {
         data.insert("google_analytics".to_owned(), json!(ga));
+    }
+
+    if book.get_mathjax_support() {
+        data.insert("mathjax_support".to_owned(), json!(true));
     }
 
     // Add check to see if there is an additional style

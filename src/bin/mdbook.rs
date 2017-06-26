@@ -9,7 +9,6 @@ use std::env;
 use std::ffi::OsStr;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
-
 use clap::{App, ArgMatches, AppSettings};
 
 pub mod build;

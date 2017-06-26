@@ -1,5 +1,6 @@
 extern crate serde_json;
 use std::path::PathBuf;
+use errors::*;
 
 /// The JSON configuration is **deprecated** and will be removed in the near future.
 /// Please migrate to the TOML configuration.
@@ -32,9 +33,9 @@ pub struct JsonConfig {
 /// assert_eq!(config.dest, Some(PathBuf::from("htmlbook")));
 /// ```
 impl JsonConfig {
-    pub fn from_json(input: &str) -> Result<Self, String> {
+    pub fn from_json(input: &str) -> Result<Self> {
         let config: JsonConfig = serde_json::from_str(input)
-                                        .map_err(|e| format!("Could not parse JSON: {}", e))?;
+                                        .chain_err(|| format!("Could not parse JSON"))?;
 
         return Ok(config);
     }

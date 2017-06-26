@@ -1,12 +1,10 @@
-use std::error::Error;
-
 use clap::{ArgMatches, SubCommand, App};
 use mdbook::MDBook;
-
+use mdbook::errors::*;
 use {get_book_dir, open};
 
 // Build command implementation
-pub fn build(args: &ArgMatches) -> Result<(), Box<Error>> {
+pub fn build(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
     let book = MDBook::new(&book_dir).read_config()?;
 
