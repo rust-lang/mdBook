@@ -18,7 +18,7 @@ pub struct JsonConfig {
 }
 
 
-/// Returns a JsonConfig from a JSON string
+/// Returns a `JsonConfig` from a JSON string
 ///
 /// ```
 /// # use mdbook::config::jsonconfig::JsonConfig;
@@ -35,8 +35,8 @@ pub struct JsonConfig {
 impl JsonConfig {
     pub fn from_json(input: &str) -> Result<Self> {
         let config: JsonConfig = serde_json::from_str(input)
-                                        .chain_err(|| format!("Could not parse JSON"))?;
+                                        .chain_err(|| "Could not parse JSON")?;
 
-        return Ok(config);
+        Ok(config)
     }
 }

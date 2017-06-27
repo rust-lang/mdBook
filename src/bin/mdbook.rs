@@ -264,7 +264,7 @@ mod serve {
             None => book,
         };
 
-        if let None = book.get_destination() {
+        if book.get_destination().is_none() {
             println!("The HTML renderer is not set up, impossible to serve the files.");
             std::process::exit(2);
         }
