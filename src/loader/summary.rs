@@ -1,9 +1,11 @@
-use std::error::Error;
+#![allow(dead_code, unused_variables)]
+
 use std::fmt::{self, Formatter, Display};
-use std::io::{Error as IoError, ErrorKind};
 use std::ops::{Deref, DerefMut};
 use std::path::PathBuf;
 use pulldown_cmark::{self, Event, Tag};
+
+use errors::*;
 
 
 /// Parse the text from a `SUMMARY.md` file into a sort of "recipe" to be
@@ -42,7 +44,7 @@ use pulldown_cmark::{self, Event, Tag};
 ///
 /// All other elements are unsupported and will be ignored at best or result in
 /// an error.
-pub fn parse_summary(summary: &str) -> Result<Summary, Box<Error>> {
+pub fn parse_summary(summary: &str) -> Result<Summary> {
     let parser = SummaryParser::new(summary);
     parser.parse()
 }
@@ -51,6 +53,9 @@ pub fn parse_summary(summary: &str) -> Result<Summary, Box<Error>> {
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Summary {
     title: Option<String>,
+    prefix_chapters: Vec<SummaryItem>,
+    numbered_chapters: Vec<SummaryItem>,
+    suffix_chapters: Vec<SummaryItem>,
 }
 
 /// A struct representing an entry in the `SUMMARY.md`, possibly with nested
@@ -61,6 +66,7 @@ pub struct Summary {
 struct Link {
     name: String,
     location: PathBuf,
+    number: Option<SectionNumber>,
     nested_items: Vec<SummaryItem>,
 }
 
@@ -153,28 +159,55 @@ impl<'a> SummaryParser<'a> {
     }
 
     /// Parse the text the `SummaryParser` was created with.
-    fn parse(mut self) -> Result<Summary, Box<Error>> {
+    fn parse(mut self) -> Result<Summary> {
         self.summary.title = self.parse_title();
 
         Ok(self.summary)
     }
 
-    fn step(&mut self) -> Result<(), Box<Error>> {
+    fn step(&mut self) -> Result<()> {
         let next_event = self.stream.next().expect("TODO: error-chain");
         trace!("[*] Current state = {:?}, Next Event = {:?}", self.state, next_event);
     
         match self.state {
-            State::Begin => self.step_start(next_event),
-            other => unimplemented!()
+            State::Begin => self.step_start(next_event)?,
+            State::PrefixChapters => self.step_prefix(next_event)?,
+            _ => unimplemented!()
         }
+
+        Ok(())
     }
 
     /// The very first state, we should see a `BeginParagraph` token or
     /// it's an error...
-    fn step_start(&mut self, event: Event<'a>) -> Result<(), Box<Error>> {
+    fn step_start(&mut self, event: Event<'a>) -> Result<()> {
         match event {
             Event::Start(Tag::Paragraph) => self.state = State::PrefixChapters,
-            other => panic!("Unexpected tag! {:?}", other),
+            other => bail!("Unexpected tag! {:?}", other),
+        }
+
+        Ok(())
+    }
+
+    /// In the second step we look out for links and horizontal rules to add
+    /// to the prefix.
+    fn step_prefix(&mut self, event: Event<'a>) -> Result<()> {
+        match event {
+            Event::Start(Tag::Link(location, _)) => {
+                let content = collect_events!(self.stream, Tag::Link(_, _));
+                let text = stringify_events(content);
+                let link = Link {
+                    name: text,
+                    location: PathBuf::from(location.as_ref()),
+                    number: None,
+                    nested_items: Vec::new(),
+                };
+                self.summary.prefix_chapters.push(SummaryItem::Link(link));
+            }
+
+            other => {
+                debug!("[*] Skipping unexpected token in summary: {:?}", other);
+            }
         }
 
         Ok(())
@@ -196,7 +229,7 @@ impl<'a> SummaryParser<'a> {
     }
 
     /// Parse a single item (`[Some Chapter Name](./path/to/chapter.md)`).
-    fn parse_item(&mut self) -> Result<Link, Box<Error>> {
+    fn parse_item(&mut self) -> Result<Link> {
         let next = self.stream.next();
 
         if let Some(Event::Start(Tag::Link(dest, _))) = next {
@@ -205,10 +238,11 @@ impl<'a> SummaryParser<'a> {
             Ok(Link {
                 name: stringify_events(content),
                 location: PathBuf::from(dest.to_string()),
+                number: None,
                 nested_items: Vec::new(),
             })
         } else {
-            Err(Box::new(IoError::new(ErrorKind::Other, format!("Expected a link, got {:?}", next))))
+            bail!("Expected a link, got {:?}", next)
         }
     }
 }
@@ -301,6 +335,7 @@ mod tests {
         let should_be = Link {
             name: String::from("A Chapter"),
             location: PathBuf::from("./path/to/chapter"),
+            number: None,
             nested_items: Vec::new(),
         };
 
@@ -332,5 +367,53 @@ mod tests {
         assert_eq!(parser.state, State::Begin);
         parser.step().unwrap();
         assert_eq!(parser.state, should_be);
+    }
+
+    #[test]
+    fn first_token_must_be_open_paragraph() {
+        let src = "hello world";
+
+        let mut parser = SummaryParser::new(src);
+        let _ = parser.stream.next(); // manually step past the Start Paragraph
+        assert!(parser.step().is_err());
+    }
+
+    #[test]
+    fn can_parse_prefix_chapter_links() {
+        let src = "[Hello World](./foo/bar/baz)";
+        let should_be = Link {
+            name: String::from("Hello World"),
+            location: PathBuf::from("./foo/bar/baz"),
+            number: None,
+            nested_items: Vec::new(),
+        };
+
+        let mut parser = SummaryParser::new(src);
+        parser.state = State::PrefixChapters;
+        assert!(parser.summary.prefix_chapters.is_empty());
+
+        let _ = parser.stream.next(); // manually step past the Start Paragraph
+        parser.step().unwrap();
+
+        assert_eq!(parser.summary.prefix_chapters.len(), 1);
+        assert_eq!(parser.summary.prefix_chapters[0], SummaryItem::Link(should_be));
+        assert_eq!(parser.state, State::PrefixChapters);
+    }
+
+    #[test]
+    fn can_parse_prefix_chapter_horizontal_rules() {
+        let src = "---";
+        let should_be = SummaryItem::Separator;
+
+        let mut parser = SummaryParser::new(src);
+        parser.state = State::PrefixChapters;
+        assert!(parser.summary.prefix_chapters.is_empty());
+
+        let _ = parser.stream.next(); // manually step past the Start Paragraph
+        parser.step().unwrap();
+
+        assert_eq!(parser.summary.prefix_chapters.len(), 1);
+        assert_eq!(parser.summary.prefix_chapters[0], should_be);
+        assert_eq!(parser.state, State::PrefixChapters);
     }
 }

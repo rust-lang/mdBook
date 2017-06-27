@@ -3,9 +3,9 @@
 #![deny(missing_docs)]
 
 use std::path::{Path, PathBuf};
-use std::error::Error;
 use std::fs::File;
 use std::io::Read;
+use errors::*;
 
 mod summary;
 
@@ -26,7 +26,7 @@ impl Loader {
     }
 
     /// Parse the `SUMMARY.md` file.
-    pub fn parse_summary(&self) -> Result<Summary, Box<Error>> {
+    pub fn parse_summary(&self) -> Result<Summary> {
         let path = self.source_directory.join("SUMMARY.md");
 
         let mut summary_content = String::new();
