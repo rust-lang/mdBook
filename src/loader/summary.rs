@@ -168,6 +168,7 @@ impl<'a> SummaryParser<'a> {
     fn step(&mut self) -> Result<()> {
         let next_event = self.stream.next().expect("TODO: error-chain");
         trace!("[*] Current state = {:?}, Next Event = {:?}", self.state, next_event);
+        println!("{:?}", next_event);
     
         match self.state {
             State::Begin => self.step_start(next_event)?,
@@ -191,6 +192,10 @@ impl<'a> SummaryParser<'a> {
 
     /// In the second step we look out for links and horizontal rules to add
     /// to the prefix.
+    ///
+    /// This state should only progress when it encounters a list. All other
+    /// events will either be separators (horizontal rule), prefix chapters
+    /// (the links), or skipped.
     fn step_prefix(&mut self, event: Event<'a>) -> Result<()> {
         match event {
             Event::Start(Tag::Link(location, _)) => {
@@ -202,7 +207,13 @@ impl<'a> SummaryParser<'a> {
                     number: None,
                     nested_items: Vec::new(),
                 };
+
+                debug!("[*] Found a prefix chapter, {:?}", link.name);
                 self.summary.prefix_chapters.push(SummaryItem::Link(link));
+            }
+            Event::End(Tag::Rule) => {
+                debug!("[*] Found a prefix chapter separator");
+                self.summary.prefix_chapters.push(SummaryItem::Separator);
             }
 
             other => {
