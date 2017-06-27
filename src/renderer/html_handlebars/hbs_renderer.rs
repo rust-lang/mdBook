@@ -110,10 +110,6 @@ impl HtmlHandlebars {
         info!(
             "[*] Creating index.html from {:?} ✓",
             book.get_destination()
-                .expect(
-                    "If the HTML renderer is called, one would assume the HtmlConfig is \
-                                            set... (4)",
-                )
                 .join(&ch.path.with_extension("html"))
         );
 
@@ -252,9 +248,7 @@ impl Renderer for HtmlHandlebars {
         // Print version
         let mut print_content = String::new();
 
-        let destination = book.get_destination().expect(
-            "If the HTML renderer is called, one would assume the HtmlConfig is set... (2)",
-        );
+        let destination = book.get_destination();
 
         debug!("[*]: Check if destination directory exists");
         if fs::create_dir_all(&destination).is_err() {

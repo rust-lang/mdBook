@@ -138,11 +138,9 @@ impl MDBook {
 
         {
 
-            if let Some(htmlconfig) = self.config.get_html_config() {
-                if !htmlconfig.get_destination().exists() {
-                    debug!("[*]: {:?} does not exist, trying to create directory", htmlconfig.get_destination());
-                    fs::create_dir_all(htmlconfig.get_destination())?;
-                }
+            if !self.get_destination().exists() {
+                debug!("[*]: {:?} does not exist, trying to create directory", self.get_destination());
+                fs::create_dir_all(self.get_destination())?;
             }
 
 
@@ -203,11 +201,7 @@ impl MDBook {
     pub fn create_gitignore(&self) {
         let gitignore = self.get_gitignore();
 
-        // If the HTML renderer is not set, return
-        if self.config.get_html_config().is_none() { return; }
-
         let destination = self.config.get_html_config()
-                                     .expect("The HtmlConfig does exist, checked just before")
                                      .get_destination();
 
         // Check that the gitignore does not extist and that the destination path begins with the root path
@@ -243,9 +237,7 @@ impl MDBook {
         self.init()?;
 
         // Clean output directory
-        if let Some(htmlconfig) = self.config.get_html_config() {
-            utils::fs::remove_dir_content(htmlconfig.get_destination())?;
-        }
+        utils::fs::remove_dir_content(self.config.get_html_config().get_destination())?;
 
         self.renderer.render(self)
     }
@@ -258,44 +250,41 @@ impl MDBook {
     pub fn copy_theme(&self) -> Result<()> {
         debug!("[fn]: copy_theme");
 
-        if let Some(htmlconfig) = self.config.get_html_config() {
-
-            let themedir = htmlconfig.get_theme();
-            if !themedir.exists() {
-                debug!("[*]: {:?} does not exist, trying to create directory", themedir);
-                fs::create_dir(&themedir)?;
-            }
-
-            // index.hbs
-            let mut index = File::create(&themedir.join("index.hbs"))?;
-            index.write_all(theme::INDEX)?;
-
-            // book.css
-            let mut css = File::create(&themedir.join("book.css"))?;
-            css.write_all(theme::CSS)?;
-
-            // favicon.png
-            let mut favicon = File::create(&themedir.join("favicon.png"))?;
-            favicon.write_all(theme::FAVICON)?;
-
-            // book.js
-            let mut js = File::create(&themedir.join("book.js"))?;
-            js.write_all(theme::JS)?;
-
-            // highlight.css
-            let mut highlight_css = File::create(&themedir.join("highlight.css"))?;
-            highlight_css.write_all(theme::HIGHLIGHT_CSS)?;
-
-            // highlight.js
-            let mut highlight_js = File::create(&themedir.join("highlight.js"))?;
-            highlight_js.write_all(theme::HIGHLIGHT_JS)?;
+        let themedir = self.config.get_html_config().get_theme();
+        if !themedir.exists() {
+            debug!("[*]: {:?} does not exist, trying to create directory", themedir);
+            fs::create_dir(&themedir)?;
         }
+
+        // index.hbs
+        let mut index = File::create(&themedir.join("index.hbs"))?;
+        index.write_all(theme::INDEX)?;
+
+        // book.css
+        let mut css = File::create(&themedir.join("book.css"))?;
+        css.write_all(theme::CSS)?;
+
+        // favicon.png
+        let mut favicon = File::create(&themedir.join("favicon.png"))?;
+        favicon.write_all(theme::FAVICON)?;
+
+        // book.js
+        let mut js = File::create(&themedir.join("book.js"))?;
+        js.write_all(theme::JS)?;
+
+        // highlight.css
+        let mut highlight_css = File::create(&themedir.join("highlight.css"))?;
+        highlight_css.write_all(theme::HIGHLIGHT_CSS)?;
+
+        // highlight.js
+        let mut highlight_js = File::create(&themedir.join("highlight.js"))?;
+        highlight_js.write_all(theme::HIGHLIGHT_JS)?;
 
         Ok(())
     }
 
     pub fn write_file<P: AsRef<Path>>(&self, filename: P, content: &[u8]) -> Result<()> {
-        let path = self.get_destination().ok_or_else(|| String::from("HtmlConfig not set, could not find a destination"))?
+        let path = self.get_destination()
             .join(filename);
 
         utils::fs::create_file(&path)?
@@ -392,22 +381,15 @@ impl MDBook {
 
     pub fn with_destination<T: Into<PathBuf>>(mut self, destination: T) -> Self {
         let root = self.config.get_root().to_owned();
-        if let Some(htmlconfig) = self.config.get_mut_html_config() {
-            htmlconfig.set_destination(&root, &destination.into());
-        } else {
-            error!("There is no HTML renderer set...");
-        }
-
+        self.config.get_mut_html_config()
+            .set_destination(&root, &destination.into());
         self
     }
 
 
-    pub fn get_destination(&self) -> Option<&Path> {
-        if let Some(htmlconfig) = self.config.get_html_config() {
-            return Some(htmlconfig.get_destination());
-        }
-
-        None
+    pub fn get_destination(&self) -> &Path {
+        self.config.get_html_config()
+            .get_destination()
     }
 
     pub fn with_source<T: Into<PathBuf>>(mut self, source: T) -> Self {
@@ -453,94 +435,61 @@ impl MDBook {
 
     pub fn with_theme_path<T: Into<PathBuf>>(mut self, theme_path: T) -> Self {
         let root = self.config.get_root().to_owned();
-        if let Some(htmlconfig) = self.config.get_mut_html_config() {
-            htmlconfig.set_theme(&root, &theme_path.into());
-        } else {
-            error!("There is no HTML renderer set...");
-        }
+        self.config.get_mut_html_config()
+            .set_theme(&root, &theme_path.into());
         self
     }
 
-    pub fn get_theme_path(&self) -> Option<&Path> {
-        if let Some(htmlconfig) = self.config.get_html_config() {
-            return Some(htmlconfig.get_theme());
-        }
-
-        None
+    pub fn get_theme_path(&self) -> &Path {
+        self.config.get_html_config()
+            .get_theme()
     }
 
     pub fn with_curly_quotes(mut self, curly_quotes: bool) -> Self {
-        if let Some(htmlconfig) = self.config.get_mut_html_config() {
-            htmlconfig.set_curly_quotes(curly_quotes);
-        } else {
-            error!("There is no HTML renderer set...");
-        }
+        self.config.get_mut_html_config()
+            .set_curly_quotes(curly_quotes);
         self
     }
 
     pub fn get_curly_quotes(&self) -> bool {
-        if let Some(htmlconfig) = self.config.get_html_config() {
-            return htmlconfig.get_curly_quotes();
-        }
-
-        false
+        self.config.get_html_config()
+            .get_curly_quotes()
     }
 
     pub fn with_mathjax_support(mut self, mathjax_support: bool) -> Self {
-        if let Some(htmlconfig) = self.config.get_mut_html_config() {
-            htmlconfig.set_mathjax_support(mathjax_support);
-        } else {
-            error!("There is no HTML renderer set...");
-        }
+        self.config.get_mut_html_config()
+            .set_mathjax_support(mathjax_support);
         self
     }
 
     pub fn get_mathjax_support(&self) -> bool {
-        if let Some(htmlconfig) = self.config.get_html_config() {
-            return htmlconfig.get_mathjax_support();
-        }
-
-        false
+        self.config.get_html_config()
+            .get_mathjax_support()
     }
 
     pub fn get_google_analytics_id(&self) -> Option<String> {
-        if let Some(htmlconfig) = self.config.get_html_config() {
-            return htmlconfig.get_google_analytics_id();
-        }
-
-        None
+        self.config.get_html_config()
+            .get_google_analytics_id()
     }
 
     pub fn has_additional_js(&self) -> bool {
-        if let Some(htmlconfig) = self.config.get_html_config() {
-            return htmlconfig.has_additional_js();
-        }
-
-        false
+        self.config.get_html_config()
+            .has_additional_js()
     }
 
     pub fn get_additional_js(&self) -> &[PathBuf] {
-        if let Some(htmlconfig) = self.config.get_html_config() {
-            return htmlconfig.get_additional_js();
-        }
-
-        &[]
+        self.config.get_html_config()
+            .get_additional_js()
     }
 
     pub fn has_additional_css(&self) -> bool {
-        if let Some(htmlconfig) = self.config.get_html_config() {
-            return htmlconfig.has_additional_css();
-        }
-
-        false
+        self.config.get_html_config()
+            .has_additional_css()
     }
 
     pub fn get_additional_css(&self) -> &[PathBuf] {
-        if let Some(htmlconfig) = self.config.get_html_config() {
-            return htmlconfig.get_additional_css();
-        }
-
-        &[]
+        self.config.get_html_config()
+            .get_additional_css()
     }
 
     // Construct book

@@ -46,7 +46,7 @@ pub struct Theme {
 }
 
 impl Theme {
-    pub fn new(src: Option<&Path>) -> Self {
+    pub fn new(src: &Path) -> Self {
 
         // Default theme
         let mut theme = Theme {
@@ -64,11 +64,9 @@ impl Theme {
         };
 
         // Check if the given path exists
-        if src.is_none() || !src.unwrap().exists() || !src.unwrap().is_dir() {
+        if !src.exists() || !src.is_dir() {
             return theme;
         }
-
-        let src = src.unwrap();
 
         // Check for individual files if they exist
 

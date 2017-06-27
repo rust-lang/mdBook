@@ -20,14 +20,14 @@ fn do_not_overwrite_unspecified_config_values() {
 
     assert_eq!(book.get_root(), dir.path());
     assert_eq!(book.get_source(), dir.path().join("bar"));
-    assert_eq!(book.get_destination().unwrap(), dir.path().join("baz"));
+    assert_eq!(book.get_destination(), dir.path().join("baz"));
 
     // Test when trying to read a config file that does not exist
     let book = book.read_config().expect("Error reading the config file");
 
     assert_eq!(book.get_root(), dir.path());
     assert_eq!(book.get_source(), dir.path().join("bar"));
-    assert_eq!(book.get_destination().unwrap(), dir.path().join("baz"));
+    assert_eq!(book.get_destination(), dir.path().join("baz"));
     assert_eq!(book.get_mathjax_support(), true);
 
     // Try with a partial config file
@@ -40,7 +40,7 @@ fn do_not_overwrite_unspecified_config_values() {
 
     assert_eq!(book.get_root(), dir.path());
     assert_eq!(book.get_source(), dir.path().join("barbaz"));
-    assert_eq!(book.get_destination().unwrap(), dir.path().join("baz"));
+    assert_eq!(book.get_destination(), dir.path().join("baz"));
     assert_eq!(book.get_mathjax_support(), true);
 }
 
