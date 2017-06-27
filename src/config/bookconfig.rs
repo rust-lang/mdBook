@@ -5,7 +5,7 @@ use super::tomlconfig::TomlConfig;
 use super::jsonconfig::JsonConfig;
 
 /// Configuration struct containing all the configuration options available in mdBook.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BookConfig {
     root: PathBuf,
     source: PathBuf,
@@ -17,7 +17,7 @@ pub struct BookConfig {
     multilingual: bool,
     indent_spaces: i32,
 
-    html_config: Option<HtmlConfig>,
+    html_config: HtmlConfig,
 }
 
 impl BookConfig {
@@ -33,7 +33,7 @@ impl BookConfig {
     ///
     /// assert_eq!(config.get_root(), &root);
     /// assert_eq!(config.get_source(), PathBuf::from("directory/to/my/book/src"));
-    /// assert_eq!(config.get_html_config(), Some(&HtmlConfig::new(PathBuf::from("directory/to/my/book"))));
+    /// assert_eq!(config.get_html_config(), &HtmlConfig::new(PathBuf::from("directory/to/my/book")));
     /// ```
     pub fn new<T: Into<PathBuf>>(root: T) -> Self {
         let root: PathBuf = root.into();
@@ -50,7 +50,7 @@ impl BookConfig {
             multilingual: false,
             indent_spaces: 4,
 
-            html_config: Some(htmlconfig),
+            html_config: htmlconfig,
         }
     }
 
@@ -109,9 +109,8 @@ impl BookConfig {
 
         if let Some(tomlhtmlconfig) = tomlconfig.output.and_then(|o| o.html) {
             let root = self.root.clone();
-            if let Some(htmlconfig) = self.get_mut_html_config() {
-                htmlconfig.fill_from_tomlconfig(root, tomlhtmlconfig);
-            }
+            self.get_mut_html_config()
+                .fill_from_tomlconfig(root, tomlhtmlconfig);
         }
 
         self
@@ -148,16 +147,14 @@ impl BookConfig {
 
         if let Some(d) = jsonconfig.dest {
             let root = self.get_root().to_owned();
-            if let Some(htmlconfig) = self.get_mut_html_config() {
-                htmlconfig.set_destination(&root, &d);
-            }
+            self.get_mut_html_config()
+                .set_destination(&root, &d);
         }
 
         if let Some(d) = jsonconfig.theme_path {
             let root = self.get_root().to_owned();
-            if let Some(htmlconfig) = self.get_mut_html_config() {
-                htmlconfig.set_theme(&root, &d);
-            }
+            self.get_mut_html_config()
+                .set_theme(&root, &d);
         }
 
         self
@@ -217,16 +214,16 @@ impl BookConfig {
     }
 
     pub fn  set_html_config(&mut self, htmlconfig: HtmlConfig) -> &mut Self {
-        self.html_config = Some(htmlconfig);
+        self.html_config = htmlconfig;
         self
     }
 
     /// Returns the configuration for the HTML renderer or None of there isn't any
-    pub fn get_html_config(&self) -> Option<&HtmlConfig> {
-        self.html_config.as_ref()
+    pub fn get_html_config(&self) -> &HtmlConfig {
+        &self.html_config
     }
 
-    pub fn get_mut_html_config(&mut self) -> Option<&mut HtmlConfig> {
-        self.html_config.as_mut()
+    pub fn get_mut_html_config(&mut self) -> &mut HtmlConfig {
+        &mut self.html_config
     }
 }

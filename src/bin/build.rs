@@ -34,10 +34,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     book.build()?;
 
-    if let Some(d) = book.get_destination() {
-        if args.is_present("open") {
-            open(d.join("index.html"));
-        }
+    if args.is_present("open") {
+        open(book.get_destination().join("index.html"));
     }
 
     Ok(())

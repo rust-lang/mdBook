@@ -66,7 +66,7 @@ fn from_json_destination() {
     let parsed = JsonConfig::from_json(json).expect("This should parse");
     let config = BookConfig::from_jsonconfig("root", parsed);
 
-    let htmlconfig = config.get_html_config().expect("There should be an HtmlConfig");
+    let htmlconfig = config.get_html_config();
 
     assert_eq!(htmlconfig.get_destination(), PathBuf::from("root/htmlbook"));
 }
@@ -81,7 +81,7 @@ fn from_json_output_html_theme() {
     let parsed = JsonConfig::from_json(json).expect("This should parse");
     let config = BookConfig::from_jsonconfig("root", parsed);
 
-    let htmlconfig = config.get_html_config().expect("There should be an HtmlConfig");
+    let htmlconfig = config.get_html_config();
 
     assert_eq!(htmlconfig.get_theme(), &PathBuf::from("root/theme"));
 }

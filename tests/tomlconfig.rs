@@ -68,7 +68,7 @@ fn from_toml_output_html_destination() {
     let parsed = TomlConfig::from_toml(toml).expect("This should parse");
     let config = BookConfig::from_tomlconfig("root", parsed);
 
-    let htmlconfig = config.get_html_config().expect("There should be an HtmlConfig");
+    let htmlconfig = config.get_html_config();
 
     assert_eq!(htmlconfig.get_destination(), PathBuf::from("root/htmlbook"));
 }
@@ -82,7 +82,7 @@ fn from_toml_output_html_theme() {
     let parsed = TomlConfig::from_toml(toml).expect("This should parse");
     let config = BookConfig::from_tomlconfig("root", parsed);
 
-    let htmlconfig = config.get_html_config().expect("There should be an HtmlConfig");
+    let htmlconfig = config.get_html_config();
 
     assert_eq!(htmlconfig.get_theme(), &PathBuf::from("root/theme"));
 }
@@ -96,7 +96,7 @@ fn from_toml_output_html_curly_quotes() {
     let parsed = TomlConfig::from_toml(toml).expect("This should parse");
     let config = BookConfig::from_tomlconfig("root", parsed);
 
-    let htmlconfig = config.get_html_config().expect("There should be an HtmlConfig");
+    let htmlconfig = config.get_html_config();
 
     assert_eq!(htmlconfig.get_curly_quotes(), true);
 }
@@ -110,7 +110,7 @@ fn from_toml_output_html_mathjax_support() {
     let parsed = TomlConfig::from_toml(toml).expect("This should parse");
     let config = BookConfig::from_tomlconfig("root", parsed);
 
-    let htmlconfig = config.get_html_config().expect("There should be an HtmlConfig");
+    let htmlconfig = config.get_html_config();
 
     assert_eq!(htmlconfig.get_mathjax_support(), true);
 }
@@ -124,7 +124,7 @@ fn from_toml_output_html_google_analytics() {
     let parsed = TomlConfig::from_toml(toml).expect("This should parse");
     let config = BookConfig::from_tomlconfig("root", parsed);
 
-    let htmlconfig = config.get_html_config().expect("There should be an HtmlConfig");
+    let htmlconfig = config.get_html_config();
 
     assert_eq!(htmlconfig.get_google_analytics_id().expect("the google-analytics key was provided"), String::from("123456"));
 }
@@ -138,7 +138,7 @@ fn from_toml_output_html_additional_stylesheet() {
     let parsed = TomlConfig::from_toml(toml).expect("This should parse");
     let config = BookConfig::from_tomlconfig("root", parsed);
 
-    let htmlconfig = config.get_html_config().expect("There should be an HtmlConfig");
+    let htmlconfig = config.get_html_config();
 
     assert_eq!(htmlconfig.get_additional_css(), &[PathBuf::from("root/custom.css"), PathBuf::from("root/two/custom.css")]);
 }
@@ -152,7 +152,7 @@ fn from_toml_output_html_additional_scripts() {
     let parsed = TomlConfig::from_toml(toml).expect("This should parse");
     let config = BookConfig::from_tomlconfig("root", parsed);
 
-    let htmlconfig = config.get_html_config().expect("There should be an HtmlConfig");
+    let htmlconfig = config.get_html_config();
 
     assert_eq!(htmlconfig.get_additional_js(), &[PathBuf::from("root/custom.js"), PathBuf::from("root/two/custom.js")]);
 }

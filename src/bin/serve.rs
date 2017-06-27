@@ -40,11 +40,6 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         None => book,
     };
 
-    if let None = book.get_destination() {
-        println!("The HTML renderer is not set up, impossible to serve the files.");
-        std::process::exit(2);
-    }
-
     if args.is_present("curly-quotes") {
         book = book.with_curly_quotes(true);
     }
@@ -79,8 +74,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     book.build()?;
 
-    let mut chain = Chain::new(staticfile::Static::new(book.get_destination()
-                                                           .expect("destination is present, checked before")));
+    let mut chain = Chain::new(staticfile::Static::new(book.get_destination()));
     chain.link_after(ErrorRecover);
     let _iron = Iron::new(chain).http(&*address).unwrap();
 

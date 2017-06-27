@@ -37,9 +37,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     if args.is_present("open") {
         book.build()?;
-        if let Some(d) = book.get_destination() {
-            open(d.join("index.html"));
-        }
+        open(book.get_destination().join("index.html"));
     }
 
     trigger_on_change(&mut book, |path, book| {
@@ -78,9 +76,7 @@ pub fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
     };
 
     // Add the theme directory to the watcher
-    if let Some(t) = book.get_theme_path() {
-        watcher.watch(t, Recursive).unwrap_or_default();
-    }
+    watcher.watch(book.get_theme_path(), Recursive).unwrap_or_default();
 
 
     // Add the book.{json,toml} file to the watcher if it exists, because it's not
