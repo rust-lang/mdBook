@@ -21,11 +21,10 @@ impl HelperDef for RenderToc {
                               .map_err(|_| RenderError::new("Could not decode the JSON data"))
                       })?;
         let current = rc.evaluate_absolute("path")?
-            .as_str()
-            .ok_or(RenderError::new("Type error for `path`, string expected"))?
+            .as_str().ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
             .replace("\"", "");
 
-        rc.writer.write_all("<ul class=\"chapter\">".as_bytes())?;
+        rc.writer.write_all(b"<ul class=\"chapter\">")?;
 
         let mut current_level = 1;
 
@@ -34,42 +33,42 @@ impl HelperDef for RenderToc {
             // Spacer
             if item.get("spacer").is_some() {
                 rc.writer
-                    .write_all("<li class=\"spacer\"></li>".as_bytes())?;
+                    .write_all(b"<li class=\"spacer\"></li>")?;
                 continue;
             }
 
             let level = if let Some(s) = item.get("section") {
-                s.matches(".").count()
+                s.matches('.').count()
             } else {
                 1
             };
 
             if level > current_level {
                 while level > current_level {
-                    rc.writer.write_all("<li>".as_bytes())?;
-                    rc.writer.write_all("<ul class=\"section\">".as_bytes())?;
+                    rc.writer.write_all(b"<li>")?;
+                    rc.writer.write_all(b"<ul class=\"section\">")?;
                     current_level += 1;
                 }
-                rc.writer.write_all("<li>".as_bytes())?;
+                rc.writer.write_all(b"<li>")?;
             } else if level < current_level {
                 while level < current_level {
-                    rc.writer.write_all("</ul>".as_bytes())?;
-                    rc.writer.write_all("</li>".as_bytes())?;
+                    rc.writer.write_all(b"</ul>")?;
+                    rc.writer.write_all(b"</li>")?;
                     current_level -= 1;
                 }
-                rc.writer.write_all("<li>".as_bytes())?;
+                rc.writer.write_all(b"<li>")?;
             } else {
-                rc.writer.write_all("<li".as_bytes())?;
+                rc.writer.write_all(b"<li")?;
                 if item.get("section").is_none() {
-                    rc.writer.write_all(" class=\"affix\"".as_bytes())?;
+                    rc.writer.write_all(b" class=\"affix\"")?;
                 }
-                rc.writer.write_all(">".as_bytes())?;
+                rc.writer.write_all(b">")?;
             }
 
             // Link
             let path_exists = if let Some(path) = item.get("path") {
                 if !path.is_empty() {
-                    rc.writer.write_all("<a href=\"".as_bytes())?;
+                    rc.writer.write_all(b"<a href=\"")?;
 
                     let tmp = Path::new(item.get("path").expect("Error: path should be Some(_)"))
                         .with_extension("html")
@@ -80,13 +79,13 @@ impl HelperDef for RenderToc {
 
                     // Add link
                     rc.writer.write_all(tmp.as_bytes())?;
-                    rc.writer.write_all("\"".as_bytes())?;
+                    rc.writer.write_all(b"\"")?;
 
                     if path == &current {
-                        rc.writer.write_all(" class=\"active\"".as_bytes())?;
+                        rc.writer.write_all(b" class=\"active\"")?;
                     }
 
-                    rc.writer.write_all(">".as_bytes())?;
+                    rc.writer.write_all(b">")?;
                     true
                 } else {
                     false
@@ -97,9 +96,9 @@ impl HelperDef for RenderToc {
 
             // Section does not necessarily exist
             if let Some(section) = item.get("section") {
-                rc.writer.write_all("<strong>".as_bytes())?;
+                rc.writer.write_all(b"<strong>")?;
                 rc.writer.write_all(section.as_bytes())?;
-                rc.writer.write_all("</strong> ".as_bytes())?;
+                rc.writer.write_all(b"</strong> ")?;
             }
 
             if let Some(name) = item.get("name") {
@@ -123,19 +122,19 @@ impl HelperDef for RenderToc {
             }
 
             if path_exists {
-                rc.writer.write_all("</a>".as_bytes())?;
+                rc.writer.write_all(b"</a>")?;
             }
 
-            rc.writer.write_all("</li>".as_bytes())?;
+            rc.writer.write_all(b"</li>")?;
 
         }
         while current_level > 1 {
-            rc.writer.write_all("</ul>".as_bytes())?;
-            rc.writer.write_all("</li>".as_bytes())?;
+            rc.writer.write_all(b"</ul>")?;
+            rc.writer.write_all(b"</li>")?;
             current_level -= 1;
         }
 
-        rc.writer.write_all("</ul>".as_bytes())?;
+        rc.writer.write_all(b"</ul>")?;
         Ok(())
     }
 }

@@ -77,7 +77,7 @@ impl HtmlHandlebars {
                     ctx.book.write_file(filename, &rendered.into_bytes())?;
 
                     if ctx.is_index {
-                        self.render_index(&ctx.book, ch, &ctx.destination)?;
+                        self.render_index(ctx.book, ch, &ctx.destination)?;
                     }
                 }
             },
@@ -121,10 +121,10 @@ impl HtmlHandlebars {
     }
 
     fn post_process(&self, rendered: String) -> String {
-        let rendered = build_header_links(rendered, "print.html");
-        let rendered = fix_anchor_links(rendered, "print.html");
-        let rendered = fix_code_blocks(rendered);
-        let rendered = add_playpen_pre(rendered);
+        let rendered = build_header_links(&rendered, "print.html");
+        let rendered = fix_anchor_links(&rendered, "print.html");
+        let rendered = fix_code_blocks(&rendered);
+        let rendered = add_playpen_pre(&rendered);
 
         rendered
     }
@@ -293,7 +293,7 @@ impl Renderer for HtmlHandlebars {
         self.copy_additional_css_and_js(book)?;
 
         // Copy all remaining files
-        utils::fs::copy_files_except_ext(book.get_source(), &destination, true, &["md"])?;
+        utils::fs::copy_files_except_ext(book.get_source(), destination, true, &["md"])?;
 
         Ok(())
     }
@@ -399,12 +399,12 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
 
 /// Goes through the rendered HTML, making sure all header tags are wrapped in
 /// an anchor so people can link to sections directly.
-fn build_header_links(html: String, filename: &str) -> String {
+fn build_header_links(html: &str, filename: &str) -> String {
     let regex = Regex::new(r"<h(\d)>(.*?)</h\d>").unwrap();
     let mut id_counter = HashMap::new();
 
     regex
-        .replace_all(&html, |caps: &Captures| {
+        .replace_all(html, |caps: &Captures| {
             let level = caps[1].parse().expect(
                 "Regex should ensure we only ever get numbers here",
             );
@@ -477,10 +477,10 @@ fn id_from_content(content: &str) -> String {
 // anchors to the same page (href="#anchor") do not work because of
 // <base href="../"> pointing to the root folder. This function *fixes*
 // that in a very inelegant way
-fn fix_anchor_links(html: String, filename: &str) -> String {
+fn fix_anchor_links(html: &str, filename: &str) -> String {
     let regex = Regex::new(r##"<a([^>]+)href="#([^"]+)"([^>]*)>"##).unwrap();
     regex
-        .replace_all(&html, |caps: &Captures| {
+        .replace_all(html, |caps: &Captures| {
             let before = &caps[1];
             let anchor = &caps[2];
             let after = &caps[3];
@@ -505,10 +505,10 @@ fn fix_anchor_links(html: String, filename: &str) -> String {
 // }
 // ```
 // This function replaces all commas by spaces in the code block classes
-fn fix_code_blocks(html: String) -> String {
+fn fix_code_blocks(html: &str) -> String {
     let regex = Regex::new(r##"<code([^>]+)class="([^"]+)"([^>]*)>"##).unwrap();
     regex
-        .replace_all(&html, |caps: &Captures| {
+        .replace_all(html, |caps: &Captures| {
             let before = &caps[1];
             let classes = &caps[2].replace(",", " ");
             let after = &caps[3];
@@ -518,10 +518,10 @@ fn fix_code_blocks(html: String) -> String {
         .into_owned()
 }
 
-fn add_playpen_pre(html: String) -> String {
+fn add_playpen_pre(html: &str) -> String {
     let regex = Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap();
     regex
-        .replace_all(&html, |caps: &Captures| {
+        .replace_all(html, |caps: &Captures| {
             let text = &caps[1];
             let classes = &caps[2];
             let code = &caps[3];
@@ -547,7 +547,7 @@ fn add_playpen_pre(html: String) -> String {
                 }
             } else {
                 // not language-rust, so no-op
-                format!("{}", text)
+                text.to_owned()
             }
         })
         .into_owned()
@@ -602,7 +602,7 @@ mod tests {
         ];
 
         for (src, should_be) in inputs {
-            let got = build_header_links(src.to_string(), "bar.rs");
+            let got = build_header_links(src, "bar.rs");
             assert_eq!(got, should_be);
         }
     }

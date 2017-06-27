@@ -247,7 +247,7 @@ impl MDBook {
             utils::fs::remove_dir_content(htmlconfig.get_destination())?;
         }
 
-        self.renderer.render(&self)
+        self.renderer.render(self)
     }
 
 
@@ -295,8 +295,7 @@ impl MDBook {
     }
 
     pub fn write_file<P: AsRef<Path>>(&self, filename: P, content: &[u8]) -> Result<()> {
-        let path = self.get_destination()
-            .ok_or(String::from("HtmlConfig not set, could not find a destination"))?
+        let path = self.get_destination().ok_or_else(|| String::from("HtmlConfig not set, could not find a destination"))?
             .join(filename);
 
         utils::fs::create_file(&path)?

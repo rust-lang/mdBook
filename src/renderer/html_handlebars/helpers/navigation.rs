@@ -18,8 +18,7 @@ pub fn previous(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(
                   })?;
 
     let current = rc.evaluate_absolute("path")?
-        .as_str()
-        .ok_or(RenderError::new("Type error for `path`, string expected"))?
+        .as_str().ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
         .replace("\"", "");
 
     let mut previous: Option<BTreeMap<String, String>> = None;
@@ -41,8 +40,7 @@ pub fn previous(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(
 
                         // Chapter title
                         previous
-                            .get("name")
-                            .ok_or(RenderError::new("No title found for chapter in JSON data"))
+                            .get("name").ok_or_else(|| RenderError::new("No title found for chapter in JSON data"))
                             .and_then(|n| {
                                           previous_chapter.insert("title".to_owned(), json!(n));
                                           Ok(())
@@ -51,13 +49,11 @@ pub fn previous(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(
 
                         // Chapter link
                         previous
-                            .get("path")
-                            .ok_or(RenderError::new("No path found for chapter in JSON data"))
+                            .get("path").ok_or_else(|| RenderError::new("No path found for chapter in JSON data"))
                             .and_then(|p| {
                                 Path::new(p)
                                     .with_extension("html")
-                                    .to_str()
-                                    .ok_or(RenderError::new("Link could not be converted to str"))
+                                    .to_str().ok_or_else(|| RenderError::new("Link could not be converted to str"))
                                     .and_then(|p| {
                                                   previous_chapter
                                                       .insert("link".to_owned(), json!(p.replace("\\", "/")));
@@ -68,8 +64,7 @@ pub fn previous(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(
 
                         debug!("[*]: Render template");
                         // Render template
-                        _h.template()
-                            .ok_or(RenderError::new("Error with the handlebars template"))
+                        _h.template().ok_or_else(|| RenderError::new("Error with the handlebars template"))
                             .and_then(|t| {
                                           let mut local_rc = rc.with_context(Context::wraps(&previous_chapter));
                                           t.render(r, &mut local_rc)
@@ -101,8 +96,7 @@ pub fn next(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), R
                           .map_err(|_| RenderError::new("Could not decode the JSON data"))
                   })?;
     let current = rc.evaluate_absolute("path")?
-        .as_str()
-        .ok_or(RenderError::new("Type error for `path`, string expected"))?
+        .as_str().ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
         .replace("\"", "");
 
     let mut previous: Option<BTreeMap<String, String>> = None;
@@ -118,8 +112,7 @@ pub fn next(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), R
                 if let Some(previous) = previous {
 
                     let previous_path = previous
-                        .get("path")
-                        .ok_or(RenderError::new("No path found for chapter in JSON data"))?;
+                        .get("path").ok_or_else(|| RenderError::new("No path found for chapter in JSON data"))?;
 
                     if previous_path == &current {
 
@@ -128,8 +121,7 @@ pub fn next(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), R
                         // Create new BTreeMap to extend the context: 'title' and 'link'
                         let mut next_chapter = BTreeMap::new();
 
-                        item.get("name")
-                            .ok_or(RenderError::new("No title found for chapter in JSON data"))
+                        item.get("name").ok_or_else(|| RenderError::new("No title found for chapter in JSON data"))
                             .and_then(|n| {
                                           next_chapter.insert("title".to_owned(), json!(n));
                                           Ok(())
@@ -137,8 +129,7 @@ pub fn next(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), R
 
                         Path::new(path)
                             .with_extension("html")
-                            .to_str()
-                            .ok_or(RenderError::new("Link could not converted to str"))
+                            .to_str().ok_or_else(|| RenderError::new("Link could not converted to str"))
                             .and_then(|l| {
                                           debug!("[*]: Inserting link: {:?}", l);
                                           // Hack for windows who tends to use `\` as separator instead of `/`
@@ -149,8 +140,7 @@ pub fn next(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), R
                         debug!("[*]: Render template");
 
                         // Render template
-                        _h.template()
-                            .ok_or(RenderError::new("Error with the handlebars template"))
+                        _h.template().ok_or_else(|| RenderError::new("Error with the handlebars template"))
                             .and_then(|t| {
                                           let mut local_rc = rc.with_context(Context::wraps(&next_chapter));
                                           t.render(r, &mut local_rc)
