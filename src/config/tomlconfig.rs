@@ -31,7 +31,7 @@ pub struct TomlHtmlConfig {
     pub additional_js: Option<Vec<PathBuf>>,
 }
 
-/// Returns a TomlConfig from a TOML string
+/// Returns a `TomlConfig` from a TOML string
 ///
 /// ```
 /// # use mdbook::config::tomlconfig::TomlConfig;
@@ -49,7 +49,7 @@ impl TomlConfig {
         let config: TomlConfig = toml::from_str(input)
                                         .chain_err(|| "Could not parse TOML")?;
         
-        return Ok(config);
+        Ok(config)
     }
 }
 

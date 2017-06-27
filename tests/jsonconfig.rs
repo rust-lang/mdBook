@@ -11,7 +11,7 @@ fn from_json_source() {
         "src": "source"
     }"#;
 
-    let parsed = JsonConfig::from_json(&json).expect("This should parse");
+    let parsed = JsonConfig::from_json(json).expect("This should parse");
     let config = BookConfig::from_jsonconfig("root", parsed);
 
     assert_eq!(config.get_source(), PathBuf::from("root/source"));
@@ -24,7 +24,7 @@ fn from_json_title() {
         "title": "Some title"
     }"#;
 
-    let parsed = JsonConfig::from_json(&json).expect("This should parse");
+    let parsed = JsonConfig::from_json(json).expect("This should parse");
     let config = BookConfig::from_jsonconfig("root", parsed);
 
     assert_eq!(config.get_title(), "Some title");
@@ -37,7 +37,7 @@ fn from_json_description() {
         "description": "This is a description"
     }"#;
 
-    let parsed = JsonConfig::from_json(&json).expect("This should parse");
+    let parsed = JsonConfig::from_json(json).expect("This should parse");
     let config = BookConfig::from_jsonconfig("root", parsed);
 
     assert_eq!(config.get_description(), "This is a description");
@@ -50,7 +50,7 @@ fn from_json_author() {
         "author": "John Doe"
     }"#;
 
-    let parsed = JsonConfig::from_json(&json).expect("This should parse");
+    let parsed = JsonConfig::from_json(json).expect("This should parse");
     let config = BookConfig::from_jsonconfig("root", parsed);
 
     assert_eq!(config.get_authors(), &[String::from("John Doe")]);
@@ -63,7 +63,7 @@ fn from_json_destination() {
         "dest": "htmlbook"
     }"#;
 
-    let parsed = JsonConfig::from_json(&json).expect("This should parse");
+    let parsed = JsonConfig::from_json(json).expect("This should parse");
     let config = BookConfig::from_jsonconfig("root", parsed);
 
     let htmlconfig = config.get_html_config().expect("There should be an HtmlConfig");
@@ -78,7 +78,7 @@ fn from_json_output_html_theme() {
         "theme_path": "theme"
     }"#;
 
-    let parsed = JsonConfig::from_json(&json).expect("This should parse");
+    let parsed = JsonConfig::from_json(json).expect("This should parse");
     let config = BookConfig::from_jsonconfig("root", parsed);
 
     let htmlconfig = config.get_html_config().expect("There should be an HtmlConfig");

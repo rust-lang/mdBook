@@ -36,11 +36,7 @@ pub fn render_playpen<P: AsRef<Path>>(s: &str, path: P) -> String {
             continue;
         };
 
-        let mut editable = "";
-        if playpen.editable {
-            editable = ",editable";
-        }
-
+        let editable = if playpen.editable { ",editable" } else { "" };
         let replacement = String::new() + "``` rust" + editable + "\n" + &file_content + "\n```\n";
 
         replaced.push_str(&s[previous_end_index..playpen.start_index]);
