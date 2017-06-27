@@ -5,8 +5,18 @@ use mdbook::MDBook;
 use mdbook::errors::Result;
 use get_book_dir;
 
+// Create clap subcommand arguments
+pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
+    SubCommand::with_name("init")
+        .about("Create boilerplate structure and files in the directory")
+        // the {n} denotes a newline which will properly aligned in all help messages
+        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'")
+        .arg_from_usage("--theme 'Copies the default theme into your source folder'")
+        .arg_from_usage("--force 'skip confirmation prompts'")
+}
+
 // Init command implementation
-pub fn init(args: &ArgMatches) -> Result<()> {
+pub fn execute(args: &ArgMatches) -> Result<()> {
 
     let book_dir = get_book_dir(args);
     let mut book = MDBook::new(&book_dir);
@@ -66,13 +76,4 @@ fn confirm() -> bool {
         "Y" | "y" | "yes" | "Yes" => true,
         _ => false,
     }
-}
-
-pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
-    SubCommand::with_name("init")
-        .about("Create boilerplate structure and files in the directory")
-        // the {n} denotes a newline which will properly aligned in all help messages
-        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'")
-        .arg_from_usage("--theme 'Copies the default theme into your source folder'")
-        .arg_from_usage("--force 'skip confirmation prompts'")
 }

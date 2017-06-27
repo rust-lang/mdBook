@@ -14,18 +14,22 @@ use watch;
 
 struct ErrorRecover;
 
-impl AfterMiddleware for ErrorRecover {
-    fn catch(&self, _: &mut Request, err: IronError) -> IronResult<Response> {
-        match err.response.status {
-            // each error will result in 404 response
-            Some(_) => Ok(err.response.set(status::NotFound)),
-            _ => Err(err),
-        }
-    }
+// Create clap subcommand arguments
+pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
+    SubCommand::with_name("serve")
+        .about("Serve the book at http://localhost:3000. Rebuild and reload on change.")
+        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'")
+        .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
+        .arg_from_usage("--curly-quotes 'Convert straight quotes to curly quotes, except for those that occur in code blocks and code spans'")
+        .arg_from_usage("-p, --port=[port] 'Use another port{n}(Defaults to 3000)'")
+        .arg_from_usage("-w, --websocket-port=[ws-port] 'Use another port for the websocket connection (livereload){n}(Defaults to 3001)'")
+        .arg_from_usage("-i, --interface=[interface] 'Interface to listen on{n}(Defaults to localhost)'")
+        .arg_from_usage("-a, --address=[address] 'Address that the browser can reach the websocket server from{n}(Defaults to the interface address)'")
+        .arg_from_usage("-o, --open 'Open the book server in a web browser'")
 }
 
 // Watch command implementation
-pub fn serve(args: &ArgMatches) -> Result<()> {
+pub fn execute(args: &ArgMatches) -> Result<()> {
     const RELOAD_COMMAND: &'static str = "reload";
 
     let book_dir = get_book_dir(args);
@@ -106,15 +110,12 @@ pub fn serve(args: &ArgMatches) -> Result<()> {
     Ok(())
 }
 
-pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
-    SubCommand::with_name("serve")
-        .about("Serve the book at http://localhost:3000. Rebuild and reload on change.")
-        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'")
-        .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
-        .arg_from_usage("--curly-quotes 'Convert straight quotes to curly quotes, except for those that occur in code blocks and code spans'")
-        .arg_from_usage("-p, --port=[port] 'Use another port{n}(Defaults to 3000)'")
-        .arg_from_usage("-w, --websocket-port=[ws-port] 'Use another port for the websocket connection (livereload){n}(Defaults to 3001)'")
-        .arg_from_usage("-i, --interface=[interface] 'Interface to listen on{n}(Defaults to localhost)'")
-        .arg_from_usage("-a, --address=[address] 'Address that the browser can reach the websocket server from{n}(Defaults to the interface address)'")
-        .arg_from_usage("-o, --open 'Open the book server in a web browser'")
+impl AfterMiddleware for ErrorRecover {
+    fn catch(&self, _: &mut Request, err: IronError) -> IronResult<Response> {
+        match err.response.status {
+            // each error will result in 404 response
+            Some(_) => Ok(err.response.set(status::NotFound)),
+            _ => Err(err),
+        }
+    }
 }

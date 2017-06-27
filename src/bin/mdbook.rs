@@ -43,13 +43,13 @@ fn main() {
 
     // Check which subcomamnd the user ran...
     let res = match app.get_matches().subcommand() {
-        ("init", Some(sub_matches)) => init::init(sub_matches),
-        ("build", Some(sub_matches)) => build::build(sub_matches),
+        ("init", Some(sub_matches)) => init::execute(sub_matches),
+        ("build", Some(sub_matches)) => build::execute(sub_matches),
         #[cfg(feature = "watch")]
-        ("watch", Some(sub_matches)) => watch::watch(sub_matches),
+        ("watch", Some(sub_matches)) => watch::execute(sub_matches),
         #[cfg(feature = "serve")]
-        ("serve", Some(sub_matches)) => serve::serve(sub_matches),
-        ("test", Some(sub_matches)) => test::test(sub_matches),
+        ("serve", Some(sub_matches)) => serve::execute(sub_matches),
+        ("test", Some(sub_matches)) => test::execute(sub_matches),
         (_, _) => unreachable!(),
     };
 
