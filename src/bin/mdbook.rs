@@ -10,6 +10,8 @@ use std::ffi::OsStr;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use clap::{App, ArgMatches, AppSettings};
+use log::{LogRecord, LogLevelFilter};
+use env_logger::LogBuilder;
 
 pub mod build;
 pub mod init;
@@ -22,7 +24,7 @@ pub mod watch;
 const NAME: &'static str = "mdbook";
 
 fn main() {
-    env_logger::init().unwrap();
+    init_logger();
 
     // Create a list of valid arguments and sub-commands
     let app = App::new(NAME)
@@ -57,6 +59,22 @@ fn main() {
         writeln!(&mut io::stderr(), "An error occured:\n{}", e).ok();
         ::std::process::exit(101);
     }
+}
+
+fn init_logger() {
+    let format = |record: &LogRecord| {
+        let module_path = record.location().module_path();
+        format!("{}:{}: {}", record.level(), module_path, record.args())
+    };
+
+    let mut builder = LogBuilder::new();
+    builder.format(format).filter(None, LogLevelFilter::Info);
+
+    if let Ok(var) = env::var("RUST_LOG") {
+       builder.parse(&var);
+    }
+
+    builder.init().unwrap();
 }
 
 fn get_book_dir(args: &ArgMatches) -> PathBuf {
