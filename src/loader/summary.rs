@@ -2,7 +2,7 @@
 
 use std::fmt::{self, Formatter, Display};
 use std::ops::{Deref, DerefMut};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use pulldown_cmark::{self, Event, Tag};
 
 use errors::*;
@@ -70,10 +70,30 @@ struct Link {
     nested_items: Vec<SummaryItem>,
 }
 
+impl Link {
+    fn new<S: Into<String>, P: AsRef<Path>>(name: S, location: P) -> Link {
+        Link {
+            name: name.into(),
+            location: location.as_ref().to_path_buf(),
+            number: None,
+            nested_items: Vec::new(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 enum SummaryItem {
     Link(Link),
     Separator,
+}
+
+impl SummaryItem {
+    fn maybe_link_mut(&mut self) -> Option<&mut Link> {
+        match *self {
+            SummaryItem::Link(ref mut l) => Some(l),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -169,11 +189,12 @@ impl<'a> SummaryParser<'a> {
         let next_event = self.stream.next().expect("TODO: error-chain");
         trace!("[*] Current state = {:?}, Next Event = {:?}", self.state, next_event);
         println!("{:?}", next_event);
-    
+
         match self.state {
             State::Begin => self.step_start(next_event)?,
             State::PrefixChapters => self.step_prefix(next_event)?,
-            _ => unimplemented!()
+            State::NumberedChapters(n) => self.step_numbered(next_event, n)?,
+            _ => unimplemented!(),
         }
 
         Ok(())
@@ -184,7 +205,7 @@ impl<'a> SummaryParser<'a> {
     fn step_start(&mut self, event: Event<'a>) -> Result<()> {
         match event {
             Event::Start(Tag::Paragraph) => self.state = State::PrefixChapters,
-            other => bail!("Unexpected tag! {:?}", other),
+            other => bail!("Expected a start of paragraph but got {:?}", other),
         }
 
         Ok(())
@@ -210,15 +231,19 @@ impl<'a> SummaryParser<'a> {
 
                 debug!("[*] Found a prefix chapter, {:?}", link.name);
                 self.summary.prefix_chapters.push(SummaryItem::Link(link));
-            }
+            },
             Event::End(Tag::Rule) => {
                 debug!("[*] Found a prefix chapter separator");
                 self.summary.prefix_chapters.push(SummaryItem::Separator);
-            }
+            },
+            Event::Start(Tag::List(_)) => {
+                debug!("[*] Changing from prefix chapters to numbered chapters");
+                self.state = State::NumberedChapters(0);
+            },
 
             other => {
                 debug!("[*] Skipping unexpected token in summary: {:?}", other);
-            }
+            },
         }
 
         Ok(())
@@ -256,7 +281,68 @@ impl<'a> SummaryParser<'a> {
             bail!("Expected a link, got {:?}", next)
         }
     }
+
+    /// Parse the numbered chapters.
+    ///
+    /// If the event is the start of a list item, consume the entire item and
+    /// add a new link to the summary with `push_numbered_section`.
+    ///
+    /// If the event is the start of a new list, bump the nesting level.
+    ///
+    /// If the event is the end of a list, decrement the nesting level. When 
+    /// the nesting level would go negative, we've finished the numbered 
+    /// section and need to parse the suffix section.
+    ///
+    /// Otherwise, ignore the event.
+    fn step_numbered(&mut self, event: Event, nesting: u32) -> Result<()> {
+        match event {
+            Event::Start(Tag::Item) => unimplemented!(),
+            other => unimplemented!()
+        }
+    }
+
+    /// Push a new section at the end of the current nesting level.
+    fn push_numbered_section(&mut self, item: SummaryItem) {
+        if let State::NumberedChapters(level) = self.state {
+            unimplemented!()
+        } else {
+            // this method should only ever be called when parsing a numbered
+            // section, therefore if we ever get here something has gone
+            // hideously wrong...
+            error!("Calling push_numbered_section() when not in a numbered section");
+            error!("Current state: {:?}", self.state);
+            error!("Item: {:?}", item);
+            error!("Summary:");
+            error!("{:#?}", self.summary);
+            panic!("Entered unreachable code, this is a bug");
+        }
+    }
 }
+
+fn push_item_at_nesting_level(root: &mut Link, item: SummaryItem, level: usize) -> Result<SectionNumber> {
+    if level == 0 {
+        root.nested_items.push(item);
+        Ok(SectionNumber(vec![root.nested_items.len() as u32]))
+    } else {
+        let next_level = level - 1;
+        let index_for_item = root.nested_items.len() + 1;
+        let (index, last_link) =
+            root.nested_items
+                .iter_mut()
+                .enumerate()
+                .filter_map(|(i, item)| item.maybe_link_mut().map(|l| (i, l)))
+                .rev()
+                .next()
+                .ok_or(format!("Can't recurse any further, summary needs to be {} more levels deep", level))?;
+
+        let mut section_number = push_item_at_nesting_level(last_link, item, level - 1)?;
+        section_number.insert(0, index as u32 + 1);
+        println!("{:?}\t{:?}", section_number, last_link);
+        Ok(section_number)
+    }
+}
+
+
 
 /// Extracts the text from formatted markdown.
 fn stringify_events<'a>(events: Vec<Event<'a>>) -> String {
@@ -426,5 +512,52 @@ mod tests {
         assert_eq!(parser.summary.prefix_chapters.len(), 1);
         assert_eq!(parser.summary.prefix_chapters[0], should_be);
         assert_eq!(parser.state, State::PrefixChapters);
+    }
+
+    #[test]
+    fn step_from_prefix_chapters_to_numbered() {
+        let src = "- foo";
+
+        let mut parser = SummaryParser::new(src);
+        parser.state = State::PrefixChapters;
+
+        // let _ = parser.stream.next(); // manually step past the Start Paragraph
+        parser.step().unwrap();
+
+        assert_eq!(parser.state, State::NumberedChapters(0));
+    }
+
+    #[test]
+    fn push_item_onto_empty_link() {
+        let mut root = Link::new("First", "/");
+
+        assert!(root.nested_items.is_empty());
+        let got = push_item_at_nesting_level(&mut root, SummaryItem::Separator, 0).unwrap();
+        assert_eq!(root.nested_items.len(), 1);
+        assert_eq!(*got, vec![1]);
+    }
+
+    #[test]
+    fn push_item_onto_complex_link() {
+        let mut root = Link::new("First", "/first");
+        root.nested_items.push(SummaryItem::Separator);
+
+        let mut child = Link::new("Second", "/first/second");
+        child.nested_items.push(SummaryItem::Link(
+            Link::new("Third", "/first/second/third"),
+        ));
+        root.nested_items.push(SummaryItem::Link(child));
+        root.nested_items.push(SummaryItem::Separator);
+
+
+        assert_eq!(root.nested_items[1].maybe_link_mut()
+            .unwrap()
+            .nested_items[0].maybe_link_mut()
+            .unwrap()
+            .nested_items.len() , 0);
+        let got = push_item_at_nesting_level(&mut root, SummaryItem::Link(Link::new("Dummy", "")), 2).unwrap();
+        println!("{:#?}", root);
+        assert_eq!(root.nested_items[1].maybe_link_mut().unwrap().nested_items[0].maybe_link_mut().unwrap().nested_items.len(), 1);
+        assert_eq!(*got, vec![2, 1, 1]);
     }
 }
