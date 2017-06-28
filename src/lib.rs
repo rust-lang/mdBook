@@ -107,6 +107,7 @@ pub mod errors {
         errors {
             Subprocess(message: String, output: ::std::process::Output) {
                 description("A subprocess failed")
+                display("{}: {}", message, String::from_utf8_lossy(&output.stdout))
             }
         }
     }
