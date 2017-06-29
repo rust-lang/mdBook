@@ -62,7 +62,7 @@ pub struct Summary {
 /// entries.
 ///
 /// This is roughly the equivalent of `[Some section](./path/to/file.md)`.
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 struct Link {
     name: String,
     location: PathBuf,
@@ -75,6 +75,17 @@ impl Link {
         Link {
             name: name.into(),
             location: location.as_ref().to_path_buf(),
+            number: None,
+            nested_items: Vec::new(),
+        }
+    }
+}
+
+impl Default for Link {
+    fn default() -> Self {
+        Link {
+            name: String::new(),
+            location: PathBuf::new(),
             number: None,
             nested_items: Vec::new(),
         }
