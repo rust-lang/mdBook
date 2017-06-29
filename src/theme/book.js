@@ -12,16 +12,25 @@ $( document ).ready(function() {
 
     set_theme(theme);
 
-
     // Syntax highlighting Configuration
     hljs.configure({
         tabReplace: '    ', // 4 spaces
         languages: [],      // Languages used for auto-detection
     });
+    
+    if (window.ace) {
+        // language-rust class needs to be removed for editable
+        // blocks or highlightjs will capture events
+        $('code.editable').removeClass('language-rust');
 
-    $('code').each(function(i, block) {
-        hljs.highlightBlock(block);
-    });
+        $('code').not('.editable').each(function(i, block) {
+            hljs.highlightBlock(block);
+        });
+    } else {
+        $('code').each(function(i, block) {
+            hljs.highlightBlock(block);
+        });
+    }
     
     // Adding the hljs class gives code blocks the color css
     // even if highlighting doesn't apply
@@ -118,18 +127,32 @@ $( document ).ready(function() {
     });
 
     function set_theme(theme) {
+        let ace_theme;
+        
         if (theme == 'coal' || theme == 'navy') {
             $("[href='ayu-highlight.css']").prop('disabled', true);
             $("[href='tomorrow-night.css']").prop('disabled', false);
             $("[href='highlight.css']").prop('disabled', true);
+            
+            ace_theme = "ace/theme/tomorrow_night";
         } else if (theme == 'ayu') {
             $("[href='ayu-highlight.css']").prop('disabled', false);
             $("[href='tomorrow-night.css']").prop('disabled', true);
             $("[href='highlight.css']").prop('disabled', true);
+            
+            ace_theme = "ace/theme/tomorrow_night";
         } else {
             $("[href='ayu-highlight.css']").prop('disabled', true);
             $("[href='tomorrow-night.css']").prop('disabled', true);
             $("[href='highlight.css']").prop('disabled', false);
+            
+            ace_theme = "ace/theme/dawn";
+        }
+        
+        if (window.ace && window.editors) {
+            window.editors.forEach(function(editor) {
+                editor.setTheme(ace_theme);
+            });
         }
 
         store.set('theme', theme);
@@ -187,7 +210,6 @@ $( document ).ready(function() {
         });
     });
 
-
     // Process playpen code blocks
     $(".playpen").each(function(block){
         var pre_block = $(this);
@@ -200,18 +222,37 @@ $( document ).ready(function() {
         buttons.prepend("<i class=\"fa fa-play play-button\"></i>");
         buttons.prepend("<i class=\"fa fa-copy clip-button\"><i class=\"tooltiptext\"></i></i>");
 
+        let code_block = pre_block.find("code").first();
+        if (window.ace && code_block.hasClass("editable")) {
+            buttons.prepend("<i class=\"fa fa-history reset-button\"></i>");
+        }
+
         buttons.find(".play-button").click(function(e){
             run_rust_code(pre_block);
         });
         buttons.find(".clip-button").mouseout(function(e){
             hideTooltip(e.currentTarget);
         });
+        buttons.find(".reset-button").click(function() {
+            if (!window.ace) { return; }
+            let editor = window.ace.edit(code_block.get(0));
+            editor.setValue(editor.originalCode);
+            editor.clearSelection();
+        });
     });
 
     var clipboardSnippets = new Clipboard('.clip-button', {
         text: function(trigger) {
             hideTooltip(trigger);
-            return $(trigger).parents(".playpen").find("code.language-rust.hljs")[0].textContent;
+            let playpen = $(trigger).parents(".playpen");
+            let code_block = playpen.find("code").first();
+
+            if (window.ace && code_block.hasClass("editable")) {
+                let editor = window.ace.edit(code_block.get(0));
+                return editor.getValue();
+            } else {
+                return code_block.get(0).textContent;
+            }
         }
     });
     clipboardSnippets.on('success', function(e) {
@@ -221,7 +262,6 @@ $( document ).ready(function() {
     clipboardSnippets.on('error', function(e) {
             showTooltip(e.trigger, "Clipboard error!");
     });
-
 });
 
 function hideTooltip(elem) {
@@ -260,7 +300,15 @@ function run_rust_code(code_block) {
         result_block = code_block.find(".result");
     }
 
-    var text = code_block.find(".language-rust").text();
+    let text;
+
+    let inner_code_block = code_block.find("code").first();
+    if (window.ace && inner_code_block.hasClass("editable")) {
+        let editor = window.ace.edit(inner_code_block.get(0));
+        text = editor.getValue();
+    } else {
+        text = inner_code_block.text();
+    }
 
     var params = {
         version: "stable",

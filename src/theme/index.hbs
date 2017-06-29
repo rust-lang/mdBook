@@ -146,8 +146,15 @@
         ga('create', '{{google_analytics}}', 'auto');
         ga('send', 'pageview');
         </script>
-      {{/if}}
+        {{/if}}
 
+        {{#if playpens_editable}}
+        <script src="{{ ace_js }}" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ editor_js }}" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ mode_rust_js }}" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ theme_dawn_js }}" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ theme_tomorrow_night_js }}" type="text/javascript" charset="utf-8"></script>
+        {{/if}}
 
         <script src="highlight.js"></script>
         <script src="book.js"></script>

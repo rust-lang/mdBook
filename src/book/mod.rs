@@ -13,8 +13,8 @@ use errors::*;
 
 use config::BookConfig;
 use config::tomlconfig::TomlConfig;
+use config::htmlconfig::HtmlConfig;
 use config::jsonconfig::JsonConfig;
-
 
 pub struct MDBook {
     config: BookConfig,
@@ -494,6 +494,10 @@ impl MDBook {
     pub fn get_additional_css(&self) -> &[PathBuf] {
         self.config.get_html_config()
             .get_additional_css()
+    }
+
+    pub fn get_html_config(&self) -> &HtmlConfig {
+        self.config.get_html_config()
     }
 
     // Construct book
