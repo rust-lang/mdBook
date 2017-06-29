@@ -366,9 +366,9 @@ impl<'a> SummaryParser<'a> {
                 let it = self.parse_item()
                     .chain_err(|| "List items should only contain links")?;
 
-                trace!("[*] Found a chapter: {:?}", it);
+                debug!("[*] Found a chapter: {:?} ({})", it.name, it.location.display());
                 let section_number = self.push_numbered_section(SummaryItem::Link(it));
-                trace!("[*] Section number was {}", section_number);
+                trace!("[*] Section number is {}", section_number);
             }
             Event::Start(Tag::List(_)) => {
                 match self.state {
@@ -406,7 +406,10 @@ impl<'a> SummaryParser<'a> {
     /// Push a new section at the end of the current nesting level.
     fn push_numbered_section(&mut self, item: SummaryItem) -> SectionNumber {
         if let State::NumberedChapters(level) = self.state {
-            push_item_at_nesting_level(&mut self.summary.numbered_chapters, item, level as usize) 
+            push_item_at_nesting_level(&mut self.summary.numbered_chapters, 
+                    item, 
+                    level as usize,
+                    SectionNumber::default()) 
                 .chain_err(|| format!("The parser should always ensure we add the next \
                 item at the correct level ({}:{})", module_path!(), line!()))
                 .unwrap()
@@ -427,10 +430,21 @@ impl<'a> SummaryParser<'a> {
 /// Given a particular level (e.g. 3), go that many levels down the `Link`'s
 /// nested items then append the provided item to the last `Link` in the
 /// list.
-fn push_item_at_nesting_level(links: &mut Vec<SummaryItem>, item: SummaryItem, level: usize) -> Result<SectionNumber> {
+fn push_item_at_nesting_level(links: &mut Vec<SummaryItem>, 
+    mut item: SummaryItem, 
+    level: usize, 
+    mut section_number: SectionNumber) -> Result<SectionNumber> {
     if level == 0 {
+        // set the section number, if applicable
+        section_number.push(links.len() as u32 + 1);
+
+        match &mut item {
+            &mut SummaryItem::Link(ref mut l) => l.number = Some(section_number.clone()),
+            _ => {}
+        }
+
         links.push(item);
-        Ok(SectionNumber(vec![links.len() as u32]))
+        Ok(section_number)
     } else {
         let next_level = level - 1;
         let index_for_item = links.len() + 1;
@@ -444,9 +458,8 @@ fn push_item_at_nesting_level(links: &mut Vec<SummaryItem>, item: SummaryItem, l
                 .next()
                 .ok_or(format!("Can't recurse any further, summary needs to be {} more levels deep", level))?;
 
-        let mut section_number = push_item_at_nesting_level(&mut last_link.nested_items, item, level - 1)?;
-        section_number.insert(0, index as u32 + 1);
-        Ok(section_number)
+        section_number.push(index as u32 + 1);
+        push_item_at_nesting_level(&mut last_link.nested_items, item, level - 1, section_number)
     }
 }
 
@@ -641,7 +654,7 @@ mod tests {
         let mut links = vec![SummaryItem::Link(root)];
 
         assert_eq!(links[0].maybe_link_mut().unwrap().nested_items.len(), 0);
-        let got = push_item_at_nesting_level(&mut links, SummaryItem::Separator, 1).unwrap();
+        let got = push_item_at_nesting_level(&mut links, SummaryItem::Separator, 1, SectionNumber::default()).unwrap();
         assert_eq!(links[0].maybe_link_mut().unwrap().nested_items.len(), 1);
         assert_eq!(*got, vec![1, 1]);
     }
@@ -667,7 +680,7 @@ mod tests {
             .nested_items[0].maybe_link_mut()
             .unwrap()
             .nested_items.len() , 0);
-        let got = push_item_at_nesting_level(&mut links, SummaryItem::Link(Link::new("Dummy", "")), 3).unwrap();
+        let got = push_item_at_nesting_level(&mut links, SummaryItem::Link(Link::new("Dummy", "")), 3, SectionNumber::default()).unwrap();
         assert_eq!(links[0].maybe_link_mut().unwrap()
             .nested_items[1].maybe_link_mut()
             .unwrap()

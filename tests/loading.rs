@@ -30,6 +30,7 @@ const SUMMARY: &'static str = "
 fn parse_summary_md() {
     env_logger::init().unwrap();
 
+    // Hard-code the structure `SUMMARY` *should* be parsed into.
     let should_be = Summary {
         title: Some(String::from("Summary")),
 
