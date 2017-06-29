@@ -52,10 +52,14 @@ pub fn parse_summary(summary: &str) -> Result<Summary> {
 /// The parsed `SUMMARY.md`, specifying how the book should be laid out.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Summary {
-    title: Option<String>,
-    prefix_chapters: Vec<SummaryItem>,
-    numbered_chapters: Vec<SummaryItem>,
-    suffix_chapters: Vec<SummaryItem>,
+    /// An optional title for the `SUMMARY.md`, currently just ignored.
+    pub title: Option<String>,
+    /// Chapters before the main text (e.g. an introduction).
+    pub prefix_chapters: Vec<SummaryItem>,
+    /// The main chapters in the document.
+    pub numbered_chapters: Vec<SummaryItem>,
+    /// Items which come after the main document (e.g. a conclusion).
+    pub suffix_chapters: Vec<SummaryItem>,
 }
 
 /// A struct representing an entry in the `SUMMARY.md`, possibly with nested
@@ -63,15 +67,21 @@ pub struct Summary {
 ///
 /// This is roughly the equivalent of `[Some section](./path/to/file.md)`.
 #[derive(Debug, Clone, PartialEq)]
-struct Link {
-    name: String,
-    location: PathBuf,
-    number: Option<SectionNumber>,
-    nested_items: Vec<SummaryItem>,
+pub struct Link {
+    /// The name of the chapter.
+    pub name: String,
+    /// The location of the chapter's source file, taking the book's `src`
+    /// directory as the root.
+    pub location: PathBuf,
+    /// The section number, if this chapter is in the numbered section.
+    pub number: Option<SectionNumber>,
+    /// Any nested items this chapter may contain.
+    pub nested_items: Vec<SummaryItem>,
 }
 
 impl Link {
-    fn new<S: Into<String>, P: AsRef<Path>>(name: S, location: P) -> Link {
+    /// Create a new link with no nested items.
+    pub fn new<S: Into<String>, P: AsRef<Path>>(name: S, location: P) -> Link {
         Link {
             name: name.into(),
             location: location.as_ref().to_path_buf(),
@@ -92,9 +102,12 @@ impl Default for Link {
     }
 }
 
+/// An item in `SUMMARY.md` which could be either a separator or a `Link`.
 #[derive(Debug, Clone, PartialEq)]
-enum SummaryItem {
+pub enum SummaryItem {
+    /// A link to a chapter.
     Link(Link),
+    /// A separator (`---`).
     Separator,
 }
 
@@ -193,13 +206,20 @@ impl<'a> SummaryParser<'a> {
     fn parse(mut self) -> Result<Summary> {
         self.summary.title = self.parse_title();
 
+        if let Some(ref title) = self.summary.title {
+            debug!("[*] Title is {:?}", title);
+        }
+        
+        while self.state != State::End {
+            self.step()?;
+        }
+
         Ok(self.summary)
     }
 
     fn step(&mut self) -> Result<()> {
         let next_event = self.stream.next().expect("TODO: error-chain");
-        trace!("[*] Current state = {:?}, Next Event = {:?}", self.state, next_event);
-        println!("{:?}", next_event);
+        trace!("[*] Current state: {:?}, next event: {:?}", self.state, next_event);
 
         match self.state {
             State::Begin => self.step_start(next_event)?,
@@ -253,7 +273,7 @@ impl<'a> SummaryParser<'a> {
             },
 
             other => {
-                debug!("[*] Skipping unexpected token in summary: {:?}", other);
+                trace!("[*] Skipping unexpected token in summary: {:?}", other);
             },
         }
 
@@ -310,6 +330,8 @@ impl<'a> SummaryParser<'a> {
             Event::Start(Tag::Item) => {
                 let it = self.parse_item()
                     .chain_err(|| "List items should only contain links")?;
+
+                trace!("[*] Found a chapter: {:?}", it);
                 self.push_numbered_section(SummaryItem::Link(it));
                 Ok(())
             }
@@ -379,7 +401,7 @@ fn stringify_events<'a>(events: Vec<Event<'a>>) -> String {
 
 /// A section number like "1.2.3", basically just a newtype'd `Vec<u32>`.
 #[derive(Debug, PartialEq, Clone, Default)]
-struct SectionNumber(Vec<u32>);
+pub struct SectionNumber(pub Vec<u32>);
 
 impl Display for SectionNumber {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {

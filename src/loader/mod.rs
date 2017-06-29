@@ -9,7 +9,7 @@ use errors::*;
 
 mod summary;
 
-pub use self::summary::{Summary, parse_summary};
+pub use self::summary::{Summary, Link, SummaryItem, parse_summary, SectionNumber};
 
 
 /// The object in charge of parsing the source directory into a usable
