@@ -76,13 +76,17 @@ extern crate serde_derive;
 extern crate serde;
 #[macro_use] 
 extern crate serde_json;
+#[macro_use]
+extern crate log;
 
 extern crate handlebars;
 extern crate pulldown_cmark;
 extern crate regex;
 
+#[cfg(test)]
 #[macro_use]
-extern crate log;
+extern crate pretty_assertions;
+
 pub mod book;
 pub mod config;
 mod parse;
