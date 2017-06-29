@@ -25,8 +25,7 @@ const SUMMARY: &str = "
 ";
 
 #[test]
-#[ignore]
-fn load_summary_md() {
+fn parse_summary_md() {
     env_logger::init().unwrap();
 
     let should_be = Summary {

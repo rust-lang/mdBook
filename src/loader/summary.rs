@@ -225,7 +225,11 @@ impl<'a> SummaryParser<'a> {
             State::Begin => self.step_start(next_event)?,
             State::PrefixChapters => self.step_prefix(next_event)?,
             State::NumberedChapters(n) => self.step_numbered(next_event, n)?,
-            _ => unimplemented!(),
+            other => {
+                trace!("[*] unimplemented state: {:?}", other);
+                trace!("{:#?}", self.summary);
+                unimplemented!()
+            }
         }
 
         Ok(())
@@ -280,6 +284,7 @@ impl<'a> SummaryParser<'a> {
         Ok(())
     }
 
+    /// Try to parse the title line.
     fn parse_title(&mut self) -> Option<String> {
         if let Some(Event::Start(Tag::Header(1))) = self.stream.next() {
             debug!("[*] Found a h1 in the SUMMARY");
@@ -332,19 +337,48 @@ impl<'a> SummaryParser<'a> {
                     .chain_err(|| "List items should only contain links")?;
 
                 trace!("[*] Found a chapter: {:?}", it);
-                self.push_numbered_section(SummaryItem::Link(it));
-                Ok(())
+                let section_number = self.push_numbered_section(SummaryItem::Link(it));
+                trace!("[*] Section number was {}", section_number);
             }
-            other => unimplemented!()
+            Event::Start(Tag::List(_)) => {
+                match self.state {
+                    State::NumberedChapters(n) => {
+                        let new_nest = n + 1;
+                        self.state = State::NumberedChapters(new_nest);
+                        trace!("[*] Nesting level increased to {}", new_nest);
+                    }
+                    other => unreachable!(),
+                }
+
+            }
+            Event::End(Tag::List(_)) => {
+                match self.state {
+                    State::NumberedChapters(n) => {
+                        if n == 0 {
+                            trace!("[*] Finished parsing the numbered chapters");
+                            self.state = State::SuffixChapters;
+                        } else {
+                            trace!("[*] Nesting level decreased to {}", n - 1);
+                            self.state = State::NumberedChapters(n - 1);
+                        }
+                    }
+                    other => unreachable!(),
+                }
+            }
+            other => {
+                trace!("[*] skipping unexpected token: {:?}", other);
+            }
         }
+
+        Ok(())
     }
 
     /// Push a new section at the end of the current nesting level.
-    fn push_numbered_section(&mut self, item: SummaryItem) {
+    fn push_numbered_section(&mut self, item: SummaryItem) -> SectionNumber {
         if let State::NumberedChapters(level) = self.state {
             push_item_at_nesting_level(&mut self.summary.numbered_chapters, item, level as usize) 
                 .chain_err(|| "The parser should always ensure we add the next item at the correct level")
-                .unwrap();
+                .unwrap()
         } else {
             // this method should only ever be called when parsing a numbered
             // section, therefore if we ever get here something has gone
@@ -381,7 +415,6 @@ fn push_item_at_nesting_level(links: &mut Vec<SummaryItem>, item: SummaryItem, l
 
         let mut section_number = push_item_at_nesting_level(&mut last_link.nested_items, item, level - 1)?;
         section_number.insert(0, index as u32 + 1);
-        println!("{:?}\t{:?}", section_number, last_link);
         Ok(section_number)
     }
 }
