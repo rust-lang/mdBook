@@ -218,18 +218,19 @@ impl<'a> SummaryParser<'a> {
     }
 
     fn step(&mut self) -> Result<()> {
-        let next_event = self.stream.next().expect("TODO: error-chain");
+        if let Some(next_event) = self.stream.next() {
         trace!("[*] Current state: {:?}, next event: {:?}", self.state, next_event);
 
         match self.state {
             State::Begin => self.step_start(next_event)?,
             State::PrefixChapters => self.step_prefix(next_event)?,
             State::NumberedChapters(n) => self.step_numbered(next_event, n)?,
-            other => {
-                trace!("[*] unimplemented state: {:?}", other);
-                trace!("{:#?}", self.summary);
-                unimplemented!()
-            }
+            State::SuffixChapters => self.step_suffix(next_event)?,
+            State::End => {},
+        }
+        } else {
+            trace!("[*] Reached end of SUMMARY.md");
+            self.state = State::End;
         }
 
         Ok(())
@@ -299,6 +300,35 @@ impl<'a> SummaryParser<'a> {
             None
         }
     }
+
+    fn step_suffix(&mut self, event: Event<'a>) -> Result<()> {
+        // FIXME: This has been copy/pasted from step_prefix. make DRY.
+        match event {
+            Event::Start(Tag::Link(location, _)) => {
+                let content = collect_events!(self.stream, Tag::Link(_, _));
+                let text = stringify_events(content);
+                let link = Link {
+                    name: text,
+                    location: PathBuf::from(location.as_ref()),
+                    number: None,
+                    nested_items: Vec::new(),
+                };
+
+                debug!("[*] Found a suffix chapter, {:?}", link.name);
+                self.summary.suffix_chapters.push(SummaryItem::Link(link));
+            },
+            Event::End(Tag::Rule) => {
+                debug!("[*] Found a suffix chapter separator");
+                self.summary.suffix_chapters.push(SummaryItem::Separator);
+            },
+            other => {
+                trace!("[*] Skipping unexpected token in summary: {:?}", other);
+            },
+        }
+
+        Ok(())
+    }
+
 
     /// Parse a single item (`[Some Chapter Name](./path/to/chapter.md)`).
     fn parse_item(&mut self) -> Result<Link> {
@@ -377,7 +407,8 @@ impl<'a> SummaryParser<'a> {
     fn push_numbered_section(&mut self, item: SummaryItem) -> SectionNumber {
         if let State::NumberedChapters(level) = self.state {
             push_item_at_nesting_level(&mut self.summary.numbered_chapters, item, level as usize) 
-                .chain_err(|| "The parser should always ensure we add the next item at the correct level")
+                .chain_err(|| format!("The parser should always ensure we add the next \
+                item at the correct level ({}:{})", module_path!(), line!()))
                 .unwrap()
         } else {
             // this method should only ever be called when parsing a numbered

@@ -1,5 +1,7 @@
 //! Integration tests for loading a book into memory
 
+#[macro_use]
+extern crate pretty_assertions;
 extern crate mdbook;
 extern crate env_logger;
 
@@ -7,7 +9,7 @@ use std::path::PathBuf;
 use mdbook::loader::{parse_summary, Link, SummaryItem, SectionNumber, Summary};
 
 
-const SUMMARY: &str = "
+const SUMMARY: &'static str = "
 # Summary
 
 [Introduction](/intro.md)
@@ -16,7 +18,7 @@ const SUMMARY: &str = "
 
 [A Prefix Chapter](/some_prefix.md)
 
-- [First chapter](/chapter_1/index.md)
+- [First Chapter](/chapter_1/index.md)
   - [Some Subsection](/chapter_1/subsection.md)
 
 ---
