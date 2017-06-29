@@ -285,20 +285,58 @@ impl<'a> SummaryParser<'a> {
         Ok(())
     }
 
-    /// Try to parse the title line.
-    fn parse_title(&mut self) -> Option<String> {
-        if let Some(Event::Start(Tag::Header(1))) = self.stream.next() {
-            debug!("[*] Found a h1 in the SUMMARY");
+    /// Parse the numbered chapters.
+    ///
+    /// If the event is the start of a list item, consume the entire item and
+    /// add a new link to the summary with `push_numbered_section`.
+    ///
+    /// If the event is the start of a new list, bump the nesting level.
+    ///
+    /// If the event is the end of a list, decrement the nesting level. When 
+    /// the nesting level would go negative, we've finished the numbered 
+    /// section and need to parse the suffix section.
+    ///
+    /// Otherwise, ignore the event.
+    fn step_numbered(&mut self, event: Event, nesting: u32) -> Result<()> {
+        match event {
+            Event::Start(Tag::Item) => {
+                let it = self.parse_item()
+                    .chain_err(|| "List items should only contain links")?;
 
-            let tags = collect_events!(self.stream, Tag::Header(1));
+                debug!("[*] Found a chapter: {:?} ({})", it.name, it.location.display());
+                let section_number = self.push_numbered_section(SummaryItem::Link(it));
+                trace!("[*] Section number is {}", section_number);
+            },
+            Event::Start(Tag::List(_)) => {
+                match self.state {
+                    State::NumberedChapters(n) => {
+                        let new_nest = n + 1;
+                        self.state = State::NumberedChapters(new_nest);
+                        trace!("[*] Nesting level increased to {}", new_nest);
+                    },
+                    other => unreachable!(),
+                }
+            },
+            Event::End(Tag::List(_)) => {
+                match self.state {
+                    State::NumberedChapters(n) => {
+                        if n == 0 {
+                            trace!("[*] Finished parsing the numbered chapters");
+                            self.state = State::SuffixChapters;
+                        } else {
+                            trace!("[*] Nesting level decreased to {}", n - 1);
+                            self.state = State::NumberedChapters(n - 1);
+                        }
+                    },
+                    other => unreachable!(),
+                }
+            },
+            other => {
+                trace!("[*] skipping unexpected token: {:?}", other);
+            },
+            }
 
-            // TODO: How do we deal with headings like "# My **awesome** summary"?
-            // for now, I'm just going to scan through and concatenate the
-            // Event::Text tags, skipping any styling.
-            Some(stringify_events(tags))
-        } else {
-            None
-        }
+        Ok(())
     }
 
     fn step_suffix(&mut self, event: Event<'a>) -> Result<()> {
@@ -348,70 +386,34 @@ impl<'a> SummaryParser<'a> {
         }
     }
 
-    /// Parse the numbered chapters.
-    ///
-    /// If the event is the start of a list item, consume the entire item and
-    /// add a new link to the summary with `push_numbered_section`.
-    ///
-    /// If the event is the start of a new list, bump the nesting level.
-    ///
-    /// If the event is the end of a list, decrement the nesting level. When 
-    /// the nesting level would go negative, we've finished the numbered 
-    /// section and need to parse the suffix section.
-    ///
-    /// Otherwise, ignore the event.
-    fn step_numbered(&mut self, event: Event, nesting: u32) -> Result<()> {
-        match event {
-            Event::Start(Tag::Item) => {
-                let it = self.parse_item()
-                    .chain_err(|| "List items should only contain links")?;
+    /// Try to parse the title line.
+    fn parse_title(&mut self) -> Option<String> {
+        if let Some(Event::Start(Tag::Header(1))) = self.stream.next() {
+            debug!("[*] Found a h1 in the SUMMARY");
 
-                debug!("[*] Found a chapter: {:?} ({})", it.name, it.location.display());
-                let section_number = self.push_numbered_section(SummaryItem::Link(it));
-                trace!("[*] Section number is {}", section_number);
-            }
-            Event::Start(Tag::List(_)) => {
-                match self.state {
-                    State::NumberedChapters(n) => {
-                        let new_nest = n + 1;
-                        self.state = State::NumberedChapters(new_nest);
-                        trace!("[*] Nesting level increased to {}", new_nest);
-                    }
-                    other => unreachable!(),
-                }
+            let tags = collect_events!(self.stream, Tag::Header(1));
 
-            }
-            Event::End(Tag::List(_)) => {
-                match self.state {
-                    State::NumberedChapters(n) => {
-                        if n == 0 {
-                            trace!("[*] Finished parsing the numbered chapters");
-                            self.state = State::SuffixChapters;
-                        } else {
-                            trace!("[*] Nesting level decreased to {}", n - 1);
-                            self.state = State::NumberedChapters(n - 1);
-                        }
-                    }
-                    other => unreachable!(),
-                }
-            }
-            other => {
-                trace!("[*] skipping unexpected token: {:?}", other);
-            }
+            // TODO: How do we deal with headings like "# My **awesome** summary"?
+            // for now, I'm just going to scan through and concatenate the
+            // Event::Text tags, skipping any styling.
+            Some(stringify_events(tags))
+        } else {
+            None
         }
-
-        Ok(())
     }
 
     /// Push a new section at the end of the current nesting level.
     fn push_numbered_section(&mut self, item: SummaryItem) -> SectionNumber {
         if let State::NumberedChapters(level) = self.state {
-            push_item_at_nesting_level(&mut self.summary.numbered_chapters, 
+            push_item_at_nesting_level(
+                &mut self.summary.numbered_chapters,
                     item, 
                     level as usize,
-                    SectionNumber::default()) 
-                .chain_err(|| format!("The parser should always ensure we add the next \
-                item at the correct level ({}:{})", module_path!(), line!()))
+                SectionNumber::default(),
+            ).chain_err(|| {
+                format!("The parser should always ensure we add the next \
+                item at the correct level ({}:{})", module_path!(), line!())
+            })
                 .unwrap()
         } else {
             // this method should only ever be called when parsing a numbered
@@ -430,17 +432,14 @@ impl<'a> SummaryParser<'a> {
 /// Given a particular level (e.g. 3), go that many levels down the `Link`'s
 /// nested items then append the provided item to the last `Link` in the
 /// list.
-fn push_item_at_nesting_level(links: &mut Vec<SummaryItem>, 
-    mut item: SummaryItem, 
-    level: usize, 
-    mut section_number: SectionNumber) -> Result<SectionNumber> {
+fn push_item_at_nesting_level(links: &mut Vec<SummaryItem>, mut item: SummaryItem, level: usize, mut section_number: SectionNumber)
+    -> Result<SectionNumber> {
     if level == 0 {
         // set the section number, if applicable
         section_number.push(links.len() as u32 + 1);
 
-        match &mut item {
-            &mut SummaryItem::Link(ref mut l) => l.number = Some(section_number.clone()),
-            _ => {}
+        if let SummaryItem::Link(ref mut l) = item {
+            l.number = Some(section_number.clone());
         }
 
         links.push(item);
@@ -451,12 +450,13 @@ fn push_item_at_nesting_level(links: &mut Vec<SummaryItem>,
 
         // FIXME: This bit needs simplifying!
         let (index, last_link) =
-            links.iter_mut()
+            links
+                .iter_mut()
                 .enumerate()
                 .filter_map(|(i, item)| item.maybe_link_mut().map(|l| (i, l)))
                 .rev()
                 .next()
-                .ok_or(format!("Can't recurse any further, summary needs to be {} more levels deep", level))?;
+                .ok_or_else(|| format!("Can't recurse any further, summary needs to be {} more levels deep", level))?;
 
         section_number.push(index as u32 + 1);
         push_item_at_nesting_level(&mut last_link.nested_items, item, level - 1, section_number)
@@ -466,7 +466,7 @@ fn push_item_at_nesting_level(links: &mut Vec<SummaryItem>,
 
 
 /// Extracts the text from formatted markdown.
-fn stringify_events<'a>(events: Vec<Event<'a>>) -> String {
+fn stringify_events(events: Vec<Event>) -> String {
     events
         .into_iter()
         .filter_map(|t| match t {
@@ -680,7 +680,12 @@ mod tests {
             .nested_items[0].maybe_link_mut()
             .unwrap()
             .nested_items.len() , 0);
-        let got = push_item_at_nesting_level(&mut links, SummaryItem::Link(Link::new("Dummy", "")), 3, SectionNumber::default()).unwrap();
+        let got = push_item_at_nesting_level(
+            &mut links,
+            SummaryItem::Link(Link::new("Dummy", "")),
+            3,
+            SectionNumber::default(),
+        ).unwrap();
         assert_eq!(links[0].maybe_link_mut().unwrap()
             .nested_items[1].maybe_link_mut()
             .unwrap()

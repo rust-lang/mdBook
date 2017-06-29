@@ -4,9 +4,14 @@
 extern crate pretty_assertions;
 extern crate mdbook;
 extern crate env_logger;
+extern crate tempdir;
 
 use std::path::PathBuf;
-use mdbook::loader::{parse_summary, Link, SummaryItem, SectionNumber, Summary};
+use std::fs::File;
+use std::io::Write;
+
+use mdbook::loader::{parse_summary, Link, SummaryItem, SectionNumber, Summary, Loader};
+use tempdir::TempDir;
 
 
 const SUMMARY: &'static str = "
@@ -28,10 +33,35 @@ const SUMMARY: &'static str = "
 
 #[test]
 fn parse_summary_md() {
-    env_logger::init().unwrap();
+    env_logger::init().ok();
 
-    // Hard-code the structure `SUMMARY` *should* be parsed into.
-    let should_be = Summary {
+    let should_be = expected_summary();
+    let got = parse_summary(SUMMARY).unwrap();
+
+    println!("{:#?}", got);
+    assert_eq!(got, should_be);
+}
+
+#[test]
+fn parse_summary_using_loader() {
+    env_logger::init().ok();
+
+    let temp = TempDir::new("book").unwrap();
+    let summary_md = temp.path().join("SUMMARY.md");
+
+    File::create(&summary_md).unwrap().write_all(SUMMARY.as_bytes()).unwrap();
+
+    let loader = Loader::new(temp.path());
+
+    let got = loader.parse_summary().unwrap();
+    let should_be = expected_summary();
+
+    assert_eq!(got, should_be);
+}
+
+/// This is what the SUMMARY should be parsed as
+fn expected_summary() -> Summary {
+    Summary {
         title: Some(String::from("Summary")),
 
         prefix_chapters: vec![
@@ -68,17 +98,12 @@ fn parse_summary_md() {
 
         suffix_chapters: vec![
             SummaryItem::Separator,
-            SummaryItem::Link( Link {
+            SummaryItem::Link(Link {
                 name: String::from("Conclusion"),
                 location: PathBuf::from("/conclusion.md"),
                 number: None,
                 nested_items: vec![],
-            })
+            }),
         ],
-    };
-
-    let got = parse_summary(SUMMARY).unwrap();
-    println!("{:#?}", got);
-
-    assert_eq!(got, should_be);
+    }
 }

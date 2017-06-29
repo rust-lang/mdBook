@@ -27,14 +27,15 @@ impl Loader {
 
     /// Parse the summary file and use it to load a book from disk.
     pub fn load(&self) -> Result<()> {
-        let summary = self.parse_summary()
-            .chain_err(|| "Couldn't parse `SUMMARY.md`")?;
+        let summary = self.parse_summary().chain_err(
+            || "Couldn't parse `SUMMARY.md`",
+        )?;
 
         unimplemented!()
     }
 
     /// Parse the `SUMMARY.md` file.
-    fn parse_summary(&self) -> Result<Summary> {
+    pub fn parse_summary(&self) -> Result<Summary> {
         let path = self.source_directory.join("SUMMARY.md");
 
         let mut summary_content = String::new();
@@ -42,5 +43,4 @@ impl Loader {
 
         summary::parse_summary(&summary_content)
     }
-
 }
