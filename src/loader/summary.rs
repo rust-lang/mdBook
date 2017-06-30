@@ -130,7 +130,22 @@ enum State {
     End,
 }
 
-/// A stateful parser for parsing a `SUMMARY.md` file.
+/// A state machine parser for parsing a `SUMMARY.md` file.
+///
+/// The parser has roughly 5 states,
+///
+/// - **Begin:** the initial state
+/// - **Prefix Chapters:** Parsing the prefix chapters
+/// - **Numbered Chapters:** Parsing the numbered chapters, using a `usize` to
+///   indicate the nesting level (because chapters can have sub-chapters)
+/// - **Suffix Chapters:** pretty much identical to the Prefix Chapters
+/// - **End:** The final state
+///
+/// The `parse()` method then continually invokes `step()` until it reaches the
+/// `End` state. Parsing is guaranteed to (eventually) finish because the next
+/// `Event` is read from the underlying `pulldown_cmark::Parser` and passed
+/// into the current state's associated method.
+///
 ///
 /// # Grammar
 ///
@@ -209,7 +224,7 @@ impl<'a> SummaryParser<'a> {
         if let Some(ref title) = self.summary.title {
             debug!("[*] Title is {:?}", title);
         }
-        
+
         while self.state != State::End {
             self.step()?;
         }
@@ -219,15 +234,15 @@ impl<'a> SummaryParser<'a> {
 
     fn step(&mut self) -> Result<()> {
         if let Some(next_event) = self.stream.next() {
-        trace!("[*] Current state: {:?}, next event: {:?}", self.state, next_event);
+            trace!("[*] Current state: {:?}, next event: {:?}", self.state, next_event);
 
-        match self.state {
-            State::Begin => self.step_start(next_event)?,
-            State::PrefixChapters => self.step_prefix(next_event)?,
-            State::NumberedChapters(n) => self.step_numbered(next_event, n)?,
-            State::SuffixChapters => self.step_suffix(next_event)?,
-            State::End => {},
-        }
+            match self.state {
+                State::Begin => self.step_start(next_event)?,
+                State::PrefixChapters => self.step_prefix(next_event)?,
+                State::NumberedChapters(n) => self.step_numbered(next_event, n)?,
+                State::SuffixChapters => self.step_suffix(next_event)?,
+                State::End => {},
+            }
         } else {
             trace!("[*] Reached end of SUMMARY.md");
             self.state = State::End;
@@ -236,7 +251,7 @@ impl<'a> SummaryParser<'a> {
         Ok(())
     }
 
-    /// The very first state, we should see a `BeginParagraph` token or
+    /// The very first state, we should see a `Begin Paragraph` token or
     /// it's an error...
     fn step_start(&mut self, event: Event<'a>) -> Result<()> {
         match event {
@@ -258,14 +273,9 @@ impl<'a> SummaryParser<'a> {
             Event::Start(Tag::Link(location, _)) => {
                 let content = collect_events!(self.stream, Tag::Link(_, _));
                 let text = stringify_events(content);
-                let link = Link {
-                    name: text,
-                    location: PathBuf::from(location.as_ref()),
-                    number: None,
-                    nested_items: Vec::new(),
-                };
+                let link = Link::new(text, location.as_ref());
 
-                debug!("[*] Found a prefix chapter, {:?}", link.name);
+                debug!("[*] Found a prefix chapter: {:?}", link.name);
                 self.summary.prefix_chapters.push(SummaryItem::Link(link));
             },
             Event::End(Tag::Rule) => {
@@ -292,8 +302,8 @@ impl<'a> SummaryParser<'a> {
     ///
     /// If the event is the start of a new list, bump the nesting level.
     ///
-    /// If the event is the end of a list, decrement the nesting level. When 
-    /// the nesting level would go negative, we've finished the numbered 
+    /// If the event is the end of a list, decrement the nesting level. When
+    /// the nesting level would go negative, we've finished the numbered
     /// section and need to parse the suffix section.
     ///
     /// Otherwise, ignore the event.
@@ -308,33 +318,26 @@ impl<'a> SummaryParser<'a> {
                 trace!("[*] Section number is {}", section_number);
             },
             Event::Start(Tag::List(_)) => {
-                match self.state {
-                    State::NumberedChapters(n) => {
-                        let new_nest = n + 1;
-                        self.state = State::NumberedChapters(new_nest);
-                        trace!("[*] Nesting level increased to {}", new_nest);
-                    },
-                    other => unreachable!(),
+                if let State::NumberedChapters(n) = self.state {
+                    self.state = State::NumberedChapters(n + 1);
+                    trace!("[*] Nesting level increased to {}", n + 1);
                 }
             },
             Event::End(Tag::List(_)) => {
-                match self.state {
-                    State::NumberedChapters(n) => {
-                        if n == 0 {
-                            trace!("[*] Finished parsing the numbered chapters");
-                            self.state = State::SuffixChapters;
-                        } else {
-                            trace!("[*] Nesting level decreased to {}", n - 1);
-                            self.state = State::NumberedChapters(n - 1);
-                        }
-                    },
-                    other => unreachable!(),
+                if let State::NumberedChapters(n) = self.state {
+                    if n == 0 {
+                        trace!("[*] Finished parsing the numbered chapters");
+                        self.state = State::SuffixChapters;
+                    } else {
+                        trace!("[*] Nesting level decreased to {}", n - 1);
+                        self.state = State::NumberedChapters(n - 1);
+                    }
                 }
             },
             other => {
                 trace!("[*] skipping unexpected token: {:?}", other);
             },
-            }
+        }
 
         Ok(())
     }
@@ -345,14 +348,9 @@ impl<'a> SummaryParser<'a> {
             Event::Start(Tag::Link(location, _)) => {
                 let content = collect_events!(self.stream, Tag::Link(_, _));
                 let text = stringify_events(content);
-                let link = Link {
-                    name: text,
-                    location: PathBuf::from(location.as_ref()),
-                    number: None,
-                    nested_items: Vec::new(),
-                };
+                let link = Link::new(text, location.as_ref());
 
-                debug!("[*] Found a suffix chapter, {:?}", link.name);
+                debug!("[*] Found a suffix chapter: {:?}", link.name);
                 self.summary.suffix_chapters.push(SummaryItem::Link(link));
             },
             Event::End(Tag::Rule) => {
@@ -375,12 +373,7 @@ impl<'a> SummaryParser<'a> {
         if let Some(Event::Start(Tag::Link(dest, _))) = next {
             let content = collect_events!(self.stream, Tag::Link(..));
 
-            Ok(Link {
-                name: stringify_events(content),
-                location: PathBuf::from(dest.to_string()),
-                number: None,
-                nested_items: Vec::new(),
-            })
+            Ok(Link::new(stringify_events(content), dest.as_ref()))
         } else {
             bail!("Expected a link, got {:?}", next)
         }
@@ -407,8 +400,8 @@ impl<'a> SummaryParser<'a> {
         if let State::NumberedChapters(level) = self.state {
             push_item_at_nesting_level(
                 &mut self.summary.numbered_chapters,
-                    item, 
-                    level as usize,
+                item,
+                level as usize,
                 SectionNumber::default(),
             ).chain_err(|| {
                 format!("The parser should always ensure we add the next \
@@ -449,23 +442,31 @@ fn push_item_at_nesting_level(links: &mut Vec<SummaryItem>, mut item: SummaryIte
         let index_for_item = links.len() + 1;
 
         // FIXME: This bit needs simplifying!
-        let (index, last_link) =
-            links
-                .iter_mut()
-                .enumerate()
-                .filter_map(|(i, item)| item.maybe_link_mut().map(|l| (i, l)))
-                .rev()
-                .next()
-                .ok_or_else(|| format!("Can't recurse any further, summary needs to be {} more levels deep", level))?;
+        let (index, last_link) = get_last_link(links).chain_err(|| {
+            format!("The list of links needs to be {} levels deeper (current position {})", 
+                level, section_number)
+        })?;
 
         section_number.push(index as u32 + 1);
         push_item_at_nesting_level(&mut last_link.nested_items, item, level - 1, section_number)
     }
 }
 
+/// Gets a pointer to the last `Link` in a list of `SummaryItem`s, and its
+/// index.
+fn get_last_link(links: &mut [SummaryItem]) -> Result<(usize, &mut Link)> {
+    links
+        .iter_mut()
+        .enumerate()
+        .filter_map(|(i, item)| item.maybe_link_mut().map(|l| (i, l)))
+        .rev()
+        .next()
+        .ok_or_else(|| "The list of SummaryItems doesn't contain any Links".into())
+}
 
 
-/// Extracts the text from formatted markdown.
+/// Removes the styling from a list of Markdown events and returns just the
+/// plain text.
 fn stringify_events(events: Vec<Event>) -> String {
     events
         .into_iter()
@@ -476,7 +477,8 @@ fn stringify_events(events: Vec<Event>) -> String {
         .collect()
 }
 
-/// A section number like "1.2.3", basically just a newtype'd `Vec<u32>`.
+/// A section number like "1.2.3", basically just a newtype'd `Vec<u32>` with
+/// a pretty `Display` impl.
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct SectionNumber(pub Vec<u32>);
 

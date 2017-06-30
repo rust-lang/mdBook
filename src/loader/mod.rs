@@ -1,4 +1,42 @@
 //! Functionality for loading the internal book representation from disk.
+//!
+//! The typical use case is to create a `Loader` pointing at the correct
+//! source directory then call the `load()` method. Internally this will
+//! search for the `SUMMARY.md` file, parse it, then use the parsed
+//! `Summary` to construct an in-memory representation of the entire book.
+//!
+//! # Examples
+//!
+//! ```rust,no_run
+//! # fn run() -> mdbook::errors::Result<()> {
+//! use mdbook::loader::Loader;
+//! let loader = Loader::new("./src/");
+//! let book = loader.load()?;
+//! # Ok(())
+//! # }
+//! # fn main() { run().unwrap() }
+//! ```
+//!
+//! Alternatively, if you are using the `mdbook` crate as a library and
+//! only want to read the `SUMMARY.md` file without having to load the
+//! entire book from disk, you can use the `parse_summary()` function.
+//!
+//! ```rust
+//! # fn run() -> mdbook::errors::Result<()> {
+//! use mdbook::loader::parse_summary;
+//! let src = "# Book Summary
+//!
+//! [Introduction](./index.md)
+//! - [First Chapter](./first/index.md)
+//!   - [Sub-Section](./first/subsection.md)
+//! - [Second Chapter](./second/index.md)
+//! ";
+//! let summary = parse_summary(src)?;
+//! println!("{:#?}", summary);
+//! # Ok(())
+//! # }
+//! # fn main() { run().unwrap() }
+//! ```
 
 #![deny(missing_docs)]
 
