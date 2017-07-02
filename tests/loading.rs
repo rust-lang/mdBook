@@ -49,11 +49,14 @@ fn parse_summary_using_loader() {
     let temp = TempDir::new("book").unwrap();
     let summary_md = temp.path().join("SUMMARY.md");
 
-    File::create(&summary_md).unwrap().write_all(SUMMARY.as_bytes()).unwrap();
+    File::create(&summary_md)
+        .unwrap()
+        .write_all(SUMMARY.as_bytes())
+        .unwrap();
 
     let loader = Loader::new(temp.path());
 
-    let got = loader.parse_summary().unwrap();
+    let got = loader.parse_summary(&summary_md).unwrap();
     let should_be = expected_summary();
 
     assert_eq!(got, should_be);
@@ -106,4 +109,15 @@ fn expected_summary() -> Summary {
             }),
         ],
     }
+}
+
+#[test]
+fn load_the_example_book() {
+    let example_src_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("book-example")
+        .join("src");
+    let loader = Loader::new(example_src_dir);
+
+    let book = loader.load().unwrap();
+    println!("{:#?}", book);
 }

@@ -3,8 +3,7 @@
 //! **mdBook** is similar to Gitbook but implemented in Rust.
 //! It offers a command line interface, but can also be used as a regular crate.
 //!
-//! This is the API doc, but you can find a [less "low-level" documentation
-//! here](../index.html) that
+//! This is the API doc, but you can find a [less "low-level" documentation here](../index.html) that
 //! contains information about the command line tool, format, structure etc.
 //! It is also rendered with mdBook to showcase the features and default theme.
 //!
@@ -26,23 +25,17 @@
 //! # #[allow(unused_variables)]
 //! fn main() {
 //!     let mut book =  MDBook::new("my-book")        // Path to root
-//! .with_source("src")       // Path from root to
-//! source directory
-//! .with_destination("book") // Path from root to
-//! output directory
-//! .read_config()            // Parse book.toml
-//! configuration file
-//! .expect("I don't handle configuration file errors,
-//! but you should!");
-//!
+//!                         .with_source("src")       // Path from root to source directory
+//!                         .with_destination("book") // Path from root to output directory
+//!                         .read_config()            // Parse book.toml configuration file
+//!                         .expect("I don't handle configuration file errors, but you should!");
 //!     book.build().unwrap();                        // Render the book
 //! }
 //! ```
 //!
 //! ## Implementing a new Renderer
 //!
-//! If you want to create a new renderer for mdBook, the only thing you have to
-//! do is to implement
+//! If you want to create a new renderer for mdBook, the only thing you have to do is to implement
 //! the [Renderer trait](renderer/renderer/trait.Renderer.html)
 //!
 //! And then you can swap in your renderer like this:
@@ -60,17 +53,15 @@
 //! let book = MDBook::new("my-book").set_renderer(Box::new(your_renderer));
 //! # }
 //! ```
-//! If you make a renderer, you get the book constructed in form of
-//! `Vec<BookItems>` and you get
+//! If you make a renderer, you get the book constructed in form of `Vec<BookItems>` and you get
 //! the book config in a `BookConfig` struct.
 //!
-//! It's your responsability to create the necessary files in the correct
+//! It's your responsibility to create the necessary files in the correct
 //! directories.
 //!
 //! ## utils
 //!
-//! I have regrouped some useful functions in the [utils](utils/index.html)
-//! module, like the
+//! I have regrouped some useful functions in the [utils](utils/index.html) module, like the
 //! following function [`utils::fs::create_file(path:
 //! &Path)`](utils/fs/fn.create_file.html)
 //!
@@ -99,6 +90,8 @@ extern crate tempdir;
 #[cfg(test)]
 #[macro_use]
 extern crate pretty_assertions;
+#[cfg(test)]
+extern crate tempdir;
 
 mod parse;
 mod preprocess;

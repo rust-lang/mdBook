@@ -46,8 +46,10 @@ use std::io::Read;
 use errors::*;
 
 mod summary;
+mod book;
 
 pub use self::summary::{Summary, Link, SummaryItem, parse_summary, SectionNumber};
+pub use self::book::{Book, load_book_from_disk, BookItem, Chapter};
 
 
 /// The object in charge of parsing the source directory into a usable
@@ -64,21 +66,33 @@ impl Loader {
     }
 
     /// Parse the summary file and use it to load a book from disk.
-    pub fn load(&self) -> Result<()> {
-        let summary = self.parse_summary().chain_err(
+    pub fn load(&self) -> Result<Book> {
+        let summary_md = self.find_summary().chain_err(
+            || "Couldn't find `SUMMARY.md`",
+        )?;
+
+        let summary = self.parse_summary(&summary_md).chain_err(
             || "Couldn't parse `SUMMARY.md`",
         )?;
 
-        unimplemented!()
+        let src_dir = match summary_md.parent() {
+            Some(parent) => parent,
+            None => bail!("SUMMARY.md doesn't have a parent... wtf?"),
+        };
+        load_book_from_disk(&summary, src_dir)
     }
 
-    /// Parse the `SUMMARY.md` file.
-    pub fn parse_summary(&self) -> Result<Summary> {
-        let path = self.source_directory.join("SUMMARY.md");
-
+    /// Parse a `SUMMARY.md` file.
+    pub fn parse_summary<P: AsRef<Path>>(&self, summary_md: P) -> Result<Summary> {
         let mut summary_content = String::new();
-        File::open(&path)?.read_to_string(&mut summary_content)?;
+        File::open(summary_md)?.read_to_string(&mut summary_content)?;
 
         summary::parse_summary(&summary_content)
+    }
+
+    fn find_summary(&self) -> Result<PathBuf> {
+        // TODO: use Piston's find_folder to make locating SUMMARY.md easier.
+        // https://github.com/PistonDevelopers/find_folder
+        Ok(self.source_directory.join("SUMMARY.md"))
     }
 }
