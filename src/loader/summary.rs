@@ -50,7 +50,7 @@ pub fn parse_summary(summary: &str) -> Result<Summary> {
 }
 
 /// The parsed `SUMMARY.md`, specifying how the book should be laid out.
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct Summary {
     /// An optional title for the `SUMMARY.md`, currently just ignored.
     pub title: Option<String>,
@@ -66,7 +66,7 @@ pub struct Summary {
 /// entries.
 ///
 /// This is roughly the equivalent of `[Some section](./path/to/file.md)`.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Link {
     /// The name of the chapter.
     pub name: String,
@@ -89,6 +89,11 @@ impl Link {
             nested_items: Vec::new(),
         }
     }
+
+    /// Add an item to this link's `nested_items`.
+    pub fn push_item<I: Into<SummaryItem>>(&mut self, item: I) {
+        self.nested_items.push(item.into());
+    }
 }
 
 impl Default for Link {
@@ -103,7 +108,7 @@ impl Default for Link {
 }
 
 /// An item in `SUMMARY.md` which could be either a separator or a `Link`.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum SummaryItem {
     /// A link to a chapter.
     Link(Link),
@@ -117,6 +122,12 @@ impl SummaryItem {
             SummaryItem::Link(ref mut l) => Some(l),
             _ => None,
         }
+    }
+}
+
+impl From<Link> for SummaryItem {
+    fn from(other: Link) -> SummaryItem {
+        SummaryItem::Link(other)
     }
 }
 
@@ -310,8 +321,9 @@ impl<'a> SummaryParser<'a> {
     fn step_numbered(&mut self, event: Event, nesting: u32) -> Result<()> {
         match event {
             Event::Start(Tag::Item) => {
-                let it = self.parse_item()
-                    .chain_err(|| "List items should only contain links")?;
+                let it = self.parse_item().chain_err(
+                    || "List items should only contain links",
+                )?;
 
                 debug!("[*] Found a chapter: {:?} ({})", it.name, it.location.display());
                 let section_number = self.push_numbered_section(SummaryItem::Link(it));
@@ -479,7 +491,7 @@ fn stringify_events(events: Vec<Event>) -> String {
 
 /// A section number like "1.2.3", basically just a newtype'd `Vec<u32>` with
 /// a pretty `Display` impl.
-#[derive(Debug, PartialEq, Clone, Default)]
+#[derive(Debug, PartialEq, Clone, Default, Serialize, Deserialize)]
 pub struct SectionNumber(pub Vec<u32>);
 
 impl Display for SectionNumber {
