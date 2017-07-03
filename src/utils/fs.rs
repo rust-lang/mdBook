@@ -4,8 +4,8 @@ use std::io::Read;
 use std::fs::{self, File};
 
 /// Takes a path to a file and try to read the file into a String
-
-pub fn file_to_string(path: &Path) -> Result<String> {
+pub fn file_to_string<P: AsRef<Path>>(path: P) -> Result<String> {
+    let path = path.as_ref();
     let mut file = match File::open(path) {
         Ok(f) => f,
         Err(e) => {

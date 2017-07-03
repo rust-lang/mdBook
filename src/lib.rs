@@ -71,22 +71,23 @@
 
 #[macro_use]
 extern crate error_chain;
+extern crate handlebars;
+#[macro_use]
+extern crate lazy_static;
+#[macro_use]
+extern crate log;
+extern crate pulldown_cmark;
+extern crate regex;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
-#[macro_use] 
+#[macro_use]
 extern crate serde_json;
 
-extern crate handlebars;
-extern crate pulldown_cmark;
-extern crate regex;
-
-#[macro_use]
-extern crate log;
-pub mod book;
-pub mod config;
 mod parse;
 mod preprocess;
+pub mod book;
+pub mod config;
 pub mod renderer;
 pub mod theme;
 pub mod utils;
