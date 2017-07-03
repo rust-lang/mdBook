@@ -1,4 +1,5 @@
 use renderer::html_handlebars::helpers;
+use preprocess;
 use renderer::Renderer;
 use book::MDBook;
 use book::bookitem::{BookItem, Chapter};
@@ -46,7 +47,7 @@ impl HtmlHandlebars {
 
                     // Parse for playpen links
                     if let Some(p) = path.parent() {
-                        content = helpers::playpen::render_playpen(&content, p);
+                        content = preprocess::links::render_playpen(&content, p);
                     }
 
                     content = utils::render_markdown(&content, ctx.book.get_curly_quotes());
