@@ -45,9 +45,9 @@ impl HtmlHandlebars {
                     debug!("[*]: Reading file");
                     f.read_to_string(&mut content)?;
 
-                    // Parse for playpen links
+                    // Parse and expand links
                     if let Some(p) = path.parent() {
-                        content = preprocess::links::render_playpen(&content, p);
+                        content = preprocess::links::replace_all(&content, p)?;
                     }
 
                     content = utils::render_markdown(&content, ctx.book.get_curly_quotes());
