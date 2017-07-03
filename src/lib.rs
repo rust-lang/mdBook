@@ -86,6 +86,7 @@ extern crate log;
 pub mod book;
 pub mod config;
 mod parse;
+mod preprocess;
 pub mod renderer;
 pub mod theme;
 pub mod utils;
