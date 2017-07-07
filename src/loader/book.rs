@@ -1,6 +1,7 @@
 #![allow(missing_docs, unused_variables, unused_imports, dead_code)]
 
 use std::path::Path;
+use std::collections::VecDeque;
 use std::fs::File;
 use std::io::Read;
 
@@ -21,6 +22,11 @@ impl Book {
     /// Create an empty book.
     pub fn new() -> Self {
         Default::default()
+    }
+
+    /// Get a depth-first iterator over the items in the book.
+    pub fn iter(&self) -> BookItems {
+        BookItems { items: self.sections.iter().collect() }
     }
 }
 
@@ -116,6 +122,29 @@ fn load_chapter<P: AsRef<Path>>(link: &Link, src_dir: P) -> Result<Chapter> {
 
     Ok(ch)
 }
+
+/// A depth-first iterator over the items in a book.
+pub struct BookItems<'a> {
+    items: VecDeque<&'a BookItem>,
+}
+
+impl<'a> Iterator for BookItems<'a> {
+    type Item = &'a BookItem;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let item = self.items.pop_front();
+
+        if let Some(&BookItem::Chapter(ref ch)) = item {
+            // if we wanted a breadth-first iterator we'd `extend()` here
+            for sub_item in ch.sub_items.iter().rev() {
+                self.items.push_front(sub_item);
+            }
+        }
+
+        item
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -230,5 +259,64 @@ And here is some more text.
         let got = load_book_from_disk(&summary, "").unwrap();
 
         assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn book_iter_iterates_over_sequential_items() {
+        let book = Book {
+            sections: vec![
+                BookItem::Chapter(Chapter {
+                    name: String::from("Chapter 1"),
+                    content: String::from(DUMMY_SRC),
+                    ..Default::default()
+                }),
+                BookItem::Separator,
+            ],
+        };
+
+        let should_be: Vec<_> = book.sections.iter().collect();
+
+        let got: Vec<_> = book.iter().collect();
+
+        assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn iterate_over_nested_book_items() {
+        let book = Book {
+            sections: vec![
+                BookItem::Chapter(Chapter {
+                    name: String::from("Chapter 1"),
+                    content: String::from(DUMMY_SRC),
+                    number: None,
+                    sub_items: vec![
+                        BookItem::Chapter(Chapter::new("Hello World", String::new())),
+                        BookItem::Separator,
+                        BookItem::Chapter(Chapter::new("Goodbye World", String::new())),
+                    ],
+                }),
+                BookItem::Separator,
+            ],
+        };
+
+
+        let got: Vec<_> = book.iter().collect();
+
+        assert_eq!(got.len(), 5);
+
+        // checking the chapter names are in the order should be sufficient here...
+        let chapter_names: Vec<String> = got.into_iter()
+            .filter_map(|i| match *i {
+                BookItem::Chapter(ref ch) => Some(ch.name.clone()),
+                _ => None,
+            })
+            .collect();
+        let should_be: Vec<_> = vec![
+            String::from("Chapter 1"),
+            String::from("Hello World"),
+            String::from("Goodbye World"),
+        ];
+
+        assert_eq!(chapter_names, should_be);
     }
 }
