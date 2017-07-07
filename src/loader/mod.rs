@@ -49,7 +49,7 @@ mod summary;
 mod book;
 
 pub use self::summary::{Summary, Link, SummaryItem, parse_summary, SectionNumber};
-pub use self::book::{Book, load_book_from_disk, BookItem, Chapter};
+pub use self::book::{Book, BookItems, load_book_from_disk, BookItem, Chapter};
 
 
 /// The object in charge of parsing the source directory into a usable
