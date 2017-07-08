@@ -20,13 +20,16 @@ environment:
 
 # Install Rust and Cargo
 install:
-  - ps: Start-FileDownload "https://static.rust-lang.org/dist/channel-rust-stable"
-  - ps: $env:RUST_VERSION = Get-Content channel-rust-stable | select -first 1 | %{$_.split('-')[1]}
-  - if NOT "%RUST_CHANNEL%" == "stable" set RUST_VERSION=%RUST_CHANNEL%
-  - ps: Start-FileDownload "https://static.rust-lang.org/dist/rust-${env:RUST_VERSION}-${env:TARGET}.exe"
-  - rust-%RUST_VERSION%-%TARGET%.exe /VERYSILENT /NORESTART /DIR="C:\Program Files (x86)\Rust"
-  - SET PATH=%PATH%;C:\Program Files (x86)\Rust\bin
-  - rustc -V
+  - ps: >-
+      If ($Env:TARGET -eq 'x86_64-pc-windows-gnu') {
+        $Env:PATH += ';C:\msys64\mingw64\bin'
+      } ElseIf ($Env:TARGET -eq 'i686-pc-windows-gnu') {
+        $Env:PATH += ';C:\msys64\mingw32\bin'
+      }
+  - curl -sSf -o rustup-init.exe https://win.rustup.rs/
+  - rustup-init.exe -y --default-host %TARGET% --default-toolchain %RUST_CHANNEL%
+  - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
+  - rustc -Vv
   - cargo -V
 
 build: false
