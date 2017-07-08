@@ -2,7 +2,6 @@ use std::fmt::{self, Formatter, Display};
 use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 use pulldown_cmark::{self, Event, Tag};
-
 use errors::*;
 
 
@@ -248,7 +247,7 @@ impl<'a> SummaryParser<'a> {
             match self.state {
                 State::Begin => self.step_start(next_event)?,
                 State::PrefixChapters => self.step_prefix(next_event)?,
-                State::NumberedChapters(n) => self.step_numbered(next_event, n)?,
+                State::NumberedChapters(_) => self.step_numbered(next_event)?,
                 State::SuffixChapters => self.step_suffix(next_event)?,
                 State::End => {},
             }
@@ -316,7 +315,7 @@ impl<'a> SummaryParser<'a> {
     /// section and need to parse the suffix section.
     ///
     /// Otherwise, ignore the event.
-    fn step_numbered(&mut self, event: Event, nesting: u32) -> Result<()> {
+    fn step_numbered(&mut self, event: Event) -> Result<()> {
         match event {
             Event::Start(Tag::Item) => {
                 let it = self.parse_item().chain_err(
@@ -448,10 +447,6 @@ fn push_item_at_nesting_level(links: &mut Vec<SummaryItem>, mut item: SummaryIte
         links.push(item);
         Ok(section_number)
     } else {
-        let next_level = level - 1;
-        let index_for_item = links.len() + 1;
-
-        // FIXME: This bit needs simplifying!
         let (index, last_link) = get_last_link(links).chain_err(|| {
             format!("The list of links needs to be {} levels deeper (current position {})", 
                 level, section_number)
@@ -465,6 +460,7 @@ fn push_item_at_nesting_level(links: &mut Vec<SummaryItem>, mut item: SummaryIte
 /// Gets a pointer to the last `Link` in a list of `SummaryItem`s, and its
 /// index.
 fn get_last_link(links: &mut [SummaryItem]) -> Result<(usize, &mut Link)> {
+    // TODO: This should probably be integrated into `Link::push_item()`
     links
         .iter_mut()
         .enumerate()

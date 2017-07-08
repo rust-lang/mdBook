@@ -18,7 +18,7 @@
 
 #![deny(missing_docs)]
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::fs::File;
 use std::io::Read;
 use errors::*;
@@ -27,6 +27,7 @@ mod summary;
 mod book;
 
 pub use self::book::{Book, BookItems, BookItem, Chapter};
+pub use self::summary::SectionNumber;
 
 use self::book::load_book_from_disk;
 use self::summary::parse_summary;

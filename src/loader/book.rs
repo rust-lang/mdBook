@@ -122,6 +122,13 @@ fn load_chapter<P: AsRef<Path>>(link: &Link, src_dir: P) -> Result<Chapter> {
 }
 
 /// A depth-first iterator over the items in a book.
+///
+/// # Note
+///
+/// This struct shouldn't be created directly, instead prefer the
+/// [`Book::iter()`] method.
+///
+/// [`Book::iter()`]: struct.Book.html#method.iter
 pub struct BookItems<'a> {
     items: VecDeque<&'a BookItem>,
 }
@@ -239,7 +246,7 @@ And here is some more text.
 
     #[test]
     fn load_a_book_with_a_single_chapter() {
-        let (link, temp) = dummy_link();
+        let (link, _temp) = dummy_link();
         let summary = Summary {
             numbered_chapters: vec![SummaryItem::Link(link)],
             ..Default::default()
