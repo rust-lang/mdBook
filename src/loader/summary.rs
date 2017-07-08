@@ -1,5 +1,3 @@
-#![allow(dead_code, unused_variables)]
-
 use std::fmt::{self, Formatter, Display};
 use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
