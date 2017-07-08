@@ -9,30 +9,8 @@
 //!
 //! ```rust,no_run
 //! # fn run() -> mdbook::errors::Result<()> {
-//! use mdbook::loader::Loader;
-//! let loader = Loader::new("./src/");
-//! let book = loader.load()?;
-//! # Ok(())
-//! # }
-//! # fn main() { run().unwrap() }
-//! ```
-//!
-//! Alternatively, if you are using the `mdbook` crate as a library and
-//! only want to read the `SUMMARY.md` file without having to load the
-//! entire book from disk, you can use the `parse_summary()` function.
-//!
-//! ```rust
-//! # fn run() -> mdbook::errors::Result<()> {
-//! use mdbook::loader::parse_summary;
-//! let src = "# Book Summary
-//!
-//! [Introduction](./index.md)
-//! - [First Chapter](./first/index.md)
-//!   - [Sub-Section](./first/subsection.md)
-//! - [Second Chapter](./second/index.md)
-//! ";
-//! let summary = parse_summary(src)?;
-//! println!("{:#?}", summary);
+//! use mdbook::loader::load_book;
+//! let book = load_book("./src/")?;
 //! # Ok(())
 //! # }
 //! # fn main() { run().unwrap() }
@@ -48,51 +26,24 @@ use errors::*;
 mod summary;
 mod book;
 
-pub use self::summary::{Summary, Link, SummaryItem, parse_summary, SectionNumber};
-pub use self::book::{Book, BookItems, load_book_from_disk, BookItem, Chapter};
+pub use self::book::{Book, BookItems, BookItem, Chapter};
 
+use self::book::load_book_from_disk;
+use self::summary::parse_summary;
 
-/// The object in charge of parsing the source directory into a usable
-/// `Book` struct.
-#[derive(Debug, Clone, PartialEq)]
-pub struct Loader {
-    source_directory: PathBuf,
-}
+/// Load a book into memory from its `src/` directory.
+pub fn load_book<P: AsRef<Path>>(src_dir: P) -> Result<Book> {
+    let src_dir = src_dir.as_ref();
+    let summary_md = src_dir.join("SUMMARY.md");
 
-impl Loader {
-    /// Create a new loader which uses the provided source directory.
-    pub fn new<P: AsRef<Path>>(source_directory: P) -> Loader {
-        Loader { source_directory: source_directory.as_ref().to_path_buf() }
-    }
+    let mut summary_content = String::new();
+    File::open(summary_md)
+        .chain_err(|| "Couldn't open SUMMARY.md")?
+        .read_to_string(&mut summary_content)?;
 
-    /// Parse the summary file and use it to load a book from disk.
-    pub fn load(&self) -> Result<Book> {
-        let summary_md = self.find_summary().chain_err(
-            || "Couldn't find `SUMMARY.md`",
-        )?;
+    let summary = parse_summary(&summary_content).chain_err(
+        || "Summary parsing failed",
+    )?;
 
-        let summary = self.parse_summary(&summary_md).chain_err(
-            || "Couldn't parse `SUMMARY.md`",
-        )?;
-
-        let src_dir = match summary_md.parent() {
-            Some(parent) => parent,
-            None => bail!("SUMMARY.md doesn't have a parent... wtf?"),
-        };
-        load_book_from_disk(&summary, src_dir)
-    }
-
-    /// Parse a `SUMMARY.md` file.
-    pub fn parse_summary<P: AsRef<Path>>(&self, summary_md: P) -> Result<Summary> {
-        let mut summary_content = String::new();
-        File::open(summary_md)?.read_to_string(&mut summary_content)?;
-
-        summary::parse_summary(&summary_content)
-    }
-
-    fn find_summary(&self) -> Result<PathBuf> {
-        // TODO: use Piston's find_folder to make locating SUMMARY.md easier.
-        // https://github.com/PistonDevelopers/find_folder
-        Ok(self.source_directory.join("SUMMARY.md"))
-    }
+    load_book_from_disk(&summary, src_dir)
 }
