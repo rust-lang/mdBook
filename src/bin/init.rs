@@ -19,10 +19,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 pub fn execute(args: &ArgMatches) -> Result<()> {
 
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::new(&book_dir);
-
-    // Call the function that does the initialization
-    book.init()?;
+    let book = MDBook::init(&book_dir)?;
 
     // If flag `--theme` is present, copy theme to src
     if args.is_present("theme") {
