@@ -2,7 +2,7 @@ use renderer::html_handlebars::helpers;
 use preprocess;
 use renderer::Renderer;
 use book::MDBook;
-use book::bookitem::{BookItem, Chapter};
+use loader::{BookItem, Chapter};
 use utils;
 use theme::{self, Theme};
 use errors::*;
@@ -28,8 +28,7 @@ impl HtmlHandlebars {
         HtmlHandlebars
     }
 
-    fn render_item(&self, item: &BookItem, mut ctx: RenderItemContext, print_content: &mut String)
-        -> Result<()> {
+    fn render_item(&self, item: &BookItem, mut ctx: RenderItemContext, print_content: &mut String) -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
         match *item {
             BookItem::Chapter(_, ref ch) |
@@ -92,15 +91,10 @@ impl HtmlHandlebars {
     fn render_index(&self, book: &MDBook, ch: &Chapter, destination: &Path) -> Result<()> {
         debug!("[*]: index.html");
 
-        let mut content = String::new();
-
-        File::open(destination.join(&ch.path.with_extension("html")))?
-            .read_to_string(&mut content)?;
-
         // This could cause a problem when someone displays
         // code containing <base href=...>
         // on the front page, however this case should be very very rare...
-        content = content
+        let content = ch.content
             .lines()
             .filter(|line| !line.contains("<base href="))
             .collect::<Vec<&str>>()
@@ -110,8 +104,9 @@ impl HtmlHandlebars {
 
         info!(
             "[*] Creating index.html from {:?} ✓",
-            book.get_destination()
-                .join(&ch.path.with_extension("html"))
+            book.get_destination().join(
+                ch.path().with_extension("html"),
+            )
         );
 
         Ok(())
@@ -175,7 +170,7 @@ impl HtmlHandlebars {
         Ok(())
     }
 
-    /// Helper function to write a file to the build directory, normalizing 
+    /// Helper function to write a file to the build directory, normalizing
     /// the path to be relative to the book root.
     fn write_custom_file(&self, custom_file: &Path, book: &MDBook) -> Result<()> {
         let mut data = Vec::new();
@@ -362,22 +357,18 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
         let mut chapter = BTreeMap::new();
 
         match *item {
-            BookItem::Affix(ref ch) => {
+            BookItem::Chapter(ref ch) => {
+                if let Some(ref section) = ch.number {
+                    chapter.insert("section".to_owned(), json!(section.to_string()));
+                }
                 chapter.insert("name".to_owned(), json!(ch.name));
-                let path = ch.path.to_str().ok_or_else(|| {
+
+                let path = ch.path().to_str().ok_or_else(|| {
                     io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
                 })?;
                 chapter.insert("path".to_owned(), json!(path));
             },
-            BookItem::Chapter(ref s, ref ch) => {
-                chapter.insert("section".to_owned(), json!(s));
-                chapter.insert("name".to_owned(), json!(ch.name));
-                let path = ch.path.to_str().ok_or_else(|| {
-                    io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
-                })?;
-                chapter.insert("path".to_owned(), json!(path));
-            },
-            BookItem::Spacer => {
+            BookItem::Separator => {
                 chapter.insert("spacer".to_owned(), json!("_spacer_"));
             },
 

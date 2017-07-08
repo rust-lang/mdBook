@@ -2,6 +2,7 @@ use std::path::Path;
 use std::collections::VecDeque;
 use std::fs::File;
 use std::io::Read;
+use std::fmt;
 
 use loader::summary::{Summary, Link, SummaryItem, SectionNumber};
 use errors::*;
@@ -59,6 +60,28 @@ impl Chapter {
             content: content,
             ..Default::default()
         }
+    }
+
+    /// Get this chapter's location in the book structure, relative to the
+    /// root.
+    ///
+    /// # Note
+    ///
+    /// This **may not** be the same as the source file's location on disk!
+    /// Rather, it reflects the chapter's location in the `Book` tree
+    /// structure.
+    pub fn path(&self) -> &Path {
+        unimplemented!()
+    }
+}
+
+impl fmt::Display for Chapter {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if let Some(ref number) = self.number {
+            write!(f, "{}) ", number)?;
+        }
+
+        write!(f, "{}", self.name)
     }
 }
 
