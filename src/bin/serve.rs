@@ -33,7 +33,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     const RELOAD_COMMAND: &'static str = "reload";
 
     let book_dir = get_book_dir(args);
-    let book = MDBook::new(&book_dir)?.read_config()?;
+    let book = MDBook::new(&book_dir)?;
 
     let mut book = match args.value_of("dest-dir") {
         Some(dest_dir) => book.with_destination(Path::new(dest_dir)),

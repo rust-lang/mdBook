@@ -1,4 +1,6 @@
-// pub use self::bookitem::{BookItem, BookItems};
+mod builder;
+
+pub use self::builder::Builder;
 
 use std::path::{Path, PathBuf};
 use std::fs::{self, File};
@@ -11,8 +13,6 @@ use tempdir::TempDir;
 use errors::*;
 
 use config::BookConfig;
-use config::tomlconfig::TomlConfig;
-use config::jsonconfig::JsonConfig;
 use loader::{self, Book, BookItem, BookItems, Chapter};
 
 
@@ -58,21 +58,7 @@ impl MDBook {
     /// [`set_dest()`](#method.set_dest)
 
     pub fn new<P: AsRef<Path>>(root: P) -> Result<MDBook> {
-
-        let root = root.as_ref();
-        if !root.exists() || !root.is_dir() {
-            bail!("{:?} No directory with that name", root);
-        }
-
-        let book = loader::load_book(root.join("src"))?;
-
-        Ok(MDBook {
-            config: BookConfig::new(root),
-            book: book,
-            renderer: Box::new(HtmlHandlebars::new()),
-            livereload: None,
-            create_missing: true,
-        })
+        Builder::new(root).build()
     }
 
     /// Returns a flat depth-first iterator over the elements of the book,
@@ -82,15 +68,14 @@ impl MDBook {
     /// ```no_run
     /// # extern crate mdbook;
     /// # use mdbook::MDBook;
-    /// # use mdbook::BookItem;
+    /// # use mdbook::loader::BookItem;
     /// # #[allow(unused_variables)]
-    /// # fn main() {
-    /// # let book = MDBook::new("mybook");
+    /// # fn run() -> ::errors::Result<()> {
+    /// # let book = MDBook::new("mybook")?;
     /// for item in book.iter() {
-    ///     match item {
-    ///         &BookItem::Chapter(ref section, ref chapter) => {},
-    ///         &BookItem::Affix(ref chapter) => {},
-    ///         &BookItem::Spacer => {},
+    ///     match *item {
+    ///         BookItem::Chapter(ref chapter) => {},
+    ///         BookItem::Separator => {},
     ///     }
     /// }
     ///
@@ -101,7 +86,9 @@ impl MDBook {
     /// // 2. Chapter 2
     /// //
     /// // etc.
+    /// # Ok(())
     /// # }
+    /// # fn main() { run().unwrap() }
     /// ```
 
     pub fn iter(&self) -> BookItems {
@@ -252,36 +239,6 @@ impl MDBook {
         )
     }
 
-    /// Parses the `book.json` file (if it exists) to extract
-    /// the configuration parameters.
-    /// The `book.json` file should be in the root directory of the book.
-    /// The root directory is the one specified when creating a new `MDBook`
-
-    pub fn read_config(mut self) -> Result<Self> {
-
-        let toml = self.get_root().join("book.toml");
-        let json = self.get_root().join("book.json");
-
-        if toml.exists() {
-            let mut file = File::open(toml)?;
-            let mut content = String::new();
-            file.read_to_string(&mut content)?;
-
-            let parsed_config = TomlConfig::from_toml(&content)?;
-            self.config.fill_from_tomlconfig(parsed_config);
-        } else if json.exists() {
-            warn!("The JSON configuration file is deprecated, please use the TOML configuration.");
-            let mut file = File::open(json)?;
-            let mut content = String::new();
-            file.read_to_string(&mut content)?;
-
-            let parsed_config = JsonConfig::from_json(&content)?;
-            self.config.fill_from_jsonconfig(parsed_config);
-        }
-
-        Ok(self)
-    }
-
     /// You can change the default renderer to another one
     /// by using this method. The only requirement
     /// is for your renderer to implement the
@@ -293,14 +250,16 @@ impl MDBook {
     /// use mdbook::renderer::HtmlHandlebars;
     ///
     /// # #[allow(unused_variables)]
-    /// fn main() {
-    ///     let book = MDBook::new("mybook")
+    /// # fn run() -> mdbook::errors::Result<()> {
+    ///     let book = MDBook::new("mybook")?
     ///                         .set_renderer(Box::new(HtmlHandlebars::new()));
     ///
     /// // In this example we replace the default renderer
     /// // by the default renderer...
     /// // Don't forget to put your renderer in a Box
-    /// }
+    /// # Ok(())
+    /// # }
+    /// # fn main() { run().unwrap() }
     /// ```
     ///
     /// **note:** Don't forget to put your renderer in a `Box`
@@ -342,7 +301,6 @@ impl MDBook {
     pub fn get_root(&self) -> &Path {
         self.config.get_root()
     }
-
 
     pub fn with_destination<T: Into<PathBuf>>(mut self, destination: T) -> Self {
         let root = self.config.get_root().to_owned();
