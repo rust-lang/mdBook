@@ -88,9 +88,6 @@ extern crate serde_json;
 extern crate tempdir;
 
 #[cfg(test)]
-#[macro_use]
-extern crate pretty_assertions;
-#[cfg(test)]
 extern crate tempdir;
 
 mod parse;

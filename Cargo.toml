@@ -43,7 +43,6 @@ ws = { version = "0.7", optional = true}
 # Tests
 [dev-dependencies]
 tempdir = "0.3.4"
-pretty_assertions = "0.2.1"
 
 [build-dependencies]
 error-chain = "0.11"
