@@ -233,21 +233,15 @@ fn create_book(passing_test: bool) -> TempDir {
 /// Read the contents of the provided file into memory and then iterate through
 /// the list of strings asserting that the file contains all of them.
 fn assert_contains_strings<P: AsRef<Path>>(filename: P, strings: &[&str]) {
-    println!("Checking {}", filename.as_ref().display());
-    println!();
+    let filename = filename.as_ref();
 
     let mut content = String::new();
-    File::open(filename)
+    File::open(&filename)
         .expect("Couldn't open the provided file")
         .read_to_string(&mut content)
-        .unwrap();
-
-    println!("{}", content);
-    println!();
-    println!();
+        .expect("Couldn't read the file's contents");
 
     for s in strings {
-        println!("Checking for {:?}", s);
-        assert!(content.contains(s));
+        assert!(content.contains(s), "Searching for {:?} in {}\n\n{}", s, filename.display(), content);
     }
 }
