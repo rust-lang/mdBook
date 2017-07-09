@@ -66,7 +66,7 @@ fn mdbook_can_correctly_test_a_passing_book() {
 #[test]
 fn mdbook_detects_book_with_failing_tests() {
     let temp = create_book(false);
-    let mut md = MDBook::new(temp.path());
+    let mut md: MDBook = MDBook::new(temp.path());
 
     assert!(md.test().is_err());
 }
