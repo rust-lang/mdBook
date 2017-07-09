@@ -160,6 +160,28 @@ fn rendered_code_has_playpen_stuff() {
     assert_contains_strings(book_js, &[".playpen"]);
 }
 
+#[test]
+fn chapter_content_appears_in_rendered_document() {
+    let content = vec![
+        ("index.html", "Here's some interesting text"),
+        ("second.html", "Second Chapter"),
+        ("first/nested.html", "testable code"),
+        ("first/index.html", "more text"),
+        ("conclusion.html", "Conclusion"),
+    ];
+
+    let temp = create_book(true);
+    let mut md = MDBook::new(temp.path());
+    md.build().unwrap();
+
+    let destination = temp.path().join("book");
+
+    for (filename, text) in content {
+        let path = destination.join(filename);
+        assert_contains_strings(path, &[text]);
+    }
+}
+
 /// Create a dummy book in a temporary directory, using the contents of
 /// `SUMMARY_MD` as a guide.
 ///
@@ -208,6 +230,8 @@ fn create_book(passing_test: bool) -> TempDir {
     temp
 }
 
+/// Read the contents of the provided file into memory and then iterate through
+/// the list of strings asserting that the file contains all of them.
 fn assert_contains_strings<P: AsRef<Path>>(filename: P, strings: &[&str]) {
     println!("Checking {}", filename.as_ref().display());
     println!();
