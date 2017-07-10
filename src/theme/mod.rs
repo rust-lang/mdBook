@@ -68,68 +68,37 @@ impl Theme {
             return theme;
         }
 
-        // Check for individual files if they exist
+        // Check for individual files, if they exist copy them across
+        {
+            let files = vec![
+                (src.join("index.hbs"), &mut theme.index),
+                (src.join("book.js"), &mut theme.js),
+                (src.join("book.css"), &mut theme.css),
+                (src.join("favicon.png"), &mut theme.favicon),
+                (src.join("highlight.js"), &mut theme.highlight_js),
+                (src.join("clipboard.min.js"), &mut theme.clipboard_js),
+                (src.join("store.js"), &mut theme.store_js),
+                (src.join("highlight.css"), &mut theme.highlight_css),
+                (src.join("tomorrow-night.css"), &mut theme.tomorrow_night_css),
+                (src.join("ayu-highlight.css"), &mut theme.ayu_highlight_css),
+            ];
 
-        // index.hbs
-        if let Ok(mut f) = File::open(&src.join("index.hbs")) {
-            theme.index.clear(); // Reset the value, because read_to_string appends...
-            let _ = f.read_to_end(&mut theme.index);
-        }
-
-        // book.js
-        if let Ok(mut f) = File::open(&src.join("book.js")) {
-            theme.js.clear();
-            let _ = f.read_to_end(&mut theme.js);
-        }
-
-        // book.css
-        if let Ok(mut f) = File::open(&src.join("book.css")) {
-            theme.css.clear();
-            let _ = f.read_to_end(&mut theme.css);
-        }
-
-        // favicon.png
-        if let Ok(mut f) = File::open(&src.join("favicon.png")) {
-            theme.favicon.clear();
-            let _ = f.read_to_end(&mut theme.favicon);
-        }
-
-        // highlight.js
-        if let Ok(mut f) = File::open(&src.join("highlight.js")) {
-            theme.highlight_js.clear();
-            let _ = f.read_to_end(&mut theme.highlight_js);
-        }
-
-        // clipboard.js
-        if let Ok(mut f) = File::open(&src.join("clipboard.min.js")) {
-            theme.clipboard_js.clear();
-            let _ = f.read_to_end(&mut theme.clipboard_js);
-        }
-
-        // store.js
-        if let Ok(mut f) = File::open(&src.join("store.js")) {
-            theme.store_js.clear();
-            let _ = f.read_to_end(&mut theme.store_js);
-        }
-
-        // highlight.css
-        if let Ok(mut f) = File::open(&src.join("highlight.css")) {
-            theme.highlight_css.clear();
-            let _ = f.read_to_end(&mut theme.highlight_css);
-        }
-
-        // tomorrow-night.css
-        if let Ok(mut f) = File::open(&src.join("tomorrow-night.css")) {
-            theme.tomorrow_night_css.clear();
-            let _ = f.read_to_end(&mut theme.tomorrow_night_css);
-        }
-
-        // ayu-highlight.css
-        if let Ok(mut f) = File::open(&src.join("ayu-highlight.css")) {
-            theme.ayu_highlight_css.clear();
-            let _ = f.read_to_end(&mut theme.ayu_highlight_css);
+            for (filename, dest) in files {
+                load_file_contents(filename, dest);
+            }
         }
 
         theme
+    }
+}
+
+fn load_file_contents<P: AsRef<Path>>(filename: P, dest: &mut Vec<u8>) {
+    let filename = filename.as_ref();
+
+    if let Ok(mut f) = File::open(filename) {
+        dest.clear();
+        if let Err(e) = f.read_to_end(dest) {
+            warn!("Couldn't load custom file, {}: {}", filename.display(), e);
+        }
     }
 }
