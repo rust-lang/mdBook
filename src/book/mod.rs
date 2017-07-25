@@ -221,7 +221,14 @@ impl MDBook {
 
             debug!("[*]: Writing to .gitignore");
 
+            // Write the destination folder to file
             writeln!(f, "{}", relative).expect("Could not write to file.");
+            
+            // Add common files
+            let ignores = vec!("*~", ".DS_Store");
+            for pattern in ignores {
+                writeln!(f, "{}", pattern).expect("Could not write to file.");
+            }
         }
     }
 
