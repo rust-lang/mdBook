@@ -25,8 +25,9 @@ install_rustup() {
   popd
 
   rm -r $td
-
-  rustup default $CHANNEL
+  rustup self update
+  rustup install "$CHANNEL"
+  rustup default "$CHANNEL"
   rustc -V
   cargo -V
 }
