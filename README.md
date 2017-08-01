@@ -43,6 +43,14 @@ There are multiple ways to install mdBook.
 
    This will download and compile mdBook for you, the only thing left to do is to add the Cargo bin directory to your `PATH`.
 
+   **Note for automatic deployment**  
+   If you are using a script to do automatic deployments using Travis or another CI server, we recommend that you specify a semver version range for mdBook when you install it through your script!
+   This will constrain the server to install the latests **non-breaking** version of mdBook and will prevent your books from failing to build because we released a new version. For example:
+
+   ```
+   cargo install mdbook --vers "^0.1.0"
+   ```
+
 3. **From Git**  
    The version published to crates.io will ever so slightly be behind the version hosted here on GitHub. If you need the latest version you can build the git version of mdBook yourself. Cargo makes this ***super easy***!
 
