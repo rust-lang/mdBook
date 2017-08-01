@@ -22,14 +22,14 @@ pub fn replace_all<P: AsRef<Path>>(s: &str, path: P) -> Result<String> {
     Ok(replaced)
 }
 
-#[derive(PartialOrd, PartialEq, Debug)]
+#[derive(PartialOrd, PartialEq, Debug, Clone)]
 enum LinkType<'a> {
     Escaped,
     Include(PathBuf),
     Playpen(PathBuf, Vec<&'a str>),
 }
 
-#[derive(PartialOrd, PartialEq, Debug)]
+#[derive(PartialOrd, PartialEq, Debug, Clone)]
 struct Link<'a> {
     start_index: usize,
     end_index: usize,
@@ -110,7 +110,7 @@ fn find_links(contents: &str) -> LinkIter {
                     |                            # or
                     \{\{\s*                      # link opening parens and whitespace
                       \#([a-zA-Z0-9]+)           # link type
-                      \s*                        # separating whitespace
+                      \s+                        # separating whitespace
                       ([a-zA-Z0-9\s_.\-:/\\]+)   # link target path and space separated properties
                     \s*\}\}                      # whitespace and link closing parens
                                  ").unwrap();
