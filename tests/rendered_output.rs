@@ -5,9 +5,10 @@ mod helpers;
 use mdbook::MDBook;
 
 
+/// Make sure you can load the dummy book and build it without panicking.
 #[test]
 fn build_the_dummy_book() {
-    let temp = helpers::create_book(true);
+    let temp = helpers::DummyBook::default().build();
     let mut md = MDBook::new(temp.path());
 
     md.build().unwrap();
@@ -15,7 +16,7 @@ fn build_the_dummy_book() {
 
 #[test]
 fn by_default_mdbook_generates_rendered_content_in_the_book_directory() {
-    let temp = helpers::create_book(false);
+    let temp = helpers::DummyBook::default().build();
     let mut md = MDBook::new(temp.path());
 
     assert!(!temp.path().join("book").exists());
@@ -27,7 +28,7 @@ fn by_default_mdbook_generates_rendered_content_in_the_book_directory() {
 
 #[test]
 fn make_sure_bottom_level_files_contain_links_to_chapters() {
-    let temp = helpers::create_book(false);
+    let temp = helpers::DummyBook::default().build();
     let mut md = MDBook::new(temp.path());
     md.build().unwrap();
 
@@ -49,7 +50,7 @@ fn make_sure_bottom_level_files_contain_links_to_chapters() {
 
 #[test]
 fn check_correct_cross_links_in_nested_dir() {
-    let temp = helpers::create_book(false);
+    let temp = helpers::DummyBook::default().build();
     let mut md = MDBook::new(temp.path());
     md.build().unwrap();
 
@@ -72,7 +73,7 @@ fn check_correct_cross_links_in_nested_dir() {
 
 #[test]
 fn rendered_code_has_playpen_stuff() {
-    let temp = helpers::create_book(true);
+    let temp = helpers::DummyBook::default().build();
     let mut md = MDBook::new(temp.path());
     md.build().unwrap();
 
@@ -95,7 +96,7 @@ fn chapter_content_appears_in_rendered_document() {
         ("conclusion.html", "Conclusion"),
     ];
 
-    let temp = helpers::create_book(true);
+    let temp = helpers::DummyBook::default().build();
     let mut md = MDBook::new(temp.path());
     md.build().unwrap();
 
