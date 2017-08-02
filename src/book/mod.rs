@@ -1,25 +1,25 @@
-pub mod bookitem;
+mod builder;
 
-pub use self::bookitem::{BookItem, BookItems};
+pub use self::builder::Builder;
 
 use std::path::{Path, PathBuf};
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::process::Command;
 
-use {theme, parse, utils};
+use {theme, utils};
 use renderer::{Renderer, HtmlHandlebars};
+use tempdir::TempDir;
 use errors::*;
 
 use config::BookConfig;
-use config::tomlconfig::TomlConfig;
-use config::jsonconfig::JsonConfig;
+use loader::{self, Book, BookItem, BookItems, Chapter};
 
 
 pub struct MDBook {
     config: BookConfig,
 
-    pub content: Vec<BookItem>,
+    book: Book,
     renderer: Box<Renderer>,
 
     livereload: Option<String>,
@@ -57,22 +57,8 @@ impl MDBook {
     /// They can both be changed by using [`set_src()`](#method.set_src) and
     /// [`set_dest()`](#method.set_dest)
 
-    pub fn new<P: Into<PathBuf>>(root: P) -> MDBook {
-
-        let root = root.into();
-        if !root.exists() || !root.is_dir() {
-            warn!("{:?} No directory with that name", root);
-        }
-
-        MDBook {
-            config: BookConfig::new(root),
-
-            content: vec![],
-            renderer: Box::new(HtmlHandlebars::new()),
-
-            livereload: None,
-            create_missing: true,
-        }
+    pub fn new<P: AsRef<Path>>(root: P) -> Result<MDBook> {
+        Builder::new(root).build()
     }
 
     /// Returns a flat depth-first iterator over the elements of the book,
@@ -82,15 +68,14 @@ impl MDBook {
     /// ```no_run
     /// # extern crate mdbook;
     /// # use mdbook::MDBook;
-    /// # use mdbook::BookItem;
+    /// # use mdbook::loader::BookItem;
     /// # #[allow(unused_variables)]
-    /// # fn main() {
-    /// # let book = MDBook::new("mybook");
+    /// # fn run() -> ::mdbook::errors::Result<()> {
+    /// # let book = MDBook::new("mybook")?;
     /// for item in book.iter() {
-    ///     match item {
-    ///         &BookItem::Chapter(ref section, ref chapter) => {},
-    ///         &BookItem::Affix(ref chapter) => {},
-    ///         &BookItem::Spacer => {},
+    ///     match *item {
+    ///         BookItem::Chapter(ref chapter) => {},
+    ///         BookItem::Separator => {},
     ///     }
     /// }
     ///
@@ -101,15 +86,12 @@ impl MDBook {
     /// // 2. Chapter 2
     /// //
     /// // etc.
+    /// # Ok(())
     /// # }
+    /// # fn main() { run().unwrap() }
     /// ```
-
     pub fn iter(&self) -> BookItems {
-        BookItems {
-            items: &self.content[..],
-            current_index: 0,
-            stack: Vec::new(),
-        }
+        self.book.iter()
     }
 
     /// `init()` creates some boilerplate files and directories
@@ -127,86 +109,51 @@ impl MDBook {
     /// and adds a `SUMMARY.md` and a
     /// `chapter_1.md` to the source directory.
 
-    pub fn init(&mut self) -> Result<()> {
+    pub fn init<P: AsRef<Path>>(root: P) -> Result<MDBook> {
+        let root = root.as_ref();
 
         debug!("[fn]: init");
 
-        if !self.config.get_root().exists() {
-            fs::create_dir_all(&self.config.get_root()).unwrap();
-            info!("{:?} created", &self.config.get_root());
+        if !root.exists() {
+            fs::create_dir_all(&root).unwrap();
+            info!("{} created", root.display());
         }
 
-        {
-
-            if !self.get_destination().exists() {
-                debug!("[*]: {:?} does not exist, trying to create directory", self.get_destination());
-                fs::create_dir_all(self.get_destination())?;
-            }
-
-
-            if !self.config.get_source().exists() {
-                debug!("[*]: {:?} does not exist, trying to create directory", self.config.get_source());
-                fs::create_dir_all(self.config.get_source())?;
-            }
-
-            let summary = self.config.get_source().join("SUMMARY.md");
-
-            if !summary.exists() {
-
-                // Summary does not exist, create it
-                debug!("[*]: {:?} does not exist, trying to create SUMMARY.md", &summary);
-                let mut f = File::create(&summary)?;
-
-                debug!("[*]: Writing to SUMMARY.md");
-
-                writeln!(f, "# Summary")?;
-                writeln!(f, "")?;
-                writeln!(f, "- [Chapter 1](./chapter_1.md)")?;
+        for dir in &["book", "src"] {
+            let dir_name = root.join(dir);
+            if !dir_name.exists() {
+                debug!("[*]: {} does not exist, trying to create directory", dir_name.display());
+                fs::create_dir_all(dir_name)?;
             }
         }
 
-        // parse SUMMARY.md, and create the missing item related file
-        self.parse_summary()?;
+        debug!("[*]: Creating SUMMARY.md");
+        let mut summary = File::create(root.join("src").join("SUMMARY.md"))?;
+        writeln!(summary, "# Summary")?;
+        writeln!(summary, "")?;
+        writeln!(summary, "- [Chapter 1](./chapter_1.md")?;
 
-        debug!("[*]: constructing paths for missing files");
-        for item in self.iter() {
-            debug!("[*]: item: {:?}", item);
-            let ch = match *item {
-                BookItem::Spacer => continue,
-                BookItem::Chapter(_, ref ch) |
-                BookItem::Affix(ref ch) => ch,
-            };
-            if !ch.path.as_os_str().is_empty() {
-                let path = self.config.get_source().join(&ch.path);
-
-                if !path.exists() {
-                    if !self.create_missing {
-                        return Err(format!("'{}' referenced from SUMMARY.md does not exist.", path.to_string_lossy())
-                                       .into());
-                    }
-                    debug!("[*]: {:?} does not exist, trying to create file", path);
-                    ::std::fs::create_dir_all(path.parent().unwrap())?;
-                    let mut f = File::create(path)?;
-
-                    // debug!("[*]: Writing to {:?}", path);
-                    writeln!(f, "# {}", ch.name)?;
-                }
-            }
-        }
+        debug!("[*]: Creating a chapter");
+        let mut chapter_1 = File::create(root.join("src").join("chapter_1.md"))?;
+        writeln!(chapter_1, "# Chapter 1")?;
+        writeln!(chapter_1, "")?;
+        writeln!(chapter_1, "TODO: Create some content.")?;
 
         debug!("[*]: init done");
-        Ok(())
+
+        MDBook::new(root)
     }
 
     pub fn create_gitignore(&self) {
         let gitignore = self.get_gitignore();
 
-        let destination = self.config.get_html_config()
-                                     .get_destination();
+        let destination = self.config.get_html_config().get_destination();
 
-        // Check that the gitignore does not extist and that the destination path begins with the root path
-        // We assume tha if it does begin with the root path it is contained within. This assumption
-        // will not hold true for paths containing double dots to go back up e.g. `root/../destination`
+        // Check that the gitignore does not exist and that the destination
+        // path begins with the root path We assume tha if it does begin with
+        // the root path it is contained within. This assumption will not hold
+        // true for paths containing double dots to go back up e.g.
+        // `root/../destination`.
         if !gitignore.exists() && destination.starts_with(self.config.get_root()) {
 
             let relative = destination
@@ -233,8 +180,6 @@ impl MDBook {
     /// It is the renderer who generates all the output files.
     pub fn build(&mut self) -> Result<()> {
         debug!("[fn]: build");
-
-        self.init()?;
 
         // Clean output directory
         utils::fs::remove_dir_content(self.config.get_html_config().get_destination())?;
@@ -284,42 +229,13 @@ impl MDBook {
     }
 
     pub fn write_file<P: AsRef<Path>>(&self, filename: P, content: &[u8]) -> Result<()> {
-        let path = self.get_destination()
-            .join(filename);
+        let path = self.get_destination().join(filename);
 
-        utils::fs::create_file(&path)?
-            .write_all(content)
-            .map_err(|e| e.into())
-    }
-
-    /// Parses the `book.json` file (if it exists) to extract
-    /// the configuration parameters.
-    /// The `book.json` file should be in the root directory of the book.
-    /// The root directory is the one specified when creating a new `MDBook`
-
-    pub fn read_config(mut self) -> Result<Self> {
-
-        let toml = self.get_root().join("book.toml");
-        let json = self.get_root().join("book.json");
-
-        if toml.exists() {
-            let mut file = File::open(toml)?;
-            let mut content = String::new();
-            file.read_to_string(&mut content)?;
-
-            let parsed_config = TomlConfig::from_toml(&content)?;
-            self.config.fill_from_tomlconfig(parsed_config);
-        } else if json.exists() {
-            warn!("The JSON configuration file is deprecated, please use the TOML configuration.");
-            let mut file = File::open(json)?;
-            let mut content = String::new();
-            file.read_to_string(&mut content)?;
-
-            let parsed_config = JsonConfig::from_json(&content)?;
-            self.config.fill_from_jsonconfig(parsed_config);
-        }
-
-        Ok(self)
+        utils::fs::create_file(&path)?.write_all(content).map_err(
+            |e| {
+                e.into()
+            },
+        )
     }
 
     /// You can change the default renderer to another one
@@ -333,14 +249,16 @@ impl MDBook {
     /// use mdbook::renderer::HtmlHandlebars;
     ///
     /// # #[allow(unused_variables)]
-    /// fn main() {
-    ///     let book = MDBook::new("mybook")
+    /// # fn run() -> mdbook::errors::Result<()> {
+    ///     let book = MDBook::new("mybook")?
     ///                         .set_renderer(Box::new(HtmlHandlebars::new()));
     ///
     /// // In this example we replace the default renderer
     /// // by the default renderer...
     /// // Don't forget to put your renderer in a Box
-    /// }
+    /// # Ok(())
+    /// # }
+    /// # fn main() { run().unwrap() }
     /// ```
     ///
     /// **note:** Don't forget to put your renderer in a `Box`
@@ -352,22 +270,27 @@ impl MDBook {
     }
 
     pub fn test(&mut self, library_paths: Vec<&str>) -> Result<()> {
-        // read in the chapters
-        self.parse_summary().chain_err(|| "Couldn't parse summary")?;
-        let library_args: Vec<&str> = (0..library_paths.len()).map(|_| "-L")
-                                                              .zip(library_paths.into_iter())
-                                                              .flat_map(|x| vec![x.0, x.1])
-                                                              .collect();
+        let library_args: Vec<&str> = (0..library_paths.len())
+            .map(|_| "-L")
+            .zip(library_paths.into_iter())
+            .flat_map(|x| vec![x.0, x.1])
+            .collect();
+
         for item in self.iter() {
+            if let BookItem::Chapter(ref ch) = *item {
+                let chapter_path = ch.path();
 
-            if let BookItem::Chapter(_, ref ch) = *item {
-                if ch.path != PathBuf::new() {
+                if chapter_path == Path::new("") {
 
-                    let path = self.get_source().join(&ch.path);
+                    let path = self.get_source().join(&chapter_path);
 
                     println!("[*]: Testing file: {:?}", path);
 
-                    let output = Command::new("rustdoc").arg(&path).arg("--test").args(&library_args).output()?;
+                    let output = Command::new("rustdoc")
+                        .arg(&path)
+                        .arg("--test")
+                        .args(&library_args)
+                        .output()?;
 
                     if !output.status.success() {
                         bail!(ErrorKind::Subprocess("Rustdoc returned an error".to_string(), output));
@@ -375,6 +298,7 @@ impl MDBook {
                 }
             }
         }
+
         Ok(())
     }
 
@@ -382,18 +306,18 @@ impl MDBook {
         self.config.get_root()
     }
 
-
     pub fn with_destination<T: Into<PathBuf>>(mut self, destination: T) -> Self {
         let root = self.config.get_root().to_owned();
-        self.config.get_mut_html_config()
-            .set_destination(&root, &destination.into());
+        self.config.get_mut_html_config().set_destination(
+            &root,
+            &destination.into(),
+        );
         self
     }
 
 
     pub fn get_destination(&self) -> &Path {
-        self.config.get_html_config()
-            .get_destination()
+        self.config.get_html_config().get_destination()
     }
 
     pub fn with_source<T: Into<PathBuf>>(mut self, source: T) -> Self {
@@ -439,67 +363,69 @@ impl MDBook {
 
     pub fn with_theme_path<T: Into<PathBuf>>(mut self, theme_path: T) -> Self {
         let root = self.config.get_root().to_owned();
-        self.config.get_mut_html_config()
-            .set_theme(&root, &theme_path.into());
+        self.config.get_mut_html_config().set_theme(
+            &root,
+            &theme_path.into(),
+        );
         self
     }
 
     pub fn get_theme_path(&self) -> &Path {
-        self.config.get_html_config()
-            .get_theme()
+        self.config.get_html_config().get_theme()
     }
 
     pub fn with_curly_quotes(mut self, curly_quotes: bool) -> Self {
-        self.config.get_mut_html_config()
-            .set_curly_quotes(curly_quotes);
+        self.config.get_mut_html_config().set_curly_quotes(
+            curly_quotes,
+        );
         self
     }
 
     pub fn get_curly_quotes(&self) -> bool {
-        self.config.get_html_config()
-            .get_curly_quotes()
+        self.config.get_html_config().get_curly_quotes()
     }
 
     pub fn with_mathjax_support(mut self, mathjax_support: bool) -> Self {
-        self.config.get_mut_html_config()
-            .set_mathjax_support(mathjax_support);
+        self.config.get_mut_html_config().set_mathjax_support(
+            mathjax_support,
+        );
         self
     }
 
     pub fn get_mathjax_support(&self) -> bool {
-        self.config.get_html_config()
-            .get_mathjax_support()
+        self.config.get_html_config().get_mathjax_support()
     }
 
     pub fn get_google_analytics_id(&self) -> Option<String> {
-        self.config.get_html_config()
-            .get_google_analytics_id()
+        self.config.get_html_config().get_google_analytics_id()
     }
 
     pub fn has_additional_js(&self) -> bool {
-        self.config.get_html_config()
-            .has_additional_js()
+        self.config.get_html_config().has_additional_js()
     }
 
     pub fn get_additional_js(&self) -> &[PathBuf] {
-        self.config.get_html_config()
-            .get_additional_js()
+        self.config.get_html_config().get_additional_js()
     }
 
     pub fn has_additional_css(&self) -> bool {
-        self.config.get_html_config()
-            .has_additional_css()
+        self.config.get_html_config().has_additional_css()
     }
 
     pub fn get_additional_css(&self) -> &[PathBuf] {
-        self.config.get_html_config()
-            .get_additional_css()
+        self.config.get_html_config().get_additional_css()
+    }
+}
+
+fn test_chapter(ch: &Chapter, tmp: &TempDir) -> Result<()> {
+    let path = tmp.path().join(&ch.name);
+    File::create(&path)?.write_all(ch.content.as_bytes())?;
+
+    let output = Command::new("rustdoc").arg(&path).arg("--test").output()?;
+
+    if !output.status.success() {
+        bail!(ErrorKind::Subprocess("Rustdoc returned an error".to_string(), output));
     }
 
-    // Construct book
-    fn parse_summary(&mut self) -> Result<()> {
-        // When append becomes stable, use self.content.append() ...
-        self.content = parse::construct_bookitems(&self.get_source().join("SUMMARY.md"))?;
-        Ok(())
-    }
+    Ok(())
 }

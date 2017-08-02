@@ -2,7 +2,7 @@ use renderer::html_handlebars::helpers;
 use preprocess;
 use renderer::Renderer;
 use book::MDBook;
-use book::bookitem::{BookItem, Chapter};
+use loader::{BookItem, Chapter};
 use utils;
 use theme::{self, Theme};
 use errors::*;
@@ -28,58 +28,50 @@ impl HtmlHandlebars {
         HtmlHandlebars
     }
 
-    fn render_item(&self, item: &BookItem, mut ctx: RenderItemContext, print_content: &mut String)
-        -> Result<()> {
+    fn render_item(&self, item: &BookItem, mut ctx: RenderItemContext, print_content: &mut String) -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
+        // deferred because we'll probably need to rewrite it anyway when
+        // renderers are made more pluggable
         match *item {
-            BookItem::Chapter(_, ref ch) |
-            BookItem::Affix(ref ch) => {
-                if ch.path != PathBuf::new() {
+            BookItem::Chapter(ref ch) => {
+                let mut content = ch.content.clone();
 
-                    let path = ctx.book.get_source().join(&ch.path);
+                // TODO: Port the playpen stuff to not require a file on disk
+                // content = helpers::playpen::render_playpen(&content, ch.path());
 
-                    debug!("[*]: Opening file: {:?}", path);
-                    let mut f = File::open(&path)?;
-                    let mut content: String = String::new();
+                content = utils::render_markdown(&content, ctx.book.get_curly_quotes());
+                print_content.push_str(&content);
 
-                    debug!("[*]: Reading file");
-                    f.read_to_string(&mut content)?;
+                // Update the context with data for this file
 
-                    // Parse and expand links
-                    if let Some(p) = path.parent() {
-                        content = preprocess::links::replace_all(&content, p)?;
-                    }
+                let path = match ch.path().to_str() {
+                    Some(p) => p,
+                    None => bail!("Could not convert path to str"),
+                };
+                ctx.data.insert("path".to_owned(), json!(path));
 
-                    content = utils::render_markdown(&content, ctx.book.get_curly_quotes());
-                    print_content.push_str(&content);
+                ctx.data.insert("content".to_owned(), json!(content));
+                ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
 
-                    // Update the context with data for this file
-                    let path = ch.path.to_str().ok_or_else(|| {
-                        io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
-                    })?;
+                // FIXME: This place needs a `Path` as well
+                // ctx.data.insert(
+                //     "path_to_root".to_owned(),
+                //     json!(utils::fs::path_to_root(&ch.path)),
+                // );
 
-                    ctx.data.insert("path".to_owned(), json!(path));
-                    ctx.data.insert("content".to_owned(), json!(content));
-                    ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
-                    ctx.data.insert(
-                        "path_to_root".to_owned(),
-                        json!(utils::fs::path_to_root(&ch.path)),
-                    );
+                // Render the handlebars template with the data
+                debug!("[*]: Render template");
+                let rendered = ctx.handlebars.render("index", &ctx.data)?;
+                let rendered = self.post_process(rendered);
 
-                    // Render the handlebars template with the data
-                    debug!("[*]: Render template");
-                    let rendered = ctx.handlebars.render("index", &ctx.data)?;
-                    let rendered = self.post_process(rendered);
+                let filename = Path::new(ch.path()).with_extension("html");
 
-                    let filename = Path::new(&ch.path).with_extension("html");
+                // Write to file
+                info!("[*] Creating {:?} ✓", filename.display());
+                ctx.book.write_file(filename, &rendered.into_bytes())?;
 
-                    // Write to file
-                    info!("[*] Creating {:?} ✓", filename.display());
-                    ctx.book.write_file(filename, &rendered.into_bytes())?;
-
-                    if ctx.is_index {
-                        self.render_index(ctx.book, ch, &ctx.destination)?;
-                    }
+                if ctx.is_index {
+                    self.render_index(ctx.book, ch, &ctx.destination)?;
                 }
             },
             _ => {},
@@ -92,15 +84,10 @@ impl HtmlHandlebars {
     fn render_index(&self, book: &MDBook, ch: &Chapter, destination: &Path) -> Result<()> {
         debug!("[*]: index.html");
 
-        let mut content = String::new();
-
-        File::open(destination.join(&ch.path.with_extension("html")))?
-            .read_to_string(&mut content)?;
-
         // This could cause a problem when someone displays
         // code containing <base href=...>
         // on the front page, however this case should be very very rare...
-        content = content
+        let content = ch.content
             .lines()
             .filter(|line| !line.contains("<base href="))
             .collect::<Vec<&str>>()
@@ -110,8 +97,9 @@ impl HtmlHandlebars {
 
         info!(
             "[*] Creating index.html from {:?} ✓",
-            book.get_destination()
-                .join(&ch.path.with_extension("html"))
+            book.get_destination().join(
+                ch.path().with_extension("html"),
+            )
         );
 
         Ok(())
@@ -175,7 +163,7 @@ impl HtmlHandlebars {
         Ok(())
     }
 
-    /// Helper function to write a file to the build directory, normalizing 
+    /// Helper function to write a file to the build directory, normalizing
     /// the path to be relative to the book root.
     fn write_custom_file(&self, custom_file: &Path, book: &MDBook) -> Result<()> {
         let mut data = Vec::new();
@@ -362,22 +350,18 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
         let mut chapter = BTreeMap::new();
 
         match *item {
-            BookItem::Affix(ref ch) => {
+            BookItem::Chapter(ref ch) => {
+                if let Some(ref section) = ch.number {
+                    chapter.insert("section".to_owned(), json!(section.to_string()));
+                }
                 chapter.insert("name".to_owned(), json!(ch.name));
-                let path = ch.path.to_str().ok_or_else(|| {
+
+                let path = ch.path().to_str().ok_or_else(|| {
                     io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
                 })?;
                 chapter.insert("path".to_owned(), json!(path));
             },
-            BookItem::Chapter(ref s, ref ch) => {
-                chapter.insert("section".to_owned(), json!(s));
-                chapter.insert("name".to_owned(), json!(ch.name));
-                let path = ch.path.to_str().ok_or_else(|| {
-                    io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
-                })?;
-                chapter.insert("path".to_owned(), json!(path));
-            },
-            BookItem::Spacer => {
+            BookItem::Separator => {
                 chapter.insert("spacer".to_owned(), json!("_spacer_"));
             },
 

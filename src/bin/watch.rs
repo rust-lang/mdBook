@@ -24,7 +24,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 // Watch command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
-    let book = MDBook::new(&book_dir).read_config()?;
+    let book = MDBook::new(&book_dir)?;
 
     let mut book = match args.value_of("dest-dir") {
         Some(dest_dir) => book.with_destination(dest_dir),
@@ -53,7 +53,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
 // Calls the closure when a book source file is changed. This is blocking!
 pub fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
-    where F: Fn(&Path, &mut MDBook) -> ()
+where
+    F: Fn(&Path, &mut MDBook) -> (),
 {
     use self::notify::RecursiveMode::*;
     use self::notify::DebouncedEvent::*;
@@ -76,19 +77,23 @@ pub fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
     };
 
     // Add the theme directory to the watcher
-    watcher.watch(book.get_theme_path(), Recursive).unwrap_or_default();
+    watcher
+        .watch(book.get_theme_path(), Recursive)
+        .unwrap_or_default();
 
 
     // Add the book.{json,toml} file to the watcher if it exists, because it's not
     // located in the source directory
     if watcher
-           .watch(book.get_root().join("book.json"), NonRecursive)
-           .is_err() {
+        .watch(book.get_root().join("book.json"), NonRecursive)
+        .is_err()
+    {
         // do nothing if book.json is not found
     }
     if watcher
-           .watch(book.get_root().join("book.toml"), NonRecursive)
-           .is_err() {
+        .watch(book.get_root().join("book.toml"), NonRecursive)
+        .is_err()
+    {
         // do nothing if book.toml is not found
     }
 

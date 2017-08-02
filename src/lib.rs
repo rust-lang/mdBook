@@ -18,20 +18,17 @@
 //! ## Example
 //!
 //! ```no_run
-//! extern crate mdbook;
+//! use mdbook::config::BookConfig;
+//! use mdbook::book::Builder;
 //!
-//! use mdbook::MDBook;
+//! // configure our book
+//! let config = BookConfig::new("my-book").with_source("src");
 //!
-//! # #[allow(unused_variables)]
-//! fn main() {
-//!     let mut book =  MDBook::new("my-book")        // Path to root
-//!                         .with_source("src")       // Path from root to source directory
-//!                         .with_destination("book") // Path from root to output directory
-//!                         .read_config()            // Parse book.toml configuration file
-//!                         .expect("I don't handle configuration file errors, but you should!");
+//! // then create a book which uses that configuration
+//! let mut book = Builder::new("my-book").with_config(config).build().unwrap();
 //!
-//!     book.build().unwrap();                        // Render the book
-//! }
+//! // and finally, render the book as html
+//! book.build().unwrap();
 //! ```
 //!
 //! ## Implementing a new Renderer
@@ -42,22 +39,20 @@
 //! And then you can swap in your renderer like this:
 //!
 //! ```no_run
-//! # extern crate mdbook;
-//! #
-//! # use mdbook::MDBook;
-//! # use mdbook::renderer::HtmlHandlebars;
-//! #
-//! # #[allow(unused_variables)]
-//! # fn main() {
-//! #   let your_renderer = HtmlHandlebars::new();
-//! #
-//!     let book =  MDBook::new("my-book").set_renderer(Box::new(your_renderer));
-//! # }
+//! # #![allow(unused_variables)]
+//! use mdbook::renderer::HtmlHandlebars;
+//! use mdbook::book::Builder;
+//!
+//! let your_renderer = HtmlHandlebars::new();
+//! let book = Builder::new("my-book").set_renderer(Box::new(your_renderer))
+//!                                   .build()
+//!                                   .unwrap();
 //! ```
 //! If you make a renderer, you get the book constructed in form of `Vec<BookItems>` and you get
 //! the book config in a `BookConfig` struct.
 //!
-//! It's your responsability to create the necessary files in the correct directories.
+//! It's your responsibility to create the necessary files in the correct
+//! directories.
 //!
 //! ## utils
 //!
@@ -65,7 +60,9 @@
 //! following function [`utils::fs::create_file(path:
 //! &Path)`](utils/fs/fn.create_file.html)
 //!
-//! This function creates a file and returns it. But before creating the file it checks every directory in the path to see if it exists, and if it does not it will be created.
+//! This function creates a file and returns it. But before creating the file
+//! it checks every directory in the path to see if it exists, and if it does
+//! not it will be created.
 //!
 //! Make sure to take a look at it.
 
@@ -84,16 +81,21 @@ extern crate serde;
 #[macro_use]
 extern crate serde_json;
 
-mod parse;
+#[cfg(test)]
+#[macro_use]
+extern crate pretty_assertions;
+extern crate tempdir;
+
 mod preprocess;
 pub mod book;
 pub mod config;
 pub mod renderer;
 pub mod theme;
 pub mod utils;
+pub mod loader;
 
 pub use book::MDBook;
-pub use book::BookItem;
+pub use loader::{Book, BookItem};
 pub use renderer::Renderer;
 
 /// The error types used through out this crate.
