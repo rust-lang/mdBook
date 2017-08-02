@@ -9,7 +9,7 @@ fn_args_density = "Compressed"
 enum_trailing_comma = true
 match_block_trailing_comma = true
 struct_trailing_comma = "Always"
-wrap_comments = true
+wrap_comments = false
 use_try_shorthand = true
 
 report_todo = "Always"

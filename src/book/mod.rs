@@ -70,7 +70,7 @@ impl MDBook {
     /// # use mdbook::MDBook;
     /// # use mdbook::loader::BookItem;
     /// # #[allow(unused_variables)]
-    /// # fn run() -> ::errors::Result<()> {
+    /// # fn run() -> ::mdbook::errors::Result<()> {
     /// # let book = MDBook::new("mybook")?;
     /// for item in book.iter() {
     ///     match *item {
@@ -90,7 +90,6 @@ impl MDBook {
     /// # }
     /// # fn main() { run().unwrap() }
     /// ```
-
     pub fn iter(&self) -> BookItems {
         self.book.iter()
     }
@@ -271,22 +270,27 @@ impl MDBook {
     }
 
     pub fn test(&mut self, library_paths: Vec<&str>) -> Result<()> {
-        // read in the chapters
-        self.parse_summary().chain_err(|| "Couldn't parse summary")?;
-        let library_args: Vec<&str> = (0..library_paths.len()).map(|_| "-L")
-                                                              .zip(library_paths.into_iter())
-                                                              .flat_map(|x| vec![x.0, x.1])
-                                                              .collect();
+        let library_args: Vec<&str> = (0..library_paths.len())
+            .map(|_| "-L")
+            .zip(library_paths.into_iter())
+            .flat_map(|x| vec![x.0, x.1])
+            .collect();
+
         for item in self.iter() {
+            if let BookItem::Chapter(ref ch) = *item {
+                let chapter_path = ch.path();
 
-            if let BookItem::Chapter(_, ref ch) = *item {
-                if ch.path != PathBuf::new() {
+                if chapter_path == Path::new("") {
 
-                    let path = self.get_source().join(&ch.path);
+                    let path = self.get_source().join(&chapter_path);
 
                     println!("[*]: Testing file: {:?}", path);
 
-                    let output = Command::new("rustdoc").arg(&path).arg("--test").args(&library_args).output()?;
+                    let output = Command::new("rustdoc")
+                        .arg(&path)
+                        .arg("--test")
+                        .args(&library_args)
+                        .output()?;
 
                     if !output.status.success() {
                         bail!(ErrorKind::Subprocess("Rustdoc returned an error".to_string(), output));

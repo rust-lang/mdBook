@@ -18,19 +18,17 @@
 //! ## Example
 //!
 //! ```no_run
-//! extern crate mdbook;
+//! use mdbook::config::BookConfig;
+//! use mdbook::book::Builder;
 //!
-//! use mdbook::MDBook;
+//! // configure our book
+//! let config = BookConfig::new("my-book").with_source("src");
 //!
-//! # #[allow(unused_variables)]
-//! fn main() {
-//!     let mut book =  MDBook::new("my-book")        // Path to root
-//!                         .with_source("src")       // Path from root to source directory
-//!                         .with_destination("book") // Path from root to output directory
-//!                         .read_config()            // Parse book.toml configuration file
-//!                         .expect("I don't handle configuration file errors, but you should!");
-//!     book.build().unwrap();                        // Render the book
-//! }
+//! // then create a book which uses that configuration
+//! let mut book = Builder::new("my-book").with_config(config).build().unwrap();
+//!
+//! // and finally, render the book as html
+//! book.build().unwrap();
 //! ```
 //!
 //! ## Implementing a new Renderer
@@ -41,17 +39,14 @@
 //! And then you can swap in your renderer like this:
 //!
 //! ```no_run
-//! # extern crate mdbook;
-//! #
-//! # use mdbook::MDBook;
-//! # use mdbook::renderer::HtmlHandlebars;
-//! #
-//! # #[allow(unused_variables)]
-//! # fn main() {
-//! #   let your_renderer = HtmlHandlebars::new();
-//! #
-//! let book = MDBook::new("my-book").set_renderer(Box::new(your_renderer));
-//! # }
+//! # #![allow(unused_variables)]
+//! use mdbook::renderer::HtmlHandlebars;
+//! use mdbook::book::Builder;
+//!
+//! let your_renderer = HtmlHandlebars::new();
+//! let book = Builder::new("my-book").set_renderer(Box::new(your_renderer))
+//!                                   .build()
+//!                                   .unwrap();
 //! ```
 //! If you make a renderer, you get the book constructed in form of `Vec<BookItems>` and you get
 //! the book config in a `BookConfig` struct.
@@ -91,7 +86,6 @@ extern crate serde_json;
 extern crate pretty_assertions;
 extern crate tempdir;
 
-mod parse;
 mod preprocess;
 pub mod book;
 pub mod config;

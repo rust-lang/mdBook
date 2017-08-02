@@ -33,6 +33,12 @@ impl Builder {
         self
     }
 
+    /// Set the renderer to be used.
+    pub fn set_renderer(mut self, renderer: Box<Renderer>) -> Self {
+        self.renderer = Some(renderer);
+        self
+    }
+
     pub fn build(self) -> Result<MDBook> {
         // if no custom config provided, try to read it from disk
         let cfg = match self.config {
