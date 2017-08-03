@@ -51,7 +51,7 @@
 //! # fn main() {
 //! #   let your_renderer = HtmlHandlebars::new();
 //! #
-//!     let book =  MDBook::new("my-book").set_renderer(Box::new(your_renderer));
+//! let book = MDBook::new("my-book").set_renderer(Box::new(your_renderer));
 //! # }
 //! ```
 //! If you make a renderer, you get the book constructed in form of `Vec<BookItems>` and you get
@@ -65,7 +65,9 @@
 //! following function [`utils::fs::create_file(path:
 //! &Path)`](utils/fs/fn.create_file.html)
 //!
-//! This function creates a file and returns it. But before creating the file it checks every directory in the path to see if it exists, and if it does not it will be created.
+//! This function creates a file and returns it. But before creating the file
+//! it checks every directory in the path to see if it exists, and if it does
+//! not it will be created.
 //!
 //! Make sure to take a look at it.
 
@@ -83,6 +85,9 @@ extern crate serde_derive;
 extern crate serde;
 #[macro_use]
 extern crate serde_json;
+
+#[cfg(test)]
+extern crate tempdir;
 
 mod parse;
 mod preprocess;
