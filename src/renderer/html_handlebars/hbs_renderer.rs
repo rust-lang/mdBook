@@ -69,9 +69,8 @@ impl HtmlHandlebars {
                     // Render the handlebars template with the data
                     debug!("[*]: Render template");
                     let rendered = ctx.handlebars.render("index", &ctx.data)?;
-                    let rendered = self.post_process(rendered);
-
                     let filename = Path::new(&ch.path).with_extension("html");
+                    let rendered = self.post_process(rendered, filename.file_name().unwrap().to_str().unwrap_or(""));
 
                     // Write to file
                     info!("[*] Creating {:?} ✓", filename.display());
@@ -117,9 +116,9 @@ impl HtmlHandlebars {
         Ok(())
     }
 
-    fn post_process(&self, rendered: String) -> String {
-        let rendered = build_header_links(&rendered, "print.html");
-        let rendered = fix_anchor_links(&rendered, "print.html");
+    fn post_process(&self, rendered: String, filename: &str) -> String {
+        let rendered = build_header_links(&rendered, filename);
+        let rendered = fix_anchor_links(&rendered, filename);
         let rendered = fix_code_blocks(&rendered);
         let rendered = add_playpen_pre(&rendered);
 
@@ -274,7 +273,7 @@ impl Renderer for HtmlHandlebars {
         debug!("[*]: Render template");
 
         let rendered = handlebars.render("index", &data)?;
-        let rendered = self.post_process(rendered);
+        let rendered = self.post_process(rendered, "print.html");
 
         book.write_file(
             Path::new("print").with_extension("html"),
