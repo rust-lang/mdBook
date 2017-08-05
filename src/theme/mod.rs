@@ -1,9 +1,10 @@
+pub mod playpen_editor;
+
 use std::path::Path;
 use std::fs::File;
 use std::io::Read;
 
 use errors::*;
-
 
 pub static INDEX: &'static [u8] = include_bytes!("index.hbs");
 pub static CSS: &'static [u8] = include_bytes!("book.css");

@@ -112,7 +112,7 @@ impl BookConfig {
             self.get_mut_html_config()
                 .fill_from_tomlconfig(root, tomlhtmlconfig);
         }
-
+        
         self
     }
 
@@ -213,7 +213,7 @@ impl BookConfig {
         self.authors.as_slice()
     }
 
-    pub fn  set_html_config(&mut self, htmlconfig: HtmlConfig) -> &mut Self {
+    pub fn set_html_config(&mut self, htmlconfig: HtmlConfig) -> &mut Self {
         self.html_config = htmlconfig;
         self
     }

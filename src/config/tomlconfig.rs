@@ -29,6 +29,13 @@ pub struct TomlHtmlConfig {
     pub mathjax_support: Option<bool>,
     pub additional_css: Option<Vec<PathBuf>>,
     pub additional_js: Option<Vec<PathBuf>>,
+    pub playpen: Option<TomlPlaypenConfig>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct TomlPlaypenConfig {
+    pub editor: Option<PathBuf>,
+    pub editable: Option<bool>,
 }
 
 /// Returns a `TomlConfig` from a TOML string
@@ -52,5 +59,3 @@ impl TomlConfig {
         Ok(config)
     }
 }
-
-

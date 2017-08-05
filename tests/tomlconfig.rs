@@ -59,7 +59,49 @@ fn from_toml_authors() {
     assert_eq!(config.get_authors(), &[String::from("John Doe"), String::from("Jane Doe")]);
 }
 
-// Tests that the `output.html.destination` key is correctly parsed in the TOML config
+// Tests that the default `playpen` config is correct in the TOML config
+#[test]
+fn from_toml_playpen_default() {
+    let toml = "";
+
+    let parsed = TomlConfig::from_toml(toml).expect("This should parse");
+    let config = BookConfig::from_tomlconfig("root", parsed);
+
+    let playpenconfig = config.get_html_config().get_playpen_config();
+
+    assert_eq!(playpenconfig.get_editor(), PathBuf::from("root/theme/editor"));
+    assert_eq!(playpenconfig.is_editable(), false);
+}
+
+// Tests that the `playpen.editor` key is correctly parsed in the TOML config
+#[test]
+fn from_toml_playpen_editor() {
+    let toml = r#"[output.html.playpen]
+    editor = "editordir""#;
+
+    let parsed = TomlConfig::from_toml(toml).expect("This should parse");
+    let config = BookConfig::from_tomlconfig("root", parsed);
+
+    let playpenconfig = config.get_html_config().get_playpen_config();
+
+    assert_eq!(playpenconfig.get_editor(), PathBuf::from("root/theme/editordir"));
+}
+
+// Tests that the `playpen.editable` key is correctly parsed in the TOML config
+#[test]
+fn from_toml_playpen_editable() {
+    let toml = r#"[output.html.playpen]
+    editable = true"#;
+
+    let parsed = TomlConfig::from_toml(toml).expect("This should parse");
+    let config = BookConfig::from_tomlconfig("root", parsed);
+
+    let playpenconfig = config.get_html_config().get_playpen_config();
+
+    assert_eq!(playpenconfig.is_editable(), true);
+}
+
+// Tests that the `output.html.destination` key is correcly parsed in the TOML config
 #[test]
 fn from_toml_output_html_destination() {
     let toml = r#"[output.html]

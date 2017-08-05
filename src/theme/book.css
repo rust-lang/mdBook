@@ -936,6 +936,9 @@ table thead td {
 /* Force background to be printed in Chrome */
     -webkit-print-color-adjust: exact;
   }
+  pre > .buttons {
+    z-index: 2;
+  }
   a,
   a:visited,
   a:active,

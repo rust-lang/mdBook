@@ -3,8 +3,9 @@ use preprocess;
 use renderer::Renderer;
 use book::MDBook;
 use book::bookitem::{BookItem, Chapter};
-use utils;
-use theme::{self, Theme};
+use config::PlaypenConfig;
+use {utils, theme};
+use theme::{Theme, playpen_editor};
 use errors::*;
 use regex::{Regex, Captures};
 
@@ -18,7 +19,6 @@ use std::collections::HashMap;
 use handlebars::Handlebars;
 
 use serde_json;
-
 
 #[derive(Default)]
 pub struct HtmlHandlebars;
@@ -69,8 +69,11 @@ impl HtmlHandlebars {
                     // Render the handlebars template with the data
                     debug!("[*]: Render template");
                     let rendered = ctx.handlebars.render("index", &ctx.data)?;
+
                     let filename = Path::new(&ch.path).with_extension("html");
-                    let rendered = self.post_process(rendered, filename.file_name().unwrap().to_str().unwrap_or(""));
+                    let rendered = self.post_process(rendered,
+                        filename.file_name().unwrap().to_str().unwrap_or(""),
+                        ctx.book.get_html_config().get_playpen_config());
 
                     // Write to file
                     info!("[*] Creating {:?} ✓", filename.display());
@@ -116,11 +119,11 @@ impl HtmlHandlebars {
         Ok(())
     }
 
-    fn post_process(&self, rendered: String, filename: &str) -> String {
+    fn post_process(&self, rendered: String, filename: &str, playpen_config: &PlaypenConfig) -> String {
         let rendered = build_header_links(&rendered, filename);
         let rendered = fix_anchor_links(&rendered, filename);
         let rendered = fix_code_blocks(&rendered);
-        let rendered = add_playpen_pre(&rendered);
+        let rendered = add_playpen_pre(&rendered, playpen_config);
 
         rendered
     }
@@ -170,6 +173,19 @@ impl HtmlHandlebars {
             "_FontAwesome/fonts/FontAwesome.ttf",
             theme::FONT_AWESOME_TTF,
         )?;
+
+        let playpen_config = book.get_html_config().get_playpen_config();
+
+        // Ace is a very large dependency, so only load it when requested
+        if playpen_config.is_editable() {
+            // Load the editor
+            let editor = playpen_editor::PlaypenEditor::new(playpen_config.get_editor());
+            book.write_file("editor.js", &editor.js)?;
+            book.write_file("ace.js", &editor.ace_js)?;
+            book.write_file("mode-rust.js", &editor.mode_rust_js)?;
+            book.write_file("theme-dawn.js", &editor.theme_dawn_js)?;
+            book.write_file("theme-tomorrow_night.js", &editor.theme_tomorrow_night_js)?;
+        }
 
         Ok(())
     }
@@ -273,8 +289,10 @@ impl Renderer for HtmlHandlebars {
         debug!("[*]: Render template");
 
         let rendered = handlebars.render("index", &data)?;
-        let rendered = self.post_process(rendered, "print.html");
 
+        let rendered = self.post_process(rendered, "print.html",
+            book.get_html_config().get_playpen_config());
+        
         book.write_file(
             Path::new("print").with_extension("html"),
             &rendered.into_bytes(),
@@ -352,6 +370,15 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
             }
         }
         data.insert("additional_js".to_owned(), json!(js));
+    }
+
+    if book.get_html_config().get_playpen_config().is_editable() {
+        data.insert("playpens_editable".to_owned(), json!(true));
+        data.insert("editor_js".to_owned(), json!("editor.js"));
+        data.insert("ace_js".to_owned(), json!("ace.js"));
+        data.insert("mode_rust_js".to_owned(), json!("mode-rust.js"));
+        data.insert("theme_dawn_js".to_owned(), json!("theme-dawn.js"));
+        data.insert("theme_tomorrow_night_js".to_owned(), json!("theme-tomorrow_night.js"));
     }
 
     let mut chapters = vec![];
@@ -512,7 +539,7 @@ fn fix_code_blocks(html: &str) -> String {
         .into_owned()
 }
 
-fn add_playpen_pre(html: &str) -> String {
+fn add_playpen_pre(html: &str, playpen_config: &PlaypenConfig) -> String {
     let regex = Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap();
     regex
         .replace_all(html, |caps: &Captures| {
@@ -522,22 +549,18 @@ fn add_playpen_pre(html: &str) -> String {
 
             if classes.contains("language-rust") && !classes.contains("ignore") {
                 // wrap the contents in an external pre block
-
-                if text.contains("fn main") || text.contains("quick_main!") {
+                if playpen_config.is_editable() &&
+                    classes.contains("editable") || text.contains("fn main") || text.contains("quick_main!") {
                     format!("<pre class=\"playpen\">{}</pre>", text)
                 } else {
                     // we need to inject our own main
                     let (attrs, code) = partition_source(code);
-                    format!(
-                        "<pre class=\"playpen\"><code class=\"{}\"># #![allow(unused_variables)]
-{}#fn main() {{
-\
-                             {}
-#}}</code></pre>",
-                        classes,
-                        attrs,
-                        code
-                    )
+
+                    format!("<pre class=\"playpen\"><code class=\"{}\">\n# #![allow(unused_variables)]\n\
+                        {}#fn main() {{\n\
+                        {}\
+                        #}}</code></pre>",
+                        classes, attrs, code)
                 }
             } else {
                 // not language-rust, so no-op

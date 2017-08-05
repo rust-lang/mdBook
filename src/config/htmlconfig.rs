@@ -1,6 +1,7 @@
 use std::path::{PathBuf, Path};
 
 use super::tomlconfig::TomlHtmlConfig;
+use super::playpenconfig::PlaypenConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct HtmlConfig {
@@ -11,6 +12,7 @@ pub struct HtmlConfig {
     google_analytics: Option<String>,
     additional_css: Vec<PathBuf>,
     additional_js: Vec<PathBuf>,
+    playpen: PlaypenConfig,
 }
 
 impl HtmlConfig {
@@ -27,14 +29,16 @@ impl HtmlConfig {
     /// ```
     pub fn new<T: Into<PathBuf>>(root: T) -> Self {
         let root = root.into();
+        let theme = root.join("theme");
         HtmlConfig {
             destination: root.clone().join("book"),
-            theme: root.join("theme"),
+            theme: theme.clone(),
             curly_quotes: false,
             mathjax_support: false,
             google_analytics: None,
             additional_css: Vec::new(),
             additional_js: Vec::new(),
+            playpen: PlaypenConfig::new(theme),
         }
     }
 
@@ -79,6 +83,10 @@ impl HtmlConfig {
                     self.additional_js.push(path);
                 }
             }
+        }
+
+        if let Some(playpen) = tomlconfig.playpen {
+            self.playpen.fill_from_tomlconfig(&self.theme, playpen);
         }
 
         self
@@ -153,5 +161,13 @@ impl HtmlConfig {
 
     pub fn get_additional_js(&self) -> &[PathBuf] {
         &self.additional_js
+    }
+
+    pub fn get_playpen_config(&self) -> &PlaypenConfig {
+        &self.playpen
+    }
+
+    pub fn get_mut_playpen_config(&mut self) -> &mut PlaypenConfig {
+        &mut self.playpen
     }
 }
