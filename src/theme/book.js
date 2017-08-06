@@ -329,8 +329,12 @@ function run_rust_code(code_block) {
         dataType: "json",
         contentType: "application/json",
         data: JSON.stringify(params),
+        timeout: 15000,
         success: function(response){
             result_block.text(response.result);
-        }
+        },
+        error: function(qXHR, textStatus, errorThrown){
+            result_block.text("Playpen communication " + textStatus);
+        },
     });
 }
