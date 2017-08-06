@@ -334,7 +334,7 @@ function run_rust_code(code_block) {
             result_block.text(response.result);
         },
         error: function(qXHR, textStatus, errorThrown){
-            result_block.text("Playpen communication " + textStatus);
+            result_block.text("Playground communication " + textStatus);
         },
     });
 }
