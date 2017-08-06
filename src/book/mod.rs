@@ -6,9 +6,11 @@ use std::path::{Path, PathBuf};
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::process::Command;
+use tempdir::TempDir;
 
 use {theme, parse, utils};
 use renderer::{Renderer, HtmlHandlebars};
+use preprocess;
 use errors::*;
 
 use config::BookConfig;
@@ -358,14 +360,25 @@ impl MDBook {
                                                               .zip(library_paths.into_iter())
                                                               .flat_map(|x| vec![x.0, x.1])
                                                               .collect();
+        let temp_dir = TempDir::new("mdbook")?;
         for item in self.iter() {
 
             if let BookItem::Chapter(_, ref ch) = *item {
-                if ch.path != PathBuf::new() {
+                if !ch.path.as_os_str().is_empty() {
 
                     let path = self.get_source().join(&ch.path);
-
+                    let base = path.parent().ok_or_else(
+                        || String::from("Invalid bookitem path!"),
+                    )?;
+                    let content = utils::fs::file_to_string(&path)?;
+                    // Parse and expand links
+                    let content = preprocess::links::replace_all(&content, base)?;
                     println!("[*]: Testing file: {:?}", path);
+
+                    //write preprocessed file to tempdir
+                    let path = temp_dir.path().join(&ch.path);
+                    let mut tmpf = utils::fs::create_file(&path)?;
+                    tmpf.write_all(content.as_bytes())?;
 
                     let output = Command::new("rustdoc").arg(&path).arg("--test").args(&library_args).output()?;
 

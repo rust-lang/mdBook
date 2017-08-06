@@ -28,6 +28,7 @@ env_logger = "0.4.0"
 toml = { version = "0.4", features = ["serde"] }
 open = "1.1"
 regex = "0.2.1"
+tempdir = "0.3.4"
 
 # Watch feature
 notify = { version = "4.0", optional = true }
@@ -38,10 +39,6 @@ crossbeam = { version = "0.2.8", optional = true }
 iron = { version = "0.5", optional = true }
 staticfile = { version = "0.4", optional = true }
 ws = { version = "0.7", optional = true}
-
-# Tests
-[dev-dependencies]
-tempdir = "0.3.4"
 
 [build-dependencies]
 error-chain = "0.10"
