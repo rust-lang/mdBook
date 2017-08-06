@@ -33,55 +33,47 @@ impl HtmlHandlebars {
         // FIXME: This should be made DRY-er and rely less on mutable state
         match *item {
             BookItem::Chapter(_, ref ch) |
-            BookItem::Affix(ref ch) => {
-                if ch.path != PathBuf::new() {
+            BookItem::Affix(ref ch) if !ch.path.as_os_str().is_empty() => {
 
-                    let path = ctx.book.get_source().join(&ch.path);
+                let path = ctx.book.get_source().join(&ch.path);
+                let content = utils::fs::file_to_string(&path)?;
+                let base = path.parent().ok_or_else(
+                    || String::from("Invalid bookitem path!"),
+                )?;
 
-                    debug!("[*]: Opening file: {:?}", path);
-                    let mut f = File::open(&path)?;
-                    let mut content: String = String::new();
+                // Parse and expand links
+                let content = preprocess::links::replace_all(&content, base)?;
+                let content = utils::render_markdown(&content, ctx.book.get_curly_quotes());
+                print_content.push_str(&content);
 
-                    debug!("[*]: Reading file");
-                    f.read_to_string(&mut content)?;
+                // Update the context with data for this file
+                let path = ch.path.to_str().ok_or_else(|| {
+                    io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
+                })?;
 
-                    // Parse and expand links
-                    if let Some(p) = path.parent() {
-                        content = preprocess::links::replace_all(&content, p)?;
-                    }
+                ctx.data.insert("path".to_owned(), json!(path));
+                ctx.data.insert("content".to_owned(), json!(content));
+                ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
+                ctx.data.insert(
+                    "path_to_root".to_owned(),
+                    json!(utils::fs::path_to_root(&ch.path)),
+                );
 
-                    content = utils::render_markdown(&content, ctx.book.get_curly_quotes());
-                    print_content.push_str(&content);
+                // Render the handlebars template with the data
+                debug!("[*]: Render template");
+                let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
-                    // Update the context with data for this file
-                    let path = ch.path.to_str().ok_or_else(|| {
-                        io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
-                    })?;
+                let filename = Path::new(&ch.path).with_extension("html");
+                let rendered = self.post_process(rendered,
+                    filename.file_name().unwrap().to_str().unwrap_or(""),
+                    ctx.book.get_html_config().get_playpen_config());
 
-                    ctx.data.insert("path".to_owned(), json!(path));
-                    ctx.data.insert("content".to_owned(), json!(content));
-                    ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
-                    ctx.data.insert(
-                        "path_to_root".to_owned(),
-                        json!(utils::fs::path_to_root(&ch.path)),
-                    );
+                // Write to file
+                info!("[*] Creating {:?} ✓", filename.display());
+                ctx.book.write_file(filename, &rendered.into_bytes())?;
 
-                    // Render the handlebars template with the data
-                    debug!("[*]: Render template");
-                    let rendered = ctx.handlebars.render("index", &ctx.data)?;
-
-                    let filename = Path::new(&ch.path).with_extension("html");
-                    let rendered = self.post_process(rendered,
-                        filename.file_name().unwrap().to_str().unwrap_or(""),
-                        ctx.book.get_html_config().get_playpen_config());
-
-                    // Write to file
-                    info!("[*] Creating {:?} ✓", filename.display());
-                    ctx.book.write_file(filename, &rendered.into_bytes())?;
-
-                    if ctx.is_index {
-                        self.render_index(ctx.book, ch, &ctx.destination)?;
-                    }
+                if ctx.is_index {
+                    self.render_index(ctx.book, ch, &ctx.destination)?;
                 }
             },
             _ => {},
