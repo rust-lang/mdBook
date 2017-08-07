@@ -19,6 +19,9 @@ code {
 .hidden {
   display: none;
 }
+.play-button.hidden {
+  display: none;
+}
 h2,
 h3 {
   margin-top: 2.5em;

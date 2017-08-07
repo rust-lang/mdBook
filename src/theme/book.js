@@ -1,3 +1,5 @@
+playground_crates = [];
+
 $( document ).ready(function() {
 
     // url
@@ -219,7 +221,7 @@ $( document ).ready(function() {
             pre_block.prepend("<div class=\"buttons\"></div>");
             buttons = pre_block.find(".buttons");
         }
-        buttons.prepend("<i class=\"fa fa-play play-button\"></i>");
+        buttons.prepend("<i class=\"fa fa-play play-button hidden\"></i>");
         buttons.prepend("<i class=\"fa fa-copy clip-button\"><i class=\"tooltiptext\"></i></i>");
 
         let code_block = pre_block.find("code").first();
@@ -245,14 +247,7 @@ $( document ).ready(function() {
         text: function(trigger) {
             hideTooltip(trigger);
             let playpen = $(trigger).parents(".playpen");
-            let code_block = playpen.find("code").first();
-
-            if (window.ace && code_block.hasClass("editable")) {
-                let editor = window.ace.edit(code_block.get(0));
-                return editor.getValue();
-            } else {
-                return code_block.get(0).textContent;
-            }
+            return playpen_text(playpen);
         }
     });
     clipboardSnippets.on('success', function(e) {
@@ -262,7 +257,53 @@ $( document ).ready(function() {
     clipboardSnippets.on('error', function(e) {
             showTooltip(e.trigger, "Clipboard error!");
     });
+
+    $.ajax({
+        url: "https://play.rust-lang.org/meta/crates",
+        method: "POST",
+        crossDomain: true,
+        dataType: "json",
+        contentType: "application/json",
+        success: function(response){
+            playground_crates = response.crates.map(function(item) {return item["id"];} );
+            $(".playpen").each(function(block){
+                update_play_button(this, playground_crates);
+            });
+        },
+    });
+
 });
+
+function playpen_text(playpen) {
+    let code_block = playpen.find("code").first();
+
+    if (window.ace && code_block.hasClass("editable")) {
+        let editor = window.ace.edit(code_block.get(0));
+        return editor.getValue();
+    } else {
+        return code_block.get(0).textContent;
+    }
+}
+
+function update_play_button(block, playground_crates) {
+    //TODO skip if `no_run` is set
+    var pre_block = $(block);
+    var play_button = pre_block.find(".play-button");
+
+    var txt = playpen_text(pre_block);
+
+    var re = /extern\s+crate\s+([a-zA-Z_0-9]+)\s*;/g;
+    var snippet_crates = [];
+    while (item = re.exec(txt))
+        snippet_crates.push(item[1]);
+
+    var all_available = snippet_crates.every(elem => playground_crates.indexOf(elem) > -1);
+    if (all_available) {
+        play_button.removeClass("hidden");
+    } else {
+        play_button.addClass("hidden");
+    }
+}
 
 function hideTooltip(elem) {
     elem.firstChild.innerText="";
