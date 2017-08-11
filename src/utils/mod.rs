@@ -17,7 +17,8 @@ pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
 
     let p = Parser::new_ext(text, opts);
     let mut converter = EventQuoteConverter::new(curly_quotes);
-    let events = p.map(|event| converter.convert(event));
+    let events = p.map(clean_codeblock_headers).map(|event| converter.convert(event));
+
     html::push_html(&mut s, events);
     s
 }
@@ -53,6 +54,21 @@ impl EventQuoteConverter {
         }
     }
 }
+
+fn clean_codeblock_headers(event: Event) -> Event {
+    match event {
+        Event::Start(Tag::CodeBlock(ref info)) => {
+            let info: String = info
+                .chars()
+                .filter(|ch| !ch.is_whitespace())
+                .collect();
+
+            Event::Start(Tag::CodeBlock(Cow::from(info)))
+        },
+        _ => event,
+    }
+}
+
 
 fn convert_quotes_to_curly(original_text: &str) -> String {
     // We'll consider the start to be "whitespace".
@@ -98,6 +114,76 @@ mod tests {
 <p><code>'three'</code> ‘four’</p>
 "#;
             assert_eq!(render_markdown(input, true), expected);
+        }
+
+        #[test]
+        fn whitespace_outside_of_codeblock_header_is_preserved() {
+            let input = r#"
+some text with spaces
+```rust
+fn main() {
+// code inside is unchanged
+}
+```
+more text with spaces
+"#;
+
+            let expected = r#"<p>some text with spaces</p>
+<pre><code class="language-rust">fn main() {
+// code inside is unchanged
+}
+</code></pre>
+<p>more text with spaces</p>
+"#;
+            assert_eq!(render_markdown(input, false), expected);
+            assert_eq!(render_markdown(input, true), expected);
+        }
+
+        #[test]
+        fn rust_code_block_properties_are_passed_as_space_delimited_class() {
+            let input = r#"
+```rust,no_run,should_panic,property_3
+```
+"#;
+
+            let expected = r#"<pre><code class="language-rust,no_run,should_panic,property_3"></code></pre>
+"#;
+            assert_eq!(render_markdown(input, false), expected);
+            assert_eq!(render_markdown(input, true), expected);
+        }
+
+        #[test]
+        fn rust_code_block_properties_with_whitespace_are_passed_as_space_delimited_class() {
+            let input = r#"
+```rust,    no_run,,,should_panic , ,property_3
+```
+"#;
+
+            let expected = r#"<pre><code class="language-rust,no_run,,,should_panic,,property_3"></code></pre>
+"#;
+            assert_eq!(render_markdown(input, false), expected);
+            assert_eq!(render_markdown(input, true), expected);
+        }
+
+        #[test]
+        fn rust_code_block_without_properties_has_proper_html_class() {
+            let input = r#"
+```rust 
+```
+"#;
+
+            let expected = r#"<pre><code class="language-rust"></code></pre>
+"#;
+            assert_eq!(render_markdown(input, false), expected);
+            assert_eq!(render_markdown(input, true), expected);
+
+            let input = r#"
+```rust
+```
+"#;
+            assert_eq!(render_markdown(input, false), expected);
+            assert_eq!(render_markdown(input, true), expected);
+
         }
     }
 
