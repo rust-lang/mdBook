@@ -2,7 +2,7 @@ pub mod bookitem;
 pub mod book;
 pub mod summary;
 
-use self::book::{parse_book, Book, BookItem, BookItems};
+use self::book::{load_book, Book, BookItem, BookItems};
 
 use std::path::{Path, PathBuf};
 use std::fs::{self, File};
@@ -10,7 +10,7 @@ use std::io::{Read, Write};
 use std::process::Command;
 use tempdir::TempDir;
 
-use {theme, parse, utils};
+use {theme, utils};
 use renderer::{Renderer, HtmlHandlebars};
 use preprocess;
 use errors::*;
@@ -23,7 +23,7 @@ use config::jsonconfig::JsonConfig;
 pub struct MDBook {
     config: BookConfig,
 
-    pub content: Vec<BookItem>,
+    pub content: Option<Book>,
     renderer: Box<Renderer>,
 
     livereload: Option<String>,
@@ -71,7 +71,7 @@ impl MDBook {
         MDBook {
             config: BookConfig::new(root),
 
-            content: vec![],
+            content: None,
             renderer: Box::new(HtmlHandlebars::new()),
 
             livereload: None,
@@ -109,11 +109,8 @@ impl MDBook {
     /// ```
 
     pub fn iter(&self) -> BookItems {
-        BookItems {
-            items: &self.content[..],
-            current_index: 0,
-            stack: Vec::new(),
-        }
+        self.content.expect("Trying to iterate over a book before it is loaded. This is a bug")
+        .iter()
     }
 
     /// `init()` creates some boilerplate files and directories
@@ -176,9 +173,8 @@ impl MDBook {
         for item in self.iter() {
             debug!("[*]: item: {:?}", item);
             let ch = match *item {
-                BookItem::Spacer => continue,
-                BookItem::Chapter(_, ref ch) |
-                BookItem::Affix(ref ch) => ch,
+                BookItem::Separator => continue,
+                BookItem::Chapter(ref ch) => ch,
             };
             if !ch.path.as_os_str().is_empty() {
                 let path = self.config.get_source().join(&ch.path);
@@ -365,8 +361,8 @@ impl MDBook {
         let temp_dir = TempDir::new("mdbook")?;
         for item in self.iter() {
 
-            if let BookItem::Chapter(_, ref ch) = *item {
-                if !ch.path.as_os_str().is_empty() {
+            if let BookItem::Chapter(ref ch) = *item {
+                if ch.path != PathBuf::new() {
 
                     let path = self.get_source().join(&ch.path);
                     let base = path.parent().ok_or_else(
@@ -517,8 +513,8 @@ impl MDBook {
 
     // Construct book
     fn parse_summary(&mut self) -> Result<()> {
-        // When append becomes stable, use self.content.append() ...
-        self.content = parse::construct_bookitems(&self.get_source().join("SUMMARY.md"))?;
+        let book = load_book(self.get_source().join("SUMMARY.md"))?;
+        self.content = Some(book);
         Ok(())
     }
 }

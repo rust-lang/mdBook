@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use std::fs::File;
 use std::io::Read;
 
-use super::summary::{Summary, Link, SummaryItem, SectionNumber};
+use super::summary::{parse_summary, Summary, Link, SummaryItem, SectionNumber};
 use errors::*;
 
 
