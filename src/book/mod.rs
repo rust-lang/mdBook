@@ -108,7 +108,7 @@ impl MDBook {
     /// ```
 
     pub fn iter(&self) -> BookItems {
-        self.content.expect("Trying to iterate over a book before it is loaded. This is a bug")
+        self.content.as_ref().expect("Trying to iterate over a book before it is loaded. This is a bug")
         .iter()
     }
 

@@ -411,7 +411,7 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
 
         match *item {
             BookItem::Chapter(ref ch) => {
-                chapter.insert("section".to_owned(), json!(s));
+                chapter.insert("section".to_owned(), json!(ch.number.clone()));
                 chapter.insert("name".to_owned(), json!(ch.name));
                 let path = ch.path.to_str().ok_or_else(|| {
                     io::Error::new(io::ErrorKind::Other, "Could not convert path to str")

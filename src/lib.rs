@@ -89,6 +89,9 @@ extern crate tempdir;
 
 #[cfg(test)]
 extern crate tempdir;
+#[cfg(test)]
+#[macro_use]
+extern crate pretty_assertions;
 
 mod preprocess;
 pub mod book;

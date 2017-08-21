@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::collections::VecDeque;
 use std::fs::File;
 use std::io::Read;
@@ -67,14 +67,17 @@ pub struct Chapter {
     pub number: Option<SectionNumber>,
     /// Nested items.
     pub sub_items: Vec<BookItem>,
+    /// The chapter's location, relative to the `SUMMARY.md` file.
+    pub path: PathBuf,
 }
 
 impl Chapter {
     /// Create a new chapter with the provided content.
-    pub fn new(name: &str, content: String) -> Chapter {
+    pub fn new<P: Into<PathBuf>>(name: &str, content: String, path: P) -> Chapter {
         Chapter {
             name: name.to_string(),
             content: content,
+            path: path.into(),
             ..Default::default()
         }
     }
@@ -119,14 +122,17 @@ fn load_chapter<P: AsRef<Path>>(link: &Link, src_dir: P) -> Result<Chapter> {
         src_dir.join(&link.location)
     };
 
-    let mut f = File::open(location).chain_err(|| {
+    let mut f = File::open(&location).chain_err(|| {
         format!("Chapter file not found, {}", link.location.display())
     })?;
 
     let mut content = String::new();
     f.read_to_string(&mut content)?;
 
-    let mut ch = Chapter::new(&link.name, content);
+    let stripped = location.strip_prefix(&src_dir).expect("Chapters are always inside a book");
+    println!("{} {} => {}", src_dir.display(), location.display(), stripped.display());
+
+    let mut ch = Chapter::new(&link.name, content, stripped);
     ch.number = link.number.clone();
 
     let sub_items = link.nested_items
@@ -223,7 +229,7 @@ And here is some more text.
     #[test]
     fn load_a_single_chapter_from_disk() {
         let (link, temp_dir) = dummy_link();
-        let should_be = Chapter::new("Chapter 1", DUMMY_SRC.to_string());
+        let should_be = Chapter::new("Chapter 1", DUMMY_SRC.to_string(), "chapter_1.md");
 
         let got = load_chapter(&link, temp_dir.path()).unwrap();
         assert_eq!(got, should_be);
@@ -239,18 +245,20 @@ And here is some more text.
 
     #[test]
     fn load_recursive_link_with_separators() {
-        let (root, _temp) = nested_links();
+        let (root, temp) = nested_links();
 
         let nested = Chapter {
             name: String::from("Nested Chapter 1"),
             content: String::from("Hello World!"),
             number: Some(SectionNumber(vec![1, 2])),
+            path: PathBuf::from("second.md"),
             sub_items: Vec::new(),
         };
         let should_be = BookItem::Chapter(Chapter {
             name: String::from("Chapter 1"),
             content: String::from(DUMMY_SRC),
             number: None,
+            path: PathBuf::from("chapter_1.md"),
             sub_items: vec![
                 BookItem::Chapter(nested.clone()),
                 BookItem::Separator,
@@ -258,13 +266,13 @@ And here is some more text.
             ],
         });
 
-        let got = load_summary_item(&SummaryItem::Link(root), "").unwrap();
+        let got = load_summary_item(&SummaryItem::Link(root), temp.path()).unwrap();
         assert_eq!(got, should_be);
     }
 
     #[test]
     fn load_a_book_with_a_single_chapter() {
-        let (link, _temp) = dummy_link();
+        let (link, temp) = dummy_link();
         let summary = Summary {
             numbered_chapters: vec![SummaryItem::Link(link)],
             ..Default::default()
@@ -274,12 +282,13 @@ And here is some more text.
                 BookItem::Chapter(Chapter {
                     name: String::from("Chapter 1"),
                     content: String::from(DUMMY_SRC),
+                    path: PathBuf::from("chapter_1.md"),
                     ..Default::default()
                 }),
             ],
         };
 
-        let got = load_book_from_disk(&summary, "").unwrap();
+        let got = load_book_from_disk(&summary, temp.path()).unwrap();
 
         assert_eq!(got, should_be);
     }
@@ -312,10 +321,11 @@ And here is some more text.
                     name: String::from("Chapter 1"),
                     content: String::from(DUMMY_SRC),
                     number: None,
+                    path: PathBuf::from("Chapter_1/index.md"),
                     sub_items: vec![
-                        BookItem::Chapter(Chapter::new("Hello World", String::new())),
+                        BookItem::Chapter(Chapter::new("Hello World", String::new(), "Chapter_1/hello.md")),
                         BookItem::Separator,
-                        BookItem::Chapter(Chapter::new("Goodbye World", String::new())),
+                        BookItem::Chapter(Chapter::new("Goodbye World", String::new(), "Chapter_1/goodbye.md")),
                     ],
                 }),
                 BookItem::Separator,
