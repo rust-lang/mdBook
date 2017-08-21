@@ -264,6 +264,7 @@ impl<'a> SummaryParser<'a> {
     fn step_start(&mut self, event: Event<'a>) -> Result<()> {
         match event {
             Event::Start(Tag::Paragraph) => self.state = State::PrefixChapters,
+            Event::Start(Tag::List(_)) => self.state = State::NumberedChapters(0),
             other => bail!("Expected a start of paragraph but got {:?}", other),
         }
 

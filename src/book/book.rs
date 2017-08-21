@@ -1,3 +1,4 @@
+use std::fmt::{self, Display, Formatter};
 use std::path::{Path, PathBuf};
 use std::collections::VecDeque;
 use std::fs::File;
@@ -130,7 +131,6 @@ fn load_chapter<P: AsRef<Path>>(link: &Link, src_dir: P) -> Result<Chapter> {
     f.read_to_string(&mut content)?;
 
     let stripped = location.strip_prefix(&src_dir).expect("Chapters are always inside a book");
-    println!("{} {} => {}", src_dir.display(), location.display(), stripped.display());
 
     let mut ch = Chapter::new(&link.name, content, stripped);
     ch.number = link.number.clone();
@@ -171,6 +171,16 @@ impl<'a> Iterator for BookItems<'a> {
         }
 
         item
+    }
+}
+
+impl Display for Chapter {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        if let Some(ref section_number) = self.number {
+            write!(f, "{} ", section_number)?;
+        }
+
+        write!(f, "{}", self.name)
     }
 }
 

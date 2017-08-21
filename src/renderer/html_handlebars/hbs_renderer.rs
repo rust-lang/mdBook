@@ -3,10 +3,9 @@ use preprocess;
 use renderer::Renderer;
 use book::MDBook;
 use config::PlaypenConfig;
-use theme::{Theme, playpen_editor};
+use theme::{self, Theme, playpen_editor};
 use book::book::{BookItem, Chapter};
 use utils;
-use theme::{self, Theme};
 use errors::*;
 use regex::{Regex, Captures};
 
@@ -33,25 +32,9 @@ impl HtmlHandlebars {
         -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
         match *item {
-<<<<<<< HEAD
-            BookItem::Chapter(_, ref ch) |
-            BookItem::Affix(ref ch) if !ch.path.as_os_str().is_empty() => {
-=======
             BookItem::Chapter(ref ch) => {
-                if ch.path != PathBuf::new() {
-
-                    let path = ctx.book.get_source().join(&ch.path);
-
-                    debug!("[*]: Opening file: {:?}", path);
-                    let mut f = File::open(&path)?;
-                    let mut content: String = String::new();
-
-                    debug!("[*]: Reading file");
-                    f.read_to_string(&mut content)?;
->>>>>>> Removed old bookitem.md, now everyone uses the correct BookItem
-
                 let path = ctx.book.get_source().join(&ch.path);
-                let content = utils::fs::file_to_string(&path)?;
+                let content = ch.content.clone();
                 let base = path.parent().ok_or_else(
                     || String::from("Invalid bookitem path!"),
                 )?;
@@ -62,9 +45,7 @@ impl HtmlHandlebars {
                 print_content.push_str(&content);
 
                 // Update the context with data for this file
-                let path = ch.path.to_str().ok_or_else(|| {
-                    io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
-                })?;
+                let path = ch.path.to_str().ok_or_else(|| Error::from("Could not convert path to str"))?;
 
                 // Non-lexical lifetimes needed :'( 
                 let title: String;
@@ -407,24 +388,26 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
 
     for item in book.iter() {
         // Create the data to inject in the template
-        let mut chapter = BTreeMap::new();
+        let mut chapter_data = BTreeMap::new();
 
         match *item {
             BookItem::Chapter(ref ch) => {
-                chapter.insert("section".to_owned(), json!(ch.number.clone()));
-                chapter.insert("name".to_owned(), json!(ch.name));
-                let path = ch.path.to_str().ok_or_else(|| {
-                    io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
-                })?;
-                chapter.insert("path".to_owned(), json!(path));
+                if let Some(ref section_number) = ch.number {
+                    chapter_data.insert("section".to_owned(), json!(section_number.to_string()));
+                }
+
+                chapter_data.insert("name".to_owned(), json!(ch.name));
+                let path = ch.path.to_str()
+                    .ok_or_else(|| Error::from("Could not convert path to str"))?;
+                chapter_data.insert("path".to_owned(), json!(path));
             },
             BookItem::Separator => {
-                chapter.insert("spacer".to_owned(), json!("_spacer_"));
+                chapter_data.insert("spacer".to_owned(), json!("_spacer_"));
             },
 
         }
 
-        chapters.push(chapter);
+        chapters.push(chapter_data);
     }
 
     data.insert("chapters".to_owned(), json!(chapters));

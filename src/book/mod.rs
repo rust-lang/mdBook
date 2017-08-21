@@ -85,17 +85,17 @@ impl MDBook {
     /// ```no_run
     /// # extern crate mdbook;
     /// # use mdbook::MDBook;
-    /// # use mdbook::BookItem;
+    /// # use mdbook::book::book::BookItem;
     /// # #[allow(unused_variables)]
     /// # fn main() {
     /// # let book = MDBook::new("mybook");
     /// for item in book.iter() {
-    ///     match item {
-    ///         &BookItem::Chapter(ref section, ref chapter) => {},
-    ///         &BookItem::Affix(ref chapter) => {},
-    ///         &BookItem::Spacer => {},
+    ///     match *item {
+    ///         BookItem::Chapter(ref chapter) => println!("{}", chapter),
+    ///         BookItem::Separator => {},
     ///     }
     /// }
+    /// panic!();
     ///
     /// // would print something like this:
     /// // 1. Chapter 1
@@ -131,67 +131,43 @@ impl MDBook {
 
         debug!("[fn]: init");
 
-        if !self.config.get_root().exists() {
-            fs::create_dir_all(&self.config.get_root()).unwrap();
-            info!("{:?} created", &self.config.get_root());
-        }
-
         {
+            let root = self.config.get_root();
+            let dest = self.get_destination();
+            let src = self.config.get_source();
 
-            if !self.get_destination().exists() {
-                debug!("[*]: {:?} does not exist, trying to create directory", self.get_destination());
-                fs::create_dir_all(self.get_destination())?;
-            }
-
-
-            if !self.config.get_source().exists() {
-                debug!("[*]: {:?} does not exist, trying to create directory", self.config.get_source());
-                fs::create_dir_all(self.config.get_source())?;
-            }
-
-            let summary = self.config.get_source().join("SUMMARY.md");
-
-            if !summary.exists() {
-
-                // Summary does not exist, create it
-                debug!("[*]: {:?} does not exist, trying to create SUMMARY.md", &summary);
-                let mut f = File::create(&summary)?;
-
-                debug!("[*]: Writing to SUMMARY.md");
-
-                writeln!(f, "# Summary")?;
-                writeln!(f, "")?;
-                writeln!(f, "- [Chapter 1](./chapter_1.md)")?;
-            }
-        }
-
-        // parse SUMMARY.md, and create the missing item related file
-        self.parse_summary()?;
-
-        debug!("[*]: constructing paths for missing files");
-        for item in self.iter() {
-            debug!("[*]: item: {:?}", item);
-            let ch = match *item {
-                BookItem::Separator => continue,
-                BookItem::Chapter(ref ch) => ch,
-            };
-            if !ch.path.as_os_str().is_empty() {
-                let path = self.config.get_source().join(&ch.path);
-
-                if !path.exists() {
-                    if !self.create_missing {
-                        return Err(format!("'{}' referenced from SUMMARY.md does not exist.", path.to_string_lossy())
-                                       .into());
-                    }
-                    debug!("[*]: {:?} does not exist, trying to create file", path);
-                    ::std::fs::create_dir_all(path.parent().unwrap())?;
-                    let mut f = File::create(path)?;
-
-                    // debug!("[*]: Writing to {:?}", path);
-                    writeln!(f, "# {}", ch.name)?;
+            let necessary_folders = &[root, dest, src];
+            
+            for folder in necessary_folders {
+                if !folder.exists() {
+                    fs::create_dir_all(folder)?;
+                    debug!("{} created", folder.display());
                 }
             }
+
+            let summary = src.join("SUMMARY.md");
+
+            if !summary.exists() {
+                debug!("[*]: Creating SUMMARY.md");
+
+                let mut f = File::create(&summary)?;
+
+                writeln!(f, "# Summary")?;
+                writeln!(f)?;
+                writeln!(f, "- [Chapter 1](./chapter_1.md)")?;
+            }
+
+            let ch_1 = src.join("chapter_1.md");
+            if !ch_1.exists() {
+                debug!("[*] Creating {}", ch_1.display());
+
+                let mut f = File::create(&ch_1)?;
+                writeln!(f, "# Chapter 1")?;
+            }
         }
+
+        // parse SUMMARY.md and load the newly created files into memory
+        self.parse_summary().chain_err(|| "Couldn't parse the SUMMARY.md file")?;
 
         debug!("[*]: init done");
         Ok(())
@@ -512,7 +488,9 @@ impl MDBook {
 
     // Construct book
     fn parse_summary(&mut self) -> Result<()> {
-        let book = load_book(self.get_source().join("SUMMARY.md"))?;
+        let src = self.config.get_source();
+        let book = load_book(&src)?;
+
         self.content = Some(book);
         Ok(())
     }
