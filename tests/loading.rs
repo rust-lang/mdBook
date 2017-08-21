@@ -5,7 +5,7 @@ extern crate env_logger;
 
 use std::path::PathBuf;
 
-use mdbook::book::book::load_book;
+use mdbook::book::load_book;
 
 
 #[test]

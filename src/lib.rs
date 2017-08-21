@@ -99,7 +99,7 @@ pub mod theme;
 pub mod utils;
 
 pub use book::MDBook;
-pub use book::book::Book;
+pub use book::Book;
 pub use renderer::Renderer;
 
 /// The error types used through out this crate.

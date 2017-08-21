@@ -1,7 +1,10 @@
-pub mod book;
-pub mod summary;
+//! The internal representation of a `Book`.
 
-use self::book::{load_book, Book, BookItem, BookItems};
+mod book;
+mod summary;
+
+pub use self::book::{load_book, Book, BookItem, BookItems, Chapter};
+pub use self::summary::SectionNumber;
 
 use std::path::{Path, PathBuf};
 use std::fs::{self, File};
@@ -19,6 +22,9 @@ use config::tomlconfig::TomlConfig;
 use config::htmlconfig::HtmlConfig;
 use config::jsonconfig::JsonConfig;
 
+
+/// A helper for managing the `Book`, its configuration, and the rendering 
+/// process.
 pub struct MDBook {
     config: BookConfig,
 
@@ -85,7 +91,7 @@ impl MDBook {
     /// ```no_run
     /// # extern crate mdbook;
     /// # use mdbook::MDBook;
-    /// # use mdbook::book::book::BookItem;
+    /// # use mdbook::book::BookItem;
     /// # #[allow(unused_variables)]
     /// # fn main() {
     /// # let book = MDBook::new("mybook");

@@ -4,7 +4,7 @@ use renderer::Renderer;
 use book::MDBook;
 use config::PlaypenConfig;
 use theme::{self, Theme, playpen_editor};
-use book::book::{BookItem, Chapter};
+use book::{BookItem, Chapter};
 use utils;
 use errors::*;
 use regex::{Regex, Captures};

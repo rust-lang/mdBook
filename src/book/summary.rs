@@ -86,11 +86,6 @@ impl Link {
             nested_items: Vec::new(),
         }
     }
-
-    /// Add an item to this link's `nested_items`.
-    pub fn push_item<I: Into<SummaryItem>>(&mut self, item: I) {
-        self.nested_items.push(item.into());
-    }
 }
 
 impl Default for Link {

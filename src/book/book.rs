@@ -88,7 +88,7 @@ impl Chapter {
 ///
 /// You need to pass in the book's source directory because all the links in
 /// `SUMMARY.md` give the chapter locations relative to it.
-pub fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P) -> Result<Book> {
+fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P) -> Result<Book> {
     debug!("[*] Loading the book from disk");
     let src_dir = src_dir.as_ref();
 
@@ -229,9 +229,9 @@ And here is some more text.
         let mut second = Link::new("Nested Chapter 1", &second_path);
         second.number = Some(SectionNumber(vec![1, 2]));
 
-        root.push_item(second.clone());
-        root.push_item(SummaryItem::Separator);
-        root.push_item(second.clone());
+        root.nested_items.push(second.clone().into());
+        root.nested_items.push(SummaryItem::Separator);
+        root.nested_items.push(second.clone().into());
 
         (root, temp_dir)
     }
