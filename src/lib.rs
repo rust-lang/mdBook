@@ -104,6 +104,9 @@ pub use renderer::Renderer;
 
 /// The error types used through out this crate.
 pub mod errors {
+    // needed temporarily because of https://github.com/rust-lang-nursery/error-chain/issues/208
+    #![allow(unknown_lints, unused_doc_comment)] 
+
     error_chain!{
         foreign_links {
             Io(::std::io::Error);

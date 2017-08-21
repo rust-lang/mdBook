@@ -12,7 +12,7 @@ use regex::{Regex, Captures};
 use std::ascii::AsciiExt;
 use std::path::{Path, PathBuf};
 use std::fs::{self, File};
-use std::io::{self, Read};
+use std::io::Read;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 
