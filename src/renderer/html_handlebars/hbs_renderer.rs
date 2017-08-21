@@ -2,10 +2,11 @@ use renderer::html_handlebars::helpers;
 use preprocess;
 use renderer::Renderer;
 use book::MDBook;
-use book::bookitem::{BookItem, Chapter};
 use config::PlaypenConfig;
-use {utils, theme};
 use theme::{Theme, playpen_editor};
+use book::book::{BookItem, Chapter};
+use utils;
+use theme::{self, Theme};
 use errors::*;
 use regex::{Regex, Captures};
 
@@ -32,8 +33,22 @@ impl HtmlHandlebars {
         -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
         match *item {
+<<<<<<< HEAD
             BookItem::Chapter(_, ref ch) |
             BookItem::Affix(ref ch) if !ch.path.as_os_str().is_empty() => {
+=======
+            BookItem::Chapter(ref ch) => {
+                if ch.path != PathBuf::new() {
+
+                    let path = ctx.book.get_source().join(&ch.path);
+
+                    debug!("[*]: Opening file: {:?}", path);
+                    let mut f = File::open(&path)?;
+                    let mut content: String = String::new();
+
+                    debug!("[*]: Reading file");
+                    f.read_to_string(&mut content)?;
+>>>>>>> Removed old bookitem.md, now everyone uses the correct BookItem
 
                 let path = ctx.book.get_source().join(&ch.path);
                 let content = utils::fs::file_to_string(&path)?;
@@ -395,14 +410,7 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
         let mut chapter = BTreeMap::new();
 
         match *item {
-            BookItem::Affix(ref ch) => {
-                chapter.insert("name".to_owned(), json!(ch.name));
-                let path = ch.path.to_str().ok_or_else(|| {
-                    io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
-                })?;
-                chapter.insert("path".to_owned(), json!(path));
-            },
-            BookItem::Chapter(ref s, ref ch) => {
+            BookItem::Chapter(ref ch) => {
                 chapter.insert("section".to_owned(), json!(s));
                 chapter.insert("name".to_owned(), json!(ch.name));
                 let path = ch.path.to_str().ok_or_else(|| {
@@ -410,7 +418,7 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
                 })?;
                 chapter.insert("path".to_owned(), json!(path));
             },
-            BookItem::Spacer => {
+            BookItem::Separator => {
                 chapter.insert("spacer".to_owned(), json!("_spacer_"));
             },
 

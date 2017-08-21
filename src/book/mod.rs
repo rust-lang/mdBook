@@ -1,4 +1,3 @@
-pub mod bookitem;
 pub mod book;
 pub mod summary;
 
