@@ -1,6 +1,8 @@
 pub mod bookitem;
+pub mod book;
+pub mod summary;
 
-pub use self::bookitem::{BookItem, BookItems};
+use self::book::{parse_book, Book, BookItem, BookItems};
 
 use std::path::{Path, PathBuf};
 use std::fs::{self, File};

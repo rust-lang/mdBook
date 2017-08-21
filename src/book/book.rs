@@ -3,8 +3,26 @@ use std::collections::VecDeque;
 use std::fs::File;
 use std::io::Read;
 
-use loader::summary::{Summary, Link, SummaryItem, SectionNumber};
+use super::summary::{Summary, Link, SummaryItem, SectionNumber};
 use errors::*;
+
+
+/// Load a book into memory from its `src/` directory.
+pub fn load_book<P: AsRef<Path>>(src_dir: P) -> Result<Book> {
+    let src_dir = src_dir.as_ref();
+    let summary_md = src_dir.join("SUMMARY.md");
+
+    let mut summary_content = String::new();
+    File::open(summary_md)
+        .chain_err(|| "Couldn't open SUMMARY.md")?
+        .read_to_string(&mut summary_content)?;
+
+    let summary = parse_summary(&summary_content).chain_err(
+        || "Summary parsing failed",
+    )?;
+
+    load_book_from_disk(&summary, src_dir)
+}
 
 
 /// A dumb tree structure representing a book.

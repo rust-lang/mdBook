@@ -90,17 +90,15 @@ extern crate tempdir;
 #[cfg(test)]
 extern crate tempdir;
 
-mod parse;
 mod preprocess;
 pub mod book;
 pub mod config;
 pub mod renderer;
 pub mod theme;
 pub mod utils;
-pub mod loader;
 
 pub use book::MDBook;
-pub use book::BookItem;
+pub use book::Book;
 pub use renderer::Renderer;
 
 /// The error types used through out this crate.
