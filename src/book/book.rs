@@ -2,14 +2,14 @@ use std::fmt::{self, Display, Formatter};
 use std::path::{Path, PathBuf};
 use std::collections::VecDeque;
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Write};
 
 use super::summary::{parse_summary, Summary, Link, SummaryItem, SectionNumber};
 use errors::*;
 
 
 /// Load a book into memory from its `src/` directory.
-pub fn load_book<P: AsRef<Path>>(src_dir: P) -> Result<Book> {
+pub fn load_book<P: AsRef<Path>>(src_dir: P, create_if_not_present: bool) -> Result<Book> {
     let src_dir = src_dir.as_ref();
     let summary_md = src_dir.join("SUMMARY.md");
 
@@ -18,11 +18,9 @@ pub fn load_book<P: AsRef<Path>>(src_dir: P) -> Result<Book> {
         .chain_err(|| "Couldn't open SUMMARY.md")?
         .read_to_string(&mut summary_content)?;
 
-    let summary = parse_summary(&summary_content).chain_err(
-        || "Summary parsing failed",
-    )?;
+    let summary = parse_summary(&summary_content).chain_err(|| "Summary parsing failed")?;
 
-    load_book_from_disk(&summary, src_dir)
+    load_book_from_disk(&summary, src_dir, create_if_not_present)
 }
 
 
@@ -88,7 +86,7 @@ impl Chapter {
 ///
 /// You need to pass in the book's source directory because all the links in
 /// `SUMMARY.md` give the chapter locations relative to it.
-fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P) -> Result<Book> {
+fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P, create_if_not_present: bool) -> Result<Book> {
     debug!("[*] Loading the book from disk");
     let src_dir = src_dir.as_ref();
 
@@ -98,18 +96,29 @@ fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P) -> Result<
 
     let summary_items = prefix.chain(numbered).chain(suffix);
 
-    let chapters = summary_items
-        .map(|i| load_summary_item(i, src_dir))
-        .collect::<Result<_>>()
-        .chain_err(|| "Couldn't load chapters from disk")?;
+    let mut chapters = Vec::new();
+
+    for summary_item in summary_items {
+        let chapter = load_summary_item(summary_item, src_dir, create_if_not_present)?;
+        chapters.push(chapter);
+    }
 
     Ok(Book { sections: chapters })
 }
 
-fn load_summary_item<P: AsRef<Path>>(item: &SummaryItem, src_dir: P) -> Result<BookItem> {
+fn load_summary_item<P: AsRef<Path>>(item: &SummaryItem, src_dir: P, create_if_not_present: bool) -> Result<BookItem> {
     match *item {
         SummaryItem::Separator => Ok(BookItem::Separator),
-        SummaryItem::Link(ref link) => load_chapter(link, src_dir).map(|c| BookItem::Chapter(c)),
+        SummaryItem::Link(ref link) => {
+            let file = src_dir.as_ref().join(&link.location);
+
+            if create_if_not_present && !file.exists() {
+                let text = format!("# {}", link.name);
+                File::create(&file)?.write_all(text.as_bytes())?;
+            }
+
+            load_chapter(link, src_dir).map(|c| BookItem::Chapter(c))
+        },
     }
 }
 
@@ -137,7 +146,7 @@ fn load_chapter<P: AsRef<Path>>(link: &Link, src_dir: P) -> Result<Chapter> {
 
     let sub_items = link.nested_items
         .iter()
-        .map(|i| load_summary_item(i, src_dir))
+        .map(|i| load_summary_item(i, src_dir, false))
         .collect::<Result<Vec<_>>>()?;
 
     ch.sub_items = sub_items;
@@ -190,6 +199,7 @@ mod tests {
     use super::*;
     use tempdir::TempDir;
     use std::io::Write;
+    use std::fs;
 
     const DUMMY_SRC: &'static str = "
 # Dummy Chapter
@@ -276,7 +286,7 @@ And here is some more text.
             ],
         });
 
-        let got = load_summary_item(&SummaryItem::Link(root), temp.path()).unwrap();
+        let got = load_summary_item(&SummaryItem::Link(root), temp.path(), false).unwrap();
         assert_eq!(got, should_be);
     }
 
@@ -298,7 +308,7 @@ And here is some more text.
             ],
         };
 
-        let got = load_book_from_disk(&summary, temp.path()).unwrap();
+        let got = load_book_from_disk(&summary, temp.path(), false).unwrap();
 
         assert_eq!(got, should_be);
     }
@@ -361,5 +371,22 @@ And here is some more text.
         ];
 
         assert_eq!(chapter_names, should_be);
+    }
+
+    #[test]
+    fn create_missing_book_items() {
+        let (link, temp) = dummy_link();
+        let summary = Summary {
+            numbered_chapters: vec![SummaryItem::Link(link)],
+            ..Default::default()
+        };
+
+        let chapter_1 = temp.path().join("chapter_1.md");
+        fs::remove_file(&chapter_1).unwrap();
+        assert!(!chapter_1.exists());
+
+        load_book_from_disk(&summary, temp.path(), true).unwrap();
+
+        assert!(chapter_1.exists());
     }
 }

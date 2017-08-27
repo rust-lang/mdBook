@@ -16,6 +16,6 @@ fn load_the_example_book() {
         .join("book-example")
         .join("src");
 
-    let book = load_book(example_src_dir).unwrap();
+    let book = load_book(example_src_dir, false).unwrap();
     println!("{:#?}", book);
 }

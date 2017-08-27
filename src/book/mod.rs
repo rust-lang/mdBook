@@ -495,7 +495,7 @@ impl MDBook {
     // Construct book
     fn parse_summary(&mut self) -> Result<()> {
         let src = self.config.get_source();
-        let book = load_book(&src)?;
+        let book = load_book(&src, self.create_missing)?;
 
         self.content = Some(book);
         Ok(())
