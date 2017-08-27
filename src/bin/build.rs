@@ -9,7 +9,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
         .about("Build the book from the markdown files")
         .arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
         .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
-        .arg_from_usage("--no-create 'Will not create non-existent files linked from SUMMARY.md'")
+        .arg_from_usage("--create 'Will create non-existent files linked from SUMMARY.md'")
         .arg_from_usage("--curly-quotes 'Convert straight quotes to curly quotes, except for those that occur in code blocks and code spans'")
         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'")
 }
@@ -24,8 +24,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         None => book,
     };
 
-    if args.is_present("no-create") {
-        book.create_missing = false;
+    if args.is_present("create") {
+        book.create_missing = true;
     }
 
     if args.is_present("curly-quotes") {
