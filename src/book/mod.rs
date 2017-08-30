@@ -223,7 +223,7 @@ impl MDBook {
 
             debug!("[*]: Writing to .gitignore");
 
-            writeln!(f, "{}", relative).expect("Could not write to file.");
+            writeln!(f, "/{}", relative).expect("Could not write to file.");
         }
     }
 
