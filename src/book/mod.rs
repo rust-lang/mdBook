@@ -14,6 +14,7 @@ use tempdir::TempDir;
 
 use {theme, utils};
 use renderer::{HtmlHandlebars, Renderer};
+use self::summary::SummaryItem;
 use preprocess;
 use errors::*;
 
@@ -174,11 +175,18 @@ impl MDBook {
         let src = self.config.get_source();
         let summary = src.join("SUMMARY.md");
 
-        if !summary.exists() {
-            debug!("[*]: Creating SUMMARY.md");
-            let mut f = File::create(&summary)?;
-            writeln!(f, "{}", STUB_SUMMARY_CONTENTS)?;
+        if summary.exists() && self.create_missing {
+            // As a special case, if we run "mdbook init" on a book which
+            // already has a summary we'll read that summary and create
+            // stubs for any files which don't already exist (@azerupi likes
+            // having access to this shortcut).
+            return create_files_from_summary(&src, &summary);
         }
+
+        // We need to create the summary file
+        debug!("[*]: Creating SUMMARY.md");
+        let mut f = File::create(&summary)?;
+        writeln!(f, "{}", STUB_SUMMARY_CONTENTS)?;
 
         let ch_1 = src.join("chapter_1.md");
         if !ch_1.exists() {
@@ -443,61 +451,56 @@ impl MDBook {
 
     pub fn with_theme_path<T: Into<PathBuf>>(mut self, theme_path: T) -> Self {
         let root = self.config.get_root().to_owned();
-        self.config.get_mut_html_config()
+        self.config
+            .get_mut_html_config()
             .set_theme(&root, &theme_path.into());
         self
     }
 
     pub fn get_theme_path(&self) -> &Path {
-        self.config.get_html_config()
-            .get_theme()
+        self.config.get_html_config().get_theme()
     }
 
     pub fn with_curly_quotes(mut self, curly_quotes: bool) -> Self {
-        self.config.get_mut_html_config()
+        self.config
+            .get_mut_html_config()
             .set_curly_quotes(curly_quotes);
         self
     }
 
     pub fn get_curly_quotes(&self) -> bool {
-        self.config.get_html_config()
-            .get_curly_quotes()
+        self.config.get_html_config().get_curly_quotes()
     }
 
     pub fn with_mathjax_support(mut self, mathjax_support: bool) -> Self {
-        self.config.get_mut_html_config()
+        self.config
+            .get_mut_html_config()
             .set_mathjax_support(mathjax_support);
         self
     }
 
     pub fn get_mathjax_support(&self) -> bool {
-        self.config.get_html_config()
-            .get_mathjax_support()
+        self.config.get_html_config().get_mathjax_support()
     }
 
     pub fn get_google_analytics_id(&self) -> Option<String> {
-        self.config.get_html_config()
-            .get_google_analytics_id()
+        self.config.get_html_config().get_google_analytics_id()
     }
 
     pub fn has_additional_js(&self) -> bool {
-        self.config.get_html_config()
-            .has_additional_js()
+        self.config.get_html_config().has_additional_js()
     }
 
     pub fn get_additional_js(&self) -> &[PathBuf] {
-        self.config.get_html_config()
-            .get_additional_js()
+        self.config.get_html_config().get_additional_js()
     }
 
     pub fn has_additional_css(&self) -> bool {
-        self.config.get_html_config()
-            .has_additional_css()
+        self.config.get_html_config().has_additional_css()
     }
 
     pub fn get_additional_css(&self) -> &[PathBuf] {
-        self.config.get_html_config()
-            .get_additional_css()
+        self.config.get_html_config().get_additional_css()
     }
 
     pub fn get_html_config(&self) -> &HtmlConfig {
@@ -512,4 +515,48 @@ impl MDBook {
         self.content = Some(book);
         Ok(())
     }
+}
+
+fn create_files_from_summary(src: &Path, summary_path: &Path) -> Result<()> {
+    debug!("[fn]: create_files_from_summary");
+    let summary = summary::parse_summary(&utils::fs::file_to_string(summary_path)?)?;
+    debug!("[*]: parsed existing summary");
+    trace!("[*]: {:#?}", summary);
+
+    create_list_of_stub_chapters(&summary.prefix_chapters, src)?;
+    create_list_of_stub_chapters(&summary.numbered_chapters, src)?;
+    create_list_of_stub_chapters(&summary.suffix_chapters, src)?;
+
+    debug!("[*]: Finished creating stub chapters using for a SUMMARY.md");
+    Ok(())
+}
+
+fn create_list_of_stub_chapters(chapters: &[SummaryItem], src_dir: &Path) -> Result<()> {
+    for summary_item in chapters {
+        if let SummaryItem::Link(ref ch) = *summary_item {
+            let location = src_dir.join(&ch.location);
+            debug!("{} + {} => {}", src_dir.display(), ch.location.display(), location.display());
+            create_stub_chapter(&ch.name, &location)?;
+            create_list_of_stub_chapters(&ch.nested_items, src_dir)?;
+        }
+    }
+
+    Ok(())
+}
+
+fn create_stub_chapter(name: &str, path: &Path) -> Result<()> {
+    debug!("[*]: Creating stub for \"{}\" at {}", name, path.display());
+
+    if let Some(parent) = path.parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent)?;
+        }
+    }
+
+    if !path.exists() {
+        let mut f = File::create(path)?;
+        writeln!(f, "# {}", name)?;
+    }
+
+    Ok(())
 }
