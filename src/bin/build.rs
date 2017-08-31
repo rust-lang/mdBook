@@ -24,9 +24,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         None => book,
     };
 
-    if args.is_present("create") {
-        book.create_missing = true;
-    }
+    book.create_missing = args.is_present("create");
 
     if args.is_present("curly-quotes") {
         book = book.with_curly_quotes(true);

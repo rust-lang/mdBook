@@ -44,7 +44,7 @@ ws = { version = "0.7", optional = true}
 error-chain = "0.11"
 
 [dev-dependencies]
-pretty_assertions = "0.2.1"
+pretty_assertions = "0.2"
 
 [features]
 default = ["output", "watch", "serve"]

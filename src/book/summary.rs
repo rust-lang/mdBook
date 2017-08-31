@@ -322,6 +322,11 @@ impl<'a> SummaryParser<'a> {
                 let section_number = self.push_numbered_section(SummaryItem::Link(it));
                 trace!("[*] Section number is {}", section_number);
             },
+            Event::End(Tag::Rule) => {
+                debug!("[*] Found a numbered chapter separator");
+                self.summary.numbered_chapters.push(SummaryItem::Separator);
+                self.state = State::NumberedChapters(0);
+            },
             Event::Start(Tag::List(_)) => {
                 if let State::NumberedChapters(n) = self.state {
                     self.state = State::NumberedChapters(n + 1);
