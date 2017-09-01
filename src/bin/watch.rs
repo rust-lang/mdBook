@@ -1,6 +1,4 @@
 extern crate notify;
-extern crate time;
-extern crate crossbeam;
 
 use std::path::Path;
 use self::notify::Watcher;
