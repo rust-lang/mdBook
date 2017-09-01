@@ -38,11 +38,11 @@ fn make_sure_bottom_level_files_contain_links_to_chapters() {
 
     let dest = temp.path().join("book");
     let links = vec![
-        "intro.html",
-        "first/index.html",
-        "first/nested.html",
-        "second.html",
-        "conclusion.html",
+        r#"href="intro.html""#,
+        r#"href="./first/index.html""#,
+        r#"href="./first/nested.html""#,
+        r#"href="./second.html""#,
+        r#"href="./conclusion.html""#,
     ];
 
     let files_in_bottom_dir = vec!["index.html", "intro.html", "second.html", "conclusion.html"];
@@ -61,11 +61,11 @@ fn check_correct_cross_links_in_nested_dir() {
     let first = temp.path().join("book").join("first");
     let links = vec![
         r#"<base href="../">"#,
-        "intro.html",
-        "first/index.html",
-        "first/nested.html",
-        "second.html",
-        "conclusion.html",
+        r#"href="intro.html""#,
+        r#"href="./first/index.html""#,
+        r#"href="./first/nested.html""#,
+        r#"href="./second.html""#,
+        r#"href="./conclusion.html""#,
     ];
 
     let files_in_nested_dir = vec!["index.html", "nested.html"];
@@ -73,6 +73,20 @@ fn check_correct_cross_links_in_nested_dir() {
     for filename in files_in_nested_dir {
         assert_contains_strings(first.join(filename), &links);
     }
+
+    assert_contains_strings(
+        first.join("index.html"),
+        &[
+            r##"href="./first/index.html#some-section" id="some-section""##
+        ],
+    );
+
+    assert_contains_strings(
+        first.join("nested.html"),
+        &[
+            r##"href="./first/nested.html#some-section" id="some-section""##
+        ],
+    );
 }
 
 #[test]

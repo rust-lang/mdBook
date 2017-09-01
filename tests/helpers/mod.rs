@@ -1,8 +1,5 @@
 //! Helpers for tests which exercise the overall application, in particular
 //! the `MDBook` initialization and build/rendering process.
-//!
-//! This will create an entire book in a temporary directory using some
-//! dummy contents from the `tests/dummy-book/` directory.
 
 
 use std::path::Path;

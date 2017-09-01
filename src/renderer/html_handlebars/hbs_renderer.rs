@@ -63,14 +63,14 @@ impl HtmlHandlebars {
                 debug!("[*]: Render template");
                 let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
-                let filename = Path::new(&ch.path).with_extension("html");
+                let filepath = Path::new(&ch.path).with_extension("html");
                 let rendered = self.post_process(rendered,
-                    filename.file_name().unwrap().to_str().unwrap_or(""),
+                    filepath.to_str().unwrap_or(""),
                     ctx.book.get_html_config().get_playpen_config());
 
                 // Write to file
-                info!("[*] Creating {:?} ✓", filename.display());
-                ctx.book.write_file(filename, &rendered.into_bytes())?;
+                info!("[*] Creating {:?} ✓", filepath.display());
+                ctx.book.write_file(filepath, &rendered.into_bytes())?;
 
                 if ctx.is_index {
                     self.render_index(ctx.book, ch, &ctx.destination)?;
@@ -111,9 +111,9 @@ impl HtmlHandlebars {
         Ok(())
     }
 
-    fn post_process(&self, rendered: String, filename: &str, playpen_config: &PlaypenConfig) -> String {
-        let rendered = build_header_links(&rendered, filename);
-        let rendered = fix_anchor_links(&rendered, filename);
+    fn post_process(&self, rendered: String, filepath: &str, playpen_config: &PlaypenConfig) -> String {
+        let rendered = build_header_links(&rendered, &filepath);
+        let rendered = fix_anchor_links(&rendered, &filepath);
         let rendered = fix_code_blocks(&rendered);
         let rendered = add_playpen_pre(&rendered, playpen_config);
 
@@ -182,7 +182,7 @@ impl HtmlHandlebars {
         Ok(())
     }
 
-    /// Helper function to write a file to the build directory, normalizing 
+    /// Helper function to write a file to the build directory, normalizing
     /// the path to be relative to the book root.
     fn write_custom_file(&self, custom_file: &Path, book: &MDBook) -> Result<()> {
         let mut data = Vec::new();
@@ -284,7 +284,7 @@ impl Renderer for HtmlHandlebars {
 
         let rendered = self.post_process(rendered, "print.html",
             book.get_html_config().get_playpen_config());
-        
+
         book.write_file(
             Path::new("print").with_extension("html"),
             &rendered.into_bytes(),
@@ -412,7 +412,7 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
 
 /// Goes through the rendered HTML, making sure all header tags are wrapped in
 /// an anchor so people can link to sections directly.
-fn build_header_links(html: &str, filename: &str) -> String {
+fn build_header_links(html: &str, filepath: &str) -> String {
     let regex = Regex::new(r"<h(\d)>(.*?)</h\d>").unwrap();
     let mut id_counter = HashMap::new();
 
@@ -422,14 +422,14 @@ fn build_header_links(html: &str, filename: &str) -> String {
                 "Regex should ensure we only ever get numbers here",
             );
 
-            wrap_header_with_link(level, &caps[2], &mut id_counter, filename)
+            wrap_header_with_link(level, &caps[2], &mut id_counter, filepath)
         })
         .into_owned()
 }
 
 /// Wraps a single header tag with a link, making sure each tag gets its own
 /// unique ID by appending an auto-incremented number (if necessary).
-fn wrap_header_with_link(level: usize, content: &str, id_counter: &mut HashMap<String, usize>, filename: &str)
+fn wrap_header_with_link(level: usize, content: &str, id_counter: &mut HashMap<String, usize>, filepath: &str)
     -> String {
     let raw_id = id_from_content(content);
 
@@ -443,11 +443,11 @@ fn wrap_header_with_link(level: usize, content: &str, id_counter: &mut HashMap<S
     *id_count += 1;
 
     format!(
-        r#"<a class="header" href="{filename}#{id}" id="{id}"><h{level}>{text}</h{level}></a>"#,
+        r##"<a class="header" href="{filepath}#{id}" id="{id}"><h{level}>{text}</h{level}></a>"##,
         level = level,
         id = id,
         text = content,
-        filename = filename
+        filepath = filepath
     )
 }
 
@@ -457,7 +457,7 @@ fn id_from_content(content: &str) -> String {
     let mut content = content.to_string();
 
     // Skip any tags or html-encoded stuff
-    let repl_sub = vec![
+    static REPL_SUB: &[&str] = &[
         "<em>",
         "</em>",
         "<code>",
@@ -470,27 +470,25 @@ fn id_from_content(content: &str) -> String {
         "&#39;",
         "&quot;",
     ];
-    for sub in repl_sub {
+    for sub in REPL_SUB {
         content = content.replace(sub, "");
     }
 
     let mut id = String::new();
-
     for c in content.chars() {
-        if c.is_alphanumeric() || c == '-' || c == '_' {
+        if c.is_alphanumeric() || c == '_' {
             id.push(c.to_ascii_lowercase());
         } else if c.is_whitespace() {
-            id.push(c);
+            id.push('-');
         }
     }
-
     id
 }
 
 // anchors to the same page (href="#anchor") do not work because of
 // <base href="../"> pointing to the root folder. This function *fixes*
 // that in a very inelegant way
-fn fix_anchor_links(html: &str, filename: &str) -> String {
+fn fix_anchor_links(html: &str, filepath: &str) -> String {
     let regex = Regex::new(r##"<a([^>]+)href="#([^"]+)"([^>]*)>"##).unwrap();
     regex
         .replace_all(html, |caps: &Captures| {
@@ -499,9 +497,9 @@ fn fix_anchor_links(html: &str, filename: &str) -> String {
             let after = &caps[3];
 
             format!(
-                "<a{before}href=\"{filename}#{anchor}\"{after}>",
+                "<a{before}href=\"{filepath}#{anchor}\"{after}>",
                 before = before,
-                filename = filename,
+                filepath = filepath,
                 anchor = anchor,
                 after = after
             )
@@ -601,17 +599,39 @@ mod tests {
     #[test]
     fn original_build_header_links() {
         let inputs = vec![
-            ("blah blah <h1>Foo</h1>", r#"blah blah <a class="header" href="bar.rs#foo" id="foo"><h1>Foo</h1></a>"#),
-            ("<h1>Foo</h1>", r#"<a class="header" href="bar.rs#foo" id="foo"><h1>Foo</h1></a>"#),
-            ("<h3>Foo^bar</h3>", r#"<a class="header" href="bar.rs#foobar" id="foobar"><h3>Foo^bar</h3></a>"#),
-            ("<h4></h4>", r#"<a class="header" href="bar.rs#" id=""><h4></h4></a>"#),
-            ("<h4><em>Hï</em></h4>", r#"<a class="header" href="bar.rs#hï" id="hï"><h4><em>Hï</em></h4></a>"#),
-            ("<h1>Foo</h1><h3>Foo</h3>", 
-                r#"<a class="header" href="bar.rs#foo" id="foo"><h1>Foo</h1></a><a class="header" href="bar.rs#foo-1" id="foo-1"><h3>Foo</h3></a>"#),
+            (
+                "blah blah <h1>Foo</h1>",
+                r##"blah blah <a class="header" href="./some_chapter/some_section.html#foo" id="foo"><h1>Foo</h1></a>"##,
+            ),
+            (
+                "<h1>Foo</h1>",
+                r##"<a class="header" href="./some_chapter/some_section.html#foo" id="foo"><h1>Foo</h1></a>"##,
+            ),
+            (
+                "<h3>Foo^bar</h3>",
+                r##"<a class="header" href="./some_chapter/some_section.html#foobar" id="foobar"><h3>Foo^bar</h3></a>"##,
+            ),
+            (
+                "<h4></h4>",
+                r##"<a class="header" href="./some_chapter/some_section.html#" id=""><h4></h4></a>"##
+            ),
+            (
+                "<h4><em>Hï</em></h4>",
+                r##"<a class="header" href="./some_chapter/some_section.html#hï" id="hï"><h4><em>Hï</em></h4></a>"##
+            ),
+            (
+                "<h1>Foo</h1><h3>Foo</h3>",
+                r##"<a class="header" href="./some_chapter/some_section.html#foo" id="foo"><h1>Foo</h1></a><a class="header" href="./some_chapter/some_section.html#foo-1" id="foo-1"><h3>Foo</h3></a>"##
+            ),
         ];
 
         for (src, should_be) in inputs {
-            let got = build_header_links(src, "bar.rs");
+            let filepath = "./some_chapter/some_section.html";
+            let got = build_header_links(&src, filepath);
+            assert_eq!(got, should_be);
+
+            // This is redundant for most cases
+            let got = fix_anchor_links(&got, filepath);
             assert_eq!(got, should_be);
         }
     }
