@@ -11,7 +11,7 @@ readme = "README.md"
 build = "build.rs"
 exclude = [
     "book-example/*",
-    "src/theme/stylus",
+    "src/theme/stylus/**",
 ]
 
 [dependencies]
