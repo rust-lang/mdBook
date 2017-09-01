@@ -1,26 +1,23 @@
-//! Helpers for tests which exercise the overall application, in particular
-//! the `MDBook` initialization and build/rendering process.
-//!
 //! This will create an entire book in a temporary directory using some
 //! dummy contents from the `tests/dummy-book/` directory.
 
+// Not all features are used in all test crates, so...
+#![allow(dead_code, unused_extern_crates)]
 
-#![allow(dead_code, unused_variables, unused_imports)]
 extern crate tempdir;
 
-use std::path::Path;
-use std::fs::{self, File};
-use std::io::{Read, Write};
+use std::fs::{create_dir_all, File};
+use std::io::Write;
 
 use tempdir::TempDir;
 
 
-const SUMMARY_MD: &'static str = include_str!("dummy-book/SUMMARY.md");
-const INTRO: &'static str = include_str!("dummy-book/intro.md");
-const FIRST: &'static str = include_str!("dummy-book/first/index.md");
-const NESTED: &'static str = include_str!("dummy-book/first/nested.md");
-const SECOND: &'static str = include_str!("dummy-book/second.md");
-const CONCLUSION: &'static str = include_str!("dummy-book/conclusion.md");
+const SUMMARY_MD: &'static str = include_str!("book/SUMMARY.md");
+const INTRO: &'static str = include_str!("book/intro.md");
+const FIRST: &'static str = include_str!("book/first/index.md");
+const NESTED: &'static str = include_str!("book/first/nested.md");
+const SECOND: &'static str = include_str!("book/second.md");
+const CONCLUSION: &'static str = include_str!("book/conclusion.md");
 
 
 /// Create a dummy book in a temporary directory, using the contents of
@@ -58,10 +55,10 @@ impl DummyBook {
         let temp = TempDir::new("dummy_book").unwrap();
 
         let src = temp.path().join("src");
-        fs::create_dir_all(&src).unwrap();
+        create_dir_all(&src).unwrap();
 
         let first = src.join("first");
-        fs::create_dir_all(&first).unwrap();
+        create_dir_all(&first).unwrap();
 
         let to_substitute = if self.passing_test { "true" } else { "false" };
         let nested_text = NESTED.replace("$TEST_STATUS", to_substitute);
@@ -89,22 +86,5 @@ impl DummyBook {
 impl Default for DummyBook {
     fn default() -> DummyBook {
         DummyBook { passing_test: true }
-    }
-}
-
-
-/// Read the contents of the provided file into memory and then iterate through
-/// the list of strings asserting that the file contains all of them.
-pub fn assert_contains_strings<P: AsRef<Path>>(filename: P, strings: &[&str]) {
-    let filename = filename.as_ref();
-
-    let mut content = String::new();
-    File::open(&filename)
-        .expect("Couldn't open the provided file")
-        .read_to_string(&mut content)
-        .expect("Couldn't read the file's contents");
-
-    for s in strings {
-        assert!(content.contains(s), "Searching for {:?} in {}\n\n{}", s, filename.display(), content);
     }
 }
