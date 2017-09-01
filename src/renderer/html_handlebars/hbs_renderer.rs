@@ -207,6 +207,9 @@ impl HtmlHandlebars {
 
     /// Update the context with data for this file
     fn configure_print_version(&self, data: &mut serde_json::Map<String, serde_json::Value>, print_content: &str) {
+        // Make sure that the Print chapter does not display the title from
+        // the last rendered chapter by removing it from its context
+        data.remove("chapter_title");
         data.insert("path".to_owned(), json!("print.md"));
         data.insert("content".to_owned(), json!(print_content));
         data.insert("path_to_root".to_owned(), json!(utils::fs::path_to_root(Path::new("print.md"))));
