@@ -493,13 +493,10 @@ pub struct SectionNumber(pub Vec<u32>);
 
 impl Display for SectionNumber {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        let dotted_number: String = self.0
-            .iter()
-            .map(|i| i.to_string())
-            .collect::<Vec<String>>()
-            .join(".");
-
-        write!(f, "{}", dotted_number)
+        for item in &self.0 {
+            write!(f, "{}.", item)?;
+        }
+        Ok(())
     }
 }
 
@@ -523,9 +520,9 @@ mod tests {
     #[test]
     fn section_number_has_correct_dotted_representation() {
         let inputs = vec![
-            (vec![0], "0"),
-            (vec![1, 3], "1.3"),
-            (vec![1, 2, 3], "1.2.3"),
+            (vec![0], "0."),
+            (vec![1, 3], "1.3."),
+            (vec![1, 2, 3], "1.2.3."),
         ];
 
         for (input, should_be) in inputs {
