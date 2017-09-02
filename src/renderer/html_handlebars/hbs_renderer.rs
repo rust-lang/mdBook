@@ -65,7 +65,8 @@ impl HtmlHandlebars {
 
                 let filepath = Path::new(&ch.path).with_extension("html");
                 let rendered = self.post_process(rendered,
-                    filepath.to_str().unwrap_or(""),
+                    &normalize_path(filepath.to_str()
+                        .expect(&format!("Bad file name: {}", filepath.display()))),
                     ctx.book.get_html_config().get_playpen_config());
 
                 // Write to file
@@ -474,15 +475,7 @@ fn id_from_content(content: &str) -> String {
         content = content.replace(sub, "");
     }
 
-    let mut id = String::new();
-    for c in content.chars() {
-        if c.is_alphanumeric() || c == '_' {
-            id.push(c.to_ascii_lowercase());
-        } else if c.is_whitespace() {
-            id.push('-');
-        }
-    }
-    id
+    normalize_id(&content)
 }
 
 // anchors to the same page (href="#anchor") do not work because of
@@ -590,6 +583,26 @@ struct RenderItemContext<'a> {
     is_index: bool,
 }
 
+pub fn normalize_path(path: &str) -> String {
+    use std::path::is_separator;
+    path.chars()
+        .map(|ch| if is_separator(ch) { '/' } else { ch })
+        .collect::<String>()
+}
+
+pub fn normalize_id(content: &str) -> String {
+    content.chars()
+        .filter_map(|ch|
+            if ch.is_alphanumeric() || ch == '_' {
+                Some(ch.to_ascii_lowercase())
+            } else if ch.is_whitespace() {
+                Some('-')
+            } else {
+                None
+            }
+        )
+        .collect::<String>()
+}
 
 
 #[cfg(test)]
