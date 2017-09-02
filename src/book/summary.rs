@@ -241,9 +241,8 @@ impl<'a> SummaryParser<'a> {
 
             match self.state {
                 State::Begin => self.step_start(next_event)?,
-                State::PrefixChapters => self.step_prefix(next_event)?,
+                State::PrefixChapters | State::SuffixChapters => self.step_affix(next_event)?,
                 State::NumberedChapters(_) => self.step_numbered(next_event)?,
-                State::SuffixChapters => self.step_suffix(next_event)?,
                 State::End => {},
             }
         } else {
@@ -266,34 +265,61 @@ impl<'a> SummaryParser<'a> {
         Ok(())
     }
 
-    /// In the second step we look out for links and horizontal rules to add
-    /// to the prefix.
+    /// Try to step through an "affix" section (recognising prefix and suffix 
+    /// chapters).
     ///
-    /// This state should only progress when it encounters a list. All other
-    /// events will either be separators (horizontal rule), prefix chapters
-    /// (the links), or skipped.
-    fn step_prefix(&mut self, event: Event<'a>) -> Result<()> {
+    /// If we encounter a link or horizontal line, it'll get added to the 
+    /// section. If we encounter a list, we'll either change to 
+    /// `State::NumberedChapter` (for prefix) or throw an error (suffix chapters).
+    ///
+    /// Anything else will be ignored.
+    fn step_affix(&mut self, event: Event<'a>) -> Result<()> {
+
         match event {
-            Event::Start(Tag::Link(location, _)) => {
-                let content = collect_events!(self.stream, Tag::Link(_, _));
-                let text = stringify_events(content);
-                let link = Link::new(text, location.as_ref());
-
-                debug!("[*] Found a prefix chapter: {:?}", link.name);
-                self.summary.prefix_chapters.push(SummaryItem::Link(link));
-            },
+            Event::Start(tag) => self.handle_start_tag_in_affix_chapter(tag)?,
             Event::End(Tag::Rule) => {
-                debug!("[*] Found a prefix chapter separator");
-                self.summary.prefix_chapters.push(SummaryItem::Separator);
+                debug!("[*] Found an affix chapter separator");
+                self.affix_chapter_list().push(SummaryItem::Separator);
             },
-            Event::Start(Tag::List(_)) => {
-                debug!("[*] Changing from prefix chapters to numbered chapters");
-                self.state = State::NumberedChapters(0);
-            },
-
             other => {
                 trace!("[*] Skipping unexpected token in summary: {:?}", other);
             },
+        }
+
+        Ok(())
+    }
+
+    /// A helper function to get the `SummaryItem` list we should add items to
+    /// when parsing an affix chapter (i.e. prefix or suffix chapters). 
+    fn affix_chapter_list(&mut self) -> &mut Vec<SummaryItem> {
+        match self.state {
+            State::PrefixChapters => &mut self.summary.prefix_chapters,
+            State::SuffixChapters => &mut self.summary.suffix_chapters,
+            other => panic!("affix_chapter_list() called with invalid state: {:?}", other),
+        }
+    }
+
+    fn handle_start_tag_in_affix_chapter(&mut self, tag: Tag) -> Result<()> {
+        match tag {
+                Tag::Link(location, _) => {
+                    let content = collect_events!(self.stream, Tag::Link(_, _));
+                    let text = stringify_events(content);
+                    let link = Link::new(text, location.as_ref());
+
+                    debug!("[*] Found an affix chapter: {:?}", link.name);
+                    self.affix_chapter_list().push(SummaryItem::Link(link));
+                },
+                Tag::List(_) => {
+                    match self.state {
+                        State::PrefixChapters => {
+                            debug!("[*] Changing from prefix chapters to numbered chapters");
+                            self.state = State::NumberedChapters(0);
+                        },
+                        State::SuffixChapters => bail!("Suffix chapters can't be followed by a list"),
+                        _ => unreachable!(),
+                    }
+                },
+                other => trace!("[*] Skipping unknown start tag while parsing affix chapters: {:?}", other),
         }
 
         Ok(())
@@ -351,30 +377,6 @@ impl<'a> SummaryParser<'a> {
 
         Ok(())
     }
-
-    fn step_suffix(&mut self, event: Event<'a>) -> Result<()> {
-        // FIXME: This has been copy/pasted from step_prefix. make DRY.
-        match event {
-            Event::Start(Tag::Link(location, _)) => {
-                let content = collect_events!(self.stream, Tag::Link(_, _));
-                let text = stringify_events(content);
-                let link = Link::new(text, location.as_ref());
-
-                debug!("[*] Found a suffix chapter: {:?}", link.name);
-                self.summary.suffix_chapters.push(SummaryItem::Link(link));
-            },
-            Event::End(Tag::Rule) => {
-                debug!("[*] Found a suffix chapter separator");
-                self.summary.suffix_chapters.push(SummaryItem::Separator);
-            },
-            other => {
-                trace!("[*] Skipping unexpected token in summary: {:?}", other);
-            },
-        }
-
-        Ok(())
-    }
-
 
     /// Parse a single item (`[Some Chapter Name](./path/to/chapter.md)`).
     fn parse_item(&mut self) -> Result<Link> {
@@ -493,7 +495,7 @@ impl Display for SectionNumber {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         let dotted_number: String = self.0
             .iter()
-            .map(|i| format!("{}", i))
+            .map(|i| i.to_string())
             .collect::<Vec<String>>()
             .join(".");
 
@@ -527,10 +529,8 @@ mod tests {
         ];
 
         for (input, should_be) in inputs {
-            let section_number = SectionNumber(input);
-            let string_repr = format!("{}", section_number);
-
-            assert_eq!(string_repr, should_be);
+            let section_number = SectionNumber(input).to_string();
+            assert_eq!(section_number, should_be);
         }
     }
 
