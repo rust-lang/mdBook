@@ -6,7 +6,6 @@
 //! These tests will need to be updated every time the example book changes.
 //! Hopefully Travis will let you know when that happens.
 
-#![feature(conservative_impl_trait)]
 
 extern crate mdbook;
 #[macro_use]
@@ -18,7 +17,7 @@ extern crate walkdir;
 mod helpers;
 
 use std::path::Path;
-use walkdir::{WalkDir, WalkDirIterator};
+use walkdir::{DirEntry, WalkDir, WalkDirIterator};
 use select::document::Document;
 use select::predicate::{Class, Descendant, Name, Predicate};
 
@@ -66,7 +65,7 @@ fn chapter_files_were_rendered_to_html() {
 
     let chapter_files = WalkDir::new(&src)
         .into_iter()
-        .filter_entry(|entry| entry.file_name().to_string_lossy().ends_with(".md"))
+        .filter_entry(|entry| entry_ends_with(entry, ".md"))
         .filter_map(|entry| entry.ok())
         .map(|entry| entry.path().to_path_buf())
         .filter(|path| path.file_name().unwrap() != "SUMMARY");
@@ -79,6 +78,12 @@ fn chapter_files_were_rendered_to_html() {
     }
 }
 
+fn entry_ends_with(entry: &DirEntry, ending: &str) -> bool {
+    entry.file_name().to_string_lossy().ends_with(ending)
+}
+
+/// Read the main page (`book/index.html`) and expose it as a DOM which we
+/// can search with the `select` crate
 fn root_index_html() -> Document {
     let temp = helpers::build_example_book();
 
@@ -92,13 +97,10 @@ fn check_third_toc_level() {
     let doc = root_index_html();
     let should_be = TOC_THIRD_LEVEL;
 
-    let children_of_children_of_children: Vec<String> = doc.find(
-        Class("chapter")
-            .descendant(Name("li"))
-            .descendant(Name("li"))
-            .descendant(Name("li"))
-            .descendant(Name("a")),
-    ).map(|elem| elem.text().trim().to_string())
+    let pred = descendants!(Class("chapter"), Name("li"), Name("li"), Name("li"), Name("a"));
+
+    let children_of_children_of_children: Vec<String> = doc.find(pred)
+        .map(|elem| elem.text().trim().to_string())
         .collect();
     assert_eq!(children_of_children_of_children, should_be);
 }
