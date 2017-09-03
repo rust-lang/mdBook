@@ -18,7 +18,7 @@ mk_tarball() {
 
   pushd $td
 
-  tar czf $out_dir/${PROJECT_NAME}-${TRAVIS_TAG}-${TARGET}.tar.gz *
+  tar czf $out_dir/${PROJECT_NAME}-${TRAVIS_TAG}-${TRAVIS_OS_NAME}.tar.gz *
 
   popd $td
   rm -r $td

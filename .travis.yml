@@ -1,110 +1,38 @@
+language: rust
 sudo: false
 
-language: generic
+cache: cargo
 
-env:
-  global:
-    - PROJECT_NAME=mdBook
+rust:
+  - stable
+  - beta
+  - nightly
 
-matrix:
-  include:
-    # Stable channel
-    - os: osx
-      env: TARGET=i686-apple-darwin CHANNEL=stable
-    - os: linux
-      env: TARGET=i686-unknown-linux-gnu CHANNEL=stable
-      addons:
-        apt:
-          packages: &i686_unknown_linux_gnu
-            - gcc-multilib
-    - os: osx
-      env: TARGET=x86_64-apple-darwin CHANNEL=stable
-    - os: linux
-      env: TARGET=x86_64-unknown-linux-gnu CHANNEL=stable
-      addons:
-        apt:
-          packages:
-            - nodejs
-    - os: linux
-      env: TARGET=x86_64-unknown-linux-musl CHANNEL=stable
-      dist: trusty
-      addons:
-        apt:
-          packages: &musl_packages
-            - musl
-            - musl-dev
-            - musl-tools
-    # Beta channel
-    - os: osx
-      env: TARGET=i686-apple-darwin CHANNEL=beta
-    - os: linux
-      env: TARGET=i686-unknown-linux-gnu CHANNEL=beta
-      addons:
-        apt:
-          packages: *i686_unknown_linux_gnu
-    - os: osx
-      env: TARGET=x86_64-apple-darwin CHANNEL=beta
-    - os: linux
-      env: TARGET=x86_64-unknown-linux-gnu CHANNEL=beta
-    - os: linux
-      env: TARGET=x86_64-unknown-linux-musl CHANNEL=beta
-      dist: trusty
-      addons:
-        apt:
-          packages: &musl_packages
-            - musl
-            - musl-dev
-            - musl-tools
-    # Nightly channel
-    - os: osx
-      env: TARGET=i686-apple-darwin CHANNEL=nightly
-    - os: linux
-      env: TARGET=i686-unknown-linux-gnu CHANNEL=nightly
-      addons:
-        apt:
-          packages: *i686_unknown_linux_gnu
-    - os: osx
-      env: TARGET=x86_64-apple-darwin CHANNEL=nightly
-    - os: linux
-      env: TARGET=x86_64-unknown-linux-gnu CHANNEL=nightly
-    - os: linux
-      env: TARGET=x86_64-unknown-linux-musl CHANNEL=nightly
-      dist: trusty
-      addons:
-        apt:
-          packages: &musl_packages
-            - musl
-            - musl-dev
-            - musl-tools
-
-install:
-  - export PATH="$PATH:$HOME/.cargo/bin"
-  - bash ci/install.sh
-
-script:
-  - bash ci/script.sh
+os:
+  - linux
+  - osx
 
 after_success:
+  # Deploy the docs if the commit is on master
   - test "$TRAVIS_PULL_REQUEST" == "false" &&
     test "$TRAVIS_BRANCH" == "master" &&
-    test "$TARGET" == "x86_64-unknown-linux-gnu" &&
-    test "$CHANNEL" = "stable" &&
+    "$TRAVIS_RUST_VERSION" == "stable"
     npm install stylus nib &&
-    bash deploy.sh
+    bash ci/deploy.sh
 
 before_deploy:
+  # Script to create packages from the build artefacts to upload to GitHub
   - bash ci/before_deploy.sh
 
 deploy:
   provider: releases
   api_key:
     secure: Z1k7WqX7z+tT4+SzTh4tBBzf11VaADB4AWuEczHtylaEb/0hRs8gaiHCNSVHm/QTp0QPWQR2Vw7uKMhVuxG7I8X7h31j3A7ulYBh/iVk0DVIrtrn2Q4WOED9CpoXLuLtk2nxo9MBViFW7mw4nJe9H2Tn9o/9oEYBuwzekvW5mh4muqUuCVTr8eQVYbs3jbC9pQy5oYjOLeUnlL9Cey5VN/nAhzAtyFP+6lIMri0PKit4JtkFou/O1MEpFYlP3VGC2lFiWuByocPKBT/L45FecS9qoHq+i6+ZCPDH2eu46nuYsDbLKAkPdGvf1MdPBPwoj0vSnZbgaTisQ4hIoBngQQQPZlPaGtcdd6g6asxSfnbA9cQhClI5oZJmg+ksxQE+peE8pnbmZ10Ix0PpIkkfWdQeMdUUCQarOTkTK54Munw+X+kp1lH19j6+krQPLBYr95fPRd4b5tWsJD2+pb/UOYFEEJxMNoUHyLCrtdCO7imOwrSUcv51+Z8UudqfPpKQeszrJcntL4owip35r3sF5TsE9YfW5qssLC164IylvP32y1AcfL1jqg8b+zrqLZKanjvDOJ1dtHHuwKqxcwf7PhAf0YjAtVSH9OIYcDzmDa0EMLrq7EK0fs6NAeb5qt6CML7pZrRS3fmOxN53Fbmj81qm6TmjQjDe4dmZlELgNow=
-  file: ${PROJECT_NAME}-${TRAVIS_TAG}-${TARGET}.tar.gz
+  file: ${PROJECT_NAME}-${TRAVIS_TAG}-${TRAVIS_OS_NAME}.tar.gz
   # don't delete the artifacts from previous phases
   skip_cleanup: true
-  # deploy when a new tag is pushed
   on:
-    condition: $CHANNEL = stable
+    condition: $TRAVIS_RUST_VERSION = stable
     tags: true
 
 notifications:
