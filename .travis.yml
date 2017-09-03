@@ -12,6 +12,10 @@ os:
   - linux
   - osx
 
+script:
+  - cargo build --verbose
+  - cargo test --verbose
+
 after_success:
   # Deploy the docs if the commit is on master
   - test "$TRAVIS_PULL_REQUEST" == "false" &&
