@@ -1,6 +1,5 @@
 // build.rs
 
-use std::process::Command;
 use std::env;
 use std::path::Path;
 #[macro_use]
@@ -8,13 +7,21 @@ extern crate error_chain;
 
 #[cfg(windows)]
 mod execs {
-    pub const NPM: &'static str = "npm.cmd";
-    pub const STYLUS: &'static str = "stylus.cmd";
+    use std::process::Command;
+
+    pub fn cmd(program: &str) -> Command {
+        let mut cmd = Command::new("cmd");
+        cmd.args(&["/c", program]);
+        cmd
+    }
 }
 #[cfg(not(windows))]
 mod execs {
-    pub const NPM: &'static str = "npm";
-    pub const STYLUS: &'static str = "stylus";
+    use std::process::Command;
+
+    pub fn cmd(program: &str) -> Command {
+        Command::new(program)
+    }
 }
 
 
@@ -25,7 +32,7 @@ error_chain!{
 }
 
 fn program_exists(program: &str) -> Result<()> {
-    Command::new(program)
+    execs::cmd(program)
         .arg("-v")
         .output()
         .chain_err(|| format!("Please install '{}'!", program))?;
@@ -33,7 +40,7 @@ fn program_exists(program: &str) -> Result<()> {
 }
 
 fn npm_package_exists(package: &str) -> Result<()> {
-    let status = Command::new(execs::NPM)
+    let status = execs::cmd("npm")
         .args(&["list", "-g"])
         .arg(package)
         .output();
@@ -67,7 +74,7 @@ fn run() -> Result<()> {
 
     if let Ok(_) = env::var("CARGO_FEATURE_REGENERATE_CSS") {
         // Check dependencies
-        Program(execs::NPM).exists()?;
+        Program("npm").exists()?;
         Program("node").exists().or(Program("nodejs").exists())?;
         Package("nib").exists()?;
         Package("stylus").exists()?;
@@ -78,7 +85,7 @@ fn run() -> Result<()> {
         let theme_dir = Path::new(&manifest_dir).join("src/theme/");
         let stylus_dir = theme_dir.join("stylus/book.styl");
 
-        if !Command::new(execs::STYLUS)
+        if !execs::cmd("stylus")
                 .arg(stylus_dir)
                 .arg("--out")
                 .arg(theme_dir)
