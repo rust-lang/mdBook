@@ -20,7 +20,7 @@ after_success:
   # Deploy the docs if the commit is on master
   - test "$TRAVIS_PULL_REQUEST" == "false" &&
     test "$TRAVIS_BRANCH" == "master" &&
-    "$TRAVIS_RUST_VERSION" == "stable"
+    "$TRAVIS_RUST_VERSION" == "stable" &&
     npm install stylus nib &&
     bash ci/deploy.sh
 
