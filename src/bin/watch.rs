@@ -98,8 +98,6 @@ pub fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
         match rx.recv() {
             Ok(event) => {
                 match event {
-                    NoticeWrite(path) |
-                    NoticeRemove(path) |
                     Create(path) |
                     Write(path) |
                     Remove(path) |
