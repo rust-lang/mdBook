@@ -66,8 +66,9 @@ impl HtmlHandlebars {
                 let filepath = Path::new(&ch.path).with_extension("html");
                 let rendered = self.post_process(rendered,
                     &normalize_path(filepath.to_str()
-                        .expect(&format!("Bad file name: {}", filepath.display()))),
-                    ctx.book.get_html_config().get_playpen_config());
+                        .ok_or(Error::from(format!("Bad file name: {}", filepath.display())))?),
+                    ctx.book.get_html_config().get_playpen_config()
+                );
 
                 // Write to file
                 info!("[*] Creating {:?} ✓", filepath.display());
@@ -458,7 +459,7 @@ fn id_from_content(content: &str) -> String {
     let mut content = content.to_string();
 
     // Skip any tags or html-encoded stuff
-    static REPL_SUB: &[&str] = &[
+    const REPL_SUB: &[&str] = &[
         "<em>",
         "</em>",
         "<code>",

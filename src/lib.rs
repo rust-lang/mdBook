@@ -100,8 +100,6 @@ pub use book::BookItem;
 pub use renderer::Renderer;
 
 /// The error types used through out this crate.
-// TODO: Drop after error_chain is fixed
-#[allow(unused_doc_comment)]
 pub mod errors {
     error_chain!{
         foreign_links {
