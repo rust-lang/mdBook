@@ -51,9 +51,17 @@ impl HtmlHandlebars {
                     io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
                 })?;
 
+                // Non-lexical lifetimes needed :'( 
+                let title: String;
+                {
+                    let book_title = ctx.data.get("book_title").and_then(serde_json::Value::as_str).unwrap_or("");
+                    title = ch.name.clone() + " - " + book_title;
+                }
+                
                 ctx.data.insert("path".to_owned(), json!(path));
                 ctx.data.insert("content".to_owned(), json!(content));
                 ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
+                ctx.data.insert("title".to_owned(), json!(title));
                 ctx.data.insert(
                     "path_to_root".to_owned(),
                     json!(utils::fs::path_to_root(&ch.path)),
@@ -209,6 +217,9 @@ impl HtmlHandlebars {
 
     /// Update the context with data for this file
     fn configure_print_version(&self, data: &mut serde_json::Map<String, serde_json::Value>, print_content: &str) {
+        // Make sure that the Print chapter does not display the title from
+        // the last rendered chapter by removing it from its context
+        data.remove("title");
         data.insert("path".to_owned(), json!("print.md"));
         data.insert("content".to_owned(), json!(print_content));
         data.insert("path_to_root".to_owned(), json!(utils::fs::path_to_root(Path::new("print.md"))));
@@ -278,6 +289,7 @@ impl Renderer for HtmlHandlebars {
 
         // Print version
         self.configure_print_version(&mut data, &print_content);
+        data.insert("title".to_owned(), json!(book.get_title()));
 
         // Render the handlebars template with the data
         debug!("[*]: Render template");
@@ -310,7 +322,7 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
 
     let mut data = serde_json::Map::new();
     data.insert("language".to_owned(), json!("en"));
-    data.insert("title".to_owned(), json!(book.get_title()));
+    data.insert("book_title".to_owned(), json!(book.get_title()));
     data.insert("description".to_owned(), json!(book.get_description()));
     data.insert("favicon".to_owned(), json!("favicon.png"));
     if let Some(livereload) = book.get_livereload() {
