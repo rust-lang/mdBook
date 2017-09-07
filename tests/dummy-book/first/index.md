@@ -1,3 +1,0 @@
-# First Chapter
-
-more text.
