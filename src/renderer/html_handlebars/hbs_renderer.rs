@@ -465,7 +465,7 @@ fn wrap_header_with_link(level: usize, content: &str, id_counter: &mut HashMap<S
     )
 }
 
-/// Generate an id for use with anchors which is derived from a "normalised"
+/// Generate an id for use with anchors which is derived from a "normalised" 
 /// string.
 fn id_from_content(content: &str) -> String {
     let mut content = content.to_string();
@@ -488,7 +488,10 @@ fn id_from_content(content: &str) -> String {
         content = content.replace(sub, "");
     }
 
-    normalize_id(&content)
+    // Remove spaces and hastags indicating a header
+    let trimmed = content.trim().trim_left_matches("#").trim();
+
+    normalize_id(trimmed)
 }
 
 // anchors to the same page (href="#anchor") do not work because of
@@ -606,7 +609,7 @@ pub fn normalize_path(path: &str) -> String {
 pub fn normalize_id(content: &str) -> String {
     content.chars()
         .filter_map(|ch|
-            if ch.is_alphanumeric() || ch == '_' {
+            if ch.is_alphanumeric() || ch == '_' || ch == '-' {
                 Some(ch.to_ascii_lowercase())
             } else if ch.is_whitespace() {
                 Some('-')
@@ -660,5 +663,11 @@ mod tests {
             let got = fix_anchor_links(&got, filepath);
             assert_eq!(got, should_be);
         }
+    }
+
+    #[test]
+    fn anchor_generation() {
+        assert_eq!(id_from_content("## `--passes`: add more rustdoc passes"), "--passes-add-more-rustdoc-passes");
+        assert_eq!(id_from_content("## Method-call expressions"), "method-call-expressions");
     }
 }
