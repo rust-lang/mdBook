@@ -64,9 +64,10 @@ pub fn previous(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(
 
                         debug!("[*]: Render template");
                         // Render template
-                        _h.template().ok_or_else(|| RenderError::new("Error with the handlebars template"))
+                        _h.template()
+                            .ok_or_else(|| RenderError::new("Error with the handlebars template"))
                             .and_then(|t| {
-                                          let mut local_rc = rc.with_context(Context::wraps(&previous_chapter));
+                                          let mut local_rc = rc.with_context(Context::wraps(&previous_chapter)?);
                                           t.render(r, &mut local_rc)
                                       })?;
                     }
@@ -142,7 +143,7 @@ pub fn next(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), R
                         // Render template
                         _h.template().ok_or_else(|| RenderError::new("Error with the handlebars template"))
                             .and_then(|t| {
-                                          let mut local_rc = rc.with_context(Context::wraps(&next_chapter));
+                                          let mut local_rc = rc.with_context(Context::wraps(&next_chapter)?);
                                           t.render(r, &mut local_rc)
                                       })?;
                         break;
