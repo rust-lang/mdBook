@@ -16,7 +16,7 @@
     <tr>
         <td colspan="2">
             <a href="https://crates.io/crates/mdbook"><img src="https://img.shields.io/crates/v/mdbook.svg"></a>
-            <a href="LICENSE"><img src="https://img.shields.io/crates/l/mdbook.svg"></a>
+            <a href="LICENSE"><img src="https://img.shields.io/github/license/azerupi/mdBook.svg"></a>
         </td>
     </tr>
 </table>
