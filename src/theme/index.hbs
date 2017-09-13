@@ -88,7 +88,9 @@
                     <h1 class="menu-title">{{ book_title }}</h1>
 
                     <div class="right-buttons">
-                        <i id="print-button" class="fa fa-print" title="Print this book"></i>
+                        <a href="print.html">
+                            <i id="print-button" class="fa fa-print" title="Print this book"></i>
+                        </a>
                     </div>
                 </div>
 
@@ -154,6 +156,14 @@
         <script src="{{ mode_rust_js }}" type="text/javascript" charset="utf-8"></script>
         <script src="{{ theme_dawn_js }}" type="text/javascript" charset="utf-8"></script>
         <script src="{{ theme_tomorrow_night_js }}" type="text/javascript" charset="utf-8"></script>
+        {{/if}}
+
+        {{#if is_print}}
+        <script>
+            $(document).ready(function() {
+                window.print();
+            })
+        </script>
         {{/if}}
 
         <script src="highlight.js"></script>

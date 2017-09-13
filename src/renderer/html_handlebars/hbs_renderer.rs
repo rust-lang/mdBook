@@ -220,6 +220,7 @@ impl HtmlHandlebars {
         // Make sure that the Print chapter does not display the title from
         // the last rendered chapter by removing it from its context
         data.remove("title");
+        data.insert("is_print".to_owned(), json!(true));
         data.insert("path".to_owned(), json!("print.md"));
         data.insert("content".to_owned(), json!(print_content));
         data.insert("path_to_root".to_owned(), json!(utils::fs::path_to_root(Path::new("print.md"))));

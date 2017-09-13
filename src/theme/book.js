@@ -83,16 +83,6 @@ $( document ).ready(function() {
     }
 
 
-    // Print button
-    $("#print-button").click(function(){
-        var printWindow = window.open("print.html");
-    });
-
-    if( url.substring(url.lastIndexOf('/')+1) == "print.html" ) {
-        window.print();
-    }
-
-
     // Theme button
     $("#theme-toggle").click(function(){
         if($('.theme-popup').length) {
