@@ -1,6 +1,6 @@
 write_mode = "Overwrite"
 
-max_width = 120
+max_width = 210
 ideal_width = 120
 fn_call_width = 100
 
