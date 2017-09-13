@@ -1,6 +1,6 @@
 pub mod fs;
 
-use pulldown_cmark::{Parser, Event, Tag, html, Options, OPTION_ENABLE_TABLES, OPTION_ENABLE_FOOTNOTES};
+use pulldown_cmark::{html, Event, Options, Parser, Tag, OPTION_ENABLE_FOOTNOTES, OPTION_ENABLE_TABLES};
 use std::borrow::Cow;
 
 
@@ -17,7 +17,8 @@ pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
 
     let p = Parser::new_ext(text, opts);
     let mut converter = EventQuoteConverter::new(curly_quotes);
-    let events = p.map(clean_codeblock_headers).map(|event| converter.convert(event));
+    let events = p.map(clean_codeblock_headers)
+        .map(|event| converter.convert(event));
 
     html::push_html(&mut s, events);
     s
@@ -30,7 +31,10 @@ struct EventQuoteConverter {
 
 impl EventQuoteConverter {
     fn new(enabled: bool) -> Self {
-        EventQuoteConverter { enabled: enabled, convert_text: true }
+        EventQuoteConverter {
+            enabled: enabled,
+            convert_text: true,
+        }
     }
 
     fn convert<'a>(&mut self, event: Event<'a>) -> Event<'a> {
@@ -39,13 +43,11 @@ impl EventQuoteConverter {
         }
 
         match event {
-            Event::Start(Tag::CodeBlock(_)) |
-            Event::Start(Tag::Code) => {
+            Event::Start(Tag::CodeBlock(_)) | Event::Start(Tag::Code) => {
                 self.convert_text = false;
                 event
             },
-            Event::End(Tag::CodeBlock(_)) |
-            Event::End(Tag::Code) => {
+            Event::End(Tag::CodeBlock(_)) | Event::End(Tag::Code) => {
                 self.convert_text = true;
                 event
             },
@@ -58,10 +60,7 @@ impl EventQuoteConverter {
 fn clean_codeblock_headers(event: Event) -> Event {
     match event {
         Event::Start(Tag::CodeBlock(ref info)) => {
-            let info: String = info
-                .chars()
-                .filter(|ch| !ch.is_whitespace())
-                .collect();
+            let info: String = info.chars().filter(|ch| !ch.is_whitespace()).collect();
 
             Event::Start(Tag::CodeBlock(Cow::from(info)))
         },
@@ -78,8 +77,16 @@ fn convert_quotes_to_curly(original_text: &str) -> String {
         .chars()
         .map(|original_char| {
             let converted_char = match original_char {
-                '\'' => if preceded_by_whitespace { '‘' } else { '’' },
-                '"' => if preceded_by_whitespace { '“' } else { '”' },
+                '\'' => if preceded_by_whitespace {
+                    '‘'
+                } else {
+                    '’'
+                },
+                '"' => if preceded_by_whitespace {
+                    '“'
+                } else {
+                    '”'
+                },
                 _ => original_char,
             };
 
@@ -183,7 +190,6 @@ more text with spaces
 "#;
             assert_eq!(render_markdown(input, false), expected);
             assert_eq!(render_markdown(input, true), expected);
-
         }
     }
 
