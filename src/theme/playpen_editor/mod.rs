@@ -13,7 +13,8 @@ pub static THEME_TOMORROW_NIGHT_JS: &'static [u8] = include_bytes!("theme-tomorr
 /// The Ace editor itself, the mode, and the theme files are the
 /// generated minified no conflict versions.
 ///
-/// The `PlaypenEditor` struct should be used instead of the static variables because
+/// The `PlaypenEditor` struct should be used instead of the static variables
+/// because
 /// the `new()` method
 /// will look if the user has an editor directory in his source folder and use
 /// the users editor instead

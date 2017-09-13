@@ -1,4 +1,4 @@
-use std::path::{PathBuf, Path};
+use std::path::{Path, PathBuf};
 
 use super::tomlconfig::TomlPlaypenConfig;
 
@@ -30,7 +30,7 @@ impl PlaypenConfig {
 
     pub fn fill_from_tomlconfig<T: Into<PathBuf>>(&mut self, root: T, tomlplaypenconfig: TomlPlaypenConfig) -> &mut Self {
         let root = root.into();
-        
+
         if let Some(editor) = tomlplaypenconfig.editor {
             if editor.is_relative() {
                 self.editor = root.join(editor);

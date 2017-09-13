@@ -46,16 +46,16 @@ pub struct TomlPlaypenConfig {
 /// let toml = r#"title="Some title"
 /// [output.html]
 /// destination = "htmlbook" "#;
-/// 
+///
 /// let config = TomlConfig::from_toml(&toml).expect("Should parse correctly");
 /// assert_eq!(config.title, Some(String::from("Some title")));
-/// assert_eq!(config.output.unwrap().html.unwrap().destination, Some(PathBuf::from("htmlbook")));
+/// assert_eq!(config.output.unwrap().html.unwrap().destination,
+/// Some(PathBuf::from("htmlbook")));
 /// ```
 impl TomlConfig {
     pub fn from_toml(input: &str) -> Result<Self> {
-        let config: TomlConfig = toml::from_str(input)
-                                        .chain_err(|| "Could not parse TOML")?;
-        
+        let config: TomlConfig = toml::from_str(input).chain_err(|| "Could not parse TOML")?;
+
         Ok(config)
     }
 }

@@ -27,7 +27,6 @@ pub struct BookItems<'a> {
 
 impl Chapter {
     pub fn new(name: String, path: PathBuf) -> Self {
-
         Chapter {
             name: name,
             path: path,
@@ -39,7 +38,8 @@ impl Chapter {
 
 impl Serialize for Chapter {
     fn serialize<S>(&self, serializer: S) -> ::std::result::Result<S::Ok, S::Error>
-        where S: Serializer
+    where
+        S: Serializer,
     {
         let mut struct_ = serializer.serialize_struct("Chapter", 2)?;
         struct_.serialize_field("name", &self.name)?;
@@ -69,8 +69,7 @@ impl<'a> Iterator for BookItems<'a> {
                 let cur = &self.items[self.current_index];
 
                 match *cur {
-                    BookItem::Chapter(_, ref ch) |
-                    BookItem::Affix(ref ch) => {
+                    BookItem::Chapter(_, ref ch) | BookItem::Affix(ref ch) => {
                         self.stack.push((self.items, self.current_index));
                         self.items = &ch.sub_items[..];
                         self.current_index = 0;

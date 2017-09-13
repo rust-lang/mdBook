@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf, Component};
+use std::path::{Component, Path, PathBuf};
 use errors::*;
 use std::io::Read;
 use std::fs::{self, File};
@@ -107,8 +107,7 @@ pub fn remove_dir_content(dir: &Path) -> Result<()> {
 /// Copies all files of a directory to another one except the files
 /// with the extensions given in the `ext_blacklist` array
 
-pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blacklist: &[&str])
-                             -> Result<()> {
+pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blacklist: &[&str]) -> Result<()> {
     debug!("[fn] copy_files_except_ext");
     // Check that from and to are different
     if from == to {
@@ -134,30 +133,41 @@ pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blackl
 
             copy_files_except_ext(&from.join(entry.file_name()), &to.join(entry.file_name()), true, ext_blacklist)?;
         } else if metadata.is_file() {
-
             // Check if it is in the blacklist
             if let Some(ext) = entry.path().extension() {
                 if ext_blacklist.contains(&ext.to_str().unwrap()) {
                     continue;
                 }
             }
-            debug!("[*] creating path for file: {:?}",
-                   &to.join(entry
-                                .path()
-                                .file_name()
-                                .expect("a file should have a file name...")));
+            debug!(
+                "[*] creating path for file: {:?}",
+                &to.join(
+                    entry
+                        .path()
+                        .file_name()
+                        .expect("a file should have a file name...")
+                )
+            );
 
-            info!("[*] Copying file: {:?}\n    to {:?}",
-                  entry.path(),
-                  &to.join(entry
-                               .path()
-                               .file_name()
-                               .expect("a file should have a file name...")));
-            fs::copy(entry.path(),
-                     &to.join(entry
-                                  .path()
-                                  .file_name()
-                                  .expect("a file should have a file name...")))?;
+            info!(
+                "[*] Copying file: {:?}\n    to {:?}",
+                entry.path(),
+                &to.join(
+                    entry
+                        .path()
+                        .file_name()
+                        .expect("a file should have a file name...")
+                )
+            );
+            fs::copy(
+                entry.path(),
+                &to.join(
+                    entry
+                        .path()
+                        .file_name()
+                        .expect("a file should have a file name..."),
+                ),
+            )?;
         }
     }
     Ok(())
@@ -235,6 +245,5 @@ mod tests {
         if !(&tmp.path().join("output/sub_dir_exists/file.txt")).exists() {
             panic!("output/sub_dir/file.png should exist")
         }
-
     }
 }

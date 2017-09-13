@@ -77,14 +77,14 @@ fn check_correct_cross_links_in_nested_dir() {
     assert_contains_strings(
         first.join("index.html"),
         &[
-            r##"href="./first/index.html#some-section" id="some-section""##
+            r##"href="./first/index.html#some-section" id="some-section""##,
         ],
     );
 
     assert_contains_strings(
         first.join("nested.html"),
         &[
-            r##"href="./first/nested.html#some-section" id="some-section""##
+            r##"href="./first/nested.html#some-section" id="some-section""##,
         ],
     );
 }

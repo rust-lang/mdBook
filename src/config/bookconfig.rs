@@ -1,10 +1,11 @@
-use std::path::{PathBuf, Path};
+use std::path::{Path, PathBuf};
 
 use super::HtmlConfig;
 use super::tomlconfig::TomlConfig;
 use super::jsonconfig::JsonConfig;
 
-/// Configuration struct containing all the configuration options available in mdBook.
+/// Configuration struct containing all the configuration options available in
+/// mdBook.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BookConfig {
     root: PathBuf,
@@ -21,8 +22,10 @@ pub struct BookConfig {
 }
 
 impl BookConfig {
-    /// Creates a new `BookConfig` struct with as root path the path given as parameter.
-    /// The source directory is `root/src` and the destination for the rendered book is `root/book`.
+    /// Creates a new `BookConfig` struct with as root path the path given as
+    /// parameter.
+    /// The source directory is `root/src` and the destination for the rendered
+    /// book is `root/book`.
     ///
     /// ```
     /// # use std::path::PathBuf;
@@ -32,8 +35,10 @@ impl BookConfig {
     /// let config = BookConfig::new(&root);
     ///
     /// assert_eq!(config.get_root(), &root);
-    /// assert_eq!(config.get_source(), PathBuf::from("directory/to/my/book/src"));
-    /// assert_eq!(config.get_html_config(), &HtmlConfig::new(PathBuf::from("directory/to/my/book")));
+    /// assert_eq!(config.get_source(),
+    /// PathBuf::from("directory/to/my/book/src"));
+    /// assert_eq!(config.get_html_config(),
+    /// &HtmlConfig::new(PathBuf::from("directory/to/my/book")));
     /// ```
     pub fn new<T: Into<PathBuf>>(root: T) -> Self {
         let root: PathBuf = root.into();
@@ -86,7 +91,6 @@ impl BookConfig {
     }
 
     pub fn fill_from_tomlconfig(&mut self, tomlconfig: TomlConfig) -> &mut Self {
-
         if let Some(s) = tomlconfig.source {
             self.set_source(s);
         }
@@ -112,11 +116,12 @@ impl BookConfig {
             self.get_mut_html_config()
                 .fill_from_tomlconfig(root, tomlhtmlconfig);
         }
-        
+
         self
     }
 
-    /// The JSON configuration file is **deprecated** and should not be used anymore.
+    /// The JSON configuration file is **deprecated** and should not be used
+    /// anymore.
     /// Please, migrate to the TOML configuration file.
     pub fn from_jsonconfig<T: Into<PathBuf>>(root: T, jsonconfig: JsonConfig) -> Self {
         let root = root.into();
@@ -125,10 +130,10 @@ impl BookConfig {
         config
     }
 
-    /// The JSON configuration file is **deprecated** and should not be used anymore.
+    /// The JSON configuration file is **deprecated** and should not be used
+    /// anymore.
     /// Please, migrate to the TOML configuration file.
     pub fn fill_from_jsonconfig(&mut self, jsonconfig: JsonConfig) -> &mut Self {
-
         if let Some(s) = jsonconfig.src {
             self.set_source(s);
         }
@@ -147,14 +152,12 @@ impl BookConfig {
 
         if let Some(d) = jsonconfig.dest {
             let root = self.get_root().to_owned();
-            self.get_mut_html_config()
-                .set_destination(&root, &d);
+            self.get_mut_html_config().set_destination(&root, &d);
         }
 
         if let Some(d) = jsonconfig.theme_path {
             let root = self.get_root().to_owned();
-            self.get_mut_html_config()
-                .set_theme(&root, &d);
+            self.get_mut_html_config().set_theme(&root, &d);
         }
 
         self
@@ -218,7 +221,8 @@ impl BookConfig {
         self
     }
 
-    /// Returns the configuration for the HTML renderer or None of there isn't any
+    /// Returns the configuration for the HTML renderer or None of there isn't
+    /// any
     pub fn get_html_config(&self) -> &HtmlConfig {
         &self.html_config
     }

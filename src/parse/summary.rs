@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use std::fs::File;
-use std::io::{Read, Result, Error, ErrorKind};
+use std::io::{Error, ErrorKind, Read, Result};
 use book::bookitem::{BookItem, Chapter};
 
 pub fn construct_bookitems(path: &PathBuf) -> Result<Vec<BookItem>> {
@@ -49,44 +49,47 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
                 section.pop();
                 continue;
             } else {
-                return Err(Error::new(ErrorKind::Other,
-                                      "Your summary.md is messed up\n\n
+                return Err(Error::new(
+                    ErrorKind::Other,
+                    "Your summary.md is messed up\n\n
                         Prefix, \
                                        Suffix and Spacer elements can only exist on the root level.\n
                         \
                                        Prefix elements can only exist before any chapter and there can be \
-                                       no chapters after suffix elements."));
+                                       no chapters after suffix elements.",
+                ));
             };
-
         } else {
             // level and current_level are the same, parse the line
             item = if let Some(parsed_item) = parse_line(summary[0]) {
-
                 // Eliminate possible errors and set section to -1 after suffix
                 match parsed_item {
                     // error if level != 0 and BookItem is != Chapter
-                    BookItem::Affix(_) |
-                    BookItem::Spacer if level > 0 => {
-                        return Err(Error::new(ErrorKind::Other,
-                                              "Your summary.md is messed up\n\n
+                    BookItem::Affix(_) | BookItem::Spacer if level > 0 => {
+                        return Err(Error::new(
+                            ErrorKind::Other,
+                            "Your summary.md is messed up\n\n
                                 \
                                                Prefix, Suffix and Spacer elements can only exist on the \
                                                root level.\n
                                 Prefix \
                                                elements can only exist before any chapter and there can be \
-                                               no chapters after suffix elements."))
+                                               no chapters after suffix elements.",
+                        ))
                     },
 
                     // error if BookItem == Chapter and section == -1
                     BookItem::Chapter(_, _) if section[0] == -1 => {
-                        return Err(Error::new(ErrorKind::Other,
-                                              "Your summary.md is messed up\n\n
+                        return Err(Error::new(
+                            ErrorKind::Other,
+                            "Your summary.md is messed up\n\n
                                 \
                                                Prefix, Suffix and Spacer elements can only exist on the \
                                                root level.\n
                                 Prefix \
                                                elements can only exist before any chapter and there can be \
-                                               no chapters after suffix elements."))
+                                               no chapters after suffix elements.",
+                        ))
                     },
 
                     // Set section = -1 after suffix
@@ -109,7 +112,6 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
                     },
                     _ => parsed_item,
                 }
-
             } else {
                 // If parse_line does not return Some(_) continue...
                 summary.remove(0);

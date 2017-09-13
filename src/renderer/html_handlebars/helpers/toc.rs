@@ -2,8 +2,8 @@ use std::path::Path;
 use std::collections::BTreeMap;
 
 use serde_json;
-use handlebars::{Handlebars, HelperDef, RenderError, RenderContext, Helper};
-use pulldown_cmark::{Parser, html, Event, Tag};
+use handlebars::{Handlebars, Helper, HelperDef, RenderContext, RenderError};
+use pulldown_cmark::{html, Event, Parser, Tag};
 
 // Handlebars helper to construct TOC
 #[derive(Clone, Copy)]
@@ -11,17 +11,15 @@ pub struct RenderToc;
 
 impl HelperDef for RenderToc {
     fn call(&self, _h: &Helper, _: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
-
         // get value from context data
         // rc.get_path() is current json parent path, you should always use it like this
         // param is the key of value you want to display
-        let chapters = rc.evaluate_absolute("chapters")
-            .and_then(|c| {
-                          serde_json::value::from_value::<Vec<BTreeMap<String, String>>>(c.clone())
-                              .map_err(|_| RenderError::new("Could not decode the JSON data"))
-                      })?;
+        let chapters = rc.evaluate_absolute("chapters").and_then(|c| {
+            serde_json::value::from_value::<Vec<BTreeMap<String, String>>>(c.clone()).map_err(|_| RenderError::new("Could not decode the JSON data"))
+        })?;
         let current = rc.evaluate_absolute("path")?
-            .as_str().ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
+            .as_str()
+            .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
             .replace("\"", "");
 
         rc.writer.write_all(b"<ul class=\"chapter\">")?;
@@ -29,11 +27,9 @@ impl HelperDef for RenderToc {
         let mut current_level = 1;
 
         for item in chapters {
-
             // Spacer
             if item.get("spacer").is_some() {
-                rc.writer
-                    .write_all(b"<li class=\"spacer\"></li>")?;
+                rc.writer.write_all(b"<li class=\"spacer\"></li>")?;
                 continue;
             }
 
@@ -106,12 +102,9 @@ impl HelperDef for RenderToc {
 
                 // filter all events that are not inline code blocks
                 let parser = Parser::new(name).filter(|event| match *event {
-                                                          Event::Start(Tag::Code) |
-                                                          Event::End(Tag::Code) |
-                                                          Event::InlineHtml(_) |
-                                                          Event::Text(_) => true,
-                                                          _ => false,
-                                                      });
+                    Event::Start(Tag::Code) | Event::End(Tag::Code) | Event::InlineHtml(_) | Event::Text(_) => true,
+                    _ => false,
+                });
 
                 // render markdown to html
                 let mut markdown_parsed_name = String::with_capacity(name.len() * 3 / 2);
@@ -126,7 +119,6 @@ impl HelperDef for RenderToc {
             }
 
             rc.writer.write_all(b"</li>")?;
-
         }
         while current_level > 1 {
             rc.writer.write_all(b"</ul>")?;

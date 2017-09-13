@@ -1,6 +1,6 @@
 use std::io;
 use std::io::Write;
-use clap::{ArgMatches, SubCommand, App};
+use clap::{App, ArgMatches, SubCommand};
 use mdbook::MDBook;
 use mdbook::errors::Result;
 use get_book_dir;
@@ -17,7 +17,6 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 
 // Init command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
-
     let book_dir = get_book_dir(args);
     let mut book = MDBook::new(&book_dir);
 
@@ -26,7 +25,6 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     // If flag `--theme` is present, copy theme to src
     if args.is_present("theme") {
-
         // Skip this if `--force` is present
         if !args.is_present("force") {
             // Print warning
@@ -45,7 +43,6 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         // Call the function that copies the theme
         book.copy_theme()?;
         println!("\nTheme copied.");
-
     }
 
     // Because of `src/book/mdbook.rs#L37-L39`, `dest` will always start with `root`

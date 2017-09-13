@@ -101,7 +101,8 @@ fn from_toml_playpen_editable() {
     assert_eq!(playpenconfig.is_editable(), true);
 }
 
-// Tests that the `output.html.destination` key is correcly parsed in the TOML config
+// Tests that the `output.html.destination` key is correcly parsed in the TOML
+// config
 #[test]
 fn from_toml_output_html_destination() {
     let toml = r#"[output.html]
@@ -129,7 +130,8 @@ fn from_toml_output_html_theme() {
     assert_eq!(htmlconfig.get_theme(), &PathBuf::from("root/theme"));
 }
 
-// Tests that the `output.html.curly-quotes` key is correctly parsed in the TOML config
+// Tests that the `output.html.curly-quotes` key is correctly parsed in the
+// TOML config
 #[test]
 fn from_toml_output_html_curly_quotes() {
     let toml = r#"[output.html]
@@ -143,7 +145,8 @@ fn from_toml_output_html_curly_quotes() {
     assert_eq!(htmlconfig.get_curly_quotes(), true);
 }
 
-// Tests that the `output.html.mathjax-support` key is correctly parsed in the TOML config
+// Tests that the `output.html.mathjax-support` key is correctly parsed in the
+// TOML config
 #[test]
 fn from_toml_output_html_mathjax_support() {
     let toml = r#"[output.html]
@@ -157,7 +160,8 @@ fn from_toml_output_html_mathjax_support() {
     assert_eq!(htmlconfig.get_mathjax_support(), true);
 }
 
-// Tests that the `output.html.google-analytics` key is correctly parsed in the TOML config
+// Tests that the `output.html.google-analytics` key is correctly parsed in the
+// TOML config
 #[test]
 fn from_toml_output_html_google_analytics() {
     let toml = r#"[output.html]
@@ -168,10 +172,16 @@ fn from_toml_output_html_google_analytics() {
 
     let htmlconfig = config.get_html_config();
 
-    assert_eq!(htmlconfig.get_google_analytics_id().expect("the google-analytics key was provided"), String::from("123456"));
+    assert_eq!(
+        htmlconfig
+            .get_google_analytics_id()
+            .expect("the google-analytics key was provided"),
+        String::from("123456")
+    );
 }
 
-// Tests that the `output.html.additional-css` key is correctly parsed in the TOML config
+// Tests that the `output.html.additional-css` key is correctly parsed in the
+// TOML config
 #[test]
 fn from_toml_output_html_additional_stylesheet() {
     let toml = r#"[output.html]
@@ -182,10 +192,17 @@ fn from_toml_output_html_additional_stylesheet() {
 
     let htmlconfig = config.get_html_config();
 
-    assert_eq!(htmlconfig.get_additional_css(), &[PathBuf::from("root/custom.css"), PathBuf::from("root/two/custom.css")]);
+    assert_eq!(
+        htmlconfig.get_additional_css(),
+        &[
+            PathBuf::from("root/custom.css"),
+            PathBuf::from("root/two/custom.css")
+        ]
+    );
 }
 
-// Tests that the `output.html.additional-js` key is correctly parsed in the TOML config
+// Tests that the `output.html.additional-js` key is correctly parsed in the
+// TOML config
 #[test]
 fn from_toml_output_html_additional_scripts() {
     let toml = r#"[output.html]
@@ -196,5 +213,11 @@ fn from_toml_output_html_additional_scripts() {
 
     let htmlconfig = config.get_html_config();
 
-    assert_eq!(htmlconfig.get_additional_js(), &[PathBuf::from("root/custom.js"), PathBuf::from("root/two/custom.js")]);
+    assert_eq!(
+        htmlconfig.get_additional_js(),
+        &[
+            PathBuf::from("root/custom.js"),
+            PathBuf::from("root/two/custom.js")
+        ]
+    );
 }
