@@ -4,8 +4,8 @@ extern crate ws;
 
 use std;
 use std::path::Path;
-use self::iron::{Iron, AfterMiddleware, IronResult, IronError, Request, Response, status, Set, Chain};
-use clap::{ArgMatches, SubCommand, App};
+use self::iron::{status, AfterMiddleware, Chain, Iron, IronError, IronResult, Request, Response, Set};
+use clap::{App, ArgMatches, SubCommand};
 use mdbook::MDBook;
 use mdbook::errors::Result;
 use {get_book_dir, open};
@@ -20,11 +20,17 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
         .about("Serve the book at http://localhost:3000. Rebuild and reload on change.")
         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'")
         .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
-        .arg_from_usage("--curly-quotes 'Convert straight quotes to curly quotes, except for those that occur in code blocks and code spans'")
+        .arg_from_usage(
+            "--curly-quotes 'Convert straight quotes to curly quotes, except for those that occur in code blocks and code spans'",
+        )
         .arg_from_usage("-p, --port=[port] 'Use another port{n}(Defaults to 3000)'")
-        .arg_from_usage("-w, --websocket-port=[ws-port] 'Use another port for the websocket connection (livereload){n}(Defaults to 3001)'")
+        .arg_from_usage(
+            "-w, --websocket-port=[ws-port] 'Use another port for the websocket connection (livereload){n}(Defaults to 3001)'",
+        )
         .arg_from_usage("-i, --interface=[interface] 'Interface to listen on{n}(Defaults to localhost)'")
-        .arg_from_usage("-a, --address=[address] 'Address that the browser can reach the websocket server from{n}(Defaults to the interface address)'")
+        .arg_from_usage(
+            "-a, --address=[address] 'Address that the browser can reach the websocket server from{n}(Defaults to the interface address)'",
+        )
         .arg_from_usage("-o, --open 'Open the book server in a web browser'")
 }
 
@@ -53,7 +59,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let address = format!("{}:{}", interface, port);
     let ws_address = format!("{}:{}", interface, ws_port);
 
-    book.set_livereload(format!(r#"
+    book.set_livereload(format!(
+        r#"
     <script type="text/javascript">
         var socket = new WebSocket("ws://{}:{}");
         socket.onmessage = function (event) {{
@@ -68,9 +75,10 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         }}
     </script>
 "#,
-                                public_address,
-                                ws_port,
-                                RELOAD_COMMAND));
+        public_address,
+        ws_port,
+        RELOAD_COMMAND
+    ));
 
     book.build()?;
 

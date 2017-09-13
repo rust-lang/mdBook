@@ -4,7 +4,7 @@ use std::path::Path;
 use self::notify::Watcher;
 use std::time::Duration;
 use std::sync::mpsc::channel;
-use clap::{ArgMatches, SubCommand, App};
+use clap::{App, ArgMatches, SubCommand};
 use mdbook::MDBook;
 use mdbook::errors::Result;
 use {get_book_dir, open};
@@ -15,7 +15,9 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
         .about("Watch the files for changes")
         .arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
         .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book when omitted)'")
-        .arg_from_usage("--curly-quotes 'Convert straight quotes to curly quotes, except for those that occur in code blocks and code spans'")
+        .arg_from_usage(
+            "--curly-quotes 'Convert straight quotes to curly quotes, except for those that occur in code blocks and code spans'",
+        )
         .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'")
 }
 
@@ -51,7 +53,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
 // Calls the closure when a book source file is changed. This is blocking!
 pub fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
-    where F: Fn(&Path, &mut MDBook) -> ()
+where
+    F: Fn(&Path, &mut MDBook) -> (),
 {
     use self::notify::RecursiveMode::*;
     use self::notify::DebouncedEvent::*;
@@ -74,19 +77,23 @@ pub fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
     };
 
     // Add the theme directory to the watcher
-    watcher.watch(book.get_theme_path(), Recursive).unwrap_or_default();
+    watcher
+        .watch(book.get_theme_path(), Recursive)
+        .unwrap_or_default();
 
 
     // Add the book.{json,toml} file to the watcher if it exists, because it's not
     // located in the source directory
     if watcher
-           .watch(book.get_root().join("book.json"), NonRecursive)
-           .is_err() {
+        .watch(book.get_root().join("book.json"), NonRecursive)
+        .is_err()
+    {
         // do nothing if book.json is not found
     }
     if watcher
-           .watch(book.get_root().join("book.toml"), NonRecursive)
-           .is_err() {
+        .watch(book.get_root().join("book.toml"), NonRecursive)
+        .is_err()
+    {
         // do nothing if book.toml is not found
     }
 
@@ -94,16 +101,11 @@ pub fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
 
     loop {
         match rx.recv() {
-            Ok(event) => {
-                match event {
-                    Create(path) |
-                    Write(path) |
-                    Remove(path) |
-                    Rename(_, path) => {
-                        closure(&path, book);
-                    },
-                    _ => {},
-                }
+            Ok(event) => match event {
+                Create(path) | Write(path) | Remove(path) | Rename(_, path) => {
+                    closure(&path, book);
+                },
+                _ => {},
             },
             Err(e) => {
                 println!("An error occured: {:?}", e);
