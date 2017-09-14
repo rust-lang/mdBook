@@ -1,5 +1,4 @@
 extern crate mdbook;
-extern crate tempdir;
 
 mod dummy;
 

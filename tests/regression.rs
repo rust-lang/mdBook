@@ -7,19 +7,17 @@
 //! Hopefully Travis will let you know when that happens.
 
 
-extern crate mdbook;
 #[macro_use]
 extern crate pretty_assertions;
 extern crate select;
-extern crate tempdir;
 extern crate walkdir;
 
-mod helpers;
+mod dummy;
 
 use std::path::Path;
 use walkdir::{DirEntry, WalkDir, WalkDirIterator};
 use select::document::Document;
-use select::predicate::{Class, Descendant, Name, Predicate};
+use select::predicate::{Class, Name, Predicate};
 
 
 const BOOK_ROOT: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/book-example");
@@ -60,7 +58,7 @@ macro_rules! descendants {
 /// and placed in the `book` directory with their extensions set to `*.html`.
 #[test]
 fn chapter_files_were_rendered_to_html() {
-    let temp = helpers::build_example_book();
+    let temp = dummy::build_example_book();
     let src = Path::new(BOOK_ROOT).join("src");
 
     let chapter_files = WalkDir::new(&src)
@@ -85,10 +83,10 @@ fn entry_ends_with(entry: &DirEntry, ending: &str) -> bool {
 /// Read the main page (`book/index.html`) and expose it as a DOM which we
 /// can search with the `select` crate
 fn root_index_html() -> Document {
-    let temp = helpers::build_example_book();
+    let temp = dummy::build_example_book();
 
     let index_page = temp.path().join("book").join("index.html");
-    let html = helpers::read_file(&index_page).unwrap();
+    let html = dummy::read_file(&index_page).unwrap();
     Document::from(html.as_str())
 }
 

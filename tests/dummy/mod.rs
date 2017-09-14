@@ -15,8 +15,8 @@ use std::error::Error;
 // The funny `self::` here is because we've got an `extern crate ...` and are
 // in a submodule
 use self::tempdir::TempDir;
-use self::walkdir::WalkDir;
 use self::mdbook::MDBook;
+use self::walkdir::WalkDir;
 
 
 const SUMMARY_MD: &'static str = include_str!("book/SUMMARY.md");
@@ -94,6 +94,18 @@ impl Default for DummyBook {
 }
 
 
+/// Copy the example book to a temporary directory and build it.
+pub fn build_example_book() -> TempDir {
+    let temp = TempDir::new("mdbook").expect("Couldn't create a temporary directory");
+    let book_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("book-example");
+
+    recursive_copy(&book_root, temp.path()).expect("Couldn't copy the book example to a temporary directory");
+
+    let book = MDBook::new(temp.path()).build().expect("Building failed");
+    temp
+}
+
+
 /// Read the contents of the provided file into memory and then iterate through
 /// the list of strings asserting that the file contains all of them.
 pub fn assert_contains_strings<P: AsRef<Path>>(filename: P, strings: &[&str]) {
@@ -110,17 +122,6 @@ pub fn assert_contains_strings<P: AsRef<Path>>(filename: P, strings: &[&str]) {
     }
 }
 
-
-/// Copy the example book to a temporary directory and build it.
-pub fn build_example_book() -> TempDir {
-    let temp = TempDir::new("mdbook").expect("Couldn't create a temporary directory");
-    let book_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("book-example");
-
-    recursive_copy(&book_root, temp.path()).expect("Couldn't copy the book example to a temporary directory");
-
-    let book = MDBook::new(temp.path()).build().expect("Building failed");
-    temp
-}
 
 
 /// Recursively copy an entire directory tree to somewhere else (a la `cp -r`).

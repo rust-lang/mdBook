@@ -1,11 +1,8 @@
 extern crate mdbook;
-extern crate tempdir;
 
 mod dummy;
-mod helpers;
 
-use dummy::DummyBook;
-use helpers::assert_contains_strings;
+use dummy::{DummyBook, assert_contains_strings};
 use mdbook::MDBook;
 
 
