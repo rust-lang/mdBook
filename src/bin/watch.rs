@@ -14,12 +14,18 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name("watch")
         .about("Watch the files for changes")
         .arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
-        .arg_from_usage("-d, --dest-dir=[dest-dir] 'The output directory for \
-                         your book{n}(Defaults to ./book when omitted)'")
-        .arg_from_usage("--curly-quotes 'Convert straight quotes to curly quotes, except \
-                         for those that occur in code blocks and code spans'")
-        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to \
-                         Current Directory when omitted)'")
+        .arg_from_usage(
+            "-d, --dest-dir=[dest-dir] 'The output directory for \
+             your book{n}(Defaults to ./book when omitted)'",
+        )
+        .arg_from_usage(
+            "--curly-quotes 'Convert straight quotes to curly quotes, except \
+             for those that occur in code blocks and code spans'",
+        )
+        .arg_from_usage(
+            "[dir] 'A directory for your book{n}(Defaults to \
+             Current Directory when omitted)'",
+        )
 }
 
 // Watch command implementation
