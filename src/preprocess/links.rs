@@ -220,8 +220,8 @@ fn test_find_playpens_with_properties() {
                 link_text: "{{#playpen file.rs editable }}",
             },
             Link {
-                start_index: 90,
-                end_index: 137,
+                start_index: 89,
+                end_index: 136,
                 link: LinkType::Playpen(
                     PathBuf::from("my.rs"),
                     vec!["editable", "no_run", "should_panic"],
