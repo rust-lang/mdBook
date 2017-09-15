@@ -216,7 +216,8 @@ impl MDBook {
         // Check that the gitignore does not extist and
         // that the destination path begins with the root path
         // We assume tha if it does begin with the root path it is contained within. This assumption
-        // will not hold true for paths containing double dots to go back up e.g. `root/../destination`
+        // will not hold true for paths containing double dots to go back up
+        // e.g. `root/../destination`
         if !gitignore.exists() && destination.starts_with(self.config.get_root()) {
             let relative = destination
                 .strip_prefix(self.config.get_root())
