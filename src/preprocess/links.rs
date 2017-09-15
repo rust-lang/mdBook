@@ -234,7 +234,9 @@ fn test_find_playpens_with_properties() {
 
 #[test]
 fn test_find_all_link_types() {
-    let s = "Some random text with escaped playpen {{#include file.rs}} and \\{{#contents are insignifficant in escaped link}} some more\n text  {{#playpen my.rs editable no_run should_panic}} ...";
+    let s = "Some random text with escaped playpen {{#include file.rs}} \
+             and \\{{#contents are insignifficant in escaped link}} \
+             some more\n text  {{#playpen my.rs editable no_run should_panic}} ...";
 
     let res = find_links(s).collect::<Vec<_>>();
     println!("\nOUTPUT: {:?}\n", res);
