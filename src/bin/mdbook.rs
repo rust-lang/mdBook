@@ -33,8 +33,10 @@ fn main() {
                 // Get the version from our Cargo.toml using clap's crate_version!() macro
                 .version(concat!("v",crate_version!()))
                 .setting(AppSettings::SubcommandRequired)
-                .after_help("For more information about a specific command, try `mdbook <command> --help`\n\
-                             Source code for mdbook at: https://github.com/azerupi/mdBook")
+                .after_help("For more information about a specific command, \
+                             try `mdbook <command> --help`\n\
+                             Source code for mdbook available \
+                             at: https://github.com/azerupi/mdBook")
                 .subcommand(init::make_subcommand())
                 .subcommand(build::make_subcommand())
                 .subcommand(test::make_subcommand());
