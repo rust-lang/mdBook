@@ -56,7 +56,10 @@ fn from_toml_authors() {
     let parsed = TomlConfig::from_toml(toml).expect("This should parse");
     let config = BookConfig::from_tomlconfig("root", parsed);
 
-    assert_eq!(config.get_authors(), &[String::from("John Doe"), String::from("Jane Doe")]);
+    assert_eq!(
+        config.get_authors(),
+        &[String::from("John Doe"), String::from("Jane Doe")]
+    );
 }
 
 // Tests that the default `playpen` config is correct in the TOML config
@@ -69,7 +72,10 @@ fn from_toml_playpen_default() {
 
     let playpenconfig = config.get_html_config().get_playpen_config();
 
-    assert_eq!(playpenconfig.get_editor(), PathBuf::from("root/theme/editor"));
+    assert_eq!(
+        playpenconfig.get_editor(),
+        PathBuf::from("root/theme/editor")
+    );
     assert_eq!(playpenconfig.is_editable(), false);
 }
 
@@ -84,7 +90,10 @@ fn from_toml_playpen_editor() {
 
     let playpenconfig = config.get_html_config().get_playpen_config();
 
-    assert_eq!(playpenconfig.get_editor(), PathBuf::from("root/theme/editordir"));
+    assert_eq!(
+        playpenconfig.get_editor(),
+        PathBuf::from("root/theme/editordir")
+    );
 }
 
 // Tests that the `playpen.editable` key is correctly parsed in the TOML config
@@ -168,7 +177,12 @@ fn from_toml_output_html_google_analytics() {
 
     let htmlconfig = config.get_html_config();
 
-    assert_eq!(htmlconfig.get_google_analytics_id().expect("the google-analytics key was provided"), String::from("123456"));
+    assert_eq!(
+        htmlconfig
+            .get_google_analytics_id()
+            .expect("the google-analytics key was provided"),
+        String::from("123456")
+    );
 }
 
 // Tests that the `output.html.additional-css` key is correctly parsed in the TOML config
@@ -182,7 +196,13 @@ fn from_toml_output_html_additional_stylesheet() {
 
     let htmlconfig = config.get_html_config();
 
-    assert_eq!(htmlconfig.get_additional_css(), &[PathBuf::from("root/custom.css"), PathBuf::from("root/two/custom.css")]);
+    assert_eq!(
+        htmlconfig.get_additional_css(),
+        &[
+            PathBuf::from("root/custom.css"),
+            PathBuf::from("root/two/custom.css")
+        ]
+    );
 }
 
 // Tests that the `output.html.additional-js` key is correctly parsed in the TOML config
@@ -196,5 +216,11 @@ fn from_toml_output_html_additional_scripts() {
 
     let htmlconfig = config.get_html_config();
 
-    assert_eq!(htmlconfig.get_additional_js(), &[PathBuf::from("root/custom.js"), PathBuf::from("root/two/custom.js")]);
+    assert_eq!(
+        htmlconfig.get_additional_js(),
+        &[
+            PathBuf::from("root/custom.js"),
+            PathBuf::from("root/two/custom.js")
+        ]
+    );
 }

@@ -47,11 +47,11 @@ fn npm_package_exists(package: &str) -> Result<()> {
 
     match status {
         Ok(ref out) if out.status.success() => Ok(()),
-        _ => {
-            bail!("Missing npm package '{0}' \
-                  install with: 'npm -g install {0}'",
-                  package)
-        },
+        _ => bail!(
+            "Missing npm package '{0}' \
+             install with: 'npm -g install {0}'",
+            package
+        ),
     }
 }
 
@@ -59,7 +59,7 @@ pub enum Resource<'a> {
     Program(&'a str),
     Package(&'a str),
 }
-use Resource::{Program, Package};
+use Resource::{Package, Program};
 
 impl<'a> Resource<'a> {
     pub fn exists(&self) -> Result<()> {
@@ -71,7 +71,6 @@ impl<'a> Resource<'a> {
 }
 
 fn run() -> Result<()> {
-
     if let Ok(_) = env::var("CARGO_FEATURE_REGENERATE_CSS") {
         // Check dependencies
         Program("npm").exists()?;
@@ -86,13 +85,14 @@ fn run() -> Result<()> {
         let stylus_dir = theme_dir.join("stylus/book.styl");
 
         if !execs::cmd("stylus")
-                .arg(stylus_dir)
-                .arg("--out")
-                .arg(theme_dir)
-                .arg("--use")
-                .arg("nib")
-                .status()?
-                .success() {
+            .arg(stylus_dir)
+            .arg("--out")
+            .arg(theme_dir)
+            .arg("--use")
+            .arg("nib")
+            .status()?
+            .success()
+        {
             bail!("Stylus encoutered an error");
         }
     }

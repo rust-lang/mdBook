@@ -4,8 +4,9 @@ extern crate ws;
 
 use std;
 use std::path::Path;
-use self::iron::{Iron, AfterMiddleware, IronResult, IronError, Request, Response, status, Set, Chain};
-use clap::{ArgMatches, SubCommand, App};
+use self::iron::{status, AfterMiddleware, Chain, Iron, IronError, IronResult, Request, Response,
+                 Set};
+use clap::{App, ArgMatches, SubCommand};
 use mdbook::MDBook;
 use mdbook::errors::Result;
 use {get_book_dir, open};
@@ -53,7 +54,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let address = format!("{}:{}", interface, port);
     let ws_address = format!("{}:{}", interface, ws_port);
 
-    book.set_livereload(format!(r#"
+    book.set_livereload(format!(
+        r#"
     <script type="text/javascript">
         var socket = new WebSocket("ws://{}:{}");
         socket.onmessage = function (event) {{
@@ -68,9 +70,10 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         }}
     </script>
 "#,
-                                public_address,
-                                ws_port,
-                                RELOAD_COMMAND));
+        public_address,
+        ws_port,
+        RELOAD_COMMAND
+    ));
 
     book.build()?;
 

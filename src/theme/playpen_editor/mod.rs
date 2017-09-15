@@ -52,7 +52,10 @@ impl PlaypenEditor {
                 (src.join("ace.js"), &mut editor.ace_js),
                 (src.join("mode-rust.js"), &mut editor.mode_rust_js),
                 (src.join("theme-dawn.js"), &mut editor.theme_dawn_js),
-                (src.join("theme-tomorrow_night.js"), &mut editor.theme_tomorrow_night_js),
+                (
+                    src.join("theme-tomorrow_night.js"),
+                    &mut editor.theme_tomorrow_night_js,
+                ),
             ];
 
             for (filename, dest) in files {

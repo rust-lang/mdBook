@@ -1,4 +1,4 @@
-use std::path::{PathBuf, Path};
+use std::path::{Path, PathBuf};
 
 use super::HtmlConfig;
 use super::tomlconfig::TomlConfig;
@@ -86,7 +86,6 @@ impl BookConfig {
     }
 
     pub fn fill_from_tomlconfig(&mut self, tomlconfig: TomlConfig) -> &mut Self {
-
         if let Some(s) = tomlconfig.source {
             self.set_source(s);
         }
@@ -112,7 +111,7 @@ impl BookConfig {
             self.get_mut_html_config()
                 .fill_from_tomlconfig(root, tomlhtmlconfig);
         }
-        
+
         self
     }
 
@@ -128,7 +127,6 @@ impl BookConfig {
     /// The JSON configuration file is **deprecated** and should not be used anymore.
     /// Please, migrate to the TOML configuration file.
     pub fn fill_from_jsonconfig(&mut self, jsonconfig: JsonConfig) -> &mut Self {
-
         if let Some(s) = jsonconfig.src {
             self.set_source(s);
         }
@@ -147,14 +145,12 @@ impl BookConfig {
 
         if let Some(d) = jsonconfig.dest {
             let root = self.get_root().to_owned();
-            self.get_mut_html_config()
-                .set_destination(&root, &d);
+            self.get_mut_html_config().set_destination(&root, &d);
         }
 
         if let Some(d) = jsonconfig.theme_path {
             let root = self.get_root().to_owned();
-            self.get_mut_html_config()
-                .set_theme(&root, &d);
+            self.get_mut_html_config().set_theme(&root, &d);
         }
 
         self

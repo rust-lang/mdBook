@@ -80,9 +80,9 @@ extern crate lazy_static;
 extern crate log;
 extern crate pulldown_cmark;
 extern crate regex;
+extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-extern crate serde;
 #[macro_use]
 extern crate serde_json;
 extern crate tempdir;

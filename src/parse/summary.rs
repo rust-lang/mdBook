@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use std::fs::File;
-use std::io::{Read, Result, Error, ErrorKind};
+use std::io::{Error, ErrorKind, Read, Result};
 use book::bookitem::{BookItem, Chapter};
 
 pub fn construct_bookitems(path: &PathBuf) -> Result<Vec<BookItem>> {
@@ -14,7 +14,11 @@ pub fn construct_bookitems(path: &PathBuf) -> Result<Vec<BookItem>> {
     Ok(top_items)
 }
 
-fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32>) -> Result<Vec<BookItem>> {
+fn parse_level(
+    summary: &mut Vec<&str>,
+    current_level: i32,
+    mut section: Vec<i32>,
+) -> Result<Vec<BookItem>> {
     debug!("[fn]: parse_level");
     let mut items: Vec<BookItem> = vec![];
 
@@ -36,9 +40,9 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
             // Level can not be root level !!
             // Add a sub-number to section
             section.push(0);
-            let last = items
-                .pop()
-                .expect("There should be at least one item since this can't be the root level");
+            let last = items.pop().expect(
+                "There should be at least one item since this can't be the root level",
+            );
 
             if let BookItem::Chapter(ref s, ref ch) = last {
                 let mut ch = ch.clone();
@@ -49,52 +53,55 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
                 section.pop();
                 continue;
             } else {
-                return Err(Error::new(ErrorKind::Other,
-                                      "Your summary.md is messed up\n\n
+                return Err(Error::new(
+                    ErrorKind::Other,
+                    "Your summary.md is messed up\n\n
                         Prefix, \
                                        Suffix and Spacer elements can only exist on the root level.\n
                         \
                                        Prefix elements can only exist before any chapter and there can be \
-                                       no chapters after suffix elements."));
+                                       no chapters after suffix elements.",
+                ));
             };
-
         } else {
             // level and current_level are the same, parse the line
             item = if let Some(parsed_item) = parse_line(summary[0]) {
-
                 // Eliminate possible errors and set section to -1 after suffix
                 match parsed_item {
                     // error if level != 0 and BookItem is != Chapter
-                    BookItem::Affix(_) |
-                    BookItem::Spacer if level > 0 => {
-                        return Err(Error::new(ErrorKind::Other,
-                                              "Your summary.md is messed up\n\n
+                    BookItem::Affix(_) | BookItem::Spacer if level > 0 => {
+                        return Err(Error::new(
+                            ErrorKind::Other,
+                            "Your summary.md is messed up\n\n
                                 \
                                                Prefix, Suffix and Spacer elements can only exist on the \
                                                root level.\n
                                 Prefix \
                                                elements can only exist before any chapter and there can be \
-                                               no chapters after suffix elements."))
-                    },
+                                               no chapters after suffix elements.",
+                        ))
+                    }
 
                     // error if BookItem == Chapter and section == -1
                     BookItem::Chapter(_, _) if section[0] == -1 => {
-                        return Err(Error::new(ErrorKind::Other,
-                                              "Your summary.md is messed up\n\n
+                        return Err(Error::new(
+                            ErrorKind::Other,
+                            "Your summary.md is messed up\n\n
                                 \
                                                Prefix, Suffix and Spacer elements can only exist on the \
                                                root level.\n
                                 Prefix \
                                                elements can only exist before any chapter and there can be \
-                                               no chapters after suffix elements."))
-                    },
+                                               no chapters after suffix elements.",
+                        ))
+                    }
 
                     // Set section = -1 after suffix
                     BookItem::Affix(_) if section[0] > 0 => {
                         section[0] = -1;
-                    },
+                    }
 
-                    _ => {},
+                    _ => {}
                 }
 
                 match parsed_item {
@@ -106,10 +113,9 @@ fn parse_level(summary: &mut Vec<&str>, current_level: i32, mut section: Vec<i32
                             .iter()
                             .fold("".to_owned(), |s, i| s + &i.to_string() + ".");
                         BookItem::Chapter(s, ch)
-                    },
+                    }
                     _ => parsed_item,
                 }
-
             } else {
                 // If parse_line does not return Some(_) continue...
                 summary.remove(0);
@@ -146,8 +152,14 @@ fn level(line: &str, spaces_in_tab: i32) -> Result<i32> {
     if spaces > 0 {
         debug!("[SUMMARY.md]:");
         debug!("\t[line]: {}", line);
-        debug!("[*]: There is an indentation error on this line. Indentation should be {} spaces", spaces_in_tab);
-        return Err(Error::new(ErrorKind::Other, format!("Indentation error on line:\n\n{}", line)));
+        debug!(
+            "[*]: There is an indentation error on this line. Indentation should be {} spaces",
+            spaces_in_tab
+        );
+        return Err(Error::new(
+            ErrorKind::Other,
+            format!("Indentation error on line:\n\n{}", line),
+        ));
     }
 
     Ok(level)
@@ -177,7 +189,7 @@ fn parse_line(l: &str) -> Option<BookItem> {
                 } else {
                     return None;
                 }
-            },
+            }
             // Non-list element
             '[' => {
                 debug!("[*]: Line is a link element");
@@ -187,8 +199,8 @@ fn parse_line(l: &str) -> Option<BookItem> {
                 } else {
                     return None;
                 }
-            },
-            _ => {},
+            }
+            _ => {}
         }
     }
 

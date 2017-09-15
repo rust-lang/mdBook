@@ -1,4 +1,4 @@
-use clap::{ArgMatches, SubCommand, App};
+use clap::{App, ArgMatches, SubCommand};
 use mdbook::MDBook;
 use mdbook::errors::Result;
 use {get_book_dir, open};

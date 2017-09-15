@@ -18,11 +18,16 @@ pub static JQUERY: &'static [u8] = include_bytes!("jquery.js");
 pub static CLIPBOARD_JS: &'static [u8] = include_bytes!("clipboard.min.js");
 pub static STORE_JS: &'static [u8] = include_bytes!("store.js");
 pub static FONT_AWESOME: &'static [u8] = include_bytes!("_FontAwesome/css/font-awesome.min.css");
-pub static FONT_AWESOME_EOT: &'static [u8] = include_bytes!("_FontAwesome/fonts/fontawesome-webfont.eot");
-pub static FONT_AWESOME_SVG: &'static [u8] = include_bytes!("_FontAwesome/fonts/fontawesome-webfont.svg");
-pub static FONT_AWESOME_TTF: &'static [u8] = include_bytes!("_FontAwesome/fonts/fontawesome-webfont.ttf");
-pub static FONT_AWESOME_WOFF: &'static [u8] = include_bytes!("_FontAwesome/fonts/fontawesome-webfont.woff");
-pub static FONT_AWESOME_WOFF2: &'static [u8] = include_bytes!("_FontAwesome/fonts/fontawesome-webfont.woff2");
+pub static FONT_AWESOME_EOT: &'static [u8] =
+    include_bytes!("_FontAwesome/fonts/fontawesome-webfont.eot");
+pub static FONT_AWESOME_SVG: &'static [u8] =
+    include_bytes!("_FontAwesome/fonts/fontawesome-webfont.svg");
+pub static FONT_AWESOME_TTF: &'static [u8] =
+    include_bytes!("_FontAwesome/fonts/fontawesome-webfont.ttf");
+pub static FONT_AWESOME_WOFF: &'static [u8] =
+    include_bytes!("_FontAwesome/fonts/fontawesome-webfont.woff");
+pub static FONT_AWESOME_WOFF2: &'static [u8] =
+    include_bytes!("_FontAwesome/fonts/fontawesome-webfont.woff2");
 pub static FONT_AWESOME_OTF: &'static [u8] = include_bytes!("_FontAwesome/fonts/FontAwesome.otf");
 
 
@@ -68,8 +73,14 @@ impl Theme {
                 (theme_dir.join("clipboard.min.js"), &mut theme.clipboard_js),
                 (theme_dir.join("store.js"), &mut theme.store_js),
                 (theme_dir.join("highlight.css"), &mut theme.highlight_css),
-                (theme_dir.join("tomorrow-night.css"), &mut theme.tomorrow_night_css),
-                (theme_dir.join("ayu-highlight.css"), &mut theme.ayu_highlight_css),
+                (
+                    theme_dir.join("tomorrow-night.css"),
+                    &mut theme.tomorrow_night_css,
+                ),
+                (
+                    theme_dir.join("ayu-highlight.css"),
+                    &mut theme.ayu_highlight_css,
+                ),
                 (theme_dir.join("jquery.js"), &mut theme.jquery),
             ];
 

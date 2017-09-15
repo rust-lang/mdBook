@@ -4,7 +4,7 @@ use std::path::Path;
 use self::notify::Watcher;
 use std::time::Duration;
 use std::sync::mpsc::channel;
-use clap::{ArgMatches, SubCommand, App};
+use clap::{App, ArgMatches, SubCommand};
 use mdbook::MDBook;
 use mdbook::errors::Result;
 use {get_book_dir, open};
@@ -51,7 +51,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
 // Calls the closure when a book source file is changed. This is blocking!
 pub fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
-    where F: Fn(&Path, &mut MDBook) -> ()
+where
+    F: Fn(&Path, &mut MDBook) -> (),
 {
     use self::notify::RecursiveMode::*;
     use self::notify::DebouncedEvent::*;
@@ -64,7 +65,7 @@ pub fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
         Err(e) => {
             println!("Error while trying to watch the files:\n\n\t{:?}", e);
             ::std::process::exit(0);
-        },
+        }
     };
 
     // Add the source directory to the watcher
@@ -74,19 +75,23 @@ pub fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
     };
 
     // Add the theme directory to the watcher
-    watcher.watch(book.get_theme_path(), Recursive).unwrap_or_default();
+    watcher
+        .watch(book.get_theme_path(), Recursive)
+        .unwrap_or_default();
 
 
     // Add the book.{json,toml} file to the watcher if it exists, because it's not
     // located in the source directory
     if watcher
-           .watch(book.get_root().join("book.json"), NonRecursive)
-           .is_err() {
+        .watch(book.get_root().join("book.json"), NonRecursive)
+        .is_err()
+    {
         // do nothing if book.json is not found
     }
     if watcher
-           .watch(book.get_root().join("book.toml"), NonRecursive)
-           .is_err() {
+        .watch(book.get_root().join("book.toml"), NonRecursive)
+        .is_err()
+    {
         // do nothing if book.toml is not found
     }
 
@@ -94,20 +99,15 @@ pub fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
 
     loop {
         match rx.recv() {
-            Ok(event) => {
-                match event {
-                    Create(path) |
-                    Write(path) |
-                    Remove(path) |
-                    Rename(_, path) => {
-                        closure(&path, book);
-                    },
-                    _ => {},
+            Ok(event) => match event {
+                Create(path) | Write(path) | Remove(path) | Rename(_, path) => {
+                    closure(&path, book);
                 }
+                _ => {}
             },
             Err(e) => {
                 println!("An error occured: {:?}", e);
-            },
+            }
         }
     }
 }

@@ -19,6 +19,12 @@ pub fn assert_contains_strings<P: AsRef<Path>>(filename: P, strings: &[&str]) {
         .expect("Couldn't read the file's contents");
 
     for s in strings {
-        assert!(content.contains(s), "Searching for {:?} in {}\n\n{}", s, filename.display(), content);
+        assert!(
+            content.contains(s),
+            "Searching for {:?} in {}\n\n{}",
+            s,
+            filename.display(),
+            content
+        );
     }
 }
