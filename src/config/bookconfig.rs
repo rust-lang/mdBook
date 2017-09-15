@@ -33,7 +33,8 @@ impl BookConfig {
     ///
     /// assert_eq!(config.get_root(), &root);
     /// assert_eq!(config.get_source(), PathBuf::from("directory/to/my/book/src"));
-    /// assert_eq!(config.get_html_config(), &HtmlConfig::new(PathBuf::from("directory/to/my/book")));
+    /// assert_eq!(config.get_html_config(),\
+    ///            &HtmlConfig::new(PathBuf::from("directory/to/my/book")));
     /// ```
     pub fn new<T: Into<PathBuf>>(root: T) -> Self {
         let root: PathBuf = root.into();
