@@ -652,36 +652,27 @@ mod tests {
         let inputs = vec![
             (
                 "blah blah <h1>Foo</h1>",
-                r##"blah blah <a class="header" \
-                href="./some_chapter/some_section.html#foo" id="foo">
-                <h1>Foo</h1></a>"##,
+                r##"blah blah <a class="header" href="./some_chapter/some_section.html#foo" id="foo"><h1>Foo</h1></a>"##,
             ),
             (
                 "<h1>Foo</h1>",
-                r##"<a class="header" href="./some_chapter/some_section.html#foo" id="foo">
-                <h1>Foo</h1></a>"##,
+                r##"<a class="header" href="./some_chapter/some_section.html#foo" id="foo"><h1>Foo</h1></a>"##,
             ),
             (
                 "<h3>Foo^bar</h3>",
-                r##"<a class="header" href="./some_chapter/some_section.html#foobar" id="foobar">
-                <h3>Foo^bar</h3></a>"##,
+                r##"<a class="header" href="./some_chapter/some_section.html#foobar" id="foobar"><h3>Foo^bar</h3></a>"##,
             ),
             (
                 "<h4></h4>",
-                r##"<a class="header" href="./some_chapter/some_section.html#" id="">
-                <h4></h4></a>"##,
+                r##"<a class="header" href="./some_chapter/some_section.html#" id=""><h4></h4></a>"##,
             ),
             (
                 "<h4><em>Hï</em></h4>",
-                r##"<a class="header" href="./some_chapter/some_section.html#hï" id="hï">
-                <h4><em>Hï</em></h4></a>"##,
+                r##"<a class="header" href="./some_chapter/some_section.html#hï" id="hï"><h4><em>Hï</em></h4></a>"##,
             ),
             (
                 "<h1>Foo</h1><h3>Foo</h3>",
-                r##"<a class="header" href="./some_chapter/some_section.html#foo" id="foo">
-                <h1>Foo</h1></a>
-                <a class="header" href="./some_chapter/some_section.html#foo-1" id="foo-1">
-                <h3>Foo</h3></a>"##,
+                r##"<a class="header" href="./some_chapter/some_section.html#foo" id="foo"><h1>Foo</h1></a><a class="header" href="./some_chapter/some_section.html#foo-1" id="foo-1"><h3>Foo</h3></a>"##,
             ),
         ];
 
