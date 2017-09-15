@@ -16,7 +16,8 @@ pub struct HtmlConfig {
 }
 
 impl HtmlConfig {
-    /// Creates a new `HtmlConfig` struct containing the configuration parameters for the HTML renderer.
+    /// Creates a new `HtmlConfig` struct containing
+    /// the configuration parameters for the HTML renderer.
     ///
     /// ```
     /// # use std::path::PathBuf;
