@@ -79,8 +79,8 @@ fn parse_level(
                                                Prefix, Suffix and Spacer elements \
                                                can only exist on the root level.\n
                                 Prefix \
-                                               elements can only exist before any chapter and there can be \
-                                               no chapters after suffix elements.",
+                                               elements can only exist before any chapter and \
+                                               there can be no chapters after suffix elements.",
                         ))
                     }
 
