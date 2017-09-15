@@ -76,8 +76,8 @@ fn parse_level(
                             ErrorKind::Other,
                             "Your summary.md is messed up\n\n
                                 \
-                                               Prefix, Suffix and Spacer elements can only exist on the \
-                                               root level.\n
+                                               Prefix, Suffix and Spacer elements \
+                                               can only exist on the root level.\n
                                 Prefix \
                                                elements can only exist before any chapter and there can be \
                                                no chapters after suffix elements.",
