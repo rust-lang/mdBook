@@ -130,7 +130,7 @@ mod tests {
         fn whitespace_outside_of_codeblock_header_is_preserved() {
             let input = r#"
 some text with spaces
-```rust
+```rust 
 fn main() {
 // code inside is unchanged
 }
@@ -180,7 +180,7 @@ more text with spaces
         #[test]
         fn rust_code_block_without_properties_has_proper_html_class() {
             let input = r#"
-```rust 
+```rust  
 ```
 "#;
 
@@ -190,7 +190,7 @@ more text with spaces
             assert_eq!(render_markdown(input, true), expected);
 
             let input = r#"
-```rust
+```rust 
 ```
 "#;
             assert_eq!(render_markdown(input, false), expected);
