@@ -180,7 +180,7 @@ more text with spaces
         #[test]
         fn rust_code_block_without_properties_has_proper_html_class() {
             let input = r#"
-```rust  
+```rust
 ```
 "#;
 
