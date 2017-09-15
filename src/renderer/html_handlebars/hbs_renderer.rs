@@ -663,11 +663,13 @@ mod tests {
             ),
             (
                 "<h3>Foo^bar</h3>",
-                r##"<a class="header" href="./some_chapter/some_section.html#foobar" id="foobar"><h3>Foo^bar</h3></a>"##,
+                r##"<a class="header" href="./some_chapter/some_section.html#foobar" id="foobar">
+                <h3>Foo^bar</h3></a>"##,
             ),
             (
                 "<h4></h4>",
-                r##"<a class="header" href="./some_chapter/some_section.html#" id=""><h4></h4></a>"##
+                r##"<a class="header" href="./some_chapter/some_section.html#" id="">
+                <h4></h4></a>"##
             ),
             (
                 "<h4><em>Hï</em></h4>",
