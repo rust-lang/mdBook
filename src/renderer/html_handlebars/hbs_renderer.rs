@@ -673,7 +673,8 @@ mod tests {
             ),
             (
                 "<h4><em>Hï</em></h4>",
-                r##"<a class="header" href="./some_chapter/some_section.html#hï" id="hï"><h4><em>Hï</em></h4></a>"##
+                r##"<a class="header" href="./some_chapter/some_section.html#hï" id="hï">
+                <h4><em>Hï</em></h4></a>"##
             ),
             (
                 "<h1>Foo</h1><h3>Foo</h3>",
