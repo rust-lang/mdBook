@@ -651,7 +651,7 @@ mod tests {
     fn original_build_header_links() {
         let inputs = vec![
             (
-                "blah blah <h1>Foo</h1>",
+                "blah blah<h1>Foo</h1>",
                 r##"blah blah 
                 <a class="header" href="./some_chapter/some_section.html#foo" id="foo">
                 <h1>Foo</h1></a>"##,
@@ -669,19 +669,19 @@ mod tests {
             (
                 "<h4></h4>",
                 r##"<a class="header" href="./some_chapter/some_section.html#" id="">
-                <h4></h4></a>"##
+                <h4></h4></a>"##,
             ),
             (
                 "<h4><em>Hï</em></h4>",
                 r##"<a class="header" href="./some_chapter/some_section.html#hï" id="hï">
-                <h4><em>Hï</em></h4></a>"##
+                <h4><em>Hï</em></h4></a>"##,
             ),
             (
                 "<h1>Foo</h1><h3>Foo</h3>",
                 r##"<a class="header" href="./some_chapter/some_section.html#foo" id="foo">
                 <h1>Foo</h1></a>
                 <a class="header" href="./some_chapter/some_section.html#foo-1" id="foo-1">
-                <h3>Foo</h3></a>"##
+                <h3>Foo</h3></a>"##,
             ),
         ];
 
