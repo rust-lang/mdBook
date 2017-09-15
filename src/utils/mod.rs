@@ -130,7 +130,7 @@ mod tests {
         fn whitespace_outside_of_codeblock_header_is_preserved() {
             let input = r#"
 some text with spaces
-```rust  
+```rust
 fn main() {
 // code inside is unchanged
 }
