@@ -190,7 +190,7 @@ more text with spaces
             assert_eq!(render_markdown(input, true), expected);
 
             let input = r#"
-```rust 
+```rust
 ```
 "#;
             assert_eq!(render_markdown(input, false), expected);
