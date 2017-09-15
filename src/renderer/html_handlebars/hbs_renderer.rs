@@ -652,7 +652,8 @@ mod tests {
         let inputs = vec![
             (
                 "blah blah <h1>Foo</h1>",
-                r##"blah blah <a class="header" href="./some_chapter/some_section.html#foo" id="foo">
+                r##"blah blah <a class="header" 
+                href="./some_chapter/some_section.html#foo" id="foo">
                 <h1>Foo</h1></a>"##,
             ),
             (
