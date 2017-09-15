@@ -213,7 +213,8 @@ impl MDBook {
 
         let destination = self.config.get_html_config().get_destination();
 
-        // Check that the gitignore does not extist and that the destination path begins with the root path
+        // Check that the gitignore does not extist and
+        // that the destination path begins with the root path
         // We assume tha if it does begin with the root path it is contained within. This assumption
         // will not hold true for paths containing double dots to go back up e.g. `root/../destination`
         if !gitignore.exists() && destination.starts_with(self.config.get_root()) {
