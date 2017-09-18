@@ -931,7 +931,7 @@ table thead td {
     left: 0;
     overflow-y: initial;
   }
-  .page-wrapper {
+  #page-wrapper.page-wrapper {
     padding-left: 0px;
   }
   #content {
