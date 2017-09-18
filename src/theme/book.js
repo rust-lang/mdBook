@@ -7,7 +7,7 @@ $( document ).ready(function() {
     window.onunload = function(){};
 
     // Set theme
-    var theme = store.get('theme');
+    var theme = store.get('mdbook-theme');
     if (theme === null || theme === undefined) { theme = 'light'; }
 
     set_theme(theme);
@@ -145,7 +145,7 @@ $( document ).ready(function() {
             });
         }
 
-        store.set('theme', theme);
+        store.set('mdbook-theme', theme);
 
         $('body').removeClass().addClass(theme);
     }
@@ -186,18 +186,35 @@ $( document ).ready(function() {
         if(!lines_hidden) { return; }
 
         // add expand button
-        pre_block.prepend("<div class=\"buttons\"><i class=\"fa fa-expand\"></i></div>");
+        pre_block.prepend("<div class=\"buttons\"><i class=\"fa fa-expand\" title=\"Show hidden lines\"></i></div>");
 
         pre_block.find("i").click(function(e){
             if( $(this).hasClass("fa-expand") ) {
                 $(this).removeClass("fa-expand").addClass("fa-compress");
+                $(this).attr("title", "Hide lines");
                 pre_block.find("span.hidden").removeClass("hidden").addClass("unhidden");
             }
             else {
                 $(this).removeClass("fa-compress").addClass("fa-expand");
+                $(this).attr("title", "Show hidden lines");
                 pre_block.find("span.unhidden").removeClass("unhidden").addClass("hidden");
             }
         });
+    });
+    
+    $("pre code").each(function(i, block){
+        var pre_block = $(this).parent();
+        if( !pre_block.hasClass('playpen') ) {
+            var buttons = pre_block.find(".buttons");
+            if(buttons.length == 0) {
+                pre_block.prepend("<div class=\"buttons\"></div>");
+                buttons = pre_block.find(".buttons");
+            }
+            buttons.prepend("<i class=\"fa fa-copy clip-button\"><i class=\"tooltiptext\"></i></i>");
+            buttons.find(".clip-button").mouseout(function(e){
+                hideTooltip(e.currentTarget);
+            });
+        }
     });
 
     // Process playpen code blocks
@@ -209,12 +226,12 @@ $( document ).ready(function() {
             pre_block.prepend("<div class=\"buttons\"></div>");
             buttons = pre_block.find(".buttons");
         }
-        buttons.prepend("<i class=\"fa fa-play play-button hidden\"></i>");
-        buttons.prepend("<i class=\"fa fa-copy clip-button\"><i class=\"tooltiptext\"></i></i>");
+        buttons.prepend("<i class=\"fa fa-play play-button hidden\" title=\"Run this code\"></i>");
+        buttons.prepend("<i class=\"fa fa-copy clip-button\" title=\"Copy to clipboard\"><i class=\"tooltiptext\"></i></i>");
 
         let code_block = pre_block.find("code").first();
         if (window.ace && code_block.hasClass("editable")) {
-            buttons.prepend("<i class=\"fa fa-history reset-button\"></i>");
+            buttons.prepend("<i class=\"fa fa-history reset-button\" title=\"Undo changes\"></i>");
         }
 
         buttons.find(".play-button").click(function(e){
@@ -234,7 +251,7 @@ $( document ).ready(function() {
     var clipboardSnippets = new Clipboard('.clip-button', {
         text: function(trigger) {
             hideTooltip(trigger);
-            let playpen = $(trigger).parents(".playpen");
+            let playpen = $(trigger).parents("pre");
             return playpen_text(playpen);
         }
     });
@@ -336,17 +353,17 @@ function sidebarToggle() {
     var html = $("html");
     if ( html.hasClass("sidebar-hidden") ) {
         html.removeClass("sidebar-hidden").addClass("sidebar-visible");
-        store.set('sidebar', 'visible');
+        store.set('mdbook-sidebar', 'visible');
     } else if ( html.hasClass("sidebar-visible") ) {
         html.removeClass("sidebar-visible").addClass("sidebar-hidden");
-        store.set('sidebar', 'hidden');
+        store.set('mdbook-sidebar', 'hidden');
     } else {
         if($("#sidebar").position().left === 0){
             html.addClass("sidebar-hidden");
-            store.set('sidebar', 'hidden');
+            store.set('mdbook-sidebar', 'hidden');
         } else {
             html.addClass("sidebar-visible");
-            store.set('sidebar', 'visible');
+            store.set('mdbook-sidebar', 'visible');
         }
     }
 }
@@ -358,22 +375,24 @@ function run_rust_code(code_block) {
         result_block = code_block.find(".result");
     }
 
-    let text = playpen_text(code_block);;
-
+    let text = playpen_text(code_block);
+    
     var params = {
-        version: "stable",
-        optimize: "0",
-        code: text,
-    };
+	channel: "stable",
+	mode: "debug",
+	crateType: "bin",
+	tests: false,
+	code: text,
+    }
 
     if(text.indexOf("#![feature") !== -1) {
-        params.version = "nightly";
+        params.channel = "nightly";
     }
 
     result_block.text("Running...");
 
     $.ajax({
-        url: "https://play.rust-lang.org/evaluate.json",
+        url: "https://play.rust-lang.org/execute",
         method: "POST",
         crossDomain: true,
         dataType: "json",
@@ -381,7 +400,7 @@ function run_rust_code(code_block) {
         data: JSON.stringify(params),
         timeout: 15000,
         success: function(response){
-            result_block.text(response.result);
+           result_block.text(response.success ? response.stdout : response.stderr);
         },
         error: function(qXHR, textStatus, errorThrown){
             result_block.text("Playground communication " + textStatus);
