@@ -5,6 +5,7 @@ body {
 }
 body {
   margin: 0;
+  font-size: 1rem;
 }
 code {
   font-family: "Source Code Pro", Consolas, "Ubuntu Mono", Menlo, "DejaVu Sans Mono", monospace, monospace;
