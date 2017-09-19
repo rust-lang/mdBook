@@ -7,7 +7,7 @@ $( document ).ready(function() {
     window.onunload = function(){};
 
     // Set theme
-    var theme = store.get('theme');
+    var theme = store.get('mdbook-theme');
     if (theme === null || theme === undefined) { theme = 'light'; }
 
     set_theme(theme);
@@ -145,7 +145,7 @@ $( document ).ready(function() {
             });
         }
 
-        store.set('theme', theme);
+        store.set('mdbook-theme', theme);
 
         $('body').removeClass().addClass(theme);
     }
