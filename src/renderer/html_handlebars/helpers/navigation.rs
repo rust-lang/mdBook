@@ -17,11 +17,9 @@ pub fn previous(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(
     })?;
 
     let current = rc.evaluate_absolute("path")?
-        .as_str()
-        .ok_or_else(|| {
-            RenderError::new("Type error for `path`, string expected")
-        })?
-        .replace("\"", "");
+                    .as_str()
+                    .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
+                    .replace("\"", "");
 
     let mut previous: Option<BTreeMap<String, String>> = None;
 
@@ -38,47 +36,46 @@ pub fn previous(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(
                         let mut previous_chapter = BTreeMap::new();
 
                         // Chapter title
-                        previous
-                            .get("name")
-                            .ok_or_else(|| {
-                                RenderError::new("No title found for chapter in JSON data")
-                            })
-                            .and_then(|n| {
-                                previous_chapter.insert("title".to_owned(), json!(n));
-                                Ok(())
-                            })?;
+                        previous.get("name")
+                                .ok_or_else(|| {
+                                                RenderError::new("No title found for chapter in \
+                                                                  JSON data")
+                                            })
+                                .and_then(|n| {
+                                              previous_chapter.insert("title".to_owned(), json!(n));
+                                              Ok(())
+                                          })?;
 
 
                         // Chapter link
-                        previous
-                            .get("path")
-                            .ok_or_else(|| {
-                                RenderError::new("No path found for chapter in JSON data")
-                            })
-                            .and_then(|p| {
-                                Path::new(p)
-                                    .with_extension("html")
-                                    .to_str()
-                                    .ok_or_else(
-                                        || RenderError::new("Link could not be converted to str"),
-                                    )
-                                    .and_then(|p| {
-                                        previous_chapter
+                        previous.get("path")
+                                .ok_or_else(|| {
+                                                RenderError::new("No path found for chapter in \
+                                                                  JSON data")
+                                            })
+                                .and_then(|p| {
+                            Path::new(p).with_extension("html")
+                                        .to_str()
+                                        .ok_or_else(|| {
+                                                        RenderError::new("Link could not be \
+                                                                          converted to str")
+                                                    })
+                                        .and_then(|p| {
+                                previous_chapter
                                             .insert("link".to_owned(), json!(p.replace("\\", "/")));
-                                        Ok(())
-                                    })
-                            })?;
+                                Ok(())
+                            })
+                        })?;
 
 
                         debug!("[*]: Render template");
                         // Render template
                         _h.template()
-                            .ok_or_else(|| RenderError::new("Error with the handlebars template"))
-                            .and_then(|t| {
-                                let mut local_rc =
-                                    rc.with_context(Context::wraps(&previous_chapter)?);
-                                t.render(r, &mut local_rc)
-                            })?;
+                          .ok_or_else(|| RenderError::new("Error with the handlebars template"))
+                          .and_then(|t| {
+                            let mut local_rc = rc.with_context(Context::wraps(&previous_chapter)?);
+                            t.render(r, &mut local_rc)
+                        })?;
                     }
                     break;
                 } else {
@@ -104,11 +101,9 @@ pub fn next(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), R
             .map_err(|_| RenderError::new("Could not decode the JSON data"))
     })?;
     let current = rc.evaluate_absolute("path")?
-        .as_str()
-        .ok_or_else(|| {
-            RenderError::new("Type error for `path`, string expected")
-        })?
-        .replace("\"", "");
+                    .as_str()
+                    .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
+                    .replace("\"", "");
 
     let mut previous: Option<BTreeMap<String, String>> = None;
 
@@ -130,33 +125,36 @@ pub fn next(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), R
 
                         item.get("name")
                             .ok_or_else(|| {
-                                RenderError::new("No title found for chapter in JSON data")
-                            })
+                                            RenderError::new("No title found for chapter in JSON \
+                                                              data")
+                                        })
                             .and_then(|n| {
-                                next_chapter.insert("title".to_owned(), json!(n));
-                                Ok(())
-                            })?;
+                                          next_chapter.insert("title".to_owned(), json!(n));
+                                          Ok(())
+                                      })?;
 
-                        Path::new(path)
-                            .with_extension("html")
-                            .to_str()
-                            .ok_or_else(|| RenderError::new("Link could not converted to str"))
-                            .and_then(|l| {
-                                debug!("[*]: Inserting link: {:?}", l);
-                                // Hack for windows who tends to use `\` as separator instead of `/`
-                                next_chapter.insert("link".to_owned(), json!(l.replace("\\", "/")));
-                                Ok(())
-                            })?;
+                        Path::new(path).with_extension("html")
+                                       .to_str()
+                                       .ok_or_else(|| {
+                                                       RenderError::new("Link could not converted \
+                                                                         to str")
+                                                   })
+                                       .and_then(|l| {
+                            debug!("[*]: Inserting link: {:?}", l);
+                            // Hack for windows who tends to use `\` as separator instead of `/`
+                            next_chapter.insert("link".to_owned(), json!(l.replace("\\", "/")));
+                            Ok(())
+                        })?;
 
                         debug!("[*]: Render template");
 
                         // Render template
                         _h.template()
-                            .ok_or_else(|| RenderError::new("Error with the handlebars template"))
-                            .and_then(|t| {
-                                let mut local_rc = rc.with_context(Context::wraps(&next_chapter)?);
-                                t.render(r, &mut local_rc)
-                            })?;
+                          .ok_or_else(|| RenderError::new("Error with the handlebars template"))
+                          .and_then(|t| {
+                            let mut local_rc = rc.with_context(Context::wraps(&next_chapter)?);
+                            t.render(r, &mut local_rc)
+                        })?;
                         break;
                     }
                 }

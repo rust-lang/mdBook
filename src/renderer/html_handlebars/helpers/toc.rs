@@ -19,11 +19,9 @@ impl HelperDef for RenderToc {
                 .map_err(|_| RenderError::new("Could not decode the JSON data"))
         })?;
         let current = rc.evaluate_absolute("path")?
-            .as_str()
-            .ok_or_else(|| {
-                RenderError::new("Type error for `path`, string expected")
-            })?
-            .replace("\"", "");
+                        .as_str()
+                        .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
+                        .replace("\"", "");
 
         rc.writer.write_all(b"<ul class=\"chapter\">")?;
 
@@ -105,12 +103,12 @@ impl HelperDef for RenderToc {
 
                 // filter all events that are not inline code blocks
                 let parser = Parser::new(name).filter(|event| match *event {
-                    Event::Start(Tag::Code) |
-                    Event::End(Tag::Code) |
-                    Event::InlineHtml(_) |
-                    Event::Text(_) => true,
-                    _ => false,
-                });
+                                                          Event::Start(Tag::Code) |
+                                                          Event::End(Tag::Code) |
+                                                          Event::InlineHtml(_) |
+                                                          Event::Text(_) => true,
+                                                          _ => false,
+                                                      });
 
                 // render markdown to html
                 let mut markdown_parsed_name = String::with_capacity(name.len() * 3 / 2);

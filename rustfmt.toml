@@ -1,0 +1,7 @@
+array_layout = "Visual"
+chain_indent = "Visual"
+fn_args_layout = "Visual"
+fn_call_style = "Visual"
+format_strings = true
+generics_indent = "Visual"
+

@@ -43,11 +43,10 @@ impl HtmlConfig {
         }
     }
 
-    pub fn fill_from_tomlconfig<T: Into<PathBuf>>(
-        &mut self,
-        root: T,
-        tomlconfig: TomlHtmlConfig,
-    ) -> &mut Self {
+    pub fn fill_from_tomlconfig<T: Into<PathBuf>>(&mut self,
+                                                  root: T,
+                                                  tomlconfig: TomlHtmlConfig)
+                                                  -> &mut Self {
         let root = root.into();
 
         if let Some(d) = tomlconfig.destination {

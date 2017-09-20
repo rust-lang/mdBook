@@ -56,14 +56,14 @@ pub fn path_to_root<P: Into<PathBuf>>(path: P) -> String {
         .expect("")
         .components()
         .fold(String::new(), |mut s, c| {
-            match c {
-                Component::Normal(_) => s.push_str("../"),
-                _ => {
-                    debug!("[*]: Other path component... {:?}", c);
-                }
+        match c {
+            Component::Normal(_) => s.push_str("../"),
+            _ => {
+                debug!("[*]: Other path component... {:?}", c);
             }
-            s
-        })
+        }
+        s
+    })
 }
 
 
@@ -107,12 +107,11 @@ pub fn remove_dir_content(dir: &Path) -> Result<()> {
 /// Copies all files of a directory to another one except the files
 /// with the extensions given in the `ext_blacklist` array
 
-pub fn copy_files_except_ext(
-    from: &Path,
-    to: &Path,
-    recursive: bool,
-    ext_blacklist: &[&str],
-) -> Result<()> {
+pub fn copy_files_except_ext(from: &Path,
+                             to: &Path,
+                             recursive: bool,
+                             ext_blacklist: &[&str])
+                             -> Result<()> {
     debug!("[fn] copy_files_except_ext");
     // Check that from and to are different
     if from == to {
@@ -136,12 +135,10 @@ pub fn copy_files_except_ext(
                 fs::create_dir(&to.join(entry.file_name()))?;
             }
 
-            copy_files_except_ext(
-                &from.join(entry.file_name()),
-                &to.join(entry.file_name()),
-                true,
-                ext_blacklist,
-            )?;
+            copy_files_except_ext(&from.join(entry.file_name()),
+                                  &to.join(entry.file_name()),
+                                  true,
+                                  ext_blacklist)?;
         } else if metadata.is_file() {
             // Check if it is in the blacklist
             if let Some(ext) = entry.path().extension() {
@@ -149,35 +146,20 @@ pub fn copy_files_except_ext(
                     continue;
                 }
             }
-            debug!(
-                "[*] creating path for file: {:?}",
-                &to.join(
-                    entry
-                        .path()
-                        .file_name()
-                        .expect("a file should have a file name...")
-                )
-            );
+            debug!("[*] creating path for file: {:?}",
+                   &to.join(entry.path()
+                                 .file_name()
+                                 .expect("a file should have a file name...")));
 
-            info!(
-                "[*] Copying file: {:?}\n    to {:?}",
-                entry.path(),
-                &to.join(
-                    entry
-                        .path()
-                        .file_name()
-                        .expect("a file should have a file name...")
-                )
-            );
-            fs::copy(
-                entry.path(),
-                &to.join(
-                    entry
-                        .path()
-                        .file_name()
-                        .expect("a file should have a file name..."),
-                ),
-            )?;
+            info!("[*] Copying file: {:?}\n    to {:?}",
+                  entry.path(),
+                  &to.join(entry.path()
+                                .file_name()
+                                .expect("a file should have a file name...")));
+            fs::copy(entry.path(),
+                     &to.join(entry.path()
+                                   .file_name()
+                                   .expect("a file should have a file name...")))?;
         }
     }
     Ok(())

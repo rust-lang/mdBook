@@ -13,18 +13,15 @@ pub fn assert_contains_strings<P: AsRef<Path>>(filename: P, strings: &[&str]) {
     let filename = filename.as_ref();
 
     let mut content = String::new();
-    File::open(&filename)
-        .expect("Couldn't open the provided file")
-        .read_to_string(&mut content)
-        .expect("Couldn't read the file's contents");
+    File::open(&filename).expect("Couldn't open the provided file")
+                         .read_to_string(&mut content)
+                         .expect("Couldn't read the file's contents");
 
     for s in strings {
-        assert!(
-            content.contains(s),
-            "Searching for {:?} in {}\n\n{}",
-            s,
-            filename.display(),
-            content
-        );
+        assert!(content.contains(s),
+                "Searching for {:?} in {}\n\n{}",
+                s,
+                filename.display(),
+                content);
     }
 }

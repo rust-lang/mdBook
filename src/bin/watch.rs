@@ -84,22 +84,19 @@ where
     };
 
     // Add the theme directory to the watcher
-    watcher
-        .watch(book.get_theme_path(), Recursive)
-        .unwrap_or_default();
+    watcher.watch(book.get_theme_path(), Recursive)
+           .unwrap_or_default();
 
 
     // Add the book.{json,toml} file to the watcher if it exists, because it's not
     // located in the source directory
-    if watcher
-        .watch(book.get_root().join("book.json"), NonRecursive)
-        .is_err()
+    if watcher.watch(book.get_root().join("book.json"), NonRecursive)
+              .is_err()
     {
         // do nothing if book.json is not found
     }
-    if watcher
-        .watch(book.get_root().join("book.toml"), NonRecursive)
-        .is_err()
+    if watcher.watch(book.get_root().join("book.toml"), NonRecursive)
+              .is_err()
     {
         // do nothing if book.toml is not found
     }
@@ -108,12 +105,14 @@ where
 
     loop {
         match rx.recv() {
-            Ok(event) => match event {
-                Create(path) | Write(path) | Remove(path) | Rename(_, path) => {
-                    closure(&path, book);
+            Ok(event) => {
+                match event {
+                    Create(path) | Write(path) | Remove(path) | Rename(_, path) => {
+                        closure(&path, book);
+                    }
+                    _ => {}
                 }
-                _ => {}
-            },
+            }
             Err(e) => {
                 println!("An error occured: {:?}", e);
             }

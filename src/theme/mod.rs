@@ -64,25 +64,17 @@ impl Theme {
 
         // Check for individual files, if they exist copy them across
         {
-            let files = vec![
-                (theme_dir.join("index.hbs"), &mut theme.index),
-                (theme_dir.join("book.js"), &mut theme.js),
-                (theme_dir.join("book.css"), &mut theme.css),
-                (theme_dir.join("favicon.png"), &mut theme.favicon),
-                (theme_dir.join("highlight.js"), &mut theme.highlight_js),
-                (theme_dir.join("clipboard.min.js"), &mut theme.clipboard_js),
-                (theme_dir.join("store.js"), &mut theme.store_js),
-                (theme_dir.join("highlight.css"), &mut theme.highlight_css),
-                (
-                    theme_dir.join("tomorrow-night.css"),
-                    &mut theme.tomorrow_night_css,
-                ),
-                (
-                    theme_dir.join("ayu-highlight.css"),
-                    &mut theme.ayu_highlight_css,
-                ),
-                (theme_dir.join("jquery.js"), &mut theme.jquery),
-            ];
+            let files = vec![(theme_dir.join("index.hbs"), &mut theme.index),
+                             (theme_dir.join("book.js"), &mut theme.js),
+                             (theme_dir.join("book.css"), &mut theme.css),
+                             (theme_dir.join("favicon.png"), &mut theme.favicon),
+                             (theme_dir.join("highlight.js"), &mut theme.highlight_js),
+                             (theme_dir.join("clipboard.min.js"), &mut theme.clipboard_js),
+                             (theme_dir.join("store.js"), &mut theme.store_js),
+                             (theme_dir.join("highlight.css"), &mut theme.highlight_css),
+                             (theme_dir.join("tomorrow-night.css"), &mut theme.tomorrow_night_css),
+                             (theme_dir.join("ayu-highlight.css"), &mut theme.ayu_highlight_css),
+                             (theme_dir.join("jquery.js"), &mut theme.jquery)];
 
             for (filename, dest) in files {
                 if !filename.exists() {

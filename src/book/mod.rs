@@ -138,19 +138,15 @@ impl MDBook {
 
         {
             if !self.get_destination().exists() {
-                debug!(
-                    "[*]: {:?} does not exist, trying to create directory",
-                    self.get_destination()
-                );
+                debug!("[*]: {:?} does not exist, trying to create directory",
+                       self.get_destination());
                 fs::create_dir_all(self.get_destination())?;
             }
 
 
             if !self.config.get_source().exists() {
-                debug!(
-                    "[*]: {:?} does not exist, trying to create directory",
-                    self.config.get_source()
-                );
+                debug!("[*]: {:?} does not exist, trying to create directory",
+                       self.config.get_source());
                 fs::create_dir_all(self.config.get_source())?;
             }
 
@@ -158,10 +154,8 @@ impl MDBook {
 
             if !summary.exists() {
                 // Summary does not exist, create it
-                debug!(
-                    "[*]: {:?} does not exist, trying to create SUMMARY.md",
-                    &summary
-                );
+                debug!("[*]: {:?} does not exist, trying to create SUMMARY.md",
+                       &summary);
                 let mut f = File::create(&summary)?;
 
                 debug!("[*]: Writing to SUMMARY.md");
@@ -187,12 +181,8 @@ impl MDBook {
 
                 if !path.exists() {
                     if !self.create_missing {
-                        return Err(
-                            format!(
-                                "'{}' referenced from SUMMARY.md does not exist.",
-                                path.to_string_lossy()
-                            ).into(),
-                        );
+                        return Err(format!("'{}' referenced from SUMMARY.md does not exist.",
+                                           path.to_string_lossy()).into());
                     }
                     debug!("[*]: {:?} does not exist, trying to create file", path);
                     ::std::fs::create_dir_all(path.parent().unwrap())?;
@@ -219,18 +209,14 @@ impl MDBook {
         // will not hold true for paths containing double dots to go back up
         // e.g. `root/../destination`
         if !gitignore.exists() && destination.starts_with(self.config.get_root()) {
-            let relative = destination
-                .strip_prefix(self.config.get_root())
-                .expect(
-                    "Could not strip the root prefix, path is not relative to root",
-                )
-                .to_str()
-                .expect("Could not convert to &str");
+            let relative = destination.strip_prefix(self.config.get_root())
+                                      .expect("Could not strip the root prefix, path is not \
+                                               relative to root")
+                                      .to_str()
+                                      .expect("Could not convert to &str");
 
-            debug!(
-                "[*]: {:?} does not exist, trying to create .gitignore",
-                gitignore
-            );
+            debug!("[*]: {:?} does not exist, trying to create .gitignore",
+                   gitignore);
 
             let mut f = File::create(&gitignore).expect("Could not create file.");
 
@@ -267,10 +253,8 @@ impl MDBook {
 
         let themedir = self.config.get_html_config().get_theme();
         if !themedir.exists() {
-            debug!(
-                "[*]: {:?} does not exist, trying to create directory",
-                themedir
-            );
+            debug!("[*]: {:?} does not exist, trying to create directory",
+                   themedir);
             fs::create_dir(&themedir)?;
         }
 
@@ -304,9 +288,8 @@ impl MDBook {
     pub fn write_file<P: AsRef<Path>>(&self, filename: P, content: &[u8]) -> Result<()> {
         let path = self.get_destination().join(filename);
 
-        utils::fs::create_file(&path)?
-            .write_all(content)
-            .map_err(|e| e.into())
+        utils::fs::create_file(&path)?.write_all(content)
+                                      .map_err(|e| e.into())
     }
 
     /// Parses the `book.json` file (if it exists) to extract
@@ -370,18 +353,17 @@ impl MDBook {
     pub fn test(&mut self, library_paths: Vec<&str>) -> Result<()> {
         // read in the chapters
         self.parse_summary().chain_err(|| "Couldn't parse summary")?;
-        let library_args: Vec<&str> = (0..library_paths.len())
-            .map(|_| "-L")
-            .zip(library_paths.into_iter())
-            .flat_map(|x| vec![x.0, x.1])
-            .collect();
+        let library_args: Vec<&str> = (0..library_paths.len()).map(|_| "-L")
+                                                              .zip(library_paths.into_iter())
+                                                              .flat_map(|x| vec![x.0, x.1])
+                                                              .collect();
         let temp_dir = TempDir::new("mdbook")?;
         for item in self.iter() {
             if let BookItem::Chapter(_, ref ch) = *item {
                 if !ch.path.as_os_str().is_empty() {
                     let path = self.get_source().join(&ch.path);
                     let base = path.parent()
-                        .ok_or_else(|| String::from("Invalid bookitem path!"))?;
+                                   .ok_or_else(|| String::from("Invalid bookitem path!"))?;
                     let content = utils::fs::file_to_string(&path)?;
                     // Parse and expand links
                     let content = preprocess::links::replace_all(&content, base)?;
@@ -392,17 +374,14 @@ impl MDBook {
                     let mut tmpf = utils::fs::create_file(&path)?;
                     tmpf.write_all(content.as_bytes())?;
 
-                    let output = Command::new("rustdoc")
-                        .arg(&path)
-                        .arg("--test")
-                        .args(&library_args)
-                        .output()?;
+                    let output = Command::new("rustdoc").arg(&path)
+                                                        .arg("--test")
+                                                        .args(&library_args)
+                                                        .output()?;
 
                     if !output.status.success() {
-                        bail!(ErrorKind::Subprocess(
-                            "Rustdoc returned an error".to_string(),
-                            output
-                        ));
+                        bail!(ErrorKind::Subprocess("Rustdoc returned an error".to_string(),
+                                                    output));
                     }
                 }
             }

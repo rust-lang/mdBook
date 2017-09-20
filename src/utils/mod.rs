@@ -19,7 +19,7 @@ pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
     let p = Parser::new_ext(text, opts);
     let mut converter = EventQuoteConverter::new(curly_quotes);
     let events = p.map(clean_codeblock_headers)
-        .map(|event| converter.convert(event));
+                  .map(|event| converter.convert(event));
 
     html::push_html(&mut s, events);
     s
@@ -76,28 +76,31 @@ fn convert_quotes_to_curly(original_text: &str) -> String {
     // We'll consider the start to be "whitespace".
     let mut preceded_by_whitespace = true;
 
-    original_text
-        .chars()
-        .map(|original_char| {
-            let converted_char = match original_char {
-                '\'' => if preceded_by_whitespace {
+    original_text.chars()
+                 .map(|original_char| {
+        let converted_char = match original_char {
+            '\'' => {
+                if preceded_by_whitespace {
                     '‘'
                 } else {
                     '’'
-                },
-                '"' => if preceded_by_whitespace {
+                }
+            }
+            '"' => {
+                if preceded_by_whitespace {
                     '“'
                 } else {
                     '”'
-                },
-                _ => original_char,
-            };
+                }
+            }
+            _ => original_char,
+        };
 
-            preceded_by_whitespace = original_char.is_whitespace();
+        preceded_by_whitespace = original_char.is_whitespace();
 
-            converted_char
-        })
-        .collect()
+        converted_char
+    })
+                 .collect()
 }
 
 #[cfg(test)]
@@ -203,18 +206,14 @@ more text with spaces
 
         #[test]
         fn it_converts_single_quotes() {
-            assert_eq!(
-                convert_quotes_to_curly("'one', 'two'"),
-                "‘one’, ‘two’"
-            );
+            assert_eq!(convert_quotes_to_curly("'one', 'two'"),
+                       "‘one’, ‘two’");
         }
 
         #[test]
         fn it_converts_double_quotes() {
-            assert_eq!(
-                convert_quotes_to_curly(r#""one", "two""#),
-                "“one”, “two”"
-            );
+            assert_eq!(convert_quotes_to_curly(r#""one", "two""#),
+                       "“one”, “two”");
         }
 
         #[test]

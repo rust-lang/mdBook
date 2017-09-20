@@ -14,11 +14,10 @@ pub fn construct_bookitems(path: &PathBuf) -> Result<Vec<BookItem>> {
     Ok(top_items)
 }
 
-fn parse_level(
-    summary: &mut Vec<&str>,
-    current_level: i32,
-    mut section: Vec<i32>,
-) -> Result<Vec<BookItem>> {
+fn parse_level(summary: &mut Vec<&str>,
+               current_level: i32,
+               mut section: Vec<i32>)
+               -> Result<Vec<BookItem>> {
     debug!("[fn]: parse_level");
     let mut items: Vec<BookItem> = vec![];
 
@@ -111,9 +110,8 @@ fn parse_level(
                         // Increment section
                         let len = section.len() - 1;
                         section[len] += 1;
-                        let s = section
-                            .iter()
-                            .fold("".to_owned(), |s, i| s + &i.to_string() + ".");
+                        let s = section.iter()
+                                       .fold("".to_owned(), |s, i| s + &i.to_string() + ".");
                         BookItem::Chapter(s, ch)
                     }
                     _ => parsed_item,
@@ -154,14 +152,10 @@ fn level(line: &str, spaces_in_tab: i32) -> Result<i32> {
     if spaces > 0 {
         debug!("[SUMMARY.md]:");
         debug!("\t[line]: {}", line);
-        debug!(
-            "[*]: There is an indentation error on this line. Indentation should be {} spaces",
-            spaces_in_tab
-        );
-        return Err(Error::new(
-            ErrorKind::Other,
-            format!("Indentation error on line:\n\n{}", line),
-        ));
+        debug!("[*]: There is an indentation error on this line. Indentation should be {} spaces",
+               spaces_in_tab);
+        return Err(Error::new(ErrorKind::Other,
+                              format!("Indentation error on line:\n\n{}", line)));
     }
 
     Ok(level)
