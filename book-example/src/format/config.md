@@ -16,8 +16,10 @@ description = "The example book covers examples."
 
 [output.html]
 destination = "my-example-book"
-additional-css = ["custom.css"]
+additional-css = ["my_custom.css"]
 ```
+
+<div class="custom_border">Formatting elements with custom css.</div>
 
 ## Supported configuration options
 

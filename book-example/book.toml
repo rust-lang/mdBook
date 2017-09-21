@@ -3,4 +3,5 @@ description = "Create book from markdown files. Like Gitbook but implemented in 
 author = "Mathieu David"
 
 [output.html]
+additional-css = ["my_custom.css"]
 mathjax-support = true
