@@ -358,22 +358,24 @@ function run_rust_code(code_block) {
         result_block = code_block.find(".result");
     }
 
-    let text = playpen_text(code_block);;
-
+    let text = playpen_text(code_block);
+    
     var params = {
-        version: "stable",
-        optimize: "0",
-        code: text,
-    };
+	channel: "stable",
+	mode: "debug",
+	crateType: "bin",
+	tests: false,
+	code: text,
+    }
 
     if(text.indexOf("#![feature") !== -1) {
-        params.version = "nightly";
+        params.channel = "nightly";
     }
 
     result_block.text("Running...");
 
     $.ajax({
-        url: "https://play.rust-lang.org/evaluate.json",
+        url: "https://play.rust-lang.org/execute",
         method: "POST",
         crossDomain: true,
         dataType: "json",
@@ -381,7 +383,7 @@ function run_rust_code(code_block) {
         data: JSON.stringify(params),
         timeout: 15000,
         success: function(response){
-            result_block.text(response.result);
+           result_block.text(response.success ? response.stdout : response.stderr);
         },
         error: function(qXHR, textStatus, errorThrown){
             result_block.text("Playground communication " + textStatus);
