@@ -336,17 +336,17 @@ function sidebarToggle() {
     var html = $("html");
     if ( html.hasClass("sidebar-hidden") ) {
         html.removeClass("sidebar-hidden").addClass("sidebar-visible");
-        store.set('sidebar', 'visible');
+        store.set('mdbook-sidebar', 'visible');
     } else if ( html.hasClass("sidebar-visible") ) {
         html.removeClass("sidebar-visible").addClass("sidebar-hidden");
-        store.set('sidebar', 'hidden');
+        store.set('mdbook-sidebar', 'hidden');
     } else {
         if($("#sidebar").position().left === 0){
             html.addClass("sidebar-hidden");
-            store.set('sidebar', 'hidden');
+            store.set('mdbook-sidebar', 'hidden');
         } else {
             html.addClass("sidebar-visible");
-            store.set('sidebar', 'visible');
+            store.set('mdbook-sidebar', 'visible');
         }
     }
 }
