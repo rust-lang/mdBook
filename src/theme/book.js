@@ -7,7 +7,7 @@ $( document ).ready(function() {
     window.onunload = function(){};
 
     // Set theme
-    var theme = store.get('theme');
+    var theme = store.get('mdbook-theme');
     if (theme === null || theme === undefined) { theme = 'light'; }
 
     set_theme(theme);
@@ -145,7 +145,7 @@ $( document ).ready(function() {
             });
         }
 
-        store.set('theme', theme);
+        store.set('mdbook-theme', theme);
 
         $('body').removeClass().addClass(theme);
     }
@@ -336,17 +336,17 @@ function sidebarToggle() {
     var html = $("html");
     if ( html.hasClass("sidebar-hidden") ) {
         html.removeClass("sidebar-hidden").addClass("sidebar-visible");
-        store.set('sidebar', 'visible');
+        store.set('mdbook-sidebar', 'visible');
     } else if ( html.hasClass("sidebar-visible") ) {
         html.removeClass("sidebar-visible").addClass("sidebar-hidden");
-        store.set('sidebar', 'hidden');
+        store.set('mdbook-sidebar', 'hidden');
     } else {
         if($("#sidebar").position().left === 0){
             html.addClass("sidebar-hidden");
-            store.set('sidebar', 'hidden');
+            store.set('mdbook-sidebar', 'hidden');
         } else {
             html.addClass("sidebar-visible");
-            store.set('sidebar', 'visible');
+            store.set('mdbook-sidebar', 'visible');
         }
     }
 }
