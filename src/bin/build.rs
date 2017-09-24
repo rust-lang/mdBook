@@ -17,7 +17,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 // Build command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
-    let book = MDBook::new(&book_dir).read_config()?;
+    let book = MDBook::new(&book_dir);
 
     let mut book = match args.value_of("dest-dir") {
         Some(dest_dir) => book.with_destination(dest_dir),
@@ -30,6 +30,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         book = book.with_curly_quotes(true);
     }
 
+    book = book.read_config()?;
     book.build()?;
 
     if args.is_present("open") {

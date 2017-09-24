@@ -83,7 +83,7 @@ impl MDBook {
             renderer: Box::new(HtmlHandlebars::new()),
 
             livereload: None,
-            create_missing: true,
+            create_missing: false,
         }
     }
 
@@ -175,15 +175,18 @@ impl MDBook {
         let src = self.config.get_source();
         let summary = src.join("SUMMARY.md");
 
-        if summary.exists() && self.create_missing {
+        if summary.exists() {
+            if self.create_missing {
             // As a special case, if we run "mdbook init" on a book which
             // already has a summary we'll read that summary and create
             // stubs for any files which don't already exist (@azerupi likes
             // having access to this shortcut).
             return create_files_from_summary(&src, &summary);
+            } else {
+                return Ok(());
+            }
         }
 
-        // We need to create the summary file
         debug!("[*]: Creating SUMMARY.md");
         let mut f = File::create(&summary)?;
         writeln!(f, "{}", STUB_SUMMARY_CONTENTS)?;
