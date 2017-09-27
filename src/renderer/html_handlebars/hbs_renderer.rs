@@ -253,8 +253,17 @@ impl Renderer for HtmlHandlebars {
 
         let theme = theme::Theme::new(theme_dir);
 
-        debug!("[*]: Register handlebars template");
-        handlebars.register_template_string("index", String::from_utf8(theme.index.clone())?)?;
+        debug!("[*]: Register the index handlebars template");
+        handlebars.register_template_string(
+            "index",
+            String::from_utf8(theme.index.clone())?,
+        )?;
+
+        debug!("[*]: Register the header handlebars template");
+        handlebars.register_partial(
+            "header",
+            String::from_utf8(theme.header.clone())?,
+        )?;
 
         debug!("[*]: Register handlebars helpers");
         self.register_hbs_helpers(&mut handlebars);

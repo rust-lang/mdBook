@@ -7,6 +7,7 @@ use std::io::Read;
 use errors::*;
 
 pub static INDEX: &'static [u8] = include_bytes!("index.hbs");
+pub static HEADER: &'static [u8] = include_bytes!("header.hbs");
 pub static CSS: &'static [u8] = include_bytes!("book.css");
 pub static FAVICON: &'static [u8] = include_bytes!("favicon.png");
 pub static JS: &'static [u8] = include_bytes!("book.js");
@@ -40,6 +41,7 @@ pub static FONT_AWESOME_OTF: &'static [u8] = include_bytes!("_FontAwesome/fonts/
 #[derive(Debug, PartialEq)]
 pub struct Theme {
     pub index: Vec<u8>,
+    pub header: Vec<u8>,
     pub css: Vec<u8>,
     pub favicon: Vec<u8>,
     pub js: Vec<u8>,
@@ -64,17 +66,20 @@ impl Theme {
 
         // Check for individual files, if they exist copy them across
         {
-            let files = vec![(theme_dir.join("index.hbs"), &mut theme.index),
-                             (theme_dir.join("book.js"), &mut theme.js),
-                             (theme_dir.join("book.css"), &mut theme.css),
-                             (theme_dir.join("favicon.png"), &mut theme.favicon),
-                             (theme_dir.join("highlight.js"), &mut theme.highlight_js),
-                             (theme_dir.join("clipboard.min.js"), &mut theme.clipboard_js),
-                             (theme_dir.join("store.js"), &mut theme.store_js),
-                             (theme_dir.join("highlight.css"), &mut theme.highlight_css),
-                             (theme_dir.join("tomorrow-night.css"), &mut theme.tomorrow_night_css),
-                             (theme_dir.join("ayu-highlight.css"), &mut theme.ayu_highlight_css),
-                             (theme_dir.join("jquery.js"), &mut theme.jquery)];
+            let files = vec![
+                (theme_dir.join("index.hbs"), &mut theme.index),
+                (theme_dir.join("header.hbs"), &mut theme.header),
+                (theme_dir.join("book.js"), &mut theme.js),
+                (theme_dir.join("book.css"), &mut theme.css),
+                (theme_dir.join("favicon.png"), &mut theme.favicon),
+                (theme_dir.join("highlight.js"), &mut theme.highlight_js),
+                (theme_dir.join("clipboard.min.js"), &mut theme.clipboard_js),
+                (theme_dir.join("store.js"), &mut theme.store_js),
+                (theme_dir.join("highlight.css"), &mut theme.highlight_css),
+                (theme_dir.join("tomorrow-night.css"), &mut theme.tomorrow_night_css),
+                (theme_dir.join("ayu-highlight.css"), &mut theme.ayu_highlight_css),
+                (theme_dir.join("jquery.js"), &mut theme.jquery),
+            ];
 
             for (filename, dest) in files {
                 if !filename.exists() {
@@ -95,6 +100,7 @@ impl Default for Theme {
     fn default() -> Theme {
         Theme {
             index: INDEX.to_owned(),
+            header: HEADER.to_owned(),
             css: CSS.to_owned(),
             favicon: FAVICON.to_owned(),
             js: JS.to_owned(),
@@ -166,6 +172,7 @@ mod tests {
 
         let empty = Theme {
             index: Vec::new(),
+            header: Vec::new(),
             css: Vec::new(),
             favicon: Vec::new(),
             js: Vec::new(),
