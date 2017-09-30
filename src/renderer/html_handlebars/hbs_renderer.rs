@@ -536,7 +536,6 @@ fn fix_code_blocks(html: &str) -> String {
 
 fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
     let regex = Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap();
-<<<<<<< HEAD
     regex.replace_all(html, |caps: &Captures| {
         let text = &caps[1];
         let classes = &caps[2];

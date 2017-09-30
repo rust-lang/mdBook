@@ -4,7 +4,7 @@ pub use self::bookitem::{BookItem, BookItems};
 
 use std::path::{Path, PathBuf};
 use std::fs::{self, File};
-use std::io::{Read, Write};
+use std::io::Write;
 use std::process::Command;
 use tempdir::TempDir;
 

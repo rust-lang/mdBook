@@ -159,12 +159,17 @@ mod tests {
         build-dir = "outputs"
 
         [output.html]
+        theme = "./themedir"
         curly-quotes = true
         google-analytics = "123456"
         additional-css = ["./foo/bar/baz.css"]
+
+        [output.html.playpen]
+        editable = true
+        editor = "ace"
         "#;
 
-        let book_should_be = BookConfig_ {
+        let book_should_be = BookConfig {
             title: Some(String::from("Some Book")),
             authors: vec![String::from("Michael-F-Bryan <michaelfbryan@gmail.com>")],
             description: Some(String::from("A completely useless book")),
@@ -173,10 +178,16 @@ mod tests {
             build_dir: PathBuf::from("outputs"),
             ..Default::default()
         };
-        let html_should_be = HtmlConfig_ {
+        let playpen_should_be = Playpen {
+            editable: true,
+            editor: PathBuf::from("ace"),
+        };
+        let html_should_be = HtmlConfig {
             curly_quotes: true,
             google_analytics: Some(String::from("123456")),
             additional_css: vec![PathBuf::from("./foo/bar/baz.css")],
+            theme: Some(PathBuf::from("./themedir")),
+            playpen: playpen_should_be,
             ..Default::default()
         };
 
