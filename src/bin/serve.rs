@@ -3,7 +3,7 @@ extern crate staticfile;
 extern crate ws;
 
 use std;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use self::iron::{status, AfterMiddleware, Chain, Iron, IronError, IronResult, Request, Response,
                  Set};
 use clap::{App, ArgMatches, SubCommand};
@@ -29,10 +29,6 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
             "-d, --dest-dir=[dest-dir] 'The output directory for \
              your book{n}(Defaults to ./book when omitted)'",
         )
-        .arg_from_usage(
-            "--curly-quotes 'Convert straight quotes to curly quotes, except \
-             for those that occur in code blocks and code spans'",
-        )
         .arg_from_usage("-p, --port=[port] 'Use another port{n}(Defaults to 3000)'")
         .arg_from_usage(
             "-w, --websocket-port=[ws-port] 'Use another port for the \
@@ -53,15 +49,10 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     const RELOAD_COMMAND: &'static str = "reload";
 
     let book_dir = get_book_dir(args);
-    let book = MDBook::new(&book_dir).read_config()?;
+    let mut book = MDBook::new(&book_dir).read_config()?;
 
-    let mut book = match args.value_of("dest-dir") {
-        Some(dest_dir) => book.with_destination(Path::new(dest_dir)),
-        None => book,
-    };
-
-    if args.is_present("curly-quotes") {
-        book = book.with_curly_quotes(true);
+    if let Some(dest_dir) = args.value_of("dest-dir") {
+        book.config.book.build_dir = PathBuf::from(dest_dir);
     }
 
     let port = args.value_of("port").unwrap_or("3000");
@@ -73,8 +64,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let address = format!("{}:{}", interface, port);
     let ws_address = format!("{}:{}", interface, ws_port);
 
-    book.set_livereload(format!(
-        r#"
+    book.livereload = Some(format!(r#"
     <script type="text/javascript">
         var socket = new WebSocket("ws://{}:{}");
         socket.onmessage = function (event) {{

@@ -47,7 +47,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     }
 
     // Because of `src/book/mdbook.rs#L37-L39`, `dest` will always start with `root`
-    let is_dest_inside_root = book.get_destination().starts_with(book.get_root());
+    let is_dest_inside_root = book.get_destination().starts_with(&book.root);
 
     if !args.is_present("force") && is_dest_inside_root {
         println!("\nDo you want a .gitignore to be created? (y/n)");

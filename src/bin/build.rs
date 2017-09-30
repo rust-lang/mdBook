@@ -1,4 +1,5 @@
-use clap::{App, ArgMatches, SubCommand};
+use std::path::PathBuf;
+use clap::{ArgMatches, SubCommand, App};
 use mdbook::MDBook;
 use mdbook::errors::Result;
 use {get_book_dir, open};
@@ -16,10 +17,6 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
             "--no-create 'Will not create non-existent files linked from SUMMARY.md'",
         )
         .arg_from_usage(
-            "--curly-quotes 'Convert straight quotes to curly quotes, except for those \
-             that occur in code blocks and code spans'",
-        )
-        .arg_from_usage(
             "[dir] 'A directory for your book{n}(Defaults to Current Directory \
              when omitted)'",
         )
@@ -28,19 +25,14 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 // Build command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
-    let book = MDBook::new(&book_dir).read_config()?;
+    let mut book = MDBook::new(&book_dir).read_config()?;
 
-    let mut book = match args.value_of("dest-dir") {
-        Some(dest_dir) => book.with_destination(dest_dir),
-        None => book,
-    };
+    if let Some(dest_dir) = args.value_of("dest-dir") {
+        book.config.book.build_dir = PathBuf::from(dest_dir);
+    }
 
     if args.is_present("no-create") {
         book.create_missing = false;
-    }
-
-    if args.is_present("curly-quotes") {
-        book = book.with_curly_quotes(true);
     }
 
     book.build()?;

@@ -1,6 +1,6 @@
 extern crate notify;
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use self::notify::Watcher;
 use std::time::Duration;
 use std::sync::mpsc::channel;
@@ -19,10 +19,6 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
              your book{n}(Defaults to ./book when omitted)'",
         )
         .arg_from_usage(
-            "--curly-quotes 'Convert straight quotes to curly quotes, except \
-             for those that occur in code blocks and code spans'",
-        )
-        .arg_from_usage(
             "[dir] 'A directory for your book{n}(Defaults to \
              Current Directory when omitted)'",
         )
@@ -31,15 +27,10 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 // Watch command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
-    let book = MDBook::new(&book_dir).read_config()?;
+    let mut book = MDBook::new(&book_dir).read_config()?;
 
-    let mut book = match args.value_of("dest-dir") {
-        Some(dest_dir) => book.with_destination(dest_dir),
-        None => book,
-    };
-
-    if args.is_present("curly-quotes") {
-        book = book.with_curly_quotes(true);
+    if let Some(dest_dir) = args.value_of("dest-dir") {
+        book.config.book.build_dir = PathBuf::from(dest_dir);
     }
 
     if args.is_present("open") {
@@ -86,7 +77,6 @@ where
     // Add the theme directory to the watcher
     watcher.watch(book.get_theme_path(), Recursive)
            .unwrap_or_default();
-
 
     // Add the book.{json,toml} file to the watcher if it exists, because it's not
     // located in the source directory
