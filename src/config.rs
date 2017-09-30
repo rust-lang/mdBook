@@ -106,7 +106,7 @@ impl Default for BookConfig {
             authors: Vec::new(),
             description: None,
             src: PathBuf::from("src"),
-            build_dir: PathBuf::from("build"),
+            build_dir: PathBuf::from("book"),
             multilingual: false,
         }
     }

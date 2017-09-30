@@ -136,7 +136,7 @@ impl MDBook {
         }
 
         {
-            let dest = &self.config.book.build_dir;
+            let dest = self.get_destination();
             if !dest.exists() {
                 debug!("[*]: {} does not exist, trying to create directory", dest.display());
                 fs::create_dir_all(dest)?;
@@ -176,7 +176,7 @@ impl MDBook {
                 BookItem::Chapter(_, ref ch) | BookItem::Affix(ref ch) => ch,
             };
             if !ch.path.as_os_str().is_empty() {
-                let path = self.config.book.src.join(&ch.path);
+                let path = self.get_source().join(&ch.path);
 
                 if !path.exists() {
                     if !self.create_missing {
@@ -238,7 +238,7 @@ impl MDBook {
         self.init()?;
 
         // Clean output directory
-        utils::fs::remove_dir_content(&self.config.book.build_dir)?;
+        utils::fs::remove_dir_content(&self.get_destination())?;
 
         self.renderer.render(self)
     }

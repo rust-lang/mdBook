@@ -82,7 +82,7 @@ impl HtmlHandlebars {
                     &normalize_path(filepath.to_str().ok_or_else(|| Error::from(
                         format!("Bad file name: {}", filepath.display()),
                     ))?),
-                    ctx.book.get_html_config().get_playpen_config(),
+                    &ctx.book.config.html_config().unwrap_or_default().playpen,
                 );
 
                 // Write to file
@@ -128,7 +128,7 @@ impl HtmlHandlebars {
     fn post_process(&self,
                     rendered: String,
                     filepath: &str,
-                    playpen_config: &PlaypenConfig)
+                    playpen_config: &Playpen)
                     -> String {
         let rendered = build_header_links(&rendered, filepath);
         let rendered = fix_anchor_links(&rendered, filepath);
@@ -265,12 +265,11 @@ impl Renderer for HtmlHandlebars {
         let mut print_content = String::new();
 
         // TODO: The Renderer trait should really pass in where it wants us to build to...
-        let destination = book.root.join(&book.config.book.build_dir);
+        let destination = book.get_destination();
 
         debug!("[*]: Check if destination directory exists");
-        if fs::create_dir_all(&destination).is_err() {
-            bail!("Unexpected error when constructing destination path");
-        }
+        fs::create_dir_all(&destination)
+            .chain_err(|| "Unexpected error when constructing destination path")?;
 
         for (i, item) in book.iter().enumerate() {
             let ctx = RenderItemContext {
@@ -297,7 +296,7 @@ impl Renderer for HtmlHandlebars {
 
         let rendered = self.post_process(rendered,
                                          "print.html",
-                                         book.get_html_config().get_playpen_config());
+                                         &book.config.html_config().unwrap_or_default().playpen);
 
         book.write_file(Path::new("print").with_extension("html"),
                         &rendered.into_bytes())?;
