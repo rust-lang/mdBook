@@ -7,17 +7,17 @@ use serde::Deserialize;
 
 use errors::*;
 
-pub mod bookconfig;
-pub mod htmlconfig;
-pub mod playpenconfig;
-pub mod tomlconfig;
-pub mod jsonconfig;
+// pub mod bookconfig;
+// pub mod htmlconfig;
+// pub mod playpenconfig;
+// pub mod tomlconfig;
+// pub mod jsonconfig;
 
 // Re-export the config structs
-pub use self::bookconfig::BookConfig;
-pub use self::htmlconfig::HtmlConfig;
-pub use self::playpenconfig::PlaypenConfig;
-pub use self::tomlconfig::TomlConfig;
+// pub use self::bookconfig::BookConfig;
+// pub use self::htmlconfig::HtmlConfig;
+// pub use self::playpenconfig::PlaypenConfig;
+// pub use self::tomlconfig::TomlConfig;
 
 
 /// The overall configuration object for MDBook.
@@ -25,7 +25,7 @@ pub use self::tomlconfig::TomlConfig;
 #[serde(default)]
 pub struct Config {
     /// Metadata about the book.
-    pub book: BookConfig_,
+    pub book: BookConfig,
     /// Arbitrary information which renderers can use during the rendering
     /// stage.
     pub output: BTreeMap<String, Value>,
@@ -58,7 +58,7 @@ impl Config {
     ///
     /// This is for compatibility only. It will be removed completely once the
     /// rendering and plugin system is established.
-    pub fn html_config(&self) -> Option<HtmlConfig_> {
+    pub fn html_config(&self) -> Option<HtmlConfig> {
         self.try_get_output("html").ok()
     }
 
@@ -96,7 +96,7 @@ fn get_deserialized<'de, T: Deserialize<'de>, S: AsRef<str>>(name: S, table: &BT
 /// loading it from disk.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
-pub struct BookConfig_ {
+pub struct BookConfig {
     /// The book's title.
     pub title: Option<String>,
     /// The book's authors.
@@ -111,9 +111,9 @@ pub struct BookConfig_ {
     pub multilingual: bool,
 }
 
-impl Default for BookConfig_ {
-    fn default() -> BookConfig_ {
-        BookConfig_ {
+impl Default for BookConfig {
+    fn default() -> BookConfig {
+        BookConfig {
             title: None,
             authors: Vec::new(),
             description: None,
@@ -126,7 +126,7 @@ impl Default for BookConfig_ {
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
-pub struct HtmlConfig_ {
+pub struct HtmlConfig {
     pub theme: Option<PathBuf>,
     pub curly_quotes: bool,
     pub mathjax_support: bool,
