@@ -137,7 +137,10 @@ pub struct HtmlConfig {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-pub struct Playpen;
+pub struct Playpen {
+    pub editor: PathBuf,
+    pub editable: bool,
+}
 
 
 #[cfg(test)]

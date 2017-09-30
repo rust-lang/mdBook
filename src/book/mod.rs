@@ -17,12 +17,12 @@ use config::Config;
 
 pub struct MDBook {
     pub root: PathBuf,
-    config: Config,
+    pub config: Config,
 
     pub content: Vec<BookItem>,
     renderer: Box<Renderer>,
 
-    livereload: Option<String>,
+    pub livereload: Option<String>,
 
     /// Should `mdbook build` create files referenced from SUMMARY.md if they
     /// don't exist
@@ -146,7 +146,7 @@ impl MDBook {
             let src = self.get_source();
             if !src.exists() {
                 debug!("[*]: {} does not exist, trying to create directory", src.display());
-                fs::create_dir_all(src)?;
+                fs::create_dir_all(&src)?;
             }
 
             let summary = src.join("SUMMARY.md");
@@ -383,20 +383,18 @@ impl MDBook {
         Ok(())
     }
 
-    fn get_destination(&self) -> PathBuf {
+    pub fn get_destination(&self) -> PathBuf {
         self.root.join(&self.config.book.build_dir)
     }
 
-    fn get_source(&self) -> PathBuf {
+    pub fn get_source(&self) -> PathBuf {
         self.root.join(&self.config.book.src)
     }
 
-    fn theme_dir(&self) -> PathBuf {
-        let relative_to_book = match self.config.html_config().and_then(|h| h.theme) {
-            Some(ref d) => d,
-            None => Path::new("theme"),
-        };
-
-        self.root.join(relative_to_book)
+    pub fn theme_dir(&self) -> PathBuf {
+        match self.config.html_config().and_then(|h| h.theme) {
+            Some(d) => self.root.join(d),
+            None => self.root.join("theme"),
+        }
     }
 }

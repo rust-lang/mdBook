@@ -3,9 +3,9 @@ use preprocess;
 use renderer::Renderer;
 use book::MDBook;
 use book::bookitem::{BookItem, Chapter};
-use config::PlaypenConfig;
-use {theme, utils};
-use theme::{playpen_editor, Theme};
+use config::{Config, Playpen, HtmlConfig};
+use {utils, theme};
+use theme::{Theme, playpen_editor};
 use errors::*;
 use regex::{Captures, Regex};
 
@@ -45,7 +45,7 @@ impl HtmlHandlebars {
 
                 // Parse and expand links
                 let content = preprocess::links::replace_all(&content, base)?;
-                let content = utils::render_markdown(&content, ctx.book.get_curly_quotes());
+                let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
                 print_content.push_str(&content);
 
                 // Update the context with data for this file
@@ -138,7 +138,7 @@ impl HtmlHandlebars {
         rendered
     }
 
-    fn copy_static_files(&self, book: &MDBook, theme: &Theme) -> Result<()> {
+    fn copy_static_files(&self, book: &MDBook, theme: &Theme, html_config: &HtmlConfig) -> Result<()> {
         book.write_file("book.js", &theme.js)?;
         book.write_file("book.css", &theme.css)?;
         book.write_file("favicon.png", &theme.favicon)?;
@@ -163,12 +163,12 @@ impl HtmlHandlebars {
         book.write_file("_FontAwesome/fonts/FontAwesome.ttf",
                         theme::FONT_AWESOME_TTF)?;
 
-        let playpen_config = book.get_html_config().get_playpen_config();
+        let playpen_config = &html_config.playpen;
 
         // Ace is a very large dependency, so only load it when requested
-        if playpen_config.is_editable() {
+        if playpen_config.editable {
             // Load the editor
-            let editor = playpen_editor::PlaypenEditor::new(playpen_config.get_editor());
+            let editor = playpen_editor::PlaypenEditor::new(&playpen_config.editor);
             book.write_file("editor.js", &editor.js)?;
             book.write_file("ace.js", &editor.ace_js)?;
             book.write_file("mode-rust.js", &editor.mode_rust_js)?;
@@ -186,7 +186,7 @@ impl HtmlHandlebars {
         let mut f = File::open(custom_file)?;
         f.read_to_end(&mut data)?;
 
-        let name = match custom_file.strip_prefix(book.get_root()) {
+        let name = match custom_file.strip_prefix(&book.root) {
             Ok(p) => p.to_str().expect("Could not convert to str"),
             Err(_) => {
                 custom_file.file_name()
@@ -224,9 +224,11 @@ impl HtmlHandlebars {
     /// Copy across any additional CSS and JavaScript files which the book
     /// has been configured to use.
     fn copy_additional_css_and_js(&self, book: &MDBook) -> Result<()> {
-        let custom_files = book.get_additional_css()
+        let html = book.config.html_config().unwrap_or_default();
+
+        let custom_files = html.additional_css
                                .iter()
-                               .chain(book.get_additional_js().iter());
+                               .chain(html.additional_js.iter());
 
         for custom_file in custom_files {
             self.write_custom_file(custom_file, book)?;
@@ -239,10 +241,17 @@ impl HtmlHandlebars {
 
 impl Renderer for HtmlHandlebars {
     fn render(&self, book: &MDBook) -> Result<()> {
+        let html_config = book.config.html_config().unwrap_or_default();
+
         debug!("[fn]: render");
         let mut handlebars = Handlebars::new();
 
-        let theme = theme::Theme::new(book.get_theme_path());
+        let theme_dir = match html_config.theme {
+            Some(ref theme) => theme,
+            None => Path::new("theme"),
+        };
+
+        let theme = theme::Theme::new(theme_dir);
 
         debug!("[*]: Register handlebars template");
         handlebars.register_template_string("index", String::from_utf8(theme.index.clone())?)?;
@@ -250,12 +259,13 @@ impl Renderer for HtmlHandlebars {
         debug!("[*]: Register handlebars helpers");
         self.register_hbs_helpers(&mut handlebars);
 
-        let mut data = make_data(book)?;
+        let mut data = make_data(book, &book.config)?;
 
         // Print version
         let mut print_content = String::new();
 
-        let destination = book.get_destination();
+        // TODO: The Renderer trait should really pass in where it wants us to build to...
+        let destination = book.root.join(&book.config.book.build_dir);
 
         debug!("[*]: Check if destination directory exists");
         if fs::create_dir_all(&destination).is_err() {
@@ -269,13 +279,16 @@ impl Renderer for HtmlHandlebars {
                 destination: destination.to_path_buf(),
                 data: data.clone(),
                 is_index: i == 0,
+                html_config: html_config.clone(),
             };
             self.render_item(item, ctx, &mut print_content)?;
         }
 
         // Print version
         self.configure_print_version(&mut data, &print_content);
-        data.insert("title".to_owned(), json!(book.get_title()));
+        if let Some(ref title) = book.config.book.title {
+            data.insert("title".to_owned(), json!(title));
+        }
 
         // Render the handlebars template with the data
         debug!("[*]: Render template");
@@ -292,42 +305,44 @@ impl Renderer for HtmlHandlebars {
 
         // Copy static files (js, css, images, ...)
         debug!("[*] Copy static files");
-        self.copy_static_files(book, &theme)?;
+        self.copy_static_files(book, &theme, &html_config)?;
         self.copy_additional_css_and_js(book)?;
 
         // Copy all remaining files
-        utils::fs::copy_files_except_ext(book.get_source(), destination, true, &["md"])?;
+        let src = book.get_source();
+        utils::fs::copy_files_except_ext(&src, &destination, true, &["md"])?;
 
         Ok(())
     }
 }
 
-fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>> {
+fn make_data(book: &MDBook, config: &Config) -> Result<serde_json::Map<String, serde_json::Value>> {
     debug!("[fn]: make_data");
+    let html = config.html_config().unwrap_or_default();
 
     let mut data = serde_json::Map::new();
     data.insert("language".to_owned(), json!("en"));
-    data.insert("book_title".to_owned(), json!(book.get_title()));
-    data.insert("description".to_owned(), json!(book.get_description()));
+    data.insert("book_title".to_owned(), json!(config.book.title.clone().unwrap_or_default()));
+    data.insert("description".to_owned(), json!(config.book.description.clone().unwrap_or_default()));
     data.insert("favicon".to_owned(), json!("favicon.png"));
-    if let Some(livereload) = book.get_livereload() {
+    if let Some(ref livereload) = book.livereload {
         data.insert("livereload".to_owned(), json!(livereload));
     }
 
     // Add google analytics tag
-    if let Some(ref ga) = book.get_google_analytics_id() {
+    if let Some(ref ga) = book.config.html_config().and_then(|html| html.google_analytics) {
         data.insert("google_analytics".to_owned(), json!(ga));
     }
 
-    if book.get_mathjax_support() {
+    if html.mathjax_support {
         data.insert("mathjax_support".to_owned(), json!(true));
     }
 
     // Add check to see if there is an additional style
-    if book.has_additional_css() {
+    if !html.additional_css.is_empty() {
         let mut css = Vec::new();
-        for style in book.get_additional_css() {
-            match style.strip_prefix(book.get_root()) {
+        for style in &html.additional_css {
+            match style.strip_prefix(&book.root) {
                 Ok(p) => css.push(p.to_str().expect("Could not convert to str")),
                 Err(_) => {
                     css.push(style.file_name()
@@ -341,10 +356,10 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
     }
 
     // Add check to see if there is an additional script
-    if book.has_additional_js() {
+    if !html.additional_js.is_empty() {
         let mut js = Vec::new();
-        for script in book.get_additional_js() {
-            match script.strip_prefix(book.get_root()) {
+        for script in &html.additional_js {
+            match script.strip_prefix(&book.root) {
                 Ok(p) => js.push(p.to_str().expect("Could not convert to str")),
                 Err(_) => {
                     js.push(script.file_name()
@@ -357,7 +372,7 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
         data.insert("additional_js".to_owned(), json!(js));
     }
 
-    if book.get_html_config().get_playpen_config().is_editable() {
+    if html.playpen.editable {
         data.insert("playpens_editable".to_owned(), json!(true));
         data.insert("editor_js".to_owned(), json!("editor.js"));
         data.insert("ace_js".to_owned(), json!("ace.js"));
@@ -519,8 +534,9 @@ fn fix_code_blocks(html: &str) -> String {
          .into_owned()
 }
 
-fn add_playpen_pre(html: &str, playpen_config: &PlaypenConfig) -> String {
+fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
     let regex = Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap();
+<<<<<<< HEAD
     regex.replace_all(html, |caps: &Captures| {
         let text = &caps[1];
         let classes = &caps[2];
@@ -530,7 +546,7 @@ fn add_playpen_pre(html: &str, playpen_config: &PlaypenConfig) -> String {
             classes.contains("mdbook-runnable")
         {
             // wrap the contents in an external pre block
-            if playpen_config.is_editable() && classes.contains("editable") ||
+            if playpen_config.editable && classes.contains("editable") ||
                 text.contains("fn main") || text.contains("quick_main!")
             {
                 format!("<pre class=\"playpen\">{}</pre>", text)
@@ -583,6 +599,7 @@ struct RenderItemContext<'a> {
     destination: PathBuf,
     data: serde_json::Map<String, serde_json::Value>,
     is_index: bool,
+    html_config: HtmlConfig,
 }
 
 pub fn normalize_path(path: &str) -> String {
