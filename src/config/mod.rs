@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 use std::fs::File;
 use std::io::Read;
 use toml::{self, Value};
+use serde::Deserialize;
 
 use errors::*;
 
@@ -20,7 +21,7 @@ pub use self::tomlconfig::TomlConfig;
 
 
 /// The overall configuration object for MDBook.
-#[derive(Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Config {
     /// Metadata about the book.
@@ -58,16 +59,42 @@ impl Config {
     /// This is for compatibility only. It will be removed completely once the
     /// rendering and plugin system is established.
     pub fn html_config(&self) -> Option<HtmlConfig_> {
-        self.output
-            .get("html")
-            .and_then(|value| HtmlConfig_::from_toml(value).ok())
+        self.try_get_output("html").ok()
+    }
+
+    /// Try to get an output and deserialize it as a `T`.
+    pub fn try_get_output<'de, T: Deserialize<'de>, S: AsRef<str>>(&self, name: S) -> Result<T> {
+        get_deserialized(name, &self.output)
+    }
+
+    /// Try to get the configuration for a preprocessor, deserializing it as a
+    /// `T`.
+    pub fn try_get_preprocessor<'de, T: Deserialize<'de>, S: AsRef<str>>(&self, name: S) -> Result<T> {
+        get_deserialized(name, &self.preprocess)
+    }
+
+    /// Try to get the configuration for a postprocessor, deserializing it as a
+    /// `T`.
+    pub fn try_get_postprocessor<'de, T: Deserialize<'de>, S: AsRef<str>>(&self, name: S) -> Result<T> {
+        get_deserialized(name, &self.postprocess)
+    }
+}
+
+/// Convenience function to load a value from some table then deserialize it.
+fn get_deserialized<'de, T: Deserialize<'de>, S: AsRef<str>>(name: S, table: &BTreeMap<String, Value>) -> Result<T> {
+    match table.get(name.as_ref()) {
+        Some(output) => output
+            .clone()
+            .try_into()
+            .chain_err(|| "Couldn't deserialize the value"),
+        None => bail!("Key Not Found"),
     }
 }
 
 
 /// Configuration options which are specific to the book and required for
 /// loading it from disk.
-#[derive(Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct BookConfig_ {
     /// The book's title.
@@ -84,7 +111,20 @@ pub struct BookConfig_ {
     pub multilingual: bool,
 }
 
-#[derive(Clone, Default, PartialEq, Serialize, Deserialize)]
+impl Default for BookConfig_ {
+    fn default() -> BookConfig_ {
+        BookConfig_ {
+            title: None,
+            authors: Vec::new(),
+            description: None,
+            src: PathBuf::from("src"),
+            build_dir: PathBuf::from("build"),
+            multilingual: false,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct HtmlConfig_ {
     pub theme: Option<PathBuf>,
@@ -96,14 +136,78 @@ pub struct HtmlConfig_ {
     pub playpen: Playpen,
 }
 
-impl HtmlConfig_ {
-    pub fn from_toml(value: &Value) -> Result<HtmlConfig_> {
-        value
-            .clone()
-            .try_into()
-            .chain_err(|| "Unable to deserialize the HTML config")
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct Playpen;
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn load_a_complex_config_file() {
+        let src = r#"
+        [book]
+        title = "Some Book"
+        authors = ["Michael-F-Bryan <michaelfbryan@gmail.com>"]
+        description = "A completely useless book"
+        multilingual = true
+        src = "source"
+        build-dir = "outputs"
+
+        [output.html]
+        curly-quotes = true
+        google-analytics = "123456"
+        additional-css = ["./foo/bar/baz.css"]
+        "#;
+
+        let book_should_be = BookConfig_ {
+            title: Some(String::from("Some Book")),
+            authors: vec![String::from("Michael-F-Bryan <michaelfbryan@gmail.com>")],
+            description: Some(String::from("A completely useless book")),
+            multilingual: true,
+            src: PathBuf::from("source"),
+            build_dir: PathBuf::from("outputs"),
+            ..Default::default()
+        };
+        let html_should_be = HtmlConfig_ {
+            curly_quotes: true,
+            google_analytics: Some(String::from("123456")),
+            additional_css: vec![PathBuf::from("./foo/bar/baz.css")],
+            ..Default::default()
+        };
+
+        let got = Config::from_str(src).unwrap();
+
+        assert_eq!(got.book, book_should_be);
+        assert_eq!(got.html_config().unwrap(), html_should_be);
+    }
+
+    #[test]
+    fn load_arbitrary_output_type() {
+        #[derive(Debug, Deserialize, PartialEq)]
+        struct RandomOutput {
+            foo: u32,
+            bar: String,
+            baz: Vec<bool>,
+        }
+
+        let src = r#"
+        [output.random]
+        foo = 5
+        bar = "Hello World"
+        baz = [true, true, false]
+        "#;
+
+        let should_be = RandomOutput {
+            foo: 5,
+            bar: String::from("Hello World"),
+            baz: vec![true, true, false],
+        };
+
+        let cfg = Config::from_str(src).unwrap();
+        let got: RandomOutput = cfg.try_get_output("random").unwrap();
+
+        assert_eq!(got, should_be);
     }
 }
-
-#[derive(Clone, Default, PartialEq, Serialize, Deserialize)]
-pub struct Playpen;
