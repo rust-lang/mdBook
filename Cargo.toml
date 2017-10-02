@@ -29,6 +29,7 @@ toml = "0.4"
 open = "1.1"
 regex = "0.2.1"
 tempdir = "0.3.4"
+elasticlunr = { git = "https://github.com/mattico/elasticlunr-rs", optional = true}
 
 # Watch feature
 notify = { version = "4.0", optional = true }
@@ -55,6 +56,7 @@ output = []
 regenerate-css = []
 watch = ["notify", "time", "crossbeam"]
 serve = ["iron", "staticfile", "ws"]
+searchindex = ["elasticlunr"]
 
 [[bin]]
 doc = false

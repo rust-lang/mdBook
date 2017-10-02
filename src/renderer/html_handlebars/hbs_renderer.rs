@@ -9,6 +9,9 @@ use theme::{Theme, playpen_editor};
 use errors::*;
 use regex::{Captures, Regex};
 
+#[cfg(feature = "searchindex")]
+use elasticlunr;
+
 use std::ascii::AsciiExt;
 use std::path::{Path, PathBuf};
 use std::fs::{self, File};
@@ -31,7 +34,8 @@ impl HtmlHandlebars {
     fn render_item(&self,
                    item: &BookItem,
                    mut ctx: RenderItemContext,
-                   print_content: &mut String)
+                   print_content: &mut String,
+                   search_documents : &mut Vec<utils::SearchDocument>)
                    -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
         match *item {
@@ -42,6 +46,15 @@ impl HtmlHandlebars {
                 let content = utils::fs::file_to_string(&path)?;
                 let base = path.parent()
                                .ok_or_else(|| String::from("Invalid bookitem path!"))?;
+                let path = ch.path.to_str().ok_or_else(|| {
+                    io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
+                })?;
+
+                utils::render_markdown_into_searchindex(search_documents,
+                    &content,
+                    path,
+                    &vec![],
+                    id_from_content);
 
                 // Parse and expand links
                 let content = preprocess::links::replace_all(&content, base)?;
@@ -49,11 +62,6 @@ impl HtmlHandlebars {
                 print_content.push_str(&content);
 
                 // Update the context with data for this file
-                let path = ch.path.to_str().ok_or_else(|| {
-                                                           io::Error::new(io::ErrorKind::Other,
-                                                                          "Could not convert path \
-                                                                           to str")
-                                                       })?;
 
                 // Non-lexical lifetimes needed :'(
                 let title: String;
@@ -264,6 +272,9 @@ impl Renderer for HtmlHandlebars {
         // Print version
         let mut print_content = String::new();
 
+        // Search index
+        let mut search_documents = vec![];
+
         // TODO: The Renderer trait should really pass in where it wants us to build to...
         let destination = book.get_destination();
 
@@ -280,8 +291,11 @@ impl Renderer for HtmlHandlebars {
                 is_index: i == 0,
                 html_config: html_config.clone(),
             };
-            self.render_item(item, ctx, &mut print_content)?;
+            self.render_item(item, ctx, &mut print_content, &mut search_documents)?;
         }
+
+        // Search index
+        make_searchindex(book, &search_documents)?;
 
         // Print version
         self.configure_print_version(&mut data, &print_content);
@@ -300,7 +314,7 @@ impl Renderer for HtmlHandlebars {
 
         book.write_file(Path::new("print").with_extension("html"),
                         &rendered.into_bytes())?;
-        info!("[*] Creating print.html ✓");
+        info!("[*] Creating \"print.html\" ✓");
 
         // Copy static files (js, css, images, ...)
         debug!("[*] Copy static files");
@@ -619,6 +633,26 @@ pub fn normalize_id(content: &str) -> String {
            .collect::<String>()
 }
 
+#[cfg(not(feature = "searchindex"))]
+fn make_searchindex(_book: &MDBook, _search_documents : &Vec<utils::SearchDocument>) -> Result<()> {
+    Ok(())
+}
+
+#[cfg(feature = "searchindex")]
+fn make_searchindex(book: &MDBook, search_documents : &Vec<utils::SearchDocument>) -> Result<()> {
+    let mut index = elasticlunr::IndexBuilder::new();
+    for sd in search_documents {
+        index.add_document(&sd.title, &sd.body);
+    }
+
+    book.write_file(
+        Path::new("searchindex").with_extension("json"),
+        &index.to_json().as_bytes(),
+    )?;
+    info!("[*] Creating \"searchindex.json\" ✓");
+
+    Ok(())
+}
 
 #[cfg(test)]
 mod tests {

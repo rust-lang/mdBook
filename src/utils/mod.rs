@@ -3,7 +3,107 @@ pub mod fs;
 use pulldown_cmark::{html, Event, Options, Parser, Tag, OPTION_ENABLE_FOOTNOTES,
                      OPTION_ENABLE_TABLES};
 use std::borrow::Cow;
+use std::fmt::Write;
+use regex::Regex;
+use std::rc::Rc;
 
+/// A heading together with the successive content until the next heading will
+/// make up one `SearchDocument`. It represents some independently searchable part of the book.
+#[derive(Default, Debug)]
+pub struct SearchDocument {
+    // Corresponding heading
+    pub title : String,
+    // Content: Flatted paragraphs, lists, code
+    pub body : String,
+    /// Needed information to generate a link to the corresponding title anchor
+    /// First part is the `reference_base` that should be the same for all documents that
+    /// came from the same `.md` file. The second part is derived from the heading of the search
+    /// document.
+    pub sref : (Rc<String>, Option<String>),
+    // Breadcrumbs like ["Main Chapter Title", "Sub Chapter Title", "H1 Heading"]
+    // as a human understandable path to the search document.
+    pub breadcrumbs : Vec<Rc<String>>,
+}
+
+impl SearchDocument {
+    fn new(sref0 : &Rc<String>, bcs : &Vec<Rc<String>>) -> SearchDocument {
+        SearchDocument {
+            title : "".to_owned(),
+            body : "".to_owned(),
+            sref : (sref0.clone(), None),
+            breadcrumbs : bcs.clone()
+        }
+    }
+
+    fn has_content(&self) -> bool {
+        self.title.len() > 0
+    }
+
+    fn add(&mut self, text : &str, to_title : bool) {
+        if to_title {
+            self.title.write_str(&text).unwrap();
+        } else {
+            self.body.write_str(&text).unwrap();
+            self.body.write_str(&" ").unwrap();
+        }
+    }
+}
+
+/// Renders markdown into flat unformatted text for usage in the search index.
+/// Refer to the struct `SearchDocument`.
+///
+/// The field `sref` in the `SearchDocument` struct becomes
+///    `(reference_base, Some(heading_to_sref("The Section Heading")))`
+pub fn render_markdown_into_searchindex<F>(
+    search_documents: &mut Vec<SearchDocument>,
+    text: &str,
+    reference_base: &str,
+    breadcrumbs : &Vec<Rc<String>>,
+    heading_to_sref : F)
+    where F : Fn(&str) -> String {
+
+    let mut opts = Options::empty();
+    opts.insert(OPTION_ENABLE_TABLES);
+    opts.insert(OPTION_ENABLE_FOOTNOTES);
+    let p = Parser::new_ext(text, opts);
+
+    let reference_base = Rc::new(reference_base.to_owned());
+    let mut current = SearchDocument::new(&reference_base, breadcrumbs);
+    let mut in_header = false;
+
+    for event in p {
+        match event {
+            Event::Start(Tag::Header(i)) if i <= 3 => {
+                if current.has_content() {
+                    search_documents.push(current);
+                }
+                current = SearchDocument::new(&reference_base, breadcrumbs);
+                in_header = true;
+            }
+            Event::End(Tag::Header(_)) => {
+                // Possible extension: Use h1,h2,h3 as hierarchy for the breadcrumbs
+                current.breadcrumbs.push(Rc::new(current.title.clone()));
+                current.sref.1 = Some(heading_to_sref(&current.title));
+                in_header = false;
+            }
+            Event::Start(_) | Event::End(_) => {}
+            Event::Text(text) => {
+                current.add(&text, in_header);
+            }
+            Event::Html(html) | Event::InlineHtml(html) => {
+                current.body.write_str(&trim_html_tags(&html)).unwrap();
+            }
+            Event::FootnoteReference(_) => {}
+            Event::SoftBreak | Event::HardBreak => {}
+        }
+    }
+    search_documents.push(current);
+}
+
+fn trim_html_tags<'a>(text : &'a str) -> Cow<'a, str> {
+    let regex = Regex::new(r"<[^>]*?>").unwrap();
+    regex.replace_all(text, "")
+}
 
 ///
 ///
