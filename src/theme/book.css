@@ -151,11 +151,12 @@ table thead td {
   max-width: 100%;
 }
 .menu-bar {
-  position: relative;
   height: 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
 }
 .menu-bar i {
-  position: relative;
   margin: 0 10px;
   z-index: 10;
   line-height: 50px;
@@ -174,16 +175,29 @@ table thead td {
 .menu-bar .right-buttons {
   float: right;
 }
+#searchbar {
+  border: 1px solid #BBB;
+  border-radius: 3px;
+  padding: 3px 5px;
+  width: 50px;
+  transition: width 0.5s ease-in-out;
+}
+#searchbar:focus, #searchbar:hover, #searchbar.active {
+  width: 150px;
+}
+.searchresults-header {
+  font-weight: bold;
+  font-size: 1em;
+}
+.searchresults-outer {
+  border-bottom: 1px dashed #CCC;
+  display: none;
+}
 .menu-title {
-  display: inline-block;
+  display: inline;
   font-weight: 200;
   font-size: 20px;
   line-height: 50px;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   text-align: center;
   margin: 0;
   opacity: 0;
@@ -924,7 +938,9 @@ table thead td {
   #sidebar,
   #menu-bar,
   .nav-chapters,
-  .mobile-nav-chapters {
+  .mobile-nav-chapters,
+  #searchbar,
+  #search-go {
     display: none;
   }
   #page-wrapper {

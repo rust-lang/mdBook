@@ -38,11 +38,13 @@ $( document ).ready(function() {
 
     var KEY_CODES = {
         PREVIOUS_KEY: 37,
-        NEXT_KEY: 39
+        NEXT_KEY: 39,
+        SEARCH_KEY: 83
     };
 
     $(document).on('keydown', function (e) {
         if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
+        if ($('#searchbar').is( ":focus" )) { return; }
         switch (e.keyCode) {
             case KEY_CODES.NEXT_KEY:
                 e.preventDefault();
@@ -55,6 +57,10 @@ $( document ).ready(function() {
                 if($('.nav-chapters.previous').length) {
                     window.location.href = $('.nav-chapters.previous').attr('href');
                 }
+                break;
+            case KEY_CODES.SEARCH_KEY:
+                e.preventDefault();
+                $('#searchbar').focus();
                 break;
         }
     });
@@ -82,6 +88,81 @@ $( document ).ready(function() {
         sidebar.scrollTop(activeSection.offset().top);
     }
 
+    // For testing purposes: Index current page
+    var searchindex = create_text_searchindex();
+    var current_searchterm = "";
+    var teaser_size_half = 80;
+
+    // Searchbar
+    $("#searchbar").on('keyup', function (e) {
+        var display = $('#searchresults');
+        var outer = $("#searchresults-outer");
+
+        var searchterm = e.target.value.trim();
+        if (searchterm != "") {
+            // keep searchbar expanded
+            $(e.target).addClass("active");
+
+            // Don't search twice the same
+            if (current_searchterm == searchterm) { return; }
+            else { current_searchterm = searchterm; }
+
+            // Do the actual search
+            var results = searchindex.search(searchterm, {
+                bool: "AND",
+                expand: true
+            });
+
+            // Display search metrics
+            var searchheader = "";
+            if (results.length > 0) {
+                searchheader = results.length + " search results for '" + searchterm + "':";
+            } else if (results.length == 1) {
+                searchheader = results.length + " search result for '" + searchterm + "':";
+            } else {
+                searchheader = "No search results for '" + searchterm + "'.";
+            }
+            $('#searchresults-header').text(searchheader);
+
+            // Clear and insert results
+            var firstterm = searchterm.split(' ')[0];
+            display.empty();
+            for(var i = 0, size = results.length; i < size ; i++){
+                var result = results[i];
+                document.lsd = result.doc;
+                var firstoccurence = result.doc.body.search(firstterm);
+                var teaser = "";
+                if (firstoccurence != -1) {
+                    var teaserstartindex = firstoccurence - teaser_size_half;
+                    var nextwordindex = result.doc.body.indexOf(" ", teaserstartindex);
+                    if (nextwordindex != -1) {
+                        teaserstartindex = nextwordindex;
+                    }
+                    var teaserendindex = firstoccurence + teaser_size_half;
+                    nextwordindex = result.doc.body.indexOf(" ", teaserendindex);
+                    if (nextwordindex != -1) {
+                        teaserendindex = nextwordindex;
+                    }
+                    teaser = (teaserstartindex > 0) ? "..." : "";
+                    teaser += result.doc.body.substring(teaserstartindex, teaserendindex) + "...";
+                } else {
+                    teaser = result.doc.body.substr(0, 80) + "...";
+                }
+
+                display.append('<li><a href="' + result.ref + '">' + result.doc.title + '</a>: '
+                    + teaser + "</li>");
+            }
+
+            // Display and scroll to results
+            sidebar.scrollTop(0);
+            outer.slideDown();
+        } else {
+            // searchbar can shrink
+            $(e.target).removeClass("active");
+            outer.slideUp();
+            display.empty();
+        }
+    });
 
     // Theme button
     $("#theme-toggle").click(function(){
@@ -361,7 +442,7 @@ function run_rust_code(code_block) {
     }
 
     let text = playpen_text(code_block);
-    
+
     var params = {
 	channel: "stable",
 	mode: "debug",
@@ -391,4 +472,47 @@ function run_rust_code(code_block) {
             result_block.text("Playground communication " + textStatus);
         },
     });
+}
+
+function create_text_searchindex() {
+    var searchindex = elasticlunr(function () {
+        this.addField('body');
+        this.addField('title');
+        this.setRef('id');
+    });
+    var content = $("#content");
+    var paragraphs = content.children();
+    var curr_title = "";
+    var curr_body = "";
+    var curr_ref = "";
+    var push = function(ref) {
+        if ((curr_title.length > 0 || curr_body.length > 0) && curr_ref.length > 0) {
+            var doc = {
+                "id": curr_ref,
+                "body": curr_body,
+                "title": curr_title
+            }
+            searchindex.addDoc(doc);
+        }
+        curr_body = "";
+        curr_title = "";
+        curr_ref = "";
+    };
+    paragraphs.each(function(index, element) {
+        // todo uppercase
+        var el = $(element);
+        if (el.prop('nodeName').toUpperCase() == "A") {
+            // new header, push old paragraph to index
+            push(index);
+            curr_title = el.text();
+            curr_ref = el.attr('href');
+        } else {
+            curr_body += " \n " + el.text();
+        }
+        // last paragraph
+        if (index == paragraphs.length - 1) {
+            push(index);
+        }
+    });
+    return searchindex;
 }
