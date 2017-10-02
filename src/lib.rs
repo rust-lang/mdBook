@@ -29,7 +29,6 @@
 //!                         .with_destination("book") // Path from root to output directory
 //!                         .read_config()            // Parse book.toml configuration file
 //!                         .expect("I don't handle configuration file errors, but you should!");
-//!
 //!     book.build().unwrap();                        // Render the book
 //! }
 //! ```
@@ -57,7 +56,8 @@
 //! If you make a renderer, you get the book constructed in form of `Vec<BookItems>` and you get
 //! the book config in a `BookConfig` struct.
 //!
-//! It's your responsability to create the necessary files in the correct directories.
+//! It's your responsibility to create the necessary files in the correct
+//! directories.
 //!
 //! ## utils
 //!
@@ -87,7 +87,10 @@ extern crate serde;
 extern crate serde_json;
 extern crate tempdir;
 
-mod parse;
+#[cfg(test)]
+#[macro_use]
+extern crate pretty_assertions;
+
 mod preprocess;
 pub mod book;
 pub mod config;
@@ -96,11 +99,14 @@ pub mod theme;
 pub mod utils;
 
 pub use book::MDBook;
-pub use book::BookItem;
+pub use book::Book;
 pub use renderer::Renderer;
 
 /// The error types used through out this crate.
 pub mod errors {
+    // needed temporarily because of https://github.com/rust-lang-nursery/error-chain/issues/208
+    #![allow(unknown_lints, unused_doc_comment)] 
+
     error_chain!{
         foreign_links {
             Io(::std::io::Error);

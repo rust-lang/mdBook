@@ -2,17 +2,17 @@ use renderer::html_handlebars::helpers;
 use preprocess;
 use renderer::Renderer;
 use book::MDBook;
-use book::bookitem::{BookItem, Chapter};
 use config::PlaypenConfig;
-use {utils, theme};
-use theme::{Theme, playpen_editor};
+use theme::{self, Theme, playpen_editor};
+use book::{BookItem, Chapter};
+use utils;
 use errors::*;
 use regex::{Regex, Captures};
 
 use std::ascii::AsciiExt;
 use std::path::{Path, PathBuf};
 use std::fs::{self, File};
-use std::io::{self, Read};
+use std::io::Read;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 
@@ -32,11 +32,9 @@ impl HtmlHandlebars {
         -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
         match *item {
-            BookItem::Chapter(_, ref ch) |
-            BookItem::Affix(ref ch) if !ch.path.as_os_str().is_empty() => {
-
+            BookItem::Chapter(ref ch) => {
                 let path = ctx.book.get_source().join(&ch.path);
-                let content = utils::fs::file_to_string(&path)?;
+                let content = ch.content.clone();
                 let base = path.parent().ok_or_else(
                     || String::from("Invalid bookitem path!"),
                 )?;
@@ -47,9 +45,7 @@ impl HtmlHandlebars {
                 print_content.push_str(&content);
 
                 // Update the context with data for this file
-                let path = ch.path.to_str().ok_or_else(|| {
-                    io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
-                })?;
+                let path = ch.path.to_str().ok_or_else(|| Error::from("Could not convert path to str"))?;
 
                 // Non-lexical lifetimes needed :'( 
                 let title: String;
@@ -392,31 +388,26 @@ fn make_data(book: &MDBook) -> Result<serde_json::Map<String, serde_json::Value>
 
     for item in book.iter() {
         // Create the data to inject in the template
-        let mut chapter = BTreeMap::new();
+        let mut chapter_data = BTreeMap::new();
 
         match *item {
-            BookItem::Affix(ref ch) => {
-                chapter.insert("name".to_owned(), json!(ch.name));
-                let path = ch.path.to_str().ok_or_else(|| {
-                    io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
-                })?;
-                chapter.insert("path".to_owned(), json!(path));
+            BookItem::Chapter(ref ch) => {
+                if let Some(ref section_number) = ch.number {
+                    chapter_data.insert("section".to_owned(), json!(section_number.to_string()));
+                }
+
+                chapter_data.insert("name".to_owned(), json!(ch.name));
+                let path = ch.path.to_str()
+                    .ok_or_else(|| Error::from("Could not convert path to str"))?;
+                chapter_data.insert("path".to_owned(), json!(path));
             },
-            BookItem::Chapter(ref s, ref ch) => {
-                chapter.insert("section".to_owned(), json!(s));
-                chapter.insert("name".to_owned(), json!(ch.name));
-                let path = ch.path.to_str().ok_or_else(|| {
-                    io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
-                })?;
-                chapter.insert("path".to_owned(), json!(path));
-            },
-            BookItem::Spacer => {
-                chapter.insert("spacer".to_owned(), json!("_spacer_"));
+            BookItem::Separator => {
+                chapter_data.insert("spacer".to_owned(), json!("_spacer_"));
             },
 
         }
 
-        chapters.push(chapter);
+        chapters.push(chapter_data);
     }
 
     data.insert("chapters".to_owned(), json!(chapters));

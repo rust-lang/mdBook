@@ -1,3 +1,4 @@
+extern crate env_logger;
 extern crate mdbook;
 extern crate tempdir;
 
@@ -39,10 +40,10 @@ fn make_sure_bottom_level_files_contain_links_to_chapters() {
     let dest = temp.path().join("book");
     let links = vec![
         r#"href="intro.html""#,
-        r#"href="./first/index.html""#,
-        r#"href="./first/nested.html""#,
-        r#"href="./second.html""#,
-        r#"href="./conclusion.html""#,
+        r#"href="first/index.html""#,
+        r#"href="first/nested.html""#,
+        r#"href="second.html""#,
+        r#"href="conclusion.html""#,
     ];
 
     let files_in_bottom_dir = vec!["index.html", "intro.html", "second.html", "conclusion.html"];
@@ -62,10 +63,10 @@ fn check_correct_cross_links_in_nested_dir() {
     let links = vec![
         r#"<base href="../">"#,
         r#"href="intro.html""#,
-        r#"href="./first/index.html""#,
-        r#"href="./first/nested.html""#,
-        r#"href="./second.html""#,
-        r#"href="./conclusion.html""#,
+        r#"href="first/index.html""#,
+        r#"href="first/nested.html""#,
+        r#"href="second.html""#,
+        r#"href="conclusion.html""#,
     ];
 
     let files_in_nested_dir = vec!["index.html", "nested.html"];
@@ -77,14 +78,14 @@ fn check_correct_cross_links_in_nested_dir() {
     assert_contains_strings(
         first.join("index.html"),
         &[
-            r##"href="./first/index.html#some-section" id="some-section""##
+            r##"href="first/index.html#some-section" id="some-section""##,
         ],
     );
 
     assert_contains_strings(
         first.join("nested.html"),
         &[
-            r##"href="./first/nested.html#some-section" id="some-section""##
+            r##"href="first/nested.html#some-section" id="some-section""##,
         ],
     );
 }
@@ -106,6 +107,8 @@ fn rendered_code_has_playpen_stuff() {
 
 #[test]
 fn chapter_content_appears_in_rendered_document() {
+    env_logger::init().ok();
+
     let content = vec![
         ("index.html", "Here's some interesting text"),
         ("second.html", "Second Chapter"),
@@ -124,4 +127,21 @@ fn chapter_content_appears_in_rendered_document() {
         let path = destination.join(filename);
         assert_contains_strings(path, &[text]);
     }
+}
+
+#[test]
+fn chapter_1_file_not_created_if_summary_already_exists() {
+    let temp = DummyBook::default().build();
+
+    let src = temp.path().join("src");
+    let summary = src.join("SUMMARY.md");
+    let chapter_1 = src.join("chapter_1.md");
+
+    assert!(summary.exists());
+    assert!(!chapter_1.exists());
+
+    let mut md = MDBook::new(temp.path());
+    md.build().unwrap();
+
+    assert!(!chapter_1.exists());
 }
