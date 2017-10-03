@@ -212,6 +212,17 @@ ul#searchresults {
 ul#searchresults li {
   margin: 10px 0px;
 }
+ul#searchresults span.breadcrumbs {
+  float: right;
+  color: #CCC;
+  font-size: 0.9em;
+  margin-left: 10px;
+}
+ul#searchresults span.teaser {
+  display: block;
+  clear: both;
+  margin: 5px 0 0 20px;
+}
 .menu-title {
   position: absolute;
   display: block;

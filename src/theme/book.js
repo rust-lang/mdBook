@@ -1,179 +1,329 @@
 $( document ).ready(function() {
 
-    // Helpers for searching
-    function create_test_searchindex() {
-        var searchindex = elasticlunr(function () {
-            this.addField('body');
-            this.addField('title');
-            this.setRef('id');
-        });
-        var content = $("#content");
-        var paragraphs = content.children();
-        var curr_title = "";
-        var curr_body = "";
-        var curr_ref = "";
-        var push = function(ref) {
-            if ((curr_title.length > 0 || curr_body.length > 0) && curr_ref.length > 0) {
-                var doc = {
-                    "id": curr_ref,
-                    "body": curr_body,
-                    "title": curr_title
-                }
-                searchindex.addDoc(doc);
-            }
-            curr_body = "";
-            curr_title = "";
-            curr_ref = "";
-        };
-        paragraphs.each(function(index, element) {
-            // todo uppercase
-            var el = $(element);
-            if (el.prop('nodeName').toUpperCase() == "A") {
-                // new header, push old paragraph to index
-                push(index);
-                curr_title = el.text();
-                curr_ref = el.attr('href');
-            } else {
-                curr_body += " \n " + el.text();
-            }
-            // last paragraph
-            if (index == paragraphs.length - 1) {
-                push(index);
-            }
-        });
-        return searchindex;
-    }
+    // Search functionality
+    //
+    // Usage: call init() on startup. You can use hasFocus() to disable prevent keyhandling
+    // while the user is typing his search.
+    var search = {
+        searchbar : $('#searchbar'),
+        searchbar_outer : $('#searchbar-outer'),
+        searchresults : $('#searchresults'),
+        searchresults_outer : $("#searchresults-outer"),
+        searchresults_header : $("#searchresults-header"),
+        searchicon : $("#search-icon"),
+        content : $('#content'),
 
-    function parseURL(url) {
-        var a =  document.createElement('a');
-        a.href = url;
-        return {
-            source: url,
-            protocol: a.protocol.replace(':',''),
-            host: a.hostname,
-            port: a.port,
-            params: (function(){
-                var ret = {};
-                var seg = a.search.replace(/^\?/,'').split('&');
-                var len = seg.length, i = 0, s;
-                for (;i<len;i++) {
-                    if (!seg[i]) { continue; }
-                    s = seg[i].split('=');
-                    ret[s[0]] = s[1];
-                }
-                return ret;
-            })(),
-            file: (a.pathname.match(/\/([^/?#]+)$/i) || [,''])[1],
-            hash: a.hash.replace('#',''),
-            path: a.pathname.replace(/^([^/])/,'/$1')
-        };
-    }
-
-    function renderURL(urlobject) {
-        var url = urlobject.protocol + "://" + urlobject.host;
-        if (urlobject.port != "") {
-            url += ":" + urlobject.port;
-        }
-        url += urlobject.path;
-        var joiner = "?";
-        for(var prop in urlobject.params) {
-            if(urlobject.params.hasOwnProperty(prop)) {
-                url += joiner + prop + "=" + urlobject.params[prop];
-                joiner = "&";
-            }
-        }
-        if (urlobject.hash != "") {
-            url += "#" + urlobject.hash;
-        }
-        return url;
-    }
-
-    var current_searchterm = "";
-    var teaser_size_half = 80;
-
-    function doSearch(searchindex, searchterm) {
-        var display = $('#searchresults');
-
-        // Don't search twice the same
-        if (current_searchterm == searchterm) { return; }
-        else { current_searchterm = searchterm; }
-
-
-        // Do the actual search
-        var results = searchindex.search(searchterm, {
+        searchindex : null,
+        searchoptions : {
             bool: "AND",
-            expand: true
-        });
+            expand: true,
+            fields: {
+                title: {boost: 1},
+                body: {boost: 1},
+                breadcrumbs: {boost: 0}
+            }
+        },
+        mark_exclude : [], // ['.hljs']
+        current_searchterm : "",
+        teaser_size_half : 80,
+        resultcount_limit : 30,
+        SEARCH_PARAM : 'search',
+        MARK_PARAM : 'highlight',
 
-        // Display search metrics
-        var searchheader = "";
-        if (results.length > 0) {
-            searchheader = results.length + " search results for '" + searchterm + "':";
-        } else if (results.length == 1) {
-            searchheader = results.length + " search result for '" + searchterm + "':";
-        } else {
-            searchheader = "No search results for '" + searchterm + "'.";
+        SEARCH_HOTKEY_KEYCODE: 83,
+        ESCAPE_KEYCODE: 27,
+
+        formatSearchMetric : function(count, searchterm) {
+            if (count == 1) {
+                return count + " search result for '" + searchterm + "':";
+            } else if (count == 0) {
+                return "No search results for '" + searchterm + "'.";
+            } else {
+                return count + " search results for '" + searchterm + "':";
+            }
         }
-        $('#searchresults-header').text(searchheader);
-
-        // Clear and insert results
-        var firstterm = searchterm.split(' ')[0];
-        display.empty();
-        for(var i = 0, size = results.length; i < size ; i++){
-            var result = results[i];
-            var firstoccurence = result.doc.body.search(firstterm);
+        ,
+        create_test_searchindex : function () {
+            var searchindex = elasticlunr(function () {
+                this.addField('body');
+                this.addField('title');
+                this.addField('breadcrumbs')
+                this.setRef('id');
+            });
+            var base_breadcrumbs = "";
+            var active_chapter = $('.sidebar ul a.active');
+            base_breadcrumbs = active_chapter.text().split('. ', 2)[1]; // demo
+            while (true) {
+                var parent_ul = active_chapter.parents('ul');
+                if (parent_ul.length == 0) break;
+                var parent_li = parent_ul.parents('li');
+                if (parent_li.length == 0) break;
+                var pre_li = parent_li.prev('li');
+                if (pre_li.length == 0) break;
+                base_breadcrumbs = pre_li.text().split('. ', 2)[1] + ' » ' + base_breadcrumbs;
+                active_chapter = pre_li;
+            }
+            var paragraphs = this.content.children();
+            var curr_title = "";
+            var curr_body = "";
+            var curr_ref = "";
+            var push = function(ref) {
+                if ((curr_title.length > 0 || curr_body.length > 0) && curr_ref.length > 0) {
+                    var doc = {
+                        "id": curr_ref,
+                        "body": curr_body,
+                        "title": curr_title,
+                        "breadcrumbs": base_breadcrumbs //"Header1 » Header2"
+                    }
+                    searchindex.addDoc(doc);
+                }
+                curr_body = "";
+                curr_title = "";
+                curr_ref = "";
+            };
+            paragraphs.each(function(index, element) {
+                // todo uppercase
+                var el = $(element);
+                if (el.prop('nodeName').toUpperCase() == "A") {
+                    // new header, push old paragraph to index
+                    push(index);
+                    curr_title = el.text();
+                    curr_ref = el.attr('href');
+                } else {
+                    curr_body += " \n " + el.text();
+                }
+                // last paragraph
+                if (index == paragraphs.length - 1) {
+                    push(index);
+                }
+            });
+            this.searchindex = searchindex;
+        }
+        ,
+        parseURL : function (url) {
+            var a =  document.createElement('a');
+            a.href = url;
+            return {
+                source: url,
+                protocol: a.protocol.replace(':',''),
+                host: a.hostname,
+                port: a.port,
+                params: (function(){
+                    var ret = {};
+                    var seg = a.search.replace(/^\?/,'').split('&');
+                    var len = seg.length, i = 0, s;
+                    for (;i<len;i++) {
+                        if (!seg[i]) { continue; }
+                        s = seg[i].split('=');
+                        ret[s[0]] = s[1];
+                    }
+                    return ret;
+                })(),
+                file: (a.pathname.match(/\/([^/?#]+)$/i) || [,''])[1],
+                hash: a.hash.replace('#',''),
+                path: a.pathname.replace(/^([^/])/,'/$1')
+            };
+        }
+        ,
+        renderURL : function (urlobject) {
+            var url = urlobject.protocol + "://" + urlobject.host;
+            if (urlobject.port != "") {
+                url += ":" + urlobject.port;
+            }
+            url += urlobject.path;
+            var joiner = "?";
+            for(var prop in urlobject.params) {
+                if(urlobject.params.hasOwnProperty(prop)) {
+                    url += joiner + prop + "=" + urlobject.params[prop];
+                    joiner = "&";
+                }
+            }
+            if (urlobject.hash != "") {
+                url += "#" + urlobject.hash;
+            }
+            return url;
+        }
+        ,
+        formatSearchResult : function (result, searchterms) {
+            // Show text around first occurrence of first search term.
+            var firstoccurence = result.doc.body.search(searchterms[0]);
             var teaser = "";
             if (firstoccurence != -1) {
-                var teaserstartindex = firstoccurence - teaser_size_half;
+                var teaserstartindex = firstoccurence - this.teaser_size_half;
                 var nextwordindex = result.doc.body.indexOf(" ", teaserstartindex);
                 if (nextwordindex != -1) {
                     teaserstartindex = nextwordindex;
                 }
-                var teaserendindex = firstoccurence + teaser_size_half;
+                var teaserendindex = firstoccurence + this.teaser_size_half;
                 nextwordindex = result.doc.body.indexOf(" ", teaserendindex);
                 if (nextwordindex != -1) {
                     teaserendindex = nextwordindex;
                 }
-                teaser = (teaserstartindex > 0) ? "..." : "";
-                teaser += result.doc.body.substring(teaserstartindex, teaserendindex) + "...";
+                teaser = (teaserstartindex > 0) ? "... " : "";
+                teaser += result.doc.body.substring(teaserstartindex, teaserendindex) + " ...";
             } else {
-                teaser = result.doc.body.substr(0, 80) + "...";
+                teaser = result.doc.body.substr(0, this.teaser_size_half * 2) + " ...";
             }
 
+            // The ?MARK_PARAM= parameter belongs inbetween the page and the #heading-anchor
             var url = result.ref.split("#");
             if (url.length == 1) {
                 url.push("");
             }
 
-            display.append('<li><a href="' + url[0] + '?highlight=' + searchterm + '#' + url[1] + '">'
-                           + result.doc.title + '</a>: ' + teaser + "</li>");
+            return $('<li><a href="'
+                    + url[0] + '?' + this.MARK_PARAM + '=' + searchterms + '#' + url[1]
+                    + '">' + result.doc.title + '</a>'
+                    + '<span class="breadcrumbs">' + result.doc.breadcrumbs + '</span>'
+                    + '<span class="teaser">' + teaser + '</span>'
+                    + '</li>');
         }
+        ,
+        doSearch : function (searchterm) {
 
-        // Display and scroll to results
-        $("#menu-bar").scrollTop(0);
-        $("#searchresults-outer").slideDown();
-    }
+            // Don't search the same twice
+            if (this.current_searchterm == searchterm) { return; }
+            else { this.current_searchterm = searchterm; }
 
-    function doSearchOrHighlightFromUrl() {
-        // Check current URL for search request
-        var url = parseURL(window.location.href);
-        if (url.params.hasOwnProperty('search')) {
-            $("#searchbar-outer").slideDown();
-            $("#searchbar")[0].value = url.params['search'];
-            $("#searchbar").trigger('keyup');
-        } else {
-            $("#searchbar-outer").slideUp();
+            if (this.searchindex == null) { return; }
+
+            // Do the actual search
+            var results = this.searchindex.search(searchterm, this.searchoptions);
+            var resultcount = (results.length > this.resultcount_limit)
+                ? this.resultcount_limit : results.length;
+
+            // Display search metrics
+            this.searchresults_header.text(this.formatSearchMetric(resultcount, searchterm));
+
+            // Clear and insert results
+            var searchterms  = searchterm.split(' ');
+            this.searchresults.empty();
+            for(var i = 0; i < resultcount ; i++){
+                this.searchresults.append(this.formatSearchResult(results[i], searchterms));
+            }
+
+            // Display and scroll to results
+            this.searchresults_outer.slideDown();
+            // this.searchicon.scrollTop(0);
         }
+        ,
+        doSearchOrMarkFromUrl : function () {
+            // Check current URL for search request
+            var url = this.parseURL(window.location.href);
+            if (url.params.hasOwnProperty(this.SEARCH_PARAM)
+                && url.params[this.SEARCH_PARAM] != "") {
+                this.searchbar_outer.slideDown();
+                this.searchbar[0].value = url.params[this.SEARCH_PARAM];
+                this.searchbarKeyUpHandler();
+            } else {
+                this.searchbar_outer.slideUp();
+            }
 
-        if (url.params.hasOwnProperty('highlight')) {
-            var words = url.params['highlight'].split(' ');
-            var header = $('#' + url.hash);
-            $('.content').mark(words, {
-                // exclude : ['.hljs']
-            });
+            if (url.params.hasOwnProperty(this.MARK_PARAM)) {
+                var words = url.params[this.MARK_PARAM].split(' ');
+                var header = $('#' + url.hash);
+                this.content.mark(words, {
+                    exclude : this.mark_exclude
+                });
+            }
         }
-    }
+        ,
+        init : function () {
+            // For testing purposes: Index current page
+            this.create_test_searchindex();
 
+            // Set up events
+            var this_ = this;
+            this.searchicon.click( function(e) { this_.searchIconClickHandler(); } );
+            this.searchbar.on('keyup', function(e) { this_.searchbarKeyUpHandler(); } );
+            $(document).on('keydown', function (e) { this_.globalKeyHandler(e); });
+            // If the user uses the browser buttons, do the same as if a reload happened
+            window.onpopstate = function(e) { this_.doSearchOrMarkFromUrl(); };
+
+            // If reloaded, do the search or mark again, depending on the current url parameters
+            this.doSearchOrMarkFromUrl();
+        }
+        ,
+        hasFocus : function () {
+            return this.searchbar.is(':focus');
+        }
+        ,
+        globalKeyHandler : function (e) {
+            if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
+            if (e.keyCode == this.ESCAPE_KEYCODE) {
+                e.preventDefault();
+                this.searchbar.removeClass("active");
+                // this.searchbar[0].value = "";
+                this.setSearchUrlParameters("",
+                    (this.searchbar[0].value.trim() != 0) ? "push" : "replace");
+                this.unfocusSearchbar();
+                this.searchbar_outer.slideUp();
+                return;
+            }
+            if (!this.hasFocus() && e.keyCode == this.SEARCH_HOTKEY_KEYCODE) {
+                e.preventDefault();
+                this.searchbar_outer.slideDown()
+                this.searchbar.focus();
+            }
+        }
+        ,
+        unfocusSearchbar : function () {
+            // hacky, but just focusing a div only works once
+            var tmp = $('<input style="position: absolute; opacity: 0;">');
+            tmp.insertAfter(this.searchicon);
+            tmp.focus();
+            tmp.remove();
+        }
+        ,
+        searchIconClickHandler : function () {
+            this.searchbar_outer.slideToggle();
+            this.searchbar.focus();
+            // TODO:
+            // If invisible, clear URL search parameter
+        }
+        ,
+        searchbarKeyUpHandler : function () {
+            var searchterm = this.searchbar[0].value.trim();
+            if (searchterm != "") {
+                this.searchbar.addClass("active");
+                this.doSearch(searchterm);
+            } else {
+                this.searchbar.removeClass("active");
+                this.searchresults_outer.slideUp();
+                this.searchresults.empty();
+            }
+
+            this.setSearchUrlParameters(searchterm, "if_begin_search");
+
+            // Remove marks
+            this.content.unmark();
+        }
+        ,
+        setSearchUrlParameters : function(searchterm, action) {
+            // Update url with ?SEARCH_PARAM= parameter, remove ?MARK_PARAM and #heading-anchor
+            var url = this.parseURL(window.location.href);
+            var first_search = ! url.params.hasOwnProperty(this.SEARCH_PARAM);
+            if (searchterm != "" || action == "if_begin_search") {
+                url.params[this.SEARCH_PARAM] = searchterm;
+                delete url.params[this.MARK_PARAM];
+                url.hash = "";
+            } else {
+                delete url.params[this.SEARCH_PARAM];
+            }
+            // A new search will also add a new history item, so the user can go back
+            // to the page prior to searching. A updated search term will only replace
+            // the url.
+            if (action == "push" || (action == "if_begin_search" && first_search) ) {
+                history.pushState({}, document.title, this.renderURL(url));
+            } else if (action == "replace" || (action == "if_begin_search" && !first_search) ) {
+                history.replaceState({}, document.title, this.renderURL(url));
+            }
+
+        }
+    };
+
+    // Interesting DOM Elements
+    var sidebar = $("#sidebar");
 
     // url
     var url = window.location.pathname;
@@ -213,13 +363,12 @@ $( document ).ready(function() {
 
     var KEY_CODES = {
         PREVIOUS_KEY: 37,
-        NEXT_KEY: 39,
-        SEARCH_KEY: 83
+        NEXT_KEY: 39
     };
 
     $(document).on('keydown', function (e) {
         if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
-        if ($('#searchbar').is( ":focus" )) { return; }
+        if (search.hasFocus()) { return; }
         switch (e.keyCode) {
             case KEY_CODES.NEXT_KEY:
                 e.preventDefault();
@@ -233,16 +382,8 @@ $( document ).ready(function() {
                     window.location.href = $('.nav-chapters.previous').attr('href');
                 }
                 break;
-            case KEY_CODES.SEARCH_KEY:
-                e.preventDefault();
-                $("#searchbar-outer").slideDown()
-                $('#searchbar').focus();
-                break;
         }
     });
-
-    // Interesting DOM Elements
-    var sidebar = $("#sidebar");
 
     // Help keyboard navigation by always focusing on page content
     $(".page").focus();
@@ -264,52 +405,8 @@ $( document ).ready(function() {
         sidebar.scrollTop(activeSection.offset().top);
     }
 
-    // For testing purposes: Index current page
-    var searchindex = create_test_searchindex();
-
-    $("#search-icon").click(function(e) {
-        var outer = $("#searchbar-outer");
-        outer.slideToggle();
-        // TODO:
-        // If invisible, clear URL search parameter
-    });
-
-    // Searchbar
-    $("#searchbar").on('keyup', function (e) {
-        var display = $('#searchresults');
-        var outer = $("#searchresults-outer");
-
-        var searchterm = e.target.value.trim();
-        if (searchterm != "") {
-            $(e.target).addClass("active");
-
-            doSearch(searchindex, searchterm);
-        } else {
-            $(e.target).removeClass("active");
-            outer.slideUp();
-            display.empty();
-        }
-
-        var url = parseURL(window.location.href);
-        var first_search = ! url.params.hasOwnProperty("search");
-        url.params["search"] = searchterm;
-        delete url.params["highlight"];
-        url.hash = "";
-        if (first_search) {
-            history.pushState({}, document.title, renderURL(url));
-        } else {
-            history.replaceState({}, document.title, renderURL(url));
-        }
-        $('.content').unmark();
-    });
-
-    window.onpopstate = function(e) {
-        doSearchOrHighlightFromUrl();
-    };
-
-    doSearchOrHighlightFromUrl();
-
-
+    // Search
+    search.init();
 
     // Theme button
     $("#theme-toggle").click(function(){
