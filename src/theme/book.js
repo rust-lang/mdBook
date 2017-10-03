@@ -1,5 +1,180 @@
 $( document ).ready(function() {
 
+    // Helpers for searching
+    function create_test_searchindex() {
+        var searchindex = elasticlunr(function () {
+            this.addField('body');
+            this.addField('title');
+            this.setRef('id');
+        });
+        var content = $("#content");
+        var paragraphs = content.children();
+        var curr_title = "";
+        var curr_body = "";
+        var curr_ref = "";
+        var push = function(ref) {
+            if ((curr_title.length > 0 || curr_body.length > 0) && curr_ref.length > 0) {
+                var doc = {
+                    "id": curr_ref,
+                    "body": curr_body,
+                    "title": curr_title
+                }
+                searchindex.addDoc(doc);
+            }
+            curr_body = "";
+            curr_title = "";
+            curr_ref = "";
+        };
+        paragraphs.each(function(index, element) {
+            // todo uppercase
+            var el = $(element);
+            if (el.prop('nodeName').toUpperCase() == "A") {
+                // new header, push old paragraph to index
+                push(index);
+                curr_title = el.text();
+                curr_ref = el.attr('href');
+            } else {
+                curr_body += " \n " + el.text();
+            }
+            // last paragraph
+            if (index == paragraphs.length - 1) {
+                push(index);
+            }
+        });
+        return searchindex;
+    }
+
+    function parseURL(url) {
+        var a =  document.createElement('a');
+        a.href = url;
+        return {
+            source: url,
+            protocol: a.protocol.replace(':',''),
+            host: a.hostname,
+            port: a.port,
+            params: (function(){
+                var ret = {};
+                var seg = a.search.replace(/^\?/,'').split('&');
+                var len = seg.length, i = 0, s;
+                for (;i<len;i++) {
+                    if (!seg[i]) { continue; }
+                    s = seg[i].split('=');
+                    ret[s[0]] = s[1];
+                }
+                return ret;
+            })(),
+            file: (a.pathname.match(/\/([^/?#]+)$/i) || [,''])[1],
+            hash: a.hash.replace('#',''),
+            path: a.pathname.replace(/^([^/])/,'/$1')
+        };
+    }
+
+    function renderURL(urlobject) {
+        var url = urlobject.protocol + "://" + urlobject.host;
+        if (urlobject.port != "") {
+            url += ":" + urlobject.port;
+        }
+        url += urlobject.path;
+        var joiner = "?";
+        for(var prop in urlobject.params) {
+            if(urlobject.params.hasOwnProperty(prop)) {
+                url += joiner + prop + "=" + urlobject.params[prop];
+                joiner = "&";
+            }
+        }
+        if (urlobject.hash != "") {
+            url += "#" + urlobject.hash;
+        }
+        return url;
+    }
+
+    var current_searchterm = "";
+    var teaser_size_half = 80;
+
+    function doSearch(searchindex, searchterm) {
+        var display = $('#searchresults');
+
+        // Don't search twice the same
+        if (current_searchterm == searchterm) { return; }
+        else { current_searchterm = searchterm; }
+
+
+        // Do the actual search
+        var results = searchindex.search(searchterm, {
+            bool: "AND",
+            expand: true
+        });
+
+        // Display search metrics
+        var searchheader = "";
+        if (results.length > 0) {
+            searchheader = results.length + " search results for '" + searchterm + "':";
+        } else if (results.length == 1) {
+            searchheader = results.length + " search result for '" + searchterm + "':";
+        } else {
+            searchheader = "No search results for '" + searchterm + "'.";
+        }
+        $('#searchresults-header').text(searchheader);
+
+        // Clear and insert results
+        var firstterm = searchterm.split(' ')[0];
+        display.empty();
+        for(var i = 0, size = results.length; i < size ; i++){
+            var result = results[i];
+            var firstoccurence = result.doc.body.search(firstterm);
+            var teaser = "";
+            if (firstoccurence != -1) {
+                var teaserstartindex = firstoccurence - teaser_size_half;
+                var nextwordindex = result.doc.body.indexOf(" ", teaserstartindex);
+                if (nextwordindex != -1) {
+                    teaserstartindex = nextwordindex;
+                }
+                var teaserendindex = firstoccurence + teaser_size_half;
+                nextwordindex = result.doc.body.indexOf(" ", teaserendindex);
+                if (nextwordindex != -1) {
+                    teaserendindex = nextwordindex;
+                }
+                teaser = (teaserstartindex > 0) ? "..." : "";
+                teaser += result.doc.body.substring(teaserstartindex, teaserendindex) + "...";
+            } else {
+                teaser = result.doc.body.substr(0, 80) + "...";
+            }
+
+            var url = result.ref.split("#");
+            if (url.length == 1) {
+                url.push("");
+            }
+
+            display.append('<li><a href="' + url[0] + '?highlight=' + searchterm + '#' + url[1] + '">'
+                           + result.doc.title + '</a>: ' + teaser + "</li>");
+        }
+
+        // Display and scroll to results
+        $("#menu-bar").scrollTop(0);
+        $("#searchresults-outer").slideDown();
+    }
+
+    function doSearchOrHighlightFromUrl() {
+        // Check current URL for search request
+        var url = parseURL(window.location.href);
+        if (url.params.hasOwnProperty('search')) {
+            $("#searchbar-outer").slideDown();
+            $("#searchbar")[0].value = url.params['search'];
+            $("#searchbar").trigger('keyup');
+        } else {
+            $("#searchbar-outer").slideUp();
+        }
+
+        if (url.params.hasOwnProperty('highlight')) {
+            var words = url.params['highlight'].split(' ');
+            var header = $('#' + url.hash);
+            $('.content').mark(words, {
+                // exclude : ['.hljs']
+            });
+        }
+    }
+
+
     // url
     var url = window.location.pathname;
 
@@ -60,6 +235,7 @@ $( document ).ready(function() {
                 break;
             case KEY_CODES.SEARCH_KEY:
                 e.preventDefault();
+                $("#searchbar-outer").slideDown()
                 $('#searchbar').focus();
                 break;
         }
@@ -89,9 +265,14 @@ $( document ).ready(function() {
     }
 
     // For testing purposes: Index current page
-    var searchindex = create_text_searchindex();
-    var current_searchterm = "";
-    var teaser_size_half = 80;
+    var searchindex = create_test_searchindex();
+
+    $("#search-icon").click(function(e) {
+        var outer = $("#searchbar-outer");
+        outer.slideToggle();
+        // TODO:
+        // If invisible, clear URL search parameter
+    });
 
     // Searchbar
     $("#searchbar").on('keyup', function (e) {
@@ -100,69 +281,35 @@ $( document ).ready(function() {
 
         var searchterm = e.target.value.trim();
         if (searchterm != "") {
-            // keep searchbar expanded
             $(e.target).addClass("active");
 
-            // Don't search twice the same
-            if (current_searchterm == searchterm) { return; }
-            else { current_searchterm = searchterm; }
-
-            // Do the actual search
-            var results = searchindex.search(searchterm, {
-                bool: "AND",
-                expand: true
-            });
-
-            // Display search metrics
-            var searchheader = "";
-            if (results.length > 0) {
-                searchheader = results.length + " search results for '" + searchterm + "':";
-            } else if (results.length == 1) {
-                searchheader = results.length + " search result for '" + searchterm + "':";
-            } else {
-                searchheader = "No search results for '" + searchterm + "'.";
-            }
-            $('#searchresults-header').text(searchheader);
-
-            // Clear and insert results
-            var firstterm = searchterm.split(' ')[0];
-            display.empty();
-            for(var i = 0, size = results.length; i < size ; i++){
-                var result = results[i];
-                document.lsd = result.doc;
-                var firstoccurence = result.doc.body.search(firstterm);
-                var teaser = "";
-                if (firstoccurence != -1) {
-                    var teaserstartindex = firstoccurence - teaser_size_half;
-                    var nextwordindex = result.doc.body.indexOf(" ", teaserstartindex);
-                    if (nextwordindex != -1) {
-                        teaserstartindex = nextwordindex;
-                    }
-                    var teaserendindex = firstoccurence + teaser_size_half;
-                    nextwordindex = result.doc.body.indexOf(" ", teaserendindex);
-                    if (nextwordindex != -1) {
-                        teaserendindex = nextwordindex;
-                    }
-                    teaser = (teaserstartindex > 0) ? "..." : "";
-                    teaser += result.doc.body.substring(teaserstartindex, teaserendindex) + "...";
-                } else {
-                    teaser = result.doc.body.substr(0, 80) + "...";
-                }
-
-                display.append('<li><a href="' + result.ref + '">' + result.doc.title + '</a>: '
-                    + teaser + "</li>");
-            }
-
-            // Display and scroll to results
-            sidebar.scrollTop(0);
-            outer.slideDown();
+            doSearch(searchindex, searchterm);
         } else {
-            // searchbar can shrink
             $(e.target).removeClass("active");
             outer.slideUp();
             display.empty();
         }
+
+        var url = parseURL(window.location.href);
+        var first_search = ! url.params.hasOwnProperty("search");
+        url.params["search"] = searchterm;
+        delete url.params["highlight"];
+        url.hash = "";
+        if (first_search) {
+            history.pushState({}, document.title, renderURL(url));
+        } else {
+            history.replaceState({}, document.title, renderURL(url));
+        }
+        $('.content').unmark();
     });
+
+    window.onpopstate = function(e) {
+        doSearchOrHighlightFromUrl();
+    };
+
+    doSearchOrHighlightFromUrl();
+
+
 
     // Theme button
     $("#theme-toggle").click(function(){
@@ -474,45 +621,3 @@ function run_rust_code(code_block) {
     });
 }
 
-function create_text_searchindex() {
-    var searchindex = elasticlunr(function () {
-        this.addField('body');
-        this.addField('title');
-        this.setRef('id');
-    });
-    var content = $("#content");
-    var paragraphs = content.children();
-    var curr_title = "";
-    var curr_body = "";
-    var curr_ref = "";
-    var push = function(ref) {
-        if ((curr_title.length > 0 || curr_body.length > 0) && curr_ref.length > 0) {
-            var doc = {
-                "id": curr_ref,
-                "body": curr_body,
-                "title": curr_title
-            }
-            searchindex.addDoc(doc);
-        }
-        curr_body = "";
-        curr_title = "";
-        curr_ref = "";
-    };
-    paragraphs.each(function(index, element) {
-        // todo uppercase
-        var el = $(element);
-        if (el.prop('nodeName').toUpperCase() == "A") {
-            // new header, push old paragraph to index
-            push(index);
-            curr_title = el.text();
-            curr_ref = el.attr('href');
-        } else {
-            curr_body += " \n " + el.text();
-        }
-        // last paragraph
-        if (index == paragraphs.length - 1) {
-            push(index);
-        }
-    });
-    return searchindex;
-}
