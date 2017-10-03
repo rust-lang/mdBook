@@ -32,16 +32,19 @@ fn run_mdbook_init_with_custom_book_and_src_locations() {
 
     let temp = TempDir::new("mdbook").unwrap();
     for file in &created_files {
-        assert!(!temp.path().join(file).exists(), "{} shouldn't exist yet!", file);
+        assert!(!temp.path().join(file).exists(),
+                "{} shouldn't exist yet!",
+                file);
     }
 
-    let mut md = MDBook::new(temp.path())
-        .with_source("in")
-        .with_destination("out");
+    let mut md = MDBook::new(temp.path()).with_source("in")
+                                         .with_destination("out");
 
     md.init().unwrap();
 
     for file in &created_files {
-        assert!(temp.path().join(file).exists(), "{} should have been created by `mdbook init`", file);
+        assert!(temp.path().join(file).exists(),
+                "{} should have been created by `mdbook init`",
+                file);
     }
 }

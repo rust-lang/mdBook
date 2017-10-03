@@ -63,20 +63,17 @@ impl DummyBook {
         let to_substitute = if self.passing_test { "true" } else { "false" };
         let nested_text = NESTED.replace("$TEST_STATUS", to_substitute);
 
-        let inputs = vec![
-            (src.join("SUMMARY.md"), SUMMARY_MD),
-            (src.join("intro.md"), INTRO),
-            (first.join("index.md"), FIRST),
-            (first.join("nested.md"), &nested_text),
-            (src.join("second.md"), SECOND),
-            (src.join("conclusion.md"), CONCLUSION),
-        ];
+        let inputs = vec![(src.join("SUMMARY.md"), SUMMARY_MD),
+                          (src.join("intro.md"), INTRO),
+                          (first.join("index.md"), FIRST),
+                          (first.join("nested.md"), &nested_text),
+                          (src.join("second.md"), SECOND),
+                          (src.join("conclusion.md"), CONCLUSION)];
 
         for (path, content) in inputs {
-            File::create(path)
-                .unwrap()
-                .write_all(content.as_bytes())
-                .unwrap();
+            File::create(path).unwrap()
+                              .write_all(content.as_bytes())
+                              .unwrap();
         }
 
         temp

@@ -1,16 +1,16 @@
-extern crate mdbook;
 #[macro_use]
 extern crate clap;
-extern crate log;
 extern crate env_logger;
+extern crate log;
+extern crate mdbook;
 extern crate open;
 
 use std::env;
 use std::ffi::OsStr;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
-use clap::{App, ArgMatches, AppSettings};
-use log::{LogRecord, LogLevelFilter};
+use clap::{App, AppSettings, ArgMatches};
+use log::{LogLevelFilter, LogRecord};
 use env_logger::LogBuilder;
 
 pub mod build;
@@ -33,7 +33,10 @@ fn main() {
                 // Get the version from our Cargo.toml using clap's crate_version!() macro
                 .version(concat!("v",crate_version!()))
                 .setting(AppSettings::SubcommandRequired)
-                .after_help("For more information about a specific command, try `mdbook <command> --help`\nSource code for mdbook available at: https://github.com/azerupi/mdBook")
+                .after_help("For more information about a specific command, \
+                             try `mdbook <command> --help`\n\
+                             Source code for mdbook available \
+                             at: https://github.com/azerupi/mdBook")
                 .subcommand(init::make_subcommand())
                 .subcommand(build::make_subcommand())
                 .subcommand(test::make_subcommand());
@@ -71,7 +74,7 @@ fn init_logger() {
     builder.format(format).filter(None, LogLevelFilter::Info);
 
     if let Ok(var) = env::var("RUST_LOG") {
-       builder.parse(&var);
+        builder.parse(&var);
     }
 
     builder.init().unwrap();

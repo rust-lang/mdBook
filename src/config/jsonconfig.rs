@@ -34,8 +34,7 @@ pub struct JsonConfig {
 /// ```
 impl JsonConfig {
     pub fn from_json(input: &str) -> Result<Self> {
-        let config: JsonConfig = serde_json::from_str(input)
-                                        .chain_err(|| "Could not parse JSON")?;
+        let config: JsonConfig = serde_json::from_str(input).chain_err(|| "Could not parse JSON")?;
 
         Ok(config)
     }

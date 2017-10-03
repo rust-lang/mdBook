@@ -1,16 +1,7 @@
-write_mode = "Overwrite"
+array_layout = "Visual"
+chain_indent = "Visual"
+fn_args_layout = "Visual"
+fn_call_style = "Visual"
+format_strings = true
+generics_indent = "Visual"
 
-max_width = 120
-ideal_width = 120
-fn_call_width = 100
-
-fn_args_density = "Compressed"
-
-enum_trailing_comma = true
-match_block_trailing_comma = true
-struct_trailing_comma = "Always"
-wrap_comments = true
-use_try_shorthand = true
-
-report_todo = "Always"
-report_fixme = "Always"

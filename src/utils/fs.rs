@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf, Component};
+use std::path::{Component, Path, PathBuf};
 use errors::*;
 use std::io::Read;
 use std::fs::{self, File};
@@ -11,7 +11,7 @@ pub fn file_to_string<P: AsRef<Path>>(path: P) -> Result<String> {
         Err(e) => {
             debug!("[*]: Failed to open {:?}", path);
             bail!(e);
-        },
+        }
     };
 
     let mut content = String::new();
@@ -56,14 +56,14 @@ pub fn path_to_root<P: Into<PathBuf>>(path: P) -> String {
         .expect("")
         .components()
         .fold(String::new(), |mut s, c| {
-            match c {
-                Component::Normal(_) => s.push_str("../"),
-                _ => {
-                    debug!("[*]: Other path component... {:?}", c);
-                },
+        match c {
+            Component::Normal(_) => s.push_str("../"),
+            _ => {
+                debug!("[*]: Other path component... {:?}", c);
             }
-            s
-        })
+        }
+        s
+    })
 }
 
 
@@ -107,7 +107,10 @@ pub fn remove_dir_content(dir: &Path) -> Result<()> {
 /// Copies all files of a directory to another one except the files
 /// with the extensions given in the `ext_blacklist` array
 
-pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blacklist: &[&str])
+pub fn copy_files_except_ext(from: &Path,
+                             to: &Path,
+                             recursive: bool,
+                             ext_blacklist: &[&str])
                              -> Result<()> {
     debug!("[fn] copy_files_except_ext");
     // Check that from and to are different
@@ -132,9 +135,11 @@ pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blackl
                 fs::create_dir(&to.join(entry.file_name()))?;
             }
 
-            copy_files_except_ext(&from.join(entry.file_name()), &to.join(entry.file_name()), true, ext_blacklist)?;
+            copy_files_except_ext(&from.join(entry.file_name()),
+                                  &to.join(entry.file_name()),
+                                  true,
+                                  ext_blacklist)?;
         } else if metadata.is_file() {
-
             // Check if it is in the blacklist
             if let Some(ext) = entry.path().extension() {
                 if ext_blacklist.contains(&ext.to_str().unwrap()) {
@@ -142,22 +147,19 @@ pub fn copy_files_except_ext(from: &Path, to: &Path, recursive: bool, ext_blackl
                 }
             }
             debug!("[*] creating path for file: {:?}",
-                   &to.join(entry
-                                .path()
-                                .file_name()
-                                .expect("a file should have a file name...")));
+                   &to.join(entry.path()
+                                 .file_name()
+                                 .expect("a file should have a file name...")));
 
             info!("[*] Copying file: {:?}\n    to {:?}",
                   entry.path(),
-                  &to.join(entry
-                               .path()
-                               .file_name()
-                               .expect("a file should have a file name...")));
+                  &to.join(entry.path()
+                                .file_name()
+                                .expect("a file should have a file name...")));
             fs::copy(entry.path(),
-                     &to.join(entry
-                                  .path()
-                                  .file_name()
-                                  .expect("a file should have a file name...")))?;
+                     &to.join(entry.path()
+                                   .file_name()
+                                   .expect("a file should have a file name...")))?;
         }
     }
     Ok(())
@@ -216,7 +218,7 @@ mod tests {
 
         match copy_files_except_ext(&tmp.path(), &tmp.path().join("output"), true, &["md"]) {
             Err(e) => panic!("Error while executing the function:\n{:?}", e),
-            Ok(_) => {},
+            Ok(_) => {}
         }
 
         // Check if the correct files where created
@@ -235,6 +237,5 @@ mod tests {
         if !(&tmp.path().join("output/sub_dir_exists/file.txt")).exists() {
             panic!("output/sub_dir/file.png should exist")
         }
-
     }
 }

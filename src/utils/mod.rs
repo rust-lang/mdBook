@@ -1,6 +1,7 @@
 pub mod fs;
 
-use pulldown_cmark::{Parser, Event, Tag, html, Options, OPTION_ENABLE_TABLES, OPTION_ENABLE_FOOTNOTES};
+use pulldown_cmark::{html, Event, Options, Parser, Tag, OPTION_ENABLE_FOOTNOTES,
+                     OPTION_ENABLE_TABLES};
 use std::borrow::Cow;
 
 
@@ -17,7 +18,8 @@ pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
 
     let p = Parser::new_ext(text, opts);
     let mut converter = EventQuoteConverter::new(curly_quotes);
-    let events = p.map(clean_codeblock_headers).map(|event| converter.convert(event));
+    let events = p.map(clean_codeblock_headers)
+                  .map(|event| converter.convert(event));
 
     html::push_html(&mut s, events);
     s
@@ -30,7 +32,10 @@ struct EventQuoteConverter {
 
 impl EventQuoteConverter {
     fn new(enabled: bool) -> Self {
-        EventQuoteConverter { enabled: enabled, convert_text: true }
+        EventQuoteConverter {
+            enabled: enabled,
+            convert_text: true,
+        }
     }
 
     fn convert<'a>(&mut self, event: Event<'a>) -> Event<'a> {
@@ -39,17 +44,17 @@ impl EventQuoteConverter {
         }
 
         match event {
-            Event::Start(Tag::CodeBlock(_)) |
-            Event::Start(Tag::Code) => {
+            Event::Start(Tag::CodeBlock(_)) | Event::Start(Tag::Code) => {
                 self.convert_text = false;
                 event
-            },
-            Event::End(Tag::CodeBlock(_)) |
-            Event::End(Tag::Code) => {
+            }
+            Event::End(Tag::CodeBlock(_)) | Event::End(Tag::Code) => {
                 self.convert_text = true;
                 event
-            },
-            Event::Text(ref text) if self.convert_text => Event::Text(Cow::from(convert_quotes_to_curly(text))),
+            }
+            Event::Text(ref text) if self.convert_text => {
+                Event::Text(Cow::from(convert_quotes_to_curly(text)))
+            }
             _ => event,
         }
     }
@@ -58,13 +63,10 @@ impl EventQuoteConverter {
 fn clean_codeblock_headers(event: Event) -> Event {
     match event {
         Event::Start(Tag::CodeBlock(ref info)) => {
-            let info: String = info
-                .chars()
-                .filter(|ch| !ch.is_whitespace())
-                .collect();
+            let info: String = info.chars().filter(|ch| !ch.is_whitespace()).collect();
 
             Event::Start(Tag::CodeBlock(Cow::from(info)))
-        },
+        }
         _ => event,
     }
 }
@@ -74,20 +76,31 @@ fn convert_quotes_to_curly(original_text: &str) -> String {
     // We'll consider the start to be "whitespace".
     let mut preceded_by_whitespace = true;
 
-    original_text
-        .chars()
-        .map(|original_char| {
-            let converted_char = match original_char {
-                '\'' => if preceded_by_whitespace { '‘' } else { '’' },
-                '"' => if preceded_by_whitespace { '“' } else { '”' },
-                _ => original_char,
-            };
+    original_text.chars()
+                 .map(|original_char| {
+        let converted_char = match original_char {
+            '\'' => {
+                if preceded_by_whitespace {
+                    '‘'
+                } else {
+                    '’'
+                }
+            }
+            '"' => {
+                if preceded_by_whitespace {
+                    '“'
+                } else {
+                    '”'
+                }
+            }
+            _ => original_char,
+        };
 
-            preceded_by_whitespace = original_char.is_whitespace();
+        preceded_by_whitespace = original_char.is_whitespace();
 
-            converted_char
-        })
-        .collect()
+        converted_char
+    })
+                 .collect()
 }
 
 #[cfg(test)]
@@ -146,7 +159,8 @@ more text with spaces
 ```
 "#;
 
-            let expected = r#"<pre><code class="language-rust,no_run,should_panic,property_3"></code></pre>
+            let expected =
+                r#"<pre><code class="language-rust,no_run,should_panic,property_3"></code></pre>
 "#;
             assert_eq!(render_markdown(input, false), expected);
             assert_eq!(render_markdown(input, true), expected);
@@ -159,7 +173,8 @@ more text with spaces
 ```
 "#;
 
-            let expected = r#"<pre><code class="language-rust,no_run,,,should_panic,,property_3"></code></pre>
+            let expected =
+                r#"<pre><code class="language-rust,no_run,,,should_panic,,property_3"></code></pre>
 "#;
             assert_eq!(render_markdown(input, false), expected);
             assert_eq!(render_markdown(input, true), expected);
@@ -168,7 +183,7 @@ more text with spaces
         #[test]
         fn rust_code_block_without_properties_has_proper_html_class() {
             let input = r#"
-```rust 
+```rust
 ```
 "#;
 
@@ -183,7 +198,6 @@ more text with spaces
 "#;
             assert_eq!(render_markdown(input, false), expected);
             assert_eq!(render_markdown(input, true), expected);
-
         }
     }
 
@@ -192,12 +206,14 @@ more text with spaces
 
         #[test]
         fn it_converts_single_quotes() {
-            assert_eq!(convert_quotes_to_curly("'one', 'two'"), "‘one’, ‘two’");
+            assert_eq!(convert_quotes_to_curly("'one', 'two'"),
+                       "‘one’, ‘two’");
         }
 
         #[test]
         fn it_converts_double_quotes() {
-            assert_eq!(convert_quotes_to_curly(r#""one", "two""#), "“one”, “two”");
+            assert_eq!(convert_quotes_to_curly(r#""one", "two""#),
+                       "“one”, “two”");
         }
 
         #[test]

@@ -39,7 +39,6 @@ struct Link<'a> {
 
 impl<'a> Link<'a> {
     fn from_capture(cap: Captures<'a>) -> Option<Link<'a>> {
-
         let link_type = match (cap.get(0), cap.get(1), cap.get(2)) {
             (_, Some(typ), Some(rest)) => {
                 let mut path_props = rest.as_str().split_whitespace();
@@ -51,21 +50,22 @@ impl<'a> Link<'a> {
                     ("playpen", Some(pth)) => Some(LinkType::Playpen(pth, props)),
                     _ => None,
                 }
-            },
-            (Some(mat), None, None) if mat.as_str().starts_with(ESCAPE_CHAR) => Some(LinkType::Escaped),
+            }
+            (Some(mat), None, None) if mat.as_str().starts_with(ESCAPE_CHAR) => {
+                Some(LinkType::Escaped)
+            }
             _ => None,
         };
 
         link_type.and_then(|lnk| {
-            cap.get(0)
-                .map(|mat| {
-                         Link {
-                             start_index: mat.start(),
-                             end_index: mat.end(),
-                             link: lnk,
-                             link_text: mat.as_str(),
-                         }
-                     })
+            cap.get(0).map(|mat| {
+                               Link {
+                                   start_index: mat.start(),
+                                   end_index: mat.end(),
+                                   link: lnk,
+                                   link_text: mat.as_str(),
+                               }
+                           })
         })
     }
 
@@ -75,14 +75,22 @@ impl<'a> Link<'a> {
             // omit the escape char
             LinkType::Escaped => Ok((&self.link_text[1..]).to_owned()),
             LinkType::Include(ref pat) => {
-                file_to_string(base.join(pat)).chain_err(|| format!("Could not read file for link {}", self.link_text))
-            },
+                file_to_string(base.join(pat)).chain_err(|| {
+                                                             format!("Could not read file for \
+                                                                      link {}",
+                                                                     self.link_text)
+                                                         })
+            }
             LinkType::Playpen(ref pat, ref attrs) => {
-                let contents = file_to_string(base.join(pat))
-                    .chain_err(|| format!("Could not read file for link {}", self.link_text))?;
+                let contents = file_to_string(base.join(pat)).chain_err(|| {
+                                                                            format!("Could not \
+                                                                                     read file \
+                                                                                     for link {}",
+                                                                                    self.link_text)
+                                                                        })?;
                 let ftype = if !attrs.is_empty() { "rust," } else { "rust" };
                 Ok(format!("```{}{}\n{}\n```\n", ftype, attrs.join(","), contents))
-            },
+            }
         }
     }
 }
@@ -190,7 +198,8 @@ fn test_find_links_escaped_link() {
 
 #[test]
 fn test_find_playpens_with_properties() {
-    let s = "Some random text with escaped playpen {{#playpen file.rs editable }} and some more\n text  {{#playpen my.rs editable no_run should_panic}} ...";
+    let s = "Some random text with escaped playpen {{#playpen file.rs editable }} and some more\n \
+             text {{#playpen my.rs editable no_run should_panic}} ...";
 
     let res = find_links(s).collect::<Vec<_>>();
     println!("\nOUTPUT: {:?}\n", res);
@@ -202,16 +211,19 @@ fn test_find_playpens_with_properties() {
                         link_text: "{{#playpen file.rs editable }}",
                     },
                     Link {
-                        start_index: 90,
-                        end_index: 137,
-                        link: LinkType::Playpen(PathBuf::from("my.rs"), vec!["editable", "no_run", "should_panic"]),
+                        start_index: 89,
+                        end_index: 136,
+                        link: LinkType::Playpen(PathBuf::from("my.rs"),
+                                                vec!["editable", "no_run", "should_panic"]),
                         link_text: "{{#playpen my.rs editable no_run should_panic}}",
                     }]);
 }
 
 #[test]
 fn test_find_all_link_types() {
-    let s = "Some random text with escaped playpen {{#include file.rs}} and \\{{#contents are insignifficant in escaped link}} some more\n text  {{#playpen my.rs editable no_run should_panic}} ...";
+    let s = "Some random text with escaped playpen {{#include file.rs}} and \\{{#contents are \
+             insignifficant in escaped link}} some more\n text  {{#playpen my.rs editable no_run \
+             should_panic}} ...";
 
     let res = find_links(s).collect::<Vec<_>>();
     println!("\nOUTPUT: {:?}\n", res);
@@ -234,7 +246,8 @@ fn test_find_all_link_types() {
                Link {
                    start_index: 130,
                    end_index: 177,
-                   link: LinkType::Playpen(PathBuf::from("my.rs"), vec!["editable", "no_run", "should_panic"]),
+                   link: LinkType::Playpen(PathBuf::from("my.rs"),
+                                           vec!["editable", "no_run", "should_panic"]),
                    link_text: "{{#playpen my.rs editable no_run should_panic}}",
                });
 }

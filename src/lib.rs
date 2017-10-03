@@ -3,8 +3,8 @@
 //! **mdBook** is similar to Gitbook but implemented in Rust.
 //! It offers a command line interface, but can also be used as a regular crate.
 //!
-//! This is the API doc, but you can find a [less "low-level" documentation here](../index.html) that
-//! contains information about the command line tool, format, structure etc.
+//! This is the API doc, but you can find a [less "low-level" documentation here](../index.html)
+//! that contains information about the command line tool, format, structure etc.
 //! It is also rendered with mdBook to showcase the features and default theme.
 //!
 //! Some reasons why you would want to use the crate (over the cli):
@@ -80,9 +80,9 @@ extern crate lazy_static;
 extern crate log;
 extern crate pulldown_cmark;
 extern crate regex;
+extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-extern crate serde;
 #[macro_use]
 extern crate serde_json;
 extern crate tempdir;

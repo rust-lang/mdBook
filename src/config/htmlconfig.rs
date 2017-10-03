@@ -1,4 +1,4 @@
-use std::path::{PathBuf, Path};
+use std::path::{Path, PathBuf};
 
 use super::tomlconfig::TomlHtmlConfig;
 use super::playpenconfig::PlaypenConfig;
@@ -16,7 +16,8 @@ pub struct HtmlConfig {
 }
 
 impl HtmlConfig {
-    /// Creates a new `HtmlConfig` struct containing the configuration parameters for the HTML renderer.
+    /// Creates a new `HtmlConfig` struct containing
+    /// the configuration parameters for the HTML renderer.
     ///
     /// ```
     /// # use std::path::PathBuf;
@@ -42,7 +43,10 @@ impl HtmlConfig {
         }
     }
 
-    pub fn fill_from_tomlconfig<T: Into<PathBuf>>(&mut self, root: T, tomlconfig: TomlHtmlConfig) -> &mut Self {
+    pub fn fill_from_tomlconfig<T: Into<PathBuf>>(&mut self,
+                                                  root: T,
+                                                  tomlconfig: TomlHtmlConfig)
+                                                  -> &mut Self {
         let root = root.into();
 
         if let Some(d) = tomlconfig.destination {

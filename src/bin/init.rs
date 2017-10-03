@@ -1,6 +1,6 @@
 use std::io;
 use std::io::Write;
-use clap::{ArgMatches, SubCommand, App};
+use clap::{App, ArgMatches, SubCommand};
 use mdbook::MDBook;
 use mdbook::errors::Result;
 use get_book_dir;
@@ -10,14 +10,14 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name("init")
         .about("Create boilerplate structure and files in the directory")
         // the {n} denotes a newline which will properly aligned in all help messages
-        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'")
+        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory \
+                         when omitted)'")
         .arg_from_usage("--theme 'Copies the default theme into your source folder'")
         .arg_from_usage("--force 'skip confirmation prompts'")
 }
 
 // Init command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
-
     let book_dir = get_book_dir(args);
     let mut book = MDBook::new(&book_dir);
 
@@ -26,7 +26,6 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     // If flag `--theme` is present, copy theme to src
     if args.is_present("theme") {
-
         // Skip this if `--force` is present
         if !args.is_present("force") {
             // Print warning
@@ -45,7 +44,6 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         // Call the function that copies the theme
         book.copy_theme()?;
         println!("\nTheme copied.");
-
     }
 
     // Because of `src/book/mdbook.rs#L37-L39`, `dest` will always start with `root`
