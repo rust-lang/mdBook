@@ -36,6 +36,15 @@ h5 {
 .header + .header h5 {
   margin-top: 1em;
 }
+a.header:target h1:before,
+a.header:target h2:before,
+a.header:target h3:before,
+a.header:target h4:before {
+    display: inline-block;
+    content: "»";
+    margin-left: -30px;
+    width: 30px;
+}
 table {
   margin: 0 auto;
   border-collapse: collapse;
@@ -212,11 +221,11 @@ ul#searchresults {
 ul#searchresults li {
   margin: 10px 0px;
 }
-ul#searchresults span.breadcrumbs {
+ul#searchresults .breadcrumbs {
   float: right;
-  color: #CCC;
   font-size: 0.9em;
   margin-left: 10px;
+  padding: 2px 0 0 0;
 }
 ul#searchresults span.teaser {
   display: block;
@@ -421,6 +430,19 @@ ul#searchresults span.teaser {
 .light a > .hljs {
   color: #4183c4;
 }
+.light #searchbar {
+  border: 1px solid #AAA;
+  background-color: #FAFAFA;
+}
+.light .searchresults-header {
+  color: #666;
+}
+.light .searchresults-outer {
+  border-bottom-color: #888;
+}
+.light .breadcrumbs {
+  color: #CCC;
+}
 .light mark {
   background-color: #a2cff5;
 }
@@ -545,6 +567,19 @@ ul#searchresults span.teaser {
 .coal a:visited,
 .coal a > .hljs {
   color: #2b79a2;
+}
+.coal #searchbar {
+  border: 1px solid #AAA;
+  background-color: #B7B7B7;
+}
+.coal .searchresults-header {
+  color: #666;
+}
+.coal .searchresults-outer {
+  border-bottom-color: #98a3ad;
+}
+.coal .breadcrumbs {
+  color: #686868;
 }
 .coal mark {
   background-color: #355c7d;
@@ -671,6 +706,19 @@ ul#searchresults span.teaser {
 .navy a > .hljs {
   color: #2b79a2;
 }
+.navy #searchbar {
+  border: 1px solid #AAA;
+  background-color: #aeaec6;
+}
+.navy .searchresults-header {
+  color: #5f5f71;
+}
+.navy .searchresults-outer {
+  border-bottom-color: #5c5c68;
+}
+.navy .breadcrumbs {
+  color: #5c5c68;
+}
 .navy mark {
   background-color: #a2cff5;
 }
@@ -796,6 +844,19 @@ ul#searchresults span.teaser {
 .rust a > .hljs {
   color: #2b79a2;
 }
+.rust #searchbar {
+  border: 1px solid #AAA;
+  background-color: #FAFAFA;
+}
+.rust .searchresults-header {
+  color: #666;
+}
+.rust .searchresults-outer {
+  border-bottom-color: #888;
+}
+.rust .breadcrumbs {
+  color: #757575;
+}
 .rust mark {
   background-color: #e69f67;
 }
@@ -920,6 +981,23 @@ ul#searchresults span.teaser {
 .ayu a:visited,
 .ayu a > .hljs {
   color: #0096cf;
+}
+.ayu #searchbar {
+  border: 1px solid #848484;
+  background-color: #424242;
+  color: #FFF;
+}
+.ayu #searchbar:focus, .ayu #searchbar.active {
+  box-shadow: 0 0 5px #D4C89F;
+}
+.ayu .searchresults-header {
+  color: #666;
+}
+.ayu .searchresults-outer {
+  border-bottom-color: #888;
+}
+.ayu .breadcrumbs {
+  color: #5f5f5f;
 }
 .ayu mark {
   background-color: #e3b171;
