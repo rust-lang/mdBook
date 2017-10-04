@@ -46,4 +46,3 @@ use tempdir::TempDir;
 //     assert_eq!(book.get_destination(), dir.path().join("baz"));
 //     assert_eq!(book.get_mathjax_support(), true);
 // }
->>>>>>> Integration tests pass again

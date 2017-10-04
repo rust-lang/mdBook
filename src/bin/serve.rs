@@ -3,7 +3,7 @@ extern crate staticfile;
 extern crate ws;
 
 use std;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use self::iron::{status, AfterMiddleware, Chain, Iron, IronError, IronResult, Request, Response,
                  Set};
 use clap::{App, ArgMatches, SubCommand};
