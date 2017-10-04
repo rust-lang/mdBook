@@ -51,11 +51,6 @@
         <!-- Fetch store.js from local - TODO add CDN when 2.x.x is available on cdnjs -->
         <script src="store.js"></script>
 
-        <!-- Custom JS script -->
-        {{#each additional_js}}
-        <script type="text/javascript" src="{{this}}"></script>
-        {{/each}}
-
     </head>
     <body class="light">
         <!-- Set the theme before any content is loaded, prevents flash -->
@@ -168,5 +163,11 @@
 
         <script src="highlight.js"></script>
         <script src="book.js"></script>
+
+        <!-- Custom JS script -->
+        {{#each additional_js}}
+        <script type="text/javascript" src="{{this}}"></script>
+        {{/each}}
+
     </body>
 </html>
