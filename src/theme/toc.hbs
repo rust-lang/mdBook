@@ -1,0 +1,23 @@
+{{#each children}}
+    {{#if spacer}}
+        <li class=spacer></li>
+    {{else}}
+        {{#if section}}
+        <li>
+        {{else}}
+        <li class="affix">
+        {{/if}}
+        {{#link}}
+            {{#if section}}
+                <strong>{{ section }}</strong>
+            {{/if}}
+            {{ name }}
+        {{/link}}
+        </li>
+        {{#if children}}
+            <ul class="section">
+                {{> toc}}
+            </ul>
+        {{/if}}
+    {{/if}}
+{{/each}}

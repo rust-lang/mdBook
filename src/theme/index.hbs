@@ -68,7 +68,11 @@
         </script>
 
         <div id="sidebar" class="sidebar">
-            {{#toc}}{{/toc}}
+            {{#with toc}}
+            <ul class="chapter">
+                {{> toc}}
+            </ul>
+            {{/with}}
         </div>
 
         <div id="page-wrapper" class="page-wrapper">

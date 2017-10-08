@@ -1,4 +1,5 @@
 use renderer::html_handlebars::helpers;
+use renderer::html_handlebars::toc_json;
 use preprocess;
 use renderer::Renderer;
 use book::MDBook;
@@ -216,7 +217,7 @@ impl HtmlHandlebars {
     }
 
     fn register_hbs_helpers(&self, handlebars: &mut Handlebars) {
-        handlebars.register_helper("toc", Box::new(helpers::toc::RenderToc));
+        handlebars.register_helper("link", Box::new(helpers::toc::link));
         handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
         handlebars.register_helper("next", Box::new(helpers::navigation::next));
     }
@@ -255,6 +256,7 @@ impl Renderer for HtmlHandlebars {
 
         debug!("[*]: Register handlebars template");
         handlebars.register_template_string("index", String::from_utf8(theme.index.clone())?)?;
+        handlebars.register_template_string("toc", String::from_utf8(theme.toc.clone())?)?;
 
         debug!("[*]: Register handlebars helpers");
         self.register_hbs_helpers(&mut handlebars);
@@ -313,6 +315,39 @@ impl Renderer for HtmlHandlebars {
 
         Ok(())
     }
+}
+
+fn make_chapters(book: &MDBook) -> Result<Vec<BTreeMap<String, String>>> {
+    book.iter().map(|item| {
+        let mut chapter = BTreeMap::new();
+
+        match *item {
+            BookItem::Affix(ref ch) => {
+                chapter.insert("name".to_owned(), ch.name.to_owned());
+                let path = ch.path.to_str().ok_or_else(|| {
+                                                           io::Error::new(io::ErrorKind::Other,
+                                                                          "Could not convert path \
+                                                                           to str")
+                                                       })?;
+                chapter.insert("path".to_owned(), path.to_owned());
+            }
+            BookItem::Chapter(ref s, ref ch) => {
+                chapter.insert("section".to_owned(), s.to_owned());
+                chapter.insert("name".to_owned(), ch.name.to_owned());
+                let path = ch.path.to_str().ok_or_else(|| {
+                                                           io::Error::new(io::ErrorKind::Other,
+                                                                          "Could not convert path \
+                                                                           to str")
+                                                       })?;
+                chapter.insert("path".to_owned(), path.to_owned());
+            }
+            BookItem::Spacer => {
+                chapter.insert("spacer".to_owned(), "_spacer_".to_owned());
+            }
+        }
+
+        Ok(chapter)
+    }).collect()
 }
 
 fn make_data(book: &MDBook, config: &Config) -> Result<serde_json::Map<String, serde_json::Value>> {
@@ -381,41 +416,10 @@ fn make_data(book: &MDBook, config: &Config) -> Result<serde_json::Map<String, s
                     json!("theme-tomorrow_night.js"));
     }
 
-    let mut chapters = vec![];
+    let chapters = make_chapters(book)?;
 
-    for item in book.iter() {
-        // Create the data to inject in the template
-        let mut chapter = BTreeMap::new();
-
-        match *item {
-            BookItem::Affix(ref ch) => {
-                chapter.insert("name".to_owned(), json!(ch.name));
-                let path = ch.path.to_str().ok_or_else(|| {
-                                                           io::Error::new(io::ErrorKind::Other,
-                                                                          "Could not convert path \
-                                                                           to str")
-                                                       })?;
-                chapter.insert("path".to_owned(), json!(path));
-            }
-            BookItem::Chapter(ref s, ref ch) => {
-                chapter.insert("section".to_owned(), json!(s));
-                chapter.insert("name".to_owned(), json!(ch.name));
-                let path = ch.path.to_str().ok_or_else(|| {
-                                                           io::Error::new(io::ErrorKind::Other,
-                                                                          "Could not convert path \
-                                                                           to str")
-                                                       })?;
-                chapter.insert("path".to_owned(), json!(path));
-            }
-            BookItem::Spacer => {
-                chapter.insert("spacer".to_owned(), json!("_spacer_"));
-            }
-        }
-
-        chapters.push(chapter);
-    }
-
-    data.insert("chapters".to_owned(), json!(chapters));
+    data.insert("chapters".to_owned(), json!(chapters.iter().map(|c| json!(c)).collect::<Vec<_>>()));
+    data.insert("toc".to_owned(), toc_json::from_chapters(chapters.as_slice())?);
 
     debug!("[*]: JSON constructed");
     Ok(data)
