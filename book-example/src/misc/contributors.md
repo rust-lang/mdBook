@@ -11,3 +11,4 @@ If you have contributed to mdBook and I forgot to add you, don't hesitate to add
 - Wayne Nilsen ([waynenilsen](https://github.com/waynenilsen))
 - [funnkill](https://github.com/funkill)
 - Fu Gangqiang ([FuGangqiang](https://github.com/FuGangqiang))
+- Stefan Schindler ([dns2utf8](https://github.com/dns2utf8))

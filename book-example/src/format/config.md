@@ -16,7 +16,7 @@ description = "The example book covers examples."
 
 [output.html]
 destination = "my-example-book"
-additional-css = ["custom.css"]
+additional-css = ["my_custom.css"]
 ```
 
 ## Supported configuration options
@@ -83,7 +83,8 @@ destination = "my-book" # the output files will be generated in `root/my-book` i
 theme = "my-theme"
 curly-quotes = true
 google-analytics = "123456"
-additional-css = ["custom.css", "custom2.css"]
-additional-js = ["custom.js"]
+additional-css = ["my_custom.css", "my_custom2.css"]
+additional-js = ["my_custom.js"]
 ```
 
+<div class="custom_border">Formatting elements with custom css.</div>
