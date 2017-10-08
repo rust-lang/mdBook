@@ -30,12 +30,12 @@ fn set_props(map: &mut BTreeMap<String, serde_json::Value>, item: &BTreeMap<Stri
     if let Some(name) = item.get("name") {
         // filter all events that are not inline code blocks
         let parser = Parser::new(name).filter(|event| match *event {
-            Event::Start(Tag::Code) |
-                Event::End(Tag::Code) |
-                Event::InlineHtml(_) |
-                Event::Text(_) => true,
-            _ => false,
-        });
+                                                  Event::Start(Tag::Code) |
+                                                  Event::End(Tag::Code) |
+                                                  Event::InlineHtml(_) |
+                                                  Event::Text(_) => true,
+                                                  _ => false,
+                                              });
 
         // render markdown to html
         let mut markdown_parsed_name = String::with_capacity(name.len() * 3 / 2);
@@ -45,11 +45,17 @@ fn set_props(map: &mut BTreeMap<String, serde_json::Value>, item: &BTreeMap<Stri
     }
 
     if let Some(previous_path) = item.get("previous_path") {
-        map.insert("previous".to_owned(), json!({"link": path_to_link(previous_path)}));
+        map.insert("previous".to_owned(),
+                   json!({
+                             "link": path_to_link(previous_path)
+                         }));
     }
 
     if let Some(next_path) = item.get("next_path") {
-        map.insert("next".to_owned(), json!({"link": path_to_link(next_path)}));
+        map.insert("next".to_owned(),
+                   json!({
+                             "link": path_to_link(next_path)
+                         }));
     }
 }
 
@@ -65,20 +71,17 @@ fn set_level(level: usize, levels: &mut Vec<serde_json::Value>) {
     while level < levels.len() {
         // Push child into parent.children
         let child = levels.pop().unwrap();
-        let mut parent = levels.last_mut()
-            .unwrap()
-            .as_object_mut()
-            .unwrap();
+        let parent = levels.last_mut().unwrap().as_object_mut().unwrap();
 
         if !parent.contains_key("children") {
             parent.insert("children".to_owned(), json!([]));
         }
 
         parent.get_mut("children")
-            .unwrap()
-            .as_array_mut()
-            .unwrap()
-            .push(child);
+              .unwrap()
+              .as_array_mut()
+              .unwrap()
+              .push(child);
     }
 }
 
@@ -107,5 +110,5 @@ pub fn from_chapters(chapters: &[BTreeMap<String, String>]) -> Result<serde_json
 
     set_level(1, &mut levels);
 
-    return Ok(levels.pop().unwrap());
+    Ok(levels.pop().unwrap())
 }
