@@ -73,7 +73,7 @@ where
         Ok(w) => w,
         Err(e) => {
             println!("Error while trying to watch the files:\n\n\t{:?}", e);
-            ::std::process::exit(0);
+            ::std::process::exit(0)
         }
     };
 

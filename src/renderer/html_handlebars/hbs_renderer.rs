@@ -79,7 +79,7 @@ impl HtmlHandlebars {
                 let filepath = Path::new(&ch.path).with_extension("html");
                 let rendered = self.post_process(
                     rendered,
-                    &normalize_path(filepath.to_str().ok_or(Error::from(
+                    &normalize_path(filepath.to_str().ok_or_else(|| Error::from(
                         format!("Bad file name: {}", filepath.display()),
                     ))?),
                     ctx.book.get_html_config().get_playpen_config(),
@@ -129,8 +129,8 @@ impl HtmlHandlebars {
                     filepath: &str,
                     playpen_config: &PlaypenConfig)
                     -> String {
-        let rendered = build_header_links(&rendered, &filepath);
-        let rendered = fix_anchor_links(&rendered, &filepath);
+        let rendered = build_header_links(&rendered, filepath);
+        let rendered = fix_anchor_links(&rendered, filepath);
         let rendered = fix_code_blocks(&rendered);
         let rendered = add_playpen_pre(&rendered, playpen_config);
 
@@ -470,7 +470,7 @@ fn id_from_content(content: &str) -> String {
     }
 
     // Remove spaces and hastags indicating a header
-    let trimmed = content.trim().trim_left_matches("#").trim();
+    let trimmed = content.trim().trim_left_matches('#').trim();
 
     normalize_id(trimmed)
 }
