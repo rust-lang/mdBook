@@ -318,7 +318,9 @@ impl Renderer for HtmlHandlebars {
 }
 
 fn make_chapters(book: &MDBook) -> Result<Vec<BTreeMap<String, String>>> {
-    book.iter().map(|item| {
+    let mut chapters: Vec<BTreeMap<String, String>> = vec![];
+
+    for item in book.iter() {
         let mut chapter = BTreeMap::new();
 
         match *item {
@@ -330,6 +332,13 @@ fn make_chapters(book: &MDBook) -> Result<Vec<BTreeMap<String, String>>> {
                                                                            to str")
                                                        })?;
                 chapter.insert("path".to_owned(), path.to_owned());
+
+                if let Some(previous) = chapters.last_mut() {
+                    previous.insert("next_path".to_owned(), path.to_owned());
+                    if let Some(previous_path) = previous.get("path") {
+                        chapter.insert("previous_path".to_owned(), previous_path.to_owned());
+                    }
+                }
             }
             BookItem::Chapter(ref s, ref ch) => {
                 chapter.insert("section".to_owned(), s.to_owned());
@@ -340,14 +349,23 @@ fn make_chapters(book: &MDBook) -> Result<Vec<BTreeMap<String, String>>> {
                                                                            to str")
                                                        })?;
                 chapter.insert("path".to_owned(), path.to_owned());
+
+                if let Some(previous) = chapters.last_mut() {
+                    previous.insert("next_path".to_owned(), path.to_owned());
+                    if let Some(previous_path) = previous.get("path") {
+                        chapter.insert("previous_path".to_owned(), previous_path.to_owned());
+                    }
+                }
             }
             BookItem::Spacer => {
                 chapter.insert("spacer".to_owned(), "_spacer_".to_owned());
             }
         }
 
-        Ok(chapter)
-    }).collect()
+        chapters.push(chapter);
+    }
+
+    Ok(chapters)
 }
 
 fn make_data(book: &MDBook, config: &Config) -> Result<serde_json::Map<String, serde_json::Value>> {
@@ -417,8 +435,6 @@ fn make_data(book: &MDBook, config: &Config) -> Result<serde_json::Map<String, s
     }
 
     let chapters = make_chapters(book)?;
-
-    data.insert("chapters".to_owned(), json!(chapters.iter().map(|c| json!(c)).collect::<Vec<_>>()));
     data.insert("toc".to_owned(), toc_json::from_chapters(chapters.as_slice())?);
 
     debug!("[*]: JSON constructed");

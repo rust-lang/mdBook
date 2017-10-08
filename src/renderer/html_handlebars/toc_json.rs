@@ -5,18 +5,20 @@ use pulldown_cmark::{html, Parser, Event, Tag};
 use serde_json;
 use errors::*;
 
+fn path_to_link(path: &str) -> String {
+    Path::new(path)
+        .with_extension("html")
+        .to_str()
+        .unwrap()
+        // Hack for windows who tends to use `\` as separator instead of `/`
+        .replace("\\", "/")
+}
+
 /// Set name etc for a chapter.
 fn set_props(map: &mut BTreeMap<String, serde_json::Value>, item: &BTreeMap<String, String>) {
     if let Some(path) = item.get("path") {
         if !path.is_empty() {
-            let tmp = Path::new(item.get("path").expect("Error: path should be Some(_)"))
-                .with_extension("html")
-                .to_str()
-                .unwrap()
-                // Hack for windows who tends to use `\` as separator instead of `/`
-                .replace("\\", "/");
-
-            map.insert("link".to_owned(), json!(tmp));
+            map.insert("link".to_owned(), json!(path_to_link(path)));
         }
     }
 
@@ -40,6 +42,14 @@ fn set_props(map: &mut BTreeMap<String, serde_json::Value>, item: &BTreeMap<Stri
         html::push_html(&mut markdown_parsed_name, parser);
 
         map.insert("name".to_owned(), json!(markdown_parsed_name));
+    }
+
+    if let Some(previous_path) = item.get("previous_path") {
+        map.insert("previous".to_owned(), json!({"link": path_to_link(previous_path)}));
+    }
+
+    if let Some(next_path) = item.get("next_path") {
+        map.insert("next".to_owned(), json!({"link": path_to_link(next_path)}));
     }
 }
 

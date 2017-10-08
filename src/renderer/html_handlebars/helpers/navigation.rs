@@ -1,169 +1,70 @@
 use std::path::Path;
-use std::collections::BTreeMap;
 
 use serde_json;
 use handlebars::{Context, Handlebars, Helper, RenderContext, RenderError, Renderable};
 
+fn find_chapter<'a>(chapter: &'a serde_json::Value, needle: &str) -> Result<Option<&'a serde_json::Map<String, serde_json::Value>>, RenderError> {
+    let chapter = chapter.as_object()
+        .ok_or_else(|| RenderError::new("Chapter is not an object"))?;
 
-// Handlebars helper for navigation
+    if let Some(link) = chapter.get("link") {
+        if link == needle {
+            return Ok(Some(From::from(chapter)));
+        }
+    }
 
-pub fn previous(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
-    debug!("[fn]: previous (handlebars helper)");
+    if let Some(children) = chapter.get("children") {
+        let children = children.as_array()
+            .ok_or_else(|| RenderError::new("chapter.children is not an array"))?;
 
-    debug!("[*]: Get data from context");
-    let chapters = rc.evaluate_absolute("chapters").and_then(|c| {
-        serde_json::value::from_value::<Vec<BTreeMap<String, String>>>(c.clone())
-            .map_err(|_| RenderError::new("Could not decode the JSON data"))
-    })?;
-
-    let current = rc.evaluate_absolute("path")?
-                    .as_str()
-                    .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
-                    .replace("\"", "");
-
-    let mut previous: Option<BTreeMap<String, String>> = None;
-
-    debug!("[*]: Search for current Chapter");
-    // Search for current chapter and return previous entry
-    for item in chapters {
-        match item.get("path") {
-            Some(path) if !path.is_empty() => {
-                if path == &current {
-                    debug!("[*]: Found current chapter");
-                    if let Some(previous) = previous {
-                        debug!("[*]: Creating BTreeMap to inject in context");
-                        // Create new BTreeMap to extend the context: 'title' and 'link'
-                        let mut previous_chapter = BTreeMap::new();
-
-                        // Chapter title
-                        previous.get("name")
-                                .ok_or_else(|| {
-                                                RenderError::new("No title found for chapter in \
-                                                                  JSON data")
-                                            })
-                                .and_then(|n| {
-                                              previous_chapter.insert("title".to_owned(), json!(n));
-                                              Ok(())
-                                          })?;
-
-
-                        // Chapter link
-                        previous.get("path")
-                                .ok_or_else(|| {
-                                                RenderError::new("No path found for chapter in \
-                                                                  JSON data")
-                                            })
-                                .and_then(|p| {
-                            Path::new(p).with_extension("html")
-                                        .to_str()
-                                        .ok_or_else(|| {
-                                                        RenderError::new("Link could not be \
-                                                                          converted to str")
-                                                    })
-                                        .and_then(|p| {
-                                previous_chapter
-                                            .insert("link".to_owned(), json!(p.replace("\\", "/")));
-                                Ok(())
-                            })
-                        })?;
-
-
-                        debug!("[*]: Render template");
-                        // Render template
-                        _h.template()
-                          .ok_or_else(|| RenderError::new("Error with the handlebars template"))
-                          .and_then(|t| {
-                            let mut local_rc = rc.with_context(Context::wraps(&previous_chapter)?);
-                            t.render(r, &mut local_rc)
-                        })?;
-                    }
-                    break;
-                } else {
-                    previous = Some(item.clone());
-                }
+        for child in children {
+            if let Some(result) = find_chapter(child, needle)? {
+                return Ok(Some(result));
             }
-            _ => continue,
+        }
+    }
+
+    Ok(None)
+}
+
+fn current_chapter<'a>(rc: &'a RenderContext) -> Result<Option<&'a serde_json::Map<String, serde_json::Value>>, RenderError> {
+    let toc = rc.evaluate_absolute("toc")
+        .map_err(|_| RenderError::new("Could not find toc in context"))?;
+
+    let current_path = rc.evaluate_absolute("path")?
+        .as_str()
+        .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
+        .replace("\"", "");
+
+    let current_link = Path::new(&current_path)
+        .with_extension("html")
+        .to_str()
+        .unwrap()
+        .replace("\\", "/");
+
+    println!("Looking for \"{}\"", current_link);
+    find_chapter(toc, &current_link)
+}
+
+fn nav_link(h: &Helper, r: &Handlebars, rc: &mut RenderContext, nav_obj_key: &str) -> Result<(), RenderError> {
+    if let Some(current) = current_chapter(rc)?.map(|v| v.clone()) {
+        if let Some(nav_obj) = current.get(nav_obj_key) {
+            h.template()
+                .ok_or_else(|| RenderError::new("Error with the handlebars template"))
+                .and_then(|t| {
+                    let mut local_rc = rc.with_context(Context::wraps(&nav_obj)?);
+                    t.render(r, &mut local_rc)
+                })?;
         }
     }
 
     Ok(())
 }
 
+pub fn previous(h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
+    nav_link(h, r, rc, "previous")
+}
 
-
-
-pub fn next(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
-    debug!("[fn]: next (handlebars helper)");
-
-    debug!("[*]: Get data from context");
-    let chapters = rc.evaluate_absolute("chapters").and_then(|c| {
-        serde_json::value::from_value::<Vec<BTreeMap<String, String>>>(c.clone())
-            .map_err(|_| RenderError::new("Could not decode the JSON data"))
-    })?;
-    let current = rc.evaluate_absolute("path")?
-                    .as_str()
-                    .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
-                    .replace("\"", "");
-
-    let mut previous: Option<BTreeMap<String, String>> = None;
-
-    debug!("[*]: Search for current Chapter");
-    // Search for current chapter and return previous entry
-    for item in chapters {
-        match item.get("path") {
-            Some(path) if !path.is_empty() => {
-                if let Some(previous) = previous {
-                    let previous_path = previous.get("path").ok_or_else(|| {
-                        RenderError::new("No path found for chapter in JSON data")
-                    })?;
-
-                    if previous_path == &current {
-                        debug!("[*]: Found current chapter");
-                        debug!("[*]: Creating BTreeMap to inject in context");
-                        // Create new BTreeMap to extend the context: 'title' and 'link'
-                        let mut next_chapter = BTreeMap::new();
-
-                        item.get("name")
-                            .ok_or_else(|| {
-                                            RenderError::new("No title found for chapter in JSON \
-                                                              data")
-                                        })
-                            .and_then(|n| {
-                                          next_chapter.insert("title".to_owned(), json!(n));
-                                          Ok(())
-                                      })?;
-
-                        Path::new(path).with_extension("html")
-                                       .to_str()
-                                       .ok_or_else(|| {
-                                                       RenderError::new("Link could not converted \
-                                                                         to str")
-                                                   })
-                                       .and_then(|l| {
-                            debug!("[*]: Inserting link: {:?}", l);
-                            // Hack for windows who tends to use `\` as separator instead of `/`
-                            next_chapter.insert("link".to_owned(), json!(l.replace("\\", "/")));
-                            Ok(())
-                        })?;
-
-                        debug!("[*]: Render template");
-
-                        // Render template
-                        _h.template()
-                          .ok_or_else(|| RenderError::new("Error with the handlebars template"))
-                          .and_then(|t| {
-                            let mut local_rc = rc.with_context(Context::wraps(&next_chapter)?);
-                            t.render(r, &mut local_rc)
-                        })?;
-                        break;
-                    }
-                }
-
-                previous = Some(item.clone());
-            }
-
-            _ => continue,
-        }
-    }
-    Ok(())
+pub fn next(h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
+    nav_link(h, r, rc, "next")
 }
