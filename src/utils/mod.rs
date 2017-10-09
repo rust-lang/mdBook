@@ -2,10 +2,10 @@ pub mod fs;
 
 use pulldown_cmark::{html, Event, Options, Parser, Tag, OPTION_ENABLE_FOOTNOTES,
                      OPTION_ENABLE_TABLES};
+use std::ascii::AsciiExt;
 use std::borrow::Cow;
 use std::fmt::Write;
 use regex::Regex;
-use std::rc::Rc;
 
 /// A heading together with the successive content until the next heading will
 /// make up one `SearchDocument`. It represents some independently searchable part of the book.
@@ -16,22 +16,22 @@ pub struct SearchDocument {
     // Content: Flatted paragraphs, lists, code
     pub body : String,
     /// Needed information to generate a link to the corresponding title anchor
-    /// First part is the `reference_base` that should be the same for all documents that
+    /// First part is the `anchor_base` that should be the same for all documents that
     /// came from the same `.md` file. The second part is derived from the heading of the search
     /// document.
-    pub sref : (Rc<String>, Option<String>),
-    // Breadcrumbs like ["Main Chapter Title", "Sub Chapter Title", "H1 Heading"]
+    pub anchor : (String, Option<String>),
+    // Hierarchy like ["Main Chapter Title", "Sub Chapter Title", "H1 Heading"]
     // as a human understandable path to the search document.
-    pub breadcrumbs : Vec<Rc<String>>,
+    pub hierarchy : Vec<String>,
 }
 
 impl SearchDocument {
-    fn new(sref0 : &Rc<String>, bcs : &Vec<Rc<String>>) -> SearchDocument {
+    fn new(anchor_base : &str, hierarchy : &Vec<String>) -> SearchDocument {
         SearchDocument {
             title : "".to_owned(),
             body : "".to_owned(),
-            sref : (sref0.clone(), None),
-            breadcrumbs : bcs.clone()
+            anchor : (anchor_base.to_owned(), None),
+            hierarchy : (*hierarchy).clone()
         }
     }
 
@@ -47,19 +47,29 @@ impl SearchDocument {
             self.body.write_str(&" ").unwrap();
         }
     }
+
+    fn extend_hierarchy(&mut self, more : &Vec<String>) {
+        let last = self.hierarchy.last().map(String::as_ref).unwrap_or("").to_owned();
+
+        self.hierarchy.extend(more.iter().filter(|h|
+            h.as_str() != ""
+            && ! h.as_str().eq_ignore_ascii_case(&last))
+        .map(|h| h.to_owned()));
+
+    }
 }
 
 /// Renders markdown into flat unformatted text for usage in the search index.
 /// Refer to the struct `SearchDocument`.
 ///
-/// The field `sref` in the `SearchDocument` struct becomes
-///    `(reference_base, Some(heading_to_sref("The Section Heading")))`
+/// The field `anchor` in the `SearchDocument` struct becomes
+///    `(anchor_base, Some(heading_to_anchor("The Section Heading")))`
 pub fn render_markdown_into_searchindex<F>(
     search_documents: &mut Vec<SearchDocument>,
     text: &str,
-    reference_base: &str,
-    breadcrumbs : &Vec<Rc<String>>,
-    heading_to_sref : F)
+    anchor_base: &str,
+    hierarchy : Vec<String>,
+    heading_to_anchor : F)
     where F : Fn(&str) -> String {
 
     let mut opts = Options::empty();
@@ -67,24 +77,31 @@ pub fn render_markdown_into_searchindex<F>(
     opts.insert(OPTION_ENABLE_FOOTNOTES);
     let p = Parser::new_ext(text, opts);
 
-    let reference_base = Rc::new(reference_base.to_owned());
-    let mut current = SearchDocument::new(&reference_base, breadcrumbs);
+    let mut current = SearchDocument::new(&anchor_base, &hierarchy);
     let mut in_header = false;
+    let max_paragraph_level = 3;
+    let mut header_hierarchy = vec!["".to_owned(); max_paragraph_level as usize];
 
     for event in p {
         match event {
-            Event::Start(Tag::Header(i)) if i <= 3 => {
+            Event::Start(Tag::Header(i)) if i <= max_paragraph_level => {
+                // Paragraph finished, the next header is following now
                 if current.has_content() {
+                    // Push header_hierarchy to the search documents chapter hierarchy
+                    current.extend_hierarchy(&header_hierarchy);
                     search_documents.push(current);
                 }
-                current = SearchDocument::new(&reference_base, breadcrumbs);
+                current = SearchDocument::new(&anchor_base, &hierarchy);
                 in_header = true;
             }
-            Event::End(Tag::Header(_)) => {
-                // Possible extension: Use h1,h2,h3 as hierarchy for the breadcrumbs
-                current.breadcrumbs.push(Rc::new(current.title.clone()));
-                current.sref.1 = Some(heading_to_sref(&current.title));
+            Event::End(Tag::Header(i)) if i <= max_paragraph_level => {
                 in_header = false;
+                current.anchor.1 = Some(heading_to_anchor(&current.title));
+
+                header_hierarchy[i as usize -1] = current.title.clone();
+                for h in &mut header_hierarchy[i as usize ..] {
+                    *h = "".to_owned();
+                }
             }
             Event::Start(_) | Event::End(_) => {}
             Event::Text(text) => {
@@ -97,6 +114,7 @@ pub fn render_markdown_into_searchindex<F>(
             Event::SoftBreak | Event::HardBreak => {}
         }
     }
+    current.extend_hierarchy(&header_hierarchy);
     search_documents.push(current);
 }
 

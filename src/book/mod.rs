@@ -105,11 +105,7 @@ impl MDBook {
     /// ```
 
     pub fn iter(&self) -> BookItems {
-        BookItems {
-            items: &self.content[..],
-            current_index: 0,
-            stack: Vec::new(),
-        }
+        BookItems::new(&self.content[..])
     }
 
     /// `init()` creates some boilerplate files and directories

@@ -9,7 +9,6 @@ use theme::{Theme, playpen_editor};
 use errors::*;
 use regex::{Captures, Regex};
 
-#[cfg(feature = "searchindex")]
 use elasticlunr;
 
 use std::ascii::AsciiExt;
@@ -35,13 +34,15 @@ impl HtmlHandlebars {
                    item: &BookItem,
                    mut ctx: RenderItemContext,
                    print_content: &mut String,
-                   search_documents : &mut Vec<utils::SearchDocument>)
+                   search_documents : &mut Vec<utils::SearchDocument>,
+                   mut parents_names : Vec<String>)
                    -> Result<()> {
+
         // FIXME: This should be made DRY-er and rely less on mutable state
         match *item {
-            BookItem::Chapter(_, ref ch) | BookItem::Affix(ref ch)
-                if !ch.path.as_os_str().is_empty() =>
-            {
+            BookItem::Chapter(_, ref ch) |
+            BookItem::Affix(ref ch) if !ch.path.as_os_str().is_empty() => {
+
                 let path = ctx.book.get_source().join(&ch.path);
                 let content = utils::fs::file_to_string(&path)?;
                 let base = path.parent()
@@ -49,11 +50,20 @@ impl HtmlHandlebars {
                 let path = ch.path.to_str().ok_or_else(|| {
                     io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
                 })?;
+                let filepath = Path::new(&ch.path).with_extension("html");
+                let filepath = filepath.to_str().ok_or_else(|| {
+                    Error::from(format!("Bad file name: {}", filepath.display()))
+                })?;
 
+
+                if ! parents_names.last().map(String::as_ref).unwrap_or("")
+                    .eq_ignore_ascii_case(&ch.name) {
+                    parents_names.push(ch.name.clone());
+                }
                 utils::render_markdown_into_searchindex(search_documents,
                     &content,
-                    path,
-                    &vec![],
+                    filepath,
+                    parents_names,
                     id_from_content);
 
                 // Parse and expand links
@@ -84,17 +94,15 @@ impl HtmlHandlebars {
                 debug!("[*]: Render template");
                 let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
-                let filepath = Path::new(&ch.path).with_extension("html");
+
                 let rendered = self.post_process(
                     rendered,
-                    &normalize_path(filepath.to_str().ok_or_else(|| Error::from(
-                        format!("Bad file name: {}", filepath.display()),
-                    ))?),
+                    &normalize_path(filepath),
                     &ctx.book.config.html_config().unwrap_or_default().playpen,
                 );
 
                 // Write to file
-                info!("[*] Creating {:?} ✓", filepath.display());
+                info!("[*] Creating {:?} ✓", filepath);
                 ctx.book.write_file(filepath, &rendered.into_bytes())?;
 
                 if ctx.is_index {
@@ -282,20 +290,28 @@ impl Renderer for HtmlHandlebars {
         fs::create_dir_all(&destination)
             .chain_err(|| "Unexpected error when constructing destination path")?;
 
-        for (i, item) in book.iter().enumerate() {
+
+        let mut depthfirstiterator = book.iter();
+        let mut is_index = true;
+        while let Some(item) = depthfirstiterator.next() {
             let ctx = RenderItemContext {
                 book: book,
                 handlebars: &handlebars,
                 destination: destination.to_path_buf(),
                 data: data.clone(),
-                is_index: i == 0,
+                is_index: is_index,
                 html_config: html_config.clone(),
             };
-            self.render_item(item, ctx, &mut print_content, &mut search_documents)?;
+            self.render_item(item,
+                             ctx,
+                             &mut print_content,
+                             &mut search_documents,
+                             depthfirstiterator.collect_current_parents_names())?;
+            is_index = false;
         }
 
         // Search index
-        make_searchindex(book, &search_documents)?;
+        make_searchindex(book, search_documents)?;
 
         // Print version
         self.configure_print_version(&mut data, &print_content);
@@ -633,21 +649,29 @@ pub fn normalize_id(content: &str) -> String {
            .collect::<String>()
 }
 
-#[cfg(not(feature = "searchindex"))]
-fn make_searchindex(_book: &MDBook, _search_documents : &Vec<utils::SearchDocument>) -> Result<()> {
-    Ok(())
-}
+/// Uses elasticlunr to create a search index and exports that into `searchindex.json`.
+fn make_searchindex(book: &MDBook, search_documents : Vec<utils::SearchDocument>) -> Result<()> {
+    let mut index = elasticlunr::index::Index::new("id",
+        &["title".into(), "body".into(), "breadcrumbs".into()]);
 
-#[cfg(feature = "searchindex")]
-fn make_searchindex(book: &MDBook, search_documents : &Vec<utils::SearchDocument>) -> Result<()> {
-    let mut index = elasticlunr::IndexBuilder::new();
     for sd in search_documents {
-        index.add_document(&sd.title, &sd.body);
+        let anchor = if let Some(s) = sd.anchor.1 {
+            format!("{}#{}", sd.anchor.0, &s)
+        } else {
+            sd.anchor.0
+        };
+
+        let mut map = HashMap::new();
+        map.insert("id".into(), anchor.clone());
+        map.insert("title".into(), sd.title);
+        map.insert("body".into(), sd.body);
+        map.insert("breadcrumbs".into(), sd.hierarchy.join(" » "));
+        index.add_doc(&anchor, map);
     }
 
     book.write_file(
         Path::new("searchindex").with_extension("json"),
-        &index.to_json().as_bytes(),
+        &serde_json::to_string(&index).unwrap().as_bytes(),
     )?;
     info!("[*] Creating \"searchindex.json\" ✓");
 

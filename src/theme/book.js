@@ -144,6 +144,20 @@ $( document ).ready(function() {
             return url;
         }
         ,
+        escapeHTML: (function() {
+            var MAP = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&#34;',
+                "'": '&#39;'
+            };
+            var repl = function(c) { return MAP[c]; };
+            return function(s) {
+                return s.replace(/[&<>'"]/g, repl);
+            };
+        })()
+        ,
         formatSearchResult : function (result, searchterms) {
             // Show text around first occurrence of first search term.
             var firstoccurence = result.doc.body.search(searchterms[0]);
@@ -173,9 +187,9 @@ $( document ).ready(function() {
 
             return $('<li><a href="'
                     + url[0] + '?' + this.MARK_PARAM + '=' + searchterms + '#' + url[1]
-                    + '">' + result.doc.title + '</a>'
-                    + '<span class="breadcrumbs">' + result.doc.breadcrumbs + '</span>'
-                    + '<span class="teaser">' + teaser + '</span>'
+                    + '">' + result.doc.breadcrumbs + '</a>' // doc.title
+                    + '<span class="breadcrumbs">' + '</span>'
+                    + '<span class="teaser">' + this.escapeHTML(teaser) + '</span>'
                     + '</li>');
         }
         ,
@@ -213,7 +227,8 @@ $( document ).ready(function() {
             if (url.params.hasOwnProperty(this.SEARCH_PARAM)
                 && url.params[this.SEARCH_PARAM] != "") {
                 this.searchbar_outer.slideDown();
-                this.searchbar[0].value = url.params[this.SEARCH_PARAM];
+                this.searchbar[0].value = decodeURIComponent(
+                    (url.params[this.SEARCH_PARAM]+'').replace(/\+/g, '%20'));
                 this.searchbarKeyUpHandler();
             } else {
                 this.searchbar_outer.slideUp();
@@ -229,19 +244,42 @@ $( document ).ready(function() {
         }
         ,
         init : function () {
-            // For testing purposes: Index current page
-            this.create_test_searchindex();
-
-            // Set up events
             var this_ = this;
-            this.searchicon.click( function(e) { this_.searchIconClickHandler(); } );
-            this.searchbar.on('keyup', function(e) { this_.searchbarKeyUpHandler(); } );
-            $(document).on('keydown', function (e) { this_.globalKeyHandler(e); });
-            // If the user uses the browser buttons, do the same as if a reload happened
-            window.onpopstate = function(e) { this_.doSearchOrMarkFromUrl(); };
+            window.md = this;
 
-            // If reloaded, do the search or mark again, depending on the current url parameters
-            this.doSearchOrMarkFromUrl();
+            // For testing purposes: Index current page
+            //this.create_test_searchindex();
+
+            $.getJSON("searchindex.json", function(json) {
+                //this_.searchindex = elasticlunr.Index.load(json);
+
+                // TODO: Workaround: reindex everything
+                var searchindex = elasticlunr(function () {
+                    this.addField('body');
+                    this.addField('title');
+                    this.addField('breadcrumbs')
+                    this.setRef('id');
+                });
+                window.mjs = json;
+                var docs = json.documentStore.docs;
+                for (var key in docs) {
+                    searchindex.addDoc(docs[key]);
+                }
+                this_.searchindex = searchindex;
+
+
+                // Set up events
+                this_.searchicon.click( function(e) { this_.searchIconClickHandler(); } );
+                this_.searchbar.on('keyup', function(e) { this_.searchbarKeyUpHandler(); } );
+                $(document).on('keydown', function (e) { this_.globalKeyHandler(e); });
+                // If the user uses the browser buttons, do the same as if a reload happened
+                window.onpopstate = function(e) { this_.doSearchOrMarkFromUrl(); };
+
+                // If reloaded, do the search or mark again, depending on the current url parameters
+                this_.doSearchOrMarkFromUrl();
+
+            });
+
         }
         ,
         hasFocus : function () {

@@ -88,7 +88,6 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate tempdir;
 extern crate toml;
-#[cfg(feature = "searchindex")]
 extern crate elasticlunr;
 
 mod parse;
