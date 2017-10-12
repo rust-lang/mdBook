@@ -124,6 +124,7 @@ impl HtmlHandlebars {
         Ok(())
     }
 
+    #[cfg_attr(feature = "cargo-clippy", allow(let_and_return))]
     fn post_process(&self,
                     rendered: String,
                     filepath: &str,
