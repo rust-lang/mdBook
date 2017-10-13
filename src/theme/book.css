@@ -1,7 +1,7 @@
-html,
-body {
+html {
   font-family: "Open Sans", sans-serif;
   color: #333;
+  overflow-x: hidden;
 }
 body {
   margin: 0;
