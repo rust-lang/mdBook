@@ -67,19 +67,11 @@ table thead td {
   -ms-transition: left 0.5s;
   transition: left 0.5s;
 }
-@media only screen and (max-width: 1060px) {
-  .sidebar {
-    left: -300px;
-  }
-}
 .sidebar code {
   line-height: 2em;
 }
 .sidebar-hidden .sidebar {
   left: -300px;
-}
-.sidebar-visible .sidebar {
-  left: 0;
 }
 .chapter {
   list-style: none outside none;
@@ -243,26 +235,20 @@ table thead td {
   text-decoration: none;
 }
 .previous {
-  left: 315px;
+  left: 15px;
   -webkit-transition: left 0.5s;
   -moz-transition: left 0.5s;
   -o-transition: left 0.5s;
   -ms-transition: left 0.5s;
   transition: left 0.5s;
 }
-@media only screen and (max-width: 1060px) {
-  .previous {
-    left: 15px;
-  }
-}
 .next {
   right: 15px;
 }
-.sidebar-hidden .previous {
-  left: 15px;
-}
-.sidebar-visible .previous {
-  left: 315px;
+@media only screen and (min-width: 1251px) {
+  .sidebar-visible .previous {
+    left: 315px;
+  }
 }
 @media only screen and (max-width: 1060px) {
   .nav-wrapper {

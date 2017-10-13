@@ -68,14 +68,6 @@ $( document ).ready(function() {
     // Toggle sidebar
     $("#sidebar-toggle").click(sidebarToggle);
 
-    // Hide sidebar on section link click if it occupies large space
-    // in relation to the whole screen (phone in portrait)
-    $("#sidebar a").click(function(event){
-        if (sidebar.width() > window.screen.width * 0.4) {
-            sidebarToggle();
-        }
-    });
-
     // Scroll sidebar to current active section
     var activeSection = sidebar.find(".active");
     if(activeSection.length) {

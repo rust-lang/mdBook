@@ -20,21 +20,15 @@
 .mobile-nav-chapters { display: none }
 .nav-chapters:hover { text-decoration: none }
 .previous {
-    left: $sidebar-width + $page-padding
+    left: $page-padding
     transition: left 0.5s
-
-    @media only screen and (max-width: $max-page-width-with-hidden-sidebar) {
-        left: $page-padding
-    }
 }
 .next { right: $page-padding }
 
-.sidebar-hidden .previous {
-  left: $page-padding
-}
-
-.sidebar-visible .previous {
-  left: $sidebar-width + $page-padding
+@media only screen and (min-width: 1251px) {
+    .sidebar-visible .previous {
+        left: $sidebar-width + $page-padding
+    }
 }
 
 .nav-wrapper {
