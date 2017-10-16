@@ -32,10 +32,9 @@ impl Config {
     /// Load the configuration file from disk.
     pub fn from_disk<P: AsRef<Path>>(config_file: P) -> Result<Config> {
         let mut buffer = String::new();
-        File::open(config_file)
-            .chain_err(|| "Unable to open the configuration file")?
-            .read_to_string(&mut buffer)
-            .chain_err(|| "Couldn't read the file")?;
+        File::open(config_file).chain_err(|| "Unable to open the configuration file")?
+                               .read_to_string(&mut buffer)
+                               .chain_err(|| "Couldn't read the file")?;
 
         Config::from_str(&buffer)
     }
@@ -57,25 +56,34 @@ impl Config {
 
     /// Try to get the configuration for a preprocessor, deserializing it as a
     /// `T`.
-    pub fn try_get_preprocessor<'de, T: Deserialize<'de>, S: AsRef<str>>(&self, name: S) -> Result<T> {
+    pub fn try_get_preprocessor<'de, T: Deserialize<'de>, S: AsRef<str>>(&self,
+                                                                         name: S)
+                                                                         -> Result<T> {
         get_deserialized(name, &self.preprocess)
     }
 
     /// Try to get the configuration for a postprocessor, deserializing it as a
     /// `T`.
-    pub fn try_get_postprocessor<'de, T: Deserialize<'de>, S: AsRef<str>>(&self, name: S) -> Result<T> {
+    pub fn try_get_postprocessor<'de, T: Deserialize<'de>, S: AsRef<str>>(&self,
+                                                                          name: S)
+                                                                          -> Result<T> {
         get_deserialized(name, &self.postprocess)
     }
 }
 
 /// Convenience function to load a value from some table then deserialize it.
-fn get_deserialized<'de, T: Deserialize<'de>, S: AsRef<str>>(name: S, table: &BTreeMap<String, Value>) -> Result<T> {
-    match table.get(name.as_ref()) {
-        Some(output) => output
-            .clone()
-            .try_into()
-            .chain_err(|| "Couldn't deserialize the value"),
-        None => bail!("Key Not Found"),
+fn get_deserialized<'de, T: Deserialize<'de>, S: AsRef<str>>(name: S,
+                                                             table: &BTreeMap<String, Value>)
+                                                             -> Result<T> {
+    let name = name.as_ref();
+
+    match table.get(name) {
+        Some(output) => {
+            output.clone()
+                  .try_into()
+                  .chain_err(|| "Couldn't deserialize the value")
+        }
+        None => bail!("Key Not Found, {}", name),
     }
 }
 

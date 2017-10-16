@@ -296,7 +296,7 @@ impl Renderer for HtmlHandlebars {
 
         let rendered = self.post_process(rendered,
                                          "print.html",
-                                         &book.config.html_config().unwrap_or_default().playpen);
+                                         &html_config.playpen);
 
         book.write_file(Path::new("print").with_extension("html"),
                         &rendered.into_bytes())?;
@@ -329,7 +329,7 @@ fn make_data(book: &MDBook, config: &Config) -> Result<serde_json::Map<String, s
     }
 
     // Add google analytics tag
-    if let Some(ref ga) = book.config.html_config().and_then(|html| html.google_analytics) {
+    if let Some(ref ga) = config.html_config().and_then(|html| html.google_analytics) {
         data.insert("google_analytics".to_owned(), json!(ga));
     }
 
