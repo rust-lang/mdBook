@@ -105,7 +105,7 @@ pub mod errors {
         foreign_links {
             Io(::std::io::Error);
             HandlebarsRender(::handlebars::RenderError);
-            HandlebarsTemplate(::handlebars::TemplateError);
+            HandlebarsTemplate(Box<::handlebars::TemplateError>);
             Utf8(::std::string::FromUtf8Error);
         }
 
@@ -114,6 +114,13 @@ pub mod errors {
                 description("A subprocess failed")
                 display("{}: {}", message, String::from_utf8_lossy(&output.stdout))
             }
+        }
+    }
+
+    // Box to halve the size of Error
+    impl From<::handlebars::TemplateError> for Error {
+        fn from(e: ::handlebars::TemplateError) -> Error {
+            From::from(Box::new(e))
         }
     }
 }
