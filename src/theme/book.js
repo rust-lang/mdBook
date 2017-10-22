@@ -25,7 +25,7 @@ $( document ).ready(function() {
         },
         mark_exclude : [], // ['.hljs']
         current_searchterm : "",
-        teaser_size_half : 80,
+        teaser_words : 30,
         resultcount_limit : 30,
         SEARCH_PARAM : 'search',
         MARK_PARAM : 'highlight',
@@ -160,24 +160,7 @@ $( document ).ready(function() {
         ,
         formatSearchResult : function (result, searchterms) {
             // Show text around first occurrence of first search term.
-            var firstoccurence = result.doc.body.search(searchterms[0]);
-            var teaser = "";
-            if (firstoccurence != -1) {
-                var teaserstartindex = firstoccurence - this.teaser_size_half;
-                var nextwordindex = result.doc.body.indexOf(" ", teaserstartindex);
-                if (nextwordindex != -1) {
-                    teaserstartindex = nextwordindex;
-                }
-                var teaserendindex = firstoccurence + this.teaser_size_half;
-                nextwordindex = result.doc.body.indexOf(" ", teaserendindex);
-                if (nextwordindex != -1) {
-                    teaserendindex = nextwordindex;
-                }
-                teaser = (teaserstartindex > 0) ? "... " : "";
-                teaser += result.doc.body.substring(teaserstartindex, teaserendindex) + " ...";
-            } else {
-                teaser = result.doc.body.substr(0, this.teaser_size_half * 2) + " ...";
-            }
+            var teaser = this.makeTeaser(this.escapeHTML(result.doc.body), searchterms);
 
             // The ?MARK_PARAM= parameter belongs inbetween the page and the #heading-anchor
             var url = result.ref.split("#");
@@ -189,8 +172,102 @@ $( document ).ready(function() {
                     + url[0] + '?' + this.MARK_PARAM + '=' + searchterms + '#' + url[1]
                     + '">' + result.doc.breadcrumbs + '</a>' // doc.title
                     + '<span class="breadcrumbs">' + '</span>'
-                    + '<span class="teaser">' + this.escapeHTML(teaser) + '</span>'
+                    + '<span class="teaser">' + teaser + '</span>'
                     + '</li>');
+        }
+        ,
+        makeTeaser : function (body, searchterms) {
+            // The strategy is as follows:
+            // First, assign a value to each word in the document:
+            //  Words that correspond to search terms (stemmer aware): 40
+            //  Normal words: 2
+            //  First word in a sentence: 8
+            // Then use a sliding window with a constant number of words and count the
+            // sum of the values of the words within the window. Then use the window that got the
+            // maximum sum. If there are multiple maximas, then get the last one.
+            // Enclose the terms in <em>.
+            var stemmed_searchterms = searchterms.map(elasticlunr.stemmer);
+            var searchterm_weight = 40;
+            var weighted = []; // contains elements of ["word", weight, index_in_document]
+            // split in sentences, then words
+            var sentences = body.split('. ');
+            var index = 0;
+            var value = 0;
+            var searchterm_found = false;
+            for (var sentenceindex in sentences) {
+                var words = sentences[sentenceindex].split(' ');
+                value = 8;
+                for (var wordindex in words) {
+                    var word = words[wordindex];
+                    if (word.length > 0) {
+                        for (var searchtermindex in stemmed_searchterms) {
+                            if (elasticlunr.stemmer(word).startsWith(stemmed_searchterms[searchtermindex])) {
+                                value = searchterm_weight;
+                                searchterm_found = true;
+                            }
+                        };
+                        weighted.push([word, value, index]);
+                        value = 2;
+                    }
+                    index += word.length;
+                    index += 1; // ' ' or '.' if last word in sentence
+                };
+                index += 1; // because we split at a two-char boundary '. '
+            };
+
+            if (weighted.length == 0) {
+                return body;
+            }
+
+            var window_weight = [];
+            var window_size = Math.min(weighted.length, this.teaser_words);
+
+            var cur_sum = 0;
+            for (var wordindex = 0; wordindex < window_size; wordindex++) {
+                cur_sum += weighted[wordindex][1];
+            };
+            window_weight.push(cur_sum);
+            for (var wordindex = 0; wordindex < weighted.length - window_size; wordindex++) {
+                cur_sum -= weighted[wordindex][1];
+                cur_sum += weighted[wordindex + window_size][1];
+                window_weight.push(cur_sum);
+            };
+
+            if (searchterm_found) {
+                var max_sum = 0;
+                var max_sum_window_index = 0;
+                // backwards
+                for (var i = window_weight.length - 1; i >= 0; i--) {
+                    if (window_weight[i] > max_sum) {
+                        max_sum = window_weight[i];
+                        max_sum_window_index = i;
+                    }
+                };
+            } else {
+                max_sum_window_index = 0;
+            }
+
+            // add <em/> around searchterms
+            var teaser_split = [];
+            var index = weighted[max_sum_window_index][2];
+            for (var i = max_sum_window_index; i < max_sum_window_index+window_size; i++) {
+                var word = weighted[i];
+                if (index < word[2]) {
+                    // missing text from index to start of `word`
+                    teaser_split.push(body.substring(index, word[2]));
+                    index = word[2];
+                }
+                if (word[1] == searchterm_weight) {
+                    teaser_split.push("<em>")
+                }
+                index = word[2] + word[0].length;
+                teaser_split.push(body.substring(word[2], index));
+                if (word[1] == searchterm_weight) {
+                    teaser_split.push("</em>")
+                }
+            };
+
+            return teaser_split.join('');
         }
         ,
         doSearch : function (searchterm) {
@@ -245,7 +322,6 @@ $( document ).ready(function() {
         ,
         init : function () {
             var this_ = this;
-            window.md = this;
 
             // For testing purposes: Index current page
             //this.create_test_searchindex();
@@ -296,6 +372,7 @@ $( document ).ready(function() {
                     (this.searchbar[0].value.trim() != 0) ? "push" : "replace");
                 this.unfocusSearchbar();
                 this.searchbar_outer.slideUp();
+                this.content.unmark();
                 return;
             }
             if (!this.hasFocus() && e.keyCode == this.SEARCH_HOTKEY_KEYCODE) {

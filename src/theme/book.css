@@ -231,6 +231,11 @@ ul#searchresults span.teaser {
   display: block;
   clear: both;
   margin: 5px 0 0 20px;
+  font-size: 0.8em;
+}
+ul#searchresults span.teaser em {
+  font-weight: bold;
+  font-style: normal;
 }
 .menu-title {
   position: absolute;
