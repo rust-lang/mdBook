@@ -82,6 +82,33 @@ $( document ).ready(function() {
         sidebar.scrollTop(activeSection.offset().top);
     }
 
+    var firstContact = null;
+
+    $(this).on('touchstart', function(e) {
+        firstContact = {
+            x: e.originalEvent.touches[0].clientX,
+            time: Date.now()
+        };
+    });
+    
+    $(this).on('touchmove', function(e) {
+        if (!firstContact) 
+            return;
+
+        var curX = e.originalEvent.touches[0].clientX;
+        var xDiff = curX - firstContact.x,
+            tDiff = Date.now() - firstContact.time;
+
+        if (tDiff < 250 && Math.abs(xDiff) >= 150) {
+            if (xDiff >= 0 && firstContact.x < Math.min(document.body.clientWidth * 0.25, 300))
+                showSidebar();
+            else if (xDiff < 0 && curX < 300)
+                hideSidebar();
+
+            firstContact = null;
+        }
+    });
+
 
     // Theme button
     $("#theme-toggle").click(function(){
@@ -334,21 +361,27 @@ function showTooltip(elem, msg) {
 
 function sidebarToggle() {
     var html = $("html");
-    if ( html.hasClass("sidebar-hidden") ) {
-        html.removeClass("sidebar-hidden").addClass("sidebar-visible");
-        store.set('mdbook-sidebar', 'visible');
-    } else if ( html.hasClass("sidebar-visible") ) {
-        html.removeClass("sidebar-visible").addClass("sidebar-hidden");
-        store.set('mdbook-sidebar', 'hidden');
+    if (html.hasClass("sidebar-hidden")) {
+        showSidebar();
+    } else if (html.hasClass("sidebar-visible")) {
+        hideSidebar();
     } else {
-        if($("#sidebar").position().left === 0){
-            html.addClass("sidebar-hidden");
-            store.set('mdbook-sidebar', 'hidden');
+        if ($("#sidebar").position().left === 0){
+            hideSidebar();
         } else {
-            html.addClass("sidebar-visible");
-            store.set('mdbook-sidebar', 'visible');
+            showSidebar();
         }
     }
+}
+
+function showSidebar() {
+    $('html').removeClass('sidebar-hidden').addClass('sidebar-visible');
+    store.set('mdbook-sidebar', 'visible');
+}
+
+function hideSidebar() {
+    $('html').removeClass('sidebar-visible').addClass('sidebar-hidden');
+    store.set('mdbook-sidebar', 'hidden');
 }
 
 function run_rust_code(code_block) {
