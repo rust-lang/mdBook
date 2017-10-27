@@ -76,8 +76,8 @@
             <div class="page" tabindex="-1">
                 <div id="menu-bar" class="menu-bar">
                     <div class="left-buttons">
-                        <i id="sidebar-toggle" class="fa fa-bars"></i>
-                        <i id="theme-toggle" class="fa fa-paint-brush"></i>
+                        <i id="sidebar-toggle" class="fa fa-bars" title="Toggle sidebar"></i>
+                        <i id="theme-toggle" class="fa fa-paint-brush" title="Change theme"></i>
                     </div>
 
                     <h1 class="menu-title">{{ book_title }}</h1>
@@ -95,13 +95,13 @@
 
                 <!-- Mobile navigation buttons -->
                 {{#previous}}
-                    <a rel="prev" href="{{link}}" class="mobile-nav-chapters previous">
+                    <a rel="prev" href="{{link}}" class="mobile-nav-chapters previous" title="Previous chapter">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 {{/previous}}
 
                 {{#next}}
-                    <a rel="next" href="{{link}}" class="mobile-nav-chapters next">
+                    <a rel="next" href="{{link}}" class="mobile-nav-chapters next" title="Next chapter">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 {{/next}}
