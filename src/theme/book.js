@@ -186,15 +186,17 @@ $( document ).ready(function() {
         if(!lines_hidden) { return; }
 
         // add expand button
-        pre_block.prepend("<div class=\"buttons\"><i class=\"fa fa-expand\"></i></div>");
+        pre_block.prepend("<div class=\"buttons\"><i class=\"fa fa-expand\" title=\"Show hidden lines\"></i></div>");
 
         pre_block.find("i").click(function(e){
             if( $(this).hasClass("fa-expand") ) {
                 $(this).removeClass("fa-expand").addClass("fa-compress");
+                $(this).attr("title", "Hide lines");
                 pre_block.find("span.hidden").removeClass("hidden").addClass("unhidden");
             }
             else {
                 $(this).removeClass("fa-compress").addClass("fa-expand");
+                $(this).attr("title", "Show hidden lines");
                 pre_block.find("span.unhidden").removeClass("unhidden").addClass("hidden");
             }
         });
@@ -209,12 +211,12 @@ $( document ).ready(function() {
             pre_block.prepend("<div class=\"buttons\"></div>");
             buttons = pre_block.find(".buttons");
         }
-        buttons.prepend("<i class=\"fa fa-play play-button hidden\"></i>");
-        buttons.prepend("<i class=\"fa fa-copy clip-button\"><i class=\"tooltiptext\"></i></i>");
+        buttons.prepend("<i class=\"fa fa-play play-button hidden\" title=\"Run this code\"></i>");
+        buttons.prepend("<i class=\"fa fa-copy clip-button\" title=\"Copy to clipboard\"><i class=\"tooltiptext\"></i></i>");
 
         let code_block = pre_block.find("code").first();
         if (window.ace && code_block.hasClass("editable")) {
-            buttons.prepend("<i class=\"fa fa-history reset-button\"></i>");
+            buttons.prepend("<i class=\"fa fa-history reset-button\" title=\"Undo changes\"></i>");
         }
 
         buttons.find(".play-button").click(function(e){
