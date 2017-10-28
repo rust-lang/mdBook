@@ -211,16 +211,21 @@ $( document ).ready(function() {
             pre_block.prepend("<div class=\"buttons\"></div>");
             buttons = pre_block.find(".buttons");
         }
-        buttons.prepend("<i class=\"fa fa-play play-button hidden\" title=\"Run this code\"></i>");
-        buttons.prepend("<i class=\"fa fa-copy clip-button\" title=\"Copy to clipboard\"><i class=\"tooltiptext\"></i></i>");
-
         let code_block = pre_block.find("code").first();
+        buttons.prepend("<i class=\"fa fa-play play-button hidden\" title=\"Run this code\"></i>");
+        if (code_block.hasClass("testable")) {
+            buttons.prepend("<i class=\"fa fa-check test-button hidden\" title=\"Run tests\"></i>");
+        }
+        buttons.prepend("<i class=\"fa fa-copy clip-button\" title=\"Copy to clipboard\"><i class=\"tooltiptext\"></i></i>");
         if (window.ace && code_block.hasClass("editable")) {
             buttons.prepend("<i class=\"fa fa-history reset-button\" title=\"Undo changes\"></i>");
         }
 
         buttons.find(".play-button").click(function(e){
             run_rust_code(pre_block);
+        });
+        buttons.find(".test-button").click(function(e){
+            run_rust_code(pre_block, true);
         });
         buttons.find(".clip-button").mouseout(function(e){
             hideTooltip(e.currentTarget);
@@ -296,11 +301,13 @@ function handle_crate_list_update(playpen_block, playground_crates) {
 // used crates vs ones available on http://play.rust-lang.org
 function update_play_button(pre_block, playground_crates) {
     var play_button = pre_block.find(".play-button");
+    var test_button = pre_block.find(".test-button");
 
     var classes = pre_block.find("code").attr("class").split(" ");
     // skip if code is `no_run`
     if (classes.indexOf("no_run") > -1) {
         play_button.addClass("hidden");
+        test_button.addClass("hidden");
         return;
     }
 
@@ -319,8 +326,10 @@ function update_play_button(pre_block, playground_crates) {
 
     if (all_available) {
         play_button.removeClass("hidden");
+        test_button.removeClass("hidden");
     } else {
         play_button.addClass("hidden");
+        test_button.addClass("hidden");
     }
 }
 
@@ -353,7 +362,7 @@ function sidebarToggle() {
     }
 }
 
-function run_rust_code(code_block) {
+function run_rust_code(code_block, as_test) {
     var result_block = code_block.find(".result");
     if(result_block.length === 0) {
         code_block.append("<code class=\"result hljs language-bash\"></code>");
@@ -374,7 +383,12 @@ function run_rust_code(code_block) {
         params.channel = "nightly";
     }
 
-    result_block.text("Running...");
+    if(as_test) {
+        result_block.text("Running tests...");
+        params.tests = true;
+    } else {
+        result_block.text("Running...");
+    }
 
     $.ajax({
         url: "https://play.rust-lang.org/execute",
