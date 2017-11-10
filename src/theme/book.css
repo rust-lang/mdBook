@@ -266,7 +266,7 @@ table thead td {
   left: 315px;
 }
 .theme-popup {
-  position: relative;
+  position: absolute;
   left: 10px;
   z-index: 1000;
   border-radius: 4px;
