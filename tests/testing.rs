@@ -1,8 +1,8 @@
 extern crate mdbook;
 
-mod dummy;
+mod dummy_book;
 
-use dummy::DummyBook;
+use dummy_book::DummyBook;
 use mdbook::MDBook;
 
 

@@ -19,14 +19,6 @@ use self::mdbook::MDBook;
 use self::walkdir::WalkDir;
 
 
-const SUMMARY_MD: &'static str = include_str!("book/SUMMARY.md");
-const INTRO: &'static str = include_str!("book/intro.md");
-const FIRST: &'static str = include_str!("book/first/index.md");
-const NESTED: &'static str = include_str!("book/first/nested.md");
-const SECOND: &'static str = include_str!("book/second.md");
-const CONCLUSION: &'static str = include_str!("book/conclusion.md");
-
-
 /// Create a dummy book in a temporary directory, using the contents of
 /// `SUMMARY_MD` as a guide.
 ///
@@ -60,28 +52,12 @@ impl DummyBook {
     /// temporary directory then chances are you've got bigger problems...
     pub fn build(&self) -> TempDir {
         let temp = TempDir::new("dummy_book").unwrap();
-
-        let src = temp.path().join("src");
-        fs::create_dir_all(&src).unwrap();
-
-        let first = src.join("first");
-        fs::create_dir_all(&first).unwrap();
+        let dummy_book_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/dummy_book");
+        recursive_copy(&dummy_book_root, temp.path()).expect("Couldn't copy files into a \
+                                                              temporary directory");
 
         let to_substitute = if self.passing_test { "true" } else { "false" };
-        let nested_text = NESTED.replace("$TEST_STATUS", to_substitute);
-
-        let inputs = vec![(src.join("SUMMARY.md"), SUMMARY_MD),
-                          (src.join("intro.md"), INTRO),
-                          (first.join("index.md"), FIRST),
-                          (first.join("nested.md"), &nested_text),
-                          (src.join("second.md"), SECOND),
-                          (src.join("conclusion.md"), CONCLUSION)];
-
-        for (path, content) in inputs {
-            File::create(path).unwrap()
-                              .write_all(content.as_bytes())
-                              .unwrap();
-        }
+        // let nested_text = NESTED.replace("$TEST_STATUS", to_substitute);
 
         temp
     }
@@ -93,32 +69,22 @@ impl Default for DummyBook {
     }
 }
 
-
-/// Copy the example book to a temporary directory and build it.
-pub fn build_example_book() -> TempDir {
-    let temp = TempDir::new("mdbook").expect("Couldn't create a temporary directory");
-    let book_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("book-example");
-
-    recursive_copy(&book_root, temp.path()).expect("Couldn't copy the book example to a temporary directory");
-
-    let book = MDBook::new(temp.path()).build().expect("Building failed");
-    temp
-}
-
-
 /// Read the contents of the provided file into memory and then iterate through
 /// the list of strings asserting that the file contains all of them.
 pub fn assert_contains_strings<P: AsRef<Path>>(filename: P, strings: &[&str]) {
     let filename = filename.as_ref();
 
     let mut content = String::new();
-    File::open(&filename)
-        .expect("Couldn't open the provided file")
-        .read_to_string(&mut content)
-        .expect("Couldn't read the file's contents");
+    File::open(&filename).expect("Couldn't open the provided file")
+                         .read_to_string(&mut content)
+                         .expect("Couldn't read the file's contents");
 
     for s in strings {
-        assert!(content.contains(s), "Searching for {:?} in {}\n\n{}", s, filename.display(), content);
+        assert!(content.contains(s),
+                "Searching for {:?} in {}\n\n{}",
+                s,
+                filename.display(),
+                content);
     }
 }
 
