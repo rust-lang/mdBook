@@ -56,11 +56,19 @@ impl DummyBook {
         recursive_copy(&dummy_book_root, temp.path()).expect("Couldn't copy files into a \
                                                               temporary directory");
 
-        let to_substitute = if self.passing_test { "true" } else { "false" };
-        // let nested_text = NESTED.replace("$TEST_STATUS", to_substitute);
+        let sub_pattern = if self.passing_test { "true" } else { "false" };
+        let file_containing_test = temp.path().join("src/first/nested.md");
+        poor_mans_sed(&file_containing_test, "$TEST_STATUS", sub_pattern);
 
         temp
     }
+}
+
+fn poor_mans_sed(filename: &Path, from: &str, to: &str) {
+    let contents = read_file(filename).unwrap();
+    File::create(filename).unwrap()
+                          .write_all(contents.replace(from, to).as_bytes())
+                          .unwrap();
 }
 
 impl Default for DummyBook {
