@@ -161,8 +161,10 @@ impl<'de> Deserialize<'de> for Config {
         if is_legacy_format(&table) {
             warn!("It looks like you are using the legacy book.toml format.");
             warn!("We'll parse it for now, but you should probably convert to the new format.");
-            warn!("See the mdbook documentation for more details");
-            warn!("http://azerupi.github.io/mdBook/format/config.html");
+            warn!("See the mdbook documentation for more details, although as a rule of thumb");
+            warn!("just move all top level configuration entries like `title`, `author` and ");
+            warn!("`description` under a table called `[book]` and it should all work.");
+            warn!("Documentation: http://rust-lang-nursery.github.io/mdBook/format/config.html");
             return Ok(Config::from_legacy(table));
         }
 
