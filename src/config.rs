@@ -7,7 +7,6 @@ use serde::{Deserialize, Deserializer};
 
 use errors::*;
 
-
 /// The overall configuration object for MDBook.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Config {
@@ -71,6 +70,43 @@ impl Config {
             bail!("Key not found, {:?}", name)
         }
     }
+
+    fn from_legacy(mut table: Table) -> Config {
+        let mut cfg = Config::default();
+
+        // we use a macro here instead of a normal loop because the $out
+        // variable can be different types. This way we can make type inference
+        // figure out what try_into() deserializes to.
+        macro_rules! get_and_insert {
+            ($table:expr, $key:expr => $out:expr) => {
+                if let Some(value) = $table.remove($key).and_then(|v| v.try_into().ok()) {
+                    $out = value;
+                }
+            };
+        }
+
+        get_and_insert!(table, "title" => cfg.book.title);
+        get_and_insert!(table, "authors" => cfg.book.authors);
+        get_and_insert!(table, "source" => cfg.book.src);
+        get_and_insert!(table, "description" => cfg.book.description);
+
+        // This complicated chain of and_then's is so we can move 
+        // "output.html.destination" to "book.build_dir" and parse it into a 
+        // PathBuf.
+        let destination: Option<PathBuf> = table.get_mut("output")
+            .and_then(|output| output.as_table_mut())
+            .and_then(|output| output.get_mut("html"))
+            .and_then(|html| html.as_table_mut())
+            .and_then(|html| html.remove("destination"))
+            .and_then(|dest| dest.try_into().ok());
+
+        if let Some(dest) = destination {
+            cfg.book.build_dir = dest;
+        }
+
+        cfg.rest = table;
+        cfg
+    }
 }
 
 fn recursive_get<'a>(key: &[&str], table: &'a Table) -> Option<&'a Value> {
@@ -111,19 +147,39 @@ fn recursive_get_mut<'a>(key: &[&str], table: &'a mut Table) -> Option<&'a mut V
 impl<'de> Deserialize<'de> for Config {
     fn deserialize<D: Deserializer<'de>>(de: D) -> ::std::result::Result<Self, D::Error> {
         let raw = Value::deserialize(de)?;
-        if let Value::Table(mut table) = raw {
-            let book: BookConfig = table.remove("book")
-                                        .and_then(|value| value.try_into().ok())
-                                        .unwrap_or_default();
-            Ok(Config {
-                   book: book,
-                   rest: table,
-               })
-        } else {
-            use serde::de::Error;
-            Err(D::Error::custom("A config file should always be a toml table"))
+
+        let mut table = match raw {
+            Value::Table(t) => t,
+            _ => {
+                use serde::de::Error;
+                return Err(D::Error::custom(
+                    "A config file should always be a toml table",
+                ));
+            }
+        };
+
+        if is_legacy_format(&table) {
+            warn!("It looks like you are using the legacy book.toml format.");
+            warn!("We'll parse it for now, but you should probably convert to the new format.");
+            warn!("See the mdbook documentation for more details");
+            warn!("http://azerupi.github.io/mdBook/format/config.html");
+            return Ok(Config::from_legacy(table));
         }
+
+        let book: BookConfig = table.remove("book")
+                                    .and_then(|value| value.try_into().ok())
+                                    .unwrap_or_default();
+        Ok(Config {
+            book: book,
+            rest: table,
+        })
     }
+}
+
+fn is_legacy_format(table: &Table) -> bool {
+    let top_level_items = ["title", "author", "authors"];
+
+    top_level_items.iter().any(|key| table.contains_key(&key.to_string()))
 }
 
 
@@ -268,16 +324,62 @@ mod tests {
         assert_eq!(baz, baz_should_be);
     }
 
-#[test]
-fn mutate_some_stuff() {
-    // really this is just a sanity check to make sure the borrow checker
-    // is happy...
-    let src = COMPLEX_CONFIG;
-    let mut config = Config::from_str(src).unwrap();
-    let key = "output.html.playpen.editable";
+    #[test]
+    fn mutate_some_stuff() {
+        // really this is just a sanity check to make sure the borrow checker
+        // is happy...
+        let src = COMPLEX_CONFIG;
+        let mut config = Config::from_str(src).unwrap();
+        let key = "output.html.playpen.editable";
 
-    assert_eq!(config.get(key).unwrap(), &Value::Boolean(true));
-    *config.get_mut(key).unwrap() = Value::Boolean(false);
-    assert_eq!(config.get(key).unwrap(), &Value::Boolean(false));
-}
+        assert_eq!(config.get(key).unwrap(), &Value::Boolean(true));
+        *config.get_mut(key).unwrap() = Value::Boolean(false);
+        assert_eq!(config.get(key).unwrap(), &Value::Boolean(false));
+    }
+
+    /// The config file format has slightly changed (metadata stuff is now under
+    /// the `book` table instead of being at the top level) so we're adding a
+    /// **temporary** compatibility check. You should be able to still load the
+    /// old format, emitting a warning.
+    #[test]
+    fn can_still_load_the_previous_format() {
+        let src = r#"
+        title = "mdBook Documentation"
+        description = "Create book from markdown files. Like Gitbook but implemented in Rust"
+        authors = ["Mathieu David"]
+        source = "./source"
+
+        [output.html]
+        destination = "my-book" # the output files will be generated in `root/my-book` instead of `root/book`
+        theme = "my-theme"
+        curly-quotes = true
+        google-analytics = "123456"
+        additional-css = ["custom.css", "custom2.css"]
+        additional-js = ["custom.js"]
+        "#;
+
+        let book_should_be = BookConfig {
+            title: Some(String::from("mdBook Documentation")),
+            description: Some(String::from(
+                "Create book from markdown files. Like Gitbook but implemented in Rust",
+            )),
+            authors: vec![String::from("Mathieu David")],
+            build_dir: PathBuf::from("my-book"),
+            src: PathBuf::from("./source"),
+            ..Default::default()
+        };
+
+        let html_should_be = HtmlConfig {
+            theme: Some(PathBuf::from("my-theme")),
+            curly_quotes: true,
+            google_analytics: Some(String::from("123456")),
+            additional_css: vec![PathBuf::from("custom.css"), PathBuf::from("custom2.css")],
+            additional_js: vec![PathBuf::from("custom.js")],
+            ..Default::default()
+        };
+
+        let got = Config::from_str(src).unwrap();
+        assert_eq!(got.book, book_should_be);
+        assert_eq!(got.html_config().unwrap(), html_should_be);
+    }
 }
