@@ -1,8 +1,9 @@
 extern crate mdbook;
 extern crate tempdir;
 
-use tempdir::TempDir;
+use std::path::PathBuf;
 use mdbook::MDBook;
+use tempdir::TempDir;
 
 
 /// Run `mdbook init` in an empty directory and make sure the default files
@@ -20,7 +21,9 @@ fn base_mdbook_init_should_create_default_content() {
     md.init().unwrap();
 
     for file in &created_files {
-        assert!(temp.path().join(file).exists(), "{} doesn't exist", file);
+        let target = temp.path().join(file);
+        println!("{}", target.display());
+        assert!(target.exists(), "{} doesn't exist", file);
     }
 }
 
@@ -37,14 +40,14 @@ fn run_mdbook_init_with_custom_book_and_src_locations() {
                 file);
     }
 
-    let mut md = MDBook::new(temp.path()).with_source("in")
-                                         .with_destination("out");
+    let mut md = MDBook::new(temp.path());
+    md.config.book.src = PathBuf::from("in");
+    md.config.book.build_dir = PathBuf::from("out");
 
     md.init().unwrap();
 
     for file in &created_files {
-        assert!(temp.path().join(file).exists(),
-                "{} should have been created by `mdbook init`",
-                file);
+        let target = temp.path().join(file);
+        assert!(target.exists(), "{} should have been created by `mdbook init`", file);
     }
 }

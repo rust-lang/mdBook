@@ -21,16 +21,17 @@
 //! extern crate mdbook;
 //!
 //! use mdbook::MDBook;
+//! use std::path::PathBuf;
 //!
-//! # #[allow(unused_variables)]
 //! fn main() {
-//!     let mut book =  MDBook::new("my-book")        // Path to root
-//!                         .with_source("src")       // Path from root to source directory
-//!                         .with_destination("book") // Path from root to output directory
-//!                         .read_config()            // Parse book.toml configuration file
-//!                         .expect("I don't handle configuration file errors, but you should!");
-//!
-//!     book.build().unwrap();                        // Render the book
+//!     let mut md = MDBook::new("my-book");
+//!     
+//!     // tweak the book configuration a bit
+//!     md.config.book.src = PathBuf::from("source");
+//!     md.config.book.build_dir = PathBuf::from("book");
+//! 
+//!     // Render the book
+//!     md.build().unwrap();                        
 //! }
 //! ```
 //!
@@ -86,6 +87,7 @@ extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
 extern crate tempdir;
+extern crate toml;
 
 mod parse;
 mod preprocess;
