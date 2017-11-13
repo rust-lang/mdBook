@@ -6,6 +6,7 @@ use std::ascii::AsciiExt;
 use std::borrow::Cow;
 use std::fmt::Write;
 use regex::Regex;
+use config::Search;
 
 /// A heading together with the successive content until the next heading will
 /// make up one `SearchDocument`. It represents some independently searchable part of the book.
@@ -65,6 +66,7 @@ impl SearchDocument {
 /// The field `anchor` in the `SearchDocument` struct becomes
 ///    `(anchor_base, Some(heading_to_anchor("The Section Heading")))`
 pub fn render_markdown_into_searchindex<F>(
+    searchconfig: &Search,
     search_documents: &mut Vec<SearchDocument>,
     text: &str,
     anchor_base: &str,
@@ -79,7 +81,7 @@ pub fn render_markdown_into_searchindex<F>(
 
     let mut current = SearchDocument::new(&anchor_base, &hierarchy);
     let mut in_header = false;
-    let max_paragraph_level = 3;
+    let max_paragraph_level = searchconfig.split_until_heading as i32;
     let mut header_hierarchy = vec!["".to_owned(); max_paragraph_level as usize];
 
     for event in p {

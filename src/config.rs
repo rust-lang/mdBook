@@ -90,8 +90,8 @@ impl Config {
         get_and_insert!(table, "source" => cfg.book.src);
         get_and_insert!(table, "description" => cfg.book.description);
 
-        // This complicated chain of and_then's is so we can move 
-        // "output.html.destination" to "book.build_dir" and parse it into a 
+        // This complicated chain of and_then's is so we can move
+        // "output.html.destination" to "book.build_dir" and parse it into a
         // PathBuf.
         let destination: Option<PathBuf> = table.get_mut("output")
             .and_then(|output| output.as_table_mut())
@@ -227,6 +227,7 @@ pub struct HtmlConfig {
     pub additional_css: Vec<PathBuf>,
     pub additional_js: Vec<PathBuf>,
     pub playpen: Playpen,
+    pub search: Search,
 }
 
 /// Configuration for tweaking how the the HTML renderer handles the playpen.
@@ -234,6 +235,53 @@ pub struct HtmlConfig {
 pub struct Playpen {
     pub editor: PathBuf,
     pub editable: bool,
+}
+
+/// Configuration of the search functionality of the HTML renderer.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct Search {
+    /// Enable in browser searching. Default: true.
+    pub enable: bool,
+    /// Maximum number of visible results. Default: 30.
+    pub limit_results: u32,
+    /// The number of words used for a search result teaser. Default: 30,
+    pub teaser_word_count: u32,
+    /// Define the logical link between multiple search words.
+    /// If true, all search words must appear in each result. Default: true.
+    pub use_boolean_and: bool,
+    /// Boost factor for the search result score if a search word appears in the header.
+    /// Default: 2.
+    pub boost_title: u8,
+    /// Boost factor for the search result score if a search word appears in the hierarchy.
+    /// The hierarchy contains all titles of the parent documents and all parent headings.
+    /// Default: 1.
+    pub boost_hierarchy: u8,
+    /// Boost factor for the search result score if a search word appears in the text.
+    /// Default: 1.
+    pub boost_paragraph: u8,
+    /// True if the searchword `micro` should match `microwave`. Default: true.
+    pub expand : bool,
+    /// Documents are split into smaller parts, seperated by headings. This defines, until which
+    /// level of heading documents should be split. Default: 3. (`### This is a level 3 heading`)
+    pub split_until_heading: u8,
+}
+
+impl Default for Search {
+    fn default() -> Search {
+        // Please update the documentation of `Search` when changing values!
+        Search {
+            enable: true,
+            limit_results: 30,
+            teaser_word_count: 30,
+            use_boolean_and: false,
+            boost_title: 2,
+            boost_hierarchy: 1,
+            boost_paragraph: 1,
+            expand: true,
+            split_until_heading: 3,
+        }
+    }
 }
 
 

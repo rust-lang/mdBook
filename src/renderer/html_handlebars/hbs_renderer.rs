@@ -3,7 +3,7 @@ use preprocess;
 use renderer::Renderer;
 use book::MDBook;
 use book::bookitem::{BookItem, Chapter};
-use config::{Config, Playpen, HtmlConfig};
+use config::{Config, Playpen, HtmlConfig, Search};
 use {utils, theme};
 use theme::{Theme, playpen_editor};
 use errors::*;
@@ -60,7 +60,9 @@ impl HtmlHandlebars {
                     .eq_ignore_ascii_case(&ch.name) {
                     parents_names.push(ch.name.clone());
                 }
-                utils::render_markdown_into_searchindex(search_documents,
+                utils::render_markdown_into_searchindex(
+                    &ctx.html_config.search,
+                    search_documents,
                     &content,
                     filepath,
                     parents_names,
@@ -311,7 +313,7 @@ impl Renderer for HtmlHandlebars {
         }
 
         // Search index
-        make_searchindex(book, search_documents)?;
+        make_searchindex(book, search_documents, &html_config.search)?;
 
         // Print version
         self.configure_print_version(&mut data, &print_content);
@@ -650,28 +652,92 @@ pub fn normalize_id(content: &str) -> String {
 }
 
 /// Uses elasticlunr to create a search index and exports that into `searchindex.json`.
-fn make_searchindex(book: &MDBook, search_documents : Vec<utils::SearchDocument>) -> Result<()> {
-    let mut index = elasticlunr::index::Index::new("id",
-        &["title".into(), "body".into(), "breadcrumbs".into()]);
+fn make_searchindex(book: &MDBook,
+                    search_documents : Vec<utils::SearchDocument>,
+                    searchconfig : &Search) -> Result<()> {
 
-    for sd in search_documents {
-        let anchor = if let Some(s) = sd.anchor.1 {
-            format!("{}#{}", sd.anchor.0, &s)
-        } else {
-            sd.anchor.0
-        };
 
-        let mut map = HashMap::new();
-        map.insert("id".into(), anchor.clone());
-        map.insert("title".into(), sd.title);
-        map.insert("body".into(), sd.body);
-        map.insert("breadcrumbs".into(), sd.hierarchy.join(" » "));
-        index.add_doc(&anchor, map);
+    #[derive(Serialize)]
+    struct SearchOptionsField {
+        boost: u8,
     }
+
+    #[derive(Serialize)]
+    struct SearchOptionsFields {
+        title: SearchOptionsField,
+        body: SearchOptionsField,
+        breadcrumbs: SearchOptionsField,
+    }
+
+    /// The searchoptions for elasticlunr.js
+    #[derive(Serialize)]
+    struct SearchOptions {
+        bool: String,
+        expand: bool,
+        limit_results: u32,
+        teaser_word_count: u32,
+        fields: SearchOptionsFields,
+    }
+
+    #[derive(Serialize)]
+    struct SearchindexJson {
+        enable: bool,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        searchoptions: Option<SearchOptions>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        index: Option<elasticlunr::index::Index>,
+
+    }
+
+    let searchoptions = SearchOptions {
+        bool : if searchconfig.use_boolean_and { "AND".into() } else { "OR".into() },
+        expand : searchconfig.expand,
+        limit_results : searchconfig.limit_results,
+        teaser_word_count : searchconfig.teaser_word_count,
+        fields : SearchOptionsFields {
+            title : SearchOptionsField { boost : searchconfig.boost_title },
+            body : SearchOptionsField { boost : searchconfig.boost_paragraph },
+            breadcrumbs : SearchOptionsField { boost : searchconfig.boost_hierarchy },
+        }
+    };
+
+    let json_contents = if searchconfig.enable {
+
+        let mut index = elasticlunr::index::Index::new("id",
+            &["title".into(), "body".into(), "breadcrumbs".into()]);
+
+        for sd in search_documents {
+            let anchor = if let Some(s) = sd.anchor.1 {
+                format!("{}#{}", sd.anchor.0, &s)
+            } else {
+                sd.anchor.0
+            };
+
+            let mut map = HashMap::new();
+            map.insert("id".into(), anchor.clone());
+            map.insert("title".into(), sd.title);
+            map.insert("body".into(), sd.body);
+            map.insert("breadcrumbs".into(), sd.hierarchy.join(" » "));
+            index.add_doc(&anchor, map);
+        }
+
+        SearchindexJson {
+            enable : searchconfig.enable,
+            searchoptions : Some(searchoptions),
+            index : Some(index),
+        }
+    } else {
+        SearchindexJson {
+            enable : false,
+            searchoptions : None,
+            index : None,
+        }
+    };
+
 
     book.write_file(
         Path::new("searchindex").with_extension("json"),
-        &serde_json::to_string(&index).unwrap().as_bytes(),
+        &serde_json::to_string(&json_contents).unwrap().as_bytes(),
     )?;
     info!("[*] Creating \"searchindex.json\" ✓");
 

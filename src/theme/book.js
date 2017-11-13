@@ -17,6 +17,8 @@ $( document ).ready(function() {
         searchoptions : {
             bool: "AND",
             expand: true,
+            teaser_word_count : 30,
+            limit_results : 30,
             fields: {
                 title: {boost: 1},
                 body: {boost: 1},
@@ -25,8 +27,6 @@ $( document ).ready(function() {
         },
         mark_exclude : [], // ['.hljs']
         current_searchterm : "",
-        teaser_words : 30,
-        resultcount_limit : 30,
         SEARCH_PARAM : 'search',
         MARK_PARAM : 'highlight',
 
@@ -220,7 +220,7 @@ $( document ).ready(function() {
             }
 
             var window_weight = [];
-            var window_size = Math.min(weighted.length, this.teaser_words);
+            var window_size = Math.min(weighted.length, this.searchoptions.teaser_word_count);
 
             var cur_sum = 0;
             for (var wordindex = 0; wordindex < window_size; wordindex++) {
@@ -280,8 +280,7 @@ $( document ).ready(function() {
 
             // Do the actual search
             var results = this.searchindex.search(searchterm, this.searchoptions);
-            var resultcount = (results.length > this.resultcount_limit)
-                ? this.resultcount_limit : results.length;
+            var resultcount = Math.min(results.length, this.searchoptions.limit_results);
 
             // Display search metrics
             this.searchresults_header.text(this.formatSearchMetric(resultcount, searchterm));
@@ -327,7 +326,14 @@ $( document ).ready(function() {
             //this.create_test_searchindex();
 
             $.getJSON("searchindex.json", function(json) {
-                //this_.searchindex = elasticlunr.Index.load(json);
+
+                if (json.enable == false) {
+                    this_.searchicon.hide();
+                    return;
+                }
+
+                this_.searchoptions = json.searchoptions;
+                //this_.searchindex = elasticlunr.Index.load(json.index);
 
                 // TODO: Workaround: reindex everything
                 var searchindex = elasticlunr(function () {
@@ -337,7 +343,8 @@ $( document ).ready(function() {
                     this.setRef('id');
                 });
                 window.mjs = json;
-                var docs = json.documentStore.docs;
+                window.search = this_;
+                var docs = json.index.documentStore.docs;
                 for (var key in docs) {
                     searchindex.addDoc(docs[key]);
                 }
