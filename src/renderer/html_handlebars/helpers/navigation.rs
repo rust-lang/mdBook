@@ -135,3 +135,42 @@ pub fn next(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), R
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+   use super::*;
+
+   #[test]
+   fn test_next_previous() {
+      let template = "
+         {{#previous}}{{title}}: {{link}}{{/previous}}
+         {{#next}}{{title}}: {{link}}{{/next}}";
+
+      let data = json!({
+         "name": "two",
+         "path": "two.path",
+         "chapters": [
+            {
+               "name": "one",
+               "path": "one.path"
+            },
+            {
+               "name": "two",
+               "path": "two.path",
+            },
+            {
+               "name": "three",
+               "path": "three.path"
+            }
+         ]
+      });
+
+      let mut h = Handlebars::new();
+      h.register_helper("previous", Box::new(previous));
+      h.register_helper("next", Box::new(next));
+
+      assert_eq!(h.template_render(template, &data).unwrap(), "
+         one: one.html
+         three: three.html");
+   }
+}
