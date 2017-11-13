@@ -19,7 +19,7 @@ impl Target {
             base_path: &String,
             current_path: &String,
             current_item: &StringMap,
-            previous_item: StringMap,
+            previous_item: &StringMap,
             ) -> Result<Option<StringMap>, RenderError> {
         match self {
             &Target::Next => {
@@ -34,7 +34,7 @@ impl Target {
 
             &Target::Previous => {
                 if current_path == base_path {
-                    return Ok(Some(previous_item));
+                    return Ok(Some(previous_item.clone()));
                 }
             }
         }
@@ -67,7 +67,7 @@ fn find_chapter(
         match item.get("path") {
             Some(path) if !path.is_empty() => {
                 if let Some(previous) = previous {
-                    if let Some(item) = target.find(&base_path, &path, &item, previous)? {
+                    if let Some(item) = target.find(&base_path, &path, &item, &previous)? {
                         return Ok(Some(item));
                     }
                 }
