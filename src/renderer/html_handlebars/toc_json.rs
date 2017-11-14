@@ -120,3 +120,69 @@ pub fn make_toc_tree(chapters: &[BTreeMap<String, String>]) -> Result<serde_json
 
     Ok(path.pop().unwrap())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_make_toc_tree() {
+        let expected_toc = json!({
+            "children": [
+            {
+                "name": "Introduction",
+                "section": "1.",
+                "link": "intro.html",
+                "next": {
+                    "link": "start.html"
+                },
+                "children": [
+                {
+                    "name": "Getting started",
+                    "section": "1.1.",
+                    "link": "start.html",
+                    "previous": {
+                        "link": "intro.html"
+                    },
+                    "next": {
+                        "link": "indepth.html"
+                    }
+                }
+                ]
+            },
+            {
+                "name": "In depth",
+                "section": "2.",
+                "link": "indepth.html",
+                "previous": {
+                    "link": "start.html"
+                }
+            }
+            ]
+        });
+
+        let mut chapter1 = BTreeMap::new();
+        chapter1.insert("name".to_owned(), "Introduction".to_owned());
+        chapter1.insert("section".to_owned(), "1.".to_owned());
+        chapter1.insert("path".to_owned(), "intro".to_owned());
+        chapter1.insert("next_path".to_owned(), "start".to_owned());
+
+        let mut chapter2 = BTreeMap::new();
+        chapter2.insert("name".to_owned(), "Getting started".to_owned());
+        chapter2.insert("section".to_owned(), "1.1.".to_owned());
+        chapter2.insert("path".to_owned(), "start".to_owned());
+        chapter2.insert("next_path".to_owned(), "indepth".to_owned());
+        chapter2.insert("previous_path".to_owned(), "intro".to_owned());
+
+        let mut chapter3 = BTreeMap::new();
+        chapter3.insert("name".to_owned(), "In depth".to_owned());
+        chapter3.insert("section".to_owned(), "2.".to_owned());
+        chapter3.insert("path".to_owned(), "indepth".to_owned());
+        chapter3.insert("previous_path".to_owned(), "start".to_owned());
+
+        let chapters = vec![chapter1, chapter2, chapter3];
+        let toc = make_toc_tree(chapters.as_slice()).unwrap();
+
+        assert_eq!(toc, expected_toc);
+    }
+}
