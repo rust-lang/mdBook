@@ -7,14 +7,15 @@ extern crate walkdir;
 mod dummy_book;
 
 use dummy_book::{assert_contains_strings, DummyBook};
-use mdbook::MDBook;
 
 use std::path::Path;
+use std::ffi::OsStr;
 use walkdir::{DirEntry, WalkDir, WalkDirIterator};
 use select::document::Document;
 use select::predicate::{Class, Name, Predicate};
 use mdbook::errors::*;
 use mdbook::utils::fs::file_to_string;
+use mdbook::MDBook;
 
 
 const BOOK_ROOT: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/dummy_book");
@@ -27,7 +28,7 @@ const TOC_SECOND_LEVEL: &[&'static str] = &["1.1. Nested Chapter"];
 /// Make sure you can load the dummy book and build it without panicking.
 #[test]
 fn build_the_dummy_book() {
-    let temp = DummyBook::default().build().unwrap();
+    let temp = DummyBook::new().build().unwrap();
     let mut md = MDBook::new(temp.path());
 
     md.build().unwrap();
@@ -35,7 +36,7 @@ fn build_the_dummy_book() {
 
 #[test]
 fn by_default_mdbook_generates_rendered_content_in_the_book_directory() {
-    let temp = DummyBook::default().build().unwrap();
+    let temp = DummyBook::new().build().unwrap();
     let mut md = MDBook::new(temp.path());
 
     assert!(!temp.path().join("book").exists());
@@ -47,7 +48,7 @@ fn by_default_mdbook_generates_rendered_content_in_the_book_directory() {
 
 #[test]
 fn make_sure_bottom_level_files_contain_links_to_chapters() {
-    let temp = DummyBook::default().build().unwrap();
+    let temp = DummyBook::new().build().unwrap();
     let mut md = MDBook::new(temp.path());
     md.build().unwrap();
 
@@ -67,7 +68,7 @@ fn make_sure_bottom_level_files_contain_links_to_chapters() {
 
 #[test]
 fn check_correct_cross_links_in_nested_dir() {
-    let temp = DummyBook::default().build().unwrap();
+    let temp = DummyBook::new().build().unwrap();
     let mut md = MDBook::new(temp.path());
     md.build().unwrap();
 
@@ -94,7 +95,7 @@ fn check_correct_cross_links_in_nested_dir() {
 
 #[test]
 fn rendered_code_has_playpen_stuff() {
-    let temp = DummyBook::default().build().unwrap();
+    let temp = DummyBook::new().build().unwrap();
     let mut md = MDBook::new(temp.path());
     md.build().unwrap();
 
@@ -115,7 +116,7 @@ fn chapter_content_appears_in_rendered_document() {
                        ("first/index.html", "more text"),
                        ("conclusion.html", "Conclusion")];
 
-    let temp = DummyBook::default().build().unwrap();
+    let temp = DummyBook::new().build().unwrap();
     let mut md = MDBook::new(temp.path());
     md.build().unwrap();
 
@@ -152,7 +153,10 @@ fn chapter_files_were_rendered_to_html() {
                                           .filter_entry(|entry| entry_ends_with(entry, ".md"))
                                           .filter_map(|entry| entry.ok())
                                           .map(|entry| entry.path().to_path_buf())
-                                          .filter(|path| path.file_name().unwrap() != "SUMMARY");
+                                          .filter(|path| {
+                                                      path.file_name().and_then(OsStr::to_str)
+                                                          != Some("SUMMARY.md")
+                                                  });
 
     for chapter in chapter_files {
         let rendered_location = temp.path().join(chapter.strip_prefix(&src).unwrap())
@@ -176,10 +180,8 @@ fn root_index_html() -> Result<Document> {
                             .chain_err(|| "Book building failed")?;
 
     let index_page = temp.path().join("book").join("index.html");
-    let book_entries = temp.path().read_dir()
-                           .chain_err(|| "Couldn't read the temporary directory")?;
-
     let html = file_to_string(&index_page).chain_err(|| "Unable to read index.html")?;
+
     Ok(Document::from(html.as_str()))
 }
 
@@ -191,7 +193,7 @@ fn check_second_toc_level() {
 
     let pred = descendants!(Class("chapter"), Name("li"), Name("li"), Name("a"));
 
-    let mut children_of_children: Vec<String> =
+    let mut children_of_children: Vec<_> =
         doc.find(pred).map(|elem| elem.text().trim().to_string())
            .collect();
     children_of_children.sort();
@@ -209,7 +211,7 @@ fn check_first_toc_level() {
 
     let pred = descendants!(Class("chapter"), Name("li"), Name("a"));
 
-    let mut children: Vec<String> = doc.find(pred).map(|elem| elem.text().trim().to_string())
+    let mut children: Vec<_> = doc.find(pred).map(|elem| elem.text().trim().to_string())
                                        .collect();
     children.sort();
 
