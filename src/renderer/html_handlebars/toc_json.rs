@@ -15,34 +15,39 @@ fn path_to_link(path: &str) -> String {
         .replace("\\", "/")
 }
 
-/// Set name etc for a chapter.
-fn set_props(map: &mut BTreeMap<String, serde_json::Value>, item: &BTreeMap<String, String>) {
+fn strip_name(name: &str) -> String {
+    // filter all events that are not inline code blocks
+    let parser = Parser::new(name).filter(|event| match *event {
+        Event::Start(Tag::Code) |
+            Event::End(Tag::Code) |
+            Event::InlineHtml(_) |
+            Event::Text(_) => true,
+        _ => false,
+    });
+
+    // render markdown to html
+    let mut markdown_parsed_name = String::with_capacity(name.len() * 3 / 2);
+    html::push_html(&mut markdown_parsed_name, parser);
+
+    markdown_parsed_name
+}
+
+/// Create a json node for a given chapter.
+fn make_chapter_node(item: &BTreeMap<String, String>) -> serde_json::Value {
+    let mut map = BTreeMap::new();
+
     if let Some(path) = item.get("path") {
         if !path.is_empty() {
             map.insert("link".to_owned(), json!(path_to_link(path)));
         }
     }
 
-    // Section does not necessarily exist
     if let Some(section) = item.get("section") {
         map.insert("section".to_owned(), json!(section));
     }
 
     if let Some(name) = item.get("name") {
-        // filter all events that are not inline code blocks
-        let parser = Parser::new(name).filter(|event| match *event {
-                                                  Event::Start(Tag::Code) |
-                                                  Event::End(Tag::Code) |
-                                                  Event::InlineHtml(_) |
-                                                  Event::Text(_) => true,
-                                                  _ => false,
-                                              });
-
-        // render markdown to html
-        let mut markdown_parsed_name = String::with_capacity(name.len() * 3 / 2);
-        html::push_html(&mut markdown_parsed_name, parser);
-
-        map.insert("name".to_owned(), json!(markdown_parsed_name));
+        map.insert("name".to_owned(), json!(strip_name(name)));
     }
 
     if let Some(previous_path) = item.get("previous_path") {
@@ -58,6 +63,8 @@ fn set_props(map: &mut BTreeMap<String, serde_json::Value>, item: &BTreeMap<Stri
                              "link": path_to_link(next_path)
                          }));
     }
+
+    json!(map)
 }
 
 /// Extend or collapse tree path to reach a certain depth.
@@ -93,12 +100,11 @@ pub fn make_toc_tree(chapters: &[BTreeMap<String, String>]) -> Result<serde_json
     let mut path = vec![];
 
     for item in chapters {
-        let mut current = BTreeMap::new();
-
-        if item.get("spacer").is_some() {
+        let node = if item.get("spacer").is_some() {
             // Spacers never belong to a section
             extend_or_collapse_path(1, &mut path);
-            current.insert("spacer".to_owned(), json!(true));
+
+            json!({"spacer": true})
         } else {
             let level = if let Some(section_name) = item.get("section") {
                 // The section "4. Foo" has level 1, "4.1. Bar" has level 2 etc.
@@ -110,10 +116,11 @@ pub fn make_toc_tree(chapters: &[BTreeMap<String, String>]) -> Result<serde_json
             };
 
             extend_or_collapse_path(level, &mut path);
-            set_props(&mut current, item);
-        }
 
-        path.push(json!(current));
+            make_chapter_node(item)
+        };
+
+        path.push(node);
     }
 
     extend_or_collapse_path(1, &mut path);
