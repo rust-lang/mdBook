@@ -1,3 +1,4 @@
+use std::cmp;
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -59,19 +60,19 @@ fn set_props(map: &mut BTreeMap<String, serde_json::Value>, item: &BTreeMap<Stri
     }
 }
 
-/// Extend or collapse levels to reach a certain depth.
-fn set_level(level: usize, levels: &mut Vec<serde_json::Value>) {
+/// Extend or collapse tree path to reach a certain depth.
+fn extend_or_collapse_path(level: usize, path: &mut Vec<serde_json::Value>) {
     // Can't pop root node
     assert!(level > 0);
 
-    while level > levels.len() {
-        levels.push(json!({}));
+    while level > path.len() {
+        path.push(json!({}));
     }
 
-    while level < levels.len() {
+    while level < path.len() {
         // Push child into parent.children
-        let child = levels.pop().unwrap();
-        let parent = levels.last_mut().unwrap().as_object_mut().unwrap();
+        let child = path.pop().unwrap();
+        let parent = path.last_mut().unwrap().as_object_mut().unwrap();
 
         if !parent.contains_key("children") {
             parent.insert("children".to_owned(), json!([]));
@@ -85,30 +86,37 @@ fn set_level(level: usize, levels: &mut Vec<serde_json::Value>) {
     }
 }
 
-pub fn from_chapters(chapters: &[BTreeMap<String, String>]) -> Result<serde_json::Value> {
-    let mut levels = vec![];
+/// Turn a flat chapters array into a tree json structure. Each node represents
+/// a section and its subsections.
+pub fn make_toc_tree(chapters: &[BTreeMap<String, String>]) -> Result<serde_json::Value> {
+    // A stack representing the path from the root node to the current node.
+    let mut path = vec![];
 
     for item in chapters {
         let mut current = BTreeMap::new();
 
         if item.get("spacer").is_some() {
-            set_level(1, &mut levels);
+            // Spacers never belong to a section
+            extend_or_collapse_path(1, &mut path);
             current.insert("spacer".to_owned(), json!(true));
         } else {
-            let level = if let Some(s) = item.get("section") {
-                ::std::cmp::max(s.matches('.').count(), 1)
+            let level = if let Some(section_name) = item.get("section") {
+                // The section "4. Foo" has level 1, "4.1. Bar" has level 2 etc.
+                // Unnumbered sections is at the root level 1.
+                cmp::max(section_name.matches('.').count(), 1)
             } else {
+                // Chapters without sections are also at the root.
                 1
             };
 
-            set_level(level, &mut levels);
+            extend_or_collapse_path(level, &mut path);
             set_props(&mut current, item);
         }
 
-        levels.push(json!(current));
+        path.push(json!(current));
     }
 
-    set_level(1, &mut levels);
+    extend_or_collapse_path(1, &mut path);
 
-    Ok(levels.pop().unwrap())
+    Ok(path.pop().unwrap())
 }

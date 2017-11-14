@@ -436,7 +436,7 @@ fn make_data(book: &MDBook, config: &Config) -> Result<serde_json::Map<String, s
     }
 
     let chapters = make_chapters(book)?;
-    data.insert("toc".to_owned(), toc_json::from_chapters(chapters.as_slice())?);
+    data.insert("toc".to_owned(), toc_json::make_toc_tree(chapters.as_slice())?);
 
     debug!("[*]: JSON constructed");
     Ok(data)
