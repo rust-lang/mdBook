@@ -32,6 +32,9 @@ $( document ).ready(function() {
 
         SEARCH_HOTKEY_KEYCODE: 83,
         ESCAPE_KEYCODE: 27,
+        DOWN_KEYCODE: 40,
+        UP_KEYCODE: 38,
+        SELECT_KEYCODE: 13,
 
         formatSearchMetric : function(count, searchterm) {
             if (count == 1) {
@@ -371,6 +374,7 @@ $( document ).ready(function() {
         ,
         globalKeyHandler : function (e) {
             if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
+
             if (e.keyCode == this.ESCAPE_KEYCODE) {
                 e.preventDefault();
                 this.searchbar.removeClass("active");
@@ -386,6 +390,38 @@ $( document ).ready(function() {
                 e.preventDefault();
                 this.searchbar_outer.slideDown()
                 this.searchbar.focus();
+                return;
+            }
+            if (this.hasFocus() && e.keyCode == this.DOWN_KEYCODE) {
+                e.preventDefault();
+                this.unfocusSearchbar();
+                this.searchresults.children('li').first().addClass("focus");
+                return;
+            }
+            if (!this.hasFocus() && (e.keyCode == this.DOWN_KEYCODE
+                                     || e.keyCode == this.UP_KEYCODE
+                                     || e.keyCode == this.SELECT_KEYCODE)) {
+                // not `:focus` because browser does annoying scrolling
+                var current_focus = search.searchresults.find("li.focus");
+                if (current_focus.length == 0) return;
+                e.preventDefault();
+                if (e.keyCode == this.DOWN_KEYCODE) {
+                    var next = current_focus.next()
+                    if (next.length > 0) {
+                        current_focus.removeClass("focus");
+                        next.addClass("focus");
+                    }
+                } else if (e.keyCode == this.UP_KEYCODE) {
+                    current_focus.removeClass("focus");
+                    var prev = current_focus.prev();
+                    if (prev.length == 0) {
+                        this.searchbar.focus();
+                    } else {
+                        prev.addClass("focus");
+                    }
+                } else {
+                    window.location = current_focus.children('a').attr('href');
+                }
             }
         }
         ,

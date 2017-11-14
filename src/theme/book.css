@@ -220,6 +220,8 @@ ul#searchresults {
 }
 ul#searchresults li {
   margin: 10px 0px;
+  padding: 2px;
+  border-radius: 2px;
 }
 ul#searchresults .breadcrumbs {
   float: right;
@@ -445,6 +447,9 @@ ul#searchresults span.teaser em {
 .light .searchresults-outer {
   border-bottom-color: #888;
 }
+.light ul#searchresults li.focus {
+  background-color: #e4f2fe;
+}
 .light .breadcrumbs {
   color: #CCC;
 }
@@ -582,6 +587,9 @@ ul#searchresults span.teaser em {
 }
 .coal .searchresults-outer {
   border-bottom-color: #98a3ad;
+}
+.coal ul#searchresults li.focus {
+  background-color: #2b2b2f;
 }
 .coal .breadcrumbs {
   color: #686868;
@@ -721,6 +729,9 @@ ul#searchresults span.teaser em {
 .navy .searchresults-outer {
   border-bottom-color: #5c5c68;
 }
+.navy ul#searchresults li.focus {
+  background-color: #242430;
+}
 .navy .breadcrumbs {
   color: #5c5c68;
 }
@@ -858,6 +869,9 @@ ul#searchresults span.teaser em {
 }
 .rust .searchresults-outer {
   border-bottom-color: #888;
+}
+.rust ul#searchresults li.focus {
+  background-color: #dec2a2;
 }
 .rust .breadcrumbs {
   color: #757575;
@@ -1000,6 +1014,9 @@ ul#searchresults span.teaser em {
 }
 .ayu .searchresults-outer {
   border-bottom-color: #888;
+}
+.ayu ul#searchresults li.focus {
+  background-color: #252932;
 }
 .ayu .breadcrumbs {
   color: #5f5f5f;
