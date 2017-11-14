@@ -4,15 +4,17 @@ use handlebars::*;
 
 /// Link to the current page.
 fn active_link(rc: &RenderContext) -> Result<String, RenderError> {
-    Ok(Path::new(rc.evaluate_absolute("path")?
-              .as_str()
-              .ok_or_else(|| RenderError::new(
-                      "Type error for `path`, string expected"))?
-             )
+    let path = rc.evaluate_absolute("path")?
+        .as_str()
+        .ok_or_else(|| RenderError::new("Expected `path` to be string"))?;
+
+    let link = Path::new(path)
         .with_extension("html")
         .to_str()
         .unwrap()
-        .replace("\\", "/"))
+        .replace("\\", "/");
+
+    Ok(link)
 }
 
 /// Wrap a block in <a> if a link exists.
