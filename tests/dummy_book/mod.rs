@@ -10,7 +10,8 @@ extern crate walkdir;
 use std::path::Path;
 use std::fs::{self, File};
 use std::io::{Read, Write};
-use std::error::Error;
+use mdbook::errors::*;
+use mdbook::utils::fs::file_to_string;
 
 // The funny `self::` here is because we've got an `extern crate ...` and are
 // in a submodule
@@ -34,47 +35,39 @@ pub struct DummyBook {
 impl DummyBook {
     /// Create a new `DummyBook` with all the defaults.
     pub fn new() -> DummyBook {
-        DummyBook::default()
+        DummyBook { passing_test: true }
     }
 
     /// Whether the doc-test included in the "Nested Chapter" should pass or
     /// fail (it passes by default).
-    pub fn with_passing_test(&mut self, test_passes: bool) -> &mut Self {
+    pub fn with_passing_test(&mut self, test_passes: bool) -> &mut DummyBook {
         self.passing_test = test_passes;
         self
     }
 
     /// Write a book to a temporary directory using the provided settings.
-    ///
-    /// # Note
-    ///
-    /// If this fails for any reason it will `panic!()`. If we can't write to a
-    /// temporary directory then chances are you've got bigger problems...
-    pub fn build(&self) -> TempDir {
-        let temp = TempDir::new("dummy_book").unwrap();
+    pub fn build(&self) -> Result<TempDir> {
+        let temp = TempDir::new("dummy_book").chain_err(|| "Unable to create temp directory")?;
+
         let dummy_book_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/dummy_book");
-        recursive_copy(&dummy_book_root, temp.path()).expect("Couldn't copy files into a \
-                                                              temporary directory");
+        recursive_copy(&dummy_book_root, temp.path()).chain_err(|| {
+                                                                     "Couldn't copy files into a \
+                                                                      temporary directory"
+                                                                 })?;
 
         let sub_pattern = if self.passing_test { "true" } else { "false" };
         let file_containing_test = temp.path().join("src/first/nested.md");
-        poor_mans_sed(&file_containing_test, "$TEST_STATUS", sub_pattern);
+        replace_pattern_in_file(&file_containing_test, "$TEST_STATUS", sub_pattern)?;
 
-        temp
+        Ok(temp)
     }
 }
 
-fn poor_mans_sed(filename: &Path, from: &str, to: &str) {
-    let contents = read_file(filename).unwrap();
-    File::create(filename).unwrap()
-                          .write_all(contents.replace(from, to).as_bytes())
-                          .unwrap();
-}
+fn replace_pattern_in_file(filename: &Path, from: &str, to: &str) -> Result<()> {
+    let contents = file_to_string(filename)?;
+    File::create(filename)?.write_all(contents.replace(from, to).as_bytes())?;
 
-impl Default for DummyBook {
-    fn default() -> DummyBook {
-        DummyBook { passing_test: true }
-    }
+    Ok(())
 }
 
 /// Read the contents of the provided file into memory and then iterate through
@@ -99,32 +92,29 @@ pub fn assert_contains_strings<P: AsRef<Path>>(filename: P, strings: &[&str]) {
 
 
 /// Recursively copy an entire directory tree to somewhere else (a la `cp -r`).
-fn recursive_copy<A: AsRef<Path>, B: AsRef<Path>>(from: A, to: B) -> Result<(), Box<Error>> {
+fn recursive_copy<A: AsRef<Path>, B: AsRef<Path>>(from: A, to: B) -> Result<()> {
     let from = from.as_ref();
     let to = to.as_ref();
 
     for entry in WalkDir::new(&from) {
-        let entry = entry?;
+        let entry = entry.chain_err(|| "Unable to inspect directory entry")?;
 
         let original_location = entry.path();
-        let relative = original_location.strip_prefix(&from)?;
+        let relative = original_location.strip_prefix(&from)
+                                        .expect("`original_location` is inside the `from` \
+                                                 directory");
         let new_location = to.join(relative);
 
         if original_location.is_file() {
             if let Some(parent) = new_location.parent() {
-                fs::create_dir_all(parent)?;
+                fs::create_dir_all(parent).chain_err(|| "Couldn't create directory")?;
             }
 
-            fs::copy(&original_location, &new_location)?;
+            fs::copy(&original_location, &new_location).chain_err(|| {
+                                                                      "Unable to copy file contents"
+                                                                  })?;
         }
     }
 
     Ok(())
-}
-
-pub fn read_file<P: AsRef<Path>>(filename: P) -> Result<String, Box<Error>> {
-    let mut contents = String::new();
-    File::open(filename)?.read_to_string(&mut contents)?;
-
-    Ok(contents)
 }
