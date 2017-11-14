@@ -317,53 +317,54 @@ impl Renderer for HtmlHandlebars {
     }
 }
 
+fn make_chapter(
+    item: &Chapter,
+    section: Option<String>,
+    previous: Option<&mut BTreeMap<String, String>>)
+    -> Result<BTreeMap<String, String>> {
+    let mut chapter = BTreeMap::new();
+
+    if let Some(section) = section {
+        chapter.insert("section".to_owned(), section);
+    }
+
+    chapter.insert("name".to_owned(), item.name.to_owned());
+
+    let path = item.path.to_str().ok_or_else(|| {
+        io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
+    })?;
+    chapter.insert("path".to_owned(), path.to_owned());
+
+    previous.map(|previous| {
+        previous.insert("next_path".to_owned(), path.to_owned());
+        if let Some(previous_path) = previous.get("path") {
+            chapter.insert("previous_path".to_owned(), previous_path.to_owned());
+        }
+    });
+
+    Ok(chapter)
+}
+
 fn make_chapters(book: &MDBook) -> Result<Vec<BTreeMap<String, String>>> {
     let mut chapters: Vec<BTreeMap<String, String>> = vec![];
 
     for item in book.iter() {
-        let mut chapter = BTreeMap::new();
-
-        match *item {
+        let chapter = match *item {
             BookItem::Affix(ref ch) => {
-                chapter.insert("name".to_owned(), ch.name.to_owned());
-                let path = ch.path.to_str().ok_or_else(|| {
-                                                           io::Error::new(io::ErrorKind::Other,
-                                                                          "Could not convert path \
-                                                                           to str")
-                                                       })?;
-                chapter.insert("path".to_owned(), path.to_owned());
-
-                if let Some(previous) = chapters.last_mut() {
-                    previous.insert("next_path".to_owned(), path.to_owned());
-                    if let Some(previous_path) = previous.get("path") {
-                        chapter.insert("previous_path".to_owned(), previous_path.to_owned());
-                    }
-                }
+                make_chapter(ch, None, chapters.last_mut())?
             }
             BookItem::Chapter(ref s, ref ch) => {
-                chapter.insert("section".to_owned(), s.to_owned());
-                chapter.insert("name".to_owned(), ch.name.to_owned());
-                let path = ch.path.to_str().ok_or_else(|| {
-                                                           io::Error::new(io::ErrorKind::Other,
-                                                                          "Could not convert path \
-                                                                           to str")
-                                                       })?;
-                chapter.insert("path".to_owned(), path.to_owned());
-
-                if let Some(previous) = chapters.last_mut() {
-                    previous.insert("next_path".to_owned(), path.to_owned());
-                    if let Some(previous_path) = previous.get("path") {
-                        chapter.insert("previous_path".to_owned(), previous_path.to_owned());
-                    }
-                }
+                make_chapter(ch, Some(s.to_owned()), chapters.last_mut())?
             }
             BookItem::Spacer => {
+                let mut chapter = BTreeMap::new();
                 chapter.insert("spacer".to_owned(), "_spacer_".to_owned());
+                chapter
             }
-        }
+        };
 
         chapters.push(chapter);
-    }
+    };
 
     Ok(chapters)
 }
