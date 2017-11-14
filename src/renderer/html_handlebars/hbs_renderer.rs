@@ -24,6 +24,12 @@ use serde_json;
 #[derive(Default)]
 pub struct HtmlHandlebars;
 
+fn register_hbs_helpers(handlebars: &mut Handlebars) {
+    handlebars.register_helper("link", Box::new(helpers::toc::link));
+    handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
+    handlebars.register_helper("next", Box::new(helpers::navigation::next));
+}
+
 impl HtmlHandlebars {
     pub fn new() -> Self {
         HtmlHandlebars
@@ -216,12 +222,6 @@ impl HtmlHandlebars {
                     json!(utils::fs::path_to_root(Path::new("print.md"))));
     }
 
-    fn register_hbs_helpers(&self, handlebars: &mut Handlebars) {
-        handlebars.register_helper("link", Box::new(helpers::toc::link));
-        handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
-        handlebars.register_helper("next", Box::new(helpers::navigation::next));
-    }
-
     /// Copy across any additional CSS and JavaScript files which the book
     /// has been configured to use.
     fn copy_additional_css_and_js(&self, book: &MDBook) -> Result<()> {
@@ -259,7 +259,7 @@ impl Renderer for HtmlHandlebars {
         handlebars.register_template_string("toc", String::from_utf8(theme.toc.clone())?)?;
 
         debug!("[*]: Register handlebars helpers");
-        self.register_hbs_helpers(&mut handlebars);
+        register_hbs_helpers(&mut handlebars);
 
         let mut data = make_data(book, &book.config)?;
 
@@ -691,5 +691,84 @@ mod tests {
                    "--passes-add-more-rustdoc-passes");
         assert_eq!(id_from_content("## Method-call expressions"),
                    "method-call-expressions");
+    }
+
+    #[test]
+    fn toc_html() {
+        let template =
+            "{{#with toc}}
+                {{> toc}}
+            {{/with}}";
+
+        let toc = json!({
+            "children": [
+            {
+                "name": "Introduction",
+                "section": "1.",
+                "link": "intro.html",
+                "next": {
+                    "link": "start.html"
+                },
+                "children": [
+                {
+                    "name": "Getting started",
+                    "section": "1.1.",
+                    "link": "start.html",
+                    "previous": {
+                        "link": "intro.html"
+                    },
+                    "next": {
+                        "link": "indepth.html"
+                    }
+                }
+                ]
+            },
+            {
+                "name": "In depth",
+                "section": "2.",
+                "link": "indepth.html",
+                "previous": {
+                    "link": "start.html"
+                }
+            }
+            ]
+        });
+
+        let expected = r#"
+            <li>
+                <a href="intro.html">
+                    <strong>1.</strong>
+                    Introduction
+                </a>
+            </li>
+            <ul class="section">
+                <li>
+                    <a class="active" href="start.html">
+                        <strong>1.1.</strong>
+                        Getting started
+                </a>
+            </li>
+            </ul>
+            <li>
+                <a href="indepth.html">
+                    <strong>2.</strong>
+                    In depth
+                </a>
+            </li>
+        "#;
+
+        let mut handlebars = Handlebars::new();
+        let data = json!({
+            "toc": toc,
+            "path": "start.html"
+        });
+
+        register_hbs_helpers(&mut handlebars);
+        handlebars.register_template_string("toc", String::from_utf8(theme::TOC.to_owned()).unwrap()).unwrap();
+
+        let rendered = handlebars.template_render(template, &data).unwrap();
+
+        assert!(rendered.split_whitespace().eq(expected.split_whitespace()),
+                "rendered:\n{}\nexpected:\n{}", rendered, expected);
     }
 }
