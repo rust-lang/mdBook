@@ -330,9 +330,7 @@ fn make_chapter(
 
     chapter.insert("name".to_owned(), item.name.to_owned());
 
-    let path = item.path.to_str().ok_or_else(|| {
-        io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
-    })?;
+    let path = item.path.to_str().chain_err(|| "Could not convert path to str")?;
     chapter.insert("path".to_owned(), path.to_owned());
 
     previous.map(|previous| {
