@@ -264,7 +264,7 @@ impl MDBook {
         index.write_all(theme::INDEX)?;
 
         // toc.hbs
-        let mut toc = File::create(&themedir.join("toc.hbs"))?;
+        let mut toc = File::create(themedir.join("toc.hbs"))?;
         toc.write_all(theme::TOC)?;
 
         // book.css
