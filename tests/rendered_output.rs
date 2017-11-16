@@ -1,18 +1,34 @@
 extern crate mdbook;
-extern crate tempdir;
+#[macro_use]
+extern crate pretty_assertions;
+extern crate select;
+extern crate walkdir;
 
-mod dummy;
-mod helpers;
+mod dummy_book;
 
-use dummy::DummyBook;
-use helpers::assert_contains_strings;
+use dummy_book::{assert_contains_strings, DummyBook};
+
+use std::path::Path;
+use std::ffi::OsStr;
+use walkdir::{DirEntry, WalkDir, WalkDirIterator};
+use select::document::Document;
+use select::predicate::{Class, Name, Predicate};
+use mdbook::errors::*;
+use mdbook::utils::fs::file_to_string;
 use mdbook::MDBook;
 
+
+const BOOK_ROOT: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/dummy_book");
+const TOC_TOP_LEVEL: &[&'static str] = &["1. First Chapter",
+                                         "2. Second Chapter",
+                                         "Conclusion",
+                                         "Introduction"];
+const TOC_SECOND_LEVEL: &[&'static str] = &["1.1. Nested Chapter"];
 
 /// Make sure you can load the dummy book and build it without panicking.
 #[test]
 fn build_the_dummy_book() {
-    let temp = DummyBook::default().build();
+    let temp = DummyBook::new().build().unwrap();
     let mut md = MDBook::new(temp.path());
 
     md.build().unwrap();
@@ -20,7 +36,7 @@ fn build_the_dummy_book() {
 
 #[test]
 fn by_default_mdbook_generates_rendered_content_in_the_book_directory() {
-    let temp = DummyBook::default().build();
+    let temp = DummyBook::new().build().unwrap();
     let mut md = MDBook::new(temp.path());
 
     assert!(!temp.path().join("book").exists());
@@ -32,7 +48,7 @@ fn by_default_mdbook_generates_rendered_content_in_the_book_directory() {
 
 #[test]
 fn make_sure_bottom_level_files_contain_links_to_chapters() {
-    let temp = DummyBook::default().build();
+    let temp = DummyBook::new().build().unwrap();
     let mut md = MDBook::new(temp.path());
     md.build().unwrap();
 
@@ -52,7 +68,7 @@ fn make_sure_bottom_level_files_contain_links_to_chapters() {
 
 #[test]
 fn check_correct_cross_links_in_nested_dir() {
-    let temp = DummyBook::default().build();
+    let temp = DummyBook::new().build().unwrap();
     let mut md = MDBook::new(temp.path());
     md.build().unwrap();
 
@@ -79,7 +95,7 @@ fn check_correct_cross_links_in_nested_dir() {
 
 #[test]
 fn rendered_code_has_playpen_stuff() {
-    let temp = DummyBook::default().build();
+    let temp = DummyBook::new().build().unwrap();
     let mut md = MDBook::new(temp.path());
     md.build().unwrap();
 
@@ -100,7 +116,7 @@ fn chapter_content_appears_in_rendered_document() {
                        ("first/index.html", "more text"),
                        ("conclusion.html", "Conclusion")];
 
-    let temp = DummyBook::default().build();
+    let temp = DummyBook::new().build().unwrap();
     let mut md = MDBook::new(temp.path());
     md.build().unwrap();
 
@@ -110,4 +126,104 @@ fn chapter_content_appears_in_rendered_document() {
         let path = destination.join(filename);
         assert_contains_strings(path, &[text]);
     }
+}
+
+
+/// Apply a series of predicates to some root predicate, where each
+/// successive predicate is the descendant of the last one. Similar to how you
+/// might do `ul.foo li a` in CSS to access all anchor tags in the `foo` list.
+macro_rules! descendants {
+    ($root:expr, $($child:expr),*) => {
+        $root
+        $(
+            .descendant($child)
+        )*
+    };
+}
+
+
+/// Make sure that all `*.md` files (excluding `SUMMARY.md`) were rendered
+/// and placed in the `book` directory with their extensions set to `*.html`.
+#[test]
+fn chapter_files_were_rendered_to_html() {
+    let temp = DummyBook::new().build().unwrap();
+    let src = Path::new(BOOK_ROOT).join("src");
+
+    let chapter_files = WalkDir::new(&src).into_iter()
+                                          .filter_entry(|entry| entry_ends_with(entry, ".md"))
+                                          .filter_map(|entry| entry.ok())
+                                          .map(|entry| entry.path().to_path_buf())
+                                          .filter(|path| {
+                                                      path.file_name().and_then(OsStr::to_str)
+                                                          != Some("SUMMARY.md")
+                                                  });
+
+    for chapter in chapter_files {
+        let rendered_location = temp.path().join(chapter.strip_prefix(&src).unwrap())
+                                    .with_extension("html");
+        assert!(rendered_location.exists(),
+                "{} doesn't exits",
+                rendered_location.display());
+    }
+}
+
+fn entry_ends_with(entry: &DirEntry, ending: &str) -> bool {
+    entry.file_name().to_string_lossy().ends_with(ending)
+}
+
+/// Read the main page (`book/index.html`) and expose it as a DOM which we
+/// can search with the `select` crate
+fn root_index_html() -> Result<Document> {
+    let temp = DummyBook::new().build()
+                               .chain_err(|| "Couldn't create the dummy book")?;
+    MDBook::new(temp.path()).build()
+                            .chain_err(|| "Book building failed")?;
+
+    let index_page = temp.path().join("book").join("index.html");
+    let html = file_to_string(&index_page).chain_err(|| "Unable to read index.html")?;
+
+    Ok(Document::from(html.as_str()))
+}
+
+#[test]
+fn check_second_toc_level() {
+    let doc = root_index_html().unwrap();
+    let mut should_be = Vec::from(TOC_SECOND_LEVEL);
+    should_be.sort();
+
+    let pred = descendants!(Class("chapter"), Name("li"), Name("li"), Name("a"));
+
+    let mut children_of_children: Vec<_> =
+        doc.find(pred).map(|elem| elem.text().trim().to_string())
+           .collect();
+    children_of_children.sort();
+
+    assert_eq!(children_of_children, should_be);
+}
+
+#[test]
+fn check_first_toc_level() {
+    let doc = root_index_html().unwrap();
+    let mut should_be = Vec::from(TOC_TOP_LEVEL);
+
+    should_be.extend(TOC_SECOND_LEVEL);
+    should_be.sort();
+
+    let pred = descendants!(Class("chapter"), Name("li"), Name("a"));
+
+    let mut children: Vec<_> = doc.find(pred).map(|elem| elem.text().trim().to_string())
+                                       .collect();
+    children.sort();
+
+    assert_eq!(children, should_be);
+}
+
+#[test]
+fn check_spacers() {
+    let doc = root_index_html().unwrap();
+    let should_be = 1;
+
+    let num_spacers =
+        doc.find(Class("chapter").descendant(Name("li").and(Class("spacer")))).count();
+    assert_eq!(num_spacers, should_be);
 }
