@@ -5,22 +5,22 @@ Welcome stranger!
 If you have come here to learn how to contribute to mdBook, we have some tips for you!
 
 First of all, don't hesitate to ask questions!
-Use the [issue tracker](https://github.com/azerupi/mdBook/issues), no question is too simple.
-If we don't respond in a couple of days, ping us @azerupi, @steveklabnik, @frewsxcv it might just be that we forgot. :wink:
+Use the [issue tracker](https://github.com/rust-lang-nursery/mdBook/issues), no question is too simple.
+If we don't respond in a couple of days, ping us @Michael-F-Bryan, @budziq, @steveklabnik, @frewsxcv it might just be that we forgot. :wink:
 
 ### Issues to work on
 
 Any issue is up for the grabbing, but if you are starting out, you might be interested in the
-[E-Easy issues](https://github.com/azerupi/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AE-Easy).
+[E-Easy issues](https://github.com/rust-lang-nursery/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AE-Easy).
 Those are issues that are considered more straightforward for beginners to Rust or the codebase itself.
 These issues can be a good launching pad for more involved issues. Easy tasks for a first time contribution
 include documentation improvements, new tests, examples, updating dependencies, etc.
 
 If you come from a web development background, you might be interested in issues related to web technologies tagged
-[A-JavaScript](https://github.com/azerupi/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AA-JavaScript),
-[A-Style](https://github.com/azerupi/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AA-Style),
-[A-HTML](https://github.com/azerupi/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AA-HTML) or
-[A-Mobile](https://github.com/azerupi/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AA-Mobile).
+[A-JavaScript](https://github.com/rust-lang-nursery/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AA-JavaScript),
+[A-Style](https://github.com/rust-lang-nursery/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AA-Style),
+[A-HTML](https://github.com/rust-lang-nursery/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AA-HTML) or
+[A-Mobile](https://github.com/rust-lang-nursery/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AA-Mobile).
 
 When you decide you want to work on a specific issue, ping us on that issue so that we can assign it to you.
 Again, do not hesitate to ask questions. We will gladly mentor anyone that want to tackle an issue.
@@ -41,7 +41,7 @@ mdBook builds on stable Rust, if you want to build mdBook from source, here are 
 0. Clone this repository with git.
 
    ```
-   git clone https://github.com/azerupi/mdBook.git
+   git clone https://github.com/rust-lang-nursery/mdBook.git
    ```
 0. Navigate into the newly created `mdBook` directory
 0. Run `cargo build`
@@ -55,7 +55,7 @@ mdBook doesn't use CSS directly but uses [Stylus](http://stylus-lang.com/), a CS
 
 When you want to change the style, it is important to not change the CSS directly because any manual modification to
 the CSS files will be overwritten when compiling the stylus files. Instead, you should make your changes directly in the
-[stylus files](https://github.com/azerupi/mdBook/tree/master/src/theme/stylus) and regenerate the CSS.
+[stylus files](https://github.com/rust-lang-nursery/mdBook/tree/master/src/theme/stylus) and regenerate the CSS.
 
 For this to work, you first need [Node and NPM](https://nodejs.org/en/) installed on your machine.
 Then run the following command to install both [stylus](http://stylus-lang.com/) and [nib](https://tj.github.io/nib/), you might need `sudo` to install successfully.

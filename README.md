@@ -4,7 +4,7 @@
     <tr>
         <td><strong>Linux / OS X</strong></td>
         <td>
-            <a href="https://travis-ci.org/azerupi/mdBook"><img src="https://travis-ci.org/azerupi/mdBook.svg?branch=master"></a>
+            <a href="https://travis-ci.org/rust-lang-nursery/mdBook"><img src="https://travis-ci.org/rust-lang-nursery/mdBook.svg?branch=master"></a>
         </td>
     </tr>
     <tr>
@@ -16,7 +16,7 @@
     <tr>
         <td colspan="2">
             <a href="https://crates.io/crates/mdbook"><img src="https://img.shields.io/crates/v/mdbook.svg"></a>
-            <a href="LICENSE"><img src="https://img.shields.io/github/license/azerupi/mdBook.svg"></a>
+            <a href="LICENSE"><img src="https://img.shields.io/github/license/rust-lang-nursery/mdBook.svg"></a>
         </td>
     </tr>
 </table>
@@ -26,14 +26,14 @@ mdBook is a utility to create modern online books from Markdown files.
 
 ## What does it look like?
 
-The [**Documentation**](http://azerupi.github.io/mdBook/) for mdBook has been written in Markdown and is using mdBook to generate the online book-like website you can read. The documentation uses the latest version on GitHub and showcases the available features.
+The [**User Guide**](https://rust-lang-nursery.github.io/mdBook/) for mdBook has been written in Markdown and is using mdBook to generate the online book-like website you can read. The documentation uses the latest version on GitHub and showcases the available features.
 
 ## Installation
 
 There are multiple ways to install mdBook.
 
 1. **Binaries**  
-   Binaries are available for download [here](https://github.com/azerupi/mdBook/releases). Make sure to put the path to the binary into your `PATH`.
+   Binaries are available for download [here](https://github.com/rust-lang-nursery/mdBook/releases). Make sure to put the path to the binary into your `PATH`.
 
 2. **From Crates.io**  
    This requires [Rust and Cargo](https://www.rust-lang.org/) to be installed. Once you have installed Rust, type the following in the terminal:
@@ -55,7 +55,7 @@ There are multiple ways to install mdBook.
    The version published to crates.io will ever so slightly be behind the version hosted here on GitHub. If you need the latest version you can build the git version of mdBook yourself. Cargo makes this ***super easy***!
 
    ```
-   cargo install --git https://github.com/azerupi/mdBook.git
+   cargo install --git https://github.com/rust-lang-nursery/mdBook.git
    ```
    Again, make sure to add the Cargo bin directory to your `PATH`.
 
@@ -63,7 +63,7 @@ There are multiple ways to install mdBook.
    If you want to contribute to mdBook you will have to clone the repository on your local machine:
 
    ```
-   git clone https://github.com/azerupi/mdBook.git
+   git clone https://github.com/rust-lang-nursery/mdBook.git
    ```
    `cd` into `mdBook/` and run
 
@@ -79,7 +79,7 @@ There are multiple ways to install mdBook.
 
 mdBook will primarily be used as a command line tool, even though it exposes all its functionality as a Rust crate for integration in other projects.
 
-Here are the main commands you will want to run. For a more exhaustive explanation, check out the [documentation](http://azerupi.github.io/mdBook/).
+Here are the main commands you will want to run. For a more exhaustive explanation, check out the [User Guide](http://rust-lang-nursery.github.io/mdBook/).
 
 - `mdbook init`
 
@@ -95,7 +95,7 @@ Here are the main commands you will want to run. For a more exhaustive explanati
 
     `book` and `src` are both directories. `src` contains the markdown files that will be used to render the output to the `book` directory.
 
-    Please, take a look at the [**Documentation**](http://azerupi.github.io/mdBook/cli/init.html) for more information and some neat tricks.
+    Please, take a look at the [**Documentation**](http://rust-lang-nursery.github.io/mdBook/cli/init.html) for more information and some neat tricks.
 
 - `mdbook build`
 
@@ -113,13 +113,13 @@ Here are the main commands you will want to run. For a more exhaustive explanati
 
 Aside from the command line interface, this crate can also be used as a library. This means that you could integrate it in an existing project, like a web-app for example. Since the command line interface is just a wrapper around the library functionality, when you use this crate as a library you have full access to all the functionality of the command line interface with an easy to use API and more!
 
-See the [Documentation](http://azerupi.github.io/mdBook/lib/lib.html) and the [API docs](http://azerupi.github.io/mdBook/mdbook/index.html) for more information.
+See the [User Guide](https://rust-lang-nursery.github.io/mdBook/) and the [API docs](https://docs.rs/mdbook/*/mdbook/) for more information.
 
 ## Contributions
 
 Contributions are highly appreciated and encouraged! Don't hesitate to participate to discussions in the issues, propose new features and ask for help.
 
-If you are just starting out with Rust, there are a series of issus that are tagged [E-Easy](https://github.com/azerupi/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AE-Easy) and **we will gladly mentor you** so that you can successfully go through the process of fixing a bug or adding a new feature! Let us know if you need any help.
+If you are just starting out with Rust, there are a series of issus that are tagged [E-Easy](https://github.com/rust-lang-nursery/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AE-Easy) and **we will gladly mentor you** so that you can successfully go through the process of fixing a bug or adding a new feature! Let us know if you need any help.
 
 For more info about contributing, check out our [contribution guide](CONTRIBUTING.md) who helps you go through the build and contribution process!
 

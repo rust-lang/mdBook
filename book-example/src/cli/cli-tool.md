@@ -24,10 +24,10 @@ Run `mdbook help` in your terminal to verify if it works. Congratulations, you h
 
 ### Install Git version
 
-The **[git version](https://github.com/azerupi/mdBook)** contains all the latest bug-fixes and features, that will be released in the next version on **Crates.io**, if you can't wait until the next release. You can build the git version yourself. Open your terminal and navigate to the directory of you choice. We need to clone the git repository and then build it with Cargo.
+The **[git version](https://github.com/rust-lang-nursery/mdBook)** contains all the latest bug-fixes and features, that will be released in the next version on **Crates.io**, if you can't wait until the next release. You can build the git version yourself. Open your terminal and navigate to the directory of you choice. We need to clone the git repository and then build it with Cargo.
 
 ```bash
-git clone --depth=1 https://github.com/azerupi/mdBook.git
+git clone --depth=1 https://github.com/rust-lang-nursery/mdBook.git
 cd mdBook
 cargo build --release
 ```
