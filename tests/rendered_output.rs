@@ -33,7 +33,7 @@ const TOC_SECOND_LEVEL: &[&'static str] = &["1.1. Nested Chapter"];
 #[test]
 fn build_the_dummy_book() {
     let temp = DummyBook::new().build().unwrap();
-    let mut md = MDBook::new(temp.path());
+    let mut md = MDBook::load(temp.path()).unwrap();
 
     md.build().unwrap();
 }
@@ -41,7 +41,7 @@ fn build_the_dummy_book() {
 #[test]
 fn by_default_mdbook_generates_rendered_content_in_the_book_directory() {
     let temp = DummyBook::new().build().unwrap();
-    let mut md = MDBook::new(temp.path());
+    let mut md = MDBook::load(temp.path()).unwrap();
 
     assert!(!temp.path().join("book").exists());
     md.build().unwrap();
@@ -53,7 +53,7 @@ fn by_default_mdbook_generates_rendered_content_in_the_book_directory() {
 #[test]
 fn make_sure_bottom_level_files_contain_links_to_chapters() {
     let temp = DummyBook::new().build().unwrap();
-    let mut md = MDBook::new(temp.path());
+    let mut md = MDBook::load(temp.path()).unwrap();
     md.build().unwrap();
 
     let dest = temp.path().join("book");
@@ -73,7 +73,7 @@ fn make_sure_bottom_level_files_contain_links_to_chapters() {
 #[test]
 fn check_correct_cross_links_in_nested_dir() {
     let temp = DummyBook::new().build().unwrap();
-    let mut md = MDBook::new(temp.path());
+    let mut md = MDBook::load(temp.path()).unwrap();
     md.build().unwrap();
 
     let first = temp.path().join("book").join("first");
@@ -100,7 +100,7 @@ fn check_correct_cross_links_in_nested_dir() {
 #[test]
 fn rendered_code_has_playpen_stuff() {
     let temp = DummyBook::new().build().unwrap();
-    let mut md = MDBook::new(temp.path());
+    let mut md = MDBook::load(temp.path()).unwrap();
     md.build().unwrap();
 
     let nested = temp.path().join("book/first/nested.html");
@@ -121,7 +121,7 @@ fn chapter_content_appears_in_rendered_document() {
                        ("conclusion.html", "Conclusion")];
 
     let temp = DummyBook::new().build().unwrap();
-    let mut md = MDBook::new(temp.path());
+    let mut md = MDBook::load(temp.path()).unwrap();
     md.build().unwrap();
 
     let destination = temp.path().join("book");
@@ -180,7 +180,7 @@ fn entry_ends_with(entry: &DirEntry, ending: &str) -> bool {
 fn root_index_html() -> Result<Document> {
     let temp = DummyBook::new().build()
                                .chain_err(|| "Couldn't create the dummy book")?;
-    MDBook::new(temp.path()).build()
+    MDBook::load(temp.path())?.build()
                             .chain_err(|| "Book building failed")?;
 
     let index_page = temp.path().join("book").join("index.html");
@@ -264,7 +264,7 @@ fn create_missing_file_without_config() {
 
 fn create_missing_setup(create_missing: Option<bool>) -> (MDBook, TempDir) {
     let temp = DummyBook::new().build().unwrap();
-    let md = MDBook::new(temp.path());
+    let md = MDBook::load(temp.path()).unwrap();
 
     let mut file = File::create(temp.path().join("book.toml")).unwrap();
     match create_missing {
