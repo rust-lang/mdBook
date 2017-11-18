@@ -118,8 +118,9 @@ impl MDBook {
     pub fn write_file<P: AsRef<Path>>(&self, filename: P, content: &[u8]) -> Result<()> {
         let path = self.get_destination().join(filename);
 
-        utils::fs::create_file(&path)?.write_all(content)
-                                      .map_err(|e| e.into())
+        utils::fs::create_file(&path)?
+            .write_all(content)
+            .map_err(|e| e.into())
     }
 
     /// Parses the `book.json` file (if it exists) to extract
@@ -149,16 +150,18 @@ impl MDBook {
     }
 
     pub fn test(&mut self, library_paths: Vec<&str>) -> Result<()> {
-        let library_args: Vec<&str> = (0..library_paths.len()).map(|_| "-L")
-                                                              .zip(library_paths.into_iter())
-                                                              .flat_map(|x| vec![x.0, x.1])
-                                                              .collect();
+        let library_args: Vec<&str> = (0..library_paths.len())
+            .map(|_| "-L")
+            .zip(library_paths.into_iter())
+            .flat_map(|x| vec![x.0, x.1])
+            .collect();
         let temp_dir = TempDir::new("mdbook")?;
         for item in self.iter() {
             if let BookItem::Chapter(ref ch) = *item {
                 if !ch.path.as_os_str().is_empty() {
                     let path = self.get_source().join(&ch.path);
-                    let base = path.parent().ok_or_else(|| String::from("Invalid bookitem path!"))?;
+                    let base = path.parent()
+                        .ok_or_else(|| String::from("Invalid bookitem path!"))?;
                     let content = utils::fs::file_to_string(&path)?;
                     // Parse and expand links
                     let content = preprocess::links::replace_all(&content, base)?;
@@ -169,10 +172,11 @@ impl MDBook {
                     let mut tmpf = utils::fs::create_file(&path)?;
                     tmpf.write_all(content.as_bytes())?;
 
-                    let output = Command::new("rustdoc").arg(&path)
-                                                        .arg("--test")
-                                                        .args(&library_args)
-                                                        .output()?;
+                    let output = Command::new("rustdoc")
+                        .arg(&path)
+                        .arg("--test")
+                        .args(&library_args)
+                        .output()?;
 
                     if !output.status.success() {
                         bail!(ErrorKind::Subprocess(
