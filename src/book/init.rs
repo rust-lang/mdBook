@@ -1,6 +1,11 @@
+use std::fs::{self, File};
 use std::path::PathBuf;
+use std::io::Write;
+use toml;
+
 use config::Config;
 use super::MDBook;
+use theme;
 use errors::*;
 
 
@@ -44,113 +49,113 @@ impl BookBuilder {
     }
 
     pub fn build(&self) -> Result<MDBook> {
-        unimplemented!()
+        info!("Creating a new book with stub content");
+
+        self.create_directory_structure()
+            .chain_err(|| "Unable to create directory structure")?;
+
+        self.create_stub_files()
+            .chain_err(|| "Unable to create stub files")?;
+
+        if self.create_gitignore {
+            self.build_gitignore()
+                .chain_err(|| "Unable to create .gitignore")?;
+        }
+
+        if self.copy_theme {
+            self.copy_across_theme()
+                .chain_err(|| "Unable to copy across the theme")?;
+        }
+
+        self.write_book_toml()?;
+
+        let book = MDBook::load(&self.root)
+            .expect("The BookBuilder should always create a valid book. \
+            If you are seeing this it is a bug and should be reported.");
+
+        Ok(book)
+    }
+
+    fn write_book_toml(&self) -> Result<()> {
+        debug!("[*] Writing book.toml");
+        let book_toml = self.root.join("book.toml");
+        let cfg = toml::to_vec(&self.config)
+            .chain_err(|| "Unable to serialize the config")?;
+
+        File::create(book_toml)
+            .chain_err(|| "Couldn't create book.toml")?
+            .write_all(&cfg)
+            .chain_err(|| "Unable to write config to book.toml")?;
+        Ok(())
+    }
+
+    fn copy_across_theme(&self) -> Result<()> {
+        debug!("[*] Copying theme");
+
+        let themedir = self.config.html_config()
+            .and_then(|html| html.theme)
+            .unwrap_or_else(|| self.config.book.src.join("theme"));
+        let themedir = self.root.join(themedir);
+
+        if !themedir.exists() {
+            debug!("[*]: {:?} does not exist, creating the directory",
+            themedir);         fs::create_dir(&themedir)?;
+        }
+
+        let mut index = File::create(themedir.join("index.hbs"))?;
+        index.write_all(theme::INDEX)?;
+
+        let mut css = File::create(themedir.join("book.css"))?;
+        css.write_all(theme::CSS)?;
+
+        let mut favicon = File::create(themedir.join("favicon.png"))?;
+        favicon.write_all(theme::FAVICON)?;
+
+        let mut js = File::create(themedir.join("book.js"))?;
+        js.write_all(theme::JS)?;
+
+        let mut highlight_css = File::create(themedir.join("highlight.css"))?;
+        highlight_css.write_all(theme::HIGHLIGHT_CSS)?;
+
+        let mut highlight_js = File::create(themedir.join("highlight.js"))?;
+        highlight_js.write_all(theme::HIGHLIGHT_JS)?;
+
+        Ok(())
+    }
+
+    fn build_gitignore(&self) -> Result<()> {
+        debug!("[*]: Creating .gitignore");
+
+        Ok(())
+    }
+
+    fn create_stub_files(&self) -> Result<()> {
+        debug!("[*] Creating example book contents");
+        let src_dir = self.root.join(&self.config.book.src);
+
+        let summary = src_dir.join("SUMMARY.md");
+        let mut f = File::create(&summary).chain_err(|| "Unable to create SUMMARY.md")?;
+        writeln!(f, "# Summary")?;
+        writeln!(f, "")?;
+        writeln!(f, "- [Chapter 1](./chapter_1.md)")?;
+
+        let chapter_1 = src_dir.join("chapter_1.md");
+        let mut f = File::create(&chapter_1).chain_err(|| "Unable to create chapter_1.md")?;
+        writeln!(f, "# Chapter 1")?;
+
+        Ok(())
+    }
+
+    fn create_directory_structure(&self) -> Result<()> {
+        debug!("[*]: Creating directory tree");
+        fs::create_dir_all(&self.root)?;
+
+        let src = self.root.join(&self.config.book.src);
+        fs::create_dir_all(&src)?;
+
+        let build = self.root.join(&self.config.build.build_dir);
+        fs::create_dir_all(&build)?;
+
+        Ok(())
     }
 }
-
-// contents of old `init()` function:
-
-// debug!("[fn]: init");
-
-// if !self.root.exists() {
-//     fs::create_dir_all(&self.root).unwrap();
-//     info!("{:?} created", self.root.display());
-// }
-
-// {
-//     let dest = self.get_destination();
-//     if !dest.exists() {
-// debug!("[*]: {} does not exist, trying to create directory",
-// dest.display());         fs::create_dir_all(dest)?;
-//     }
-
-
-//     let src = self.get_source();
-//     if !src.exists() {
-// debug!("[*]: {} does not exist, trying to create directory",
-// src.display());         fs::create_dir_all(&src)?;
-//     }
-
-//     let summary = src.join("SUMMARY.md");
-
-//     if !summary.exists() {
-//         // Summary does not exist, create it
-// debug!("[*]: {:?} does not exist, trying to create SUMMARY.md",
-// &summary);         let mut f = File::create(&summary)?;
-
-//         debug!("[*]: Writing to SUMMARY.md");
-
-//         writeln!(f, "# Summary")?;
-//         writeln!(f, "")?;
-//         writeln!(f, "- [Chapter 1](./chapter_1.md)")?;
-//     }
-// }
-
-// // parse SUMMARY.md, and create the missing item related file
-// self.parse_summary()?;
-
-// debug!("[*]: constructing paths for missing files");
-// for item in self.iter() {
-//     debug!("[*]: item: {:?}", item);
-//     let ch = match *item {
-//         BookItem::Spacer => continue,
-//         BookItem::Chapter(_, ref ch) | BookItem::Affix(ref ch) => ch,
-//     };
-//     if !ch.path.as_os_str().is_empty() {
-//         let path = self.get_source().join(&ch.path);
-
-//         if !path.exists() {
-//             if !self.create_missing {
-//                 return Err(
-// format!("'{}' referenced from SUMMARY.md does not
-// exist.", path.to_string_lossy()).into(),                 );
-//             }
-//             debug!("[*]: {:?} does not exist, trying to create file", path);
-//             ::std::fs::create_dir_all(path.parent().unwrap())?;
-//             let mut f = File::create(path)?;
-
-//             // debug!("[*]: Writing to {:?}", path);
-//             writeln!(f, "# {}", ch.name)?;
-//         }
-//     }
-// }
-
-// debug!("[*]: init done");
-// Ok(())
-
-// pub fn copy_theme(&self) -> Result<()> {
-//     debug!("[fn]: copy_theme");
-
-//     let themedir = self.theme_dir();
-
-//     if !themedir.exists() {
-// debug!("[*]: {:?} does not exist, trying to create directory",
-// themedir);         fs::create_dir(&themedir)?;
-//     }
-
-//     // index.hbs
-//     let mut index = File::create(themedir.join("index.hbs"))?;
-//     index.write_all(theme::INDEX)?;
-
-//     // book.css
-//     let mut css = File::create(themedir.join("book.css"))?;
-//     css.write_all(theme::CSS)?;
-
-//     // favicon.png
-//     let mut favicon = File::create(themedir.join("favicon.png"))?;
-//     favicon.write_all(theme::FAVICON)?;
-
-//     // book.js
-//     let mut js = File::create(themedir.join("book.js"))?;
-//     js.write_all(theme::JS)?;
-
-//     // highlight.css
-//     let mut highlight_css = File::create(themedir.join("highlight.css"))?;
-//     highlight_css.write_all(theme::HIGHLIGHT_CSS)?;
-
-//     // highlight.js
-//     let mut highlight_js = File::create(themedir.join("highlight.js"))?;
-//     highlight_js.write_all(theme::HIGHLIGHT_JS)?;
-
-//     Ok(())
-// }

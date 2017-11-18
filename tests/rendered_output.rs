@@ -9,7 +9,7 @@ mod dummy_book;
 
 use dummy_book::{assert_contains_strings, DummyBook};
 
-use std::fs::{File, remove_file};
+use std::fs::{remove_file, File};
 use std::io::Write;
 use std::path::Path;
 use std::ffi::OsStr;
@@ -23,10 +23,12 @@ use mdbook::MDBook;
 
 
 const BOOK_ROOT: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/dummy_book");
-const TOC_TOP_LEVEL: &[&'static str] = &["1. First Chapter",
-                                         "2. Second Chapter",
-                                         "Conclusion",
-                                         "Introduction"];
+const TOC_TOP_LEVEL: &[&'static str] = &[
+    "1. First Chapter",
+    "2. Second Chapter",
+    "Conclusion",
+    "Introduction",
+];
 const TOC_SECOND_LEVEL: &[&'static str] = &["1.1. Nested Chapter"];
 
 /// Make sure you can load the dummy book and build it without panicking.
@@ -57,11 +59,13 @@ fn make_sure_bottom_level_files_contain_links_to_chapters() {
     md.build().unwrap();
 
     let dest = temp.path().join("book");
-    let links = vec![r#"href="intro.html""#,
-                     r#"href="./first/index.html""#,
-                     r#"href="./first/nested.html""#,
-                     r#"href="./second.html""#,
-                     r#"href="./conclusion.html""#];
+    let links = vec![
+        r#"href="intro.html""#,
+        r#"href="./first/index.html""#,
+        r#"href="./first/nested.html""#,
+        r#"href="./second.html""#,
+        r#"href="./conclusion.html""#,
+    ];
 
     let files_in_bottom_dir = vec!["index.html", "intro.html", "second.html", "conclusion.html"];
 
@@ -77,12 +81,14 @@ fn check_correct_cross_links_in_nested_dir() {
     md.build().unwrap();
 
     let first = temp.path().join("book").join("first");
-    let links = vec![r#"<base href="../">"#,
-                     r#"href="intro.html""#,
-                     r#"href="./first/index.html""#,
-                     r#"href="./first/nested.html""#,
-                     r#"href="./second.html""#,
-                     r#"href="./conclusion.html""#];
+    let links = vec![
+        r#"<base href="../">"#,
+        r#"href="intro.html""#,
+        r#"href="./first/index.html""#,
+        r#"href="./first/nested.html""#,
+        r#"href="./second.html""#,
+        r#"href="./conclusion.html""#,
+    ];
 
     let files_in_nested_dir = vec!["index.html", "nested.html"];
 
@@ -90,11 +96,19 @@ fn check_correct_cross_links_in_nested_dir() {
         assert_contains_strings(first.join(filename), &links);
     }
 
-    assert_contains_strings(first.join("index.html"),
-                            &[r##"href="./first/index.html#some-section" id="some-section""##]);
+    assert_contains_strings(
+        first.join("index.html"),
+        &[
+            r##"href="./first/index.html#some-section" id="some-section""##,
+        ],
+    );
 
-    assert_contains_strings(first.join("nested.html"),
-                            &[r##"href="./first/nested.html#some-section" id="some-section""##]);
+    assert_contains_strings(
+        first.join("nested.html"),
+        &[
+            r##"href="./first/nested.html#some-section" id="some-section""##,
+        ],
+    );
 }
 
 #[test]
@@ -114,11 +128,13 @@ fn rendered_code_has_playpen_stuff() {
 
 #[test]
 fn chapter_content_appears_in_rendered_document() {
-    let content = vec![("index.html", "Here's some interesting text"),
-                       ("second.html", "Second Chapter"),
-                       ("first/nested.html", "testable code"),
-                       ("first/index.html", "more text"),
-                       ("conclusion.html", "Conclusion")];
+    let content = vec![
+        ("index.html", "Here's some interesting text"),
+        ("second.html", "Second Chapter"),
+        ("first/nested.html", "testable code"),
+        ("first/index.html", "more text"),
+        ("conclusion.html", "Conclusion"),
+    ];
 
     let temp = DummyBook::new().build().unwrap();
     let mut md = MDBook::load(temp.path()).unwrap();
@@ -153,21 +169,22 @@ fn chapter_files_were_rendered_to_html() {
     let temp = DummyBook::new().build().unwrap();
     let src = Path::new(BOOK_ROOT).join("src");
 
-    let chapter_files = WalkDir::new(&src).into_iter()
-                                          .filter_entry(|entry| entry_ends_with(entry, ".md"))
-                                          .filter_map(|entry| entry.ok())
-                                          .map(|entry| entry.path().to_path_buf())
-                                          .filter(|path| {
-                                                      path.file_name().and_then(OsStr::to_str)
-                                                          != Some("SUMMARY.md")
-                                                  });
+    let chapter_files = WalkDir::new(&src)
+        .into_iter()
+        .filter_entry(|entry| entry_ends_with(entry, ".md"))
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path().to_path_buf())
+        .filter(|path| path.file_name().and_then(OsStr::to_str) != Some("SUMMARY.md"));
 
     for chapter in chapter_files {
-        let rendered_location = temp.path().join(chapter.strip_prefix(&src).unwrap())
-                                    .with_extension("html");
-        assert!(rendered_location.exists(),
-                "{} doesn't exits",
-                rendered_location.display());
+        let rendered_location = temp.path()
+            .join(chapter.strip_prefix(&src).unwrap())
+            .with_extension("html");
+        assert!(
+            rendered_location.exists(),
+            "{} doesn't exits",
+            rendered_location.display()
+        );
     }
 }
 
@@ -178,10 +195,12 @@ fn entry_ends_with(entry: &DirEntry, ending: &str) -> bool {
 /// Read the main page (`book/index.html`) and expose it as a DOM which we
 /// can search with the `select` crate
 fn root_index_html() -> Result<Document> {
-    let temp = DummyBook::new().build()
-                               .chain_err(|| "Couldn't create the dummy book")?;
-    MDBook::load(temp.path())?.build()
-                            .chain_err(|| "Book building failed")?;
+    let temp = DummyBook::new()
+        .build()
+        .chain_err(|| "Couldn't create the dummy book")?;
+    MDBook::load(temp.path())?
+        .build()
+        .chain_err(|| "Book building failed")?;
 
     let index_page = temp.path().join("book").join("index.html");
     let html = file_to_string(&index_page).chain_err(|| "Unable to read index.html")?;
@@ -197,9 +216,9 @@ fn check_second_toc_level() {
 
     let pred = descendants!(Class("chapter"), Name("li"), Name("li"), Name("a"));
 
-    let mut children_of_children: Vec<_> =
-        doc.find(pred).map(|elem| elem.text().trim().to_string())
-           .collect();
+    let mut children_of_children: Vec<_> = doc.find(pred)
+        .map(|elem| elem.text().trim().to_string())
+        .collect();
     children_of_children.sort();
 
     assert_eq!(children_of_children, should_be);
@@ -215,8 +234,9 @@ fn check_first_toc_level() {
 
     let pred = descendants!(Class("chapter"), Name("li"), Name("a"));
 
-    let mut children: Vec<_> = doc.find(pred).map(|elem| elem.text().trim().to_string())
-                                       .collect();
+    let mut children: Vec<_> = doc.find(pred)
+        .map(|elem| elem.text().trim().to_string())
+        .collect();
     children.sort();
 
     assert_eq!(children, should_be);
@@ -227,8 +247,8 @@ fn check_spacers() {
     let doc = root_index_html().unwrap();
     let should_be = 1;
 
-    let num_spacers =
-        doc.find(Class("chapter").descendant(Name("li").and(Class("spacer")))).count();
+    let num_spacers = doc.find(Class("chapter").descendant(Name("li").and(Class("spacer"))))
+        .count();
     assert_eq!(num_spacers, should_be);
 }
 
@@ -269,7 +289,8 @@ fn create_missing_setup(create_missing: Option<bool>) -> (MDBook, TempDir) {
     let mut file = File::create(temp.path().join("book.toml")).unwrap();
     match create_missing {
         Some(true) => file.write_all(b"[build]\ncreate-missing = true\n").unwrap(),
-        Some(false) => file.write_all(b"[build]\ncreate-missing = false\n").unwrap(),
+        Some(false) => file.write_all(b"[build]\ncreate-missing = false\n")
+            .unwrap(),
         None => (),
     }
     file.flush().unwrap();
