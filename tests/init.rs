@@ -18,7 +18,7 @@ fn base_mdbook_init_should_create_default_content() {
         assert!(!temp.path().join(file).exists());
     }
 
-    let md = MDBook::init(temp.path()).build().unwrap();
+    MDBook::init(temp.path()).build().unwrap();
 
     for file in &created_files {
         let target = temp.path().join(file);

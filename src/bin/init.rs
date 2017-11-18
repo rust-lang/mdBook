@@ -3,7 +3,6 @@ use std::io::Write;
 use clap::{App, ArgMatches, SubCommand};
 use mdbook::MDBook;
 use mdbook::errors::Result;
-use mdbook::config::Config;
 use get_book_dir;
 
 // Create clap subcommand arguments

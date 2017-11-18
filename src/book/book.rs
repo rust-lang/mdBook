@@ -2,7 +2,7 @@ use std::fmt::{self, Display, Formatter};
 use std::path::{Path, PathBuf};
 use std::collections::VecDeque;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::Read;
 
 use super::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
 use errors::*;
@@ -14,9 +14,8 @@ pub fn load_book<P: AsRef<Path>>(src_dir: P) -> Result<Book> {
     let summary_md = src_dir.join("SUMMARY.md");
 
     let mut summary_content = String::new();
-    File::open(summary_md)
-        .chain_err(|| "Couldn't open SUMMARY.md")?
-        .read_to_string(&mut summary_content)?;
+    File::open(summary_md).chain_err(|| "Couldn't open SUMMARY.md")?
+                          .read_to_string(&mut summary_content)?;
 
     let summary = parse_summary(&summary_content).chain_err(|| "Summary parsing failed")?;
 
@@ -111,10 +110,7 @@ fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P) -> Result<
 fn load_summary_item<P: AsRef<Path>>(item: &SummaryItem, src_dir: P) -> Result<BookItem> {
     match *item {
         SummaryItem::Separator => Ok(BookItem::Separator),
-        SummaryItem::Link(ref link) => {
-            let file = src_dir.as_ref().join(&link.location);
-            load_chapter(link, src_dir).map(|c| BookItem::Chapter(c))
-        },
+        SummaryItem::Link(ref link) => load_chapter(link, src_dir).map(|c| BookItem::Chapter(c)),
     }
 }
 
@@ -128,22 +124,22 @@ fn load_chapter<P: AsRef<Path>>(link: &Link, src_dir: P) -> Result<Chapter> {
         src_dir.join(&link.location)
     };
 
-    let mut f = File::open(&location).chain_err(|| format!("Chapter file not found, {}", link.location.display()))?;
+    let mut f = File::open(&location).chain_err(|| {
+        format!("Chapter file not found, {}", link.location.display())
+    })?;
 
     let mut content = String::new();
     f.read_to_string(&mut content)?;
 
-    let stripped = location
-        .strip_prefix(&src_dir)
-        .expect("Chapters are always inside a book");
+    let stripped = location.strip_prefix(&src_dir)
+                           .expect("Chapters are always inside a book");
 
     let mut ch = Chapter::new(&link.name, content, stripped);
     ch.number = link.number.clone();
 
-    let sub_items = link.nested_items
-        .iter()
-        .map(|i| load_summary_item(i, src_dir))
-        .collect::<Result<Vec<_>>>()?;
+    let sub_items = link.nested_items.iter()
+                        .map(|i| load_summary_item(i, src_dir))
+                        .collect::<Result<Vec<_>>>()?;
 
     ch.sub_items = sub_items;
 
@@ -195,14 +191,14 @@ mod tests {
     use super::*;
     use tempdir::TempDir;
     use std::io::Write;
-    use std::fs;
 
     const DUMMY_SRC: &'static str = "
 # Dummy Chapter
 
 this is some dummy text.
 
-And here is some more text.
+And here is some \
+                                     more text.
 ";
 
     /// Create a dummy `Link` in a temporary directory.
@@ -210,10 +206,9 @@ And here is some more text.
         let temp = TempDir::new("book").unwrap();
 
         let chapter_path = temp.path().join("chapter_1.md");
-        File::create(&chapter_path)
-            .unwrap()
-            .write(DUMMY_SRC.as_bytes())
-            .unwrap();
+        File::create(&chapter_path).unwrap()
+                                   .write(DUMMY_SRC.as_bytes())
+                                   .unwrap();
 
         let link = Link::new("Chapter 1", chapter_path);
 
@@ -226,10 +221,9 @@ And here is some more text.
 
         let second_path = temp_dir.path().join("second.md");
 
-        File::create(&second_path)
-            .unwrap()
-            .write_all("Hello World!".as_bytes())
-            .unwrap();
+        File::create(&second_path).unwrap()
+                                  .write_all("Hello World!".as_bytes())
+                                  .unwrap();
 
 
         let mut second = Link::new("Nested Chapter 1", &second_path);
@@ -339,9 +333,17 @@ And here is some more text.
                     number: None,
                     path: PathBuf::from("Chapter_1/index.md"),
                     sub_items: vec![
-                        BookItem::Chapter(Chapter::new("Hello World", String::new(), "Chapter_1/hello.md")),
+                        BookItem::Chapter(Chapter::new(
+                            "Hello World",
+                            String::new(),
+                            "Chapter_1/hello.md",
+                        )),
                         BookItem::Separator,
-                        BookItem::Chapter(Chapter::new("Goodbye World", String::new(), "Chapter_1/goodbye.md")),
+                        BookItem::Chapter(Chapter::new(
+                            "Goodbye World",
+                            String::new(),
+                            "Chapter_1/goodbye.md",
+                        )),
                     ],
                 }),
                 BookItem::Separator,
@@ -354,12 +356,11 @@ And here is some more text.
         assert_eq!(got.len(), 5);
 
         // checking the chapter names are in the order should be sufficient here...
-        let chapter_names: Vec<String> = got.into_iter()
-            .filter_map(|i| match *i {
-                BookItem::Chapter(ref ch) => Some(ch.name.clone()),
-                _ => None,
-            })
-            .collect();
+        let chapter_names: Vec<String> = got.into_iter().filter_map(|i| match *i {
+            BookItem::Chapter(ref ch) => Some(ch.name.clone()),
+            _ => None,
+        })
+                                            .collect();
         let should_be: Vec<_> = vec![
             String::from("Chapter 1"),
             String::from("Hello World"),

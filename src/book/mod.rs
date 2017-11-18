@@ -6,12 +6,11 @@ pub use self::book::{Book, BookItem, BookItems, Chapter};
 pub use self::init::BookBuilder;
 
 use std::path::{Path, PathBuf};
-use std::fs::{self, File};
 use std::io::Write;
 use std::process::Command;
 use tempdir::TempDir;
 
-use {theme, utils};
+use utils;
 use renderer::{HtmlHandlebars, Renderer};
 use preprocess;
 use errors::*;
@@ -104,17 +103,14 @@ impl MDBook {
         BookBuilder::new(book_root)
     }
 
-    /// The `build()` method is the one where everything happens.
-    /// First it parses `SUMMARY.md` to construct the book's structure
-    /// in the form of a `Vec<BookItem>` and then calls `render()`
-    /// method of the current renderer.
-    ///
-    /// It is the renderer who generates all the output files.
+    /// Tells the renderer to build our book and put it in the build directory.
     pub fn build(&mut self) -> Result<()> {
         debug!("[fn]: build");
 
-        // Clean output directory
-        utils::fs::remove_dir_content(&self.get_destination())?;
+        let dest = self.get_destination();
+        if dest.exists() {
+            utils::fs::remove_dir_content(&dest).chain_err(|| "Unable to clear output directory")?;
+        }
 
         self.renderer.render(self)
     }
@@ -122,9 +118,8 @@ impl MDBook {
     pub fn write_file<P: AsRef<Path>>(&self, filename: P, content: &[u8]) -> Result<()> {
         let path = self.get_destination().join(filename);
 
-        utils::fs::create_file(&path)?
-            .write_all(content)
-            .map_err(|e| e.into())
+        utils::fs::create_file(&path)?.write_all(content)
+                                      .map_err(|e| e.into())
     }
 
     /// Parses the `book.json` file (if it exists) to extract
@@ -175,18 +170,16 @@ impl MDBook {
     }
 
     pub fn test(&mut self, library_paths: Vec<&str>) -> Result<()> {
-        let library_args: Vec<&str> = (0..library_paths.len())
-            .map(|_| "-L")
-            .zip(library_paths.into_iter())
-            .flat_map(|x| vec![x.0, x.1])
-            .collect();
+        let library_args: Vec<&str> = (0..library_paths.len()).map(|_| "-L")
+                                                              .zip(library_paths.into_iter())
+                                                              .flat_map(|x| vec![x.0, x.1])
+                                                              .collect();
         let temp_dir = TempDir::new("mdbook")?;
         for item in self.iter() {
             if let BookItem::Chapter(ref ch) = *item {
                 if !ch.path.as_os_str().is_empty() {
                     let path = self.get_source().join(&ch.path);
-                    let base = path.parent()
-                        .ok_or_else(|| String::from("Invalid bookitem path!"))?;
+                    let base = path.parent().ok_or_else(|| String::from("Invalid bookitem path!"))?;
                     let content = utils::fs::file_to_string(&path)?;
                     // Parse and expand links
                     let content = preprocess::links::replace_all(&content, base)?;
@@ -197,11 +190,10 @@ impl MDBook {
                     let mut tmpf = utils::fs::create_file(&path)?;
                     tmpf.write_all(content.as_bytes())?;
 
-                    let output = Command::new("rustdoc")
-                        .arg(&path)
-                        .arg("--test")
-                        .args(&library_args)
-                        .output()?;
+                    let output = Command::new("rustdoc").arg(&path)
+                                                        .arg("--test")
+                                                        .args(&library_args)
+                                                        .output()?;
 
                     if !output.status.success() {
                         bail!(ErrorKind::Subprocess(

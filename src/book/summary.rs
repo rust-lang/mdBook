@@ -370,8 +370,9 @@ impl<'a> SummaryParser<'a> {
                     }
                 }
             },
+            Event::End(Tag::Item) => { /* Ignore */ },
             other => {
-                trace!("[*] skipping unexpected token: {:?}", other);
+                trace!("[*] ignoring token: {:?}", other);
             },
         }
 
