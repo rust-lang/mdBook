@@ -13,7 +13,11 @@ os:
   - osx
 
 script:
+  - id
+  - pwd
+  - ls -l
   - cargo build --verbose
+  - ls -l target/debug
   - cargo test --verbose
 
 after_success:
