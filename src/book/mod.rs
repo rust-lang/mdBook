@@ -1,6 +1,7 @@
-pub mod bookitem;
+mod summary;
+mod book;
 
-pub use self::bookitem::{BookItem, BookItems};
+pub use self::book::{Book, BookItem, BookItems, Chapter};
 
 use std::path::{Path, PathBuf};
 use std::fs::{self, File};
@@ -8,7 +9,7 @@ use std::io::Write;
 use std::process::Command;
 use tempdir::TempDir;
 
-use {parse, theme, utils};
+use {theme, utils};
 use renderer::{HtmlHandlebars, Renderer};
 use preprocess;
 use errors::*;
@@ -19,56 +20,80 @@ pub struct MDBook {
     pub root: PathBuf,
     pub config: Config,
 
-    pub content: Vec<BookItem>,
+    book: Book,
     renderer: Box<Renderer>,
 
     pub livereload: Option<String>,
 }
 
 impl MDBook {
-    /// Create a new `MDBook` struct with root directory `root`
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// # extern crate mdbook;
-    /// # use mdbook::MDBook;
-    /// # #[allow(unused_variables)]
-    /// # fn main() {
-    /// let book = MDBook::new("root_dir");
-    /// # }
-    /// ```
-    ///
-    /// In this example, `root_dir` will be the root directory of our book
-    /// and is specified in function of the current working directory
-    /// by using a relative path instead of an
-    /// absolute path.
-    ///
-    /// Default directory paths:
-    ///
-    /// - source: `root/src`
-    /// - output: `root/book`
-    /// - theme: `root/theme`
-    ///
-    /// They can both be changed by using [`set_src()`](#method.set_src) and
-    /// [`set_dest()`](#method.set_dest)
+    /// Load a book from its root directory on disk.
+    pub fn load<P: Into<PathBuf>>(book_root: P) -> Result<MDBook> {
+        let book_root = book_root.into();
+        let config_location = book_root.join("book.toml");
 
-    pub fn new<P: Into<PathBuf>>(root: P) -> MDBook {
-        let root = root.into();
-        if !root.exists() || !root.is_dir() {
-            warn!("{:?} No directory with that name", root);
-        }
+        let config = if config_location.exists() {
+            Config::from_disk(&config_location)?
+        } else {
+            Config::default()
+        };
 
-        MDBook {
-            root: root,
-            config: Config::default(),
+        let src_dir = book_root.join(&config.book.src);
+        let book = book::load_book(&src_dir)?;
 
-            content: vec![],
+        let md = MDBook {
+            root: book_root,
+            config: config,
+            book: book,
             renderer: Box::new(HtmlHandlebars::new()),
-
             livereload: None,
         }
     }
+
+    // /// Create a new `MDBook` struct with root directory `root`
+    // ///
+    // /// # Examples
+    // ///
+    // /// ```no_run
+    // /// # extern crate mdbook;
+    // /// # use mdbook::MDBook;
+    // /// # #[allow(unused_variables)]
+    // /// # fn main() {
+    // /// let book = MDBook::new("root_dir");
+    // /// # }
+    // /// ```
+    // ///
+    // /// In this example, `root_dir` will be the root directory of our book
+    // /// and is specified in function of the current working directory
+    // /// by using a relative path instead of an
+    // /// absolute path.
+    // ///
+    // /// Default directory paths:
+    // ///
+    // /// - source: `root/src`
+    // /// - output: `root/book`
+    // /// - theme: `root/theme`
+    // ///
+    // /// They can both be changed by using [`set_src()`](#method.set_src) and
+    // /// [`set_dest()`](#method.set_dest)
+
+    // pub fn new<P: Into<PathBuf>>(root: P) -> MDBook {
+    //     let root = root.into();
+    //     if !root.exists() || !root.is_dir() {
+    //         warn!("{:?} No directory with that name", root);
+    //     }
+
+    //     MDBook {
+    //         root: root,
+    //         config: Config::default(),
+
+    //         content: vec![],
+    //         renderer: Box::new(HtmlHandlebars::new()),
+
+    //         livereload: None,
+    //         create_missing: true,
+    //     }
+    // }
 
     /// Returns a flat depth-first iterator over the elements of the book,
     /// it returns an [BookItem enum](bookitem.html):
@@ -77,15 +102,14 @@ impl MDBook {
     /// ```no_run
     /// # extern crate mdbook;
     /// # use mdbook::MDBook;
-    /// # use mdbook::BookItem;
+    /// # use mdbook::book::BookItem;
     /// # #[allow(unused_variables)]
     /// # fn main() {
     /// # let book = MDBook::new("mybook");
     /// for item in book.iter() {
-    ///     match item {
-    ///         &BookItem::Chapter(ref section, ref chapter) => {},
-    ///         &BookItem::Affix(ref chapter) => {},
-    ///         &BookItem::Spacer => {},
+    ///     match *item {
+    ///         BookItem::Chapter(ref chapter) => {},
+    ///         BookItem::Spacer => {},
     ///     }
     /// }
     ///
@@ -100,11 +124,7 @@ impl MDBook {
     /// ```
 
     pub fn iter(&self) -> BookItems {
-        BookItems {
-            items: &self.content[..],
-            current_index: 0,
-            stack: Vec::new(),
-        }
+        self.book.iter()
     }
 
     /// `init()` creates some boilerplate files and directories
@@ -122,104 +142,106 @@ impl MDBook {
     /// and adds a `SUMMARY.md` and a
     /// `chapter_1.md` to the source directory.
 
-    pub fn init(&mut self) -> Result<()> {
-        debug!("[fn]: init");
+    pub fn init<P: AsRef<Path>>(book_root: P) -> Result<MDBook> {
+        unimplemented!()
+        // debug!("[fn]: init");
 
-        if !self.root.exists() {
-            fs::create_dir_all(&self.root).unwrap();
-            info!("{:?} created", self.root.display());
-        }
+        // if !self.root.exists() {
+        //     fs::create_dir_all(&self.root).unwrap();
+        //     info!("{:?} created", self.root.display());
+        // }
 
-        {
-            let dest = self.get_destination();
-            if !dest.exists() {
-                debug!("[*]: {} does not exist, trying to create directory", dest.display());
-                fs::create_dir_all(dest)?;
-            }
+        // {
+        //     let dest = self.get_destination();
+        //     if !dest.exists() {
+        // debug!("[*]: {} does not exist, trying to create directory",
+        // dest.display());         fs::create_dir_all(dest)?;
+        //     }
 
 
-            let src = self.get_source();
-            if !src.exists() {
-                debug!("[*]: {} does not exist, trying to create directory", src.display());
-                fs::create_dir_all(&src)?;
-            }
+        //     let src = self.get_source();
+        //     if !src.exists() {
+        // debug!("[*]: {} does not exist, trying to create directory",
+        // src.display());         fs::create_dir_all(&src)?;
+        //     }
 
-            let summary = src.join("SUMMARY.md");
+        //     let summary = src.join("SUMMARY.md");
 
-            if !summary.exists() {
-                // Summary does not exist, create it
-                debug!("[*]: {:?} does not exist, trying to create SUMMARY.md",
-                       &summary);
-                let mut f = File::create(&summary)?;
+        //     if !summary.exists() {
+        //         // Summary does not exist, create it
+        // debug!("[*]: {:?} does not exist, trying to create SUMMARY.md",
+        // &summary);         let mut f = File::create(&summary)?;
 
-                debug!("[*]: Writing to SUMMARY.md");
+        //         debug!("[*]: Writing to SUMMARY.md");
 
-                writeln!(f, "# Summary")?;
-                writeln!(f, "")?;
-                writeln!(f, "- [Chapter 1](./chapter_1.md)")?;
-            }
-        }
+        //         writeln!(f, "# Summary")?;
+        //         writeln!(f, "")?;
+        //         writeln!(f, "- [Chapter 1](./chapter_1.md)")?;
+        //     }
+        // }
 
-        // parse SUMMARY.md, and create the missing item related file
-        self.parse_summary()?;
+        // // parse SUMMARY.md, and create the missing item related file
+        // self.parse_summary()?;
 
-        debug!("[*]: constructing paths for missing files");
-        for item in self.iter() {
-            debug!("[*]: item: {:?}", item);
-            let ch = match *item {
-                BookItem::Spacer => continue,
-                BookItem::Chapter(_, ref ch) | BookItem::Affix(ref ch) => ch,
-            };
-            if !ch.path.as_os_str().is_empty() {
-                let path = self.get_source().join(&ch.path);
+        // debug!("[*]: constructing paths for missing files");
+        // for item in self.iter() {
+        //     debug!("[*]: item: {:?}", item);
+        //     let ch = match *item {
+        //         BookItem::Spacer => continue,
+        //         BookItem::Chapter(_, ref ch) | BookItem::Affix(ref ch) => ch,
+        //     };
+        //     if !ch.path.as_os_str().is_empty() {
+        //         let path = self.get_source().join(&ch.path);
 
-                if !path.exists() {
-                    if !self.config.build.create_missing {
-                        return Err(
-                            format!("'{}' referenced from SUMMARY.md does not exist.", path.to_string_lossy()).into(),
-                        );
-                    }
-                    debug!("[*]: {:?} does not exist, trying to create file", path);
-                    ::std::fs::create_dir_all(path.parent().unwrap())?;
-                    let mut f = File::create(path)?;
+        //         if !path.exists() {
+        //             if !self.create_missing {
+        //                 return Err(
+        // format!("'{}' referenced from SUMMARY.md does not
+        // exist.", path.to_string_lossy()).into(),                 );
+        //             }
+        //             debug!("[*]: {:?} does not exist, trying to create file", path);
+        //             ::std::fs::create_dir_all(path.parent().unwrap())?;
+        //             let mut f = File::create(path)?;
 
-                    // debug!("[*]: Writing to {:?}", path);
-                    writeln!(f, "# {}", ch.name)?;
-                }
-            }
-        }
+        //             // debug!("[*]: Writing to {:?}", path);
+        //             writeln!(f, "# {}", ch.name)?;
+        //         }
+        //     }
+        // }
 
-        debug!("[*]: init done");
-        Ok(())
+        // debug!("[*]: init done");
+        // Ok(())
     }
 
-    pub fn create_gitignore(&self) {
-        let gitignore = self.get_gitignore();
+    // pub fn create_gitignore(&self) {
+    //     let gitignore = self.get_gitignore();
 
-        let destination = self.get_destination();
+    //     let destination = self.get_destination();
 
-        // Check that the gitignore does not extist and that the destination path
-        // begins with the root path
-        // We assume tha if it does begin with the root path it is contained within.
-        // This assumption
-        // will not hold true for paths containing double dots to go back up e.g.
-        // `root/../destination`
-        if !gitignore.exists() && destination.starts_with(&self.root) {
-            let relative = destination
-                .strip_prefix(&self.root)
-                .expect("Could not strip the root prefix, path is not relative to root")
-                .to_str()
-                .expect("Could not convert to &str");
+    //     // Check that the gitignore does not extist and that the destination path
+    //     // begins with the root path
+    // // We assume tha if it does begin with the root path it is contained
+    // within.     // This assumption
+    //     // will not hold true for paths containing double dots to go back up e.g.
+    //     // `root/../destination`
+    //     if !gitignore.exists() && destination.starts_with(&self.root) {
+    //         let relative = destination
+    //             .strip_prefix(&self.root)
+    // .expect("Could not strip the root prefix, path is not relative
+    // to root")             .to_str()
+    //             .expect("Could not convert to &str");
 
-            debug!("[*]: {:?} does not exist, trying to create .gitignore", gitignore);
+    // debug!("[*]: {:?} does not exist, trying to create .gitignore",
+    // gitignore);
 
-            let mut f = File::create(&gitignore).expect("Could not create file.");
+    // let mut f = File::create(&gitignore).expect("Could not create
+    // file.");
 
-            debug!("[*]: Writing to .gitignore");
+    //         debug!("[*]: Writing to .gitignore");
 
-            writeln!(f, "/{}", relative).expect("Could not write to file.");
-        }
-    }
+    //         writeln!(f, "/{}", relative).expect("Could not write to file.");
+    //     }
+    // }
 
     /// The `build()` method is the one where everything happens.
     /// First it parses `SUMMARY.md` to construct the book's structure
@@ -230,8 +252,6 @@ impl MDBook {
     pub fn build(&mut self) -> Result<()> {
         debug!("[fn]: build");
 
-        self.init()?;
-
         // Clean output directory
         utils::fs::remove_dir_content(&self.get_destination())?;
 
@@ -239,18 +259,13 @@ impl MDBook {
     }
 
 
-    pub fn get_gitignore(&self) -> PathBuf {
-        self.root.join(".gitignore")
-    }
-
     pub fn copy_theme(&self) -> Result<()> {
         debug!("[fn]: copy_theme");
 
         let themedir = self.theme_dir();
 
         if !themedir.exists() {
-            debug!("[*]: {:?} does not exist, trying to create directory",
-                   themedir);
+            debug!("[*]: {:?} does not exist, trying to create directory", themedir);
             fs::create_dir(&themedir)?;
         }
 
@@ -288,8 +303,9 @@ impl MDBook {
     pub fn write_file<P: AsRef<Path>>(&self, filename: P, content: &[u8]) -> Result<()> {
         let path = self.get_destination().join(filename);
 
-        utils::fs::create_file(&path)?.write_all(content)
-                                      .map_err(|e| e.into())
+        utils::fs::create_file(&path)?
+            .write_all(content)
+            .map_err(|e| e.into())
     }
 
     /// Parses the `book.json` file (if it exists) to extract
@@ -340,8 +356,6 @@ impl MDBook {
     }
 
     pub fn test(&mut self, library_paths: Vec<&str>) -> Result<()> {
-        // read in the chapters
-        self.parse_summary().chain_err(|| "Couldn't parse summary")?;
         let library_args: Vec<&str> = (0..library_paths.len())
             .map(|_| "-L")
             .zip(library_paths.into_iter())
@@ -349,11 +363,11 @@ impl MDBook {
             .collect();
         let temp_dir = TempDir::new("mdbook")?;
         for item in self.iter() {
-            if let BookItem::Chapter(_, ref ch) = *item {
+            if let BookItem::Chapter(ref ch) = *item {
                 if !ch.path.as_os_str().is_empty() {
                     let path = self.get_source().join(&ch.path);
                     let base = path.parent()
-                                   .ok_or_else(|| String::from("Invalid bookitem path!"))?;
+                        .ok_or_else(|| String::from("Invalid bookitem path!"))?;
                     let content = utils::fs::file_to_string(&path)?;
                     // Parse and expand links
                     let content = preprocess::links::replace_all(&content, base)?;
@@ -364,26 +378,18 @@ impl MDBook {
                     let mut tmpf = utils::fs::create_file(&path)?;
                     tmpf.write_all(content.as_bytes())?;
 
-                    let output = Command::new("rustdoc").arg(&path)
-                                                        .arg("--test")
-                                                        .args(&library_args)
-                                                        .output()?;
+                    let output = Command::new("rustdoc")
+                        .arg(&path)
+                        .arg("--test")
+                        .args(&library_args)
+                        .output()?;
 
                     if !output.status.success() {
-                        bail!(ErrorKind::Subprocess("Rustdoc returned an error".to_string(),
-                                                    output));
+                        bail!(ErrorKind::Subprocess("Rustdoc returned an error".to_string(), output));
                     }
                 }
             }
         }
-        Ok(())
-    }
-
-    // Construct book
-    fn parse_summary(&mut self) -> Result<()> {
-        // When append becomes stable, use self.content.append() ...
-        let summary = self.get_source().join("SUMMARY.md");
-        self.content = parse::construct_bookitems(&summary)?;
         Ok(())
     }
 
