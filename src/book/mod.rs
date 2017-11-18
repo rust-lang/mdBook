@@ -61,11 +61,11 @@ impl MDBook {
     /// # use mdbook::book::BookItem;
     /// # #[allow(unused_variables)]
     /// # fn main() {
-    /// # let book = MDBook::new("mybook");
+    /// # let book = MDBook::load("mybook").unwrap();
     /// for item in book.iter() {
     ///     match *item {
     ///         BookItem::Chapter(ref chapter) => {},
-    ///         BookItem::Spacer => {},
+    ///         BookItem::Separator => {},
     ///     }
     /// }
     ///
@@ -140,32 +140,11 @@ impl MDBook {
         Ok(self)
     }
 
-    /// You can change the default renderer to another one
-    /// by using this method. The only requirement
-    /// is for your renderer to implement the
-    /// [Renderer trait](../../renderer/renderer/trait.Renderer.html)
-    ///
-    /// ```no_run
-    /// extern crate mdbook;
-    /// use mdbook::MDBook;
-    /// use mdbook::renderer::HtmlHandlebars;
-    ///
-    /// # #[allow(unused_variables)]
-    /// fn main() {
-    ///     let book = MDBook::new("mybook")
-    ///                         .set_renderer(Box::new(HtmlHandlebars::new()));
-    ///
-    /// // In this example we replace the default renderer
-    /// // by the default renderer...
-    /// // Don't forget to put your renderer in a Box
-    /// }
-    /// ```
-    ///
-    /// **note:** Don't forget to put your renderer in a `Box`
-    /// before passing it to `set_renderer()`
-
-    pub fn set_renderer(mut self, renderer: Box<Renderer>) -> Self {
-        self.renderer = renderer;
+    /// You can change the default renderer to another one by using this method.
+    /// The only requirement is for your renderer to implement the [Renderer
+    /// trait](../../renderer/renderer/trait.Renderer.html)
+    pub fn set_renderer<R: Renderer + 'static>(mut self, renderer: R) -> Self {
+        self.renderer = Box::new(renderer);
         self
     }
 

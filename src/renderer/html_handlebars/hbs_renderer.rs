@@ -9,7 +9,7 @@ use theme::{Theme, playpen_editor};
 use errors::*;
 use regex::{Captures, Regex};
 
-use std::ascii::AsciiExt;
+#[allow(unused_imports)] use std::ascii::AsciiExt;
 use std::path::{Path, PathBuf};
 use std::fs::{self, File};
 use std::io::{self, Read};

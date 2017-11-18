@@ -24,7 +24,7 @@
 //! use std::path::PathBuf;
 //!
 //! fn main() {
-//!     let mut md = MDBook::new("my-book");
+//!     let mut md = MDBook::load("my-book").unwrap();
 //!
 //!     // tweak the book configuration a bit
 //!     md.config.book.src = PathBuf::from("source");
@@ -52,7 +52,8 @@
 //! # fn main() {
 //! #   let your_renderer = HtmlHandlebars::new();
 //! #
-//! let book = MDBook::new("my-book").set_renderer(Box::new(your_renderer));
+//! let mut book = MDBook::load("my-book").unwrap();
+//! book.set_renderer(your_renderer);
 //! # }
 //! ```
 //! If you make a renderer, you get the book constructed in form of `Vec<BookItems>` and you get
