@@ -10,7 +10,6 @@ mod dummy_book;
 use dummy_book::{assert_contains_strings, DummyBook};
 
 use std::fs::{remove_file, File};
-use std::io::Write;
 use std::path::Path;
 use std::ffi::OsStr;
 use walkdir::{DirEntry, WalkDir, WalkDirIterator};
@@ -256,46 +255,45 @@ fn check_spacers() {
 /// not exist.
 #[test]
 fn failure_on_missing_file() {
-    let (md, _temp) = create_missing_setup(Some(false));
+    let (mut md, _temp) = create_missing_setup(false);
 
     // On failure, `build()` does not return a specific error, so assume
     // any error is a failure due to a missing file.
-    assert!(md.read_config().unwrap().build().is_err());
+    assert!(md.build().is_err());
 }
 
 /// Ensure a missing file is created if `create-missing` is true.
 #[test]
 fn create_missing_file_with_config() {
-    let (md, temp) = create_missing_setup(Some(true));
+    let (mut md, temp) = create_missing_setup(true);
 
-    md.read_config().unwrap().build().unwrap();
+    md.build().unwrap();
     assert!(temp.path().join("src").join("intro.md").exists());
 }
 
-/// Ensure a missing file is created if `create-missing` is not set (the default
-/// is true).
-#[test]
-fn create_missing_file_without_config() {
-    let (md, temp) = create_missing_setup(None);
-
-    md.read_config().unwrap().build().unwrap();
-    assert!(temp.path().join("src").join("intro.md").exists());
-}
-
-fn create_missing_setup(create_missing: Option<bool>) -> (MDBook, TempDir) {
+fn create_missing_setup(create_missing: bool) -> (MDBook, TempDir) {
     let temp = DummyBook::new().build().unwrap();
-    let md = MDBook::load(temp.path()).unwrap();
+    let mut md = MDBook::load(temp.path()).unwrap();
 
-    let mut file = File::create(temp.path().join("book.toml")).unwrap();
-    match create_missing {
-        Some(true) => file.write_all(b"[build]\ncreate-missing = true\n").unwrap(),
-        Some(false) => file.write_all(b"[build]\ncreate-missing = false\n")
-            .unwrap(),
-        None => (),
-    }
-    file.flush().unwrap();
-
+    md.config.build.create_missing = create_missing;
     remove_file(temp.path().join("src").join("intro.md")).unwrap();
 
     (md, temp)
+}
+
+/// This makes sure you can include a Rust file with `{{#playpen example.rs}}`.
+/// Specification is in `book-example/src/format/rust.md`
+#[test]
+fn able_to_include_rust_files_in_chapters() {
+    let temp = DummyBook::new().build().unwrap();
+    let mut md = MDBook::load(temp.path()).unwrap();
+    md.build().unwrap();
+
+    let second = temp.path().join("book/second.html");
+
+    let playpen_strings = &[
+        r#"class="playpen""#,
+        r#"println!(&quot;Hello World!&quot;);"#,
+    ];
+    assert_contains_strings(second, playpen_strings);
 }

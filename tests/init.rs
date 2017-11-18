@@ -2,6 +2,7 @@ extern crate mdbook;
 extern crate tempdir;
 
 use std::path::PathBuf;
+use std::fs;
 use mdbook::MDBook;
 use mdbook::config::Config;
 use tempdir::TempDir;
@@ -63,7 +64,7 @@ fn book_toml_isnt_required() {
     let temp = TempDir::new("mdbook").unwrap();
     let md = MDBook::init(temp.path()).build().unwrap();
 
-    assert!(!temp.path().join("book.toml").exists());
+    let _ = fs::remove_file(temp.path().join("book.toml"));
 
     md.read_config().unwrap().build().unwrap();
 }

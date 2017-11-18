@@ -38,7 +38,9 @@ impl HtmlHandlebars {
             BookItem::Chapter(ref ch)  => 
             {
                 let content = ch.content.clone();
-                let base = ch.path.parent().expect("All chapters must have a parent directory");
+                let base = ch.path.parent()
+                    .map(|dir| ctx.src_dir.join(dir))
+                    .expect("All chapters must have a parent directory");
 
                 // Parse and expand links
                 let content = preprocess::links::replace_all(&content, base)?;
@@ -239,13 +241,14 @@ impl HtmlHandlebars {
 impl Renderer for HtmlHandlebars {
     fn render(&self, book: &MDBook) -> Result<()> {
         let html_config = book.config.html_config().unwrap_or_default();
+        let src_dir = book.root.join(&book.config.book.src);
 
         debug!("[fn]: render");
         let mut handlebars = Handlebars::new();
 
         let theme_dir = match html_config.theme {
-            Some(ref theme) => theme,
-            None => Path::new("theme"),
+            Some(ref theme) => theme.to_path_buf(),
+            None => src_dir.join("theme"),
         };
 
         let theme = theme::Theme::new(theme_dir);
@@ -282,6 +285,7 @@ impl Renderer for HtmlHandlebars {
                 book: book,
                 handlebars: &handlebars,
                 destination: destination.to_path_buf(),
+                src_dir: src_dir.clone(),
                 data: data.clone(),
                 is_index: i == 0,
                 html_config: html_config.clone(),
@@ -595,6 +599,7 @@ struct RenderItemContext<'a> {
     handlebars: &'a Handlebars,
     book: &'a MDBook,
     destination: PathBuf,
+    src_dir: PathBuf,
     data: serde_json::Map<String, serde_json::Value>,
     is_index: bool,
     html_config: HtmlConfig,
