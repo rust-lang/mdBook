@@ -74,6 +74,10 @@ pub fn render_markdown_into_searchindex<F>(
     heading_to_anchor : F)
     where F : Fn(&str) -> String {
 
+    if ! searchconfig.enable {
+        return;
+    }
+
     let mut opts = Options::empty();
     opts.insert(OPTION_ENABLE_TABLES);
     opts.insert(OPTION_ENABLE_FOOTNOTES);

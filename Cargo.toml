@@ -29,7 +29,7 @@ toml = "0.4"
 open = "1.1"
 regex = "0.2.1"
 tempdir = "0.3.4"
-elasticlunr = { git = "https://github.com/mattico/elasticlunr-rs" }
+elasticlunr-rs = "0.2.1"
 
 # Watch feature
 notify = { version = "4.0", optional = true }

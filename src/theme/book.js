@@ -46,63 +46,6 @@ $( document ).ready(function() {
             }
         }
         ,
-        create_test_searchindex : function () {
-            var searchindex = elasticlunr(function () {
-                this.addField('body');
-                this.addField('title');
-                this.addField('breadcrumbs')
-                this.setRef('id');
-            });
-            var base_breadcrumbs = "";
-            var active_chapter = $('.sidebar ul a.active');
-            base_breadcrumbs = active_chapter.text().split('. ', 2)[1]; // demo
-            while (true) {
-                var parent_ul = active_chapter.parents('ul');
-                if (parent_ul.length == 0) break;
-                var parent_li = parent_ul.parents('li');
-                if (parent_li.length == 0) break;
-                var pre_li = parent_li.prev('li');
-                if (pre_li.length == 0) break;
-                base_breadcrumbs = pre_li.text().split('. ', 2)[1] + ' » ' + base_breadcrumbs;
-                active_chapter = pre_li;
-            }
-            var paragraphs = this.content.children();
-            var curr_title = "";
-            var curr_body = "";
-            var curr_ref = "";
-            var push = function(ref) {
-                if ((curr_title.length > 0 || curr_body.length > 0) && curr_ref.length > 0) {
-                    var doc = {
-                        "id": curr_ref,
-                        "body": curr_body,
-                        "title": curr_title,
-                        "breadcrumbs": base_breadcrumbs //"Header1 » Header2"
-                    }
-                    searchindex.addDoc(doc);
-                }
-                curr_body = "";
-                curr_title = "";
-                curr_ref = "";
-            };
-            paragraphs.each(function(index, element) {
-                // todo uppercase
-                var el = $(element);
-                if (el.prop('nodeName').toUpperCase() == "A") {
-                    // new header, push old paragraph to index
-                    push(index);
-                    curr_title = el.text();
-                    curr_ref = el.attr('href');
-                } else {
-                    curr_body += " \n " + el.text();
-                }
-                // last paragraph
-                if (index == paragraphs.length - 1) {
-                    push(index);
-                }
-            });
-            this.searchindex = searchindex;
-        }
-        ,
         parseURL : function (url) {
             var a =  document.createElement('a');
             a.href = url;
@@ -325,9 +268,6 @@ $( document ).ready(function() {
         init : function () {
             var this_ = this;
 
-            // For testing purposes: Index current page
-            //this.create_test_searchindex();
-
             $.getJSON("searchindex.json", function(json) {
 
                 if (json.enable == false) {
@@ -336,23 +276,7 @@ $( document ).ready(function() {
                 }
 
                 this_.searchoptions = json.searchoptions;
-                //this_.searchindex = elasticlunr.Index.load(json.index);
-
-                // TODO: Workaround: reindex everything
-                var searchindex = elasticlunr(function () {
-                    this.addField('body');
-                    this.addField('title');
-                    this.addField('breadcrumbs')
-                    this.setRef('id');
-                });
-                window.mjs = json;
-                window.search = this_;
-                var docs = json.index.documentStore.docs;
-                for (var key in docs) {
-                    searchindex.addDoc(docs[key]);
-                }
-                this_.searchindex = searchindex;
-
+                this_.searchindex = elasticlunr.Index.load(json.index);
 
                 // Set up events
                 this_.searchicon.click( function(e) { this_.searchIconClickHandler(); } );

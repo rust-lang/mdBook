@@ -312,7 +312,7 @@ impl Renderer for HtmlHandlebars {
             is_index = false;
         }
 
-        // Search index
+        // Search index (call this even if searching is disabled)
         make_searchindex(book, search_documents, &html_config.search)?;
 
         // Print version
@@ -656,6 +656,8 @@ fn make_searchindex(book: &MDBook,
                     search_documents : Vec<utils::SearchDocument>,
                     searchconfig : &Search) -> Result<()> {
 
+    // These structs mirror the configuration javascript object accepted by
+    // http://elasticlunr.com/docs/configuration.js.html
 
     #[derive(Serialize)]
     struct SearchOptionsField {
@@ -669,7 +671,6 @@ fn make_searchindex(book: &MDBook,
         breadcrumbs: SearchOptionsField,
     }
 
-    /// The searchoptions for elasticlunr.js
     #[derive(Serialize)]
     struct SearchOptions {
         bool: String,
@@ -681,11 +682,14 @@ fn make_searchindex(book: &MDBook,
 
     #[derive(Serialize)]
     struct SearchindexJson {
+        /// Propagate the search enabled/disabled setting to the html page
         enable: bool,
         #[serde(skip_serializing_if = "Option::is_none")]
+        /// The searchoptions for elasticlunr.js
         searchoptions: Option<SearchOptions>,
+        /// The index for elasticlunr.js
         #[serde(skip_serializing_if = "Option::is_none")]
-        index: Option<elasticlunr::index::Index>,
+        index: Option<elasticlunr::Index>,
 
     }
 
@@ -703,22 +707,17 @@ fn make_searchindex(book: &MDBook,
 
     let json_contents = if searchconfig.enable {
 
-        let mut index = elasticlunr::index::Index::new("id",
-            &["title".into(), "body".into(), "breadcrumbs".into()]);
+        let mut index = elasticlunr::Index::new(&["title", "body", "breadcrumbs"]);
 
         for sd in search_documents {
+            // Concat the html link with the anchor ("abc.html#anchor")
             let anchor = if let Some(s) = sd.anchor.1 {
                 format!("{}#{}", sd.anchor.0, &s)
             } else {
                 sd.anchor.0
             };
 
-            let mut map = HashMap::new();
-            map.insert("id".into(), anchor.clone());
-            map.insert("title".into(), sd.title);
-            map.insert("body".into(), sd.body);
-            map.insert("breadcrumbs".into(), sd.hierarchy.join(" » "));
-            index.add_doc(&anchor, map);
+            index.add_doc(&anchor, &[sd.title, sd.body, sd.hierarchy.join(" » ")]);
         }
 
         SearchindexJson {
