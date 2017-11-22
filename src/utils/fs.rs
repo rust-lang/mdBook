@@ -44,8 +44,8 @@ pub fn file_to_string<P: AsRef<Path>>(path: P) -> Result<String> {
 ///
 /// **note:** it's not very fool-proof, if you find a situation where
 /// it doesn't return the correct path.
-/// Consider [submitting a new issue](https://github.com/azerupi/mdBook/issues)
-/// or a [pull-request](https://github.com/azerupi/mdBook/pulls) to improve it.
+/// Consider [submitting a new issue](https://github.com/rust-lang-nursery/mdBook/issues)
+/// or a [pull-request](https://github.com/rust-lang-nursery/mdBook/pulls) to improve it.
 
 pub fn path_to_root<P: Into<PathBuf>>(path: P) -> String {
     debug!("[fn]: path_to_root");

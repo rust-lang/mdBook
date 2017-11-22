@@ -36,7 +36,7 @@ fn main() {
                 .after_help("For more information about a specific command, \
                              try `mdbook <command> --help`\n\
                              Source code for mdbook available \
-                             at: https://github.com/azerupi/mdBook")
+                             at: https://github.com/rust-lang-nursery/mdBook")
                 .subcommand(init::make_subcommand())
                 .subcommand(build::make_subcommand())
                 .subcommand(test::make_subcommand());
