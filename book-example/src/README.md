@@ -4,7 +4,7 @@
 
 What you are reading serves as an example of the output of mdBook and at the same time as a high-level documentation.
 
-mdBook is free and open source, you can find the source code on [Github](https://github.com/azerupi/mdBook). Issues and feature requests can be posted on the [Github Issue tracker](https://github.com/azerupi/mdBook/issues).
+mdBook is free and open source, you can find the source code on [Github](https://github.com/rust-lang-nursery/mdBook). Issues and feature requests can be posted on the [Github Issue tracker](https://github.com/rust-lang-nursery/mdBook/issues).
 
 ## API docs
 
