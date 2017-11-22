@@ -28,7 +28,7 @@ git init
 git config user.name "Mathieu David"
 git config user.email "mathieudavid@mathieudavid.org"
 
-git remote add upstream "https://$GH_TOKEN@github.com/azerupi/mdBook.git"
+git remote add upstream "https://$GH_TOKEN@github.com/rust-lang-nursery/mdBook.git"
 git fetch upstream
 git reset upstream/gh-pages
 
