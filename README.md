@@ -26,7 +26,7 @@ mdBook is a utility to create modern online books from Markdown files.
 
 ## What does it look like?
 
-The [**Documentation**](http://azerupi.github.io/mdBook/) for mdBook has been written in Markdown and is using mdBook to generate the online book-like website you can read. The documentation uses the latest version on GitHub and showcases the available features.
+The [**Documentation**](http://rust-lang-nursery.github.io/mdBook/) for mdBook has been written in Markdown and is using mdBook to generate the online book-like website you can read. The documentation uses the latest version on GitHub and showcases the available features.
 
 ## Installation
 
