@@ -413,6 +413,8 @@ fn make_data(book: &MDBook, config: &Config) -> Result<serde_json::Map<String, s
                     json!("theme-tomorrow_night.js"));
     }
 
+    data.insert("search".to_owned(), json!(html.search.enable));
+
     let mut chapters = vec![];
 
     for item in book.iter() {

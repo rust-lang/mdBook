@@ -48,6 +48,7 @@
             }
         </script>
 
+        {{#if search}}
         <!-- Fetch elasticlunr.js from CDN but have a local fallback -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/elasticlunr/0.9.6/elasticlunr.min.js"></script>
         <script>
@@ -63,6 +64,7 @@
                 document.write(unescape("%3Cscript src='jquery.mark.min.js'%3E%3C/script%3E"));
             }
         </script>
+        {{/if}}
 
         <!-- Fetch store.js from local - TODO add CDN when 2.x.x is available on cdnjs -->
         <script src="store.js"></script>
@@ -94,7 +96,9 @@
                     <div class="left-buttons">
                         <i id="sidebar-toggle" class="fa fa-bars" title="Toggle sidebar"></i>
                         <i id="theme-toggle" class="fa fa-paint-brush" title="Change theme"></i>
-                        <i id="search-icon" class="fa fa-search" title="Search!"></i>
+                        {{#if search}}
+                        <i id="search-icon" class="fa fa-search" title="Search. (Shortkey: s)"></i>
+                        {{/if}}
                     </div>
 
                     <h1 class="menu-title">{{ book_title }}</h1>
@@ -106,6 +110,7 @@
                     </div>
                 </div>
 
+                {{#if search}}
                 <div id="searchbar-outer" class="searchbar-outer">
                     <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ...">
 
@@ -115,6 +120,7 @@
                         </ul>
                     </div>
                 </div>
+                {{/if}}
 
 
                 <div id="content" class="content">
