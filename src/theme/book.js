@@ -2,8 +2,8 @@ $( document ).ready(function() {
 
     // Search functionality
     //
-    // Usage: call init() on startup. You can use hasFocus() to disable prevent keyhandling
-    // while the user is typing his search.
+    // Usage: call init() on startup. You can use !hasFocus() to prevent keyhandling in your key
+    // event handlers while the user is typing his search.
     var search = {
         searchbar : $('#searchbar'),
         searchbar_outer : $('#searchbar-outer'),
@@ -25,10 +25,10 @@ $( document ).ready(function() {
                 breadcrumbs: {boost: 0}
             }
         },
-        mark_exclude : [], // ['.hljs']
+        mark_exclude : [],
         current_searchterm : "",
-        SEARCH_PARAM : 'search',
-        MARK_PARAM : 'highlight',
+        URL_SEARCH_PARAM : 'search',
+        URL_MARK_PARAM : 'highlight',
 
         SEARCH_HOTKEY_KEYCODE: 83,
         ESCAPE_KEYCODE: 27,
@@ -36,16 +36,8 @@ $( document ).ready(function() {
         UP_KEYCODE: 38,
         SELECT_KEYCODE: 13,
 
-        formatSearchMetric : function(count, searchterm) {
-            if (count == 1) {
-                return count + " search result for '" + searchterm + "':";
-            } else if (count == 0) {
-                return "No search results for '" + searchterm + "'.";
-            } else {
-                return count + " search results for '" + searchterm + "':";
-            }
-        }
-        ,
+
+        // Helper to parse a url into its building blocks.
         parseURL : function (url) {
             var a =  document.createElement('a');
             a.href = url;
@@ -71,6 +63,7 @@ $( document ).ready(function() {
             };
         }
         ,
+        // Helper to recreate a url string from its building blocks.
         renderURL : function (urlobject) {
             var url = urlobject.protocol + "://" + urlobject.host;
             if (urlobject.port != "") {
@@ -90,6 +83,7 @@ $( document ).ready(function() {
             return url;
         }
         ,
+        // Helper to escape html special chars for displaying the teasers
         escapeHTML: (function() {
             var MAP = {
                 '&': '&amp;',
@@ -104,18 +98,27 @@ $( document ).ready(function() {
             };
         })()
         ,
+        formatSearchMetric : function(count, searchterm) {
+            if (count == 1) {
+                return count + " search result for '" + searchterm + "':";
+            } else if (count == 0) {
+                return "No search results for '" + searchterm + "'.";
+            } else {
+                return count + " search results for '" + searchterm + "':";
+            }
+        }
+        ,
         formatSearchResult : function (result, searchterms) {
-            // Show text around first occurrence of first search term.
             var teaser = this.makeTeaser(this.escapeHTML(result.doc.body), searchterms);
 
-            // The ?MARK_PARAM= parameter belongs inbetween the page and the #heading-anchor
+            // The ?URL_MARK_PARAM= parameter belongs inbetween the page and the #heading-anchor
             var url = result.ref.split("#");
-            if (url.length == 1) {
+            if (url.length == 1) { // no anchor found
                 url.push("");
             }
 
             return $('<li><a href="'
-                    + url[0] + '?' + this.MARK_PARAM + '=' + searchterms + '#' + url[1]
+                    + url[0] + '?' + this.URL_MARK_PARAM + '=' + searchterms + '#' + url[1]
                     + '">' + result.doc.breadcrumbs + '</a>' // doc.title
                     + '<span class="breadcrumbs">' + '</span>'
                     + '<span class="teaser">' + teaser + '</span>'
@@ -216,55 +219,6 @@ $( document ).ready(function() {
             return teaser_split.join('');
         }
         ,
-        doSearch : function (searchterm) {
-
-            // Don't search the same twice
-            if (this.current_searchterm == searchterm) { return; }
-            else { this.current_searchterm = searchterm; }
-
-            if (this.searchindex == null) { return; }
-
-            // Do the actual search
-            var results = this.searchindex.search(searchterm, this.searchoptions);
-            var resultcount = Math.min(results.length, this.searchoptions.limit_results);
-
-            // Display search metrics
-            this.searchresults_header.text(this.formatSearchMetric(resultcount, searchterm));
-
-            // Clear and insert results
-            var searchterms  = searchterm.split(' ');
-            this.searchresults.empty();
-            for(var i = 0; i < resultcount ; i++){
-                this.searchresults.append(this.formatSearchResult(results[i], searchterms));
-            }
-
-            // Display and scroll to results
-            this.searchresults_outer.slideDown();
-            // this.searchicon.scrollTop(0);
-        }
-        ,
-        doSearchOrMarkFromUrl : function () {
-            // Check current URL for search request
-            var url = this.parseURL(window.location.href);
-            if (url.params.hasOwnProperty(this.SEARCH_PARAM)
-                && url.params[this.SEARCH_PARAM] != "") {
-                this.searchbar_outer.slideDown();
-                this.searchbar[0].value = decodeURIComponent(
-                    (url.params[this.SEARCH_PARAM]+'').replace(/\+/g, '%20'));
-                this.searchbarKeyUpHandler();
-            } else {
-                this.searchbar_outer.slideUp();
-            }
-
-            if (url.params.hasOwnProperty(this.MARK_PARAM)) {
-                var words = url.params[this.MARK_PARAM].split(' ');
-                var header = $('#' + url.hash);
-                this.content.mark(words, {
-                    exclude : this.mark_exclude
-                });
-            }
-        }
-        ,
         init : function () {
             var this_ = this;
 
@@ -296,6 +250,38 @@ $( document ).ready(function() {
             return this.searchbar.is(':focus');
         }
         ,
+        unfocusSearchbar : function () {
+            // hacky, but just focusing a div only works once
+            var tmp = $('<input style="position: absolute; opacity: 0;">');
+            tmp.insertAfter(this.searchicon);
+            tmp.focus();
+            tmp.remove();
+        }
+        ,
+        // On reload or browser history backwards/forwards events, parse the url and do search or mark
+        doSearchOrMarkFromUrl : function () {
+            // Check current URL for search request
+            var url = this.parseURL(window.location.href);
+            if (url.params.hasOwnProperty(this.URL_SEARCH_PARAM)
+                && url.params[this.URL_SEARCH_PARAM] != "") {
+                this.searchbar_outer.slideDown();
+                this.searchbar[0].value = decodeURIComponent(
+                    (url.params[this.URL_SEARCH_PARAM]+'').replace(/\+/g, '%20'));
+                this.searchbarKeyUpHandler(); // -> doSearch()
+            } else {
+                this.searchbar_outer.slideUp();
+            }
+
+            if (url.params.hasOwnProperty(this.URL_MARK_PARAM)) {
+                var words = url.params[this.URL_MARK_PARAM].split(' ');
+                var header = $('#' + url.hash);
+                this.content.mark(words, {
+                    exclude : this.mark_exclude
+                });
+            }
+        }
+        ,
+        // Eventhandler for keyevents on `document`
         globalKeyHandler : function (e) {
             if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
 
@@ -304,8 +290,10 @@ $( document ).ready(function() {
                 this.searchbar.removeClass("active");
                 // this.searchbar[0].value = "";
                 this.setSearchUrlParameters("",
-                    (this.searchbar[0].value.trim() != 0) ? "push" : "replace");
-                this.unfocusSearchbar();
+                    (this.searchbar[0].value.trim() != "") ? "push" : "replace");
+                if (this.hasFocus()) {
+                    this.unfocusSearchbar();
+                }
                 this.searchbar_outer.slideUp();
                 this.content.unmark();
                 return;
@@ -349,21 +337,13 @@ $( document ).ready(function() {
             }
         }
         ,
-        unfocusSearchbar : function () {
-            // hacky, but just focusing a div only works once
-            var tmp = $('<input style="position: absolute; opacity: 0;">');
-            tmp.insertAfter(this.searchicon);
-            tmp.focus();
-            tmp.remove();
-        }
-        ,
+        // Eventhandler for search icon
         searchIconClickHandler : function () {
             this.searchbar_outer.slideToggle();
             this.searchbar.focus();
-            // TODO:
-            // If invisible, clear URL search parameter
         }
         ,
+        // Eventhandler for keyevents while the searchbar is focused
         searchbarKeyUpHandler : function () {
             var searchterm = this.searchbar[0].value.trim();
             if (searchterm != "") {
@@ -375,32 +355,61 @@ $( document ).ready(function() {
                 this.searchresults.empty();
             }
 
-            this.setSearchUrlParameters(searchterm, "if_begin_search");
+            this.setSearchUrlParameters(searchterm, "push_if_new_search_else_replace");
 
             // Remove marks
             this.content.unmark();
         }
         ,
+        // Update current url with ?URL_SEARCH_PARAM= parameter, remove ?URL_MARK_PARAM and #heading-anchor .
+        // `action` can be one of "push", "replace", "push_if_new_search_else_replace"
+        // and replaces or pushes a new browser history item.
+        // "push_if_new_search_else_replace" pushes if there is no `?URL_SEARCH_PARAM=abc` yet.
         setSearchUrlParameters : function(searchterm, action) {
-            // Update url with ?SEARCH_PARAM= parameter, remove ?MARK_PARAM and #heading-anchor
             var url = this.parseURL(window.location.href);
-            var first_search = ! url.params.hasOwnProperty(this.SEARCH_PARAM);
-            if (searchterm != "" || action == "if_begin_search") {
-                url.params[this.SEARCH_PARAM] = searchterm;
-                delete url.params[this.MARK_PARAM];
+            var first_search = ! url.params.hasOwnProperty(this.URL_SEARCH_PARAM);
+            if (searchterm != "" || action == "push_if_new_search_else_replace") {
+                url.params[this.URL_SEARCH_PARAM] = searchterm;
+                delete url.params[this.URL_MARK_PARAM];
                 url.hash = "";
             } else {
-                delete url.params[this.SEARCH_PARAM];
+                delete url.params[this.URL_SEARCH_PARAM];
             }
             // A new search will also add a new history item, so the user can go back
             // to the page prior to searching. A updated search term will only replace
             // the url.
-            if (action == "push" || (action == "if_begin_search" && first_search) ) {
+            if (action == "push" || (action == "push_if_new_search_else_replace" && first_search) ) {
                 history.pushState({}, document.title, this.renderURL(url));
-            } else if (action == "replace" || (action == "if_begin_search" && !first_search) ) {
+            } else if (action == "replace" || (action == "push_if_new_search_else_replace" && !first_search) ) {
                 history.replaceState({}, document.title, this.renderURL(url));
             }
+        }
+        ,
+        doSearch : function (searchterm) {
 
+            // Don't search the same twice
+            if (this.current_searchterm == searchterm) { return; }
+            else { this.current_searchterm = searchterm; }
+
+            if (this.searchindex == null) { return; }
+
+            // Do the actual search
+            var results = this.searchindex.search(searchterm, this.searchoptions);
+            var resultcount = Math.min(results.length, this.searchoptions.limit_results);
+
+            // Display search metrics
+            this.searchresults_header.text(this.formatSearchMetric(resultcount, searchterm));
+
+            // Clear and insert results
+            var searchterms  = searchterm.split(' ');
+            this.searchresults.empty();
+            for(var i = 0; i < resultcount ; i++){
+                this.searchresults.append(this.formatSearchResult(results[i], searchterms));
+            }
+
+            // Display and scroll to results
+            this.searchresults_outer.slideDown();
+            // this.searchicon.scrollTop(0);
         }
     };
 
