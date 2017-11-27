@@ -89,7 +89,7 @@ fn run() -> Result<()> {
                                 .status()?
                                 .success()
         {
-            bail!("Stylus encoutered an error");
+            bail!("Stylus encountered an error");
         }
     }
     Ok(())
