@@ -202,6 +202,8 @@ pub struct BookConfig {
     pub build_dir: PathBuf,
     /// Does this book support more than one language?
     pub multilingual: bool,
+    /// Default theme to be used
+    pub default_theme: Option<String>,
 }
 
 impl Default for BookConfig {
@@ -213,6 +215,7 @@ impl Default for BookConfig {
             src: PathBuf::from("src"),
             build_dir: PathBuf::from("book"),
             multilingual: false,
+            default_theme: None,
         }
     }
 }
