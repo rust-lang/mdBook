@@ -29,6 +29,9 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
             "-d, --dest-dir=[dest-dir] 'The output directory for \
              your book{n}(Defaults to ./book when omitted)'",
         )
+        .arg_from_usage(
+            "--no-create 'Will not create non-existent files linked from SUMMARY.md'",
+        )
         .arg_from_usage("-p, --port=[port] 'Use another port{n}(Defaults to 3000)'")
         .arg_from_usage(
             "-w, --websocket-port=[ws-port] 'Use another port for the \
@@ -53,6 +56,10 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     if let Some(dest_dir) = args.value_of("dest-dir") {
         book.config.book.build_dir = PathBuf::from(dest_dir);
+    }
+
+    if args.is_present("no-create") {
+        book.create_missing = false;
     }
 
     let port = args.value_of("port").unwrap_or("3000");
