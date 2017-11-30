@@ -25,8 +25,10 @@ pub struct MDBook {
     pub livereload: Option<String>,
 
     /// Should `mdbook build` create files referenced from SUMMARY.md if they
-    /// don't exist
-    pub create_missing: bool,
+    /// don't exist? If `None`, use the setting specified in `book.toml`,
+    /// otherwise use this.
+    /// This is for backward compatibility only.
+    pub create_missing: Option<bool>,
 }
 
 impl MDBook {
@@ -71,7 +73,7 @@ impl MDBook {
             renderer: Box::new(HtmlHandlebars::new()),
 
             livereload: None,
-            create_missing: true,
+            create_missing: None,
         }
     }
 
@@ -179,7 +181,9 @@ impl MDBook {
                 let path = self.get_source().join(&ch.path);
 
                 if !path.exists() {
-                    if !self.create_missing {
+                    let create_missing = self.create_missing.unwrap_or(self.config.build.create_missing);
+
+                    if !create_missing {
                         return Err(
                             format!("'{}' referenced from SUMMARY.md does not exist.", path.to_string_lossy()).into(),
                         );

@@ -14,7 +14,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
              book{n}(Defaults to ./book when omitted)'",
         )
         .arg_from_usage(
-            "--no-create 'Will not create non-existent files linked from SUMMARY.md'",
+            "--no-create 'Will not create non-existent files linked from SUMMARY.md (deprecated: use book.toml instead)'",
         )
         .arg_from_usage(
             "[dir] 'A directory for your book{n}(Defaults to Current Directory \
@@ -32,7 +32,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     }
 
     if args.is_present("no-create") {
-        book.create_missing = false;
+        book.create_missing = Some(false);
     }
 
     book.build()?;

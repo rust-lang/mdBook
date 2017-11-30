@@ -12,6 +12,7 @@ use errors::*;
 pub struct Config {
     /// Metadata about the book.
     pub book: BookConfig,
+    pub build: BuildConfig,
     rest: Table,
 }
 
@@ -171,8 +172,14 @@ impl<'de> Deserialize<'de> for Config {
         let book: BookConfig = table.remove("book")
                                     .and_then(|value| value.try_into().ok())
                                     .unwrap_or_default();
+
+        let build: BuildConfig = table.remove("build")
+                                      .and_then(|value| value.try_into().ok())
+                                      .unwrap_or_default();
+
         Ok(Config {
             book: book,
+            build: build,
             rest: table,
         })
     }
@@ -217,6 +224,23 @@ impl Default for BookConfig {
     }
 }
 
+/// Configuration for the build procedure.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct BuildConfig {
+    /// Should non-existent markdown files specified in `SETTINGS.md` be created
+    /// if they don't exist?
+    pub create_missing: bool,
+}
+
+impl Default for BuildConfig {
+    fn default() -> BuildConfig {
+        BuildConfig {
+            create_missing: true,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct HtmlConfig {
@@ -250,6 +274,9 @@ mod tests {
         src = "source"
         build-dir = "outputs"
 
+        [build]
+        create-missing = false
+
         [output.html]
         theme = "./themedir"
         curly-quotes = true
@@ -274,6 +301,9 @@ mod tests {
             build_dir: PathBuf::from("outputs"),
             ..Default::default()
         };
+        let build_should_be = BuildConfig {
+            create_missing: false,
+        };
         let playpen_should_be = Playpen {
             editable: true,
             editor: PathBuf::from("ace"),
@@ -290,6 +320,7 @@ mod tests {
         let got = Config::from_str(src).unwrap();
 
         assert_eq!(got.book, book_should_be);
+        assert_eq!(got.build, build_should_be);
         assert_eq!(got.html_config().unwrap(), html_should_be);
     }
 

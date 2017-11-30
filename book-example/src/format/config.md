@@ -10,6 +10,9 @@ title = "Example book"
 author = "John Doe"
 description = "The example book covers examples."
 
+[build]
+create-missing = false
+
 [output.html]
 destination = "my-example-book"
 additional-css = ["custom.css"]
@@ -43,6 +46,20 @@ authors = ["John Doe", "Jane Doe"]
 description = "The example book covers examples."
 src = "my-src"  # the source files will be found in `root/my-src` instead of `root/src`
 build-dir = "build"
+```
+
+### Build options
+
+This controls the build process of your book.
+
+- **create-missing:** By default, any missing files specified in `SUMMARY.md`
+  will be created when the book is built. If this is `false` then the build
+  process will instead exit with an error if any files do not exist.
+
+**book.toml**
+```toml
+[build]
+create-missing = false
 ```
 
 ### HTML renderer options
