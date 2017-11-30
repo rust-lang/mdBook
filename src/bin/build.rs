@@ -28,11 +28,12 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let mut book = MDBook::new(&book_dir).read_config()?;
 
     if let Some(dest_dir) = args.value_of("dest-dir") {
-        book.config.book.build_dir = PathBuf::from(dest_dir);
+        book.config.build.build_dir = PathBuf::from(dest_dir);
     }
 
+    // This flag is deprecated in favor of being set via `book.toml`.
     if args.is_present("no-create") {
-        book.create_missing = Some(false);
+        book.config.build.create_missing = false;
     }
 
     book.build()?;

@@ -11,10 +11,10 @@ author = "John Doe"
 description = "The example book covers examples."
 
 [build]
+build-dir = "my-example-book"
 create-missing = false
 
 [output.html]
-destination = "my-example-book"
 additional-css = ["custom.css"]
 ```
 
@@ -35,8 +35,6 @@ This is general information about your book.
 - **src:** By default, the source directory is found in the directory named
   `src` directly under the root folder. But this is configurable with the `src`
   key in the configuration file.
-- **build-dir:** The directory to put the rendered book in. By default this is
-  `book/` in the book's root directory.
 
 **book.toml**
 ```toml
@@ -45,20 +43,23 @@ title = "Example book"
 authors = ["John Doe", "Jane Doe"]
 description = "The example book covers examples."
 src = "my-src"  # the source files will be found in `root/my-src` instead of `root/src`
-build-dir = "build"
 ```
 
 ### Build options
 
 This controls the build process of your book.
 
+- **build-dir:** The directory to put the rendered book in. By default this is
+  `book/` in the book's root directory.
 - **create-missing:** By default, any missing files specified in `SUMMARY.md`
-  will be created when the book is built. If this is `false` then the build
-  process will instead exit with an error if any files do not exist.
+  will be created when the book is built (i.e. `create-missing = true`). If this
+  is `false` then the build process will instead exit with an error if any files
+  do not exist.
 
 **book.toml**
 ```toml
 [build]
+build-dir = "build"
 create-missing = false
 ```
 
