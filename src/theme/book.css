@@ -251,7 +251,7 @@ table thead td {
   -ms-transition: left 0.5s;
   transition: left 0.5s;
 }
-@media only screen and (max-width: 1060px) {
+@media only screen and (max-width: 1250px) {
   .previous {
     left: 15px;
   }
