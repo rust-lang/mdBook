@@ -3,11 +3,13 @@ use preprocess;
 use renderer::Renderer;
 use book::MDBook;
 use book::bookitem::{BookItem, Chapter};
-use config::{Config, Playpen, HtmlConfig};
+use config::{Config, Playpen, HtmlConfig, Search};
 use {utils, theme};
 use theme::{Theme, playpen_editor};
 use errors::*;
 use regex::{Captures, Regex};
+
+use elasticlunr;
 
 use std::ascii::AsciiExt;
 use std::path::{Path, PathBuf};
@@ -31,17 +33,40 @@ impl HtmlHandlebars {
     fn render_item(&self,
                    item: &BookItem,
                    mut ctx: RenderItemContext,
-                   print_content: &mut String)
+                   print_content: &mut String,
+                   search_documents : &mut Vec<utils::SearchDocument>,
+                   mut parents_names : Vec<String>)
                    -> Result<()> {
+
         // FIXME: This should be made DRY-er and rely less on mutable state
         match *item {
-            BookItem::Chapter(_, ref ch) | BookItem::Affix(ref ch)
-                if !ch.path.as_os_str().is_empty() =>
-            {
+            BookItem::Chapter(_, ref ch) |
+            BookItem::Affix(ref ch) if !ch.path.as_os_str().is_empty() => {
+
                 let path = ctx.book.get_source().join(&ch.path);
                 let content = utils::fs::file_to_string(&path)?;
                 let base = path.parent()
                                .ok_or_else(|| String::from("Invalid bookitem path!"))?;
+                let path = ch.path.to_str().ok_or_else(|| {
+                    io::Error::new(io::ErrorKind::Other, "Could not convert path to str")
+                })?;
+                let filepath = Path::new(&ch.path).with_extension("html");
+                let filepath = filepath.to_str().ok_or_else(|| {
+                    Error::from(format!("Bad file name: {}", filepath.display()))
+                })?;
+
+
+                if ! parents_names.last().map(String::as_ref).unwrap_or("")
+                    .eq_ignore_ascii_case(&ch.name) {
+                    parents_names.push(ch.name.clone());
+                }
+                utils::render_markdown_into_searchindex(
+                    &ctx.html_config.search,
+                    search_documents,
+                    &content,
+                    filepath,
+                    parents_names,
+                    id_from_content);
 
                 // Parse and expand links
                 let content = preprocess::links::replace_all(&content, base)?;
@@ -49,11 +74,6 @@ impl HtmlHandlebars {
                 print_content.push_str(&content);
 
                 // Update the context with data for this file
-                let path = ch.path.to_str().ok_or_else(|| {
-                                                           io::Error::new(io::ErrorKind::Other,
-                                                                          "Could not convert path \
-                                                                           to str")
-                                                       })?;
 
                 // Non-lexical lifetimes needed :'(
                 let title: String;
@@ -76,17 +96,15 @@ impl HtmlHandlebars {
                 debug!("[*]: Render template");
                 let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
-                let filepath = Path::new(&ch.path).with_extension("html");
+
                 let rendered = self.post_process(
                     rendered,
-                    &normalize_path(filepath.to_str().ok_or_else(|| Error::from(
-                        format!("Bad file name: {}", filepath.display()),
-                    ))?),
+                    &normalize_path(filepath),
                     &ctx.book.config.html_config().unwrap_or_default().playpen,
                 );
 
                 // Write to file
-                info!("[*] Creating {:?} ✓", filepath.display());
+                info!("[*] Creating {:?} ✓", filepath);
                 ctx.book.write_file(filepath, &rendered.into_bytes())?;
 
                 if ctx.is_index {
@@ -273,6 +291,9 @@ impl Renderer for HtmlHandlebars {
         // Print version
         let mut print_content = String::new();
 
+        // Search index
+        let mut search_documents = vec![];
+
         // TODO: The Renderer trait should really pass in where it wants us to build to...
         let destination = book.get_destination();
 
@@ -280,17 +301,28 @@ impl Renderer for HtmlHandlebars {
         fs::create_dir_all(&destination)
             .chain_err(|| "Unexpected error when constructing destination path")?;
 
-        for (i, item) in book.iter().enumerate() {
+
+        let mut depthfirstiterator = book.iter();
+        let mut is_index = true;
+        while let Some(item) = depthfirstiterator.next() {
             let ctx = RenderItemContext {
                 book: book,
                 handlebars: &handlebars,
                 destination: destination.to_path_buf(),
                 data: data.clone(),
-                is_index: i == 0,
+                is_index: is_index,
                 html_config: html_config.clone(),
             };
-            self.render_item(item, ctx, &mut print_content)?;
+            self.render_item(item,
+                             ctx,
+                             &mut print_content,
+                             &mut search_documents,
+                             depthfirstiterator.collect_current_parents_names())?;
+            is_index = false;
         }
+
+        // Search index (call this even if searching is disabled)
+        make_searchindex(book, search_documents, &html_config.search)?;
 
         // Print version
         self.configure_print_version(&mut data, &print_content);
@@ -309,7 +341,7 @@ impl Renderer for HtmlHandlebars {
 
         book.write_file(Path::new("print").with_extension("html"),
                         &rendered.into_bytes())?;
-        info!("[*] Creating print.html ✓");
+        info!("[*] Creating \"print.html\" ✓");
 
         // Copy static files (js, css, images, ...)
         debug!("[*] Copy static files");
@@ -389,6 +421,8 @@ fn make_data(book: &MDBook, config: &Config) -> Result<serde_json::Map<String, s
         data.insert("theme_tomorrow_night_js".to_owned(),
                     json!("theme-tomorrow_night.js"));
     }
+
+    data.insert("search".to_owned(), json!(html.search.enable));
 
     let mut chapters = vec![];
 
@@ -628,6 +662,97 @@ pub fn normalize_id(content: &str) -> String {
            .collect::<String>()
 }
 
+/// Uses elasticlunr to create a search index and exports that into `searchindex.json`.
+fn make_searchindex(book: &MDBook,
+                    search_documents : Vec<utils::SearchDocument>,
+                    searchconfig : &Search) -> Result<()> {
+
+    // These structs mirror the configuration javascript object accepted by
+    // http://elasticlunr.com/docs/configuration.js.html
+
+    #[derive(Serialize)]
+    struct SearchOptionsField {
+        boost: u8,
+    }
+
+    #[derive(Serialize)]
+    struct SearchOptionsFields {
+        title: SearchOptionsField,
+        body: SearchOptionsField,
+        breadcrumbs: SearchOptionsField,
+    }
+
+    #[derive(Serialize)]
+    struct SearchOptions {
+        bool: String,
+        expand: bool,
+        limit_results: u32,
+        teaser_word_count: u32,
+        fields: SearchOptionsFields,
+    }
+
+    #[derive(Serialize)]
+    struct SearchindexJson {
+        /// Propagate the search enabled/disabled setting to the html page
+        enable: bool,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        /// The searchoptions for elasticlunr.js
+        searchoptions: Option<SearchOptions>,
+        /// The index for elasticlunr.js
+        #[serde(skip_serializing_if = "Option::is_none")]
+        index: Option<elasticlunr::Index>,
+
+    }
+
+    let searchoptions = SearchOptions {
+        bool : if searchconfig.use_boolean_and { "AND".into() } else { "OR".into() },
+        expand : searchconfig.expand,
+        limit_results : searchconfig.limit_results,
+        teaser_word_count : searchconfig.teaser_word_count,
+        fields : SearchOptionsFields {
+            title : SearchOptionsField { boost : searchconfig.boost_title },
+            body : SearchOptionsField { boost : searchconfig.boost_paragraph },
+            breadcrumbs : SearchOptionsField { boost : searchconfig.boost_hierarchy },
+        }
+    };
+
+    let json_contents = if searchconfig.enable {
+
+        let mut index = elasticlunr::Index::new(&["title", "body", "breadcrumbs"]);
+
+        for sd in search_documents {
+            // Concat the html link with the anchor ("abc.html#anchor")
+            let anchor = if let Some(s) = sd.anchor.1 {
+                format!("{}#{}", sd.anchor.0, &s)
+            } else {
+                sd.anchor.0
+            };
+
+            index.add_doc(&anchor, &[sd.title, sd.body, sd.hierarchy.join(" » ")]);
+        }
+
+        SearchindexJson {
+            enable : searchconfig.enable,
+            searchoptions : Some(searchoptions),
+            index : Some(index),
+        }
+    } else {
+        SearchindexJson {
+            enable : false,
+            searchoptions : None,
+            index : None,
+        }
+    };
+
+
+    book.write_file(
+        Path::new("searchindex").with_extension("json"),
+        &serde_json::to_string(&json_contents).unwrap().as_bytes(),
+    )?;
+    info!("[*] Creating \"searchindex.json\" ✓");
+
+    Ok(())
+}
 
 #[cfg(test)]
 mod tests {

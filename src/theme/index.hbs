@@ -48,6 +48,24 @@
             }
         </script>
 
+        {{#if search}}
+        <!-- Fetch elasticlunr.js from CDN but have a local fallback -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/elasticlunr/0.9.6/elasticlunr.min.js"></script>
+        <script>
+            if (typeof elasticlunr == 'undefined') {
+                document.write(unescape("%3Cscript src='elasticlunr.min.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch mark.js from CDN but have a local fallback -->
+        <script src="https://cdn.jsdelivr.net/npm/mark.js@8.11.0/dist/jquery.mark.min.js"></script>
+        <script>
+            if (typeof jQuery.fn.mark == 'undefined') {
+                document.write(unescape("%3Cscript src='jquery.mark.min.js'%3E%3C/script%3E"));
+            }
+        </script>
+        {{/if}}
+
         <!-- Fetch store.js from local - TODO add CDN when 2.x.x is available on cdnjs -->
         <script src="store.js"></script>
 
@@ -79,6 +97,9 @@
                     <div class="left-buttons">
                         <i id="sidebar-toggle" class="fa fa-bars" title="Toggle sidebar"></i>
                         <i id="theme-toggle" class="fa fa-paint-brush" title="Change theme"></i>
+                        {{#if search}}
+                        <i id="search-icon" class="fa fa-search" title="Search. (Shortkey: s)"></i>
+                        {{/if}}
                     </div>
 
                     <h1 class="menu-title">{{ book_title }}</h1>
@@ -89,6 +110,19 @@
                         </a>
                     </div>
                 </div>
+
+                {{#if search}}
+                <div id="searchbar-outer" class="searchbar-outer">
+                    <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ...">
+
+                    <div id="searchresults-outer" class="searchresults-outer">
+                        <div class="searchresults-header" id="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                {{/if}}
+
 
                 <div id="content" class="content">
                     {{{ content }}}
@@ -139,7 +173,7 @@
         <script>
             var localAddrs = ["localhost", "127.0.0.1", ""];
 
-            // make sure we don't activate google analytics if the developer is 
+            // make sure we don't activate google analytics if the developer is
             // inspecting the book locally...
             if (localAddrs.indexOf(document.location.hostname) === -1) {
                 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){

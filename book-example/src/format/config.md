@@ -13,6 +13,10 @@ description = "The example book covers examples."
 [output.html]
 destination = "my-example-book"
 additional-css = ["custom.css"]
+
+[output.html.search]
+enable = true
+limit-results = 15
 ```
 
 ## Supported configuration options
@@ -51,8 +55,6 @@ renderer need to be specified under the TOML table `[output.html]`.
 
 The following configuration options are available:
 
-    pub playpen: Playpen,
-
 - **theme:** mdBook comes with a default theme and all the resource files
   needed for it. But if this option is set, mdBook will selectively overwrite
   the theme files with the ones found in the specified folder.
@@ -68,13 +70,33 @@ The following configuration options are available:
   removing the current behaviour, you can specify a set of javascript files
   that will be loaded alongside the default one.
 - **playpen:** A subtable for configuring various playpen settings.
+- **search:** A subtable for configuring the browser based search functionality.
 
-**book.toml**
+Available configuration options for the `[output.html.search]` table:
+
+- **enable:** Enable or disable the search function. Disabling can improve compilation time by a factor of two. Defaults to `true`.
+- **limit-results:** The maximum number of search results. Defaults to `30`.
+- **teaser-word-count:** The number of words used for a search result teaser. Defaults to `30`.
+- **use-boolean-and:** Define the logical link between multiple search words. If true, all search words must appear in each result. Defaults to `true`.
+- **boost-title:** Boost factor for the search result score if a search word appears in the header. Defaults to `2`.
+- **boost-hierarchy:** Boost factor for the search result score if a search word appears in the hierarchy. The hierarchy contains all titles of the parent documents and all parent headings. Defaults to `1`.
+- **boost-paragraph:** Boost factor for the search result score if a search word appears in the text. Defaults to `1`.
+- **expand:** True if the searchword `micro` should match `microwave`. Defaults to `true`.
+- **split-until-heading:** Documents are split into smaller parts, seperated by headings. This defines, until which level of heading documents should be split. Defaults to `3`. (`### This is a level 3 heading`)
+
+Available configuration options for the `[output.html.playpen]` table:
+
+- **editor:** Source folder for the editors javascript files. Defaults to `""`.
+- **editable:** Allow editing the source code. Defaults to `false`.
+
+This shows all available options in the **book.toml**:
 ```toml
 [book]
 title = "Example book"
 authors = ["John Doe", "Jane Doe"]
 description = "The example book covers examples."
+src = "my-src"  # the source files will be found in `root/my-src` instead of `root/src`
+build-dir = "build"
 
 [output.html]
 theme = "my-theme"
@@ -82,6 +104,17 @@ curly-quotes = true
 google-analytics = "123456"
 additional-css = ["custom.css", "custom2.css"]
 additional-js = ["custom.js"]
+
+[output.html.search]
+enable = true
+limit-results = 30
+teaser-word-count = 30
+use-boolean-and = true
+boost-title = 2
+boost-hierarchy = 1
+boost-paragraph = 1
+expand = true
+split-until-heading = 3
 
 [output.html.playpen]
 editor = "./path/to/editor"

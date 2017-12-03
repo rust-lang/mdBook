@@ -1,6 +1,17 @@
+[book]
 title = "mdBook Documentation"
 description = "Create book from markdown files. Like Gitbook but implemented in Rust"
 author = "Mathieu David"
 
 [output.html]
 mathjax-support = true
+
+[output.html.search]
+enable = true
+limit-results = 20
+use-boolean-and = true
+boost-title = 2
+boost-hierarchy = 2
+boost-paragraph = 1
+expand = true
+split-until-heading = 2

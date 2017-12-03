@@ -25,13 +25,13 @@
 //!
 //! fn main() {
 //!     let mut md = MDBook::new("my-book");
-//!     
+//!
 //!     // tweak the book configuration a bit
 //!     md.config.book.src = PathBuf::from("source");
 //!     md.config.book.build_dir = PathBuf::from("book");
-//! 
+//!
 //!     // Render the book
-//!     md.build().unwrap();                        
+//!     md.build().unwrap();
 //! }
 //! ```
 //!
@@ -88,6 +88,7 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate tempdir;
 extern crate toml;
+extern crate elasticlunr;
 
 mod parse;
 mod preprocess;
