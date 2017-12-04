@@ -4,6 +4,7 @@ extern crate pretty_assertions;
 extern crate select;
 extern crate tempdir;
 extern crate walkdir;
+extern crate tempdir;
 
 mod dummy_book;
 
@@ -296,4 +297,14 @@ fn able_to_include_rust_files_in_chapters() {
         r#"println!(&quot;Hello World!&quot;);"#,
     ];
     assert_contains_strings(second, playpen_strings);
+}
+
+#[test]
+fn example_book_can_build() {
+   let example_book_dir = dummy_book::new_copy_of_example_book().unwrap();
+
+   let mut md = MDBook::load(example_book_dir.path()).unwrap();
+
+   let got = md.build();
+   assert!(got.is_ok());
 }
