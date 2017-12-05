@@ -52,7 +52,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let mut book = MDBook::new(&book_dir).read_config()?;
 
     if let Some(dest_dir) = args.value_of("dest-dir") {
-        book.config.book.build_dir = PathBuf::from(dest_dir);
+        book.config.build.build_dir = PathBuf::from(dest_dir);
     }
 
     let port = args.value_of("port").unwrap_or("3000");

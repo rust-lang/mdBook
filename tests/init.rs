@@ -42,7 +42,7 @@ fn run_mdbook_init_with_custom_book_and_src_locations() {
 
     let mut md = MDBook::new(temp.path());
     md.config.book.src = PathBuf::from("in");
-    md.config.book.build_dir = PathBuf::from("out");
+    md.config.build.build_dir = PathBuf::from("out");
 
     md.init().unwrap();
 

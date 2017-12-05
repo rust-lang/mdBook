@@ -23,10 +23,6 @@ pub struct MDBook {
     renderer: Box<Renderer>,
 
     pub livereload: Option<String>,
-
-    /// Should `mdbook build` create files referenced from SUMMARY.md if they
-    /// don't exist
-    pub create_missing: bool,
 }
 
 impl MDBook {
@@ -71,7 +67,6 @@ impl MDBook {
             renderer: Box::new(HtmlHandlebars::new()),
 
             livereload: None,
-            create_missing: true,
         }
     }
 
@@ -179,7 +174,7 @@ impl MDBook {
                 let path = self.get_source().join(&ch.path);
 
                 if !path.exists() {
-                    if !self.create_missing {
+                    if !self.config.build.create_missing {
                         return Err(
                             format!("'{}' referenced from SUMMARY.md does not exist.", path.to_string_lossy()).into(),
                         );
@@ -388,7 +383,7 @@ impl MDBook {
     }
 
     pub fn get_destination(&self) -> PathBuf {
-        self.root.join(&self.config.book.build_dir)
+        self.root.join(&self.config.build.build_dir)
     }
 
     pub fn get_source(&self) -> PathBuf {

@@ -2,17 +2,21 @@ extern crate mdbook;
 #[macro_use]
 extern crate pretty_assertions;
 extern crate select;
+extern crate tempdir;
 extern crate walkdir;
 
 mod dummy_book;
 
 use dummy_book::{assert_contains_strings, DummyBook};
 
+use std::fs::{File, remove_file};
+use std::io::Write;
 use std::path::Path;
 use std::ffi::OsStr;
 use walkdir::{DirEntry, WalkDir, WalkDirIterator};
 use select::document::Document;
 use select::predicate::{Class, Name, Predicate};
+use tempdir::TempDir;
 use mdbook::errors::*;
 use mdbook::utils::fs::file_to_string;
 use mdbook::MDBook;
@@ -226,4 +230,51 @@ fn check_spacers() {
     let num_spacers =
         doc.find(Class("chapter").descendant(Name("li").and(Class("spacer")))).count();
     assert_eq!(num_spacers, should_be);
+}
+
+/// Ensure building fails if `create-missing` is false and one of the files does
+/// not exist.
+#[test]
+fn failure_on_missing_file() {
+    let (md, _temp) = create_missing_setup(Some(false));
+
+    // On failure, `build()` does not return a specific error, so assume
+    // any error is a failure due to a missing file.
+    assert!(md.read_config().unwrap().build().is_err());
+}
+
+/// Ensure a missing file is created if `create-missing` is true.
+#[test]
+fn create_missing_file_with_config() {
+    let (md, temp) = create_missing_setup(Some(true));
+
+    md.read_config().unwrap().build().unwrap();
+    assert!(temp.path().join("src").join("intro.md").exists());
+}
+
+/// Ensure a missing file is created if `create-missing` is not set (the default
+/// is true).
+#[test]
+fn create_missing_file_without_config() {
+    let (md, temp) = create_missing_setup(None);
+
+    md.read_config().unwrap().build().unwrap();
+    assert!(temp.path().join("src").join("intro.md").exists());
+}
+
+fn create_missing_setup(create_missing: Option<bool>) -> (MDBook, TempDir) {
+    let temp = DummyBook::new().build().unwrap();
+    let md = MDBook::new(temp.path());
+
+    let mut file = File::create(temp.path().join("book.toml")).unwrap();
+    match create_missing {
+        Some(true) => file.write_all(b"[build]\ncreate-missing = true\n").unwrap(),
+        Some(false) => file.write_all(b"[build]\ncreate-missing = false\n").unwrap(),
+        None => (),
+    }
+    file.flush().unwrap();
+
+    remove_file(temp.path().join("src").join("intro.md")).unwrap();
+
+    (md, temp)
 }

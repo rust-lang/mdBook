@@ -12,6 +12,7 @@ use errors::*;
 pub struct Config {
     /// Metadata about the book.
     pub book: BookConfig,
+    pub build: BuildConfig,
     rest: Table,
 }
 
@@ -91,7 +92,7 @@ impl Config {
         get_and_insert!(table, "description" => cfg.book.description);
 
         // This complicated chain of and_then's is so we can move 
-        // "output.html.destination" to "book.build_dir" and parse it into a 
+        // "output.html.destination" to "build.build_dir" and parse it into a 
         // PathBuf.
         let destination: Option<PathBuf> = table.get_mut("output")
             .and_then(|output| output.as_table_mut())
@@ -101,7 +102,7 @@ impl Config {
             .and_then(|dest| dest.try_into().ok());
 
         if let Some(dest) = destination {
-            cfg.book.build_dir = dest;
+            cfg.build.build_dir = dest;
         }
 
         cfg.rest = table;
@@ -162,8 +163,10 @@ impl<'de> Deserialize<'de> for Config {
             warn!("It looks like you are using the legacy book.toml format.");
             warn!("We'll parse it for now, but you should probably convert to the new format.");
             warn!("See the mdbook documentation for more details, although as a rule of thumb");
-            warn!("just move all top level configuration entries like `title`, `author` and ");
-            warn!("`description` under a table called `[book]` and it should all work.");
+            warn!("just move all top level configuration entries like `title`, `author` and");
+            warn!("`description` under a table called `[book]`, move the `destination` entry");
+            warn!("from `[output.html]`, renamed to `build-dir`, under a table called");
+            warn!("`[build]`, and it should all work.");
             warn!("Documentation: http://rust-lang-nursery.github.io/mdBook/format/config.html");
             return Ok(Config::from_legacy(table));
         }
@@ -171,8 +174,14 @@ impl<'de> Deserialize<'de> for Config {
         let book: BookConfig = table.remove("book")
                                     .and_then(|value| value.try_into().ok())
                                     .unwrap_or_default();
+
+        let build: BuildConfig = table.remove("build")
+                                      .and_then(|value| value.try_into().ok())
+                                      .unwrap_or_default();
+
         Ok(Config {
             book: book,
+            build: build,
             rest: table,
         })
     }
@@ -198,8 +207,6 @@ pub struct BookConfig {
     pub description: Option<String>,
     /// Location of the book source relative to the book's root directory.
     pub src: PathBuf,
-    /// Where to put built artefacts relative to the book's root directory.
-    pub build_dir: PathBuf,
     /// Does this book support more than one language?
     pub multilingual: bool,
 }
@@ -211,8 +218,27 @@ impl Default for BookConfig {
             authors: Vec::new(),
             description: None,
             src: PathBuf::from("src"),
-            build_dir: PathBuf::from("book"),
             multilingual: false,
+        }
+    }
+}
+
+/// Configuration for the build procedure.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct BuildConfig {
+    /// Where to put built artefacts relative to the book's root directory.
+    pub build_dir: PathBuf,
+    /// Should non-existent markdown files specified in `SETTINGS.md` be created
+    /// if they don't exist?
+    pub create_missing: bool,
+}
+
+impl Default for BuildConfig {
+    fn default() -> BuildConfig {
+        BuildConfig {
+            build_dir: PathBuf::from("book"),
+            create_missing: true,
         }
     }
 }
@@ -248,7 +274,10 @@ mod tests {
         description = "A completely useless book"
         multilingual = true
         src = "source"
+
+        [build]
         build-dir = "outputs"
+        create-missing = false
 
         [output.html]
         theme = "./themedir"
@@ -271,8 +300,11 @@ mod tests {
             description: Some(String::from("A completely useless book")),
             multilingual: true,
             src: PathBuf::from("source"),
-            build_dir: PathBuf::from("outputs"),
             ..Default::default()
+        };
+        let build_should_be = BuildConfig {
+            build_dir: PathBuf::from("outputs"),
+            create_missing: false,
         };
         let playpen_should_be = Playpen {
             editable: true,
@@ -290,6 +322,7 @@ mod tests {
         let got = Config::from_str(src).unwrap();
 
         assert_eq!(got.book, book_should_be);
+        assert_eq!(got.build, build_should_be);
         assert_eq!(got.html_config().unwrap(), html_should_be);
     }
 
@@ -366,9 +399,13 @@ mod tests {
                 "Create book from markdown files. Like Gitbook but implemented in Rust",
             )),
             authors: vec![String::from("Mathieu David")],
-            build_dir: PathBuf::from("my-book"),
             src: PathBuf::from("./source"),
             ..Default::default()
+        };
+
+        let build_should_be = BuildConfig {
+            build_dir: PathBuf::from("my-book"),
+            create_missing: true,
         };
 
         let html_should_be = HtmlConfig {
@@ -382,6 +419,7 @@ mod tests {
 
         let got = Config::from_str(src).unwrap();
         assert_eq!(got.book, book_should_be);
+        assert_eq!(got.build, build_should_be);
         assert_eq!(got.html_config().unwrap(), html_should_be);
     }
 }

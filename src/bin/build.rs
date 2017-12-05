@@ -14,7 +14,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
              book{n}(Defaults to ./book when omitted)'",
         )
         .arg_from_usage(
-            "--no-create 'Will not create non-existent files linked from SUMMARY.md'",
+            "--no-create 'Will not create non-existent files linked from SUMMARY.md (deprecated: use book.toml instead)'",
         )
         .arg_from_usage(
             "[dir] 'A directory for your book{n}(Defaults to Current Directory \
@@ -28,11 +28,12 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let mut book = MDBook::new(&book_dir).read_config()?;
 
     if let Some(dest_dir) = args.value_of("dest-dir") {
-        book.config.book.build_dir = PathBuf::from(dest_dir);
+        book.config.build.build_dir = PathBuf::from(dest_dir);
     }
 
+    // This flag is deprecated in favor of being set via `book.toml`.
     if args.is_present("no-create") {
-        book.create_missing = false;
+        book.config.build.create_missing = false;
     }
 
     book.build()?;
