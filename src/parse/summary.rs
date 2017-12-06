@@ -110,9 +110,7 @@ fn parse_level(summary: &mut Vec<&str>,
                         // Increment section
                         let len = section.len() - 1;
                         section[len] += 1;
-                        let s = section.iter()
-                                       .fold("".to_owned(), |s, i| s + &i.to_string() + ".");
-                        BookItem::Chapter(s, ch)
+                        BookItem::Chapter(section.clone(), ch)
                     }
                     _ => parsed_item,
                 }
@@ -181,7 +179,7 @@ fn parse_line(l: &str) -> Option<BookItem> {
                 debug!("[*]: Line is list element");
 
                 if let Some((name, path)) = read_link(line) {
-                    return Some(BookItem::Chapter("0".to_owned(), Chapter::new(name, path)));
+                    return Some(BookItem::Chapter(vec![0], Chapter::new(name, path)));
                 } else {
                     return None;
                 }
