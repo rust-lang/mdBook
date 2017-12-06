@@ -36,3 +36,10 @@
 .sidebar-visible .previous {
   left: $sidebar-width + $page-padding
 }
+
+.nav-wrapper {
+  @media only screen and (max-width: $max-page-width-with-hidden-sidebar) {
+    max-width: $content-max-width
+    margin: 0 auto
+  }
+}

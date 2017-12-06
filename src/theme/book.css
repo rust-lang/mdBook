@@ -114,11 +114,11 @@ table thead td {
   -moz-box-sizing: border-box;
   box-sizing: border-box;
   min-height: 100%;
-  -webkit-transition: padding-left 0.5s;
-  -moz-transition: padding-left 0.5s;
-  -o-transition: padding-left 0.5s;
-  -ms-transition: padding-left 0.5s;
-  transition: padding-left 0.5s;
+  -webkit-transition: padding-left 0.5s, margin-right 0.5s;
+  -moz-transition: padding-left 0.5s, margin-right 0.5s;
+  -o-transition: padding-left 0.5s, margin-right 0.5s;
+  -ms-transition: padding-left 0.5s, margin-right 0.5s;
+  transition: padding-left 0.5s, margin-right 0.5s;
 }
 @media only screen and (max-width: 1060px) {
   .page-wrapper {
@@ -130,6 +130,7 @@ table thead td {
 }
 .sidebar-visible .page-wrapper {
   padding-left: 300px;
+  margin-right: -300px;
 }
 .page {
   outline: 0;
@@ -251,7 +252,7 @@ table thead td {
   -ms-transition: left 0.5s;
   transition: left 0.5s;
 }
-@media only screen and (max-width: 1250px) {
+@media only screen and (max-width: 1060px) {
   .previous {
     left: 15px;
   }
@@ -264,6 +265,12 @@ table thead td {
 }
 .sidebar-visible .previous {
   left: 315px;
+}
+@media only screen and (max-width: 1060px) {
+  .nav-wrapper {
+    max-width: 750px;
+    margin: 0 auto;
+  }
 }
 .theme-popup {
   position: absolute;
@@ -284,7 +291,7 @@ table thead td {
   border-top-left-radius: inherit;
   border-top-right-radius: inherit;
 }
-@media only screen and (max-width: 1250px) {
+@media only screen and (max-width: 1060px) {
   .nav-chapters {
     display: none;
   }
