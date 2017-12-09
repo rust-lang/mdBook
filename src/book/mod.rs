@@ -299,8 +299,13 @@ impl MDBook {
 
     pub fn read_config(mut self) -> Result<Self> {
         let config_path = self.root.join("book.toml");
-        debug!("[*] Loading the config from {}", config_path.display());
-        self.config = Config::from_disk(&config_path)?;
+
+        if config_path.exists() {
+            debug!("[*] Loading the config from {}", config_path.display());
+            self.config = Config::from_disk(&config_path)?;
+        } else {
+            self.config = Config::default();
+        }
 
         Ok(self)
     }
