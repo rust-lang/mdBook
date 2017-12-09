@@ -51,3 +51,14 @@ fn run_mdbook_init_with_custom_book_and_src_locations() {
         assert!(target.exists(), "{} should have been created by `mdbook init`", file);
     }
 }
+
+#[test]
+fn book_toml_isnt_required() {
+    let temp = TempDir::new("mdbook").unwrap();
+    let mut md = MDBook::new(temp.path());
+    md.init().unwrap();
+
+    assert!(!temp.path().join("book.toml").exists());
+
+    md.read_config().unwrap().build().unwrap();
+}
