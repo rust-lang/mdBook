@@ -7,7 +7,7 @@
     min-height: 100%
 
     // Animation: slide away
-    transition: padding-left 0.5s
+    transition: padding-left 0.5s, margin-right 0.5s
 
     @media only screen and (max-width: $max-page-width-with-hidden-sidebar) {
         padding-left: 0
@@ -20,6 +20,7 @@
 
 .sidebar-visible .page-wrapper {
     padding-left: $sidebar-width
+    margin-right: - $sidebar-width
 }
 
 .page {
@@ -30,7 +31,7 @@
 .content {
     margin-left: auto
     margin-right:auto
-    max-width: 750px
+    max-width: $content-max-width
     padding-bottom: 50px
 
     a {
