@@ -2,7 +2,6 @@ extern crate mdbook;
 #[macro_use]
 extern crate pretty_assertions;
 extern crate select;
-extern crate tempdir;
 extern crate walkdir;
 
 mod dummy_book;
@@ -15,9 +14,9 @@ use std::ffi::OsStr;
 use walkdir::{DirEntry, WalkDir, WalkDirIterator};
 use select::document::Document;
 use select::predicate::{Class, Name, Predicate};
-use tempdir::TempDir;
 use mdbook::errors::*;
 use mdbook::utils::fs::file_to_string;
+use mdbook::config::Config;
 use mdbook::MDBook;
 
 
@@ -254,33 +253,29 @@ fn check_spacers() {
 /// Ensure building fails if `create-missing` is false and one of the files does
 /// not exist.
 #[test]
-#[ignore]
 fn failure_on_missing_file() {
-    let (mut md, _temp) = create_missing_setup(false);
+    let temp = DummyBook::new().build().unwrap();
+    fs::remove_file(temp.path().join("src").join("intro.md")).unwrap();
 
-    // On failure, `build()` does not return a specific error, so assume
-    // any error is a failure due to a missing file.
-    assert!(md.build().is_err());
+    let mut cfg = Config::default();
+    cfg.build.create_missing = false;
+
+    let got = MDBook::load_with_config(temp.path(), cfg);
+    assert!(got.is_err());
 }
 
 /// Ensure a missing file is created if `create-missing` is true.
 #[test]
-#[ignore]
 fn create_missing_file_with_config() {
-    let (mut md, temp) = create_missing_setup(true);
-
-    md.build().unwrap();
-    assert!(temp.path().join("src").join("intro.md").exists());
-}
-
-fn create_missing_setup(create_missing: bool) -> (MDBook, TempDir) {
     let temp = DummyBook::new().build().unwrap();
-    let mut md = MDBook::load(temp.path()).unwrap();
-
-    md.config.build.create_missing = create_missing;
     fs::remove_file(temp.path().join("src").join("intro.md")).unwrap();
 
-    (md, temp)
+    let mut cfg = Config::default();
+    cfg.build.create_missing = true;
+
+    assert!(!temp.path().join("src").join("intro.md").exists());
+    let _md = MDBook::load_with_config(temp.path(), cfg).unwrap();
+    assert!(temp.path().join("src").join("intro.md").exists());
 }
 
 /// This makes sure you can include a Rust file with `{{#playpen example.rs}}`.

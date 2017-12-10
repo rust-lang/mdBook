@@ -2,24 +2,57 @@ use std::fmt::{self, Display, Formatter};
 use std::path::{Path, PathBuf};
 use std::collections::VecDeque;
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Write};
 
 use super::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
+use config::BuildConfig;
 use errors::*;
 
 
 /// Load a book into memory from its `src/` directory.
-pub fn load_book<P: AsRef<Path>>(src_dir: P) -> Result<Book> {
+pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> {
     let src_dir = src_dir.as_ref();
     let summary_md = src_dir.join("SUMMARY.md");
 
     let mut summary_content = String::new();
-    File::open(summary_md).chain_err(|| "Couldn't open SUMMARY.md")?
-                          .read_to_string(&mut summary_content)?;
+    File::open(summary_md)
+        .chain_err(|| "Couldn't open SUMMARY.md")?
+        .read_to_string(&mut summary_content)?;
 
     let summary = parse_summary(&summary_content).chain_err(|| "Summary parsing failed")?;
 
+    if cfg.create_missing {
+        create_missing(&src_dir, &summary).chain_err(|| "Unable to create missing chapters")?;
+    }
+
     load_book_from_disk(&summary, src_dir)
+}
+
+fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
+    let mut items: Vec<_> = summary
+        .prefix_chapters
+        .iter()
+        .chain(summary.numbered_chapters.iter())
+        .chain(summary.suffix_chapters.iter())
+        .collect();
+
+    while !items.is_empty() {
+        let next = items.pop().expect("already checked");
+
+        if let SummaryItem::Link(ref link) = *next {
+            let filename = src_dir.join(&link.location);
+            if !filename.exists() {
+                debug!("[*] Creating missing file {}", filename.display());
+
+                let mut f = File::create(&filename)?;
+                writeln!(f, "# {}", link.name)?;
+            }
+
+            items.extend(&link.nested_items);
+        }
+    }
+
+    Ok(())
 }
 
 
@@ -124,22 +157,23 @@ fn load_chapter<P: AsRef<Path>>(link: &Link, src_dir: P) -> Result<Chapter> {
         src_dir.join(&link.location)
     };
 
-    let mut f = File::open(&location).chain_err(|| {
-        format!("Chapter file not found, {}", link.location.display())
-    })?;
+    let mut f = File::open(&location)
+        .chain_err(|| format!("Chapter file not found, {}", link.location.display()))?;
 
     let mut content = String::new();
     f.read_to_string(&mut content)?;
 
-    let stripped = location.strip_prefix(&src_dir)
-                           .expect("Chapters are always inside a book");
+    let stripped = location
+        .strip_prefix(&src_dir)
+        .expect("Chapters are always inside a book");
 
     let mut ch = Chapter::new(&link.name, content, stripped);
     ch.number = link.number.clone();
 
-    let sub_items = link.nested_items.iter()
-                        .map(|i| load_summary_item(i, src_dir))
-                        .collect::<Result<Vec<_>>>()?;
+    let sub_items = link.nested_items
+        .iter()
+        .map(|i| load_summary_item(i, src_dir))
+        .collect::<Result<Vec<_>>>()?;
 
     ch.sub_items = sub_items;
 
@@ -206,9 +240,10 @@ And here is some \
         let temp = TempDir::new("book").unwrap();
 
         let chapter_path = temp.path().join("chapter_1.md");
-        File::create(&chapter_path).unwrap()
-                                   .write(DUMMY_SRC.as_bytes())
-                                   .unwrap();
+        File::create(&chapter_path)
+            .unwrap()
+            .write(DUMMY_SRC.as_bytes())
+            .unwrap();
 
         let link = Link::new("Chapter 1", chapter_path);
 
@@ -221,9 +256,10 @@ And here is some \
 
         let second_path = temp_dir.path().join("second.md");
 
-        File::create(&second_path).unwrap()
-                                  .write_all("Hello World!".as_bytes())
-                                  .unwrap();
+        File::create(&second_path)
+            .unwrap()
+            .write_all("Hello World!".as_bytes())
+            .unwrap();
 
 
         let mut second = Link::new("Nested Chapter 1", &second_path);
@@ -356,11 +392,12 @@ And here is some \
         assert_eq!(got.len(), 5);
 
         // checking the chapter names are in the order should be sufficient here...
-        let chapter_names: Vec<String> = got.into_iter().filter_map(|i| match *i {
-            BookItem::Chapter(ref ch) => Some(ch.name.clone()),
-            _ => None,
-        })
-                                            .collect();
+        let chapter_names: Vec<String> = got.into_iter()
+            .filter_map(|i| match *i {
+                BookItem::Chapter(ref ch) => Some(ch.name.clone()),
+                _ => None,
+            })
+            .collect();
         let should_be: Vec<_> = vec![
             String::from("Chapter 1"),
             String::from("Hello World"),

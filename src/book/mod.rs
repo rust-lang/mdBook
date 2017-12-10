@@ -3,6 +3,7 @@ mod book;
 mod init;
 
 pub use self::book::{Book, BookItem, BookItems, Chapter};
+pub use self::summary::SectionNumber;
 pub use self::init::BookBuilder;
 
 use std::path::{Path, PathBuf};
@@ -39,8 +40,15 @@ impl MDBook {
             Config::default()
         };
 
+        MDBook::load_with_config(book_root, config)
+    }
+
+    /// Load a book from its root directory using a custom config.
+    pub fn load_with_config<P: Into<PathBuf>>(book_root: P, config: Config) -> Result<MDBook> {
+        let book_root = book_root.into();
+
         let src_dir = book_root.join(&config.book.src);
-        let book = book::load_book(&src_dir)?;
+        let book = book::load_book(&src_dir, &config.build)?;
 
         Ok(MDBook {
             root: book_root,
