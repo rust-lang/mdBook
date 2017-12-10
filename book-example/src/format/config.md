@@ -35,6 +35,8 @@ This is general information about your book.
 - **src:** By default, the source directory is found in the directory named
   `src` directly under the root folder. But this is configurable with the `src`
   key in the configuration file.
+- **section-numbers:** By default, sections are numbered in the table of
+  contents. Setting this to `false` disables numbering.
 
 **book.toml**
 ```toml
@@ -43,6 +45,7 @@ title = "Example book"
 authors = ["John Doe", "Jane Doe"]
 description = "The example book covers examples."
 src = "my-src"  # the source files will be found in `root/my-src` instead of `root/src`
+section-numbers = false
 ```
 
 ### Build options

@@ -34,8 +34,8 @@ impl HelperDef for RenderToc {
                 continue;
             }
 
-            let level = if let Some(s) = item.get("section") {
-                s.matches('.').count()
+            let level = if let Some(s) = item.get("level") {
+                s.parse().expect(&format!("Error: level expected integer, got \"{}\"", s))
             } else {
                 1
             };

@@ -2,10 +2,11 @@ use serde::{Serialize, Serializer};
 use serde::ser::SerializeStruct;
 use std::path::PathBuf;
 
+type Section = Vec<i32>;
 
 #[derive(Debug, Clone)]
 pub enum BookItem {
-    Chapter(String, Chapter), // String = section
+    Chapter(Section, Chapter),
     Affix(Chapter),
     Spacer,
 }

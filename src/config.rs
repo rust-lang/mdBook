@@ -209,6 +209,8 @@ pub struct BookConfig {
     pub src: PathBuf,
     /// Does this book support more than one language?
     pub multilingual: bool,
+    /// Should sections be numbered in the TOC?
+    pub section_numbers: bool,
 }
 
 impl Default for BookConfig {
@@ -219,6 +221,7 @@ impl Default for BookConfig {
             description: None,
             src: PathBuf::from("src"),
             multilingual: false,
+            section_numbers: true,
         }
     }
 }
@@ -274,6 +277,7 @@ mod tests {
         description = "A completely useless book"
         multilingual = true
         src = "source"
+        section-numbers = false
 
         [build]
         build-dir = "outputs"
@@ -300,6 +304,7 @@ mod tests {
             description: Some(String::from("A completely useless book")),
             multilingual: true,
             src: PathBuf::from("source"),
+            section_numbers: false,
             ..Default::default()
         };
         let build_should_be = BuildConfig {

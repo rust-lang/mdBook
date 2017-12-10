@@ -407,7 +407,15 @@ fn make_data(book: &MDBook, config: &Config) -> Result<serde_json::Map<String, s
                 chapter.insert("path".to_owned(), json!(path));
             }
             BookItem::Chapter(ref s, ref ch) => {
-                chapter.insert("section".to_owned(), json!(s));
+                let level = format!("{}", s.len());
+                chapter.insert("level".to_owned(), json!(level));
+
+                if config.book.section_numbers {
+                    let section = s.iter()
+                                   .fold("".to_owned(), |s, i| s + &i.to_string() + ".");
+                    chapter.insert("section".to_owned(), json!(section));
+                }
+
                 chapter.insert("name".to_owned(), json!(ch.name));
                 let path = ch.path.to_str().ok_or_else(|| {
                                                            io::Error::new(io::ErrorKind::Other,
