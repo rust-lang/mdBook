@@ -123,24 +123,6 @@ impl MDBook {
             .map_err(|e| e.into())
     }
 
-    /// Parses the `book.json` file (if it exists) to extract
-    /// the configuration parameters.
-    /// The `book.json` file should be in the root directory of the book.
-    /// The root directory is the one specified when creating a new `MDBook`
-
-    pub fn read_config(mut self) -> Result<Self> {
-        let config_path = self.root.join("book.toml");
-
-        if config_path.exists() {
-            debug!("[*] Loading the config from {}", config_path.display());
-            self.config = Config::from_disk(&config_path)?;
-        } else {
-            self.config = Config::default();
-        }
-
-        Ok(self)
-    }
-
     /// You can change the default renderer to another one by using this method.
     /// The only requirement is for your renderer to implement the [Renderer
     /// trait](../../renderer/renderer/trait.Renderer.html)
@@ -155,7 +137,9 @@ impl MDBook {
             .zip(library_paths.into_iter())
             .flat_map(|x| vec![x.0, x.1])
             .collect();
+
         let temp_dir = TempDir::new("mdbook")?;
+
         for item in self.iter() {
             if let BookItem::Chapter(ref ch) = *item {
                 if !ch.path.as_os_str().is_empty() {

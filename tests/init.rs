@@ -62,9 +62,9 @@ fn run_mdbook_init_with_custom_book_and_src_locations() {
 #[test]
 fn book_toml_isnt_required() {
     let temp = TempDir::new("mdbook").unwrap();
-    let md = MDBook::init(temp.path()).build().unwrap();
+    let mut md = MDBook::init(temp.path()).build().unwrap();
 
     let _ = fs::remove_file(temp.path().join("book.toml"));
 
-    md.read_config().unwrap().build().unwrap();
+    md.build().unwrap();
 }
