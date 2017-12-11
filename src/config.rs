@@ -25,9 +25,10 @@ impl Config {
     /// Load the configuration file from disk.
     pub fn from_disk<P: AsRef<Path>>(config_file: P) -> Result<Config> {
         let mut buffer = String::new();
-        File::open(config_file).chain_err(|| "Unable to open the configuration file")?
-                               .read_to_string(&mut buffer)
-                               .chain_err(|| "Couldn't read the file")?;
+        File::open(config_file)
+            .chain_err(|| "Unable to open the configuration file")?
+            .read_to_string(&mut buffer)
+            .chain_err(|| "Couldn't read the file")?;
 
         Config::from_str(&buffer)
     }
@@ -64,9 +65,10 @@ impl Config {
         let name = name.as_ref();
 
         if let Some(value) = self.get(name) {
-            value.clone()
-                 .try_into()
-                 .chain_err(|| "Couldn't deserialize the value")
+            value
+                .clone()
+                .try_into()
+                .chain_err(|| "Couldn't deserialize the value")
         } else {
             bail!("Key not found, {:?}", name)
         }
@@ -91,10 +93,11 @@ impl Config {
         get_and_insert!(table, "source" => cfg.book.src);
         get_and_insert!(table, "description" => cfg.book.description);
 
-        // This complicated chain of and_then's is so we can move 
-        // "output.html.destination" to "build.build_dir" and parse it into a 
+        // This complicated chain of and_then's is so we can move
+        // "output.html.destination" to "build.build_dir" and parse it into a
         // PathBuf.
-        let destination: Option<PathBuf> = table.get_mut("output")
+        let destination: Option<PathBuf> = table
+            .get_mut("output")
             .and_then(|output| output.as_table_mut())
             .and_then(|output| output.get_mut("html"))
             .and_then(|html| html.as_table_mut())
@@ -171,13 +174,15 @@ impl<'de> Deserialize<'de> for Config {
             return Ok(Config::from_legacy(table));
         }
 
-        let book: BookConfig = table.remove("book")
-                                    .and_then(|value| value.try_into().ok())
-                                    .unwrap_or_default();
+        let book: BookConfig = table
+            .remove("book")
+            .and_then(|value| value.try_into().ok())
+            .unwrap_or_default();
 
-        let build: BuildConfig = table.remove("build")
-                                      .and_then(|value| value.try_into().ok())
-                                      .unwrap_or_default();
+        let build: BuildConfig = table
+            .remove("build")
+            .and_then(|value| value.try_into().ok())
+            .unwrap_or_default();
 
         Ok(Config {
             book: book,
@@ -200,7 +205,7 @@ impl Serialize for Config {
         };
 
         table.insert("book".to_string(), book_config);
-        
+
         Value::Table(table).serialize(s)
     }
 }
@@ -208,7 +213,9 @@ impl Serialize for Config {
 fn is_legacy_format(table: &Table) -> bool {
     let top_level_items = ["title", "author", "authors"];
 
-    top_level_items.iter().any(|key| table.contains_key(&key.to_string()))
+    top_level_items
+        .iter()
+        .any(|key| table.contains_key(&key.to_string()))
 }
 
 

@@ -33,8 +33,8 @@ pub struct MDBook {
     pub root: PathBuf,
     /// The configuration used to tweak now a book is built.
     pub config: Config,
-
-    book: Book,
+    /// A representation of the book's contents in memory.
+    pub book: Book,
     renderer: Box<Renderer>,
 
     /// The URL used for live reloading when serving up the book.
