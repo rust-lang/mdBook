@@ -69,8 +69,8 @@ where
     };
 
     // Add the source directory to the watcher
-    if let Err(e) = watcher.watch(book.get_source(), Recursive) {
-        println!("Error while watching {:?}:\n    {:?}", book.get_source(), e);
+    if let Err(e) = watcher.watch(book.source_dir(), Recursive) {
+        println!("Error while watching {:?}:\n    {:?}", book.source_dir(), e);
         ::std::process::exit(0);
     };
 

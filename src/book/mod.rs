@@ -1,3 +1,42 @@
+//! The internal representation of a book and infrastructure for loading it from
+//! disk and building it.
+//!
+//! # Examples
+//!
+//! If creating a new book from scratch, you'll want to get a `BookBuilder` via
+//! the `MDBook::init()` method.
+//!
+//! ```rust,no_run
+//! use mdbook::MDBook;
+//! use mdbook::config::Config;
+//!
+//! let root_dir = "/path/to/book/root";
+//!
+//! let mut cfg = Config::default();
+//! cfg.book.title = Some("My Book".to_string());
+//! cfg.book.authors.push("Michael-F-Bryan".to_string());
+//!
+//! MDBook::init(root_dir)
+//!     .create_gitignore(true)
+//!     .with_config(cfg)
+//!     .build()
+//!     .expect("Book generation failed");
+//! ```
+//!
+//! You can also load an existing book and build it.
+//!
+//! ```rust,no_run
+//! use mdbook::MDBook;
+//!
+//! let root_dir = "/path/to/book/root";
+//!
+//! let mut md = MDBook::load(root_dir)
+//!     .expect("Unable to load the book");
+//! md.build().expect("Building failed");
+//! ```
+
+#![deny(missing_docs)]
+
 mod summary;
 mod book;
 mod init;
@@ -18,13 +57,17 @@ use errors::*;
 
 use config::Config;
 
+/// The object used to manage and build a book.
 pub struct MDBook {
+    /// The book's root directory.
     pub root: PathBuf,
+    /// The configuration used to tweak now a book is built.
     pub config: Config,
 
     book: Book,
     renderer: Box<Renderer>,
 
+    /// The URL used for live reloading when serving up the book.
     pub livereload: Option<String>,
 }
 
@@ -123,6 +166,8 @@ impl MDBook {
         self.renderer.render(self)
     }
 
+    // FIXME: This doesn't belong as part of `MDBook`. It is only used by the HTML renderer
+    #[doc(hidden)]
     pub fn write_file<P: AsRef<Path>>(&self, filename: P, content: &[u8]) -> Result<()> {
         let path = self.get_destination().join(filename);
 
@@ -139,6 +184,7 @@ impl MDBook {
         self
     }
 
+    /// Run `rustdoc` tests on the book, linking against the provided libraries.
     pub fn test(&mut self, library_paths: Vec<&str>) -> Result<()> {
         let library_args: Vec<&str> = (0..library_paths.len())
             .map(|_| "-L")
@@ -151,7 +197,7 @@ impl MDBook {
         for item in self.iter() {
             if let BookItem::Chapter(ref ch) = *item {
                 if !ch.path.as_os_str().is_empty() {
-                    let path = self.get_source().join(&ch.path);
+                    let path = self.source_dir().join(&ch.path);
                     let base = path.parent()
                         .ok_or_else(|| String::from("Invalid bookitem path!"))?;
                     let content = utils::fs::file_to_string(&path)?;
@@ -182,14 +228,19 @@ impl MDBook {
         Ok(())
     }
 
+    // FIXME: This doesn't belong under `MDBook`, it should really be passed to the renderer directly.
+    #[doc(hidden)]
     pub fn get_destination(&self) -> PathBuf {
         self.root.join(&self.config.build.build_dir)
     }
 
-    pub fn get_source(&self) -> PathBuf {
+    /// Get the directory containing this book's source files.
+    pub fn source_dir(&self) -> PathBuf {
         self.root.join(&self.config.book.src)
     }
 
+    // FIXME: This belongs as part of the `HtmlConfig`.
+    #[doc(hidden)]
     pub fn theme_dir(&self) -> PathBuf {
         match self.config.html_config().and_then(|h| h.theme) {
             Some(d) => self.root.join(d),

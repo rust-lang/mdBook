@@ -19,6 +19,8 @@ pub struct BookBuilder {
 }
 
 impl BookBuilder {
+    /// Create a new `BookBuilder` which will generate a book in the provided
+    /// root directory.
     pub fn new<P: Into<PathBuf>>(root: P) -> BookBuilder {
         BookBuilder {
             root: root.into(),
@@ -34,20 +36,32 @@ impl BookBuilder {
         self
     }
 
+    /// Get the config used by the `BookBuilder`.
+    pub fn config(&self) -> &Config {
+        &self.config
+    }
+
+    /// Should the theme be copied into the generated book (so users can tweak
+    /// it)?
     pub fn copy_theme(&mut self, copy: bool) -> &mut BookBuilder {
         self.copy_theme = copy;
         self
     }
 
+    /// Should we create a `.gitignore` file?
     pub fn create_gitignore(&mut self, create: bool) -> &mut BookBuilder {
         self.create_gitignore = create;
         self
     }
 
-    pub fn config(&self) -> &Config {
-        &self.config
-    }
-
+    /// Generate the actual book. This will:
+    ///
+    /// - Create the directory structure.
+    /// - Stub out some dummy chapters and the `SUMMARY.md`.
+    /// - Create a `.gitignore` (if applicable)
+    /// - Create a themes directory and populate it (if applicable)
+    /// - Generate a `book.toml` file,
+    /// - Then load the book so we can
     pub fn build(&self) -> Result<MDBook> {
         info!("Creating a new book with stub content");
 
@@ -69,18 +83,23 @@ impl BookBuilder {
 
         self.write_book_toml()?;
 
-        let book = MDBook::load(&self.root)
-            .expect("The BookBuilder should always create a valid book. \
-            If you are seeing this it is a bug and should be reported.");
+        match MDBook::load(&self.root) {
+            Ok(book) => Ok(book),
+            Err(e) => {
+                error!("{}", e);
 
-        Ok(book)
+                panic!(
+                    "The BookBuilder should always create a valid book. If you are seeing this it \
+                     is a bug and should be reported."
+                );
+            }
+        }
     }
 
     fn write_book_toml(&self) -> Result<()> {
         debug!("[*] Writing book.toml");
         let book_toml = self.root.join("book.toml");
-        let cfg = toml::to_vec(&self.config)
-            .chain_err(|| "Unable to serialize the config")?;
+        let cfg = toml::to_vec(&self.config).chain_err(|| "Unable to serialize the config")?;
 
         File::create(book_toml)
             .chain_err(|| "Couldn't create book.toml")?
@@ -92,14 +111,15 @@ impl BookBuilder {
     fn copy_across_theme(&self) -> Result<()> {
         debug!("[*] Copying theme");
 
-        let themedir = self.config.html_config()
+        let themedir = self.config
+            .html_config()
             .and_then(|html| html.theme)
             .unwrap_or_else(|| self.config.book.src.join("theme"));
         let themedir = self.root.join(themedir);
 
         if !themedir.exists() {
-            debug!("[*]: {:?} does not exist, creating the directory",
-            themedir);         fs::create_dir(&themedir)?;
+            debug!("[*]: {:?} does not exist, creating the directory", themedir);
+            fs::create_dir(&themedir)?;
         }
 
         let mut index = File::create(themedir.join("index.hbs"))?;

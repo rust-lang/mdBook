@@ -318,7 +318,7 @@ impl Renderer for HtmlHandlebars {
         self.copy_additional_css_and_js(book)?;
 
         // Copy all remaining files
-        let src = book.get_source();
+        let src = book.source_dir();
         utils::fs::copy_files_except_ext(&src, &destination, true, &["md"])?;
 
         Ok(())
