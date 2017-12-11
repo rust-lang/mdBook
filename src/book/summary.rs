@@ -1,4 +1,4 @@
-use std::fmt::{self, Formatter, Display};
+use std::fmt::{self, Display, Formatter};
 use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 use pulldown_cmark::{self, Event, Tag};
@@ -193,6 +193,7 @@ macro_rules! collect_events {
 
             loop {
                 let event = $stream.next();
+                trace!("Next event: {:?}", event);
                 match event {
                     Some(Event::End($delimiter)) => break,
                     Some(other) => events.push(other),
@@ -382,6 +383,7 @@ impl<'a> SummaryParser<'a> {
     /// Parse a single item (`[Some Chapter Name](./path/to/chapter.md)`).
     fn parse_item(&mut self) -> Result<Link> {
         let next = self.stream.next();
+        trace!("Parsing an item, next event is {:?}", next);
 
         if let Some(Event::Start(Tag::Link(dest, _))) = next {
             let content = collect_events!(self.stream, Tag::Link(..));
@@ -580,7 +582,6 @@ mod tests {
         let got = stringify_events(events);
 
         assert_eq!(got, should_be);
-
     }
 
     #[test]

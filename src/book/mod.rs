@@ -11,8 +11,8 @@ mod summary;
 mod book;
 mod init;
 
-pub use self::book::{Book, BookItem, BookItems, Chapter};
-pub use self::summary::SectionNumber;
+pub use self::book::{load_book, Book, BookItem, BookItems, Chapter};
+pub use self::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
 pub use self::init::BookBuilder;
 
 use std::path::{Path, PathBuf};
