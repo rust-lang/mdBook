@@ -1,7 +1,7 @@
 use std::fmt::{self, Display, Formatter};
 use std::path::{Path, PathBuf};
 use std::collections::VecDeque;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::{Read, Write};
 
 use super::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
@@ -42,6 +42,11 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
         if let SummaryItem::Link(ref link) = *next {
             let filename = src_dir.join(&link.location);
             if !filename.exists() {
+                if let Some(parent) = filename.parent() {
+                    if !parent.exists() {
+                        fs::create_dir_all(parent)?;
+                    }
+                }
                 debug!("[*] Creating missing file {}", filename.display());
 
                 let mut f = File::create(&filename)?;
