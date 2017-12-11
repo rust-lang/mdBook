@@ -2,6 +2,7 @@ use std::fmt::{self, Display, Formatter};
 use std::iter::FromIterator;
 use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
+use memchr::{self, Memchr};
 use pulldown_cmark::{self, Event, Tag};
 use errors::*;
 
@@ -176,6 +177,7 @@ macro_rules! collect_events {
             loop {
                 let event = $stream.next();
                 trace!("Next event: {:?}", event);
+
                 match event {
                     Some($delimiter) => break,
                     Some(other) => events.push(other),
@@ -204,8 +206,11 @@ impl<'a> SummaryParser<'a> {
     fn current_location(&self) -> (usize, usize) {
         let byte_offset = self.stream.get_offset();
 
-        let line = 0;
-        let col = 0;
+        let previous_text = self.src[..byte_offset].as_bytes();
+        let line = Memchr::new(b'\n', previous_text).count() + 1;
+        let start_of_line = memchr::memrchr(b'\n', previous_text).unwrap_or(0);
+        let col = self.src[start_of_line..byte_offset].chars().count();
+
         (line, col)
     }
 
@@ -238,10 +243,7 @@ impl<'a> SummaryParser<'a> {
         );
 
         loop {
-            let next = self.stream.next();
-            trace!("[*] Next event: {:?}", next);
-
-            match next {
+            match self.next_event() {
                 Some(Event::Start(Tag::List(..))) => {
                     if is_prefix {
                         // we've finished prefix chapters and are at the start
@@ -291,20 +293,46 @@ impl<'a> SummaryParser<'a> {
         // If you can think of a better way to do this then please make a PR :)
 
         loop {
-            let bunch_of_items = self.parse_nested_numbered(&root_number)?;
+            let mut bunch_of_items = self.parse_nested_numbered(&root_number)?;
+
+            // if we've resumed after something like a rule the root sections
+            // will be numbered from 1. We need to manually go back and update
+            // them
+            update_section_numbers(&mut bunch_of_items, 0, items.len() as u32);
             items.extend(bunch_of_items);
 
-            match self.stream.next() {
-                Some(Event::Start(Tag::Rule)) => {
-                    items.push(SummaryItem::Separator);
+            match self.next_event() {
+                Some(Event::Start(Tag::Paragraph)) => {
+                    // we're starting the suffix chapters
+                    break;
+                }
+                Some(Event::Start(other_tag)) => {
+                    if Tag::Rule == other_tag {
+                        items.push(SummaryItem::Separator);
+                    }
+                    trace!("Skipping contents of {:?}", other_tag);
 
-                    if let Some(Event::Start(Tag::List(..))) = self.stream.next() {
+                    // Skip over the contents of this tag
+                    loop {
+                        let next = self.next_event();
+
+                        if next.is_none() || next == Some(Event::End(other_tag.clone())) {
+                            break;
+                        }
+                    }
+
+                    if let Some(Event::Start(Tag::List(..))) = self.next_event() {
                         continue;
                     } else {
                         break;
                     }
                 }
-                _ => {
+                Some(_) => {
+                    // something else... ignore
+                    continue;
+                }
+                None => {
+                    // EOF, bail...
                     break;
                 }
             }
@@ -313,40 +341,25 @@ impl<'a> SummaryParser<'a> {
         Ok(items)
     }
 
+    fn next_event(&mut self) -> Option<Event<'a>> {
+        let next = self.stream.next();
+        trace!("Next event: {:?}", next);
+
+        next
+    }
+
     fn parse_nested_numbered(&mut self, parent: &SectionNumber) -> Result<Vec<SummaryItem>> {
         debug!("[*] Parsing numbered chapters at level {}", parent);
         let mut items = Vec::new();
 
         loop {
-            let next = self.stream.next();
-            trace!("[*] Next event: {:?}", next);
-
-            match next {
-                Some(Event::Start(Tag::Item)) => match self.stream.next() {
-                    Some(Event::Start(Tag::Link(href, _))) => {
-                        let mut link = self.parse_link(href.to_string())?;
-
-                        let mut number = parent.clone();
-                        number.0.push(items.len() as u32 + 1);
-                        trace!(
-                            "[*] Found chapter: {} {} ({})",
-                            number,
-                            link.name,
-                            link.location.display()
-                        );
-
-                        link.number = Some(number);
-                        items.push(SummaryItem::Link(link));
-                    }
-                    other => {
-                        warn!("Expected a start of a link, actually got {:?}", other);
-                        bail!(self.parse_error(
-                            "The link items for nested chapters must only contain a hyperlink"
-                        ));
-                    }
-                },
+            match self.next_event() {
+                Some(Event::Start(Tag::Item)) => {
+                    let item = self.parse_nested_item(parent, items.len())?;
+                    items.push(item);
+                }
                 Some(Event::Start(Tag::List(..))) => {
-                    // recurse
+                    // recurse to parse the nested list
                     let (_, last_item) = get_last_link(&mut items)?;
                     let last_item_number = last_item
                         .number
@@ -366,6 +379,40 @@ impl<'a> SummaryParser<'a> {
         Ok(items)
     }
 
+    fn parse_nested_item(
+        &mut self,
+        parent: &SectionNumber,
+        num_existing_items: usize,
+    ) -> Result<SummaryItem> {
+        loop {
+            match self.next_event() {
+                Some(Event::Start(Tag::Paragraph)) => continue,
+                Some(Event::Start(Tag::Link(href, _))) => {
+                    let mut link = self.parse_link(href.to_string())?;
+
+                    let mut number = parent.clone();
+                    number.0.push(num_existing_items as u32 + 1);
+                    trace!(
+                        "[*] Found chapter: {} {} ({})",
+                        number,
+                        link.name,
+                        link.location.display()
+                    );
+
+                    link.number = Some(number);
+
+                    return Ok(SummaryItem::Link(link));
+                }
+                other => {
+                    warn!("Expected a start of a link, actually got {:?}", other);
+                    bail!(self.parse_error(
+                        "The link items for nested chapters must only contain a hyperlink"
+                    ));
+                }
+            }
+        }
+    }
+
     fn parse_error<D: Display>(&self, msg: D) -> Error {
         let (line, col) = self.current_location();
 
@@ -374,17 +421,25 @@ impl<'a> SummaryParser<'a> {
 
     /// Try to parse the title line.
     fn parse_title(&mut self) -> Option<String> {
-        if let Some(Event::Start(Tag::Header(1))) = self.stream.next() {
+        if let Some(Event::Start(Tag::Header(1))) = self.next_event() {
             debug!("[*] Found a h1 in the SUMMARY");
 
             let tags = collect_events!(self.stream, end Tag::Header(1));
-
-            // TODO: How do we deal with headings like "# My **awesome** summary"?
-            // for now, I'm just going to scan through and concatenate the
-            // Event::Text tags, skipping any styling.
             Some(stringify_events(tags))
         } else {
             None
+        }
+    }
+}
+
+fn update_section_numbers(sections: &mut [SummaryItem], level: usize, by: u32) {
+    for section in sections {
+        if let SummaryItem::Link(ref mut link) = *section {
+            if let Some(ref mut number) = link.number {
+                number.0[level] += by;
+            }
+
+            update_section_numbers(&mut link.nested_items, level, by);
         }
     }
 }
@@ -398,7 +453,10 @@ fn get_last_link(links: &mut [SummaryItem]) -> Result<(usize, &mut Link)> {
         .filter_map(|(i, item)| item.maybe_link_mut().map(|l| (i, l)))
         .rev()
         .next()
-        .ok_or_else(|| "The list of SummaryItems doesn't contain any Links".into())
+        .ok_or_else(|| {
+            "Unable to get last link because the list of SummaryItems doesn't contain any Links"
+                .into()
+        })
 }
 
 
@@ -606,6 +664,38 @@ mod tests {
                         nested_items: Vec::new(),
                     }),
                 ],
+            }),
+            SummaryItem::Link(Link {
+                name: String::from("Second"),
+                location: PathBuf::from("./second.md"),
+                number: Some(SectionNumber(vec![2])),
+                nested_items: Vec::new(),
+            }),
+        ];
+
+        let mut parser = SummaryParser::new(src);
+        let _ = parser.stream.next();
+
+        let got = parser.parse_numbered().unwrap();
+
+        assert_eq!(got, should_be);
+    }
+
+    /// This test ensures the book will continue to pass because it breaks the
+    /// `SUMMARY.md` up using level 2 headers ([example]).
+    ///
+    /// [example]: https://github.com/rust-lang/book/blob/2c942dc094f4ddcdc7aba7564f80782801197c99/second-edition/src/SUMMARY.md#basic-rust-literacy
+    #[test]
+    fn can_have_a_subheader_between_nested_items() {
+        extern crate env_logger;
+        env_logger::init().ok();
+        let src = "- [First](./first.md)\n\n## Subheading\n\n- [Second](./second.md)\n";
+        let should_be = vec![
+            SummaryItem::Link(Link {
+                name: String::from("First"),
+                location: PathBuf::from("./first.md"),
+                number: Some(SectionNumber(vec![1])),
+                nested_items: Vec::new(),
             }),
             SummaryItem::Link(Link {
                 name: String::from("Second"),

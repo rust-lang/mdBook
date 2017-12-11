@@ -95,6 +95,7 @@ extern crate handlebars;
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
+extern crate memchr;
 extern crate pulldown_cmark;
 extern crate regex;
 extern crate serde;
