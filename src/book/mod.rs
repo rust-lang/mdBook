@@ -1,39 +1,9 @@
 //! The internal representation of a book and infrastructure for loading it from
 //! disk and building it.
 //!
-//! # Examples
+//! For examples on using `MDBook`, consult the [top-level documentation][1].
 //!
-//! If creating a new book from scratch, you'll want to get a `BookBuilder` via
-//! the `MDBook::init()` method.
-//!
-//! ```rust,no_run
-//! use mdbook::MDBook;
-//! use mdbook::config::Config;
-//!
-//! let root_dir = "/path/to/book/root";
-//!
-//! let mut cfg = Config::default();
-//! cfg.book.title = Some("My Book".to_string());
-//! cfg.book.authors.push("Michael-F-Bryan".to_string());
-//!
-//! MDBook::init(root_dir)
-//!     .create_gitignore(true)
-//!     .with_config(cfg)
-//!     .build()
-//!     .expect("Book generation failed");
-//! ```
-//!
-//! You can also load an existing book and build it.
-//!
-//! ```rust,no_run
-//! use mdbook::MDBook;
-//!
-//! let root_dir = "/path/to/book/root";
-//!
-//! let mut md = MDBook::load(root_dir)
-//!     .expect("Unable to load the book");
-//! md.build().expect("Building failed");
-//! ```
+//! [1]: ../index.html
 
 #![deny(missing_docs)]
 

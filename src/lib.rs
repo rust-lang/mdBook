@@ -15,24 +15,39 @@
 //! - Write a new Renderer
 //! - ...
 //!
-//! ## Example
+//! # Examples
 //!
-//! ```no_run
-//! extern crate mdbook;
+//! If creating a new book from scratch, you'll want to get a `BookBuilder` via
+//! the `MDBook::init()` method.
 //!
+//! ```rust,no_run
 //! use mdbook::MDBook;
-//! use std::path::PathBuf;
+//! use mdbook::config::Config;
 //!
-//! fn main() {
-//!     let mut md = MDBook::load("my-book").unwrap();
+//! let root_dir = "/path/to/book/root";
 //!
-//!     // tweak the book configuration a bit
-//!     md.config.book.src = PathBuf::from("source");
-//!     md.config.build.build_dir = PathBuf::from("book");
-//! 
-//!     // Render the book
-//!     md.build().unwrap();
-//! }
+//! // create a default config and change a couple things
+//! let mut cfg = Config::default();
+//! cfg.book.title = Some("My Book".to_string());
+//! cfg.book.authors.push("Michael-F-Bryan".to_string());
+//!
+//! MDBook::init(root_dir)
+//!     .create_gitignore(true)
+//!     .with_config(cfg)
+//!     .build()
+//!     .expect("Book generation failed");
+//! ```
+//!
+//! You can also load an existing book and build it.
+//!
+//! ```rust,no_run
+//! use mdbook::MDBook;
+//!
+//! let root_dir = "/path/to/book/root";
+//!
+//! let mut md = MDBook::load(root_dir)
+//!     .expect("Unable to load the book");
+//! md.build().expect("Building failed");
 //! ```
 //!
 //! ## Implementing a new Renderer
