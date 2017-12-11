@@ -1,8 +1,8 @@
 //! Some integration tests to make sure the `SUMMARY.md` parser can deal with
 //! some real-life examples.
 
-extern crate error_chain;
 extern crate env_logger;
+extern crate error_chain;
 extern crate mdbook;
 
 use std::fs::File;
@@ -46,3 +46,4 @@ macro_rules! summary_md_test {
 summary_md_test!(rust_by_example, "rust_by_example.md");
 summary_md_test!(rust_ffi_guide, "rust_ffi_guide.md");
 summary_md_test!(example_book, "example_book.md");
+summary_md_test!(the_book_2nd_edition, "the_book-2nd_edition.md");

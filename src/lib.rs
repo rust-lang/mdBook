@@ -105,6 +105,10 @@ extern crate serde_json;
 extern crate tempdir;
 extern crate toml;
 
+#[cfg(test)]
+#[macro_use]
+extern crate pretty_assertions;
+
 mod preprocess;
 pub mod book;
 pub mod config;
@@ -130,6 +134,11 @@ pub mod errors {
             Subprocess(message: String, output: ::std::process::Output) {
                 description("A subprocess failed")
                 display("{}: {}", message, String::from_utf8_lossy(&output.stdout))
+            }
+
+            ParseError(line: usize, col: usize, message: String) {
+                description("A SUMMARY.md parsing error")
+                display("Error at line {}, column {}: {}", line, col, message)
             }
         }
     }
