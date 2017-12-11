@@ -48,10 +48,17 @@ impl MDBook {
         let config_location = book_root.join("book.toml");
 
         let config = if config_location.exists() {
+            debug!("[*] Loading config from {}", config_location.display());
             Config::from_disk(&config_location)?
         } else {
             Config::default()
         };
+
+        if log_enabled!(::log::LogLevel::Trace) {
+            for line in format!("Config: {:#?}", config).lines() {
+                trace!("{}", line);
+            }
+        }
 
         MDBook::load_with_config(book_root, config)
     }
