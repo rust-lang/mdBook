@@ -63,4 +63,4 @@ name = "mdbook"
 path = "src/bin/mdbook.rs"
 
 [patch.crates-io]
-pulldown-cmark = { git = "https://github.com/Michael-F-Bryan/pulldown-cmark", branch = "derives" }
+pulldown-cmark = { git = "https://github.com/google/pulldown-cmark" }
