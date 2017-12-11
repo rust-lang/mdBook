@@ -13,8 +13,8 @@ use errors::*;
 /// # Summary Format
 ///
 /// **Title:** It's common practice to begin with a title, generally
-/// "# Summary". But it is not mandatory, the parser just ignores it. So you
-/// can too if you feel like it.
+/// "# Summary". It's not mandatory and the parser (currently) ignores it, so
+/// you can too if you feel like it.
 ///
 /// **Prefix Chapter:** Before the main numbered chapters you can add a couple
 /// of elements that will not be numbered. This is useful for forewords,
@@ -35,7 +35,8 @@ use errors::*;
 /// - [Title of the Chapter](relative/path/to/markdown.md)
 /// ```
 ///
-/// You can either use - or * to indicate a numbered chapter.
+/// You can either use - or * to indicate a numbered chapter, the parser doesn't
+/// care but you'll probably want to stay consistent.
 ///
 /// **Suffix Chapter:** After the numbered chapters you can add a couple of
 /// non-numbered chapters. They are the same as prefix chapters but come after
@@ -125,7 +126,7 @@ impl From<Link> for SummaryItem {
     }
 }
 
-/// A recursive descent parser for a `SUMMARY.md`.
+/// A recursive descent (-ish) parser for a `SUMMARY.md`.
 ///
 ///
 /// # Grammar
@@ -203,6 +204,8 @@ impl<'a> SummaryParser<'a> {
         }
     }
 
+    /// Get the current line and column to give the user more useful error 
+    /// messages.
     fn current_location(&self) -> (usize, usize) {
         let byte_offset = self.stream.get_offset();
 
@@ -458,7 +461,6 @@ fn get_last_link(links: &mut [SummaryItem]) -> Result<(usize, &mut Link)> {
                 .into()
         })
 }
-
 
 /// Removes the styling from a list of Markdown events and returns just the
 /// plain text.

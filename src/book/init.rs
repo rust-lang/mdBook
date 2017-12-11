@@ -61,7 +61,7 @@ impl BookBuilder {
     /// - Create a `.gitignore` (if applicable)
     /// - Create a themes directory and populate it (if applicable)
     /// - Generate a `book.toml` file,
-    /// - Then load the book so we can
+    /// - Then load the book so we can build it or run tests.
     pub fn build(&self) -> Result<MDBook> {
         info!("Creating a new book with stub content");
 
@@ -145,6 +145,10 @@ impl BookBuilder {
 
     fn build_gitignore(&self) -> Result<()> {
         debug!("[*]: Creating .gitignore");
+
+        let mut f = File::create(self.root.join(".gitignore"))?;
+
+        writeln!(f, "{}", self.config.build.build_dir.display())?;
 
         Ok(())
     }

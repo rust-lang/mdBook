@@ -1,11 +1,11 @@
 //! # mdBook
 //!
-//! **mdBook** is similar to Gitbook but implemented in Rust.
+//! **mdBook** is similar to GitBook but implemented in Rust.
 //! It offers a command line interface, but can also be used as a regular crate.
 //!
-//! This is the API doc, but you can find a [less "low-level" documentation here](../index.html)
-//! that contains information about the command line tool, format, structure etc.
-//! It is also rendered with mdBook to showcase the features and default theme.
+//! This is the API doc, the [user guide] is also available if you want
+//! information about the command line tool, format, structure etc. It is also
+//! rendered with mdBook to showcase the features and default theme.
 //!
 //! Some reasons why you would want to use the crate (over the cli):
 //!
@@ -52,8 +52,9 @@
 //!
 //! ## Implementing a new Renderer
 //!
-//! If you want to create a new renderer for mdBook, the only thing you have to do is to implement
-//! the [Renderer trait](renderer/renderer/trait.Renderer.html)
+//! If you want to create a new renderer for mdBook, the only thing you have to
+//! do is to implement the [Renderer](renderer/renderer/trait.Renderer.html)
+//! trait.
 //!
 //! And then you can swap in your renderer like this:
 //!
@@ -71,22 +72,26 @@
 //! book.set_renderer(your_renderer);
 //! # }
 //! ```
-//! If you make a renderer, you get the book constructed in form of `Vec<BookItems>` and you get
-//! the book config in a `BookConfig` struct.
 //!
-//! It's your responsability to create the necessary files in the correct directories.
+//! If you make a renderer, you get the book constructed in form of
+//! `Vec<BookItems>` and you get ! the book config in a `BookConfig` struct.
+//!
+//! It's your responsability to create the necessary files in the correct
+//! directories.
 //!
 //! ## utils
 //!
-//! I have regrouped some useful functions in the [utils](utils/index.html) module, like the
-//! following function [`utils::fs::create_file(path:
-//! &Path)`](utils/fs/fn.create_file.html)
+//! I have regrouped some useful functions in the [utils](utils/index.html)
+//! module, like the following function [`utils::fs::create_file(path:
+//! &Path)`](utils/fs/fn.create_file.html).
 //!
 //! This function creates a file and returns it. But before creating the file
 //! it checks every directory in the path to see if it exists, and if it does
 //! not it will be created.
 //!
 //! Make sure to take a look at it.
+//!
+//! [user guide]: https://rust-lang-nursery.github.io/mdBook/
 
 #[macro_use]
 extern crate error_chain;
