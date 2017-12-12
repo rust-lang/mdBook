@@ -279,6 +279,7 @@ fn determine_renderers(config: &Config) -> Vec<Box<Renderer>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use toml::value::{Table, Value};
 
     #[test]
     fn config_defaults_to_html_renderer_if_empty() {
@@ -291,5 +292,30 @@ mod tests {
 
         assert_eq!(got.len(), 1);
         assert_eq!(got[0].name(), "html");
+    }
+
+    #[test]
+    fn add_a_random_renderer_to_the_config() {
+        let mut cfg = Config::default();
+        cfg.set("output.random", Table::new()).unwrap();
+
+        let got = determine_renderers(&cfg);
+
+        assert_eq!(got.len(), 1);
+        assert_eq!(got[0].name(), "random");
+    }
+
+    #[test]
+    fn add_a_random_renderer_with_custom_command_to_the_config() {
+        let mut cfg = Config::default();
+
+        let mut table = Table::new();
+        table.insert("command".to_string(), Value::String("false".to_string()));
+        cfg.set("output.random", table).unwrap();
+
+        let got = determine_renderers(&cfg);
+
+        assert_eq!(got.len(), 1);
+        assert_eq!(got[0].name(), "random");
     }
 }

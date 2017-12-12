@@ -74,6 +74,16 @@ impl Config {
         }
     }
 
+    /// Set a config key, clobbering any existing values along the way.
+    pub fn set<S: Serialize, I: AsRef<str>>(&mut self, index: I, value: S) -> Result<()> {
+        let pieces: Vec<_> = index.as_ref().split(".").collect();
+        let value =
+            Value::try_from(value).chain_err(|| "Unable to represent the item as a JSON Value")?;
+        recursive_set(&pieces, &mut self.rest, value);
+
+        Ok(())
+    }
+
     fn from_legacy(mut table: Table) -> Config {
         let mut cfg = Config::default();
 
@@ -110,6 +120,26 @@ impl Config {
 
         cfg.rest = table;
         cfg
+    }
+}
+
+fn recursive_set(key: &[&str], table: &mut Table, value: Value) {
+    if key.is_empty() {
+        unreachable!();
+    } else if key.len() == 1 {
+        table.insert(key[0].to_string(), value);
+    } else {
+        let first = key[0];
+        let rest = &key[1..];
+
+        // if `table[first]` isn't a table, replace whatever is there with a
+        // new table.
+        if table.get(first).and_then(|t| t.as_table()).is_none() {
+            table.insert(first.to_string(), Value::Table(Table::new()));
+        }
+
+        let nested = table.get_mut(first).and_then(|t| t.as_table_mut()).unwrap();
+        recursive_set(rest, nested, value);
     }
 }
 
@@ -456,5 +486,18 @@ mod tests {
         assert_eq!(got.book, book_should_be);
         assert_eq!(got.build, build_should_be);
         assert_eq!(got.html_config().unwrap(), html_should_be);
+    }
+
+    #[test]
+    fn set_a_config_item() {
+        let mut cfg = Config::default();
+        let key = "foo.bar.baz";
+        let value = "Something Interesting";
+
+        assert!(cfg.get(key).is_none());
+        cfg.set(key, value).unwrap();
+
+        let got: String = cfg.get_deserialized(key).unwrap();
+        assert_eq!(got, value);
     }
 }
