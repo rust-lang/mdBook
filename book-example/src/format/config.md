@@ -69,8 +69,6 @@ renderer need to be specified under the TOML table `[output.html]`.
 
 The following configuration options are available:
 
-    pub playpen: Playpen,
-
 - **theme:** mdBook comes with a default theme and all the resource files
   needed for it. But if this option is set, mdBook will selectively overwrite
   the theme files with the ones found in the specified folder.
@@ -125,6 +123,15 @@ author can take advantage of serde to deserialize the generic `toml::Value`
 object retrieved from `Config` into a struct specific to its use case.
 
 ```rust
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate toml;
+extern crate mdbook;
+
+use toml::Value;
+use mdbook::config::Config;
+
 #[derive(Debug, Deserialize, PartialEq)]
 struct RandomOutput {
     foo: u32,
@@ -132,6 +139,7 @@ struct RandomOutput {
     baz: Vec<bool>,
 }
 
+# fn run() -> Result<(), Box<::std::error::Error>> {
 let src = r#"
 [output.random]
 foo = 5
@@ -140,16 +148,24 @@ baz = [true, true, false]
 "#;
 
 let book_config = Config::from_str(src)?; // usually passed in by mdbook
-let random: Value = book_config.get("output.random").unwrap_or_default();
-let got: RandomOutput = random.try_into()?;
+let random = book_config.get("output.random")
+  .cloned()
+  .ok_or("output.random not found")?;
+let got: RandomOutput = random.try_into()?; 
+
+let should_be = RandomOutput {
+  foo: 5,
+  bar: "Hello World".to_string(),
+  baz: vec![true, true, false]
+};
 
 assert_eq!(got, should_be);
 
-if let Some(baz) = book_config.get_deserialized::<Vec<bool>>("output.random.baz") {
-  println!("{:?}", baz); // prints [true, true, false]
+let baz: Vec<bool> = book_config.get_deserialized("output.random.baz")?;
+println!("{:?}", baz); // prints [true, true, false]
 
-  // do something interesting with baz
-}
-
-// start the rendering process
+// do something interesting with baz
+# Ok(())
+# }
+# fn main() { run().unwrap() }
 ```

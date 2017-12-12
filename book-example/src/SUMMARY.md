@@ -15,6 +15,6 @@
         - [Syntax highlighting](format/theme/syntax-highlighting.md)
     - [MathJax Support](format/mathjax.md)
     - [Rust code specific features](format/rust.md)
-- [Rust Library](lib/lib.md)
+- [For Developers](lib/index.md)
 -----------
 [Contributors](misc/contributors.md)
