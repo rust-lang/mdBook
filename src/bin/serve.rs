@@ -75,9 +75,9 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     let mut chain = Chain::new(staticfile::Static::new(book.get_destination()));
     chain.link_after(ErrorRecover);
-    let _iron = Iron::new(chain).http(&*address).unwrap();
+    let _iron = Iron::new(chain).http(&*address)?;
 
-    let ws_server = ws::WebSocket::new(|_| |_| Ok(())).unwrap();
+    let ws_server = ws::WebSocket::new(|_| |_| Ok(()))?;
 
     let broadcaster = ws_server.broadcaster();
 
