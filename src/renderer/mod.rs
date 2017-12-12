@@ -58,8 +58,9 @@ impl Renderer for CmdRenderer {
     fn render(&self, book: &MDBook) -> Result<()> {
         info!("Invoking the \"{}\" renderer", self.cmd);
         let ctx = RenderContext::new(&book.root, book.book.clone(), book.config.clone());
+        let cmd = format!("mdbook-{}", self.cmd);
 
-        let mut child = Command::new(&self.cmd)
+        let mut child = Command::new(cmd)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
