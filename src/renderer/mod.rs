@@ -24,6 +24,16 @@ pub struct RenderContext {
     pub config: Config,
 }
 
+impl RenderContext {
+    pub fn source_dir(&self) -> PathBuf {
+        self.root.join(&self.config.book.src)
+    }
+
+    pub fn build_dir(&self) -> PathBuf {
+        self.root.join(&self.config.build.build_dir)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct CmdRenderer {
     cmd: String,
@@ -57,7 +67,7 @@ impl Renderer for CmdRenderer {
 
         if !output.status.success() {
             error!("Renderer exited with non-zero return code.");
-            bail!("Alternate renderer failed");
+            bail!("The \"{}\" renderer failed", self.cmd);
         } else {
             Ok(())
         }
