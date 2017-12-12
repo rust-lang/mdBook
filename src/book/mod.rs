@@ -81,19 +81,7 @@ impl MDBook {
         let book = book::load_book(&src_dir, &config.build)?;
         let livereload = None;
 
-        let mut renderers: Vec<Box<Renderer>> = Vec::new();
-
-        for name in config.renderers() {
-            if name == "html" {
-                renderers.push(Box::new(HtmlHandlebars::new()));
-            } else {
-                renderers.push(Box::new(CmdRenderer::new(name)));
-            }
-        }
-
-        if renderers.is_empty() {
-            renderers.push(Box::new(HtmlHandlebars::new()));
-        }
+        let renderers = determine_renderers(&config);
 
         Ok(MDBook {
             root,
@@ -252,5 +240,56 @@ impl MDBook {
             Some(d) => self.root.join(d),
             None => self.root.join("theme"),
         }
+    }
+}
+
+/// Look at the `Config` and try to figure out what renderers to use.
+fn determine_renderers(config: &Config) -> Vec<Box<Renderer>> {
+    let mut renderers: Vec<Box<Renderer>> = Vec::new();
+
+    if let Some(output_table) = config.get("output").and_then(|o| o.as_table()) {
+        for (key, table) in output_table.iter() {
+            if key == "html" {
+                renderers.push(Box::new(HtmlHandlebars::new()));
+            } else {
+                // look for the `command` field, falling back to using the key
+                // prepended by "mdbook-"
+                let command = table
+                    .get("command")
+                    .and_then(|c| c.as_str())
+                    .map(|s| s.to_string())
+                    .unwrap_or_else(|| format!("mdbook-{}", key));
+
+                renderers.push(Box::new(CmdRenderer::new(
+                    key.to_string(),
+                    command.to_string(),
+                )));
+            }
+        }
+    }
+
+    // if we couldn't find anything, add the HTML renderer as a default
+    if renderers.is_empty() {
+        renderers.push(Box::new(HtmlHandlebars::new()));
+    }
+
+    renderers
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn config_defaults_to_html_renderer_if_empty() {
+        let cfg = Config::default();
+
+        // make sure we haven't got anything in the `output` table
+        assert!(cfg.get("output").is_none());
+
+        let got = determine_renderers(&cfg);
+
+        assert_eq!(got.len(), 1);
+        assert_eq!(got[0].name(), "html");
     }
 }

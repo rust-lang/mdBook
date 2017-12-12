@@ -12,6 +12,7 @@ use book::{Book, MDBook};
 
 
 pub trait Renderer {
+    fn name(&self) -> &str;
     fn render(&self, book: &MDBook) -> Result<()>;
 }
 
@@ -45,22 +46,26 @@ impl RenderContext {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CmdRenderer {
+    name: String,
     cmd: String,
 }
 
 impl CmdRenderer {
-    pub fn new<S: Into<String>>(cmd: S) -> CmdRenderer {
-        CmdRenderer { cmd: cmd.into() }
+    pub fn new(name: String, cmd: String) -> CmdRenderer {
+        CmdRenderer { name, cmd }
     }
 }
 
 impl Renderer for CmdRenderer {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
     fn render(&self, book: &MDBook) -> Result<()> {
         info!("Invoking the \"{}\" renderer", self.cmd);
         let ctx = RenderContext::new(&book.root, book.book.clone(), book.config.clone());
-        let cmd = format!("mdbook-{}", self.cmd);
 
-        let mut child = Command::new(cmd)
+        let mut child = Command::new(&self.cmd)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())

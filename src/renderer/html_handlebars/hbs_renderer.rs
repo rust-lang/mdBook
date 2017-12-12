@@ -245,6 +245,10 @@ impl HtmlHandlebars {
 
 
 impl Renderer for HtmlHandlebars {
+    fn name(&self) -> &str {
+        "html"
+    }
+
     fn render(&self, book: &MDBook) -> Result<()> {
         let html_config = book.config.html_config().unwrap_or_default();
         let src_dir = book.root.join(&book.config.book.src);

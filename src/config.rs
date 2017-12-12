@@ -111,14 +111,6 @@ impl Config {
         cfg.rest = table;
         cfg
     }
-
-    /// Get a list of the available renderers.
-    pub fn renderers(&self) -> Vec<String> {
-        self.get("output")
-            .and_then(|o| o.as_table())
-            .map(|t| t.keys().cloned().collect())
-            .unwrap_or_default()
-    }
 }
 
 fn recursive_get<'a>(key: &[&str], table: &'a Table) -> Option<&'a Value> {
