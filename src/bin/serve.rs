@@ -49,7 +49,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     const RELOAD_COMMAND: &'static str = "reload";
 
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::new(&book_dir).read_config()?;
+    let mut book = MDBook::load(&book_dir)?;
 
     if let Some(dest_dir) = args.value_of("dest-dir") {
         book.config.build.build_dir = PathBuf::from(dest_dir);
@@ -64,7 +64,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let address = format!("{}:{}", interface, port);
     let ws_address = format!("{}:{}", interface, ws_port);
 
-    book.livereload = Some(format!(r#"
+    book.livereload = Some(format!(
+        r#"
     <script type="text/javascript">
         var socket = new WebSocket("ws://{}:{}");
         socket.onmessage = function (event) {{
@@ -94,7 +95,9 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     let broadcaster = ws_server.broadcaster();
 
-    std::thread::spawn(move || { ws_server.listen(&*ws_address).unwrap(); });
+    std::thread::spawn(move || {
+        ws_server.listen(&*ws_address).unwrap();
+    });
 
     let serving_url = format!("http://{}", address);
     println!("\nServing on: {}", serving_url);

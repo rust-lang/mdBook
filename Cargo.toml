@@ -26,6 +26,7 @@ lazy_static = "0.2"
 log = "0.3"
 env_logger = "0.4.0"
 toml = "0.4"
+memchr = "2.0.1"
 open = "1.1"
 regex = "0.2.1"
 tempdir = "0.3.4"
@@ -60,3 +61,6 @@ serve = ["iron", "staticfile", "ws"]
 doc = false
 name = "mdbook"
 path = "src/bin/mdbook.rs"
+
+[patch.crates-io]
+pulldown-cmark = { git = "https://github.com/google/pulldown-cmark" }

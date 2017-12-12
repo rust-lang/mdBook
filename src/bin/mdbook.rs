@@ -1,17 +1,18 @@
 #[macro_use]
 extern crate clap;
 extern crate env_logger;
+extern crate error_chain;
 extern crate log;
 extern crate mdbook;
 extern crate open;
 
 use std::env;
 use std::ffi::OsStr;
-use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use clap::{App, AppSettings, ArgMatches};
 use log::{LogLevelFilter, LogRecord};
 use env_logger::LogBuilder;
+use error_chain::ChainedError;
 
 pub mod build;
 pub mod init;
@@ -59,7 +60,8 @@ fn main() {
     };
 
     if let Err(e) = res {
-        writeln!(&mut io::stderr(), "An error occured:\n{}", e).ok();
+        eprintln!("{}", e.display_chain());
+
         ::std::process::exit(101);
     }
 }

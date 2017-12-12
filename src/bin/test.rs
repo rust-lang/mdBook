@@ -18,7 +18,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
                                        .map(|v| v.collect())
                                        .unwrap_or_default();
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::new(&book_dir).read_config()?;
+    let mut book = MDBook::load(&book_dir)?;
 
     book.test(library_paths)?;
 

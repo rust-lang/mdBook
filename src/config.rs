@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::Read;
 use toml::{self, Value};
 use toml::value::Table;
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use errors::*;
 
@@ -184,6 +184,24 @@ impl<'de> Deserialize<'de> for Config {
             build: build,
             rest: table,
         })
+    }
+}
+
+impl Serialize for Config {
+    fn serialize<S: Serializer>(&self, s: S) -> ::std::result::Result<S::Ok, S::Error> {
+        let mut table = self.rest.clone();
+
+        let book_config = match Value::try_from(self.book.clone()) {
+            Ok(cfg) => cfg,
+            Err(_) => {
+                use serde::ser::Error;
+                return Err(S::Error::custom("Unable to serialize the BookConfig"));
+            }
+        };
+
+        table.insert("book".to_string(), book_config);
+        
+        Value::Table(table).serialize(s)
     }
 }
 

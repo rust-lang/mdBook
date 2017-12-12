@@ -1,11 +1,11 @@
 //! # mdBook
 //!
-//! **mdBook** is similar to Gitbook but implemented in Rust.
+//! **mdBook** is similar to GitBook but implemented in Rust.
 //! It offers a command line interface, but can also be used as a regular crate.
 //!
-//! This is the API doc, but you can find a [less "low-level" documentation here](../index.html)
-//! that contains information about the command line tool, format, structure etc.
-//! It is also rendered with mdBook to showcase the features and default theme.
+//! This is the API doc, the [user guide] is also available if you want
+//! information about the command line tool, format, structure etc. It is also
+//! rendered with mdBook to showcase the features and default theme.
 //!
 //! Some reasons why you would want to use the crate (over the cli):
 //!
@@ -15,30 +15,46 @@
 //! - Write a new Renderer
 //! - ...
 //!
-//! ## Example
+//! # Examples
 //!
-//! ```no_run
-//! extern crate mdbook;
+//! If creating a new book from scratch, you'll want to get a `BookBuilder` via
+//! the `MDBook::init()` method.
 //!
+//! ```rust,no_run
 //! use mdbook::MDBook;
-//! use std::path::PathBuf;
+//! use mdbook::config::Config;
 //!
-//! fn main() {
-//!     let mut md = MDBook::new("my-book");
-//!     
-//!     // tweak the book configuration a bit
-//!     md.config.book.src = PathBuf::from("source");
-//!     md.config.build.build_dir = PathBuf::from("book");
-//! 
-//!     // Render the book
-//!     md.build().unwrap();                        
-//! }
+//! let root_dir = "/path/to/book/root";
+//!
+//! // create a default config and change a couple things
+//! let mut cfg = Config::default();
+//! cfg.book.title = Some("My Book".to_string());
+//! cfg.book.authors.push("Michael-F-Bryan".to_string());
+//!
+//! MDBook::init(root_dir)
+//!     .create_gitignore(true)
+//!     .with_config(cfg)
+//!     .build()
+//!     .expect("Book generation failed");
+//! ```
+//!
+//! You can also load an existing book and build it.
+//!
+//! ```rust,no_run
+//! use mdbook::MDBook;
+//!
+//! let root_dir = "/path/to/book/root";
+//!
+//! let mut md = MDBook::load(root_dir)
+//!     .expect("Unable to load the book");
+//! md.build().expect("Building failed");
 //! ```
 //!
 //! ## Implementing a new Renderer
 //!
-//! If you want to create a new renderer for mdBook, the only thing you have to do is to implement
-//! the [Renderer trait](renderer/renderer/trait.Renderer.html)
+//! If you want to create a new renderer for mdBook, the only thing you have to
+//! do is to implement the [Renderer](renderer/renderer/trait.Renderer.html)
+//! trait.
 //!
 //! And then you can swap in your renderer like this:
 //!
@@ -52,25 +68,30 @@
 //! # fn main() {
 //! #   let your_renderer = HtmlHandlebars::new();
 //! #
-//! let book = MDBook::new("my-book").set_renderer(Box::new(your_renderer));
+//! let mut book = MDBook::load("my-book").unwrap();
+//! book.set_renderer(your_renderer);
 //! # }
 //! ```
-//! If you make a renderer, you get the book constructed in form of `Vec<BookItems>` and you get
-//! the book config in a `BookConfig` struct.
 //!
-//! It's your responsability to create the necessary files in the correct directories.
+//! If you make a renderer, you get the book constructed in form of
+//! `Vec<BookItems>` and you get ! the book config in a `BookConfig` struct.
+//!
+//! It's your responsability to create the necessary files in the correct
+//! directories.
 //!
 //! ## utils
 //!
-//! I have regrouped some useful functions in the [utils](utils/index.html) module, like the
-//! following function [`utils::fs::create_file(path:
-//! &Path)`](utils/fs/fn.create_file.html)
+//! I have regrouped some useful functions in the [utils](utils/index.html)
+//! module, like the following function [`utils::fs::create_file(path:
+//! &Path)`](utils/fs/fn.create_file.html).
 //!
 //! This function creates a file and returns it. But before creating the file
 //! it checks every directory in the path to see if it exists, and if it does
 //! not it will be created.
 //!
 //! Make sure to take a look at it.
+//!
+//! [user guide]: https://rust-lang-nursery.github.io/mdBook/
 
 #[macro_use]
 extern crate error_chain;
@@ -79,6 +100,7 @@ extern crate handlebars;
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
+extern crate memchr;
 extern crate pulldown_cmark;
 extern crate regex;
 extern crate serde;
@@ -89,7 +111,10 @@ extern crate serde_json;
 extern crate tempdir;
 extern crate toml;
 
-mod parse;
+#[cfg(test)]
+#[macro_use]
+extern crate pretty_assertions;
+
 mod preprocess;
 pub mod book;
 pub mod config;
@@ -115,6 +140,11 @@ pub mod errors {
             Subprocess(message: String, output: ::std::process::Output) {
                 description("A subprocess failed")
                 display("{}: {}", message, String::from_utf8_lossy(&output.stdout))
+            }
+
+            ParseError(line: usize, col: usize, message: String) {
+                description("A SUMMARY.md parsing error")
+                display("Error at line {}, column {}: {}", line, col, message)
             }
         }
     }

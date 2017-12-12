@@ -2,14 +2,14 @@ use renderer::html_handlebars::helpers;
 use preprocess;
 use renderer::Renderer;
 use book::MDBook;
-use book::bookitem::{BookItem, Chapter};
+use book::{BookItem, Chapter};
 use config::{Config, Playpen, HtmlConfig};
 use {utils, theme};
 use theme::{Theme, playpen_editor};
 use errors::*;
 use regex::{Captures, Regex};
 
-use std::ascii::AsciiExt;
+#[allow(unused_imports)] use std::ascii::AsciiExt;
 use std::path::{Path, PathBuf};
 use std::fs::{self, File};
 use std::io::{self, Read};
@@ -35,13 +35,12 @@ impl HtmlHandlebars {
                    -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
         match *item {
-            BookItem::Chapter(_, ref ch) | BookItem::Affix(ref ch)
-                if !ch.path.as_os_str().is_empty() =>
+            BookItem::Chapter(ref ch)  => 
             {
-                let path = ctx.book.get_source().join(&ch.path);
-                let content = utils::fs::file_to_string(&path)?;
-                let base = path.parent()
-                               .ok_or_else(|| String::from("Invalid bookitem path!"))?;
+                let content = ch.content.clone();
+                let base = ch.path.parent()
+                    .map(|dir| ctx.src_dir.join(dir))
+                    .expect("All chapters must have a parent directory");
 
                 // Parse and expand links
                 let content = preprocess::links::replace_all(&content, base)?;
@@ -242,13 +241,14 @@ impl HtmlHandlebars {
 impl Renderer for HtmlHandlebars {
     fn render(&self, book: &MDBook) -> Result<()> {
         let html_config = book.config.html_config().unwrap_or_default();
+        let src_dir = book.root.join(&book.config.book.src);
 
         debug!("[fn]: render");
         let mut handlebars = Handlebars::new();
 
         let theme_dir = match html_config.theme {
-            Some(ref theme) => theme,
-            None => Path::new("theme"),
+            Some(ref theme) => theme.to_path_buf(),
+            None => src_dir.join("theme"),
         };
 
         let theme = theme::Theme::new(theme_dir);
@@ -285,6 +285,7 @@ impl Renderer for HtmlHandlebars {
                 book: book,
                 handlebars: &handlebars,
                 destination: destination.to_path_buf(),
+                src_dir: src_dir.clone(),
                 data: data.clone(),
                 is_index: i == 0,
                 html_config: html_config.clone(),
@@ -317,7 +318,7 @@ impl Renderer for HtmlHandlebars {
         self.copy_additional_css_and_js(book)?;
 
         // Copy all remaining files
-        let src = book.get_source();
+        let src = book.source_dir();
         utils::fs::copy_files_except_ext(&src, &destination, true, &["md"])?;
 
         Ok(())
@@ -397,7 +398,11 @@ fn make_data(book: &MDBook, config: &Config) -> Result<serde_json::Map<String, s
         let mut chapter = BTreeMap::new();
 
         match *item {
-            BookItem::Affix(ref ch) => {
+            BookItem::Chapter(ref ch) => {
+                if let Some(ref section) = ch.number {
+                    chapter.insert("section".to_owned(), json!(section.to_string()));
+                }
+
                 chapter.insert("name".to_owned(), json!(ch.name));
                 let path = ch.path.to_str().ok_or_else(|| {
                                                            io::Error::new(io::ErrorKind::Other,
@@ -406,17 +411,7 @@ fn make_data(book: &MDBook, config: &Config) -> Result<serde_json::Map<String, s
                                                        })?;
                 chapter.insert("path".to_owned(), json!(path));
             }
-            BookItem::Chapter(ref s, ref ch) => {
-                chapter.insert("section".to_owned(), json!(s));
-                chapter.insert("name".to_owned(), json!(ch.name));
-                let path = ch.path.to_str().ok_or_else(|| {
-                                                           io::Error::new(io::ErrorKind::Other,
-                                                                          "Could not convert path \
-                                                                           to str")
-                                                       })?;
-                chapter.insert("path".to_owned(), json!(path));
-            }
-            BookItem::Spacer => {
+            BookItem::Separator => {
                 chapter.insert("spacer".to_owned(), json!("_spacer_"));
             }
         }
@@ -604,6 +599,7 @@ struct RenderItemContext<'a> {
     handlebars: &'a Handlebars,
     book: &'a MDBook,
     destination: PathBuf,
+    src_dir: PathBuf,
     data: serde_json::Map<String, serde_json::Value>,
     is_index: bool,
     html_config: HtmlConfig,
