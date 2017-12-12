@@ -7,7 +7,7 @@ use self::iron::{status, AfterMiddleware, Chain, Iron, IronError, IronResult, Re
                  Set};
 use clap::{App, ArgMatches, SubCommand};
 use mdbook::MDBook;
-use mdbook::errors::Result;
+use mdbook::errors::*;
 use {get_book_dir, open};
 #[cfg(feature = "watch")]
 use watch;
@@ -75,9 +75,12 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     let mut chain = Chain::new(staticfile::Static::new(book.get_destination()));
     chain.link_after(ErrorRecover);
-    let _iron = Iron::new(chain).http(&*address)?;
+    let _iron = Iron::new(chain)
+        .http(&*address)
+        .chain_err(|| "Unable to launch the server")?;
 
-    let ws_server = ws::WebSocket::new(|_| |_| Ok(()))?;
+    let ws_server =
+        ws::WebSocket::new(|_| |_| Ok(())).chain_err(|| "Unable to start the websocket")?;
 
     let broadcaster = ws_server.broadcaster();
 
