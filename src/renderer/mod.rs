@@ -25,17 +25,17 @@ pub struct RenderContext {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct AlternateRenderer {
+pub struct CmdRenderer {
     cmd: String,
 }
 
-impl AlternateRenderer {
-    pub fn new<S: Into<String>>(cmd: S) -> AlternateRenderer {
-        AlternateRenderer { cmd: cmd.into() }
+impl CmdRenderer {
+    pub fn new<S: Into<String>>(cmd: S) -> CmdRenderer {
+        CmdRenderer { cmd: cmd.into() }
     }
 }
 
-impl Renderer for AlternateRenderer {
+impl Renderer for CmdRenderer {
     fn render(&self, book: &MDBook) -> Result<()> {
         info!("Invoking the \"{}\" renderer", self.cmd);
         let ctx = RenderContext::new(&book.root, book.book.clone(), book.config.clone());

@@ -69,7 +69,7 @@
 //! #   let your_renderer = HtmlHandlebars::new();
 //! #
 //! let mut book = MDBook::load("my-book").unwrap();
-//! book.set_renderer(your_renderer);
+//! book.with_renderer(your_renderer);
 //! # }
 //! ```
 //!

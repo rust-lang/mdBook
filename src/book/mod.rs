@@ -35,7 +35,7 @@ pub struct MDBook {
     pub config: Config,
     /// A representation of the book's contents in memory.
     pub book: Book,
-    renderer: Box<Renderer>,
+    renderers: Vec<Box<Renderer>>,
 
     /// The URL used for live reloading when serving up the book.
     pub livereload: Option<String>,
@@ -84,7 +84,7 @@ impl MDBook {
             root: book_root,
             config: config,
             book: book,
-            renderer: Box::new(HtmlHandlebars::new()),
+            renderers: vec![Box::new(HtmlHandlebars::new())],
             livereload: None,
         })
     }
@@ -150,7 +150,11 @@ impl MDBook {
             utils::fs::remove_dir_content(&dest).chain_err(|| "Unable to clear output directory")?;
         }
 
-        self.renderer.render(self)
+        for renderer in &self.renderers {
+            renderer.render(self).chain_err(|| "Rendering failed")?;
+        }
+
+        Ok(())
     }
 
     // FIXME: This doesn't belong as part of `MDBook`. It is only used by the HTML renderer
@@ -166,8 +170,8 @@ impl MDBook {
     /// You can change the default renderer to another one by using this method.
     /// The only requirement is for your renderer to implement the [Renderer
     /// trait](../../renderer/renderer/trait.Renderer.html)
-    pub fn set_renderer<R: Renderer + 'static>(mut self, renderer: R) -> Self {
-        self.renderer = Box::new(renderer);
+    pub fn with_renderer<R: Renderer + 'static>(&mut self, renderer: R) -> &mut Self {
+        self.renderers.push(Box::new(renderer));
         self
     }
 
