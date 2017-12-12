@@ -304,8 +304,7 @@ fn example_book_can_build() {
 
     let mut md = MDBook::load(example_book_dir.path()).unwrap();
 
-    let got = md.build();
-    assert!(got.is_ok());
+    md.build().unwrap();
 }
 
 #[test]
