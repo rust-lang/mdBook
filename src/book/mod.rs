@@ -21,7 +21,7 @@ use std::process::Command;
 use tempdir::TempDir;
 
 use utils;
-use renderer::{HtmlHandlebars, Renderer};
+use renderer::{CmdRenderer, HtmlHandlebars, Renderer};
 use preprocess;
 use errors::*;
 
@@ -75,17 +75,32 @@ impl MDBook {
 
     /// Load a book from its root directory using a custom config.
     pub fn load_with_config<P: Into<PathBuf>>(book_root: P, config: Config) -> Result<MDBook> {
-        let book_root = book_root.into();
+        let root = book_root.into();
 
-        let src_dir = book_root.join(&config.book.src);
+        let src_dir = root.join(&config.book.src);
         let book = book::load_book(&src_dir, &config.build)?;
+        let livereload = None;
+
+        let mut renderers: Vec<Box<Renderer>> = Vec::new();
+
+        for name in config.renderers() {
+            if name == "html" {
+                renderers.push(Box::new(HtmlHandlebars::new()));
+            } else {
+                renderers.push(Box::new(CmdRenderer::new(name)));
+            }
+        }
+
+        if renderers.is_empty() {
+            renderers.push(Box::new(HtmlHandlebars::new()));
+        }
 
         Ok(MDBook {
-            root: book_root,
-            config: config,
-            book: book,
-            renderers: vec![Box::new(HtmlHandlebars::new())],
-            livereload: None,
+            root,
+            config,
+            book,
+            renderers,
+            livereload,
         })
     }
 
