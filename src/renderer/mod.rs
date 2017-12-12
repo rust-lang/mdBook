@@ -18,13 +18,22 @@ pub trait Renderer {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RenderContext {
-    pub version: &'static str,
+    pub version: String,
     pub root: PathBuf,
     pub book: Book,
     pub config: Config,
 }
 
 impl RenderContext {
+    pub fn new<P: Into<PathBuf>>(root: P, book: Book, config: Config) -> RenderContext {
+        RenderContext {
+            book: book,
+            config: config,
+            version: env!("CARGO_PKG_VERSION").to_string(),
+            root: root.into(),
+        }
+    }
+
     pub fn source_dir(&self) -> PathBuf {
         self.root.join(&self.config.book.src)
     }
@@ -70,17 +79,6 @@ impl Renderer for CmdRenderer {
             bail!("The \"{}\" renderer failed", self.cmd);
         } else {
             Ok(())
-        }
-    }
-}
-
-impl RenderContext {
-    pub fn new<P: Into<PathBuf>>(root: P, book: Book, config: Config) -> RenderContext {
-        RenderContext {
-            book: book,
-            config: config,
-            version: env!("CARGO_PKG_VERSION"),
-            root: root.into(),
         }
     }
 }
