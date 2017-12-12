@@ -15,12 +15,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
         .about("Watch the files for changes")
         .arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
         .arg_from_usage(
-            "-d, --dest-dir=[dest-dir] 'The output directory for \
-             your book{n}(Defaults to ./book when omitted)'",
-        )
-        .arg_from_usage(
-            "[dir] 'A directory for your book{n}(Defaults to \
-             Current Directory when omitted)'",
+            "[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'",
         )
 }
 
@@ -38,9 +33,11 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         open(book.get_destination().join("index.html"));
     }
 
-    trigger_on_change(&mut book, |path, book| {
+    trigger_on_change(&book, |path, book_dir| {
         println!("File changed: {:?}\nBuilding book...\n", path);
-        if let Err(e) = book.build() {
+        let result = MDBook::load(&book_dir).and_then(|mut b| b.build());
+
+        if let Err(e) = result {
             println!("Error while building: {:?}", e);
         }
         println!("");
@@ -50,9 +47,9 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 }
 
 // Calls the closure when a book source file is changed. This is blocking!
-pub fn trigger_on_change<F>(book: &mut MDBook, closure: F) -> ()
+pub fn trigger_on_change<F>(book: &MDBook, closure: F) -> ()
 where
-    F: Fn(&Path, &mut MDBook) -> (),
+    F: Fn(&Path, &Path) -> (),
 {
     use self::notify::RecursiveMode::*;
     use self::notify::DebouncedEvent::*;
@@ -75,34 +72,24 @@ where
     };
 
     // Add the theme directory to the watcher
-    watcher.watch(book.theme_dir(), Recursive)
-           .unwrap_or_default();
+    watcher
+        .watch(book.theme_dir(), Recursive)
+        .unwrap_or_default();
 
-    // Add the book.{json,toml} file to the watcher if it exists, because it's not
+    // Add the book.toml file to the watcher if it exists, because it's not
     // located in the source directory
-    if watcher.watch(book.root.join("book.json"), NonRecursive)
-              .is_err()
-    {
-        // do nothing if book.json is not found
-    }
-    if watcher.watch(book.root.join("book.toml"), NonRecursive)
-              .is_err()
-    {
-        // do nothing if book.toml is not found
-    }
+    let _ = watcher.watch(book.root.join("book.toml"), NonRecursive);
 
     println!("\nListening for changes...\n");
 
     loop {
         match rx.recv() {
-            Ok(event) => {
-                match event {
-                    Create(path) | Write(path) | Remove(path) | Rename(_, path) => {
-                        closure(&path, book);
-                    }
-                    _ => {}
+            Ok(event) => match event {
+                Create(path) | Write(path) | Remove(path) | Rename(_, path) => {
+                    closure(&path, &book.root);
                 }
-            }
+                _ => {}
+            },
             Err(e) => {
                 println!("An error occured: {:?}", e);
             }
