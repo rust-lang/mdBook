@@ -3,12 +3,11 @@ extern crate staticfile;
 extern crate ws;
 
 use std;
-use std::path::PathBuf;
 use self::iron::{status, AfterMiddleware, Chain, Iron, IronError, IronResult, Request, Response,
                  Set};
 use clap::{App, ArgMatches, SubCommand};
 use mdbook::MDBook;
-use mdbook::errors::Result;
+use mdbook::errors::*;
 use {get_book_dir, open};
 #[cfg(feature = "watch")]
 use watch;
@@ -18,28 +17,21 @@ struct ErrorRecover;
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name("serve")
-        .about(
-            "Serve the book at http://localhost:3000. Rebuild and reload on change.",
-        )
+        .about("Serve the book at http://localhost:3000. Rebuild and reload on change.")
         .arg_from_usage(
-            "[dir] 'A directory for your book{n}(Defaults to \
-             Current Directory when omitted)'",
-        )
-        .arg_from_usage(
-            "-d, --dest-dir=[dest-dir] 'The output directory for \
-             your book{n}(Defaults to ./book when omitted)'",
+            "[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'",
         )
         .arg_from_usage("-p, --port=[port] 'Use another port{n}(Defaults to 3000)'")
         .arg_from_usage(
-            "-w, --websocket-port=[ws-port] 'Use another port for the \
-             websocket connection (livereload){n}(Defaults to 3001)'",
+            "-w, --websocket-port=[ws-port] 'Use another port for the websocket connection \
+             (livereload){n}(Defaults to 3001)'",
         )
         .arg_from_usage(
             "-i, --interface=[interface] 'Interface to listen on{n}(Defaults to localhost)'",
         )
         .arg_from_usage(
-            "-a, --address=[address] 'Address that the browser can reach the \
-             websocket server from{n}(Defaults to the interface address)'",
+            "-a, --address=[address] 'Address that the browser can reach the websocket server \
+             from{n}(Defaults to the interface address)'",
         )
         .arg_from_usage("-o, --open 'Open the book server in a web browser'")
 }
@@ -50,10 +42,6 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     let book_dir = get_book_dir(args);
     let mut book = MDBook::load(&book_dir)?;
-
-    if let Some(dest_dir) = args.value_of("dest-dir") {
-        book.config.build.build_dir = PathBuf::from(dest_dir);
-    }
 
     let port = args.value_of("port").unwrap_or("3000");
     let ws_port = args.value_of("websocket-port").unwrap_or("3001");
@@ -80,18 +68,19 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         }}
     </script>
 "#,
-        public_address,
-        ws_port,
-        RELOAD_COMMAND
+        public_address, ws_port, RELOAD_COMMAND
     ));
 
     book.build()?;
 
     let mut chain = Chain::new(staticfile::Static::new(book.get_destination()));
     chain.link_after(ErrorRecover);
-    let _iron = Iron::new(chain).http(&*address).unwrap();
+    let _iron = Iron::new(chain)
+        .http(&*address)
+        .chain_err(|| "Unable to launch the server")?;
 
-    let ws_server = ws::WebSocket::new(|_| |_| Ok(())).unwrap();
+    let ws_server =
+        ws::WebSocket::new(|_| |_| Ok(())).chain_err(|| "Unable to start the websocket")?;
 
     let broadcaster = ws_server.broadcaster();
 
@@ -107,9 +96,9 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     }
 
     #[cfg(feature = "watch")]
-    watch::trigger_on_change(&mut book, move |path, book| {
+    watch::trigger_on_change(&mut book, move |path, book_dir| {
         println!("File changed: {:?}\nBuilding book...\n", path);
-        match book.build() {
+        match MDBook::load(&book_dir).and_then(|mut b| b.build()) {
             Err(e) => println!("Error while building: {:?}", e),
             _ => broadcaster.send(RELOAD_COMMAND).unwrap(),
         }
