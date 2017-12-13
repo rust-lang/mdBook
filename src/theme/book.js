@@ -201,6 +201,21 @@ $( document ).ready(function() {
             }
         });
     });
+    
+    $("pre code").each(function(i, block){
+        var pre_block = $(this).parent();
+        if( !pre_block.hasClass('playpen') ) {
+            var buttons = pre_block.find(".buttons");
+            if(buttons.length == 0) {
+                pre_block.prepend("<div class=\"buttons\"></div>");
+                buttons = pre_block.find(".buttons");
+            }
+            buttons.prepend("<i class=\"fa fa-copy clip-button\"><i class=\"tooltiptext\"></i></i>");
+            buttons.find(".clip-button").mouseout(function(e){
+                hideTooltip(e.currentTarget);
+            });
+        }
+    });
 
     // Process playpen code blocks
     $(".playpen").each(function(block){
@@ -236,7 +251,7 @@ $( document ).ready(function() {
     var clipboardSnippets = new Clipboard('.clip-button', {
         text: function(trigger) {
             hideTooltip(trigger);
-            let playpen = $(trigger).parents(".playpen");
+            let playpen = $(trigger).parents("pre");
             return playpen_text(playpen);
         }
     });
