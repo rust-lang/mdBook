@@ -230,7 +230,8 @@ impl HtmlHandlebars {
                                .chain(html.additional_js.iter());
 
         for custom_file in custom_files {
-            self.write_custom_file(custom_file, book)?;
+            self.write_custom_file(&custom_file, book)
+                .chain_err(|| format!("Copying {} failed", custom_file.display()))?;
         }
 
         Ok(())
@@ -312,10 +313,11 @@ impl Renderer for HtmlHandlebars {
                         &rendered.into_bytes())?;
         info!("[*] Creating print.html ✓");
 
-        // Copy static files (js, css, images, ...)
         debug!("[*] Copy static files");
-        self.copy_static_files(book, &theme, &html_config)?;
-        self.copy_additional_css_and_js(book)?;
+        self.copy_static_files(book, &theme, &html_config)
+            .chain_err(|| "Unable to copy across static files")?;
+        self.copy_additional_css_and_js(book)
+            .chain_err(|| "Unable to copy across additional CSS and JS")?;
 
         // Copy all remaining files
         let src = book.source_dir();
