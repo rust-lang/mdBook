@@ -6,6 +6,7 @@ body {
 body {
   margin: 0;
   font-size: 1rem;
+  overflow-x: hidden;
 }
 code {
   font-family: "Source Code Pro", Consolas, "Ubuntu Mono", Menlo, "DejaVu Sans Mono", monospace, monospace;
@@ -109,28 +110,25 @@ table thead td {
   white-space: nowrap;
 }
 .page-wrapper {
-  padding-left: 300px;
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
   min-height: 100%;
-  -webkit-transition: padding-left 0.5s, margin-right 0.5s;
-  -moz-transition: padding-left 0.5s, margin-right 0.5s;
-  -o-transition: padding-left 0.5s, margin-right 0.5s;
-  -ms-transition: padding-left 0.5s, margin-right 0.5s;
-  transition: padding-left 0.5s, margin-right 0.5s;
-}
-@media only screen and (max-width: 1060px) {
-  .page-wrapper {
-    padding-left: 0;
-  }
-}
-.sidebar-hidden .page-wrapper {
-  padding-left: 0;
+  width: 100%;
+  -webkit-transition: padding-left 0.5s, margin-left 0.5s;
+  -moz-transition: padding-left 0.5s, margin-left 0.5s;
+  -o-transition: padding-left 0.5s, margin-left 0.5s;
+  -ms-transition: padding-left 0.5s, margin-left 0.5s;
+  transition: padding-left 0.5s, margin-left 0.5s;
 }
 .sidebar-visible .page-wrapper {
   padding-left: 300px;
-  margin-right: -300px;
+}
+@media only screen and (max-width: 1079px) {
+  .sidebar-visible .page-wrapper {
+    padding-left: 0;
+    margin-left: 300px;
+  }
 }
 .page {
   outline: 0;
