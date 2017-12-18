@@ -228,32 +228,41 @@ table thead td {
   -ms-transition: color 0.5s;
   transition: color 0.5s;
 }
-.mobile-nav-chapters {
-  display: none;
-}
 .nav-chapters:hover {
   text-decoration: none;
 }
+.nav-wrapper {
+  margin-top: 50px;
+  display: none;
+}
+.mobile-nav-chapters {
+  font-size: 2.5em;
+  text-align: center;
+  text-decoration: none;
+  width: 90px;
+  border-radius: 5px;
+}
 .previous {
-  left: 15px;
-  -webkit-transition: left 0.5s;
-  -moz-transition: left 0.5s;
-  -o-transition: left 0.5s;
-  -ms-transition: left 0.5s;
-  transition: left 0.5s;
+  float: left;
 }
 .next {
+  float: right;
   right: 15px;
 }
-@media only screen and (min-width: 1251px) {
-  .sidebar-visible .previous {
-    left: 315px;
+@media only screen and (max-width: 1080px) {
+  .nav-chapters {
+    display: none;
+  }
+  .nav-wrapper {
+    display: block;
   }
 }
-@media only screen and (max-width: 1060px) {
-  .nav-wrapper {
-    max-width: 750px;
-    margin: 0 auto;
+@media only screen and (max-width: 1380px) {
+  .sidebar-visible .nav-chapters {
+    display: none;
+  }
+  .sidebar-visible .nav-wrapper {
+    display: block;
   }
 }
 .theme-popup {
@@ -274,37 +283,6 @@ table thead td {
 .theme-popup .theme:hover:last-child {
   border-top-left-radius: inherit;
   border-top-right-radius: inherit;
-}
-@media only screen and (max-width: 1060px) {
-  .nav-chapters {
-    display: none;
-  }
-  .mobile-nav-chapters {
-    font-size: 2.5em;
-    text-align: center;
-    text-decoration: none;
-    max-width: 150px;
-    min-width: 90px;
-    -webkit-box-pack: center;
-    -moz-box-pack: center;
-    -o-box-pack: center;
-    -ms-flex-pack: center;
-    -webkit-justify-content: center;
-    justify-content: center;
-    -ms-flex-line-pack: center;
-    -webkit-align-content: center;
-    align-content: center;
-    position: relative;
-    display: inline-block;
-    margin-bottom: 50px;
-    border-radius: 5px;
-  }
-  .next {
-    float: right;
-  }
-  .previous {
-    float: left;
-  }
 }
 .light {
   color: #333;

@@ -93,30 +93,24 @@
 
                 <div id="content" class="content">
                     {{{ content }}}
+
+                    <div class="nav-wrapper">
+                        <!-- Mobile navigation buttons -->
+                        {{#previous}}
+                            <a rel="prev" href="{{link}}" class="mobile-nav-chapters previous" title="Previous chapter">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        {{/previous}}
+
+                        {{#next}}
+                            <a rel="next" href="{{link}}" class="mobile-nav-chapters next" title="Next chapter">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        {{/next}}
+
+                        <div style="clear: both"></div>
+                    </div>
                 </div>
-
-                <!--
-                Constrain the space between buttons on small screen so the total
-                width of the buttons group will not exceed the main content
-                above.
-                -->
-                <div class="nav-wrapper">
-                    <!-- Mobile navigation buttons -->
-                    {{#previous}}
-                        <a rel="prev" href="{{link}}" class="mobile-nav-chapters previous" title="Previous chapter">
-                            <i class="fa fa-angle-left"></i>
-                        </a>
-                    {{/previous}}
-
-                    {{#next}}
-                        <a rel="next" href="{{link}}" class="mobile-nav-chapters next" title="Next chapter">
-                            <i class="fa fa-angle-right"></i>
-                        </a>
-                    {{/next}}
-
-                    <div style="clear: both"></div>
-                </div>
-
             </div>
 
             {{#previous}}
