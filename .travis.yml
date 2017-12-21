@@ -63,11 +63,7 @@ script:
 - bash ci/script.sh
 
 after_success:
-- test "$TRAVIS_PULL_REQUEST" == "false" && 
-  test "$TRAVIS_BRANCH" == "master" && 
-  test "$TRAVIS_RUST_VERSION" == "stable" && 
-  npm install stylus nib && 
-  bash ci/github_pages.sh
+- bash ci/github_pages.sh
 
 before_deploy:
 - sh ci/before_deploy.sh
