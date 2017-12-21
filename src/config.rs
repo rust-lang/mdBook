@@ -274,10 +274,20 @@ pub struct HtmlConfig {
 }
 
 /// Configuration for tweaking how the the HTML renderer handles the playpen.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
 pub struct Playpen {
     pub editor: PathBuf,
     pub editable: bool,
+}
+
+impl Default for Playpen {
+    fn default() -> Playpen {
+        Playpen {
+            editor: PathBuf::from("ace"),
+            editable: false,
+        }
+    }
 }
 
 
