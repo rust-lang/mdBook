@@ -1,4 +1,5 @@
 #!/bin/bash
+# Deploys the `book-example` to GitHub Pages
 
 # Exit on error or variable unset
 set -o errexit -o nounset

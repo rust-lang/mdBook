@@ -1,42 +1,92 @@
+# Based on the "trust" template v0.1.1
+# https://github.com/japaric/trust/tree/v0.1.1
+
+dist: trusty
 language: rust
-sudo: false
+services: docker
+sudo: required
 
 cache: cargo
+before_cache:
+- chmod -R a+r $HOME/.cargo
 
-rust:
-  - stable
-  - nightly
+env:
+  global:
+  - CRATE_NAME=mdbook
+  - secure: DPzSRXyfRIVTibv1wOKFeGekXlL8sumGEZxpeq911MpLlrndOKmOo5Ibi3JD8fbUOsE9A/5spj4B2KQNjhbplH+Cp26oEikjuNAA6cA/b2+/TMoC3i0klAYpVopBBV3FFna0gLP+q6t6fzG2v9TJrvmmVav6KVX6ylPNvD/LoReCjrkpgLIQuAQ6dSQNor9uV+EVt4plKhhkiS28DlYdgmTvNb5g4dzOhs8hoWty72J765VYWEDDC8qXn6N9GyrhsC3dhjASGn+1QDSCADYdbG9nrRlb4CZhrfcgOnHhAFva363kshg9HtCphigMgQy2oZXk4nLWK90/HuaPPkVj+N/lpIYjtiHOunToZJfIb0MWzyVI+7+I7WR6n6XbhLCPMe/sPXHHQ3HhQhZZ9xv7CDx9IkYJQBcF3LC+9kzJRi4QT0UTqrxcO3ncgXwvholP8Vg2KKPqFcbuyLPzbvr/o8zIilvLUFAEoDPfTEwSAC4BCzaGkFQVWzhWkgw8Pe1ckOEYFkZ0VLBuCpEiz+x45sbBL1SnnO5xhpjmdc572ZyW7ZmAABw1VfiWhhBWg4WGSf8lLnDHhNA36Qon34pnME/xpJQtWoo7ZZkkzvzYP/oW88/0UIMWDSOYKz7MijXlbNUggwAwUhrLzXDuB71HUKfPreFubfUxbOpu+OtTcOQ=
 
-os:
-  - linux
-  - osx
+matrix:
+  include:
+  # Android
+  - env: TARGET=arm-linux-androideabi DISABLE_TESTS=1
+
+  # Linux
+  - env: TARGET=aarch64-unknown-linux-gnu
+  - env: TARGET=arm-unknown-linux-gnueabi
+  - env: TARGET=i686-unknown-linux-gnu
+  - env: TARGET=i686-unknown-linux-musl
+  - env: TARGET=x86_64-unknown-linux-gnu
+  - env: TARGET=x86_64-unknown-linux-musl
+
+  # Mac
+  - env: TARGET=i686-apple-darwin
+    os: osx
+  - env: TARGET=x86_64-apple-darwin
+    os: osx
+
+  # BSD
+  - env: TARGET=i686-unknown-freebsd DISABLE_TESTS=1
+  - env: TARGET=x86_64-unknown-freebsd DISABLE_TESTS=1
+  - env: TARGET=x86_64-unknown-netbsd DISABLE_TESTS=1
+
+  # Other channels
+  - env: TARGET=x86_64-unknown-linux-gnu
+    rust: beta
+  - env: TARGET=x86_64-apple-darwin
+    os: osx
+    rust: beta
+  - env: TARGET=x86_64-unknown-linux-gnu
+    rust: nightly
+  - env: TARGET=x86_64-apple-darwin
+    os: osx
+    rust: nightly
+
+before_install:
+- set -e
+- rustup self update
+
+install:
+- sh ci/install.sh
+- source ~/.cargo/env || true
 
 script:
-  - cargo build --verbose
-  - cargo test --verbose
+- bash ci/script.sh
 
 after_success:
-  # Deploy the docs if the commit is on master
-  - test "$TRAVIS_PULL_REQUEST" == "false" &&
-    test "$TRAVIS_BRANCH" == "master" &&
-    test "$TRAVIS_RUST_VERSION" == "stable" &&
-    npm install stylus nib &&
-    bash ci/deploy.sh
+- test "$TRAVIS_PULL_REQUEST" == "false" && 
+  test "$TRAVIS_BRANCH" == "master" && 
+  test "$TRAVIS_RUST_VERSION" == "stable" && 
+  npm install stylus nib && 
+  bash ci/github_pages.sh
 
 before_deploy:
-  # Script to create packages from the build artefacts to upload to GitHub
-  - bash ci/before_deploy.sh
+- sh ci/before_deploy.sh
 
 deploy:
-  provider: releases
   api_key:
-    secure: Z1k7WqX7z+tT4+SzTh4tBBzf11VaADB4AWuEczHtylaEb/0hRs8gaiHCNSVHm/QTp0QPWQR2Vw7uKMhVuxG7I8X7h31j3A7ulYBh/iVk0DVIrtrn2Q4WOED9CpoXLuLtk2nxo9MBViFW7mw4nJe9H2Tn9o/9oEYBuwzekvW5mh4muqUuCVTr8eQVYbs3jbC9pQy5oYjOLeUnlL9Cey5VN/nAhzAtyFP+6lIMri0PKit4JtkFou/O1MEpFYlP3VGC2lFiWuByocPKBT/L45FecS9qoHq+i6+ZCPDH2eu46nuYsDbLKAkPdGvf1MdPBPwoj0vSnZbgaTisQ4hIoBngQQQPZlPaGtcdd6g6asxSfnbA9cQhClI5oZJmg+ksxQE+peE8pnbmZ10Ix0PpIkkfWdQeMdUUCQarOTkTK54Munw+X+kp1lH19j6+krQPLBYr95fPRd4b5tWsJD2+pb/UOYFEEJxMNoUHyLCrtdCO7imOwrSUcv51+Z8UudqfPpKQeszrJcntL4owip35r3sF5TsE9YfW5qssLC164IylvP32y1AcfL1jqg8b+zrqLZKanjvDOJ1dtHHuwKqxcwf7PhAf0YjAtVSH9OIYcDzmDa0EMLrq7EK0fs6NAeb5qt6CML7pZrRS3fmOxN53Fbmj81qm6TmjQjDe4dmZlELgNow=
-  file: ${PROJECT_NAME}-${TRAVIS_TAG}-${TRAVIS_OS_NAME}.tar.gz
-  # don't delete the artifacts from previous phases
-  skip_cleanup: true
+  - secure: cURRWBr034iqBz/ifD7uOunBfNR30YxIXfgLX0osWz+iafkVbhDGYYz9sBmRraqO2P7L2koEXMADVb/md1kI2+ykiq/ml+l9zuEAZPVmvSGUN7ZD+7s+lu3l5OBPG5z175T+b2q2q2m8XVR7TW20ra4QbE0bq06KAoOyjSgQVBTSCYsL9uTsGwiVRMEqqJT/BmKhKJNkpGsTKyBSKkOXvfeAAbE260vXUDEN9TYdJ3fvteRrpwLX56ee64gIZUq0RjDc4SKIEqilM6iUtNMvurqaewYNGkiXKRruV6BPCHxEHo6NNT46kOJLBJTf7gZw//dWhSoWpg9P0gdAnPWm407kSa3F7aJ1eRShAFQ4BLyfz9efTqm+jP3fOp7Mm7igSh9w6caSRuOnSsUf5+raRQ8E5Y9HsWGzzpZQk24Fx9EGZ04EeDSdpZAFz+jcbMpHf8t2p4CEx0CCNwYvKx6EydMKbMF5QteQ8SQkXNLhv7Rz2OgtXWYZPRVCMfQfOplsi2InsLCrQxTgwh+6u654SqVSgaHG+IncEAxBrdWy4rHcg7qereUcKfcY3k96vaDxdn/T2c00Ig0aNFR91YnixGMd6J6tQgDcRK9jh6fUm1CCBE9hT+pNUmtgYKuWBoLZexUZFFnfuBed0WciBot1bGDDamndqKq0jJiAzg+GMHk=
+  file_glob: true
+  file: "$CRATE_NAME-$TRAVIS_TAG-$TARGET.*"
   on:
-    condition: $TRAVIS_RUST_VERSION = stable
+    condition: "$TRAVIS_RUST_VERSION = stable"
     tags: true
+  provider: releases
+  skip_cleanup: true
+
+branches:
+  only:
+  - "/^v\\d+\\.\\d+\\.\\d+.*$/"
+  - master
 
 notifications:
   email:
