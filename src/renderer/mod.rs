@@ -2,6 +2,7 @@ pub use self::html_handlebars::HtmlHandlebars;
 
 mod html_handlebars;
 
+use std::io::Read;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use serde_json;
@@ -41,6 +42,11 @@ impl RenderContext {
 
     pub fn build_dir(&self) -> PathBuf {
         self.root.join(&self.config.build.build_dir)
+    }
+
+    pub fn from_json<R: Read>(reader: R) -> Result<RenderContext> {
+        serde_json::from_reader(reader)
+            .chain_err(|| "Unable to deserialize the `RenderContext`")
     }
 }
 
