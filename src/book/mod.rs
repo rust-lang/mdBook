@@ -260,9 +260,11 @@ fn determine_renderers(config: &Config) -> Vec<Box<Renderer>> {
                     .map(|s| s.to_string())
                     .unwrap_or_else(|| format!("mdbook-{}", key));
 
+                // TODO: Actually calculate the destination directory
                 renderers.push(Box::new(CmdRenderer::new(
                     key.to_string(),
                     command.to_string(),
+                    &config.build.build_dir,
                 )));
             }
         }

@@ -11,12 +11,10 @@ use errors::*;
 use config::Config;
 use book::{Book, MDBook};
 
-
 pub trait Renderer {
     fn name(&self) -> &str;
     fn render(&self, book: &MDBook) -> Result<()>;
 }
-
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RenderContext {
@@ -24,15 +22,21 @@ pub struct RenderContext {
     pub root: PathBuf,
     pub book: Book,
     pub config: Config,
+    pub destination: PathBuf,
 }
 
 impl RenderContext {
-    pub fn new<P: Into<PathBuf>>(root: P, book: Book, config: Config) -> RenderContext {
+    pub fn new<P, Q>(root: P, book: Book, config: Config, destination: Q) -> RenderContext
+    where
+        P: Into<PathBuf>,
+        Q: Into<PathBuf>,
+    {
         RenderContext {
             book: book,
             config: config,
             version: env!("CARGO_PKG_VERSION").to_string(),
             root: root.into(),
+            destination: destination.into(),
         }
     }
 
@@ -54,11 +58,17 @@ impl RenderContext {
 pub struct CmdRenderer {
     name: String,
     cmd: String,
+    destination: PathBuf,
 }
 
 impl CmdRenderer {
-    pub fn new(name: String, cmd: String) -> CmdRenderer {
-        CmdRenderer { name, cmd }
+    pub fn new<P: Into<PathBuf>>(name: String, cmd: String, destination: P) -> CmdRenderer {
+        let destination = destination.into();
+        CmdRenderer {
+            name,
+            cmd,
+            destination,
+        }
     }
 }
 
@@ -69,7 +79,12 @@ impl Renderer for CmdRenderer {
 
     fn render(&self, book: &MDBook) -> Result<()> {
         info!("Invoking the \"{}\" renderer", self.cmd);
-        let ctx = RenderContext::new(&book.root, book.book.clone(), book.config.clone());
+        let ctx = RenderContext::new(
+            &book.root,
+            book.book.clone(),
+            book.config.clone(),
+            &self.destination,
+        );
 
         let mut child = Command::new(&self.cmd)
             .stdin(Stdio::piped())
