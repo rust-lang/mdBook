@@ -88,8 +88,6 @@ impl Renderer for CmdRenderer {
 
         let mut child = Command::new(&self.cmd)
             .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
             .spawn()
             .chain_err(|| "Unable to start the renderer")?;
 
@@ -98,10 +96,10 @@ impl Renderer for CmdRenderer {
             &ctx,
         ).chain_err(|| "Error occurred while sending the render context to the renderer")?;
 
-        let output = child.wait_with_output()?;
-        trace!("{} exited with output: {:?}", self.cmd, output);
+        let status = child.wait()?;
+        trace!("{} exited with output: {:?}", self.cmd, status);
 
-        if !output.status.success() {
+        if !status.success() {
             error!("Renderer exited with non-zero return code.");
             bail!("The \"{}\" renderer failed", self.cmd);
         } else {
