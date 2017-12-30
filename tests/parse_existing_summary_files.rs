@@ -14,7 +14,7 @@ macro_rules! summary_md_test {
     ($name:ident, $filename:expr) => {
         #[test]
         fn $name() {
-            env_logger::init().ok();
+            env_logger::try_init().ok();
 
             let filename = Path::new(env!("CARGO_MANIFEST_DIR"))
                 .join("tests")

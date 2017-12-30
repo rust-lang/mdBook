@@ -689,8 +689,6 @@ mod tests {
     /// [example]: https://github.com/rust-lang/book/blob/2c942dc094f4ddcdc7aba7564f80782801197c99/second-edition/src/SUMMARY.md#basic-rust-literacy
     #[test]
     fn can_have_a_subheader_between_nested_items() {
-        extern crate env_logger;
-        env_logger::init().ok();
         let src = "- [First](./first.md)\n\n## Subheading\n\n- [Second](./second.md)\n";
         let should_be = vec![
             SummaryItem::Link(Link {

@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate clap;
+extern crate chrono;
 extern crate env_logger;
 extern crate error_chain;
 extern crate log;
@@ -9,9 +10,11 @@ extern crate open;
 use std::env;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
+use std::io::Write;
 use clap::{App, AppSettings, ArgMatches};
-use log::{LogLevelFilter, LogRecord};
-use env_logger::LogBuilder;
+use chrono::Local;
+use log::LevelFilter;
+use env_logger::Builder;
 use error_chain::ChainedError;
 
 pub mod build;
@@ -67,19 +70,24 @@ fn main() {
 }
 
 fn init_logger() {
-    let format = |record: &LogRecord| {
-        let module_path = record.location().module_path();
-        format!("{}:{}: {}", record.level(), module_path, record.args())
-    };
+    let mut builder = Builder::new();
 
-    let mut builder = LogBuilder::new();
-    builder.format(format).filter(None, LogLevelFilter::Info);
+    builder.format(|formatter, record| {
+        writeln!(formatter, "{} [{}] ({}): {}",
+                 Local::now().format("%Y-%m-%d %H:%M:%S"),
+                 record.level(),
+                 record.target(),
+                 record.args())
+    });
 
     if let Ok(var) = env::var("RUST_LOG") {
         builder.parse(&var);
+    } else {
+        // if no RUST_LOG provided, default to logging at the Info level
+        builder.filter(None, LevelFilter::Info);
     }
 
-    builder.init().unwrap();
+    builder.init();
 }
 
 fn get_book_dir(args: &ArgMatches) -> PathBuf {
