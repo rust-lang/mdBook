@@ -6,7 +6,8 @@ set -ex
 # Only run this on the master branch for stable
 if [ "$TRAVIS_PULL_REQUEST" != "false" ] || 
    [ "$TRAVIS_BRANCH" != "master" ] ||
-   [ "$TRAVIS_RUST_VERSION" != "stable" ]; then
+   [ "$TRAVIS_RUST_VERSION" != "stable" ] ||
+   [ "$TARGET" != "x86_64-unknown-linux-gnu" ]; then
    exit 0
 fi
 
@@ -23,7 +24,7 @@ echo -e "${CYAN}Running cargo doc${NC}"
 cargo doc --features regenerate-css
 
 echo -e "${CYAN}Running mdbook build${NC}"
-target/"$TARGET"/debug/mdbook build book-example/
+cargo run -- build book-example/
 
 echo -e "${CYAN}Copying book to target/doc${NC}"
 cp -R book-example/book/* target/doc/
