@@ -11,7 +11,7 @@ if [ "$TRAVIS_PULL_REQUEST" != "false" ] ||
 fi
 
 # Make sure we have the css dependencies
-npm install stylus nib 
+npm install -g stylus nib 
 
 NC='\033[39m'
 CYAN='\033[36m'
