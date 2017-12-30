@@ -1,32 +1,31 @@
-# `before_deploy` phase: here we package the build artifacts
+# This script takes care of building your crate and packaging it for release
 
 set -ex
 
-mktempd() {
-  echo $(mktemp -d 2>/dev/null || mktemp -d -t tmp)
-}
-
-mk_artifacts() {
-  cargo build --target $TARGET --release
-}
-
-mk_tarball() {
-  local td=$(mktempd)
-  local out_dir=$(pwd)
-
-  cp target/$TARGET/release/mdbook $td
-
-  pushd $td
-
-  tar czf $out_dir/${PROJECT_NAME}-${TRAVIS_TAG}-${TRAVIS_OS_NAME}.tar.gz *
-
-  popd $td
-  rm -r $td
-}
-
 main() {
-  mk_artifacts
-  mk_tarball
+    local src=$(pwd) \
+          stage=
+
+    case $TRAVIS_OS_NAME in
+        linux)
+            stage=$(mktemp -d)
+            ;;
+        osx)
+            stage=$(mktemp -d -t tmp)
+            ;;
+    esac
+
+    test -f Cargo.lock || cargo generate-lockfile
+
+    cross rustc --bin mdbook --target $TARGET --release -- -C lto
+
+    cp target/$TARGET/release/mdbook $stage/
+
+    cd $stage
+    tar czf $src/$CRATE_NAME-$TRAVIS_TAG-$TARGET.tar.gz *
+    cd $src
+
+    rm -rf $stage
 }
 
 main

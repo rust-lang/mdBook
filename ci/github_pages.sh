@@ -1,7 +1,17 @@
 #!/bin/bash
+# Deploys the `book-example` to GitHub Pages
 
-# Exit on error or variable unset
-set -o errexit -o nounset
+set -ex
+
+# Only run this on the master branch for stable
+if [ "$TRAVIS_PULL_REQUEST" != "false" ] || 
+   [ "$TRAVIS_BRANCH" != "master" ] ||
+   [ "$TRAVIS_RUST_VERSION" != "stable" ]; then
+   exit 0
+fi
+
+# Make sure we have the css dependencies
+npm install stylus nib 
 
 NC='\033[39m'
 CYAN='\033[36m'
@@ -10,23 +20,20 @@ GREEN='\033[32m'
 rev=$(git rev-parse --short HEAD)
 
 echo -e "${CYAN}Running cargo doc${NC}"
-# Run cargo doc
-cargo doc
+cargo doc --features regenerate-css
 
 echo -e "${CYAN}Running mdbook build${NC}"
-# Run mdbook to generate the book
 target/"$TARGET"/debug/mdbook build book-example/
 
 echo -e "${CYAN}Copying book to target/doc${NC}"
-# Copy files from rendered book to doc root
 cp -R book-example/book/* target/doc/
 
 cd target/doc
 
 echo -e "${CYAN}Initializing Git${NC}"
 git init
-git config user.name "Mathieu David"
-git config user.email "mathieudavid@mathieudavid.org"
+git config user.name "Michael Bryan"
+git config user.email "michaelfbryan@gmail.com"
 
 git remote add upstream "https://$GH_TOKEN@github.com/rust-lang-nursery/mdBook.git"
 git fetch upstream
@@ -39,4 +46,4 @@ git add -A .
 git commit -m "rebuild pages at ${rev}"
 git push -q upstream HEAD:gh-pages
 
-echo -e "${GREEN}Deployement done${NC}"
+echo -e "${GREEN}Deployed docs to GitHub Pages${NC}"
