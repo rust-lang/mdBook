@@ -11,7 +11,7 @@ use dummy_book::{assert_contains_strings, DummyBook};
 use std::fs;
 use std::path::Path;
 use std::ffi::OsStr;
-use walkdir::{DirEntry, WalkDir, WalkDirIterator};
+use walkdir::{DirEntry, WalkDir};
 use select::document::Document;
 use select::predicate::{Class, Name, Predicate};
 use mdbook::errors::*;
