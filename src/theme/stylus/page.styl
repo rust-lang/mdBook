@@ -1,26 +1,24 @@
 @require 'variables'
 
 .page-wrapper {
-    padding-left: $sidebar-width
     box-sizing: border-box
 
     min-height: 100%
+    width: 100%
 
     // Animation: slide away
-    transition: padding-left 0.5s, margin-right 0.5s
-
-    @media only screen and (max-width: $max-page-width-with-hidden-sidebar) {
-        padding-left: 0
-    }
-}
-
-.sidebar-hidden .page-wrapper {
-    padding-left: 0
+    transition: padding-left 0.5s, margin-left 0.5s
 }
 
 .sidebar-visible .page-wrapper {
     padding-left: $sidebar-width
-    margin-right: - $sidebar-width
+}
+
+@media only screen and (max-width: $page-plus-sidebar-width - 1) {
+    .sidebar-visible .page-wrapper {
+        padding-left: 0
+        margin-left: $sidebar-width
+    }
 }
 
 .page {
@@ -30,7 +28,7 @@
 
 .content {
     margin-left: auto
-    margin-right:auto
+    margin-right: auto
     max-width: $content-max-width
     padding-bottom: 50px
 

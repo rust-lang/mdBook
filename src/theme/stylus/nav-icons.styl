@@ -9,6 +9,7 @@
     margin: 0
     max-width: 150px
     min-width: 90px
+
     display: flex
     justify-content: center
     align-content: center
@@ -17,29 +18,38 @@
     transition: color 0.5s
 }
 
-.mobile-nav-chapters { display: none }
 .nav-chapters:hover { text-decoration: none }
-.previous {
-    left: $sidebar-width + $page-padding
-    transition: left 0.5s
-
-    @media only screen and (max-width: $max-page-width-with-hidden-sidebar) {
-        left: $page-padding
-    }
-}
-.next { right: $page-padding }
-
-.sidebar-hidden .previous {
-  left: $page-padding
-}
-
-.sidebar-visible .previous {
-  left: $sidebar-width + $page-padding
-}
 
 .nav-wrapper {
-  @media only screen and (max-width: $max-page-width-with-hidden-sidebar) {
-    max-width: $content-max-width
-    margin: 0 auto
-  }
+    margin-top: 50px
+    display: none
+}
+
+.mobile-nav-chapters { 
+    font-size: 2.5em
+    text-align: center
+    text-decoration: none
+    width: 90px
+    border-radius: 5px
+}
+
+.previous {
+    float: left
+}
+
+.next {
+    float: right
+    right: $page-padding 
+}
+
+@media only screen and (max-width: $page-plus-sidebar-width) {
+    .nav-chapters { display: none }
+    .nav-wrapper { display: block }
+}
+
+@media only screen and (max-width: $page-plus-sidebar-width + $sidebar-width) {
+    .sidebar-visible {
+        .nav-chapters { display: none }
+        .nav-wrapper { display: block }
+    }
 }

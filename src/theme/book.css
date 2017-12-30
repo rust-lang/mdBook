@@ -1,11 +1,12 @@
-html,
-body {
+html {
   font-family: "Open Sans", sans-serif;
   color: #333;
+  overflow-x: hidden;
 }
 body {
   margin: 0;
   font-size: 1rem;
+  overflow-x: hidden;
 }
 code {
   font-family: "Source Code Pro", Consolas, "Ubuntu Mono", Menlo, "DejaVu Sans Mono", monospace, monospace;
@@ -66,19 +67,11 @@ table thead td {
   -ms-transition: left 0.5s;
   transition: left 0.5s;
 }
-@media only screen and (max-width: 1060px) {
-  .sidebar {
-    left: -300px;
-  }
-}
 .sidebar code {
   line-height: 2em;
 }
 .sidebar-hidden .sidebar {
   left: -300px;
-}
-.sidebar-visible .sidebar {
-  left: 0;
 }
 .chapter {
   list-style: none outside none;
@@ -109,28 +102,25 @@ table thead td {
   white-space: nowrap;
 }
 .page-wrapper {
-  padding-left: 300px;
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
   min-height: 100%;
-  -webkit-transition: padding-left 0.5s, margin-right 0.5s;
-  -moz-transition: padding-left 0.5s, margin-right 0.5s;
-  -o-transition: padding-left 0.5s, margin-right 0.5s;
-  -ms-transition: padding-left 0.5s, margin-right 0.5s;
-  transition: padding-left 0.5s, margin-right 0.5s;
-}
-@media only screen and (max-width: 1060px) {
-  .page-wrapper {
-    padding-left: 0;
-  }
-}
-.sidebar-hidden .page-wrapper {
-  padding-left: 0;
+  width: 100%;
+  -webkit-transition: padding-left 0.5s, margin-left 0.5s;
+  -moz-transition: padding-left 0.5s, margin-left 0.5s;
+  -o-transition: padding-left 0.5s, margin-left 0.5s;
+  -ms-transition: padding-left 0.5s, margin-left 0.5s;
+  transition: padding-left 0.5s, margin-left 0.5s;
 }
 .sidebar-visible .page-wrapper {
   padding-left: 300px;
-  margin-right: -300px;
+}
+@media only screen and (max-width: 1079px) {
+  .sidebar-visible .page-wrapper {
+    padding-left: 0;
+    margin-left: 300px;
+  }
 }
 .page {
   outline: 0;
@@ -238,38 +228,41 @@ table thead td {
   -ms-transition: color 0.5s;
   transition: color 0.5s;
 }
-.mobile-nav-chapters {
-  display: none;
-}
 .nav-chapters:hover {
   text-decoration: none;
 }
-.previous {
-  left: 315px;
-  -webkit-transition: left 0.5s;
-  -moz-transition: left 0.5s;
-  -o-transition: left 0.5s;
-  -ms-transition: left 0.5s;
-  transition: left 0.5s;
+.nav-wrapper {
+  margin-top: 50px;
+  display: none;
 }
-@media only screen and (max-width: 1060px) {
-  .previous {
-    left: 15px;
-  }
+.mobile-nav-chapters {
+  font-size: 2.5em;
+  text-align: center;
+  text-decoration: none;
+  width: 90px;
+  border-radius: 5px;
+}
+.previous {
+  float: left;
 }
 .next {
+  float: right;
   right: 15px;
 }
-.sidebar-hidden .previous {
-  left: 15px;
-}
-.sidebar-visible .previous {
-  left: 315px;
-}
-@media only screen and (max-width: 1060px) {
+@media only screen and (max-width: 1080px) {
+  .nav-chapters {
+    display: none;
+  }
   .nav-wrapper {
-    max-width: 750px;
-    margin: 0 auto;
+    display: block;
+  }
+}
+@media only screen and (max-width: 1380px) {
+  .sidebar-visible .nav-chapters {
+    display: none;
+  }
+  .sidebar-visible .nav-wrapper {
+    display: block;
   }
 }
 .theme-popup {
@@ -290,37 +283,6 @@ table thead td {
 .theme-popup .theme:hover:last-child {
   border-top-left-radius: inherit;
   border-top-right-radius: inherit;
-}
-@media only screen and (max-width: 1060px) {
-  .nav-chapters {
-    display: none;
-  }
-  .mobile-nav-chapters {
-    font-size: 2.5em;
-    text-align: center;
-    text-decoration: none;
-    max-width: 150px;
-    min-width: 90px;
-    -webkit-box-pack: center;
-    -moz-box-pack: center;
-    -o-box-pack: center;
-    -ms-flex-pack: center;
-    -webkit-justify-content: center;
-    justify-content: center;
-    -ms-flex-line-pack: center;
-    -webkit-align-content: center;
-    align-content: center;
-    position: relative;
-    display: inline-block;
-    margin-bottom: 50px;
-    border-radius: 5px;
-  }
-  .next {
-    float: right;
-  }
-  .previous {
-    float: left;
-  }
 }
 .light {
   color: #333;
