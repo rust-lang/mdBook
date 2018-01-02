@@ -25,7 +25,9 @@ pub fn replace_all<P: AsRef<Path>>(s: &str, path: P) -> Result<String> {
 #[derive(PartialOrd, PartialEq, Debug, Clone)]
 enum LinkType<'a> {
     Escaped,
-    Include(PathBuf),
+    IncludeFull(PathBuf),
+    IncludeRangeFrom(PathBuf, usize),
+    IncludeRange(PathBuf, usize, usize),
     Playpen(PathBuf, Vec<&'a str>),
 }
 
@@ -38,6 +40,29 @@ struct Link<'a> {
 }
 
 impl<'a> Link<'a> {
+    fn parse_include_path(path: PathBuf) -> Option<LinkType<'a>> {
+        path.to_str().map(|p| {
+            let mut parts = p.split(':');
+            let p = parts.next().unwrap();
+            let from = parts.next().and_then(|s| s.parse::<usize>().ok());
+            let to = parts.next().and_then(|s| s.parse::<usize>().ok());
+            match from {
+                Some(from) => {
+                    match to {
+                        Some(to) => LinkType::IncludeRange(p.into(), from, to),
+                        None => LinkType::IncludeRangeFrom(p.into(), from),
+                    }
+                }
+                None => {
+                    match to {
+                        Some(to) => LinkType::IncludeRange(p.into(), 0, to),
+                        None => LinkType::IncludeFull(p.into()),
+                    }
+                }
+            }
+        })
+    }
+
     fn from_capture(cap: Captures<'a>) -> Option<Link<'a>> {
         let link_type = match (cap.get(0), cap.get(1), cap.get(2)) {
             (_, Some(typ), Some(rest)) => {
@@ -46,27 +71,41 @@ impl<'a> Link<'a> {
                 let props: Vec<&str> = path_props.collect();
 
                 match (typ.as_str(), file_path) {
-                    ("include", Some(pth)) => Some(LinkType::Include(pth)),
+                    ("include", Some(pth)) => Self::parse_include_path(pth),
                     ("playpen", Some(pth)) => Some(LinkType::Playpen(pth, props)),
                     _ => None,
                 }
             }
-            (Some(mat), None, None) if mat.as_str().starts_with(ESCAPE_CHAR) => {
-                Some(LinkType::Escaped)
-            }
+            (Some(mat), None, None) if mat.as_str().starts_with(ESCAPE_CHAR) => Some(
+                LinkType::Escaped,
+            ),
             _ => None,
         };
 
         link_type.and_then(|lnk| {
             cap.get(0).map(|mat| {
-                               Link {
-                                   start_index: mat.start(),
-                                   end_index: mat.end(),
-                                   link: lnk,
-                                   link_text: mat.as_str(),
-                               }
-                           })
+                Link {
+                    start_index: mat.start(),
+                    end_index: mat.end(),
+                    link: lnk,
+                    link_text: mat.as_str(),
+                }
+            })
         })
+    }
+
+    fn join_lines<'b, I: IntoIterator<Item = &'b str>>(lines: I) -> String {
+        let mut lines = lines.into_iter();
+        let first = String::from(lines.next().unwrap_or(""));
+        lines.fold(first, |acc, s| acc + "\n" + s)
+    }
+
+    fn take_lines(s: String, from: usize, to_inclusive: Option<usize>) -> String {
+        let lines = s.split('\n').skip(from);
+        match to_inclusive {
+            Some(to) => Self::join_lines(lines.take(to.checked_sub(from).unwrap_or(0))),
+            None => Self::join_lines(lines),
+        }
     }
 
     fn render_with_path<P: AsRef<Path>>(&self, base: P) -> Result<String> {
@@ -74,22 +113,36 @@ impl<'a> Link<'a> {
         match self.link {
             // omit the escape char
             LinkType::Escaped => Ok((&self.link_text[1..]).to_owned()),
-            LinkType::Include(ref pat) => {
+            LinkType::IncludeFull(ref pat) => {
                 file_to_string(base.join(pat)).chain_err(|| {
-                                                             format!("Could not read file for \
-                                                                      link {}",
-                                                                     self.link_text)
-                                                         })
+                    format!("Could not read file for link {}", self.link_text)
+                })
+            }
+            LinkType::IncludeRangeFrom(ref pat, from) => {
+                file_to_string(base.join(pat))
+                    .map(|s| Self::take_lines(s, from, None))
+                    .chain_err(|| {
+                        format!("Could not read file for link {}", self.link_text)
+                    })
+            }
+            LinkType::IncludeRange(ref pat, from, to) => {
+                file_to_string(base.join(pat))
+                    .map(|s| Self::take_lines(s, from, Some(to)))
+                    .chain_err(|| {
+                        format!("Could not read file for link {}", self.link_text)
+                    })
             }
             LinkType::Playpen(ref pat, ref attrs) => {
                 let contents = file_to_string(base.join(pat)).chain_err(|| {
-                                                                            format!("Could not \
-                                                                                     read file \
-                                                                                     for link {}",
-                                                                                    self.link_text)
-                                                                        })?;
+                    format!("Could not read file for link {}", self.link_text)
+                })?;
                 let ftype = if !attrs.is_empty() { "rust," } else { "rust" };
-                Ok(format!("```{}{}\n{}\n```\n", ftype, attrs.join(","), contents))
+                Ok(format!(
+                    "```{}{}\n{}\n```\n",
+                    ftype,
+                    attrs.join(","),
+                    contents
+                ))
             }
         }
     }
@@ -181,6 +234,70 @@ fn test_find_links_simple_link() {
 }
 
 #[test]
+fn test_find_links_with_range() {
+    let s = "Some random text with {{#include file.rs:10:20}}...";
+    let res = find_links(s).collect::<Vec<_>>();
+    println!("\nOUTPUT: {:?}\n", res);
+    assert_eq!(
+        res,
+        vec![
+            Link {
+                start_index: 22,
+                end_index: 48,
+                link: LinkType::IncludeRange(PathBuf::from("file.rs"), 10, 20),
+                link_text: "{{#include file.rs:10:20}}",
+            },
+        ]
+    );
+
+    let s = "Some random text with {{#include file.rs:10:}}...";
+    let res = find_links(s).collect::<Vec<_>>();
+    println!("\nOUTPUT: {:?}\n", res);
+    assert_eq!(
+        res,
+        vec![
+            Link {
+                start_index: 22,
+                end_index: 46,
+                link: LinkType::IncludeRangeFrom(PathBuf::from("file.rs"), 10),
+                link_text: "{{#include file.rs:10:}}",
+            },
+        ]
+    );
+
+    let s = "Some random text with {{#include file.rs::20}}...";
+    let res = find_links(s).collect::<Vec<_>>();
+    println!("\nOUTPUT: {:?}\n", res);
+    assert_eq!(
+        res,
+        vec![
+            Link {
+                start_index: 22,
+                end_index: 46,
+                link: LinkType::IncludeRange(PathBuf::from("file.rs"), 0, 20),
+                link_text: "{{#include file.rs::20}}",
+            },
+        ]
+    );
+
+    let s = "Some random text with {{#include file.rs::}}...";
+    let res = find_links(s).collect::<Vec<_>>();
+    println!("\nOUTPUT: {:?}\n", res);
+    assert_eq!(
+        res,
+        vec![
+            Link {
+                start_index: 22,
+                end_index: 44,
+                link: LinkType::IncludeFull(PathBuf::from("file.rs")),
+                link_text: "{{#include file.rs::}}",
+            },
+        ]
+    );
+}
+
+
+#[test]
 fn test_find_links_escaped_link() {
     let s = "Some random text with escaped playpen \\{{#playpen file.rs editable}} ...";
 
@@ -232,7 +349,7 @@ fn test_find_all_link_types() {
                Link {
                    start_index: 38,
                    end_index: 58,
-                   link: LinkType::Include(PathBuf::from("file.rs")),
+                   link: LinkType::IncludeFull(PathBuf::from("file.rs")),
                    link_text: "{{#include file.rs}}",
                });
     assert_eq!(res[1],
