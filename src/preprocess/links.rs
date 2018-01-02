@@ -25,7 +25,6 @@ pub fn replace_all<P: AsRef<Path>>(s: &str, path: P) -> Result<String> {
 #[derive(PartialOrd, PartialEq, Debug, Clone)]
 enum LinkType<'a> {
     Escaped,
-    IncludeFull(PathBuf),
     IncludeRangeFrom(PathBuf, usize),
     IncludeRange(PathBuf, usize, usize),
     Playpen(PathBuf, Vec<&'a str>),
@@ -56,7 +55,7 @@ impl<'a> Link<'a> {
                 None => {
                     match to {
                         Some(to) => LinkType::IncludeRange(p.into(), 0, to),
-                        None => LinkType::IncludeFull(p.into()),
+                        None => LinkType::IncludeRangeFrom(p.into(), 0),
                     }
                 }
             }
@@ -113,11 +112,6 @@ impl<'a> Link<'a> {
         match self.link {
             // omit the escape char
             LinkType::Escaped => Ok((&self.link_text[1..]).to_owned()),
-            LinkType::IncludeFull(ref pat) => {
-                file_to_string(base.join(pat)).chain_err(|| {
-                    format!("Could not read file for link {}", self.link_text)
-                })
-            }
             LinkType::IncludeRangeFrom(ref pat, from) => {
                 file_to_string(base.join(pat))
                     .map(|s| Self::take_lines(s, from, None))
@@ -289,7 +283,7 @@ fn test_find_links_with_range() {
             Link {
                 start_index: 22,
                 end_index: 44,
-                link: LinkType::IncludeFull(PathBuf::from("file.rs")),
+                link: LinkType::IncludeRangeFrom(PathBuf::from("file.rs"), 0),
                 link_text: "{{#include file.rs::}}",
             },
         ]
@@ -349,7 +343,7 @@ fn test_find_all_link_types() {
                Link {
                    start_index: 38,
                    end_index: 58,
-                   link: LinkType::IncludeFull(PathBuf::from("file.rs")),
+                   link: LinkType::IncludeRangeFrom(PathBuf::from("file.rs"), 0),
                    link_text: "{{#include file.rs}}",
                });
     assert_eq!(res[1],
