@@ -43,7 +43,7 @@ git reset upstream/gh-pages --quiet
 touch .
 
 echo -e "${CYAN}Pushing changes to gh-pages${NC}"
-git add -A . --quiet
+git add -A . 
 git commit -m "rebuild pages at ${rev}" --quiet
 git push -q upstream HEAD:gh-pages --quiet
 
