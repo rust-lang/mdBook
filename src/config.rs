@@ -308,6 +308,14 @@ pub struct HtmlConfig {
     pub additional_css: Vec<PathBuf>,
     pub additional_js: Vec<PathBuf>,
     pub playpen: Playpen,
+    /// This is used as a bit of a workaround for the `mdbook serve` command. 
+    /// Basically, because you set the websocket port from the command line, the
+    /// `mdbook serve` command needs a way to let the HTML renderer know where
+    /// to point livereloading at, if it has been enabled.
+    ///
+    /// This config item *should not be edited* by the end user.
+    #[doc(hidden)]
+    pub livereload_url: Option<String>,
 }
 
 /// Configuration for tweaking how the the HTML renderer handles the playpen.

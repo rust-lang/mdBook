@@ -30,7 +30,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     book.build()?;
 
     if args.is_present("open") {
-        open(book.get_destination().join("index.html"));
+        open(book.build_dir_for("html").join("index.html"));
     }
 
     Ok(())

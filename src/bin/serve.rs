@@ -38,8 +38,6 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 
 // Watch command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
-    const RELOAD_COMMAND: &'static str = "reload";
-
     let book_dir = get_book_dir(args);
     let mut book = MDBook::load(&book_dir)?;
 
@@ -52,29 +50,13 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let address = format!("{}:{}", interface, port);
     let ws_address = format!("{}:{}", interface, ws_port);
 
-    let livereload = Some(format!(
-        r#"
-    <script type="text/javascript">
-        var socket = new WebSocket("ws://{}:{}");
-        socket.onmessage = function (event) {{
-            if (event.data === "{}") {{
-                socket.close();
-                location.reload(true); // force reload from server (not from cache)
-            }}
-        }};
-
-        window.onbeforeunload = function() {{
-            socket.close();
-        }}
-    </script>
-"#,
-        public_address, ws_port, RELOAD_COMMAND
-    ));
-    book.livereload = livereload.clone();
+    let livereload_url = format!("ws://{}:{}", public_address, ws_port);
+    book.config
+        .set("output.html.livereload-url", &livereload_url)?;
 
     book.build()?;
 
-    let mut chain = Chain::new(staticfile::Static::new(book.get_destination()));
+    let mut chain = Chain::new(staticfile::Static::new(book.build_dir_for("html")));
     chain.link_after(ErrorRecover);
     let _iron = Iron::new(chain)
         .http(&*address)
@@ -90,7 +72,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     });
 
     let serving_url = format!("http://{}", address);
-    println!("\nServing on: {}", serving_url);
+    info!("Serving on: {}", serving_url);
 
     if open_browser {
         open(serving_url);
@@ -100,13 +82,13 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     watch::trigger_on_change(&mut book, move |path, book_dir| {
         println!("File changed: {:?}\nBuilding book...\n", path);
         // FIXME: This area is really ugly because we need to re-set livereload :(
-        
-        let livereload = livereload.clone();
+
+        let livereload_url = livereload_url.clone();
 
         let result = MDBook::load(&book_dir)
-            .map(move |mut b| {
-                b.livereload = livereload;
-                b
+            .and_then(move |mut b| {
+                b.config.set("output.html.livereload-url", &livereload_url)?;
+                Ok(b)
             })
             .and_then(|mut b| b.build());
 
@@ -117,7 +99,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
                 error!("\tCaused By: {}", cause);
             }
         } else {
-            let _ = broadcaster.send(RELOAD_COMMAND);
+            let _ = broadcaster.send("reload");
         }
     });
 

@@ -26,7 +26,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     if args.is_present("open") {
         book.build()?;
-        open(book.get_destination().join("index.html"));
+        open(book.build_dir_for("html").join("index.html"));
     }
 
     trigger_on_change(&book, |path, book_dir| {
@@ -56,14 +56,14 @@ where
     let mut watcher = match notify::watcher(tx, Duration::from_secs(1)) {
         Ok(w) => w,
         Err(e) => {
-            println!("Error while trying to watch the files:\n\n\t{:?}", e);
+            error!("Error while trying to watch the files:\n\n\t{:?}", e);
             ::std::process::exit(1)
         }
     };
 
     // Add the source directory to the watcher
     if let Err(e) = watcher.watch(book.source_dir(), Recursive) {
-        println!("Error while watching {:?}:\n    {:?}", book.source_dir(), e);
+        error!("Error while watching {:?}:\n    {:?}", book.source_dir(), e);
         ::std::process::exit(1);
     };
 
@@ -72,9 +72,10 @@ where
     // Add the book.toml file to the watcher if it exists
     let _ = watcher.watch(book.root.join("book.toml"), NonRecursive);
 
-    println!("\nListening for changes...\n");
+    info!("Listening for changes...");
 
     for event in rx.iter() {
+        debug!("Received filesystem event: {:?}", event);
         match event {
             Create(path) | Write(path) | Remove(path) | Rename(_, path) => {
                 closure(&path, &book.root);

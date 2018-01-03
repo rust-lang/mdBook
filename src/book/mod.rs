@@ -15,13 +15,13 @@ pub use self::book::{load_book, Book, BookItem, BookItems, Chapter};
 pub use self::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
 pub use self::init::BookBuilder;
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::io::Write;
 use std::process::Command;
 use tempdir::TempDir;
 
 use utils;
-use renderer::{CmdRenderer, HtmlHandlebars, Renderer};
+use renderer::{CmdRenderer, HtmlHandlebars, RenderContext, Renderer};
 use preprocess;
 use errors::*;
 
@@ -148,26 +148,33 @@ impl MDBook {
     pub fn build(&mut self) -> Result<()> {
         debug!("[fn]: build");
 
-        let dest = self.get_destination();
-        if dest.exists() {
-            utils::fs::remove_dir_content(&dest).chain_err(|| "Unable to clear output directory")?;
-        }
-
         for renderer in &self.renderers {
-            renderer.render(self).chain_err(|| "Rendering failed")?;
+            let name = renderer.name();
+            let build_dir = self.build_dir_for(name);
+            if build_dir.exists() {
+                debug!(
+                    "Cleaning build dir for the \"{}\" renderer ({})",
+                    name,
+                    build_dir.display()
+                );
+
+                utils::fs::remove_dir_content(&build_dir)
+                    .chain_err(|| "Unable to clear output directory")?;
+            }
+
+            let render_context = RenderContext::new(
+                self.root.clone(),
+                self.book.clone(),
+                self.config.clone(),
+                build_dir,
+            );
+
+            renderer
+                .render(&render_context)
+                .chain_err(|| "Rendering failed")?;
         }
 
         Ok(())
-    }
-
-    // FIXME: This doesn't belong as part of `MDBook`. It is only used by the HTML renderer
-    #[doc(hidden)]
-    pub fn write_file<P: AsRef<Path>>(&self, filename: P, content: &[u8]) -> Result<()> {
-        let path = self.get_destination().join(filename);
-
-        utils::fs::create_file(&path)?
-            .write_all(content)
-            .map_err(|e| e.into())
     }
 
     /// You can change the default renderer to another one by using this method.
@@ -222,10 +229,38 @@ impl MDBook {
         Ok(())
     }
 
-    // FIXME: This doesn't belong under `MDBook`, it should really be passed to the renderer directly.
-    #[doc(hidden)]
-    pub fn get_destination(&self) -> PathBuf {
-        self.root.join(&self.config.build.build_dir)
+    /// The logic for determining where a backend should put its build
+    /// artefacts.
+    ///
+    /// If there is only 1 renderer, put it in the directory pointed to by the
+    /// `build.build_dir` key in `Config`. If there is more than one then the
+    /// renderer gets its own directory within the main build dir.
+    ///
+    /// i.e. If there were only one renderer (in this case, the HTML renderer):
+    ///
+    /// - build/
+    ///   - index.html
+    ///   - ...
+    ///
+    /// Otherwise if there are multiple:
+    ///
+    /// - build/
+    ///   - epub/
+    ///     - my_awesome_book.epub
+    ///   - html/
+    ///     - index.html
+    ///     - ...
+    ///   - latex/
+    ///     - my_awesome_book.tex
+    ///
+    pub fn build_dir_for(&self, backend_name: &str) -> PathBuf {
+        let build_dir = self.root.join(&self.config.build.build_dir);
+
+        if self.renderers.len() <= 1 {
+            build_dir
+        } else {
+            build_dir.join(backend_name)
+        }
     }
 
     /// Get the directory containing this book's source files.

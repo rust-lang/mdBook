@@ -9,11 +9,11 @@ use serde_json;
 
 use errors::*;
 use config::Config;
-use book::{Book, MDBook};
+use book::Book;
 
 pub trait Renderer {
     fn name(&self) -> &str;
-    fn render(&self, book: &MDBook) -> Result<()>;
+    fn render(&self, ctx: &RenderContext) -> Result<()>;
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -49,8 +49,7 @@ impl RenderContext {
     }
 
     pub fn from_json<R: Read>(reader: R) -> Result<RenderContext> {
-        serde_json::from_reader(reader)
-            .chain_err(|| "Unable to deserialize the `RenderContext`")
+        serde_json::from_reader(reader).chain_err(|| "Unable to deserialize the `RenderContext`")
     }
 }
 
@@ -77,14 +76,8 @@ impl Renderer for CmdRenderer {
         &self.name
     }
 
-    fn render(&self, book: &MDBook) -> Result<()> {
+    fn render(&self, ctx: &RenderContext) -> Result<()> {
         info!("Invoking the \"{}\" renderer", self.cmd);
-        let ctx = RenderContext::new(
-            &book.root,
-            book.book.clone(),
-            book.config.clone(),
-            &self.destination,
-        );
 
         let mut child = Command::new(&self.cmd)
             .stdin(Stdio::piped())
