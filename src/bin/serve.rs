@@ -52,7 +52,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let address = format!("{}:{}", interface, port);
     let ws_address = format!("{}:{}", interface, ws_port);
 
-    book.livereload = Some(format!(
+    let livereload = Some(format!(
         r#"
     <script type="text/javascript">
         var socket = new WebSocket("ws://{}:{}");
@@ -70,6 +70,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 "#,
         public_address, ws_port, RELOAD_COMMAND
     ));
+    book.livereload = livereload.clone();
 
     book.build()?;
 
@@ -98,11 +99,26 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     #[cfg(feature = "watch")]
     watch::trigger_on_change(&mut book, move |path, book_dir| {
         println!("File changed: {:?}\nBuilding book...\n", path);
-        match MDBook::load(&book_dir).and_then(|mut b| b.build()) {
-            Err(e) => println!("Error while building: {:?}", e),
-            _ => broadcaster.send(RELOAD_COMMAND).unwrap(),
+        // FIXME: This area is really ugly because we need to re-set livereload :(
+        
+        let livereload = livereload.clone();
+
+        let result = MDBook::load(&book_dir)
+            .map(move |mut b| {
+                b.livereload = livereload;
+                b
+            })
+            .and_then(|mut b| b.build());
+
+        if let Err(e) = result {
+            error!("Unable to load the book");
+            error!("Error: {}", e);
+            for cause in e.iter().skip(1) {
+                error!("\tCaused By: {}", cause);
+            }
+        } else {
+            let _ = broadcaster.send(RELOAD_COMMAND);
         }
-        println!("");
     });
 
     Ok(())

@@ -74,7 +74,7 @@ where
 
     println!("\nListening for changes...\n");
 
-    for event in rx.recv() {
+    for event in rx.iter() {
         match event {
             Create(path) | Write(path) | Remove(path) | Rename(_, path) => {
                 closure(&path, &book.root);
