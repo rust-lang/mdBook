@@ -299,7 +299,6 @@ fn determine_renderers(config: &Config) -> Vec<Box<Renderer>> {
                 renderers.push(Box::new(CmdRenderer::new(
                     key.to_string(),
                     command.to_string(),
-                    &config.build.build_dir,
                 )));
             }
         }
