@@ -47,6 +47,71 @@ command = "python3 my_plugin.py"
 If no backend is supplied (i.e. there are no `output.*` tables), `mdbook` will 
 fall back to the `html` backend.
 
+### The `Config` Struct
+
+If you are developing a plugin or alternate backend then whenever your code is
+called you will almost certainly be passed a reference to the book's `Config`. 
+This can be treated roughly as a nested hashmap which lets you call methods like
+`get()` and `get_mut()` to get access to the config's contents.
+
+By convention, plugin developers will have their settings as a subtable inside
+`plugins` (e.g. a link checker would put its settings in `plugins.link_check`) 
+and backends should put their configuration under `output`, like the HTML 
+renderer does in the previous examples.
+
+As an example, some hypothetical `random` renderer would typically want to load
+its settings from the `Config` at the very start of its rendering process. The
+author can take advantage of serde to deserialize the generic `toml::Value` 
+object retrieved from `Config` into a struct specific to its use case.
+
+```rust
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate toml;
+extern crate mdbook;
+
+use toml::Value;
+use mdbook::config::Config;
+
+#[derive(Debug, Deserialize, PartialEq)]
+struct RandomOutput {
+    foo: u32,
+    bar: String,
+    baz: Vec<bool>,
+}
+
+# fn run() -> Result<(), Box<::std::error::Error>> {
+let src = r#"
+[output.random]
+foo = 5
+bar = "Hello World"
+baz = [true, true, false]
+"#;
+
+let book_config = Config::from_str(src)?; // usually passed in via the RenderContext
+let random = book_config.get("output.random")
+  .cloned()
+  .ok_or("output.random not found")?;
+let got: RandomOutput = random.try_into()?; 
+
+let should_be = RandomOutput {
+  foo: 5,
+  bar: "Hello World".to_string(),
+  baz: vec![true, true, false]
+};
+
+assert_eq!(got, should_be);
+
+let baz: Vec<bool> = book_config.get_deserialized("output.random.baz")?;
+println!("{:?}", baz); // prints [true, true, false]
+
+// do something interesting with baz
+# Ok(())
+# }
+# fn main() { run().unwrap() }
+```
+
 
 ## Render Context
 
