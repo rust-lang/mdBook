@@ -145,7 +145,8 @@ table thead td {
   position: relative;
   height: 50px;
 }
-.menu-bar i {
+.menu-bar i,
+.menu-bar .icon-button {
   position: relative;
   margin: 0 10px;
   z-index: 10;
@@ -156,7 +157,8 @@ table thead td {
   -ms-transition: color 0.5s;
   transition: color 0.5s;
 }
-.menu-bar i:hover {
+.menu-bar i:hover,
+.menu-bar .icon-button:hover {
   cursor: pointer;
 }
 .menu-bar .left-buttons {
@@ -322,10 +324,12 @@ table thead td {
 .light .nav-chapters:visited,
 .light .mobile-nav-chapters,
 .light .mobile-nav-chapters:visited,
+.light .menu-bar .icon-button,
 .light .menu-bar a i {
   color: #ccc;
 }
 .light .menu-bar i:hover,
+.light .menu-bar .icon-button:hover,
 .light .nav-chapters:hover,
 .light .mobile-nav-chapters i:hover {
   color: #333;
@@ -405,6 +409,15 @@ table thead td {
 .light pre > .result {
   margin-top: 10px;
 }
+.light .icon-button {
+  border: none;
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+.light .icon-button i {
+  margin: 0;
+}
 .coal {
   color: #98a3ad;
   background-color: #141617;
@@ -443,10 +456,12 @@ table thead td {
 .coal .nav-chapters:visited,
 .coal .mobile-nav-chapters,
 .coal .mobile-nav-chapters:visited,
+.coal .menu-bar .icon-button,
 .coal .menu-bar a i {
   color: #43484d;
 }
 .coal .menu-bar i:hover,
+.coal .menu-bar .icon-button:hover,
 .coal .nav-chapters:hover,
 .coal .mobile-nav-chapters i:hover {
   color: #b3c0cc;
@@ -526,6 +541,15 @@ table thead td {
 .coal pre > .result {
   margin-top: 10px;
 }
+.coal .icon-button {
+  border: none;
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+.coal .icon-button i {
+  margin: 0;
+}
 .navy {
   color: #bcbdd0;
   background-color: #161923;
@@ -564,10 +588,12 @@ table thead td {
 .navy .nav-chapters:visited,
 .navy .mobile-nav-chapters,
 .navy .mobile-nav-chapters:visited,
+.navy .menu-bar .icon-button,
 .navy .menu-bar a i {
   color: #737480;
 }
 .navy .menu-bar i:hover,
+.navy .menu-bar .icon-button:hover,
 .navy .nav-chapters:hover,
 .navy .mobile-nav-chapters i:hover {
   color: #b7b9cc;
@@ -647,6 +673,15 @@ table thead td {
 .navy pre > .result {
   margin-top: 10px;
 }
+.navy .icon-button {
+  border: none;
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+.navy .icon-button i {
+  margin: 0;
+}
 .rust {
   color: #262625;
   background-color: #e1e1db;
@@ -685,10 +720,12 @@ table thead td {
 .rust .nav-chapters:visited,
 .rust .mobile-nav-chapters,
 .rust .mobile-nav-chapters:visited,
+.rust .menu-bar .icon-button,
 .rust .menu-bar a i {
   color: #737480;
 }
 .rust .menu-bar i:hover,
+.rust .menu-bar .icon-button:hover,
 .rust .nav-chapters:hover,
 .rust .mobile-nav-chapters i:hover {
   color: #262625;
@@ -768,6 +805,15 @@ table thead td {
 .rust pre > .result {
   margin-top: 10px;
 }
+.rust .icon-button {
+  border: none;
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+.rust .icon-button i {
+  margin: 0;
+}
 .ayu {
   color: #c5c5c5;
   background-color: #0f1419;
@@ -806,10 +852,12 @@ table thead td {
 .ayu .nav-chapters:visited,
 .ayu .mobile-nav-chapters,
 .ayu .mobile-nav-chapters:visited,
+.ayu .menu-bar .icon-button,
 .ayu .menu-bar a i {
   color: #737480;
 }
 .ayu .menu-bar i:hover,
+.ayu .menu-bar .icon-button:hover,
 .ayu .nav-chapters:hover,
 .ayu .mobile-nav-chapters i:hover {
   color: #b7b9cc;
@@ -888,6 +936,15 @@ table thead td {
 }
 .ayu pre > .result {
   margin-top: 10px;
+}
+.ayu .icon-button {
+  border: none;
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+.ayu .icon-button i {
+  margin: 0;
 }
 @media only print {
   #sidebar,
