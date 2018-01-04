@@ -39,11 +39,13 @@
     .nav-chapters:visited,
     .mobile-nav-chapters,
     .mobile-nav-chapters:visited,
+    .menu-bar .icon-button,
     .menu-bar a i {
         color: $icons
     }
 
     .menu-bar i:hover,
+    .menu-bar .icon-button:hover,
     .nav-chapters:hover,
     .mobile-nav-chapters i:hover {
         color: $icons-hover
@@ -131,5 +133,16 @@
 
         & > .result { margin-top: 10px; }
 
+    }
+
+    .icon-button {
+        border: none;
+        background: none;
+        padding: 0;
+        color: inherit;
+
+        i {
+            margin: 0;
+        }
     }
 }
