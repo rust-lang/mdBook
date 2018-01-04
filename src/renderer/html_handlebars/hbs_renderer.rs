@@ -54,6 +54,14 @@ impl HtmlHandlebars {
                                                                            to str")
                                                        })?;
 
+                // "print.html" is used for the print page.
+                if path == "print.md" {
+                    bail!(ErrorKind::ReservedFilenameError(
+                        "Filename print.md is reserved for internal usage.".to_string(),
+                        path.to_string())
+                    );
+                };
+
                 // Non-lexical lifetimes needed :'(
                 let title: String;
                 {

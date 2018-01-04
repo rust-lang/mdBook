@@ -146,6 +146,11 @@ pub mod errors {
                 description("A SUMMARY.md parsing error")
                 display("Error at line {}, column {}: {}", line, col, message)
             }
+
+            ReservedFilenameError(message: String, filename: String) {
+                description("A reserved filename error")
+                display("Error while processing {}: {}", filename, message)
+            }
         }
     }
 
