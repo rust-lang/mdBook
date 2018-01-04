@@ -1,6 +1,8 @@
+use std::ops::{Range, RangeFrom, RangeTo, RangeFull};
 use std::path::{Path, PathBuf};
 use regex::{CaptureMatches, Captures, Regex};
 use utils::fs::file_to_string;
+use utils::string::take_lines;
 use errors::*;
 
 const ESCAPE_CHAR: char = '\\';
@@ -22,15 +24,38 @@ pub fn replace_all<P: AsRef<Path>>(s: &str, path: P) -> Result<String> {
     Ok(replaced)
 }
 
-#[derive(PartialOrd, PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone)]
 enum LinkType<'a> {
     Escaped,
-    IncludeRangeFrom(PathBuf, usize),
-    IncludeRange(PathBuf, usize, usize),
+    IncludeRange(PathBuf, Range<usize>),
+    IncludeRangeFrom(PathBuf, RangeFrom<usize>),
+    IncludeRangeTo(PathBuf, RangeTo<usize>),
+    IncludeRangeFull(PathBuf, RangeFull),
     Playpen(PathBuf, Vec<&'a str>),
 }
 
-#[derive(PartialOrd, PartialEq, Debug, Clone)]
+fn parse_include_path(path: &str) -> LinkType<'static> {
+    let mut parts = path.split(':');
+    let path = parts.next().unwrap().into();
+    let start = parts.next().and_then(|s| s.parse::<usize>().ok());
+    let end = parts.next().and_then(|s| s.parse::<usize>().ok());
+    match start {
+        Some(start) => {
+            match end {
+                Some(end) => LinkType::IncludeRange(path, Range{ start: start, end: end}),
+                None => LinkType::IncludeRangeFrom(path, RangeFrom{ start: start }),
+            }
+        }
+        None => {
+            match end {
+                Some(end) => LinkType::IncludeRangeTo(path, RangeTo{ end: end }),
+                None => LinkType::IncludeRangeFull(path, RangeFull),
+            }
+        }
+    }
+}
+
+#[derive(PartialEq, Debug, Clone)]
 struct Link<'a> {
     start_index: usize,
     end_index: usize,
@@ -39,39 +64,16 @@ struct Link<'a> {
 }
 
 impl<'a> Link<'a> {
-    fn parse_include_path(path: PathBuf) -> Option<LinkType<'a>> {
-        path.to_str().map(|p| {
-            let mut parts = p.split(':');
-            let p = parts.next().unwrap();
-            let from = parts.next().and_then(|s| s.parse::<usize>().ok());
-            let to = parts.next().and_then(|s| s.parse::<usize>().ok());
-            match from {
-                Some(from) => {
-                    match to {
-                        Some(to) => LinkType::IncludeRange(p.into(), from, to),
-                        None => LinkType::IncludeRangeFrom(p.into(), from),
-                    }
-                }
-                None => {
-                    match to {
-                        Some(to) => LinkType::IncludeRange(p.into(), 0, to),
-                        None => LinkType::IncludeRangeFrom(p.into(), 0),
-                    }
-                }
-            }
-        })
-    }
-
     fn from_capture(cap: Captures<'a>) -> Option<Link<'a>> {
         let link_type = match (cap.get(0), cap.get(1), cap.get(2)) {
             (_, Some(typ), Some(rest)) => {
                 let mut path_props = rest.as_str().split_whitespace();
-                let file_path = path_props.next().map(PathBuf::from);
+                let file_arg = path_props.next();
                 let props: Vec<&str> = path_props.collect();
 
-                match (typ.as_str(), file_path) {
-                    ("include", Some(pth)) => Self::parse_include_path(pth),
-                    ("playpen", Some(pth)) => Some(LinkType::Playpen(pth, props)),
+                match (typ.as_str(), file_arg) {
+                    ("include", Some(pth)) => Some(parse_include_path(pth)),
+                    ("playpen", Some(pth)) => Some(LinkType::Playpen(pth.into(), props)),
                     _ => None,
                 }
             }
@@ -93,35 +95,34 @@ impl<'a> Link<'a> {
         })
     }
 
-    fn join_lines<'b, I: IntoIterator<Item = &'b str>>(lines: I) -> String {
-        let mut lines = lines.into_iter();
-        let first = String::from(lines.next().unwrap_or(""));
-        lines.fold(first, |acc, s| acc + "\n" + s)
-    }
-
-    fn take_lines(s: String, from: usize, to_inclusive: Option<usize>) -> String {
-        let lines = s.split('\n').skip(from);
-        match to_inclusive {
-            Some(to) => Self::join_lines(lines.take(to.checked_sub(from).unwrap_or(0))),
-            None => Self::join_lines(lines),
-        }
-    }
-
     fn render_with_path<P: AsRef<Path>>(&self, base: P) -> Result<String> {
         let base = base.as_ref();
         match self.link {
             // omit the escape char
             LinkType::Escaped => Ok((&self.link_text[1..]).to_owned()),
-            LinkType::IncludeRangeFrom(ref pat, from) => {
+            LinkType::IncludeRange(ref pat, ref range) => {
                 file_to_string(base.join(pat))
-                    .map(|s| Self::take_lines(s, from, None))
+                    .map(|s| take_lines(&s, range.clone()))
                     .chain_err(|| {
                         format!("Could not read file for link {}", self.link_text)
                     })
             }
-            LinkType::IncludeRange(ref pat, from, to) => {
+            LinkType::IncludeRangeFrom(ref pat, ref range) => {
                 file_to_string(base.join(pat))
-                    .map(|s| Self::take_lines(s, from, Some(to)))
+                    .map(|s| take_lines(&s, range.clone()))
+                    .chain_err(|| {
+                        format!("Could not read file for link {}", self.link_text)
+                    })
+            }
+            LinkType::IncludeRangeTo(ref pat, ref range) => {
+                file_to_string(base.join(pat))
+                    .map(|s| take_lines(&s, range.clone()))
+                    .chain_err(|| {
+                        format!("Could not read file for link {}", self.link_text)
+                    })
+            }
+            LinkType::IncludeRangeFull(ref pat, _) => {
+                file_to_string(base.join(pat))
                     .chain_err(|| {
                         format!("Could not read file for link {}", self.link_text)
                     })
@@ -238,12 +239,15 @@ fn test_find_links_with_range() {
             Link {
                 start_index: 22,
                 end_index: 48,
-                link: LinkType::IncludeRange(PathBuf::from("file.rs"), 10, 20),
+                link: LinkType::IncludeRange(PathBuf::from("file.rs"), 10..20),
                 link_text: "{{#include file.rs:10:20}}",
             },
         ]
     );
+}
 
+#[test]
+fn test_find_links_with_from_range() {
     let s = "Some random text with {{#include file.rs:10:}}...";
     let res = find_links(s).collect::<Vec<_>>();
     println!("\nOUTPUT: {:?}\n", res);
@@ -253,12 +257,15 @@ fn test_find_links_with_range() {
             Link {
                 start_index: 22,
                 end_index: 46,
-                link: LinkType::IncludeRangeFrom(PathBuf::from("file.rs"), 10),
+                link: LinkType::IncludeRangeFrom(PathBuf::from("file.rs"), 10..),
                 link_text: "{{#include file.rs:10:}}",
             },
         ]
     );
+}
 
+#[test]
+fn test_find_links_with_to_range() {
     let s = "Some random text with {{#include file.rs::20}}...";
     let res = find_links(s).collect::<Vec<_>>();
     println!("\nOUTPUT: {:?}\n", res);
@@ -268,12 +275,15 @@ fn test_find_links_with_range() {
             Link {
                 start_index: 22,
                 end_index: 46,
-                link: LinkType::IncludeRange(PathBuf::from("file.rs"), 0, 20),
+                link: LinkType::IncludeRangeTo(PathBuf::from("file.rs"), ..20),
                 link_text: "{{#include file.rs::20}}",
             },
         ]
     );
+}
 
+#[test]
+fn test_find_links_with_full_range() {
     let s = "Some random text with {{#include file.rs::}}...";
     let res = find_links(s).collect::<Vec<_>>();
     println!("\nOUTPUT: {:?}\n", res);
@@ -283,13 +293,12 @@ fn test_find_links_with_range() {
             Link {
                 start_index: 22,
                 end_index: 44,
-                link: LinkType::IncludeRangeFrom(PathBuf::from("file.rs"), 0),
+                link: LinkType::IncludeRangeFull(PathBuf::from("file.rs"), ..),
                 link_text: "{{#include file.rs::}}",
             },
         ]
     );
 }
-
 
 #[test]
 fn test_find_links_escaped_link() {
@@ -343,7 +352,7 @@ fn test_find_all_link_types() {
                Link {
                    start_index: 38,
                    end_index: 58,
-                   link: LinkType::IncludeRangeFrom(PathBuf::from("file.rs"), 0),
+                   link: LinkType::IncludeRangeFull(PathBuf::from("file.rs"), ..),
                    link_text: "{{#include file.rs}}",
                });
     assert_eq!(res[1],

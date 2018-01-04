@@ -1,4 +1,5 @@
 pub mod fs;
+pub mod string;
 
 use pulldown_cmark::{html, Event, Options, Parser, Tag, OPTION_ENABLE_FOOTNOTES,
                      OPTION_ENABLE_TABLES};
