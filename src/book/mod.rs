@@ -145,7 +145,7 @@ impl MDBook {
     }
 
     /// Tells the renderer to build our book and put it in the build directory.
-    pub fn build(&mut self) -> Result<()> {
+    pub fn build(&self) -> Result<()> {
         debug!("[fn]: build");
 
         for renderer in &self.renderers {

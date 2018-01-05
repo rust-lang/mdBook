@@ -22,7 +22,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 // Watch command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::load(&book_dir)?;
+    let book = MDBook::load(&book_dir)?;
 
     if args.is_present("open") {
         book.build()?;
@@ -31,7 +31,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     trigger_on_change(&book, |path, book_dir| {
         println!("File changed: {:?}\nBuilding book...\n", path);
-        let result = MDBook::load(&book_dir).and_then(|mut b| b.build());
+        let result = MDBook::load(&book_dir).and_then(|b| b.build());
 
         if let Err(e) = result {
             println!("Error while building: {}", e);
