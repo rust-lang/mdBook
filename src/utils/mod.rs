@@ -1,10 +1,11 @@
 pub mod fs;
-pub mod string;
+mod string;
 
 use pulldown_cmark::{html, Event, Options, Parser, Tag, OPTION_ENABLE_FOOTNOTES,
                      OPTION_ENABLE_TABLES};
 use std::borrow::Cow;
 
+pub use self::string::{RangeArgument, take_lines};
 
 ///
 ///

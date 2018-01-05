@@ -2,7 +2,7 @@ use std::ops::{Range, RangeFrom, RangeTo, RangeFull};
 use std::path::{Path, PathBuf};
 use regex::{CaptureMatches, Captures, Regex};
 use utils::fs::file_to_string;
-use utils::string::take_lines;
+use utils::take_lines;
 use errors::*;
 
 const ESCAPE_CHAR: char = '\\';

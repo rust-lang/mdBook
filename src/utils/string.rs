@@ -2,7 +2,8 @@ use std::ops::{Range, RangeFrom, RangeFull, RangeTo};
 use itertools::Itertools;
 
 // This trait is already contained in the standard lib, however it is unstable.
-// When the feature will stabilize, pls remove!
+// TODO: Remove when the `collections_range` feature stabilises
+// (https://github.com/rust-lang/rust/issues/30877)
 pub trait RangeArgument<T: ?Sized> {
     fn start(&self) -> Option<&T>;
     fn end(&self) -> Option<&T>;
