@@ -11,9 +11,6 @@ if [ "$TRAVIS_PULL_REQUEST" != "false" ] ||
    exit 0
 fi
 
-export RUST_BACKTRACE=full
-df -h
-
 # Make sure we have the css dependencies
 npm install -g stylus nib 
 
@@ -25,11 +22,9 @@ rev=$(git rev-parse --short HEAD)
 
 echo -e "${CYAN}Running cargo doc${NC}"
 cargo doc --features regenerate-css
-df -h
 
 echo -e "${CYAN}Running mdbook build${NC}"
 cargo run -- build book-example/
-df -h
 
 echo -e "${CYAN}Copying book to target/doc${NC}"
 cp -R book-example/book/* target/doc/
@@ -44,7 +39,6 @@ git config user.email "michaelfbryan@gmail.com"
 git remote add upstream "https://$GH_TOKEN@github.com/rust-lang-nursery/mdBook.git"
 git fetch upstream --quiet
 git reset upstream/gh-pages --quiet
-df -h
 
 touch .
 
