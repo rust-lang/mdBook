@@ -129,6 +129,8 @@ pub use renderer::Renderer;
 
 /// The error types used through out this crate.
 pub mod errors {
+    use std::path::PathBuf;
+
     error_chain!{
         foreign_links {
             Io(::std::io::Error);
@@ -146,6 +148,11 @@ pub mod errors {
             ParseError(line: usize, col: usize, message: String) {
                 description("A SUMMARY.md parsing error")
                 display("Error at line {}, column {}: {}", line, col, message)
+            }
+
+            ReservedFilenameError(filename: PathBuf) {
+                description("Reserved Filename")
+                display("{} is reserved for internal use", filename.display())
             }
         }
     }

@@ -2,6 +2,7 @@ extern crate mdbook;
 #[macro_use]
 extern crate pretty_assertions;
 extern crate select;
+extern crate tempdir;
 extern crate walkdir;
 
 mod dummy_book;
@@ -9,11 +10,13 @@ mod dummy_book;
 use dummy_book::{assert_contains_strings, DummyBook};
 
 use std::fs;
+use std::io::Write;
 use std::path::Path;
 use std::ffi::OsStr;
 use walkdir::{DirEntry, WalkDir};
 use select::document::Document;
 use select::predicate::{Class, Name, Predicate};
+use tempdir::TempDir;
 use mdbook::errors::*;
 use mdbook::utils::fs::file_to_string;
 use mdbook::config::Config;
@@ -303,4 +306,22 @@ fn example_book_can_build() {
 
     let got = md.build();
     assert!(got.is_ok());
+}
+
+#[test]
+fn book_with_a_reserved_filename_does_not_build() {
+    let tmp_dir = TempDir::new("mdBook").unwrap();
+    let src_path = tmp_dir.path().join("src");
+    fs::create_dir(&src_path).unwrap();
+
+    let summary_path = src_path.join("SUMMARY.md");
+    let print_path = src_path.join("print.md");
+
+    fs::File::create(print_path).unwrap();
+    let mut summary_file = fs::File::create(summary_path).unwrap();
+    writeln!(summary_file, "[print](print.md)").unwrap();
+
+    let mut md = MDBook::load(tmp_dir.path()).unwrap();
+    let got = md.build();
+    assert!(got.is_err());
 }

@@ -54,6 +54,11 @@ impl HtmlHandlebars {
                                                                            to str")
                                                        })?;
 
+                // "print.html" is used for the print page.
+                if ch.path == Path::new("print.md") {
+                    bail!(ErrorKind::ReservedFilenameError(ch.path.clone()));
+                };
+
                 // Non-lexical lifetimes needed :'(
                 let title: String;
                 {
