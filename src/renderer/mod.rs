@@ -17,8 +17,9 @@ mod html_handlebars;
 
 use std::io::Read;
 use std::path::PathBuf;
-use std::process::{Command, Stdio};
+use std::process::Command;
 use serde_json;
+use tempfile;
 
 use errors::*;
 use config::Config;
@@ -135,17 +136,20 @@ impl Renderer for CmdRenderer {
     fn render(&self, ctx: &RenderContext) -> Result<()> {
         info!("Invoking the \"{}\" renderer", self.cmd);
 
-        let mut child = Command::new(&self.cmd)
-            .stdin(Stdio::piped())
-            .spawn()
+        // We need to write the RenderContext to a temporary file here instead
+        // of passing it in via a pipe. This prevents a race condition where
+        // some quickly executing command (e.g. `/bin/true`) may exit before we
+        // finish writing the render context (closing the stdin pipe and
+        // throwing a write error).
+        let mut temp = tempfile::tempfile().chain_err(|| "Unable to create a temporary file")?;
+        serde_json::to_writer(&mut temp, &ctx)
+            .chain_err(|| "Unable to serialize the RenderContext")?;
+
+        let status = Command::new(&self.cmd)
+            .stdin(temp)
+            .status()
             .chain_err(|| "Unable to start the renderer")?;
 
-        serde_json::to_writer(
-            child.stdin.as_mut().expect("stdin is always attached"),
-            &ctx,
-        ).chain_err(|| "Error occurred while sending the render context to the renderer")?;
-
-        let status = child.wait()?;
         trace!("{} exited with output: {:?}", self.cmd, status);
 
         if !status.success() {
