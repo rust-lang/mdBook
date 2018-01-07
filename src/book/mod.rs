@@ -89,16 +89,19 @@ impl MDBook {
 
         let renderers = determine_renderers(&config);
 
-        let preprocessors = determine_preprocessors(&config);
-
-        Ok(MDBook {
+        let mut md_book = MDBook {
             root,
             config,
             book,
             renderers,
             livereload,
-            preprocessors,
-        })
+            preprocessors: vec![],
+        };
+
+        let preprocessors = determine_preprocessors(&md_book);
+        md_book.preprocessors = preprocessors;
+
+        Ok(md_book)
     }
 
     /// Returns a flat depth-first iterator over the elements of the book,
@@ -324,9 +327,21 @@ fn determine_renderers(config: &Config) -> Vec<Box<Renderer>> {
     renderers
 }
 
-/// Look at the `Config` and try to figure out what preprocessors to run.
-fn determine_preprocessors(config: &Config) -> Vec<Box<Preprocessor>> {
+/// Look at the `MDBook` and try to figure out what preprocessors to run.
+fn determine_preprocessors(md_book: &MDBook) -> Vec<Box<Preprocessor>> {
     let mut preprocessors: Vec<Box<Preprocessor>> = Vec::new();
+
+    if let Some(preprocess_array) = md_book.config.get("pre_process").and_then(|o| o.as_array()) {
+        for key in preprocess_array.iter() {
+            if key.as_str().map_or(false, |key| key == "links") {
+                let preprocessor = preprocess::links::ReplaceAllPreprocessor {
+                    src_dir: md_book.source_dir(),
+                };
+
+                preprocessors.push(Box::new(preprocessor))
+            }
+        }
+    }
 
     preprocessors
 }
