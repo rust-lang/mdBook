@@ -273,7 +273,7 @@ impl MDBook {
         self.root.join(&self.config.book.src)
     }
 
-    // FIXME: This belongs as part of the `HtmlConfig`.
+    // FIXME: This really belongs as part of the `HtmlConfig`.
     #[doc(hidden)]
     pub fn theme_dir(&self) -> PathBuf {
         match self.config.html_config().and_then(|h| h.theme) {

@@ -54,7 +54,8 @@ impl Config {
     /// # Note
     ///
     /// This is for compatibility only. It will be removed completely once the
-    /// rendering and plugin system is established.
+    /// HTML renderer is refactored to be less coupled to `mdbook` internals.
+    #[doc(hidden)]
     pub fn html_config(&self) -> Option<HtmlConfig> {
         self.get_deserialized("output.html").ok()
     }
@@ -75,6 +76,9 @@ impl Config {
     }
 
     /// Set a config key, clobbering any existing values along the way.
+    ///
+    /// The only way this can fail is if we can't serialize `value` into a
+    /// `toml::Value`.
     pub fn set<S: Serialize, I: AsRef<str>>(&mut self, index: I, value: S) -> Result<()> {
         let pieces: Vec<_> = index.as_ref().split(".").collect();
         let value =
@@ -123,6 +127,11 @@ impl Config {
     }
 }
 
+/// Recursively walk down a table and try to set some `foo.bar.baz` value.
+///
+/// If at any table along the way doesn't exist (or isn't itself a `Table`!) an
+/// empty `Table` will be inserted. e.g. if the `foo` table didn't contain a
+/// nested table called `bar`, we'd insert one and then keep recursing.
 fn recursive_set(key: &[&str], table: &mut Table, value: Value) {
     if key.is_empty() {
         unreachable!();
@@ -143,6 +152,7 @@ fn recursive_set(key: &[&str], table: &mut Table, value: Value) {
     }
 }
 
+/// The "getter" version of `recursive_set()`.
 fn recursive_get<'a>(key: &[&str], table: &'a Table) -> Option<&'a Value> {
     if key.is_empty() {
         return None;
@@ -160,6 +170,7 @@ fn recursive_get<'a>(key: &[&str], table: &'a Table) -> Option<&'a Value> {
     }
 }
 
+/// The mutable version of `recursive_get()`.
 fn recursive_get_mut<'a>(key: &[&str], table: &'a mut Table) -> Option<&'a mut Value> {
     // TODO: Figure out how to abstract over mutability to reduce copy-pasta
     if key.is_empty() {
@@ -248,7 +259,6 @@ fn is_legacy_format(table: &Table) -> bool {
         .any(|key| table.contains_key(&key.to_string()))
 }
 
-
 /// Configuration options which are specific to the book and required for
 /// loading it from disk.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -308,7 +318,7 @@ pub struct HtmlConfig {
     pub additional_css: Vec<PathBuf>,
     pub additional_js: Vec<PathBuf>,
     pub playpen: Playpen,
-    /// This is used as a bit of a workaround for the `mdbook serve` command. 
+    /// This is used as a bit of a workaround for the `mdbook serve` command.
     /// Basically, because you set the websocket port from the command line, the
     /// `mdbook serve` command needs a way to let the HTML renderer know where
     /// to point livereloading at, if it has been enabled.
@@ -334,7 +344,6 @@ impl Default for Playpen {
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
