@@ -16,7 +16,6 @@ use clap::{App, AppSettings, ArgMatches};
 use chrono::Local;
 use log::LevelFilter;
 use env_logger::Builder;
-use error_chain::ChainedError;
 use mdbook::utils;
 
 pub mod build;

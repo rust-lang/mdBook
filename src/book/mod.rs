@@ -19,6 +19,7 @@ use std::path::PathBuf;
 use std::io::Write;
 use std::process::Command;
 use tempdir::TempDir;
+use toml::Value;
 
 use utils;
 use renderer::{CmdRenderer, HtmlHandlebars, RenderContext, Renderer};
@@ -149,32 +150,36 @@ impl MDBook {
         debug!("[fn]: build");
 
         for renderer in &self.renderers {
-            let name = renderer.name();
-            let build_dir = self.build_dir_for(name);
-            if build_dir.exists() {
-                debug!(
-                    "Cleaning build dir for the \"{}\" renderer ({})",
-                    name,
-                    build_dir.display()
-                );
-
-                utils::fs::remove_dir_content(&build_dir)
-                    .chain_err(|| "Unable to clear output directory")?;
-            }
-
-            let render_context = RenderContext::new(
-                self.root.clone(),
-                self.book.clone(),
-                self.config.clone(),
-                build_dir,
-            );
-
-            renderer
-                .render(&render_context)
-                .chain_err(|| "Rendering failed")?;
+            self.run_renderer(renderer.as_ref())?;
         }
 
         Ok(())
+    }
+
+    fn run_renderer(&self, renderer: &Renderer) -> Result<()> {
+        let name = renderer.name();
+        let build_dir = self.build_dir_for(name);
+        if build_dir.exists() {
+            debug!(
+                "Cleaning build dir for the \"{}\" renderer ({})",
+                name,
+                build_dir.display()
+            );
+
+            utils::fs::remove_dir_content(&build_dir)
+                .chain_err(|| "Unable to clear output directory")?;
+        }
+
+        let render_context = RenderContext::new(
+            self.root.clone(),
+            self.book.clone(),
+            self.config.clone(),
+            build_dir,
+        );
+
+        renderer
+            .render(&render_context)
+            .chain_err(|| "Rendering failed")
     }
 
     /// You can change the default renderer to another one by using this method.
@@ -284,22 +289,12 @@ fn determine_renderers(config: &Config) -> Vec<Box<Renderer>> {
 
     if let Some(output_table) = config.get("output").and_then(|o| o.as_table()) {
         for (key, table) in output_table.iter() {
+            // the "html" backend has its own Renderer
             if key == "html" {
                 renderers.push(Box::new(HtmlHandlebars::new()));
             } else {
-                // look for the `command` field, falling back to using the key
-                // prepended by "mdbook-"
-                let command = table
-                    .get("command")
-                    .and_then(|c| c.as_str())
-                    .map(|s| s.to_string())
-                    .unwrap_or_else(|| format!("mdbook-{}", key));
-
-                // TODO: Actually calculate the destination directory
-                renderers.push(Box::new(CmdRenderer::new(
-                    key.to_string(),
-                    command.to_string(),
-                )));
+                let renderer = interpret_custom_renderer(key, table);
+                renderers.push(renderer);
             }
         }
     }
@@ -310,6 +305,19 @@ fn determine_renderers(config: &Config) -> Vec<Box<Renderer>> {
     }
 
     renderers
+}
+
+fn interpret_custom_renderer(key: &str, table: &Value) -> Box<Renderer> {
+    // look for the `command` field, falling back to using the key
+    // prepended by "mdbook-"
+    let table_dot_command = table
+        .get("command")
+        .and_then(|c| c.as_str())
+        .map(|s| s.to_string());
+
+    let command = table_dot_command.unwrap_or_else(|| format!("mdbook-{}", key));
+
+    Box::new(CmdRenderer::new(key.to_string(), command.to_string()))
 }
 
 #[cfg(test)]
