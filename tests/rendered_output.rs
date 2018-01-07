@@ -317,7 +317,7 @@ fn book_with_a_reserved_filename_does_not_build() {
     let mut summary_file = fs::File::create(summary_path).unwrap();
     writeln!(summary_file, "[print](print.md)").unwrap();
 
-    let mut md = MDBook::load(tmp_dir.path()).unwrap();
+    let md = MDBook::load(tmp_dir.path()).unwrap();
     let got = md.build();
     assert!(got.is_err());
 }
