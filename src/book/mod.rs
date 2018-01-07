@@ -224,7 +224,7 @@ impl MDBook {
 
         let temp_dir = TempDir::new("mdbook")?;
 
-        let replace_all_preprocessor = preprocess::links::ReplaceAllPreprocessor {
+        let replace_all_preprocessor = preprocess::links::LinkPreprocessor {
             src_dir: self.source_dir(),
         };
 
@@ -337,24 +337,27 @@ fn determine_renderers(config: &Config) -> Vec<Box<Renderer>> {
 fn determine_preprocessors(md_book: &MDBook) -> Vec<Box<Preprocessor>> {
     let mut preprocessors: Vec<Box<Preprocessor>> = Vec::new();
 
-    if let Some(preprocess_array) = md_book.config.get("pre_process").and_then(|o| o.as_array()) {
+    if let Some(preprocess_array) = md_book.config.get("preprocess").and_then(|o| o.as_array()) {
         for key in preprocess_array.iter() {
-            if key.as_str().map_or(false, |key| key == "links") {
-                let replace_all_preprocessor = preprocess::links::ReplaceAllPreprocessor {
-                    src_dir: md_book.source_dir(),
-                };
+            match key.as_str() {
+                Some(key) if key == "links" => {
+                    let link_preprocessor = preprocess::links::LinkPreprocessor {
+                        src_dir: md_book.source_dir(),
+                    };
 
-                preprocessors.push(Box::new(replace_all_preprocessor))
+                    preprocessors.push(Box::new(link_preprocessor ))
+                }
+                _ => {}
             }
         }
     }
 
     if preprocessors.is_empty() {
-        let replace_all_preprocessor = preprocess::links::ReplaceAllPreprocessor {
+        let link_preprocessor = preprocess::links::LinkPreprocessor {
             src_dir: md_book.source_dir(),
         };
 
-        preprocessors.push(Box::new(replace_all_preprocessor))
+        preprocessors.push(Box::new(link_preprocessor))
     }
 
     preprocessors

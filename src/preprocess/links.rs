@@ -10,11 +10,11 @@ use book::{Book, BookItem};
 
 const ESCAPE_CHAR: char = '\\';
 
-pub struct ReplaceAllPreprocessor {
+pub struct LinkPreprocessor {
     pub src_dir: PathBuf
 }
 
-impl Preprocessor for ReplaceAllPreprocessor {
+impl Preprocessor for LinkPreprocessor {
     fn run(&self, book: &mut Book) -> Result<()> {
         for section in &mut book.sections {
             match *section {
