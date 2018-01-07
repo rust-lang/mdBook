@@ -160,14 +160,20 @@ impl MDBook {
     pub fn build(&self) -> Result<()> {
         debug!("[fn]: build");
 
+        let mut preprocessed_book = self.book.clone();
+
+        for preprocessor in &self.preprocessors {
+            preprocessor.run(&mut preprocessed_book)?;
+        }
+
         for renderer in &self.renderers {
-            self.run_renderer(renderer.as_ref())?;
+            self.run_renderer(&preprocessed_book, renderer.as_ref())?;
         }
 
         Ok(())
     }
 
-    fn run_renderer(&self, renderer: &Renderer) -> Result<()> {
+    fn run_renderer(&self, preprocessed_book: &Book, renderer: &Renderer) -> Result<()> {
         let name = renderer.name();
         let build_dir = self.build_dir_for(name);
         if build_dir.exists() {
@@ -183,7 +189,7 @@ impl MDBook {
 
         let render_context = RenderContext::new(
             self.root.clone(),
-            self.book.clone(),
+            preprocessed_book.clone(),
             self.config.clone(),
             build_dir,
         );
