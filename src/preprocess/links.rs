@@ -19,11 +19,11 @@ impl Preprocessor for ReplaceAllPreprocessor {
         for section in &mut book.sections {
             match *section {
                 BookItem::Chapter(ref mut ch) => {
-                    let content = ::std::mem::replace(&mut ch.content, String::new());
                     let base = ch.path.parent()
                         .map(|dir| self.src_dir.join(dir))
                         .ok_or_else(|| String::from("Invalid bookitem path!"))?;
-                    ch.content = replace_all(&content, base)?
+                    let content = replace_all(&ch.content, base)?;
+                    ch.content = content
                 }
                 _ => {}
             }
