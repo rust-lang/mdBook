@@ -8,10 +8,7 @@ use std::borrow::Cow;
 
 pub use self::string::{RangeArgument, take_lines};
 
-///
-///
-/// Wrapper around the pulldown-cmark parser and renderer to render markdown
-
+/// Wrapper around the pulldown-cmark parser for rendering markdown to HTML.
 pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
     let mut s = String::with_capacity(text.len() * 3 / 2);
 
