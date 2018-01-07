@@ -11,7 +11,13 @@ use book::{Book, BookItem};
 const ESCAPE_CHAR: char = '\\';
 
 pub struct LinkPreprocessor {
-    pub src_dir: PathBuf
+    src_dir: PathBuf
+}
+
+impl LinkPreprocessor {
+    pub fn new<P: Into<PathBuf>>(src_dir: P) -> Self {
+        LinkPreprocessor { src_dir: src_dir.into() }
+    }
 }
 
 impl Preprocessor for LinkPreprocessor {
