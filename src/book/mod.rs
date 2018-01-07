@@ -340,13 +340,21 @@ fn determine_preprocessors(md_book: &MDBook) -> Vec<Box<Preprocessor>> {
     if let Some(preprocess_array) = md_book.config.get("pre_process").and_then(|o| o.as_array()) {
         for key in preprocess_array.iter() {
             if key.as_str().map_or(false, |key| key == "links") {
-                let preprocessor = preprocess::links::ReplaceAllPreprocessor {
+                let replace_all_preprocessor = preprocess::links::ReplaceAllPreprocessor {
                     src_dir: md_book.source_dir(),
                 };
 
-                preprocessors.push(Box::new(preprocessor))
+                preprocessors.push(Box::new(replace_all_preprocessor))
             }
         }
+    }
+
+    if preprocessors.is_empty() {
+        let replace_all_preprocessor = preprocess::links::ReplaceAllPreprocessor {
+            src_dir: md_book.source_dir(),
+        };
+
+        preprocessors.push(Box::new(replace_all_preprocessor))
     }
 
     preprocessors
