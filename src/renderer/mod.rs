@@ -20,6 +20,7 @@ use std::path::PathBuf;
 use std::process::Command;
 use serde_json;
 use tempfile;
+use shlex::Shlex;
 
 use errors::*;
 use config::Config;
@@ -126,6 +127,22 @@ impl CmdRenderer {
     pub fn new(name: String, cmd: String) -> CmdRenderer {
         CmdRenderer { name, cmd }
     }
+
+    fn compose_command(&self) -> Result<Command> {
+        let mut words = Shlex::new(&self.cmd);
+        let executable = match words.next() {
+            Some(e) => e,
+            None => bail!("Command string was empty"),
+        };
+
+        let mut cmd = Command::new(executable);
+
+        for arg in words {
+            cmd.arg(arg);
+        }
+
+        Ok(cmd)
+    }
 }
 
 impl Renderer for CmdRenderer {
@@ -145,8 +162,9 @@ impl Renderer for CmdRenderer {
         serde_json::to_writer(&mut temp, &ctx)
             .chain_err(|| "Unable to serialize the RenderContext")?;
 
-        let status = Command::new(&self.cmd)
+        let status = self.compose_command()?
             .stdin(temp)
+            .current_dir(&ctx.destination)
             .status()
             .chain_err(|| "Unable to start the renderer")?;
 
