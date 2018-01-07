@@ -89,7 +89,7 @@ impl MDBook {
 
         let renderers = determine_renderers(&config);
 
-        let preprocessors = vec![];
+        let preprocessors = determine_preprocessors(&config);
 
         Ok(MDBook {
             root,
@@ -215,16 +215,18 @@ impl MDBook {
 
         let temp_dir = TempDir::new("mdbook")?;
 
+        let replace_all_preprocessor = preprocess::links::ReplaceAllPreprocessor {
+            src_dir: self.source_dir(),
+        };
+
+        replace_all_preprocessor.run(&mut self.book)?;
+
         for item in self.iter() {
             if let BookItem::Chapter(ref ch) = *item {
                 if !ch.path.as_os_str().is_empty() {
                     let path = self.source_dir().join(&ch.path);
-                    let base = path.parent()
-                        .ok_or_else(|| String::from("Invalid bookitem path!"))?;
-                    let content = utils::fs::file_to_string(&path)?;
-                    // Parse and expand links
-                    let content = preprocess::links::replace_all(&content, base)?;
                     println!("[*]: Testing file: {:?}", path);
+                    let content = utils::fs::file_to_string(&path)?;
 
                     // write preprocessed file to tempdir
                     let path = temp_dir.path().join(&ch.path);
@@ -320,6 +322,13 @@ fn determine_renderers(config: &Config) -> Vec<Box<Renderer>> {
     }
 
     renderers
+}
+
+/// Look at the `Config` and try to figure out what preprocessors to run.
+fn determine_preprocessors(config: &Config) -> Vec<Box<Preprocessor>> {
+    let mut preprocessors: Vec<Box<Preprocessor>> = Vec::new();
+
+    preprocessors
 }
 
 fn interpret_custom_renderer(key: &str, table: &Value) -> Box<Renderer> {

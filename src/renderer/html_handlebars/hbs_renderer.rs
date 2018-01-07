@@ -1,5 +1,4 @@
 use renderer::html_handlebars::helpers;
-use preprocess;
 use renderer::{RenderContext, Renderer};
 use book::{Book, BookItem, Chapter};
 use config::{Config, HtmlConfig, Playpen};
@@ -50,12 +49,6 @@ impl HtmlHandlebars {
         match *item {
             BookItem::Chapter(ref ch) => {
                 let content = ch.content.clone();
-                let base = ch.path.parent()
-                    .map(|dir| ctx.src_dir.join(dir))
-                    .expect("All chapters must have a parent directory");
-
-                // Parse and expand links
-                let content = preprocess::links::replace_all(&content, base)?;
                 let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
                 print_content.push_str(&content);
 
@@ -322,7 +315,6 @@ impl Renderer for HtmlHandlebars {
             let ctx = RenderItemContext {
                 handlebars: &handlebars,
                 destination: destination.to_path_buf(),
-                src_dir: src_dir.clone(),
                 data: data.clone(),
                 is_index: i == 0,
                 html_config: html_config.clone(),
@@ -634,7 +626,6 @@ fn partition_source(s: &str) -> (String, String) {
 struct RenderItemContext<'a> {
     handlebars: &'a Handlebars,
     destination: PathBuf,
-    src_dir: PathBuf,
     data: serde_json::Map<String, serde_json::Value>,
     is_index: bool,
     html_config: HtmlConfig,

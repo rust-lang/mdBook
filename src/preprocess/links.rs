@@ -5,9 +5,35 @@ use utils::fs::file_to_string;
 use utils::take_lines;
 use errors::*;
 
+use super::Preprocessor;
+use book::{Book, BookItem};
+
 const ESCAPE_CHAR: char = '\\';
 
-pub fn replace_all<P: AsRef<Path>>(s: &str, path: P) -> Result<String> {
+pub struct ReplaceAllPreprocessor {
+    pub src_dir: PathBuf
+}
+
+impl Preprocessor for ReplaceAllPreprocessor {
+    fn run(&self, book: &mut Book) -> Result<()> {
+        for section in &mut book.sections {
+            match *section {
+                BookItem::Chapter(ref mut ch) => {
+                    let content = ::std::mem::replace(&mut ch.content, String::new());
+                    let base = ch.path.parent()
+                        .map(|dir| self.src_dir.join(dir))
+                        .ok_or_else(|| String::from("Invalid bookitem path!"))?;
+                    ch.content = replace_all(&content, base)?
+                }
+                _ => {}
+            }
+        }
+
+        Ok(())
+    }
+}
+
+fn replace_all<P: AsRef<Path>>(s: &str, path: P) -> Result<String> {
     // When replacing one thing in a string by something with a different length,
     // the indices after that will not correspond,
     // we therefore have to store the difference to correct this
