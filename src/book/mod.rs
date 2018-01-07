@@ -23,7 +23,7 @@ use toml::Value;
 
 use utils;
 use renderer::{CmdRenderer, HtmlHandlebars, RenderContext, Renderer};
-use preprocess::{self, Preprocessor};
+use preprocess::{Preprocessor, LinkPreprocessor, PreprocessorContext};
 use errors::*;
 
 use config::Config;
@@ -88,20 +88,16 @@ impl MDBook {
         let livereload = None;
 
         let renderers = determine_renderers(&config);
+        let preprocessors = determine_preprocessors(&config);
 
-        let mut md_book = MDBook {
+        Ok(MDBook {
             root,
             config,
             book,
             renderers,
             livereload,
-            preprocessors: vec![],
-        };
-
-        let preprocessors = determine_preprocessors(&md_book);
-        md_book.preprocessors = preprocessors;
-
-        Ok(md_book)
+            preprocessors,
+        })
     }
 
     /// Returns a flat depth-first iterator over the elements of the book,
@@ -161,9 +157,12 @@ impl MDBook {
         debug!("[fn]: build");
 
         let mut preprocessed_book = self.book.clone();
+        let preprocess_ctx = PreprocessorContext {
+            src_dir: self.source_dir(),
+        };
 
         for preprocessor in &self.preprocessors {
-            preprocessor.run(&mut preprocessed_book)?;
+            preprocessor.run(&preprocess_ctx, &mut preprocessed_book)?;
         }
 
         for renderer in &self.renderers {
@@ -225,9 +224,11 @@ impl MDBook {
         let temp_dir = TempDir::new("mdbook")?;
 
         let src_dir = self.source_dir();
-        let replace_all_preprocessor = preprocess::links::LinkPreprocessor::new(src_dir);
+        let preprocess_context = PreprocessorContext {
+            src_dir
+        };
 
-        replace_all_preprocessor.run(&mut self.book)?;
+        LinkPreprocessor::new().run(&preprocess_context, &mut self.book)?;
 
         for item in self.iter() {
             if let BookItem::Chapter(ref ch) = *item {
@@ -333,16 +334,14 @@ fn determine_renderers(config: &Config) -> Vec<Box<Renderer>> {
 }
 
 /// Look at the `MDBook` and try to figure out what preprocessors to run.
-fn determine_preprocessors(md_book: &MDBook) -> Vec<Box<Preprocessor>> {
+fn determine_preprocessors(config: &Config) -> Vec<Box<Preprocessor>> {
     let mut preprocessors: Vec<Box<Preprocessor>> = Vec::new();
 
-    if let Some(preprocess_array) = md_book.config.get("preprocess").and_then(|o| o.as_array()) {
+    if let Some(preprocess_array) = config.get("preprocess").and_then(|o| o.as_array()) {
         for key in preprocess_array.iter() {
             match key.as_str() {
                 Some(key) if key == "links" => {
-                    let src_dir = md_book.source_dir();
-                    let link_preprocessor = preprocess::links::LinkPreprocessor::new(src_dir);
-                    preprocessors.push(Box::new(link_preprocessor))
+                    preprocessors.push(Box::new(LinkPreprocessor::new()))
                 }
                 _ => {}
             }
@@ -350,9 +349,7 @@ fn determine_preprocessors(md_book: &MDBook) -> Vec<Box<Preprocessor>> {
     }
 
     if preprocessors.is_empty() {
-        let src_dir = md_book.source_dir();
-        let link_preprocessor = preprocess::links::LinkPreprocessor::new(src_dir);
-        preprocessors.push(Box::new(link_preprocessor))
+        preprocessors.push(Box::new(LinkPreprocessor::new()))
     }
 
     preprocessors

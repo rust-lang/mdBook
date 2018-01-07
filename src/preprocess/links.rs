@@ -5,28 +5,26 @@ use utils::fs::file_to_string;
 use utils::take_lines;
 use errors::*;
 
-use super::Preprocessor;
+use super::{Preprocessor, PreprocessorContext};
 use book::{Book, BookItem};
 
 const ESCAPE_CHAR: char = '\\';
 
-pub struct LinkPreprocessor {
-    src_dir: PathBuf
-}
+pub struct LinkPreprocessor;
 
 impl LinkPreprocessor {
-    pub fn new<P: Into<PathBuf>>(src_dir: P) -> Self {
-        LinkPreprocessor { src_dir: src_dir.into() }
+    pub fn new() -> Self {
+        LinkPreprocessor
     }
 }
 
 impl Preprocessor for LinkPreprocessor {
-    fn run(&self, book: &mut Book) -> Result<()> {
+    fn run(&self, ctx: &PreprocessorContext, book: &mut Book) -> Result<()> {
         for section in &mut book.sections {
             match *section {
                 BookItem::Chapter(ref mut ch) => {
                     let base = ch.path.parent()
-                        .map(|dir| self.src_dir.join(dir))
+                        .map(|dir| ctx.src_dir.join(dir))
                         .ok_or_else(|| String::from("Invalid bookitem path!"))?;
                     let content = replace_all(&ch.content, base)?;
                     ch.content = content
