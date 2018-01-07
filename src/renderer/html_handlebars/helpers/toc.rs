@@ -7,7 +7,9 @@ use pulldown_cmark::{html, Event, Parser, Tag};
 
 // Handlebars helper to construct TOC
 #[derive(Clone, Copy)]
-pub struct RenderToc;
+pub struct RenderToc {
+    pub no_section_label: bool
+}
 
 impl HelperDef for RenderToc {
     fn call(&self, _h: &Helper, _: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
@@ -91,11 +93,13 @@ impl HelperDef for RenderToc {
                 false
             };
 
-            // Section does not necessarily exist
-            if let Some(section) = item.get("section") {
-                rc.writer.write_all(b"<strong>")?;
-                rc.writer.write_all(section.as_bytes())?;
-                rc.writer.write_all(b"</strong> ")?;
+            if !self.no_section_label {
+                // Section does not necessarily exist
+                if let Some(section) = item.get("section") {
+                    rc.writer.write_all(b"<strong>")?;
+                    rc.writer.write_all(section.as_bytes())?;
+                    rc.writer.write_all(b"</strong> ")?;
+                }
             }
 
             if let Some(name) = item.get("name") {

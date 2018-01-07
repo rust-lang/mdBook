@@ -84,6 +84,9 @@ The following configuration options are available:
   removing the current behaviour, you can specify a set of javascript files
   that will be loaded alongside the default one.
 - **playpen:** A subtable for configuring various playpen settings.
+- **no-section-label**: mdBook by defaults adds section label in table of
+  contents column. For example, "1.", "2.1". Set this option to true to
+  disable those labels. Defaults to `false`.
 
 **book.toml**
 ```toml
