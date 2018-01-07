@@ -23,7 +23,7 @@ use toml::Value;
 
 use utils;
 use renderer::{CmdRenderer, HtmlHandlebars, RenderContext, Renderer};
-use preprocess;
+use preprocess::{self, Preprocessor};
 use errors::*;
 
 use config::Config;
@@ -40,6 +40,9 @@ pub struct MDBook {
 
     /// The URL used for live reloading when serving up the book.
     pub livereload: Option<String>,
+
+    /// List of pre-processors to be run on the book
+    preprocessors: Vec<Box<Preprocessor>>
 }
 
 impl MDBook {
@@ -86,12 +89,15 @@ impl MDBook {
 
         let renderers = determine_renderers(&config);
 
+        let preprocessors = vec![];
+
         Ok(MDBook {
             root,
             config,
             book,
             renderers,
             livereload,
+            preprocessors,
         })
     }
 
@@ -189,6 +195,13 @@ impl MDBook {
     /// trait](../../renderer/renderer/trait.Renderer.html)
     pub fn with_renderer<R: Renderer + 'static>(&mut self, renderer: R) -> &mut Self {
         self.renderers.push(Box::new(renderer));
+        self
+    }
+
+    /// You can add a new preprocessor by using this method.
+    /// The only requirement is for your renderer to implement the Preprocessor trait.
+    pub fn with_preprecessor<P: Preprocessor + 'static>(&mut self, preprocessor: P) -> &mut Self {
+        self.preprocessors.push(Box::new(preprocessor));
         self
     }
 
