@@ -239,8 +239,8 @@ impl HtmlHandlebars {
                     json!(utils::fs::path_to_root(Path::new("print.md"))));
     }
 
-    fn register_hbs_helpers(&self, handlebars: &mut Handlebars) {
-        handlebars.register_helper("toc", Box::new(helpers::toc::RenderToc));
+    fn register_hbs_helpers(&self, handlebars: &mut Handlebars, html_config: &HtmlConfig) {
+        handlebars.register_helper("toc", Box::new(helpers::toc::RenderToc {no_section_label: html_config.no_section_label}));
         handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
         handlebars.register_helper("next", Box::new(helpers::navigation::next));
     }
@@ -307,7 +307,7 @@ impl Renderer for HtmlHandlebars {
         )?;
 
         debug!("[*]: Register handlebars helpers");
-        self.register_hbs_helpers(&mut handlebars);
+        self.register_hbs_helpers(&mut handlebars, &html_config);
 
         let mut data = make_data(&ctx.root, &book, &ctx.config, &html_config)?;
 

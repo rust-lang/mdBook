@@ -326,6 +326,7 @@ pub struct HtmlConfig {
     /// This config item *should not be edited* by the end user.
     #[doc(hidden)]
     pub livereload_url: Option<String>,
+    pub no_section_label: bool,
 }
 
 /// Configuration for tweaking how the the HTML renderer handles the playpen.
