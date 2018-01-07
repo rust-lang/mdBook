@@ -234,8 +234,8 @@ impl MDBook {
             if let BookItem::Chapter(ref ch) = *item {
                 if !ch.path.as_os_str().is_empty() {
                     let path = self.source_dir().join(&ch.path);
-                    println!("[*]: Testing file: {:?}", path);
                     let content = utils::fs::file_to_string(&path)?;
+                    println!("[*]: Testing file: {:?}", path);
 
                     // write preprocessed file to tempdir
                     let path = temp_dir.path().join(&ch.path);
