@@ -15,13 +15,14 @@ pub use self::book::{load_book, Book, BookItem, BookItems, Chapter};
 pub use self::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
 pub use self::init::BookBuilder;
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::io::Write;
 use std::process::Command;
 use tempdir::TempDir;
+use toml::Value;
 
 use utils;
-use renderer::{HtmlHandlebars, Renderer};
+use renderer::{CmdRenderer, HtmlHandlebars, RenderContext, Renderer};
 use preprocess;
 use errors::*;
 
@@ -33,9 +34,9 @@ pub struct MDBook {
     pub root: PathBuf,
     /// The configuration used to tweak now a book is built.
     pub config: Config,
-
-    book: Book,
-    renderer: Box<Renderer>,
+    /// A representation of the book's contents in memory.
+    pub book: Book,
+    renderers: Vec<Box<Renderer>>,
 
     /// The URL used for live reloading when serving up the book.
     pub livereload: Option<String>,
@@ -75,17 +76,20 @@ impl MDBook {
 
     /// Load a book from its root directory using a custom config.
     pub fn load_with_config<P: Into<PathBuf>>(book_root: P, config: Config) -> Result<MDBook> {
-        let book_root = book_root.into();
+        let root = book_root.into();
 
-        let src_dir = book_root.join(&config.book.src);
+        let src_dir = root.join(&config.book.src);
         let book = book::load_book(&src_dir, &config.build)?;
+        let livereload = None;
+
+        let renderers = determine_renderers(&config);
 
         Ok(MDBook {
-            root: book_root,
-            config: config,
-            book: book,
-            renderer: Box::new(HtmlHandlebars::new()),
-            livereload: None,
+            root,
+            config,
+            book,
+            renderers,
+            livereload,
         })
     }
 
@@ -142,32 +146,47 @@ impl MDBook {
     }
 
     /// Tells the renderer to build our book and put it in the build directory.
-    pub fn build(&mut self) -> Result<()> {
+    pub fn build(&self) -> Result<()> {
         debug!("[fn]: build");
 
-        let dest = self.get_destination();
-        if dest.exists() {
-            utils::fs::remove_dir_content(&dest).chain_err(|| "Unable to clear output directory")?;
+        for renderer in &self.renderers {
+            self.run_renderer(renderer.as_ref())?;
         }
 
-        self.renderer.render(self)
+        Ok(())
     }
 
-    // FIXME: This doesn't belong as part of `MDBook`. It is only used by the HTML renderer
-    #[doc(hidden)]
-    pub fn write_file<P: AsRef<Path>>(&self, filename: P, content: &[u8]) -> Result<()> {
-        let path = self.get_destination().join(filename);
+    fn run_renderer(&self, renderer: &Renderer) -> Result<()> {
+        let name = renderer.name();
+        let build_dir = self.build_dir_for(name);
+        if build_dir.exists() {
+            debug!(
+                "Cleaning build dir for the \"{}\" renderer ({})",
+                name,
+                build_dir.display()
+            );
 
-        utils::fs::create_file(&path)?
-            .write_all(content)
-            .map_err(|e| e.into())
+            utils::fs::remove_dir_content(&build_dir)
+                .chain_err(|| "Unable to clear output directory")?;
+        }
+
+        let render_context = RenderContext::new(
+            self.root.clone(),
+            self.book.clone(),
+            self.config.clone(),
+            build_dir,
+        );
+
+        renderer
+            .render(&render_context)
+            .chain_err(|| "Rendering failed")
     }
 
     /// You can change the default renderer to another one by using this method.
     /// The only requirement is for your renderer to implement the [Renderer
     /// trait](../../renderer/renderer/trait.Renderer.html)
-    pub fn set_renderer<R: Renderer + 'static>(mut self, renderer: R) -> Self {
-        self.renderer = Box::new(renderer);
+    pub fn with_renderer<R: Renderer + 'static>(&mut self, renderer: R) -> &mut Self {
+        self.renderers.push(Box::new(renderer));
         self
     }
 
@@ -215,10 +234,38 @@ impl MDBook {
         Ok(())
     }
 
-    // FIXME: This doesn't belong under `MDBook`, it should really be passed to the renderer directly.
-    #[doc(hidden)]
-    pub fn get_destination(&self) -> PathBuf {
-        self.root.join(&self.config.build.build_dir)
+    /// The logic for determining where a backend should put its build
+    /// artefacts.
+    ///
+    /// If there is only 1 renderer, put it in the directory pointed to by the
+    /// `build.build_dir` key in `Config`. If there is more than one then the
+    /// renderer gets its own directory within the main build dir.
+    ///
+    /// i.e. If there were only one renderer (in this case, the HTML renderer):
+    ///
+    /// - build/
+    ///   - index.html
+    ///   - ...
+    ///
+    /// Otherwise if there are multiple:
+    ///
+    /// - build/
+    ///   - epub/
+    ///     - my_awesome_book.epub
+    ///   - html/
+    ///     - index.html
+    ///     - ...
+    ///   - latex/
+    ///     - my_awesome_book.tex
+    ///
+    pub fn build_dir_for(&self, backend_name: &str) -> PathBuf {
+        let build_dir = self.root.join(&self.config.build.build_dir);
+
+        if self.renderers.len() <= 1 {
+            build_dir
+        } else {
+            build_dir.join(backend_name)
+        }
     }
 
     /// Get the directory containing this book's source files.
@@ -226,12 +273,93 @@ impl MDBook {
         self.root.join(&self.config.book.src)
     }
 
-    // FIXME: This belongs as part of the `HtmlConfig`.
+    // FIXME: This really belongs as part of the `HtmlConfig`.
     #[doc(hidden)]
     pub fn theme_dir(&self) -> PathBuf {
         match self.config.html_config().and_then(|h| h.theme) {
             Some(d) => self.root.join(d),
             None => self.root.join("theme"),
         }
+    }
+}
+
+/// Look at the `Config` and try to figure out what renderers to use.
+fn determine_renderers(config: &Config) -> Vec<Box<Renderer>> {
+    let mut renderers: Vec<Box<Renderer>> = Vec::new();
+
+    if let Some(output_table) = config.get("output").and_then(|o| o.as_table()) {
+        for (key, table) in output_table.iter() {
+            // the "html" backend has its own Renderer
+            if key == "html" {
+                renderers.push(Box::new(HtmlHandlebars::new()));
+            } else {
+                let renderer = interpret_custom_renderer(key, table);
+                renderers.push(renderer);
+            }
+        }
+    }
+
+    // if we couldn't find anything, add the HTML renderer as a default
+    if renderers.is_empty() {
+        renderers.push(Box::new(HtmlHandlebars::new()));
+    }
+
+    renderers
+}
+
+fn interpret_custom_renderer(key: &str, table: &Value) -> Box<Renderer> {
+    // look for the `command` field, falling back to using the key
+    // prepended by "mdbook-"
+    let table_dot_command = table
+        .get("command")
+        .and_then(|c| c.as_str())
+        .map(|s| s.to_string());
+
+    let command = table_dot_command.unwrap_or_else(|| format!("mdbook-{}", key));
+
+    Box::new(CmdRenderer::new(key.to_string(), command.to_string()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use toml::value::{Table, Value};
+
+    #[test]
+    fn config_defaults_to_html_renderer_if_empty() {
+        let cfg = Config::default();
+
+        // make sure we haven't got anything in the `output` table
+        assert!(cfg.get("output").is_none());
+
+        let got = determine_renderers(&cfg);
+
+        assert_eq!(got.len(), 1);
+        assert_eq!(got[0].name(), "html");
+    }
+
+    #[test]
+    fn add_a_random_renderer_to_the_config() {
+        let mut cfg = Config::default();
+        cfg.set("output.random", Table::new()).unwrap();
+
+        let got = determine_renderers(&cfg);
+
+        assert_eq!(got.len(), 1);
+        assert_eq!(got[0].name(), "random");
+    }
+
+    #[test]
+    fn add_a_random_renderer_with_custom_command_to_the_config() {
+        let mut cfg = Config::default();
+
+        let mut table = Table::new();
+        table.insert("command".to_string(), Value::String("false".to_string()));
+        cfg.set("output.random", table).unwrap();
+
+        let got = determine_renderers(&cfg);
+
+        assert_eq!(got.len(), 1);
+        assert_eq!(got[0].name(), "random");
     }
 }

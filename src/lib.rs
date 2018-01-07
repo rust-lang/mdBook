@@ -69,7 +69,7 @@
 //! #   let your_renderer = HtmlHandlebars::new();
 //! #
 //! let mut book = MDBook::load("my-book").unwrap();
-//! book.set_renderer(your_renderer);
+//! book.with_renderer(your_renderer);
 //! # }
 //! ```
 //!
@@ -109,7 +109,9 @@ extern crate serde;
 extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
+extern crate shlex;
 extern crate tempdir;
+extern crate tempfile;
 extern crate toml;
 
 #[cfg(test)]

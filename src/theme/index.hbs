@@ -139,8 +139,22 @@
             }
         </script>
 
+        {{#if livereload}}
         <!-- Livereload script (if served using the cli tool) -->
-        {{{livereload}}}
+        <script type="text/javascript">
+            var socket = new WebSocket("{{{livereload}}}");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload(true); // force reload from server (not from cache)
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        {{/if}}
 
         {{#if google_analytics}}
         <!-- Google Analytics Tag -->

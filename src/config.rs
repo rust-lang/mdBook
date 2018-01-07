@@ -25,9 +25,10 @@ impl Config {
     /// Load the configuration file from disk.
     pub fn from_disk<P: AsRef<Path>>(config_file: P) -> Result<Config> {
         let mut buffer = String::new();
-        File::open(config_file).chain_err(|| "Unable to open the configuration file")?
-                               .read_to_string(&mut buffer)
-                               .chain_err(|| "Couldn't read the file")?;
+        File::open(config_file)
+            .chain_err(|| "Unable to open the configuration file")?
+            .read_to_string(&mut buffer)
+            .chain_err(|| "Couldn't read the file")?;
 
         Config::from_str(&buffer)
     }
@@ -53,7 +54,8 @@ impl Config {
     /// # Note
     ///
     /// This is for compatibility only. It will be removed completely once the
-    /// rendering and plugin system is established.
+    /// HTML renderer is refactored to be less coupled to `mdbook` internals.
+    #[doc(hidden)]
     pub fn html_config(&self) -> Option<HtmlConfig> {
         self.get_deserialized("output.html").ok()
     }
@@ -64,12 +66,26 @@ impl Config {
         let name = name.as_ref();
 
         if let Some(value) = self.get(name) {
-            value.clone()
-                 .try_into()
-                 .chain_err(|| "Couldn't deserialize the value")
+            value
+                .clone()
+                .try_into()
+                .chain_err(|| "Couldn't deserialize the value")
         } else {
             bail!("Key not found, {:?}", name)
         }
+    }
+
+    /// Set a config key, clobbering any existing values along the way.
+    ///
+    /// The only way this can fail is if we can't serialize `value` into a
+    /// `toml::Value`.
+    pub fn set<S: Serialize, I: AsRef<str>>(&mut self, index: I, value: S) -> Result<()> {
+        let pieces: Vec<_> = index.as_ref().split(".").collect();
+        let value =
+            Value::try_from(value).chain_err(|| "Unable to represent the item as a JSON Value")?;
+        recursive_set(&pieces, &mut self.rest, value);
+
+        Ok(())
     }
 
     fn from_legacy(mut table: Table) -> Config {
@@ -91,10 +107,11 @@ impl Config {
         get_and_insert!(table, "source" => cfg.book.src);
         get_and_insert!(table, "description" => cfg.book.description);
 
-        // This complicated chain of and_then's is so we can move 
-        // "output.html.destination" to "build.build_dir" and parse it into a 
+        // This complicated chain of and_then's is so we can move
+        // "output.html.destination" to "build.build_dir" and parse it into a
         // PathBuf.
-        let destination: Option<PathBuf> = table.get_mut("output")
+        let destination: Option<PathBuf> = table
+            .get_mut("output")
             .and_then(|output| output.as_table_mut())
             .and_then(|output| output.get_mut("html"))
             .and_then(|html| html.as_table_mut())
@@ -110,6 +127,32 @@ impl Config {
     }
 }
 
+/// Recursively walk down a table and try to set some `foo.bar.baz` value.
+///
+/// If at any table along the way doesn't exist (or isn't itself a `Table`!) an
+/// empty `Table` will be inserted. e.g. if the `foo` table didn't contain a
+/// nested table called `bar`, we'd insert one and then keep recursing.
+fn recursive_set(key: &[&str], table: &mut Table, value: Value) {
+    if key.is_empty() {
+        unreachable!();
+    } else if key.len() == 1 {
+        table.insert(key[0].to_string(), value);
+    } else {
+        let first = key[0];
+        let rest = &key[1..];
+
+        // if `table[first]` isn't a table, replace whatever is there with a
+        // new table.
+        if table.get(first).and_then(|t| t.as_table()).is_none() {
+            table.insert(first.to_string(), Value::Table(Table::new()));
+        }
+
+        let nested = table.get_mut(first).and_then(|t| t.as_table_mut()).unwrap();
+        recursive_set(rest, nested, value);
+    }
+}
+
+/// The "getter" version of `recursive_set()`.
 fn recursive_get<'a>(key: &[&str], table: &'a Table) -> Option<&'a Value> {
     if key.is_empty() {
         return None;
@@ -127,6 +170,7 @@ fn recursive_get<'a>(key: &[&str], table: &'a Table) -> Option<&'a Value> {
     }
 }
 
+/// The mutable version of `recursive_get()`.
 fn recursive_get_mut<'a>(key: &[&str], table: &'a mut Table) -> Option<&'a mut Value> {
     // TODO: Figure out how to abstract over mutability to reduce copy-pasta
     if key.is_empty() {
@@ -171,13 +215,15 @@ impl<'de> Deserialize<'de> for Config {
             return Ok(Config::from_legacy(table));
         }
 
-        let book: BookConfig = table.remove("book")
-                                    .and_then(|value| value.try_into().ok())
-                                    .unwrap_or_default();
+        let book: BookConfig = table
+            .remove("book")
+            .and_then(|value| value.try_into().ok())
+            .unwrap_or_default();
 
-        let build: BuildConfig = table.remove("build")
-                                      .and_then(|value| value.try_into().ok())
-                                      .unwrap_or_default();
+        let build: BuildConfig = table
+            .remove("build")
+            .and_then(|value| value.try_into().ok())
+            .unwrap_or_default();
 
         Ok(Config {
             book: book,
@@ -200,7 +246,7 @@ impl Serialize for Config {
         };
 
         table.insert("book".to_string(), book_config);
-        
+
         Value::Table(table).serialize(s)
     }
 }
@@ -208,9 +254,10 @@ impl Serialize for Config {
 fn is_legacy_format(table: &Table) -> bool {
     let top_level_items = ["title", "author", "authors"];
 
-    top_level_items.iter().any(|key| table.contains_key(&key.to_string()))
+    top_level_items
+        .iter()
+        .any(|key| table.contains_key(&key.to_string()))
 }
-
 
 /// Configuration options which are specific to the book and required for
 /// loading it from disk.
@@ -271,6 +318,14 @@ pub struct HtmlConfig {
     pub additional_css: Vec<PathBuf>,
     pub additional_js: Vec<PathBuf>,
     pub playpen: Playpen,
+    /// This is used as a bit of a workaround for the `mdbook serve` command.
+    /// Basically, because you set the websocket port from the command line, the
+    /// `mdbook serve` command needs a way to let the HTML renderer know where
+    /// to point livereloading at, if it has been enabled.
+    ///
+    /// This config item *should not be edited* by the end user.
+    #[doc(hidden)]
+    pub livereload_url: Option<String>,
 }
 
 /// Configuration for tweaking how the the HTML renderer handles the playpen.
@@ -289,7 +344,6 @@ impl Default for Playpen {
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -449,5 +503,18 @@ mod tests {
         assert_eq!(got.book, book_should_be);
         assert_eq!(got.build, build_should_be);
         assert_eq!(got.html_config().unwrap(), html_should_be);
+    }
+
+    #[test]
+    fn set_a_config_item() {
+        let mut cfg = Config::default();
+        let key = "foo.bar.baz";
+        let value = "Something Interesting";
+
+        assert!(cfg.get(key).is_none());
+        cfg.set(key, value).unwrap();
+
+        let got: String = cfg.get_deserialized(key).unwrap();
+        assert_eq!(got, value);
     }
 }

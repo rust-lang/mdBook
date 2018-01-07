@@ -26,7 +26,11 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         // Skip this if `--force` is present
         if !args.is_present("force") {
             // Print warning
-            print!("\nCopying the default theme to {}", builder.config().book.src.display());
+            println!();
+            println!(
+                "Copying the default theme to {}",
+                builder.config().book.src.display()
+            );
             println!("This could potentially overwrite files already present in that directory.");
             print!("\nAre you sure you want to continue? (y/n) ");
 

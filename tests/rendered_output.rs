@@ -22,7 +22,6 @@ use mdbook::utils::fs::file_to_string;
 use mdbook::config::Config;
 use mdbook::MDBook;
 
-
 const BOOK_ROOT: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/dummy_book");
 const TOC_TOP_LEVEL: &[&'static str] = &[
     "1. First Chapter",
@@ -36,7 +35,7 @@ const TOC_SECOND_LEVEL: &[&'static str] = &["1.1. Nested Chapter"];
 #[test]
 fn build_the_dummy_book() {
     let temp = DummyBook::new().build().unwrap();
-    let mut md = MDBook::load(temp.path()).unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
 
     md.build().unwrap();
 }
@@ -44,7 +43,7 @@ fn build_the_dummy_book() {
 #[test]
 fn by_default_mdbook_generates_rendered_content_in_the_book_directory() {
     let temp = DummyBook::new().build().unwrap();
-    let mut md = MDBook::load(temp.path()).unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
 
     assert!(!temp.path().join("book").exists());
     md.build().unwrap();
@@ -56,7 +55,7 @@ fn by_default_mdbook_generates_rendered_content_in_the_book_directory() {
 #[test]
 fn make_sure_bottom_level_files_contain_links_to_chapters() {
     let temp = DummyBook::new().build().unwrap();
-    let mut md = MDBook::load(temp.path()).unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
     md.build().unwrap();
 
     let dest = temp.path().join("book");
@@ -78,7 +77,7 @@ fn make_sure_bottom_level_files_contain_links_to_chapters() {
 #[test]
 fn check_correct_cross_links_in_nested_dir() {
     let temp = DummyBook::new().build().unwrap();
-    let mut md = MDBook::load(temp.path()).unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
     md.build().unwrap();
 
     let first = temp.path().join("book").join("first");
@@ -115,7 +114,7 @@ fn check_correct_cross_links_in_nested_dir() {
 #[test]
 fn rendered_code_has_playpen_stuff() {
     let temp = DummyBook::new().build().unwrap();
-    let mut md = MDBook::load(temp.path()).unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
     md.build().unwrap();
 
     let nested = temp.path().join("book/first/nested.html");
@@ -138,7 +137,7 @@ fn chapter_content_appears_in_rendered_document() {
     ];
 
     let temp = DummyBook::new().build().unwrap();
-    let mut md = MDBook::load(temp.path()).unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
     md.build().unwrap();
 
     let destination = temp.path().join("book");
@@ -148,7 +147,6 @@ fn chapter_content_appears_in_rendered_document() {
         assert_contains_strings(path, &[text]);
     }
 }
-
 
 /// Apply a series of predicates to some root predicate, where each
 /// successive predicate is the descendant of the last one. Similar to how you
@@ -161,7 +159,6 @@ macro_rules! descendants {
         )*
     };
 }
-
 
 /// Make sure that all `*.md` files (excluding `SUMMARY.md`) were rendered
 /// and placed in the `book` directory with their extensions set to `*.html`.
@@ -286,7 +283,7 @@ fn create_missing_file_with_config() {
 #[test]
 fn able_to_include_rust_files_in_chapters() {
     let temp = DummyBook::new().build().unwrap();
-    let mut md = MDBook::load(temp.path()).unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
     md.build().unwrap();
 
     let second = temp.path().join("book/second.html");
@@ -302,10 +299,9 @@ fn able_to_include_rust_files_in_chapters() {
 fn example_book_can_build() {
     let example_book_dir = dummy_book::new_copy_of_example_book().unwrap();
 
-    let mut md = MDBook::load(example_book_dir.path()).unwrap();
+    let md = MDBook::load(example_book_dir.path()).unwrap();
 
-    let got = md.build();
-    assert!(got.is_ok());
+    md.build().unwrap();
 }
 
 #[test]

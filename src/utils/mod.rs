@@ -1,5 +1,6 @@
 pub mod fs;
 mod string;
+use errors::Error;
 
 use pulldown_cmark::{html, Event, Options, Parser, Tag, OPTION_ENABLE_FOOTNOTES,
                      OPTION_ENABLE_TABLES};
@@ -7,10 +8,7 @@ use std::borrow::Cow;
 
 pub use self::string::{RangeArgument, take_lines};
 
-///
-///
-/// Wrapper around the pulldown-cmark parser and renderer to render markdown
-
+/// Wrapper around the pulldown-cmark parser for rendering markdown to HTML.
 pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
     let mut s = String::with_capacity(text.len() * 3 / 2);
 
@@ -103,6 +101,15 @@ fn convert_quotes_to_curly(original_text: &str) -> String {
         converted_char
     })
                  .collect()
+}
+
+/// Prints a "backtrace" of some `Error`.
+pub fn log_backtrace(e: &Error) {
+    error!("Error: {}", e);
+
+    for cause in e.iter().skip(1) {
+        error!("\tCaused By: {}", cause);
+    }
 }
 
 #[cfg(test)]

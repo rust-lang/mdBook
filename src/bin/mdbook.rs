@@ -16,7 +16,7 @@ use clap::{App, AppSettings, ArgMatches};
 use chrono::Local;
 use log::LevelFilter;
 use env_logger::Builder;
-use error_chain::ChainedError;
+use mdbook::utils;
 
 pub mod build;
 pub mod init;
@@ -64,7 +64,7 @@ fn main() {
     };
 
     if let Err(e) = res {
-        eprintln!("{}", e.display_chain());
+        utils::log_backtrace(&e);
 
         ::std::process::exit(101);
     }
@@ -101,12 +101,12 @@ fn get_book_dir(args: &ArgMatches) -> PathBuf {
             p.to_path_buf()
         }
     } else {
-        env::current_dir().unwrap()
+        env::current_dir().expect("Unable to determine the current directory")
     }
 }
 
 fn open<P: AsRef<OsStr>>(path: P) {
     if let Err(e) = open::that(path) {
-        println!("Error opening web browser: {}", e);
+        error!("Error opening web browser: {}", e);
     }
 }

@@ -69,8 +69,6 @@ renderer need to be specified under the TOML table `[output.html]`.
 
 The following configuration options are available:
 
-    pub playpen: Playpen,
-
 - **theme:** mdBook comes with a default theme and all the resource files
   needed for it. But if this option is set, mdBook will selectively overwrite
   the theme files with the ones found in the specified folder.
@@ -104,52 +102,4 @@ additional-js = ["custom.js"]
 [output.html.playpen]
 editor = "./path/to/editor"
 editable = false
-```
-
-
-## For Developers
-
-If you are developing a plugin or alternate backend then whenever your code is
-called you will almost certainly be passed a reference to the book's `Config`. 
-This can be treated roughly as a nested hashmap which lets you call methods like
-`get()` and `get_mut()` to get access to the config's contents.
-
-By convention, plugin developers will have their settings as a subtable inside
-`plugins` (e.g. a link checker would put its settings in `plugins.link_check`) 
-and backends should put their configuration under `output`, like the HTML 
-renderer does in the previous examples.
-
-As an example, some hypothetical `random` renderer would typically want to load
-its settings from the `Config` at the very start of its rendering process. The
-author can take advantage of serde to deserialize the generic `toml::Value` 
-object retrieved from `Config` into a struct specific to its use case.
-
-```rust
-#[derive(Debug, Deserialize, PartialEq)]
-struct RandomOutput {
-    foo: u32,
-    bar: String,
-    baz: Vec<bool>,
-}
-
-let src = r#"
-[output.random]
-foo = 5
-bar = "Hello World"
-baz = [true, true, false]
-"#;
-
-let book_config = Config::from_str(src)?; // usually passed in by mdbook
-let random: Value = book_config.get("output.random").unwrap_or_default();
-let got: RandomOutput = random.try_into()?;
-
-assert_eq!(got, should_be);
-
-if let Some(baz) = book_config.get_deserialized::<Vec<bool>>("output.random.baz") {
-  println!("{:?}", baz); // prints [true, true, false]
-
-  // do something interesting with baz
-}
-
-// start the rendering process
 ```
