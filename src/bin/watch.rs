@@ -6,6 +6,7 @@ use std::time::Duration;
 use std::sync::mpsc::channel;
 use clap::{App, ArgMatches, SubCommand};
 use mdbook::MDBook;
+use mdbook::utils;
 use mdbook::errors::Result;
 use {get_book_dir, open};
 
@@ -30,13 +31,13 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     }
 
     trigger_on_change(&book, |path, book_dir| {
-        println!("File changed: {:?}\nBuilding book...\n", path);
+        info!("File changed: {:?}\nBuilding book...\n", path);
         let result = MDBook::load(&book_dir).and_then(|b| b.build());
 
         if let Err(e) = result {
-            println!("Error while building: {}", e);
+            error!("Unable to build the book");
+            utils::log_backtrace(&e);
         }
-        println!();
     });
 
     Ok(())

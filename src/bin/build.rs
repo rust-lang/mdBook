@@ -30,6 +30,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     book.build()?;
 
     if args.is_present("open") {
+        // FIXME: What's the right behaviour if we don't use the HTML renderer?
         open(book.build_dir_for("html").join("index.html"));
     }
 

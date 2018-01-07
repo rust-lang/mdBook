@@ -7,6 +7,7 @@ use self::iron::{status, AfterMiddleware, Chain, Iron, IronError, IronResult, Re
                  Set};
 use clap::{App, ArgMatches, SubCommand};
 use mdbook::MDBook;
+use mdbook::utils;
 use mdbook::errors::*;
 use {get_book_dir, open};
 #[cfg(feature = "watch")]
@@ -80,7 +81,9 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     #[cfg(feature = "watch")]
     watch::trigger_on_change(&mut book, move |path, book_dir| {
-        println!("File changed: {:?}\nBuilding book...\n", path);
+        info!("File changed: {:?}", path);
+        info!("Building book...");
+
         // FIXME: This area is really ugly because we need to re-set livereload :(
 
         let livereload_url = livereload_url.clone();
@@ -94,10 +97,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
         if let Err(e) = result {
             error!("Unable to load the book");
-            error!("Error: {}", e);
-            for cause in e.iter().skip(1) {
-                error!("\tCaused By: {}", cause);
-            }
+            utils::log_backtrace(&e);
         } else {
             let _ = broadcaster.send("reload");
         }
