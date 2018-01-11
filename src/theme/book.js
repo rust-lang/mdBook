@@ -385,11 +385,17 @@ function sidebarToggle() {
 
 function showSidebar() {
     $('html').removeClass('sidebar-hidden').addClass('sidebar-visible');
+    $('#sidebar a').attr('tabIndex', 0);
+    $('#sidebar-toggle').attr('aria-expanded', true);
+    $('#sidebar').attr('aria-hidden', false);
     store.set('mdbook-sidebar', 'visible');
 }
 
 function hideSidebar() {
     $('html').removeClass('sidebar-visible').addClass('sidebar-hidden');
+    $('#sidebar a').attr('tabIndex', -1);
+    $('#sidebar-toggle').attr('aria-expanded', false);
+    $('#sidebar').attr('aria-hidden', true);
     store.set('mdbook-sidebar', 'hidden');
 }
 

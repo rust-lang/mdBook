@@ -78,7 +78,7 @@
                 {{> header}}
                 <div id="menu-bar" class="menu-bar">
                     <div class="left-buttons">
-                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle sidebar">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-controls="sidebar">
                             <i class="fa fa-bars"></i>
                         </button>
                         <button id="theme-toggle" class="icon-button" type="button" title="Change theme">
@@ -94,6 +94,13 @@
                         </a>
                     </div>
                 </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    $('#sidebar-toggle').attr('aria-expanded', sidebar === 'visible');
+                    $('#sidebar').attr('aria-hidden', sidebar !== 'visible');
+                    $('#sidebar a').attr('tabIndex', sidebar === 'visible' ? 0 : -1);
+                </script>
 
                 <div id="content" class="content">
                     {{{ content }}}
