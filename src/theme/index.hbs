@@ -107,36 +107,38 @@
                         {{{ content }}}
                     </main>
 
-                    <div class="nav-wrapper">
+                    <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         {{#previous}}
-                            <a rel="prev" href="{{link}}" class="mobile-nav-chapters previous" title="Previous chapter">
+                            <a rel="prev" href="{{link}}" class="mobile-nav-chapters previous" title="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         {{/previous}}
 
                         {{#next}}
-                            <a rel="next" href="{{link}}" class="mobile-nav-chapters next" title="Next chapter">
+                            <a rel="next" href="{{link}}" class="mobile-nav-chapters next" title="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         {{/next}}
 
                         <div style="clear: both"></div>
-                    </div>
+                    </nav>
                 </div>
             </div>
 
-            {{#previous}}
-                <a href="{{link}}" class="nav-chapters previous" title="You can navigate through the chapters using the arrow keys">
-                    <i class="fa fa-angle-left"></i>
-                </a>
-            {{/previous}}
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                {{#previous}}
+                    <a href="{{link}}" class="nav-chapters previous" title="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                {{/previous}}
 
-            {{#next}}
-                <a href="{{link}}" class="nav-chapters next" title="You can navigate through the chapters using the arrow keys">
-                    <i class="fa fa-angle-right"></i>
-                </a>
-            {{/next}}
+                {{#next}}
+                    <a href="{{link}}" class="nav-chapters next" title="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                {{/next}}
+            </nav>
 
         </div>
 

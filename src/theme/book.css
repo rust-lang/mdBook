@@ -252,7 +252,7 @@ table thead td {
   right: 15px;
 }
 @media only screen and (max-width: 1080px) {
-  .nav-chapters {
+  .nav-wide-wrapper {
     display: none;
   }
   .nav-wrapper {
@@ -260,7 +260,7 @@ table thead td {
   }
 }
 @media only screen and (max-width: 1380px) {
-  .sidebar-visible .nav-chapters {
+  .sidebar-visible .nav-wide-wrapper {
     display: none;
   }
   .sidebar-visible .nav-wrapper {
