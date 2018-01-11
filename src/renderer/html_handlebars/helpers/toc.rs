@@ -25,7 +25,7 @@ impl HelperDef for RenderToc {
                         .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
                         .replace("\"", "");
 
-        rc.writer.write_all(b"<ul class=\"chapter\">")?;
+        rc.writer.write_all(b"<ol class=\"chapter\">")?;
 
         let mut current_level = 1;
 
@@ -45,13 +45,13 @@ impl HelperDef for RenderToc {
             if level > current_level {
                 while level > current_level {
                     rc.writer.write_all(b"<li>")?;
-                    rc.writer.write_all(b"<ul class=\"section\">")?;
+                    rc.writer.write_all(b"<ol class=\"section\">")?;
                     current_level += 1;
                 }
                 rc.writer.write_all(b"<li>")?;
             } else if level < current_level {
                 while level < current_level {
-                    rc.writer.write_all(b"</ul>")?;
+                    rc.writer.write_all(b"</ol>")?;
                     rc.writer.write_all(b"</li>")?;
                     current_level -= 1;
                 }
@@ -129,12 +129,12 @@ impl HelperDef for RenderToc {
             rc.writer.write_all(b"</li>")?;
         }
         while current_level > 1 {
-            rc.writer.write_all(b"</ul>")?;
+            rc.writer.write_all(b"</ol>")?;
             rc.writer.write_all(b"</li>")?;
             current_level -= 1;
         }
 
-        rc.writer.write_all(b"</ul>")?;
+        rc.writer.write_all(b"</ol>")?;
         Ok(())
     }
 }
