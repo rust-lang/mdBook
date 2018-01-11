@@ -38,7 +38,8 @@ $( document ).ready(function() {
 
     var KEY_CODES = {
         PREVIOUS_KEY: 37,
-        NEXT_KEY: 39
+        NEXT_KEY: 39,
+        ESCAPE_KEY: 27,
     };
 
     $(document).on('keydown', function (e) {
@@ -55,6 +56,10 @@ $( document ).ready(function() {
                 if($('.nav-chapters.previous').length) {
                     window.location.href = $('.nav-chapters.previous').attr('href');
                 }
+                break;
+            case KEY_CODES.ESCAPE_KEY:
+                e.preventDefault();
+                hideThemes();
                 break;
         }
     });
@@ -98,36 +103,37 @@ $( document ).ready(function() {
         }
     });
 
+    function showThemes() {
+        $('.theme-popup').css('display', 'block');
+        $('#theme-toggle').attr('aria-expanded', true);
+    }
+
+    function hideThemes() {
+        $('.theme-popup').css('display', 'none');
+        $('#theme-toggle').attr('aria-expanded', false);
+    }
 
     // Theme button
     $("#theme-toggle").click(function(){
-        if($('.theme-popup').length) {
-            $('.theme-popup').remove();
+        if ($('.theme-popup').css('display') === 'block') {
+            hideThemes();
         } else {
-            var popup = $('<div class="theme-popup"></div>')
-                .append($('<div class="theme" id="light">Light <span class="default">(default)</span><div>'))
-                .append($('<div class="theme" id="rust">Rust</div>'))
-                .append($('<div class="theme" id="coal">Coal</div>'))
-                .append($('<div class="theme" id="navy">Navy</div>'))
-                .append($('<div class="theme" id="ayu">Ayu</div>'));
-
-
-            popup.insertAfter(this);
-
-            $('.theme').click(function(){
-                var theme = $(this).attr('id');
-                set_theme(theme);
-            });
+            showThemes();
         }
+    });
+
+    $('.theme').click(function(){
+        var theme = $(this).attr('id');
+        set_theme(theme);
     });
 
     // Hide theme selector popup when clicking outside of it
     $(document).click(function(event){
         var popup = $('.theme-popup');
-        if(popup.length) {
+        if(popup.css('display') === 'block') {
             var target = $(event.target);
             if(!target.closest('.theme').length && !target.closest('#theme-toggle').length) {
-                popup.remove();
+                hideThemes();
             }
         }
     });

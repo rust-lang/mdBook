@@ -275,11 +275,17 @@ table thead td {
   font-size: 0.7em;
 }
 .theme-popup .theme {
+  display: inline;
+  border: 0;
   margin: 0;
   padding: 2px 10px;
   line-height: 25px;
+  width: 100%;
   white-space: nowrap;
+  text-align: left;
   cursor: pointer;
+  background: inherit;
+  font-size: inherit;
 }
 .theme-popup .theme:hover:first-child,
 .theme-popup .theme:hover:last-child {
@@ -349,6 +355,10 @@ table thead td {
   color: #333;
   background: #fafafa;
   border: 1px solid #ccc;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: none;
 }
 .light .theme-popup .theme:hover {
   background-color: #e6e6e6;
@@ -481,6 +491,10 @@ table thead td {
   color: #98a3ad;
   background: #141617;
   border: 1px solid #43484d;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: none;
 }
 .coal .theme-popup .theme:hover {
   background-color: #1f2124;
@@ -613,6 +627,10 @@ table thead td {
   color: #bcbdd0;
   background: #161923;
   border: 1px solid #737480;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: none;
 }
 .navy .theme-popup .theme:hover {
   background-color: #282e40;
@@ -745,6 +763,10 @@ table thead td {
   color: #262625;
   background: #e1e1db;
   border: 1px solid #b38f6b;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: none;
 }
 .rust .theme-popup .theme:hover {
   background-color: #99908a;
@@ -877,6 +899,10 @@ table thead td {
   color: #c5c5c5;
   background: #14191f;
   border: 1px solid #5c6773;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: none;
 }
 .ayu .theme-popup .theme:hover {
   background-color: #191f26;
