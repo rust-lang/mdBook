@@ -96,7 +96,7 @@ impl HelperDef for RenderToc {
             if !self.no_section_label {
                 // Section does not necessarily exist
                 if let Some(section) = item.get("section") {
-                    rc.writer.write_all(b"<strong>")?;
+                    rc.writer.write_all(b"<strong aria-hidden=\"true\">")?;
                     rc.writer.write_all(section.as_bytes())?;
                     rc.writer.write_all(b"</strong> ")?;
                 }
