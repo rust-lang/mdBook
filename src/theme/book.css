@@ -79,6 +79,7 @@ table thead td {
   line-height: 2.2em;
 }
 .chapter li a {
+  display: block;
   padding: 5px 0;
   text-decoration: none;
 }
