@@ -378,7 +378,7 @@ function sidebarToggle() {
     } else if (html.hasClass("sidebar-visible")) {
         hideSidebar();
     } else {
-        if ($("#sidebar").position().left === 0){
+        if (getComputedStyle($('#sidebar')[0])['transform'] === 'none'){
             hideSidebar();
         } else {
             showSidebar();
