@@ -41,14 +41,6 @@
             }
         </script>
 
-        <!-- Fetch JQuery from CDN but have a local fallback -->
-        <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-        <script>
-            if (typeof jQuery == 'undefined') {
-                document.write(unescape("%3Cscript src='jquery.js'%3E%3C/script%3E"));
-            }
-        </script>
-
         <!-- Fetch store.js from local - TODO add CDN when 2.x.x is available on cdnjs -->
         <script src="store.js"></script>
 
@@ -58,7 +50,7 @@
         <script type="text/javascript">
             var theme = store.get('mdbook-theme');
             if (theme === null || theme === undefined) { theme = 'light'; }
-            $('body').removeClass().addClass(theme);
+            document.body.className = theme;
         </script>
 
         <!-- Hide / unhide sidebar before it is displayed -->
@@ -66,7 +58,7 @@
             var sidebar = 'hidden';
             if (document.body.clientWidth >= 1080)
                 sidebar = store.get('mdbook-sidebar') || 'visible';
-            $("html").addClass("sidebar-" + sidebar);
+            document.querySelector('html').classList.add("sidebar-" + sidebar);
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
@@ -105,9 +97,11 @@
 
                 <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
                 <script type="text/javascript">
-                    $('#sidebar-toggle').attr('aria-expanded', sidebar === 'visible');
-                    $('#sidebar').attr('aria-hidden', sidebar !== 'visible');
-                    $('#sidebar a').attr('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
                 </script>
 
                 <div id="content" class="content">
@@ -153,8 +147,12 @@
 
         <!-- Local fallback for Font Awesome -->
         <script>
-            if ($(".fa").css("font-family") !== "FontAwesome") {
-                $('<link rel="stylesheet" type="text/css" href="_FontAwesome/css/font-awesome.css">').prependTo('head');
+            if (getComputedStyle(document.querySelector(".fa")).fontFamily !== "FontAwesome") {
+                var link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.type = 'text/css';
+                link.href = '_FontAwesome/css/font-awesome.css';
+                document.head.insertBefore(link, document.head.firstChild)
             }
         </script>
 
@@ -204,7 +202,7 @@
 
         {{#if is_print}}
         <script>
-            $(document).ready(function() {
+            document.addEventListener('DOMContentLoaded', function() {
                 window.print();
             })
         </script>

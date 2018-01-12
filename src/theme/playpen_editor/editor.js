@@ -4,8 +4,8 @@ window.editors = [];
         return;
     }
 
-    $(".editable").each(function() {
-        let editor = ace.edit(this);
+    Array.from(document.querySelectorAll('.editable')).forEach(function(editable) {
+        let editor = ace.edit(editable);
             editor.setOptions({
             highlightActiveLine: false,
             showPrintMargin: false,
