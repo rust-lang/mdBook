@@ -1,6 +1,7 @@
 .menu-bar {
     position: relative
-    height: 50px
+    display: flex
+    flex-wrap: wrap
 
     i, .icon-button {
         position: relative
@@ -12,9 +13,6 @@
 
         &:hover { cursor: pointer }
     }
-
-    .left-buttons { float: left }
-    .right-buttons { float: right }
 }
 
 .menu-title {
@@ -22,13 +20,12 @@
     font-weight: 200
     font-size: 20px
     line-height: 50px
-    position: absolute
-    top: 0
-    left: 0
-    right: 0
-    bottom: 0
     text-align: center
     margin: 0
+    flex: 1
+    white-space: nowrap
+    overflow: hidden
+    text-overflow: ellipsis
 
     opacity: 0
     transition: opacity 0.5s ease-in-out

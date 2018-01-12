@@ -61,17 +61,21 @@ table thead td {
   -moz-box-sizing: border-box;
   box-sizing: border-box;
   -webkit-overflow-scrolling: touch;
-  -webkit-transition: left 0.5s;
-  -moz-transition: left 0.5s;
-  -o-transition: left 0.5s;
-  -ms-transition: left 0.5s;
-  transition: left 0.5s;
+  -webkit-transition: -webkit-transform 0.5s;
+  -moz-transition: -moz-transform 0.5s;
+  -o-transition: -o-transform 0.5s;
+  -ms-transition: -ms-transform 0.5s;
+  transition: transform 0.5s;
 }
 .sidebar code {
   line-height: 2em;
 }
 .sidebar-hidden .sidebar {
-  left: -300px;
+  -webkit-transform: translateX(-300px);
+  -moz-transform: translateX(-300px);
+  -o-transform: translateX(-300px);
+  -ms-transform: translateX(-300px);
+  transform: translateX(-300px);
 }
 .chapter {
   list-style: none outside none;
@@ -106,8 +110,6 @@ table thead td {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
-  min-height: 100%;
-  width: 100%;
   -webkit-transition: padding-left 0.5s, margin-left 0.5s;
   -moz-transition: padding-left 0.5s, margin-left 0.5s;
   -o-transition: padding-left 0.5s, margin-left 0.5s;
@@ -144,7 +146,18 @@ table thead td {
 }
 .menu-bar {
   position: relative;
-  height: 50px;
+  display: -webkit-box;
+  display: -moz-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: box;
+  display: flex;
+  -webkit-box-lines: multiple;
+  -moz-box-lines: multiple;
+  -o-box-lines: multiple;
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
 }
 .menu-bar i,
 .menu-bar .icon-button {
@@ -162,24 +175,24 @@ table thead td {
 .menu-bar .icon-button:hover {
   cursor: pointer;
 }
-.menu-bar .left-buttons {
-  float: left;
-}
-.menu-bar .right-buttons {
-  float: right;
-}
 .menu-title {
   display: inline-block;
   font-weight: 200;
   font-size: 20px;
   line-height: 50px;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   text-align: center;
   margin: 0;
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1;
+  -o-box-flex: 1;
+  box-flex: 1;
+  -webkit-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
   opacity: 0;
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
   filter: alpha(opacity=0);
