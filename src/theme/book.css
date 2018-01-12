@@ -298,6 +298,7 @@ table thead td {
   white-space: nowrap;
   text-align: left;
   cursor: pointer;
+  color: inherit;
   background: inherit;
   font-size: inherit;
 }
