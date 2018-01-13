@@ -6,18 +6,20 @@ use std::io::Read;
 use std::env;
 use toml::{self, Value};
 use toml::value::Table;
+use toml_query::read::TomlValueReadExt;
+use toml_query::insert::TomlValueInsertExt;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json;
 
 use errors::*;
 
 /// The overall configuration object for MDBook.
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Config {
     /// Metadata about the book.
     pub book: BookConfig,
     pub build: BuildConfig,
-    rest: Table,
+    rest: Value,
 }
 
 impl Config {
@@ -93,14 +95,18 @@ impl Config {
     /// `output.html.playpen` will fetch the "playpen" out of the html output
     /// table).
     pub fn get(&self, key: &str) -> Option<&Value> {
-        let pieces: Vec<_> = key.split(".").collect();
-        recursive_get(&pieces, &self.rest)
+        match self.rest.read(key) {
+            Ok(inner) => inner,
+            Err(_) => None,
+        }
     }
 
     /// Fetch a value from the `Config` so you can mutate it.
     pub fn get_mut<'a>(&'a mut self, key: &str) -> Option<&'a mut Value> {
-        let pieces: Vec<_> = key.split(".").collect();
-        recursive_get_mut(&pieces, &mut self.rest)
+        match self.rest.read_mut(key) {
+            Ok(inner) => inner,
+            Err(_) => None,
+        }
     }
 
     /// Convenience method for getting the html renderer's configuration.
@@ -134,14 +140,17 @@ impl Config {
     /// The only way this can fail is if we can't serialize `value` into a
     /// `toml::Value`.
     pub fn set<S: Serialize, I: AsRef<str>>(&mut self, index: I, value: S) -> Result<()> {
-        let pieces: Vec<_> = index.as_ref().split(".").collect();
+        let index = index.as_ref();
+
         let value =
             Value::try_from(value).chain_err(|| "Unable to represent the item as a JSON Value")?;
 
-        match pieces[0] {
-            "book" => self.book.update_value(&pieces[1..], value),
-            "build" => self.build.update_value(&pieces[1..], value),
-            _ => recursive_set(&pieces, &mut self.rest, value),
+        if index.starts_with("book.") {
+            self.book.update_value(&index[5..], value);
+        } else if index.starts_with("build.") {
+            self.build.update_value(&index[6..], value);
+        } else {
+            self.rest.insert(index, value)?;
         }
 
         Ok(())
@@ -181,73 +190,20 @@ impl Config {
             cfg.build.build_dir = dest;
         }
 
-        cfg.rest = table;
+        cfg.rest = Value::Table(table);
         cfg
     }
 }
 
-/// Recursively walk down a table and try to set some `foo.bar.baz` value.
-///
-/// If at any table along the way doesn't exist (or isn't itself a `Table`!) an
-/// empty `Table` will be inserted. e.g. if the `foo` table didn't contain a
-/// nested table called `bar`, we'd insert one and then keep recursing.
-fn recursive_set(key: &[&str], table: &mut Table, value: Value) {
-    if key.is_empty() {
-        unreachable!();
-    } else if key.len() == 1 {
-        table.insert(key[0].to_string(), value);
-    } else {
-        let first = key[0];
-        let rest = &key[1..];
-
-        // if `table[first]` isn't a table, replace whatever is there with a
-        // new table.
-        if table.get(first).and_then(|t| t.as_table()).is_none() {
-            table.insert(first.to_string(), Value::Table(Table::new()));
+impl Default for Config {
+    fn default() -> Config {
+        Config {
+            book: BookConfig::default(),
+            build: BuildConfig::default(),
+            rest: Value::Table(Table::default()),
         }
-
-        let nested = table.get_mut(first).and_then(|t| t.as_table_mut()).unwrap();
-        recursive_set(rest, nested, value);
     }
 }
-
-/// The "getter" version of `recursive_set()`.
-fn recursive_get<'a>(key: &[&str], table: &'a Table) -> Option<&'a Value> {
-    if key.is_empty() {
-        return None;
-    } else if key.len() == 1 {
-        return table.get(key[0]);
-    }
-
-    let first = key[0];
-    let rest = &key[1..];
-
-    if let Some(&Value::Table(ref nested)) = table.get(first) {
-        recursive_get(rest, nested)
-    } else {
-        None
-    }
-}
-
-/// The mutable version of `recursive_get()`.
-fn recursive_get_mut<'a>(key: &[&str], table: &'a mut Table) -> Option<&'a mut Value> {
-    // TODO: Figure out how to abstract over mutability to reduce copy-pasta
-    if key.is_empty() {
-        return None;
-    } else if key.len() == 1 {
-        return table.get_mut(key[0]);
-    }
-
-    let first = key[0];
-    let rest = &key[1..];
-
-    if let Some(&mut Value::Table(ref mut nested)) = table.get_mut(first) {
-        recursive_get_mut(rest, nested)
-    } else {
-        None
-    }
-}
-
 impl<'de> Deserialize<'de> for Config {
     fn deserialize<D: Deserializer<'de>>(de: D) -> ::std::result::Result<Self, D::Error> {
         let raw = Value::deserialize(de)?;
@@ -287,26 +243,26 @@ impl<'de> Deserialize<'de> for Config {
         Ok(Config {
             book: book,
             build: build,
-            rest: table,
+            rest: Value::Table(table),
         })
     }
 }
 
 impl Serialize for Config {
     fn serialize<S: Serializer>(&self, s: S) -> ::std::result::Result<S::Ok, S::Error> {
+        use serde::ser::Error;
+
         let mut table = self.rest.clone();
 
         let book_config = match Value::try_from(self.book.clone()) {
             Ok(cfg) => cfg,
             Err(_) => {
-                use serde::ser::Error;
                 return Err(S::Error::custom("Unable to serialize the BookConfig"));
             }
         };
 
-        table.insert("book".to_string(), book_config);
-
-        Value::Table(table).serialize(s)
+        table.insert("book", book_config).expect("unreachable");
+        table.serialize(s)
     }
 }
 
@@ -423,13 +379,12 @@ impl Default for Playpen {
 /// This is definitely not the most performant way to do things, which means you
 /// should probably keep it away from tight loops...
 trait Updateable<'de>: Serialize + Deserialize<'de> {
-    fn update_value<S: Serialize>(&mut self, keys: &[&str], value: S) {
+    fn update_value<S: Serialize>(&mut self, key: &str, value: S) {
         let mut raw = Value::try_from(&self).expect("unreachable");
 
         {
             if let Ok(value) = Value::try_from(value) {
-                let mut repr = raw.as_table_mut().expect("unreachable");
-                recursive_set(keys, &mut repr, value);
+                let _ = raw.insert(key, value);
             } else {
                 return;
             }

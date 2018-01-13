@@ -113,6 +113,7 @@ extern crate shlex;
 extern crate tempdir;
 extern crate tempfile;
 extern crate toml;
+extern crate toml_query;
 
 #[cfg(test)]
 #[macro_use]
@@ -139,6 +140,10 @@ pub mod errors {
             HandlebarsRender(::handlebars::RenderError);
             HandlebarsTemplate(Box<::handlebars::TemplateError>);
             Utf8(::std::string::FromUtf8Error);
+        }
+
+        links {
+            TomlQuery(::toml_query::error::Error, ::toml_query::error::ErrorKind);
         }
 
         errors {
