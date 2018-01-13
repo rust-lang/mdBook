@@ -8,6 +8,7 @@ use toml::{self, Value};
 use toml::value::Table;
 use toml_query::read::TomlValueReadExt;
 use toml_query::insert::TomlValueInsertExt;
+use toml_query::delete::TomlValueDeleteExt;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json;
 
@@ -156,7 +157,7 @@ impl Config {
         Ok(())
     }
 
-    fn from_legacy(mut table: Table) -> Config {
+    fn from_legacy(mut table: Value) -> Config {
         let mut cfg = Config::default();
 
         // we use a macro here instead of a normal loop because the $out
@@ -164,7 +165,10 @@ impl Config {
         // figure out what try_into() deserializes to.
         macro_rules! get_and_insert {
             ($table:expr, $key:expr => $out:expr) => {
-                if let Some(value) = $table.remove($key).and_then(|v| v.try_into().ok()) {
+                let got = $table.as_table_mut()
+                                .and_then(|t| t.remove($key))
+                                .and_then(|v| v.try_into().ok());
+                if let Some(value) = got {
                     $out = value;
                 }
             };
@@ -175,22 +179,13 @@ impl Config {
         get_and_insert!(table, "source" => cfg.book.src);
         get_and_insert!(table, "description" => cfg.book.description);
 
-        // This complicated chain of and_then's is so we can move
-        // "output.html.destination" to "build.build_dir" and parse it into a
-        // PathBuf.
-        let destination: Option<PathBuf> = table
-            .get_mut("output")
-            .and_then(|output| output.as_table_mut())
-            .and_then(|output| output.get_mut("html"))
-            .and_then(|html| html.as_table_mut())
-            .and_then(|html| html.remove("destination"))
-            .and_then(|dest| dest.try_into().ok());
-
-        if let Some(dest) = destination {
-            cfg.build.build_dir = dest;
+        if let Ok(Some(dest)) = table.delete("output.html.destination") {
+            if let Ok(destination) = dest.try_into() {
+                cfg.build.build_dir = destination;
+            }
         }
 
-        cfg.rest = Value::Table(table);
+        cfg.rest = table;
         cfg
     }
 }
@@ -208,6 +203,18 @@ impl<'de> Deserialize<'de> for Config {
     fn deserialize<D: Deserializer<'de>>(de: D) -> ::std::result::Result<Self, D::Error> {
         let raw = Value::deserialize(de)?;
 
+        if is_legacy_format(&raw) {
+            warn!("It looks like you are using the legacy book.toml format.");
+            warn!("We'll parse it for now, but you should probably convert to the new format.");
+            warn!("See the mdbook documentation for more details, although as a rule of thumb");
+            warn!("just move all top level configuration entries like `title`, `author` and");
+            warn!("`description` under a table called `[book]`, move the `destination` entry");
+            warn!("from `[output.html]`, renamed to `build-dir`, under a table called");
+            warn!("`[build]`, and it should all work.");
+            warn!("Documentation: http://rust-lang-nursery.github.io/mdBook/format/config.html");
+            return Ok(Config::from_legacy(raw));
+        }
+
         let mut table = match raw {
             Value::Table(t) => t,
             _ => {
@@ -217,18 +224,6 @@ impl<'de> Deserialize<'de> for Config {
                 ));
             }
         };
-
-        if is_legacy_format(&table) {
-            warn!("It looks like you are using the legacy book.toml format.");
-            warn!("We'll parse it for now, but you should probably convert to the new format.");
-            warn!("See the mdbook documentation for more details, although as a rule of thumb");
-            warn!("just move all top level configuration entries like `title`, `author` and");
-            warn!("`description` under a table called `[book]`, move the `destination` entry");
-            warn!("from `[output.html]`, renamed to `build-dir`, under a table called");
-            warn!("`[build]`, and it should all work.");
-            warn!("Documentation: http://rust-lang-nursery.github.io/mdBook/format/config.html");
-            return Ok(Config::from_legacy(table));
-        }
 
         let book: BookConfig = table
             .remove("book")
@@ -278,12 +273,22 @@ fn parse_env(key: &str) -> Option<String> {
     }
 }
 
-fn is_legacy_format(table: &Table) -> bool {
-    let top_level_items = ["title", "author", "authors"];
+fn is_legacy_format(table: &Value) -> bool {
+    let legacy_items = [
+        "title",
+        "authors",
+        "source",
+        "description",
+        "output.html.destination",
+    ];
 
-    top_level_items
-        .iter()
-        .any(|key| table.contains_key(&key.to_string()))
+    for item in &legacy_items {
+        if let Ok(Some(_)) = table.read(item) {
+            return true;
+        }
+    }
+
+    false
 }
 
 /// Configuration options which are specific to the book and required for
