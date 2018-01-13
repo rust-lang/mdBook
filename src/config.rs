@@ -1,9 +1,13 @@
+//! Mdbook's configuration system. 
+
 use std::path::{Path, PathBuf};
 use std::fs::File;
 use std::io::Read;
+use std::env;
 use toml::{self, Value};
 use toml::value::Table;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde_json;
 
 use errors::*;
 
@@ -31,6 +35,56 @@ impl Config {
             .chain_err(|| "Couldn't read the file")?;
 
         Config::from_str(&buffer)
+    }
+
+    /// Updates the `Config` from the available environment variables.
+    ///
+    /// Variables starting with `MDBOOK_` are used for configuration. The key is
+    /// created by removing the `MDBOOK_` prefix and turning the resulting
+    /// string into `kebab-case`. Double underscores (`__`) separate nested
+    /// keys, while a single underscore (`_`) is replaced with a dash (`-`).
+    ///
+    /// For example:
+    ///
+    /// - `MDBOOK_foo` -> `foo`
+    /// - `MDBOOK_FOO` -> `foo`
+    /// - `MDBOOK_FOO__BAR` -> `foo.bar`
+    /// - `MDBOOK_FOO_BAR` -> `foo-bar`
+    /// - `MDBOOK_FOO_bar__baz` -> `foo-bar.baz`
+    ///
+    /// So by setting the `MDBOOK_BOOK__TITLE` environment variable you can
+    /// override the book's title without needing to touch your `book.toml`.
+    ///
+    /// > **Note:** To facilitate setting more complex config items, the value 
+    /// > of an environment variable is first parsed as JSON, falling back to a
+    /// > string if the parse fails. 
+    /// >
+    /// > This means, if you so desired, you could override all book metadata 
+    /// > when building the book with something like
+    /// >
+    /// > ```
+    /// > $ export MDBOOK_BOOK="{'title': 'My Awesome Book', authors: ['Michael-F-Bryan']}"
+    /// > $ mdbook build
+    /// > ```
+    /// 
+    /// The latter case may be useful in situations where `mdbook` is invoked 
+    /// from a script or CI, where it sometimes isn't possible to update the
+    /// `book.toml` before building.
+    pub fn update_from_env(&mut self) {
+        debug!("Updating the config from environment variables");
+
+        let overrides = env::vars().filter_map(|(key, value)| match parse_env(&key) {
+            Some(index) => Some((index, value)),
+            None => None,
+        });
+
+        for (key, value) in overrides {
+            trace!("{} => {}", key, value);
+            let parsed_value = serde_json::from_str(&value)
+                .unwrap_or_else(|_| serde_json::Value::String(value.to_string()));
+
+            self.set(key, parsed_value).expect("unreachable");
+        }
     }
 
     /// Fetch an arbitrary item from the `Config` as a `toml::Value`.
@@ -248,6 +302,18 @@ impl Serialize for Config {
         table.insert("book".to_string(), book_config);
 
         Value::Table(table).serialize(s)
+    }
+}
+
+fn parse_env(key: &str) -> Option<String> {
+    const PREFIX: &str = "MDBOOK_";
+
+    if key.starts_with(PREFIX) {
+        let key = &key[PREFIX.len()..];
+
+        Some(key.to_lowercase().replace("__", ".").replace("_", "-"))
+    } else {
+        None
     }
 }
 
@@ -517,5 +583,22 @@ mod tests {
 
         let got: String = cfg.get_deserialized(key).unwrap();
         assert_eq!(got, value);
+    }
+
+    #[test]
+    fn parse_env_vars() {
+        let inputs = vec![
+            ("FOO", None),
+            ("MDBOOK_foo", Some("foo")),
+            ("MDBOOK_FOO__bar__baz", Some("foo.bar.baz")),
+            ("MDBOOK_FOO_bar__baz", Some("foo-bar.baz")),
+        ];
+
+        for (src, should_be) in inputs {
+            let got = parse_env(src);
+            let should_be = should_be.map(|s| s.to_string());
+
+            assert_eq!(got, should_be);
+        }
     }
 }
