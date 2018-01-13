@@ -58,12 +58,14 @@ impl MDBook {
             warn!("\thttps://rust-lang-nursery.github.io/mdBook/format/config.html");
         }
 
-        let config = if config_location.exists() {
+        let mut config = if config_location.exists() {
             debug!("[*] Loading config from {}", config_location.display());
             Config::from_disk(&config_location)?
         } else {
             Config::default()
         };
+
+        config.update_from_env();
 
         if log_enabled!(::log::Level::Trace) {
             for line in format!("Config: {:#?}", config).lines() {
