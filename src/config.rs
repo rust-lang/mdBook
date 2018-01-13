@@ -1,4 +1,4 @@
-//! Mdbook's configuration system. 
+//! Mdbook's configuration system.
 
 use std::path::{Path, PathBuf};
 use std::fs::File;
@@ -55,19 +55,19 @@ impl Config {
     /// So by setting the `MDBOOK_BOOK__TITLE` environment variable you can
     /// override the book's title without needing to touch your `book.toml`.
     ///
-    /// > **Note:** To facilitate setting more complex config items, the value 
+    /// > **Note:** To facilitate setting more complex config items, the value
     /// > of an environment variable is first parsed as JSON, falling back to a
-    /// > string if the parse fails. 
+    /// > string if the parse fails.
     /// >
-    /// > This means, if you so desired, you could override all book metadata 
+    /// > This means, if you so desired, you could override all book metadata
     /// > when building the book with something like
     /// >
-    /// > ```
+    /// > ```text
     /// > $ export MDBOOK_BOOK="{'title': 'My Awesome Book', authors: ['Michael-F-Bryan']}"
     /// > $ mdbook build
     /// > ```
-    /// 
-    /// The latter case may be useful in situations where `mdbook` is invoked 
+    ///
+    /// The latter case may be useful in situations where `mdbook` is invoked
     /// from a script or CI, where it sometimes isn't possible to update the
     /// `book.toml` before building.
     pub fn update_from_env(&mut self) {
@@ -137,7 +137,12 @@ impl Config {
         let pieces: Vec<_> = index.as_ref().split(".").collect();
         let value =
             Value::try_from(value).chain_err(|| "Unable to represent the item as a JSON Value")?;
-        recursive_set(&pieces, &mut self.rest, value);
+
+        match pieces[0] {
+            "book" => self.book.update_value(&pieces[1..], value),
+            "build" => self.build.update_value(&pieces[1..], value),
+            _ => recursive_set(&pieces, &mut self.rest, value),
+        }
 
         Ok(())
     }
@@ -412,6 +417,33 @@ impl Default for Playpen {
     }
 }
 
+/// Allows you to "update" any arbitrary field in a struct by round-tripping via
+/// a `toml::Value`.
+///
+/// This is definitely not the most performant way to do things, which means you
+/// should probably keep it away from tight loops...
+trait Updateable<'de>: Serialize + Deserialize<'de> {
+    fn update_value<S: Serialize>(&mut self, keys: &[&str], value: S) {
+        let mut raw = Value::try_from(&self).expect("unreachable");
+
+        {
+            if let Ok(value) = Value::try_from(value) {
+                let mut repr = raw.as_table_mut().expect("unreachable");
+                recursive_set(keys, &mut repr, value);
+            } else {
+                return;
+            }
+        }
+
+        if let Ok(updated) = raw.try_into() {
+            *self = updated;
+        }
+    }
+}
+
+impl<'de> Updateable<'de> for BookConfig {}
+impl<'de> Updateable<'de> for BuildConfig {}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -600,5 +632,61 @@ mod tests {
 
             assert_eq!(got, should_be);
         }
+    }
+
+    fn encode_env_var(key: &str) -> String {
+        format!(
+            "MDBOOK_{}",
+            key.to_uppercase().replace('.', "__").replace("-", "_")
+        )
+    }
+
+    #[test]
+    fn update_config_using_env_var() {
+        let mut cfg = Config::default();
+        let key = "foo.bar";
+        let value = "baz";
+
+        assert!(cfg.get(key).is_none());
+
+        let encoded_key = encode_env_var(key);
+        env::set_var(encoded_key, value);
+
+        cfg.update_from_env();
+
+        assert_eq!(cfg.get_deserialized::<String, _>(key).unwrap(), value);
+    }
+
+    #[test]
+    fn update_config_using_env_var_and_complex_value() {
+        let mut cfg = Config::default();
+        let key = "foo-bar.baz";
+        let value = json!({"array": [1, 2, 3], "number": 3.14});
+        let value_str = serde_json::to_string(&value).unwrap();
+
+        assert!(cfg.get(key).is_none());
+
+        let encoded_key = encode_env_var(key);
+        env::set_var(encoded_key, value_str);
+
+        cfg.update_from_env();
+
+        assert_eq!(
+            cfg.get_deserialized::<serde_json::Value, _>(key).unwrap(),
+            value
+        );
+    }
+
+    #[test]
+    fn update_book_title_via_env() {
+        let mut cfg = Config::default();
+        let should_be = "Something else".to_string();
+
+        assert_ne!(cfg.book.title, Some(should_be.clone()));
+
+        env::set_var("MDBOOK_BOOK__TITLE", &should_be);
+        cfg.update_from_env();
+
+        assert_eq!(cfg.book.title, Some(should_be));
     }
 }
