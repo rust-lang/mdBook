@@ -396,8 +396,11 @@ trait Updateable<'de>: Serialize + Deserialize<'de> {
     }
 }
 
-impl<'de> Updateable<'de> for BookConfig {}
-impl<'de> Updateable<'de> for BuildConfig {}
+impl<'de, T> Updateable<'de> for T
+where
+    T: Serialize + Deserialize<'de>,
+{
+}
 
 #[cfg(test)]
 mod tests {
