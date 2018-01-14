@@ -1,4 +1,53 @@
 //! Mdbook's configuration system.
+//! 
+//! The main entrypoint of the `config` module is the `Config` struct. This acts
+//! essentially as a bag of configuration information, with a couple
+//! pre-determined tables (`BookConfig` and `BuildConfig`) as well as support 
+//! for arbitrary data which is exposed to plugins and alternate backends.
+//! 
+//! 
+//! # Examples
+//! 
+//! ```rust
+//! # extern crate mdbook;
+//! # use mdbook::errors::*;
+//! # extern crate toml;
+//! use std::path::PathBuf;
+//! use mdbook::Config;
+//! use toml::Value;
+//! 
+//! # fn run() -> Result<()> {
+//! let src = r#"
+//! [book]
+//! title = "My Book"
+//! authors = ["Michael-F-Bryan"]
+//! 
+//! [build]
+//! src = "out"
+//! 
+//! [other-table.foo]
+//! bar = 123
+//! "#;
+//! 
+//! // load the `Config` from a toml string
+//! let mut cfg = Config::from_str(src)?;
+//! 
+//! // retrieve a nested value
+//! let bar = cfg.get("other-table.foo.bar").cloned();
+//! assert_eq!(bar, Some(Value::Integer(123)));
+//! 
+//! // Set the `output.html.theme` directory
+//! assert!(cfg.get("output.html").is_none());
+//! cfg.set("output.html.theme", "./themes");
+//! 
+//! // then load it again, automatically deserializing to a `PathBuf`.
+//! let got: PathBuf = cfg.get_deserialized("output.html.theme")?;
+//! assert_eq!(got, PathBuf::from("./themes"));
+//! # Ok(())
+//! # }
+//! # fn main() { run().unwrap() }
+//! ```
+
 #![deny(missing_docs)]
 
 use std::path::{Path, PathBuf};
