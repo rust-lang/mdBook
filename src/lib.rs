@@ -111,7 +111,6 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate shlex;
 extern crate tempdir;
-extern crate tempfile;
 extern crate toml;
 extern crate toml_query;
 

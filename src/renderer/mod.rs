@@ -17,9 +17,8 @@ mod html_handlebars;
 
 use std::io::Read;
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Stdio};
 use serde_json;
-use tempfile;
 use shlex::Shlex;
 
 use errors::*;
@@ -153,20 +152,29 @@ impl Renderer for CmdRenderer {
     fn render(&self, ctx: &RenderContext) -> Result<()> {
         info!("Invoking the \"{}\" renderer", self.cmd);
 
-        // We need to write the RenderContext to a temporary file here instead
-        // of passing it in via a pipe. This prevents a race condition where
-        // some quickly executing command (e.g. `/bin/true`) may exit before we
-        // finish writing the render context (closing the stdin pipe and
-        // throwing a write error).
-        let mut temp = tempfile::tempfile().chain_err(|| "Unable to create a temporary file")?;
-        serde_json::to_writer(&mut temp, &ctx)
-            .chain_err(|| "Unable to serialize the RenderContext")?;
-
-        let status = self.compose_command()?
-            .stdin(temp)
+        let mut child = self.compose_command()?
+            .stdin(Stdio::piped())
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
             .current_dir(&ctx.destination)
-            .status()
+            .spawn()
             .chain_err(|| "Unable to start the renderer")?;
+
+        {
+            let mut stdin = child.stdin.take().expect("Child has stdin");
+            if let Err(e) = serde_json::to_writer(&mut stdin, &ctx) {
+                // Looks like the backend hung up before we could finish
+                // sending it the render context. Log the error and keep going
+                warn!("Error writing the RenderContext to the backend, {}", e);
+            }
+
+            // explicitly close the `stdin` file handle
+            drop(stdin);
+        }
+
+        let status = child
+            .wait()
+            .chain_err(|| "Error waiting for the backend to complete")?;
 
         trace!("{} exited with output: {:?}", self.cmd, status);
 
