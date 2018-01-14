@@ -128,6 +128,7 @@ pub mod utils;
 pub use book::MDBook;
 pub use book::BookItem;
 pub use renderer::Renderer;
+pub use config::Config;
 
 /// The error types used through out this crate.
 pub mod errors {

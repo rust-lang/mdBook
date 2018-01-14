@@ -1,4 +1,5 @@
 //! Mdbook's configuration system.
+#![deny(missing_docs)]
 
 use std::path::{Path, PathBuf};
 use std::fs::File;
@@ -14,11 +15,13 @@ use serde_json;
 
 use errors::*;
 
-/// The overall configuration object for MDBook.
+/// The overall configuration object for MDBook, essentially an in-memory
+/// representation of `book.toml`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Config {
     /// Metadata about the book.
     pub book: BookConfig,
+    /// Information about the build environment.
     pub build: BuildConfig,
     rest: Value,
 }
@@ -344,15 +347,24 @@ impl Default for BuildConfig {
     }
 }
 
+/// Configuration for the HTML renderer.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct HtmlConfig {
+    /// The theme directory, if specified.
     pub theme: Option<PathBuf>,
+    /// Use "smart quotes" instead of the usual `"` character.
     pub curly_quotes: bool,
+    /// Should mathjax be enabled?
     pub mathjax_support: bool,
+    /// An optional google analytics code.
     pub google_analytics: Option<String>,
+    /// Additional CSS stylesheets to include in the rendered page's `<head>`.
     pub additional_css: Vec<PathBuf>,
+    /// Additional JS scripts to include at the bottom of the rendered page's 
+    /// `<body>`.
     pub additional_js: Vec<PathBuf>,
+    /// Playpen settings.
     pub playpen: Playpen,
     /// This is used as a bit of a workaround for the `mdbook serve` command.
     /// Basically, because you set the websocket port from the command line, the
@@ -362,6 +374,7 @@ pub struct HtmlConfig {
     /// This config item *should not be edited* by the end user.
     #[doc(hidden)]
     pub livereload_url: Option<String>,
+    /// Should section labels be rendered?
     pub no_section_label: bool,
 }
 
@@ -369,7 +382,11 @@ pub struct HtmlConfig {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Playpen {
+    /// The path to the editor to use. Defaults to the [Ace Editor].
+    /// 
+    /// [Ace Editor]: https://ace.c9.io/
     pub editor: PathBuf,
+    /// Should playpen snippets be editable? Defaults to `false`.
     pub editable: bool,
 }
 
