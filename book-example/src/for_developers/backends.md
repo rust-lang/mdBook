@@ -123,7 +123,26 @@ Work*.
 
 ```
 $ mdbook build
-TODO: Insert output of build command with wordcount backend
+...
+2018-01-16 07:31:15 [INFO] (mdbook::renderer): Invoking the "mdbook-wordcount" renderer
+mdBook: 126
+Command Line Tool: 224
+init: 283
+build: 145
+watch: 146
+serve: 292
+test: 139
+Format: 30
+SUMMARY.md: 259
+Configuration: 784
+Theme: 304
+index.hbs: 447
+Syntax highlighting: 314
+MathJax Support: 153
+Rust code specific features: 148
+For Developers: 788
+Alternate Backends: 710
+Contributors: 85
 ```
 
 The reason we didn't need to specify the full name/path of our `wordcount` 
