@@ -68,22 +68,29 @@
             $("html").addClass("sidebar-" + sidebar);
         </script>
 
-        <div id="sidebar" class="sidebar">
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             {{#toc}}{{/toc}}
-        </div>
+        </nav>
 
         <div id="page-wrapper" class="page-wrapper">
 
-            <div class="page" tabindex="-1">
+            <div class="page">
                 {{> header}}
                 <div id="menu-bar" class="menu-bar">
                     <div class="left-buttons">
-                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle sidebar">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-controls="sidebar">
                             <i class="fa fa-bars"></i>
                         </button>
-                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme">
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
                             <i class="fa fa-paint-brush"></i>
                         </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="submenu">
+                            <li><button class="theme" id="light">Light <span class="default">(default)</span></button></li>
+                            <li><button class="theme" id="rust">Rust</button></li>
+                            <li><button class="theme" id="coal">Coal</button></li>
+                            <li><button class="theme" id="navy">Navy</button></li>
+                            <li><button class="theme" id="ayu">Ayu</button></li>
+                        </ul>
                     </div>
 
                     <h1 class="menu-title">{{ book_title }}</h1>
@@ -95,39 +102,50 @@
                     </div>
                 </div>
 
-                <div id="content" class="content">
-                    {{{ content }}}
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    $('#sidebar-toggle').attr('aria-expanded', sidebar === 'visible');
+                    $('#sidebar').attr('aria-hidden', sidebar !== 'visible');
+                    $('#sidebar a').attr('tabIndex', sidebar === 'visible' ? 0 : -1);
+                </script>
 
-                    <div class="nav-wrapper">
+                <div id="content" class="content">
+                    <main>
+                        {{{ content }}}
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         {{#previous}}
-                            <a rel="prev" href="{{link}}" class="mobile-nav-chapters previous" title="Previous chapter">
+                            <a rel="prev" href="{{link}}" class="mobile-nav-chapters previous" title="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         {{/previous}}
 
                         {{#next}}
-                            <a rel="next" href="{{link}}" class="mobile-nav-chapters next" title="Next chapter">
+                            <a rel="next" href="{{link}}" class="mobile-nav-chapters next" title="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         {{/next}}
 
                         <div style="clear: both"></div>
-                    </div>
+                    </nav>
                 </div>
             </div>
 
-            {{#previous}}
-                <a href="{{link}}" class="nav-chapters previous" title="You can navigate through the chapters using the arrow keys">
-                    <i class="fa fa-angle-left"></i>
-                </a>
-            {{/previous}}
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                {{#previous}}
+                    <a href="{{link}}" class="nav-chapters previous" title="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                {{/previous}}
 
-            {{#next}}
-                <a href="{{link}}" class="nav-chapters next" title="You can navigate through the chapters using the arrow keys">
-                    <i class="fa fa-angle-right"></i>
-                </a>
-            {{/next}}
+                {{#next}}
+                    <a href="{{link}}" class="nav-chapters next" title="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                {{/next}}
+            </nav>
 
         </div>
 

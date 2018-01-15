@@ -61,17 +61,21 @@ table thead td {
   -moz-box-sizing: border-box;
   box-sizing: border-box;
   -webkit-overflow-scrolling: touch;
-  -webkit-transition: left 0.5s;
-  -moz-transition: left 0.5s;
-  -o-transition: left 0.5s;
-  -ms-transition: left 0.5s;
-  transition: left 0.5s;
+  -webkit-transition: -webkit-transform 0.5s;
+  -moz-transition: -moz-transform 0.5s;
+  -o-transition: -o-transform 0.5s;
+  -ms-transition: -ms-transform 0.5s;
+  transition: transform 0.5s;
 }
 .sidebar code {
   line-height: 2em;
 }
 .sidebar-hidden .sidebar {
-  left: -300px;
+  -webkit-transform: translateX(-300px);
+  -moz-transform: translateX(-300px);
+  -o-transform: translateX(-300px);
+  -ms-transform: translateX(-300px);
+  transform: translateX(-300px);
 }
 .chapter {
   list-style: none outside none;
@@ -79,6 +83,7 @@ table thead td {
   line-height: 2.2em;
 }
 .chapter li a {
+  display: block;
   padding: 5px 0;
   text-decoration: none;
 }
@@ -105,8 +110,6 @@ table thead td {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
-  min-height: 100%;
-  width: 100%;
   -webkit-transition: padding-left 0.5s, margin-left 0.5s;
   -moz-transition: padding-left 0.5s, margin-left 0.5s;
   -o-transition: padding-left 0.5s, margin-left 0.5s;
@@ -143,7 +146,18 @@ table thead td {
 }
 .menu-bar {
   position: relative;
-  height: 50px;
+  display: -webkit-box;
+  display: -moz-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: box;
+  display: flex;
+  -webkit-box-lines: multiple;
+  -moz-box-lines: multiple;
+  -o-box-lines: multiple;
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
 }
 .menu-bar i,
 .menu-bar .icon-button {
@@ -161,24 +175,24 @@ table thead td {
 .menu-bar .icon-button:hover {
   cursor: pointer;
 }
-.menu-bar .left-buttons {
-  float: left;
-}
-.menu-bar .right-buttons {
-  float: right;
-}
 .menu-title {
   display: inline-block;
   font-weight: 200;
   font-size: 20px;
   line-height: 50px;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   text-align: center;
   margin: 0;
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1;
+  -o-box-flex: 1;
+  box-flex: 1;
+  -webkit-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
   opacity: 0;
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
   filter: alpha(opacity=0);
@@ -252,7 +266,7 @@ table thead td {
   right: 15px;
 }
 @media only screen and (max-width: 1080px) {
-  .nav-chapters {
+  .nav-wide-wrapper {
     display: none;
   }
   .nav-wrapper {
@@ -260,7 +274,7 @@ table thead td {
   }
 }
 @media only screen and (max-width: 1380px) {
-  .sidebar-visible .nav-chapters {
+  .sidebar-visible .nav-wide-wrapper {
     display: none;
   }
   .sidebar-visible .nav-wrapper {
@@ -275,11 +289,18 @@ table thead td {
   font-size: 0.7em;
 }
 .theme-popup .theme {
+  display: inline;
+  border: 0;
   margin: 0;
   padding: 2px 10px;
   line-height: 25px;
+  width: 100%;
   white-space: nowrap;
+  text-align: left;
   cursor: pointer;
+  color: inherit;
+  background: inherit;
+  font-size: inherit;
 }
 .theme-popup .theme:hover:first-child,
 .theme-popup .theme:hover:last-child {
@@ -349,6 +370,10 @@ table thead td {
   color: #333;
   background: #fafafa;
   border: 1px solid #ccc;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: none;
 }
 .light .theme-popup .theme:hover {
   background-color: #e6e6e6;
@@ -481,6 +506,10 @@ table thead td {
   color: #98a3ad;
   background: #141617;
   border: 1px solid #43484d;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: none;
 }
 .coal .theme-popup .theme:hover {
   background-color: #1f2124;
@@ -613,6 +642,10 @@ table thead td {
   color: #bcbdd0;
   background: #161923;
   border: 1px solid #737480;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: none;
 }
 .navy .theme-popup .theme:hover {
   background-color: #282e40;
@@ -745,6 +778,10 @@ table thead td {
   color: #262625;
   background: #e1e1db;
   border: 1px solid #b38f6b;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: none;
 }
 .rust .theme-popup .theme:hover {
   background-color: #99908a;
@@ -877,6 +914,10 @@ table thead td {
   color: #c5c5c5;
   background: #14191f;
   border: 1px solid #5c6773;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: none;
 }
 .ayu .theme-popup .theme:hover {
   background-color: #191f26;
