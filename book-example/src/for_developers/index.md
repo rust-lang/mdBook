@@ -1,15 +1,13 @@
 # For Developers
 
 While `mdbook` is mainly used as a command line tool, you can also import the 
-underlying library directly and use that to manage a book. 
+underlying library directly and use that to manage a book. It also has a fairly
+flexible plugin mechanism, allowing you to create your own custom tooling and 
+consumers (often referred to as *backends*) if you need to do some analysis of
+the book or convert it to a different format.
 
-- Creating custom backends 
-- Automatically generating and reloading a book on the fly 
-- Integration with existing projects
-
-The best source for examples on using the `mdbook` crate from your own Rust 
-programs is the [API Docs].
-
+The *For Developers* chapters are here to show you the more advanced usage of 
+`mdbook`.
 
 ## Configuration
 

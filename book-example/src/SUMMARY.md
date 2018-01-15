@@ -16,6 +16,7 @@
         - [Editor](format/theme/editor.md)
     - [MathJax Support](format/mathjax.md)
     - [Rust code specific features](format/rust.md)
-- [For Developers](lib/index.md)
+- [For Developers](for_developers/index.md)
+    - [Alternate Backends](for_developers/backends.md)
 -----------
 [Contributors](misc/contributors.md)

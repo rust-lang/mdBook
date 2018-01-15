@@ -66,3 +66,5 @@ doc = false
 name = "mdbook"
 path = "src/bin/mdbook.rs"
 
+[workspace]
+members = ["book-example/src/for_developers/mdbook-wordcount"]

@@ -1,0 +1,8 @@
+[package]
+name = "mdbook-wordcount"
+version = "0.1.0"
+authors = ["Michael Bryan <michaelfbryan@gmail.com>"]
+workspace = "../../../.."
+
+[dependencies]
+mdbook = { path = "../../../.." }

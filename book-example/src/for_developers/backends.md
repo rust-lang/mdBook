@@ -1,0 +1,137 @@
+# Alternate Backends
+
+A "backend" is simply a program which `mdbook` will invoke during the book 
+rendering process. This program is passed a JSON representation of the book and
+configuration information via `stdin`. Once the backend receives this 
+information it is free to do whatever it wants.
+
+There are already several alternate backends on GitHub which can be used as a 
+rough example of how this is accomplished in practice.
+
+- [mdbook-linkcheck] - a simple program for verifying the book doesn't contain
+  any broken links
+- [mdbook-epub] - an EPUB renderer
+- [mdbook-test] - a program to run the book's contents through [rust-skeptic] to
+  verify everything compiles and runs correctly (similar to `rustdoc --test`)
+
+This page will step you through creating your own alternate backend in the form
+of a simple word counting program. Although it will be written in Rust, there's
+no reason why it couldn't be accomplished using something like Python or Ruby.
+
+
+## Setting Up
+
+First you'll want to create a new binary program and add `mdbook` as a 
+dependency.
+
+```
+$ cargo new --bin mdbook-wordcount
+$ cd mdbook-wordcount 
+$ cargo add mdbook
+```
+
+When our `mdbook-wordcount` plugin is invoked, `mdbook` will send it a JSON 
+version of [`RenderContext`] via our plugin's `stdin`. For convenience, there's 
+a [`RenderContext::from_json()`] constructor which will load a `RenderContext`.
+
+This is all the boilerplate necessary for our backend to load the book.
+
+```rust
+// src/main.rs
+extern crate mdbook;
+
+use std::io;
+use mdbook::renderer::RenderContext;
+
+fn main() {
+    let mut stdin = io::stdin();
+    let ctx = RenderContext::from_json(&mut stdin).unwrap();
+}
+```
+
+> **Note:** The `RenderContext` contains a `version` field. This lets backends 
+  figure out whether they are compatible with the version of `mdbook` it's being
+  called by. This `version` comes directly from the corresponding field in 
+  `mdbook`'s `Cargo.toml`. 
+  
+  It is recommended that backends use the [`semver`] crate to inspect this field
+  and emit a warning if there may be a compatibility issue.
+
+
+## Inspecting the Book
+
+Now our backend has a copy of the book, lets count how many words are in each 
+chapter!
+
+Because the `RenderContext` contains a [`Book`] field (`book`), and a `Book` has
+the [`Book::iter()`] method for iterating over all items in a `Book`, this step
+turns out to be just as easy as the first.
+
+```rust
+
+fn main() {
+    let mut stdin = io::stdin();
+    let ctx = RenderContext::from_json(&mut stdin).unwrap();
+
+    for item in ctx.book.iter() {
+        if let BookItem::Chapter(ref ch) = *item {
+            let num_words = count_words(ch);
+            println!("{}: {}", ch.name, num_words);
+        }
+    }
+}
+
+fn count_words(ch: &Chapter) -> usize {
+    ch.content.split_whitespace().count()
+}
+```
+
+
+## Enabling the Backend
+
+Now we've got the basics running, we want to actually use it. First, install
+the program.
+
+```
+$ cargo install
+```
+
+Then `cd` to the particular book you'd like to count the words of and update its
+`book.toml` file. 
+
+```diff
+  [book]
+  title = "mdBook Documentation"
+  description = "Create book from markdown files. Like Gitbook but implemented in Rust"
+  authors = ["Mathieu David", "Michael-F-Bryan"]
+
++ [output.html]
+
++ [output.wordcount]
+```
+
+When it loads a book into memory, `mdbook` will inspect your `book.toml` file 
+to try and figure out which backends to use by looking for all `output.*`
+tables. If none are provided it'll fall back to using the default HTML
+renderer. 
+
+Notably, this means if you want to add your own custom backend you'll also
+need to make sure to add the HTML backend, even if its tabke just stays empty.
+
+Now you just need to build your book like normal, and everything should *Just 
+Work*.
+
+```
+$ mdbook build
+```
+
+
+[mdbook-linkcheck]: https://github.com/Michael-F-Bryan/mdbook-linkcheck
+[mdbook-epub]: https://github.com/Michael-F-Bryan/mdbook-epub
+[mdbook-test]: https://github.com/Michael-F-Bryan/mdbook-test
+[rust-skeptic]: https://github.com/budziq/rust-skeptic
+[`RenderContext`]: http://rust-lang-nursery.github.io/mdBook/mdbook/renderer/struct.RenderContext.html
+[`RenderContext::from_json()`]: http://rust-lang-nursery.github.io/mdBook/mdbook/renderer/struct.RenderContext.html#method.from_json
+[`semver`]: https://crates.io/crates/semver
+[`Book`]: http://rust-lang-nursery.github.io/mdBook/mdbook/book/struct.Book.html
+[`Book::iter()`]: http://rust-lang-nursery.github.io/mdBook/mdbook/book/struct.Book.html#method.iter
