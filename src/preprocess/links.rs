@@ -19,6 +19,10 @@ impl LinkPreprocessor {
 }
 
 impl Preprocessor for LinkPreprocessor {
+    fn name(&self) -> &str {
+        "links"
+    }
+
     fn run(&self, ctx: &PreprocessorContext, book: &mut Book) -> Result<()> {
         for section in &mut book.sections {
             match *section {

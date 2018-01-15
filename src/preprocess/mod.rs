@@ -12,5 +12,6 @@ pub struct PreprocessorContext {
 }
 
 pub trait Preprocessor {
+    fn name(&self) -> &str;
     fn run(&self, ctx: &PreprocessorContext, book: &mut Book) -> Result<()>;
 }

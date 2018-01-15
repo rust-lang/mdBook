@@ -88,7 +88,7 @@ impl MDBook {
         let livereload = None;
 
         let renderers = determine_renderers(&config);
-        let preprocessors = determine_preprocessors(&config);
+        let preprocessors = determine_preprocessors(&config)?;
 
         Ok(MDBook {
             root,
@@ -334,25 +334,26 @@ fn determine_renderers(config: &Config) -> Vec<Box<Renderer>> {
 }
 
 /// Look at the `MDBook` and try to figure out what preprocessors to run.
-fn determine_preprocessors(config: &Config) -> Vec<Box<Preprocessor>> {
+fn determine_preprocessors(config: &Config) -> Result<Vec<Box<Preprocessor>>> {
+
+    let preprocess_list = match config.build.preprocess {
+        Some(ref p) => p,
+        // If no preprocessor field is set, default to the LinkPreprocessor. This allows you
+        // to disable the LinkPreprocessor by setting "preprocess" to an empty list.
+        None => return Ok(vec![Box::new(LinkPreprocessor::new())])
+    };
+
     let mut preprocessors: Vec<Box<Preprocessor>> = Vec::new();
 
-    if let Some(preprocess_array) = config.get("preprocess").and_then(|o| o.as_array()) {
-        for key in preprocess_array.iter() {
-            match key.as_str() {
-                Some(key) if key == "links" => {
-                    preprocessors.push(Box::new(LinkPreprocessor::new()))
-                }
-                _ => {}
-            }
+    for key in preprocess_list {
+        if key == "links" {
+            preprocessors.push(Box::new(LinkPreprocessor::new()))
+        } else {
+            bail!("{:?} is not a recognised preprocessor", key);
         }
     }
 
-    if preprocessors.is_empty() {
-        preprocessors.push(Box::new(LinkPreprocessor::new()))
-    }
-
-    preprocessors
+    Ok(preprocessors)
 }
 
 fn interpret_custom_renderer(key: &str, table: &Value) -> Box<Renderer> {
@@ -409,5 +410,66 @@ mod tests {
 
         assert_eq!(got.len(), 1);
         assert_eq!(got[0].name(), "random");
+    }
+
+    #[test]
+    fn config_defaults_to_link_preprocessor_if_not_set() {
+        let cfg = Config::default();
+
+        // make sure we haven't got anything in the `output` table
+        assert!(cfg.build.preprocess.is_none());
+
+        let got = determine_preprocessors(&cfg);
+
+        assert!(got.is_ok());
+        assert_eq!(got.as_ref().unwrap().len(), 1);
+        assert_eq!(got.as_ref().unwrap()[0].name(), "links");
+    }
+
+    #[test]
+    fn config_doesnt_default_if_empty() {
+        let cfg_str: &'static str = r#"
+        [book]
+        title = "Some Book"
+
+        [build]
+        build-dir = "outputs"
+        create-missing = false
+        preprocess = []
+        "#;
+
+
+        let cfg = Config::from_str(cfg_str).unwrap();
+
+        // make sure we have something in the `output` table
+        assert!(cfg.build.preprocess.is_some());
+
+        let got = determine_preprocessors(&cfg);
+
+        assert!(got.is_ok());
+        assert!(got.unwrap().is_empty());
+    }
+
+    #[test]
+    fn config_complains_if_unimplemented_preprocessor() {
+        let cfg_str: &'static str = r#"
+        [book]
+        title = "Some Book"
+
+        [build]
+        build-dir = "outputs"
+        create-missing = false
+        preprocess = ["random"]
+        "#;
+
+
+        let cfg = Config::from_str(cfg_str).unwrap();
+
+        // make sure we have something in the `output` table
+        assert!(cfg.build.preprocess.is_some());
+
+        let got = determine_preprocessors(&cfg);
+
+        assert!(got.is_err());
     }
 }
