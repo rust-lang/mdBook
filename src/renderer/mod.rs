@@ -15,6 +15,7 @@ pub use self::html_handlebars::HtmlHandlebars;
 
 mod html_handlebars;
 
+use std::fs;
 use std::io::Read;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
@@ -151,6 +152,8 @@ impl Renderer for CmdRenderer {
 
     fn render(&self, ctx: &RenderContext) -> Result<()> {
         info!("Invoking the \"{}\" renderer", self.cmd);
+
+        let _ = fs::create_dir_all(&ctx.destination);
 
         let mut child = self.compose_command()?
             .stdin(Stdio::piped())
