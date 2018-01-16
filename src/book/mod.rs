@@ -350,10 +350,11 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<Preprocessor>>> {
     let mut preprocessors: Vec<Box<Preprocessor>> = Vec::new();
 
     for key in preprocess_list {
-        if key == "links" {
-            preprocessors.push(Box::new(LinkPreprocessor::new()))
-        } else {
-            bail!("{:?} is not a recognised preprocessor", key);
+        match key.as_ref() {
+            "links" => {
+                preprocessors.push(Box::new(LinkPreprocessor::new()))
+            }
+            _ =>  bail!("{:?} is not a recognised preprocessor", key),
         }
     }
 
