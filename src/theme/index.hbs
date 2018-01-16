@@ -41,14 +41,12 @@
             }
         </script>
 
-        <!-- Fetch store.js from local - TODO add CDN when 2.x.x is available on cdnjs -->
-        <script src="store.js"></script>
-
     </head>
     <body class="light">
         <!-- Set the theme before any content is loaded, prevents flash -->
         <script type="text/javascript">
-            var theme = store.get('mdbook-theme');
+            var theme;
+            try { theme = store.get('mdbook-theme'); } catch(e) { } 
             if (theme === null || theme === undefined) { theme = 'light'; }
             document.body.className = theme;
         </script>
@@ -56,8 +54,10 @@
         <!-- Hide / unhide sidebar before it is displayed -->
         <script type="text/javascript">
             var sidebar = 'hidden';
-            if (document.body.clientWidth >= 1080)
-                sidebar = store.get('mdbook-sidebar') || 'visible';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = store.get('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
             document.querySelector('html').classList.add("sidebar-" + sidebar);
         </script>
 

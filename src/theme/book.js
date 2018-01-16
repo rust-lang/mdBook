@@ -331,13 +331,14 @@ function playpen_text(playpen) {
             });
         }
 
-        store.set('mdbook-theme', theme);
+        try { localStorage.setItem('mdbook-theme', theme); } catch (e) { }
 
         document.body.className = theme;
     }
 
     // Set theme
-    var theme = store.get('mdbook-theme');
+    var theme;
+    try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
     if (theme === null || theme === undefined) { theme = 'light'; }
 
     set_theme(theme);
@@ -387,7 +388,7 @@ function playpen_text(playpen) {
         });
         sidebarToggleButton.setAttribute('aria-expanded', true);
         sidebar.setAttribute('aria-hidden', false);
-        store.set('mdbook-sidebar', 'visible');
+        try { localStorage.setItem('mdbook-sidebar', 'visible'); } catch (e) { }
     }
 
     function hideSidebar() {
@@ -398,7 +399,7 @@ function playpen_text(playpen) {
         });
         sidebarToggleButton.setAttribute('aria-expanded', false);
         sidebar.setAttribute('aria-hidden', true);
-        store.set('mdbook-sidebar', 'hidden');
+        try { localStorage.setItem('mdbook-sidebar', 'hidden'); } catch (e) { }
     }
 
     // Toggle sidebar
