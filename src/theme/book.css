@@ -1,12 +1,10 @@
 html {
   font-family: "Open Sans", sans-serif;
   color: #333;
-  overflow-x: hidden;
 }
 body {
   margin: 0;
   font-size: 1rem;
-  overflow-x: hidden;
 }
 code {
   font-family: "Source Code Pro", Consolas, "Ubuntu Mono", Menlo, "DejaVu Sans Mono", monospace, monospace;
@@ -145,7 +143,8 @@ table thead td {
   max-width: 100%;
 }
 .menu-bar {
-  position: relative;
+  position: sticky;
+  top: 0;
   display: -webkit-box;
   display: -moz-box;
   display: -webkit-flex;
@@ -321,6 +320,10 @@ table thead td {
 .light .content .header:visited:hover {
   text-decoration: none;
 }
+.light .menu-bar {
+  background-color: #fff;
+  z-index: 101;
+}
 .light .sidebar {
   background-color: #fafafa;
   color: #364149;
@@ -462,6 +465,10 @@ table thead td {
 .coal .content .header:link:hover,
 .coal .content .header:visited:hover {
   text-decoration: none;
+}
+.coal .menu-bar {
+  background-color: #141617;
+  z-index: 101;
 }
 .coal .sidebar {
   background-color: #292c2f;
@@ -605,6 +612,10 @@ table thead td {
 .navy .content .header:visited:hover {
   text-decoration: none;
 }
+.navy .menu-bar {
+  background-color: #161923;
+  z-index: 101;
+}
 .navy .sidebar {
   background-color: #282d3f;
   color: #c8c9db;
@@ -747,6 +758,10 @@ table thead td {
 .rust .content .header:visited:hover {
   text-decoration: none;
 }
+.rust .menu-bar {
+  background-color: #e1e1db;
+  z-index: 101;
+}
 .rust .sidebar {
   background-color: #3b2e2a;
   color: #c8c9db;
@@ -888,6 +903,10 @@ table thead td {
 .ayu .content .header:link:hover,
 .ayu .content .header:visited:hover {
   text-decoration: none;
+}
+.ayu .menu-bar {
+  background-color: #0f1419;
+  z-index: 101;
 }
 .ayu .sidebar {
   background-color: #14191f;
