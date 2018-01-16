@@ -18,6 +18,8 @@ This page will step you through creating your own alternate backend in the form
 of a simple word counting program. Although it will be written in Rust, there's
 no reason why it couldn't be accomplished using something like Python or Ruby.
 
+> **Note:** TODO: Write disclaimer excusing the sloppy code
+
 
 ## Setting Up
 
@@ -225,6 +227,106 @@ and then add a check to make sure we skip ignored chapters.
       }
   }
 ```
+
+
+## Output and Signalling Failure
+
+While it's nice to print word counts to the terminal when a book is built, it 
+might also be a good idea to output them to a file somewhere. `mdbook` tells a
+backend where it should place any generated output via the `destination` field
+in [`RenderContext`].
+
+```diff
++ use std::fs::{self, File};
++ use std::io::{self, Write};
+- use std::io;
+  use mdbook::renderer::RenderContext;
+  use mdbook::book::{BookItem, Chapter};
+  
+  fn main() {
+    ...
+  
++     let _ = fs::create_dir_all(&ctx.destination);
++     let mut f = File::create(ctx.destination.join("wordcounts.txt")).unwrap();
++ 
+      for item in ctx.book.iter() {
+          if let BookItem::Chapter(ref ch) = *item {
+              ...
+  
+              let num_words = count_words(ch);
+              println!("{}: {}", ch.name, num_words);
++             writeln!(f, "{}: {}", ch.name, num_words).unwrap();
+          }
+      }
+  }
+```
+
+> **Note:** There is no guarantee that the destination directory exists or is
+> empty (`mdbook` may leave the previous contents to let backends do caching),
+> so it's always a good idea to create it with `fs::create_dir_all()`.
+
+There's always the possibility that an error will occur while processing a book
+(just look at all the `unwrap()`'s we've written already), so `mdbook` will 
+interpret a non-zero exit code as a rendering failure.
+
+For example, if we wanted to make sure all chapters have an *even* number of
+words, erroring out if an odd number is encountered, then you may do something
+like this:
+
+```diff
++ use std::process;
+  ...
+
+  fn main() {
+      ...
+  
+      for item in ctx.book.iter() {
+          if let BookItem::Chapter(ref ch) = *item {
+              ...
+  
+              let num_words = count_words(ch);
+              println!("{}: {}", ch.name, num_words);
+              writeln!(f, "{}: {}", ch.name, num_words).unwrap();
+
++             if cfg.deny_odds && num_words % 2 == 1 {
++               eprintln!("{} has an odd number of words!", ch.name);
++               process::exit(1);
+              }
+          }
+      }
+  }
+
+  #[derive(Debug, Default, Serialize, Deserialize)]
+  #[serde(default, rename_all = "kebab-case")]
+  pub struct WordcountConfig {
+      pub ignores: Vec<String>,
++     pub deny_odds: bool,
+  }
+```
+
+Now, if we reinstall the backend and build a book,
+
+```
+$ cargo install --force
+$ mdbook build /path/to/book
+...
+2018-01-16 21:21:39 [INFO] (mdbook::renderer): Invoking the "wordcount" renderer
+mdBook: 126
+Command Line Tool: 224
+init: 283
+init has an odd number of words!
+2018-01-16 21:21:39 [ERROR] (mdbook::renderer): Renderer exited with non-zero return code.
+2018-01-16 21:21:39 [ERROR] (mdbook::utils): Error: Rendering failed
+2018-01-16 21:21:39 [ERROR] (mdbook::utils): 	Caused By: The "mdbook-wordcount" renderer failed
+```
+
+As you've probably already noticed, output from the plugin's subprocess is
+immediately passed through to the user. It is encouraged for plugins to
+follow the "rule of silence" and only generate output when necessary (e.g. an
+error in generation or a warning).
+
+All environment variables are passed through to the backend, allowing you to
+use the usual `RUST_LOG` to control logging verbosity.
 
 
 [mdbook-linkcheck]: https://github.com/Michael-F-Bryan/mdbook-linkcheck
