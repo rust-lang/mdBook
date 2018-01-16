@@ -161,6 +161,10 @@ $( document ).ready(function() {
             ace_theme = "ace/theme/dawn";
         }
 
+        setTimeout(function() {
+            document.querySelector('meta[name="theme-color"]').content = getComputedStyle(document.body).backgroundColor;
+        }, 1);
+
         if (window.ace && window.editors) {
             window.editors.forEach(function(editor) {
                 editor.setTheme(ace_theme);
