@@ -165,6 +165,68 @@ arguments or be an interpreted script), you can use the `command` field.
 ```
 
 
+## Configuration
+
+Now imagine you don't want to count the number of words on a particular chapter
+(it might be generated text/code, etc). The canonical way to do this is via
+the usual `book.toml` configuration file by adding items to your `[output.foo]` 
+table. 
+
+The `Config` can be treated roughly as a nested hashmap which lets you call
+methods like `get()` to access the config's contents, with a
+`get_deserialized()` convenience method for retrieving a value and
+automatically deserializing to some arbitrary type `T`.
+
+To implement this, we'll create our own serializable `WordcountConfig` struct 
+which will encapsulate all configuration for this backend.
+
+First add `serde` and `serde_derive` to your `Cargo.toml`,
+
+```
+$ cargo add serde serde_derive
+```
+
+And then you can create the config struct,
+
+```rust
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+
+...
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct WordcountConfig {
+  pub ignores: Vec<String>,
+}
+```
+
+Now we just need to deserialize the `WordcountConfig` from our `RenderContext`
+and then add a check to make sure we skip ignored chapters.
+
+```diff
+  fn main() {
+      let mut stdin = io::stdin();
+      let ctx = RenderContext::from_json(&mut stdin).unwrap();
++     let cfg: WordcountConfig = ctx.config
++         .get_deserialized("output.wordcount")
++         .unwrap_or_default();
+  
+      for item in ctx.book.iter() {
+          if let BookItem::Chapter(ref ch) = *item {
++             if cfg.ignores.contains(&ch.name) {
++                 continue;
++             }
++ 
+              let num_words = count_words(ch);
+              println!("{}: {}", ch.name, num_words);
+          }
+      }
+  }
+```
+
+
 [mdbook-linkcheck]: https://github.com/Michael-F-Bryan/mdbook-linkcheck
 [mdbook-epub]: https://github.com/Michael-F-Bryan/mdbook-epub
 [mdbook-test]: https://github.com/Michael-F-Bryan/mdbook-test
@@ -174,3 +236,4 @@ arguments or be an interpreted script), you can use the `command` field.
 [`semver`]: https://crates.io/crates/semver
 [`Book`]: http://rust-lang-nursery.github.io/mdBook/mdbook/book/struct.Book.html
 [`Book::iter()`]: http://rust-lang-nursery.github.io/mdBook/mdbook/book/struct.Book.html#method.iter
+[`Config`]: http://rust-lang-nursery.github.io/mdBook/mdbook/config/struct.Config.html 
