@@ -28,10 +28,10 @@ matrix:
   - env: TARGET=x86_64-unknown-linux-musl
 
   # Mac
-  - env: TARGET=i686-apple-darwin
-    os: osx
-  - env: TARGET=x86_64-apple-darwin
-    os: osx
+  # - env: TARGET=i686-apple-darwin
+  #   os: osx
+  # - env: TARGET=x86_64-apple-darwin
+  #   os: osx
 
   # BSD
   - env: TARGET=i686-unknown-freebsd DISABLE_TESTS=1
@@ -41,14 +41,14 @@ matrix:
   # Other channels
   - env: TARGET=x86_64-unknown-linux-gnu
     rust: beta
-  - env: TARGET=x86_64-apple-darwin
-    os: osx
-    rust: beta
+  # - env: TARGET=x86_64-apple-darwin
+  #   os: osx
+  #   rust: beta
   - env: TARGET=x86_64-unknown-linux-gnu
     rust: nightly
-  - env: TARGET=x86_64-apple-darwin
-    os: osx
-    rust: nightly
+  # - env: TARGET=x86_64-apple-darwin
+  #   os: osx
+  #   rust: nightly
 
 before_install:
 - set -e
