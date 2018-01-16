@@ -333,6 +333,10 @@ fn determine_renderers(config: &Config) -> Vec<Box<Renderer>> {
     renderers
 }
 
+fn default_preprocessors() -> Vec<Box<Preprocessor>> {
+    vec![Box::new(LinkPreprocessor::new())]
+}
+
 /// Look at the `MDBook` and try to figure out what preprocessors to run.
 fn determine_preprocessors(config: &Config) -> Result<Vec<Box<Preprocessor>>> {
 
@@ -340,7 +344,7 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<Preprocessor>>> {
         Some(ref p) => p,
         // If no preprocessor field is set, default to the LinkPreprocessor. This allows you
         // to disable the LinkPreprocessor by setting "preprocess" to an empty list.
-        None => return Ok(vec![Box::new(LinkPreprocessor::new())])
+        None => return Ok(default_preprocessors())
     };
 
     let mut preprocessors: Vec<Box<Preprocessor>> = Vec::new();
