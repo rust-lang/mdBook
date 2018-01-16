@@ -199,15 +199,14 @@ impl MDBook {
     }
 
     /// You can change the default renderer to another one by using this method.
-    /// The only requirement is for your renderer to implement the [Renderer
-    /// trait](../../renderer/renderer/trait.Renderer.html)
+    /// The only requirement is for your renderer to implement the [`Renderer`
+    /// trait](../renderer/trait.Renderer.html)
     pub fn with_renderer<R: Renderer + 'static>(&mut self, renderer: R) -> &mut Self {
         self.renderers.push(Box::new(renderer));
         self
     }
 
-    /// You can add a new preprocessor by using this method.
-    /// The only requirement is for your renderer to implement the Preprocessor trait.
+    /// Register a [`Preprocessor`](../preprocess/trait.Preprocessor.html) to be used when rendering the book.
     pub fn with_preprecessor<P: Preprocessor + 'static>(&mut self, preprocessor: P) -> &mut Self {
         self.preprocessors.push(Box::new(preprocessor));
         self
