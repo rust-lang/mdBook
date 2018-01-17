@@ -157,6 +157,7 @@ table thead td {
   -webkit-flex-wrap: wrap;
   -ms-flex-wrap: wrap;
   flex-wrap: wrap;
+  z-index: 101;
 }
 .menu-bar i,
 .menu-bar .icon-button {
@@ -322,7 +323,8 @@ table thead td {
 }
 .light .menu-bar {
   background-color: #fff;
-  z-index: 101;
+  border-bottom: #f2f2f2 1px solid;
+  margin: auto -15px;
 }
 .light .sidebar {
   background-color: #fafafa;
@@ -468,7 +470,8 @@ table thead td {
 }
 .coal .menu-bar {
   background-color: #141617;
-  z-index: 101;
+  border-bottom: #1f2223 1px solid;
+  margin: auto -15px;
 }
 .coal .sidebar {
   background-color: #292c2f;
@@ -614,7 +617,8 @@ table thead td {
 }
 .navy .menu-bar {
   background-color: #161923;
-  z-index: 101;
+  border-bottom: #1f2331 1px solid;
+  margin: auto -15px;
 }
 .navy .sidebar {
   background-color: #282d3f;
@@ -760,7 +764,8 @@ table thead td {
 }
 .rust .menu-bar {
   background-color: #e1e1db;
-  z-index: 101;
+  border-bottom: #d7d7cf 1px solid;
+  margin: auto -15px;
 }
 .rust .sidebar {
   background-color: #3b2e2a;
@@ -906,7 +911,8 @@ table thead td {
 }
 .ayu .menu-bar {
   background-color: #0f1419;
-  z-index: 101;
+  border-bottom: #182028 1px solid;
+  margin: auto -15px;
 }
 .ayu .sidebar {
   background-color: #14191f;
