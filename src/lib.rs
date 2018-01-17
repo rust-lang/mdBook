@@ -118,7 +118,7 @@ extern crate toml_query;
 #[macro_use]
 extern crate pretty_assertions;
 
-mod preprocess;
+pub mod preprocess;
 pub mod book;
 pub mod config;
 pub mod renderer;

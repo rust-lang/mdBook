@@ -329,6 +329,9 @@ pub struct BuildConfig {
     /// Should non-existent markdown files specified in `SETTINGS.md` be created
     /// if they don't exist?
     pub create_missing: bool,
+    /// Which preprocessors should be applied
+    pub preprocess: Option<Vec<String>>,
+
 }
 
 impl Default for BuildConfig {
@@ -336,6 +339,7 @@ impl Default for BuildConfig {
         BuildConfig {
             build_dir: PathBuf::from("book"),
             create_missing: true,
+            preprocess: None,
         }
     }
 }
@@ -422,6 +426,7 @@ mod tests {
         [build]
         build-dir = "outputs"
         create-missing = false
+        preprocess = ["first_preprocessor", "second_preprocessor"]
 
         [output.html]
         theme = "./themedir"
@@ -449,6 +454,8 @@ mod tests {
         let build_should_be = BuildConfig {
             build_dir: PathBuf::from("outputs"),
             create_missing: false,
+            preprocess: Some(vec!["first_preprocessor".to_string(),
+                                  "second_preprocessor".to_string()]),
         };
         let playpen_should_be = Playpen {
             editable: true,
@@ -550,6 +557,7 @@ mod tests {
         let build_should_be = BuildConfig {
             build_dir: PathBuf::from("my-book"),
             create_missing: true,
+            preprocess: None,
         };
 
         let html_should_be = HtmlConfig {

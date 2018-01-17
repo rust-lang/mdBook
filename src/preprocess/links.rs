@@ -5,9 +5,45 @@ use utils::fs::file_to_string;
 use utils::take_lines;
 use errors::*;
 
+use super::{Preprocessor, PreprocessorContext};
+use book::{Book, BookItem};
+
 const ESCAPE_CHAR: char = '\\';
 
-pub fn replace_all<P: AsRef<Path>>(s: &str, path: P) -> Result<String> {
+pub struct LinkPreprocessor;
+
+impl LinkPreprocessor {
+    pub fn new() -> Self {
+        LinkPreprocessor
+    }
+}
+
+impl Preprocessor for LinkPreprocessor {
+    fn name(&self) -> &str {
+        "links"
+    }
+
+    fn run(&self, ctx: &PreprocessorContext, book: &mut Book) -> Result<()> {
+        let src_dir = ctx.root.join(&ctx.config.book.src);
+
+        for section in &mut book.sections {
+            match *section {
+                BookItem::Chapter(ref mut ch) => {
+                    let base = ch.path.parent()
+                        .map(|dir| src_dir.join(dir))
+                        .ok_or_else(|| String::from("Invalid bookitem path!"))?;
+                    let content = replace_all(&ch.content, base)?;
+                    ch.content = content
+                }
+                _ => {}
+            }
+        }
+
+        Ok(())
+    }
+}
+
+fn replace_all<P: AsRef<Path>>(s: &str, path: P) -> Result<String> {
     // When replacing one thing in a string by something with a different length,
     // the indices after that will not correspond,
     // we therefore have to store the difference to correct this
