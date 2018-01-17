@@ -157,9 +157,7 @@ impl MDBook {
         debug!("[fn]: build");
 
         let mut preprocessed_book = self.book.clone();
-        let preprocess_ctx = PreprocessorContext {
-            src_dir: self.source_dir(),
-        };
+        let preprocess_ctx = PreprocessorContext::new(self.root.clone(), self.config.clone());
 
         for preprocessor in &self.preprocessors {
             preprocessor.run(&preprocess_ctx, &mut preprocessed_book)?;
@@ -222,10 +220,7 @@ impl MDBook {
 
         let temp_dir = TempDir::new("mdbook")?;
 
-        let src_dir = self.source_dir();
-        let preprocess_context = PreprocessorContext {
-            src_dir
-        };
+        let preprocess_context = PreprocessorContext::new(self.root.clone(), self.config.clone());
 
         LinkPreprocessor::new().run(&preprocess_context, &mut self.book)?;
 
