@@ -158,11 +158,11 @@ table thead td {
   -ms-flex-wrap: wrap;
   flex-wrap: wrap;
   z-index: 101;
-  -webkit-transition: -webkit-transform 0.5s;
-  -moz-transition: -moz-transform 0.5s;
-  -o-transition: -o-transform 0.5s;
-  -ms-transition: -ms-transform 0.5s;
-  transition: transform 0.5s;
+  -webkit-transition: -webkit-transform 0.5s, border-bottom-color 0.5s;
+  -moz-transition: -moz-transform 0.5s, border-bottom-color 0.5s;
+  -o-transition: -o-transform 0.5s, border-bottom-color 0.5s;
+  -ms-transition: -ms-transform 0.5s, border-bottom-color 0.5s;
+  transition: transform 0.5s, border-bottom-color 0.5s;
 }
 .menu-bar i,
 .menu-bar .icon-button {
@@ -322,8 +322,13 @@ table thead td {
 }
 .light .menu-bar {
   background-color: #fff;
-  border-bottom: #f2f2f2 1px solid;
+  border-bottom-color: #fff;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
   margin: auto -15px;
+}
+.light .menu-bar.bordered {
+  border-bottom-color: #f2f2f2;
 }
 .light .sidebar {
   background-color: #fafafa;
@@ -469,8 +474,13 @@ table thead td {
 }
 .coal .menu-bar {
   background-color: #141617;
-  border-bottom: #1f2223 1px solid;
+  border-bottom-color: #141617;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
   margin: auto -15px;
+}
+.coal .menu-bar.bordered {
+  border-bottom-color: #1f2223;
 }
 .coal .sidebar {
   background-color: #292c2f;
@@ -616,8 +626,13 @@ table thead td {
 }
 .navy .menu-bar {
   background-color: #161923;
-  border-bottom: #1f2331 1px solid;
+  border-bottom-color: #161923;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
   margin: auto -15px;
+}
+.navy .menu-bar.bordered {
+  border-bottom-color: #1f2331;
 }
 .navy .sidebar {
   background-color: #282d3f;
@@ -763,8 +778,13 @@ table thead td {
 }
 .rust .menu-bar {
   background-color: #e1e1db;
-  border-bottom: #d7d7cf 1px solid;
+  border-bottom-color: #e1e1db;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
   margin: auto -15px;
+}
+.rust .menu-bar.bordered {
+  border-bottom-color: #d7d7cf;
 }
 .rust .sidebar {
   background-color: #3b2e2a;
@@ -910,8 +930,13 @@ table thead td {
 }
 .ayu .menu-bar {
   background-color: #0f1419;
-  border-bottom: #182028 1px solid;
+  border-bottom-color: #0f1419;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
   margin: auto -15px;
+}
+.ayu .menu-bar.bordered {
+  border-bottom-color: #182028;
 }
 .ayu .sidebar {
   background-color: #14191f;

@@ -515,6 +515,14 @@ function run_rust_code(code_block) {
             menu.classList.add('folded');
         }
 
+        if (!menu.classList.contains('bordered') && scrollingContainer.scrollTop > 0) {
+            menu.classList.add('bordered');
+        }
+
+        if (menu.classList.contains('bordered') && scrollingContainer.scrollTop === 0) {
+            menu.classList.remove('bordered');
+        }
+
         previousScrollTop = scrollingContainer.scrollTop;
     }, { passive: true });
 })();
