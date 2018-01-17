@@ -1,6 +1,4 @@
 extern crate mdbook;
-#[macro_use]
-extern crate lazy_static;
 
 mod dummy_book;
 
@@ -12,7 +10,7 @@ use mdbook::book::Book;
 use mdbook::config::Config;
 use mdbook::errors::*;
 
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 #[test]
 fn mdbook_can_correctly_test_a_passing_book() {
@@ -33,11 +31,9 @@ fn mdbook_detects_book_with_failing_tests() {
 #[test]
 fn mdbook_runs_preprocessors() {
 
-    lazy_static! {
-        static ref HAS_RUN: Mutex<bool> = Mutex::new(false);
-    }
+    let has_run: Arc<Mutex<bool>> = Arc::new(Mutex::new(false));
 
-    struct DummyPreprocessor;
+    struct DummyPreprocessor(Arc<Mutex<bool>>);
 
     impl Preprocessor for DummyPreprocessor {
         fn name(&self) -> &str {
@@ -45,7 +41,7 @@ fn mdbook_runs_preprocessors() {
         }
 
         fn run(&self, _ctx: &PreprocessorContext, _book: &mut Book) -> Result<()> {
-            *HAS_RUN.lock().unwrap() = true;
+            *self.0.lock().unwrap() = true;
             Ok(())
         }
     }
@@ -54,8 +50,8 @@ fn mdbook_runs_preprocessors() {
     let cfg = Config::default();
 
     let mut book = MDBook::load_with_config(temp.path(), cfg).unwrap();
-    book.with_preprecessor(DummyPreprocessor);
+    book.with_preprecessor(DummyPreprocessor(Arc::clone(&has_run)));
     book.build().unwrap();
 
-    assert!(*HAS_RUN.lock().unwrap())
+    assert!(*has_run.lock().unwrap())
 }
