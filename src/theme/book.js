@@ -501,3 +501,20 @@ function run_rust_code(code_block) {
         .then(function(response) { result_block.innerText = response.success ? response.stdout : response.stderr; })
         .catch(function(error) { result_block.innerText = "Playground communication" + error.message; });
 }
+
+(function autoHideMenu() {
+    var scrollingContainer = document.querySelector('html');
+    var menu = document.getElementById('menu-bar');
+
+    var previousScrollTop = scrollingContainer.scrollTop;
+
+    document.addEventListener('scroll', function() {
+        if (menu.classList.contains('folded') && scrollingContainer.scrollTop < previousScrollTop) {
+            menu.classList.remove('folded');
+        } else if (!menu.classList.contains('folded') && scrollingContainer.scrollTop > previousScrollTop) {
+            menu.classList.add('folded');
+        }
+
+        previousScrollTop = scrollingContainer.scrollTop;
+    }, { passive: true });
+})();

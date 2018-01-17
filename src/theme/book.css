@@ -158,6 +158,11 @@ table thead td {
   -ms-flex-wrap: wrap;
   flex-wrap: wrap;
   z-index: 101;
+  -webkit-transition: -webkit-transform 0.5s;
+  -moz-transition: -moz-transform 0.5s;
+  -o-transition: -o-transform 0.5s;
+  -ms-transition: -ms-transform 0.5s;
+  transition: transform 0.5s;
 }
 .menu-bar i,
 .menu-bar .icon-button {
@@ -174,6 +179,13 @@ table thead td {
 .menu-bar i:hover,
 .menu-bar .icon-button:hover {
   cursor: pointer;
+}
+.menu-bar.folded {
+  -webkit-transform: translateY(-60px);
+  -moz-transform: translateY(-60px);
+  -o-transform: translateY(-60px);
+  -ms-transform: translateY(-60px);
+  transform: translateY(-60px);
 }
 .menu-title {
   display: inline-block;

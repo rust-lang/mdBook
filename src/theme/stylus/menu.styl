@@ -4,6 +4,7 @@
     display: flex
     flex-wrap: wrap
     z-index: 101
+    transition: transform 0.5s
 
     i, .icon-button {
         position: relative
@@ -14,6 +15,10 @@
         transition: color 0.5s
 
         &:hover { cursor: pointer }
+    }
+
+    &.folded {
+        transform: translateY(-60px);
     }
 }
 
