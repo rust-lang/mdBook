@@ -13,6 +13,7 @@
     - [Theme](format/theme/theme.md)
         - [index.hbs](format/theme/index-hbs.md)
         - [Syntax highlighting](format/theme/syntax-highlighting.md)
+        - [Editor](format/theme/editor.md)
     - [MathJax Support](format/mathjax.md)
     - [Rust code specific features](format/rust.md)
 - [For Developers](lib/index.md)
