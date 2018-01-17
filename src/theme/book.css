@@ -431,6 +431,12 @@ table thead td {
 .light pre > .buttons i {
   margin-left: 8px;
 }
+.light pre > .buttons button {
+  color: inherit;
+  background: transparent;
+  border: none;
+  cursor: inherit;
+}
 .light pre > .result {
   margin-top: 10px;
 }
@@ -566,6 +572,12 @@ table thead td {
 }
 .coal pre > .buttons i {
   margin-left: 8px;
+}
+.coal pre > .buttons button {
+  color: inherit;
+  background: transparent;
+  border: none;
+  cursor: inherit;
 }
 .coal pre > .result {
   margin-top: 10px;
@@ -703,6 +715,12 @@ table thead td {
 .navy pre > .buttons i {
   margin-left: 8px;
 }
+.navy pre > .buttons button {
+  color: inherit;
+  background: transparent;
+  border: none;
+  cursor: inherit;
+}
 .navy pre > .result {
   margin-top: 10px;
 }
@@ -839,6 +857,12 @@ table thead td {
 .rust pre > .buttons i {
   margin-left: 8px;
 }
+.rust pre > .buttons button {
+  color: inherit;
+  background: transparent;
+  border: none;
+  cursor: inherit;
+}
 .rust pre > .result {
   margin-top: 10px;
 }
@@ -974,6 +998,12 @@ table thead td {
 }
 .ayu pre > .buttons i {
   margin-left: 8px;
+}
+.ayu pre > .buttons button {
+  color: inherit;
+  background: transparent;
+  border: none;
+  cursor: inherit;
 }
 .ayu pre > .result {
   margin-top: 10px;
