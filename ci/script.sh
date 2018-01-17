@@ -3,9 +3,8 @@
 set -ex
 
 main() {
-    cross build --target $TARGET
-    cross build --manifest-path ./book-example/src/for_developers/mdbook-wordcount/Cargo.toml
-    cross build --target $TARGET --release
+    cross build --target $TARGET --all
+    cross build --target $TARGET --all --release
 
     if [ ! -z $DISABLE_TESTS ]; then
         return
