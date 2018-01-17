@@ -5,3 +5,6 @@ author = "Mathieu David"
 
 [output.html]
 mathjax-support = true
+
+[output.html.playpen]
+editable = true
