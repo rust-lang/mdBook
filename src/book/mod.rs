@@ -160,6 +160,7 @@ impl MDBook {
         let preprocess_ctx = PreprocessorContext::new(self.root.clone(), self.config.clone());
 
         for preprocessor in &self.preprocessors {
+            debug!("Running the {} preprocessor.", preprocessor.name());
             preprocessor.run(&preprocess_ctx, &mut preprocessed_book)?;
         }
 
