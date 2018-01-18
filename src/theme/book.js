@@ -151,21 +151,21 @@ document.addEventListener('DOMContentLoaded', function() {
         let ace_theme;
 
         if (theme == 'coal' || theme == 'navy') {
-            document.querySelector("[href='ayu-highlight.css']").setAttribute('disabled', true);
-            document.querySelector("[href='tomorrow-night.css']").removeAttribute('disabled');
-            document.querySelector("[href='highlight.css']").setAttribute('disabled', true);
+            document.querySelector("[href='ayu-highlight.css']").disabled = true;
+            document.querySelector("[href='tomorrow-night.css']").disabled = false;
+            document.querySelector("[href='highlight.css']").disabled = true;
 
             ace_theme = "ace/theme/tomorrow_night";
         } else if (theme == 'ayu') {
-            document.querySelector("[href='ayu-highlight.css']").removeAttribute('disabled');
-            document.querySelector("[href='tomorrow-night.css']").setAttribute('disabled', true);
-            document.querySelector("[href='highlight.css']").setAttribute('disabled', true);
+            document.querySelector("[href='ayu-highlight.css']").disabled = false;
+            document.querySelector("[href='tomorrow-night.css']").disabled = true;
+            document.querySelector("[href='highlight.css']").disabled = true;
 
             ace_theme = "ace/theme/tomorrow_night";
         } else {
-            document.querySelector("[href='ayu-highlight.css']").setAttribute('disabled', true);
-            document.querySelector("[href='tomorrow-night.css']").setAttribute('disabled', true);
-            document.querySelector("[href='highlight.css']").removeAttribute('disabled');
+            document.querySelector("[href='ayu-highlight.css']").disabled = true;
+            document.querySelector("[href='tomorrow-night.css']").disabled = true;
+            document.querySelector("[href='highlight.css']").disabled = false;
 
             ace_theme = "ace/theme/dawn";
         }
