@@ -1,10 +1,13 @@
-.menu-bar {
+#menu-bar {
     position: sticky
     top: 0
-    display: flex
-    flex-wrap: wrap
     z-index: 101
-    transition: transform 0.5s, border-bottom-color 0.5s
+
+    & > #menu-bar-sticky-container {
+        display: flex
+        flex-wrap: wrap
+        transition: transform 0.5s, border-bottom-color 0.5s
+    }
 
     i, .icon-button {
         position: relative
@@ -18,7 +21,8 @@
     }
 }
 
-html:not(.sidebar-visible) #menu-bar.folded {
+
+html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-container  {
     transform: translateY(-60px);
 }
 
