@@ -180,7 +180,7 @@ table thead td {
 .menu-bar .icon-button:hover {
   cursor: pointer;
 }
-.menu-bar.folded {
+html:not(.sidebar-visible) #menu-bar.folded {
   -webkit-transform: translateY(-60px);
   -moz-transform: translateY(-60px);
   -o-transform: translateY(-60px);
