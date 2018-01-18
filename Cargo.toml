@@ -66,5 +66,3 @@ doc = false
 name = "mdbook"
 path = "src/bin/mdbook.rs"
 
-[patch.crates-io]
-pulldown-cmark = { git = "https://github.com/google/pulldown-cmark" }

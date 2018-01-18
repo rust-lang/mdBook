@@ -3,7 +3,7 @@ use std::iter::FromIterator;
 use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 use memchr::{self, Memchr};
-use pulldown_cmark::{self, Event, Tag};
+use pulldown_cmark::{self, Alignment, Event, Tag};
 use errors::*;
 
 
@@ -310,7 +310,9 @@ impl<'a> SummaryParser<'a> {
                     break;
                 }
                 Some(Event::Start(other_tag)) => {
-                    if Tag::Rule == other_tag {
+                    // FIXME: Remove this when google/pulldown_cmark#120 lands (new patch release)
+                    // replace with `other_tag == Tag::Rule`
+                    if tag_eq(&other_tag, &Tag::Rule) {
                         items.push(SummaryItem::Separator);
                     }
                     trace!("Skipping contents of {:?}", other_tag);
@@ -318,9 +320,15 @@ impl<'a> SummaryParser<'a> {
                     // Skip over the contents of this tag
                     loop {
                         let next = self.next_event();
-
-                        if next.is_none() || next == Some(Event::End(other_tag.clone())) {
-                            break;
+                        // FIXME: Remove this when google/pulldown_cmark#120 lands (new patch release)
+                        // and replace it with:
+                        // if next.is_none() || next == Some(Event::End(other_tag.clone())) {
+                        //     break;
+                        // }
+                        match next {
+                            Some(Event::Start(ref t)) if tag_eq(t, &other_tag) => break,
+                            None => break,
+                            _ => {}
                         }
                     }
 
@@ -472,6 +480,41 @@ fn stringify_events(events: Vec<Event>) -> String {
             _ => None,
         })
         .collect()
+}
+
+// FIXME: Remove this when google/pulldown_cmark#120 lands (new patch release)
+fn tag_eq(left: &Tag, right: &Tag) -> bool {
+    match (left, right) {
+    (&Tag::Paragraph, &Tag::Paragraph) => true,
+    (&Tag::Rule, &Tag::Rule) => true,
+    (&Tag::Header(a), &Tag::Header(b)) => a == b,
+    (&Tag::BlockQuote, &Tag::BlockQuote) => true,
+    (&Tag::CodeBlock(ref a), &Tag::CodeBlock(ref b)) => a == b,
+    (&Tag::List(ref a), &Tag::List(ref b)) => a == b,
+    (&Tag::Item, &Tag::Item) => true,
+    (&Tag::FootnoteDefinition(ref a), &Tag::FootnoteDefinition(ref b)) => a == b,
+    (&Tag::Table(ref a), &Tag::Table(ref b)) => a.iter().zip(b.iter()).all(|(l, r)| alignment_eq(*l, *r)),
+    (&Tag::TableHead, &Tag::TableHead) => true,
+    (&Tag::TableRow, &Tag::TableRow) => true,
+    (&Tag::TableCell, &Tag::TableCell) => true,
+    (&Tag::Emphasis, &Tag::Emphasis) => true,
+    (&Tag::Strong, &Tag::Strong) => true,
+    (&Tag::Code, &Tag::Code) => true,
+    (&Tag::Link(ref a_1, ref a_2), &Tag::Link(ref b_1, ref b_2)) => a_1 == b_1 && a_2 == b_2,
+    (&Tag::Image(ref a_1, ref a_2), &Tag::Image(ref b_1, ref b_2)) => a_1 == b_1 && a_2 == b_2,
+        _ => false,
+    }
+}
+
+// FIXME: Remove this when google/pulldown_cmark#120 lands (new patch release)
+fn alignment_eq(left: Alignment, right: Alignment) -> bool {
+    match (left, right) {
+        (Alignment::None, Alignment::None) => true,
+        (Alignment::Left, Alignment::Left) => true,
+        (Alignment::Center, Alignment::Center) => true,
+        (Alignment::Right, Alignment::Right) => true,
+        _ => false
+    }
 }
 
 /// A section number like "1.2.3", basically just a newtype'd `Vec<u32>` with
