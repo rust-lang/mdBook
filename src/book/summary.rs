@@ -318,17 +318,16 @@ impl<'a> SummaryParser<'a> {
                     trace!("Skipping contents of {:?}", other_tag);
 
                     // Skip over the contents of this tag
-                    loop {
-                        let next = self.next_event();
+                    while let Some(event) = self.next_event() {
                         // FIXME: Remove this when google/pulldown_cmark#120 lands (new patch release)
-                        // and replace it with:
-                        // if next.is_none() || next == Some(Event::End(other_tag.clone())) {
+                        // and replace the nested if-let with:
+                        // if next == Event::End(other_tag.clone()) {
                         //     break;
                         // }
-                        match next {
-                            Some(Event::Start(ref t)) if tag_eq(t, &other_tag) => break,
-                            None => break,
-                            _ => {}
+                        if let Event::End(tag) = event {
+                            if tag_eq(&tag, &other_tag) { 
+                                break;
+                            }
                         }
                     }
 
