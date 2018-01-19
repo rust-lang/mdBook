@@ -12,6 +12,23 @@
         }
     }
 
+    .menu-bar {
+        margin: auto (- $page-padding);
+
+        & > #menu-bar-sticky-container {
+            background-color: $bg
+            border-bottom-color: $bg
+            border-bottom-width: 1px
+            border-bottom-style: solid
+        }
+
+        &.bordered > #menu-bar-sticky-container  {
+            border-bottom-color: $table-border-color
+        }
+    }
+
+    $table-border-color
+
     .sidebar {
         background-color: $sidebar-bg
         color: $sidebar-fg

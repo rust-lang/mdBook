@@ -1,7 +1,13 @@
-.menu-bar {
-    position: relative
-    display: flex
-    flex-wrap: wrap
+#menu-bar {
+    position: sticky
+    top: 0
+    z-index: 101
+
+    & > #menu-bar-sticky-container {
+        display: flex
+        flex-wrap: wrap
+        transition: transform 0.5s, border-bottom-color 0.5s
+    }
 
     i, .icon-button {
         position: relative
@@ -15,6 +21,11 @@
     }
 }
 
+
+html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-container  {
+    transform: translateY(-60px);
+}
+
 .menu-title {
     display: inline-block
     font-weight: 200
@@ -26,11 +37,4 @@
     white-space: nowrap
     overflow: hidden
     text-overflow: ellipsis
-
-    opacity: 0
-    transition: opacity 0.5s ease-in-out
-}
-
-.menu-bar:hover .menu-title {
-    opacity: 1
 }

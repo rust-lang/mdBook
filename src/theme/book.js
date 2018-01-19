@@ -1,4 +1,4 @@
-var html, sidebar, sidebarLinks, sidebarToggleButton;
+var html, sidebar, sidebarLinks, sidebarToggleButton, themeToggleButton, themePopup;
 
 document.addEventListener('DOMContentLoaded', function() {
 
@@ -77,8 +77,8 @@ document.addEventListener('DOMContentLoaded', function() {
     sidebar = document.getElementById("sidebar");
     sidebarLinks = document.querySelectorAll('#sidebar a');
     sidebarToggleButton = document.getElementById("sidebar-toggle");
-    var themeToggleButton = document.getElementById('theme-toggle');
-    var themePopup = document.getElementById('theme-list');
+    themeToggleButton = document.getElementById('theme-toggle');
+    themePopup = document.getElementById('theme-list');
 
     // Toggle sidebar
     sidebarToggleButton.addEventListener('click', sidebarToggle);
@@ -115,16 +115,6 @@ document.addEventListener('DOMContentLoaded', function() {
             firstContact = null;
         }
     });
-
-    function showThemes() {
-        themePopup.style.display = 'block';
-        themeToggleButton.setAttribute('aria-expanded', true);
-    }
-
-    function hideThemes() {
-        themePopup.style.display = 'none';
-        themeToggleButton.setAttribute('aria-expanded', false);
-    }
 
     // Theme button
     themeToggleButton.addEventListener('click', function(){
@@ -440,6 +430,16 @@ function sidebarToggle() {
     }
 }
 
+function showThemes() {
+    themePopup.style.display = 'block';
+    themeToggleButton.setAttribute('aria-expanded', true);
+}
+
+function hideThemes() {
+    themePopup.style.display = 'none';
+    themeToggleButton.setAttribute('aria-expanded', false);
+}
+
 function showSidebar() {
     html.classList.remove('sidebar-hidden')
     html.classList.add('sidebar-visible');
@@ -501,3 +501,29 @@ function run_rust_code(code_block) {
         .then(function(response) { result_block.innerText = response.success ? response.stdout : response.stderr; })
         .catch(function(error) { result_block.innerText = "Playground communication" + error.message; });
 }
+
+(function autoHideMenu() {
+    var scrollingContainer = document.querySelector('html');
+    var menu = document.getElementById('menu-bar');
+
+    var previousScrollTop = scrollingContainer.scrollTop;
+
+    document.addEventListener('scroll', function() {
+        if (menu.classList.contains('folded') && scrollingContainer.scrollTop < previousScrollTop) {
+            menu.classList.remove('folded');
+        } else if (!menu.classList.contains('folded') && scrollingContainer.scrollTop > previousScrollTop) {
+            menu.classList.add('folded');
+        }
+
+        if (!menu.classList.contains('bordered') && scrollingContainer.scrollTop > 0) {
+            menu.classList.add('bordered');
+        }
+
+        if (menu.classList.contains('bordered') && scrollingContainer.scrollTop === 0) {
+            menu.classList.remove('bordered');
+        }
+
+        previousScrollTop = scrollingContainer.scrollTop;
+        hideThemes();
+    }, { passive: true });
+})();

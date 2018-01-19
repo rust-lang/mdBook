@@ -1,7 +1,6 @@
 html {
   font-family: "Open Sans", sans-serif;
   color: #333;
-  overflow-x: hidden;
 }
 body {
   margin: 0;
@@ -144,8 +143,12 @@ table thead td {
 .content img {
   max-width: 100%;
 }
-.menu-bar {
-  position: relative;
+#menu-bar {
+  position: sticky;
+  top: 0;
+  z-index: 101;
+}
+#menu-bar > #menu-bar-sticky-container {
   display: -webkit-box;
   display: -moz-box;
   display: -webkit-flex;
@@ -158,9 +161,14 @@ table thead td {
   -webkit-flex-wrap: wrap;
   -ms-flex-wrap: wrap;
   flex-wrap: wrap;
+  -webkit-transition: -webkit-transform 0.5s, border-bottom-color 0.5s;
+  -moz-transition: -moz-transform 0.5s, border-bottom-color 0.5s;
+  -o-transition: -o-transform 0.5s, border-bottom-color 0.5s;
+  -ms-transition: -ms-transform 0.5s, border-bottom-color 0.5s;
+  transition: transform 0.5s, border-bottom-color 0.5s;
 }
-.menu-bar i,
-.menu-bar .icon-button {
+#menu-bar i,
+#menu-bar .icon-button {
   position: relative;
   margin: 0 10px;
   z-index: 10;
@@ -171,9 +179,16 @@ table thead td {
   -ms-transition: color 0.5s;
   transition: color 0.5s;
 }
-.menu-bar i:hover,
-.menu-bar .icon-button:hover {
+#menu-bar i:hover,
+#menu-bar .icon-button:hover {
   cursor: pointer;
+}
+html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-container {
+  -webkit-transform: translateY(-60px);
+  -moz-transform: translateY(-60px);
+  -o-transform: translateY(-60px);
+  -ms-transform: translateY(-60px);
+  transform: translateY(-60px);
 }
 .menu-title {
   display: inline-block;
@@ -193,19 +208,6 @@ table thead td {
   overflow: hidden;
   -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
-  opacity: 0;
-  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
-  filter: alpha(opacity=0);
-  -webkit-transition: opacity 0.5s ease-in-out;
-  -moz-transition: opacity 0.5s ease-in-out;
-  -o-transition: opacity 0.5s ease-in-out;
-  -ms-transition: opacity 0.5s ease-in-out;
-  transition: opacity 0.5s ease-in-out;
-}
-.menu-bar:hover .menu-title {
-  opacity: 1;
-  -ms-filter: none;
-  filter: none;
 }
 .nav-chapters {
   font-size: 2.5em;
@@ -320,6 +322,18 @@ table thead td {
 .light .content .header:link:hover,
 .light .content .header:visited:hover {
   text-decoration: none;
+}
+.light .menu-bar {
+  margin: auto -15px;
+}
+.light .menu-bar > #menu-bar-sticky-container {
+  background-color: #fff;
+  border-bottom-color: #fff;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+}
+.light .menu-bar.bordered > #menu-bar-sticky-container {
+  border-bottom-color: #f2f2f2;
 }
 .light .sidebar {
   background-color: #fafafa;
@@ -463,6 +477,18 @@ table thead td {
 .coal .content .header:visited:hover {
   text-decoration: none;
 }
+.coal .menu-bar {
+  margin: auto -15px;
+}
+.coal .menu-bar > #menu-bar-sticky-container {
+  background-color: #141617;
+  border-bottom-color: #141617;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+}
+.coal .menu-bar.bordered > #menu-bar-sticky-container {
+  border-bottom-color: #1f2223;
+}
 .coal .sidebar {
   background-color: #292c2f;
   color: #a1adb8;
@@ -604,6 +630,18 @@ table thead td {
 .navy .content .header:link:hover,
 .navy .content .header:visited:hover {
   text-decoration: none;
+}
+.navy .menu-bar {
+  margin: auto -15px;
+}
+.navy .menu-bar > #menu-bar-sticky-container {
+  background-color: #161923;
+  border-bottom-color: #161923;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+}
+.navy .menu-bar.bordered > #menu-bar-sticky-container {
+  border-bottom-color: #1f2331;
 }
 .navy .sidebar {
   background-color: #282d3f;
@@ -747,6 +785,18 @@ table thead td {
 .rust .content .header:visited:hover {
   text-decoration: none;
 }
+.rust .menu-bar {
+  margin: auto -15px;
+}
+.rust .menu-bar > #menu-bar-sticky-container {
+  background-color: #e1e1db;
+  border-bottom-color: #e1e1db;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+}
+.rust .menu-bar.bordered > #menu-bar-sticky-container {
+  border-bottom-color: #d7d7cf;
+}
 .rust .sidebar {
   background-color: #3b2e2a;
   color: #c8c9db;
@@ -888,6 +938,18 @@ table thead td {
 .ayu .content .header:link:hover,
 .ayu .content .header:visited:hover {
   text-decoration: none;
+}
+.ayu .menu-bar {
+  margin: auto -15px;
+}
+.ayu .menu-bar > #menu-bar-sticky-container {
+  background-color: #0f1419;
+  border-bottom-color: #0f1419;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+}
+.ayu .menu-bar.bordered > #menu-bar-sticky-container {
+  border-bottom-color: #182028;
 }
 .ayu .sidebar {
   background-color: #14191f;
