@@ -18,8 +18,6 @@ This page will step you through creating your own alternate backend in the form
 of a simple word counting program. Although it will be written in Rust, there's
 no reason why it couldn't be accomplished using something like Python or Ruby.
 
-> **Note:** TODO: Write disclaimer excusing the sloppy code
-
 
 ## Setting Up
 
@@ -329,6 +327,18 @@ All environment variables are passed through to the backend, allowing you to
 use the usual `RUST_LOG` to control logging verbosity.
 
 
+## Wrapping Up
+
+Although contrived, hopefully this example was enough to show how you'd create
+an alternate backend for `mdbook`. If you feel it's missing something, don't 
+hesitate to create an issue in the [issue tracker] so we can improve the user
+guide.
+
+The existing backends mentioned towards the start of this chapter should serve
+as a good example of how it's done in real life, so feel free to skim through 
+the source code or ask questions.
+
+
 [mdbook-linkcheck]: https://github.com/Michael-F-Bryan/mdbook-linkcheck
 [mdbook-epub]: https://github.com/Michael-F-Bryan/mdbook-epub
 [mdbook-test]: https://github.com/Michael-F-Bryan/mdbook-test
@@ -339,3 +349,4 @@ use the usual `RUST_LOG` to control logging verbosity.
 [`Book`]: http://rust-lang-nursery.github.io/mdBook/mdbook/book/struct.Book.html
 [`Book::iter()`]: http://rust-lang-nursery.github.io/mdBook/mdbook/book/struct.Book.html#method.iter
 [`Config`]: http://rust-lang-nursery.github.io/mdBook/mdbook/config/struct.Config.html 
+[issue tracker]: https://github.com/rust-lang-nursery/mdBook/issues
