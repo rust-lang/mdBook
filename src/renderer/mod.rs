@@ -151,7 +151,7 @@ impl Renderer for CmdRenderer {
     }
 
     fn render(&self, ctx: &RenderContext) -> Result<()> {
-        info!("Invoking the \"{}\" renderer", self.cmd);
+        info!("Invoking the \"{}\" renderer", self.name);
 
         let _ = fs::create_dir_all(&ctx.destination);
 
@@ -183,7 +183,7 @@ impl Renderer for CmdRenderer {
 
         if !status.success() {
             error!("Renderer exited with non-zero return code.");
-            bail!("The \"{}\" renderer failed", self.cmd);
+            bail!("The \"{}\" renderer failed", self.name);
         } else {
             Ok(())
         }

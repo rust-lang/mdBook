@@ -36,7 +36,7 @@ fn tee_command<P: AsRef<Path>>(out_file: P) -> String {
     let out_file = out_file.as_ref();
 
     if cfg!(windows) {
-        format!("cmd.exe /c type ^> \"{}\"", out_file.display())
+        format!("cmd.exe /c \"type > {}\"", out_file.display())
     } else {
         format!("tee {}", out_file.display())
     }
