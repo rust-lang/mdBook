@@ -43,6 +43,7 @@ fn tee_command<P: AsRef<Path>>(out_file: P) -> String {
 }
 
 #[test]
+#[cfg(not(windows))]
 fn backends_receive_render_context_via_stdin() {
     let temp = TempDir::new("output").unwrap();
     let out_file = temp.path().join("out.txt");
