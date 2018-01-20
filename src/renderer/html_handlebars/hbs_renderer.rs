@@ -156,7 +156,6 @@ impl HtmlHandlebars {
         self.write_file(destination, "book.js", &theme.js)?;
         self.write_file(destination, "book.css", &theme.css)?;
         self.write_file(destination, "favicon.png", &theme.favicon)?;
-        self.write_file(destination, "jquery.js", &theme.jquery)?;
         self.write_file(destination, "highlight.css", &theme.highlight_css)?;
         self.write_file(destination, "tomorrow-night.css", &theme.tomorrow_night_css)?;
         self.write_file(destination, "ayu-highlight.css", &theme.ayu_highlight_css)?;

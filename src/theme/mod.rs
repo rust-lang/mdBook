@@ -15,7 +15,6 @@ pub static HIGHLIGHT_JS: &'static [u8] = include_bytes!("highlight.js");
 pub static TOMORROW_NIGHT_CSS: &'static [u8] = include_bytes!("tomorrow-night.css");
 pub static HIGHLIGHT_CSS: &'static [u8] = include_bytes!("highlight.css");
 pub static AYU_HIGHLIGHT_CSS: &'static [u8] = include_bytes!("ayu-highlight.css");
-pub static JQUERY: &'static [u8] = include_bytes!("jquery.js");
 pub static CLIPBOARD_JS: &'static [u8] = include_bytes!("clipboard.min.js");
 pub static STORE_JS: &'static [u8] = include_bytes!("store.js");
 pub static FONT_AWESOME: &'static [u8] = include_bytes!("_FontAwesome/css/font-awesome.min.css");
@@ -51,7 +50,6 @@ pub struct Theme {
     pub highlight_js: Vec<u8>,
     pub clipboard_js: Vec<u8>,
     pub store_js: Vec<u8>,
-    pub jquery: Vec<u8>,
 }
 
 impl Theme {
@@ -78,7 +76,6 @@ impl Theme {
                 (theme_dir.join("highlight.css"), &mut theme.highlight_css),
                 (theme_dir.join("tomorrow-night.css"), &mut theme.tomorrow_night_css),
                 (theme_dir.join("ayu-highlight.css"), &mut theme.ayu_highlight_css),
-                (theme_dir.join("jquery.js"), &mut theme.jquery),
             ];
 
             for (filename, dest) in files {
@@ -110,7 +107,6 @@ impl Default for Theme {
             highlight_js: HIGHLIGHT_JS.to_owned(),
             clipboard_js: CLIPBOARD_JS.to_owned(),
             store_js: STORE_JS.to_owned(),
-            jquery: JQUERY.to_owned(),
         }
     }
 }
@@ -182,7 +178,6 @@ mod tests {
             highlight_js: Vec::new(),
             clipboard_js: Vec::new(),
             store_js: Vec::new(),
-            jquery: Vec::new(),
         };
 
         assert_eq!(got, empty);
