@@ -28,7 +28,6 @@ impl Preprocessor for LinkPreprocessor {
 
         book.for_each_mut(|section: &mut BookItem| {
             if let BookItem::Chapter(ref mut ch) = *section {
-                println!("Checking {}", ch);
                 let base = ch.path
                     .parent()
                     .map(|dir| src_dir.join(dir))
@@ -52,12 +51,12 @@ fn replace_all<P: AsRef<Path>>(s: &str, path: P) -> String {
     let mut replaced = String::new();
 
     for playpen in find_links(s) {
-        println!("{} {:?}", path.display(), playpen);
         replaced.push_str(&s[previous_end_index..playpen.start_index]);
 
         match playpen.render_with_path(&path) {
             Ok(new_content) => {
                 replaced.push_str(&new_content);
+                previous_end_index = playpen.end_index;
             }
             Err(e) => {
                 error!("Error updating \"{}\", {}", playpen.link_text, e);

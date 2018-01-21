@@ -7,7 +7,7 @@ extern crate walkdir;
 
 mod dummy_book;
 
-use dummy_book::{assert_contains_strings, DummyBook};
+use dummy_book::{assert_contains_strings, assert_doesnt_contain_strings, DummyBook};
 
 use std::fs;
 use std::io::Write;
@@ -293,7 +293,9 @@ fn able_to_include_playpen_files_in_chapters() {
         r#"class="playpen""#,
         r#"println!(&quot;Hello World!&quot;);"#,
     ];
-    assert_contains_strings(second, playpen_strings);
+
+    assert_contains_strings(&second, playpen_strings);
+    assert_doesnt_contain_strings(&second, &["{{#playpen example.rs}}"]);
 }
 
 /// This makes sure you can include a Rust file with `{{#include ../SUMMARY.md}}`.
@@ -306,7 +308,9 @@ fn able_to_include_files_in_chapters() {
     let includes = temp.path().join("book/first/includes.html");
 
     let summary_strings = &["<h1>Summary</h1>", ">First Chapter</a>"];
-    assert_contains_strings(includes, summary_strings);
+    assert_contains_strings(&includes, summary_strings);
+
+    assert_doesnt_contain_strings(&includes, &["{{#include ../SUMMARY.md::}}"]);
 }
 
 #[test]

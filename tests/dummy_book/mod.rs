@@ -85,6 +85,18 @@ pub fn assert_contains_strings<P: AsRef<Path>>(filename: P, strings: &[&str]) {
     }
 }
 
+pub fn assert_doesnt_contain_strings<P: AsRef<Path>>(filename: P, strings: &[&str]) {
+    let filename = filename.as_ref();
+    let content = file_to_string(filename).expect("Couldn't read the file's contents");
+
+    for s in strings {
+        assert!(!content.contains(s),
+                "Found {:?} in {}\n\n{}",
+                s,
+                filename.display(),
+                content);
+    }
+}
 
 
 /// Recursively copy an entire directory tree to somewhere else (a la `cp -r`).
