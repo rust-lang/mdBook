@@ -32,6 +32,14 @@
     .sidebar {
         background-color: $sidebar-bg
         color: $sidebar-fg
+
+        &::-webkit-scrollbar {
+            background: $sidebar-bg;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: $sidebar-fg;
+        }
     }
 
     .chapter li {
@@ -171,5 +179,13 @@
         i {
             margin: 0;
         }
+    }
+
+    ::-webkit-scrollbar {
+        background: $bg;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: $fg;
     }
 }

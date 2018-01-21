@@ -279,6 +279,7 @@ function playpen_text(playpen) {
 })();
 
 (function themes() {
+    var html = document.querySelector('html');
     var themeToggleButton = document.getElementById('theme-toggle');
     var themePopup = document.getElementById('theme-list');
     var themeColorMetaTag = document.querySelector('meta[name="theme-color"]');
@@ -331,9 +332,15 @@ function playpen_text(playpen) {
             });
         }
 
+        var previousTheme;
+        try { previousTheme = localStorage.getItem('mdbook-theme'); } catch (e) { }
+        if (previousTheme === null || previousTheme === undefined) { previousTheme = 'light'; }
+
         try { localStorage.setItem('mdbook-theme', theme); } catch (e) { }
 
         document.body.className = theme;
+        html.classList.remove(previousTheme);
+        html.classList.add(theme);
     }
 
     // Set theme
