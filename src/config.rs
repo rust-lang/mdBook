@@ -1,4 +1,54 @@
 //! Mdbook's configuration system.
+//! 
+//! The main entrypoint of the `config` module is the `Config` struct. This acts
+//! essentially as a bag of configuration information, with a couple
+//! pre-determined tables (`BookConfig` and `BuildConfig`) as well as support 
+//! for arbitrary data which is exposed to plugins and alternate backends.
+//! 
+//! 
+//! # Examples
+//! 
+//! ```rust
+//! # extern crate mdbook;
+//! # use mdbook::errors::*;
+//! # extern crate toml;
+//! use std::path::PathBuf;
+//! use mdbook::Config;
+//! use toml::Value;
+//! 
+//! # fn run() -> Result<()> {
+//! let src = r#"
+//! [book]
+//! title = "My Book"
+//! authors = ["Michael-F-Bryan"]
+//! 
+//! [build]
+//! src = "out"
+//! 
+//! [other-table.foo]
+//! bar = 123
+//! "#;
+//! 
+//! // load the `Config` from a toml string
+//! let mut cfg = Config::from_str(src)?;
+//! 
+//! // retrieve a nested value
+//! let bar = cfg.get("other-table.foo.bar").cloned();
+//! assert_eq!(bar, Some(Value::Integer(123)));
+//! 
+//! // Set the `output.html.theme` directory
+//! assert!(cfg.get("output.html").is_none());
+//! cfg.set("output.html.theme", "./themes");
+//! 
+//! // then load it again, automatically deserializing to a `PathBuf`.
+//! let got: PathBuf = cfg.get_deserialized("output.html.theme")?;
+//! assert_eq!(got, PathBuf::from("./themes"));
+//! # Ok(())
+//! # }
+//! # fn main() { run().unwrap() }
+//! ```
+
+#![deny(missing_docs)]
 
 use std::path::{Path, PathBuf};
 use std::fs::File;
@@ -14,11 +64,13 @@ use serde_json;
 
 use errors::*;
 
-/// The overall configuration object for MDBook.
+/// The overall configuration object for MDBook, essentially an in-memory
+/// representation of `book.toml`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Config {
     /// Metadata about the book.
     pub book: BookConfig,
+    /// Information about the build environment.
     pub build: BuildConfig,
     rest: Value,
 }
@@ -344,15 +396,24 @@ impl Default for BuildConfig {
     }
 }
 
+/// Configuration for the HTML renderer.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct HtmlConfig {
+    /// The theme directory, if specified.
     pub theme: Option<PathBuf>,
+    /// Use "smart quotes" instead of the usual `"` character.
     pub curly_quotes: bool,
+    /// Should mathjax be enabled?
     pub mathjax_support: bool,
+    /// An optional google analytics code.
     pub google_analytics: Option<String>,
+    /// Additional CSS stylesheets to include in the rendered page's `<head>`.
     pub additional_css: Vec<PathBuf>,
+    /// Additional JS scripts to include at the bottom of the rendered page's 
+    /// `<body>`.
     pub additional_js: Vec<PathBuf>,
+    /// Playpen settings.
     pub playpen: Playpen,
     /// This is used as a bit of a workaround for the `mdbook serve` command.
     /// Basically, because you set the websocket port from the command line, the
@@ -362,6 +423,7 @@ pub struct HtmlConfig {
     /// This config item *should not be edited* by the end user.
     #[doc(hidden)]
     pub livereload_url: Option<String>,
+    /// Should section labels be rendered?
     pub no_section_label: bool,
 }
 
@@ -369,7 +431,11 @@ pub struct HtmlConfig {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Playpen {
+    /// The path to the editor to use. Defaults to the [Ace Editor].
+    /// 
+    /// [Ace Editor]: https://ace.c9.io/
     pub editor: PathBuf,
+    /// Should playpen snippets be editable? Defaults to `false`.
     pub editable: bool,
 }
 

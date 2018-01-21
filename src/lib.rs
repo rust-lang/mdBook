@@ -12,7 +12,7 @@
 //! - Integrate mdbook in a current project
 //! - Extend the capabilities of mdBook
 //! - Do some processing or test before building your book
-//! - Write a new Renderer
+//! - Accessing the public API to help create a new Renderer
 //! - ...
 //!
 //! # Examples
@@ -50,48 +50,30 @@
 //! md.build().expect("Building failed");
 //! ```
 //!
-//! ## Implementing a new Renderer
+//! ## Implementing a new Backend
 //!
-//! If you want to create a new renderer for mdBook, the only thing you have to
-//! do is to implement the [Renderer](renderer/renderer/trait.Renderer.html)
-//! trait.
-//!
-//! And then you can swap in your renderer like this:
-//!
-//! ```no_run
-//! # extern crate mdbook;
-//! #
-//! # use mdbook::MDBook;
-//! # use mdbook::renderer::HtmlHandlebars;
-//! #
-//! # #[allow(unused_variables)]
-//! # fn main() {
-//! #   let your_renderer = HtmlHandlebars::new();
-//! #
-//! let mut book = MDBook::load("my-book").unwrap();
-//! book.with_renderer(your_renderer);
-//! # }
-//! ```
-//!
-//! If you make a renderer, you get the book constructed in form of
-//! `Vec<BookItems>` and you get ! the book config in a `BookConfig` struct.
-//!
-//! It's your responsability to create the necessary files in the correct
-//! directories.
-//!
-//! ## utils
-//!
-//! I have regrouped some useful functions in the [utils](utils/index.html)
-//! module, like the following function [`utils::fs::create_file(path:
-//! &Path)`](utils/fs/fn.create_file.html).
-//!
-//! This function creates a file and returns it. But before creating the file
-//! it checks every directory in the path to see if it exists, and if it does
-//! not it will be created.
-//!
-//! Make sure to take a look at it.
+//! `mdbook` has a fairly flexible mechanism for creating additional backends 
+//! for your book. The general idea is you'll add an extra table in the book's
+//! `book.toml` which specifies an executable to be invoked by `mdbook`. This
+//! executable will then be called during a build, with an in-memory 
+//! representation ([`RenderContext`]) of the book being passed to the
+//! subprocess via `stdin`. 
+//! 
+//! The [`RenderContext`] gives the backend access to the contents of 
+//! `book.toml` and lets it know which directory all generated artefacts should
+//! be placed in. For a much more in-depth explanation, consult the [relevant
+//! chapter] in the *For Developers* section of the user guide.
+//! 
+//! To make creating a backend easier, the `mdbook` crate can be imported 
+//! directly, making deserializing the `RenderContext` easy and giving you 
+//! access to the various methods for working with the [`Config`].
 //!
 //! [user guide]: https://rust-lang-nursery.github.io/mdBook/
+//! [`RenderContext`]: renderer/struct.RenderContext.html
+//! [relevant chapter]: https://rust-lang-nursery.github.io/mdBook/for_developers/backends.html
+//! [`Config`]: config/struct.Config.html
+
+#![deny(missing_docs)]
 
 #[macro_use]
 extern crate error_chain;
@@ -128,6 +110,7 @@ pub mod utils;
 pub use book::MDBook;
 pub use book::BookItem;
 pub use renderer::Renderer;
+pub use config::Config;
 
 /// The error types used through out this crate.
 pub mod errors {
@@ -135,27 +118,30 @@ pub mod errors {
 
     error_chain!{
         foreign_links {
-            Io(::std::io::Error);
-            HandlebarsRender(::handlebars::RenderError);
-            HandlebarsTemplate(Box<::handlebars::TemplateError>);
-            Utf8(::std::string::FromUtf8Error);
+            Io(::std::io::Error) #[doc = "A wrapper around `std::io::Error`"];
+            HandlebarsRender(::handlebars::RenderError) #[doc = "Handlebars rendering failed"];
+            HandlebarsTemplate(Box<::handlebars::TemplateError>) #[doc = "Unable to parse the template"];
+            Utf8(::std::string::FromUtf8Error) #[doc = "Invalid UTF-8"];
         }
 
         links {
-            TomlQuery(::toml_query::error::Error, ::toml_query::error::ErrorKind);
+            TomlQuery(::toml_query::error::Error, ::toml_query::error::ErrorKind) #[doc = "A TomlQuery error"];
         }
 
         errors {
+            /// A subprocess exited with an unsuccessful return code.
             Subprocess(message: String, output: ::std::process::Output) {
                 description("A subprocess failed")
                 display("{}: {}", message, String::from_utf8_lossy(&output.stdout))
             }
 
+            /// An error was encountered while parsing the `SUMMARY.md` file.
             ParseError(line: usize, col: usize, message: String) {
                 description("A SUMMARY.md parsing error")
                 display("Error at line {}, column {}: {}", line, col, message)
             }
 
+            /// The user tried to use a reserved filename.
             ReservedFilenameError(filename: PathBuf) {
                 description("Reserved Filename")
                 display("{} is reserved for internal use", filename.display())
