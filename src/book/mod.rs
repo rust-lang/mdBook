@@ -5,8 +5,6 @@
 //!
 //! [1]: ../index.html
 
-#![deny(missing_docs)]
-
 mod summary;
 mod book;
 mod init;

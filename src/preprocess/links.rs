@@ -10,9 +10,12 @@ use book::{Book, BookItem};
 
 const ESCAPE_CHAR: char = '\\';
 
+/// A preprocessor for expanding the `{{# playpen}}` and `{{# include}}` 
+/// helpers in a chapter.
 pub struct LinkPreprocessor;
 
 impl LinkPreprocessor {
+    /// Create a new `LinkPreprocessor`.
     pub fn new() -> Self {
         LinkPreprocessor
     }

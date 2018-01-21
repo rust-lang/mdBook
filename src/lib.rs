@@ -73,6 +73,8 @@
 //! [For Developers]: https://rust-lang-nursery.github.io/mdBook/lib/index.html
 //! [`Config`]: config/struct.Config.html
 
+#![deny(missing_docs)]
+
 #[macro_use]
 extern crate error_chain;
 extern crate handlebars;
@@ -116,27 +118,30 @@ pub mod errors {
 
     error_chain!{
         foreign_links {
-            Io(::std::io::Error);
-            HandlebarsRender(::handlebars::RenderError);
-            HandlebarsTemplate(Box<::handlebars::TemplateError>);
-            Utf8(::std::string::FromUtf8Error);
+            Io(::std::io::Error) #[doc = "A wrapper around `std::io::Error`"];
+            HandlebarsRender(::handlebars::RenderError) #[doc = "Handlebars rendering failed"];
+            HandlebarsTemplate(Box<::handlebars::TemplateError>) #[doc = "Unable to parse the template"];
+            Utf8(::std::string::FromUtf8Error) #[doc = "Invalid UTF-8"];
         }
 
         links {
-            TomlQuery(::toml_query::error::Error, ::toml_query::error::ErrorKind);
+            TomlQuery(::toml_query::error::Error, ::toml_query::error::ErrorKind) #[doc = "A TomlQuery error"];
         }
 
         errors {
+            /// A subprocess exited with an unsuccessful return code.
             Subprocess(message: String, output: ::std::process::Output) {
                 description("A subprocess failed")
                 display("{}: {}", message, String::from_utf8_lossy(&output.stdout))
             }
 
+            /// An error was encountered while parsing the `SUMMARY.md` file.
             ParseError(line: usize, col: usize, message: String) {
                 description("A SUMMARY.md parsing error")
                 display("Error at line {}, column {}: {}", line, col, message)
             }
 
+            /// The user tried to use a reserved filename.
             ReservedFilenameError(filename: PathBuf) {
                 description("Reserved Filename")
                 display("{} is reserved for internal use", filename.display())
