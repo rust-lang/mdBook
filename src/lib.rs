@@ -61,8 +61,8 @@
 //! 
 //! The [`RenderContext`] gives the backend access to the contents of 
 //! `book.toml` and lets it know which directory all generated artefacts should
-//! be placed in. For a much more in-depth explanation, consult the [For
-//! Developers] section of the user guide.
+//! be placed in. For a much more in-depth explanation, consult the [relevant
+//! chapter] in the *For Developers* section of the user guide.
 //! 
 //! To make creating a backend easier, the `mdbook` crate can be imported 
 //! directly, making deserializing the `RenderContext` easy and giving you 
@@ -70,7 +70,7 @@
 //!
 //! [user guide]: https://rust-lang-nursery.github.io/mdBook/
 //! [`RenderContext`]: renderer/struct.RenderContext.html
-//! [For Developers]: https://rust-lang-nursery.github.io/mdBook/lib/index.html
+//! [relevant chapter]: https://rust-lang-nursery.github.io/mdBook/for_developers/backends.html
 //! [`Config`]: config/struct.Config.html
 
 #![deny(missing_docs)]

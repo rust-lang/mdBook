@@ -11,8 +11,6 @@
 //! [For Developers]: https://rust-lang-nursery.github.io/mdBook/lib/index.html
 //! [RenderContext]: struct.RenderContext.html
 
-#![allow(missing_docs)] // FIXME: Document this
-
 pub use self::html_handlebars::HtmlHandlebars;
 
 mod html_handlebars;

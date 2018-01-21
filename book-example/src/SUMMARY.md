@@ -17,6 +17,7 @@
     - [MathJax Support](format/mathjax.md)
     - [Rust code specific features](format/rust.md)
 - [For Developers](for_developers/index.md)
+    - [Preprocessors](for_developers/preprocessors.md)
     - [Alternate Backends](for_developers/backends.md)
 -----------
 [Contributors](misc/contributors.md)

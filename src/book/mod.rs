@@ -36,9 +36,6 @@ pub struct MDBook {
     pub book: Book,
     renderers: Vec<Box<Renderer>>,
 
-    /// The URL used for live reloading when serving up the book.
-    pub livereload: Option<String>,
-
     /// List of pre-processors to be run on the book
     preprocessors: Vec<Box<Preprocessor>>
 }
@@ -83,7 +80,6 @@ impl MDBook {
 
         let src_dir = root.join(&config.book.src);
         let book = book::load_book(&src_dir, &config.build)?;
-        let livereload = None;
 
         let renderers = determine_renderers(&config);
         let preprocessors = determine_preprocessors(&config)?;
@@ -93,7 +89,6 @@ impl MDBook {
             config,
             book,
             renderers,
-            livereload,
             preprocessors,
         })
     }
