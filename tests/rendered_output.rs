@@ -7,7 +7,7 @@ extern crate walkdir;
 
 mod dummy_book;
 
-use dummy_book::{assert_contains_strings, DummyBook};
+use dummy_book::{assert_contains_strings, assert_doesnt_contain_strings, DummyBook};
 
 use std::fs;
 use std::io::Write;
@@ -29,7 +29,7 @@ const TOC_TOP_LEVEL: &[&'static str] = &[
     "Conclusion",
     "Introduction",
 ];
-const TOC_SECOND_LEVEL: &[&'static str] = &["1.1. Nested Chapter"];
+const TOC_SECOND_LEVEL: &[&'static str] = &["1.1. Nested Chapter", "1.2. Includes"];
 
 /// Make sure you can load the dummy book and build it without panicking.
 #[test]
@@ -49,7 +49,8 @@ fn by_default_mdbook_generates_rendered_content_in_the_book_directory() {
     md.build().unwrap();
 
     assert!(temp.path().join("book").exists());
-    assert!(temp.path().join("book").join("index.html").exists());
+    let index_file = md.build_dir_for("html").join("index.html");
+    assert!(index_file.exists());
 }
 
 #[test]
@@ -281,7 +282,7 @@ fn create_missing_file_with_config() {
 /// This makes sure you can include a Rust file with `{{#playpen example.rs}}`.
 /// Specification is in `book-example/src/format/rust.md`
 #[test]
-fn able_to_include_rust_files_in_chapters() {
+fn able_to_include_playpen_files_in_chapters() {
     let temp = DummyBook::new().build().unwrap();
     let md = MDBook::load(temp.path()).unwrap();
     md.build().unwrap();
@@ -292,7 +293,24 @@ fn able_to_include_rust_files_in_chapters() {
         r#"class="playpen""#,
         r#"println!(&quot;Hello World!&quot;);"#,
     ];
-    assert_contains_strings(second, playpen_strings);
+
+    assert_contains_strings(&second, playpen_strings);
+    assert_doesnt_contain_strings(&second, &["{{#playpen example.rs}}"]);
+}
+
+/// This makes sure you can include a Rust file with `{{#include ../SUMMARY.md}}`.
+#[test]
+fn able_to_include_files_in_chapters() {
+    let temp = DummyBook::new().build().unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
+    md.build().unwrap();
+
+    let includes = temp.path().join("book/first/includes.html");
+
+    let summary_strings = &["<h1>Summary</h1>", ">First Chapter</a>"];
+    assert_contains_strings(&includes, summary_strings);
+
+    assert_doesnt_contain_strings(&includes, &["{{#include ../SUMMARY.md::}}"]);
 }
 
 #[test]

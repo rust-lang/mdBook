@@ -8,7 +8,6 @@ use super::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
 use config::BuildConfig;
 use errors::*;
 
-
 /// Load a book into memory from its `src/` directory.
 pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> {
     let src_dir = src_dir.as_ref();
@@ -60,14 +59,19 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
     Ok(())
 }
 
-
 /// A dumb tree structure representing a book.
 ///
-/// For the moment a book is just a collection of `BookItems`.
+/// For the moment a book is just a collection of `BookItems` which are 
+/// accessible by either iterating (immutably) over the book with [`iter()`], or
+/// recursively applying a closure to each section to mutate the chapters, using
+/// [`for_each_mut()`].
+/// 
+/// [`iter()`]: #method.iter
+/// [`for_each_mut()`]: #method.for_each_mut
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct Book {
     /// The sections in this book.
-    pub sections: Vec<BookItem>,
+    sections: Vec<BookItem>,
 }
 
 impl Book {
@@ -81,6 +85,35 @@ impl Book {
         BookItems {
             items: self.sections.iter().collect(),
         }
+    }
+
+    /// Recursively apply a closure to each item in the book, allowing you to
+    /// mutate them.
+    ///
+    /// # Note
+    ///
+    /// Unlike the `iter()` method, this requires a closure instead of returning
+    /// an iterator. This is because using iterators can possibly allow you
+    /// to have iterator invalidation errors.
+    pub fn for_each_mut<F>(&mut self, mut func: F)
+    where
+        F: FnMut(&mut BookItem),
+    {
+        for_each_mut(&mut func, &mut self.sections);
+    }
+}
+
+pub fn for_each_mut<'a, F, I>(func: &mut F, items: I)
+where
+    F: FnMut(&mut BookItem),
+    I: IntoIterator<Item = &'a mut BookItem>,
+{
+    for item in items {
+        if let &mut BookItem::Chapter(ref mut ch) = item {
+            for_each_mut(func, &mut ch.sub_items);
+        }
+
+        func(item);
     }
 }
 
@@ -224,7 +257,6 @@ impl Display for Chapter {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -265,7 +297,6 @@ And here is some \
             .unwrap()
             .write_all("Hello World!".as_bytes())
             .unwrap();
-
 
         let mut second = Link::new("Nested Chapter 1", &second_path);
         second.number = Some(SectionNumber(vec![1, 2]));
@@ -391,7 +422,6 @@ And here is some \
             ],
         };
 
-
         let got: Vec<_> = book.iter().collect();
 
         assert_eq!(got.len(), 5);
@@ -410,5 +440,40 @@ And here is some \
         ];
 
         assert_eq!(chapter_names, should_be);
+    }
+
+    #[test]
+    fn for_each_mut_visits_all_items() {
+        let mut book = Book {
+            sections: vec![
+                BookItem::Chapter(Chapter {
+                    name: String::from("Chapter 1"),
+                    content: String::from(DUMMY_SRC),
+                    number: None,
+                    path: PathBuf::from("Chapter_1/index.md"),
+                    sub_items: vec![
+                        BookItem::Chapter(Chapter::new(
+                            "Hello World",
+                            String::new(),
+                            "Chapter_1/hello.md",
+                        )),
+                        BookItem::Separator,
+                        BookItem::Chapter(Chapter::new(
+                            "Goodbye World",
+                            String::new(),
+                            "Chapter_1/goodbye.md",
+                        )),
+                    ],
+                }),
+                BookItem::Separator,
+            ],
+        };
+
+        let num_items = book.iter().count();
+        let mut visited = 0;
+
+        book.for_each_mut(|_| visited += 1);
+
+        assert_eq!(visited, num_items);
     }
 }
