@@ -161,7 +161,6 @@ impl HtmlHandlebars {
         self.write_file(destination, "ayu-highlight.css", &theme.ayu_highlight_css)?;
         self.write_file(destination, "highlight.js", &theme.highlight_js)?;
         self.write_file(destination, "clipboard.min.js", &theme.clipboard_js)?;
-        self.write_file(destination, "store.js", &theme.store_js)?;
         self.write_file(
             destination,
             "_FontAwesome/css/font-awesome.css",

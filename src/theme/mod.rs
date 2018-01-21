@@ -17,7 +17,6 @@ pub static TOMORROW_NIGHT_CSS: &'static [u8] = include_bytes!("tomorrow-night.cs
 pub static HIGHLIGHT_CSS: &'static [u8] = include_bytes!("highlight.css");
 pub static AYU_HIGHLIGHT_CSS: &'static [u8] = include_bytes!("ayu-highlight.css");
 pub static CLIPBOARD_JS: &'static [u8] = include_bytes!("clipboard.min.js");
-pub static STORE_JS: &'static [u8] = include_bytes!("store.js");
 pub static FONT_AWESOME: &'static [u8] = include_bytes!("_FontAwesome/css/font-awesome.min.css");
 pub static FONT_AWESOME_EOT: &'static [u8] =
     include_bytes!("_FontAwesome/fonts/fontawesome-webfont.eot");
@@ -50,7 +49,6 @@ pub struct Theme {
     pub ayu_highlight_css: Vec<u8>,
     pub highlight_js: Vec<u8>,
     pub clipboard_js: Vec<u8>,
-    pub store_js: Vec<u8>,
 }
 
 impl Theme {
@@ -73,7 +71,6 @@ impl Theme {
                 (theme_dir.join("favicon.png"), &mut theme.favicon),
                 (theme_dir.join("highlight.js"), &mut theme.highlight_js),
                 (theme_dir.join("clipboard.min.js"), &mut theme.clipboard_js),
-                (theme_dir.join("store.js"), &mut theme.store_js),
                 (theme_dir.join("highlight.css"), &mut theme.highlight_css),
                 (theme_dir.join("tomorrow-night.css"), &mut theme.tomorrow_night_css),
                 (theme_dir.join("ayu-highlight.css"), &mut theme.ayu_highlight_css),
@@ -107,7 +104,6 @@ impl Default for Theme {
             ayu_highlight_css: AYU_HIGHLIGHT_CSS.to_owned(),
             highlight_js: HIGHLIGHT_JS.to_owned(),
             clipboard_js: CLIPBOARD_JS.to_owned(),
-            store_js: STORE_JS.to_owned(),
         }
     }
 }
@@ -178,7 +174,6 @@ mod tests {
             ayu_highlight_css: Vec::new(),
             highlight_js: Vec::new(),
             clipboard_js: Vec::new(),
-            store_js: Vec::new(),
         };
 
         assert_eq!(got, empty);
