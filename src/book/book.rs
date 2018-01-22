@@ -61,11 +61,11 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
 
 /// A dumb tree structure representing a book.
 ///
-/// For the moment a book is just a collection of `BookItems` which are 
+/// For the moment a book is just a collection of `BookItems` which are
 /// accessible by either iterating (immutably) over the book with [`iter()`], or
 /// recursively applying a closure to each section to mutate the chapters, using
 /// [`for_each_mut()`].
-/// 
+///
 /// [`iter()`]: #method.iter
 /// [`for_each_mut()`]: #method.for_each_mut
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -199,7 +199,8 @@ fn load_chapter<P: AsRef<Path>>(link: &Link, src_dir: P) -> Result<Chapter> {
         .chain_err(|| format!("Chapter file not found, {}", link.location.display()))?;
 
     let mut content = String::new();
-    f.read_to_string(&mut content)?;
+    f.read_to_string(&mut content)
+        .chain_err(|| format!("Unable to read \"{}\" ({})", link.name, location.display()))?;
 
     let stripped = location
         .strip_prefix(&src_dir)
@@ -475,5 +476,44 @@ And here is some \
         book.for_each_mut(|_| visited += 1);
 
         assert_eq!(visited, num_items);
+    }
+
+    #[test]
+    fn cant_load_chapters_with_an_empty_path() {
+        let (_, temp) = dummy_link();
+        let summary = Summary {
+            numbered_chapters: vec![
+                SummaryItem::Link(Link {
+                    name: String::from("Empty"),
+                    location: PathBuf::from(""),
+                    ..Default::default()
+                }),
+            ],
+            ..Default::default()
+        };
+
+        let got = load_book_from_disk(&summary, temp.path());
+        assert!(got.is_err());
+    }
+
+    #[test]
+    fn cant_load_chapters_when_the_link_is_a_directory() {
+        let (_, temp) = dummy_link();
+        let dir = temp.path().join("nested");
+        fs::create_dir(&dir).unwrap();
+
+        let summary = Summary {
+            numbered_chapters: vec![
+                SummaryItem::Link(Link {
+                    name: String::from("nested"),
+                    location: dir,
+                    ..Default::default()
+                }),
+            ],
+            ..Default::default()
+        };
+
+        let got = load_book_from_disk(&summary, temp.path());
+        assert!(got.is_err());
     }
 }
