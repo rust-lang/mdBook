@@ -144,6 +144,7 @@ table thead td {
   max-width: 100%;
 }
 #menu-bar {
+  position: -webkit-sticky;
   position: sticky;
   top: 0;
   z-index: 101;
