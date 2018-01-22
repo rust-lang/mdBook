@@ -240,7 +240,7 @@ impl<'a> SummaryParser<'a> {
     fn parse_affix(&mut self, is_prefix: bool) -> Result<Vec<SummaryItem>> {
         let mut items = Vec::new();
         debug!(
-            "[*] Parsing {} items",
+            "Parsing {} items",
             if is_prefix { "prefix" } else { "suffix" }
         );
 
@@ -362,7 +362,7 @@ impl<'a> SummaryParser<'a> {
     }
 
     fn parse_nested_numbered(&mut self, parent: &SectionNumber) -> Result<Vec<SummaryItem>> {
-        debug!("[*] Parsing numbered chapters at level {}", parent);
+        debug!("Parsing numbered chapters at level {}", parent);
         let mut items = Vec::new();
 
         loop {
@@ -406,7 +406,7 @@ impl<'a> SummaryParser<'a> {
                     let mut number = parent.clone();
                     number.0.push(num_existing_items as u32 + 1);
                     trace!(
-                        "[*] Found chapter: {} {} ({})",
+                        "Found chapter: {} {} ({})",
                         number,
                         link.name,
                         link.location.display()
@@ -435,7 +435,7 @@ impl<'a> SummaryParser<'a> {
     /// Try to parse the title line.
     fn parse_title(&mut self) -> Option<String> {
         if let Some(Event::Start(Tag::Header(1))) = self.next_event() {
-            debug!("[*] Found a h1 in the SUMMARY");
+            debug!("Found a h1 in the SUMMARY");
 
             let tags = collect_events!(self.stream, end Tag::Header(1));
             Some(stringify_events(tags))

@@ -8,7 +8,6 @@ use super::MDBook;
 use theme;
 use errors::*;
 
-
 /// A helper for setting up a new book and its directory structure.
 #[derive(Debug, Clone, PartialEq)]
 pub struct BookBuilder {
@@ -97,7 +96,7 @@ impl BookBuilder {
     }
 
     fn write_book_toml(&self) -> Result<()> {
-        debug!("[*] Writing book.toml");
+        debug!("Writing book.toml");
         let book_toml = self.root.join("book.toml");
         let cfg = toml::to_vec(&self.config).chain_err(|| "Unable to serialize the config")?;
 
@@ -109,7 +108,7 @@ impl BookBuilder {
     }
 
     fn copy_across_theme(&self) -> Result<()> {
-        debug!("[*] Copying theme");
+        debug!("Copying theme");
 
         let themedir = self.config
             .html_config()
@@ -118,7 +117,10 @@ impl BookBuilder {
         let themedir = self.root.join(themedir);
 
         if !themedir.exists() {
-            debug!("[*]: {:?} does not exist, creating the directory", themedir);
+            debug!(
+                "{} does not exist, creating the directory",
+                themedir.display()
+            );
             fs::create_dir(&themedir)?;
         }
 
@@ -144,7 +146,7 @@ impl BookBuilder {
     }
 
     fn build_gitignore(&self) -> Result<()> {
-        debug!("[*]: Creating .gitignore");
+        debug!("Creating .gitignore");
 
         let mut f = File::create(self.root.join(".gitignore"))?;
 
@@ -154,7 +156,7 @@ impl BookBuilder {
     }
 
     fn create_stub_files(&self) -> Result<()> {
-        debug!("[*] Creating example book contents");
+        debug!("Creating example book contents");
         let src_dir = self.root.join(&self.config.book.src);
 
         let summary = src_dir.join("SUMMARY.md");
@@ -171,7 +173,7 @@ impl BookBuilder {
     }
 
     fn create_directory_structure(&self) -> Result<()> {
-        debug!("[*]: Creating directory tree");
+        debug!("Creating directory tree");
         fs::create_dir_all(&self.root)?;
 
         let src = self.root.join(&self.config.book.src);

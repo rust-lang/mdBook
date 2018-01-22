@@ -10,7 +10,7 @@ use regex::{Captures, Regex};
 #[allow(unused_imports)] use std::ascii::AsciiExt;
 use std::path::{Path, PathBuf};
 use std::fs::{self, File};
-use std::io::{self, Read, Write};
+use std::io::{Read, Write};
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 
@@ -53,11 +53,9 @@ impl HtmlHandlebars {
                 print_content.push_str(&content);
 
                 // Update the context with data for this file
-                let path = ch.path.to_str().ok_or_else(|| {
-                                                           io::Error::new(io::ErrorKind::Other,
-                                                                          "Could not convert path \
-                                                                           to str")
-                                                       })?;
+                let path = ch.path
+                    .to_str()
+                    .chain_err(|| "Could not convert path to str")?;
 
                 // "print.html" is used for the print page.
                 if ch.path == Path::new("print.md") {
@@ -82,7 +80,7 @@ impl HtmlHandlebars {
                                 json!(utils::fs::path_to_root(&ch.path)));
 
                 // Render the handlebars template with the data
-                debug!("[*]: Render template");
+                debug!("Render template");
                 let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
                 let filepath = Path::new(&ch.path).with_extension("html");
@@ -95,7 +93,7 @@ impl HtmlHandlebars {
                 );
 
                 // Write to file
-                info!("[*] Creating {:?} ✓", filepath.display());
+                debug!("Creating {} ✓", filepath.display());
                 self.write_file(&ctx.destination, filepath, &rendered.into_bytes())?;
 
                 if ctx.is_index {
@@ -110,7 +108,7 @@ impl HtmlHandlebars {
 
     /// Create an index.html from the first element in SUMMARY.md
     fn render_index(&self, ch: &Chapter, destination: &Path) -> Result<()> {
-        debug!("[*]: index.html");
+        debug!("index.html");
 
         let mut content = String::new();
 
@@ -127,8 +125,10 @@ impl HtmlHandlebars {
 
         self.write_file(destination, "index.html", content.as_bytes())?;
 
-        info!("[*] Creating index.html from {:?} ✓",
-            destination.join(&ch.path.with_extension("html")));
+        debug!(
+            "Creating index.html from {} ✓",
+            destination.join(&ch.path.with_extension("html")).display()
+        );
 
         Ok(())
     }
@@ -275,7 +275,7 @@ impl Renderer for HtmlHandlebars {
         let destination = &ctx.destination;
         let book = &ctx.book;
 
-        debug!("[fn]: render");
+        trace!("render");
         let mut handlebars = Handlebars::new();
 
         let theme_dir = match html_config.theme {
@@ -285,19 +285,13 @@ impl Renderer for HtmlHandlebars {
 
         let theme = theme::Theme::new(theme_dir);
 
-        debug!("[*]: Register the index handlebars template");
-        handlebars.register_template_string(
-            "index",
-            String::from_utf8(theme.index.clone())?,
-        )?;
+        debug!("Register the index handlebars template");
+        handlebars.register_template_string("index", String::from_utf8(theme.index.clone())?)?;
 
-        debug!("[*]: Register the header handlebars template");
-        handlebars.register_partial(
-            "header",
-            String::from_utf8(theme.header.clone())?,
-        )?;
+        debug!("Register the header handlebars template");
+        handlebars.register_partial("header", String::from_utf8(theme.header.clone())?)?;
 
-        debug!("[*]: Register handlebars helpers");
+        debug!("Register handlebars helpers");
         self.register_hbs_helpers(&mut handlebars, &html_config);
 
         let mut data = make_data(&ctx.root, &book, &ctx.config, &html_config)?;
@@ -305,7 +299,6 @@ impl Renderer for HtmlHandlebars {
         // Print version
         let mut print_content = String::new();
 
-        debug!("[*]: Check if destination directory exists");
         fs::create_dir_all(&destination)
             .chain_err(|| "Unexpected error when constructing destination path")?;
 
@@ -327,7 +320,7 @@ impl Renderer for HtmlHandlebars {
         }
 
         // Render the handlebars template with the data
-        debug!("[*]: Render template");
+        debug!("Render template");
 
         let rendered = handlebars.render("index", &data)?;
 
@@ -336,9 +329,9 @@ impl Renderer for HtmlHandlebars {
                                          &html_config.playpen);
 
         self.write_file(&destination, "print.html", &rendered.into_bytes())?;
-        info!("[*] Creating print.html ✓");
+        debug!("Creating print.html ✓");
 
-        debug!("[*] Copy static files");
+        debug!("Copy static files");
         self.copy_static_files(&destination, &theme, &html_config)
             .chain_err(|| "Unable to copy across static files")?;
         self.copy_additional_css_and_js(&html_config, &destination)
@@ -352,7 +345,7 @@ impl Renderer for HtmlHandlebars {
 }
 
 fn make_data(root: &Path, book: &Book, config: &Config, html_config: &HtmlConfig) -> Result<serde_json::Map<String, serde_json::Value>> {
-    debug!("[fn]: make_data");
+    trace!("make_data");
     let html = config.html_config().unwrap_or_default();
 
     let mut data = serde_json::Map::new();
@@ -430,11 +423,9 @@ fn make_data(root: &Path, book: &Book, config: &Config, html_config: &HtmlConfig
                 }
 
                 chapter.insert("name".to_owned(), json!(ch.name));
-                let path = ch.path.to_str().ok_or_else(|| {
-                                                           io::Error::new(io::ErrorKind::Other,
-                                                                          "Could not convert path \
-                                                                           to str")
-                                                       })?;
+                let path = ch.path
+                    .to_str()
+                    .chain_err(|| "Could not convert path to str")?;
                 chapter.insert("path".to_owned(), json!(path));
             }
             BookItem::Separator => {
@@ -619,7 +610,6 @@ fn partition_source(s: &str) -> (String, String) {
 
     (before, after)
 }
-
 
 struct RenderItemContext<'a> {
     handlebars: &'a Handlebars,

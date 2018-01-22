@@ -21,7 +21,7 @@ use toml::Value;
 
 use utils;
 use renderer::{CmdRenderer, HtmlHandlebars, RenderContext, Renderer};
-use preprocess::{Preprocessor, LinkPreprocessor, PreprocessorContext};
+use preprocess::{LinkPreprocessor, Preprocessor, PreprocessorContext};
 use errors::*;
 
 use config::Config;
@@ -37,7 +37,7 @@ pub struct MDBook {
     renderers: Vec<Box<Renderer>>,
 
     /// List of pre-processors to be run on the book
-    preprocessors: Vec<Box<Preprocessor>>
+    preprocessors: Vec<Box<Preprocessor>>,
 }
 
 impl MDBook {
@@ -57,7 +57,7 @@ impl MDBook {
         }
 
         let mut config = if config_location.exists() {
-            debug!("[*] Loading config from {}", config_location.display());
+            debug!("Loading config from {}", config_location.display());
             Config::from_disk(&config_location)?
         } else {
             Config::default()
@@ -147,7 +147,7 @@ impl MDBook {
 
     /// Tells the renderer to build our book and put it in the build directory.
     pub fn build(&self) -> Result<()> {
-        debug!("[fn]: build");
+        info!("Book building has started");
 
         let mut preprocessed_book = self.book.clone();
         let preprocess_ctx = PreprocessorContext::new(self.root.clone(), self.config.clone());
@@ -158,6 +158,7 @@ impl MDBook {
         }
 
         for renderer in &self.renderers {
+            info!("Running the {} backend", renderer.name());
             self.run_renderer(&preprocessed_book, renderer.as_ref())?;
         }
 
@@ -223,7 +224,7 @@ impl MDBook {
                 if !ch.path.as_os_str().is_empty() {
                     let path = self.source_dir().join(&ch.path);
                     let content = utils::fs::file_to_string(&path)?;
-                    println!("[*]: Testing file: {:?}", path);
+                    info!("Testing file: {:?}", path);
 
                     // write preprocessed file to tempdir
                     let path = temp_dir.path().join(&ch.path);
@@ -327,22 +328,19 @@ fn default_preprocessors() -> Vec<Box<Preprocessor>> {
 
 /// Look at the `MDBook` and try to figure out what preprocessors to run.
 fn determine_preprocessors(config: &Config) -> Result<Vec<Box<Preprocessor>>> {
-
     let preprocess_list = match config.build.preprocess {
         Some(ref p) => p,
         // If no preprocessor field is set, default to the LinkPreprocessor. This allows you
         // to disable the LinkPreprocessor by setting "preprocess" to an empty list.
-        None => return Ok(default_preprocessors())
+        None => return Ok(default_preprocessors()),
     };
 
     let mut preprocessors: Vec<Box<Preprocessor>> = Vec::new();
 
     for key in preprocess_list {
         match key.as_ref() {
-            "links" => {
-                preprocessors.push(Box::new(LinkPreprocessor::new()))
-            }
-            _ =>  bail!("{:?} is not a recognised preprocessor", key),
+            "links" => preprocessors.push(Box::new(LinkPreprocessor::new())),
+            _ => bail!("{:?} is not a recognised preprocessor", key),
         }
     }
 
@@ -431,7 +429,6 @@ mod tests {
         preprocess = []
         "#;
 
-
         let cfg = Config::from_str(cfg_str).unwrap();
 
         // make sure we have something in the `output` table
@@ -454,7 +451,6 @@ mod tests {
         create-missing = false
         preprocess = ["random"]
         "#;
-
 
         let cfg = Config::from_str(cfg_str).unwrap();
 
