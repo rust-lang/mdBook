@@ -47,7 +47,7 @@ fn find_chapter(
     rc: &mut RenderContext,
     target: Target
 ) -> Result<Option<StringMap>, RenderError> {
-    debug!("[*]: Get data from context");
+    debug!("Get data from context");
 
     let chapters = rc.evaluate_absolute("chapters").and_then(|c| {
         serde_json::value::from_value::<Vec<StringMap>>(c.clone())
@@ -61,7 +61,7 @@ fn find_chapter(
 
     let mut previous: Option<StringMap> = None;
 
-    debug!("[*]: Search for chapter");
+    debug!("Search for chapter");
 
     for item in chapters {
         match item.get("path") {
@@ -87,7 +87,7 @@ fn render(
     rc: &mut RenderContext,
     chapter: &StringMap,
 ) -> Result<(), RenderError> {
-    debug!("[*]: Creating BTreeMap to inject in context");
+    trace!("Creating BTreeMap to inject in context");
 
     let mut context = BTreeMap::new();
 
@@ -104,7 +104,7 @@ fn render(
                     .map(|p| context.insert("link".to_owned(), json!(p.replace("\\", "/"))))
             })?;
 
-    debug!("[*]: Render template");
+    trace!("Render template");
 
     _h.template()
         .ok_or_else(|| RenderError::new("Error with the handlebars template"))
@@ -117,7 +117,7 @@ fn render(
 }
 
 pub fn previous(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
-    debug!("[fn]: previous (handlebars helper)");
+    trace!("previous (handlebars helper)");
 
     if let Some(previous) = find_chapter(rc, Target::Previous)? {
         render(_h, r, rc, &previous)?;
@@ -127,7 +127,7 @@ pub fn previous(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(
 }
 
 pub fn next(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
-    debug!("[fn]: next (handlebars helper)");
+    trace!("next (handlebars helper)");
 
     if let Some(next) = find_chapter(rc, Target::Next)? {
         render(_h, r, rc, &next)?;
