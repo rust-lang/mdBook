@@ -72,7 +72,7 @@ j
    the git version of mdBook yourself. Cargo makes this ***super easy***!
 
    ```
-   cargo install --git https://github.com/rust-lang-nursery/mdBook.git
+   cargo install --git https://github.com/rust-lang-nursery/mdBook.git mdbook
    ```
 
    Again, make sure to add the Cargo bin directory to your `PATH`.
