@@ -1,7 +1,7 @@
 [package]
 name = "mdbook"
 version = "0.0.29-alpha.0"
-authors = ["Mathieu David <mathieudavid@mathieudavid.org>"]
+authors = ["Mathieu David <mathieudavid@mathieudavid.org>", "Michael-F-Bryan <michaelfbryan@gmail.com>"]
 description = "create books from markdown files (like Gitbook)"
 documentation = "http://rust-lang-nursery.github.io/mdBook/index.html"
 repository = "https://github.com/rust-lang-nursery/mdBook"
