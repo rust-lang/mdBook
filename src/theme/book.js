@@ -510,26 +510,25 @@ function playpen_text(playpen) {
 })();
 
 (function autoHideMenu() {
-    var scrollingContainer = document.querySelector('html');
     var menu = document.getElementById('menu-bar');
 
-    var previousScrollTop = scrollingContainer.scrollTop;
+    var previousScrollTop = document.scrollingElement.scrollTop;
 
     document.addEventListener('scroll', function () {
-        if (menu.classList.contains('folded') && scrollingContainer.scrollTop < previousScrollTop) {
+        if (menu.classList.contains('folded') && document.scrollingElement.scrollTop < previousScrollTop) {
             menu.classList.remove('folded');
-        } else if (!menu.classList.contains('folded') && scrollingContainer.scrollTop > previousScrollTop) {
+        } else if (!menu.classList.contains('folded') && document.scrollingElement.scrollTop > previousScrollTop) {
             menu.classList.add('folded');
         }
 
-        if (!menu.classList.contains('bordered') && scrollingContainer.scrollTop > 0) {
+        if (!menu.classList.contains('bordered') && document.scrollingElement.scrollTop > 0) {
             menu.classList.add('bordered');
         }
 
-        if (menu.classList.contains('bordered') && scrollingContainer.scrollTop === 0) {
+        if (menu.classList.contains('bordered') && document.scrollingElement.scrollTop === 0) {
             menu.classList.remove('bordered');
         }
 
-        previousScrollTop = scrollingContainer.scrollTop;
+        previousScrollTop = document.scrollingElement.scrollTop;
     }, { passive: true });
 })();
