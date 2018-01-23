@@ -43,10 +43,26 @@
 
     </head>
     <body class="light">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
         <!-- Set the theme before any content is loaded, prevents flash -->
         <script type="text/javascript">
             var theme;
-            try { theme = store.get('mdbook-theme'); } catch(e) { } 
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { } 
             if (theme === null || theme === undefined) { theme = 'light'; }
             document.body.className = theme;
         </script>
@@ -55,7 +71,7 @@
         <script type="text/javascript">
             var sidebar = 'hidden';
             if (document.body.clientWidth >= 1080) {
-                try { sidebar = store.get('mdbook-sidebar'); } catch(e) { }
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
             }
             document.querySelector('html').classList.add("sidebar-" + sidebar);
