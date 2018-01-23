@@ -422,7 +422,7 @@ function playpen_text(playpen) {
             x: e.touches[0].clientX,
             time: Date.now()
         };
-    });
+    }, { passive: true });
 
     document.addEventListener('touchmove', function (e) {
         if (!firstContact)
@@ -440,7 +440,7 @@ function playpen_text(playpen) {
 
             firstContact = null;
         }
-    });
+    }, { passive: true });
 
     // Scroll sidebar to current active section
     var activeSection = sidebar.querySelector(".active");
