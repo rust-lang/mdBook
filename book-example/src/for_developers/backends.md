@@ -149,7 +149,7 @@ The reason we didn't need to specify the full name/path of our `wordcount`
 backend is because `mdbook` will try to *infer* the program's name via 
 convention. The executable for the `foo` backend is typically called 
 `mdbook-foo`, with an associated `[output.foo]` entry in the `book.toml`. To
-explicitly tell `mdbook` what command to invoke (it may require command line 
+explicitly tell `mdbook` what command to invoke (it may require command-line 
 arguments or be an interpreted script), you can use the `command` field.
 
 ```diff
