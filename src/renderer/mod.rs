@@ -16,7 +16,7 @@ pub use self::html_handlebars::HtmlHandlebars;
 mod html_handlebars;
 
 use std::fs;
-use std::io::Read;
+use std::io::{self, Read};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use serde_json;
@@ -155,13 +155,22 @@ impl Renderer for CmdRenderer {
 
         let _ = fs::create_dir_all(&ctx.destination);
 
-        let mut child = self.compose_command()?
+        let mut child = match self.compose_command()?
             .stdin(Stdio::piped())
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
             .current_dir(&ctx.destination)
-            .spawn()
-            .chain_err(|| "Unable to start the renderer")?;
+            .spawn() {
+                Ok(c) => c,
+                Err(ref e) if e.kind() == io::ErrorKind::NotFound => {
+                    warn!("The command wasn't found, is the \"{}\" backend installed?", self.name);
+                    warn!("\tCommand: {}", self.cmd);
+                    return Ok(());
+                }
+                Err(e) => {
+                    return Err(e).chain_err(|| "Unable to start the backend")?;
+                }
+            };
 
         {
             let mut stdin = child.stdin.take().expect("Child has stdin");
