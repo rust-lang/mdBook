@@ -21,7 +21,7 @@ The process of rendering a book project goes through several steps.
 
 1. Load the book 
     - Parse the `book.toml`, falling back to the default `Config` if it doesn't
-       exist.
+       exist
     - Load the book chapters into memory
     - Discover which preprocessors/backends should be used
 2. Run the preprocessors
