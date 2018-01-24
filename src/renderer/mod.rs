@@ -26,6 +26,8 @@ use errors::*;
 use config::Config;
 use book::Book;
 
+const MDBOOK_VERSION: &str = env!("CARGO_PKG_VERSION");
+
 /// An arbitrary `mdbook` backend.
 ///
 /// Although it's quite possible for you to import `mdbook` as a library and
@@ -68,7 +70,7 @@ pub struct RenderContext {
 
 impl RenderContext {
     /// Create a new `RenderContext`.
-    pub(crate) fn new<P, Q>(root: P, book: Book, config: Config, destination: Q) -> RenderContext
+    pub fn new<P, Q>(root: P, book: Book, config: Config, destination: Q) -> RenderContext
     where
         P: Into<PathBuf>,
         Q: Into<PathBuf>,
@@ -76,7 +78,7 @@ impl RenderContext {
         RenderContext {
             book: book,
             config: config,
-            version: env!("CARGO_PKG_VERSION").to_string(),
+            version: MDBOOK_VERSION.to_string(),
             root: root.into(),
             destination: destination.into(),
         }
