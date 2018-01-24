@@ -116,7 +116,7 @@ tables. If none are provided it'll fall back to using the default HTML
 renderer. 
 
 Notably, this means if you want to add your own custom backend you'll also
-need to make sure to add the HTML backend, even if its tabke just stays empty.
+need to make sure to add the HTML backend, even if its table just stays empty.
 
 Now you just need to build your book like normal, and everything should *Just 
 Work*.
