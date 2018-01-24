@@ -101,6 +101,12 @@ impl Book {
     {
         for_each_mut(&mut func, &mut self.sections);
     }
+
+    /// Append a `BookItem` to the `Book`.
+    pub fn push_item<I: Into<BookItem>>(&mut self, item: I) -> &mut Self {
+        self.sections.push(item.into());
+        self
+    }
 }
 
 pub fn for_each_mut<'a, F, I>(func: &mut F, items: I)
@@ -124,6 +130,12 @@ pub enum BookItem {
     Chapter(Chapter),
     /// A section separator.
     Separator,
+}
+
+impl From<Chapter> for BookItem {
+    fn from(other: Chapter) -> BookItem {
+        BookItem::Chapter(other)
+    }
 }
 
 /// The representation of a "chapter", usually mapping to a single file on
