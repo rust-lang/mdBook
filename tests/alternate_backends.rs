@@ -25,6 +25,13 @@ fn failing_alternate_backend() {
 }
 
 #[test]
+fn missing_backends_arent_fatal() {
+    let (md, _temp) = dummy_book_with_backend("missing", "trduyvbhijnorgevfuhn");
+
+    assert!(md.build().is_ok());
+}
+
+#[test]
 fn alternate_backend_with_arguments() {
     let (md, _temp) = dummy_book_with_backend("arguments", "echo Hello World!");
 
