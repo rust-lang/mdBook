@@ -21,7 +21,7 @@ mdbook serve path/to/book
 For example: suppose you had an nginx server for SSL termination which has a public address of 192.168.1.100 on port 80 and proxied that to 127.0.0.1 on port 8000. To run use the nginx proxy do:
 
 ```bash
-mdbook server path/to/book -p 8000 -i 127.0.0.1 -a 192.168.1.100
+mdbook serve path/to/book -p 8000 -i 127.0.0.1 -a 192.168.1.100
 ```
 
 If you were to want live reloading for this you would need to proxy the websocket calls through nginx as well from `192.168.1.100:<WS_PORT>` to `127.0.0.1:<WS_PORT>`. The `-w` flag allows for the websocket port to be configured.
