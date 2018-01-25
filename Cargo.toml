@@ -14,6 +14,11 @@ exclude = [
     "src/theme/stylus/**",
 ]
 
+[package.metadata.release]
+sign-commit = true
+push-remote = "upstream"
+tag-prefix = "v"
+
 [dependencies]
 clap = "2.24"
 chrono = "0.4"
@@ -65,6 +70,3 @@ serve = ["iron", "staticfile", "ws"]
 doc = false
 name = "mdbook"
 path = "src/bin/mdbook.rs"
-
-[workspace]
-members = ["book-example/src/for_developers/mdbook-wordcount"]
