@@ -340,6 +340,12 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
   background-color: #fafafa;
   color: #364149;
 }
+.light .sidebar::-webkit-scrollbar {
+  background: #fafafa;
+}
+.light .sidebar::-webkit-scrollbar-thumb {
+  background: #364149;
+}
 .light .chapter li {
   color: #aaa;
 }
@@ -464,6 +470,12 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 .light .icon-button i {
   margin: 0;
 }
+.light ::-webkit-scrollbar {
+  background: #fff;
+}
+.light ::-webkit-scrollbar-thumb {
+  background: #333;
+}
 .coal {
   color: #98a3ad;
   background-color: #141617;
@@ -493,6 +505,12 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 .coal .sidebar {
   background-color: #292c2f;
   color: #a1adb8;
+}
+.coal .sidebar::-webkit-scrollbar {
+  background: #292c2f;
+}
+.coal .sidebar::-webkit-scrollbar-thumb {
+  background: #a1adb8;
 }
 .coal .chapter li {
   color: #505254;
@@ -618,6 +636,12 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 .coal .icon-button i {
   margin: 0;
 }
+.coal ::-webkit-scrollbar {
+  background: #141617;
+}
+.coal ::-webkit-scrollbar-thumb {
+  background: #98a3ad;
+}
 .navy {
   color: #bcbdd0;
   background-color: #161923;
@@ -647,6 +671,12 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 .navy .sidebar {
   background-color: #282d3f;
   color: #c8c9db;
+}
+.navy .sidebar::-webkit-scrollbar {
+  background: #282d3f;
+}
+.navy .sidebar::-webkit-scrollbar-thumb {
+  background: #c8c9db;
 }
 .navy .chapter li {
   color: #505274;
@@ -772,6 +802,12 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 .navy .icon-button i {
   margin: 0;
 }
+.navy ::-webkit-scrollbar {
+  background: #161923;
+}
+.navy ::-webkit-scrollbar-thumb {
+  background: #bcbdd0;
+}
 .rust {
   color: #262625;
   background-color: #e1e1db;
@@ -801,6 +837,12 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 .rust .sidebar {
   background-color: #3b2e2a;
   color: #c8c9db;
+}
+.rust .sidebar::-webkit-scrollbar {
+  background: #3b2e2a;
+}
+.rust .sidebar::-webkit-scrollbar-thumb {
+  background: #c8c9db;
 }
 .rust .chapter li {
   color: #505254;
@@ -926,6 +968,12 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 .rust .icon-button i {
   margin: 0;
 }
+.rust ::-webkit-scrollbar {
+  background: #e1e1db;
+}
+.rust ::-webkit-scrollbar-thumb {
+  background: #262625;
+}
 .ayu {
   color: #c5c5c5;
   background-color: #0f1419;
@@ -955,6 +1003,12 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 .ayu .sidebar {
   background-color: #14191f;
   color: #c8c9db;
+}
+.ayu .sidebar::-webkit-scrollbar {
+  background: #14191f;
+}
+.ayu .sidebar::-webkit-scrollbar-thumb {
+  background: #c8c9db;
 }
 .ayu .chapter li {
   color: #5c6773;
@@ -1079,6 +1133,12 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 }
 .ayu .icon-button i {
   margin: 0;
+}
+.ayu ::-webkit-scrollbar {
+  background: #0f1419;
+}
+.ayu ::-webkit-scrollbar-thumb {
+  background: #c5c5c5;
 }
 @media only print {
   #sidebar,
