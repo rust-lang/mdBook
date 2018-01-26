@@ -245,6 +245,10 @@ impl HtmlHandlebars {
 
         for custom_file in custom_files {
             let output_location = destination.join(custom_file);
+            if let Some(parent) = output_location.parent() {
+                fs::create_dir_all(parent)
+                    .chain_err(|| format!("Unable to create {}", parent.display()))?;
+            }
             debug!(
                 "Copying {} -> {}",
                 custom_file.display(),
