@@ -1,4 +1,4 @@
-use std::path::{Component, Path, PathBuf};
+use std::path::Path;
 use errors::*;
 use std::io::Read;
 use std::fs::{self, File};
@@ -14,48 +14,6 @@ pub fn file_to_string<P: AsRef<Path>>(path: P) -> Result<String> {
         .chain_err(|| "Unable to read the file")?;
 
     Ok(content)
-}
-
-/// Takes a path and returns a path containing just enough `../` to point to
-/// the root of the given path.
-///
-/// This is mostly interesting for a relative path to point back to the
-/// directory from where the path starts.
-///
-/// ```rust
-/// # extern crate mdbook;
-/// #
-/// # use std::path::Path;
-/// # use mdbook::utils::fs::path_to_root;
-/// #
-/// # fn main() {
-/// let path = Path::new("some/relative/path");
-/// assert_eq!(path_to_root(path), "../../");
-/// # }
-/// ```
-///
-/// **note:** it's not very fool-proof, if you find a situation where
-/// it doesn't return the correct path.
-/// Consider [submitting a new issue](https://github.com/rust-lang-nursery/mdBook/issues)
-/// or a [pull-request](https://github.com/rust-lang-nursery/mdBook/pulls) to improve it.
-
-pub fn path_to_root<P: Into<PathBuf>>(path: P) -> String {
-    debug!("path_to_root");
-    // Remove filename and add "../" for every directory
-
-    path.into()
-        .parent()
-        .expect("")
-        .components()
-        .fold(String::new(), |mut s, c| {
-            match c {
-                Component::Normal(_) => s.push_str("../"),
-                _ => {
-                    debug!("Other path component... {:?}", c);
-                }
-            }
-            s
-        })
 }
 
 /// This function creates a file and returns it. But before creating the file

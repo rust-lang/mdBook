@@ -95,6 +95,7 @@ extern crate shlex;
 extern crate tempdir;
 extern crate toml;
 extern crate toml_query;
+extern crate relative_path;
 
 #[cfg(test)]
 #[macro_use]
@@ -114,7 +115,7 @@ pub use config::Config;
 
 /// The error types used through out this crate.
 pub mod errors {
-    use std::path::PathBuf;
+    use relative_path::RelativePathBuf;
 
     error_chain!{
         foreign_links {
@@ -142,7 +143,7 @@ pub mod errors {
             }
 
             /// The user tried to use a reserved filename.
-            ReservedFilenameError(filename: PathBuf) {
+            ReservedFilenameError(filename: RelativePathBuf) {
                 description("Reserved Filename")
                 display("{} is reserved for internal use", filename.display())
             }

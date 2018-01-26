@@ -1,9 +1,9 @@
 use std::fmt::{self, Display, Formatter};
 use std::iter::FromIterator;
 use std::ops::{Deref, DerefMut};
-use std::path::{Path, PathBuf};
 use memchr::{self, Memchr};
 use pulldown_cmark::{self, Alignment, Event, Tag};
+use relative_path::{RelativePath, RelativePathBuf};
 use errors::*;
 
 /// Parse the text from a `SUMMARY.md` file into a sort of "recipe" to be
@@ -71,7 +71,7 @@ pub struct Link {
     pub name: String,
     /// The location of the chapter's source file, taking the book's `src`
     /// directory as the root.
-    pub location: PathBuf,
+    pub location: RelativePathBuf,
     /// The section number, if this chapter is in the numbered section.
     pub number: Option<SectionNumber>,
     /// Any nested items this chapter may contain.
@@ -80,10 +80,10 @@ pub struct Link {
 
 impl Link {
     /// Create a new link with no nested items.
-    pub fn new<S: Into<String>, P: AsRef<Path>>(name: S, location: P) -> Link {
+    pub fn new<S: Into<String>, P: AsRef<RelativePath>>(name: S, location: P) -> Link {
         Link {
             name: name.into(),
-            location: location.as_ref().to_path_buf(),
+            location: location.as_ref().to_relative_path_buf(),
             number: None,
             nested_items: Vec::new(),
         }
@@ -94,7 +94,7 @@ impl Default for Link {
     fn default() -> Self {
         Link {
             name: String::new(),
-            location: PathBuf::new(),
+            location: RelativePathBuf::new(),
             number: None,
             nested_items: Vec::new(),
         }
@@ -277,7 +277,7 @@ impl<'a> SummaryParser<'a> {
         } else {
             Ok(Link {
                 name: name,
-                location: PathBuf::from(href.to_string()),
+                location: RelativePathBuf::from(href.to_string()),
                 number: None,
                 nested_items: Vec::new(),
             })
@@ -617,12 +617,12 @@ mod tests {
         let should_be = vec![
             SummaryItem::Link(Link {
                 name: String::from("First"),
-                location: PathBuf::from("./first.md"),
+                location: RelativePathBuf::from("./first.md"),
                 ..Default::default()
             }),
             SummaryItem::Link(Link {
                 name: String::from("Second"),
-                location: PathBuf::from("./second.md"),
+                location: RelativePathBuf::from("./second.md"),
                 ..Default::default()
             }),
         ];
@@ -661,7 +661,7 @@ mod tests {
         let src = "[First](./first.md)";
         let should_be = Link {
             name: String::from("First"),
-            location: PathBuf::from("./first.md"),
+            location: RelativePathBuf::from("./first.md"),
             ..Default::default()
         };
 
@@ -682,7 +682,7 @@ mod tests {
         let src = "- [First](./first.md)\n";
         let link = Link {
             name: String::from("First"),
-            location: PathBuf::from("./first.md"),
+            location: RelativePathBuf::from("./first.md"),
             number: Some(SectionNumber(vec![1])),
             ..Default::default()
         };
@@ -703,12 +703,12 @@ mod tests {
         let should_be = vec![
             SummaryItem::Link(Link {
                 name: String::from("First"),
-                location: PathBuf::from("./first.md"),
+                location: RelativePathBuf::from("./first.md"),
                 number: Some(SectionNumber(vec![1])),
                 nested_items: vec![
                     SummaryItem::Link(Link {
                         name: String::from("Nested"),
-                        location: PathBuf::from("./nested.md"),
+                        location: RelativePathBuf::from("./nested.md"),
                         number: Some(SectionNumber(vec![1, 1])),
                         nested_items: Vec::new(),
                     }),
@@ -716,7 +716,7 @@ mod tests {
             }),
             SummaryItem::Link(Link {
                 name: String::from("Second"),
-                location: PathBuf::from("./second.md"),
+                location: RelativePathBuf::from("./second.md"),
                 number: Some(SectionNumber(vec![2])),
                 nested_items: Vec::new(),
             }),
@@ -740,13 +740,13 @@ mod tests {
         let should_be = vec![
             SummaryItem::Link(Link {
                 name: String::from("First"),
-                location: PathBuf::from("./first.md"),
+                location: RelativePathBuf::from("./first.md"),
                 number: Some(SectionNumber(vec![1])),
                 nested_items: Vec::new(),
             }),
             SummaryItem::Link(Link {
                 name: String::from("Second"),
-                location: PathBuf::from("./second.md"),
+                location: RelativePathBuf::from("./second.md"),
                 number: Some(SectionNumber(vec![2])),
                 nested_items: Vec::new(),
             }),
