@@ -1,13 +1,13 @@
 //! Mdbook's configuration system.
-//! 
+//!
 //! The main entrypoint of the `config` module is the `Config` struct. This acts
 //! essentially as a bag of configuration information, with a couple
-//! pre-determined tables (`BookConfig` and `BuildConfig`) as well as support 
+//! pre-determined tables (`BookConfig` and `BuildConfig`) as well as support
 //! for arbitrary data which is exposed to plugins and alternate backends.
-//! 
-//! 
+//!
+//!
 //! # Examples
-//! 
+//!
 //! ```rust
 //! # extern crate mdbook;
 //! # use mdbook::errors::*;
@@ -15,31 +15,31 @@
 //! use std::path::PathBuf;
 //! use mdbook::Config;
 //! use toml::Value;
-//! 
+//!
 //! # fn run() -> Result<()> {
 //! let src = r#"
 //! [book]
 //! title = "My Book"
 //! authors = ["Michael-F-Bryan"]
-//! 
+//!
 //! [build]
 //! src = "out"
-//! 
+//!
 //! [other-table.foo]
 //! bar = 123
 //! "#;
-//! 
+//!
 //! // load the `Config` from a toml string
 //! let mut cfg = Config::from_str(src)?;
-//! 
+//!
 //! // retrieve a nested value
 //! let bar = cfg.get("other-table.foo.bar").cloned();
 //! assert_eq!(bar, Some(Value::Integer(123)));
-//! 
+//!
 //! // Set the `output.html.theme` directory
 //! assert!(cfg.get("output.html").is_none());
 //! cfg.set("output.html.theme", "./themes");
-//! 
+//!
 //! // then load it again, automatically deserializing to a `PathBuf`.
 //! let got: PathBuf = cfg.get_deserialized("output.html.theme")?;
 //! assert_eq!(got, PathBuf::from("./themes"));
@@ -410,7 +410,7 @@ pub struct HtmlConfig {
     pub google_analytics: Option<String>,
     /// Additional CSS stylesheets to include in the rendered page's `<head>`.
     pub additional_css: Vec<PathBuf>,
-    /// Additional JS scripts to include at the bottom of the rendered page's 
+    /// Additional JS scripts to include at the bottom of the rendered page's
     /// `<body>`.
     pub additional_js: Vec<PathBuf>,
     /// Playpen settings.
@@ -425,28 +425,83 @@ pub struct HtmlConfig {
     pub livereload_url: Option<String>,
     /// Should section labels be rendered?
     pub no_section_label: bool,
+    /// Search settings.
+    pub search: Search,
 }
 
 /// Configuration for tweaking how the the HTML renderer handles the playpen.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Playpen {
-    /// The path to the editor to use. Defaults to the [Ace Editor].
-    /// 
+    /// The path to the editor to use. If not specified, will use the [Ace Editor] implementation
+    /// included in MDBook. Default: `""`.
+    ///
     /// [Ace Editor]: https://ace.c9.io/
     pub editor: PathBuf,
-    /// Should playpen snippets be editable? Defaults to `false`.
+    /// Should playpen snippets be editable? Default: `false`.
     pub editable: bool,
 }
 
 impl Default for Playpen {
     fn default() -> Playpen {
         Playpen {
-            editor: PathBuf::from("ace"),
+            editor: PathBuf::new(),
             editable: false,
         }
     }
 }
+
+/// Configuration of the search functionality of the HTML renderer.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct Search {
+    /// Enable in browser searching. Default: `true` (if `search` feature is enabled).
+    pub enable: bool,
+    /// The path to the searcher to use. If not specified, will use the searcher code included in
+    /// MDBook. Default: `""`
+    pub searcher: PathBuf,
+    /// Maximum number of visible results. Default: `30`.
+    pub limit_results: u32,
+    /// The number of words used for a search result teaser. Default: `30`,
+    pub teaser_word_count: u32,
+    /// Define the logical link between multiple search words.
+    /// If true, all search words must appear in each result. Default: `true`.
+    pub use_boolean_and: bool,
+    /// Boost factor for the search result score if a search word appears in the header.
+    /// Default: `2`.
+    pub boost_title: u8,
+    /// Boost factor for the search result score if a search word appears in the hierarchy.
+    /// The hierarchy contains all titles of the parent documents and all parent headings.
+    /// Default: `1`.
+    pub boost_hierarchy: u8,
+    /// Boost factor for the search result score if a search word appears in the text.
+    /// Default: `1`.
+    pub boost_paragraph: u8,
+    /// True if the searchword `micro` should match `microwave`. Default: `true`.
+    pub expand : bool,
+    /// Documents are split into smaller parts, seperated by headings. This defines, until which
+    /// level of heading documents should be split. Default: `3`. (`### This is a level 3 heading`)
+    pub heading_split_level: u8,
+}
+
+impl Default for Search {
+    fn default() -> Search {
+        // Please update the documentation of `Search` when changing values!
+        Search {
+            enable: cfg!(feature = "search"),
+            searcher: PathBuf::new(),
+            limit_results: 30,
+            teaser_word_count: 30,
+            use_boolean_and: false,
+            boost_title: 2,
+            boost_hierarchy: 1,
+            boost_paragraph: 1,
+            expand: true,
+            heading_split_level: 3,
+        }
+    }
+}
+
 
 /// Allows you to "update" any arbitrary field in a struct by round-tripping via
 /// a `toml::Value`.

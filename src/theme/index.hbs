@@ -112,9 +112,14 @@
                                 <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                                 <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                             </ul>
+                            {{#if search_enabled}}
+                            <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                                <i class="fa fa-search"></i>
+                            </button>
+                            {{/if}}
                         </div>
 
-                        <h1 class="menu-title">{{ book_title }}</h1>
+                        <h1 class="menu-title">{{ book_title }}</h1> 
 
                         <div class="right-buttons">
                             <a href="print.html" title="Print this book" aria-label="Print this book">
@@ -123,6 +128,17 @@
                         </div>
                     </div>
                 </div>
+
+                {{#if search_enabled}}
+                <div id="searchbar-outer" class="searchbar-outer">
+                    <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                </div>
+                <div id="searchresults-outer" class="searchresults-outer">
+                    <div class="searchresults-header" id="searchresults-header"></div>
+                    <ul id="searchresults">
+                    </ul>
+                </div>
+                {{/if}}
 
                 <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
                 <script type="text/javascript">
@@ -227,6 +243,12 @@
         <script src="{{ mode_rust_js }}" type="text/javascript" charset="utf-8"></script>
         <script src="{{ theme_dawn_js }}" type="text/javascript" charset="utf-8"></script>
         <script src="{{ theme_tomorrow_night_js }}" type="text/javascript" charset="utf-8"></script>
+        {{/if}}
+
+        {{#if search_enabled}}
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
         {{/if}}
 
         {{#if is_print}}

@@ -1,3 +1,5 @@
+//! Theme dependencies for the playpen editor.
+
 use std::path::Path;
 
 use theme::load_file_contents;
@@ -14,13 +16,10 @@ pub static THEME_TOMORROW_NIGHT_JS: &'static [u8] = include_bytes!("theme-tomorr
 /// generated minified no conflict versions.
 ///
 /// The `PlaypenEditor` struct should be used instead of the static variables because
-/// the `new()` method
-/// will look if the user has an editor directory in his source folder and use
-/// the users editor instead
-/// of the default.
+/// the `new()` method will look if the user has an editor directory in his source folder and use
+/// the user's editor instead of the default.
 ///
-/// You should exceptionnaly use the static variables only if you need the
-/// default editor even if the
+/// You should only use the static variables if you need the default editor even if the
 /// user has specified another editor.
 pub struct PlaypenEditor {
     pub js: Vec<u8>,

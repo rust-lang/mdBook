@@ -84,7 +84,10 @@
         background-color: $sidebar-bg
     }
 
-    .content a:link, a:visited, a > .hljs {
+    #searchresults a,
+    .content a:link,
+    a:visited,
+    a > .hljs {
         color: $links
     }
 
@@ -187,5 +190,33 @@
 
     ::-webkit-scrollbar-thumb {
         background: $scrollbar;
+    }
+
+    /* Search */
+    #searchbar {
+        border: 1px solid $searchbar-border-color;
+        border-radius: 3px;
+        background-color: $searchbar-bg;
+        color: $searchbar-fg
+
+        &:focus, &.active {
+            box-shadow: 0 0 3px $searchbar-shadow-color;
+        }
+    }
+
+    .searchresults-header {
+        color: $searchresults-header-fg;
+    }
+
+    .searchresults-outer {
+        border-bottom: 1px dashed $searchresults-border-color;
+    }
+
+    ul#searchresults li.focus {
+        background-color: $searchresults-li-bg;
+    }
+
+    mark {
+        background-color: $search-mark-bg;
     }
 }

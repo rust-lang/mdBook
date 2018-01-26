@@ -16,6 +16,10 @@ create-missing = false
 
 [output.html]
 additional-css = ["custom.css"]
+
+[output.html.search]
+enable = true
+limit-results = 15
 ```
 
 ## Supported configuration options
@@ -81,14 +85,52 @@ The following configuration options are available:
   stylesheets that will be loaded after the default ones where you can
   surgically change the style.
 - **additional-js:** If you need to add some behaviour to your book without
-  removing the current behaviour, you can specify a set of javascript files
+  removing the current behaviour, you can specify a set of JavaScript files
   that will be loaded alongside the default one.
-- **playpen:** A subtable for configuring various playpen settings.
-- **no-section-label**: mdBook by defaults adds section label in table of
+- **no-section-label:** mdBook by defaults adds section label in table of
   contents column. For example, "1.", "2.1". Set this option to true to
   disable those labels. Defaults to `false`.
+- **playpen:** A subtable for configuring various playpen settings.
+- **search:** A subtable for configuring the in-browser search
+  functionality. mdBook must be compiled with the `search` feature enabled
+  (on by default).
 
-**book.toml**
+Available configuration options for the `[output.html.playpen]` table:
+
+- **editor:** mdBook includes a default editor for Rust code using [Ace]. If
+  this option is set, mdBook will selectively overwrite the editor JavaScript
+  files with ones included in the specified folder.
+- **editable:** Allow editing the source code. Defaults to `false`.
+
+[Ace]: https://ace.c9.io/
+
+Available configuration options for the `[output.html.search]` table:
+
+- **enable:** Enable or disable the search function. Disabling can improve
+  book build times by a factor of two. Defaults to `true`.
+- **searcher:** mdBook includes a default search implementation. If this
+  option is set, mdBook will selectively overwrite the search JavaScript
+  files with ones included in the specified folder.
+- **limit-results:** The maximum number of search results. Defaults to `30`.
+- **teaser-word-count:** The number of words used for a search result teaser. 
+  Defaults to `30`.
+- **use-boolean-and:** Define the logical link between multiple search words. 
+  If true, all search words must appear in each result. Defaults to `true`.
+- **boost-title:** Boost factor for the search result score if a search word
+  appears in the header. Defaults to `2`.
+- **boost-hierarchy:** Boost factor for the search result score if a search
+  word appears in the hierarchy. The hierarchy contains all titles of the
+  parent documents and all parent headings. Defaults to `1`.
+- **boost-paragraph:** Boost factor for the search result score if a search 
+  word appears in the text. Defaults to `1`.
+- **expand:** True if search should match longer results e.g. search `micro` 
+  should match `microwave`. Defaults to `true`.
+- **heading-split-level:** Search results will link to a section of the document
+  which contains the result. Documents are split into sections by headings
+  this level or less.
+  Defaults to `3`. (`### This is a level 3 heading`)
+
+This shows all available options in the **book.toml**:
 ```toml
 [book]
 title = "Example book"
@@ -105,6 +147,18 @@ additional-js = ["custom.js"]
 [output.html.playpen]
 editor = "./path/to/editor"
 editable = false
+
+[output.html.search]
+enable = true
+searcher = "./path/to/searcher"
+limit-results = 30
+teaser-word-count = 30
+use-boolean-and = true
+boost-title = 2
+boost-hierarchy = 1
+boost-paragraph = 1
+expand = true
+heading-split-level = 3
 ```
 
 
