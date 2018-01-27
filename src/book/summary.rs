@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::fmt::{self, Display, Formatter};
 use std::iter::FromIterator;
 use std::ops::{Deref, DerefMut};
@@ -191,9 +192,11 @@ impl From<VirtualLink> for SummaryItem {
 /// numbered_chapters ::= dotted_item+
 /// dotted_item       ::= INDENT* DOT_POINT item
 /// item              ::= link
+///                     | virtual_link
 ///                     | separator
-/// separator         ::= "---"
 /// link              ::= "[" TEXT "]" "(" TEXT ")"
+/// virtual_link      ::= "[" TEXT "]" "()"
+/// separator         ::= "---"
 /// DOT_POINT         ::= "-"
 ///                     | "*"
 /// ```
@@ -304,10 +307,7 @@ impl<'a> SummaryParser<'a> {
                         bail!(self.parse_error("Suffix chapters cannot be followed by a list"));
                     }
                 }
-                Some(Event::Start(Tag::Link(href, _))) => {
-                    let link = self.parse_link(href.to_string())?;
-                    items.push(SummaryItem::Link(link));
-                }
+                Some(Event::Start(Tag::Link(href, _))) => items.push(self.parse_item(href)),
                 Some(Event::Start(Tag::Rule)) => items.push(SummaryItem::Separator),
                 Some(_) => {}
                 None => break,
@@ -317,19 +317,18 @@ impl<'a> SummaryParser<'a> {
         Ok(items)
     }
 
-    fn parse_link(&mut self, href: String) -> Result<Link> {
-        let link_content = collect_events!(self.stream, end Tag::Link(..));
-        let name = stringify_events(link_content);
+    fn parse_item(&mut self, href: Cow<'a, str>) -> SummaryItem {
+        let name = {
+            let link_content = collect_events!(self.stream, end Tag::Link(..));
+            stringify_events(link_content)
+        };
 
         if href.is_empty() {
-            Err(self.parse_error("You can't have an empty link."))
+            let link = VirtualLink::new(name);
+            SummaryItem::VirtualLink(link)
         } else {
-            Ok(Link {
-                name: name,
-                location: PathBuf::from(href.to_string()),
-                number: None,
-                nested_items: Vec::new(),
-            })
+            let link = Link::new(name, href.into_owned());
+            SummaryItem::Link(link)
         }
     }
 
@@ -441,20 +440,35 @@ impl<'a> SummaryParser<'a> {
             match self.next_event() {
                 Some(Event::Start(Tag::Paragraph)) => continue,
                 Some(Event::Start(Tag::Link(href, _))) => {
-                    let mut link = self.parse_link(href.to_string())?;
+                    let mut item = self.parse_item(href);
 
                     let mut number = parent.clone();
                     number.0.push(num_existing_items as u32 + 1);
-                    trace!(
-                        "Found chapter: {} {} ({})",
-                        number,
-                        link.name,
-                        link.location.display()
-                    );
 
-                    link.number = Some(number);
+                    match item {
+                        SummaryItem::Link(ref mut link) => {
+                            trace!(
+                                "Found chapter: {} {} ({})",
+                                number,
+                                link.name,
+                                link.location.display(),
+                            );
 
-                    return Ok(SummaryItem::Link(link));
+                            link.number = Some(number);
+                        },
+                        SummaryItem::VirtualLink(ref mut link) => {
+                            trace!(
+                                "Found virtual chapter: {} {}",
+                                number,
+                                link.name,
+                            );
+
+                            link.number = Some(number);
+                        },
+                        SummaryItem::Separator => panic!(),
+                    }
+
+                    return Ok(item);
                 }
                 other => {
                     warn!("Expected a start of a link, actually got {:?}", other);
