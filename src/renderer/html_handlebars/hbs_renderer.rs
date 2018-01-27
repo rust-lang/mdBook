@@ -9,14 +9,22 @@ use regex::{Captures, Regex};
 
 #[allow(unused_imports)] use std::ascii::AsciiExt;
 use std::path::{Path, PathBuf};
-use std::fs::{self, File};
+use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Write};
 use std::collections::BTreeMap;
 use std::collections::HashMap;
+use std::collections::hash_map::DefaultHasher;
+use std::hash::Hasher;
 
 use handlebars::Handlebars;
 
 use serde_json;
+
+#[derive(Default)]
+pub struct ChapterFile {
+    pub path: String,
+    pub revision: u64,
+}
 
 #[derive(Default)]
 pub struct HtmlHandlebars;
@@ -39,12 +47,47 @@ impl HtmlHandlebars {
             .map_err(|e| e.into())
     }
 
+    fn build_service_worker(&self, build_dir: &Path, chapter_files: &Vec<ChapterFile>) -> Result<()> {
+        let path = build_dir.join("sw.js");
+        let mut file = OpenOptions::new().append(true).open(path)?;
+        let mut content = String::from("\nconst chapters = [\n");
+
+        for chapter_file in chapter_files {
+            content.push_str("  { url: ");
+
+            // Rewrite "/" to point to the current directory
+            // https://rust-lang-nursery.github.io/ => https://rust-lang-nursery.github.io/mdBook/
+            // location.href is https://rust-lang-nursery.github.io/mdBook/sw.js
+            // so we remove the sw.js from the end to get the correct path
+            if chapter_file.path == "/" {
+                content.push_str("location.href.slice(0, location.href.length - 5)");
+            } else {
+                content.push_str("'");
+                content.push_str(&chapter_file.path);
+                content.push_str("'");
+            }
+
+            content.push_str(", revision: '");
+            content.push_str(&chapter_file.revision.to_string());
+            content.push_str("' },\n");
+        }
+
+        content.push_str("];\n");
+        content.push_str("\nworkbox.precache(chapters);\n");
+
+        file.write(content.as_bytes())?;
+
+        Ok(())
+    }
+
     fn render_item(
         &self,
                    item: &BookItem,
                    mut ctx: RenderItemContext,
         print_content: &mut String,
-    ) -> Result<()> {
+    ) -> Result<Vec<ChapterFile>> {
+        let mut chapter_files = Vec::new();
+
         // FIXME: This should be made DRY-er and rely less on mutable state
         match *item {
             BookItem::Chapter(ref ch) => {
@@ -84,26 +127,41 @@ impl HtmlHandlebars {
                 let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
                 let filepath = Path::new(&ch.path).with_extension("html");
+                let filepath_str = filepath.to_str().ok_or_else(|| {
+                    Error::from(format!("Bad file name: {}", filepath.display()))
+                })?;
                 let rendered = self.post_process(
                     rendered,
-                    &normalize_path(filepath.to_str().ok_or_else(|| {
-                        Error::from(format!("Bad file name: {}", filepath.display()))
-                    })?),
+                    &normalize_path(filepath_str),
                     &ctx.html_config.playpen,
                 );
+                let rendered_bytes = rendered.into_bytes();
 
                 // Write to file
-                debug!("Creating {} ✓", filepath.display());
-                self.write_file(&ctx.destination, filepath, &rendered.into_bytes())?;
+                debug!("Creating {:?} ✓", filepath.display());
+                self.write_file(&ctx.destination, &filepath, &rendered_bytes)?;
+
+                let mut hasher = DefaultHasher::new();
+                hasher.write(&rendered_bytes);
 
                 if ctx.is_index {
                     self.render_index(ch, &ctx.destination)?;
+
+                    chapter_files.push(ChapterFile {
+                        path: String::from("/"),
+                        revision: hasher.finish(),
+                    });
                 }
+
+                chapter_files.push(ChapterFile {
+                    path: filepath_str.into(),
+                    revision: hasher.finish(),
+                });
             }
-            _ => {}
+            _ => { }
         }
 
-        Ok(())
+        Ok(chapter_files)
     }
 
     /// Create an index.html from the first element in SUMMARY.md
@@ -159,6 +217,7 @@ impl HtmlHandlebars {
         self.write_file(destination, "highlight.css", &theme.highlight_css)?;
         self.write_file(destination, "tomorrow-night.css", &theme.tomorrow_night_css)?;
         self.write_file(destination, "ayu-highlight.css", &theme.ayu_highlight_css)?;
+        self.write_file(destination, "sw.js", &theme.service_worker)?;
         self.write_file(destination, "highlight.js", &theme.highlight_js)?;
         self.write_file(destination, "clipboard.min.js", &theme.clipboard_js)?;
         self.write_file(
@@ -306,6 +365,7 @@ impl Renderer for HtmlHandlebars {
         fs::create_dir_all(&destination)
             .chain_err(|| "Unexpected error when constructing destination path")?;
 
+        let mut chapter_files = Vec::new();
         for (i, item) in book.iter().enumerate() {
             let ctx = RenderItemContext {
                 handlebars: &handlebars,
@@ -314,7 +374,9 @@ impl Renderer for HtmlHandlebars {
                 is_index: i == 0,
                 html_config: html_config.clone(),
             };
-            self.render_item(item, ctx, &mut print_content)?;
+            let mut item_chapter_files = self.render_item(item, ctx, &mut print_content)?;
+
+            chapter_files.append(&mut item_chapter_files);
         }
 
         // Print version
@@ -340,6 +402,11 @@ impl Renderer for HtmlHandlebars {
             .chain_err(|| "Unable to copy across static files")?;
         self.copy_additional_css_and_js(&html_config, &destination)
             .chain_err(|| "Unable to copy across additional CSS and JS")?;
+        
+        if html_config.offline_support {
+            debug!("[*] Patching Service Worker to precache chapters");
+            self.build_service_worker(destination, &chapter_files)?;
+        }
 
         // Copy all remaining files
         utils::fs::copy_files_except_ext(&src_dir, &destination, true, &["md"])?;
