@@ -50,7 +50,7 @@ pub fn take_lines<R: RangeArgument<usize>>(s: &str, range: R) -> String {
     let start = *range.start().unwrap_or(&0);
     let mut lines = s.lines().skip(start);
     match range.end() {
-        Some(&end) => lines.take(end).join("\n"),
+        Some(&end) => lines.take(end.checked_sub(start).unwrap_or(0)).join("\n"),
         None => lines.join("\n"),
     }
 }
@@ -62,9 +62,12 @@ mod tests {
     #[test]
     fn take_lines_test() {
         let s = "Lorem\nipsum\ndolor\nsit\namet";
-        assert_eq!(take_lines(s, 0..3), "Lorem\nipsum\ndolor");
+        assert_eq!(take_lines(s, 1..3), "ipsum\ndolor");
         assert_eq!(take_lines(s, 3..), "sit\namet");
         assert_eq!(take_lines(s, ..3), "Lorem\nipsum\ndolor");
         assert_eq!(take_lines(s, ..), s);
+        // corner cases
+        assert_eq!(take_lines(s, 4..3), "");
+        assert_eq!(take_lines(s, ..100), s);
     }
 }
