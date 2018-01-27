@@ -675,22 +675,46 @@ mod tests {
 
     #[test]
     fn parse_a_link() {
-        let src = "[First](./first.md)";
-        let should_be = Link {
-            name: String::from("First"),
-            location: PathBuf::from("./first.md"),
-            ..Default::default()
-        };
+        let src = "[Chapter](./chapter.md)";
+        let should_be = SummaryItem::Link(
+            Link {
+                name: String::from("Chapter"),
+                location: PathBuf::from("./chapter.md"),
+                ..Default::default()
+            }
+        );
 
         let mut parser = SummaryParser::new(src);
         let _ = parser.stream.next(); // skip past start of paragraph
 
         let href = match parser.stream.next() {
-            Some(Event::Start(Tag::Link(href, _))) => href.to_string(),
+            Some(Event::Start(Tag::Link(href, _))) => href,
             other => panic!("Unreachable, {:?}", other),
         };
 
-        let got = parser.parse_link(href).unwrap();
+        let got = parser.parse_item(href);
+        assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn parse_a_virtual_link() {
+        let src = "[Virtual chapter]()";
+        let should_be = SummaryItem::VirtualLink(
+            VirtualLink {
+                name: String::from("Virtual chapter"),
+                ..Default::default()
+            }
+        );
+
+        let mut parser = SummaryParser::new(src);
+        let _ = parser.stream.next(); // skip past start of paragraph
+
+        let href = match parser.stream.next() {
+            Some(Event::Start(Tag::Link(href, _))) => href,
+            other => panic!("Unreachable, {:?}", other),
+        };
+
+        let got = parser.parse_item(href);
         assert_eq!(got, should_be);
     }
 
@@ -775,15 +799,5 @@ mod tests {
         let got = parser.parse_numbered().unwrap();
 
         assert_eq!(got, should_be);
-    }
-
-    #[test]
-    fn an_empty_link_location_is_an_error() {
-        let src = "- [Empty]()\n";
-        let mut parser = SummaryParser::new(src);
-        parser.stream.next();
-
-        let got = parser.parse_numbered();
-        assert!(got.is_err());
     }
 }
