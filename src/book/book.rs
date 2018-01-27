@@ -301,10 +301,6 @@ fn load_virtual_chapter<P: AsRef<Path>>(link: &VirtualLink, src_dir: P) -> Resul
     ch.sub_items = sub_items;
 
     Ok(ch)
-        /* TODO Open question: Do we really want to return a `Result<_>` here?
-         * Pro: Function would have almost signature as load_chapter()
-         * Con: We do not use it!
-         */
 }
 
 /// A depth-first iterator over the items in a book.
