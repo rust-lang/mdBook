@@ -245,6 +245,7 @@ fn load_summary_item<P: AsRef<Path>>(
         SummaryItem::Link(ref link) => {
             load_chapter(link, src_dir, parent_names).map(|c| BookItem::Chapter(c))
         }
+        SummaryItem::VirtualLink(ref link) => unimplemented!(),
     }
 }
 

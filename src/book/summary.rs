@@ -61,10 +61,9 @@ pub struct Summary {
     pub suffix_chapters: Vec<SummaryItem>,
 }
 
-/// A struct representing an entry in the `SUMMARY.md`, possibly with nested
-/// entries.
+/// A linked chapter in the `SUMMARY.md`, possibly with nested entries.
 ///
-/// This is roughly the equivalent of `[Some section](./path/to/file.md)`.
+/// This is roughly the equivalent of `- [Some section](./path/to/file.md)`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Link {
     /// The name of the chapter.
@@ -101,11 +100,48 @@ impl Default for Link {
     }
 }
 
-/// An item in `SUMMARY.md` which could be either a separator or a `Link`.
+/// A linked virtual chapter in the `SUMMARY.md`, possibly with nested entries.
+///
+/// This is roughly the equivalent of `- Some virtual section`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct VirtualLink {
+    /// The name of the chapter.
+    pub name: String,
+    /// The section number, if this virtual chapter is in the numbered section.
+    pub number: Option<SectionNumber>,
+    /// Any nested items this virtual chapter may contain.
+    pub nested_items: Vec<SummaryItem>,
+}
+
+impl VirtualLink {
+    /// Create a new virtual link with no nested items.
+    pub fn new<S: Into<String>>(name: S) -> VirtualLink {
+        VirtualLink {
+            name: name.into(),
+            number: None,
+            nested_items: Vec::new(),
+        }
+    }
+}
+
+impl Default for VirtualLink {
+    fn default() -> Self {
+        VirtualLink {
+            name: String::new(),
+            number: None,
+            nested_items: Vec::new(),
+        }
+    }
+}
+
+/// An entry in the `SUMMARY.md` which could be either a `Link`, a
+/// `VirtualLink` or separator.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum SummaryItem {
     /// A link to a chapter.
     Link(Link),
+    /// A link to a virtual chapter.
+    VirtualLink(VirtualLink),
     /// A separator (`---`).
     Separator,
 }
@@ -117,11 +153,24 @@ impl SummaryItem {
             _ => None,
         }
     }
+
+    fn maybe_virtual_link_mut(&mut self) -> Option<&mut VirtualLink> {
+        match *self {
+            SummaryItem::VirtualLink(ref mut l) => Some(l),
+            _ => None,
+        }
+    }
 }
 
 impl From<Link> for SummaryItem {
     fn from(other: Link) -> SummaryItem {
         SummaryItem::Link(other)
+    }
+}
+
+impl From<VirtualLink> for SummaryItem {
+    fn from(other: VirtualLink) -> SummaryItem {
+        SummaryItem::VirtualLink(other)
     }
 }
 
