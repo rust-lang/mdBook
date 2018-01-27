@@ -136,13 +136,13 @@ pub enum BookItem {
 }
 
 impl From<Chapter> for BookItem {
-    fn from(other: Chapter) -> BookItem {
+    fn from(other: Chapter) -> Self {
         BookItem::Chapter(other)
     }
 }
 
 impl From<VirtualChapter> for BookItem {
-    fn from(other: VirtualChapter) -> BookItem {
+    fn from(other: VirtualChapter) -> Self {
         BookItem::VirtualChapter(other)
     }
 }
@@ -199,8 +199,8 @@ pub struct VirtualChapter {
 
 impl VirtualChapter {
     /// Create a new chapter with the provided content.
-    pub fn new(name: &str, content: String) -> VirtualChapter {
-        VirtualChapter {
+    pub fn new(name: &str, content: String) -> Self {
+        Self {
             name: name.to_string(),
             content: content,
             ..Default::default()
@@ -246,6 +246,7 @@ fn load_summary_item<P: AsRef<Path>>(
             load_chapter(link, src_dir, parent_names).map(|c| BookItem::Chapter(c))
         }
         SummaryItem::VirtualLink(ref link) => unimplemented!(),
+        SummaryItem::Separator => Ok(BookItem::Separator),
     }
 }
 

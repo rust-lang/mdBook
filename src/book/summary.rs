@@ -79,8 +79,8 @@ pub struct Link {
 
 impl Link {
     /// Create a new link with no nested items.
-    pub fn new<S: Into<String>, P: AsRef<Path>>(name: S, location: P) -> Link {
-        Link {
+    pub fn new<S: Into<String>, P: AsRef<Path>>(name: S, location: P) -> Self {
+        Self {
             name: name.into(),
             location: location.as_ref().to_path_buf(),
             number: None,
@@ -91,7 +91,7 @@ impl Link {
 
 impl Default for Link {
     fn default() -> Self {
-        Link {
+        Self {
             name: String::new(),
             location: PathBuf::new(),
             number: None,
@@ -115,8 +115,8 @@ pub struct VirtualLink {
 
 impl VirtualLink {
     /// Create a new virtual link with no nested items.
-    pub fn new<S: Into<String>>(name: S) -> VirtualLink {
-        VirtualLink {
+    pub fn new<S: Into<String>>(name: S) -> Self {
+        Self {
             name: name.into(),
             number: None,
             nested_items: Vec::new(),
@@ -126,7 +126,7 @@ impl VirtualLink {
 
 impl Default for VirtualLink {
     fn default() -> Self {
-        VirtualLink {
+        Self {
             name: String::new(),
             number: None,
             nested_items: Vec::new(),
@@ -163,13 +163,13 @@ impl SummaryItem {
 }
 
 impl From<Link> for SummaryItem {
-    fn from(other: Link) -> SummaryItem {
+    fn from(other: Link) -> Self {
         SummaryItem::Link(other)
     }
 }
 
 impl From<VirtualLink> for SummaryItem {
-    fn from(other: VirtualLink) -> SummaryItem {
+    fn from(other: VirtualLink) -> Self {
         SummaryItem::VirtualLink(other)
     }
 }
