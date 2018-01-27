@@ -129,6 +129,8 @@ where
 pub enum BookItem {
     /// A nested chapter.
     Chapter(Chapter),
+    /// A nested virtual chapter.
+    VirtualChapter(VirtualChapter),
     /// A section separator.
     Separator,
 }
@@ -136,6 +138,12 @@ pub enum BookItem {
 impl From<Chapter> for BookItem {
     fn from(other: Chapter) -> BookItem {
         BookItem::Chapter(other)
+    }
+}
+
+impl From<VirtualChapter> for BookItem {
+    fn from(other: VirtualChapter) -> BookItem {
+        BookItem::VirtualChapter(other)
     }
 }
 
@@ -170,6 +178,31 @@ impl Chapter {
             content: content,
             path: path.into(),
             parent_names: parent_names,
+            ..Default::default()
+        }
+    }
+}
+
+/// The representation of a "virtual chapter", available for namespacing
+/// purposes and not mapping to a file on disk.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct VirtualChapter {
+    /// The chapter's name.
+    pub name: String,
+    /// The chapter's contents.
+    pub content: String,
+    /// The chapter's section number, if it has one.
+    pub number: Option<SectionNumber>,
+    /// Nested items.
+    pub sub_items: Vec<BookItem>,
+}
+
+impl VirtualChapter {
+    /// Create a new chapter with the provided content.
+    pub fn new(name: &str, content: String) -> VirtualChapter {
+        VirtualChapter {
+            name: name.to_string(),
+            content: content,
             ..Default::default()
         }
     }

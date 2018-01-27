@@ -434,6 +434,9 @@ fn make_data(root: &Path, book: &Book, config: &Config, html_config: &HtmlConfig
                     .chain_err(|| "Could not convert path to str")?;
                 chapter.insert("path".to_owned(), json!(path));
             }
+            BookItem::VirtualChapter(ref ch) => {
+                unimplemented!();   // TODO
+            }
             BookItem::Separator => {
                 chapter.insert("spacer".to_owned(), json!("_spacer_"));
             }
