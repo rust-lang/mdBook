@@ -172,7 +172,7 @@ function playpen_text(playpen) {
 
         var buttons = document.createElement('div');
         buttons.className = 'buttons';
-        buttons.innerHTML = "<i class=\"fa fa-expand\" title=\"Show hidden lines\"></i>";
+        buttons.innerHTML = "<button class=\"fa fa-expand\" title=\"Show hidden lines\" aria-label=\"Show hidden lines\"></button>";
 
         // add expand button
         pre_block.prepend(buttons);
@@ -184,6 +184,7 @@ function playpen_text(playpen) {
                 e.target.classList.remove('fa-expand');
                 e.target.classList.add('fa-compress');
                 e.target.title = 'Hide lines';
+                e.target.setAttribute('aria-label', e.target.title);
 
                 Array.from(lines).forEach(function (line) {
                     line.classList.remove('hidden');
@@ -195,6 +196,7 @@ function playpen_text(playpen) {
                 e.target.classList.remove('fa-compress');
                 e.target.classList.add('fa-expand');
                 e.target.title = 'Show hidden lines';
+                e.target.setAttribute('aria-label', e.target.title);
 
                 Array.from(lines).forEach(function (line) {
                     line.classList.remove('unhidden');
@@ -217,6 +219,7 @@ function playpen_text(playpen) {
             var clipButton = document.createElement('button');
             clipButton.className = 'fa fa-copy clip-button';
             clipButton.title = 'Copy to clipboard';
+            clipButton.setAttribute('aria-label', clipButton.title);
             clipButton.innerHTML = '<i class=\"tooltiptext\"></i>';
 
             buttons.prepend(clipButton);
@@ -237,11 +240,13 @@ function playpen_text(playpen) {
         runCodeButton.className = 'fa fa-play play-button';
         runCodeButton.hidden = true;
         runCodeButton.title = 'Run this code';
+        runCodeButton.setAttribute('aria-label', runCodeButton.title);
 
         var copyCodeClipboardButton = document.createElement('button');
         copyCodeClipboardButton.className = 'fa fa-copy clip-button';
         copyCodeClipboardButton.innerHTML = '<i class="tooltiptext"></i>';
         copyCodeClipboardButton.title = 'Copy to clipboard';
+        copyCodeClipboardButton.setAttribute('aria-label', copyCodeClipboardButton.title);
 
         buttons.prepend(runCodeButton);
         buttons.prepend(copyCodeClipboardButton);
@@ -255,6 +260,7 @@ function playpen_text(playpen) {
             var undoChangesButton = document.createElement('button');
             undoChangesButton.className = 'fa fa-history reset-button';
             undoChangesButton.title = 'Undo changes';
+            undoChangesButton.setAttribute('aria-label', undoChangesButton.title);
 
             buttons.prepend(undoChangesButton);
 
