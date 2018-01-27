@@ -107,6 +107,7 @@ impl MDBook {
     /// for item in book.iter() {
     ///     match *item {
     ///         BookItem::Chapter(ref chapter) => {},
+    ///         BookItem::VirtualChapter(ref virtual_chapter) => {},
     ///         BookItem::Separator => {},
     ///     }
     /// }
