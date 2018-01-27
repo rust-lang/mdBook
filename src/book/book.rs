@@ -4,7 +4,7 @@ use std::collections::VecDeque;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 
-use super::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
+use super::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem, VirtualLink};
 use config::BuildConfig;
 use errors::*;
 
@@ -245,8 +245,8 @@ fn load_summary_item<P: AsRef<Path>>(
         SummaryItem::Link(ref link) => {
             load_chapter(link, src_dir, parent_names).map(|c| BookItem::Chapter(c))
         }
-        SummaryItem::VirtualLink(ref link) => unimplemented!(),
-        SummaryItem::Separator => Ok(BookItem::Separator),
+        SummaryItem::VirtualLink(ref link) =>
+            load_virtual_chapter(link, src_dir).map(VirtualChapter::into),
     }
 }
 
@@ -288,6 +288,31 @@ fn load_chapter<P: AsRef<Path>>(
     ch.sub_items = sub_items;
 
     Ok(ch)
+}
+
+fn load_virtual_chapter<P: AsRef<Path>>(link: &VirtualLink, src_dir: P) -> Result<VirtualChapter> {
+    let src_dir = src_dir.as_ref();
+
+    let content = String::new();
+        /* TODO Open question: Do we need "pseudo content" for virtual chapters?
+         * If not: Remove this and corresponding field in `VirtualChapter`!
+         */
+
+    let mut ch = VirtualChapter::new(&link.name, content);
+    ch.number = link.number.clone();
+
+    let sub_items = link.nested_items
+        .iter()
+        .map(|i| load_summary_item(i, src_dir))
+        .collect::<Result<Vec<_>>>()?;
+
+    ch.sub_items = sub_items;
+
+    Ok(ch)
+        /* TODO Open question: Do we really want to return a `Result<_>` here?
+         * Pro: Function would have almost signature as load_chapter()
+         * Con: We do not use it!
+         */
 }
 
 /// A depth-first iterator over the items in a book.
