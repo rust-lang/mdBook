@@ -344,7 +344,7 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
   background: #fafafa;
 }
 .light .sidebar::-webkit-scrollbar-thumb {
-  background: #364149;
+  background: #ccc;
 }
 .light .chapter li {
   color: #aaa;
@@ -474,7 +474,7 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
   background: #fff;
 }
 .light ::-webkit-scrollbar-thumb {
-  background: #333;
+  background: #ccc;
 }
 .coal {
   color: #98a3ad;
@@ -640,7 +640,7 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
   background: #141617;
 }
 .coal ::-webkit-scrollbar-thumb {
-  background: #98a3ad;
+  background: #a1adb8;
 }
 .navy {
   color: #bcbdd0;
@@ -806,7 +806,7 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
   background: #161923;
 }
 .navy ::-webkit-scrollbar-thumb {
-  background: #bcbdd0;
+  background: #c8c9db;
 }
 .rust {
   color: #262625;
@@ -972,7 +972,7 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
   background: #e1e1db;
 }
 .rust ::-webkit-scrollbar-thumb {
-  background: #262625;
+  background: #c8c9db;
 }
 .ayu {
   color: #c5c5c5;
@@ -1138,7 +1138,7 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
   background: #0f1419;
 }
 .ayu ::-webkit-scrollbar-thumb {
-  background: #c5c5c5;
+  background: #c8c9db;
 }
 @media only print {
   #sidebar,
