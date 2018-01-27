@@ -189,8 +189,6 @@ impl Chapter {
 pub struct VirtualChapter {
     /// The chapter's name.
     pub name: String,
-    /// The chapter's contents.
-    pub content: String,
     /// The chapter's section number, if it has one.
     pub number: Option<SectionNumber>,
     /// Nested items.
@@ -198,11 +196,10 @@ pub struct VirtualChapter {
 }
 
 impl VirtualChapter {
-    /// Create a new chapter with the provided content.
-    pub fn new(name: &str, content: String) -> Self {
+    /// Create a new virtual chapter with the given name.
+    pub fn new(name: &str) -> Self {
         Self {
             name: name.to_string(),
-            content: content,
             ..Default::default()
         }
     }
@@ -293,12 +290,7 @@ fn load_chapter<P: AsRef<Path>>(
 fn load_virtual_chapter<P: AsRef<Path>>(link: &VirtualLink, src_dir: P) -> Result<VirtualChapter> {
     let src_dir = src_dir.as_ref();
 
-    let content = String::new();
-        /* TODO Open question: Do we need "pseudo content" for virtual chapters?
-         * If not: Remove this and corresponding field in `VirtualChapter`!
-         */
-
-    let mut ch = VirtualChapter::new(&link.name, content);
+    let mut ch = VirtualChapter::new(&link.name);
     ch.number = link.number.clone();
 
     let sub_items = link.nested_items
