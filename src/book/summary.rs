@@ -412,15 +412,31 @@ impl<'a> SummaryParser<'a> {
                 }
                 Some(Event::Start(Tag::List(..))) => {
                     // recurse to parse the nested list
-                    let (_, last_item) = get_last_link(&mut items)?;
-                    let last_item_number = last_item
-                        .number
-                        .as_ref()
-                        .expect("All numbered chapters have numbers");
+                    let (_, last_item) = get_last_linklike(&mut items)?;
 
-                    let sub_items = self.parse_nested_numbered(last_item_number)?;
+                    match *last_item {
+                        SummaryItem::Link(ref mut last_link) => {
+                            let last_item_number = last_link
+                                .number
+                                .as_ref()
+                                .expect("All numbered chapters have numbers");
 
-                    last_item.nested_items = sub_items;
+                            let sub_items = self.parse_nested_numbered(last_item_number)?;
+
+                            last_link.nested_items = sub_items;
+                        },
+                        SummaryItem::VirtualLink(ref mut last_link) => {
+                            let last_item_number = last_link
+                                .number
+                                .as_ref()
+                                .expect("All numbered chapters have numbers");
+
+                            let sub_items = self.parse_nested_numbered(last_item_number)?;
+
+                            last_link.nested_items = sub_items;
+                        },
+                        SummaryItem::Separator => unreachable!(),
+                    };
                 }
                 Some(Event::End(Tag::List(..))) => break,
                 Some(_) => {}
@@ -511,17 +527,23 @@ fn update_section_numbers(sections: &mut [SummaryItem], level: usize, by: u32) {
     }
 }
 
-/// Gets a pointer to the last `Link` in a list of `SummaryItem`s, and its
-/// index.
-fn get_last_link(links: &mut [SummaryItem]) -> Result<(usize, &mut Link)> {
-    links
+/// Gets a pointer to the last `Link` or `VirtualLink` in a list of
+/// `SummaryItem`s, and its index.
+fn get_last_linklike(items: &mut [SummaryItem]) -> Result<(usize, &mut SummaryItem)> {
+    items
         .iter_mut()
         .enumerate()
-        .filter_map(|(i, item)| item.maybe_link_mut().map(|l| (i, l)))
+        .filter(|&(_, ref item)| {
+            match **item {
+                SummaryItem::Link(_) => true,
+                SummaryItem::VirtualLink(_) => true,
+                SummaryItem::Separator => false,
+            }
+        })
         .rev()
         .next()
         .ok_or_else(|| {
-            "Unable to get last link because the list of SummaryItems doesn't contain any Links"
+            "Unable to get last Link or VirtualLink because the list of SummaryItems doesn't contain any"
                 .into()
         })
 }
