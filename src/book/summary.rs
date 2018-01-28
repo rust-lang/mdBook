@@ -307,7 +307,7 @@ impl<'a> SummaryParser<'a> {
                         bail!(self.parse_error("Suffix chapters cannot be followed by a list"));
                     }
                 }
-                Some(Event::Start(Tag::Link(href, _))) => items.push(self.parse_item(href)),
+                Some(Event::Start(Tag::Link(href, _))) => items.push(self.parse_linklike(href)),
                 Some(Event::Start(Tag::Rule)) => items.push(SummaryItem::Separator),
                 Some(_) => {}
                 None => break,
@@ -317,7 +317,7 @@ impl<'a> SummaryParser<'a> {
         Ok(items)
     }
 
-    fn parse_item(&mut self, href: Cow<'a, str>) -> SummaryItem {
+    fn parse_linklike(&mut self, href: Cow<'a, str>) -> SummaryItem {
         let name = {
             let link_content = collect_events!(self.stream, end Tag::Link(..));
             stringify_events(link_content)
@@ -456,7 +456,7 @@ impl<'a> SummaryParser<'a> {
             match self.next_event() {
                 Some(Event::Start(Tag::Paragraph)) => continue,
                 Some(Event::Start(Tag::Link(href, _))) => {
-                    let mut item = self.parse_item(href);
+                    let mut item = self.parse_linklike(href);
 
                     let mut number = parent.clone();
                     number.0.push(num_existing_items as u32 + 1);
@@ -714,7 +714,7 @@ mod tests {
             other => panic!("Unreachable, {:?}", other),
         };
 
-        let got = parser.parse_item(href);
+        let got = parser.parse_linklike(href);
         assert_eq!(got, should_be);
     }
 
@@ -736,7 +736,7 @@ mod tests {
             other => panic!("Unreachable, {:?}", other),
         };
 
-        let got = parser.parse_item(href);
+        let got = parser.parse_linklike(href);
         assert_eq!(got, should_be);
     }
 
