@@ -1,6 +1,7 @@
 #![allow(missing_docs)] // FIXME: Document this
 
 pub mod fs;
+mod link_filter;
 mod string;
 use errors::Error;
 
@@ -9,9 +10,14 @@ use pulldown_cmark::{html, Event, Options, Parser, Tag, OPTION_ENABLE_FOOTNOTES,
 use std::borrow::Cow;
 
 pub use self::string::{RangeArgument, take_lines};
+pub use self::link_filter::{LinkFilter, ChangeExtLinkFilter};
 
 /// Wrapper around the pulldown-cmark parser for rendering markdown to HTML.
-pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
+pub fn render_markdown(
+    text: &str,
+    link_filter: Option<&LinkFilter>,
+    curly_quotes: bool,
+) -> String {
     let mut s = String::with_capacity(text.len() * 3 / 2);
 
     let mut opts = Options::empty();
@@ -19,9 +25,18 @@ pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
     opts.insert(OPTION_ENABLE_FOOTNOTES);
 
     let p = Parser::new_ext(text, opts);
+
     let mut converter = EventQuoteConverter::new(curly_quotes);
+
     let events = p.map(clean_codeblock_headers)
                   .map(|event| converter.convert(event));
+
+    let events: Box<Iterator<Item = Event>> = if let Some(filter) = link_filter {
+        let mut link_filter_converter = LinkFilterConverter::new(filter);
+        Box::new(events.map(move |event| link_filter_converter.convert(event)))
+    } else {
+        Box::new(events)
+    };
 
     html::push_html(&mut s, events);
     s
@@ -56,6 +71,31 @@ impl EventQuoteConverter {
             }
             Event::Text(ref text) if self.convert_text => {
                 Event::Text(Cow::from(convert_quotes_to_curly(text)))
+            }
+            _ => event,
+        }
+    }
+}
+
+struct LinkFilterConverter<'filter> {
+    filter: &'filter LinkFilter,
+}
+
+impl<'filter> LinkFilterConverter<'filter> {
+    fn new(filter: &'filter LinkFilter) -> Self {
+        LinkFilterConverter {
+            filter: filter,
+        }
+    }
+
+    fn convert<'a>(&mut self, event: Event<'a>) -> Event<'a> {
+        match event {
+            Event::Start(Tag::Link(dest, title)) => {
+                if let Some(translated) = self.filter.apply(&dest) {
+                    return Event::Start(Tag::Link(Cow::Owned(translated), title));
+                }
+
+                Event::Start(Tag::Link(dest, title))
             }
             _ => event,
         }
@@ -118,10 +158,12 @@ pub fn log_backtrace(e: &Error) {
 mod tests {
     mod render_markdown {
         use super::super::render_markdown;
+        use super::super::ChangeExtLinkFilter;
+        use relative_path::RelativePath;
 
         #[test]
         fn it_can_keep_quotes_straight() {
-            assert_eq!(render_markdown("'one'", false), "<p>'one'</p>\n");
+            assert_eq!(render_markdown("'one'", None, false), "<p>'one'</p>\n");
         }
 
         #[test]
@@ -137,7 +179,7 @@ mod tests {
 </code></pre>
 <p><code>'three'</code> ‘four’</p>
 "#;
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, None, true), expected);
         }
 
         #[test]
@@ -159,8 +201,8 @@ more text with spaces
 </code></pre>
 <p>more text with spaces</p>
 "#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, None, false), expected);
+            assert_eq!(render_markdown(input, None, true), expected);
         }
 
         #[test]
@@ -173,8 +215,8 @@ more text with spaces
             let expected =
                 r#"<pre><code class="language-rust,no_run,should_panic,property_3"></code></pre>
 "#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, None, false), expected);
+            assert_eq!(render_markdown(input, None, true), expected);
         }
 
         #[test]
@@ -187,8 +229,8 @@ more text with spaces
             let expected =
                 r#"<pre><code class="language-rust,no_run,,,should_panic,,property_3"></code></pre>
 "#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, None, false), expected);
+            assert_eq!(render_markdown(input, None, true), expected);
         }
 
         #[test]
@@ -200,15 +242,37 @@ more text with spaces
 
             let expected = r#"<pre><code class="language-rust"></code></pre>
 "#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, None, false), expected);
+            assert_eq!(render_markdown(input, None, true), expected);
 
             let input = r#"
 ```rust
 ```
 "#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, None, false), expected);
+            assert_eq!(render_markdown(input, None, true), expected);
+        }
+
+        #[test]
+        fn test_link_filter() {
+            let input = r#"
+[foo](./bar.md)
+[foo](./baz.md)
+"#;
+
+            let expected = "<p><a href=\"bar.html\">foo</a>\n<a href=\"./baz.md\">foo</a></p>\n";
+
+            let bar = RelativePath::new("./bar.md");
+
+            let filter = ChangeExtLinkFilter::new(
+                RelativePath::new("."),
+                |path| path == bar,
+                "md",
+                "html"
+            );
+
+            // only bar is a file.
+            assert_eq!(render_markdown(input, Some(&filter), false), expected);
         }
     }
 

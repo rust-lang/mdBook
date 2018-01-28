@@ -22,7 +22,7 @@ configuration files, etc.
 - The `book` directory is where your book is rendered. All the output is ready to be uploaded
 to a server to be seen by your audience.
 
-- The `SUMMARY.md` file is the most important file, it's the skeleton of your book and is discussed in more detail in another  [chapter](format/summary.html).
+- The `SUMMARY.md` file is the most important file, it's the skeleton of your book and is discussed in more detail in another  [chapter](../format/summary.md).
 
 #### Tip & Trick: Hidden Feature
 When a `SUMMARY.md` file already exists, the `init` command will first parse it and generate the missing files according to the paths used in the `SUMMARY.md`. This allows you to think and create the whole structure of your book and then let mdBook generate it for you.

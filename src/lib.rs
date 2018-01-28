@@ -95,6 +95,8 @@ extern crate shlex;
 extern crate tempdir;
 extern crate toml;
 extern crate toml_query;
+extern crate relative_path;
+extern crate url;
 
 #[cfg(test)]
 #[macro_use]
@@ -115,6 +117,7 @@ pub use config::Config;
 /// The error types used through out this crate.
 pub mod errors {
     use std::path::PathBuf;
+    use relative_path::FromPathError;
 
     error_chain!{
         foreign_links {
@@ -122,6 +125,7 @@ pub mod errors {
             HandlebarsRender(::handlebars::RenderError) #[doc = "Handlebars rendering failed"];
             HandlebarsTemplate(Box<::handlebars::TemplateError>) #[doc = "Unable to parse the template"];
             Utf8(::std::string::FromUtf8Error) #[doc = "Invalid UTF-8"];
+            FromPathError(FromPathError) #[doc = "Failed to convert to relative path"];
         }
 
         links {

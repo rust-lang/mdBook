@@ -19,5 +19,6 @@
 - [For Developers](for_developers/index.md)
     - [Preprocessors](for_developers/preprocessors.md)
     - [Alternate Backends](for_developers/backends.md)
+- [Test](test.md)
 -----------
 [Contributors](misc/contributors.md)

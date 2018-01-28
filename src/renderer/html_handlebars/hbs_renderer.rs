@@ -13,6 +13,8 @@ use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::collections::BTreeMap;
 use std::collections::HashMap;
+use std::collections::HashSet;
+use relative_path::{RelativePathBuf, RelativePath};
 
 use handlebars::Handlebars;
 
@@ -41,15 +43,39 @@ impl HtmlHandlebars {
 
     fn render_item(
         &self,
-                   item: &BookItem,
-                   mut ctx: RenderItemContext,
+        item: &BookItem,
+        targets: &HashSet<RelativePathBuf>,
+        mut ctx: RenderItemContext,
         print_content: &mut String,
     ) -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
         match *item {
             BookItem::Chapter(ref ch) => {
                 let content = ch.content.clone();
-                let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
+
+                let path = RelativePathBuf::from_path(&ch.path)?;
+                let parent = path.parent().unwrap_or(RelativePath::new("."));
+
+                let link_filter = utils::ChangeExtLinkFilter::new(
+                    parent,
+                    move |dest| {
+                        let check = parent.join_normalized(dest);
+
+                        if !targets.contains(&check) {
+                            warn!("link to non-existent destination: {:?}", dest);
+                            return false;
+                        }
+
+                        true
+                    },
+                    "md",
+                    "html",
+                );
+
+                let content = utils::render_markdown(
+                    &content, Some(&link_filter), ctx.html_config.curly_quotes
+                );
+
                 print_content.push_str(&content);
 
                 // Update the context with data for this file
@@ -307,6 +333,15 @@ impl Renderer for HtmlHandlebars {
         fs::create_dir_all(&destination)
             .chain_err(|| "Unexpected error when constructing destination path")?;
 
+        // valid link targets
+        let mut targets = HashSet::new();
+
+        for item in book.iter() {
+            if let BookItem::Chapter(ref ch) = *item {
+                targets.insert(RelativePathBuf::from_path(&ch.path)?);
+            }
+        }
+
         for (i, item) in book.iter().enumerate() {
             let ctx = RenderItemContext {
                 handlebars: &handlebars,
@@ -315,7 +350,7 @@ impl Renderer for HtmlHandlebars {
                 is_index: i == 0,
                 html_config: html_config.clone(),
             };
-            self.render_item(item, ctx, &mut print_content)?;
+            self.render_item(item, &targets, ctx, &mut print_content)?;
         }
 
         // Print version
