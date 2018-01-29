@@ -376,11 +376,11 @@ fn make_data(root: &Path, book: &Book, config: &Config, html_config: &HtmlConfig
         let mut css = Vec::new();
         for style in &html.additional_css {
             match style.strip_prefix(root) {
-                Ok(p) => css.push(p.to_str().expect("Could not convert to str")),
+                Ok(p) => {
+                    css.push(p.to_str().expect("Could not convert to str"))
+                },
                 Err(_) => {
-                    css.push(style.file_name()
-                                  .expect("File has a file name")
-                                  .to_str()
+                    css.push(style.to_str()
                                   .expect("Could not convert to str"))
                 }
             }
