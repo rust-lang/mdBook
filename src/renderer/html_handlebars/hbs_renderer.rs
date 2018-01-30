@@ -238,12 +238,13 @@ impl HtmlHandlebars {
 
     /// Copy across any additional CSS and JavaScript files which the book
     /// has been configured to use.
-    fn copy_additional_css_and_js(&self, html: &HtmlConfig, destination: &Path) -> Result<()> {
+    fn copy_additional_css_and_js(&self, html: &HtmlConfig, root: &Path, destination: &Path) -> Result<()> {
         let custom_files = html.additional_css.iter().chain(html.additional_js.iter());
 
         debug!("Copying additional CSS and JS");
 
         for custom_file in custom_files {
+            let input_location = root.join(custom_file);
             let output_location = destination.join(custom_file);
             if let Some(parent) = output_location.parent() {
                 fs::create_dir_all(parent)
@@ -251,14 +252,14 @@ impl HtmlHandlebars {
             }
             debug!(
                 "Copying {} -> {}",
-                custom_file.display(),
+                input_location.display(),
                 output_location.display()
             );
 
-            fs::copy(custom_file, &output_location).chain_err(|| {
+            fs::copy(&input_location, &output_location).chain_err(|| {
                 format!(
                     "Unable to copy {} to {}",
-                    custom_file.display(),
+                    input_location.display(),
                     output_location.display()
                 )
             })?;
@@ -338,7 +339,7 @@ impl Renderer for HtmlHandlebars {
         debug!("Copy static files");
         self.copy_static_files(&destination, &theme, &html_config)
             .chain_err(|| "Unable to copy across static files")?;
-        self.copy_additional_css_and_js(&html_config, &destination)
+        self.copy_additional_css_and_js(&html_config, &ctx.root, &destination)
             .chain_err(|| "Unable to copy across additional CSS and JS")?;
 
         // Copy all remaining files
@@ -375,11 +376,11 @@ fn make_data(root: &Path, book: &Book, config: &Config, html_config: &HtmlConfig
         let mut css = Vec::new();
         for style in &html.additional_css {
             match style.strip_prefix(root) {
-                Ok(p) => css.push(p.to_str().expect("Could not convert to str")),
+                Ok(p) => {
+                    css.push(p.to_str().expect("Could not convert to str"))
+                },
                 Err(_) => {
-                    css.push(style.file_name()
-                                  .expect("File has a file name")
-                                  .to_str()
+                    css.push(style.to_str()
                                   .expect("Could not convert to str"))
                 }
             }
