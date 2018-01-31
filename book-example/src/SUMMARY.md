@@ -15,7 +15,7 @@
         - [Syntax highlighting](format/theme/syntax-highlighting.md)
         - [Editor](format/theme/editor.md)
     - [MathJax Support](format/mathjax.md)
-    - [Rust code specific features](format/rust.md)
+    - [mdBook specific features](format/mdbook.md)
 - [For Developers](for_developers/index.md)
     - [Preprocessors](for_developers/preprocessors.md)
     - [Alternate Backends](for_developers/backends.md)

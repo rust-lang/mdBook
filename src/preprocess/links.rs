@@ -10,7 +10,7 @@ use book::{Book, BookItem};
 
 const ESCAPE_CHAR: char = '\\';
 
-/// A preprocessor for expanding the `{{# playpen}}` and `{{# include}}` 
+/// A preprocessor for expanding the `{{# playpen}}` and `{{# include}}`
 /// helpers in a chapter.
 pub struct LinkPreprocessor;
 
@@ -87,8 +87,14 @@ enum LinkType<'a> {
 fn parse_include_path(path: &str) -> LinkType<'static> {
     let mut parts = path.split(':');
     let path = parts.next().unwrap().into();
-    let start = parts.next().and_then(|s| s.parse::<usize>().ok());
-    let end = parts.next().and_then(|s| s.parse::<usize>().ok());
+    // subtract 1 since line numbers usually begin with 1
+    let start = parts
+        .next()
+        .and_then(|s| s.parse::<usize>().ok())
+        .map(|val| val.checked_sub(1).unwrap_or(0));
+    let end = parts.next();
+    let has_end = end.is_some();
+    let end = end.and_then(|s| s.parse::<usize>().ok());
     match start {
         Some(start) => match end {
             Some(end) => LinkType::IncludeRange(
@@ -98,7 +104,17 @@ fn parse_include_path(path: &str) -> LinkType<'static> {
                     end: end,
                 },
             ),
-            None => LinkType::IncludeRangeFrom(path, RangeFrom { start: start }),
+            None => if has_end {
+                LinkType::IncludeRangeFrom(path, RangeFrom { start: start })
+            } else {
+                LinkType::IncludeRange(
+                    path,
+                    Range {
+                        start: start,
+                        end: start + 1,
+                    },
+                )
+            },
         },
         None => match end {
             Some(end) => LinkType::IncludeRangeTo(path, RangeTo { end: end }),
@@ -276,8 +292,26 @@ mod tests {
                 Link {
                     start_index: 22,
                     end_index: 48,
-                    link: LinkType::IncludeRange(PathBuf::from("file.rs"), 10..20),
+                    link: LinkType::IncludeRange(PathBuf::from("file.rs"), 9..20),
                     link_text: "{{#include file.rs:10:20}}",
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn test_find_links_with_line_number() {
+        let s = "Some random text with {{#include file.rs:10}}...";
+        let res = find_links(s).collect::<Vec<_>>();
+        println!("\nOUTPUT: {:?}\n", res);
+        assert_eq!(
+            res,
+            vec![
+                Link {
+                    start_index: 22,
+                    end_index: 45,
+                    link: LinkType::IncludeRange(PathBuf::from("file.rs"), 9..10),
+                    link_text: "{{#include file.rs:10}}",
                 },
             ]
         );
@@ -294,7 +328,7 @@ mod tests {
                 Link {
                     start_index: 22,
                     end_index: 46,
-                    link: LinkType::IncludeRangeFrom(PathBuf::from("file.rs"), 10..),
+                    link: LinkType::IncludeRangeFrom(PathBuf::from("file.rs"), 9..),
                     link_text: "{{#include file.rs:10:}}",
                 },
             ]
