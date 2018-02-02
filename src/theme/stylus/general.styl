@@ -48,3 +48,15 @@ table {
       td { font-weight: 700; }
     }
 }
+
+:not(.footnote-definition) + .footnote-definition,
+.footnote-definition + :not(.footnote-definition) {
+    margin-top: 2em;
+}
+
+.footnote-definition {
+    font-size: 0.9em;
+    margin: 0.5em 0;
+
+    p { display: inline; }
+}
