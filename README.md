@@ -40,7 +40,7 @@ There are multiple ways to install mdBook.
    path to the binary into your `PATH`.
 
 2. **From Crates.io**
-j
+
    This requires [Rust] and Cargo to be installed. Once you have installed
    Rust, type the following in the terminal:
 
