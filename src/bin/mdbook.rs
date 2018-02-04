@@ -19,6 +19,7 @@ use env_logger::Builder;
 use mdbook::utils;
 
 pub mod build;
+pub mod clean;
 pub mod init;
 pub mod test;
 #[cfg(feature = "serve")]
@@ -44,7 +45,8 @@ fn main() {
                              at: https://github.com/rust-lang-nursery/mdBook")
                 .subcommand(init::make_subcommand())
                 .subcommand(build::make_subcommand())
-                .subcommand(test::make_subcommand());
+                .subcommand(test::make_subcommand())
+                .subcommand(clean::make_subcommand());
 
     #[cfg(feature = "watch")]
     let app = app.subcommand(watch::make_subcommand());
@@ -55,6 +57,7 @@ fn main() {
     let res = match app.get_matches().subcommand() {
         ("init", Some(sub_matches)) => init::execute(sub_matches),
         ("build", Some(sub_matches)) => build::execute(sub_matches),
+        ("clean", Some(sub_matches)) => clean::execute(sub_matches),
         #[cfg(feature = "watch")]
         ("watch", Some(sub_matches)) => watch::execute(sub_matches),
         #[cfg(feature = "serve")]
