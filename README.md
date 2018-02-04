@@ -141,6 +141,10 @@ explanation, check out the [User Guide].
     `http://localhost:3000` (port is changeable) and reloads the browser when a
     change occurs.
 
+- `mdbook clean`
+
+    Delete directory in which generated book is located.
+
 
 ### As a library
 
