@@ -415,8 +415,7 @@ function playpen_text(playpen) {
         try { localStorage.setItem('mdbook-sidebar', 'hidden'); } catch (e) { }
     }
 
-    // Toggle sidebar
-    sidebarToggleButton.addEventListener('click', function sidebarToggle() {
+    function toggleSidebar() {
         if (html.classList.contains("sidebar-hidden")) {
             showSidebar();
         } else if (html.classList.contains("sidebar-visible")) {
@@ -428,7 +427,10 @@ function playpen_text(playpen) {
                 showSidebar();
             }
         }
-    });
+    }
+
+    // Toggle sidebar
+    sidebarToggleButton.addEventListener('click', toggleSidebar);
 
     document.addEventListener('touchstart', function (e) {
         firstContact = {
@@ -460,17 +462,8 @@ function playpen_text(playpen) {
 
         switch (e.key) {
             case 'F9':
-                if (html.classList.contains("sidebar-hidden")) {
-                    showSidebar();
-                } else if (html.classList.contains("sidebar-visible")) {
-                    hideSidebar();
-                } else {
-                    if (getComputedStyle(sidebar)['transform'] === 'none') {
-                        hideSidebar();
-                    } else {
-                        showSidebar();
-                    }
-                }
+                console.log(window.location.href);
+                toggleSidebar();
                 break;
         }
     });
@@ -490,18 +483,26 @@ function playpen_text(playpen) {
             case 'ArrowRight':
             case 'j':
                 e.preventDefault();
-                var nextButton = document.querySelector('.nav-chapters.next');
-                if (nextButton) {
-                    window.location.href = nextButton.href;
+                var previousButton = document.querySelector('.nav-chapters.previous');
+                if (previousButton) {
+                    window.location.href = previousButton.href;
                 }
                 break;
             case 'ArrowLeft':
             case 'k':
                 e.preventDefault();
-                var previousButton = document.querySelector('.nav-chapters.previous');
-                if (previousButton) {
-                    window.location.href = previousButton.href;
+                var nextButton = document.querySelector('.nav-chapters.next');
+                if (nextButton) {
+                    window.location.href = nextButton.href;
                 }
+                break;
+            case 'h':
+                e.preventDefault();
+                // TODO: add code
+                break;
+            case 'l':
+                e.preventDefault();
+                // TODO: add code
                 break;
         }
     });
