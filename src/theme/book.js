@@ -455,6 +455,26 @@ function playpen_text(playpen) {
         }
     }, { passive: true });
 
+    document.addEventListener('keydown', function (e) {
+        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
+
+        switch (e.key) {
+            case 'F9':
+                if (html.classList.contains("sidebar-hidden")) {
+                    showSidebar();
+                } else if (html.classList.contains("sidebar-visible")) {
+                    hideSidebar();
+                } else {
+                    if (getComputedStyle(sidebar)['transform'] === 'none') {
+                        hideSidebar();
+                    } else {
+                        showSidebar();
+                    }
+                }
+                break;
+        }
+    });
+
     // Scroll sidebar to current active section
     var activeSection = sidebar.querySelector(".active");
     if (activeSection) {
