@@ -110,7 +110,7 @@ editable = false
 
 ## Environment Variables
 
-All configuration values van be overridden from the command line by setting the
+All configuration values can be overridden from the command line by setting the
 corresponding environment variable. Because many operating systems restrict
 environment variables to be alphanumeric characters or `_`, the configuration
 key needs to be formatted slightly differently to the normal `foo.bar.baz` form.
