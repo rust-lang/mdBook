@@ -468,6 +468,7 @@ function playpen_text(playpen) {
 
         switch (e.key) {
             case 'ArrowRight':
+            case 'j':
                 e.preventDefault();
                 var nextButton = document.querySelector('.nav-chapters.next');
                 if (nextButton) {
@@ -475,6 +476,7 @@ function playpen_text(playpen) {
                 }
                 break;
             case 'ArrowLeft':
+            case 'k':
                 e.preventDefault();
                 var previousButton = document.querySelector('.nav-chapters.previous');
                 if (previousButton) {
