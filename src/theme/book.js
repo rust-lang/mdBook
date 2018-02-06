@@ -379,11 +379,34 @@ function playpen_text(playpen) {
 
     document.addEventListener('keydown', function (e) {
         if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
+        if (!themePopup.contains(e.target)) { return; }
 
         switch (e.key) {
             case 'Escape':
                 e.preventDefault();
                 hideThemes();
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                var li = document.activeElement.parentElement;
+                if (li && li.previousElementSibling) {
+                    li.previousElementSibling.querySelector('button').focus();
+                }
+                break;
+            case 'ArrowDown':
+                e.preventDefault();
+                var li = document.activeElement.parentElement;
+                if (li && li.nextElementSibling) {
+                    li.nextElementSibling.querySelector('button').focus();
+                }
+                break;
+            case 'Home':
+                e.preventDefault();
+                themePopup.querySelector('li:first-child button').focus();
+                break;
+            case 'End':
+                e.preventDefault();
+                themePopup.querySelector('li:last-child button').focus();
                 break;
         }
     });
