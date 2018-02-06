@@ -377,6 +377,8 @@ function playpen_text(playpen) {
     });
 
     document.addEventListener('keydown', function (e) {
+        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
+
         switch (e.key) {
             case 'Escape':
                 e.preventDefault();
