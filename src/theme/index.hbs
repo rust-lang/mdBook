@@ -41,6 +41,14 @@
             }
         </script>
 
+        <noscript>
+            <style type="text/css">
+                .javascript-only {
+                    display: none;
+                }
+            </style>
+        </noscript>
+
     </head>
     <body class="light">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
@@ -90,7 +98,7 @@
                 {{> header}}
                 <div id="menu-bar" class="menu-bar">
                     <div id="menu-bar-sticky-container">
-                        <div class="left-buttons">
+                        <div class="left-buttons javascript-only">
                             <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
                                 <i class="fa fa-bars"></i>
                             </button>
