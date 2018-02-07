@@ -522,6 +522,14 @@ function playpen_text(playpen) {
     });
 })();
 
+(function scrollToTop () {
+    var menuTitle = document.querySelector('.menu-title');
+
+    menuTitle.addEventListener('click', function () {
+        document.scrollingElement.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+})();
+
 (function autoHideMenu() {
     var menu = document.getElementById('menu-bar');
 

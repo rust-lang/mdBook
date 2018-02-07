@@ -220,6 +220,7 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
   overflow: hidden;
   -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
+  cursor: pointer;
 }
 .nav-chapters {
   font-size: 2.5em;
