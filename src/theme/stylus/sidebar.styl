@@ -31,16 +31,18 @@
 
     li a {
         display: block;
-        padding: 5px 0
+        padding: 0
         text-decoration: none
 
+        @media (-moz-touch-enabled: 1), (pointer: coarse) { padding: 5px 0; }
         &:hover { text-decoration: none }
     }
 
     .spacer {
         width: 100%
         height: 3px
-        margin: 10px 0px
+        margin: 5px 0px
+        @media (-moz-touch-enabled: 1), (pointer: coarse) { margin: 10px 0; }
     }
 }
 
