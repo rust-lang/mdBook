@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html lang="{{ language }}">
+<html lang="{{ language }}" class="sidebar-visible">
     <head>
         <meta charset="UTF-8">
         <title>{{ title }}</title>
@@ -70,12 +70,14 @@
 
         <!-- Hide / unhide sidebar before it is displayed -->
         <script type="text/javascript">
+            var html = document.querySelector('html');
             var sidebar = 'hidden';
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
             }
-            document.querySelector('html').classList.add("sidebar-" + sidebar);
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
