@@ -298,11 +298,13 @@ function playpen_text(playpen) {
     function showThemes() {
         themePopup.style.display = 'block';
         themeToggleButton.setAttribute('aria-expanded', true);
+        themePopup.querySelector("button#" + document.body.className).focus();
     }
 
     function hideThemes() {
         themePopup.style.display = 'none';
         themeToggleButton.setAttribute('aria-expanded', false);
+        themeToggleButton.focus();
     }
 
     function set_theme(theme) {
@@ -369,18 +371,42 @@ function playpen_text(playpen) {
         set_theme(theme);
     });
 
-    // Hide theme selector popup when clicking outside of it
-    document.addEventListener('click', function (event) {
-        if (themePopup.style.display === 'block' && !themeToggleButton.contains(event.target) && !themePopup.contains(event.target)) {
+    themePopup.addEventListener('focusout', function(e) {
+        if (!themePopup.contains(e.relatedTarget)) {
             hideThemes();
         }
     });
 
     document.addEventListener('keydown', function (e) {
+        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
+        if (!themePopup.contains(e.target)) { return; }
+
         switch (e.key) {
             case 'Escape':
                 e.preventDefault();
                 hideThemes();
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                var li = document.activeElement.parentElement;
+                if (li && li.previousElementSibling) {
+                    li.previousElementSibling.querySelector('button').focus();
+                }
+                break;
+            case 'ArrowDown':
+                e.preventDefault();
+                var li = document.activeElement.parentElement;
+                if (li && li.nextElementSibling) {
+                    li.nextElementSibling.querySelector('button').focus();
+                }
+                break;
+            case 'Home':
+                e.preventDefault();
+                themePopup.querySelector('li:first-child button').focus();
+                break;
+            case 'End':
+                e.preventDefault();
+                themePopup.querySelector('li:last-child button').focus();
                 break;
         }
     });
