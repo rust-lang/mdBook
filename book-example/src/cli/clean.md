@@ -1,19 +1,18 @@
 # The clean command
 
-The `clean` command is used to delete directory where built book is located.
+The clean command is used to delete the generated book and any other build
+artifacts.
 
 ```bash
 mdbook clean
 ```
 
-It will try to delete built book. If you pass path to directory it will be used
-instead.
-
+It will try to delete the built book. If a path is provided, it will be used.
 
 #### Specify a directory
 
 Like `init`, the `clean` command can take a directory as an argument to use
-instead of the standard directory where generated book is placed once built.
+instead of the normal build directory.
 
 ```bash
 mdbook clean --dest-dir=path/to/book
