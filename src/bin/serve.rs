@@ -3,6 +3,7 @@ extern crate staticfile;
 extern crate ws;
 
 use std;
+use std::path::PathBuf;
 use self::iron::{status, AfterMiddleware, Chain, Iron, IronError, IronResult, Request, Response,
                  Set};
 use clap::{App, ArgMatches, SubCommand};
@@ -37,11 +38,20 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
         .arg_from_usage("-o, --open 'Open the book server in a web browser'")
 }
 
-// Watch command implementation
-pub fn execute(args: &ArgMatches) -> Result<()> {
-    let book_dir = get_book_dir(args);
-    let mut book = MDBook::load(&book_dir)?;
+/// Elements built from the arguments provided to the `serve` subcommand. These
+/// do not map directly onto the command line arguments but rather represent the
+/// collation of the arguments to provide the functionality.
+struct ServeArgs {
+    book_dir: PathBuf,
+    ws_address: String,
+    address: String,
+    livereload_url: String,
+    open_browser: bool,
+}
 
+/// Parse the arguments provided and return a constructed `ServeArgs`.
+fn parse_args(args: &ArgMatches) -> ServeArgs {
+    let book_dir = get_book_dir(args);
     let port = args.value_of("port").unwrap_or("3000");
     let ws_port = args.value_of("websocket-port").unwrap_or("3001");
     let interface = args.value_of("interface").unwrap_or("localhost");
@@ -52,15 +62,26 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let ws_address = format!("{}:{}", interface, ws_port);
 
     let livereload_url = format!("ws://{}:{}", public_address, ws_port);
-    book.config
-        .set("output.html.livereload-url", &livereload_url)?;
 
+    ServeArgs {
+        book_dir,
+        ws_address,
+        address,
+        livereload_url,
+        open_browser,
+    }
+}
+
+///  Serve command implementation
+pub fn execute(args: &ArgMatches) -> Result<()> {
+    let serve_args = parse_args(args);
+    let mut book = MDBook::load(&serve_args.book_dir)?;
     book.build()?;
 
     let mut chain = Chain::new(staticfile::Static::new(book.build_dir_for("html")));
     chain.link_after(ErrorRecover);
     let _iron = Iron::new(chain)
-        .http(&*address)
+        .http(&*serve_args.address)
         .chain_err(|| "Unable to launch the server")?;
 
     let ws_server =
@@ -68,17 +89,18 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     let broadcaster = ws_server.broadcaster();
 
+    let ws_address = serve_args.ws_address;
     std::thread::spawn(move || {
         ws_server.listen(&*ws_address).unwrap();
     });
 
-    let serving_url = format!("http://{}", address);
+    let serving_url = format!("http://{}", serve_args.address);
     info!("Serving on: {}", serving_url);
 
-    if open_browser {
+    if serve_args.open_browser {
         open(serving_url);
     }
-
+    let livereload_url = serve_args.livereload_url;
     #[cfg(feature = "watch")]
     watch::trigger_on_change(&mut book, move |path, book_dir| {
         info!("File changed: {:?}", path);
