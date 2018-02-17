@@ -3,6 +3,7 @@
 pub use self::links::LinkPreprocessor;
 
 mod links;
+mod mathjax;
 
 use book::Book;
 use config::Config;
