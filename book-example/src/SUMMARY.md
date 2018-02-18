@@ -7,6 +7,7 @@
     - [watch](cli/watch.md)
     - [serve](cli/serve.md)
     - [test](cli/test.md)
+    - [clean](cli/clean.md)
 - [Format](format/format.md)
     - [SUMMARY.md](format/summary.md)
     - [Configuration](format/config.md)
