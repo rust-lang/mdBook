@@ -1,13 +1,13 @@
 //! Mdbook's configuration system.
-//! 
+//!
 //! The main entrypoint of the `config` module is the `Config` struct. This acts
 //! essentially as a bag of configuration information, with a couple
-//! pre-determined tables (`BookConfig` and `BuildConfig`) as well as support 
+//! pre-determined tables (`BookConfig` and `BuildConfig`) as well as support
 //! for arbitrary data which is exposed to plugins and alternate backends.
-//! 
-//! 
+//!
+//!
 //! # Examples
-//! 
+//!
 //! ```rust
 //! # extern crate mdbook;
 //! # use mdbook::errors::*;
@@ -15,31 +15,31 @@
 //! use std::path::PathBuf;
 //! use mdbook::Config;
 //! use toml::Value;
-//! 
+//!
 //! # fn run() -> Result<()> {
 //! let src = r#"
 //! [book]
 //! title = "My Book"
 //! authors = ["Michael-F-Bryan"]
-//! 
+//!
 //! [build]
 //! src = "out"
-//! 
+//!
 //! [other-table.foo]
 //! bar = 123
 //! "#;
-//! 
+//!
 //! // load the `Config` from a toml string
 //! let mut cfg = Config::from_str(src)?;
-//! 
+//!
 //! // retrieve a nested value
 //! let bar = cfg.get("other-table.foo.bar").cloned();
 //! assert_eq!(bar, Some(Value::Integer(123)));
-//! 
+//!
 //! // Set the `output.html.theme` directory
 //! assert!(cfg.get("output.html").is_none());
 //! cfg.set("output.html.theme", "./themes");
-//! 
+//!
 //! // then load it again, automatically deserializing to a `PathBuf`.
 //! let got: PathBuf = cfg.get_deserialized("output.html.theme")?;
 //! assert_eq!(got, PathBuf::from("./themes"));
@@ -383,7 +383,6 @@ pub struct BuildConfig {
     pub create_missing: bool,
     /// Which preprocessors should be applied
     pub preprocess: Option<Vec<String>>,
-
 }
 
 impl Default for BuildConfig {
@@ -410,7 +409,7 @@ pub struct HtmlConfig {
     pub google_analytics: Option<String>,
     /// Additional CSS stylesheets to include in the rendered page's `<head>`.
     pub additional_css: Vec<PathBuf>,
-    /// Additional JS scripts to include at the bottom of the rendered page's 
+    /// Additional JS scripts to include at the bottom of the rendered page's
     /// `<body>`.
     pub additional_js: Vec<PathBuf>,
     /// Playpen settings.
@@ -427,12 +426,23 @@ pub struct HtmlConfig {
     pub no_section_label: bool,
 }
 
+impl HtmlConfig {
+    /// Returns the directory of theme from the provided root directory. If the
+    /// directory is not present it will append the default directory of "theme"
+    pub fn theme_dir(&self, root: &PathBuf) -> PathBuf {
+        match self.theme {
+            Some(ref d) => root.join(d),
+            None => root.join("theme"),
+        }
+    }
+}
+
 /// Configuration for tweaking how the the HTML renderer handles the playpen.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Playpen {
     /// The path to the editor to use. Defaults to the [Ace Editor].
-    /// 
+    ///
     /// [Ace Editor]: https://ace.c9.io/
     pub editor: PathBuf,
     /// Should playpen snippets be editable? Defaults to `false`.
@@ -520,8 +530,10 @@ mod tests {
         let build_should_be = BuildConfig {
             build_dir: PathBuf::from("outputs"),
             create_missing: false,
-            preprocess: Some(vec!["first_preprocessor".to_string(),
-                                  "second_preprocessor".to_string()]),
+            preprocess: Some(vec![
+                "first_preprocessor".to_string(),
+                "second_preprocessor".to_string(),
+            ]),
         };
         let playpen_should_be = Playpen {
             editable: true,
