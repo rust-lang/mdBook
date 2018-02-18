@@ -1,8 +1,11 @@
 use std::io;
 use std::io::Write;
+use std::env;
 use clap::{App, ArgMatches, SubCommand};
 use mdbook::MDBook;
 use mdbook::errors::Result;
+use mdbook::utils;
+use mdbook::config;
 use get_book_dir;
 
 // Create clap subcommand arguments
@@ -47,10 +50,36 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         builder.create_gitignore(true);
     }
 
+    if let Some(author) = get_author_name() {
+        debug!("Obtained user name from gitconfig: {:?}", author);
+        let mut config = config::Config::default();
+        config.book.authors.push(author);
+        builder.with_config(config);
+    }
+
     builder.build()?;
     println!("\nAll done, no errors...");
 
     Ok(())
+}
+
+// Obtains author name from git config file if it can be located.
+fn get_author_name() -> Option<String> {
+    if let Some(home) = env::home_dir() {
+        let git_config_path = home.join(".gitconfig");
+        let content = utils::fs::file_to_string(git_config_path).unwrap();
+        let user_name = content
+            .lines()
+            .filter(|x| !x.starts_with("#"))
+            .map(|x| x.trim_left())
+            .filter(|x| x.starts_with("name"))
+            .next();
+        user_name
+            .and_then(|x| x.rsplit("=").next())
+            .map(|x| x.trim().to_owned())
+    } else {
+        None
+    }
 }
 
 // Simple function that user comfirmation
