@@ -7,7 +7,7 @@
 use errors::Result;
 
 use super::{Preprocessor, PreprocessorContext};
-use book::Book;
+use book::{Book, BookItem};
 
 /// a preprocessor for expanding `$`- and `$$`-pairs into valid MathJax expressions.
 pub struct MathJaxPreprocessor;
@@ -24,7 +24,20 @@ impl Preprocessor for MathJaxPreprocessor {
         "mathjax"
     }
 
-    fn run(&self, _ctx: &PreprocessorContext, _book: &mut Book) -> Result<()> {
+    fn run(&self, _ctx: &PreprocessorContext, book: &mut Book) -> Result<()> {
+        book.for_each_mut(|section: &mut BookItem| {
+            if let BookItem::Chapter(ref mut chapter) = *section {
+                let content = replace_all_mathematics(&chapter.content);
+                chapter.content = content;
+            }
+        });
+
         Ok(())
     }
+}
+
+fn replace_all_mathematics(content: &str) -> String {
+    let replaced = String::from(content);
+
+    replaced
 }
