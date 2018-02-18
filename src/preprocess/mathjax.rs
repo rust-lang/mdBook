@@ -37,7 +37,33 @@ impl Preprocessor for MathJaxPreprocessor {
 }
 
 fn replace_all_mathematics(content: &str) -> String {
-    let replaced = String::from(content);
+    let mut previous_end_index = 0;
+    let mut replaced = String::new();
+
+    for _math in find_mathematics(content) {
+        unimplemented!();
+    }
+
+    replaced.push_str(&content[previous_end_index..]);
 
     replaced
+}
+
+fn find_mathematics(_content: &str) -> MathematicsIterator {
+    MathematicsIterator
+}
+
+struct MathematicsIterator;
+
+impl Iterator for MathematicsIterator {
+    type Item = Mathematics;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        None
+    }
+}
+
+struct Mathematics {
+    start_index: usize,
+    end_index: usize,
 }
