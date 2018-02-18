@@ -133,6 +133,9 @@ pub enum BookItem {
     VirtualChapter(VirtualChapter),
     /// A section separator.
     Separator,
+    // To make sure clients have a `_ =>` case
+    #[doc(hidden)]
+    __NonExhaustive,
 }
 
 impl From<Chapter> for BookItem {

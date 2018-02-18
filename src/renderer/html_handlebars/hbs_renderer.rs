@@ -440,6 +440,7 @@ fn make_data(root: &Path, book: &Book, config: &Config, html_config: &HtmlConfig
             BookItem::Separator => {
                 chapter.insert("spacer".to_owned(), json!("_spacer_"));
             }
+            _ => unimplemented!(),
         }
 
         chapters.push(chapter);
