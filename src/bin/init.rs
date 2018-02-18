@@ -23,9 +23,11 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
     let mut builder = MDBook::init(&book_dir);
+    let mut config = config::Config::default();
 
     // If flag `--theme` is present, copy theme to src
     if args.is_present("theme") {
+        config.set("output.html.theme", "src/theme")?;
         // Skip this if `--force` is present
         if !args.is_present("force") {
             // Print warning
@@ -41,6 +43,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
             if confirm() {
                 builder.copy_theme(true);
             }
+        } else {
+            builder.copy_theme(true);
         }
     }
 
@@ -52,7 +56,6 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     if let Some(author) = get_author_name() {
         debug!("Obtained user name from gitconfig: {:?}", author);
-        let mut config = config::Config::default();
         config.book.authors.push(author);
         builder.with_config(config);
     }
