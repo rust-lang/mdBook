@@ -66,4 +66,12 @@ impl Iterator for MathematicsIterator {
 struct Mathematics {
     start_index: usize,
     end_index: usize,
+    kind: Kind,
+}
+
+enum Kind {
+    Inline,
+    Block,
+    LegacyInline,
+    LegacyBlock,
 }
