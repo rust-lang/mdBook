@@ -55,9 +55,17 @@ fn replace_all_mathematics(content: &str) -> String {
 fn find_mathematics(content: &str) -> MathematicsIterator {
     lazy_static! {
         static ref REGEXP: Regex = Regex::new(r"(?x) # insignificant whitespace mode
-            \$    # a dollar sign
-            [^$]+ # followed by one or more things other than a dollar sign
-            \$    # followed by a dollar sign.
+                   # Block mathematics is
+            (\$\$) # a double dollar sign
+            [^$]+  # followed by one or more things other than a dollar sign
+            (\$\$) # followed by a closing double dollar sign.
+
+            |      # or
+
+                   # Inline mathematics is
+            (\$)   # a dollar sign
+            [^$]+  # followed by one or more things other than a dollar sign
+            (\$)   # followed by a closing dollar sign.
         ").unwrap();
     }
     MathematicsIterator(REGEXP.captures_iter(content))
@@ -92,14 +100,25 @@ enum Kind {
     Block,
     LegacyInline,
     LegacyBlock,
+    Unrecognized,
+    Unknown,
 }
 
 impl<'a> Mathematics<'a> {
     fn from_capture(captures: Captures<'a>) -> Option<Self> {
+        let kind =
+            captures.get(1).or(captures.get(3))
+            .map(|delimiter|
+                 match delimiter.as_str() {
+                     "$$" => Kind::Block,
+                     "$"  => Kind::Inline,
+                     _    => Kind::Unrecognized,
+                 });
+
         captures.get(0).map(|m| Mathematics {
             start_index: m.start(),
             end_index: m.end(),
-            kind: Kind::Inline,
+            kind: kind.unwrap_or(Kind::Unknown),
             text: m.as_str(),
         })
     }
@@ -131,6 +150,20 @@ mod tests {
             end_index: 44,
             kind: Kind::Inline,
             text: "$a^{2} + b^{2} = c^{2}$",
+        })
+    }
+
+    #[test]
+    fn should_find_block_mathematics() {
+        let content = "Euler's identity: $$e^{i\\pi} + 1 = 0$$";
+
+        let result = find_mathematics(content).collect::<Vec<_>>();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0], Mathematics {
+            start_index: 18,
+            end_index: 38,
+            kind: Kind::Block,
+            text: "$$e^{i\\pi} + 1 = 0$$",
         })
     }
 }
