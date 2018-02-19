@@ -237,15 +237,15 @@
         </script>
         {{/if}}
 
-        {{#if playpens_editable}}
-        <script src="{{ ace_js }}" type="text/javascript" charset="utf-8"></script>
-        <script src="{{ editor_js }}" type="text/javascript" charset="utf-8"></script>
-        <script src="{{ mode_rust_js }}" type="text/javascript" charset="utf-8"></script>
-        <script src="{{ theme_dawn_js }}" type="text/javascript" charset="utf-8"></script>
-        <script src="{{ theme_tomorrow_night_js }}" type="text/javascript" charset="utf-8"></script>
+        {{#if playpen_js}}
+        <script src="ace.js" type="text/javascript" charset="utf-8"></script>
+        <script src="editor.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mode-rust.js" type="text/javascript" charset="utf-8"></script>
+        <script src="theme-dawn.js" type="text/javascript" charset="utf-8"></script>
+        <script src="theme-tomorrow_night.js" type="text/javascript" charset="utf-8"></script>
         {{/if}}
 
-        {{#if search_enabled}}
+        {{#if search_js}}
         <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="searcher.js" type="text/javascript" charset="utf-8"></script>

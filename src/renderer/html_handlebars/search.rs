@@ -12,13 +12,10 @@ use book::{Book, BookItem};
 use config::Search;
 use errors::*;
 use utils;
-use theme::searcher::Searcher;
+use theme::searcher;
 
 /// Creates all files required for search.
 pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> Result<()> {
-    if !search_config.enable {
-        return Ok(());
-    }
     let mut index = Index::new(&["title", "body", "breadcrumbs"]);
 
     for item in book.iter() {
@@ -26,12 +23,13 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
     }
 
     let json = write_to_json(index, &search_config)?;
-    let searcher = Searcher::new(&search_config.searcher);
-    utils::fs::write_file(destination, "searchindex.json", json.as_bytes())?;
-    utils::fs::write_file(destination, "searcher.js", &searcher.js)?;
-    utils::fs::write_file(destination, "mark.min.js", &searcher.mark_js)?;
-    utils::fs::write_file(destination, "elasticlunr.min.js", &searcher.elasticlunr_js)?;
-    debug!("Copying search files ✓");
+    if search_config.copy_js {
+        utils::fs::write_file(destination, "searchindex.json", json.as_bytes())?;
+        utils::fs::write_file(destination, "searcher.js", searcher::JS)?;
+        utils::fs::write_file(destination, "mark.min.js", searcher::MARK_JS)?;
+        utils::fs::write_file(destination, "elasticlunr.min.js", searcher::ELASTICLUNR_JS)?;
+        debug!("Copying search files ✓");
+    }
 
     Ok(())
 }

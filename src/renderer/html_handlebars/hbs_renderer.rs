@@ -3,7 +3,7 @@ use config::{Config, HtmlConfig, Playpen};
 use errors::*;
 use renderer::{RenderContext, Renderer};
 use renderer::html_handlebars::helpers;
-use theme::{self, Theme};
+use theme::{self, Theme, playpen_editor};
 use utils;
 
 #[allow(unused_imports)] use std::ascii::AsciiExt;
@@ -190,16 +190,15 @@ impl HtmlHandlebars {
         let playpen_config = &html_config.playpen;
 
         // Ace is a very large dependency, so only load it when requested
-        if playpen_config.editable {
+        if playpen_config.editable && playpen_config.copy_js {
             // Load the editor
-            let editor = theme::playpen_editor::PlaypenEditor::new(&playpen_config.editor);
-            write_file(destination, "editor.js", &editor.js)?;
-            write_file(destination, "ace.js", &editor.ace_js)?;
-            write_file(destination, "mode-rust.js", &editor.mode_rust_js)?;
-            write_file(destination, "theme-dawn.js", &editor.theme_dawn_js)?;
+            write_file(destination, "editor.js", playpen_editor::JS)?;
+            write_file(destination, "ace.js", playpen_editor::ACE_JS)?;
+            write_file(destination, "mode-rust.js", playpen_editor::MODE_RUST_JS)?;
+            write_file(destination, "theme-dawn.js", playpen_editor::THEME_DAWN_JS)?;
             write_file(destination,
                 "theme-tomorrow_night.js",
-                &editor.theme_tomorrow_night_js,
+                playpen_editor::THEME_TOMORROW_NIGHT_JS,
             )?;
         }
 
@@ -338,7 +337,7 @@ impl Renderer for HtmlHandlebars {
 
         // Render search index
         #[cfg(feature = "search")]
-        super::search::create_files(&html_config.search, &destination, &book)?;
+        super::search::create_files(&html_config.search.unwrap_or_default(), &destination, &book)?;
 
         // Copy all remaining files
         utils::fs::copy_files_except_ext(&src_dir, &destination, true, &["md"])?;
@@ -403,24 +402,20 @@ fn make_data(root: &Path, book: &Book, config: &Config, html_config: &HtmlConfig
         data.insert("additional_js".to_owned(), json!(js));
     }
 
-    if html.playpen.editable {
-        data.insert("playpens_editable".to_owned(), json!(true));
-        data.insert("editor_js".to_owned(), json!("editor.js"));
-        data.insert("ace_js".to_owned(), json!("ace.js"));
-        data.insert("mode_rust_js".to_owned(), json!("mode-rust.js"));
-        data.insert("theme_dawn_js".to_owned(), json!("theme-dawn.js"));
-        data.insert("theme_tomorrow_night_js".to_owned(),
-                    json!("theme-tomorrow_night.js"));
+    if html.playpen.editable && html.playpen.copy_js {
+        data.insert("playpen_js".to_owned(), json!(true));
     }
 
-    if html.search.enable {
-        if cfg!(feature = "search") {
-            data.insert("search_enabled".to_owned(), json!(true));
-        } else {
-            warn!("mdBook compiled without search support, ignoring `output.html.search.enable`");
-            warn!("please reinstall with `cargo install mdbook --force --features search`\
-                to use the search feature")
+    let search = html_config.search.clone();
+    if cfg!(feature = "search") {
+        data.insert("search_enabled".to_owned(), json!(true));
+        if search.unwrap_or_default().copy_js {
+            data.insert("search_js".to_owned(), json!(true));
         }
+    } else if search.is_some() {
+        warn!("mdBook compiled without search support, ignoring `output.html.search` table");
+        warn!("please reinstall with `cargo install mdbook --force --features search`\
+            to use the search feature")
     }
     
     let mut chapters = vec![];

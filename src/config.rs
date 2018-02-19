@@ -425,28 +425,26 @@ pub struct HtmlConfig {
     pub livereload_url: Option<String>,
     /// Should section labels be rendered?
     pub no_section_label: bool,
-    /// Search settings.
-    pub search: Search,
+    /// Search settings. If `None`, the default will be used.
+    pub search: Option<Search>,
 }
 
 /// Configuration for tweaking how the the HTML renderer handles the playpen.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Playpen {
-    /// The path to the editor to use. If not specified, will use the [Ace Editor] implementation
-    /// included in MDBook. Default: `""`.
-    ///
-    /// [Ace Editor]: https://ace.c9.io/
-    pub editor: PathBuf,
     /// Should playpen snippets be editable? Default: `false`.
     pub editable: bool,
+    /// Copy JavaScript files for the editor to the output directory?
+    /// Default: `true`.
+    pub copy_js: bool,
 }
 
 impl Default for Playpen {
     fn default() -> Playpen {
         Playpen {
-            editor: PathBuf::new(),
             editable: false,
+            copy_js: true,
         }
     }
 }
@@ -455,11 +453,6 @@ impl Default for Playpen {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Search {
-    /// Enable in browser searching. Default: `true` (if `search` feature is enabled).
-    pub enable: bool,
-    /// The path to the searcher to use. If not specified, will use the searcher code included in
-    /// MDBook. Default: `""`
-    pub searcher: PathBuf,
     /// Maximum number of visible results. Default: `30`.
     pub limit_results: u32,
     /// The number of words used for a search result teaser. Default: `30`,
@@ -482,14 +475,15 @@ pub struct Search {
     /// Documents are split into smaller parts, seperated by headings. This defines, until which
     /// level of heading documents should be split. Default: `3`. (`### This is a level 3 heading`)
     pub heading_split_level: u8,
+    /// Copy JavaScript files for the search functionality to the output directory?
+    /// Default: `true`.
+    pub copy_js: bool,
 }
 
 impl Default for Search {
     fn default() -> Search {
         // Please update the documentation of `Search` when changing values!
         Search {
-            enable: cfg!(feature = "search"),
-            searcher: PathBuf::new(),
             limit_results: 30,
             teaser_word_count: 30,
             use_boolean_and: false,
@@ -498,6 +492,7 @@ impl Default for Search {
             boost_paragraph: 1,
             expand: true,
             heading_split_level: 3,
+            copy_js: true,
         }
     }
 }
@@ -580,7 +575,7 @@ mod tests {
         };
         let playpen_should_be = Playpen {
             editable: true,
-            editor: PathBuf::from("ace"),
+            copy_js: true,
         };
         let html_should_be = HtmlConfig {
             curly_quotes: true,

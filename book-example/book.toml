@@ -10,7 +10,6 @@ mathjax-support = true
 editable = true
 
 [output.html.search]
-enable = true
 limit-results = 20
 use-boolean-and = true
 boost-title = 2

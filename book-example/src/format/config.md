@@ -18,7 +18,6 @@ create-missing = false
 additional-css = ["custom.css"]
 
 [output.html.search]
-enable = true
 limit-results = 15
 ```
 
@@ -97,20 +96,14 @@ The following configuration options are available:
 
 Available configuration options for the `[output.html.playpen]` table:
 
-- **editor:** mdBook includes a default editor for Rust code using [Ace]. If
-  this option is set, mdBook will selectively overwrite the editor JavaScript
-  files with ones included in the specified folder.
 - **editable:** Allow editing the source code. Defaults to `false`.
+- **copy-js:** Copy JavaScript files for the editor to the output directory.
+  Defaults to `true`.
 
 [Ace]: https://ace.c9.io/
 
 Available configuration options for the `[output.html.search]` table:
 
-- **enable:** Enable or disable the search function. Disabling can improve
-  book build times by a factor of two. Defaults to `true`.
-- **searcher:** mdBook includes a default search implementation. If this
-  option is set, mdBook will selectively overwrite the search JavaScript
-  files with ones included in the specified folder.
 - **limit-results:** The maximum number of search results. Defaults to `30`.
 - **teaser-word-count:** The number of words used for a search result teaser. 
   Defaults to `30`.
@@ -129,6 +122,8 @@ Available configuration options for the `[output.html.search]` table:
   which contains the result. Documents are split into sections by headings
   this level or less.
   Defaults to `3`. (`### This is a level 3 heading`)
+- **copy-js:** Copy JavaScript files for the search implementation to the
+  output directory. Defaults to `true`.
 
 This shows all available options in the **book.toml**:
 ```toml
