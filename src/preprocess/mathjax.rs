@@ -66,7 +66,7 @@ fn find_mathematics(content: &str) -> MathematicsIterator {
 struct MathematicsIterator<'a>(CaptureMatches<'a, 'a>);
 
 impl<'a> Iterator for MathematicsIterator<'a> {
-    type Item = Mathematics;
+    type Item = Mathematics<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
         for capture in &mut self.0 {
@@ -79,10 +79,11 @@ impl<'a> Iterator for MathematicsIterator<'a> {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-struct Mathematics {
+struct Mathematics<'a> {
     start_index: usize,
     end_index: usize,
     kind: Kind,
+    text: &'a str,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -93,12 +94,13 @@ enum Kind {
     LegacyBlock,
 }
 
-impl Mathematics {
-    fn from_capture<'a>(captures: Captures<'a>) -> Option<Self> {
+impl<'a> Mathematics<'a> {
+    fn from_capture(captures: Captures<'a>) -> Option<Self> {
         captures.get(0).map(|m| Mathematics {
             start_index: m.start(),
             end_index: m.end(),
             kind: Kind::Inline,
+            text: m.as_str(),
         })
     }
 
@@ -128,6 +130,7 @@ mod tests {
             start_index: 21,
             end_index: 44,
             kind: Kind::Inline,
+            text: "$a^{2} + b^{2} = c^{2}$",
         })
     }
 }
