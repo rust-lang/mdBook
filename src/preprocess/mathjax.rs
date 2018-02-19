@@ -40,8 +40,10 @@ fn replace_all_mathematics(content: &str) -> String {
     let mut previous_end_index = 0;
     let mut replaced = String::new();
 
-    for _math in find_mathematics(content) {
-        unimplemented!();
+    for math in find_mathematics(content) {
+        replaced.push_str(&content[previous_end_index..math.start_index]);
+        replaced.push_str(math.replacement());
+        previous_end_index = math.end_index;
     }
 
     replaced.push_str(&content[previous_end_index..]);
@@ -74,4 +76,10 @@ enum Kind {
     Block,
     LegacyInline,
     LegacyBlock,
+}
+
+impl Mathematics {
+    fn replacement(&self) -> String {
+        unimplemented!()
+    }
 }
