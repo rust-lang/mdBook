@@ -116,7 +116,6 @@ enum Kind {
     Block,
     LegacyInline,
     LegacyBlock,
-    Unknown,
 }
 
 impl<'a> Mathematics<'a> {
@@ -130,7 +129,7 @@ impl<'a> Mathematics<'a> {
                      "\\\\[" => Kind::LegacyBlock,
                      _       => Kind::LegacyInline,
                  })
-            .unwrap_or(Kind::Unknown);
+            .expect("captured mathematics should have opening delimiter at the provided indices");
 
         captures.get(0).map(|m| Mathematics {
             start_index: m.start(),
@@ -141,7 +140,20 @@ impl<'a> Mathematics<'a> {
     }
 
     fn replacement(&self) -> String {
-        unimplemented!()
+        let mut replacement = String::new();
+        match self.kind {
+            Kind::Block  | Kind::LegacyBlock  => {
+                replacement.push_str("<div class=\"math\">$$");
+                replacement.push_str(self.text);
+                replacement.push_str("$$</div>");
+            },
+            Kind::Inline | Kind::LegacyInline => {
+                replacement.push_str("<span class=\"inline math\">$");
+                replacement.push_str(self.text);
+                replacement.push_str("$</span>");
+            },
+        }
+        replacement
     }
 }
 
@@ -153,7 +165,6 @@ impl Kind {
             Kind::Inline       => &delimited_text[1..end-1],
             Kind::LegacyBlock  => &delimited_text[3..end-3],
             Kind::LegacyInline => &delimited_text[3..end-3],
-            Kind::Unknown      => &delimited_text[..]
         }
     }
 }
@@ -174,6 +185,7 @@ mod tests {
         let content = "Pythagorean theorem: $a^{2} + b^{2} = c^{2}$";
 
         let result = find_mathematics(content).collect::<Vec<_>>();
+
         assert_eq!(result.len(), 1);
         assert_eq!(result[0], Mathematics {
             start_index: 21,
@@ -188,6 +200,7 @@ mod tests {
         let content = "Euler's identity: $$e^{i\\pi} + 1 = 0$$";
 
         let result = find_mathematics(content).collect::<Vec<_>>();
+
         assert_eq!(result.len(), 1);
         assert_eq!(result[0], Mathematics {
             start_index: 18,
@@ -202,6 +215,7 @@ mod tests {
         let content = "Pythagorean theorem: \\\\(a^{2} + b^{2} = c^{2}\\\\)";
 
         let result = find_mathematics(content).collect::<Vec<_>>();
+
         assert_eq!(result.len(), 1);
         assert_eq!(result[0], Mathematics {
             start_index: 21,
@@ -216,6 +230,7 @@ mod tests {
         let content = "Euler's identity: \\\\[e^{i\\pi} + 1 = 0\\\\]";
 
         let result = find_mathematics(content).collect::<Vec<_>>();
+
         assert_eq!(result.len(), 1);
         assert_eq!(result[0], Mathematics {
             start_index: 18,
@@ -224,4 +239,23 @@ mod tests {
             text: "e^{i\\pi} + 1 = 0",
         })
     }
+
+    #[test]
+    fn should_replace_inline_mathematics() {
+        let content = "Pythagorean theorem: $a^{2} + b^{2} = c^{2}$";
+
+        let result = replace_all_mathematics(content);
+
+        assert_eq!(result, "Pythagorean theorem: <span class=\"inline math\">$a^{2} + b^{2} = c^{2}$</span>")
+    }
+
+    #[test]
+    fn should_replace_block_mathematics() {
+        let content = "Euler's identity: $$e^{i\\pi} + 1 = 0$$";
+
+        let result = replace_all_mathematics(content);
+
+        assert_eq!(result, "Euler's identity: <div class=\"math\">$$e^{i\\pi} + 1 = 0$$</div>")
+    }
+
 }
