@@ -55,17 +55,33 @@ fn replace_all_mathematics(content: &str) -> String {
 fn find_mathematics(content: &str) -> MathematicsIterator {
     lazy_static! {
         static ref REGEXP: Regex = Regex::new(r"(?x) # insignificant whitespace mode
-                   # Block mathematics is
-            (\$\$) # a double dollar sign
-            [^$]+  # followed by one or more things other than a dollar sign
-            (\$\$) # followed by a closing double dollar sign.
+                     # Mathematics is
 
-            |      # or
+                     # Block mathematics is
+            (\$\$)   # a double dollar sign
+            [^$]+    # followed by one or more things other than a dollar sign
+            (\$\$)   # followed by a closing double dollar sign.
 
-                   # Inline mathematics is
-            (\$)   # a dollar sign
-            [^$]+  # followed by one or more things other than a dollar sign
-            (\$)   # followed by a closing dollar sign.
+            |        # or
+
+                     # Inline mathematics is
+            (\$)     # a dollar sign
+            [^$]+    # followed by one or more things other than a dollar sign
+            (\$)     # followed by a closing dollar sign.
+
+            |        # or
+
+                     # Legacy inline mathematics
+            (\\\\\() # An escaped opening bracket `\\(`
+            [^)]+    # followed by one or more other things TODO provide correct regexp.
+            (\\\\\)) # followed by a closing bracket `\\)`
+
+            |        # or
+
+                     # Legacy block mathematics
+            (\\\\\[) # An escaped opening bracket `\\[`
+            [^$]+    # followed by one ore more other things TODO provide correct regexp.
+            (\\\\\]) # followed by a closing bracket `\\]`
         ").unwrap();
     }
     MathematicsIterator(REGEXP.captures_iter(content))
@@ -107,12 +123,14 @@ enum Kind {
 impl<'a> Mathematics<'a> {
     fn from_capture(captures: Captures<'a>) -> Option<Self> {
         let kind =
-            captures.get(1).or(captures.get(3))
+            captures.get(1).or(captures.get(3)).or(captures.get(5)).or(captures.get(7))
             .map(|delimiter|
                  match delimiter.as_str() {
-                     "$$" => Kind::Block,
-                     "$"  => Kind::Inline,
-                     _    => Kind::Unrecognized,
+                     "$$"    => Kind::Block,
+                     "$"     => Kind::Inline,
+                     "\\\\[" => Kind::LegacyBlock,
+                     "\\\\(" => Kind::LegacyInline,
+                     _       => Kind::Unrecognized, // Should never occur
                  });
 
         captures.get(0).map(|m| Mathematics {
@@ -164,6 +182,34 @@ mod tests {
             end_index: 38,
             kind: Kind::Block,
             text: "$$e^{i\\pi} + 1 = 0$$",
+        })
+    }
+
+    #[test]
+    fn should_find_legacy_inline_mathematics() {
+        let content = "Pythagorean theorem: \\\\(a^{2} + b^{2} = c^{2}\\\\)";
+
+        let result = find_mathematics(content).collect::<Vec<_>>();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0], Mathematics {
+            start_index: 21,
+            end_index: 48,
+            kind: Kind::LegacyInline,
+            text: "\\\\(a^{2} + b^{2} = c^{2}\\\\)",
+        })
+    }
+
+    #[test]
+    fn should_find_legacy_block_mathematics() {
+        let content = "Euler's identity: \\\\[e^{i\\pi} + 1 = 0\\\\]";
+
+        let result = find_mathematics(content).collect::<Vec<_>>();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0], Mathematics {
+            start_index: 18,
+            end_index: 40,
+            kind: Kind::LegacyBlock,
+            text: "\\\\[e^{i\\pi} + 1 = 0\\\\]",
         })
     }
 }
