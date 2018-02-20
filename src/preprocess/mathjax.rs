@@ -110,7 +110,7 @@ struct Mathematics<'a> {
     text: &'a str,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 enum Kind {
     Inline,
     Block,
@@ -136,12 +136,25 @@ impl<'a> Mathematics<'a> {
             start_index: m.start(),
             end_index: m.end(),
             kind: kind,
-            text: m.as_str(),
+            text: kind.text(m.as_str()),
         })
     }
 
     fn replacement(&self) -> String {
         unimplemented!()
+    }
+}
+
+impl Kind {
+    fn text<'a>(&self, delimited_text: &'a str) -> &'a str {
+        let end = delimited_text.len();
+        match *self {
+            Kind::Block        => &delimited_text[2..end-2],
+            Kind::Inline       => &delimited_text[1..end-1],
+            Kind::LegacyBlock  => &delimited_text[3..end-3],
+            Kind::LegacyInline => &delimited_text[3..end-3],
+            Kind::Unknown      => &delimited_text[..]
+        }
     }
 }
 
@@ -166,7 +179,7 @@ mod tests {
             start_index: 21,
             end_index: 44,
             kind: Kind::Inline,
-            text: "$a^{2} + b^{2} = c^{2}$",
+            text: "a^{2} + b^{2} = c^{2}",
         })
     }
 
@@ -180,7 +193,7 @@ mod tests {
             start_index: 18,
             end_index: 38,
             kind: Kind::Block,
-            text: "$$e^{i\\pi} + 1 = 0$$",
+            text: "e^{i\\pi} + 1 = 0",
         })
     }
 
@@ -194,7 +207,7 @@ mod tests {
             start_index: 21,
             end_index: 48,
             kind: Kind::LegacyInline,
-            text: "\\\\(a^{2} + b^{2} = c^{2}\\\\)",
+            text: "a^{2} + b^{2} = c^{2}",
         })
     }
 
@@ -208,7 +221,7 @@ mod tests {
             start_index: 18,
             end_index: 40,
             kind: Kind::LegacyBlock,
-            text: "\\\\[e^{i\\pi} + 1 = 0\\\\]",
+            text: "e^{i\\pi} + 1 = 0",
         })
     }
 }
