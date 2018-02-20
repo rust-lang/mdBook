@@ -116,7 +116,6 @@ enum Kind {
     Block,
     LegacyInline,
     LegacyBlock,
-    Unrecognized,
     Unknown,
 }
 
@@ -129,14 +128,14 @@ impl<'a> Mathematics<'a> {
                      "$$"    => Kind::Block,
                      "$"     => Kind::Inline,
                      "\\\\[" => Kind::LegacyBlock,
-                     "\\\\(" => Kind::LegacyInline,
-                     _       => Kind::Unrecognized, // Should never occur
-                 });
+                     _       => Kind::LegacyInline,
+                 })
+            .unwrap_or(Kind::Unknown);
 
         captures.get(0).map(|m| Mathematics {
             start_index: m.start(),
             end_index: m.end(),
-            kind: kind.unwrap_or(Kind::Unknown),
+            kind: kind,
             text: m.as_str(),
         })
     }
