@@ -15,9 +15,9 @@ use std::ffi::OsString;
 use std::env::{args, args_os};
 use std::process;
 
-struct ProcessLinks;
+struct Deemphasize;
 
-impl Preprocessor for ProcessLinks {
+impl Preprocessor for Deemphasize {
     fn name(&self) -> &str {
         "md-links-to-html-links"
     }
@@ -72,7 +72,7 @@ impl Preprocessor for ProcessLinks {
 
 fn do_it(book: OsString) -> ::std::result::Result<(), Error> {
     let mut book = MDBook::load(book)?;
-    book.with_preprecessor(ProcessLinks);
+    book.with_preprecessor(Deemphasize);
     book.build()
 }
 
