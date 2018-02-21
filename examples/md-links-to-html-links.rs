@@ -1,22 +1,14 @@
 extern crate mdbook;
 extern crate pulldown_cmark;
 extern crate pulldown_cmark_to_cmark;
-#[macro_use]
-extern crate quicli;
 
 use mdbook::errors::Error;
 use mdbook::MDBook;
 use mdbook::book::Book;
 use mdbook::preprocess::{PreprocessorContext, Preprocessor};
-use quicli::prelude::*;
 
-#[derive(Debug, StructOpt)]
-struct Cli {
-    book: String,
-
-    #[structopt(long = "verbose", short = "v", parse(from_occurrences))]
-    verbosity: u8,
-}
+use std::ffi::OsString;
+use std::env::{args_os, args};
 
 struct ProcessLinks;
 
@@ -26,17 +18,27 @@ impl Preprocessor for ProcessLinks {
     }
 
     fn run(&self, ctx: &PreprocessorContext, book: &mut Book) -> ::std::result::Result<(), Error> {
-        info!("Running '{}' preprocessor", self.name());
+        eprintln!("Running '{}' preprocessor", self.name());
         Ok(())
     }
 }
 
-fn do_it(args: Cli) -> ::std::result::Result<(), Error> {
-    let mut book = MDBook::load(args.book)?;
+fn do_it(book: OsString) -> ::std::result::Result<(), Error> {
+    let mut book = MDBook::load(book)?;
     book.with_preprecessor(ProcessLinks);
     Ok(())
 }
 
-main!(|args: Cli, log_level: verbosity| {
-    do_it(args).map_err(|e|format_err!("{}", e))?
-});
+fn main() {
+    if args_os().count() != 2 {
+        eprintln!("USAGE: {} <book>", args().next().expect("executable"));
+        return
+    }
+    if let Err(e) = do_it(args_os()
+                        .skip(1)
+                        .next()
+                        .expect("one argument")) {
+        eprintln!("{}", e);
+    }
+}
+

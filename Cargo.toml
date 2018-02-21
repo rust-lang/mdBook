@@ -58,7 +58,6 @@ select = "0.4"
 pretty_assertions = "0.4"
 walkdir = "2.0"
 pulldown-cmark-to-cmark = "1.1.0"
-quicli = "0.2.0"
 
 [features]
 default = ["output", "watch", "serve"]
