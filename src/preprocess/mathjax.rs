@@ -124,10 +124,10 @@ impl<'a> Mathematics<'a> {
             captures.get(1).or(captures.get(4)).or(captures.get(7)).or(captures.get(10))
             .map(|delimiter|
                  match delimiter.as_str() {
-                     "$$"    => Kind::Block,
-                     "$"     => Kind::Inline,
-                     "\\\\[" => Kind::LegacyBlock,
-                     _       => Kind::LegacyInline,
+                     "$$"   => Kind::Block,
+                     "$"    => Kind::Inline,
+                     r"\\[" => Kind::LegacyBlock,
+                     _      => Kind::LegacyInline,
                  })
             .expect("captured mathematics should have opening delimiter at the provided indices");
 
@@ -212,7 +212,7 @@ mod tests {
 
     #[test]
     fn should_find_legacy_inline_mathematics() {
-        let content = "Pythagorean theorem: \\\\(a^{2} + b^{2} = c^{2}\\\\)";
+        let content = r"Pythagorean theorem: \\(a^{2} + b^{2} = c^{2}\\)";
 
         let result = find_mathematics(content).collect::<Vec<_>>();
 
@@ -227,7 +227,7 @@ mod tests {
 
     #[test]
     fn should_find_legacy_block_mathematics() {
-        let content = "Euler's identity: \\\\[e^{i\\pi} + 1 = 0\\\\]";
+        let content = r"Euler's identity: \\[e^{i\pi} + 1 = 0\\]";
 
         let result = find_mathematics(content).collect::<Vec<_>>();
 
