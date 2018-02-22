@@ -140,19 +140,14 @@ impl<'a> Mathematics<'a> {
     }
 
     fn replacement(&self) -> String {
-        let mut replacement = String::new();
-        match self.kind {
+        let replacement: String = match self.kind {
             Kind::Block  | Kind::LegacyBlock  => {
-                replacement.push_str("<div class=\"math\">$$");
-                replacement.push_str(self.text);
-                replacement.push_str("$$</div>");
+                format!("<div class=\"math\">$${}$$</div>", self.text)
             },
             Kind::Inline | Kind::LegacyInline => {
-                replacement.push_str("<span class=\"inline math\">$");
-                replacement.push_str(self.text);
-                replacement.push_str("$</span>");
+                format!("<span class=\"inline math\">${}$</span>", self.text)
             },
-        }
+        };
         replacement
     }
 }
