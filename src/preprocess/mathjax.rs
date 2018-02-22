@@ -135,7 +135,7 @@ impl<'a> Mathematics<'a> {
             start_index: m.start(),
             end_index: m.end(),
             kind: kind,
-            text: kind.text(m.as_str()),
+            text: strip_delimiters_from_delimited_text(&kind, m.as_str()),
         })
     }
 
@@ -152,15 +152,13 @@ impl<'a> Mathematics<'a> {
     }
 }
 
-impl Kind {
-    fn text<'a>(&self, delimited_text: &'a str) -> &'a str {
-        let end = delimited_text.len();
-        match *self {
-            Kind::Block        => &delimited_text[2..end-2],
-            Kind::Inline       => &delimited_text[1..end-1],
-            Kind::LegacyBlock  => &delimited_text[3..end-3],
-            Kind::LegacyInline => &delimited_text[3..end-3],
-        }
+fn strip_delimiters_from_delimited_text<'a>(kind: &Kind, delimited_text: &'a str) -> &'a str {
+    let end = delimited_text.len();
+    match *kind {
+        Kind::Block        => &delimited_text[2..end-2],
+        Kind::Inline       => &delimited_text[1..end-1],
+        Kind::LegacyBlock  => &delimited_text[3..end-3],
+        Kind::LegacyInline => &delimited_text[3..end-3],
     }
 }
 
