@@ -33,7 +33,7 @@ pub struct PreprocessorContext {
 
 ## A complete Example
 
-The magic happens within the `run(...)` method of the `Preprocessor` trait implementation.
+The magic happens within the `run(...)` method of the [`Preprocessor`][preprocessor-docs] trait implementation.
 
 As direct access to the chapters is not possible, you will probably end up iterating
 them using `for_each_mut(...)`:
@@ -78,6 +78,7 @@ cmark(events, &mut buf, None)
 
 For everything else, have a look [at the complete example][example].
 
+[preprocessor-docs]: https://docs.rs/mdbook/0.1.3/mdbook/preprocess/trait.Preprocessor.html
 [pc]: https://crates.io/crates/pulldown-cmark
 [pctc]: https://crates.io/crates/pulldown-cmark-to-cmark
 [example]: https://github.com/rust-lang-nursery/mdBook/blob/master/examples/de-emphasize.rs
