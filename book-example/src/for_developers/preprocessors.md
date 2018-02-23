@@ -41,12 +41,17 @@ them using `for_each_mut(...)`:
 ```rust
 book.for_each_mut(|item: &mut BookItem| {
     if let BookItem::Chapter(ref mut chapter) = *item {
-        eprintln!("{}: processing chapter '{}'", self.name(), chapter.name);
-        // ... adjust the chapter content, and ...
-
-        // ... finally assign the new value
-        chapter.content = buf;
-    }
+      eprintln!("{}: processing chapter '{}'", self.name(), chapter.name);
+      res = Some(
+          match Deemphasize::remove_emphasis(&mut num_removed_items, chapter) {
+              Ok(md) => {
+                  chapter.content = md;
+                  Ok(())
+              }
+              Err(err) => Err(err),
+          },
+      );
+  }
 });
 ```
 
@@ -62,18 +67,25 @@ The following code block shows how to remove all emphasis from markdown, and do 
 safely.
 
 ```rust
-let mut buf = String::with_capacity(chapter.content.len());
-let events = Parser::new(&chapter.content)
-              .filter(|e|
-                match *e {
-                    Event::Start(Tag::Emphasis)
-                    | Event::Start(Tag::Strong)
-                    | Event::End(Tag::Emphasis)
-                    | Event::End(Tag::Strong) => false,
-                    _ => true,
-                }
-              );
-cmark(events, &mut buf, None)
+fn remove_emphasis(num_removed_items: &mut i32, chapter: &mut Chapter) -> Result<String> {
+    let mut buf = String::with_capacity(chapter.content.len());
+    let events = Parser::new(&chapter.content).filter(|e| {
+        let should_keep = match *e {
+            Event::Start(Tag::Emphasis)
+            | Event::Start(Tag::Strong)
+            | Event::End(Tag::Emphasis)
+            | Event::End(Tag::Strong) => false,
+            _ => true,
+        };
+        if !should_keep {
+            *num_removed_items += 1;
+        }
+        should_keep
+    });
+    cmark(events, &mut buf, None)
+        .map(|_| buf)
+        .map_err(|err| Error::from(format!("Markdown serialization failed: {}", err)))
+}
 ```
 
 For everything else, have a look [at the complete example][example].
