@@ -296,9 +296,8 @@ impl Renderer for HtmlHandlebars {
         fs::create_dir_all(&destination)
             .chain_err(|| "Unexpected error when constructing destination path")?;
 
-        let mut depthfirstiterator = book.iter();
         let mut is_index = true;
-        while let Some(item) = depthfirstiterator.next() {
+        for item in book.iter() {
             let ctx = RenderItemContext {
                 handlebars: &handlebars,
                 destination: destination.to_path_buf(),
