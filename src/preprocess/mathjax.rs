@@ -59,28 +59,36 @@ fn find_mathematics(content: &str) -> MathematicsIterator {
 
                      # Block mathematics is
             (\$\$)   # a double dollar sign
-            [^$]+    # followed by one or more things other than a dollar sign
+            (?:      # followed by one or more
+            [^$]     # things other than a dollar sign
+            |        # or
+            \\\$     # an escaped dollar sign
+            )+
             (\$\$)   # followed by a closing double dollar sign.
 
             |        # or
 
                      # Inline mathematics is
             (\$)     # a dollar sign
-            [^$]+    # followed by one or more things other than a dollar sign
+            (?:      # followed by one or more
+            [^$]     # things other than a dollar sign
+            |        # or
+            \\\$     # an escaped dollar sign
+            )+
             (\$)     # followed by a closing dollar sign.
 
             |        # or
 
                      # Legacy inline mathematics
             (\\\\\() # An escaped opening bracket `\\(`
-            [^)]+    # followed by one or more other things TODO provide correct regexp.
+            .+?      # followed by one or more other things, but lazily
             (\\\\\)) # followed by a closing bracket `\\)`
 
             |        # or
 
                      # Legacy block mathematics
             (\\\\\[) # An escaped opening bracket `\\[`
-            [^$]+    # followed by one ore more other things TODO provide correct regexp.
+            .+?      # followed by one ore more other things, but lazily
             (\\\\\]) # followed by a closing bracket `\\]`
         ").unwrap();
     }
