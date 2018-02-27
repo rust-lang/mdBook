@@ -246,6 +246,9 @@
         <script src="theme-tomorrow_night.js" type="text/javascript" charset="utf-8"></script>
         {{/if}}
 
+        {{#if search_enabled}}
+        <script src="searchindex.js" type="text/javascript" charset="utf-8"></script>
+        {{/if}}
         {{#if search_js}}
         <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>

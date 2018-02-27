@@ -22,11 +22,11 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
         render_item(&mut index, &search_config, item)?;
     }
 
-    let json = write_to_json(index, &search_config)?;
+    let index = write_to_js(index, &search_config)?;
     debug!("Writing search index ✓");
 
     if search_config.copy_js {
-        utils::fs::write_file(destination, "searchindex.json", json.as_bytes())?;
+        utils::fs::write_file(destination, "searchindex.js", index.as_bytes())?;
         utils::fs::write_file(destination, "searcher.js", searcher::JS)?;
         utils::fs::write_file(destination, "mark.min.js", searcher::MARK_JS)?;
         utils::fs::write_file(destination, "elasticlunr.min.js", searcher::ELASTICLUNR_JS)?;
@@ -144,8 +144,10 @@ fn render_item(index: &mut Index, search_config: &Search, item: &BookItem) -> Re
     Ok(())
 }
 
-/// Converts the index and search options to a JSON string
-fn write_to_json(index: Index, search_config: &Search) -> Result<String> {
+/// Exports the index and search options to a JS script which stores the index in `window.search`.
+/// Using a JS script is a workaround for CORS in `file://` URIs. It also removes the need for
+/// downloading/parsing JSON in JS.
+fn write_to_js(index: Index, search_config: &Search) -> Result<String> {
     // These structs mirror the configuration javascript object accepted by
     // http://elasticlunr.com/docs/configuration.js.html
 
@@ -204,6 +206,7 @@ fn write_to_json(index: Index, search_config: &Search) -> Result<String> {
         searchoptions: searchoptions,
         index: index,
     };
+    let json_contents = serde_json::to_string(&json_contents)?;
 
-    Ok(serde_json::to_string(&json_contents)?)
+    Ok(format!("window.search = {};", json_contents))
 }

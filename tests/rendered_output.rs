@@ -349,15 +349,21 @@ mod search {
     use mdbook::MDBook;
     use dummy_book::DummyBook;
 
+    fn read_book_index(root: &Path) -> serde_json::Value {
+        let index = root.join("book/searchindex.js");
+        let index = file_to_string(index).unwrap();
+        let index = index.trim_left_matches("window.search = ");
+        let index = index.trim_right_matches(";");
+        serde_json::from_str(&index).unwrap()
+    }
+
     #[test]
     fn book_creates_reasonable_search_index() {
         let temp = DummyBook::new().build().unwrap();
         let md = MDBook::load(temp.path()).unwrap();
         md.build().unwrap();
 
-        let index = temp.path().join("book/searchindex.json");
-        let index = file_to_string(index).unwrap();
-        let index: serde_json::Value = serde_json::from_str(&index).unwrap();
+        let index = read_book_index(temp.path());
 
         let bodyidx = &index["index"]["index"]["body"]["root"];
         let textidx = &bodyidx["t"]["e"]["x"]["t"];
@@ -393,13 +399,11 @@ mod search {
             let md = MDBook::load(temp.path()).unwrap();
             md.build().unwrap();
 
-            let src = temp.path().join("book/searchindex.json");
-            let src = File::open(src).unwrap();
-            let src: serde_json::Value = serde_json::from_reader(src).unwrap();
+            let src = read_book_index(temp.path());
 
             let dest = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/searchindex_fixture.json");
-            let mut dest = File::create(&dest).unwrap();
-            serde_json::to_writer_pretty(&mut dest, &src).unwrap();
+            let dest = File::create(&dest).unwrap();
+            serde_json::to_writer_pretty(dest, &src).unwrap();
 
             src
         } else {
@@ -423,9 +427,7 @@ mod search {
         let md = MDBook::load(temp.path()).unwrap();
         md.build().unwrap();
 
-        let book_index = temp.path().join("book/searchindex.json");
-        let book_index = File::open(book_index).unwrap();
-        let book_index: serde_json::Value = serde_json::from_reader(book_index).unwrap();
+        let book_index = read_book_index(temp.path());
 
         let fixture_index = get_fixture();
 

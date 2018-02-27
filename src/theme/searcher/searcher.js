@@ -1,4 +1,4 @@
-window.search = {};
+window.search = window.search || {};
 (function search(search) {
     // Search functionality
     //
@@ -236,28 +236,18 @@ window.search = {};
     }
 
     function init() {
-        var request = new XMLHttpRequest();
-        request.open('GET', 'searchindex.json', true);
-        
-        request.onload = function() {
-            if (this.status >= 200 && this.status < 400) {
-                var json = JSON.parse(this.response);
+        searchoptions = window.search.searchoptions;
+        searchindex = elasticlunr.Index.load(window.search.index);
 
-                searchoptions = json.searchoptions;
-                searchindex = elasticlunr.Index.load(json.index);
+        // Set up events
+        searchicon.addEventListener('click', function(e) { searchIconClickHandler(); }, false);
+        searchbar.addEventListener('keyup', function(e) { searchbarKeyUpHandler(); }, false);
+        document.addEventListener('keydown', function (e) { globalKeyHandler(e); }, false);
+        // If the user uses the browser buttons, do the same as if a reload happened
+        window.onpopstate = function(e) { doSearchOrMarkFromUrl(); };
 
-                // Set up events
-                searchicon.addEventListener('click', function(e) { searchIconClickHandler(); }, false);
-                searchbar.addEventListener('keyup', function(e) { searchbarKeyUpHandler(); }, false);
-                document.addEventListener('keydown', function (e) { globalKeyHandler(e); }, false);
-                // If the user uses the browser buttons, do the same as if a reload happened
-                window.onpopstate = function(e) { doSearchOrMarkFromUrl(); };
-
-                // If reloaded, do the search or mark again, depending on the current url parameters
-                doSearchOrMarkFromUrl();
-            }
-        };        
-        request.send();
+        // If reloaded, do the search or mark again, depending on the current url parameters
+        doSearchOrMarkFromUrl();
     }
     
     function unfocusSearchbar() {
