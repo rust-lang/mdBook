@@ -3,7 +3,7 @@
     "documentStore": {
       "docInfo": {
         "conclusion.html#conclusion": {
-          "body": 5,
+          "body": 3,
           "breadcrumbs": 1,
           "title": 1
         },
@@ -50,7 +50,7 @@
       },
       "docs": {
         "conclusion.html#conclusion": {
-          "body": "1 + 2 < 5 > 0 &gt;",
+          "body": "I put &lt;HTML&gt; in here!",
           "breadcrumbs": "Conclusion",
           "id": "conclusion.html#conclusion",
           "title": "Conclusion"
@@ -115,38 +115,6 @@
     "index": {
       "body": {
         "root": {
-          "0": {
-            "df": 1,
-            "docs": {
-              "conclusion.html#conclusion": {
-                "tf": 1.0
-              }
-            }
-          },
-          "1": {
-            "df": 1,
-            "docs": {
-              "conclusion.html#conclusion": {
-                "tf": 1.0
-              }
-            }
-          },
-          "2": {
-            "df": 1,
-            "docs": {
-              "conclusion.html#conclusion": {
-                "tf": 1.0
-              }
-            }
-          },
-          "5": {
-            "df": 1,
-            "docs": {
-              "conclusion.html#conclusion": {
-                "tf": 1.0
-              }
-            }
-          },
           "a": {
             "df": 0,
             "docs": {},
@@ -386,18 +354,6 @@
               }
             }
           },
-          "g": {
-            "df": 0,
-            "docs": {},
-            "t": {
-              "df": 1,
-              "docs": {
-                "conclusion.html#conclusion": {
-                  "tf": 1.0
-                }
-              }
-            }
-          },
           "h": {
             "df": 0,
             "docs": {},
@@ -416,8 +372,12 @@
                       }
                     }
                   },
-                  "df": 0,
-                  "docs": {}
+                  "df": 1,
+                  "docs": {
+                    "conclusion.html#conclusion": {
+                      "tf": 1.0
+                    }
+                  }
                 }
               }
             },
@@ -582,6 +542,46 @@
                   }
                 }
               }
+            },
+            "t": {
+              ";": {
+                "df": 0,
+                "docs": {},
+                "h": {
+                  "df": 0,
+                  "docs": {},
+                  "t": {
+                    "df": 0,
+                    "docs": {},
+                    "m": {
+                      "df": 0,
+                      "docs": {},
+                      "l": {
+                        "&": {
+                          "df": 0,
+                          "docs": {},
+                          "g": {
+                            "df": 0,
+                            "docs": {},
+                            "t": {
+                              "df": 1,
+                              "docs": {
+                                "conclusion.html#conclusion": {
+                                  "tf": 1.0
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "df": 0,
+                        "docs": {}
+                      }
+                    }
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {}
             }
           },
           "m": {
@@ -722,6 +722,18 @@
                         "docs": {}
                       }
                     }
+                  }
+                }
+              }
+            },
+            "u": {
+              "df": 0,
+              "docs": {},
+              "t": {
+                "df": 1,
+                "docs": {
+                  "conclusion.html#conclusion": {
+                    "tf": 1.0
                   }
                 }
               }
@@ -976,38 +988,6 @@
       },
       "breadcrumbs": {
         "root": {
-          "0": {
-            "df": 1,
-            "docs": {
-              "conclusion.html#conclusion": {
-                "tf": 1.0
-              }
-            }
-          },
-          "1": {
-            "df": 1,
-            "docs": {
-              "conclusion.html#conclusion": {
-                "tf": 1.0
-              }
-            }
-          },
-          "2": {
-            "df": 1,
-            "docs": {
-              "conclusion.html#conclusion": {
-                "tf": 1.0
-              }
-            }
-          },
-          "5": {
-            "df": 1,
-            "docs": {
-              "conclusion.html#conclusion": {
-                "tf": 1.0
-              }
-            }
-          },
           "a": {
             "df": 0,
             "docs": {},
@@ -1262,18 +1242,6 @@
               }
             }
           },
-          "g": {
-            "df": 0,
-            "docs": {},
-            "t": {
-              "df": 1,
-              "docs": {
-                "conclusion.html#conclusion": {
-                  "tf": 1.0
-                }
-              }
-            }
-          },
           "h": {
             "df": 0,
             "docs": {},
@@ -1292,8 +1260,12 @@
                       }
                     }
                   },
-                  "df": 0,
-                  "docs": {}
+                  "df": 1,
+                  "docs": {
+                    "conclusion.html#conclusion": {
+                      "tf": 1.0
+                    }
+                  }
                 }
               }
             },
@@ -1458,6 +1430,46 @@
                   }
                 }
               }
+            },
+            "t": {
+              ";": {
+                "df": 0,
+                "docs": {},
+                "h": {
+                  "df": 0,
+                  "docs": {},
+                  "t": {
+                    "df": 0,
+                    "docs": {},
+                    "m": {
+                      "df": 0,
+                      "docs": {},
+                      "l": {
+                        "&": {
+                          "df": 0,
+                          "docs": {},
+                          "g": {
+                            "df": 0,
+                            "docs": {},
+                            "t": {
+                              "df": 1,
+                              "docs": {
+                                "conclusion.html#conclusion": {
+                                  "tf": 1.0
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "df": 0,
+                        "docs": {}
+                      }
+                    }
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {}
             }
           },
           "m": {
@@ -1598,6 +1610,18 @@
                         "docs": {}
                       }
                     }
+                  }
+                }
+              }
+            },
+            "u": {
+              "df": 0,
+              "docs": {},
+              "t": {
+                "df": 1,
+                "docs": {
+                  "conclusion.html#conclusion": {
+                    "tf": 1.0
                   }
                 }
               }

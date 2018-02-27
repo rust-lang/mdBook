@@ -23,6 +23,8 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
     }
 
     let json = write_to_json(index, &search_config)?;
+    debug!("Writing search index ✓");
+
     if search_config.copy_js {
         utils::fs::write_file(destination, "searchindex.json", json.as_bytes())?;
         utils::fs::write_file(destination, "searcher.js", searcher::JS)?;
@@ -34,16 +36,13 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
     Ok(())
 }
 
-fn make_doc_ref<'a>(anchor_base: &'a str, section_id: &Option<String>) -> Cow<'a, str> {
-    if let &Some(ref id) = section_id {
+/// Uses the given arguments to construct a search document, then inserts it to the given index.
+fn add_doc<'a>(index: &mut Index, anchor_base: &'a str, section_id: &Option<String>, items: &[&str]) {
+    let doc_ref: Cow<'a, str> = if let &Some(ref id) = section_id {
         format!("{}#{}", anchor_base, id).into()
     } else {
         anchor_base.into()
-    }
-}
-
-fn add_doc(index: &mut Index, anchor_base: &str, section_id: &Option<String>, items: &[&str]) {
-    let doc_ref = make_doc_ref(anchor_base, section_id);
+    };
     let doc_ref = utils::collapse_whitespace(doc_ref.trim());
     let items = items.iter().map(|&x| utils::collapse_whitespace(x.trim()));
     index.add_doc(&doc_ref, items);

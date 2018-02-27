@@ -378,7 +378,7 @@ mod search {
         );
         assert_eq!(
             docs["conclusion.html#conclusion"]["body"],
-            "1 + 2 < 5 > 0 &gt;"
+            "I put &lt;HTML&gt; in here!"
         );
     }
 
@@ -416,7 +416,7 @@ mod search {
     //
     // If you're pretty sure you haven't broken anything, change `GENERATE_FIXTURE`
     // above to `true`, and run `cargo test` to generate a new fixture. Then
-    // change it back to `false`.
+    // change it back to `false`. Include the changed `searchindex_fixture.json` in your commit.
     #[test]
     fn search_index_hasnt_changed_accidentally() {
         let temp = DummyBook::new().build().unwrap();

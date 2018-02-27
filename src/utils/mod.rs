@@ -12,10 +12,44 @@ use std::borrow::Cow;
 
 pub use self::string::{RangeArgument, take_lines};
 
-/// Naively removes HTML tags from text using a regex.
+/// Naively removes HTML tags from text using a regex. Comments, script tags, and style tags are
+/// completely removed. Other tags are removed, but their contents remain. Angle brackets must be
+/// escaped, except when inside of script or style blocks. CDATA blocks outside of script/style tags
+/// are ignored, use a markdown code block instead.
 pub fn remove_html_tags<'a>(text: &'a str) -> Cow<'a, str> {
     lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?s)<!--.*?-->|<!\[CDATA\[.*?]]>|<[a-zA-Z/?!]+[^>]*?>").unwrap();
+        static ref RE: Regex = Regex::new(r"(?x) # whitespace insignificant mode
+            (?s)    # match newline characters with `.`
+            
+                    # HTML comments are
+            <!--    # match the beginning of a comment
+            .*?     # match any character, as few as possible
+            -->     # match the end of a comment
+            
+            |       # or
+            
+                    # HTML tags whose content is removed are
+            <       # start of tag
+                    # use a non-capturing group to list the tags whose contents we want to remove:
+            (?:script|style)
+            [^>]*?  # any non-right-angle-bracket characters, as few as possible
+            >       # end of tag
+
+            .*?     # match any character, as few as possible
+
+            </      # start of close tag
+                    # the same list from above, we cannot use backreferences:
+            (?:script|style)
+            \s*     # any whitespace
+            >       # end of close tag
+            
+            |       # or
+
+                    # HTML tags are
+            <       # a left angle bracket
+            [^>]+?  # one or more non-right-angle-bracket characters, as few as possible
+            >       # a right angle bracket
+            ").unwrap();
     }
     RE.replace_all(text, "")
 }
@@ -304,23 +338,27 @@ more text with spaces
         fn html_removal_works() {
 let html = r#"
 <table><tr><td>
-foo <3 &amp; &lt;
+foo 3 &amp; &lt;
 </td></tr></table>
-
-<i class="foo"> > <
+<i class="foo">
 *bar<!--* </i> -->
 </i>
-
-<![CDATA[
-< > <> </done>all of this should be gone!
-]]>
+<script type="text/javascript" >
+// There's something hapenin' in here...
+if (5 < 3 > foo_bar)
+    alert("this is bad!");
+</script >
+<style>
+css looks, like this {
+    foo: < 3 ><> bar
+}
+</style >
 "#;
 let tagfree = r#"
 
-foo <3 &amp; &lt;
+foo 3 &amp; &lt;
 
 
- > <
 *bar
 
 
