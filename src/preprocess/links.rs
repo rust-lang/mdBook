@@ -31,10 +31,10 @@ impl Preprocessor for LinkPreprocessor {
 
         book.for_each_mut(|section: &mut BookItem| {
             if let BookItem::Chapter(ref mut ch) = *section {
-                let base = ch.path
+                let base = ch.path.to_path(&src_dir)
                     .parent()
-                    .map(|dir| src_dir.join(dir))
-                    .expect("All book items have a parent");
+                    .expect("All book items have a parent")
+                    .to_owned();
 
                 let content = replace_all(&ch.content, base);
                 ch.content = content;

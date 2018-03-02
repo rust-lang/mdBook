@@ -1,5 +1,5 @@
 use std::fmt::{self, Display, Formatter};
-use std::path::{Path, PathBuf};
+use std::path::{Path};
 use std::collections::VecDeque;
 use std::fs::{self, File};
 use std::io::{Read, Write};
@@ -7,6 +7,7 @@ use std::io::{Read, Write};
 use super::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
 use config::BuildConfig;
 use errors::*;
+use relative_path::RelativePathBuf;
 
 /// Load a book into memory from its `src/` directory.
 pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> {
@@ -39,7 +40,8 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
         let next = items.pop().expect("already checked");
 
         if let SummaryItem::Link(ref link) = *next {
-            let filename = src_dir.join(&link.location);
+            let filename = link.location.to_path(src_dir);
+
             if !filename.exists() {
                 if let Some(parent) = filename.parent() {
                     if !parent.exists() {
@@ -150,13 +152,15 @@ pub struct Chapter {
     pub number: Option<SectionNumber>,
     /// Nested items.
     pub sub_items: Vec<BookItem>,
-    /// The chapter's location, relative to the `SUMMARY.md` file.
-    pub path: PathBuf,
+    /// The chapter's relative location.
+    pub path: RelativePathBuf,
 }
 
 impl Chapter {
     /// Create a new chapter with the provided content.
-    pub fn new<P: Into<PathBuf>>(name: &str, content: String, path: P) -> Chapter {
+    pub fn new<P: Into<RelativePathBuf>>(
+        name: &str, content: String, path: P,
+    ) -> Chapter {
         Chapter {
             name: name.to_string(),
             content: content,
@@ -201,24 +205,16 @@ fn load_chapter<P: AsRef<Path>>(link: &Link, src_dir: P) -> Result<Chapter> {
     debug!("Loading {} ({})", link.name, link.location.display());
     let src_dir = src_dir.as_ref();
 
-    let location = if link.location.is_absolute() {
-        link.location.clone()
-    } else {
-        src_dir.join(&link.location)
-    };
+    let location = &link.location;
 
-    let mut f = File::open(&location)
+    let mut f = File::open(location.to_path(src_dir))
         .chain_err(|| format!("Chapter file not found, {}", link.location.display()))?;
 
     let mut content = String::new();
     f.read_to_string(&mut content)
         .chain_err(|| format!("Unable to read \"{}\" ({})", link.name, location.display()))?;
 
-    let stripped = location
-        .strip_prefix(&src_dir)
-        .expect("Chapters are always inside a book");
-
-    let mut ch = Chapter::new(&link.name, content, stripped);
+    let mut ch = Chapter::new(&link.name, content, &link.location);
     ch.number = link.number.clone();
 
     let sub_items = link.nested_items
@@ -289,8 +285,9 @@ And here is some \
     fn dummy_link() -> (Link, TempDir) {
         let temp = TempDir::new("book").unwrap();
 
-        let chapter_path = temp.path().join("chapter_1.md");
-        File::create(&chapter_path)
+        let chapter_path = RelativePathBuf::from("chapter_1.md");
+
+        File::create(&chapter_path.to_path(temp.path()))
             .unwrap()
             .write(DUMMY_SRC.as_bytes())
             .unwrap();
@@ -304,9 +301,9 @@ And here is some \
     fn nested_links() -> (Link, TempDir) {
         let (mut root, temp_dir) = dummy_link();
 
-        let second_path = temp_dir.path().join("second.md");
+        let second_path = RelativePathBuf::from("second.md");
 
-        File::create(&second_path)
+        File::create(&second_path.to_path(&temp_dir))
             .unwrap()
             .write_all("Hello World!".as_bytes())
             .unwrap();
@@ -332,7 +329,7 @@ And here is some \
 
     #[test]
     fn cant_load_a_nonexistent_chapter() {
-        let link = Link::new("Chapter 1", "/foo/bar/baz.md");
+        let link = Link::new("Chapter 1", "foo/bar/baz.md");
 
         let got = load_chapter(&link, "");
         assert!(got.is_err());
@@ -346,14 +343,14 @@ And here is some \
             name: String::from("Nested Chapter 1"),
             content: String::from("Hello World!"),
             number: Some(SectionNumber(vec![1, 2])),
-            path: PathBuf::from("second.md"),
+            path: RelativePathBuf::from("second.md"),
             sub_items: Vec::new(),
         };
         let should_be = BookItem::Chapter(Chapter {
             name: String::from("Chapter 1"),
             content: String::from(DUMMY_SRC),
             number: None,
-            path: PathBuf::from("chapter_1.md"),
+            path: RelativePathBuf::from("chapter_1.md"),
             sub_items: vec![
                 BookItem::Chapter(nested.clone()),
                 BookItem::Separator,
@@ -377,7 +374,7 @@ And here is some \
                 BookItem::Chapter(Chapter {
                     name: String::from("Chapter 1"),
                     content: String::from(DUMMY_SRC),
-                    path: PathBuf::from("chapter_1.md"),
+                    path: RelativePathBuf::from("chapter_1.md"),
                     ..Default::default()
                 }),
             ],
@@ -416,7 +413,7 @@ And here is some \
                     name: String::from("Chapter 1"),
                     content: String::from(DUMMY_SRC),
                     number: None,
-                    path: PathBuf::from("Chapter_1/index.md"),
+                    path: RelativePathBuf::from("Chapter_1/index.md"),
                     sub_items: vec![
                         BookItem::Chapter(Chapter::new(
                             "Hello World",
@@ -463,7 +460,7 @@ And here is some \
                     name: String::from("Chapter 1"),
                     content: String::from(DUMMY_SRC),
                     number: None,
-                    path: PathBuf::from("Chapter_1/index.md"),
+                    path: RelativePathBuf::from("Chapter_1/index.md"),
                     sub_items: vec![
                         BookItem::Chapter(Chapter::new(
                             "Hello World",
@@ -497,7 +494,7 @@ And here is some \
             numbered_chapters: vec![
                 SummaryItem::Link(Link {
                     name: String::from("Empty"),
-                    location: PathBuf::from(""),
+                    location: RelativePathBuf::from(""),
                     ..Default::default()
                 }),
             ],
@@ -511,14 +508,13 @@ And here is some \
     #[test]
     fn cant_load_chapters_when_the_link_is_a_directory() {
         let (_, temp) = dummy_link();
-        let dir = temp.path().join("nested");
-        fs::create_dir(&dir).unwrap();
+        fs::create_dir(temp.path().join("nested")).unwrap();
 
         let summary = Summary {
             numbered_chapters: vec![
                 SummaryItem::Link(Link {
                     name: String::from("nested"),
-                    location: dir,
+                    location: RelativePathBuf::from("nested"),
                     ..Default::default()
                 }),
             ],
