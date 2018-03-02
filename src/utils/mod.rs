@@ -12,48 +12,6 @@ use std::borrow::Cow;
 
 pub use self::string::{RangeArgument, take_lines};
 
-/// Naively removes HTML tags from text using a regex. Comments, script tags, and style tags are
-/// completely removed. Other tags are removed, but their contents remain. Angle brackets must be
-/// escaped, except when inside of script or style blocks. CDATA blocks outside of script/style tags
-/// are ignored, use a markdown code block instead.
-pub fn remove_html_tags<'a>(text: &'a str) -> Cow<'a, str> {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?x) # whitespace insignificant mode
-            (?s)    # match newline characters with `.`
-            
-                    # HTML comments are
-            <!--    # match the beginning of a comment
-            .*?     # match any character, as few as possible
-            -->     # match the end of a comment
-            
-            |       # or
-            
-                    # HTML tags whose content is removed are
-            <       # start of tag
-                    # use a non-capturing group to list the tags whose contents we want to remove:
-            (?:script|style)
-            [^>]*?  # any non-right-angle-bracket characters, as few as possible
-            >       # end of tag
-
-            .*?     # match any character, as few as possible
-
-            </      # start of close tag
-                    # the same list from above, we cannot use backreferences:
-            (?:script|style)
-            \s*     # any whitespace
-            >       # end of close tag
-            
-            |       # or
-
-                    # HTML tags are
-            <       # a left angle bracket
-            [^>]+?  # one or more non-right-angle-bracket characters, as few as possible
-            >       # a right angle bracket
-            ").unwrap();
-    }
-    RE.replace_all(text, "")
-}
-
 /// Replaces multiple consecutive whitespace characters with a single space character.
 pub fn collapse_whitespace<'a>(text: &'a str) -> Cow<'a, str> {
     lazy_static! {
@@ -313,7 +271,7 @@ more text with spaces
     }
 
     mod html_munging {
-        use super::super::{id_from_content, normalize_id, remove_html_tags};
+        use super::super::{id_from_content, normalize_id};
 
         #[test]
         fn it_generates_anchors() {
@@ -332,39 +290,6 @@ more text with spaces
             assert_eq!(normalize_id("_-_12345"), "a_-_12345");
             assert_eq!(normalize_id("12345"), "a12345");
             assert_eq!(normalize_id(""), "");
-        }
-
-        #[test]
-        fn html_removal_works() {
-let html = r#"
-<table><tr><td>
-foo 3 &amp; &lt;
-</td></tr></table>
-<i class="foo">
-*bar<!--* </i> -->
-</i>
-<script type="text/javascript" >
-// There's something hapenin' in here...
-if (5 < 3 > foo_bar)
-    alert("this is bad!");
-</script >
-<style>
-css looks, like this {
-    foo: < 3 ><> bar
-}
-</style >
-"#;
-let tagfree = r#"
-
-foo 3 &amp; &lt;
-
-
-*bar
-
-
-
-"#;
-            assert_eq!(remove_html_tags(html), tagfree);
         }
     }
 

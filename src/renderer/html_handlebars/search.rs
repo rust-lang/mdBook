@@ -1,7 +1,8 @@
+extern crate ammonia;
 extern crate elasticlunr;
 
 use std::borrow::Cow;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 use pulldown_cmark::*;
@@ -37,7 +38,12 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
 }
 
 /// Uses the given arguments to construct a search document, then inserts it to the given index.
-fn add_doc<'a>(index: &mut Index, anchor_base: &'a str, section_id: &Option<String>, items: &[&str]) {
+fn add_doc<'a>(
+    index: &mut Index,
+    anchor_base: &'a str,
+    section_id: &Option<String>,
+    items: &[&str],
+) {
     let doc_ref: Cow<'a, str> = if let &Some(ref id) = section_id {
         format!("{}#{}", anchor_base, id).into()
     } else {
@@ -49,7 +55,11 @@ fn add_doc<'a>(index: &mut Index, anchor_base: &'a str, section_id: &Option<Stri
 }
 
 /// Renders markdown into flat unformatted text and adds it to the search index.
-fn render_item(index: &mut Index, search_config: &Search, item: &BookItem) -> Result<()> {
+fn render_item(
+    index: &mut Index,
+    search_config: &Search,
+    item: &BookItem,
+) -> Result<()> {
     let chapter = match item {
         &BookItem::Chapter(ref ch) => ch,
         _ => return Ok(()),
@@ -120,8 +130,7 @@ fn render_item(index: &mut Index, search_config: &Search, item: &BookItem) -> Re
                 }
             }
             Event::Html(html) | Event::InlineHtml(html) => {
-                let textified = utils::remove_html_tags(&html);
-                body.push_str(&textified);
+                body.push_str(&clean_html(&html));
             }
             Event::FootnoteReference(name) => {
                 let len = footnote_numbers.len() + 1;
@@ -209,4 +218,24 @@ fn write_to_js(index: Index, search_config: &Search) -> Result<String> {
     let json_contents = serde_json::to_string(&json_contents)?;
 
     Ok(format!("window.search = {};", json_contents))
+}
+
+fn clean_html(html: &str) -> String {
+    lazy_static! {
+        static ref AMMONIA: ammonia::Builder<'static> = { 
+            let mut clean_content = HashSet::new();
+            clean_content.insert("script");
+            clean_content.insert("style");
+            let mut builder = ammonia::Builder::new();
+            builder
+                .tags(HashSet::new())
+                .tag_attributes(HashMap::new())
+                .generic_attributes(HashSet::new())
+                .link_rel(None)
+                .allowed_classes(HashMap::new())
+                .clean_content_tags(clean_content);
+            builder
+        };
+    }
+    AMMONIA.clean(html).to_string()
 }
