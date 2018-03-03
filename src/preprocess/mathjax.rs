@@ -182,6 +182,14 @@ mod tests {
     }
 
     #[test]
+    fn should_find_no_mathematics_in_regular_text_with_a_single_dollar_sign() {
+        let content = "Text with a single $ mathematics";
+
+        assert_eq!(find_mathematics(content).count(), 0);
+    }
+
+
+    #[test]
     fn should_find_inline_mathematics() {
         let content = "Pythagorean theorem: $a^{2} + b^{2} = c^{2}$";
 
