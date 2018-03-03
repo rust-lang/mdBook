@@ -128,15 +128,17 @@ enum Kind {
 
 impl<'a> Mathematics<'a> {
     fn from_capture(captures: Captures<'a>) -> Option<Self> {
-        let kind =
-            captures.get(1).or(captures.get(3)).or(captures.get(5)).or(captures.get(7))
-            .map(|delimiter|
-                 match delimiter.as_str() {
-                     "$$"   => Kind::Block,
-                     "$"    => Kind::Inline,
-                     r"\\[" => Kind::LegacyBlock,
-                     _      => Kind::LegacyInline,
-                 })
+        let kind = captures
+            .get(1)
+            .or(captures.get(3))
+            .or(captures.get(5))
+            .or(captures.get(7))
+            .map(|delimiter| match delimiter.as_str() {
+                "$$" => Kind::Block,
+                "$" => Kind::Inline,
+                r"\\[" => Kind::LegacyBlock,
+                _ => Kind::LegacyInline,
+            })
             .expect("captured mathematics should have opening delimiter at the provided indices");
 
         captures.get(0).map(|m| Mathematics {
@@ -149,12 +151,12 @@ impl<'a> Mathematics<'a> {
 
     fn replacement(&self) -> String {
         let replacement: String = match self.kind {
-            Kind::Block  | Kind::LegacyBlock  => {
+            Kind::Block | Kind::LegacyBlock => {
                 format!("<div class=\"math\">$${}$$</div>", self.text)
-            },
+            }
             Kind::Inline | Kind::LegacyInline => {
                 format!("<span class=\"inline math\">${}$</span>", self.text)
-            },
+            }
         };
         replacement
     }
@@ -163,10 +165,10 @@ impl<'a> Mathematics<'a> {
 fn strip_delimiters_from_delimited_text<'a>(kind: &Kind, delimited_text: &'a str) -> &'a str {
     let end = delimited_text.len();
     match *kind {
-        Kind::Block        => &delimited_text[2..end-2],
-        Kind::Inline       => &delimited_text[1..end-1],
-        Kind::LegacyBlock  => &delimited_text[3..end-3],
-        Kind::LegacyInline => &delimited_text[3..end-3],
+        Kind::Block => &delimited_text[2..end - 2],
+        Kind::Inline => &delimited_text[1..end - 1],
+        Kind::LegacyBlock => &delimited_text[3..end - 3],
+        Kind::LegacyInline => &delimited_text[3..end - 3],
     }
 }
 
@@ -187,7 +189,6 @@ mod tests {
 
         assert_eq!(find_mathematics(content).count(), 0);
     }
-
 
     #[test]
     fn should_find_no_mathematics_when_delimiters_do_not_match() {
@@ -210,12 +211,15 @@ mod tests {
         let result = find_mathematics(content).collect::<Vec<_>>();
 
         assert_eq!(result.len(), 1);
-        assert_eq!(result[0], Mathematics {
-            start_index: 21,
-            end_index: 44,
-            kind: Kind::Inline,
-            text: "a^{2} + b^{2} = c^{2}",
-        })
+        assert_eq!(
+            result[0],
+            Mathematics {
+                start_index: 21,
+                end_index: 44,
+                kind: Kind::Inline,
+                text: "a^{2} + b^{2} = c^{2}",
+            }
+        )
     }
 
     #[test]
@@ -225,12 +229,15 @@ mod tests {
         let result = find_mathematics(content).collect::<Vec<_>>();
 
         assert_eq!(result.len(), 1);
-        assert_eq!(result[0], Mathematics {
-            start_index: 18,
-            end_index: 38,
-            kind: Kind::Block,
-            text: "e^{i\\pi} + 1 = 0",
-        })
+        assert_eq!(
+            result[0],
+            Mathematics {
+                start_index: 18,
+                end_index: 38,
+                kind: Kind::Block,
+                text: "e^{i\\pi} + 1 = 0",
+            }
+        )
     }
 
     #[test]
@@ -240,12 +247,15 @@ mod tests {
         let result = find_mathematics(content).collect::<Vec<_>>();
 
         assert_eq!(result.len(), 1);
-        assert_eq!(result[0], Mathematics {
-            start_index: 21,
-            end_index: 48,
-            kind: Kind::LegacyInline,
-            text: "a^{2} + b^{2} = c^{2}",
-        })
+        assert_eq!(
+            result[0],
+            Mathematics {
+                start_index: 21,
+                end_index: 48,
+                kind: Kind::LegacyInline,
+                text: "a^{2} + b^{2} = c^{2}",
+            }
+        )
     }
 
     #[test]
@@ -255,12 +265,15 @@ mod tests {
         let result = find_mathematics(content).collect::<Vec<_>>();
 
         assert_eq!(result.len(), 1);
-        assert_eq!(result[0], Mathematics {
-            start_index: 18,
-            end_index: 40,
-            kind: Kind::LegacyBlock,
-            text: "e^{i\\pi} + 1 = 0",
-        })
+        assert_eq!(
+            result[0],
+            Mathematics {
+                start_index: 18,
+                end_index: 40,
+                kind: Kind::LegacyBlock,
+                text: "e^{i\\pi} + 1 = 0",
+            }
+        )
     }
 
     #[test]
@@ -269,7 +282,10 @@ mod tests {
 
         let result = replace_all_mathematics(content);
 
-        assert_eq!(result, "Pythagorean theorem: <span class=\"inline math\">$a^{2} + b^{2} = c^{2}$</span>")
+        assert_eq!(
+            result,
+            "Pythagorean theorem: <span class=\"inline math\">$a^{2} + b^{2} = c^{2}$</span>"
+        )
     }
 
     #[test]
@@ -278,7 +294,10 @@ mod tests {
 
         let result = replace_all_mathematics(content);
 
-        assert_eq!(result, "Euler's identity: <div class=\"math\">$$e^{i\\pi} + 1 = 0$$</div>")
+        assert_eq!(
+            result,
+            "Euler's identity: <div class=\"math\">$$e^{i\\pi} + 1 = 0$$</div>"
+        )
     }
 
 }
