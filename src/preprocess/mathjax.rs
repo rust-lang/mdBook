@@ -188,6 +188,14 @@ mod tests {
         assert_eq!(find_mathematics(content).count(), 0);
     }
 
+
+    #[test]
+    fn should_find_no_mathematics_when_delimiters_do_not_match() {
+        let content = "$$Text with a non matching delimiters mathematics\\]";
+
+        assert_eq!(find_mathematics(content).count(), 0);
+    }
+
     #[test]
     fn should_find_mathematics_spanning_over_multiple_lines() {
         let content = "Mathematics $a +\n b$ over multiple lines";
