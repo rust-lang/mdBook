@@ -188,6 +188,12 @@ mod tests {
         assert_eq!(find_mathematics(content).count(), 0);
     }
 
+    #[test]
+    fn should_find_mathematics_spanning_over_multiple_lines() {
+        let content = "Mathematics $a +\n b$ over multiple lines";
+
+        assert_eq!(find_mathematics(content).count(), 1);
+    }
 
     #[test]
     fn should_find_inline_mathematics() {
