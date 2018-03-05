@@ -13,8 +13,11 @@ use errors::*;
 
 pub static INDEX: &'static [u8] = include_bytes!("index.hbs");
 pub static HEADER: &'static [u8] = include_bytes!("header.hbs");
-pub static CSS: &'static [u8] = include_bytes!("book.css");
 pub static FAVICON: &'static [u8] = include_bytes!("favicon.png");
+pub static CHROME_CSS: &'static [u8] = include_bytes!("css/chrome.css");
+pub static GENERAL_CSS: &'static [u8] = include_bytes!("css/general.css");
+pub static PRINT_CSS: &'static [u8] = include_bytes!("css/print.css");
+pub static VARIABLES_CSS: &'static [u8] = include_bytes!("css/variables.css");
 pub static JS: &'static [u8] = include_bytes!("book.js");
 pub static HIGHLIGHT_JS: &'static [u8] = include_bytes!("highlight.js");
 pub static TOMORROW_NIGHT_CSS: &'static [u8] = include_bytes!("tomorrow-night.css");
@@ -45,7 +48,10 @@ pub static FONT_AWESOME_OTF: &'static [u8] = include_bytes!("_FontAwesome/fonts/
 pub struct Theme {
     pub index: Vec<u8>,
     pub header: Vec<u8>,
-    pub css: Vec<u8>,
+    pub chrome_css: Vec<u8>,
+    pub general_css: Vec<u8>,
+    pub print_css: Vec<u8>,
+    pub variables_css: Vec<u8>,
     pub favicon: Vec<u8>,
     pub js: Vec<u8>,
     pub highlight_css: Vec<u8>,
@@ -73,7 +79,10 @@ impl Theme {
                 (theme_dir.join("index.hbs"), &mut theme.index),
                 (theme_dir.join("header.hbs"), &mut theme.header),
                 (theme_dir.join("book.js"), &mut theme.js),
-                (theme_dir.join("book.css"), &mut theme.css),
+                (theme_dir.join("css/chrome.css"), &mut theme.chrome_css),
+                (theme_dir.join("css/general.css"), &mut theme.general_css),
+                (theme_dir.join("css/print.css"), &mut theme.print_css),
+                (theme_dir.join("css/variables.css"), &mut theme.variables_css),
                 (theme_dir.join("favicon.png"), &mut theme.favicon),
                 (theme_dir.join("highlight.js"), &mut theme.highlight_js),
                 (theme_dir.join("clipboard.min.js"), &mut theme.clipboard_js),
@@ -102,7 +111,10 @@ impl Default for Theme {
         Theme {
             index: INDEX.to_owned(),
             header: HEADER.to_owned(),
-            css: CSS.to_owned(),
+            chrome_css: CHROME_CSS.to_owned(),
+            general_css: GENERAL_CSS.to_owned(),
+            print_css: PRINT_CSS.to_owned(),
+            variables_css: VARIABLES_CSS.to_owned(),
             favicon: FAVICON.to_owned(),
             js: JS.to_owned(),
             highlight_css: HIGHLIGHT_CSS.to_owned(),

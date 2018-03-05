@@ -144,7 +144,10 @@ impl HtmlHandlebars {
         use utils::fs::write_file;
 
         write_file(destination, "book.js", &theme.js)?;
-        write_file(destination, "book.css", &theme.css)?;
+        write_file(destination, "css/chrome.css", &theme.chrome_css)?;
+        write_file(destination, "css/general.css", &theme.general_css)?;
+        write_file(destination, "css/print.css", &theme.print_css)?;
+        write_file(destination, "css/variables.css", &theme.variables_css)?;
         write_file(destination, "favicon.png", &theme.favicon)?;
         write_file(destination, "highlight.css", &theme.highlight_css)?;
         write_file(destination, "tomorrow-night.css", &theme.tomorrow_night_css)?;
