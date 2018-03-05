@@ -1,6 +1,6 @@
 html {
-    font-family: "Open Sans", sans-serif
-    color: #333
+    font-family: "Open Sans", sans-serif;
+    color: #333;
 }
 
 body {
@@ -48,15 +48,15 @@ a.header:target h4:before {
 table {
     margin: 0 auto;
     border-collapse: collapse;
+}
 
-    td {
-      padding: 3px 20px;
-      border: 1px solid;
-    }
+table td {
+    padding: 3px 20px;
+    border: 1px solid;
+}
 
-    thead {
-      td { font-weight: 700; }
-    }
+table thead td {
+    font-weight: 700;
 }
 
 :not(.footnote-definition) + .footnote-definition,
@@ -67,6 +67,8 @@ table {
 .footnote-definition {
     font-size: 0.9em;
     margin: 0.5em 0;
+}
 
-    p { display: inline; }
+.footnote-definition p { 
+    display: inline; 
 }

@@ -1,0 +1,239 @@
+
+@import "ayu.css";
+@import "coal.css";
+@import "light.css";
+@import "navy.css";
+@import "rust.css";
+
+* {
+    color: var(--fg);
+    background-color: var(--bg);
+}
+
+.content .header:link,
+.content .header:visited {
+    color: var(--fg);
+    pointer: cursor;
+}
+
+.content .header:link,
+.content .header:visited:hover {
+    text-decoration: none;
+}
+
+.menu-bar {
+    margin: auto (- var(--page-padding));
+}
+
+.menu-bar > #menu-bar-sticky-container {
+    background-color: var(--bg);
+    border-bottom-color: var(--bg);
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+}
+
+.menu-bar.bordered > #menu-bar-sticky-container  {
+    border-bottom-color: var(--table-border-color);
+}
+
+.sidebar {
+    background-color: var(--sidebar-bg);
+    color: var(--sidebar-fg);
+}
+
+.sidebar::-webkit-scrollbar {
+    background: var(--sidebar-bg);
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: var(--scrollbar);
+}
+
+.chapter li {
+    color: var(--sidebar-non-existant);
+}
+
+.chapter li a { 
+    color: var(--sidebar-fg); 
+}
+
+.chapter li .active,
+a:hover {
+    /* Animate color change */
+    color: var(--sidebar-active);
+}
+
+.chapter .spacer {
+    background-color: var(--sidebar-spacer);
+}
+
+.menu-bar,
+.menu-bar:visited,
+.nav-chapters,
+.nav-chapters:visited,
+.mobile-nav-chapters,
+.mobile-nav-chapters:visited,
+.menu-bar .icon-button,
+.menu-bar a i {
+    color: var(--icons);
+}
+
+.menu-bar i:hover,
+.menu-bar .icon-button:hover,
+.nav-chapters:hover,
+.mobile-nav-chapters i:hover {
+    color: var(--icons-hover);
+}
+
+.mobile-nav-chapters i:hover {
+    color: var(--sidebar-fg);
+}
+
+.mobile-nav-chapters {
+    background-color: var(--sidebar-bg);
+}
+
+#searchresults a,
+.content a:link,
+a:visited,
+a > .hljs {
+    color: var(--links);
+}
+
+.theme-popup {
+    color: var(--fg);
+    background: var(--theme-popup-bg);
+    border: 1px solid var(--theme-popup-border);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: none;
+}
+
+.theme-popup .theme:hover {
+    background-color: var(--theme-hover);
+}
+
+.theme-popup .default {
+    color: var(--icons);
+}
+
+blockquote {
+    margin: 20px 0;
+    padding: 0 20px;
+    color: var(--fg);
+    background-color: var(--quote-bg);
+    border-top: .1em solid var(--quote-border);
+    border-bottom: .1em solid var(--quote-border);
+}
+
+
+table td {
+    border-color: var(--table-border-color);
+}
+
+/* Alternate background colors for rows */
+table tbody tr:nth-child(2n) {
+    background: var(--table-alternate-bg);
+}
+table thead {
+    background: var(--table-header-bg);
+}
+table thead td {
+    border: none;
+}
+table thead tr {
+    border: 1px var(--table-header-bg) solid;
+}
+
+
+/* Inline code */
+:not(pre) > .hljs {
+    display: inline-block;
+    vertical-align: middle;
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+    color: var(--inline-code-color);
+}
+
+a:hover > .hljs {
+    text-decoration: underline;
+}
+
+pre {
+    position: relative;
+}
+
+pre > .buttons {
+    position: absolute;
+    z-index: 100;
+    right: 5px;
+    top: 5px;
+
+    color: var(--sidebar-fg);
+    cursor: pointer;
+}
+pre > .buttons :hover {
+    color: var(--sidebar-active);
+}
+pre > .buttons i {
+    margin-left: 8px;
+}
+pre > .buttons button {
+    color: inherit;
+    background: transparent;
+    border: none;
+    cursor: inherit;
+}
+
+pre > .result {
+    margin-top: 10px;
+}
+
+.icon-button {
+    border: none;
+    background: none;
+    padding: 0;
+    color: inherit;
+}
+
+.icon-button i {
+    margin: 0;
+}
+
+::-webkit-scrollbar {
+    background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--scrollbar);
+}
+
+/* Search */
+#searchbar {
+    border: 1px solid var(--searchbar-border-color);
+    border-radius: 3px;
+    background-color: var(--searchbar-bg);
+    color: var(--searchbar-fg);
+}
+
+#searchbar:focus,
+#searchbar.active {
+    box-shadow: 0 0 3px var(--searchbar-shadow-color);
+}
+
+.searchresults-header {
+    color: var(--searchresults-header-fg);
+}
+
+.searchresults-outer {
+    border-bottom: 1px dashed var(--searchresults-border-color);
+}
+
+ul#searchresults li.focus {
+    background-color: var(--searchresults-li-bg);
+}
+
+mark {
+    background-color: var(--search-mark-bg);
+}
