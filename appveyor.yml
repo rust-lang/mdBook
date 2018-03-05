@@ -32,17 +32,12 @@ install:
   - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
   - rustc -Vv
   - cargo -V
-  - ps: Install-Product node $env:nodejs_version
-  - node --version
-  - npm --version
-  - npm install -g stylus nib
 
 build: false
 
 # Equivalent to Travis' `script` phase
 test_script:
   - cargo build --verbose
-  - cargo build --verbose --features=regenerate-css
   - cargo test --verbose
 
 before_deploy:

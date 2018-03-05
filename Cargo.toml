@@ -10,7 +10,6 @@ license = "MPL-2.0"
 readme = "README.md"
 exclude = [
     "book-example/*",
-    "src/theme/stylus/**",
 ]
 
 [package.metadata.release]
@@ -63,7 +62,6 @@ pulldown-cmark-to-cmark = "1.1.0"
 default = ["output", "watch", "serve", "search"]
 debug = []
 output = []
-regenerate-css = []
 watch = ["notify", "time", "crossbeam"]
 serve = ["iron", "staticfile", "ws"]
 search = ["elasticlunr-rs", "ammonia"]

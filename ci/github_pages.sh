@@ -11,9 +11,6 @@ if [ "$TRAVIS_PULL_REQUEST" != "false" ] ||
    exit 0
 fi
 
-# Make sure we have the css dependencies
-npm install -g stylus nib 
-
 NC='\033[39m'
 CYAN='\033[36m'
 GREEN='\033[32m'
@@ -21,7 +18,7 @@ GREEN='\033[32m'
 rev=$(git rev-parse --short HEAD)
 
 echo -e "${CYAN}Running cargo doc${NC}"
-cargo doc --features regenerate-css > /dev/null
+cargo doc > /dev/null
 
 echo -e "${CYAN}Running mdbook build${NC}"
 cargo run -- build book-example/
