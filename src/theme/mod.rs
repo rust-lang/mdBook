@@ -162,21 +162,26 @@ mod tests {
 
     #[test]
     fn theme_dir_overrides_defaults() {
-        // Get all the non-Rust files in the theme directory
-        let special_files = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("src/theme")
-            .read_dir()
-            .unwrap()
-            .filter_map(|f| f.ok())
-            .map(|f| f.path())
-            .filter(|p| p.is_file() && !p.ends_with(".rs"));
-
         let temp = TempDir::new("mdbook").unwrap();
+        ::std::fs::create_dir(temp.path().join("css"));
 
-        // "touch" all of the special files so we have empty copies
-        for special_file in special_files {
-            let filename = temp.path().join(special_file.file_name().unwrap());
-            let _ = File::create(&filename);
+        let files = [
+            "index.hbs",
+            "header.hbs",
+            "favicon.png",
+            "css/chrome.css",
+            "css/general.css",
+            "css/print.css",
+            "css/variables.css",
+            "book.js",
+            "highlight.js",
+            "tomorrow-night.css",
+            "highlight.css",
+            "ayu-highlight.css",
+            "clipboard.min.js",
+        ];
+        for file in &files {
+            File::create(&temp.path().join(file));
         }
 
         let got = Theme::new(temp.path());
@@ -184,7 +189,10 @@ mod tests {
         let empty = Theme {
             index: Vec::new(),
             header: Vec::new(),
-            css: Vec::new(),
+            chrome_css: Vec::new(),
+            general_css: Vec::new(),
+            print_css: Vec::new(),
+            variables_css: Vec::new(),
             favicon: Vec::new(),
             js: Vec::new(),
             highlight_css: Vec::new(),
