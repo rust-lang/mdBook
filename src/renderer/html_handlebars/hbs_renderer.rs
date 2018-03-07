@@ -1,21 +1,20 @@
-use renderer::html_handlebars::helpers;
-use renderer::{RenderContext, Renderer};
 use book::{Book, BookItem, Chapter};
 use config::{Config, HtmlConfig, Playpen};
-use {theme, utils};
-use theme::{playpen_editor, Theme};
 use errors::*;
-use regex::{Captures, Regex};
+use renderer::{RenderContext, Renderer};
+use renderer::html_handlebars::helpers;
+use theme::{self, Theme, playpen_editor};
+use utils;
 
 #[allow(unused_imports)] use std::ascii::AsciiExt;
-use std::path::{Path, PathBuf};
-use std::fs::{self, File};
-use std::io::{Read, Write};
 use std::collections::BTreeMap;
 use std::collections::HashMap;
+use std::fs::{self, File};
+use std::io::Read;
+use std::path::{Path, PathBuf};
 
 use handlebars::Handlebars;
-
+use regex::{Captures, Regex};
 use serde_json;
 
 #[derive(Default)]
@@ -26,23 +25,10 @@ impl HtmlHandlebars {
         HtmlHandlebars
     }
 
-    fn write_file<P: AsRef<Path>>(
-        &self,
-        build_dir: &Path,
-        filename: P,
-        content: &[u8],
-    ) -> Result<()> {
-        let path = build_dir.join(filename);
-
-        utils::fs::create_file(&path)?
-            .write_all(content)
-            .map_err(|e| e.into())
-    }
-
     fn render_item(
         &self,
-                   item: &BookItem,
-                   mut ctx: RenderItemContext,
+        item: &BookItem,
+        mut ctx: RenderItemContext,
         print_content: &mut String,
     ) -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
@@ -56,6 +42,11 @@ impl HtmlHandlebars {
                 let path = ch.path
                     .to_str()
                     .chain_err(|| "Could not convert path to str")?;
+                let filepath = Path::new(&ch.path)
+                    .with_extension("html");
+                let filepathstr = filepath.to_str()
+                    .chain_err(|| "Could not convert HTML path to str")?;
+                let filepathstr = utils::fs::normalize_path(filepathstr);
 
                 // "print.html" is used for the print page.
                 if ch.path == Path::new("print.md") {
@@ -83,18 +74,15 @@ impl HtmlHandlebars {
                 debug!("Render template");
                 let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
-                let filepath = Path::new(&ch.path).with_extension("html");
                 let rendered = self.post_process(
                     rendered,
-                    &normalize_path(filepath.to_str().ok_or_else(|| {
-                        Error::from(format!("Bad file name: {}", filepath.display()))
-                    })?),
+                    &filepathstr,
                     &ctx.html_config.playpen,
                 );
 
                 // Write to file
-                debug!("Creating {} ✓", filepath.display());
-                self.write_file(&ctx.destination, filepath, &rendered.into_bytes())?;
+                debug!("Creating {} ✓", filepathstr);
+                utils::fs::write_file(&ctx.destination, &filepath, &rendered.into_bytes())?;
 
                 if ctx.is_index {
                     self.render_index(ch, &ctx.destination)?;
@@ -123,7 +111,7 @@ impl HtmlHandlebars {
                          .collect::<Vec<&str>>()
                          .join("\n");
 
-        self.write_file(destination, "index.html", content.as_bytes())?;
+        utils::fs::write_file(destination, "index.html", content.as_bytes())?;
 
         debug!(
             "Creating index.html from {} ✓",
@@ -153,45 +141,47 @@ impl HtmlHandlebars {
         theme: &Theme,
         html_config: &HtmlConfig,
     ) -> Result<()> {
-        self.write_file(destination, "book.js", &theme.js)?;
-        self.write_file(destination, "book.css", &theme.css)?;
-        self.write_file(destination, "favicon.png", &theme.favicon)?;
-        self.write_file(destination, "highlight.css", &theme.highlight_css)?;
-        self.write_file(destination, "tomorrow-night.css", &theme.tomorrow_night_css)?;
-        self.write_file(destination, "ayu-highlight.css", &theme.ayu_highlight_css)?;
-        self.write_file(destination, "highlight.js", &theme.highlight_js)?;
-        self.write_file(destination, "clipboard.min.js", &theme.clipboard_js)?;
-        self.write_file(
+        use utils::fs::write_file;
+
+        write_file(destination, "book.js", &theme.js)?;
+        write_file(destination, "book.css", &theme.css)?;
+        write_file(destination, "favicon.png", &theme.favicon)?;
+        write_file(destination, "highlight.css", &theme.highlight_css)?;
+        write_file(destination, "tomorrow-night.css", &theme.tomorrow_night_css)?;
+        write_file(destination, "ayu-highlight.css", &theme.ayu_highlight_css)?;
+        write_file(destination, "highlight.js", &theme.highlight_js)?;
+        write_file(destination, "clipboard.min.js", &theme.clipboard_js)?;
+        write_file(
             destination,
             "_FontAwesome/css/font-awesome.css",
             theme::FONT_AWESOME,
         )?;
-        self.write_file(
+        write_file(
             destination,
             "_FontAwesome/fonts/fontawesome-webfont.eot",
             theme::FONT_AWESOME_EOT,
         )?;
-        self.write_file(
+        write_file(
             destination,
             "_FontAwesome/fonts/fontawesome-webfont.svg",
             theme::FONT_AWESOME_SVG,
         )?;
-        self.write_file(
+        write_file(
             destination,
             "_FontAwesome/fonts/fontawesome-webfont.ttf",
             theme::FONT_AWESOME_TTF,
         )?;
-        self.write_file(
+        write_file(
             destination,
             "_FontAwesome/fonts/fontawesome-webfont.woff",
             theme::FONT_AWESOME_WOFF,
         )?;
-        self.write_file(
+        write_file(
             destination,
             "_FontAwesome/fonts/fontawesome-webfont.woff2",
             theme::FONT_AWESOME_WOFF2,
         )?;
-        self.write_file(
+        write_file(
             destination,
             "_FontAwesome/fonts/FontAwesome.ttf",
             theme::FONT_AWESOME_TTF,
@@ -200,16 +190,15 @@ impl HtmlHandlebars {
         let playpen_config = &html_config.playpen;
 
         // Ace is a very large dependency, so only load it when requested
-        if playpen_config.editable {
+        if playpen_config.editable && playpen_config.copy_js {
             // Load the editor
-            let editor = playpen_editor::PlaypenEditor::new(&playpen_config.editor);
-            self.write_file(destination, "editor.js", &editor.js)?;
-            self.write_file(destination, "ace.js", &editor.ace_js)?;
-            self.write_file(destination, "mode-rust.js", &editor.mode_rust_js)?;
-            self.write_file(destination, "theme-dawn.js", &editor.theme_dawn_js)?;
-            self.write_file(destination,
+            write_file(destination, "editor.js", playpen_editor::JS)?;
+            write_file(destination, "ace.js", playpen_editor::ACE_JS)?;
+            write_file(destination, "mode-rust.js", playpen_editor::MODE_RUST_JS)?;
+            write_file(destination, "theme-dawn.js", playpen_editor::THEME_DAWN_JS)?;
+            write_file(destination,
                 "theme-tomorrow_night.js",
-                &editor.theme_tomorrow_night_js,
+                playpen_editor::THEME_TOMORROW_NIGHT_JS,
             )?;
         }
 
@@ -307,15 +296,19 @@ impl Renderer for HtmlHandlebars {
         fs::create_dir_all(&destination)
             .chain_err(|| "Unexpected error when constructing destination path")?;
 
-        for (i, item) in book.iter().enumerate() {
+        let mut is_index = true;
+        for item in book.iter() {
             let ctx = RenderItemContext {
                 handlebars: &handlebars,
                 destination: destination.to_path_buf(),
                 data: data.clone(),
-                is_index: i == 0,
+                is_index: is_index,
                 html_config: html_config.clone(),
             };
-            self.render_item(item, ctx, &mut print_content)?;
+            self.render_item(item,
+                             ctx,
+                             &mut print_content)?;
+            is_index = false;
         }
 
         // Print version
@@ -326,14 +319,13 @@ impl Renderer for HtmlHandlebars {
 
         // Render the handlebars template with the data
         debug!("Render template");
-
         let rendered = handlebars.render("index", &data)?;
 
         let rendered = self.post_process(rendered,
                                          "print.html",
                                          &html_config.playpen);
 
-        self.write_file(&destination, "print.html", &rendered.into_bytes())?;
+        utils::fs::write_file(&destination, "print.html", &rendered.into_bytes())?;
         debug!("Creating print.html ✓");
 
         debug!("Copy static files");
@@ -341,6 +333,10 @@ impl Renderer for HtmlHandlebars {
             .chain_err(|| "Unable to copy across static files")?;
         self.copy_additional_css_and_js(&html_config, &ctx.root, &destination)
             .chain_err(|| "Unable to copy across additional CSS and JS")?;
+
+        // Render search index
+        #[cfg(feature = "search")]
+        super::search::create_files(&html_config.search.unwrap_or_default(), &destination, &book)?;
 
         // Copy all remaining files
         utils::fs::copy_files_except_ext(&src_dir, &destination, true, &["md"])?;
@@ -405,16 +401,22 @@ fn make_data(root: &Path, book: &Book, config: &Config, html_config: &HtmlConfig
         data.insert("additional_js".to_owned(), json!(js));
     }
 
-    if html.playpen.editable {
-        data.insert("playpens_editable".to_owned(), json!(true));
-        data.insert("editor_js".to_owned(), json!("editor.js"));
-        data.insert("ace_js".to_owned(), json!("ace.js"));
-        data.insert("mode_rust_js".to_owned(), json!("mode-rust.js"));
-        data.insert("theme_dawn_js".to_owned(), json!("theme-dawn.js"));
-        data.insert("theme_tomorrow_night_js".to_owned(),
-                    json!("theme-tomorrow_night.js"));
+    if html.playpen.editable && html.playpen.copy_js {
+        data.insert("playpen_js".to_owned(), json!(true));
     }
 
+    let search = html_config.search.clone();
+    if cfg!(feature = "search") {
+        data.insert("search_enabled".to_owned(), json!(true));
+        if search.unwrap_or_default().copy_js {
+            data.insert("search_js".to_owned(), json!(true));
+        }
+    } else if search.is_some() {
+        warn!("mdBook compiled without search support, ignoring `output.html.search` table");
+        warn!("please reinstall with `cargo install mdbook --force --features search`\
+            to use the search feature")
+    }
+    
     let mut chapters = vec![];
 
     for item in book.iter() {
@@ -469,7 +471,7 @@ fn wrap_header_with_link(level: usize,
                          id_counter: &mut HashMap<String, usize>,
                          filepath: &str)
                          -> String {
-    let raw_id = id_from_content(content);
+    let raw_id = utils::id_from_content(content);
 
     let id_count = id_counter.entry(raw_id.clone()).or_insert(0);
 
@@ -487,33 +489,6 @@ fn wrap_header_with_link(level: usize,
         text = content,
         filepath = filepath
     )
-}
-
-/// Generate an id for use with anchors which is derived from a "normalised"
-/// string.
-fn id_from_content(content: &str) -> String {
-    let mut content = content.to_string();
-
-    // Skip any tags or html-encoded stuff
-    const REPL_SUB: &[&str] = &["<em>",
-                                "</em>",
-                                "<code>",
-                                "</code>",
-                                "<strong>",
-                                "</strong>",
-                                "&lt;",
-                                "&gt;",
-                                "&amp;",
-                                "&#39;",
-                                "&quot;"];
-    for sub in REPL_SUB {
-        content = content.replace(sub, "");
-    }
-
-    // Remove spaces and hastags indicating a header
-    let trimmed = content.trim().trim_left_matches('#').trim();
-
-    normalize_id(trimmed)
 }
 
 // anchors to the same page (href="#anchor") do not work because of
@@ -555,8 +530,7 @@ fn fix_code_blocks(html: &str) -> String {
                 before = before,
                 classes = classes,
                 after = after)
-    })
-         .into_owned()
+    }).into_owned()
 }
 
 fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
@@ -591,8 +565,7 @@ fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
             // not language-rust, so no-op
             text.to_owned()
         }
-    })
-         .into_owned()
+    }).into_owned()
 }
 
 fn partition_source(s: &str) -> (String, String) {
@@ -623,26 +596,6 @@ struct RenderItemContext<'a> {
     is_index: bool,
     html_config: HtmlConfig,
 }
-
-pub fn normalize_path(path: &str) -> String {
-    use std::path::is_separator;
-    path.chars()
-        .map(|ch| if is_separator(ch) { '/' } else { ch })
-        .collect::<String>()
-}
-
-pub fn normalize_id(content: &str) -> String {
-    content.chars()
-           .filter_map(|ch| if ch.is_alphanumeric() || ch == '_' || ch == '-' {
-                           Some(ch.to_ascii_lowercase())
-                       } else if ch.is_whitespace() {
-                           Some('-')
-                       } else {
-                           None
-                       })
-           .collect::<String>()
-}
-
 
 #[cfg(test)]
 mod tests {
@@ -686,13 +639,5 @@ mod tests {
             let got = fix_anchor_links(&got, filepath);
             assert_eq!(got, should_be);
         }
-    }
-
-    #[test]
-    fn anchor_generation() {
-        assert_eq!(id_from_content("## `--passes`: add more rustdoc passes"),
-                   "--passes-add-more-rustdoc-passes");
-        assert_eq!(id_from_content("## Method-call expressions"),
-                   "method-call-expressions");
     }
 }

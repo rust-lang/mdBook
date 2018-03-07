@@ -3,12 +3,70 @@
 pub mod fs;
 mod string;
 use errors::Error;
+use regex::Regex;
 
 use pulldown_cmark::{html, Event, Options, Parser, Tag, OPTION_ENABLE_FOOTNOTES,
                      OPTION_ENABLE_TABLES};
+
 use std::borrow::Cow;
 
 pub use self::string::{RangeArgument, take_lines};
+
+/// Replaces multiple consecutive whitespace characters with a single space character.
+pub fn collapse_whitespace<'a>(text: &'a str) -> Cow<'a, str> {
+    lazy_static! {
+        static ref RE: Regex = Regex::new(r"\s\s+").unwrap();
+    }
+    RE.replace_all(text, " ")
+}
+
+/// Convert the given string to a valid HTML element ID
+pub fn normalize_id(content: &str) -> String {
+    let mut ret = content
+        .chars()
+        .filter_map(|ch| {
+            if ch.is_alphanumeric() || ch == '_' || ch == '-' {
+                Some(ch.to_ascii_lowercase())
+            } else if ch.is_whitespace() {
+                Some('-')
+            } else {
+                None
+            }
+        })
+        .collect::<String>();
+    // Ensure that the first character is [A-Za-z]
+    if ret.chars().next().map_or(false, |c| !c.is_ascii_alphabetic()) {
+        ret.insert(0, 'a');
+    }
+    ret
+}
+
+/// Generate an ID for use with anchors which is derived from a "normalised"
+/// string.
+pub fn id_from_content(content: &str) -> String {
+    let mut content = content.to_string();
+
+    // Skip any tags or html-encoded stuff
+    const REPL_SUB: &[&str] = &["<em>",
+                                "</em>",
+                                "<code>",
+                                "</code>",
+                                "<strong>",
+                                "</strong>",
+                                "&lt;",
+                                "&gt;",
+                                "&amp;",
+                                "&#39;",
+                                "&quot;"];
+    for sub in REPL_SUB {
+        content = content.replace(sub, "");
+    }
+
+    // Remove spaces and hashes indicating a header
+    let trimmed = content.trim().trim_left_matches('#').trim();
+
+    normalize_id(trimmed)
+}
 
 /// Wrapper around the pulldown-cmark parser for rendering markdown to HTML.
 pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
@@ -209,6 +267,29 @@ more text with spaces
 "#;
             assert_eq!(render_markdown(input, false), expected);
             assert_eq!(render_markdown(input, true), expected);
+        }
+    }
+
+    mod html_munging {
+        use super::super::{id_from_content, normalize_id};
+
+        #[test]
+        fn it_generates_anchors() {
+            assert_eq!(id_from_content("## `--passes`: add more rustdoc passes"),
+                    "a--passes-add-more-rustdoc-passes");
+            assert_eq!(id_from_content("## Method-call expressions"),
+                    "method-call-expressions");
+        }
+
+        #[test]
+        fn it_normalizes_ids() {
+            assert_eq!(normalize_id("`--passes`: add more rustdoc passes"),
+                    "a--passes-add-more-rustdoc-passes");
+            assert_eq!(normalize_id("Method-call 🐙 expressions \u{1f47c}"),
+                    "method-call--expressions-");
+            assert_eq!(normalize_id("_-_12345"), "a_-_12345");
+            assert_eq!(normalize_id("12345"), "a12345");
+            assert_eq!(normalize_id(""), "");
         }
     }
 

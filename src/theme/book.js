@@ -499,6 +499,7 @@ function playpen_text(playpen) {
 (function chapterNavigation() {
     document.addEventListener('keydown', function (e) {
         if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
+        if (window.search && window.search.hasFocus()) { return; }
 
         switch (e.key) {
             case 'ArrowRight':

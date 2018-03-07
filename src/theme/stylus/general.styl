@@ -35,6 +35,16 @@ h4, h5 { margin-top: 2em }
 
 .header + .header h3, .header + .header h4, .header + .header h5 { margin-top: 1em }
 
+a.header:target h1:before,
+a.header:target h2:before,
+a.header:target h3:before,
+a.header:target h4:before {
+    display: inline-block;
+    content: "»";
+    margin-left: -30px;
+    width: 30px;
+}
+
 table {
     margin: 0 auto;
     border-collapse: collapse;

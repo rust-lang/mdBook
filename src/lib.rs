@@ -52,20 +52,20 @@
 //!
 //! ## Implementing a new Backend
 //!
-//! `mdbook` has a fairly flexible mechanism for creating additional backends 
+//! `mdbook` has a fairly flexible mechanism for creating additional backends
 //! for your book. The general idea is you'll add an extra table in the book's
 //! `book.toml` which specifies an executable to be invoked by `mdbook`. This
-//! executable will then be called during a build, with an in-memory 
+//! executable will then be called during a build, with an in-memory
 //! representation ([`RenderContext`]) of the book being passed to the
-//! subprocess via `stdin`. 
-//! 
-//! The [`RenderContext`] gives the backend access to the contents of 
+//! subprocess via `stdin`.
+//!
+//! The [`RenderContext`] gives the backend access to the contents of
 //! `book.toml` and lets it know which directory all generated artefacts should
 //! be placed in. For a much more in-depth explanation, consult the [relevant
 //! chapter] in the *For Developers* section of the user guide.
-//! 
-//! To make creating a backend easier, the `mdbook` crate can be imported 
-//! directly, making deserializing the `RenderContext` easy and giving you 
+//!
+//! To make creating a backend easier, the `mdbook` crate can be imported
+//! directly, making deserializing the `RenderContext` easy and giving you
 //! access to the various methods for working with the [`Config`].
 //!
 //! [user guide]: https://rust-lang-nursery.github.io/mdBook/
@@ -122,6 +122,7 @@ pub mod errors {
             HandlebarsRender(::handlebars::RenderError) #[doc = "Handlebars rendering failed"];
             HandlebarsTemplate(Box<::handlebars::TemplateError>) #[doc = "Unable to parse the template"];
             Utf8(::std::string::FromUtf8Error) #[doc = "Invalid UTF-8"];
+            SerdeJson(::serde_json::Error) #[doc = "JSON conversion failed"];
         }
 
         links {
