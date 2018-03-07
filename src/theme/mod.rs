@@ -163,7 +163,7 @@ mod tests {
     #[test]
     fn theme_dir_overrides_defaults() {
         let temp = TempDir::new("mdbook").unwrap();
-        ::std::fs::create_dir(temp.path().join("css"));
+        ::std::fs::create_dir(temp.path().join("css")).unwrap();
 
         let files = [
             "index.hbs",
@@ -181,7 +181,7 @@ mod tests {
             "clipboard.min.js",
         ];
         for file in &files {
-            File::create(&temp.path().join(file));
+            File::create(&temp.path().join(file)).unwrap();
         }
 
         let got = Theme::new(temp.path());
