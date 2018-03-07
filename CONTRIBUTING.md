@@ -48,30 +48,6 @@ mdBook builds on stable Rust, if you want to build mdBook from source, here are 
 
 The resulting binary can be found in `mdBook/target/debug/` under the name `mdBook` or `mdBook.exe`.
 
-
-### Making changes to the style
-
-mdBook doesn't use CSS directly but uses [Stylus](http://stylus-lang.com/), a CSS-preprocessor which compiles to CSS.
-
-When you want to change the style, it is important to not change the CSS directly because any manual modification to
-the CSS files will be overwritten when compiling the stylus files. Instead, you should make your changes directly in the
-[stylus files](https://github.com/rust-lang-nursery/mdBook/tree/master/src/theme/stylus) and regenerate the CSS.
-
-For this to work, you first need [Node and NPM](https://nodejs.org/en/) installed on your machine.
-Then run the following command to install both [stylus](http://stylus-lang.com/) and [nib](https://tj.github.io/nib/), you might need `sudo` to install successfully.
-
-```
-npm install -g stylus nib
-```
-
-When that finished, you can simply regenerate the CSS files by building mdBook with the following command:
-
-```
-cargo build --features=regenerate-css
-```
-
-This should automatically call the appropriate stylus command to recompile the files to CSS and include them in the project.
-
 ### Making a pull-request
 
 When you feel comfortable that your changes could be integrated into mdBook, you can create a pull-request on GitHub.
