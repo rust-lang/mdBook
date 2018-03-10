@@ -54,6 +54,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         builder.create_gitignore(true);
     }
 
+    config.book.title = request_book_title();
+
     if let Some(author) = get_author_name() {
         debug!("Obtained user name from gitconfig: {:?}", author);
         config.book.authors.push(author);
@@ -66,7 +68,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     Ok(())
 }
 
-// Obtains author name from git config file if it can be located.
+/// Obtains author name from git config file if it can be located.
 fn get_author_name() -> Option<String> {
     if let Some(home) = env::home_dir() {
         let git_config_path = home.join(".gitconfig");
@@ -85,7 +87,21 @@ fn get_author_name() -> Option<String> {
     }
 }
 
-// Simple function that user comfirmation
+/// Request book title from user and return if provided.
+fn request_book_title() -> Option<String> {
+    println!("What title would you like to give the book? ");
+    io::stdout().flush().unwrap();
+    let mut resp = String::new();
+    io::stdin().read_line(&mut resp).unwrap();
+    let resp = resp.trim();
+    if resp.is_empty() {
+        None
+    } else {
+        Some(resp.into())
+    }
+}
+
+// Simple function for user confirmation
 fn confirm() -> bool {
     io::stdout().flush().unwrap();
     let mut s = String::new();
