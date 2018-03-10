@@ -424,6 +424,8 @@ pub struct HtmlConfig {
     pub livereload_url: Option<String>,
     /// Should section labels be rendered?
     pub no_section_label: bool,
+    /// Search settings. If `None`, the default will be used.
+    pub search: Option<Search>,
 }
 
 impl HtmlConfig {
@@ -441,19 +443,66 @@ impl HtmlConfig {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Playpen {
-    /// The path to the editor to use. Defaults to the [Ace Editor].
-    ///
-    /// [Ace Editor]: https://ace.c9.io/
-    pub editor: PathBuf,
-    /// Should playpen snippets be editable? Defaults to `false`.
+    /// Should playpen snippets be editable? Default: `false`.
     pub editable: bool,
+    /// Copy JavaScript files for the editor to the output directory?
+    /// Default: `true`.
+    pub copy_js: bool,
 }
 
 impl Default for Playpen {
     fn default() -> Playpen {
         Playpen {
-            editor: PathBuf::from("ace"),
             editable: false,
+            copy_js: true,
+        }
+    }
+}
+
+/// Configuration of the search functionality of the HTML renderer.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct Search {
+    /// Maximum number of visible results. Default: `30`.
+    pub limit_results: u32,
+    /// The number of words used for a search result teaser. Default: `30`,
+    pub teaser_word_count: u32,
+    /// Define the logical link between multiple search words.
+    /// If true, all search words must appear in each result. Default: `true`.
+    pub use_boolean_and: bool,
+    /// Boost factor for the search result score if a search word appears in the header.
+    /// Default: `2`.
+    pub boost_title: u8,
+    /// Boost factor for the search result score if a search word appears in the hierarchy.
+    /// The hierarchy contains all titles of the parent documents and all parent headings.
+    /// Default: `1`.
+    pub boost_hierarchy: u8,
+    /// Boost factor for the search result score if a search word appears in the text.
+    /// Default: `1`.
+    pub boost_paragraph: u8,
+    /// True if the searchword `micro` should match `microwave`. Default: `true`.
+    pub expand: bool,
+    /// Documents are split into smaller parts, seperated by headings. This defines, until which
+    /// level of heading documents should be split. Default: `3`. (`### This is a level 3 heading`)
+    pub heading_split_level: u8,
+    /// Copy JavaScript files for the search functionality to the output directory?
+    /// Default: `true`.
+    pub copy_js: bool,
+}
+
+impl Default for Search {
+    fn default() -> Search {
+        // Please update the documentation of `Search` when changing values!
+        Search {
+            limit_results: 30,
+            teaser_word_count: 30,
+            use_boolean_and: false,
+            boost_title: 2,
+            boost_hierarchy: 1,
+            boost_paragraph: 1,
+            expand: true,
+            heading_split_level: 3,
+            copy_js: true,
         }
     }
 }
@@ -537,7 +586,7 @@ mod tests {
         };
         let playpen_should_be = Playpen {
             editable: true,
-            editor: PathBuf::from("ace"),
+            copy_js: true,
         };
         let html_should_be = HtmlConfig {
             curly_quotes: true,

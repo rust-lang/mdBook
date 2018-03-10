@@ -339,3 +339,103 @@ fn book_with_a_reserved_filename_does_not_build() {
     let got = md.build();
     assert!(got.is_err());
 }
+
+#[cfg(feature = "search")]
+mod search {
+    extern crate serde_json;
+    use std::fs::File;
+    use std::path::Path;
+    use mdbook::utils::fs::file_to_string;
+    use mdbook::MDBook;
+    use dummy_book::DummyBook;
+
+    fn read_book_index(root: &Path) -> serde_json::Value {
+        let index = root.join("book/searchindex.js");
+        let index = file_to_string(index).unwrap();
+        let index = index.trim_left_matches("window.search = ");
+        let index = index.trim_right_matches(";");
+        serde_json::from_str(&index).unwrap()
+    }
+
+    #[test]
+    fn book_creates_reasonable_search_index() {
+        let temp = DummyBook::new().build().unwrap();
+        let md = MDBook::load(temp.path()).unwrap();
+        md.build().unwrap();
+
+        let index = read_book_index(temp.path());
+
+        let bodyidx = &index["index"]["index"]["body"]["root"];
+        let textidx = &bodyidx["t"]["e"]["x"]["t"];
+        assert_eq!(textidx["df"], 2);
+        assert_eq!(textidx["docs"]["first/index.html#first-chapter"]["tf"], 1.0);
+        assert_eq!(textidx["docs"]["intro.html#introduction"]["tf"], 1.0);
+
+        let docs = &index["index"]["documentStore"]["docs"];
+        assert_eq!(docs["first/index.html#first-chapter"]["body"], "more text.");
+        assert_eq!(docs["first/index.html#some-section"]["body"], "");
+        assert_eq!(
+            docs["first/includes.html#summary"]["body"],
+            "Introduction First Chapter Nested Chapter Includes Second Chapter Conclusion"
+        );
+        assert_eq!(
+            docs["first/includes.html#summary"]["breadcrumbs"],
+            "First Chapter » Summary"
+        );
+        assert_eq!(
+            docs["conclusion.html#conclusion"]["body"],
+            "I put &lt;HTML&gt; in here!"
+        );
+    }
+
+    // Setting this to `true` may cause issues with `cargo watch`,
+    // since it may not finish writing the fixture before the tests
+    // are run again.
+    const GENERATE_FIXTURE: bool = false;
+
+    fn get_fixture() -> serde_json::Value {
+        if GENERATE_FIXTURE {
+            let temp = DummyBook::new().build().unwrap();
+            let md = MDBook::load(temp.path()).unwrap();
+            md.build().unwrap();
+
+            let src = read_book_index(temp.path());
+
+            let dest = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/searchindex_fixture.json");
+            let dest = File::create(&dest).unwrap();
+            serde_json::to_writer_pretty(dest, &src).unwrap();
+
+            src
+        } else {
+            let json = include_str!("searchindex_fixture.json");
+            serde_json::from_str(json).expect("Unable to deserialize the fixture")
+        }
+    }
+
+    // So you've broken the test. If you changed dummy_book, it's probably
+    // safe to regenerate the fixture. If you haven't then make sure that the
+    // search index still works. Run `cargo run -- serve tests/dummy_book`
+    // and try some searches. Are you getting results? Do the teasers look OK?
+    // Are there new errors in the JS console?
+    //
+    // If you're pretty sure you haven't broken anything, change `GENERATE_FIXTURE`
+    // above to `true`, and run `cargo test` to generate a new fixture. Then
+    // change it back to `false`. Include the changed `searchindex_fixture.json` in your commit.
+    #[test]
+    fn search_index_hasnt_changed_accidentally() {
+        let temp = DummyBook::new().build().unwrap();
+        let md = MDBook::load(temp.path()).unwrap();
+        md.build().unwrap();
+
+        let book_index = read_book_index(temp.path());
+
+        let fixture_index = get_fixture();
+
+        // Uncomment this if you're okay with pretty-printing 32KB of JSON
+        //assert_eq!(fixture_index, book_index);
+
+        if book_index != fixture_index {
+            panic!("The search index has changed from the fixture");
+        }
+    }
+}

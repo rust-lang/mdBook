@@ -1,6 +1,6 @@
+extern crate chrono;
 #[macro_use]
 extern crate clap;
-extern crate chrono;
 extern crate env_logger;
 extern crate error_chain;
 #[macro_use]
@@ -38,7 +38,7 @@ fn main() {
                 .author("Mathieu David <mathieudavid@mathieudavid.org>")
                 // Get the version from our Cargo.toml using clap's crate_version!() macro
                 .version(concat!("v",crate_version!()))
-                .setting(AppSettings::SubcommandRequired)
+                .setting(AppSettings::ArgRequiredElseHelp)
                 .after_help("For more information about a specific command, \
                              try `mdbook <command> --help`\n\
                              Source code for mdbook available \
@@ -77,11 +77,14 @@ fn init_logger() {
     let mut builder = Builder::new();
 
     builder.format(|formatter, record| {
-        writeln!(formatter, "{} [{}] ({}): {}",
-                 Local::now().format("%Y-%m-%d %H:%M:%S"),
-                 record.level(),
-                 record.target(),
-                 record.args())
+        writeln!(
+            formatter,
+            "{} [{}] ({}): {}",
+            Local::now().format("%Y-%m-%d %H:%M:%S"),
+            record.level(),
+            record.target(),
+            record.args()
+        )
     });
 
     if let Ok(var) = env::var("RUST_LOG") {
@@ -89,6 +92,8 @@ fn init_logger() {
     } else {
         // if no RUST_LOG provided, default to logging at the Info level
         builder.filter(None, LevelFilter::Info);
+        // Filter extraneous html5ever not-implemented messages
+        builder.filter(Some("html5ever"), LevelFilter::Error);
     }
 
     builder.init();

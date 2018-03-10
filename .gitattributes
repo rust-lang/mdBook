@@ -2,3 +2,7 @@
 
 * text=auto eol=lf
 *.rs rust
+*.woff -text
+*.ttf -text
+*.otf -text
+*.png -text
