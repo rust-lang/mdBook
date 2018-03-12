@@ -1,22 +1,23 @@
-#[macro_use]
-extern crate clap;
 extern crate chrono;
+extern crate clap;
 extern crate env_logger;
 extern crate error_chain;
 #[macro_use]
 extern crate log;
 extern crate mdbook;
 extern crate open;
+#[macro_use]
+extern crate structopt;
 
 use std::env;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::io::Write;
-use clap::{App, AppSettings, ArgMatches};
 use chrono::Local;
 use log::LevelFilter;
 use env_logger::Builder;
 use mdbook::utils;
+use structopt::StructOpt;
 
 pub mod build;
 pub mod clean;
@@ -27,43 +28,18 @@ pub mod serve;
 #[cfg(feature = "watch")]
 pub mod watch;
 
-const NAME: &'static str = "mdbook";
-
 fn main() {
     init_logger();
 
-    // Create a list of valid arguments and sub-commands
-    let app = App::new(NAME)
-                .about("Create a book in form of a static website from markdown files")
-                .author("Mathieu David <mathieudavid@mathieudavid.org>")
-                // Get the version from our Cargo.toml using clap's crate_version!() macro
-                .version(concat!("v",crate_version!()))
-                .setting(AppSettings::SubcommandRequired)
-                .after_help("For more information about a specific command, \
-                             try `mdbook <command> --help`\n\
-                             Source code for mdbook available \
-                             at: https://github.com/rust-lang-nursery/mdBook")
-                .subcommand(init::make_subcommand())
-                .subcommand(build::make_subcommand())
-                .subcommand(test::make_subcommand())
-                .subcommand(clean::make_subcommand());
+    let opt = Opts::from_args();
 
-    #[cfg(feature = "watch")]
-    let app = app.subcommand(watch::make_subcommand());
-    #[cfg(feature = "serve")]
-    let app = app.subcommand(serve::make_subcommand());
-
-    // Check which subcomamnd the user ran...
-    let res = match app.get_matches().subcommand() {
-        ("init", Some(sub_matches)) => init::execute(sub_matches),
-        ("build", Some(sub_matches)) => build::execute(sub_matches),
-        ("clean", Some(sub_matches)) => clean::execute(sub_matches),
-        #[cfg(feature = "watch")]
-        ("watch", Some(sub_matches)) => watch::execute(sub_matches),
-        #[cfg(feature = "serve")]
-        ("serve", Some(sub_matches)) => serve::execute(sub_matches),
-        ("test", Some(sub_matches)) => test::execute(sub_matches),
-        (_, _) => unreachable!(),
+    let res = match opt {
+        Opts::Init(x) => init::execute(x),
+        Opts::Build(x) => build::execute(x),
+        Opts::Clean(x) => clean::execute(x),
+        Opts::Watch(x) => watch::execute(x),
+        Opts::Serve(x) => serve::execute(x),
+        Opts::Test(x) => test::execute(x),
     };
 
     if let Err(e) = res {
@@ -73,15 +49,42 @@ fn main() {
     }
 }
 
+/// Subcommands and their respective parameters.
+#[derive(StructOpt)]
+#[structopt(about = "Create a book in form of a static website from markdown files",
+            after_help = "For more information about a specific command, \
+                          try `mdbook <command> --help`\n\
+                          Source code for mdbook available \
+                          at: https://github.com/rust-lang-nursery/mdBook",
+            author = "Mathieu David <mathieudavid@mathieudavid.org>")]
+enum Opts {
+    #[structopt(name = "init", about = "Create boilerplate structure and files in the directory")]
+    Init(init::InitArgs),
+    #[structopt(name = "build", about = "Build the book from the markdown files")]
+    Build(build::BuildArgs),
+    #[structopt(name = "clean", about = "Delete built book")] Clean(clean::CleanArgs),
+    #[cfg(feature = "watch")]
+    #[structopt(name = "watch", about = "Watch the files for changes")]
+    Watch(watch::WatchArgs),
+    #[cfg(feature = "serve")]
+    #[structopt(name = "serve",
+                about = "Serve the book at http://localhost:3000. Rebuild and reload on change.")]
+    Serve(serve::ServeArgs),
+    #[structopt(name = "test", about = "Test that code samples compile")] Test(test::TestArgs),
+}
+
 fn init_logger() {
     let mut builder = Builder::new();
 
     builder.format(|formatter, record| {
-        writeln!(formatter, "{} [{}] ({}): {}",
-                 Local::now().format("%Y-%m-%d %H:%M:%S"),
-                 record.level(),
-                 record.target(),
-                 record.args())
+        writeln!(
+            formatter,
+            "{} [{}] ({}): {}",
+            Local::now().format("%Y-%m-%d %H:%M:%S"),
+            record.level(),
+            record.target(),
+            record.args()
+        )
     });
 
     if let Ok(var) = env::var("RUST_LOG") {
@@ -94,8 +97,8 @@ fn init_logger() {
     builder.init();
 }
 
-fn get_book_dir(args: &ArgMatches) -> PathBuf {
-    if let Some(dir) = args.value_of("dir") {
+fn get_book_dir(book_dir: Option<String>) -> PathBuf {
+    if let Some(ref dir) = book_dir {
         // Check if path is relative from current dir, or absolute...
         let p = Path::new(dir);
         if p.is_relative() {
