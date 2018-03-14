@@ -71,7 +71,8 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct Book {
     /// The sections in this book.
-    sections: Vec<BookItem>,
+    pub sections: Vec<BookItem>,
+    __non_exhaustive: (),
 }
 
 impl Book {
@@ -158,9 +159,12 @@ pub struct Chapter {
 
 impl Chapter {
     /// Create a new chapter with the provided content.
-    pub fn new<P: Into<PathBuf>>(name: &str, content: String, path: P, parent_names: Vec<String>) 
-        -> Chapter 
-    {
+    pub fn new<P: Into<PathBuf>>(
+        name: &str,
+        content: String,
+        path: P,
+        parent_names: Vec<String>,
+    ) -> Chapter {
         Chapter {
             name: name.to_string(),
             content: content,
@@ -192,23 +196,30 @@ fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P) -> Result<
         chapters.push(chapter);
     }
 
-    Ok(Book { sections: chapters })
+    Ok(Book {
+        sections: chapters,
+        __non_exhaustive: (),
+    })
 }
 
-fn load_summary_item<P: AsRef<Path>>(item: &SummaryItem, src_dir: P, parent_names: Vec<String>) 
-    -> Result<BookItem> 
-{
+fn load_summary_item<P: AsRef<Path>>(
+    item: &SummaryItem,
+    src_dir: P,
+    parent_names: Vec<String>,
+) -> Result<BookItem> {
     match *item {
         SummaryItem::Separator => Ok(BookItem::Separator),
         SummaryItem::Link(ref link) => {
             load_chapter(link, src_dir, parent_names).map(|c| BookItem::Chapter(c))
-        },
+        }
     }
 }
 
-fn load_chapter<P: AsRef<Path>>(link: &Link, src_dir: P, parent_names: Vec<String>) 
-    -> Result<Chapter> 
-{
+fn load_chapter<P: AsRef<Path>>(
+    link: &Link,
+    src_dir: P,
+    parent_names: Vec<String>,
+) -> Result<Chapter> {
     debug!("Loading {} ({})", link.name, link.location.display());
     let src_dir = src_dir.as_ref();
 
@@ -337,7 +348,12 @@ And here is some \
     #[test]
     fn load_a_single_chapter_from_disk() {
         let (link, temp_dir) = dummy_link();
-        let should_be = Chapter::new("Chapter 1", DUMMY_SRC.to_string(), "chapter_1.md", Vec::new());
+        let should_be = Chapter::new(
+            "Chapter 1",
+            DUMMY_SRC.to_string(),
+            "chapter_1.md",
+            Vec::new(),
+        );
 
         let got = load_chapter(&link, temp_dir.path(), Vec::new()).unwrap();
         assert_eq!(got, should_be);
@@ -396,6 +412,7 @@ And here is some \
                     ..Default::default()
                 }),
             ],
+            ..Default::default()
         };
 
         let got = load_book_from_disk(&summary, temp.path()).unwrap();
@@ -414,6 +431,7 @@ And here is some \
                 }),
                 BookItem::Separator,
             ],
+            ..Default::default()
         };
 
         let should_be: Vec<_> = book.sections.iter().collect();
@@ -451,6 +469,7 @@ And here is some \
                 }),
                 BookItem::Separator,
             ],
+            ..Default::default()
         };
 
         let got: Vec<_> = book.iter().collect();
@@ -501,6 +520,7 @@ And here is some \
                 }),
                 BookItem::Separator,
             ],
+            ..Default::default()
         };
 
         let num_items = book.iter().count();
