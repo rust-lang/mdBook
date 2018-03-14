@@ -383,7 +383,6 @@ pub struct BuildConfig {
     pub create_missing: bool,
     /// Which preprocessors should be applied
     pub preprocess: Option<Vec<String>>,
-
 }
 
 impl Default for BuildConfig {
@@ -429,6 +428,17 @@ pub struct HtmlConfig {
     pub search: Option<Search>,
 }
 
+impl HtmlConfig {
+    /// Returns the directory of theme from the provided root directory. If the
+    /// directory is not present it will append the default directory of "theme"
+    pub fn theme_dir(&self, root: &PathBuf) -> PathBuf {
+        match self.theme {
+            Some(ref d) => root.join(d),
+            None => root.join("theme"),
+        }
+    }
+}
+
 /// Configuration for tweaking how the the HTML renderer handles the playpen.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
@@ -471,7 +481,7 @@ pub struct Search {
     /// Default: `1`.
     pub boost_paragraph: u8,
     /// True if the searchword `micro` should match `microwave`. Default: `true`.
-    pub expand : bool,
+    pub expand: bool,
     /// Documents are split into smaller parts, seperated by headings. This defines, until which
     /// level of heading documents should be split. Default: `3`. (`### This is a level 3 heading`)
     pub heading_split_level: u8,
@@ -496,7 +506,6 @@ impl Default for Search {
         }
     }
 }
-
 
 /// Allows you to "update" any arbitrary field in a struct by round-tripping via
 /// a `toml::Value`.
@@ -570,8 +579,10 @@ mod tests {
         let build_should_be = BuildConfig {
             build_dir: PathBuf::from("outputs"),
             create_missing: false,
-            preprocess: Some(vec!["first_preprocessor".to_string(),
-                                  "second_preprocessor".to_string()]),
+            preprocess: Some(vec![
+                "first_preprocessor".to_string(),
+                "second_preprocessor".to_string(),
+            ]),
         };
         let playpen_should_be = Playpen {
             editable: true,

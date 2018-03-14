@@ -288,13 +288,12 @@ impl MDBook {
         self.root.join(&self.config.book.src)
     }
 
-    // FIXME: This really belongs as part of the `HtmlConfig`.
-    #[doc(hidden)]
+    /// Get the directory containing the theme resources for the book.
     pub fn theme_dir(&self) -> PathBuf {
-        match self.config.html_config().and_then(|h| h.theme) {
-            Some(d) => self.root.join(d),
-            None => self.root.join("theme"),
-        }
+        self.config
+            .html_config()
+            .unwrap_or_default()
+            .theme_dir(&self.root)
     }
 }
 
