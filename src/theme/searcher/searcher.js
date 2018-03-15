@@ -351,8 +351,10 @@ window.search = window.search || {};
     function showSearch(yes) {
         if (yes) {
             searchbar_outer.style.display = 'block';
+            content.style.display = 'none';
             searchicon.setAttribute('aria-expanded', 'true');
         } else {
+            content.style.display = 'block';
             searchbar_outer.style.display = 'none';
             searchresults_outer.style.display = 'none';
             searchbar.value = '';
@@ -364,8 +366,10 @@ window.search = window.search || {};
     function showResults(yes) {
         if (yes) {
             searchbar_outer.style.display = 'block';
+            content.style.display = 'none';
             searchresults_outer.style.display = 'block';
         } else {
+            content.style.display = 'block';
             searchresults_outer.style.display = 'none';
         }
     }
