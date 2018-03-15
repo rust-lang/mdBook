@@ -2,7 +2,7 @@
 name = "mdbook"
 version = "0.1.4-alpha.0"
 authors = ["Mathieu David <mathieudavid@mathieudavid.org>", "Michael-F-Bryan <michaelfbryan@gmail.com>"]
-description = "create books from markdown files (like Gitbook)"
+description = "Create books from markdown files"
 documentation = "http://rust-lang-nursery.github.io/mdBook/index.html"
 repository = "https://github.com/rust-lang-nursery/mdBook"
 keywords = ["book", "gitbook", "rustbook", "markdown"]
@@ -16,7 +16,7 @@ exclude = [
 
 [package.metadata.release]
 sign-commit = true
-push-remote = "upstream"
+push-remote = "origin"
 tag-prefix = "v"
 
 [dependencies]
