@@ -1,7 +1,8 @@
 //! # mdBook
 //!
-//! **mdBook** is similar to GitBook but implemented in Rust.
-//! It offers a command line interface, but can also be used as a regular crate.
+//! **mdBook** is a tool for rendering a collection of markdown documents into
+//! a form more suitable for end users like HTML or EPUB.  It offers a command
+//! line interface, but this crate can be used if more control is required.
 //!
 //! This is the API doc, the [user guide] is also available if you want
 //! information about the command line tool, format, structure etc. It is also
@@ -14,6 +15,12 @@
 //! - Do some processing or test before building your book
 //! - Accessing the public API to help create a new Renderer
 //! - ...
+//!
+//! > **Note:** While we try to ensure `mdbook`'s command-line interface and
+//! > behaviour are backwards compatible, the tool's internals are still
+//! > evolving and being iterated on. If you wish to prevent accidental
+//! > breakages it is recommended to pin any tools building on top of the
+//! > `mdbook` crate to a specific release.
 //!
 //! # Examples
 //!
