@@ -2138,6 +2138,10 @@
     "ref": "id",
     "version": "0.9.5"
   },
+  "resultsoptions": {
+    "limit_results": 30,
+    "teaser_word_count": 30
+  },
   "searchoptions": {
     "bool": "OR",
     "expand": true,
@@ -2151,8 +2155,6 @@
       "title": {
         "boost": 2
       }
-    },
-    "limit_results": 30,
-    "teaser_word_count": 30
+    }
   }
 }
