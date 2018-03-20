@@ -140,14 +140,28 @@ table thead td {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
-  -webkit-transition: margin-left 0.3s;
-  -moz-transition: margin-left 0.3s;
-  -o-transition: margin-left 0.3s;
-  -ms-transition: margin-left 0.3s;
-  transition: margin-left 0.3s;
+  -webkit-transition: margin-left 0.3s ease, -webkit-transform 0.3s ease;
+  -moz-transition: margin-left 0.3s ease, -moz-transform 0.3s ease;
+  -o-transition: margin-left 0.3s ease, -o-transform 0.3s ease;
+  -ms-transition: margin-left 0.3s ease, -ms-transform 0.3s ease;
+  transition: margin-left 0.3s ease, transform 0.3s ease;
 }
 .sidebar-visible .page-wrapper {
-  margin-left: 300px;
+  -webkit-transform: translateX(300px);
+  -moz-transform: translateX(300px);
+  -o-transform: translateX(300px);
+  -ms-transform: translateX(300px);
+  transform: translateX(300px);
+}
+@media only screen and (min-width: 620px) {
+  .sidebar-visible .page-wrapper {
+    -webkit-transform: none;
+    -moz-transform: none;
+    -o-transform: none;
+    -ms-transform: none;
+    transform: none;
+    margin-left: 300px;
+  }
 }
 .page {
   outline: 0;
