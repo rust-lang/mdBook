@@ -205,11 +205,11 @@ table thead td {
   -webkit-flex-wrap: wrap;
   -ms-flex-wrap: wrap;
   flex-wrap: wrap;
-  -webkit-transition: -webkit-transform 0.3s, border-bottom-color 0.5s;
-  -moz-transition: -moz-transform 0.3s, border-bottom-color 0.5s;
-  -o-transition: -o-transform 0.3s, border-bottom-color 0.5s;
-  -ms-transition: -ms-transform 0.3s, border-bottom-color 0.5s;
-  transition: transform 0.3s, border-bottom-color 0.5s;
+  -webkit-transition: -webkit-transform 0.3s;
+  -moz-transition: -moz-transform 0.3s;
+  -o-transition: -o-transform 0.3s;
+  -ms-transition: -ms-transform 0.3s;
+  transition: transform 0.3s;
 }
 #menu-bar i,
 #menu-bar .icon-button {
