@@ -9,7 +9,8 @@ window.search = window.search || {};
         return;
     }
     
-    var searchbar = document.getElementById('searchbar'),
+    var search_wrap = document.getElementById('search-wrapper'),
+        searchbar = document.getElementById('searchbar'),
         searchbar_outer = document.getElementById('searchbar-outer'),
         searchresults = document.getElementById('searchresults'),
         searchresults_outer = document.getElementById('searchresults-outer'),
@@ -315,7 +316,7 @@ window.search = window.search || {};
             e.preventDefault();
             showSearch(true);
             window.scrollTo(0, 0);
-            searchbar.focus();
+            searchbar.select();
             return;
         }
         if (hasFocus() && e.keyCode == DOWN_KEYCODE) {
@@ -353,38 +354,30 @@ window.search = window.search || {};
     
     function showSearch(yes) {
         if (yes) {
-            searchbar_outer.style.display = 'block';
-            content.style.display = 'none';
+            search_wrap.classList.remove('hidden');
             searchicon.setAttribute('aria-expanded', 'true');
         } else {
-            content.style.display = 'block';
-            searchbar_outer.style.display = 'none';
-            searchresults_outer.style.display = 'none';
-            searchbar.value = '';
-            removeChildren(searchresults);
+            search_wrap.classList.add('hidden');
             searchicon.setAttribute('aria-expanded', 'false');
         }
     }
 
     function showResults(yes) {
         if (yes) {
-            searchbar_outer.style.display = 'block';
-            content.style.display = 'none';
-            searchresults_outer.style.display = 'block';
+            searchresults_outer.classList.remove('hidden');
         } else {
-            content.style.display = 'block';
-            searchresults_outer.style.display = 'none';
+            searchresults_outer.classList.add('hidden');
         }
     }
 
     // Eventhandler for search icon
     function searchIconClickHandler() {
-        if (searchbar_outer.style.display === 'block') {
-            showSearch(false);
-        } else {
+        if (search_wrap.classList.contains('hidden')) {
             showSearch(true);
             window.scrollTo(0, 0);
-            searchbar.focus();
+            searchbar.select();
+        } else {
+            showSearch(false);
         }
     }
     
