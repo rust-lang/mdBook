@@ -18,11 +18,13 @@ window.search = window.search || {};
         content = document.getElementById('content'),
 
         searchindex = null,
+        resultsoptions = {
+            teaser_word_count: 30,
+            limit_results: 30,
+        },
         searchoptions = {
             bool: "AND",
             expand: true,
-            teaser_word_count: 30,
-            limit_results: 30,
             fields: {
                 title: {boost: 1},
                 body: {boost: 1},
@@ -185,7 +187,7 @@ window.search = window.search || {};
         }
 
         var window_weight = [];
-        var window_size = Math.min(weighted.length, searchoptions.teaser_word_count);
+        var window_size = Math.min(weighted.length, resultsoptions.teaser_word_count);
 
         var cur_sum = 0;
         for (var wordindex = 0; wordindex < window_size; wordindex++) {
@@ -236,6 +238,7 @@ window.search = window.search || {};
     }
 
     function init() {
+        resultsoptions = window.search.resultsoptions;
         searchoptions = window.search.searchoptions;
         searchindex = elasticlunr.Index.load(window.search.index);
 
@@ -437,7 +440,7 @@ window.search = window.search || {};
 
         // Do the actual search
         var results = searchindex.search(searchterm, searchoptions);
-        var resultcount = Math.min(results.length, searchoptions.limit_results);
+        var resultcount = Math.min(results.length, resultsoptions.limit_results);
 
         // Display search metrics
         searchresults_header.innerText = formatSearchMetric(resultcount, searchterm);

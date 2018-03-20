@@ -157,63 +157,53 @@ fn render_item(
 /// Using a JS script is a workaround for CORS in `file://` URIs. It also removes the need for
 /// downloading/parsing JSON in JS.
 fn write_to_js(index: Index, search_config: &Search) -> Result<String> {
-    // These structs mirror the configuration javascript object accepted by
-    // http://elasticlunr.com/docs/configuration.js.html
+    use std::collections::BTreeMap;
+    use self::elasticlunr::config::{SearchBool, SearchOptions, SearchOptionsField};
 
     #[derive(Serialize)]
-    struct SearchOptionsField {
-        boost: u8,
-    }
-
-    #[derive(Serialize)]
-    struct SearchOptionsFields {
-        title: SearchOptionsField,
-        body: SearchOptionsField,
-        breadcrumbs: SearchOptionsField,
-    }
-
-    #[derive(Serialize)]
-    struct SearchOptions {
-        bool: String,
-        expand: bool,
+    struct ResultsOptions {
         limit_results: u32,
         teaser_word_count: u32,
-        fields: SearchOptionsFields,
     }
 
     #[derive(Serialize)]
     struct SearchindexJson {
+        /// The options used for displaying search results
+        resultsoptions: ResultsOptions,
         /// The searchoptions for elasticlunr.js
         searchoptions: SearchOptions,
         /// The index for elasticlunr.js
         index: elasticlunr::Index,
     }
 
+    let mut fields = BTreeMap::new();
+    let mut opt = SearchOptionsField::default();
+    opt.boost = Some(search_config.boost_title);
+    fields.insert("title".into(), opt);
+    opt.boost = Some(search_config.boost_paragraph);
+    fields.insert("body".into(), opt);
+    opt.boost = Some(search_config.boost_hierarchy);
+    fields.insert("breadcrumbs".into(), opt);
+
     let searchoptions = SearchOptions {
         bool: if search_config.use_boolean_and {
-            "AND".into()
+            SearchBool::And
         } else {
-            "OR".into()
+            SearchBool::Or
         },
         expand: search_config.expand,
+        fields,
+    };
+
+    let resultsoptions = ResultsOptions {
         limit_results: search_config.limit_results,
         teaser_word_count: search_config.teaser_word_count,
-        fields: SearchOptionsFields {
-            title: SearchOptionsField {
-                boost: search_config.boost_title,
-            },
-            body: SearchOptionsField {
-                boost: search_config.boost_paragraph,
-            },
-            breadcrumbs: SearchOptionsField {
-                boost: search_config.boost_hierarchy,
-            },
-        },
     };
 
     let json_contents = SearchindexJson {
-        searchoptions: searchoptions,
-        index: index,
+        resultsoptions,
+        searchoptions,
+        index,
     };
     let json_contents = serde_json::to_string(&json_contents)?;
 
@@ -222,7 +212,7 @@ fn write_to_js(index: Index, search_config: &Search) -> Result<String> {
 
 fn clean_html(html: &str) -> String {
     lazy_static! {
-        static ref AMMONIA: ammonia::Builder<'static> = { 
+        static ref AMMONIA: ammonia::Builder<'static> = {
             let mut clean_content = HashSet::new();
             clean_content.insert("script");
             clean_content.insert("style");
