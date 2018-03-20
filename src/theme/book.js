@@ -178,7 +178,7 @@ function playpen_text(playpen) {
         buttons.innerHTML = "<button class=\"fa fa-expand\" title=\"Show hidden lines\" aria-label=\"Show hidden lines\"></button>";
 
         // add expand button
-        pre_block.prepend(buttons);
+        pre_block.insertBefore(buttons, pre_block.firstChild);
 
         pre_block.querySelector('.buttons').addEventListener('click', function (e) {
             if (e.target.classList.contains('fa-expand')) {
@@ -216,7 +216,7 @@ function playpen_text(playpen) {
             if (!buttons) {
                 buttons = document.createElement('div');
                 buttons.className = 'buttons';
-                pre_block.prepend(buttons);
+                pre_block.insertBefore(buttons, pre_block.firstChild);
             }
 
             var clipButton = document.createElement('button');
@@ -225,7 +225,7 @@ function playpen_text(playpen) {
             clipButton.setAttribute('aria-label', clipButton.title);
             clipButton.innerHTML = '<i class=\"tooltiptext\"></i>';
 
-            buttons.prepend(clipButton);
+            buttons.insertBefore(clipButton, buttons.firstChild);
         }
     });
 
@@ -236,7 +236,7 @@ function playpen_text(playpen) {
         if (!buttons) {
             buttons = document.createElement('div');
             buttons.className = 'buttons';
-            pre_block.prepend(buttons);
+            pre_block.insertBefore(buttons, pre_block.firstChild);
         }
 
         var runCodeButton = document.createElement('button');
@@ -251,8 +251,8 @@ function playpen_text(playpen) {
         copyCodeClipboardButton.title = 'Copy to clipboard';
         copyCodeClipboardButton.setAttribute('aria-label', copyCodeClipboardButton.title);
 
-        buttons.prepend(runCodeButton);
-        buttons.prepend(copyCodeClipboardButton);
+        buttons.insertBefore(runCodeButton, buttons.firstChild);
+        buttons.insertBefore(copyCodeClipboardButton, buttons.firstChild);
 
         runCodeButton.addEventListener('click', function (e) {
             run_rust_code(pre_block);
@@ -265,7 +265,7 @@ function playpen_text(playpen) {
             undoChangesButton.title = 'Undo changes';
             undoChangesButton.setAttribute('aria-label', undoChangesButton.title);
 
-            buttons.prepend(undoChangesButton);
+            buttons.insertBefore(undoChangesButton, buttons.firstChild);
 
             undoChangesButton.addEventListener('click', function () {
                 let editor = window.ace.edit(code_block);
