@@ -1,3 +1,5 @@
+"use strict";
+
 // Fix back button cache problem
 window.onunload = function () { };
 
@@ -55,6 +57,7 @@ function playpen_text(playpen) {
         var txt = playpen_text(pre_block);
         var re = /extern\s+crate\s+([a-zA-Z_0-9]+)\s*;/g;
         var snippet_crates = [];
+        var item;
         while (item = re.exec(txt)) {
             snippet_crates.push(item[1]);
         }

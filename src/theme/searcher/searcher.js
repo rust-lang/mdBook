@@ -1,3 +1,4 @@
+"use strict";
 window.search = window.search || {};
 (function search(search) {
     // Search functionality
@@ -246,7 +247,7 @@ window.search = window.search || {};
         // Set up events
         searchicon.addEventListener('click', function(e) { searchIconClickHandler(); }, false);
         searchbar.addEventListener('keyup', function(e) { searchbarKeyUpHandler(); }, false);
-        document.addEventListener('keydown', function (e) { globalKeyHandler(e); }, false);
+        document.addEventListener('keydown', function(e) { globalKeyHandler(e); }, false);
         // If the user uses the browser buttons, do the same as if a reload happened
         window.onpopstate = function(e) { doSearchOrMarkFromUrl(); };
 
@@ -300,54 +301,48 @@ window.search = window.search || {};
     function globalKeyHandler(e) {
         if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.target.type === 'textarea') { return; }
 
-        if (e.keyCode == ESCAPE_KEYCODE) {
+        if (e.keyCode === ESCAPE_KEYCODE) {
             e.preventDefault();
             searchbar.classList.remove("active");
             setSearchUrlParameters("",
-                (searchbar.value.trim() != "") ? "push" : "replace");
+                (searchbar.value.trim() !== "") ? "push" : "replace");
             if (hasFocus()) {
                 unfocusSearchbar();
             }
             showSearch(false);
             marker.unmark();
-            return;
-        }
-        if (!hasFocus() && e.keyCode == SEARCH_HOTKEY_KEYCODE) {
+        } else if (!hasFocus() && e.keyCode === SEARCH_HOTKEY_KEYCODE) {
             e.preventDefault();
             showSearch(true);
             window.scrollTo(0, 0);
             searchbar.select();
-            return;
-        }
-        if (hasFocus() && e.keyCode == DOWN_KEYCODE) {
+        } else if (hasFocus() && e.keyCode === DOWN_KEYCODE) {
             e.preventDefault();
             unfocusSearchbar();
-            searchresults.children('li').first().classList.add("focus");
-            return;
-        }
-        if (!hasFocus() && (e.keyCode == DOWN_KEYCODE
-                            || e.keyCode == UP_KEYCODE
-                            || e.keyCode == SELECT_KEYCODE)) {
+            searchresults.firstElementChild.classList.add("focus");
+        } else if (!hasFocus() && (e.keyCode === DOWN_KEYCODE
+                                || e.keyCode === UP_KEYCODE
+                                || e.keyCode === SELECT_KEYCODE)) {
             // not `:focus` because browser does annoying scrolling
-            var current_focus = search.searchresults.find("li.focus");
-            if (current_focus.length == 0) return;
+            var focused = searchresults.querySelector("li.focus");
+            if (!focused) return;
             e.preventDefault();
-            if (e.keyCode == DOWN_KEYCODE) {
-                var next = current_focus.next()
-                if (next.length > 0) {
-                    current_focus.classList.remove("focus");
+            if (e.keyCode === DOWN_KEYCODE) {
+                var next = focused.nextElementSibling;
+                if (next) {
+                    focused.classList.remove("focus");
                     next.classList.add("focus");
                 }
-            } else if (e.keyCode == UP_KEYCODE) {
-                current_focus.classList.remove("focus");
-                var prev = current_focus.prev();
-                if (prev.length == 0) {
-                    searchbar.focus();
-                } else {
+            } else if (e.keyCode === UP_KEYCODE) {
+                focused.classList.remove("focus");
+                var prev = focused.previousElementSibling;
+                if (prev) {
                     prev.classList.add("focus");
+                } else {
+                    searchbar.select();
                 }
-            } else {
-                window.location = current_focus.children('a').attr('href');
+            } else { // SELECT_KEYCODE
+                window.location.assign(focused.querySelector('a'));
             }
         }
     }
@@ -359,6 +354,10 @@ window.search = window.search || {};
         } else {
             search_wrap.classList.add('hidden');
             searchicon.setAttribute('aria-expanded', 'false');
+            var results = searchresults.children;
+            for (var i = 0; i < results.length; i++) {
+                results[i].classList.remove("focus");
+            }
         }
     }
 
