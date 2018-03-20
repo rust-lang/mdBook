@@ -349,7 +349,8 @@ function playpen_text(playpen) {
 
         try { localStorage.setItem('mdbook-theme', theme); } catch (e) { }
 
-        document.body.className = theme;
+        document.body.classList.remove(previousTheme);
+        document.body.classList.add(theme);
         html.classList.remove(previousTheme);
         html.classList.add(theme);
     }

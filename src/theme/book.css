@@ -81,6 +81,8 @@ table thead td {
   box-sizing: border-box;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
+}
+.js .sidebar {
   -webkit-transition: -webkit-transform 0.3s;
   -moz-transition: -moz-transform 0.3s;
   -o-transition: -o-transform 0.3s;
@@ -140,6 +142,8 @@ table thead td {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
+}
+.js .page-wrapper {
   -webkit-transition: margin-left 0.3s ease, -webkit-transform 0.3s ease;
   -moz-transition: margin-left 0.3s ease, -moz-transform 0.3s ease;
   -o-transition: margin-left 0.3s ease, -o-transform 0.3s ease;
@@ -205,6 +209,8 @@ table thead td {
   -webkit-flex-wrap: wrap;
   -ms-flex-wrap: wrap;
   flex-wrap: wrap;
+}
+.js #menu-bar > #menu-bar-sticky-container {
   -webkit-transition: -webkit-transform 0.3s;
   -moz-transition: -moz-transform 0.3s;
   -o-transition: -o-transform 0.3s;
@@ -217,15 +223,12 @@ table thead td {
   margin: 0 10px;
   z-index: 10;
   line-height: 50px;
+  cursor: pointer;
   -webkit-transition: color 0.5s;
   -moz-transition: color 0.5s;
   -o-transition: color 0.5s;
   -ms-transition: color 0.5s;
   transition: color 0.5s;
-}
-#menu-bar i:hover,
-#menu-bar .icon-button:hover {
-  cursor: pointer;
 }
 html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-container {
   -webkit-transform: translateY(-60px);
@@ -233,6 +236,9 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
   -o-transform: translateY(-60px);
   -ms-transform: translateY(-60px);
   transform: translateY(-60px);
+}
+.no-js .left-buttons {
+  display: none;
 }
 .menu-title {
   display: inline-block;
@@ -252,6 +258,8 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
   overflow: hidden;
   -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
+}
+.js .menu-title {
   cursor: pointer;
 }
 .nav-chapters {
@@ -363,7 +371,6 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 .light .content .header:link,
 .light .content .header:visited {
   color: #333;
-  pointer: cursor;
 }
 .light .content .header:link:hover,
 .light .content .header:visited:hover {
@@ -554,7 +561,6 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 .coal .content .header:link,
 .coal .content .header:visited {
   color: #98a3ad;
-  pointer: cursor;
 }
 .coal .content .header:link:hover,
 .coal .content .header:visited:hover {
@@ -745,7 +751,6 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 .navy .content .header:link,
 .navy .content .header:visited {
   color: #bcbdd0;
-  pointer: cursor;
 }
 .navy .content .header:link:hover,
 .navy .content .header:visited:hover {
@@ -936,7 +941,6 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 .rust .content .header:link,
 .rust .content .header:visited {
   color: #262625;
-  pointer: cursor;
 }
 .rust .content .header:link:hover,
 .rust .content .header:visited:hover {
@@ -1127,7 +1131,6 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 .ayu .content .header:link,
 .ayu .content .header:visited {
   color: #c5c5c5;
-  pointer: cursor;
 }
 .ayu .content .header:link:hover,
 .ayu .content .header:visited:hover {
@@ -1401,9 +1404,11 @@ mark {
   -o-transition: background-color 300ms linear;
   -ms-transition: background-color 300ms linear;
   transition: background-color 300ms linear;
+  cursor: pointer;
 }
-.fade-out {
+mark.fade-out {
   background-color: rgba(0,0,0,0) !important;
+  cursor: auto;
 }
 .searchbar-outer {
   margin-left: auto;
