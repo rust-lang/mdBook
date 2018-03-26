@@ -1,6 +1,6 @@
 use std::io;
 use std::io::Write;
-use std::env;
+use std::process::Command;
 use clap::{App, ArgMatches, SubCommand};
 use mdbook::MDBook;
 use mdbook::errors::Result;
@@ -68,20 +68,15 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     Ok(())
 }
 
-/// Obtains author name from git config file if it can be located.
+/// Obtains author name from git config file by running the `git config` command.
 fn get_author_name() -> Option<String> {
-    if let Some(home) = env::home_dir() {
-        let git_config_path = home.join(".gitconfig");
-        let content = utils::fs::file_to_string(git_config_path).unwrap();
-        let user_name = content
-            .lines()
-            .filter(|x| !x.starts_with("#"))
-            .map(|x| x.trim_left())
-            .filter(|x| x.starts_with("name"))
-            .next();
-        user_name
-            .and_then(|x| x.rsplit("=").next())
-            .map(|x| x.trim().to_owned())
+    let output = Command::new("git")
+        .args(&["config", "--get", "user.name"])
+        .output()
+        .ok()?;
+
+    if output.status.success() {
+        Some(String::from_utf8_lossy(&output.stdout).trim().to_owned())
     } else {
         None
     }
