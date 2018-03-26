@@ -1,6 +1,6 @@
 [package]
 name = "mdbook"
-version = "0.1.6-alpha.0"
+version = "0.1.6"
 authors = ["Mathieu David <mathieudavid@mathieudavid.org>", "Michael-F-Bryan <michaelfbryan@gmail.com>"]
 description = "Create books from markdown files"
 documentation = "http://rust-lang-nursery.github.io/mdBook/index.html"
@@ -35,7 +35,7 @@ toml = "0.4"
 memchr = "2.0"
 open = "1.1"
 regex = "0.2.1"
-tempdir = "0.3.4"
+tempfile = "3.0"
 itertools = "0.7"
 shlex = "0.1"
 toml-query = "0.6"

@@ -1,11 +1,11 @@
 extern crate mdbook;
-extern crate tempdir;
+extern crate tempfile;
 
 use std::path::PathBuf;
 use std::fs;
 use mdbook::MDBook;
 use mdbook::config::Config;
-use tempdir::TempDir;
+use tempfile::Builder as TempFileBuilder;
 
 
 /// Run `mdbook init` in an empty directory and make sure the default files
@@ -14,7 +14,7 @@ use tempdir::TempDir;
 fn base_mdbook_init_should_create_default_content() {
     let created_files = vec!["book", "src", "src/SUMMARY.md", "src/chapter_1.md"];
 
-    let temp = TempDir::new("mdbook").unwrap();
+    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
     for file in &created_files {
         assert!(!temp.path().join(file).exists());
     }
@@ -34,7 +34,7 @@ fn base_mdbook_init_should_create_default_content() {
 fn run_mdbook_init_with_custom_book_and_src_locations() {
     let created_files = vec!["out", "in", "in/SUMMARY.md", "in/chapter_1.md"];
 
-    let temp = TempDir::new("mdbook").unwrap();
+    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
     for file in &created_files {
         assert!(
             !temp.path().join(file).exists(),
@@ -61,7 +61,7 @@ fn run_mdbook_init_with_custom_book_and_src_locations() {
 
 #[test]
 fn book_toml_isnt_required() {
-    let temp = TempDir::new("mdbook").unwrap();
+    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
     let md = MDBook::init(temp.path()).build().unwrap();
 
     let _ = fs::remove_file(temp.path().join("book.toml"));

@@ -297,7 +297,7 @@ impl Display for Chapter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempdir::TempDir;
+    use tempfile::{TempDir, Builder as TempFileBuilder};
     use std::io::Write;
 
     const DUMMY_SRC: &'static str = "
@@ -311,7 +311,7 @@ And here is some \
 
     /// Create a dummy `Link` in a temporary directory.
     fn dummy_link() -> (Link, TempDir) {
-        let temp = TempDir::new("book").unwrap();
+        let temp = TempFileBuilder::new().prefix("book").tempdir().unwrap();
 
         let chapter_path = temp.path().join("chapter_1.md");
         File::create(&chapter_path)
