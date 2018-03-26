@@ -134,7 +134,7 @@ fn load_file_contents<P: AsRef<Path>>(filename: P, dest: &mut Vec<u8>) -> Result
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempdir::TempDir;
+    use tempfile::Builder as TempFileBuilder;
     use std::path::PathBuf;
 
     #[test]
@@ -159,7 +159,7 @@ mod tests {
             .map(|f| f.path())
             .filter(|p| p.is_file() && !p.ends_with(".rs"));
 
-        let temp = TempDir::new("mdbook").unwrap();
+        let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
 
         // "touch" all of the special files so we have empty copies
         for special_file in special_files {

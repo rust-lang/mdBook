@@ -193,14 +193,14 @@ pub fn copy_files_except_ext(
 
 #[cfg(test)]
 mod tests {
-    extern crate tempdir;
+    extern crate tempfile;
 
     use super::copy_files_except_ext;
     use std::fs;
 
     #[test]
     fn copy_files_except_ext_test() {
-        let tmp = match tempdir::TempDir::new("") {
+        let tmp = match tempfile::TempDir::new() {
             Ok(t) => t,
             Err(_) => panic!("Could not create a temp dir"),
         };

@@ -1,11 +1,11 @@
 //! Integration tests to make sure alternate backends work.
 
 extern crate mdbook;
-extern crate tempdir;
+extern crate tempfile;
 
 #[cfg(not(windows))]
 use std::path::Path;
-use tempdir::TempDir;
+use tempfile::{TempDir, Builder as TempFileBuilder};
 use mdbook::config::Config;
 use mdbook::MDBook;
 
@@ -55,7 +55,7 @@ fn backends_receive_render_context_via_stdin() {
     use std::fs::File;
     use mdbook::renderer::RenderContext;
 
-    let temp = TempDir::new("output").unwrap();
+    let temp = TempFileBuilder::new().prefix("output").tempdir().unwrap();
     let out_file = temp.path().join("out.txt");
     let cmd = tee_command(&out_file);
 
@@ -70,7 +70,7 @@ fn backends_receive_render_context_via_stdin() {
 }
 
 fn dummy_book_with_backend(name: &str, command: &str) -> (MDBook, TempDir) {
-    let temp = TempDir::new("mdbook").unwrap();
+    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
 
     let mut config = Config::default();
     config

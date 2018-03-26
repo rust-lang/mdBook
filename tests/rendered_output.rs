@@ -2,7 +2,7 @@ extern crate mdbook;
 #[macro_use]
 extern crate pretty_assertions;
 extern crate select;
-extern crate tempdir;
+extern crate tempfile;
 extern crate walkdir;
 
 mod dummy_book;
@@ -16,7 +16,7 @@ use std::ffi::OsStr;
 use walkdir::{DirEntry, WalkDir};
 use select::document::Document;
 use select::predicate::{Class, Name, Predicate};
-use tempdir::TempDir;
+use tempfile::Builder as TempFileBuilder;
 use mdbook::errors::*;
 use mdbook::utils::fs::file_to_string;
 use mdbook::config::Config;
@@ -324,7 +324,7 @@ fn example_book_can_build() {
 
 #[test]
 fn book_with_a_reserved_filename_does_not_build() {
-    let tmp_dir = TempDir::new("mdBook").unwrap();
+    let tmp_dir = TempFileBuilder::new().prefix("mdBook").tempdir().unwrap();
     let src_path = tmp_dir.path().join("src");
     fs::create_dir(&src_path).unwrap();
 

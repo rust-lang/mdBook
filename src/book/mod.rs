@@ -16,7 +16,7 @@ pub use self::init::BookBuilder;
 use std::path::PathBuf;
 use std::io::Write;
 use std::process::Command;
-use tempdir::TempDir;
+use tempfile::Builder as TempFileBuilder;
 use toml::Value;
 
 use utils;
@@ -213,7 +213,7 @@ impl MDBook {
             .flat_map(|x| vec![x.0, x.1])
             .collect();
 
-        let temp_dir = TempDir::new("mdbook")?;
+        let temp_dir = TempFileBuilder::new().prefix("mdbook").tempdir()?;
 
         let preprocess_context = PreprocessorContext::new(self.root.clone(), self.config.clone());
 

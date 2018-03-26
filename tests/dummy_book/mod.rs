@@ -4,7 +4,7 @@
 // Not all features are used in all test crates, so...
 #![allow(dead_code, unused_variables, unused_imports, unused_extern_crates)]
 extern crate mdbook;
-extern crate tempdir;
+extern crate tempfile;
 extern crate walkdir;
 
 use std::path::Path;
@@ -15,7 +15,7 @@ use mdbook::utils::fs::file_to_string;
 
 // The funny `self::` here is because we've got an `extern crate ...` and are
 // in a submodule
-use self::tempdir::TempDir;
+use self::tempfile::{TempDir, Builder as TempFileBuilder};
 use self::mdbook::MDBook;
 use self::walkdir::WalkDir;
 
@@ -47,7 +47,7 @@ impl DummyBook {
 
     /// Write a book to a temporary directory using the provided settings.
     pub fn build(&self) -> Result<TempDir> {
-        let temp = TempDir::new("dummy_book").chain_err(|| "Unable to create temp directory")?;
+        let temp = TempFileBuilder::new().prefix("dummy_book").tempdir().chain_err(|| "Unable to create temp directory")?;
 
         let dummy_book_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/dummy_book");
         recursive_copy(&dummy_book_root, temp.path()).chain_err(|| {
@@ -128,7 +128,7 @@ fn recursive_copy<A: AsRef<Path>, B: AsRef<Path>>(from: A, to: B) -> Result<()> 
 }
 
 pub fn new_copy_of_example_book() -> Result<TempDir> {
-    let temp = TempDir::new("book-example")?;
+    let temp = TempFileBuilder::new().prefix("book-example").tempdir()?;
     
     let book_example = Path::new(env!("CARGO_MANIFEST_DIR")).join("book-example");
 
