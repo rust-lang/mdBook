@@ -72,15 +72,13 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 fn get_author_name() -> Option<String> {
     let output = Command::new("git")
         .args(&["config", "--get", "user.name"])
-        .output();
+        .output()
+        .ok()?;
 
-    match output {
-        Ok(output) => if output.status.success() {
-            Some(String::from_utf8_lossy(&output.stdout).trim().to_owned())
-        } else {
-            None
-        },
-        _ => return None,
+    if output.status.success() {
+        Some(String::from_utf8_lossy(&output.stdout).trim().to_owned())
+    } else {
+        None
     }
 }
 
