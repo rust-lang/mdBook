@@ -372,7 +372,15 @@ function playpen_text(playpen) {
     });
 
     themePopup.addEventListener('focusout', function(e) {
-        if (!themePopup.contains(e.relatedTarget)) {
+        // e.relatedTarget is null in Safari and Firefox on macOS (see workaround below)
+        if (!!e.relatedTarget && !themePopup.contains(e.relatedTarget)) {
+            hideThemes();
+        }
+    });
+
+    // Should not be needed, but it works around an issue on macOS & iOS: https://github.com/rust-lang-nursery/mdBook/issues/628
+    document.addEventListener('click', function(e) {
+        if (themePopup.style.display === 'block' && !themeToggleButton.contains(e.target) && !themePopup.contains(e.target)) {
             hideThemes();
         }
     });
@@ -491,6 +499,7 @@ function playpen_text(playpen) {
 (function chapterNavigation() {
     document.addEventListener('keydown', function (e) {
         if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
+        if (window.search && window.search.hasFocus()) { return; }
 
         switch (e.key) {
             case 'ArrowRight':

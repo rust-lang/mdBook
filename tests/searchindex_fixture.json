@@ -1,0 +1,2160 @@
+{
+  "index": {
+    "documentStore": {
+      "docInfo": {
+        "conclusion.html#conclusion": {
+          "body": 3,
+          "breadcrumbs": 1,
+          "title": 1
+        },
+        "first/includes.html#includes": {
+          "body": 0,
+          "breadcrumbs": 3,
+          "title": 1
+        },
+        "first/includes.html#summary": {
+          "body": 9,
+          "breadcrumbs": 3,
+          "title": 1
+        },
+        "first/index.html#first-chapter": {
+          "body": 2,
+          "breadcrumbs": 2,
+          "title": 2
+        },
+        "first/index.html#some-section": {
+          "body": 0,
+          "breadcrumbs": 1,
+          "title": 1
+        },
+        "first/nested.html#nested-chapter": {
+          "body": 4,
+          "breadcrumbs": 4,
+          "title": 2
+        },
+        "first/nested.html#some-section": {
+          "body": 0,
+          "breadcrumbs": 3,
+          "title": 1
+        },
+        "intro.html#introduction": {
+          "body": 3,
+          "breadcrumbs": 1,
+          "title": 1
+        },
+        "second.html#second-chapter": {
+          "body": 20,
+          "breadcrumbs": 2,
+          "title": 2
+        }
+      },
+      "docs": {
+        "conclusion.html#conclusion": {
+          "body": "I put &lt;HTML&gt; in here!",
+          "breadcrumbs": "Conclusion",
+          "id": "conclusion.html#conclusion",
+          "title": "Conclusion"
+        },
+        "first/includes.html#includes": {
+          "body": "",
+          "breadcrumbs": "First Chapter » Includes",
+          "id": "first/includes.html#includes",
+          "title": "Includes"
+        },
+        "first/includes.html#summary": {
+          "body": "Introduction First Chapter Nested Chapter Includes Second Chapter Conclusion",
+          "breadcrumbs": "First Chapter » Summary",
+          "id": "first/includes.html#summary",
+          "title": "Summary"
+        },
+        "first/index.html#first-chapter": {
+          "body": "more text.",
+          "breadcrumbs": "First Chapter",
+          "id": "first/index.html#first-chapter",
+          "title": "First Chapter"
+        },
+        "first/index.html#some-section": {
+          "body": "",
+          "breadcrumbs": "Some Section",
+          "id": "first/index.html#some-section",
+          "title": "Some Section"
+        },
+        "first/nested.html#nested-chapter": {
+          "body": "This file has some testable code. assert!(true);",
+          "breadcrumbs": "First Chapter » Nested Chapter",
+          "id": "first/nested.html#nested-chapter",
+          "title": "Nested Chapter"
+        },
+        "first/nested.html#some-section": {
+          "body": "",
+          "breadcrumbs": "First Chapter » Some Section",
+          "id": "first/nested.html#some-section",
+          "title": "Some Section"
+        },
+        "intro.html#introduction": {
+          "body": "Here's some interesting text...",
+          "breadcrumbs": "Introduction",
+          "id": "intro.html#introduction",
+          "title": "Introduction"
+        },
+        "second.html#second-chapter": {
+          "body": "This makes sure you can insert runnable Rust files. fn main() { println!(\"Hello World!\");\n#\n# // You can even hide lines! :D\n# println!(\"I am hidden! Expand the code snippet to see me\");\n}",
+          "breadcrumbs": "Second Chapter",
+          "id": "second.html#second-chapter",
+          "title": "Second Chapter"
+        }
+      },
+      "length": 9,
+      "save": true
+    },
+    "fields": [
+      "title",
+      "body",
+      "breadcrumbs"
+    ],
+    "index": {
+      "body": {
+        "root": {
+          "a": {
+            "df": 0,
+            "docs": {},
+            "s": {
+              "df": 0,
+              "docs": {},
+              "s": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 0,
+                  "docs": {},
+                  "r": {
+                    "df": 0,
+                    "docs": {},
+                    "t": {
+                      "!": {
+                        "(": {
+                          "df": 0,
+                          "docs": {},
+                          "t": {
+                            "df": 0,
+                            "docs": {},
+                            "r": {
+                              "df": 0,
+                              "docs": {},
+                              "u": {
+                                "df": 1,
+                                "docs": {
+                                  "first/nested.html#nested-chapter": {
+                                    "tf": 1.0
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "df": 0,
+                        "docs": {}
+                      },
+                      "df": 0,
+                      "docs": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "c": {
+            "df": 0,
+            "docs": {},
+            "h": {
+              "a": {
+                "df": 0,
+                "docs": {},
+                "p": {
+                  "df": 0,
+                  "docs": {},
+                  "t": {
+                    "df": 0,
+                    "docs": {},
+                    "e": {
+                      "df": 0,
+                      "docs": {},
+                      "r": {
+                        "df": 4,
+                        "docs": {
+                          "first/includes.html#summary": {
+                            "tf": 1.7320508075688773
+                          },
+                          "first/index.html#first-chapter": {
+                            "tf": 1.0
+                          },
+                          "first/nested.html#nested-chapter": {
+                            "tf": 1.0
+                          },
+                          "second.html#second-chapter": {
+                            "tf": 1.0
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {}
+            },
+            "o": {
+              "d": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 2,
+                  "docs": {
+                    "first/nested.html#nested-chapter": {
+                      "tf": 1.0
+                    },
+                    "second.html#second-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {},
+              "n": {
+                "c": {
+                  "df": 0,
+                  "docs": {},
+                  "l": {
+                    "df": 0,
+                    "docs": {},
+                    "u": {
+                      "df": 0,
+                      "docs": {},
+                      "s": {
+                        "df": 2,
+                        "docs": {
+                          "conclusion.html#conclusion": {
+                            "tf": 1.0
+                          },
+                          "first/includes.html#summary": {
+                            "tf": 1.0
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "df": 0,
+                "docs": {}
+              }
+            }
+          },
+          "d": {
+            "df": 1,
+            "docs": {
+              "second.html#second-chapter": {
+                "tf": 1.0
+              }
+            }
+          },
+          "df": 0,
+          "docs": {},
+          "e": {
+            "df": 0,
+            "docs": {},
+            "v": {
+              "df": 0,
+              "docs": {},
+              "e": {
+                "df": 0,
+                "docs": {},
+                "n": {
+                  "df": 1,
+                  "docs": {
+                    "second.html#second-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              }
+            },
+            "x": {
+              "df": 0,
+              "docs": {},
+              "p": {
+                "a": {
+                  "df": 0,
+                  "docs": {},
+                  "n": {
+                    "d": {
+                      "df": 1,
+                      "docs": {
+                        "second.html#second-chapter": {
+                          "tf": 1.0
+                        }
+                      }
+                    },
+                    "df": 0,
+                    "docs": {}
+                  }
+                },
+                "df": 0,
+                "docs": {}
+              }
+            }
+          },
+          "f": {
+            "df": 0,
+            "docs": {},
+            "i": {
+              "df": 0,
+              "docs": {},
+              "l": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 2,
+                  "docs": {
+                    "first/nested.html#nested-chapter": {
+                      "tf": 1.0
+                    },
+                    "second.html#second-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              },
+              "r": {
+                "df": 0,
+                "docs": {},
+                "s": {
+                  "df": 0,
+                  "docs": {},
+                  "t": {
+                    "df": 2,
+                    "docs": {
+                      "first/includes.html#summary": {
+                        "tf": 1.0
+                      },
+                      "first/index.html#first-chapter": {
+                        "tf": 1.0
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "n": {
+              "df": 1,
+              "docs": {
+                "second.html#second-chapter": {
+                  "tf": 1.0
+                }
+              }
+            }
+          },
+          "h": {
+            "df": 0,
+            "docs": {},
+            "e": {
+              "df": 0,
+              "docs": {},
+              "r": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "'": {
+                    "df": 1,
+                    "docs": {
+                      "intro.html#introduction": {
+                        "tf": 1.0
+                      }
+                    }
+                  },
+                  "df": 1,
+                  "docs": {
+                    "conclusion.html#conclusion": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              }
+            },
+            "i": {
+              "d": {
+                "d": {
+                  "df": 0,
+                  "docs": {},
+                  "e": {
+                    "df": 0,
+                    "docs": {},
+                    "n": {
+                      "df": 1,
+                      "docs": {
+                        "second.html#second-chapter": {
+                          "tf": 1.0
+                        }
+                      }
+                    }
+                  }
+                },
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 1,
+                  "docs": {
+                    "second.html#second-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {}
+            }
+          },
+          "i": {
+            "df": 0,
+            "docs": {},
+            "n": {
+              "c": {
+                "df": 0,
+                "docs": {},
+                "l": {
+                  "df": 0,
+                  "docs": {},
+                  "u": {
+                    "d": {
+                      "df": 2,
+                      "docs": {
+                        "first/includes.html#includes": {
+                          "tf": 1.0
+                        },
+                        "first/includes.html#summary": {
+                          "tf": 1.0
+                        }
+                      }
+                    },
+                    "df": 0,
+                    "docs": {}
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {},
+              "s": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 0,
+                  "docs": {},
+                  "r": {
+                    "df": 0,
+                    "docs": {},
+                    "t": {
+                      "df": 1,
+                      "docs": {
+                        "second.html#second-chapter": {
+                          "tf": 1.0
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "t": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 0,
+                  "docs": {},
+                  "r": {
+                    "df": 0,
+                    "docs": {},
+                    "e": {
+                      "df": 0,
+                      "docs": {},
+                      "s": {
+                        "df": 0,
+                        "docs": {},
+                        "t": {
+                          "df": 1,
+                          "docs": {
+                            "intro.html#introduction": {
+                              "tf": 1.0
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "r": {
+                  "df": 0,
+                  "docs": {},
+                  "o": {
+                    "d": {
+                      "df": 0,
+                      "docs": {},
+                      "u": {
+                        "c": {
+                          "df": 0,
+                          "docs": {},
+                          "t": {
+                            "df": 2,
+                            "docs": {
+                              "first/includes.html#summary": {
+                                "tf": 1.0
+                              },
+                              "intro.html#introduction": {
+                                "tf": 1.0
+                              }
+                            }
+                          }
+                        },
+                        "df": 0,
+                        "docs": {}
+                      }
+                    },
+                    "df": 0,
+                    "docs": {}
+                  }
+                }
+              }
+            }
+          },
+          "l": {
+            "df": 0,
+            "docs": {},
+            "i": {
+              "df": 0,
+              "docs": {},
+              "n": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 1,
+                  "docs": {
+                    "second.html#second-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              }
+            },
+            "t": {
+              ";": {
+                "df": 0,
+                "docs": {},
+                "h": {
+                  "df": 0,
+                  "docs": {},
+                  "t": {
+                    "df": 0,
+                    "docs": {},
+                    "m": {
+                      "df": 0,
+                      "docs": {},
+                      "l": {
+                        "&": {
+                          "df": 0,
+                          "docs": {},
+                          "g": {
+                            "df": 0,
+                            "docs": {},
+                            "t": {
+                              "df": 1,
+                              "docs": {
+                                "conclusion.html#conclusion": {
+                                  "tf": 1.0
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "df": 0,
+                        "docs": {}
+                      }
+                    }
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {}
+            }
+          },
+          "m": {
+            "a": {
+              "df": 0,
+              "docs": {},
+              "i": {
+                "df": 0,
+                "docs": {},
+                "n": {
+                  "df": 1,
+                  "docs": {
+                    "second.html#second-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              },
+              "k": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 1,
+                  "docs": {
+                    "second.html#second-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              }
+            },
+            "df": 0,
+            "docs": {},
+            "o": {
+              "df": 0,
+              "docs": {},
+              "r": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 1,
+                  "docs": {
+                    "first/index.html#first-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "n": {
+            "df": 0,
+            "docs": {},
+            "e": {
+              "df": 0,
+              "docs": {},
+              "s": {
+                "df": 0,
+                "docs": {},
+                "t": {
+                  "df": 2,
+                  "docs": {
+                    "first/includes.html#summary": {
+                      "tf": 1.0
+                    },
+                    "first/nested.html#nested-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "p": {
+            "df": 0,
+            "docs": {},
+            "r": {
+              "df": 0,
+              "docs": {},
+              "i": {
+                "df": 0,
+                "docs": {},
+                "n": {
+                  "df": 0,
+                  "docs": {},
+                  "t": {
+                    "df": 0,
+                    "docs": {},
+                    "l": {
+                      "df": 0,
+                      "docs": {},
+                      "n": {
+                        "!": {
+                          "(": {
+                            "\"": {
+                              "df": 0,
+                              "docs": {},
+                              "h": {
+                                "df": 0,
+                                "docs": {},
+                                "e": {
+                                  "df": 0,
+                                  "docs": {},
+                                  "l": {
+                                    "df": 0,
+                                    "docs": {},
+                                    "l": {
+                                      "df": 0,
+                                      "docs": {},
+                                      "o": {
+                                        "df": 1,
+                                        "docs": {
+                                          "second.html#second-chapter": {
+                                            "tf": 1.0
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "i": {
+                                "df": 1,
+                                "docs": {
+                                  "second.html#second-chapter": {
+                                    "tf": 1.0
+                                  }
+                                }
+                              }
+                            },
+                            "df": 0,
+                            "docs": {}
+                          },
+                          "df": 0,
+                          "docs": {}
+                        },
+                        "df": 0,
+                        "docs": {}
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "u": {
+              "df": 0,
+              "docs": {},
+              "t": {
+                "df": 1,
+                "docs": {
+                  "conclusion.html#conclusion": {
+                    "tf": 1.0
+                  }
+                }
+              }
+            }
+          },
+          "r": {
+            "df": 0,
+            "docs": {},
+            "u": {
+              "df": 0,
+              "docs": {},
+              "n": {
+                "df": 0,
+                "docs": {},
+                "n": {
+                  "a": {
+                    "b": {
+                      "df": 0,
+                      "docs": {},
+                      "l": {
+                        "df": 1,
+                        "docs": {
+                          "second.html#second-chapter": {
+                            "tf": 1.0
+                          }
+                        }
+                      }
+                    },
+                    "df": 0,
+                    "docs": {}
+                  },
+                  "df": 0,
+                  "docs": {}
+                }
+              },
+              "s": {
+                "df": 0,
+                "docs": {},
+                "t": {
+                  "df": 1,
+                  "docs": {
+                    "second.html#second-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "s": {
+            "df": 0,
+            "docs": {},
+            "e": {
+              "c": {
+                "df": 0,
+                "docs": {},
+                "o": {
+                  "df": 0,
+                  "docs": {},
+                  "n": {
+                    "d": {
+                      "df": 2,
+                      "docs": {
+                        "first/includes.html#summary": {
+                          "tf": 1.0
+                        },
+                        "second.html#second-chapter": {
+                          "tf": 1.0
+                        }
+                      }
+                    },
+                    "df": 0,
+                    "docs": {}
+                  }
+                },
+                "t": {
+                  "df": 0,
+                  "docs": {},
+                  "i": {
+                    "df": 0,
+                    "docs": {},
+                    "o": {
+                      "df": 0,
+                      "docs": {},
+                      "n": {
+                        "df": 2,
+                        "docs": {
+                          "first/index.html#some-section": {
+                            "tf": 1.0
+                          },
+                          "first/nested.html#some-section": {
+                            "tf": 1.0
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {},
+              "e": {
+                "df": 1,
+                "docs": {
+                  "second.html#second-chapter": {
+                    "tf": 1.0
+                  }
+                }
+              }
+            },
+            "n": {
+              "df": 0,
+              "docs": {},
+              "i": {
+                "df": 0,
+                "docs": {},
+                "p": {
+                  "df": 0,
+                  "docs": {},
+                  "p": {
+                    "df": 0,
+                    "docs": {},
+                    "e": {
+                      "df": 0,
+                      "docs": {},
+                      "t": {
+                        "df": 1,
+                        "docs": {
+                          "second.html#second-chapter": {
+                            "tf": 1.0
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "u": {
+              "df": 0,
+              "docs": {},
+              "m": {
+                "df": 0,
+                "docs": {},
+                "m": {
+                  "a": {
+                    "df": 0,
+                    "docs": {},
+                    "r": {
+                      "df": 0,
+                      "docs": {},
+                      "i": {
+                        "df": 1,
+                        "docs": {
+                          "first/includes.html#summary": {
+                            "tf": 1.0
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "df": 0,
+                  "docs": {}
+                }
+              },
+              "r": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 1,
+                  "docs": {
+                    "second.html#second-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "t": {
+            "df": 0,
+            "docs": {},
+            "e": {
+              "df": 0,
+              "docs": {},
+              "s": {
+                "df": 0,
+                "docs": {},
+                "t": {
+                  "a": {
+                    "b": {
+                      "df": 0,
+                      "docs": {},
+                      "l": {
+                        "df": 1,
+                        "docs": {
+                          "first/nested.html#nested-chapter": {
+                            "tf": 1.0
+                          }
+                        }
+                      }
+                    },
+                    "df": 0,
+                    "docs": {}
+                  },
+                  "df": 0,
+                  "docs": {}
+                }
+              },
+              "x": {
+                "df": 0,
+                "docs": {},
+                "t": {
+                  "df": 2,
+                  "docs": {
+                    "first/index.html#first-chapter": {
+                      "tf": 1.0
+                    },
+                    "intro.html#introduction": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "w": {
+            "df": 0,
+            "docs": {},
+            "o": {
+              "df": 0,
+              "docs": {},
+              "r": {
+                "df": 0,
+                "docs": {},
+                "l": {
+                  "d": {
+                    "df": 1,
+                    "docs": {
+                      "second.html#second-chapter": {
+                        "tf": 1.0
+                      }
+                    }
+                  },
+                  "df": 0,
+                  "docs": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "breadcrumbs": {
+        "root": {
+          "a": {
+            "df": 0,
+            "docs": {},
+            "s": {
+              "df": 0,
+              "docs": {},
+              "s": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 0,
+                  "docs": {},
+                  "r": {
+                    "df": 0,
+                    "docs": {},
+                    "t": {
+                      "!": {
+                        "(": {
+                          "df": 0,
+                          "docs": {},
+                          "t": {
+                            "df": 0,
+                            "docs": {},
+                            "r": {
+                              "df": 0,
+                              "docs": {},
+                              "u": {
+                                "df": 1,
+                                "docs": {
+                                  "first/nested.html#nested-chapter": {
+                                    "tf": 1.0
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "df": 0,
+                        "docs": {}
+                      },
+                      "df": 0,
+                      "docs": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "c": {
+            "df": 0,
+            "docs": {},
+            "h": {
+              "a": {
+                "df": 0,
+                "docs": {},
+                "p": {
+                  "df": 0,
+                  "docs": {},
+                  "t": {
+                    "df": 0,
+                    "docs": {},
+                    "e": {
+                      "df": 0,
+                      "docs": {},
+                      "r": {
+                        "df": 6,
+                        "docs": {
+                          "first/includes.html#includes": {
+                            "tf": 1.0
+                          },
+                          "first/includes.html#summary": {
+                            "tf": 2.0
+                          },
+                          "first/index.html#first-chapter": {
+                            "tf": 1.4142135623730952
+                          },
+                          "first/nested.html#nested-chapter": {
+                            "tf": 1.7320508075688773
+                          },
+                          "first/nested.html#some-section": {
+                            "tf": 1.0
+                          },
+                          "second.html#second-chapter": {
+                            "tf": 1.4142135623730952
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {}
+            },
+            "o": {
+              "d": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 2,
+                  "docs": {
+                    "first/nested.html#nested-chapter": {
+                      "tf": 1.0
+                    },
+                    "second.html#second-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {},
+              "n": {
+                "c": {
+                  "df": 0,
+                  "docs": {},
+                  "l": {
+                    "df": 0,
+                    "docs": {},
+                    "u": {
+                      "df": 0,
+                      "docs": {},
+                      "s": {
+                        "df": 2,
+                        "docs": {
+                          "conclusion.html#conclusion": {
+                            "tf": 1.4142135623730952
+                          },
+                          "first/includes.html#summary": {
+                            "tf": 1.0
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "df": 0,
+                "docs": {}
+              }
+            }
+          },
+          "d": {
+            "df": 1,
+            "docs": {
+              "second.html#second-chapter": {
+                "tf": 1.0
+              }
+            }
+          },
+          "df": 0,
+          "docs": {},
+          "e": {
+            "df": 0,
+            "docs": {},
+            "v": {
+              "df": 0,
+              "docs": {},
+              "e": {
+                "df": 0,
+                "docs": {},
+                "n": {
+                  "df": 1,
+                  "docs": {
+                    "second.html#second-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              }
+            },
+            "x": {
+              "df": 0,
+              "docs": {},
+              "p": {
+                "a": {
+                  "df": 0,
+                  "docs": {},
+                  "n": {
+                    "d": {
+                      "df": 1,
+                      "docs": {
+                        "second.html#second-chapter": {
+                          "tf": 1.0
+                        }
+                      }
+                    },
+                    "df": 0,
+                    "docs": {}
+                  }
+                },
+                "df": 0,
+                "docs": {}
+              }
+            }
+          },
+          "f": {
+            "df": 0,
+            "docs": {},
+            "i": {
+              "df": 0,
+              "docs": {},
+              "l": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 2,
+                  "docs": {
+                    "first/nested.html#nested-chapter": {
+                      "tf": 1.0
+                    },
+                    "second.html#second-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              },
+              "r": {
+                "df": 0,
+                "docs": {},
+                "s": {
+                  "df": 0,
+                  "docs": {},
+                  "t": {
+                    "df": 5,
+                    "docs": {
+                      "first/includes.html#includes": {
+                        "tf": 1.0
+                      },
+                      "first/includes.html#summary": {
+                        "tf": 1.4142135623730952
+                      },
+                      "first/index.html#first-chapter": {
+                        "tf": 1.4142135623730952
+                      },
+                      "first/nested.html#nested-chapter": {
+                        "tf": 1.0
+                      },
+                      "first/nested.html#some-section": {
+                        "tf": 1.0
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "n": {
+              "df": 1,
+              "docs": {
+                "second.html#second-chapter": {
+                  "tf": 1.0
+                }
+              }
+            }
+          },
+          "h": {
+            "df": 0,
+            "docs": {},
+            "e": {
+              "df": 0,
+              "docs": {},
+              "r": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "'": {
+                    "df": 1,
+                    "docs": {
+                      "intro.html#introduction": {
+                        "tf": 1.0
+                      }
+                    }
+                  },
+                  "df": 1,
+                  "docs": {
+                    "conclusion.html#conclusion": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              }
+            },
+            "i": {
+              "d": {
+                "d": {
+                  "df": 0,
+                  "docs": {},
+                  "e": {
+                    "df": 0,
+                    "docs": {},
+                    "n": {
+                      "df": 1,
+                      "docs": {
+                        "second.html#second-chapter": {
+                          "tf": 1.0
+                        }
+                      }
+                    }
+                  }
+                },
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 1,
+                  "docs": {
+                    "second.html#second-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {}
+            }
+          },
+          "i": {
+            "df": 0,
+            "docs": {},
+            "n": {
+              "c": {
+                "df": 0,
+                "docs": {},
+                "l": {
+                  "df": 0,
+                  "docs": {},
+                  "u": {
+                    "d": {
+                      "df": 2,
+                      "docs": {
+                        "first/includes.html#includes": {
+                          "tf": 1.4142135623730952
+                        },
+                        "first/includes.html#summary": {
+                          "tf": 1.0
+                        }
+                      }
+                    },
+                    "df": 0,
+                    "docs": {}
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {},
+              "s": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 0,
+                  "docs": {},
+                  "r": {
+                    "df": 0,
+                    "docs": {},
+                    "t": {
+                      "df": 1,
+                      "docs": {
+                        "second.html#second-chapter": {
+                          "tf": 1.0
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "t": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 0,
+                  "docs": {},
+                  "r": {
+                    "df": 0,
+                    "docs": {},
+                    "e": {
+                      "df": 0,
+                      "docs": {},
+                      "s": {
+                        "df": 0,
+                        "docs": {},
+                        "t": {
+                          "df": 1,
+                          "docs": {
+                            "intro.html#introduction": {
+                              "tf": 1.0
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "r": {
+                  "df": 0,
+                  "docs": {},
+                  "o": {
+                    "d": {
+                      "df": 0,
+                      "docs": {},
+                      "u": {
+                        "c": {
+                          "df": 0,
+                          "docs": {},
+                          "t": {
+                            "df": 2,
+                            "docs": {
+                              "first/includes.html#summary": {
+                                "tf": 1.0
+                              },
+                              "intro.html#introduction": {
+                                "tf": 1.4142135623730952
+                              }
+                            }
+                          }
+                        },
+                        "df": 0,
+                        "docs": {}
+                      }
+                    },
+                    "df": 0,
+                    "docs": {}
+                  }
+                }
+              }
+            }
+          },
+          "l": {
+            "df": 0,
+            "docs": {},
+            "i": {
+              "df": 0,
+              "docs": {},
+              "n": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 1,
+                  "docs": {
+                    "second.html#second-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              }
+            },
+            "t": {
+              ";": {
+                "df": 0,
+                "docs": {},
+                "h": {
+                  "df": 0,
+                  "docs": {},
+                  "t": {
+                    "df": 0,
+                    "docs": {},
+                    "m": {
+                      "df": 0,
+                      "docs": {},
+                      "l": {
+                        "&": {
+                          "df": 0,
+                          "docs": {},
+                          "g": {
+                            "df": 0,
+                            "docs": {},
+                            "t": {
+                              "df": 1,
+                              "docs": {
+                                "conclusion.html#conclusion": {
+                                  "tf": 1.0
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "df": 0,
+                        "docs": {}
+                      }
+                    }
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {}
+            }
+          },
+          "m": {
+            "a": {
+              "df": 0,
+              "docs": {},
+              "i": {
+                "df": 0,
+                "docs": {},
+                "n": {
+                  "df": 1,
+                  "docs": {
+                    "second.html#second-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              },
+              "k": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 1,
+                  "docs": {
+                    "second.html#second-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              }
+            },
+            "df": 0,
+            "docs": {},
+            "o": {
+              "df": 0,
+              "docs": {},
+              "r": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 1,
+                  "docs": {
+                    "first/index.html#first-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "n": {
+            "df": 0,
+            "docs": {},
+            "e": {
+              "df": 0,
+              "docs": {},
+              "s": {
+                "df": 0,
+                "docs": {},
+                "t": {
+                  "df": 2,
+                  "docs": {
+                    "first/includes.html#summary": {
+                      "tf": 1.0
+                    },
+                    "first/nested.html#nested-chapter": {
+                      "tf": 1.4142135623730952
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "p": {
+            "df": 0,
+            "docs": {},
+            "r": {
+              "df": 0,
+              "docs": {},
+              "i": {
+                "df": 0,
+                "docs": {},
+                "n": {
+                  "df": 0,
+                  "docs": {},
+                  "t": {
+                    "df": 0,
+                    "docs": {},
+                    "l": {
+                      "df": 0,
+                      "docs": {},
+                      "n": {
+                        "!": {
+                          "(": {
+                            "\"": {
+                              "df": 0,
+                              "docs": {},
+                              "h": {
+                                "df": 0,
+                                "docs": {},
+                                "e": {
+                                  "df": 0,
+                                  "docs": {},
+                                  "l": {
+                                    "df": 0,
+                                    "docs": {},
+                                    "l": {
+                                      "df": 0,
+                                      "docs": {},
+                                      "o": {
+                                        "df": 1,
+                                        "docs": {
+                                          "second.html#second-chapter": {
+                                            "tf": 1.0
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "i": {
+                                "df": 1,
+                                "docs": {
+                                  "second.html#second-chapter": {
+                                    "tf": 1.0
+                                  }
+                                }
+                              }
+                            },
+                            "df": 0,
+                            "docs": {}
+                          },
+                          "df": 0,
+                          "docs": {}
+                        },
+                        "df": 0,
+                        "docs": {}
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "u": {
+              "df": 0,
+              "docs": {},
+              "t": {
+                "df": 1,
+                "docs": {
+                  "conclusion.html#conclusion": {
+                    "tf": 1.0
+                  }
+                }
+              }
+            }
+          },
+          "r": {
+            "df": 0,
+            "docs": {},
+            "u": {
+              "df": 0,
+              "docs": {},
+              "n": {
+                "df": 0,
+                "docs": {},
+                "n": {
+                  "a": {
+                    "b": {
+                      "df": 0,
+                      "docs": {},
+                      "l": {
+                        "df": 1,
+                        "docs": {
+                          "second.html#second-chapter": {
+                            "tf": 1.0
+                          }
+                        }
+                      }
+                    },
+                    "df": 0,
+                    "docs": {}
+                  },
+                  "df": 0,
+                  "docs": {}
+                }
+              },
+              "s": {
+                "df": 0,
+                "docs": {},
+                "t": {
+                  "df": 1,
+                  "docs": {
+                    "second.html#second-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "s": {
+            "df": 0,
+            "docs": {},
+            "e": {
+              "c": {
+                "df": 0,
+                "docs": {},
+                "o": {
+                  "df": 0,
+                  "docs": {},
+                  "n": {
+                    "d": {
+                      "df": 2,
+                      "docs": {
+                        "first/includes.html#summary": {
+                          "tf": 1.0
+                        },
+                        "second.html#second-chapter": {
+                          "tf": 1.4142135623730952
+                        }
+                      }
+                    },
+                    "df": 0,
+                    "docs": {}
+                  }
+                },
+                "t": {
+                  "df": 0,
+                  "docs": {},
+                  "i": {
+                    "df": 0,
+                    "docs": {},
+                    "o": {
+                      "df": 0,
+                      "docs": {},
+                      "n": {
+                        "df": 2,
+                        "docs": {
+                          "first/index.html#some-section": {
+                            "tf": 1.4142135623730952
+                          },
+                          "first/nested.html#some-section": {
+                            "tf": 1.4142135623730952
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {},
+              "e": {
+                "df": 1,
+                "docs": {
+                  "second.html#second-chapter": {
+                    "tf": 1.0
+                  }
+                }
+              }
+            },
+            "n": {
+              "df": 0,
+              "docs": {},
+              "i": {
+                "df": 0,
+                "docs": {},
+                "p": {
+                  "df": 0,
+                  "docs": {},
+                  "p": {
+                    "df": 0,
+                    "docs": {},
+                    "e": {
+                      "df": 0,
+                      "docs": {},
+                      "t": {
+                        "df": 1,
+                        "docs": {
+                          "second.html#second-chapter": {
+                            "tf": 1.0
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "u": {
+              "df": 0,
+              "docs": {},
+              "m": {
+                "df": 0,
+                "docs": {},
+                "m": {
+                  "a": {
+                    "df": 0,
+                    "docs": {},
+                    "r": {
+                      "df": 0,
+                      "docs": {},
+                      "i": {
+                        "df": 1,
+                        "docs": {
+                          "first/includes.html#summary": {
+                            "tf": 1.4142135623730952
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "df": 0,
+                  "docs": {}
+                }
+              },
+              "r": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 1,
+                  "docs": {
+                    "second.html#second-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "t": {
+            "df": 0,
+            "docs": {},
+            "e": {
+              "df": 0,
+              "docs": {},
+              "s": {
+                "df": 0,
+                "docs": {},
+                "t": {
+                  "a": {
+                    "b": {
+                      "df": 0,
+                      "docs": {},
+                      "l": {
+                        "df": 1,
+                        "docs": {
+                          "first/nested.html#nested-chapter": {
+                            "tf": 1.0
+                          }
+                        }
+                      }
+                    },
+                    "df": 0,
+                    "docs": {}
+                  },
+                  "df": 0,
+                  "docs": {}
+                }
+              },
+              "x": {
+                "df": 0,
+                "docs": {},
+                "t": {
+                  "df": 2,
+                  "docs": {
+                    "first/index.html#first-chapter": {
+                      "tf": 1.0
+                    },
+                    "intro.html#introduction": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "w": {
+            "df": 0,
+            "docs": {},
+            "o": {
+              "df": 0,
+              "docs": {},
+              "r": {
+                "df": 0,
+                "docs": {},
+                "l": {
+                  "d": {
+                    "df": 1,
+                    "docs": {
+                      "second.html#second-chapter": {
+                        "tf": 1.0
+                      }
+                    }
+                  },
+                  "df": 0,
+                  "docs": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "title": {
+        "root": {
+          "c": {
+            "df": 0,
+            "docs": {},
+            "h": {
+              "a": {
+                "df": 0,
+                "docs": {},
+                "p": {
+                  "df": 0,
+                  "docs": {},
+                  "t": {
+                    "df": 0,
+                    "docs": {},
+                    "e": {
+                      "df": 0,
+                      "docs": {},
+                      "r": {
+                        "df": 3,
+                        "docs": {
+                          "first/index.html#first-chapter": {
+                            "tf": 1.0
+                          },
+                          "first/nested.html#nested-chapter": {
+                            "tf": 1.0
+                          },
+                          "second.html#second-chapter": {
+                            "tf": 1.0
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {}
+            },
+            "o": {
+              "df": 0,
+              "docs": {},
+              "n": {
+                "c": {
+                  "df": 0,
+                  "docs": {},
+                  "l": {
+                    "df": 0,
+                    "docs": {},
+                    "u": {
+                      "df": 0,
+                      "docs": {},
+                      "s": {
+                        "df": 1,
+                        "docs": {
+                          "conclusion.html#conclusion": {
+                            "tf": 1.0
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "df": 0,
+                "docs": {}
+              }
+            }
+          },
+          "df": 0,
+          "docs": {},
+          "f": {
+            "df": 0,
+            "docs": {},
+            "i": {
+              "df": 0,
+              "docs": {},
+              "r": {
+                "df": 0,
+                "docs": {},
+                "s": {
+                  "df": 0,
+                  "docs": {},
+                  "t": {
+                    "df": 1,
+                    "docs": {
+                      "first/index.html#first-chapter": {
+                        "tf": 1.0
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "i": {
+            "df": 0,
+            "docs": {},
+            "n": {
+              "c": {
+                "df": 0,
+                "docs": {},
+                "l": {
+                  "df": 0,
+                  "docs": {},
+                  "u": {
+                    "d": {
+                      "df": 1,
+                      "docs": {
+                        "first/includes.html#includes": {
+                          "tf": 1.0
+                        }
+                      }
+                    },
+                    "df": 0,
+                    "docs": {}
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {},
+              "t": {
+                "df": 0,
+                "docs": {},
+                "r": {
+                  "df": 0,
+                  "docs": {},
+                  "o": {
+                    "d": {
+                      "df": 0,
+                      "docs": {},
+                      "u": {
+                        "c": {
+                          "df": 0,
+                          "docs": {},
+                          "t": {
+                            "df": 1,
+                            "docs": {
+                              "intro.html#introduction": {
+                                "tf": 1.0
+                              }
+                            }
+                          }
+                        },
+                        "df": 0,
+                        "docs": {}
+                      }
+                    },
+                    "df": 0,
+                    "docs": {}
+                  }
+                }
+              }
+            }
+          },
+          "n": {
+            "df": 0,
+            "docs": {},
+            "e": {
+              "df": 0,
+              "docs": {},
+              "s": {
+                "df": 0,
+                "docs": {},
+                "t": {
+                  "df": 1,
+                  "docs": {
+                    "first/nested.html#nested-chapter": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "s": {
+            "df": 0,
+            "docs": {},
+            "e": {
+              "c": {
+                "df": 0,
+                "docs": {},
+                "o": {
+                  "df": 0,
+                  "docs": {},
+                  "n": {
+                    "d": {
+                      "df": 1,
+                      "docs": {
+                        "second.html#second-chapter": {
+                          "tf": 1.0
+                        }
+                      }
+                    },
+                    "df": 0,
+                    "docs": {}
+                  }
+                },
+                "t": {
+                  "df": 0,
+                  "docs": {},
+                  "i": {
+                    "df": 0,
+                    "docs": {},
+                    "o": {
+                      "df": 0,
+                      "docs": {},
+                      "n": {
+                        "df": 2,
+                        "docs": {
+                          "first/index.html#some-section": {
+                            "tf": 1.0
+                          },
+                          "first/nested.html#some-section": {
+                            "tf": 1.0
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {}
+            },
+            "u": {
+              "df": 0,
+              "docs": {},
+              "m": {
+                "df": 0,
+                "docs": {},
+                "m": {
+                  "a": {
+                    "df": 0,
+                    "docs": {},
+                    "r": {
+                      "df": 0,
+                      "docs": {},
+                      "i": {
+                        "df": 1,
+                        "docs": {
+                          "first/includes.html#summary": {
+                            "tf": 1.0
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "df": 0,
+                  "docs": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "pipeline": [
+      "trimmer",
+      "stopWordFilter",
+      "stemmer"
+    ],
+    "ref": "id",
+    "version": "0.9.5"
+  },
+  "resultsoptions": {
+    "limit_results": 30,
+    "teaser_word_count": 30
+  },
+  "searchoptions": {
+    "bool": "OR",
+    "expand": true,
+    "fields": {
+      "body": {
+        "boost": 1
+      },
+      "breadcrumbs": {
+        "boost": 1
+      },
+      "title": {
+        "boost": 2
+      }
+    }
+  }
+}

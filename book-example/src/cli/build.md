@@ -14,8 +14,8 @@ convenience. Large books will therefore remain structured when rendered.
 
 #### Specify a directory
 
-Like `init`, the `build` command can take a directory as argument to use instead of the
-current working directory.
+Like `init`, the `build` command can take a directory as an argument to use
+instead of the current working directory.
 
 ```bash
 mdbook build path/to/book

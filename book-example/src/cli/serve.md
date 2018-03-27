@@ -6,8 +6,8 @@ This preferred by many for writing books with mdbook because it allows for you t
 
 #### Specify a directory
 
-Like `watch`, `serve` can take a directory as argument to use instead of the
-current working directory.
+Like `watch`, `serve` can take a directory as an argument to use instead of
+the current working directory.
 
 ```bash
 mdbook serve path/to/book

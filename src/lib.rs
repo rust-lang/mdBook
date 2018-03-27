@@ -1,7 +1,8 @@
 //! # mdBook
 //!
-//! **mdBook** is similar to GitBook but implemented in Rust.
-//! It offers a command line interface, but can also be used as a regular crate.
+//! **mdBook** is a tool for rendering a collection of markdown documents into
+//! a form more suitable for end users like HTML or EPUB.  It offers a command
+//! line interface, but this crate can be used if more control is required.
 //!
 //! This is the API doc, the [user guide] is also available if you want
 //! information about the command line tool, format, structure etc. It is also
@@ -14,6 +15,12 @@
 //! - Do some processing or test before building your book
 //! - Accessing the public API to help create a new Renderer
 //! - ...
+//!
+//! > **Note:** While we try to ensure `mdbook`'s command-line interface and
+//! > behaviour are backwards compatible, the tool's internals are still
+//! > evolving and being iterated on. If you wish to prevent accidental
+//! > breakages it is recommended to pin any tools building on top of the
+//! > `mdbook` crate to a specific release.
 //!
 //! # Examples
 //!
@@ -52,20 +59,20 @@
 //!
 //! ## Implementing a new Backend
 //!
-//! `mdbook` has a fairly flexible mechanism for creating additional backends 
+//! `mdbook` has a fairly flexible mechanism for creating additional backends
 //! for your book. The general idea is you'll add an extra table in the book's
 //! `book.toml` which specifies an executable to be invoked by `mdbook`. This
-//! executable will then be called during a build, with an in-memory 
+//! executable will then be called during a build, with an in-memory
 //! representation ([`RenderContext`]) of the book being passed to the
-//! subprocess via `stdin`. 
-//! 
-//! The [`RenderContext`] gives the backend access to the contents of 
+//! subprocess via `stdin`.
+//!
+//! The [`RenderContext`] gives the backend access to the contents of
 //! `book.toml` and lets it know which directory all generated artefacts should
 //! be placed in. For a much more in-depth explanation, consult the [relevant
 //! chapter] in the *For Developers* section of the user guide.
-//! 
-//! To make creating a backend easier, the `mdbook` crate can be imported 
-//! directly, making deserializing the `RenderContext` easy and giving you 
+//!
+//! To make creating a backend easier, the `mdbook` crate can be imported
+//! directly, making deserializing the `RenderContext` easy and giving you
 //! access to the various methods for working with the [`Config`].
 //!
 //! [user guide]: https://rust-lang-nursery.github.io/mdBook/
@@ -92,7 +99,7 @@ extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
 extern crate shlex;
-extern crate tempdir;
+extern crate tempfile;
 extern crate toml;
 extern crate toml_query;
 
@@ -122,6 +129,7 @@ pub mod errors {
             HandlebarsRender(::handlebars::RenderError) #[doc = "Handlebars rendering failed"];
             HandlebarsTemplate(Box<::handlebars::TemplateError>) #[doc = "Unable to parse the template"];
             Utf8(::std::string::FromUtf8Error) #[doc = "Invalid UTF-8"];
+            SerdeJson(::serde_json::Error) #[doc = "JSON conversion failed"];
         }
 
         links {

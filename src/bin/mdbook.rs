@@ -37,7 +37,9 @@ fn main() {
         Opts::Init(x) => init::execute(x),
         Opts::Build(x) => build::execute(x),
         Opts::Clean(x) => clean::execute(x),
+        #[cfg(feature = "watch")]
         Opts::Watch(x) => watch::execute(x),
+        #[cfg(feature = "serve")]
         Opts::Serve(x) => serve::execute(x),
         Opts::Test(x) => test::execute(x),
     };
@@ -92,6 +94,8 @@ fn init_logger() {
     } else {
         // if no RUST_LOG provided, default to logging at the Info level
         builder.filter(None, LevelFilter::Info);
+        // Filter extraneous html5ever not-implemented messages
+        builder.filter(Some("html5ever"), LevelFilter::Error);
     }
 
     builder.init();

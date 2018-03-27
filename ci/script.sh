@@ -3,6 +3,7 @@
 set -ex
 
 main() {
+    cross build --target $TARGET --all --no-default-features
     cross build --target $TARGET --all
     cross build --target $TARGET --all --release
 
@@ -10,6 +11,7 @@ main() {
         return
     fi
 
+    cross test --target $TARGET --no-default-features
     cross test --target $TARGET
     cross test --target $TARGET --release
 }

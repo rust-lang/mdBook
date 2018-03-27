@@ -1,7 +1,7 @@
-use std::path::{Component, Path, PathBuf};
 use errors::*;
-use std::io::Read;
 use std::fs::{self, File};
+use std::io::{Read, Write};
+use std::path::{Component, Path, PathBuf};
 
 /// Takes a path to a file and try to read the file into a String
 pub fn file_to_string<P: AsRef<Path>>(path: P) -> Result<String> {
@@ -14,6 +14,27 @@ pub fn file_to_string<P: AsRef<Path>>(path: P) -> Result<String> {
         .chain_err(|| "Unable to read the file")?;
 
     Ok(content)
+}
+
+/// Naively replaces any path seperator with a forward-slash '/'
+pub fn normalize_path(path: &str) -> String {
+    use std::path::is_separator;
+    path.chars()
+        .map(|ch| if is_separator(ch) { '/' } else { ch })
+        .collect::<String>()
+}
+
+/// Write the given data to a file, creating it first if necessary
+pub fn write_file<P: AsRef<Path>>(
+    build_dir: &Path,
+    filename: P,
+    content: &[u8],
+) -> Result<()> {
+    let path = build_dir.join(filename);
+
+    create_file(&path)?
+        .write_all(content)
+        .map_err(|e| e.into())
 }
 
 /// Takes a path and returns a path containing just enough `../` to point to
@@ -38,7 +59,6 @@ pub fn file_to_string<P: AsRef<Path>>(path: P) -> Result<String> {
 /// it doesn't return the correct path.
 /// Consider [submitting a new issue](https://github.com/rust-lang-nursery/mdBook/issues)
 /// or a [pull-request](https://github.com/rust-lang-nursery/mdBook/pulls) to improve it.
-
 pub fn path_to_root<P: Into<PathBuf>>(path: P) -> String {
     debug!("path_to_root");
     // Remove filename and add "../" for every directory
@@ -61,7 +81,6 @@ pub fn path_to_root<P: Into<PathBuf>>(path: P) -> String {
 /// This function creates a file and returns it. But before creating the file
 /// it checks every directory in the path to see if it exists,
 /// and if it does not it will be created.
-
 pub fn create_file(path: &Path) -> Result<File> {
     debug!("Creating {}", path.display());
 
@@ -76,7 +95,6 @@ pub fn create_file(path: &Path) -> Result<File> {
 }
 
 /// Removes all the content of a directory but not the directory itself
-
 pub fn remove_dir_content(dir: &Path) -> Result<()> {
     for item in fs::read_dir(dir)? {
         if let Ok(item) = item {
@@ -93,7 +111,6 @@ pub fn remove_dir_content(dir: &Path) -> Result<()> {
 
 /// Copies all files of a directory to another one except the files
 /// with the extensions given in the `ext_blacklist` array
-
 pub fn copy_files_except_ext(
     from: &Path,
     to: &Path,
@@ -176,14 +193,14 @@ pub fn copy_files_except_ext(
 
 #[cfg(test)]
 mod tests {
-    extern crate tempdir;
+    extern crate tempfile;
 
     use super::copy_files_except_ext;
     use std::fs;
 
     #[test]
     fn copy_files_except_ext_test() {
-        let tmp = match tempdir::TempDir::new("") {
+        let tmp = match tempfile::TempDir::new() {
             Ok(t) => t,
             Err(_) => panic!("Could not create a temp dir"),
         };

@@ -16,7 +16,7 @@ pub use self::init::BookBuilder;
 use std::path::PathBuf;
 use std::io::Write;
 use std::process::Command;
-use tempdir::TempDir;
+use tempfile::Builder as TempFileBuilder;
 use toml::Value;
 
 use utils;
@@ -213,7 +213,7 @@ impl MDBook {
             .flat_map(|x| vec![x.0, x.1])
             .collect();
 
-        let temp_dir = TempDir::new("mdbook")?;
+        let temp_dir = TempFileBuilder::new().prefix("mdbook").tempdir()?;
 
         let preprocess_context = PreprocessorContext::new(self.root.clone(), self.config.clone());
 
@@ -288,13 +288,12 @@ impl MDBook {
         self.root.join(&self.config.book.src)
     }
 
-    // FIXME: This really belongs as part of the `HtmlConfig`.
-    #[doc(hidden)]
+    /// Get the directory containing the theme resources for the book.
     pub fn theme_dir(&self) -> PathBuf {
-        match self.config.html_config().and_then(|h| h.theme) {
-            Some(d) => self.root.join(d),
-            None => self.root.join("theme"),
-        }
+        self.config
+            .html_config()
+            .unwrap_or_default()
+            .theme_dir(&self.root)
     }
 }
 

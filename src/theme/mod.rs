@@ -1,5 +1,9 @@
-#![allow(missing_docs)] // FIXME: Document this
+#![allow(missing_docs)]
+
 pub mod playpen_editor;
+
+#[cfg(feature = "search")]
+pub mod searcher;
 
 use std::path::Path;
 use std::fs::File;
@@ -52,6 +56,8 @@ pub struct Theme {
 }
 
 impl Theme {
+    /// Creates a `Theme` from the given `theme_dir`.
+    /// If a file is found in the theme dir, it will override the default version.
     pub fn new<P: AsRef<Path>>(theme_dir: P) -> Self {
         let theme_dir = theme_dir.as_ref();
         let mut theme = Theme::default();
@@ -128,7 +134,7 @@ fn load_file_contents<P: AsRef<Path>>(filename: P, dest: &mut Vec<u8>) -> Result
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempdir::TempDir;
+    use tempfile::Builder as TempFileBuilder;
     use std::path::PathBuf;
 
     #[test]
@@ -153,7 +159,7 @@ mod tests {
             .map(|f| f.path())
             .filter(|p| p.is_file() && !p.ends_with(".rs"));
 
-        let temp = TempDir::new("mdbook").unwrap();
+        let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
 
         // "touch" all of the special files so we have empty copies
         for special_file in special_files {
