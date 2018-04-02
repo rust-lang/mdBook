@@ -230,6 +230,9 @@ table thead td {
   -ms-transition: color 0.5s;
   transition: color 0.5s;
 }
+#menu-bar #print-button {
+  margin: 0 15px;
+}
 html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-container {
   -webkit-transform: translateY(-60px);
   -moz-transform: translateY(-60px);
