@@ -6,6 +6,15 @@ main() {
     local src=$(pwd) \
           stage=
 
+    case $TRAVIS_OS_NAME in
+        linux)
+            stage=$(mktemp -d)
+            ;;
+        osx)
+            stage=$(mktemp -d -t tmp)
+            ;;
+    esac
+
     cargo rustc --bin mdbook --target $TARGET --release -- -C lto
 
     cp target/release/mdbook $stage/
