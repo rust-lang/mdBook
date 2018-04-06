@@ -297,7 +297,7 @@ window.search = window.search || {};
     
     // Eventhandler for keyevents on `document`
     function globalKeyHandler(e) {
-        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
+        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.target.type === 'textarea') { return; }
 
         if (e.keyCode == ESCAPE_KEYCODE) {
             e.preventDefault();
