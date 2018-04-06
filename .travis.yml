@@ -3,7 +3,6 @@
 
 dist: trusty
 language: rust
-services: docker
 sudo: required
 
 cache: cargo
@@ -17,26 +16,15 @@ env:
 
 matrix:
   include:
-  # Android
-  - env: TARGET=arm-linux-androideabi DISABLE_TESTS=1
-
   # Linux
-  - env: TARGET=aarch64-unknown-linux-gnu
-  - env: TARGET=arm-unknown-linux-gnueabi
   - env: TARGET=i686-unknown-linux-gnu
   - env: TARGET=x86_64-unknown-linux-gnu
-  - env: TARGET=x86_64-unknown-linux-musl
 
   # Mac
   - env: TARGET=i686-apple-darwin
     os: osx
   - env: TARGET=x86_64-apple-darwin
     os: osx
-
-  # BSD
-  - env: TARGET=i686-unknown-freebsd DISABLE_TESTS=1
-  - env: TARGET=x86_64-unknown-freebsd DISABLE_TESTS=1
-  - env: TARGET=x86_64-unknown-netbsd DISABLE_TESTS=1
 
   # Other channels
   - env: TARGET=x86_64-unknown-linux-gnu
