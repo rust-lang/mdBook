@@ -6,7 +6,6 @@ use renderer::html_handlebars::helpers;
 use theme::{self, Theme, playpen_editor};
 use utils;
 
-#[allow(unused_imports)] use std::ascii::AsciiExt;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::fs::{self, File};
