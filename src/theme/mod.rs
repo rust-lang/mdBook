@@ -36,7 +36,7 @@ pub static FONT_AWESOME_OTF: &'static [u8] = include_bytes!("_FontAwesome/fonts/
 
 
 /// The `Theme` struct should be used instead of the static variables because
-/// the `new()` method will look if the user has a theme directory in his
+/// the `new()` method will look if the user has a theme directory in their
 /// source folder and use the users theme instead of the default.
 ///
 /// You should only ever use the static variables directly if you want to
