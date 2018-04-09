@@ -1,3 +1,4 @@
+"use strict";
 window.editors = [];
 (function(editors) {
     if (typeof(ace) === 'undefined' || !ace) {

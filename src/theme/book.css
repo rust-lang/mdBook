@@ -81,11 +81,13 @@ table thead td {
   box-sizing: border-box;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
-  -webkit-transition: -webkit-transform 0.5s;
-  -moz-transition: -moz-transform 0.5s;
-  -o-transition: -o-transform 0.5s;
-  -ms-transition: -ms-transform 0.5s;
-  transition: transform 0.5s;
+}
+.js .sidebar {
+  -webkit-transition: -webkit-transform 0.3s;
+  -moz-transition: -moz-transform 0.3s;
+  -o-transition: -o-transform 0.3s;
+  -ms-transition: -ms-transform 0.3s;
+  transition: transform 0.3s;
 }
 .sidebar code {
   line-height: 2em;
@@ -137,42 +139,44 @@ table thead td {
   white-space: nowrap;
 }
 .page-wrapper {
-  left: 0;
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
-  -webkit-transition: padding-left 0.5s, margin-left 0.5s, left 0.5s;
-  -moz-transition: padding-left 0.5s, margin-left 0.5s, left 0.5s;
-  -o-transition: padding-left 0.5s, margin-left 0.5s, left 0.5s;
-  -ms-transition: padding-left 0.5s, margin-left 0.5s, left 0.5s;
-  transition: padding-left 0.5s, margin-left 0.5s, left 0.5s;
+}
+.js .page-wrapper {
+  -webkit-transition: margin-left 0.3s ease, -webkit-transform 0.3s ease;
+  -moz-transition: margin-left 0.3s ease, -moz-transform 0.3s ease;
+  -o-transition: margin-left 0.3s ease, -o-transform 0.3s ease;
+  -ms-transition: margin-left 0.3s ease, -ms-transform 0.3s ease;
+  transition: margin-left 0.3s ease, transform 0.3s ease;
 }
 .sidebar-visible .page-wrapper {
-  left: 300px;
+  -webkit-transform: translateX(300px);
+  -moz-transform: translateX(300px);
+  -o-transform: translateX(300px);
+  -ms-transform: translateX(300px);
+  transform: translateX(300px);
+}
+@media only screen and (min-width: 620px) {
+  .sidebar-visible .page-wrapper {
+    -webkit-transform: none;
+    -moz-transform: none;
+    -o-transform: none;
+    -ms-transform: none;
+    transform: none;
+    margin-left: 300px;
+  }
 }
 .page {
   outline: 0;
   padding: 0 15px;
 }
 .content {
-  position: relative;
-  top: 0;
-  bottom: 0;
   overflow-y: auto;
-  right: 0;
-  left: 0;
   padding: 0 15px;
   padding-bottom: 50px;
 }
-.sidebar-visible .content {
-  position: absolute;
-  top: 52px;
-}
-.content > main {
+.content main {
   margin-left: auto;
   margin-right: auto;
   max-width: 750px;
@@ -205,11 +209,13 @@ table thead td {
   -webkit-flex-wrap: wrap;
   -ms-flex-wrap: wrap;
   flex-wrap: wrap;
-  -webkit-transition: -webkit-transform 0.5s, border-bottom-color 0.5s;
-  -moz-transition: -moz-transform 0.5s, border-bottom-color 0.5s;
-  -o-transition: -o-transform 0.5s, border-bottom-color 0.5s;
-  -ms-transition: -ms-transform 0.5s, border-bottom-color 0.5s;
-  transition: transform 0.5s, border-bottom-color 0.5s;
+}
+.js #menu-bar > #menu-bar-sticky-container {
+  -webkit-transition: -webkit-transform 0.3s;
+  -moz-transition: -moz-transform 0.3s;
+  -o-transition: -o-transform 0.3s;
+  -ms-transition: -ms-transform 0.3s;
+  transition: transform 0.3s;
 }
 #menu-bar i,
 #menu-bar .icon-button {
@@ -217,15 +223,15 @@ table thead td {
   margin: 0 10px;
   z-index: 10;
   line-height: 50px;
+  cursor: pointer;
   -webkit-transition: color 0.5s;
   -moz-transition: color 0.5s;
   -o-transition: color 0.5s;
   -ms-transition: color 0.5s;
   transition: color 0.5s;
 }
-#menu-bar i:hover,
-#menu-bar .icon-button:hover {
-  cursor: pointer;
+#menu-bar #print-button {
+  margin: 0 15px;
 }
 html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-container {
   -webkit-transform: translateY(-60px);
@@ -233,6 +239,9 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
   -o-transform: translateY(-60px);
   -ms-transform: translateY(-60px);
   transform: translateY(-60px);
+}
+.no-js .left-buttons {
+  display: none;
 }
 .menu-title {
   display: inline-block;
@@ -252,6 +261,8 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
   overflow: hidden;
   -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
+}
+.js .menu-title {
   cursor: pointer;
 }
 .nav-chapters {
@@ -363,7 +374,6 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 .light .content .header:link,
 .light .content .header:visited {
   color: #333;
-  pointer: cursor;
 }
 .light .content .header:link:hover,
 .light .content .header:visited:hover {
@@ -554,7 +564,6 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 .coal .content .header:link,
 .coal .content .header:visited {
   color: #98a3ad;
-  pointer: cursor;
 }
 .coal .content .header:link:hover,
 .coal .content .header:visited:hover {
@@ -745,7 +754,6 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 .navy .content .header:link,
 .navy .content .header:visited {
   color: #bcbdd0;
-  pointer: cursor;
 }
 .navy .content .header:link:hover,
 .navy .content .header:visited:hover {
@@ -936,7 +944,6 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 .rust .content .header:link,
 .rust .content .header:visited {
   color: #262625;
-  pointer: cursor;
 }
 .rust .content .header:link:hover,
 .rust .content .header:visited:hover {
@@ -1127,7 +1134,6 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 .ayu .content .header:link,
 .ayu .content .header:visited {
   color: #c5c5c5;
-  pointer: cursor;
 }
 .ayu .content .header:link:hover,
 .ayu .content .header:visited:hover {
@@ -1401,18 +1407,18 @@ mark {
   -o-transition: background-color 300ms linear;
   -ms-transition: background-color 300ms linear;
   transition: background-color 300ms linear;
+  cursor: pointer;
 }
-.fade-out {
+mark.fade-out {
   background-color: rgba(0,0,0,0) !important;
+  cursor: auto;
 }
 .searchbar-outer {
-  display: none;
   margin-left: auto;
   margin-right: auto;
   max-width: 750px;
 }
 #searchbar {
-  display: block;
   width: 100%;
   margin: 5px auto 0px auto;
   padding: 10px 16px;
@@ -1428,7 +1434,6 @@ mark {
   padding: 18px 0 0 5px;
 }
 .searchresults-outer {
-  display: none;
   margin-left: auto;
   margin-right: auto;
   max-width: 750px;

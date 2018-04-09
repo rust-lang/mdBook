@@ -9,21 +9,21 @@ mark {
     padding: 0 3px 1px 3px;
     margin: 0 -3px -1px -3px;
     transition: background-color 300ms linear;
+    cursor: pointer;
 }
 
-.fade-out {
-    background-color: rgba(0,0,0,0) !important
+mark.fade-out {
+    background-color: rgba(0,0,0,0) !important;
+    cursor: auto;
 }
 
 .searchbar-outer {
-    display: none;
     margin-left: auto;
     margin-right: auto;
     max-width: $content-max-width;
 }
 
 #searchbar {
-    display: block;
     width: 100%;
     margin: 5px auto 0px auto;
     padding: 10px 16px;
@@ -37,7 +37,6 @@ mark {
 }
 
 .searchresults-outer {
-    display: none;
     margin-left: auto;
     margin-right: auto;
     max-width: $content-max-width;

@@ -2,18 +2,20 @@
 
 .page-wrapper {
     box-sizing: border-box
-    left: 0
-    position: absolute
-    right: 0
-    top: 0
-    bottom: 0
 
     // Animation: slide away
-    transition: padding-left 0.5s, margin-left 0.5s, left 0.5s
+    .js & {
+        transition: margin-left 0.3s ease, transform 0.3s ease
+    }
 }
 
 .sidebar-visible .page-wrapper {
-    left: $sidebar-width
+    transform: translateX($sidebar-width)
+
+    @media only screen and (min-width: $sidebar-reflow-width) {
+        transform: none
+        margin-left: $sidebar-width
+    }
 }
 
 .page {
@@ -22,12 +24,7 @@
 }
 
 .content {
-    position: relative
-    top: 0
-    bottom: 0
     overflow-y: auto
-    right: 0
-    left: 0
     padding: 0 15px
     padding-bottom: 50px
 
@@ -43,9 +40,4 @@
     }
 
     img { max-width: 100%; }
-}
-
-.sidebar-visible .content {
-    position: absolute
-    top: 52px
 }
