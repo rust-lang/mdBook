@@ -4,7 +4,6 @@ use std::process::Command;
 use clap::{App, ArgMatches, SubCommand};
 use mdbook::MDBook;
 use mdbook::errors::Result;
-use mdbook::utils;
 use mdbook::config;
 use get_book_dir;
 
