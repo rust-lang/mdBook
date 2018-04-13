@@ -435,7 +435,11 @@ fn make_data(root: &Path, book: &Book, config: &Config, html_config: &HtmlConfig
                 chapter.insert("path".to_owned(), json!(path));
             }
             BookItem::VirtualChapter(ref ch) => {
-                unimplemented!();   // TODO
+                if let Some(ref section) = ch.number {
+                    chapter.insert("section".to_owned(), json!(section.to_string()));
+                }
+
+                chapter.insert("name".to_owned(), json!(ch.name));
             }
             BookItem::Separator => {
                 chapter.insert("spacer".to_owned(), json!("_spacer_"));

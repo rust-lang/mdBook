@@ -10,6 +10,7 @@
     - [clean](cli/clean.md)
 - [Format](format/format.md)
     - [SUMMARY.md](format/summary.md)
+        - [Virtual Chapter]()
     - [Configuration](format/config.md)
     - [Theme](format/theme/theme.md)
         - [index.hbs](format/theme/index-hbs.md)
