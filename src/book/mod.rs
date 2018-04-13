@@ -109,6 +109,7 @@ impl MDBook {
     ///         BookItem::Chapter(ref chapter) => {},
     ///         BookItem::VirtualChapter(ref virtual_chapter) => {},
     ///         BookItem::Separator => {},
+    ///         _ => {},
     ///     }
     /// }
     ///
