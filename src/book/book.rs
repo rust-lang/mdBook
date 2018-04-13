@@ -246,7 +246,7 @@ fn load_summary_item<P: AsRef<Path>>(
             load_chapter(link, src_dir, parent_names).map(|c| BookItem::Chapter(c))
         }
         SummaryItem::VirtualLink(ref link) =>
-            load_virtual_chapter(link, src_dir).map(VirtualChapter::into),
+            load_virtual_chapter(link, src_dir, parent_names).map(VirtualChapter::into),
     }
 }
 
@@ -290,7 +290,7 @@ fn load_chapter<P: AsRef<Path>>(
     Ok(ch)
 }
 
-fn load_virtual_chapter<P: AsRef<Path>>(link: &VirtualLink, src_dir: P) -> Result<VirtualChapter> {
+fn load_virtual_chapter<P: AsRef<Path>>(link: &VirtualLink, src_dir: P, parent_names: Vec<String>) -> Result<VirtualChapter> {
     let src_dir = src_dir.as_ref();
 
     let mut ch = VirtualChapter::new(&link.name);
@@ -298,7 +298,7 @@ fn load_virtual_chapter<P: AsRef<Path>>(link: &VirtualLink, src_dir: P) -> Resul
 
     let sub_items = link.nested_items
         .iter()
-        .map(|i| load_summary_item(i, src_dir))
+        .map(|i| load_summary_item(i, src_dir, parent_names.clone()))
         .collect::<Result<Vec<_>>>()?;
 
     ch.sub_items = sub_items;
