@@ -87,6 +87,52 @@ impl HtmlHandlebars {
                     self.render_index(ch, &ctx.destination)?;
                 }
             }
+            // If the first chapter is a virtual chapter, create an empty index.html
+            BookItem::VirtualChapter(ref ch) => {
+
+                if ctx.is_index {
+    
+                    let content = String::new();
+                
+                    // Update the context with data for this file
+                    let filepath = Path::new("index.md")
+                        .with_extension("html");
+                    let filepathstr = filepath.to_str()
+                        .chain_err(|| "Could not convert HTML path to str")?;
+                    let filepathstr = utils::fs::normalize_path(filepathstr);
+
+                    // Non-lexical lifetimes needed :'(
+                    let title: String;
+                    {
+                        let book_title = ctx.data
+                                            .get("book_title")
+                                            .and_then(serde_json::Value::as_str)
+                                            .unwrap_or("");
+                        title = book_title.to_string();
+                    }
+    
+                    ctx.data.insert("path".to_owned(), json!("index.md".to_string()));
+                    ctx.data.insert("content".to_owned(), json!(content));
+                    ctx.data.insert("chapter_title".to_owned(), json!("".to_string()));
+                    ctx.data.insert("title".to_owned(), json!(title));
+                    ctx.data.insert("path_to_root".to_owned(),
+                                    json!(utils::fs::path_to_root(Path::new("index.md"))));
+    
+                    // Render the handlebars template with the data
+                    debug!("Render template");
+                    let rendered = ctx.handlebars.render("index", &ctx.data)?;
+    
+                    let rendered = self.post_process(
+                        rendered,
+                        &filepathstr,
+                        &ctx.html_config.playpen,
+                    );
+
+                    // Write to file
+                    debug!("Creating {} ✓", filepathstr);
+                    utils::fs::write_file(&ctx.destination, &filepath, &rendered.into_bytes())?;
+                }
+            }
             _ => {}
         }
 
