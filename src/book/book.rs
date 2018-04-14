@@ -291,6 +291,7 @@ fn load_chapter<P: AsRef<Path>>(
 }
 
 fn load_virtual_chapter<P: AsRef<Path>>(link: &VirtualLink, src_dir: P, parent_names: Vec<String>) -> Result<VirtualChapter> {
+    debug!("Loading {}", link.name);
     let src_dir = src_dir.as_ref();
 
     let mut ch = VirtualChapter::new(&link.name);
@@ -324,11 +325,20 @@ impl<'a> Iterator for BookItems<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         let item = self.items.pop_front();
 
-        if let Some(&BookItem::Chapter(ref ch)) = item {
-            // if we wanted a breadth-first iterator we'd `extend()` here
-            for sub_item in ch.sub_items.iter().rev() {
-                self.items.push_front(sub_item);
+        match item {
+            Some(&BookItem::Chapter(ref ch)) => {
+                // if we wanted a breadth-first iterator we'd `extend()` here
+                for sub_item in ch.sub_items.iter().rev() {
+                    self.items.push_front(sub_item);
+                }
+            },
+            Some(&BookItem::VirtualChapter(ref ch)) => {
+                // if we wanted a breadth-first iterator we'd `extend()` here
+                for sub_item in ch.sub_items.iter().rev() {
+                    self.items.push_front(sub_item);
+                }
             }
+            _ => {},
         }
 
         item
