@@ -242,6 +242,7 @@ window.search = window.search || {};
     function init() {
         resultsoptions = window.search.resultsoptions;
         searchoptions = window.search.searchoptions;
+        searchbar_outer = window.search.searchbar_outer;
         searchindex = elasticlunr.Index.load(window.search.index);
 
         // Set up events
@@ -250,6 +251,8 @@ window.search = window.search || {};
         document.addEventListener('keydown', function(e) { globalKeyHandler(e); }, false);
         // If the user uses the browser buttons, do the same as if a reload happened
         window.onpopstate = function(e) { doSearchOrMarkFromUrl(); };
+        // Suppress "submit" events so the page doesn't reload when the user presses Enter
+        document.addEventListener('submit', function(e) { e.preventDefault(); }, false);
 
         // If reloaded, do the search or mark again, depending on the current url parameters
         doSearchOrMarkFromUrl();
