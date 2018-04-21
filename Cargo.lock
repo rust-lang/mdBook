@@ -498,7 +498,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "mdbook"
-version = "0.1.6"
+version = "0.1.7-alpha.0"
 dependencies = [
  "ammonia 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
