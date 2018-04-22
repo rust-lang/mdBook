@@ -71,6 +71,7 @@ regenerate-css = []
 watch = ["notify", "time", "crossbeam"]
 serve = ["iron", "staticfile", "ws"]
 search = ["elasticlunr-rs", "ammonia"]
+win-bash-tests = [] # Enables tests which require bash utilities on Windows
 
 [[bin]]
 doc = false

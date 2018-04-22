@@ -43,7 +43,7 @@ build: false
 test_script:
   - cargo build --verbose
   - cargo build --verbose --features=regenerate-css
-  - cargo test --verbose
+  - cargo test --verbose --features=win-bash-tests
 
 before_deploy:
   # Generate artifacts for release

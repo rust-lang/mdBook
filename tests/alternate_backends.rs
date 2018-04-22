@@ -3,13 +3,12 @@
 extern crate mdbook;
 extern crate tempfile;
 
-#[cfg(not(windows))]
-use std::path::Path;
 use tempfile::{TempDir, Builder as TempFileBuilder};
 use mdbook::config::Config;
 use mdbook::MDBook;
 
 #[test]
+#[cfg_attr(all(windows, not(feature = "win-bash-tests")), ignore)]
 fn passing_alternate_backend() {
     let (md, _temp) = dummy_book_with_backend("passing", "true");
 
@@ -17,6 +16,7 @@ fn passing_alternate_backend() {
 }
 
 #[test]
+#[cfg_attr(all(windows, not(feature = "win-bash-tests")), ignore)]
 fn failing_alternate_backend() {
     let (md, _temp) = dummy_book_with_backend("failing", "false");
 
@@ -37,27 +37,15 @@ fn alternate_backend_with_arguments() {
     md.build().unwrap();
 }
 
-/// Get a command which will pipe `stdin` to the provided file.
-#[cfg(not(windows))]
-fn tee_command<P: AsRef<Path>>(out_file: P) -> String {
-    let out_file = out_file.as_ref();
-
-    if cfg!(windows) {
-        format!("cmd.exe /c \"type > {}\"", out_file.display())
-    } else {
-        format!("tee {}", out_file.display())
-    }
-}
-
 #[test]
-#[cfg(not(windows))]
+#[cfg_attr(windows, ignore)]
 fn backends_receive_render_context_via_stdin() {
     use std::fs::File;
     use mdbook::renderer::RenderContext;
 
     let temp = TempFileBuilder::new().prefix("output").tempdir().unwrap();
     let out_file = temp.path().join("out.txt");
-    let cmd = tee_command(&out_file);
+    let cmd = format!("tee {}", out_file.display());
 
     let (md, _temp) = dummy_book_with_backend("cat-to-file", &cmd);
 
