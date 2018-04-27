@@ -1373,6 +1373,9 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
     white-space: -o-pre-wrap /* Opera 7 */;
     word-wrap: break-word /* Internet Explorer 5.5+ */;
   }
+  .fa {
+    display: none !important;
+  }
 }
 .tooltiptext {
   position: absolute;
