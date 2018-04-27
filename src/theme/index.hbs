@@ -212,14 +212,6 @@
         </script>
         {{/if}}
 
-        {{#if is_print}}
-        <script type="text/javascript">
-            document.addEventListener('DOMContentLoaded', function() {
-                window.print();
-            })
-        </script>
-        {{/if}}
-
         {{#if playpen_js}}
         <script src="ace.js" type="text/javascript" charset="utf-8"></script>
         <script src="editor.js" type="text/javascript" charset="utf-8"></script>
@@ -245,6 +237,22 @@
         {{#each additional_js}}
         <script type="text/javascript" src="{{this}}"></script>
         {{/each}}
+
+        {{#if is_print}}
+        {{#if mathjax_support}}
+        <script type="text/x-mathjax-config">
+        MathJax.Hub.Register.StartupHook("End", function() {
+            window.print();
+        });
+        </script>
+        {{else}}
+        <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            window.print();
+        });
+        </script>
+        {{/if}}
+        {{/if}}
 
     </body>
 </html>
