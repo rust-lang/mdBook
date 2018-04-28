@@ -13,7 +13,7 @@
           "title": 1
         },
         "first/includes.html#summary": {
-          "body": 9,
+          "body": 10,
           "breadcrumbs": 3,
           "title": 1
         },
@@ -62,7 +62,7 @@
           "title": "Includes"
         },
         "first/includes.html#summary": {
-          "body": "Introduction First Chapter Nested Chapter Includes Second Chapter Conclusion",
+          "body": "Introduction First Chapter Nested Chapter Includes Recursive Second Chapter Conclusion",
           "breadcrumbs": "First Chapter » Summary",
           "id": "first/includes.html#summary",
           "title": "Summary"
@@ -742,6 +742,30 @@
           "r": {
             "df": 0,
             "docs": {},
+            "e": {
+              "c": {
+                "df": 0,
+                "docs": {},
+                "u": {
+                  "df": 0,
+                  "docs": {},
+                  "r": {
+                    "df": 0,
+                    "docs": {},
+                    "s": {
+                      "df": 1,
+                      "docs": {
+                        "first/includes.html#summary": {
+                          "tf": 1.0
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {}
+            },
             "u": {
               "df": 0,
               "docs": {},
@@ -1630,6 +1654,30 @@
           "r": {
             "df": 0,
             "docs": {},
+            "e": {
+              "c": {
+                "df": 0,
+                "docs": {},
+                "u": {
+                  "df": 0,
+                  "docs": {},
+                  "r": {
+                    "df": 0,
+                    "docs": {},
+                    "s": {
+                      "df": 1,
+                      "docs": {
+                        "first/includes.html#summary": {
+                          "tf": 1.0
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {}
+            },
             "u": {
               "df": 0,
               "docs": {},
