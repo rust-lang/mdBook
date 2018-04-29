@@ -241,14 +241,16 @@
         {{#if is_print}}
         {{#if mathjax_support}}
         <script type="text/javascript">
-        MathJax.Hub.Register.StartupHook("End", function() {
-            window.print();
+        window.addEventListener('load', function() {
+            MathJax.Hub.Register.StartupHook('End', function() {
+                window.setTimeout(window.print, 100);
+            });
         });
         </script>
         {{else}}
         <script type="text/javascript">
-        document.addEventListener('DOMContentLoaded', function() {
-            window.print();
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
         });
         </script>
         {{/if}}
