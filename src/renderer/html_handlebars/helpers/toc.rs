@@ -1,9 +1,11 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::collections::BTreeMap;
 
 use serde_json;
 use handlebars::{Handlebars, Helper, HelperDef, RenderContext, RenderError};
 use pulldown_cmark::{html, Event, Parser, Tag};
+
+use super::rewrite_to_dir_index;
 
 // Handlebars helper to construct TOC
 pub struct RenderToc {
@@ -72,7 +74,7 @@ impl HelperDef for RenderToc {
                     let tmp = {
                         // To be recognized by browsers, rewrite extenstion to `.html`.
                         let path = Path::new(path).with_extension("html");
-                        self.rewrite_directory_index(&path)
+                        rewrite_to_dir_index(&path, &self.rewrite_to_dir)
                     }
                         .to_str()
                         .unwrap()
@@ -139,42 +141,5 @@ impl HelperDef for RenderToc {
 
         rc.writer.write_all(b"</ol>")?;
         Ok(())
-    }
-
-}
-
-impl RenderToc {
-    // Rewrite filenames matches any in `rewrite_to_dir` to directory index.
-    fn rewrite_directory_index(&self, path: &Path) -> PathBuf {
-        for filename in self.rewrite_to_dir.iter() {
-            if filename.as_str() == path.file_name().unwrap_or_default() {
-                return path.with_file_name("");
-            }
-        }
-        return path.to_owned();
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn rewrite_dir_success() {
-        let render = RenderToc {
-            no_section_label: true,
-            rewrite_to_dir: vec![
-                "index.html".to_owned(),
-                "index.md".to_owned(),
-            ],
-        };
-        let path = PathBuf::from("index.html");
-        assert_eq!(render.rewrite_directory_index(&path), PathBuf::from(""));
-
-        let path = PathBuf::from("index.md");
-        assert_eq!(render.rewrite_directory_index(&path), PathBuf::from(""));
-
-        let path = PathBuf::from("index.asp");
-        assert_eq!(render.rewrite_directory_index(&path), path);
     }
 }
