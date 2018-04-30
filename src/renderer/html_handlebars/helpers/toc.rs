@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::collections::BTreeMap;
 
 use serde_json;
@@ -6,9 +6,9 @@ use handlebars::{Handlebars, Helper, HelperDef, RenderContext, RenderError};
 use pulldown_cmark::{html, Event, Parser, Tag};
 
 // Handlebars helper to construct TOC
-#[derive(Clone, Copy)]
 pub struct RenderToc {
     pub no_section_label: bool,
+    pub rewrite_to_dir: Vec<String>,
 }
 
 impl HelperDef for RenderToc {
@@ -69,8 +69,11 @@ impl HelperDef for RenderToc {
                 if !path.is_empty() {
                     rc.writer.write_all(b"<a href=\"")?;
 
-                    let tmp = Path::new(item.get("path").expect("Error: path should be Some(_)"))
-                        .with_extension("html")
+                    let tmp = {
+                        // To be recognized by browsers, rewrite extenstion to `.html`.
+                        let path = Path::new(path).with_extension("html");
+                        self.rewrite_directory_index(&path)
+                    }
                         .to_str()
                         .unwrap()
                         // Hack for windows who tends to use `\` as separator instead of `/`
@@ -136,5 +139,42 @@ impl HelperDef for RenderToc {
 
         rc.writer.write_all(b"</ol>")?;
         Ok(())
+    }
+
+}
+
+impl RenderToc {
+    // Rewrite filenames matches any in `rewrite_to_dir` to directory index.
+    fn rewrite_directory_index(&self, path: &Path) -> PathBuf {
+        for filename in self.rewrite_to_dir.iter() {
+            if filename.as_str() == path.file_name().unwrap_or_default() {
+                return path.with_file_name("");
+            }
+        }
+        return path.to_owned();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rewrite_dir_success() {
+        let render = RenderToc {
+            no_section_label: true,
+            rewrite_to_dir: vec![
+                "index.html".to_owned(),
+                "index.md".to_owned(),
+            ],
+        };
+        let path = PathBuf::from("index.html");
+        assert_eq!(render.rewrite_directory_index(&path), PathBuf::from(""));
+
+        let path = PathBuf::from("index.md");
+        assert_eq!(render.rewrite_directory_index(&path), PathBuf::from(""));
+
+        let path = PathBuf::from("index.asp");
+        assert_eq!(render.rewrite_directory_index(&path), path);
     }
 }

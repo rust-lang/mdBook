@@ -219,7 +219,10 @@ impl HtmlHandlebars {
     }
 
     fn register_hbs_helpers(&self, handlebars: &mut Handlebars, html_config: &HtmlConfig) {
-        handlebars.register_helper("toc", Box::new(helpers::toc::RenderToc {no_section_label: html_config.no_section_label}));
+        handlebars.register_helper("toc", Box::new(helpers::toc::RenderToc {
+            no_section_label: html_config.no_section_label,
+            rewrite_to_dir: html_config.rewrite_to_dir.to_owned(),
+        }));
         handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
         handlebars.register_helper("next", Box::new(helpers::navigation::next));
     }

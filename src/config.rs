@@ -424,6 +424,8 @@ pub struct HtmlConfig {
     pub livereload_url: Option<String>,
     /// Should section labels be rendered?
     pub no_section_label: bool,
+    /// Filenames listed here would be rewritten to directory index `/`.
+    pub rewrite_to_dir: Vec<String>,
     /// Search settings. If `None`, the default will be used.
     pub search: Option<Search>,
 }
