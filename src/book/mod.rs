@@ -414,7 +414,7 @@ mod tests {
     }
 
     #[test]
-    fn config_defaults_to_link_preprocessor_if_not_set() {
+    fn config_defaults_to_link_and_index_preprocessor_if_not_set() {
         let cfg = Config::default();
 
         // make sure we haven't got anything in the `output` table
@@ -423,8 +423,9 @@ mod tests {
         let got = determine_preprocessors(&cfg);
 
         assert!(got.is_ok());
-        assert_eq!(got.as_ref().unwrap().len(), 1);
+        assert_eq!(got.as_ref().unwrap().len(), 2);
         assert_eq!(got.as_ref().unwrap()[0].name(), "links");
+        assert_eq!(got.as_ref().unwrap()[1].name(), "index");
     }
 
     #[test]
