@@ -19,7 +19,7 @@ impl Preprocessor for IndexPreprocessor {
         "index"
     }
 
-    fn run(&self, ctx: &PreprocessorContext, book: &mut Book) -> Result<()> {
+    fn run(&self, _ctx: &PreprocessorContext, book: &mut Book) -> Result<()> {
         book.for_each_mut(|section: &mut BookItem| {
             if let BookItem::Chapter(ref mut ch) = *section {
                 if ch.path.file_name().unwrap_or_default() == "README.md" {
