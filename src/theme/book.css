@@ -1322,12 +1322,14 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
   .mobile-nav-chapters {
     display: none;
   }
-  #page-wrapper {
-    left: 0;
-    overflow-y: initial;
-  }
   #page-wrapper.page-wrapper {
-    padding-left: 0px;
+    -webkit-transform: none;
+    -moz-transform: none;
+    -o-transform: none;
+    -ms-transform: none;
+    transform: none;
+    margin-left: 0px;
+    overflow-y: initial;
   }
   #content {
     max-width: none;
@@ -1361,16 +1363,14 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
   h6 {
     page-break-inside: avoid;
     page-break-after: avoid;
-/*break-after: avoid*/
   }
   pre,
   code {
     page-break-inside: avoid;
-    white-space: pre-wrap /* CSS 3 */;
-    white-space: -moz-pre-wrap /* Mozilla, since 1999 */;
-    white-space: -pre-wrap /* Opera 4-6 */;
-    white-space: -o-pre-wrap /* Opera 7 */;
-    word-wrap: break-word /* Internet Explorer 5.5+ */;
+    white-space: pre-wrap;
+  }
+  .fa {
+    display: none !important;
   }
 }
 .tooltiptext {
