@@ -1,3 +1,6 @@
+use std::path::Path;
+use regex::Regex;
+
 use errors::*;
 
 use super::{Preprocessor, PreprocessorContext};
@@ -19,10 +22,17 @@ impl Preprocessor for IndexPreprocessor {
         "index"
     }
 
-    fn run(&self, _ctx: &PreprocessorContext, book: &mut Book) -> Result<()> {
+    fn run(&self, ctx: &PreprocessorContext, book: &mut Book) -> Result<()> {
+        let source_dir = ctx.root.join(&ctx.config.book.src);
         book.for_each_mut(|section: &mut BookItem| {
             if let BookItem::Chapter(ref mut ch) = *section {
-                if ch.path.file_name().unwrap_or_default() == "README.md" {
+                if is_readme_file(&ch.path) {
+                    let index_md = source_dir
+                        .join(ch.path.with_file_name("index.md"));
+                    if index_md.exists() {
+                        warn_readme_name_conflict(&ch.path, &index_md);
+                    }
+
                     ch.path.set_file_name("index.md");
                 }
             }
@@ -32,3 +42,50 @@ impl Preprocessor for IndexPreprocessor {
     }
 }
 
+fn warn_readme_name_conflict<P: AsRef<Path>>(readme_path: P, index_path: P) {
+    let file_name = readme_path.as_ref().file_name().unwrap_or_default();
+    let parent_dir = index_path.as_ref().parent().unwrap_or(index_path.as_ref());
+    warn!("It seems that there are both {:?} and index.md under \"{}\".", file_name, parent_dir.display());
+    warn!("mdbook converts {:?} into index.html by default. It may cause", file_name);
+    warn!("unexpected behavior if putting both files under the same directory.");
+    warn!("To solve the warning, try to rearrange the book structure or disable");
+    warn!("\"index\" preprocessor to stop the conversion.");
+}
+
+fn is_readme_file<P: AsRef<Path>>(path: P) -> bool {
+    lazy_static! {
+        static ref RE: Regex = Regex::new(r"(?i)^readme$").unwrap();
+    }
+    RE.is_match(
+        path.as_ref()
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or_default()
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn file_stem_exactly_matches_readme_case_insensitively() {
+        let path = "path/to/Readme.md";
+        assert!(is_readme_file(path));
+
+        let path = "path/to/README.md";
+        assert!(is_readme_file(path));
+
+        let path = "path/to/rEaDmE.md";
+        assert!(is_readme_file(path));
+
+        let path = "path/to/README.markdown";
+        assert!(is_readme_file(path));
+
+        let path = "path/to/README";
+        assert!(is_readme_file(path));
+
+        let path = "path/to/README-README.md";
+        assert!(!is_readme_file(path));
+    }
+}
