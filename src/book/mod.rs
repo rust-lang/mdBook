@@ -21,7 +21,12 @@ use toml::Value;
 
 use utils;
 use renderer::{CmdRenderer, HtmlHandlebars, RenderContext, Renderer};
-use preprocess::{LinkPreprocessor, Preprocessor, PreprocessorContext};
+use preprocess::{
+    LinkPreprocessor,
+    IndexPreprocessor,
+    Preprocessor,
+    PreprocessorContext
+};
 use errors::*;
 
 use config::Config;
@@ -218,6 +223,7 @@ impl MDBook {
         let preprocess_context = PreprocessorContext::new(self.root.clone(), self.config.clone());
 
         LinkPreprocessor::new().run(&preprocess_context, &mut self.book)?;
+        IndexPreprocessor::new().run(&preprocess_context, &mut self.book)?;
 
         for item in self.iter() {
             if let BookItem::Chapter(ref ch) = *item {
@@ -322,15 +328,19 @@ fn determine_renderers(config: &Config) -> Vec<Box<Renderer>> {
 }
 
 fn default_preprocessors() -> Vec<Box<Preprocessor>> {
-    vec![Box::new(LinkPreprocessor::new())]
+    vec![
+        Box::new(LinkPreprocessor::new()),
+        Box::new(IndexPreprocessor::new()),
+    ]
 }
 
 /// Look at the `MDBook` and try to figure out what preprocessors to run.
 fn determine_preprocessors(config: &Config) -> Result<Vec<Box<Preprocessor>>> {
     let preprocess_list = match config.build.preprocess {
         Some(ref p) => p,
-        // If no preprocessor field is set, default to the LinkPreprocessor. This allows you
-        // to disable the LinkPreprocessor by setting "preprocess" to an empty list.
+        // If no preprocessor field is set, default to the LinkPreprocessor and
+        // IndexPreprocessor. This allows you to disable default preprocessors
+        // by setting "preprocess" to an empty list.
         None => return Ok(default_preprocessors()),
     };
 
@@ -339,6 +349,7 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<Preprocessor>>> {
     for key in preprocess_list {
         match key.as_ref() {
             "links" => preprocessors.push(Box::new(LinkPreprocessor::new())),
+            "index" => preprocessors.push(Box::new(IndexPreprocessor::new())),
             _ => bail!("{:?} is not a recognised preprocessor", key),
         }
     }
@@ -403,7 +414,7 @@ mod tests {
     }
 
     #[test]
-    fn config_defaults_to_link_preprocessor_if_not_set() {
+    fn config_defaults_to_link_and_index_preprocessor_if_not_set() {
         let cfg = Config::default();
 
         // make sure we haven't got anything in the `output` table
@@ -412,8 +423,9 @@ mod tests {
         let got = determine_preprocessors(&cfg);
 
         assert!(got.is_ok());
-        assert_eq!(got.as_ref().unwrap().len(), 1);
+        assert_eq!(got.as_ref().unwrap().len(), 2);
         assert_eq!(got.as_ref().unwrap()[0].name(), "links");
+        assert_eq!(got.as_ref().unwrap()[1].name(), "index");
     }
 
     #[test]

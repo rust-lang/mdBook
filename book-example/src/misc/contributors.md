@@ -16,3 +16,4 @@ If you have contributed to mdBook and I forgot to add you, don't hesitate to add
 - [projektir](https://github.com/projektir)
 - [Phaiax](https://github.com/Phaiax)
 - [Matt Ickstadt](https://github.com/mattico)
+- Weihang Lo ([@weihanglo](https://github.com/weihanglo))

@@ -340,6 +340,36 @@ fn book_with_a_reserved_filename_does_not_build() {
     assert!(got.is_err());
 }
 
+#[test]
+fn by_default_mdbook_use_index_preprocessor_to_convert_readme_to_index() {
+    let temp = DummyBook::new().build().unwrap();
+    let mut cfg = Config::default();
+    cfg.set("book.src", "src2").expect("Couldn't set config.book.src to \"src2\".");
+    let md = MDBook::load_with_config(temp.path(), cfg).unwrap();
+    md.build().unwrap();
+
+    let first_index = temp.path()
+        .join("book")
+        .join("first")
+        .join("index.html");
+    let expected_strings = vec![
+        r#"href="first/index.html""#,
+        r#"href="second/index.html""#,
+        "First README",
+    ];
+    assert_contains_strings(&first_index, &expected_strings);
+    assert_doesnt_contain_strings(&first_index, &vec!["README.html"]);
+
+    let second_index = temp.path()
+        .join("book")
+        .join("second")
+        .join("index.html");
+    let unexpected_strings = vec![
+        "Second README",
+    ];
+    assert_doesnt_contain_strings(&second_index, &unexpected_strings);
+}
+
 #[cfg(feature = "search")]
 mod search {
     extern crate serde_json;
