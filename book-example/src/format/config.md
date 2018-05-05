@@ -58,12 +58,21 @@ This controls the build process of your book.
   will be created when the book is built (i.e. `create-missing = true`). If this
   is `false` then the build process will instead exit with an error if any files
   do not exist.
+- **preprocess:** Specify which preprocessors to be applied. Default is `["links", "index"]`. To disable default preprocessors, pass an empty array `[]` in.
+
+
+The following preprocessors are available and included by default:
+
+- `links`: Expand the `{{# playpen}}` and `{{# include}}` handlebars helpers in a chapter.
+- `index`: Convert all chapter files named `README.md` into `index.md`. That is to say, all `README.md` would be rendered to an index file `index.html` in the rendered book.
+
 
 **book.toml**
 ```toml
 [build]
 build-dir = "build"
 create-missing = false
+preprocess = ["links", "index"]
 ```
 
 ### HTML renderer options
@@ -131,6 +140,11 @@ This shows all available options in the **book.toml**:
 title = "Example book"
 authors = ["John Doe", "Jane Doe"]
 description = "The example book covers examples."
+
+[build]
+build-dir = "book"
+create-missing = true
+preprocess = ["links", "index"]
 
 [output.html]
 theme = "my-theme"
