@@ -219,9 +219,17 @@ impl HtmlHandlebars {
     }
 
     fn register_hbs_helpers(&self, handlebars: &mut Handlebars, html_config: &HtmlConfig) {
-        handlebars.register_helper("toc", Box::new(helpers::toc::RenderToc {no_section_label: html_config.no_section_label}));
-        handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
-        handlebars.register_helper("next", Box::new(helpers::navigation::next));
+        let HtmlConfig { no_section_label, ref rewrite_to_dir, .. } = *html_config;
+        handlebars.register_helper("toc", Box::new(helpers::toc::RenderToc {
+            no_section_label,
+            rewrite_to_dir: rewrite_to_dir.to_owned(),
+        }));
+        handlebars.register_helper("previous", Box::new(helpers::navigation::Previous {
+            rewrite_to_dir: rewrite_to_dir.to_owned(),
+        }));
+        handlebars.register_helper("next", Box::new(helpers::navigation::Next {
+            rewrite_to_dir: rewrite_to_dir.to_owned(),
+        }));
     }
 
     /// Copy across any additional CSS and JavaScript files which the book

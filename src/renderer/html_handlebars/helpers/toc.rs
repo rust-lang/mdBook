@@ -5,10 +5,12 @@ use serde_json;
 use handlebars::{Handlebars, Helper, HelperDef, RenderContext, RenderError};
 use pulldown_cmark::{html, Event, Parser, Tag};
 
+use super::rewrite_to_dir_index;
+
 // Handlebars helper to construct TOC
-#[derive(Clone, Copy)]
 pub struct RenderToc {
     pub no_section_label: bool,
+    pub rewrite_to_dir: Vec<String>,
 }
 
 impl HelperDef for RenderToc {
@@ -69,8 +71,11 @@ impl HelperDef for RenderToc {
                 if !path.is_empty() {
                     rc.writer.write_all(b"<a href=\"")?;
 
-                    let tmp = Path::new(item.get("path").expect("Error: path should be Some(_)"))
-                        .with_extension("html")
+                    let tmp = {
+                        // To be recognized by browsers, rewrite extenstion to `.html`.
+                        let path = Path::new(path).with_extension("html");
+                        rewrite_to_dir_index(&path, &self.rewrite_to_dir)
+                    }
                         .to_str()
                         .unwrap()
                         // Hack for windows who tends to use `\` as separator instead of `/`

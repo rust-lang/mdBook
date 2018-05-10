@@ -2,7 +2,10 @@ use std::path::Path;
 use std::collections::BTreeMap;
 
 use serde_json;
-use handlebars::{Context, Handlebars, Helper, RenderContext, RenderError, Renderable};
+use handlebars::{Context, Handlebars, Helper, HelperDef, RenderContext, RenderError, Renderable};
+
+use super::rewrite_to_dir_index;
+
 
 type StringMap = BTreeMap<String, String>;
 
@@ -83,6 +86,7 @@ fn render(
     r: &Handlebars,
     rc: &mut RenderContext,
     chapter: &StringMap,
+    rewrite_names: &[String],
 ) -> Result<(), RenderError> {
     trace!("Creating BTreeMap to inject in context");
 
@@ -97,8 +101,7 @@ fn render(
         .get("path")
         .ok_or_else(|| RenderError::new("No path found for chapter in JSON data"))
         .and_then(|p| {
-            Path::new(p)
-                .with_extension("html")
+            rewrite_to_dir_index(Path::new(p).with_extension("html"), rewrite_names)
                 .to_str()
                 .ok_or_else(|| RenderError::new("Link could not be converted to str"))
                 .map(|p| context.insert("link".to_owned(), json!(p.replace("\\", "/"))))
@@ -116,24 +119,48 @@ fn render(
     Ok(())
 }
 
-pub fn previous(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
-    trace!("previous (handlebars helper)");
-
-    if let Some(previous) = find_chapter(rc, Target::Previous)? {
-        render(_h, r, rc, &previous)?;
-    }
-
-    Ok(())
+pub struct Previous {
+    pub rewrite_to_dir: Vec<String>,
 }
 
-pub fn next(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
-    trace!("next (handlebars helper)");
-
-    if let Some(next) = find_chapter(rc, Target::Next)? {
-        render(_h, r, rc, &next)?;
+impl Default for Previous {
+    fn default() -> Self {
+        Self { rewrite_to_dir: vec![] }
     }
+}
 
-    Ok(())
+impl HelperDef for Previous {
+    fn call(&self, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
+        trace!("previous (handlebars helper)");
+
+        if let Some(previous) = find_chapter(rc, Target::Previous)? {
+            render(_h, r, rc, &previous, &self.rewrite_to_dir)?;
+        }
+
+        Ok(())
+    }
+}
+
+pub struct Next {
+    pub rewrite_to_dir: Vec<String>,
+}
+
+impl Default for Next {
+    fn default() -> Self {
+        Self { rewrite_to_dir: vec![] }
+    }
+}
+
+impl HelperDef for Next {
+    fn call(&self, _h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
+        trace!("next (handlebars helper)");
+
+        if let Some(next) = find_chapter(rc, Target::Next)? {
+            render(_h, r, rc, &next, &self.rewrite_to_dir)?;
+        }
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -165,8 +192,8 @@ mod tests {
       });
 
         let mut h = Handlebars::new();
-        h.register_helper("previous", Box::new(previous));
-        h.register_helper("next", Box::new(next));
+        h.register_helper("previous", Box::new(Previous::default()));
+        h.register_helper("next", Box::new(Next::default()));
 
         assert_eq!(
             h.render_template(TEMPLATE, &data).unwrap(),
@@ -196,8 +223,8 @@ mod tests {
       });
 
         let mut h = Handlebars::new();
-        h.register_helper("previous", Box::new(previous));
-        h.register_helper("next", Box::new(next));
+        h.register_helper("previous", Box::new(Previous::default()));
+        h.register_helper("next", Box::new(Next::default()));
 
         assert_eq!(
             h.render_template(TEMPLATE, &data).unwrap(),
@@ -226,8 +253,8 @@ mod tests {
       });
 
         let mut h = Handlebars::new();
-        h.register_helper("previous", Box::new(previous));
-        h.register_helper("next", Box::new(next));
+        h.register_helper("previous", Box::new(Previous::default()));
+        h.register_helper("next", Box::new(Next::default()));
 
         assert_eq!(
             h.render_template(TEMPLATE, &data).unwrap(),
