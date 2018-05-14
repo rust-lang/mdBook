@@ -18,7 +18,7 @@ use select::document::Document;
 use select::predicate::{Class, Name, Predicate};
 use tempfile::Builder as TempFileBuilder;
 use mdbook::errors::*;
-use mdbook::utils::fs::file_to_string;
+use mdbook::utils::fs::{file_to_string, write_file};
 use mdbook::config::Config;
 use mdbook::MDBook;
 
@@ -368,6 +368,24 @@ fn by_default_mdbook_use_index_preprocessor_to_convert_readme_to_index() {
         "Second README",
     ];
     assert_doesnt_contain_strings(&second_index, &unexpected_strings);
+}
+
+#[test]
+fn theme_dir_overrides_work_correctly() {
+    let book_dir = dummy_book::new_copy_of_example_book().unwrap();
+    let book_dir = book_dir.path();
+    let theme_dir = book_dir.join("theme");
+
+    let mut index = ::mdbook::theme::INDEX.to_vec();
+    index.extend_from_slice(b"\n<!-- This is a modified index.hbs! -->");
+
+    write_file(&theme_dir, "index.hbs", &index).unwrap();
+
+    let md = MDBook::load(book_dir).unwrap();
+    md.build().unwrap();
+
+    let built_index = book_dir.join("book").join("index.html");
+    dummy_book::assert_contains_strings(built_index, &["This is a modified index.hbs!"]);
 }
 
 #[cfg(feature = "search")]

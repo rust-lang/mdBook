@@ -273,7 +273,7 @@ impl Renderer for HtmlHandlebars {
 
         let theme_dir = match html_config.theme {
             Some(ref theme) => theme.to_path_buf(),
-            None => src_dir.join("theme"),
+            None => ctx.root.join("theme"),
         };
 
         let theme = theme::Theme::new(theme_dir);
