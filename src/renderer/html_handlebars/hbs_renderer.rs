@@ -142,6 +142,9 @@ impl HtmlHandlebars {
     ) -> Result<()> {
         use utils::fs::write_file;
 
+        write_file(destination, ".nojekyll", 
+            b"This file makes sure that Github Pages doesn't process mdBook's output.")?;
+
         write_file(destination, "book.js", &theme.js)?;
         write_file(destination, "book.css", &theme.css)?;
         write_file(destination, "favicon.png", &theme.favicon)?;
@@ -152,37 +155,37 @@ impl HtmlHandlebars {
         write_file(destination, "clipboard.min.js", &theme.clipboard_js)?;
         write_file(
             destination,
-            "_FontAwesome/css/font-awesome.css",
+            "FontAwesome/css/font-awesome.css",
             theme::FONT_AWESOME,
         )?;
         write_file(
             destination,
-            "_FontAwesome/fonts/fontawesome-webfont.eot",
+            "FontAwesome/fonts/fontawesome-webfont.eot",
             theme::FONT_AWESOME_EOT,
         )?;
         write_file(
             destination,
-            "_FontAwesome/fonts/fontawesome-webfont.svg",
+            "FontAwesome/fonts/fontawesome-webfont.svg",
             theme::FONT_AWESOME_SVG,
         )?;
         write_file(
             destination,
-            "_FontAwesome/fonts/fontawesome-webfont.ttf",
+            "FontAwesome/fonts/fontawesome-webfont.ttf",
             theme::FONT_AWESOME_TTF,
         )?;
         write_file(
             destination,
-            "_FontAwesome/fonts/fontawesome-webfont.woff",
+            "FontAwesome/fonts/fontawesome-webfont.woff",
             theme::FONT_AWESOME_WOFF,
         )?;
         write_file(
             destination,
-            "_FontAwesome/fonts/fontawesome-webfont.woff2",
+            "FontAwesome/fonts/fontawesome-webfont.woff2",
             theme::FONT_AWESOME_WOFF2,
         )?;
         write_file(
             destination,
-            "_FontAwesome/fonts/FontAwesome.ttf",
+            "FontAwesome/fonts/FontAwesome.ttf",
             theme::FONT_AWESOME_TTF,
         )?;
 
