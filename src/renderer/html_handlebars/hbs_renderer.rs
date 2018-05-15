@@ -142,6 +142,9 @@ impl HtmlHandlebars {
     ) -> Result<()> {
         use utils::fs::write_file;
 
+        write_file(destination, ".nojekyll", 
+            b"This file makes sure that Github Pages doesn't process mdBook's output.")?;
+
         write_file(destination, "book.js", &theme.js)?;
         write_file(destination, "book.css", &theme.css)?;
         write_file(destination, "favicon.png", &theme.favicon)?;
