@@ -1,9 +1,9 @@
 use book::{Book, BookItem, Chapter};
 use config::{Config, HtmlConfig, Playpen};
 use errors::*;
-use renderer::{RenderContext, Renderer};
 use renderer::html_handlebars::helpers;
-use theme::{self, Theme, playpen_editor};
+use renderer::{RenderContext, Renderer};
+use theme::{self, playpen_editor, Theme};
 use utils;
 
 use std::collections::BTreeMap;
@@ -41,9 +41,9 @@ impl HtmlHandlebars {
                 let path = ch.path
                     .to_str()
                     .chain_err(|| "Could not convert path to str")?;
-                let filepath = Path::new(&ch.path)
-                    .with_extension("html");
-                let filepathstr = filepath.to_str()
+                let filepath = Path::new(&ch.path).with_extension("html");
+                let filepathstr = filepath
+                    .to_str()
                     .chain_err(|| "Could not convert HTML path to str")?;
                 let filepathstr = utils::fs::normalize_path(filepathstr);
 
@@ -56,9 +56,9 @@ impl HtmlHandlebars {
                 let title: String;
                 {
                     let book_title = ctx.data
-                                        .get("book_title")
-                                        .and_then(serde_json::Value::as_str)
-                                        .unwrap_or("");
+                        .get("book_title")
+                        .and_then(serde_json::Value::as_str)
+                        .unwrap_or("");
                     title = ch.name.clone() + " - " + book_title;
                 }
 
@@ -66,18 +66,16 @@ impl HtmlHandlebars {
                 ctx.data.insert("content".to_owned(), json!(content));
                 ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
                 ctx.data.insert("title".to_owned(), json!(title));
-                ctx.data.insert("path_to_root".to_owned(),
-                                json!(utils::fs::path_to_root(&ch.path)));
+                ctx.data.insert(
+                    "path_to_root".to_owned(),
+                    json!(utils::fs::path_to_root(&ch.path)),
+                );
 
                 // Render the handlebars template with the data
                 debug!("Render template");
                 let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
-                let rendered = self.post_process(
-                    rendered,
-                    &filepathstr,
-                    &ctx.html_config.playpen,
-                );
+                let rendered = self.post_process(rendered, &filepathstr, &ctx.html_config.playpen);
 
                 // Write to file
                 debug!("Creating {} ✓", filepathstr);
@@ -105,10 +103,11 @@ impl HtmlHandlebars {
         // This could cause a problem when someone displays
         // code containing <base href=...>
         // on the front page, however this case should be very very rare...
-        content = content.lines()
-                         .filter(|line| !line.contains("<base href="))
-                         .collect::<Vec<&str>>()
-                         .join("\n");
+        content = content
+            .lines()
+            .filter(|line| !line.contains("<base href="))
+            .collect::<Vec<&str>>()
+            .join("\n");
 
         utils::fs::write_file(destination, "index.html", content.as_bytes())?;
 
@@ -121,11 +120,7 @@ impl HtmlHandlebars {
     }
 
     #[cfg_attr(feature = "cargo-clippy", allow(let_and_return))]
-    fn post_process(&self,
-                    rendered: String,
-                    filepath: &str,
-                    playpen_config: &Playpen)
-                    -> String {
+    fn post_process(&self, rendered: String, filepath: &str, playpen_config: &Playpen) -> String {
         let rendered = build_header_links(&rendered, filepath);
         let rendered = fix_anchor_links(&rendered, filepath);
         let rendered = fix_code_blocks(&rendered);
@@ -195,7 +190,8 @@ impl HtmlHandlebars {
             write_file(destination, "ace.js", playpen_editor::ACE_JS)?;
             write_file(destination, "mode-rust.js", playpen_editor::MODE_RUST_JS)?;
             write_file(destination, "theme-dawn.js", playpen_editor::THEME_DAWN_JS)?;
-            write_file(destination,
+            write_file(
+                destination,
                 "theme-tomorrow_night.js",
                 playpen_editor::THEME_TOMORROW_NIGHT_JS,
             )?;
@@ -205,28 +201,42 @@ impl HtmlHandlebars {
     }
 
     /// Update the context with data for this file
-    fn configure_print_version(&self,
-                               data: &mut serde_json::Map<String, serde_json::Value>,
-                               print_content: &str) {
+    fn configure_print_version(
+        &self,
+        data: &mut serde_json::Map<String, serde_json::Value>,
+        print_content: &str,
+    ) {
         // Make sure that the Print chapter does not display the title from
         // the last rendered chapter by removing it from its context
         data.remove("title");
         data.insert("is_print".to_owned(), json!(true));
         data.insert("path".to_owned(), json!("print.md"));
         data.insert("content".to_owned(), json!(print_content));
-        data.insert("path_to_root".to_owned(),
-                    json!(utils::fs::path_to_root(Path::new("print.md"))));
+        data.insert(
+            "path_to_root".to_owned(),
+            json!(utils::fs::path_to_root(Path::new("print.md"))),
+        );
     }
 
     fn register_hbs_helpers(&self, handlebars: &mut Handlebars, html_config: &HtmlConfig) {
-        handlebars.register_helper("toc", Box::new(helpers::toc::RenderToc {no_section_label: html_config.no_section_label}));
+        handlebars.register_helper(
+            "toc",
+            Box::new(helpers::toc::RenderToc {
+                no_section_label: html_config.no_section_label,
+            }),
+        );
         handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
         handlebars.register_helper("next", Box::new(helpers::navigation::next));
     }
 
     /// Copy across any additional CSS and JavaScript files which the book
     /// has been configured to use.
-    fn copy_additional_css_and_js(&self, html: &HtmlConfig, root: &Path, destination: &Path) -> Result<()> {
+    fn copy_additional_css_and_js(
+        &self,
+        html: &HtmlConfig,
+        root: &Path,
+        destination: &Path,
+    ) -> Result<()> {
         let custom_files = html.additional_css.iter().chain(html.additional_js.iter());
 
         debug!("Copying additional CSS and JS");
@@ -260,7 +270,8 @@ impl HtmlHandlebars {
 // TODO(mattico): Remove some time after the 0.1.8 release
 fn maybe_wrong_theme_dir(dir: &Path) -> Result<bool> {
     fn entry_is_maybe_book_file(entry: fs::DirEntry) -> Result<bool> {
-        Ok(entry.file_type()?.is_file() && entry.path().extension().map_or(false, |ext| ext == "md"))
+        Ok(entry.file_type()?.is_file()
+            && entry.path().extension().map_or(false, |ext| ext == "md"))
     }
 
     if dir.is_dir() {
@@ -294,8 +305,13 @@ impl Renderer for HtmlHandlebars {
             None => ctx.root.join("theme"),
         };
 
-        if html_config.theme.is_none() && maybe_wrong_theme_dir(&src_dir.join("theme")).unwrap_or(false) {
-            warn!("Previous versions of mdBook erroneously accepted `./src/theme` as an automatic theme directory");
+        if html_config.theme.is_none()
+            && maybe_wrong_theme_dir(&src_dir.join("theme")).unwrap_or(false)
+        {
+            warn!(
+                "Previous versions of mdBook erroneously accepted `./src/theme` as an automatic \
+                 theme directory"
+            );
             warn!("Please move your theme files to `./theme` for them to continue being used");
         }
 
@@ -327,9 +343,7 @@ impl Renderer for HtmlHandlebars {
                 is_index: is_index,
                 html_config: html_config.clone(),
             };
-            self.render_item(item,
-                             ctx,
-                             &mut print_content)?;
+            self.render_item(item, ctx, &mut print_content)?;
             is_index = false;
         }
 
@@ -343,9 +357,7 @@ impl Renderer for HtmlHandlebars {
         debug!("Render template");
         let rendered = handlebars.render("index", &data)?;
 
-        let rendered = self.post_process(rendered,
-                                         "print.html",
-                                         &html_config.playpen);
+        let rendered = self.post_process(rendered, "print.html", &html_config.playpen);
 
         utils::fs::write_file(&destination, "print.html", &rendered.into_bytes())?;
         debug!("Creating print.html ✓");
@@ -367,14 +379,25 @@ impl Renderer for HtmlHandlebars {
     }
 }
 
-fn make_data(root: &Path, book: &Book, config: &Config, html_config: &HtmlConfig) -> Result<serde_json::Map<String, serde_json::Value>> {
+fn make_data(
+    root: &Path,
+    book: &Book,
+    config: &Config,
+    html_config: &HtmlConfig,
+) -> Result<serde_json::Map<String, serde_json::Value>> {
     trace!("make_data");
     let html = config.html_config().unwrap_or_default();
 
     let mut data = serde_json::Map::new();
     data.insert("language".to_owned(), json!("en"));
-    data.insert("book_title".to_owned(), json!(config.book.title.clone().unwrap_or_default()));
-    data.insert("description".to_owned(), json!(config.book.description.clone().unwrap_or_default()));
+    data.insert(
+        "book_title".to_owned(),
+        json!(config.book.title.clone().unwrap_or_default()),
+    );
+    data.insert(
+        "description".to_owned(),
+        json!(config.book.description.clone().unwrap_or_default()),
+    );
     data.insert("favicon".to_owned(), json!("favicon.png"));
     if let Some(ref livereload) = html_config.livereload_url {
         data.insert("livereload".to_owned(), json!(livereload));
@@ -394,13 +417,8 @@ fn make_data(root: &Path, book: &Book, config: &Config, html_config: &HtmlConfig
         let mut css = Vec::new();
         for style in &html.additional_css {
             match style.strip_prefix(root) {
-                Ok(p) => {
-                    css.push(p.to_str().expect("Could not convert to str"))
-                },
-                Err(_) => {
-                    css.push(style.to_str()
-                                  .expect("Could not convert to str"))
-                }
+                Ok(p) => css.push(p.to_str().expect("Could not convert to str")),
+                Err(_) => css.push(style.to_str().expect("Could not convert to str")),
             }
         }
         data.insert("additional_css".to_owned(), json!(css));
@@ -412,12 +430,13 @@ fn make_data(root: &Path, book: &Book, config: &Config, html_config: &HtmlConfig
         for script in &html.additional_js {
             match script.strip_prefix(root) {
                 Ok(p) => js.push(p.to_str().expect("Could not convert to str")),
-                Err(_) => {
-                    js.push(script.file_name()
-                                  .expect("File has a file name")
-                                  .to_str()
-                                  .expect("Could not convert to str"))
-                }
+                Err(_) => js.push(
+                    script
+                        .file_name()
+                        .expect("File has a file name")
+                        .to_str()
+                        .expect("Could not convert to str"),
+                ),
             }
         }
         data.insert("additional_js".to_owned(), json!(js));
@@ -435,10 +454,12 @@ fn make_data(root: &Path, book: &Book, config: &Config, html_config: &HtmlConfig
         }
     } else if search.is_some() {
         warn!("mdBook compiled without search support, ignoring `output.html.search` table");
-        warn!("please reinstall with `cargo install mdbook --force --features search`\
-            to use the search feature")
+        warn!(
+            "please reinstall with `cargo install mdbook --force --features search`to use the \
+             search feature"
+        )
     }
-    
+
     let mut chapters = vec![];
 
     for item in book.iter() {
@@ -477,22 +498,25 @@ fn build_header_links(html: &str, filepath: &str) -> String {
     let regex = Regex::new(r"<h(\d)>(.*?)</h\d>").unwrap();
     let mut id_counter = HashMap::new();
 
-    regex.replace_all(html, |caps: &Captures| {
-        let level = caps[1].parse()
-                           .expect("Regex should ensure we only ever get numbers here");
+    regex
+        .replace_all(html, |caps: &Captures| {
+            let level = caps[1]
+                .parse()
+                .expect("Regex should ensure we only ever get numbers here");
 
-        wrap_header_with_link(level, &caps[2], &mut id_counter, filepath)
-    })
-         .into_owned()
+            wrap_header_with_link(level, &caps[2], &mut id_counter, filepath)
+        })
+        .into_owned()
 }
 
 /// Wraps a single header tag with a link, making sure each tag gets its own
 /// unique ID by appending an auto-incremented number (if necessary).
-fn wrap_header_with_link(level: usize,
-                         content: &str,
-                         id_counter: &mut HashMap<String, usize>,
-                         filepath: &str)
-                         -> String {
+fn wrap_header_with_link(
+    level: usize,
+    content: &str,
+    id_counter: &mut HashMap<String, usize>,
+    filepath: &str,
+) -> String {
     let raw_id = utils::id_from_content(content);
 
     let id_count = id_counter.entry(raw_id.clone()).or_insert(0);
@@ -518,20 +542,22 @@ fn wrap_header_with_link(level: usize,
 // that in a very inelegant way
 fn fix_anchor_links(html: &str, filepath: &str) -> String {
     let regex = Regex::new(r##"<a([^>]+)href="#([^"]+)"([^>]*)>"##).unwrap();
-    regex.replace_all(html, |caps: &Captures| {
-        let before = &caps[1];
-        let anchor = &caps[2];
-        let after = &caps[3];
+    regex
+        .replace_all(html, |caps: &Captures| {
+            let before = &caps[1];
+            let anchor = &caps[2];
+            let after = &caps[3];
 
-        format!("<a{before}href=\"{filepath}#{anchor}\"{after}>",
+            format!(
+                "<a{before}href=\"{filepath}#{anchor}\"{after}>",
                 before = before,
                 filepath = filepath,
                 anchor = anchor,
-                after = after)
-    })
-         .into_owned()
+                after = after
+            )
+        })
+        .into_owned()
 }
-
 
 // The rust book uses annotations for rustdoc to test code snippets,
 // like the following:
@@ -543,51 +569,54 @@ fn fix_anchor_links(html: &str, filepath: &str) -> String {
 // This function replaces all commas by spaces in the code block classes
 fn fix_code_blocks(html: &str) -> String {
     let regex = Regex::new(r##"<code([^>]+)class="([^"]+)"([^>]*)>"##).unwrap();
-    regex.replace_all(html, |caps: &Captures| {
-        let before = &caps[1];
-        let classes = &caps[2].replace(",", " ");
-        let after = &caps[3];
+    regex
+        .replace_all(html, |caps: &Captures| {
+            let before = &caps[1];
+            let classes = &caps[2].replace(",", " ");
+            let after = &caps[3];
 
-        format!(r#"<code{before}class="{classes}"{after}>"#,
+            format!(
+                r#"<code{before}class="{classes}"{after}>"#,
                 before = before,
                 classes = classes,
-                after = after)
-    }).into_owned()
+                after = after
+            )
+        })
+        .into_owned()
 }
 
 fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
     let regex = Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap();
-    regex.replace_all(html, |caps: &Captures| {
-        let text = &caps[1];
-        let classes = &caps[2];
-        let code = &caps[3];
+    regex
+        .replace_all(html, |caps: &Captures| {
+            let text = &caps[1];
+            let classes = &caps[2];
+            let code = &caps[3];
 
-        if (classes.contains("language-rust") && !classes.contains("ignore")) ||
-            classes.contains("mdbook-runnable")
-        {
-            // wrap the contents in an external pre block
-            if playpen_config.editable && classes.contains("editable") ||
-                text.contains("fn main") || text.contains("quick_main!")
+            if (classes.contains("language-rust") && !classes.contains("ignore"))
+                || classes.contains("mdbook-runnable")
             {
-                format!("<pre class=\"playpen\">{}</pre>", text)
-            } else {
-                // we need to inject our own main
-                let (attrs, code) = partition_source(code);
+                // wrap the contents in an external pre block
+                if playpen_config.editable && classes.contains("editable")
+                    || text.contains("fn main") || text.contains("quick_main!")
+                {
+                    format!("<pre class=\"playpen\">{}</pre>", text)
+                } else {
+                    // we need to inject our own main
+                    let (attrs, code) = partition_source(code);
 
-                format!("<pre class=\"playpen\"><code class=\"{}\">\n# \
-                         #![allow(unused_variables)]\n\
-                         {}#fn main() {{\n\
-                         {}\
-                         #}}</code></pre>",
-                        classes,
-                        attrs,
-                        code)
+                    format!(
+                        "<pre class=\"playpen\"><code class=\"{}\">\n# \
+                         #![allow(unused_variables)]\n{}#fn main() {{\n{}#}}</code></pre>",
+                        classes, attrs, code
+                    )
+                }
+            } else {
+                // not language-rust, so no-op
+                text.to_owned()
             }
-        } else {
-            // not language-rust, so no-op
-            text.to_owned()
-        }
-    }).into_owned()
+        })
+        .into_owned()
 }
 
 fn partition_source(s: &str) -> (String, String) {
