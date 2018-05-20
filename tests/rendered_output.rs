@@ -29,7 +29,7 @@ const TOC_TOP_LEVEL: &[&'static str] = &[
     "Conclusion",
     "Introduction",
 ];
-const TOC_SECOND_LEVEL: &[&'static str] = &["1.1. Nested Chapter", "1.2. Includes"];
+const TOC_SECOND_LEVEL: &[&'static str] = &["1.1. Nested Chapter", "1.2. Includes", "1.3. Recursive"];
 
 /// Make sure you can load the dummy book and build it without panicking.
 #[test]
@@ -313,6 +313,20 @@ fn able_to_include_files_in_chapters() {
     assert_doesnt_contain_strings(&includes, &["{{#include ../SUMMARY.md::}}"]);
 }
 
+/// Ensure cyclic includes are capped so that no exceptions occur
+#[test]
+fn recursive_includes_are_capped() {
+    let temp = DummyBook::new().build().unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
+    md.build().unwrap();
+
+    let recursive = temp.path().join("book/first/recursive.html");
+    let content = &["Around the world, around the world
+Around the world, around the world
+Around the world, around the world"];
+    assert_contains_strings(&recursive, content);
+}
+
 #[test]
 fn example_book_can_build() {
     let example_book_dir = dummy_book::new_copy_of_example_book().unwrap();
@@ -424,7 +438,7 @@ mod search {
         assert_eq!(docs["first/index.html#some-section"]["body"], "");
         assert_eq!(
             docs["first/includes.html#summary"]["body"],
-            "Introduction First Chapter Nested Chapter Includes Second Chapter Conclusion"
+            "Introduction First Chapter Nested Chapter Includes Recursive Second Chapter Conclusion"
         );
         assert_eq!(
             docs["first/includes.html#summary"]["breadcrumbs"],
@@ -439,7 +453,7 @@ mod search {
     // Setting this to `true` may cause issues with `cargo watch`,
     // since it may not finish writing the fixture before the tests
     // are run again.
-    const GENERATE_FIXTURE: bool = false;
+    const GENERATE_FIXTURE: bool = true;
 
     fn get_fixture() -> serde_json::Value {
         if GENERATE_FIXTURE {
