@@ -83,12 +83,11 @@ fn check_correct_cross_links_in_nested_dir() {
 
     let first = temp.path().join("book").join("first");
     let links = vec![
-        r#"<base href="../">"#,
-        r#"href="intro.html""#,
-        r#"href="first/index.html""#,
-        r#"href="first/nested.html""#,
-        r#"href="second.html""#,
-        r#"href="conclusion.html""#,
+        r#"href="../intro.html""#,
+        r#"href="../first/index.html""#,
+        r#"href="../first/nested.html""#,
+        r#"href="../second.html""#,
+        r#"href="../conclusion.html""#,
     ];
 
     let files_in_nested_dir = vec!["index.html", "nested.html"];
@@ -100,14 +99,14 @@ fn check_correct_cross_links_in_nested_dir() {
     assert_contains_strings(
         first.join("index.html"),
         &[
-            r##"href="first/index.html#some-section" id="some-section""##,
+            r##"href="#some-section" id="some-section""##,
         ],
     );
 
     assert_contains_strings(
         first.join("nested.html"),
         &[
-            r##"href="first/nested.html#some-section" id="some-section""##,
+            r##"href="#some-section" id="some-section""##,
         ],
     );
 }
@@ -367,8 +366,8 @@ fn by_default_mdbook_use_index_preprocessor_to_convert_readme_to_index() {
         .join("first")
         .join("index.html");
     let expected_strings = vec![
-        r#"href="first/index.html""#,
-        r#"href="second/index.html""#,
+        r#"href="../first/index.html""#,
+        r#"href="../second/index.html""#,
         "First README",
     ];
     assert_contains_strings(&first_index, &expected_strings);

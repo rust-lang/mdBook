@@ -4,6 +4,8 @@ use std::collections::BTreeMap;
 use serde_json;
 use handlebars::{Context, Handlebars, Helper, RenderContext, RenderError, Renderable};
 
+use utils;
+
 type StringMap = BTreeMap<String, String>;
 
 /// Target for `find_chapter`.
@@ -87,6 +89,13 @@ fn render(
     trace!("Creating BTreeMap to inject in context");
 
     let mut context = BTreeMap::new();
+    let base_path = rc.evaluate_absolute("path", false)?
+                      .as_str()
+                      .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
+                      .replace("\"", "");
+
+    context.insert("path_to_root".to_owned(),
+                                json!(utils::fs::path_to_root(&base_path)));
 
     chapter
         .get("name")

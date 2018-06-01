@@ -9,20 +9,18 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
-        <base href="{{ path_to_root }}">
-
-        <link rel="stylesheet" href="book.css">
+        <link rel="stylesheet" href="{{ path_to_root }}book.css">
         <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
         <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
 
         <link rel="shortcut icon" href="{{ favicon }}">
 
         <!-- Font Awesome -->
-        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="{{ path_to_root }}FontAwesome/css/font-awesome.css">
 
-        <link rel="stylesheet" href="highlight.css">
-        <link rel="stylesheet" href="tomorrow-night.css">
-        <link rel="stylesheet" href="ayu-highlight.css">
+        <link rel="stylesheet" href="{{ path_to_root }}highlight.css">
+        <link rel="stylesheet" href="{{ path_to_root }}tomorrow-night.css">
+        <link rel="stylesheet" href="{{ path_to_root }}ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
         {{#each additional_css}}
@@ -107,7 +105,7 @@
                         <h1 class="menu-title">{{ book_title }}</h1> 
 
                         <div class="right-buttons">
-                            <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <a href="{{ path_to_root }}print.html" title="Print this book" aria-label="Print this book">
                                 <i id="print-button" class="fa fa-print"></i>
                             </a>
                         </div>
@@ -144,13 +142,13 @@
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         {{#previous}}
-                            <a rel="prev" href="{{link}}" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="{{ path_to_root }}{{link}}" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         {{/previous}}
 
                         {{#next}}
-                            <a rel="next" href="{{link}}" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="{{ path_to_root }}{{link}}" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         {{/next}}
@@ -162,13 +160,13 @@
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 {{#previous}}
-                    <a href="{{link}}" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a href="{{ path_to_root }}{{link}}" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 {{/previous}}
 
                 {{#next}}
-                    <a href="{{link}}" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a href="{{ path_to_root }}{{link}}" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 {{/next}}
@@ -213,29 +211,32 @@
         {{/if}}
 
         {{#if playpen_js}}
-        <script src="ace.js" type="text/javascript" charset="utf-8"></script>
-        <script src="editor.js" type="text/javascript" charset="utf-8"></script>
-        <script src="mode-rust.js" type="text/javascript" charset="utf-8"></script>
-        <script src="theme-dawn.js" type="text/javascript" charset="utf-8"></script>
-        <script src="theme-tomorrow_night.js" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ path_to_root }}ace.js" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ path_to_root }}editor.js" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ path_to_root }}mode-rust.js" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ path_to_root }}theme-dawn.js" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ path_to_root }}theme-tomorrow_night.js" type="text/javascript" charset="utf-8"></script>
         {{/if}}
 
         {{#if search_enabled}}
-        <script src="searchindex.js" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ path_to_root }}searchindex.js" type="text/javascript" charset="utf-8"></script>
+        <script>
+            var path_to_root = "{{path_to_root}}";
+        </script>
         {{/if}}
         {{#if search_js}}
-        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ path_to_root }}elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ path_to_root }}mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ path_to_root }}searcher.js" type="text/javascript" charset="utf-8"></script>
         {{/if}}
 
-        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
-        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ path_to_root }}clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ path_to_root }}highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="{{ path_to_root }}book.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- Custom JS scripts -->
         {{#each additional_js}}
-        <script type="text/javascript" src="{{this}}"></script>
+        <script type="text/javascript" src="{{ path_to_root }}{{this}}"></script>
         {{/each}}
 
         {{#if is_print}}

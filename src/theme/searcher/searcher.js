@@ -137,7 +137,7 @@ window.search = window.search || {};
             url.push("");
         }
 
-        return '<a href="' + url[0] + '?' + URL_MARK_PARAM + '=' + searchterms + '#' + url[1]
+        return '<a href="' + path_to_root + url[0] + '?' + URL_MARK_PARAM + '=' + searchterms + '#' + url[1]
             + '" aria-details="teaser_' + teaser_count + '">' + result.doc.breadcrumbs + '</a>'
             + '<span class="teaser" id="teaser_' + teaser_count + '" aria-label="Search Result Teaser">' 
             + teaser + '</span>';
