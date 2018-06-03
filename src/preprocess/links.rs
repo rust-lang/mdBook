@@ -122,7 +122,7 @@ fn parse_include_path(path: &str) -> LinkType<'static> {
     let start = parts
         .next()
         .and_then(|s| s.parse::<usize>().ok())
-        .map(|val| val.checked_sub(1).unwrap_or(0));
+        .map(|val| val.saturating_sub(1));
     let end = parts.next();
     let has_end = end.is_some();
     let end = end.and_then(|s| s.parse::<usize>().ok());
