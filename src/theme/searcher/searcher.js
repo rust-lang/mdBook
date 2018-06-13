@@ -27,11 +27,12 @@ window.search = window.search || {};
         content = document.getElementById('content'),
 
         searchindex = null,
-        resultsoptions = {
+        doc_urls = [],
+        results_options = {
             teaser_word_count: 30,
             limit_results: 30,
         },
-        searchoptions = {
+        search_options = {
             bool: "AND",
             expand: true,
             fields: {
@@ -139,7 +140,7 @@ window.search = window.search || {};
         teaser_count++;
 
         // The ?URL_MARK_PARAM= parameter belongs inbetween the page and the #heading-anchor
-        var url = result.ref.split("#");
+        var url = doc_urls[result.ref].split("#");
         if (url.length == 1) { // no anchor found
             url.push("");
         }
@@ -196,7 +197,7 @@ window.search = window.search || {};
         }
 
         var window_weight = [];
-        var window_size = Math.min(weighted.length, resultsoptions.teaser_word_count);
+        var window_size = Math.min(weighted.length, results_options.teaser_word_count);
 
         var cur_sum = 0;
         for (var wordindex = 0; wordindex < window_size; wordindex++) {
@@ -247,9 +248,10 @@ window.search = window.search || {};
     }
 
     function init() {
-        resultsoptions = window.search.resultsoptions;
-        searchoptions = window.search.searchoptions;
+        results_options = window.search.results_options;
+        search_options = window.search.search_options;
         searchbar_outer = window.search.searchbar_outer;
+        doc_urls = window.search.doc_urls;
         searchindex = elasticlunr.Index.load(window.search.index);
 
         // Set up events
@@ -441,8 +443,8 @@ window.search = window.search || {};
         if (searchindex == null) { return; }
 
         // Do the actual search
-        var results = searchindex.search(searchterm, searchoptions);
-        var resultcount = Math.min(results.length, resultsoptions.limit_results);
+        var results = searchindex.search(searchterm, search_options);
+        var resultcount = Math.min(results.length, results_options.limit_results);
 
         // Display search metrics
         searchresults_header.innerText = formatSearchMetric(resultcount, searchterm);
