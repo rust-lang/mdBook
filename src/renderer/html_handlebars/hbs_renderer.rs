@@ -450,7 +450,7 @@ fn make_data(
     if cfg!(feature = "search") {
         let search = search.unwrap_or_default();
         data.insert("search_enabled".to_owned(), json!(search.enable));
-        data.insert("search_js".to_owned(), json!(search.copy_js));
+        data.insert("search_js".to_owned(), json!(search.enable && search.copy_js));
     } else if search.is_some() {
         warn!("mdBook compiled without search support, ignoring `output.html.search` table");
         warn!(
