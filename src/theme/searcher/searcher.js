@@ -247,12 +247,12 @@ window.search = window.search || {};
         return teaser_split.join('');
     }
 
-    function init() {
-        results_options = window.search.results_options;
-        search_options = window.search.search_options;
-        searchbar_outer = window.search.searchbar_outer;
-        doc_urls = window.search.doc_urls;
-        searchindex = elasticlunr.Index.load(window.search.index);
+    function init(config) {
+        results_options = config.results_options;
+        search_options = config.search_options;
+        searchbar_outer = config.searchbar_outer;
+        doc_urls = config.doc_urls;
+        searchindex = elasticlunr.Index.load(config.index);
 
         // Set up events
         searchicon.addEventListener('click', function(e) { searchIconClickHandler(); }, false);
@@ -462,7 +462,16 @@ window.search = window.search || {};
         showResults(true);
     }
 
-    init();
+    fetch('searchindex.json')
+        .then(response => response.json())
+        .then(json => init(json))        
+        .catch(error => { // Try to load searchindex.js if fetch failed
+            var script = document.createElement('script');
+            script.src = 'searchindex.js';
+            script.onload = () => init(window.search);
+            document.head.appendChild(script);
+        });
+
     // Exported functions
     search.hasFocus = hasFocus;
 })(window.search);

@@ -24,14 +24,15 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
         render_item(&mut index, &search_config, &mut doc_urls, item)?;
     }
 
-    let index = write_to_js(index, &search_config, doc_urls)?;
+    let index = write_to_json(index, &search_config, doc_urls)?;
     debug!("Writing search index ✓");
     if index.len() > 10_000_000 {
-        warn!("searchindex.js is very large ({} bytes)", index.len());
+        warn!("searchindex.json is very large ({} bytes)", index.len());
     }
 
     if search_config.copy_js {
-        utils::fs::write_file(destination, "searchindex.js", index.as_bytes())?;
+        utils::fs::write_file(destination, "searchindex.json", index.as_bytes())?;
+        utils::fs::write_file(destination, "searchindex.js", format!("window.search = {};", index).as_bytes())?;
         utils::fs::write_file(destination, "searcher.js", searcher::JS)?;
         utils::fs::write_file(destination, "mark.min.js", searcher::MARK_JS)?;
         utils::fs::write_file(destination, "elasticlunr.min.js", searcher::ELASTICLUNR_JS)?;
@@ -164,10 +165,7 @@ fn render_item(
     Ok(())
 }
 
-/// Exports the index and search options to a JS script which stores the index in `window.search`.
-/// Using a JS script is a workaround for CORS in `file://` URIs. It also removes the need for
-/// downloading/parsing JSON in JS.
-fn write_to_js(index: Index, search_config: &Search, doc_urls: Vec<String>) -> Result<String> {
+fn write_to_json(index: Index, search_config: &Search, doc_urls: Vec<String>) -> Result<String> {
     use std::collections::BTreeMap;
     use self::elasticlunr::config::{SearchBool, SearchOptions, SearchOptionsField};
 
@@ -225,7 +223,7 @@ fn write_to_js(index: Index, search_config: &Search, doc_urls: Vec<String>) -> R
     let json_contents = serde_json::to_value(&json_contents)?;
     let json_contents = serde_json::to_string(&json_contents)?;
 
-    Ok(format!("window.search = {};", json_contents))
+    Ok(json_contents)
 }
 
 fn clean_html(html: &str) -> String {
