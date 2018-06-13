@@ -26,6 +26,9 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
 
     let index = write_to_js(index, &search_config, doc_urls)?;
     debug!("Writing search index ✓");
+    if index.len() > 10_000_000 {
+        warn!("searchindex.js is very large ({} bytes)", index.len());
+    }
 
     if search_config.copy_js {
         utils::fs::write_file(destination, "searchindex.js", index.as_bytes())?;
