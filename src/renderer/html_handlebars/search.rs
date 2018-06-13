@@ -50,17 +50,17 @@ fn add_doc(
     section_id: &Option<String>,
     items: &[&str],
 ) {
-    let doc_ref = if let &Some(ref id) = section_id {
+    let url = if let &Some(ref id) = section_id {
         Cow::Owned(format!("{}#{}", anchor_base, id))
     } else {
-        Cow::Borrowed(anchor_base.into())
+        Cow::Borrowed(anchor_base)
     };
-    let doc_ref = utils::collapse_whitespace(doc_ref.trim());
-    let key = doc_urls.len();
-    doc_urls.push(doc_ref.into());
+    let url = utils::collapse_whitespace(url.trim());
+    let doc_ref = doc_urls.len().to_string();
+    doc_urls.push(url.into());
 
     let items = items.iter().map(|&x| utils::collapse_whitespace(x.trim()));
-    index.add_doc(&key.to_string(), items);
+    index.add_doc(&doc_ref, items);
 }
 
 /// Renders markdown into flat unformatted text and adds it to the search index.
