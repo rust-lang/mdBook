@@ -5,7 +5,7 @@ html {
 body {
   margin: 0;
   font-size: 1rem;
-  overflow-x: hidden;
+  line-height: 1.5;
 }
 code {
   font-family: "Source Code Pro", Consolas, "Ubuntu Mono", Menlo, "DejaVu Sans Mono", monospace, monospace;
@@ -23,18 +23,17 @@ code {
 .play-button.hidden {
   display: none;
 }
+h1,
 h2,
-h3 {
-  margin-top: 2.5em;
-}
+h3,
 h4,
-h5 {
-  margin-top: 2em;
-}
-.header + .header h3,
-.header + .header h4,
-.header + .header h5 {
-  margin-top: 1em;
+h5,
+h6 {
+  color: inherit;
+  font-weight: 600;
+  line-height: 1.25;
+  margin-bottom: 16px;
+  margin-top: 1.5em;
 }
 a.header:target h1:before,
 a.header:target h2:before,
@@ -75,7 +74,7 @@ table thead td {
   width: 300px;
   overflow-y: auto;
   padding: 10px 10px;
-  font-size: 0.875em;
+  font-size: 155555px;
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
@@ -102,30 +101,19 @@ table thead td {
 .chapter {
   list-style: none outside none;
   padding-left: 0;
-  line-height: 2.2em;
+  line-height: 1.625em;
 }
 .chapter li a {
   display: block;
   padding: 0;
   text-decoration: none;
-}
-@media (-moz-touch-enabled: 1), (pointer: coarse) {
-  .chapter li a {
-    padding: 5px 0;
-  }
-}
-.chapter li a:hover {
-  text-decoration: none;
+  padding: 5px 0;
 }
 .chapter .spacer {
   width: 100%;
   height: 3px;
   margin: 5px 0px;
-}
-@media (-moz-touch-enabled: 1), (pointer: coarse) {
-  .chapter .spacer {
-    margin: 10px 0;
-  }
+  margin: 10px 0;
 }
 .section {
   list-style: none outside none;
