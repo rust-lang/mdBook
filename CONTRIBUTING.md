@@ -58,10 +58,16 @@ the CSS files will be overwritten when compiling the stylus files. Instead, you 
 [stylus files](https://github.com/rust-lang-nursery/mdBook/tree/master/src/theme/stylus) and regenerate the CSS.
 
 For this to work, you first need [Node and NPM](https://nodejs.org/en/) installed on your machine.
-Then run the following command to install both [stylus](http://stylus-lang.com/) and [nib](https://tj.github.io/nib/), you might need `sudo` to install successfully.
+Then run the following command to install the necessary Node.js packages.
 
 ```
-npm install -g stylus nib
+npm install
+```
+
+Or if you have [yarn](https://yarnpkg.com):
+
+```
+yarn
 ```
 
 When that finished, you can simply regenerate the CSS files by building mdBook with the following command:

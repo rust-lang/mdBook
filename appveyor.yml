@@ -34,8 +34,8 @@ install:
   - cargo -V
   - ps: Install-Product node $env:nodejs_version
   - node --version
-  - npm --version
-  - npm install -g stylus nib
+  - yarn --version
+  - yarn --frozen-lockfile
 
 build: false
 

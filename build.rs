@@ -1,25 +1,28 @@
 // build.rs
 
 use std::env;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 #[macro_use]
 extern crate error_chain;
 
 #[cfg(windows)]
 mod execs {
+    use std::ffi::OsStr;
     use std::process::Command;
 
-    pub fn cmd(program: &str) -> Command {
+    pub fn cmd(program: &OsStr) -> Command {
         let mut cmd = Command::new("cmd");
-        cmd.args(&["/c", program]);
+        cmd.arg("/c");
+        cmd.arg(program);
         cmd
     }
 }
 #[cfg(not(windows))]
 mod execs {
+    use std::ffi::OsStr;
     use std::process::Command;
 
-    pub fn cmd(program: &str) -> Command {
+    pub fn cmd(program: &OsStr) -> Command {
         Command::new(program)
     }
 }
@@ -30,59 +33,26 @@ error_chain!{
     }
 }
 
-fn program_exists(program: &str) -> Result<()> {
-    execs::cmd(program)
-        .arg("-v")
-        .output()
-        .chain_err(|| format!("Please install '{}'!", program))?;
-    Ok(())
-}
-
-fn npm_package_exists(package: &str) -> Result<()> {
-    let status = execs::cmd("npm")
-        .args(&["list", "-g"])
-        .arg(package)
-        .output();
-
-    match status {
-        Ok(ref out) if out.status.success() => Ok(()),
-        _ => bail!(
-            "Missing npm package '{0}' install with: 'npm -g install {0}'",
-            package
-        ),
-    }
-}
-
-pub enum Resource<'a> {
-    Program(&'a str),
-    Package(&'a str),
-}
-use Resource::{Package, Program};
-
-impl<'a> Resource<'a> {
-    pub fn exists(&self) -> Result<()> {
-        match *self {
-            Program(name) => program_exists(name),
-            Package(name) => npm_package_exists(name),
-        }
+fn node_modules_exists() -> Result<()> {
+    if Path::new("node_modules").exists() {
+        Ok(())
+    } else {
+        bail!("`node_modules` does not exist. Please run `yarn install`")
     }
 }
 
 fn run() -> Result<()> {
     if let Ok(_) = env::var("CARGO_FEATURE_REGENERATE_CSS") {
-        // Check dependencies
-        Program("npm").exists()?;
-        Program("node").exists().or(Program("nodejs").exists())?;
-        Package("nib").exists()?;
-        Package("stylus").exists()?;
-
+        node_modules_exists()?;
         // Compile stylus stylesheet to css
         let manifest_dir = env::var("CARGO_MANIFEST_DIR")
             .chain_err(|| "Please run the script with: 'cargo build'!")?;
         let theme_dir = Path::new(&manifest_dir).join("src/theme/");
         let stylus_dir = theme_dir.join("stylus/book.styl");
 
-        if !execs::cmd("stylus")
+        let stylus_path: PathBuf = [".", "node_modules", ".bin", "stylus"].iter().collect();
+
+        if !execs::cmd(stylus_path.as_os_str())
             .arg(stylus_dir)
             .arg("--out")
             .arg(theme_dir)

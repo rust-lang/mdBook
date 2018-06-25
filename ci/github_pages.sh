@@ -12,7 +12,7 @@ if [ "$TRAVIS_PULL_REQUEST" != "false" ] ||
 fi
 
 # Make sure we have the css dependencies
-npm install -g stylus nib 
+yarn --frozen-lockfile
 
 NC='\033[39m'
 CYAN='\033[36m'

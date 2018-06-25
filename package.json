@@ -1,0 +1,6 @@
+{
+  "devDependencies": {
+    "nib": "^1.1.2",
+    "stylus": "^0.54.5"
+  }
+}
