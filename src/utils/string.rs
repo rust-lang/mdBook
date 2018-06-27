@@ -50,7 +50,7 @@ pub fn take_lines<R: RangeArgument<usize>>(s: &str, range: R) -> String {
     let start = *range.start().unwrap_or(&0);
     let mut lines = s.lines().skip(start);
     match range.end() {
-        Some(&end) => lines.take(end.checked_sub(start).unwrap_or(0)).join("\n"),
+        Some(&end) => lines.take(end.saturating_sub(start)).join("\n"),
         None => lines.join("\n"),
     }
 }
