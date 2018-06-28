@@ -9,7 +9,14 @@ window.search = window.search || {};
     if (!Mark || !elasticlunr) {
         return;
     }
-    
+
+    //IE 11 Compatibility from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith
+    if (!String.prototype.startsWith) {
+        String.prototype.startsWith = function(search, pos) {
+            return this.substr(!pos || pos < 0 ? 0 : +pos, search.length) === search;
+        };
+    }
+
     var search_wrap = document.getElementById('search-wrapper'),
         searchbar = document.getElementById('searchbar'),
         searchbar_outer = document.getElementById('searchbar-outer'),
