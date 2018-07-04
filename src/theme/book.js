@@ -150,9 +150,11 @@ function playpen_text(playpen) {
         var lines = code_block.innerHTML.split("\n");
         var first_non_hidden_line = false;
         var lines_hidden = false;
+        var trimmed_line = "";
 
         for (var n = 0; n < lines.length; n++) {
-            if (lines[n].trim()[0] == hiding_character) {
+            trimmed_line = lines[n].trim();
+            if (trimmed_line[0] == hiding_character && trimmed_line[1] != hiding_character) {
                 if (first_non_hidden_line) {
                     lines[n] = "<span class=\"hidden\">" + "\n" + lines[n].replace(/(\s*)# ?/, "$1") + "</span>";
                 }
@@ -166,6 +168,9 @@ function playpen_text(playpen) {
             }
             else {
                 first_non_hidden_line = true;
+            }
+            if (trimmed_line[0] == hiding_character && trimmed_line[1] == hiding_character) {
+                lines[n] = lines[n].replace("##", "#")
             }
         }
         code_block.innerHTML = lines.join("");
