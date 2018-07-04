@@ -15,11 +15,9 @@ main() {
             ;;
     esac
 
-    test -f Cargo.lock || cargo generate-lockfile
+    cargo rustc --bin mdbook --target $TARGET --release -- -C lto
 
-    cross rustc --bin mdbook --target $TARGET --release -- -C lto
-
-    cp target/$TARGET/release/mdbook $stage/
+    cp target/release/mdbook $stage/
 
     cd $stage
     tar czf $src/$CRATE_NAME-$TRAVIS_TAG-$TARGET.tar.gz *

@@ -1,8 +1,10 @@
 //! Book preprocessing.
 
 pub use self::links::LinkPreprocessor;
+pub use self::index::IndexPreprocessor;
 
 mod links;
+mod index;
 
 use book::Book;
 use config::Config;
@@ -10,7 +12,7 @@ use errors::*;
 
 use std::path::PathBuf;
 
-/// Extra information for a `Preprocessor` to give them more context when 
+/// Extra information for a `Preprocessor` to give them more context when
 /// processing a book.
 pub struct PreprocessorContext {
     /// The location of the book directory on disk.
@@ -26,7 +28,7 @@ impl PreprocessorContext {
     }
 }
 
-/// An operation which is run immediately after loading a book into memory and 
+/// An operation which is run immediately after loading a book into memory and
 /// before it gets rendered.
 pub trait Preprocessor {
     /// Get the `Preprocessor`'s name.

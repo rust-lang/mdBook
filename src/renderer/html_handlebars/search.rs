@@ -205,6 +205,10 @@ fn write_to_js(index: Index, search_config: &Search) -> Result<String> {
         searchoptions,
         index,
     };
+
+    // By converting to serde_json::Value as an intermediary, we use a
+    // BTreeMap internally and can force a stable ordering of map keys.
+    let json_contents = serde_json::to_value(&json_contents)?;
     let json_contents = serde_json::to_string(&json_contents)?;
 
     Ok(format!("window.search = {};", json_contents))

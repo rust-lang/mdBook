@@ -1,15 +1,17 @@
+"use strict";
 window.search = window.search || {};
 (function search(search) {
     // Search functionality
     //
     // You can use !hasFocus() to prevent keyhandling in your key
-    // event handlers while the user is typing his search.
+    // event handlers while the user is typing their search.
 
     if (!Mark || !elasticlunr) {
         return;
     }
     
-    var searchbar = document.getElementById('searchbar'),
+    var search_wrap = document.getElementById('search-wrapper'),
+        searchbar = document.getElementById('searchbar'),
         searchbar_outer = document.getElementById('searchbar-outer'),
         searchresults = document.getElementById('searchresults'),
         searchresults_outer = document.getElementById('searchresults-outer'),
@@ -240,14 +242,17 @@ window.search = window.search || {};
     function init() {
         resultsoptions = window.search.resultsoptions;
         searchoptions = window.search.searchoptions;
+        searchbar_outer = window.search.searchbar_outer;
         searchindex = elasticlunr.Index.load(window.search.index);
 
         // Set up events
         searchicon.addEventListener('click', function(e) { searchIconClickHandler(); }, false);
         searchbar.addEventListener('keyup', function(e) { searchbarKeyUpHandler(); }, false);
-        document.addEventListener('keydown', function (e) { globalKeyHandler(e); }, false);
+        document.addEventListener('keydown', function(e) { globalKeyHandler(e); }, false);
         // If the user uses the browser buttons, do the same as if a reload happened
         window.onpopstate = function(e) { doSearchOrMarkFromUrl(); };
+        // Suppress "submit" events so the page doesn't reload when the user presses Enter
+        document.addEventListener('submit', function(e) { e.preventDefault(); }, false);
 
         // If reloaded, do the search or mark again, depending on the current url parameters
         doSearchOrMarkFromUrl();
@@ -297,94 +302,84 @@ window.search = window.search || {};
     
     // Eventhandler for keyevents on `document`
     function globalKeyHandler(e) {
-        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
+        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.target.type === 'textarea') { return; }
 
-        if (e.keyCode == ESCAPE_KEYCODE) {
+        if (e.keyCode === ESCAPE_KEYCODE) {
             e.preventDefault();
             searchbar.classList.remove("active");
             setSearchUrlParameters("",
-                (searchbar.value.trim() != "") ? "push" : "replace");
+                (searchbar.value.trim() !== "") ? "push" : "replace");
             if (hasFocus()) {
                 unfocusSearchbar();
             }
             showSearch(false);
             marker.unmark();
-            return;
-        }
-        if (!hasFocus() && e.keyCode == SEARCH_HOTKEY_KEYCODE) {
+        } else if (!hasFocus() && e.keyCode === SEARCH_HOTKEY_KEYCODE) {
             e.preventDefault();
             showSearch(true);
             window.scrollTo(0, 0);
-            searchbar.focus();
-            return;
-        }
-        if (hasFocus() && e.keyCode == DOWN_KEYCODE) {
+            searchbar.select();
+        } else if (hasFocus() && e.keyCode === DOWN_KEYCODE) {
             e.preventDefault();
             unfocusSearchbar();
-            searchresults.children('li').first().classList.add("focus");
-            return;
-        }
-        if (!hasFocus() && (e.keyCode == DOWN_KEYCODE
-                            || e.keyCode == UP_KEYCODE
-                            || e.keyCode == SELECT_KEYCODE)) {
+            searchresults.firstElementChild.classList.add("focus");
+        } else if (!hasFocus() && (e.keyCode === DOWN_KEYCODE
+                                || e.keyCode === UP_KEYCODE
+                                || e.keyCode === SELECT_KEYCODE)) {
             // not `:focus` because browser does annoying scrolling
-            var current_focus = search.searchresults.find("li.focus");
-            if (current_focus.length == 0) return;
+            var focused = searchresults.querySelector("li.focus");
+            if (!focused) return;
             e.preventDefault();
-            if (e.keyCode == DOWN_KEYCODE) {
-                var next = current_focus.next()
-                if (next.length > 0) {
-                    current_focus.classList.remove("focus");
+            if (e.keyCode === DOWN_KEYCODE) {
+                var next = focused.nextElementSibling;
+                if (next) {
+                    focused.classList.remove("focus");
                     next.classList.add("focus");
                 }
-            } else if (e.keyCode == UP_KEYCODE) {
-                current_focus.classList.remove("focus");
-                var prev = current_focus.prev();
-                if (prev.length == 0) {
-                    searchbar.focus();
-                } else {
+            } else if (e.keyCode === UP_KEYCODE) {
+                focused.classList.remove("focus");
+                var prev = focused.previousElementSibling;
+                if (prev) {
                     prev.classList.add("focus");
+                } else {
+                    searchbar.select();
                 }
-            } else {
-                window.location = current_focus.children('a').attr('href');
+            } else { // SELECT_KEYCODE
+                window.location.assign(focused.querySelector('a'));
             }
         }
     }
     
     function showSearch(yes) {
         if (yes) {
-            searchbar_outer.style.display = 'block';
-            content.style.display = 'none';
+            search_wrap.classList.remove('hidden');
             searchicon.setAttribute('aria-expanded', 'true');
         } else {
-            content.style.display = 'block';
-            searchbar_outer.style.display = 'none';
-            searchresults_outer.style.display = 'none';
-            searchbar.value = '';
-            removeChildren(searchresults);
+            search_wrap.classList.add('hidden');
             searchicon.setAttribute('aria-expanded', 'false');
+            var results = searchresults.children;
+            for (var i = 0; i < results.length; i++) {
+                results[i].classList.remove("focus");
+            }
         }
     }
 
     function showResults(yes) {
         if (yes) {
-            searchbar_outer.style.display = 'block';
-            content.style.display = 'none';
-            searchresults_outer.style.display = 'block';
+            searchresults_outer.classList.remove('hidden');
         } else {
-            content.style.display = 'block';
-            searchresults_outer.style.display = 'none';
+            searchresults_outer.classList.add('hidden');
         }
     }
 
     // Eventhandler for search icon
     function searchIconClickHandler() {
-        if (searchbar_outer.style.display === 'block') {
-            showSearch(false);
-        } else {
+        if (search_wrap.classList.contains('hidden')) {
             showSearch(true);
             window.scrollTo(0, 0);
-            searchbar.focus();
+            searchbar.select();
+        } else {
+            showSearch(false);
         }
     }
     

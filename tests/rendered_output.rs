@@ -18,7 +18,7 @@ use select::document::Document;
 use select::predicate::{Class, Name, Predicate};
 use tempfile::Builder as TempFileBuilder;
 use mdbook::errors::*;
-use mdbook::utils::fs::file_to_string;
+use mdbook::utils::fs::{file_to_string, write_file};
 use mdbook::config::Config;
 use mdbook::MDBook;
 
@@ -29,7 +29,7 @@ const TOC_TOP_LEVEL: &[&'static str] = &[
     "Conclusion",
     "Introduction",
 ];
-const TOC_SECOND_LEVEL: &[&'static str] = &["1.1. Nested Chapter", "1.2. Includes"];
+const TOC_SECOND_LEVEL: &[&'static str] = &["1.1. Nested Chapter", "1.2. Includes", "1.3. Recursive"];
 
 /// Make sure you can load the dummy book and build it without panicking.
 #[test]
@@ -313,6 +313,20 @@ fn able_to_include_files_in_chapters() {
     assert_doesnt_contain_strings(&includes, &["{{#include ../SUMMARY.md::}}"]);
 }
 
+/// Ensure cyclic includes are capped so that no exceptions occur
+#[test]
+fn recursive_includes_are_capped() {
+    let temp = DummyBook::new().build().unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
+    md.build().unwrap();
+
+    let recursive = temp.path().join("book/first/recursive.html");
+    let content = &["Around the world, around the world
+Around the world, around the world
+Around the world, around the world"];
+    assert_contains_strings(&recursive, content);
+}
+
 #[test]
 fn example_book_can_build() {
     let example_book_dir = dummy_book::new_copy_of_example_book().unwrap();
@@ -338,6 +352,54 @@ fn book_with_a_reserved_filename_does_not_build() {
     let md = MDBook::load(tmp_dir.path()).unwrap();
     let got = md.build();
     assert!(got.is_err());
+}
+
+#[test]
+fn by_default_mdbook_use_index_preprocessor_to_convert_readme_to_index() {
+    let temp = DummyBook::new().build().unwrap();
+    let mut cfg = Config::default();
+    cfg.set("book.src", "src2").expect("Couldn't set config.book.src to \"src2\".");
+    let md = MDBook::load_with_config(temp.path(), cfg).unwrap();
+    md.build().unwrap();
+
+    let first_index = temp.path()
+        .join("book")
+        .join("first")
+        .join("index.html");
+    let expected_strings = vec![
+        r#"href="first/index.html""#,
+        r#"href="second/index.html""#,
+        "First README",
+    ];
+    assert_contains_strings(&first_index, &expected_strings);
+    assert_doesnt_contain_strings(&first_index, &vec!["README.html"]);
+
+    let second_index = temp.path()
+        .join("book")
+        .join("second")
+        .join("index.html");
+    let unexpected_strings = vec![
+        "Second README",
+    ];
+    assert_doesnt_contain_strings(&second_index, &unexpected_strings);
+}
+
+#[test]
+fn theme_dir_overrides_work_correctly() {
+    let book_dir = dummy_book::new_copy_of_example_book().unwrap();
+    let book_dir = book_dir.path();
+    let theme_dir = book_dir.join("theme");
+
+    let mut index = ::mdbook::theme::INDEX.to_vec();
+    index.extend_from_slice(b"\n<!-- This is a modified index.hbs! -->");
+
+    write_file(&theme_dir, "index.hbs", &index).unwrap();
+
+    let md = MDBook::load(book_dir).unwrap();
+    md.build().unwrap();
+
+    let built_index = book_dir.join("book").join("index.html");
+    dummy_book::assert_contains_strings(built_index, &["This is a modified index.hbs!"]);
 }
 
 #[cfg(feature = "search")]
@@ -376,7 +438,7 @@ mod search {
         assert_eq!(docs["first/index.html#some-section"]["body"], "");
         assert_eq!(
             docs["first/includes.html#summary"]["body"],
-            "Introduction First Chapter Nested Chapter Includes Second Chapter Conclusion"
+            "Introduction First Chapter Nested Chapter Includes Recursive Second Chapter Conclusion"
         );
         assert_eq!(
             docs["first/includes.html#summary"]["breadcrumbs"],
@@ -391,7 +453,7 @@ mod search {
     // Setting this to `true` may cause issues with `cargo watch`,
     // since it may not finish writing the fixture before the tests
     // are run again.
-    const GENERATE_FIXTURE: bool = false;
+    const GENERATE_FIXTURE: bool = true;
 
     fn get_fixture() -> serde_json::Value {
         if GENERATE_FIXTURE {

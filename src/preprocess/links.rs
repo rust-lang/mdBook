@@ -9,6 +9,7 @@ use super::{Preprocessor, PreprocessorContext};
 use book::{Book, BookItem};
 
 const ESCAPE_CHAR: char = '\\';
+const MAX_LINK_NESTED_DEPTH: usize = 10;
 
 /// A preprocessor for expanding the `{{# playpen}}` and `{{# include}}`
 /// helpers in a chapter.
@@ -36,7 +37,7 @@ impl Preprocessor for LinkPreprocessor {
                     .map(|dir| src_dir.join(dir))
                     .expect("All book items have a parent");
 
-                let content = replace_all(&ch.content, base);
+                let content = replace_all(&ch.content, base, &ch.path, 0);
                 ch.content = content;
             }
         });
@@ -45,11 +46,12 @@ impl Preprocessor for LinkPreprocessor {
     }
 }
 
-fn replace_all<P: AsRef<Path>>(s: &str, path: P) -> String {
+fn replace_all<P: AsRef<Path>>(s: &str, path: P, source: &P, depth: usize) -> String {
     // When replacing one thing in a string by something with a different length,
     // the indices after that will not correspond,
     // we therefore have to store the difference to correct this
     let path = path.as_ref();
+    let source = source.as_ref();
     let mut previous_end_index = 0;
     let mut replaced = String::new();
 
@@ -58,7 +60,15 @@ fn replace_all<P: AsRef<Path>>(s: &str, path: P) -> String {
 
         match playpen.render_with_path(&path) {
             Ok(new_content) => {
-                replaced.push_str(&new_content);
+                if depth < MAX_LINK_NESTED_DEPTH {
+                    if let Some(rel_path) = playpen.link.relative_path(path) {
+                        replaced.push_str(&replace_all(&new_content, rel_path, &source.to_path_buf(), depth + 1));
+                    }
+                }
+                else {
+                    error!("Stack depth exceeded in {}. Check for cyclic includes",
+                            source.display());
+                }
                 previous_end_index = playpen.end_index;
             }
             Err(e) => {
@@ -84,6 +94,27 @@ enum LinkType<'a> {
     Playpen(PathBuf, Vec<&'a str>),
 }
 
+impl<'a> LinkType<'a> {
+    fn relative_path<P: AsRef<Path>>(self, base: P) -> Option<PathBuf> {
+        let base = base.as_ref();
+        match self {
+            LinkType::Escaped => None,
+            LinkType::IncludeRange(p, _) => Some(return_relative_path(base, &p)),
+            LinkType::IncludeRangeFrom(p, _) => Some(return_relative_path(base, &p)),
+            LinkType::IncludeRangeTo(p, _) => Some(return_relative_path(base, &p)),
+            LinkType::IncludeRangeFull(p, _) => Some(return_relative_path(base, &p)),
+            LinkType::Playpen(p,_) => Some(return_relative_path(base, &p))
+        }
+    }
+}
+fn return_relative_path<P: AsRef<Path>>(base: P, relative: P) -> PathBuf {
+    base.as_ref()
+        .join(relative)
+        .parent()
+        .expect("Included file should not be /")
+        .to_path_buf()
+}
+
 fn parse_include_path(path: &str) -> LinkType<'static> {
     let mut parts = path.split(':');
     let path = parts.next().unwrap().into();
@@ -91,7 +122,7 @@ fn parse_include_path(path: &str) -> LinkType<'static> {
     let start = parts
         .next()
         .and_then(|s| s.parse::<usize>().ok())
-        .map(|val| val.checked_sub(1).unwrap_or(0));
+        .map(|val| val.saturating_sub(1));
     let end = parts.next();
     let has_end = end.is_some();
     let end = end.and_then(|s| s.parse::<usize>().ok());

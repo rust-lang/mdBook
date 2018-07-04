@@ -7,7 +7,9 @@
     & > #menu-bar-sticky-container {
         display: flex
         flex-wrap: wrap
-        transition: transform 0.5s, border-bottom-color 0.5s
+        .js & {
+            transition: transform 0.3s
+        }
     }
 
     i, .icon-button {
@@ -15,16 +17,21 @@
         margin: 0 10px
         z-index: 10
         line-height: 50px
-
+        cursor: pointer
         transition: color 0.5s
+    }
 
-        &:hover { cursor: pointer }
+    #print-button {
+        margin: 0 15px
     }
 }
 
-
-html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-container  {
+html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-container {
     transform: translateY(-60px);
+}
+
+.no-js .left-buttons {
+    display: none
 }
 
 .menu-title {
@@ -38,5 +45,7 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
     white-space: nowrap
     overflow: hidden
     text-overflow: ellipsis
-    cursor: pointer;
+    .js & {
+        cursor: pointer
+    }
 }
