@@ -14,11 +14,6 @@ exclude = [
     "src/theme/stylus/**",
 ]
 
-[package.metadata.release]
-sign-commit = true
-push-remote = "origin"
-tag-prefix = "v"
-
 [dependencies]
 clap = "2.24"
 chrono = "0.4"
