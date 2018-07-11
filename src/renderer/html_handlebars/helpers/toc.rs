@@ -1,6 +1,8 @@
 use std::path::Path;
 use std::collections::BTreeMap;
 
+use utils;
+
 use serde_json;
 use handlebars::{Handlebars, Helper, HelperDef, RenderContext, RenderError};
 use pulldown_cmark::{html, Event, Parser, Tag};
@@ -77,6 +79,7 @@ impl HelperDef for RenderToc {
                         .replace("\\", "/");
 
                     // Add link
+                    rc.writer.write_all(&utils::fs::path_to_root(&current).as_bytes())?;
                     rc.writer.write_all(tmp.as_bytes())?;
                     rc.writer.write_all(b"\"")?;
 

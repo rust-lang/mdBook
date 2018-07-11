@@ -68,6 +68,35 @@ pub fn id_from_content(content: &str) -> String {
     normalize_id(trimmed)
 }
 
+fn adjust_links(event: Event) -> Event {
+
+    lazy_static! {
+        static ref HTTP_LINK: Regex = Regex::new("^https?://").unwrap();
+        static ref MD_LINK: Regex = Regex::new("(?P<link>.*).md(?P<anchor>#.*)?").unwrap();
+    }
+
+    match event {
+        Event::Start(Tag::Link(dest, title)) => {
+            if !HTTP_LINK.is_match(&dest) {
+                if let Some(caps) = MD_LINK.captures(&dest) {
+
+                    let mut html_link = [&caps["link"], ".html"].concat();
+
+                    if let Some(anchor) = caps.name("anchor") {
+                        html_link.push_str(anchor.as_str());
+                    }
+
+                    return Event::Start(Tag::Link(Cow::from(html_link), title))
+                }
+            }
+
+            Event::Start(Tag::Link(dest, title))
+        },
+        _ => event
+    }
+
+}
+
 /// Wrapper around the pulldown-cmark parser for rendering markdown to HTML.
 pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
     let mut s = String::with_capacity(text.len() * 3 / 2);
@@ -79,6 +108,7 @@ pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
     let p = Parser::new_ext(text, opts);
     let mut converter = EventQuoteConverter::new(curly_quotes);
     let events = p.map(clean_codeblock_headers)
+                  .map(adjust_links)
                   .map(|event| converter.convert(event));
 
     html::push_html(&mut s, events);
@@ -176,6 +206,17 @@ pub fn log_backtrace(e: &Error) {
 mod tests {
     mod render_markdown {
         use super::super::render_markdown;
+
+        #[test]
+        fn preserves_external_links() {
+           assert_eq!(render_markdown("[example](https://www.rust-lang.org/)", false), "<p><a href=\"https://www.rust-lang.org/\">example</a></p>\n");
+        }
+
+        #[test]
+        fn it_can_adjust_markdown_links() {
+            assert_eq!(render_markdown("[example](example.md)", false), "<p><a href=\"example.html\">example</a></p>\n");
+            assert_eq!(render_markdown("[example_anchor](example.md#anchor)", false), "<p><a href=\"example.html#anchor\">example_anchor</a></p>\n");
+        }
 
         #[test]
         fn it_can_keep_quotes_straight() {
