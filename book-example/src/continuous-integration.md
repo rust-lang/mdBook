@@ -34,12 +34,9 @@ script:
 Following these instructions will result in your book being published to GitHub
 pages after a successful CI run on your repository's `master` branch.
 
-First, create a new GitHub oauth token with the "public_repo" permissions (or
-"repo" for private repositories). Go to your repository's Travis CI settings
-page and add an environment variable named `GITHUB_TOKEN` that is marked secure
-and *not* shown in the logs.
+First, create a new GitHub "Personal Access Token" with the "public_repo" permissions (or "repo" for private repositories). Go to your repository's Travis CI settings page and add an environment variable named `GITHUB_TOKEN` that is marked secure and *not* shown in the logs.
 
-Then, add this snippet to your `.travis.yml`:
+Then, append this snippet to your `.travis.yml` and update the path to the `book` directory:
 
 ```yaml
 deploy:
