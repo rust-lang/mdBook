@@ -18,13 +18,23 @@ function playpen_text(playpen) {
 (function codeSnippets() {
     // Hide Rust code lines prepended with a specific character
     var hiding_character = "#";
-    var request = fetch("https://play.rust-lang.org/meta/crates", {
-        headers: {
-            'Content-Type': "application/json",
-        },
-        method: 'POST',
-        mode: 'cors',
-    });
+
+    var playpens = Array.from(document.querySelectorAll(".playpen"));
+    if (playpens.length > 0) {
+        fetch("https://play.rust-lang.org/meta/crates", {
+            headers: {
+                'Content-Type': "application/json",
+            },
+            method: 'POST',
+            mode: 'cors',
+        })
+        .then(response => response.json())
+        .then(response => {
+            // get list of crates available in the rust playground
+            let playground_crates = response.crates.map(item => item["id"]);
+            playpens.forEach(block => handle_crate_list_update(block, playground_crates));
+        });
+    }
 
     function handle_crate_list_update(playpen_block, playground_crates) {
         // update the play buttons after receiving the response
@@ -274,17 +284,6 @@ function playpen_text(playpen) {
             });
         }
     });
-
-    request
-        .then(function (response) { return response.json(); })
-        .then(function (response) {
-            // get list of crates available in the rust playground
-            let playground_crates = response.crates.map(function (item) { return item["id"]; });
-            Array.from(document.querySelectorAll(".playpen")).forEach(function (block) {
-                handle_crate_list_update(block, playground_crates);
-            });
-        });
-
 })();
 
 (function themes() {
