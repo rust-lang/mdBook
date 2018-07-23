@@ -463,9 +463,11 @@ impl Default for Playpen {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Search {
+    /// Enable the search feature. Default: `true`.
+    pub enable: bool,
     /// Maximum number of visible results. Default: `30`.
     pub limit_results: u32,
-    /// The number of words used for a search result teaser. Default: `30`,
+    /// The number of words used for a search result teaser. Default: `30`.
     pub teaser_word_count: u32,
     /// Define the logical link between multiple search words.
     /// If true, all search words must appear in each result. Default: `true`.
@@ -494,6 +496,7 @@ impl Default for Search {
     fn default() -> Search {
         // Please update the documentation of `Search` when changing values!
         Search {
+            enable: true,
             limit_results: 30,
             teaser_word_count: 30,
             use_boolean_and: false,

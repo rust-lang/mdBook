@@ -113,6 +113,7 @@ Available configuration options for the `[output.html.playpen]` table:
 
 Available configuration options for the `[output.html.search]` table:
 
+- **enable:** Enables the search feature. Defaults to `true`.
 - **limit-results:** The maximum number of search results. Defaults to `30`.
 - **teaser-word-count:** The number of words used for a search result teaser. 
   Defaults to `30`.
@@ -168,6 +169,7 @@ boost-hierarchy = 1
 boost-paragraph = 1
 expand = true
 heading-split-level = 3
+copy-js = true
 ```
 
 

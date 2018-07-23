@@ -367,8 +367,10 @@ impl Renderer for HtmlHandlebars {
             .chain_err(|| "Unable to copy across additional CSS and JS")?;
 
         // Render search index
-        #[cfg(feature = "search")]
-        super::search::create_files(&html_config.search.unwrap_or_default(), &destination, &book)?;
+        let search = html_config.search.unwrap_or_default();
+        if cfg!(feature = "search") && search.enable {
+            super::search::create_files(&search, &destination, &book)?;
+        }
 
         // Copy all remaining files
         utils::fs::copy_files_except_ext(&src_dir, &destination, true, &["md"])?;
@@ -446,10 +448,9 @@ fn make_data(
 
     let search = html_config.search.clone();
     if cfg!(feature = "search") {
-        data.insert("search_enabled".to_owned(), json!(true));
-        if search.unwrap_or_default().copy_js {
-            data.insert("search_js".to_owned(), json!(true));
-        }
+        let search = search.unwrap_or_default();
+        data.insert("search_enabled".to_owned(), json!(search.enable));
+        data.insert("search_js".to_owned(), json!(search.enable && search.copy_js));
     } else if search.is_some() {
         warn!("mdBook compiled without search support, ignoring `output.html.search` table");
         warn!(

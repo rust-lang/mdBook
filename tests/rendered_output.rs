@@ -426,25 +426,39 @@ mod search {
 
         let index = read_book_index(temp.path());
 
+        let doc_urls = index["doc_urls"].as_array().unwrap();
+        let get_doc_ref = |url: &str| -> String {
+            doc_urls.iter()
+                .position(|s| s == url)
+                .unwrap()
+                .to_string()
+        };
+
+        let first_chapter = get_doc_ref("first/index.html#first-chapter");
+        let introduction = get_doc_ref("intro.html#introduction");
+        let some_section = get_doc_ref("first/index.html#some-section");
+        let summary = get_doc_ref("first/includes.html#summary");
+        let conclusion = get_doc_ref("conclusion.html#conclusion");
+
         let bodyidx = &index["index"]["index"]["body"]["root"];
         let textidx = &bodyidx["t"]["e"]["x"]["t"];
         assert_eq!(textidx["df"], 2);
-        assert_eq!(textidx["docs"]["first/index.html#first-chapter"]["tf"], 1.0);
-        assert_eq!(textidx["docs"]["intro.html#introduction"]["tf"], 1.0);
+        assert_eq!(textidx["docs"][&first_chapter]["tf"], 1.0);
+        assert_eq!(textidx["docs"][&introduction]["tf"], 1.0);
 
         let docs = &index["index"]["documentStore"]["docs"];
-        assert_eq!(docs["first/index.html#first-chapter"]["body"], "more text.");
-        assert_eq!(docs["first/index.html#some-section"]["body"], "");
+        assert_eq!(docs[&first_chapter]["body"], "more text.");
+        assert_eq!(docs[&some_section]["body"], "");
         assert_eq!(
-            docs["first/includes.html#summary"]["body"],
+            docs[&summary]["body"],
             "Introduction First Chapter Nested Chapter Includes Recursive Second Chapter Conclusion"
         );
         assert_eq!(
-            docs["first/includes.html#summary"]["breadcrumbs"],
+            docs[&summary]["breadcrumbs"],
             "First Chapter » Summary"
         );
         assert_eq!(
-            docs["conclusion.html#conclusion"]["body"],
+            docs[&conclusion]["body"],
             "I put &lt;HTML&gt; in here!"
         );
     }
@@ -452,7 +466,7 @@ mod search {
     // Setting this to `true` may cause issues with `cargo watch`,
     // since it may not finish writing the fixture before the tests
     // are run again.
-    const GENERATE_FIXTURE: bool = true;
+    const GENERATE_FIXTURE: bool = false;
 
     fn get_fixture() -> serde_json::Value {
         if GENERATE_FIXTURE {
@@ -481,7 +495,7 @@ mod search {
     //
     // If you're pretty sure you haven't broken anything, change `GENERATE_FIXTURE`
     // above to `true`, and run `cargo test` to generate a new fixture. Then
-    // change it back to `false`. Include the changed `searchindex_fixture.json` in your commit.
+    // **change it back to `false`**. Include the changed `searchindex_fixture.json` in your commit.
     #[test]
     fn search_index_hasnt_changed_accidentally() {
         let temp = DummyBook::new().build().unwrap();

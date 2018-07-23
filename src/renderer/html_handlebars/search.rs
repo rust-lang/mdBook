@@ -18,16 +18,21 @@ use theme::searcher;
 /// Creates all files required for search.
 pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> Result<()> {
     let mut index = Index::new(&["title", "body", "breadcrumbs"]);
+    let mut doc_urls = Vec::with_capacity(book.sections.len());
 
     for item in book.iter() {
-        render_item(&mut index, &search_config, item)?;
+        render_item(&mut index, &search_config, &mut doc_urls, item)?;
     }
 
-    let index = write_to_js(index, &search_config)?;
+    let index = write_to_json(index, &search_config, doc_urls)?;
     debug!("Writing search index ✓");
+    if index.len() > 10_000_000 {
+        warn!("searchindex.json is very large ({} bytes)", index.len());
+    }
 
     if search_config.copy_js {
-        utils::fs::write_file(destination, "searchindex.js", index.as_bytes())?;
+        utils::fs::write_file(destination, "searchindex.json", index.as_bytes())?;
+        utils::fs::write_file(destination, "searchindex.js", format!("window.search = {};", index).as_bytes())?;
         utils::fs::write_file(destination, "searcher.js", searcher::JS)?;
         utils::fs::write_file(destination, "mark.min.js", searcher::MARK_JS)?;
         utils::fs::write_file(destination, "elasticlunr.min.js", searcher::ELASTICLUNR_JS)?;
@@ -38,18 +43,22 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
 }
 
 /// Uses the given arguments to construct a search document, then inserts it to the given index.
-fn add_doc<'a>(
+fn add_doc(
     index: &mut Index,
-    anchor_base: &'a str,
+    doc_urls: &mut Vec<String>, 
+    anchor_base: &str, 
     section_id: &Option<String>,
     items: &[&str],
 ) {
-    let doc_ref: Cow<'a, str> = if let &Some(ref id) = section_id {
-        format!("{}#{}", anchor_base, id).into()
+    let url = if let &Some(ref id) = section_id {
+        Cow::Owned(format!("{}#{}", anchor_base, id))
     } else {
-        anchor_base.into()
+        Cow::Borrowed(anchor_base)
     };
-    let doc_ref = utils::collapse_whitespace(doc_ref.trim());
+    let url = utils::collapse_whitespace(url.trim());
+    let doc_ref = doc_urls.len().to_string();
+    doc_urls.push(url.into());
+
     let items = items.iter().map(|&x| utils::collapse_whitespace(x.trim()));
     index.add_doc(&doc_ref, items);
 }
@@ -58,6 +67,7 @@ fn add_doc<'a>(
 fn render_item(
     index: &mut Index,
     search_config: &Search,
+    doc_urls: &mut Vec<String>,
     item: &BookItem,
 ) -> Result<()> {
     let chapter = match item {
@@ -92,6 +102,7 @@ fn render_item(
                     // Write the data to the index, and clear it for the next section
                     add_doc(
                         index,
+                        doc_urls,
                         &anchor_base,
                         &section_id,
                         &[&heading, &body, &breadcrumbs.join(" » ")],
@@ -144,6 +155,7 @@ fn render_item(
         // Make sure the last section is added to the index
         add_doc(
             index,
+            doc_urls,
             &anchor_base,
             &section_id,
             &[&heading, &body, &breadcrumbs.join(" » ")],
@@ -153,10 +165,7 @@ fn render_item(
     Ok(())
 }
 
-/// Exports the index and search options to a JS script which stores the index in `window.search`.
-/// Using a JS script is a workaround for CORS in `file://` URIs. It also removes the need for
-/// downloading/parsing JSON in JS.
-fn write_to_js(index: Index, search_config: &Search) -> Result<String> {
+fn write_to_json(index: Index, search_config: &Search, doc_urls: Vec<String>) -> Result<String> {
     use std::collections::BTreeMap;
     use self::elasticlunr::config::{SearchBool, SearchOptions, SearchOptionsField};
 
@@ -169,9 +178,11 @@ fn write_to_js(index: Index, search_config: &Search) -> Result<String> {
     #[derive(Serialize)]
     struct SearchindexJson {
         /// The options used for displaying search results
-        resultsoptions: ResultsOptions,
+        results_options: ResultsOptions,
         /// The searchoptions for elasticlunr.js
-        searchoptions: SearchOptions,
+        search_options: SearchOptions,
+        /// Used to lookup a document's URL from an integer document ref.
+        doc_urls: Vec<String>,
         /// The index for elasticlunr.js
         index: elasticlunr::Index,
     }
@@ -185,7 +196,7 @@ fn write_to_js(index: Index, search_config: &Search) -> Result<String> {
     opt.boost = Some(search_config.boost_hierarchy);
     fields.insert("breadcrumbs".into(), opt);
 
-    let searchoptions = SearchOptions {
+    let search_options = SearchOptions {
         bool: if search_config.use_boolean_and {
             SearchBool::And
         } else {
@@ -195,14 +206,15 @@ fn write_to_js(index: Index, search_config: &Search) -> Result<String> {
         fields,
     };
 
-    let resultsoptions = ResultsOptions {
+    let results_options = ResultsOptions {
         limit_results: search_config.limit_results,
         teaser_word_count: search_config.teaser_word_count,
     };
 
     let json_contents = SearchindexJson {
-        resultsoptions,
-        searchoptions,
+        results_options,
+        search_options,
+        doc_urls,
         index,
     };
 
@@ -211,7 +223,7 @@ fn write_to_js(index: Index, search_config: &Search) -> Result<String> {
     let json_contents = serde_json::to_value(&json_contents)?;
     let json_contents = serde_json::to_string(&json_contents)?;
 
-    Ok(format!("window.search = {};", json_contents))
+    Ok(json_contents)
 }
 
 fn clean_html(html: &str) -> String {
