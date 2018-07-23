@@ -462,12 +462,12 @@ window.search = window.search || {};
         showResults(true);
     }
 
-    fetch('searchindex.json')
+    fetch(path_to_root + 'searchindex.json')
         .then(response => response.json())
         .then(json => init(json))        
         .catch(error => { // Try to load searchindex.js if fetch failed
             var script = document.createElement('script');
-            script.src = 'searchindex.js';
+            script.src = path_to_root + 'searchindex.js';
             script.onload = () => init(window.search);
             document.head.appendChild(script);
         });
