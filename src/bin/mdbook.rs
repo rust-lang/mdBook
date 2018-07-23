@@ -8,22 +8,22 @@ extern crate log;
 extern crate mdbook;
 extern crate open;
 
+use chrono::Local;
+use clap::{App, AppSettings, ArgMatches};
+use env_logger::Builder;
+use log::LevelFilter;
+use mdbook::utils;
 use std::env;
 use std::ffi::OsStr;
-use std::path::{Path, PathBuf};
 use std::io::Write;
-use clap::{App, AppSettings, ArgMatches};
-use chrono::Local;
-use log::LevelFilter;
-use env_logger::Builder;
-use mdbook::utils;
+use std::path::{Path, PathBuf};
 
 pub mod build;
 pub mod clean;
 pub mod init;
-pub mod test;
 #[cfg(feature = "serve")]
 pub mod serve;
+pub mod test;
 #[cfg(feature = "watch")]
 pub mod watch;
 

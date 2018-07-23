@@ -1,5 +1,5 @@
-use std::ops::{Range, RangeFrom, RangeFull, RangeTo};
 use itertools::Itertools;
+use std::ops::{Range, RangeFrom, RangeFull, RangeTo};
 
 // This trait is already contained in the standard lib, however it is unstable.
 // TODO: Remove when the `collections_range` feature stabilises

@@ -50,17 +50,17 @@
 
 #![deny(missing_docs)]
 
-use std::path::{Path, PathBuf};
-use std::fs::File;
-use std::io::Read;
-use std::env;
-use toml::{self, Value};
-use toml::value::Table;
-use toml_query::read::TomlValueReadExt;
-use toml_query::insert::TomlValueInsertExt;
-use toml_query::delete::TomlValueDeleteExt;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json;
+use std::env;
+use std::fs::File;
+use std::io::Read;
+use std::path::{Path, PathBuf};
+use toml::value::Table;
+use toml::{self, Value};
+use toml_query::delete::TomlValueDeleteExt;
+use toml_query::insert::TomlValueInsertExt;
+use toml_query::read::TomlValueReadExt;
 
 use errors::*;
 
@@ -217,9 +217,10 @@ impl Config {
         // figure out what try_into() deserializes to.
         macro_rules! get_and_insert {
             ($table:expr, $key:expr => $out:expr) => {
-                let got = $table.as_table_mut()
-                                .and_then(|t| t.remove($key))
-                                .and_then(|v| v.try_into().ok());
+                let got = $table
+                    .as_table_mut()
+                    .and_then(|t| t.remove($key))
+                    .and_then(|v| v.try_into().ok());
                 if let Some(value) = got {
                     $out = value;
                 }

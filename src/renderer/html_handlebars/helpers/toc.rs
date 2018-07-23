@@ -1,11 +1,11 @@
-use std::path::Path;
 use std::collections::BTreeMap;
+use std::path::Path;
 
 use utils;
 
-use serde_json;
 use handlebars::{Handlebars, Helper, HelperDef, RenderContext, RenderError};
 use pulldown_cmark::{html, Event, Parser, Tag};
+use serde_json;
 
 // Handlebars helper to construct TOC
 #[derive(Clone, Copy)]
@@ -79,7 +79,8 @@ impl HelperDef for RenderToc {
                         .replace("\\", "/");
 
                     // Add link
-                    rc.writer.write_all(&utils::fs::path_to_root(&current).as_bytes())?;
+                    rc.writer
+                        .write_all(&utils::fs::path_to_root(&current).as_bytes())?;
                     rc.writer.write_all(tmp.as_bytes())?;
                     rc.writer.write_all(b"\"")?;
 

@@ -1,7 +1,7 @@
-use std::path::PathBuf;
 use clap::{App, ArgMatches, SubCommand};
-use mdbook::MDBook;
 use mdbook::errors::Result;
+use mdbook::MDBook;
+use std::path::PathBuf;
 use {get_book_dir, open};
 
 // Create clap subcommand arguments

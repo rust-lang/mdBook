@@ -132,8 +132,11 @@ impl HtmlHandlebars {
     ) -> Result<()> {
         use utils::fs::write_file;
 
-        write_file(destination, ".nojekyll", 
-            b"This file makes sure that Github Pages doesn't process mdBook's output.")?;
+        write_file(
+            destination,
+            ".nojekyll",
+            b"This file makes sure that Github Pages doesn't process mdBook's output.",
+        )?;
 
         write_file(destination, "book.js", &theme.js)?;
         write_file(destination, "book.css", &theme.css)?;
@@ -450,7 +453,10 @@ fn make_data(
     if cfg!(feature = "search") {
         let search = search.unwrap_or_default();
         data.insert("search_enabled".to_owned(), json!(search.enable));
-        data.insert("search_js".to_owned(), json!(search.enable && search.copy_js));
+        data.insert(
+            "search_js".to_owned(),
+            json!(search.enable && search.copy_js),
+        );
     } else if search.is_some() {
         warn!("mdBook compiled without search support, ignoring `output.html.search` table");
         warn!(
@@ -513,7 +519,7 @@ fn build_header_links(html: &str) -> String {
 fn wrap_header_with_link(
     level: usize,
     content: &str,
-    id_counter: &mut HashMap<String, usize>
+    id_counter: &mut HashMap<String, usize>,
 ) -> String {
     let raw_id = utils::id_from_content(content);
 
@@ -533,7 +539,6 @@ fn wrap_header_with_link(
         text = content
     )
 }
-
 
 // The rust book uses annotations for rustdoc to test code snippets,
 // like the following:
@@ -574,7 +579,8 @@ fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
             {
                 // wrap the contents in an external pre block
                 if playpen_config.editable && classes.contains("editable")
-                    || text.contains("fn main") || text.contains("quick_main!")
+                    || text.contains("fn main")
+                    || text.contains("quick_main!")
                 {
                     format!("<pre class=\"playpen\">{}</pre>", text)
                 } else {

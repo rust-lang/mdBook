@@ -1,2 +1,2 @@
-pub mod toc;
 pub mod navigation;
+pub mod toc;

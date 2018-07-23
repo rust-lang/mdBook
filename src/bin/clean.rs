@@ -1,9 +1,9 @@
+use clap::{App, ArgMatches, SubCommand};
+use get_book_dir;
+use mdbook::errors::*;
+use mdbook::MDBook;
 use std::fs;
 use std::path::PathBuf;
-use clap::{App, ArgMatches, SubCommand};
-use mdbook::MDBook;
-use mdbook::errors::*;
-use get_book_dir;
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {

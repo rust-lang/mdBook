@@ -5,9 +5,9 @@ pub mod playpen_editor;
 #[cfg(feature = "search")]
 pub mod searcher;
 
-use std::path::Path;
 use std::fs::File;
 use std::io::Read;
+use std::path::Path;
 
 use errors::*;
 
@@ -33,7 +33,6 @@ pub static FONT_AWESOME_WOFF: &'static [u8] =
 pub static FONT_AWESOME_WOFF2: &'static [u8] =
     include_bytes!("FontAwesome/fonts/fontawesome-webfont.woff2");
 pub static FONT_AWESOME_OTF: &'static [u8] = include_bytes!("FontAwesome/fonts/FontAwesome.otf");
-
 
 /// The `Theme` struct should be used instead of the static variables because
 /// the `new()` method will look if the user has a theme directory in their
@@ -78,8 +77,14 @@ impl Theme {
                 (theme_dir.join("highlight.js"), &mut theme.highlight_js),
                 (theme_dir.join("clipboard.min.js"), &mut theme.clipboard_js),
                 (theme_dir.join("highlight.css"), &mut theme.highlight_css),
-                (theme_dir.join("tomorrow-night.css"), &mut theme.tomorrow_night_css),
-                (theme_dir.join("ayu-highlight.css"), &mut theme.ayu_highlight_css),
+                (
+                    theme_dir.join("tomorrow-night.css"),
+                    &mut theme.tomorrow_night_css,
+                ),
+                (
+                    theme_dir.join("ayu-highlight.css"),
+                    &mut theme.ayu_highlight_css,
+                ),
             ];
 
             for (filename, dest) in files {
@@ -130,12 +135,11 @@ fn load_file_contents<P: AsRef<Path>>(filename: P, dest: &mut Vec<u8>) -> Result
     Ok(())
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::Builder as TempFileBuilder;
     use std::path::PathBuf;
+    use tempfile::Builder as TempFileBuilder;
 
     #[test]
     fn theme_uses_defaults_with_nonexistent_src_dir() {

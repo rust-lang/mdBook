@@ -1,9 +1,9 @@
+use errors::*;
+use regex::{CaptureMatches, Captures, Regex};
 use std::ops::{Range, RangeFrom, RangeFull, RangeTo};
 use std::path::{Path, PathBuf};
-use regex::{CaptureMatches, Captures, Regex};
 use utils::fs::file_to_string;
 use utils::take_lines;
-use errors::*;
 
 use super::{Preprocessor, PreprocessorContext};
 use book::{Book, BookItem};
@@ -62,12 +62,18 @@ fn replace_all<P: AsRef<Path>>(s: &str, path: P, source: &P, depth: usize) -> St
             Ok(new_content) => {
                 if depth < MAX_LINK_NESTED_DEPTH {
                     if let Some(rel_path) = playpen.link.relative_path(path) {
-                        replaced.push_str(&replace_all(&new_content, rel_path, &source.to_path_buf(), depth + 1));
+                        replaced.push_str(&replace_all(
+                            &new_content,
+                            rel_path,
+                            &source.to_path_buf(),
+                            depth + 1,
+                        ));
                     }
-                }
-                else {
-                    error!("Stack depth exceeded in {}. Check for cyclic includes",
-                            source.display());
+                } else {
+                    error!(
+                        "Stack depth exceeded in {}. Check for cyclic includes",
+                        source.display()
+                    );
                 }
                 previous_end_index = playpen.end_index;
             }
@@ -103,7 +109,7 @@ impl<'a> LinkType<'a> {
             LinkType::IncludeRangeFrom(p, _) => Some(return_relative_path(base, &p)),
             LinkType::IncludeRangeTo(p, _) => Some(return_relative_path(base, &p)),
             LinkType::IncludeRangeFull(p, _) => Some(return_relative_path(base, &p)),
-            LinkType::Playpen(p,_) => Some(return_relative_path(base, &p))
+            LinkType::Playpen(p, _) => Some(return_relative_path(base, &p)),
         }
     }
 }
@@ -241,15 +247,16 @@ fn find_links(contents: &str) -> LinkIter {
     // lazily compute following regex
     // r"\\\{\{#.*\}\}|\{\{#([a-zA-Z0-9]+)\s*([a-zA-Z0-9_.\-:/\\\s]+)\}\}")?;
     lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?x) # insignificant whitespace mode
-                    \\\{\{\#.*\}\}               # match escaped link
-                    |                            # or
-                    \{\{\s*                      # link opening parens and whitespace
-                      \#([a-zA-Z0-9]+)           # link type
-                      \s+                        # separating whitespace
-                      ([a-zA-Z0-9\s_.\-:/\\]+)   # link target path and space separated properties
-                    \s*\}\}                      # whitespace and link closing parens
-                                 ").unwrap();
+        static ref RE: Regex = Regex::new(
+            r"(?x)                     # insignificant whitespace mode
+            \\\{\{\#.*\}\}             # match escaped link
+            |                          # or
+            \{\{\s*                    # link opening parens and whitespace
+            \#([a-zA-Z0-9]+)           # link type
+            \s+                        # separating whitespace
+            ([a-zA-Z0-9\s_.\-:/\\]+)   # link target path and space separated properties
+            \s*\}\}                    # whitespace and link closing parens"
+        ).unwrap();
     }
     LinkIter(RE.captures_iter(contents))
 }
@@ -319,14 +326,12 @@ mod tests {
         println!("\nOUTPUT: {:?}\n", res);
         assert_eq!(
             res,
-            vec![
-                Link {
-                    start_index: 22,
-                    end_index: 48,
-                    link: LinkType::IncludeRange(PathBuf::from("file.rs"), 9..20),
-                    link_text: "{{#include file.rs:10:20}}",
-                },
-            ]
+            vec![Link {
+                start_index: 22,
+                end_index: 48,
+                link: LinkType::IncludeRange(PathBuf::from("file.rs"), 9..20),
+                link_text: "{{#include file.rs:10:20}}",
+            }]
         );
     }
 
@@ -337,14 +342,12 @@ mod tests {
         println!("\nOUTPUT: {:?}\n", res);
         assert_eq!(
             res,
-            vec![
-                Link {
-                    start_index: 22,
-                    end_index: 45,
-                    link: LinkType::IncludeRange(PathBuf::from("file.rs"), 9..10),
-                    link_text: "{{#include file.rs:10}}",
-                },
-            ]
+            vec![Link {
+                start_index: 22,
+                end_index: 45,
+                link: LinkType::IncludeRange(PathBuf::from("file.rs"), 9..10),
+                link_text: "{{#include file.rs:10}}",
+            }]
         );
     }
 
@@ -355,14 +358,12 @@ mod tests {
         println!("\nOUTPUT: {:?}\n", res);
         assert_eq!(
             res,
-            vec![
-                Link {
-                    start_index: 22,
-                    end_index: 46,
-                    link: LinkType::IncludeRangeFrom(PathBuf::from("file.rs"), 9..),
-                    link_text: "{{#include file.rs:10:}}",
-                },
-            ]
+            vec![Link {
+                start_index: 22,
+                end_index: 46,
+                link: LinkType::IncludeRangeFrom(PathBuf::from("file.rs"), 9..),
+                link_text: "{{#include file.rs:10:}}",
+            }]
         );
     }
 
@@ -373,14 +374,12 @@ mod tests {
         println!("\nOUTPUT: {:?}\n", res);
         assert_eq!(
             res,
-            vec![
-                Link {
-                    start_index: 22,
-                    end_index: 46,
-                    link: LinkType::IncludeRangeTo(PathBuf::from("file.rs"), ..20),
-                    link_text: "{{#include file.rs::20}}",
-                },
-            ]
+            vec![Link {
+                start_index: 22,
+                end_index: 46,
+                link: LinkType::IncludeRangeTo(PathBuf::from("file.rs"), ..20),
+                link_text: "{{#include file.rs::20}}",
+            }]
         );
     }
 
@@ -391,14 +390,12 @@ mod tests {
         println!("\nOUTPUT: {:?}\n", res);
         assert_eq!(
             res,
-            vec![
-                Link {
-                    start_index: 22,
-                    end_index: 44,
-                    link: LinkType::IncludeRangeFull(PathBuf::from("file.rs"), ..),
-                    link_text: "{{#include file.rs::}}",
-                },
-            ]
+            vec![Link {
+                start_index: 22,
+                end_index: 44,
+                link: LinkType::IncludeRangeFull(PathBuf::from("file.rs"), ..),
+                link_text: "{{#include file.rs::}}",
+            }]
         );
     }
 
@@ -409,14 +406,12 @@ mod tests {
         println!("\nOUTPUT: {:?}\n", res);
         assert_eq!(
             res,
-            vec![
-                Link {
-                    start_index: 22,
-                    end_index: 42,
-                    link: LinkType::IncludeRangeFull(PathBuf::from("file.rs"), ..),
-                    link_text: "{{#include file.rs}}",
-                },
-            ]
+            vec![Link {
+                start_index: 22,
+                end_index: 42,
+                link: LinkType::IncludeRangeFull(PathBuf::from("file.rs"), ..),
+                link_text: "{{#include file.rs}}",
+            }]
         );
     }
 
@@ -429,14 +424,12 @@ mod tests {
 
         assert_eq!(
             res,
-            vec![
-                Link {
-                    start_index: 38,
-                    end_index: 68,
-                    link: LinkType::Escaped,
-                    link_text: "\\{{#playpen file.rs editable}}",
-                },
-            ]
+            vec![Link {
+                start_index: 38,
+                end_index: 68,
+                link: LinkType::Escaped,
+                link_text: "\\{{#playpen file.rs editable}}",
+            }]
         );
     }
 

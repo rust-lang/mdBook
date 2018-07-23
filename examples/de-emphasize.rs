@@ -3,15 +3,15 @@ extern crate mdbook;
 extern crate pulldown_cmark;
 extern crate pulldown_cmark_to_cmark;
 
-use mdbook::errors::{Error, Result};
-use mdbook::MDBook;
 use mdbook::book::{Book, BookItem, Chapter};
+use mdbook::errors::{Error, Result};
 use mdbook::preprocess::{Preprocessor, PreprocessorContext};
+use mdbook::MDBook;
 use pulldown_cmark::{Event, Parser, Tag};
 use pulldown_cmark_to_cmark::fmt::cmark;
 
-use std::ffi::OsString;
 use std::env::{args, args_os};
+use std::ffi::OsString;
 use std::process;
 
 struct Deemphasize;

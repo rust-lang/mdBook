@@ -1,10 +1,10 @@
 //! Book preprocessing.
 
-pub use self::links::LinkPreprocessor;
 pub use self::index::IndexPreprocessor;
+pub use self::links::LinkPreprocessor;
 
-mod links;
 mod index;
+mod links;
 
 use book::Book;
 use config::Config;
