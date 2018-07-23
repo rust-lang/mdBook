@@ -1,5 +1,5 @@
-use std::path::Path;
 use regex::Regex;
+use std::path::Path;
 
 use errors::*;
 
@@ -27,8 +27,7 @@ impl Preprocessor for IndexPreprocessor {
         book.for_each_mut(|section: &mut BookItem| {
             if let BookItem::Chapter(ref mut ch) = *section {
                 if is_readme_file(&ch.path) {
-                    let index_md = source_dir
-                        .join(ch.path.with_file_name("index.md"));
+                    let index_md = source_dir.join(ch.path.with_file_name("index.md"));
                     if index_md.exists() {
                         warn_readme_name_conflict(&ch.path, &index_md);
                     }
@@ -45,8 +44,15 @@ impl Preprocessor for IndexPreprocessor {
 fn warn_readme_name_conflict<P: AsRef<Path>>(readme_path: P, index_path: P) {
     let file_name = readme_path.as_ref().file_name().unwrap_or_default();
     let parent_dir = index_path.as_ref().parent().unwrap_or(index_path.as_ref());
-    warn!("It seems that there are both {:?} and index.md under \"{}\".", file_name, parent_dir.display());
-    warn!("mdbook converts {:?} into index.html by default. It may cause", file_name);
+    warn!(
+        "It seems that there are both {:?} and index.md under \"{}\".",
+        file_name,
+        parent_dir.display()
+    );
+    warn!(
+        "mdbook converts {:?} into index.html by default. It may cause",
+        file_name
+    );
     warn!("unexpected behavior if putting both files under the same directory.");
     warn!("To solve the warning, try to rearrange the book structure or disable");
     warn!("\"index\" preprocessor to stop the conversion.");
@@ -60,7 +66,7 @@ fn is_readme_file<P: AsRef<Path>>(path: P) -> bool {
         path.as_ref()
             .file_stem()
             .and_then(|s| s.to_str())
-            .unwrap_or_default()
+            .unwrap_or_default(),
     )
 }
 

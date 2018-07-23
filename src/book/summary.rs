@@ -1,10 +1,10 @@
+use errors::*;
+use memchr::{self, Memchr};
+use pulldown_cmark::{self, Event, Tag};
 use std::fmt::{self, Display, Formatter};
 use std::iter::FromIterator;
 use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
-use memchr::{self, Memchr};
-use pulldown_cmark::{self, Event, Tag};
-use errors::*;
 
 /// Parse the text from a `SUMMARY.md` file into a sort of "recipe" to be
 /// used when loading a book from disk.
@@ -164,33 +164,34 @@ struct SummaryParser<'a> {
 /// use pattern matching and you won't get errors because `take_while()`
 /// moves `$stream` out of self.
 macro_rules! collect_events {
-    ($stream:expr, start $delimiter:pat) => {
+    ($stream:expr,start $delimiter:pat) => {
         collect_events!($stream, Event::Start($delimiter))
     };
-    ($stream:expr, end $delimiter:pat) => {
+    ($stream:expr,end $delimiter:pat) => {
         collect_events!($stream, Event::End($delimiter))
     };
-    ($stream:expr, $delimiter:pat) => {
-        {
-            let mut events = Vec::new();
+    ($stream:expr, $delimiter:pat) => {{
+        let mut events = Vec::new();
 
-            loop {
-                let event = $stream.next();
-                trace!("Next event: {:?}", event);
+        loop {
+            let event = $stream.next();
+            trace!("Next event: {:?}", event);
 
-                match event {
-                    Some($delimiter) => break,
-                    Some(other) => events.push(other),
-                    None => {
-                        debug!("Reached end of stream without finding the closing pattern, {}", stringify!($delimiter));
-                        break;
-                    }
+            match event {
+                Some($delimiter) => break,
+                Some(other) => events.push(other),
+                None => {
+                    debug!(
+                        "Reached end of stream without finding the closing pattern, {}",
+                        stringify!($delimiter)
+                    );
+                    break;
                 }
             }
-
-            events
         }
-    }
+
+        events
+    }};
 }
 
 impl<'a> SummaryParser<'a> {
@@ -659,14 +660,12 @@ mod tests {
                 name: String::from("First"),
                 location: PathBuf::from("./first.md"),
                 number: Some(SectionNumber(vec![1])),
-                nested_items: vec![
-                    SummaryItem::Link(Link {
-                        name: String::from("Nested"),
-                        location: PathBuf::from("./nested.md"),
-                        number: Some(SectionNumber(vec![1, 1])),
-                        nested_items: Vec::new(),
-                    }),
-                ],
+                nested_items: vec![SummaryItem::Link(Link {
+                    name: String::from("Nested"),
+                    location: PathBuf::from("./nested.md"),
+                    number: Some(SectionNumber(vec![1, 1])),
+                    nested_items: Vec::new(),
+                })],
             }),
             SummaryItem::Link(Link {
                 name: String::from("Second"),

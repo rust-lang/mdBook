@@ -5,15 +5,15 @@ use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
+use self::elasticlunr::Index;
 use pulldown_cmark::*;
 use serde_json;
-use self::elasticlunr::Index;
 
 use book::{Book, BookItem};
 use config::Search;
 use errors::*;
-use utils;
 use theme::searcher;
+use utils;
 
 /// Creates all files required for search.
 pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> Result<()> {
@@ -32,7 +32,11 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
 
     if search_config.copy_js {
         utils::fs::write_file(destination, "searchindex.json", index.as_bytes())?;
-        utils::fs::write_file(destination, "searchindex.js", format!("window.search = {};", index).as_bytes())?;
+        utils::fs::write_file(
+            destination,
+            "searchindex.js",
+            format!("window.search = {};", index).as_bytes(),
+        )?;
         utils::fs::write_file(destination, "searcher.js", searcher::JS)?;
         utils::fs::write_file(destination, "mark.min.js", searcher::MARK_JS)?;
         utils::fs::write_file(destination, "elasticlunr.min.js", searcher::ELASTICLUNR_JS)?;
@@ -45,8 +49,8 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
 /// Uses the given arguments to construct a search document, then inserts it to the given index.
 fn add_doc(
     index: &mut Index,
-    doc_urls: &mut Vec<String>, 
-    anchor_base: &str, 
+    doc_urls: &mut Vec<String>,
+    anchor_base: &str,
     section_id: &Option<String>,
     items: &[&str],
 ) {
@@ -166,8 +170,8 @@ fn render_item(
 }
 
 fn write_to_json(index: Index, search_config: &Search, doc_urls: Vec<String>) -> Result<String> {
-    use std::collections::BTreeMap;
     use self::elasticlunr::config::{SearchBool, SearchOptions, SearchOptionsField};
+    use std::collections::BTreeMap;
 
     #[derive(Serialize)]
     struct ResultsOptions {

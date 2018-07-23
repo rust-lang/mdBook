@@ -25,16 +25,10 @@ pub fn normalize_path(path: &str) -> String {
 }
 
 /// Write the given data to a file, creating it first if necessary
-pub fn write_file<P: AsRef<Path>>(
-    build_dir: &Path,
-    filename: P,
-    content: &[u8],
-) -> Result<()> {
+pub fn write_file<P: AsRef<Path>>(build_dir: &Path, filename: P, content: &[u8]) -> Result<()> {
     let path = build_dir.join(filename);
 
-    create_file(&path)?
-        .write_all(content)
-        .map_err(|e| e.into())
+    create_file(&path)?.write_all(content).map_err(|e| e.into())
 }
 
 /// Takes a path and returns a path containing just enough `../` to point to

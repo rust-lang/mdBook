@@ -2,16 +2,17 @@ extern crate iron;
 extern crate staticfile;
 extern crate ws;
 
-use std;
-use self::iron::{status, AfterMiddleware, Chain, Iron, IronError, IronResult, Request, Response,
-                 Set};
+use self::iron::{
+    status, AfterMiddleware, Chain, Iron, IronError, IronResult, Request, Response, Set,
+};
 use clap::{App, ArgMatches, SubCommand};
-use mdbook::MDBook;
-use mdbook::utils;
 use mdbook::errors::*;
-use {get_book_dir, open};
+use mdbook::utils;
+use mdbook::MDBook;
+use std;
 #[cfg(feature = "watch")]
 use watch;
+use {get_book_dir, open};
 
 struct ErrorRecover;
 

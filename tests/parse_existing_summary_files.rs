@@ -5,10 +5,10 @@ extern crate env_logger;
 extern crate error_chain;
 extern crate mdbook;
 
+use mdbook::book;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
-use mdbook::book;
 
 macro_rules! summary_md_test {
     ($name:ident, $filename:expr) => {

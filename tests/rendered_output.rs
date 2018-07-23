@@ -9,18 +9,18 @@ mod dummy_book;
 
 use dummy_book::{assert_contains_strings, assert_doesnt_contain_strings, DummyBook};
 
+use mdbook::config::Config;
+use mdbook::errors::*;
+use mdbook::utils::fs::{file_to_string, write_file};
+use mdbook::MDBook;
+use select::document::Document;
+use select::predicate::{Class, Name, Predicate};
+use std::ffi::OsStr;
 use std::fs;
 use std::io::Write;
 use std::path::Path;
-use std::ffi::OsStr;
-use walkdir::{DirEntry, WalkDir};
-use select::document::Document;
-use select::predicate::{Class, Name, Predicate};
 use tempfile::Builder as TempFileBuilder;
-use mdbook::errors::*;
-use mdbook::utils::fs::{file_to_string, write_file};
-use mdbook::config::Config;
-use mdbook::MDBook;
+use walkdir::{DirEntry, WalkDir};
 
 const BOOK_ROOT: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/dummy_book");
 const TOC_TOP_LEVEL: &[&'static str] = &[
@@ -29,7 +29,8 @@ const TOC_TOP_LEVEL: &[&'static str] = &[
     "Conclusion",
     "Introduction",
 ];
-const TOC_SECOND_LEVEL: &[&'static str] = &["1.1. Nested Chapter", "1.2. Includes", "1.3. Recursive"];
+const TOC_SECOND_LEVEL: &[&'static str] =
+    &["1.1. Nested Chapter", "1.2. Includes", "1.3. Recursive"];
 
 /// Make sure you can load the dummy book and build it without panicking.
 #[test]
@@ -98,16 +99,12 @@ fn check_correct_cross_links_in_nested_dir() {
 
     assert_contains_strings(
         first.join("index.html"),
-        &[
-            r##"href="#some-section" id="some-section""##,
-        ],
+        &[r##"href="#some-section" id="some-section""##],
     );
 
     assert_contains_strings(
         first.join("nested.html"),
-        &[
-            r##"href="#some-section" id="some-section""##,
-        ],
+        &[r##"href="#some-section" id="some-section""##],
     );
 }
 
@@ -357,14 +354,12 @@ fn book_with_a_reserved_filename_does_not_build() {
 fn by_default_mdbook_use_index_preprocessor_to_convert_readme_to_index() {
     let temp = DummyBook::new().build().unwrap();
     let mut cfg = Config::default();
-    cfg.set("book.src", "src2").expect("Couldn't set config.book.src to \"src2\".");
+    cfg.set("book.src", "src2")
+        .expect("Couldn't set config.book.src to \"src2\".");
     let md = MDBook::load_with_config(temp.path(), cfg).unwrap();
     md.build().unwrap();
 
-    let first_index = temp.path()
-        .join("book")
-        .join("first")
-        .join("index.html");
+    let first_index = temp.path().join("book").join("first").join("index.html");
     let expected_strings = vec![
         r#"href="../first/index.html""#,
         r#"href="../second/index.html""#,
@@ -373,13 +368,8 @@ fn by_default_mdbook_use_index_preprocessor_to_convert_readme_to_index() {
     assert_contains_strings(&first_index, &expected_strings);
     assert_doesnt_contain_strings(&first_index, &vec!["README.html"]);
 
-    let second_index = temp.path()
-        .join("book")
-        .join("second")
-        .join("index.html");
-    let unexpected_strings = vec![
-        "Second README",
-    ];
+    let second_index = temp.path().join("book").join("second").join("index.html");
+    let unexpected_strings = vec!["Second README"];
     assert_doesnt_contain_strings(&second_index, &unexpected_strings);
 }
 
@@ -404,11 +394,11 @@ fn theme_dir_overrides_work_correctly() {
 #[cfg(feature = "search")]
 mod search {
     extern crate serde_json;
-    use std::fs::File;
-    use std::path::Path;
+    use dummy_book::DummyBook;
     use mdbook::utils::fs::file_to_string;
     use mdbook::MDBook;
-    use dummy_book::DummyBook;
+    use std::fs::File;
+    use std::path::Path;
 
     fn read_book_index(root: &Path) -> serde_json::Value {
         let index = root.join("book/searchindex.js");
@@ -427,12 +417,8 @@ mod search {
         let index = read_book_index(temp.path());
 
         let doc_urls = index["doc_urls"].as_array().unwrap();
-        let get_doc_ref = |url: &str| -> String {
-            doc_urls.iter()
-                .position(|s| s == url)
-                .unwrap()
-                .to_string()
-        };
+        let get_doc_ref =
+            |url: &str| -> String { doc_urls.iter().position(|s| s == url).unwrap().to_string() };
 
         let first_chapter = get_doc_ref("first/index.html#first-chapter");
         let introduction = get_doc_ref("intro.html#introduction");
@@ -453,14 +439,8 @@ mod search {
             docs[&summary]["body"],
             "Introduction First Chapter Nested Chapter Includes Recursive Second Chapter Conclusion"
         );
-        assert_eq!(
-            docs[&summary]["breadcrumbs"],
-            "First Chapter » Summary"
-        );
-        assert_eq!(
-            docs[&conclusion]["body"],
-            "I put &lt;HTML&gt; in here!"
-        );
+        assert_eq!(docs[&summary]["breadcrumbs"], "First Chapter » Summary");
+        assert_eq!(docs[&conclusion]["body"], "I put &lt;HTML&gt; in here!");
     }
 
     // Setting this to `true` may cause issues with `cargo watch`,

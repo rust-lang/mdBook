@@ -1,8 +1,8 @@
-use std::path::Path;
 use std::collections::BTreeMap;
+use std::path::Path;
 
-use serde_json;
 use handlebars::{Context, Handlebars, Helper, RenderContext, RenderError, Renderable};
+use serde_json;
 
 use utils;
 
@@ -90,12 +90,14 @@ fn render(
 
     let mut context = BTreeMap::new();
     let base_path = rc.evaluate_absolute("path", false)?
-                      .as_str()
-                      .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
-                      .replace("\"", "");
+        .as_str()
+        .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
+        .replace("\"", "");
 
-    context.insert("path_to_root".to_owned(),
-                                json!(utils::fs::path_to_root(&base_path)));
+    context.insert(
+        "path_to_root".to_owned(),
+        json!(utils::fs::path_to_root(&base_path)),
+    );
 
     chapter
         .get("name")

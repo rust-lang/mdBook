@@ -7,18 +7,17 @@ extern crate mdbook;
 extern crate tempfile;
 extern crate walkdir;
 
-use std::path::Path;
-use std::fs::{self, File};
-use std::io::{Read, Write};
 use mdbook::errors::*;
 use mdbook::utils::fs::file_to_string;
+use std::fs::{self, File};
+use std::io::{Read, Write};
+use std::path::Path;
 
 // The funny `self::` here is because we've got an `extern crate ...` and are
 // in a submodule
-use self::tempfile::{TempDir, Builder as TempFileBuilder};
 use self::mdbook::MDBook;
+use self::tempfile::{Builder as TempFileBuilder, TempDir};
 use self::walkdir::WalkDir;
-
 
 /// Create a dummy book in a temporary directory, using the contents of
 /// `SUMMARY_MD` as a guide.
@@ -47,13 +46,16 @@ impl DummyBook {
 
     /// Write a book to a temporary directory using the provided settings.
     pub fn build(&self) -> Result<TempDir> {
-        let temp = TempFileBuilder::new().prefix("dummy_book").tempdir().chain_err(|| "Unable to create temp directory")?;
+        let temp = TempFileBuilder::new()
+            .prefix("dummy_book")
+            .tempdir()
+            .chain_err(|| "Unable to create temp directory")?;
 
         let dummy_book_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/dummy_book");
         recursive_copy(&dummy_book_root, temp.path()).chain_err(|| {
-                                                                     "Couldn't copy files into a \
-                                                                      temporary directory"
-                                                                 })?;
+            "Couldn't copy files into a \
+             temporary directory"
+        })?;
 
         let sub_pattern = if self.passing_test { "true" } else { "false" };
         let file_containing_test = temp.path().join("src/first/nested.md");
@@ -77,11 +79,13 @@ pub fn assert_contains_strings<P: AsRef<Path>>(filename: P, strings: &[&str]) {
     let content = file_to_string(filename).expect("Couldn't read the file's contents");
 
     for s in strings {
-        assert!(content.contains(s),
-                "Searching for {:?} in {}\n\n{}",
-                s,
-                filename.display(),
-                content);
+        assert!(
+            content.contains(s),
+            "Searching for {:?} in {}\n\n{}",
+            s,
+            filename.display(),
+            content
+        );
     }
 }
 
@@ -90,14 +94,15 @@ pub fn assert_doesnt_contain_strings<P: AsRef<Path>>(filename: P, strings: &[&st
     let content = file_to_string(filename).expect("Couldn't read the file's contents");
 
     for s in strings {
-        assert!(!content.contains(s),
-                "Found {:?} in {}\n\n{}",
-                s,
-                filename.display(),
-                content);
+        assert!(
+            !content.contains(s),
+            "Found {:?} in {}\n\n{}",
+            s,
+            filename.display(),
+            content
+        );
     }
 }
-
 
 /// Recursively copy an entire directory tree to somewhere else (a la `cp -r`).
 fn recursive_copy<A: AsRef<Path>, B: AsRef<Path>>(from: A, to: B) -> Result<()> {
@@ -108,9 +113,9 @@ fn recursive_copy<A: AsRef<Path>, B: AsRef<Path>>(from: A, to: B) -> Result<()> 
         let entry = entry.chain_err(|| "Unable to inspect directory entry")?;
 
         let original_location = entry.path();
-        let relative = original_location.strip_prefix(&from)
-                                        .expect("`original_location` is inside the `from` \
-                                                 directory");
+        let relative = original_location
+            .strip_prefix(&from)
+            .expect("`original_location` is inside the `from` directory");
         let new_location = to.join(relative);
 
         if original_location.is_file() {
@@ -118,9 +123,8 @@ fn recursive_copy<A: AsRef<Path>, B: AsRef<Path>>(from: A, to: B) -> Result<()> 
                 fs::create_dir_all(parent).chain_err(|| "Couldn't create directory")?;
             }
 
-            fs::copy(&original_location, &new_location).chain_err(|| {
-                                                                      "Unable to copy file contents"
-                                                                  })?;
+            fs::copy(&original_location, &new_location)
+                .chain_err(|| "Unable to copy file contents")?;
         }
     }
 
@@ -129,7 +133,7 @@ fn recursive_copy<A: AsRef<Path>, B: AsRef<Path>>(from: A, to: B) -> Result<()> 
 
 pub fn new_copy_of_example_book() -> Result<TempDir> {
     let temp = TempFileBuilder::new().prefix("book-example").tempdir()?;
-    
+
     let book_example = Path::new(env!("CARGO_MANIFEST_DIR")).join("book-example");
 
     recursive_copy(book_example, temp.path())?;

@@ -1,12 +1,11 @@
 extern crate mdbook;
 extern crate tempfile;
 
-use std::path::PathBuf;
-use std::fs;
-use mdbook::MDBook;
 use mdbook::config::Config;
+use mdbook::MDBook;
+use std::fs;
+use std::path::PathBuf;
 use tempfile::Builder as TempFileBuilder;
-
 
 /// Run `mdbook init` in an empty directory and make sure the default files
 /// are created.

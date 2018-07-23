@@ -3,11 +3,11 @@
 extern crate mdbook;
 extern crate tempfile;
 
-#[cfg(not(windows))]
-use std::path::Path;
-use tempfile::{TempDir, Builder as TempFileBuilder};
 use mdbook::config::Config;
 use mdbook::MDBook;
+#[cfg(not(windows))]
+use std::path::Path;
+use tempfile::{Builder as TempFileBuilder, TempDir};
 
 #[test]
 fn passing_alternate_backend() {
@@ -52,8 +52,8 @@ fn tee_command<P: AsRef<Path>>(out_file: P) -> String {
 #[test]
 #[cfg(not(windows))]
 fn backends_receive_render_context_via_stdin() {
-    use std::fs::File;
     use mdbook::renderer::RenderContext;
+    use std::fs::File;
 
     let temp = TempFileBuilder::new().prefix("output").tempdir().unwrap();
     let out_file = temp.path().join("out.txt");

@@ -4,11 +4,11 @@ mod dummy_book;
 
 use dummy_book::DummyBook;
 
-use mdbook::MDBook;
-use mdbook::preprocess::{Preprocessor, PreprocessorContext};
 use mdbook::book::Book;
 use mdbook::config::Config;
 use mdbook::errors::*;
+use mdbook::preprocess::{Preprocessor, PreprocessorContext};
+use mdbook::MDBook;
 
 use std::sync::{Arc, Mutex};
 
@@ -30,7 +30,6 @@ fn mdbook_detects_book_with_failing_tests() {
 
 #[test]
 fn mdbook_runs_preprocessors() {
-
     let has_run: Arc<Mutex<bool>> = Arc::new(Mutex::new(false));
 
     struct DummyPreprocessor(Arc<Mutex<bool>>);

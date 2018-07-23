@@ -5,29 +5,24 @@
 //!
 //! [1]: ../index.html
 
-mod summary;
 mod book;
 mod init;
+mod summary;
 
 pub use self::book::{load_book, Book, BookItem, BookItems, Chapter};
-pub use self::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
 pub use self::init::BookBuilder;
+pub use self::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
 
-use std::path::PathBuf;
 use std::io::Write;
+use std::path::PathBuf;
 use std::process::Command;
 use tempfile::Builder as TempFileBuilder;
 use toml::Value;
 
-use utils;
-use renderer::{CmdRenderer, HtmlHandlebars, RenderContext, Renderer};
-use preprocess::{
-    LinkPreprocessor,
-    IndexPreprocessor,
-    Preprocessor,
-    PreprocessorContext
-};
 use errors::*;
+use preprocess::{IndexPreprocessor, LinkPreprocessor, Preprocessor, PreprocessorContext};
+use renderer::{CmdRenderer, HtmlHandlebars, RenderContext, Renderer};
+use utils;
 
 use config::Config;
 

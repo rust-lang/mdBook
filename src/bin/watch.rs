@@ -1,13 +1,13 @@
 extern crate notify;
 
-use std::path::Path;
 use self::notify::Watcher;
-use std::time::Duration;
-use std::sync::mpsc::channel;
 use clap::{App, ArgMatches, SubCommand};
-use mdbook::MDBook;
-use mdbook::utils;
 use mdbook::errors::Result;
+use mdbook::utils;
+use mdbook::MDBook;
+use std::path::Path;
+use std::sync::mpsc::channel;
+use std::time::Duration;
 use {get_book_dir, open};
 
 // Create clap subcommand arguments
@@ -48,8 +48,8 @@ pub fn trigger_on_change<F>(book: &MDBook, closure: F)
 where
     F: Fn(&Path, &Path),
 {
-    use self::notify::RecursiveMode::*;
     use self::notify::DebouncedEvent::*;
+    use self::notify::RecursiveMode::*;
 
     // Create a channel to receive the events.
     let (tx, rx) = channel();
