@@ -18,14 +18,7 @@ use std::ffi::OsStr;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-pub mod build;
-pub mod clean;
-pub mod init;
-#[cfg(feature = "serve")]
-pub mod serve;
-pub mod test;
-#[cfg(feature = "watch")]
-pub mod watch;
+mod cmd;
 
 const NAME: &'static str = "mdbook";
 
@@ -43,26 +36,26 @@ fn main() {
                              try `mdbook <command> --help`\n\
                              Source code for mdbook available \
                              at: https://github.com/rust-lang-nursery/mdBook")
-                .subcommand(init::make_subcommand())
-                .subcommand(build::make_subcommand())
-                .subcommand(test::make_subcommand())
-                .subcommand(clean::make_subcommand());
+                .subcommand(cmd::init::make_subcommand())
+                .subcommand(cmd::build::make_subcommand())
+                .subcommand(cmd::test::make_subcommand())
+                .subcommand(cmd::clean::make_subcommand());
 
     #[cfg(feature = "watch")]
-    let app = app.subcommand(watch::make_subcommand());
+    let app = app.subcommand(cmd::watch::make_subcommand());
     #[cfg(feature = "serve")]
-    let app = app.subcommand(serve::make_subcommand());
+    let app = app.subcommand(cmd::serve::make_subcommand());
 
     // Check which subcomamnd the user ran...
     let res = match app.get_matches().subcommand() {
-        ("init", Some(sub_matches)) => init::execute(sub_matches),
-        ("build", Some(sub_matches)) => build::execute(sub_matches),
-        ("clean", Some(sub_matches)) => clean::execute(sub_matches),
+        ("init", Some(sub_matches)) => cmd::init::execute(sub_matches),
+        ("build", Some(sub_matches)) => cmd::build::execute(sub_matches),
+        ("clean", Some(sub_matches)) => cmd::clean::execute(sub_matches),
         #[cfg(feature = "watch")]
-        ("watch", Some(sub_matches)) => watch::execute(sub_matches),
+        ("watch", Some(sub_matches)) => cmd::watch::execute(sub_matches),
         #[cfg(feature = "serve")]
-        ("serve", Some(sub_matches)) => serve::execute(sub_matches),
-        ("test", Some(sub_matches)) => test::execute(sub_matches),
+        ("serve", Some(sub_matches)) => cmd::serve::execute(sub_matches),
+        ("test", Some(sub_matches)) => cmd::test::execute(sub_matches),
         (_, _) => unreachable!(),
     };
 
