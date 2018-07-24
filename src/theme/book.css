@@ -224,6 +224,12 @@ table thead td {
   -ms-transition: color 0.5s;
   transition: color 0.5s;
 }
+@media only screen and (max-width: 420px) {
+  #menu-bar i,
+  #menu-bar .icon-button {
+    margin: 0 5px;
+  }
+}
 #menu-bar #print-button {
   margin: 0 15px;
 }
