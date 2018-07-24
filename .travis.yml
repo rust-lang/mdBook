@@ -2,7 +2,7 @@ language: rust
 
 cache: 
   timeout: 360
-  - cargo
+  cargo: true
 
 before_cache:
   - chmod -R a+r $HOME/.cargo
