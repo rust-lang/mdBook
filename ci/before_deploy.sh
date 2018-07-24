@@ -17,7 +17,7 @@ main() {
 
     cargo rustc --bin mdbook --target $TARGET --release -- -C lto
 
-    cp target/release/mdbook $stage/
+    cp target/$TARGET/release/mdbook $stage/
 
     cd $stage
     tar czf $src/$CRATE_NAME-$TRAVIS_TAG-$TARGET.tar.gz *
