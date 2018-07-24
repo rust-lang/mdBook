@@ -68,4 +68,3 @@ search = ["elasticlunr-rs", "ammonia"]
 [[bin]]
 doc = false
 name = "mdbook"
-path = "src/bin/mdbook.rs"
