@@ -370,9 +370,11 @@ impl Renderer for HtmlHandlebars {
             .chain_err(|| "Unable to copy across additional CSS and JS")?;
 
         // Render search index
-        let search = html_config.search.unwrap_or_default();
-        if cfg!(feature = "search") && search.enable {
-            super::search::create_files(&search, &destination, &book)?;
+        #[cfg(feature = "search")] {
+            let search = html_config.search.unwrap_or_default();
+            if search.enable {
+                super::search::create_files(&search, &destination, &book)?;
+            }
         }
 
         // Copy all remaining files
