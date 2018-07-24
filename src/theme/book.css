@@ -132,12 +132,6 @@ table thead td {
   padding-left: 20px;
   line-height: 1.9em;
 }
-.section li {
-  -o-text-overflow: ellipsis;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-}
 .page-wrapper {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
