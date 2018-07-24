@@ -220,12 +220,7 @@ impl HtmlHandlebars {
     }
 
     fn register_hbs_helpers(&self, handlebars: &mut Handlebars, html_config: &HtmlConfig) {
-        handlebars.register_helper(
-            "toc",
-            Box::new(helpers::toc::RenderToc {
-                no_section_label: html_config.no_section_label,
-            }),
-        );
+        handlebars.register_helper("toc", Box::new(helpers::toc::toc));
         handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
         handlebars.register_helper("next", Box::new(helpers::navigation::next));
     }
@@ -402,18 +397,22 @@ fn make_data(
         json!(config.book.description.clone().unwrap_or_default()),
     );
     data.insert("favicon".to_owned(), json!("favicon.png"));
+
     if let Some(ref livereload) = html_config.livereload_url {
         data.insert("livereload".to_owned(), json!(livereload));
     }
 
-    // Add google analytics tag
-    if let Some(ref ga) = config.html_config().and_then(|html| html.google_analytics) {
+    if let Some(ref ga) = html.google_analytics {
         data.insert("google_analytics".to_owned(), json!(ga));
     }
 
     if html.mathjax_support {
         data.insert("mathjax_support".to_owned(), json!(true));
     }
+
+    if html.no_section_label {
+        data.insert("no_section_label".to_owned(), json!(true));
+    }    
 
     // Add check to see if there is an additional style
     if !html.additional_css.is_empty() {
