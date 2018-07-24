@@ -1,6 +1,7 @@
 language: rust
 
 cache: 
+  timeout: 360
   - cargo
 
 before_cache:
