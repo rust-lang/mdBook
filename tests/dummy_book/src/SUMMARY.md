@@ -1,6 +1,6 @@
 # Summary
 
-[dummy_book](README.md)
+[Dummy Book](README.md)
 [Introduction](intro.md)
 
 - [First Chapter](first/index.md)
