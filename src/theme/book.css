@@ -1,6 +1,9 @@
 html {
   font-family: "Open Sans", sans-serif;
   color: #333;
+  -webkit-text-size-adjust: none;
+  -ms-text-size-adjust: none;
+  text-size-adjust: none;
 }
 body {
   margin: 0;
