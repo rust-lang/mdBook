@@ -23,7 +23,7 @@ a > .hljs {
     position: sticky;
     top: 0;
     z-index: 101;
-    margin: auto (- var(--page-padding));
+    margin: auto calc(0px - var(--page-padding));
 }
 #menu-bar > #menu-bar-sticky-container {
     display: flex;
@@ -36,7 +36,7 @@ a > .hljs {
 .js #menu-bar > #menu-bar-sticky-container {
     transition: transform 0.3s;
 }
-.menu-bar.bordered > #menu-bar-sticky-container  {
+#menu-bar.bordered > #menu-bar-sticky-container  {
     border-bottom-color: var(--table-border-color);
 }
 #menu-bar i, #menu-bar .icon-button {
@@ -160,7 +160,7 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
     .nav-wrapper { display: block; }
 }
 
-@media only screen and (max-width: var(--page-plus-sidebar-width) + var(--sidebar-width)) {
+@media only screen and (max-width: calc(var(--page-plus-sidebar-width) + var(--sidebar-width))) {
     .sidebar-visible .nav-wide-wrapper { display: none; }
     .sidebar-visible .nav-wrapper { display: block; }
 }
@@ -309,7 +309,7 @@ ul#searchresults span.teaser em {
     line-height: 2em;
 }
 .sidebar-hidden .sidebar {
-    transform: translateX(- var(--sidebar-width));
+    transform: translateX(calc(0px - var(--sidebar-width)));
 }
 .sidebar::-webkit-scrollbar {
     background: var(--sidebar-bg);
