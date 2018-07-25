@@ -5,13 +5,13 @@ extern crate ws;
 use self::iron::{
     status, AfterMiddleware, Chain, Iron, IronError, IronResult, Request, Response, Set,
 };
+#[cfg(feature = "watch")]
+use super::watch;
 use clap::{App, ArgMatches, SubCommand};
 use mdbook::errors::*;
 use mdbook::utils;
 use mdbook::MDBook;
 use std;
-#[cfg(feature = "watch")]
-use super::watch;
 use {get_book_dir, open};
 
 struct ErrorRecover;
