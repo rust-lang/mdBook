@@ -27,6 +27,7 @@ const TOC_TOP_LEVEL: &[&'static str] = &[
     "1. First Chapter",
     "2. Second Chapter",
     "Conclusion",
+    "Dummy Book",
     "Introduction",
 ];
 const TOC_SECOND_LEVEL: &[&'static str] =
@@ -126,7 +127,8 @@ fn rendered_code_has_playpen_stuff() {
 #[test]
 fn chapter_content_appears_in_rendered_document() {
     let content = vec![
-        ("index.html", "Here's some interesting text"),
+        ("index.html", "This file is just here to cause the"),
+        ("intro.html", "Here's some interesting text"),
         ("second.html", "Second Chapter"),
         ("first/nested.html", "testable code"),
         ("first/index.html", "more text"),
@@ -437,7 +439,7 @@ mod search {
         assert_eq!(docs[&some_section]["body"], "");
         assert_eq!(
             docs[&summary]["body"],
-            "Introduction First Chapter Nested Chapter Includes Recursive Second Chapter Conclusion"
+            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Second Chapter Conclusion"
         );
         assert_eq!(docs[&summary]["breadcrumbs"], "First Chapter » Summary");
         assert_eq!(docs[&conclusion]["body"], "I put &lt;HTML&gt; in here!");
