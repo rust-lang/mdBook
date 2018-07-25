@@ -4,7 +4,7 @@
     #menu-bar,
     .nav-chapters,
     .mobile-nav-chapters {
-        display: none
+        display: none;
     }
 
     #page-wrapper.page-wrapper {
@@ -24,11 +24,11 @@
     }
 
     code {
-        background-color: #666666
-        border-radius: 5px
+        background-color: #666666;
+        border-radius: 5px;
 
         /* Force background to be printed in Chrome */
-        -webkit-print-color-adjust: exact
+        -webkit-print-color-adjust: exact;
     }
 
     pre > .buttons {
@@ -36,21 +36,21 @@
     }
 
     a, a:visited, a:active, a:hover {
-        color: #4183c4
-        text-decoration: none
+        color: #4183c4;
+        text-decoration: none;
     }
 
     h1, h2, h3, h4, h5, h6 {
-        page-break-inside: avoid
-        page-break-after: avoid
+        page-break-inside: avoid;
+        page-break-after: avoid;
     }
 
     pre, code {
-        page-break-inside: avoid
-        white-space: pre-wrap
+        page-break-inside: avoid;
+        white-space: pre-wrap;
     }
 
     .fa {
-        display: none !important 
+        display: none !important;
     }
 }

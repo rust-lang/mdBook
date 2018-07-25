@@ -1,0 +1,37 @@
+@import 'variables.css';
+
+.page-wrapper {
+    box-sizing: border-box;
+}
+.js .page-wrapper {
+    transition: margin-left 0.3s ease, transform 0.3s ease; /* Animation: slide away */
+}
+
+.sidebar-visible .page-wrapper {
+    transform: translateX(var(--sidebar-width));
+}
+@media only screen and (min-width: var(--sidebar-reflow-width)) {
+    .sidebar-visible .page-wrapper {
+        transform: none;
+        margin-left: var(--sidebar-width);
+    }
+}
+
+.page {
+    outline: 0;
+    padding: 0 var(--page-padding);
+}
+
+.content {
+    overflow-y: auto;
+    padding: 0 15px;
+    padding-bottom: 50px;
+}
+.content main {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: var(--content-max-width);
+}
+.content a { text-decoration: none; }
+.content a:hover { text-decoration: underline; }
+.content img { max-width: 100%; }

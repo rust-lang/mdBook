@@ -1,7 +1,7 @@
 html {
-    font-family: "Open Sans", sans-serif
-    color: #333
-    text-size-adjust: none
+    font-family: "Open Sans", sans-serif;
+    color: #333;
+    text-size-adjust: none;
 }
 
 body {
@@ -12,29 +12,25 @@ body {
 
 code {
     font-family: "Source Code Pro", Consolas, "Ubuntu Mono", Menlo, "DejaVu Sans Mono", monospace, monospace;
-    font-size: 0.875em; // please adjust the ace font size accordingly in editor.js
+    font-size: 0.875em; /* please adjust the ace font size accordingly in editor.js */
 }
 
-.left {
-    float: left
+.left { float: left; }
+
+.right { float: right; }
+
+.hidden { display: none; }
+
+.play-button.hidden { display: none; }
+
+h2, h3 { margin-top: 2.5em; }
+h4, h5 { margin-top: 2em; }
+
+.header + .header h3,
+.header + .header h4,
+.header + .header h5 { 
+    margin-top: 1em;
 }
-
-.right {
-    float: right
-}
-
-.hidden {
-    display: none;
-}
-
-.play-button.hidden {
-    display: none;
-}
-
-h2, h3 { margin-top: 2.5em }
-h4, h5 { margin-top: 2em }
-
-.header + .header h3, .header + .header h4, .header + .header h5 { margin-top: 1em }
 
 a.header:target h1:before,
 a.header:target h2:before,
@@ -49,15 +45,13 @@ a.header:target h4:before {
 table {
     margin: 0 auto;
     border-collapse: collapse;
-
-    td {
-      padding: 3px 20px;
-      border: 1px solid;
-    }
-
-    thead {
-      td { font-weight: 700; }
-    }
+}
+table td {
+    padding: 3px 20px;
+    border: 1px solid;
+}
+table thead td {
+    font-weight: 700; 
 }
 
 :not(.footnote-definition) + .footnote-definition,
@@ -68,6 +62,8 @@ table {
 .footnote-definition {
     font-size: 0.9em;
     margin: 0.5em 0;
+}
 
-    p { display: inline; }
+.footnote-definition p {
+    display: inline;
 }
