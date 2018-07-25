@@ -14,7 +14,10 @@
 
     i, .icon-button {
         position: relative
-        margin: 0 10px
+        margin: 0 8px
+        @media only screen and (max-width: $narrow-device-max-width) {
+            margin: 0 5px
+        }
         z-index: 10
         line-height: 50px
         cursor: pointer
@@ -30,8 +33,9 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
     transform: translateY(-60px);
 }
 
-.no-js .left-buttons {
-    display: none
+.left-buttons {
+    .no-js & { display: none }
+    margin: 0 5px
 }
 
 .menu-title {

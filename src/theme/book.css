@@ -217,7 +217,7 @@ table thead td {
 #menu-bar i,
 #menu-bar .icon-button {
   position: relative;
-  margin: 0 10px;
+  margin: 0 8px;
   z-index: 10;
   line-height: 50px;
   cursor: pointer;
@@ -226,6 +226,12 @@ table thead td {
   -o-transition: color 0.5s;
   -ms-transition: color 0.5s;
   transition: color 0.5s;
+}
+@media only screen and (max-width: 420px) {
+  #menu-bar i,
+  #menu-bar .icon-button {
+    margin: 0 5px;
+  }
 }
 #menu-bar #print-button {
   margin: 0 15px;
@@ -236,6 +242,9 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
   -o-transform: translateY(-60px);
   -ms-transform: translateY(-60px);
   transform: translateY(-60px);
+}
+.left-buttons {
+  margin: 0 5px;
 }
 .no-js .left-buttons {
   display: none;
