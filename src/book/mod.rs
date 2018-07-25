@@ -213,12 +213,13 @@ impl MDBook {
             .flat_map(|x| vec![x.0, x.1])
             .collect();
 
-        let temp_dir = TempFileBuilder::new().prefix("mdbook").tempdir()?;
+        let temp_dir = TempFileBuilder::new().prefix("mdbook-").tempdir()?;
 
         let preprocess_context = PreprocessorContext::new(self.root.clone(), self.config.clone());
 
         LinkPreprocessor::new().run(&preprocess_context, &mut self.book)?;
-        IndexPreprocessor::new().run(&preprocess_context, &mut self.book)?;
+        // Index Preprocessor is disabled so that chapter paths continue to point to the
+        // actual markdown files.
 
         for item in self.iter() {
             if let BookItem::Chapter(ref ch) = *item {

@@ -47,7 +47,7 @@ impl DummyBook {
     /// Write a book to a temporary directory using the provided settings.
     pub fn build(&self) -> Result<TempDir> {
         let temp = TempFileBuilder::new()
-            .prefix("dummy_book")
+            .prefix("dummy_book-")
             .tempdir()
             .chain_err(|| "Unable to create temp directory")?;
 
