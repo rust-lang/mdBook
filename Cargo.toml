@@ -8,11 +8,7 @@ repository = "https://github.com/rust-lang-nursery/mdBook"
 keywords = ["book", "gitbook", "rustbook", "markdown"]
 license = "MPL-2.0"
 readme = "README.md"
-build = "build.rs"
-exclude = [
-    "book-example/*",
-    "src/theme/stylus/**",
-]
+exclude = ["book-example/*"]
 
 [dependencies]
 clap = "2.24"
@@ -47,9 +43,6 @@ ws = { version = "0.7", optional = true}
 elasticlunr-rs = { version = "2.3", optional = true, default-features = false }
 ammonia = { version = "1.1", optional = true }
 
-[build-dependencies]
-error-chain = "0.12"
-
 [dev-dependencies]
 select = "0.4"
 pretty_assertions = "0.5"
@@ -60,7 +53,6 @@ pulldown-cmark-to-cmark = "1.1.0"
 default = ["output", "watch", "serve", "search"]
 debug = []
 output = []
-regenerate-css = []
 watch = ["notify"]
 serve = ["iron", "staticfile", "ws"]
 search = ["elasticlunr-rs", "ammonia"]

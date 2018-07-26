@@ -127,8 +127,20 @@ impl BookBuilder {
         let mut index = File::create(themedir.join("index.hbs"))?;
         index.write_all(theme::INDEX)?;
 
-        let mut css = File::create(themedir.join("book.css"))?;
-        css.write_all(theme::CSS)?;
+        let cssdir = themedir.join("css");
+        fs::create_dir(&cssdir)?;
+
+        let mut general_css = File::create(cssdir.join("general.css"))?;
+        general_css.write_all(theme::GENERAL_CSS)?;
+
+        let mut chrome_css = File::create(cssdir.join("chrome.css"))?;
+        chrome_css.write_all(theme::CHROME_CSS)?;
+
+        let mut print_css = File::create(cssdir.join("print.css"))?;
+        print_css.write_all(theme::PRINT_CSS)?;
+
+        let mut variables_css = File::create(cssdir.join("variables.css"))?;
+        variables_css.write_all(theme::VARIABLES_CSS)?;
 
         let mut favicon = File::create(themedir.join("favicon.png"))?;
         favicon.write_all(theme::FAVICON)?;
