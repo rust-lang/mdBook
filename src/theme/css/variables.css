@@ -5,10 +5,6 @@
     --sidebar-width: 300px;
     --page-padding: 15px;
     --content-max-width: 750px;
-    --content-min-width: 320px;
-    --page-plus-sidebar-width: calc(var(--content-max-width) + var(--sidebar-width) + var(--page-padding) * 2);
-    --sidebar-reflow-width: calc(var(--sidebar-width) + var(--content-min-width));
-    --narrow-device-max-width: 420px;
 }
 
 /* Themes */

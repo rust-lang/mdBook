@@ -47,7 +47,7 @@ a > .hljs {
     cursor: pointer;
     transition: color 0.5s;
 }
-@media only screen and (max-width: var(--narrow-device-max-width)) {
+@media only screen and (max-width: 420px) {
     #menu-bar i, #menu-bar .icon-button {
         margin: 0 5px;
     }
@@ -155,12 +155,12 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
     right: var(--page-padding);
 }
 
-@media only screen and (max-width: var(--page-plus-sidebar-width)) {
+@media only screen and (max-width: 1080px) {
     .nav-wide-wrapper { display: none; }
     .nav-wrapper { display: block; }
 }
 
-@media only screen and (max-width: calc(var(--page-plus-sidebar-width) + var(--sidebar-width))) {
+@media only screen and (max-width: 1380px) {
     .sidebar-visible .nav-wide-wrapper { display: none; }
     .sidebar-visible .nav-wrapper { display: block; }
 }
@@ -321,7 +321,7 @@ ul#searchresults span.teaser em {
 .sidebar-visible .page-wrapper {
     transform: translateX(var(--sidebar-width));
 }
-@media only screen and (min-width: var(--sidebar-reflow-width)) {
+@media only screen and (min-width: 620px) {
     .sidebar-visible .page-wrapper {
         transform: none;
         margin-left: var(--sidebar-width);
