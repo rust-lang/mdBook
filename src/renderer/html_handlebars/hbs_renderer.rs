@@ -580,7 +580,9 @@ fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
             let classes = &caps[2];
             let code = &caps[3];
 
-            if (classes.contains("language-rust") && !classes.contains("ignore"))
+            if (classes.contains("language-rust")
+                && !classes.contains("ignore")
+                && !classes.contains("noplaypen"))
                 || classes.contains("mdbook-runnable")
             {
                 // wrap the contents in an external pre block
