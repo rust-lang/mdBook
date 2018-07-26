@@ -15,6 +15,9 @@ main() {
             ;;
     esac
 
+    # This will slow down the build, but is necessary to not run out of disk space
+    cargo clean
+
     cargo rustc --bin mdbook --target $TARGET --release -- -C lto
 
     cp target/$TARGET/release/mdbook $stage/
