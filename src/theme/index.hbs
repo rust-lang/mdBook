@@ -36,6 +36,9 @@
         {{/if}}
     </head>
     <body class="light">
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">var path_to_root = "{{ path_to_root }}";</script>
+
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script type="text/javascript">
             try {
@@ -220,12 +223,6 @@
         <script src="{{ path_to_root }}theme-tomorrow_night.js" type="text/javascript" charset="utf-8"></script>
         {{/if}}
 
-        {{#if search_enabled}}
-        <script src="{{ path_to_root }}searchindex.js" type="text/javascript" charset="utf-8"></script>
-        <script>
-            var path_to_root = "{{path_to_root}}";
-        </script>
-        {{/if}}
         {{#if search_js}}
         <script src="{{ path_to_root }}elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="{{ path_to_root }}mark.min.js" type="text/javascript" charset="utf-8"></script>
