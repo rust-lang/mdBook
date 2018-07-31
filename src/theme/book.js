@@ -101,7 +101,8 @@ function playpen_text(playpen) {
             crateType: "bin",
             tests: false,
             code: text,
-        }
+            backtrace: false,
+        };
 
         if (text.indexOf("#![feature") !== -1) {
             params.channel = "nightly";
