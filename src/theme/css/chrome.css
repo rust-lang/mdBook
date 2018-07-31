@@ -41,7 +41,7 @@ a > .hljs {
 }
 #menu-bar i, #menu-bar .icon-button {
     position: relative;
-    margin: 0 8px;
+    padding: 0 8px;
     z-index: 10;
     line-height: 50px;
     cursor: pointer;
@@ -49,7 +49,7 @@ a > .hljs {
 }
 @media only screen and (max-width: 420px) {
     #menu-bar i, #menu-bar .icon-button {
-        margin: 0 5px;
+        padding: 0 5px;
     }
 }
 
@@ -71,8 +71,13 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
     transform: translateY(-60px);
 }
 
-.left-buttons { margin: 0 5px; }
-.no-js .left-buttons { display: none; }
+.left-buttons {
+    display: flex;
+    margin: 0 5px;
+}
+.no-js .left-buttons { 
+    display: none;
+}
 
 .menu-title {
     display: inline-block;
@@ -374,6 +379,7 @@ a:hover {
 .theme-popup {
     position: absolute;
     left: 10px;
+    top: 50px;
     z-index: 1000;
     border-radius: 4px;
     font-size: 0.7em;
