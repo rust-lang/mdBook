@@ -19,9 +19,16 @@ function playpen_text(playpen) {
     // Hide Rust code lines prepended with a specific character
     var hiding_character = "#";
 
+    function fetch_with_timeout(url, options, timeout = 6000) {
+        return Promise.race([
+            fetch(url, options),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), timeout))
+        ]);
+    }
+
     var playpens = Array.from(document.querySelectorAll(".playpen"));
     if (playpens.length > 0) {
-        fetch("https://play.rust-lang.org/meta/crates", {
+        fetch_with_timeout("https://play.rust-lang.org/meta/crates", {
             headers: {
                 'Content-Type': "application/json",
             },
@@ -96,33 +103,28 @@ function playpen_text(playpen) {
         let text = playpen_text(code_block);
 
         var params = {
-            channel: "stable",
-            mode: "debug",
-            crateType: "bin",
-            tests: false,
-            code: text,
-            backtrace: false,
+            version: "stable",
+            optimize: "0",
+            code: text
         };
 
         if (text.indexOf("#![feature") !== -1) {
-            params.channel = "nightly";
+            params.version = "nightly";
         }
 
         result_block.innerText = "Running...";
 
-        var request = fetch("https://play.rust-lang.org/execute", {
+        fetch_with_timeout("https://play.rust-lang.org/evaluate.json", {
             headers: {
                 'Content-Type': "application/json",
             },
             method: 'POST',
             mode: 'cors',
             body: JSON.stringify(params)
-        });
-
-        request
-            .then(function (response) { return response.json(); })
-            .then(function (response) { result_block.innerText = response.success ? response.stdout : response.stderr; })
-            .catch(function (error) { result_block.innerText = "Playground communication" + error.message; });
+        })
+        .then(response => response.json())
+        .then(response => result_block.innerText = response.result)
+        .catch(error => result_block.innerText = "Playground Communication: " + error.message);
     }
 
     // Syntax highlighting Configuration
