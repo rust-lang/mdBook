@@ -20,26 +20,27 @@ use std::path::{Path, PathBuf};
 
 mod cmd;
 
-const NAME: &'static str = "mdbook";
+const NAME: &'static str = "mdBook";
+const VERSION: &'static str = concat!("v", crate_version!());
 
 fn main() {
     init_logger();
 
     // Create a list of valid arguments and sub-commands
     let app = App::new(NAME)
-                .about("Create a book in form of a static website from markdown files")
-                .author("Mathieu David <mathieudavid@mathieudavid.org>")
-                // Get the version from our Cargo.toml using clap's crate_version!() macro
-                .version(concat!("v",crate_version!()))
-                .setting(AppSettings::ArgRequiredElseHelp)
-                .after_help("For more information about a specific command, \
-                             try `mdbook <command> --help`\n\
-                             Source code for mdbook available \
-                             at: https://github.com/rust-lang-nursery/mdBook")
-                .subcommand(cmd::init::make_subcommand())
-                .subcommand(cmd::build::make_subcommand())
-                .subcommand(cmd::test::make_subcommand())
-                .subcommand(cmd::clean::make_subcommand());
+        .about("Creates a book from markdown files")
+        .author("Mathieu David <mathieudavid@mathieudavid.org>")
+        .version(VERSION)
+        .setting(AppSettings::GlobalVersion)
+        .setting(AppSettings::ArgRequiredElseHelp)
+        .after_help(
+            "For more information about a specific command, try `mdbook <command> --help`\n\
+             The source code for mdBook is available at: https://github.com/rust-lang-nursery/mdBook",
+        )
+        .subcommand(cmd::init::make_subcommand())
+        .subcommand(cmd::build::make_subcommand())
+        .subcommand(cmd::test::make_subcommand())
+        .subcommand(cmd::clean::make_subcommand());
 
     #[cfg(feature = "watch")]
     let app = app.subcommand(cmd::watch::make_subcommand());

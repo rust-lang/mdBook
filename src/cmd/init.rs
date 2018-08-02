@@ -10,12 +10,12 @@ use std::process::Command;
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name("init")
-        .about("Create boilerplate structure and files in the directory")
+        .about("Creates the boilerplate structure and files for a new book")
         // the {n} denotes a newline which will properly aligned in all help messages
-        .arg_from_usage("[dir] 'A directory for your book{n}(Defaults to Current Directory \
-                         when omitted)'")
+        .arg_from_usage("[dir] 'Directory to create the book in{n}\
+            (Defaults to the Current Directory when omitted)'")
         .arg_from_usage("--theme 'Copies the default theme into your source folder'")
-        .arg_from_usage("--force 'skip confirmation prompts'")
+        .arg_from_usage("--force 'Skips confirmation prompts'")
 }
 
 // Init command implementation
