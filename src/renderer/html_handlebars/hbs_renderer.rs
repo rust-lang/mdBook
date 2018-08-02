@@ -1,4 +1,4 @@
-use book::{Book, BookItem, Chapter};
+use book::{Book, BookItem};
 use config::{Config, HtmlConfig, Playpen};
 use errors::*;
 use renderer::html_handlebars::helpers;
@@ -8,8 +8,7 @@ use utils;
 
 use std::collections::BTreeMap;
 use std::collections::HashMap;
-use std::fs::{self, File};
-use std::io::Read;
+use std::fs;
 use std::path::{Path, PathBuf};
 
 use handlebars::Handlebars;
@@ -74,43 +73,25 @@ impl HtmlHandlebars {
                 let rendered = self.post_process(rendered, &ctx.html_config.playpen);
 
                 // Write to file
-                debug!("Creating {} ✓", filepath.display());
-                utils::fs::write_file(&ctx.destination, &filepath, &rendered.into_bytes())?;
+                debug!("Creating {}", filepath.display());
+                utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
 
                 if ctx.is_index {
-                    self.render_index(ch, &ctx.destination)?;
+                    ctx.data.insert("path".to_owned(), json!("index.html"));
+                    ctx.data.insert("path_to_root".to_owned(), json!(""));
+                    let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
+                    let rendered_index =
+                        self.post_process(rendered_index, &ctx.html_config.playpen);
+                    debug!("Creating index.html from {}", path);
+                    utils::fs::write_file(
+                        &ctx.destination,
+                        "index.html",
+                        rendered_index.as_bytes(),
+                    )?;
                 }
             }
             _ => {}
         }
-
-        Ok(())
-    }
-
-    /// Create an index.html from the first element in SUMMARY.md
-    fn render_index(&self, ch: &Chapter, destination: &Path) -> Result<()> {
-        debug!("index.html");
-
-        let mut content = String::new();
-
-        File::open(destination.join(&ch.path.with_extension("html")))?
-            .read_to_string(&mut content)?;
-
-        // This could cause a problem when someone displays
-        // code containing <base href=...>
-        // on the front page, however this case should be very very rare...
-        content = content
-            .lines()
-            .filter(|line| !line.contains("<base href="))
-            .collect::<Vec<&str>>()
-            .join("\n");
-
-        utils::fs::write_file(destination, "index.html", content.as_bytes())?;
-
-        debug!(
-            "Creating index.html from {} ✓",
-            destination.join(&ch.path.with_extension("html")).display()
-        );
 
         Ok(())
     }
@@ -363,7 +344,7 @@ impl Renderer for HtmlHandlebars {
 
         let rendered = self.post_process(rendered, &html_config.playpen);
 
-        utils::fs::write_file(&destination, "print.html", &rendered.into_bytes())?;
+        utils::fs::write_file(&destination, "print.html", rendered.as_bytes())?;
         debug!("Creating print.html ✓");
 
         debug!("Copy static files");
