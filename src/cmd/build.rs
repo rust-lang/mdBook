@@ -1,21 +1,21 @@
 use clap::{App, ArgMatches, SubCommand};
 use mdbook::errors::Result;
 use mdbook::MDBook;
-use std::path::PathBuf;
 use {get_book_dir, open};
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name("build")
-        .about("Build the book from the markdown files")
-        .arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
+        .about("Builds a book from its markdown files")
         .arg_from_usage(
-            "-d, --dest-dir=[dest-dir] 'The output directory for your book{n}(Defaults to ./book \
-             when omitted)'",
+            "-d, --dest-dir=[dest-dir] 'Output directory for the book{n}\
+             (If omitted, uses build.build-dir from book.toml or defaults to ./book)'",
         )
         .arg_from_usage(
-            "[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'",
+            "[dir] 'Root directory for the book{n}\
+             (Defaults to the Current Directory when omitted)'",
         )
+        .arg_from_usage("-o, --open 'Opens the compiled book in a web browser'")
 }
 
 // Build command implementation
@@ -24,7 +24,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let mut book = MDBook::load(&book_dir)?;
 
     if let Some(dest_dir) = args.value_of("dest-dir") {
-        book.config.build.build_dir = PathBuf::from(dest_dir);
+        book.config.build.build_dir = dest_dir.into();
     }
 
     book.build()?;

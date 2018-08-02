@@ -7,7 +7,7 @@ use self::iron::{
 };
 #[cfg(feature = "watch")]
 use super::watch;
-use clap::{App, ArgMatches, SubCommand};
+use clap::{App, Arg, ArgMatches, SubCommand};
 use mdbook::errors::*;
 use mdbook::utils;
 use mdbook::MDBook;
@@ -19,23 +19,52 @@ struct ErrorRecover;
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name("serve")
-        .about("Serve the book at http://localhost:3000. Rebuild and reload on change.")
+        .about("Serves a book at http://localhost:3000, and rebuilds it on changes")
         .arg_from_usage(
-            "[dir] 'A directory for your book{n}(Defaults to Current Directory when omitted)'",
-        )
-        .arg_from_usage("-p, --port=[port] 'Use another port{n}(Defaults to 3000)'")
-        .arg_from_usage(
-            "-w, --websocket-port=[ws-port] 'Use another port for the websocket connection \
-             (livereload){n}(Defaults to 3001)'",
+            "-d, --dest-dir=[dest-dir] 'Output directory for the book{n}\
+             (If omitted, uses build.build-dir from book.toml or defaults to ./book)'",
         )
         .arg_from_usage(
-            "-i, --interface=[interface] 'Interface to listen on{n}(Defaults to localhost)'",
+            "[dir] 'Root directory for the book{n}\
+             (Defaults to the Current Directory when omitted)'",
         )
-        .arg_from_usage(
-            "-a, --address=[address] 'Address that the browser can reach the websocket server \
-             from{n}(Defaults to the interface address)'",
+        .arg(
+            Arg::with_name("hostname")
+                .short("n")
+                .long("hostname")
+                .takes_value(true)
+                .default_value("localhost")
+                .empty_values(false)
+                .help("Hostname to listen on for HTTP connections"),
         )
-        .arg_from_usage("-o, --open 'Open the book server in a web browser'")
+        .arg(
+            Arg::with_name("port")
+                .short("p")
+                .long("port")
+                .takes_value(true)
+                .default_value("3000")
+                .empty_values(false)
+                .help("Port to use for HTTP connections"),
+        )
+        .arg(
+            Arg::with_name("websocket-hostname")
+                .long("websocket-hostname")
+                .takes_value(true)
+                .empty_values(false)
+                .help(
+                    "Hostname to connect to for WebSockets connections (Defaults to the HTTP hostname)",
+                ),
+        )
+        .arg(
+            Arg::with_name("websocket-port")
+                .short("w")
+                .long("websocket-port")
+                .takes_value(true)
+                .default_value("3001")
+                .empty_values(false)
+                .help("Port to use for WebSockets livereload connections"),
+        )
+        .arg_from_usage("-o, --open 'Opens the book server in a web browser'")
 }
 
 // Watch command implementation
@@ -43,18 +72,22 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
     let mut book = MDBook::load(&book_dir)?;
 
-    let port = args.value_of("port").unwrap_or("3000");
-    let ws_port = args.value_of("websocket-port").unwrap_or("3001");
-    let interface = args.value_of("interface").unwrap_or("localhost");
-    let public_address = args.value_of("address").unwrap_or(interface);
+    let port = args.value_of("port").unwrap();
+    let ws_port = args.value_of("websocket-port").unwrap();
+    let hostname = args.value_of("hostname").unwrap();
+    let public_address = args.value_of("websocket-address").unwrap_or(hostname);
     let open_browser = args.is_present("open");
 
-    let address = format!("{}:{}", interface, port);
-    let ws_address = format!("{}:{}", interface, ws_port);
+    let address = format!("{}:{}", hostname, port);
+    let ws_address = format!("{}:{}", hostname, ws_port);
 
     let livereload_url = format!("ws://{}:{}", public_address, ws_port);
     book.config
         .set("output.html.livereload-url", &livereload_url)?;
+
+    if let Some(dest_dir) = args.value_of("dest-dir") {
+        book.config.build.build_dir = dest_dir.into();
+    }
 
     book.build()?;
 
@@ -87,10 +120,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
         // FIXME: This area is really ugly because we need to re-set livereload :(
 
-        let livereload_url = livereload_url.clone();
-
         let result = MDBook::load(&book_dir)
-            .and_then(move |mut b| {
+            .and_then(|mut b| {
                 b.config.set("output.html.livereload-url", &livereload_url)?;
                 Ok(b)
             })
