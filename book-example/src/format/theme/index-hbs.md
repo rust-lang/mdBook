@@ -37,7 +37,7 @@ Since the original directory structure is maintained, it is useful to prepend re
 
 In addition to the properties you can access, there are some handlebars helpers at your disposal.
 
-1.  ### toc
+### 1. toc
 
     The toc helper is used like this
 
@@ -68,7 +68,7 @@ In addition to the properties you can access, there are some handlebars helpers 
     </script>
     ```
 
-2.  ### previous / next
+### 2. previous / next
 
     The previous and next helpers expose a `link` and `name` property to the previous and next chapters.
 
@@ -87,5 +87,4 @@ In addition to the properties you can access, there are some handlebars helpers 
 
 ------
 
-*If you would like me to expose other properties or helpers, please [create a new issue](https://github.com/rust-lang-nursery/mdBook/issues)
-and I will consider it.*
+*If you would like other properties or helpers exposed, please [create a new issue](https://github.com/rust-lang-nursery/mdBook/issues)*
