@@ -32,7 +32,8 @@ impl Preprocessor for LinkPreprocessor {
 
         book.for_each_mut(|section: &mut BookItem| {
             if let BookItem::Chapter(ref mut ch) = *section {
-                let base = ch.path
+                let base = ch
+                    .path
                     .parent()
                     .map(|dir| src_dir.join(dir))
                     .expect("All book items have a parent");
@@ -46,7 +47,11 @@ impl Preprocessor for LinkPreprocessor {
     }
 }
 
-fn replace_all<P: AsRef<Path>>(s: &str, path: P, source: &P, depth: usize) -> String {
+fn replace_all<P1, P2>(s: &str, path: P1, source: P2, depth: usize) -> String
+where
+    P1: AsRef<Path>,
+    P2: AsRef<Path>,
+{
     // When replacing one thing in a string by something with a different length,
     // the indices after that will not correspond,
     // we therefore have to store the difference to correct this
@@ -62,12 +67,9 @@ fn replace_all<P: AsRef<Path>>(s: &str, path: P, source: &P, depth: usize) -> St
             Ok(new_content) => {
                 if depth < MAX_LINK_NESTED_DEPTH {
                     if let Some(rel_path) = playpen.link.relative_path(path) {
-                        replaced.push_str(&replace_all(
-                            &new_content,
-                            rel_path,
-                            &source.to_path_buf(),
-                            depth + 1,
-                        ));
+                        replaced.push_str(&replace_all(&new_content, rel_path, source, depth + 1));
+                    } else {
+                        replaced.push_str(&new_content);
                     }
                 } else {
                     error!(
@@ -264,6 +266,21 @@ fn find_links(contents: &str) -> LinkIter {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_replace_all_escaped() {
+        let start = r"
+        Some text over here.
+        ```hbs
+        \{{#include file.rs}} << an escaped link!
+        ```";
+        let end = r"
+        Some text over here.
+        ```hbs
+        {{#include file.rs}} << an escaped link!
+        ```";
+        assert_eq!(replace_all(start, "", "", 0), end);
+    }
 
     #[test]
     fn test_find_links_no_link() {
