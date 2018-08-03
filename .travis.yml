@@ -21,9 +21,6 @@ script:
   - cargo build --verbose
   - cargo test --verbose
 
-after_success:
-  - bash ci/github_pages.sh
-
 before_deploy:
   - sh ci/before_deploy.sh
 
@@ -40,8 +37,8 @@ deploy:
 
 branches:
   only:
-    - "/^v\\d+\\.\\d+\\.\\d+.*$/"
     - master
+    - /^v\d+\.\d+\.\d+.*$/
 
 notifications:
   email:
