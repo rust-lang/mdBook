@@ -1,15 +1,15 @@
 # index.hbs
 
-`index.hbs` is the handlebars template that is used to render the book.
-The markdown files are processed to html and then injected in that template.
+`index.hbs` is the handlebars template that is used to render the book. The
+markdown files are processed to html and then injected in that template.
 
-If you want to change the layout or style of your book, chances are that you will
-have to modify this template a little bit. Here is what you need to know.
+If you want to change the layout or style of your book, chances are that you
+will have to modify this template a little bit. Here is what you need to know.
 
 ## Data
 
-A lot of data is exposed to the handlebars template with the "context".
-In the handlebars template you can access this information by using
+A lot of data is exposed to the handlebars template with the "context". In the
+handlebars template you can access this information by using
 
 ```handlebars
 {{name_of_property}}
@@ -17,25 +17,31 @@ In the handlebars template you can access this information by using
 
 Here is a list of the properties that are exposed:
 
-- ***language*** Language of the book in the form `en`. To use in <code class="language-html">\<html lang="{{ language }}"></code> for example.
-At the moment it is hardcoded.
+- ***language*** Language of the book in the form `en`. To use in <code
+  class="language-html">\<html lang="{{ language }}"></code> for example. At the
+  moment it is hardcoded.
 - ***title*** Title of the book, as specified in `book.toml`
 - ***chapter_title*** Title of the current chapter, as listed in `SUMMARY.md`
 
-- ***path*** Relative path to the original markdown file from the source directory
+- ***path*** Relative path to the original markdown file from the source
+  directory
 - ***content*** This is the rendered markdown.
-- ***path_to_root*** This is a path containing exclusively `../`'s that points to the root of the book from the current file.
-Since the original directory structure is maintained, it is useful to prepend relative links with this `path_to_root`.
+- ***path_to_root*** This is a path containing exclusively `../`'s that points
+  to the root of the book from the current file. Since the original directory
+  structure is maintained, it is useful to prepend relative links with this
+  `path_to_root`.
 
 - ***chapters*** Is an array of dictionaries of the form
   ```json
   {"section": "1.2.1", "name": "name of this chapter", "path": "dir/markdown.md"}
   ```
-  containing all the chapters of the book. It is used for example to construct the table of contents (sidebar).
+  containing all the chapters of the book. It is used for example to construct
+  the table of contents (sidebar).
 
 ## Handlebars Helpers
 
-In addition to the properties you can access, there are some handlebars helpers at your disposal.
+In addition to the properties you can access, there are some handlebars helpers
+at your disposal.
 
 ### 1. toc
 
@@ -87,4 +93,5 @@ In addition to the properties you can access, there are some handlebars helpers 
 
 ------
 
-*If you would like other properties or helpers exposed, please [create a new issue](https://github.com/rust-lang-nursery/mdBook/issues)*
+*If you would like other properties or helpers exposed, please [create a new
+issue](https://github.com/rust-lang-nursery/mdBook/issues)*

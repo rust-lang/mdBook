@@ -1,11 +1,11 @@
 # Alternate Backends
 
-A "backend" is simply a program which `mdbook` will invoke during the book 
+A "backend" is simply a program which `mdbook` will invoke during the book
 rendering process. This program is passed a JSON representation of the book and
-configuration information via `stdin`. Once the backend receives this 
+configuration information via `stdin`. Once the backend receives this
 information it is free to do whatever it wants.
 
-There are already several alternate backends on GitHub which can be used as a 
+There are already several alternate backends on GitHub which can be used as a
 rough example of how this is accomplished in practice.
 
 - [mdbook-linkcheck] - a simple program for verifying the book doesn't contain
@@ -21,7 +21,7 @@ no reason why it couldn't be accomplished using something like Python or Ruby.
 
 ## Setting Up
 
-First you'll want to create a new binary program and add `mdbook` as a 
+First you'll want to create a new binary program and add `mdbook` as a
 dependency.
 
 ```
@@ -30,8 +30,8 @@ $ cd mdbook-wordcount
 $ cargo add mdbook
 ```
 
-When our `mdbook-wordcount` plugin is invoked, `mdbook` will send it a JSON 
-version of [`RenderContext`] via our plugin's `stdin`. For convenience, there's 
+When our `mdbook-wordcount` plugin is invoked, `mdbook` will send it a JSON
+version of [`RenderContext`] via our plugin's `stdin`. For convenience, there's
 a [`RenderContext::from_json()`] constructor which will load a `RenderContext`.
 
 This is all the boilerplate necessary for our backend to load the book.
@@ -49,9 +49,9 @@ fn main() {
 }
 ```
 
-> **Note:** The `RenderContext` contains a `version` field. This lets backends 
+> **Note:** The `RenderContext` contains a `version` field. This lets backends
   figure out whether they are compatible with the version of `mdbook` it's being
-  called by. This `version` comes directly from the corresponding field in 
+  called by. This `version` comes directly from the corresponding field in
   `mdbook`'s `Cargo.toml`. 
   
   It is recommended that backends use the [`semver`] crate to inspect this field
@@ -60,7 +60,7 @@ fn main() {
 
 ## Inspecting the Book
 
-Now our backend has a copy of the book, lets count how many words are in each 
+Now our backend has a copy of the book, lets count how many words are in each
 chapter!
 
 Because the `RenderContext` contains a [`Book`] field (`book`), and a `Book` has
@@ -89,8 +89,8 @@ fn count_words(ch: &Chapter) -> usize {
 
 ## Enabling the Backend
 
-Now we've got the basics running, we want to actually use it. First, install
-the program.
+Now we've got the basics running, we want to actually use it. First, install the
+program.
 
 ```
 $ cargo install
@@ -110,15 +110,14 @@ Then `cd` to the particular book you'd like to count the words of and update its
 + [output.wordcount]
 ```
 
-When it loads a book into memory, `mdbook` will inspect your `book.toml` file 
-to try and figure out which backends to use by looking for all `output.*`
-tables. If none are provided it'll fall back to using the default HTML
-renderer. 
+When it loads a book into memory, `mdbook` will inspect your `book.toml` file to
+try and figure out which backends to use by looking for all `output.*` tables.
+If none are provided it'll fall back to using the default HTML renderer. 
 
-Notably, this means if you want to add your own custom backend you'll also
-need to make sure to add the HTML backend, even if its table just stays empty.
+Notably, this means if you want to add your own custom backend you'll also need
+to make sure to add the HTML backend, even if its table just stays empty.
 
-Now you just need to build your book like normal, and everything should *Just 
+Now you just need to build your book like normal, and everything should *Just
 Work*.
 
 ```
@@ -145,11 +144,11 @@ Alternate Backends: 710
 Contributors: 85
 ```
 
-The reason we didn't need to specify the full name/path of our `wordcount` 
-backend is because `mdbook` will try to *infer* the program's name via 
-convention. The executable for the `foo` backend is typically called 
+The reason we didn't need to specify the full name/path of our `wordcount`
+backend is because `mdbook` will try to *infer* the program's name via
+convention. The executable for the `foo` backend is typically called
 `mdbook-foo`, with an associated `[output.foo]` entry in the `book.toml`. To
-explicitly tell `mdbook` what command to invoke (it may require command-line 
+explicitly tell `mdbook` what command to invoke (it may require command-line
 arguments or be an interpreted script), you can use the `command` field.
 
 ```diff
@@ -168,16 +167,16 @@ arguments or be an interpreted script), you can use the `command` field.
 ## Configuration
 
 Now imagine you don't want to count the number of words on a particular chapter
-(it might be generated text/code, etc). The canonical way to do this is via
-the usual `book.toml` configuration file by adding items to your `[output.foo]` 
+(it might be generated text/code, etc). The canonical way to do this is via the
+usual `book.toml` configuration file by adding items to your `[output.foo]`
 table. 
 
 The `Config` can be treated roughly as a nested hashmap which lets you call
 methods like `get()` to access the config's contents, with a
-`get_deserialized()` convenience method for retrieving a value and
-automatically deserializing to some arbitrary type `T`.
+`get_deserialized()` convenience method for retrieving a value and automatically
+deserializing to some arbitrary type `T`.
 
-To implement this, we'll create our own serializable `WordcountConfig` struct 
+To implement this, we'll create our own serializable `WordcountConfig` struct
 which will encapsulate all configuration for this backend.
 
 First add `serde` and `serde_derive` to your `Cargo.toml`,
@@ -229,7 +228,7 @@ and then add a check to make sure we skip ignored chapters.
 
 ## Output and Signalling Failure
 
-While it's nice to print word counts to the terminal when a book is built, it 
+While it's nice to print word counts to the terminal when a book is built, it
 might also be a good idea to output them to a file somewhere. `mdbook` tells a
 backend where it should place any generated output via the `destination` field
 in [`RenderContext`].
@@ -264,7 +263,7 @@ in [`RenderContext`].
 > so it's always a good idea to create it with `fs::create_dir_all()`.
 
 There's always the possibility that an error will occur while processing a book
-(just look at all the `unwrap()`'s we've written already), so `mdbook` will 
+(just look at all the `unwrap()`'s we've written already), so `mdbook` will
 interpret a non-zero exit code as a rendering failure.
 
 For example, if we wanted to make sure all chapters have an *even* number of
@@ -315,27 +314,27 @@ init: 283
 init has an odd number of words!
 2018-01-16 21:21:39 [ERROR] (mdbook::renderer): Renderer exited with non-zero return code.
 2018-01-16 21:21:39 [ERROR] (mdbook::utils): Error: Rendering failed
-2018-01-16 21:21:39 [ERROR] (mdbook::utils): 	Caused By: The "mdbook-wordcount" renderer failed
+2018-01-16 21:21:39 [ERROR] (mdbook::utils):    Caused By: The "mdbook-wordcount" renderer failed
 ```
 
 As you've probably already noticed, output from the plugin's subprocess is
-immediately passed through to the user. It is encouraged for plugins to
-follow the "rule of silence" and only generate output when necessary (e.g. an
-error in generation or a warning).
+immediately passed through to the user. It is encouraged for plugins to follow
+the "rule of silence" and only generate output when necessary (e.g. an error in
+generation or a warning).
 
-All environment variables are passed through to the backend, allowing you to
-use the usual `RUST_LOG` to control logging verbosity.
+All environment variables are passed through to the backend, allowing you to use
+the usual `RUST_LOG` to control logging verbosity.
 
 
 ## Wrapping Up
 
 Although contrived, hopefully this example was enough to show how you'd create
-an alternate backend for `mdbook`. If you feel it's missing something, don't 
+an alternate backend for `mdbook`. If you feel it's missing something, don't
 hesitate to create an issue in the [issue tracker] so we can improve the user
 guide.
 
 The existing backends mentioned towards the start of this chapter should serve
-as a good example of how it's done in real life, so feel free to skim through 
+as a good example of how it's done in real life, so feel free to skim through
 the source code or ask questions.
 
 
@@ -348,5 +347,5 @@ the source code or ask questions.
 [`semver`]: https://crates.io/crates/semver
 [`Book`]: http://rust-lang-nursery.github.io/mdBook/mdbook/book/struct.Book.html
 [`Book::iter()`]: http://rust-lang-nursery.github.io/mdBook/mdbook/book/struct.Book.html#method.iter
-[`Config`]: http://rust-lang-nursery.github.io/mdBook/mdbook/config/struct.Config.html 
+[`Config`]: http://rust-lang-nursery.github.io/mdBook/mdbook/config/struct.Config.html
 [issue tracker]: https://github.com/rust-lang-nursery/mdBook/issues

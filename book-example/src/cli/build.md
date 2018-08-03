@@ -6,8 +6,8 @@ The build command is used to render your book:
 mdbook build
 ```
 
-It will try to parse your `SUMMARY.md` file to understand the structure of your book
-and fetch the corresponding files.
+It will try to parse your `SUMMARY.md` file to understand the structure of your
+book and fetch the corresponding files.
 
 The rendered output will maintain the same directory structure as the source for
 convenience. Large books will therefore remain structured when rendered.
@@ -28,11 +28,11 @@ your default web browser after building it.
 
 #### --dest-dir
 
-The `--dest-dir` (`-d`) option allows you to change the output directory for
-the book. If not specified it will default to the value of the
-`build.build-dir` key in `book.toml`, or to `./book` relative to the book's
-root directory.
+The `--dest-dir` (`-d`) option allows you to change the output directory for the
+book. If not specified it will default to the value of the `build.build-dir` key
+in `book.toml`, or to `./book` relative to the book's root directory.
 
 -------------------
 
-***Note:*** *Make sure to run the build command in the root directory and not in the source directory*
+***Note:*** *Make sure to run the build command in the root directory and not in
+the source directory*

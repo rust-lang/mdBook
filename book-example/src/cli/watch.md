@@ -2,8 +2,8 @@
 
 The `watch` command is useful when you want your book to be rendered on every
 file change. You could repeatedly issue `mdbook build` every time a file is
-changed. But using `mdbook watch` once will watch your files and will trigger
-a build automatically whenever you modify a file.
+changed. But using `mdbook watch` once will watch your files and will trigger a
+build automatically whenever you modify a file.
 
 #### Specify a directory
 
@@ -21,7 +21,6 @@ your default web browser.
 
 #### --dest-dir
 
-The `--dest-dir` (`-d`) option allows you to change the output directory for
-the book. If not specified it will default to the value of the
-`build.build-dir` key in `book.toml`, or to `./book` relative to the book's
-root directory.
+The `--dest-dir` (`-d`) option allows you to change the output directory for the
+book. If not specified it will default to the value of the `build.build-dir` key
+in `book.toml`, or to `./book` relative to the book's root directory.

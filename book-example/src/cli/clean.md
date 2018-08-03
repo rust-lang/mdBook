@@ -19,9 +19,9 @@ mdbook clean path/to/book
 #### --dest-dir
 
 The `--dest-dir` (`-d`) option allows you to override the book's output
-directory, which will be deleted by this command. If not specified it
-will default to the value of the `build.build-dir` key in `book.toml`, or to
-`./book` relative to the book's root directory.
+directory, which will be deleted by this command. If not specified it will
+default to the value of the `build.build-dir` key in `book.toml`, or to `./book`
+relative to the book's root directory.
 
 ```bash
 mdbook clean --dest-dir=path/to/book

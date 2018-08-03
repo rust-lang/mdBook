@@ -1,8 +1,7 @@
 # Contributors
 
-Here is a list of the contributors who have helped improving mdBook. Big shout-out to them!
-
-If you have contributed to mdBook and I forgot to add you, don't hesitate to add yourself to the list. If you are in the list, feel free to add your real name & contact information if you wish.
+Here is a list of the contributors who have helped improving mdBook. Big
+shout-out to them!
 
 - [mdinger](https://github.com/mdinger)
 - Kevin ([kbknapp](https://github.com/kbknapp))
@@ -12,8 +11,10 @@ If you have contributed to mdBook and I forgot to add you, don't hesitate to add
 - [funnkill](https://github.com/funkill)
 - Fu Gangqiang ([FuGangqiang](https://github.com/FuGangqiang))
 - [Michael-F-Bryan](https://github.com/Michael-F-Bryan)
-- [Chris Spiegel](https://github.com/cspiegel)
+- Chris Spiegel ([cspiegel](https://github.com/cspiegel))
 - [projektir](https://github.com/projektir)
 - [Phaiax](https://github.com/Phaiax)
-- [Matt Ickstadt](https://github.com/mattico)
+- Matt Ickstadt ([mattico](https://github.com/mattico))
 - Weihang Lo ([@weihanglo](https://github.com/weihanglo))
+
+If you feel you're missing from this list, feel free to add yourself in a PR.

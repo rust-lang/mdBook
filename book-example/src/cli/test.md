@@ -5,9 +5,9 @@ When writing a book, you sometimes need to automate some tests. For example,
 of code examples that could get outdated. Therefore it is very important for
 them to be able to automatically test these code examples.
 
-mdBook supports a `test` command that will run all available tests in a book.
-At the moment, only rustdoc tests are supported, but this may be expanded upon
-in the future.
+mdBook supports a `test` command that will run all available tests in a book. At
+the moment, only rustdoc tests are supported, but this may be expanded upon in
+the future.
 
 #### Disable tests on a code block
 
@@ -31,8 +31,8 @@ rustdoc *does* test code blocks which have no language specified:
 
 #### Specify a directory
 
-The `test` command can take a directory as an argument to use as the book's
-root instead of the current working directory.
+The `test` command can take a directory as an argument to use as the book's root
+instead of the current working directory.
 
 ```bash
 mdbook test path/to/book
@@ -47,7 +47,6 @@ comma-delimited list (`-L foo,bar`).
 
 #### --dest-dir
 
-The `--dest-dir` (`-d`) option allows you to change the output directory for
-the book. If not specified it will default to the value of the
-`build.build-dir` key in `book.toml`, or to `./book` relative to the book's
-root directory.
+The `--dest-dir` (`-d`) option allows you to change the output directory for the
+book. If not specified it will default to the value of the `build.build-dir` key
+in `book.toml`, or to `./book` relative to the book's root directory.

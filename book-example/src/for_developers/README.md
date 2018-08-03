@@ -1,12 +1,12 @@
 # For Developers
 
-While `mdbook` is mainly used as a command line tool, you can also import the 
+While `mdbook` is mainly used as a command line tool, you can also import the
 underlying library directly and use that to manage a book. It also has a fairly
-flexible plugin mechanism, allowing you to create your own custom tooling and 
+flexible plugin mechanism, allowing you to create your own custom tooling and
 consumers (often referred to as *backends*) if you need to do some analysis of
 the book or render it in a different format.
 
-The *For Developers* chapters are here to show you the more advanced usage of 
+The *For Developers* chapters are here to show you the more advanced usage of
 `mdbook`.
 
 The two main ways a developer can hook into the book's build process is via,
@@ -32,11 +32,11 @@ The process of rendering a book project goes through several steps.
 
 The `mdbook` binary is just a wrapper around the `mdbook` crate, exposing its
 functionality as a command-line program. As such it is quite easy to create your
-own programs which use `mdbook` internally, adding your own functionality (e.g. 
+own programs which use `mdbook` internally, adding your own functionality (e.g.
 a custom preprocessor) or tweaking the build process.
 
 The easiest way to find out how to use the `mdbook` crate is by looking at the
-[API Docs]. The top level documentation explains how one would use the 
+[API Docs]. The top level documentation explains how one would use the
 [`MDBook`] type to load and build a book, while the [config] module gives a good
 explanation on the configuration system.
 

@@ -1,9 +1,9 @@
 # The serve command
 
 The serve command is used to preview a book by serving it over HTTP at
-`localhost:3000` by default. Additionally it watches the book's directory
-for changes, rebuilding the book and refreshing clients for each change.
-A websocket connection is used to trigger the client-side refresh.
+`localhost:3000` by default. Additionally it watches the book's directory for
+changes, rebuilding the book and refreshing clients for each change. A websocket
+connection is used to trigger the client-side refresh.
 
 #### Specify a directory
 
@@ -20,8 +20,8 @@ mdbook serve path/to/book
 to listen on, and the hostname for the browser to connect to for WebSockets.
 
 For example: suppose you have an nginx server for SSL termination which has a
-public address of 192.168.1.100 on port 80 and proxied that to 127.0.0.1 on
-port 8000. To run use the nginx proxy do:
+public address of 192.168.1.100 on port 80 and proxied that to 127.0.0.1 on port
+8000\. To run use the nginx proxy do:
 
 ```bash
 mdbook serve path/to/book -p 8000 -n 127.0.0.1 --websocket-hostname 192.168.1.100
@@ -34,17 +34,16 @@ configured.
 
 #### --open
 
-When you use the `--open` (`-o`) flag, mdbook will open the book in your
-your default web browser after starting the server.
+When you use the `--open` (`-o`) flag, mdbook will open the book in your your
+default web browser after starting the server.
 
 #### --dest-dir
 
-The `--dest-dir` (`-d`) option allows you to change the output directory for
-the book. If not specified it will default to the value of the
-`build.build-dir` key in `book.toml`, or to `./book` relative to the book's
-root directory.
+The `--dest-dir` (`-d`) option allows you to change the output directory for the
+book. If not specified it will default to the value of the `build.build-dir` key
+in `book.toml`, or to `./book` relative to the book's root directory.
 
 -----
 
-***Note:*** *The `serve` command is for testing, and is not intended
-to be a complete HTTP server for a website.*
+***Note:*** *The `serve` command is for testing, and is not intended to be a
+complete HTTP server for a website.*

@@ -33,10 +33,11 @@ pub struct PreprocessorContext {
 
 ## A complete Example
 
-The magic happens within the `run(...)` method of the [`Preprocessor`][preprocessor-docs] trait implementation.
+The magic happens within the `run(...)` method of the
+[`Preprocessor`][preprocessor-docs] trait implementation.
 
-As direct access to the chapters is not possible, you will probably end up iterating
-them using `for_each_mut(...)`:
+As direct access to the chapters is not possible, you will probably end up
+iterating them using `for_each_mut(...)`:
 
 ```rust
 book.for_each_mut(|item: &mut BookItem| {
@@ -56,15 +57,15 @@ book.for_each_mut(|item: &mut BookItem| {
 ```
 
 The `chapter.content` is just a markdown formatted string, and you will have to
-process it in some way. Even though it's entirely possible to implement some sort of
-manual find & replace operation, if that feels too unsafe you can use [`pulldown-cmark`][pc]
-to parse the string into events and work on them instead.
+process it in some way. Even though it's entirely possible to implement some
+sort of manual find & replace operation, if that feels too unsafe you can use
+[`pulldown-cmark`][pc] to parse the string into events and work on them instead.
 
-Finally you can use [`pulldown-cmark-to-cmark`][pctc] to transform these events back to
-a string.
+Finally you can use [`pulldown-cmark-to-cmark`][pctc] to transform these events
+back to a string.
 
-The following code block shows how to remove all emphasis from markdown, and do so
-safely.
+The following code block shows how to remove all emphasis from markdown, and do
+so safely.
 
 ```rust
 fn remove_emphasis(num_removed_items: &mut i32, chapter: &mut Chapter) -> Result<String> {
