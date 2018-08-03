@@ -221,11 +221,14 @@ impl<'a> SummaryParser<'a> {
     fn parse(mut self) -> Result<Summary> {
         let title = self.parse_title();
 
-        let prefix_chapters = self.parse_affix(true)
+        let prefix_chapters = self
+            .parse_affix(true)
             .chain_err(|| "There was an error parsing the prefix chapters")?;
-        let numbered_chapters = self.parse_numbered()
+        let numbered_chapters = self
+            .parse_numbered()
             .chain_err(|| "There was an error parsing the numbered chapters")?;
-        let suffix_chapters = self.parse_affix(false)
+        let suffix_chapters = self
+            .parse_affix(false)
             .chain_err(|| "There was an error parsing the suffix chapters")?;
 
         Ok(Summary {

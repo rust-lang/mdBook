@@ -157,7 +157,8 @@ impl Renderer for CmdRenderer {
 
         let _ = fs::create_dir_all(&ctx.destination);
 
-        let mut child = match self.compose_command()?
+        let mut child = match self
+            .compose_command()?
             .stdin(Stdio::piped())
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())

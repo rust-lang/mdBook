@@ -534,11 +534,7 @@ trait Updateable<'de>: Serialize + Deserialize<'de> {
     }
 }
 
-impl<'de, T> Updateable<'de> for T
-where
-    T: Serialize + Deserialize<'de>,
-{
-}
+impl<'de, T> Updateable<'de> for T where T: Serialize + Deserialize<'de> {}
 
 #[cfg(test)]
 mod tests {

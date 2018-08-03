@@ -22,7 +22,8 @@ impl HelperDef for RenderToc {
             serde_json::value::from_value::<Vec<BTreeMap<String, String>>>(c.clone())
                 .map_err(|_| RenderError::new("Could not decode the JSON data"))
         })?;
-        let current = rc.evaluate_absolute("path", true)?
+        let current = rc
+            .evaluate_absolute("path", true)?
             .as_str()
             .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
             .replace("\"", "");

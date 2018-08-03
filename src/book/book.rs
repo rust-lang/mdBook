@@ -245,7 +245,8 @@ fn load_chapter<P: AsRef<Path>>(
     ch.number = link.number.clone();
 
     sub_item_parents.push(link.name.clone());
-    let sub_items = link.nested_items
+    let sub_items = link
+        .nested_items
         .iter()
         .map(|i| load_summary_item(i, src_dir, sub_item_parents.clone()))
         .collect::<Result<Vec<_>>>()?;
@@ -475,7 +476,8 @@ And here is some \
         assert_eq!(got.len(), 5);
 
         // checking the chapter names are in the order should be sufficient here...
-        let chapter_names: Vec<String> = got.into_iter()
+        let chapter_names: Vec<String> = got
+            .into_iter()
             .filter_map(|i| match *i {
                 BookItem::Chapter(ref ch) => Some(ch.name.clone()),
                 _ => None,

@@ -36,7 +36,8 @@ pub fn normalize_id(content: &str) -> String {
         })
         .collect::<String>();
     // Ensure that the first character is [A-Za-z]
-    if ret.chars()
+    if ret
+        .chars()
         .next()
         .map_or(false, |c| !c.is_ascii_alphabetic())
     {
@@ -110,7 +111,8 @@ pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
 
     let p = Parser::new_ext(text, opts);
     let mut converter = EventQuoteConverter::new(curly_quotes);
-    let events = p.map(clean_codeblock_headers)
+    let events = p
+        .map(clean_codeblock_headers)
         .map(adjust_links)
         .map(|event| converter.convert(event));
 

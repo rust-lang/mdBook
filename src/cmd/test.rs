@@ -28,7 +28,8 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 
 // test command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
-    let library_paths: Vec<&str> = args.values_of("library-path")
+    let library_paths: Vec<&str> = args
+        .values_of("library-path")
         .map(|v| v.collect())
         .unwrap_or_default();
     let book_dir = get_book_dir(args);

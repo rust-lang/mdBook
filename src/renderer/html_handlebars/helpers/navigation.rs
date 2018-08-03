@@ -53,7 +53,8 @@ fn find_chapter(rc: &mut RenderContext, target: Target) -> Result<Option<StringM
             .map_err(|_| RenderError::new("Could not decode the JSON data"))
     })?;
 
-    let base_path = rc.evaluate_absolute("path", true)?
+    let base_path = rc
+        .evaluate_absolute("path", true)?
         .as_str()
         .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
         .replace("\"", "");
@@ -89,7 +90,8 @@ fn render(
     trace!("Creating BTreeMap to inject in context");
 
     let mut context = BTreeMap::new();
-    let base_path = rc.evaluate_absolute("path", false)?
+    let base_path = rc
+        .evaluate_absolute("path", false)?
         .as_str()
         .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
         .replace("\"", "");

@@ -174,7 +174,8 @@ fn chapter_files_were_rendered_to_html() {
         .filter(|path| path.file_name().and_then(OsStr::to_str) != Some("SUMMARY.md"));
 
     for chapter in chapter_files {
-        let rendered_location = temp.path()
+        let rendered_location = temp
+            .path()
             .join(chapter.strip_prefix(&src).unwrap())
             .with_extension("html");
         assert!(
@@ -213,7 +214,8 @@ fn check_second_toc_level() {
 
     let pred = descendants!(Class("chapter"), Name("li"), Name("li"), Name("a"));
 
-    let mut children_of_children: Vec<_> = doc.find(pred)
+    let mut children_of_children: Vec<_> = doc
+        .find(pred)
         .map(|elem| elem.text().trim().to_string())
         .collect();
     children_of_children.sort();
@@ -231,7 +233,8 @@ fn check_first_toc_level() {
 
     let pred = descendants!(Class("chapter"), Name("li"), Name("a"));
 
-    let mut children: Vec<_> = doc.find(pred)
+    let mut children: Vec<_> = doc
+        .find(pred)
         .map(|elem| elem.text().trim().to_string())
         .collect();
     children.sort();
@@ -244,7 +247,8 @@ fn check_spacers() {
     let doc = root_index_html().unwrap();
     let should_be = 1;
 
-    let num_spacers = doc.find(Class("chapter").descendant(Name("li").and(Class("spacer"))))
+    let num_spacers = doc
+        .find(Class("chapter").descendant(Name("li").and(Class("spacer"))))
         .count();
     assert_eq!(num_spacers, should_be);
 }

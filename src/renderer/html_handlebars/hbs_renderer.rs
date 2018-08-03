@@ -37,7 +37,8 @@ impl HtmlHandlebars {
                 print_content.push_str(&content);
 
                 // Update the context with data for this file
-                let path = ch.path
+                let path = ch
+                    .path
                     .to_str()
                     .chain_err(|| "Could not convert path to str")?;
                 let filepath = Path::new(&ch.path).with_extension("html");
@@ -50,7 +51,8 @@ impl HtmlHandlebars {
                 // Non-lexical lifetimes needed :'(
                 let title: String;
                 {
-                    let book_title = ctx.data
+                    let book_title = ctx
+                        .data
                         .get("book_title")
                         .and_then(serde_json::Value::as_str)
                         .unwrap_or("");
@@ -465,7 +467,8 @@ fn make_data(
                 }
 
                 chapter.insert("name".to_owned(), json!(ch.name));
-                let path = ch.path
+                let path = ch
+                    .path
                     .to_str()
                     .chain_err(|| "Could not convert path to str")?;
                 chapter.insert("path".to_owned(), json!(path));

@@ -110,7 +110,8 @@ impl BookBuilder {
     fn copy_across_theme(&self) -> Result<()> {
         debug!("Copying theme");
 
-        let themedir = self.config
+        let themedir = self
+            .config
             .html_config()
             .and_then(|html| html.theme)
             .unwrap_or_else(|| self.config.book.src.join("theme"));
