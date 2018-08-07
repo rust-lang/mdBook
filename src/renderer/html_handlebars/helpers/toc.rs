@@ -3,7 +3,7 @@ use std::path::Path;
 
 use utils;
 
-use handlebars::{Handlebars, Helper, HelperDef, RenderContext, RenderError};
+use handlebars::{Context, Handlebars, Helper, HelperDef, Output, RenderContext, RenderError};
 use pulldown_cmark::{html, Event, Parser, Tag};
 use serde_json;
 
@@ -14,28 +14,28 @@ pub struct RenderToc {
 }
 
 impl HelperDef for RenderToc {
-    fn call(&self, _h: &Helper, _: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
+    fn call<'reg:'rc, 'rc>(&self, _h: &Helper, _: &Handlebars, ctx: &Context, rc: &mut RenderContext, out: &mut Output) -> Result<(), RenderError> {
         // get value from context data
         // rc.get_path() is current json parent path, you should always use it like this
         // param is the key of value you want to display
-        let chapters = rc.evaluate_absolute("chapters", true).and_then(|c| {
+        let chapters = rc.evaluate_absolute(ctx, "chapters", true).and_then(|c| {
             serde_json::value::from_value::<Vec<BTreeMap<String, String>>>(c.clone())
                 .map_err(|_| RenderError::new("Could not decode the JSON data"))
         })?;
         let current = rc
-            .evaluate_absolute("path", true)?
+            .evaluate_absolute(ctx, "path", true)?
             .as_str()
             .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
             .replace("\"", "");
 
-        rc.writer.write_all(b"<ol class=\"chapter\">")?;
+        out.write("<ol class=\"chapter\">")?;
 
         let mut current_level = 1;
 
         for item in chapters {
             // Spacer
             if item.get("spacer").is_some() {
-                rc.writer.write_all(b"<li class=\"spacer\"></li>")?;
+                out.write("<li class=\"spacer\"></li>")?;
                 continue;
             }
 
@@ -47,30 +47,30 @@ impl HelperDef for RenderToc {
 
             if level > current_level {
                 while level > current_level {
-                    rc.writer.write_all(b"<li>")?;
-                    rc.writer.write_all(b"<ol class=\"section\">")?;
+                    out.write("<li>")?;
+                    out.write("<ol class=\"section\">")?;
                     current_level += 1;
                 }
-                rc.writer.write_all(b"<li>")?;
+                out.write("<li>")?;
             } else if level < current_level {
                 while level < current_level {
-                    rc.writer.write_all(b"</ol>")?;
-                    rc.writer.write_all(b"</li>")?;
+                    out.write("</ol>")?;
+                    out.write("</li>")?;
                     current_level -= 1;
                 }
-                rc.writer.write_all(b"<li>")?;
+                out.write("<li>")?;
             } else {
-                rc.writer.write_all(b"<li")?;
+                out.write("<li")?;
                 if item.get("section").is_none() {
-                    rc.writer.write_all(b" class=\"affix\"")?;
+                    out.write(" class=\"affix\"")?;
                 }
-                rc.writer.write_all(b">")?;
+                out.write(">")?;
             }
 
             // Link
             let path_exists = if let Some(path) = item.get("path") {
                 if !path.is_empty() {
-                    rc.writer.write_all(b"<a href=\"")?;
+                    out.write("<a href=\"")?;
 
                     let tmp = Path::new(item.get("path").expect("Error: path should be Some(_)"))
                         .with_extension("html")
@@ -80,16 +80,15 @@ impl HelperDef for RenderToc {
                         .replace("\\", "/");
 
                     // Add link
-                    rc.writer
-                        .write_all(&utils::fs::path_to_root(&current).as_bytes())?;
-                    rc.writer.write_all(tmp.as_bytes())?;
-                    rc.writer.write_all(b"\"")?;
+                    out.write(&utils::fs::path_to_root(&current))?;
+                    out.write(&tmp)?;
+                    out.write("\"")?;
 
                     if path == &current {
-                        rc.writer.write_all(b" class=\"active\"")?;
+                        out.write(" class=\"active\"")?;
                     }
 
-                    rc.writer.write_all(b">")?;
+                    out.write(">")?;
                     true
                 } else {
                     false
@@ -101,9 +100,9 @@ impl HelperDef for RenderToc {
             if !self.no_section_label {
                 // Section does not necessarily exist
                 if let Some(section) = item.get("section") {
-                    rc.writer.write_all(b"<strong aria-hidden=\"true\">")?;
-                    rc.writer.write_all(section.as_bytes())?;
-                    rc.writer.write_all(b"</strong> ")?;
+                    out.write("<strong aria-hidden=\"true\">")?;
+                    out.write(&section)?;
+                    out.write("</strong> ")?;
                 }
             }
 
@@ -124,22 +123,22 @@ impl HelperDef for RenderToc {
                 html::push_html(&mut markdown_parsed_name, parser);
 
                 // write to the handlebars template
-                rc.writer.write_all(markdown_parsed_name.as_bytes())?;
+                out.write(&markdown_parsed_name)?;
             }
 
             if path_exists {
-                rc.writer.write_all(b"</a>")?;
+                out.write("</a>")?;
             }
 
-            rc.writer.write_all(b"</li>")?;
+            out.write("</li>")?;
         }
         while current_level > 1 {
-            rc.writer.write_all(b"</ol>")?;
-            rc.writer.write_all(b"</li>")?;
+            out.write("</ol>")?;
+            out.write("</li>")?;
             current_level -= 1;
         }
 
-        rc.writer.write_all(b"</ol>")?;
+        out.write("</ol>")?;
         Ok(())
     }
 }

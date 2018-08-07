@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use handlebars::{Context, Handlebars, Helper, RenderContext, RenderError, Renderable};
+use handlebars::{Context, Handlebars, Helper, Output, RenderContext, RenderError, Renderable};
 use serde_json;
 
 use utils;
@@ -45,16 +45,16 @@ impl Target {
     }
 }
 
-fn find_chapter(rc: &mut RenderContext, target: Target) -> Result<Option<StringMap>, RenderError> {
+fn find_chapter(ctx: &Context, rc: &mut RenderContext, target: Target) -> Result<Option<StringMap>, RenderError> {
     debug!("Get data from context");
 
-    let chapters = rc.evaluate_absolute("chapters", true).and_then(|c| {
+    let chapters = rc.evaluate_absolute(ctx, "chapters", true).and_then(|c| {
         serde_json::value::from_value::<Vec<StringMap>>(c.clone())
             .map_err(|_| RenderError::new("Could not decode the JSON data"))
     })?;
 
     let base_path = rc
-        .evaluate_absolute("path", true)?
+        .evaluate_absolute(ctx, "path", true)?
         .as_str()
         .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
         .replace("\"", "");
@@ -84,14 +84,16 @@ fn find_chapter(rc: &mut RenderContext, target: Target) -> Result<Option<StringM
 fn render(
     _h: &Helper,
     r: &Handlebars,
+    ctx: &Context,
     rc: &mut RenderContext,
+    out: &mut Output,
     chapter: &StringMap,
 ) -> Result<(), RenderError> {
     trace!("Creating BTreeMap to inject in context");
 
     let mut context = BTreeMap::new();
     let base_path = rc
-        .evaluate_absolute("path", false)?
+        .evaluate_absolute(ctx, "path", false)?
         .as_str()
         .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
         .replace("\"", "");
@@ -122,28 +124,29 @@ fn render(
     _h.template()
         .ok_or_else(|| RenderError::new("Error with the handlebars template"))
         .and_then(|t| {
-            let mut local_rc = rc.with_context(Context::wraps(&context)?);
-            t.render(r, &mut local_rc)
+            let mut local_rc = rc.new_for_block();
+            let local_ctx = Context::wraps(&context)?;
+            t.render(r, &local_ctx, &mut local_rc, out)
         })?;
 
     Ok(())
 }
 
-pub fn previous(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
+pub fn previous(_h: &Helper, r: &Handlebars, ctx: &Context, rc: &mut RenderContext, out: &mut Output) -> Result<(), RenderError> {
     trace!("previous (handlebars helper)");
 
-    if let Some(previous) = find_chapter(rc, Target::Previous)? {
-        render(_h, r, rc, &previous)?;
+    if let Some(previous) = find_chapter(ctx, rc, Target::Previous)? {
+        render(_h, r, ctx, rc, out, &previous)?;
     }
 
     Ok(())
 }
 
-pub fn next(_h: &Helper, r: &Handlebars, rc: &mut RenderContext) -> Result<(), RenderError> {
+pub fn next(_h: &Helper, r: &Handlebars, ctx: &Context, rc: &mut RenderContext, out: &mut Output) -> Result<(), RenderError> {
     trace!("next (handlebars helper)");
 
-    if let Some(next) = find_chapter(rc, Target::Next)? {
-        render(_h, r, rc, &next)?;
+    if let Some(next) = find_chapter(ctx, rc, Target::Next)? {
+        render(_h, r, ctx, rc, out, &next)?;
     }
 
     Ok(())
