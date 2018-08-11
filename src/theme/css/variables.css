@@ -10,7 +10,7 @@
 /* Themes */
 
 .ayu {
-    --bg: #0f1419;
+    --bg: hsl(210, 25%, 8%);
     --fg: #c5c5c5;
 
     --sidebar-bg: #14191f;
@@ -32,12 +32,12 @@
     --theme-popup-border: #5c6773;
     --theme-hover: #191f26;
 
-    --quote-bg: #262933;
-    --quote-border: lighten(var(--quote-bg), 5%);
+    --quote-bg: hsl(226, 15%, 17%);
+    --quote-border: hsl(226, 15%, 22%);
 
-    --table-border-color: lighten(var(--bg), 5%);
-    --table-header-bg: lighten(var(--bg), 20%);
-    --table-alternate-bg: lighten(var(--bg), 3%);
+    --table-border-color: hsl(210, 25%, 13%);
+    --table-header-bg: hsl(210, 25%, 28%);
+    --table-alternate-bg: hsl(210, 25%, 11%);
 
     --searchbar-border-color: #848484;
     --searchbar-bg: #424242;
@@ -50,7 +50,7 @@
 }
 
 .coal {
-    --bg: #141617;
+    --bg: hsl(200, 7%, 8%);
     --fg: #98a3ad;
 
     --sidebar-bg: #292c2f;
@@ -72,12 +72,12 @@
     --theme-popup-border: #43484d;
     --theme-hover: #1f2124;
 
-    --quote-bg: #242637;
-    --quote-border: lighten(var(--quote-bg), 5%);
+    --quote-bg: hsl(234, 21%, 18%);
+    --quote-border: hsl(234, 21%, 23%);
 
-    --table-border-color: lighten(var(--bg), 5%);
-    --table-header-bg: lighten(var(--bg), 20%);
-    --table-alternate-bg: lighten(var(--bg), 3%);
+    --table-border-color: hsl(200, 7%, 13%);
+    --table-header-bg: hsl(200, 7%, 28%);
+    --table-alternate-bg: hsl(200, 7%, 11%);
 
     --searchbar-border-color: #aaa;
     --searchbar-bg: #b7b7b7;
@@ -90,7 +90,7 @@
 }
 
 .light {
-    --bg: #ffffff;
+    --bg: hsl(0, 0%, 100%);
     --fg: #333333;
 
     --sidebar-bg: #fafafa;
@@ -112,12 +112,12 @@
     --theme-popup-border: #cccccc;
     --theme-hover: #e6e6e6;
 
-    --quote-bg: #f2f7f9;
-    --quote-border: darken(var(--quote-bg), 5%);
+    --quote-bg: hsl(197, 37%, 96%);
+    --quote-border: hsl(197, 37%, 91%);
 
-    --table-border-color: darken(var(--bg), 5%);
-    --table-header-bg: darken(var(--bg), 20%);
-    --table-alternate-bg: darken(var(--bg), 3%);
+    --table-border-color: hsl(0, 0%, 95%);
+    --table-header-bg: hsl(0, 0%, 80%);
+    --table-alternate-bg: hsl(0, 0%, 97%);
 
     --searchbar-border-color: #aaa;
     --searchbar-bg: #fafafa;
@@ -130,7 +130,7 @@
 }
 
 .navy {
-    --bg: #161923;
+    --bg: hsl(226, 23%, 11%);
     --fg: #bcbdd0;
 
     --sidebar-bg: #282d3f;
@@ -152,12 +152,12 @@
     --theme-popup-border: #737480;
     --theme-hover: #282e40;
 
-    --quote-bg: #262933;
-    --quote-border: lighten(var(--quote-bg), 5%);
+    --quote-bg: hsl(226, 15%, 17%);
+    --quote-border: hsl(226, 15%, 22%);
 
-    --table-border-color: lighten(var(--bg), 5%);
-    --table-header-bg: lighten(var(--bg), 20%);
-    --table-alternate-bg: lighten(var(--bg), 3%);
+    --table-border-color: hsl(226, 23%, 16%);
+    --table-header-bg: hsl(226, 23%, 31%);
+    --table-alternate-bg: hsl(226, 23%, 14%);
 
     --searchbar-border-color: #aaa;
     --searchbar-bg: #aeaec6;
@@ -170,7 +170,7 @@
 }
 
 .rust {
-    --bg: #e1e1db;
+    --bg: hsl(60, 9%, 87%);
     --fg: #262625;
 
     --sidebar-bg: #3b2e2a;
@@ -192,12 +192,12 @@
     --theme-popup-border: #b38f6b;
     --theme-hover: #99908a;
 
-    --quote-bg: #c1c1bb;
-    --quote-border: darken(var(--quote-bg), 5%);
+    --quote-bg: hsl(60, 5%, 75%);
+    --quote-border: hsl(60, 5%, 70%);
 
-    --table-border-color: darken(var(--bg), 5%);
+    --table-border-color: hsl(60, 9%, 82%);
     --table-header-bg: #b3a497;
-    --table-alternate-bg: darken(var(--bg), 3%);
+    --table-alternate-bg: hsl(60, 9%, 84%);
 
     --searchbar-border-color: #aaa;
     --searchbar-bg: #fafafa;
