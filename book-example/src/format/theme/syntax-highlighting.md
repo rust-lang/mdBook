@@ -28,7 +28,7 @@ Now your theme will be used instead of the default theme.
 
 ## Hiding code lines
 
-There is a feature in mdBook that let's you hide code lines by prepending them
+There is a feature in mdBook that lets you hide code lines by prepending them
 with a `#`.
 
 
