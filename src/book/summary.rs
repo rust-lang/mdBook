@@ -475,8 +475,7 @@ fn stringify_events(events: Vec<Event>) -> String {
         .filter_map(|t| match t {
             Event::Text(text) => Some(text.into_owned()),
             _ => None,
-        })
-        .collect()
+        }).collect()
 }
 
 /// A section number like "1.2.3", basically just a newtype'd `Vec<u32>` with

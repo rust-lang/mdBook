@@ -33,8 +33,7 @@ pub fn normalize_id(content: &str) -> String {
             } else {
                 None
             }
-        })
-        .collect::<String>();
+        }).collect::<String>();
     // Ensure that the first character is [A-Za-z]
     if ret
         .chars()
@@ -194,8 +193,7 @@ fn convert_quotes_to_curly(original_text: &str) -> String {
             preceded_by_whitespace = original_char.is_whitespace();
 
             converted_char
-        })
-        .collect()
+        }).collect()
 }
 
 /// Prints a "backtrace" of some `Error`.

@@ -481,8 +481,7 @@ And here is some \
             .filter_map(|i| match *i {
                 BookItem::Chapter(ref ch) => Some(ch.name.clone()),
                 _ => None,
-            })
-            .collect();
+            }).collect();
         let should_be: Vec<_> = vec![
             String::from("Chapter 1"),
             String::from("Hello World"),

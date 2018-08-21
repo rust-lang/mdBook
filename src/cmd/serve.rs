@@ -122,10 +122,10 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
         let result = MDBook::load(&book_dir)
             .and_then(|mut b| {
-                b.config.set("output.html.livereload-url", &livereload_url)?;
+                b.config
+                    .set("output.html.livereload-url", &livereload_url)?;
                 Ok(b)
-            })
-            .and_then(|b| b.build());
+            }).and_then(|b| b.build());
 
         if let Err(e) = result {
             error!("Unable to load the book");
