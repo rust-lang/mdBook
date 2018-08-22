@@ -36,12 +36,12 @@ build: false
 
 # Equivalent to Travis' `script` phase
 test_script:
-  - cargo build --verbose
-  - cargo test --verbose
+  - cargo test --all
+  - cargo test --all --no-default-features
 
 before_deploy:
   # Generate artifacts for release
-  - cargo build --release
+  - cargo rustc --bin mdbook --release -- -C lto
   - mkdir staging
   - copy target\release\mdbook.exe staging
   - cd staging
