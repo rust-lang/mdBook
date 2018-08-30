@@ -16,6 +16,8 @@ const MAX_LINK_NESTED_DEPTH: usize = 10;
 pub struct LinkPreprocessor;
 
 impl LinkPreprocessor {
+    pub(crate) const NAME: &'static str = "links";
+
     /// Create a new `LinkPreprocessor`.
     pub fn new() -> Self {
         LinkPreprocessor
@@ -24,7 +26,7 @@ impl LinkPreprocessor {
 
 impl Preprocessor for LinkPreprocessor {
     fn name(&self) -> &str {
-        "links"
+        Self::NAME
     }
 
     fn run(&self, ctx: &PreprocessorContext, mut book: Book) -> Result<Book> {

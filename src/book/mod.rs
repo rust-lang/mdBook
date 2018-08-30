@@ -349,10 +349,19 @@ fn default_preprocessors() -> Vec<Box<Preprocessor>> {
     ]
 }
 
+fn is_default_preprocessor(pre: &Preprocessor) -> bool {
+    let name = pre.name();
+    name == LinkPreprocessor::NAME || name == IndexPreprocessor::NAME
+}
+
 /// Look at the `MDBook` and try to figure out what preprocessors to run.
 fn determine_preprocessors(config: &Config) -> Result<Vec<Box<Preprocessor>>> {
-    let preprocess_list = match config.build.preprocess {
-        Some(ref p) => p,
+    let preprocessor_keys = config.get("preprocessor")
+        .and_then(|value| value.as_table())
+        .map(|table| table.keys());
+
+    let preprocessor_keys = match preprocessor_keys {
+        Some(keys) => keys,
         // If no preprocessor field is set, default to the LinkPreprocessor and
         // IndexPreprocessor. This allows you to disable default preprocessors
         // by setting "preprocess" to an empty list.
@@ -361,7 +370,7 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<Preprocessor>>> {
 
     let mut preprocessors: Vec<Box<Preprocessor>> = Vec::new();
 
-    for key in preprocess_list {
+    for key in preprocessor_keys {
         match key.as_ref() {
             "links" => preprocessors.push(Box::new(LinkPreprocessor::new())),
             "index" => preprocessors.push(Box::new(IndexPreprocessor::new())),
@@ -388,7 +397,16 @@ fn interpret_custom_renderer(key: &str, table: &Value) -> Box<Renderer> {
 /// Check whether we should run a particular `Preprocessor` in combination
 /// with the renderer, falling back to `Preprocessor::supports_renderer()`
 /// method if the user doesn't say anything.
+///
+/// The `build.use-default-preprocessors` config option can be used to ensure
+/// default preprocessors always run if they support the renderer.
 fn preprocessor_should_run(preprocessor: &Preprocessor, renderer: &Renderer, cfg: &Config) -> bool {
+    if cfg.build.use_default_preprocessors &&
+        is_default_preprocessor(preprocessor) &&
+        preprocessor.supports_renderer(renderer.name()) {
+        return true;
+    }
+
     let key = format!("preprocessor.{}.renderers", preprocessor.name());
     let renderer_name = renderer.name();
 
@@ -449,8 +467,8 @@ mod tests {
     fn config_defaults_to_link_and_index_preprocessor_if_not_set() {
         let cfg = Config::default();
 
-        // make sure we haven't got anything in the `output` table
-        assert!(cfg.build.preprocess.is_none());
+        // make sure we haven't got anything in the `preprocessor` table
+        assert!(cfg.get("preprocessor").is_none());
 
         let got = determine_preprocessors(&cfg);
 
@@ -461,44 +479,22 @@ mod tests {
     }
 
     #[test]
-    fn config_doesnt_default_if_empty() {
-        let cfg_str: &'static str = r#"
-        [book]
-        title = "Some Book"
-
-        [build]
-        build-dir = "outputs"
-        create-missing = false
-        preprocess = []
-        "#;
-
-        let cfg = Config::from_str(cfg_str).unwrap();
-
-        // make sure we have something in the `output` table
-        assert!(cfg.build.preprocess.is_some());
-
-        let got = determine_preprocessors(&cfg);
-
-        assert!(got.is_ok());
-        assert!(got.unwrap().is_empty());
-    }
-
-    #[test]
     fn config_complains_if_unimplemented_preprocessor() {
         let cfg_str: &'static str = r#"
         [book]
         title = "Some Book"
 
+        [preprocessor.random]
+
         [build]
         build-dir = "outputs"
         create-missing = false
-        preprocess = ["random"]
         "#;
 
         let cfg = Config::from_str(cfg_str).unwrap();
 
-        // make sure we have something in the `output` table
-        assert!(cfg.build.preprocess.is_some());
+        // make sure the `preprocessor.random` table exists
+        assert!(cfg.get_preprocessor("random").is_some());
 
         let got = determine_preprocessors(&cfg);
 
