@@ -39,4 +39,12 @@ pub trait Preprocessor {
     /// Run this `Preprocessor`, allowing it to update the book before it is
     /// given to a renderer.
     fn run(&self, ctx: &PreprocessorContext, book: Book) -> Result<Book>;
+
+    /// A hint to `MDBook` whether this preprocessor is compatible with a
+    /// particular renderer.
+    ///
+    /// By default, always returns `true`.
+    fn supports_renderer(&self, _renderer: &str) -> bool {
+        true
+    }
 }

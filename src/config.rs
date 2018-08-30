@@ -209,6 +209,18 @@ impl Config {
         Ok(())
     }
 
+    /// Get the table associated with a particular renderer.
+    pub fn get_renderer<I: AsRef<str>>(&self, index: I) -> Option<&Table> {
+        let key = format!("output.{}", index.as_ref());
+        self.get(&key).and_then(|v| v.as_table())
+    }
+
+    /// Get the table associated with a particular preprocessor.
+    pub fn get_preprocessor<I: AsRef<str>>(&self, index: I) -> Option<&Table> {
+        let key = format!("preprocessor.{}", index.as_ref());
+        self.get(&key).and_then(|v| v.as_table())
+    }
+
     fn from_legacy(mut table: Value) -> Config {
         let mut cfg = Config::default();
 

@@ -156,6 +156,7 @@ impl MDBook {
         Ok(())
     }
 
+    /// Run the entire build process for a particular `Renderer`.
     fn execute_build_process(&self, renderer: &Renderer) -> Result<()> {
         let mut preprocessed_book = self.book.clone();
         let preprocess_ctx = PreprocessorContext::new(self.root.clone(),
@@ -163,9 +164,11 @@ impl MDBook {
                                      renderer.name().to_string());
 
         for preprocessor in &self.preprocessors {
-            debug!("Running the {} preprocessor.", preprocessor.name());
-            preprocessed_book =
-                preprocessor.run(&preprocess_ctx, preprocessed_book)?;
+            if preprocessor_should_run(&**preprocessor, renderer, &self.config) {
+                debug!("Running the {} preprocessor.", preprocessor.name());
+                preprocessed_book =
+                    preprocessor.run(&preprocess_ctx, preprocessed_book)?;
+            }
         }
 
         info!("Running the {} backend", renderer.name());
@@ -382,6 +385,23 @@ fn interpret_custom_renderer(key: &str, table: &Value) -> Box<Renderer> {
     Box::new(CmdRenderer::new(key.to_string(), command.to_string()))
 }
 
+/// Check whether we should run a particular `Preprocessor` in combination
+/// with the renderer, falling back to `Preprocessor::supports_renderer()`
+/// method if the user doesn't say anything.
+fn preprocessor_should_run(preprocessor: &Preprocessor, renderer: &Renderer, cfg: &Config) -> bool {
+    let key = format!("preprocessor.{}.renderers", preprocessor.name());
+    let renderer_name = renderer.name();
+
+    if let Some(Value::Array(ref explicit_renderers)) = cfg.get(&key) {
+        return explicit_renderers.into_iter()
+            .filter_map(|val| val.as_str())
+            .any(|name| name == renderer_name);
+    }
+
+    preprocessor.supports_renderer(renderer_name)
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -483,5 +503,58 @@ mod tests {
         let got = determine_preprocessors(&cfg);
 
         assert!(got.is_err());
+    }
+
+    #[test]
+    fn config_respects_preprocessor_selection() {
+        let cfg_str: &'static str = r#"
+        [preprocessor.links]
+        renderers = ["html"]
+        "#;
+
+        let cfg = Config::from_str(cfg_str).unwrap();
+
+        // double-check that we can access preprocessor.links.renderers[0]
+        let html = cfg.get_preprocessor("links")
+            .and_then(|links| links.get("renderers"))
+            .and_then(|renderers| renderers.as_array())
+            .and_then(|renderers| renderers.get(0))
+            .and_then(|renderer| renderer.as_str())
+            .unwrap();
+        assert_eq!(html, "html");
+        let html_renderer = HtmlHandlebars::default();
+        let pre = LinkPreprocessor::new();
+
+        let should_run = preprocessor_should_run(&pre, &html_renderer, &cfg);
+        assert!(should_run);
+    }
+
+    struct BoolPreprocessor(bool);
+    impl Preprocessor for BoolPreprocessor {
+        fn name(&self) -> &str {
+            "bool-preprocessor"
+        }
+
+        fn run(&self, _ctx: &PreprocessorContext, _book: Book) -> Result<Book> {
+            unimplemented!()
+        }
+
+        fn supports_renderer(&self, _renderer: &str) -> bool {
+            self.0
+        }
+    }
+
+    #[test]
+    fn preprocessor_should_run_falls_back_to_supports_renderer_method() {
+        let cfg = Config::default();
+        let html = HtmlHandlebars::new();
+
+        let should_be = true;
+        let got = preprocessor_should_run(&BoolPreprocessor(should_be), &html, &cfg);
+        assert_eq!(got, should_be);
+
+        let should_be = false;
+        let got = preprocessor_should_run(&BoolPreprocessor(should_be), &html, &cfg);
+        assert_eq!(got, should_be);
     }
 }
