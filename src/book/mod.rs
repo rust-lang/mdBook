@@ -158,8 +158,9 @@ impl MDBook {
 
     fn execute_build_process(&self, renderer: &Renderer) -> Result<()> {
         let mut preprocessed_book = self.book.clone();
-        let preprocess_ctx =
-            PreprocessorContext::new(self.root.clone(), self.config.clone());
+        let preprocess_ctx = PreprocessorContext::new(self.root.clone(),
+                                     self.config.clone(),
+                                     renderer.name().to_string());
 
         for preprocessor in &self.preprocessors {
             debug!("Running the {} preprocessor.", preprocessor.name());
@@ -227,7 +228,10 @@ impl MDBook {
 
         let temp_dir = TempFileBuilder::new().prefix("mdbook-").tempdir()?;
 
-        let preprocess_context = PreprocessorContext::new(self.root.clone(), self.config.clone());
+        // FIXME: Is "test" the proper renderer name to use here?
+        let preprocess_context = PreprocessorContext::new(self.root.clone(),
+                                                          self.config.clone(),
+                                                          "test".to_string());
 
         let book = LinkPreprocessor::new().run(&preprocess_context, self.book.clone())?;
         // Index Preprocessor is disabled so that chapter paths continue to point to the

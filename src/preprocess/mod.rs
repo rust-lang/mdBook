@@ -19,12 +19,14 @@ pub struct PreprocessorContext {
     pub root: PathBuf,
     /// The book configuration (`book.toml`).
     pub config: Config,
+    /// The `Renderer` this preprocessor is being used with.
+    pub renderer: String,
 }
 
 impl PreprocessorContext {
     /// Create a new `PreprocessorContext`.
-    pub(crate) fn new(root: PathBuf, config: Config) -> Self {
-        PreprocessorContext { root, config }
+    pub(crate) fn new(root: PathBuf, config: Config, renderer: String) -> Self {
+        PreprocessorContext { root, config, renderer }
     }
 }
 
