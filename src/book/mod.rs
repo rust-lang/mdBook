@@ -401,10 +401,9 @@ fn interpret_custom_renderer(key: &str, table: &Value) -> Box<Renderer> {
 /// The `build.use-default-preprocessors` config option can be used to ensure
 /// default preprocessors always run if they support the renderer.
 fn preprocessor_should_run(preprocessor: &Preprocessor, renderer: &Renderer, cfg: &Config) -> bool {
-    if cfg.build.use_default_preprocessors &&
-        is_default_preprocessor(preprocessor) &&
-        preprocessor.supports_renderer(renderer.name()) {
-        return true;
+    // default preprocessors should be run by default (if supported)
+    if cfg.build.use_default_preprocessors && is_default_preprocessor(preprocessor) {
+        return preprocessor.supports_renderer(renderer.name());
     }
 
     let key = format!("preprocessor.{}.renderers", preprocessor.name());
