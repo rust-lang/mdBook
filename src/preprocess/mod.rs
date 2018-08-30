@@ -36,5 +36,5 @@ pub trait Preprocessor {
 
     /// Run this `Preprocessor`, allowing it to update the book before it is
     /// given to a renderer.
-    fn run(&self, ctx: &PreprocessorContext, book: &mut Book) -> Result<()>;
+    fn run(&self, ctx: &PreprocessorContext, book: Book) -> Result<Book>;
 }

@@ -22,7 +22,7 @@ impl Preprocessor for IndexPreprocessor {
         "index"
     }
 
-    fn run(&self, ctx: &PreprocessorContext, book: &mut Book) -> Result<()> {
+    fn run(&self, ctx: &PreprocessorContext, mut book: Book) -> Result<Book> {
         let source_dir = ctx.root.join(&ctx.config.book.src);
         book.for_each_mut(|section: &mut BookItem| {
             if let BookItem::Chapter(ref mut ch) = *section {
@@ -37,7 +37,7 @@ impl Preprocessor for IndexPreprocessor {
             }
         });
 
-        Ok(())
+        Ok(book)
     }
 }
 

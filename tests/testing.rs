@@ -39,9 +39,9 @@ fn mdbook_runs_preprocessors() {
             "dummy"
         }
 
-        fn run(&self, _ctx: &PreprocessorContext, _book: &mut Book) -> Result<()> {
+        fn run(&self, _ctx: &PreprocessorContext, book: Book) -> Result<Book> {
             *self.0.lock().unwrap() = true;
-            Ok(())
+            Ok(book)
         }
     }
 

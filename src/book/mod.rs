@@ -149,23 +149,35 @@ impl MDBook {
     pub fn build(&self) -> Result<()> {
         info!("Book building has started");
 
-        let mut preprocessed_book = self.book.clone();
-        let preprocess_ctx = PreprocessorContext::new(self.root.clone(), self.config.clone());
-
-        for preprocessor in &self.preprocessors {
-            debug!("Running the {} preprocessor.", preprocessor.name());
-            preprocessor.run(&preprocess_ctx, &mut preprocessed_book)?;
-        }
-
         for renderer in &self.renderers {
-            info!("Running the {} backend", renderer.name());
-            self.run_renderer(&preprocessed_book, renderer.as_ref())?;
+            self.execute_build_process(&**renderer)?;
         }
 
         Ok(())
     }
 
-    fn run_renderer(&self, preprocessed_book: &Book, renderer: &Renderer) -> Result<()> {
+    fn execute_build_process(&self, renderer: &Renderer) -> Result<()> {
+        let mut preprocessed_book = self.book.clone();
+        let preprocess_ctx =
+            PreprocessorContext::new(self.root.clone(), self.config.clone());
+
+        for preprocessor in &self.preprocessors {
+            debug!("Running the {} preprocessor.", preprocessor.name());
+            preprocessed_book =
+                preprocessor.run(&preprocess_ctx, preprocessed_book)?;
+        }
+
+        info!("Running the {} backend", renderer.name());
+        self.render(&preprocessed_book, renderer)?;
+
+        Ok(())
+    }
+
+    fn render(
+        &self,
+        preprocessed_book: &Book,
+        renderer: &Renderer,
+    ) -> Result<()> {
         let name = renderer.name();
         let build_dir = self.build_dir_for(name);
         if build_dir.exists() {
@@ -217,11 +229,11 @@ impl MDBook {
 
         let preprocess_context = PreprocessorContext::new(self.root.clone(), self.config.clone());
 
-        LinkPreprocessor::new().run(&preprocess_context, &mut self.book)?;
+        let book = LinkPreprocessor::new().run(&preprocess_context, self.book.clone())?;
         // Index Preprocessor is disabled so that chapter paths continue to point to the
         // actual markdown files.
 
-        for item in self.iter() {
+        for item in book.iter() {
             if let BookItem::Chapter(ref ch) = *item {
                 if !ch.path.as_os_str().is_empty() {
                     let path = self.source_dir().join(&ch.path);
