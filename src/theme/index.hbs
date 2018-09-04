@@ -27,7 +27,7 @@
 
         <!-- Custom theme stylesheets -->
         {{#each additional_css}}
-        <link rel="stylesheet" href="{{ this }}">
+        <link rel="stylesheet" href="{{ ../path_to_root }}{{ this }}">
         {{/each}}
 
         {{#if mathjax_support}}
@@ -235,7 +235,7 @@
 
         <!-- Custom JS scripts -->
         {{#each additional_js}}
-        <script type="text/javascript" src="{{ path_to_root }}{{this}}"></script>
+        <script type="text/javascript" src="{{ ../path_to_root }}{{this}}"></script>
         {{/each}}
 
         {{#if is_print}}
