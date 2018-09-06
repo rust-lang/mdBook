@@ -48,5 +48,6 @@ comma-delimited list (`-L foo,bar`).
 #### --dest-dir
 
 The `--dest-dir` (`-d`) option allows you to change the output directory for the
-book. If not specified it will default to the value of the `build.build-dir` key
-in `book.toml`, or to `./book` relative to the book's root directory.
+book. Relative paths are interpreted relative to the book's root directory. If
+not specified it will default to the value of the `build.build-dir` key in
+`book.toml`, or to `./book`.
