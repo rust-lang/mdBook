@@ -5,6 +5,9 @@ The serve command is used to preview a book by serving it over HTTP at
 changes, rebuilding the book and refreshing clients for each change. A websocket
 connection is used to trigger the client-side refresh.
 
+***Note:*** *The `serve` command is for testing a book's HTML output, and is not
+intended to be a complete HTTP server for a website.*
+
 #### Specify a directory
 
 The `serve` command can take a directory as an argument to use as the book's
@@ -43,8 +46,3 @@ The `--dest-dir` (`-d`) option allows you to change the output directory for the
 book. Relative paths are interpreted relative to the book's root directory. If
 not specified it will default to the value of the `build.build-dir` key in
 `book.toml`, or to `./book`.
-
------
-
-***Note:*** *The `serve` command is for testing, and is not intended to be a
-complete HTTP server for a website.*
