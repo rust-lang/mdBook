@@ -57,7 +57,7 @@ We love code quality and Rust has some excellent tools to assist you with contri
 Before you make your Pull Request to the project, please run it through the `rustfmt` utility.
 This will ensure we have good quality source code that is better for us all to maintain.
 
-[rustfmt]([)https://github.com/rust-lang-nursery/rustfmt) has a lot more information on the project.
+[rustfmt](https://github.com/rust-lang-nursery/rustfmt) has a lot more information on the project.
 The quick guide is
 
 1. Install it
