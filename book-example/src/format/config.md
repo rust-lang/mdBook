@@ -14,6 +14,10 @@ description = "The example book covers examples."
 build-dir = "my-example-book"
 create-missing = false
 
+[preprocess]
+index  = true
+linkes = true
+
 [output.html]
 additional-css = ["custom.css"]
 
@@ -26,7 +30,6 @@ limit-results = 15
 It is important to note that **any** relative path specified in the in the
 configuration will always be taken relative from the root of the book where the
 configuration file is located.
-
 
 ### General metadata
 
@@ -59,10 +62,8 @@ This controls the build process of your book.
   will be created when the book is built (i.e. `create-missing = true`). If this
   is `false` then the build process will instead exit with an error if any files
   do not exist.
-- **preprocess:** Specify which preprocessors to be applied. Default is
-  `["links", "index"]`. To disable default preprocessors, pass an empty array
-  `[]` in.
 
+### Configuring Preprocessors
 
 The following preprocessors are available and included by default:
 
@@ -71,14 +72,39 @@ The following preprocessors are available and included by default:
 - `index`: Convert all chapter files named `README.md` into `index.md`. That is
   to say, all `README.md` would be rendered to an index file `index.html` in the
   rendered book.
-
+- `emoji`: Convert `:emoji:` text into Emojis. eg: `:smile:` to :smile:
 
 **book.toml**
 ```toml
 [build]
 build-dir = "build"
 create-missing = false
-preprocess = ["links", "index"]
+
+[preprocess]
+links = true
+index = true
+emoji = true
+```
+
+#### Locking a Preprocessor dependency to a renderer
+
+You can explicitly specify that a preprocessor should run for a renderer by binding the two together.
+
+```
+[preprocessor.mathjax]
+renderers = ["html"]  # mathjax only makes sense with the HTML renderer
+```
+
+#### Nested Configuration
+
+Where a preprocessor has more complex configuration available to it, use the
+following style of configuration.
+
+```
+[preprocess.links]
+# set the renderers this preprocessor will run for
+renderers = ["html"]
+some_extra_feature = true
 ```
 
 ### HTML renderer options
