@@ -329,12 +329,32 @@ more text with spaces
         #[test]
         fn it_generates_anchors() {
             assert_eq!(
-                id_from_content("## `--passes`: add more rustdoc passes"),
-                "a--passes-add-more-rustdoc-passes"
-            );
-            assert_eq!(
                 id_from_content("## Method-call expressions"),
                 "method-call-expressions"
+            );
+            assert_eq!(
+                id_from_content("## **Bold** title"),
+                "bold-title"
+            );
+            assert_eq!(
+                id_from_content("## `Code` title"),
+                "code-title"
+            );
+        }
+
+        #[test]
+        fn it_generates_anchors_from_non_ascii_initial() {
+            assert_eq!(
+                id_from_content("## `--passes`: add more rustdoc passes"),
+                "--passes-add-more-rustdoc-passes"
+            );
+            assert_eq!(
+                id_from_content("## 中文標題 CJK title"),
+                "中文標題-cjk-title"
+            );
+            assert_eq!(
+                id_from_content("## Über"),
+                "Über"
             );
         }
 
@@ -342,14 +362,17 @@ more text with spaces
         fn it_normalizes_ids() {
             assert_eq!(
                 normalize_id("`--passes`: add more rustdoc passes"),
-                "a--passes-add-more-rustdoc-passes"
+                "--passes-add-more-rustdoc-passes"
             );
             assert_eq!(
                 normalize_id("Method-call 🐙 expressions \u{1f47c}"),
                 "method-call--expressions-"
             );
-            assert_eq!(normalize_id("_-_12345"), "a_-_12345");
-            assert_eq!(normalize_id("12345"), "a12345");
+            assert_eq!(normalize_id("_-_12345"), "_-_12345");
+            assert_eq!(normalize_id("12345"), "12345");
+            assert_eq!(normalize_id("中文"), "中文");
+            assert_eq!(normalize_id("にほんご"), "にほんご");
+            assert_eq!(normalize_id("한국어"), "한국어");
             assert_eq!(normalize_id(""), "");
         }
     }
