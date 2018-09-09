@@ -14,9 +14,9 @@ description = "The example book covers examples."
 build-dir = "my-example-book"
 create-missing = false
 
-[preprocess]
-index  = true
-linkes = true
+[preprocess.index]
+
+[preprocess.links]
 
 [output.html]
 additional-css = ["custom.css"]
@@ -62,17 +62,29 @@ This controls the build process of your book.
   will be created when the book is built (i.e. `create-missing = true`). If this
   is `false` then the build process will instead exit with an error if any files
   do not exist.
+- **use-default-preprocessors:** Disable the default preprocessors of (`links` &
+  `index`) by setting this option to `false`.
 
-### Configuring Preprocessors
+  If you have the same, and/or other preprocessors declared via their table
+  of configuration, they will run instead.
+
+  - For clarity, with no preprocessor configuration, the default `links` and 
+    `index` will run.
+  - Setting `use-default-preprocessors = false` will disable these
+    default preprocessors from running.
+  - Adding `[preprocessor.links]`, for example, will ensure, regardless of 
+    `use-default-preprocessors` that `links` it will run.
+
+## Configuring Preprocessors
 
 The following preprocessors are available and included by default:
 
-- `links`: Expand the `{{# playpen}}` and `{{# include}}` handlebars helpers in
-  a chapter.
+- `links`: Expand the `{{ #playpen }}` and `{{ #include }}` handlebars helpers in
+  a chapter to include the contents of a file.
 - `index`: Convert all chapter files named `README.md` into `index.md`. That is
   to say, all `README.md` would be rendered to an index file `index.html` in the
   rendered book.
-- `emoji`: Convert `:emoji:` text into Emojis. eg: `:smile:` to :smile:
+
 
 **book.toml**
 ```toml
@@ -80,10 +92,23 @@ The following preprocessors are available and included by default:
 build-dir = "build"
 create-missing = false
 
-[preprocess]
-links = true
-index = true
-emoji = true
+[preprocess.links]
+
+[preprocess.index]
+```
+
+### Custom Preprocessor Configuration
+
+Like renderers, preprocessor will need to be given its own table (e.g. `[preprocessor.mathjax]`). 
+In the section, you may then pass extra configuration to the preprocessor by adding key-value pairs to the table.
+
+For example
+
+```
+[preprocess.links]
+# set the renderers this preprocessor will run for
+renderers = ["html"]
+some_extra_feature = true
 ```
 
 #### Locking a Preprocessor dependency to a renderer
@@ -95,19 +120,10 @@ You can explicitly specify that a preprocessor should run for a renderer by bind
 renderers = ["html"]  # mathjax only makes sense with the HTML renderer
 ```
 
-#### Nested Configuration
-
-Where a preprocessor has more complex configuration available to it, use the
-following style of configuration.
-
-```
-[preprocess.links]
-# set the renderers this preprocessor will run for
-renderers = ["html"]
-some_extra_feature = true
-```
+## Configuring Renderers
 
 ### HTML renderer options
+
 The HTML renderer has a couple of options as well. All the options for the
 renderer need to be specified under the TOML table `[output.html]`.
 

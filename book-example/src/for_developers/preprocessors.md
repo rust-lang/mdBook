@@ -103,7 +103,7 @@ fn remove_emphasis(
 
 For everything else, have a look [at the complete example][example].
 
-[preprocessor-docs]: https://docs.rs/mdbook/0.2.2/mdbook/preprocess/trait.Preprocessor.html
+[preprocessor-docs]: https://docs.rs/mdbook/latest/mdbook/preprocess/trait.Preprocessor.html
 [pc]: https://crates.io/crates/pulldown-cmark
 [pctc]: https://crates.io/crates/pulldown-cmark-to-cmark
 [example]: https://github.com/rust-lang-nursery/mdBook/blob/master/examples/de-emphasize.rs
