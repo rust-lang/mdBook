@@ -564,7 +564,7 @@ mod tests {
         [build]
         build-dir = "outputs"
         create-missing = false
-        preprocess = ["first_preprocessor", "second_preprocessor"]
+        use-default-preprocessors = true
 
         [output.html]
         theme = "./themedir"
@@ -575,6 +575,10 @@ mod tests {
         [output.html.playpen]
         editable = true
         editor = "ace"
+
+        [preprocess.first]
+
+        [preprocess.second]
         "#;
 
     #[test]

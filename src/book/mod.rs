@@ -360,15 +360,19 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<Preprocessor>>> {
         .and_then(|value| value.as_table())
         .map(|table| table.keys());
 
+    let mut preprocessors = if config.build.use_default_preprocessors {
+        default_preprocessors()
+    } else {
+        Vec::new()
+    };
+
     let preprocessor_keys = match preprocessor_keys {
         Some(keys) => keys,
         // If no preprocessor field is set, default to the LinkPreprocessor and
         // IndexPreprocessor. This allows you to disable default preprocessors
         // by setting "preprocess" to an empty list.
-        None => return Ok(default_preprocessors()),
+        None => return Ok(preprocessors),
     };
-
-    let mut preprocessors: Vec<Box<Preprocessor>> = Vec::new();
 
     for key in preprocessor_keys {
         match key.as_ref() {
@@ -475,6 +479,16 @@ mod tests {
         assert_eq!(got.as_ref().unwrap().len(), 2);
         assert_eq!(got.as_ref().unwrap()[0].name(), "links");
         assert_eq!(got.as_ref().unwrap()[1].name(), "index");
+    }
+
+    #[test]
+    fn use_default_preprocessors_works() {
+        let mut cfg = Config::default();
+        cfg.build.use_default_preprocessors = false;
+
+        let got = determine_preprocessors(&cfg).unwrap();
+
+        assert_eq!(got.len(), 0);
     }
 
     #[test]
