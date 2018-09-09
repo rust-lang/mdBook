@@ -21,9 +21,10 @@ pub fn collapse_whitespace<'a>(text: &'a str) -> Cow<'a, str> {
     RE.replace_all(text, " ")
 }
 
-/// Convert the given string to a valid HTML element ID
+/// Convert the given string to a valid HTML element ID.
+/// The only restriction is that the ID must not contain any ASCII whitespace.
 pub fn normalize_id(content: &str) -> String {
-    let mut ret = content
+    content
         .chars()
         .filter_map(|ch| {
             if ch.is_alphanumeric() || ch == '_' || ch == '-' {
@@ -33,16 +34,7 @@ pub fn normalize_id(content: &str) -> String {
             } else {
                 None
             }
-        }).collect::<String>();
-    // Ensure that the first character is [A-Za-z]
-    if ret
-        .chars()
-        .next()
-        .map_or(false, |c| !c.is_ascii_alphabetic())
-    {
-        ret.insert(0, 'a');
-    }
-    ret
+        }).collect::<String>()
 }
 
 /// Generate an ID for use with anchors which is derived from a "normalised"
