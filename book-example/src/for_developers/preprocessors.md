@@ -18,7 +18,10 @@ A preprocessor is represented by the `Preprocessor` trait.
 ```rust
 pub trait Preprocessor {
     fn name(&self) -> &str;
-    fn run(&self, ctx: &PreprocessorContext, book: &mut Book) -> Result<()>;
+    fn run(&self, ctx: &PreprocessorContext, book: Book) -> Result<Book>;
+    fn supports_renderer(&self, _renderer: &str) -> bool {
+        true
+    }
 }
 ```
 
@@ -28,8 +31,12 @@ Where the `PreprocessorContext` is defined as
 pub struct PreprocessorContext {
     pub root: PathBuf,
     pub config: Config,
+    /// The `Renderer` this preprocessor is being used with.
+    pub renderer: String,
 }
 ```
+
+The `renderer` value allows you react accordingly, for example, PDF or HTML.
 
 ## A complete Example
 
@@ -68,8 +75,12 @@ The following code block shows how to remove all emphasis from markdown, and do
 so safely.
 
 ```rust
-fn remove_emphasis(num_removed_items: &mut i32, chapter: &mut Chapter) -> Result<String> {
+fn remove_emphasis(
+    num_removed_items: &mut usize,
+    chapter: &mut Chapter,
+) -> Result<String> {
     let mut buf = String::with_capacity(chapter.content.len());
+
     let events = Parser::new(&chapter.content).filter(|e| {
         let should_keep = match *e {
             Event::Start(Tag::Emphasis)
@@ -83,15 +94,16 @@ fn remove_emphasis(num_removed_items: &mut i32, chapter: &mut Chapter) -> Result
         }
         should_keep
     });
-    cmark(events, &mut buf, None)
-        .map(|_| buf)
-        .map_err(|err| Error::from(format!("Markdown serialization failed: {}", err)))
+
+    cmark(events, &mut buf, None).map(|_| buf).map_err(|err| {
+        Error::from(format!("Markdown serialization failed: {}", err))
+    })
 }
 ```
 
 For everything else, have a look [at the complete example][example].
 
-[preprocessor-docs]: https://docs.rs/mdbook/0.1.3/mdbook/preprocess/trait.Preprocessor.html
+[preprocessor-docs]: https://docs.rs/mdbook/latest/mdbook/preprocess/trait.Preprocessor.html
 [pc]: https://crates.io/crates/pulldown-cmark
 [pctc]: https://crates.io/crates/pulldown-cmark-to-cmark
 [example]: https://github.com/rust-lang-nursery/mdBook/blob/master/examples/de-emphasize.rs
