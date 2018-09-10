@@ -19,12 +19,14 @@ pub struct PreprocessorContext {
     pub root: PathBuf,
     /// The book configuration (`book.toml`).
     pub config: Config,
+    /// The `Renderer` this preprocessor is being used with.
+    pub renderer: String,
 }
 
 impl PreprocessorContext {
     /// Create a new `PreprocessorContext`.
-    pub(crate) fn new(root: PathBuf, config: Config) -> Self {
-        PreprocessorContext { root, config }
+    pub(crate) fn new(root: PathBuf, config: Config, renderer: String) -> Self {
+        PreprocessorContext { root, config, renderer }
     }
 }
 
@@ -36,5 +38,13 @@ pub trait Preprocessor {
 
     /// Run this `Preprocessor`, allowing it to update the book before it is
     /// given to a renderer.
-    fn run(&self, ctx: &PreprocessorContext, book: &mut Book) -> Result<()>;
+    fn run(&self, ctx: &PreprocessorContext, book: Book) -> Result<Book>;
+
+    /// A hint to `MDBook` whether this preprocessor is compatible with a
+    /// particular renderer.
+    ///
+    /// By default, always returns `true`.
+    fn supports_renderer(&self, _renderer: &str) -> bool {
+        true
+    }
 }

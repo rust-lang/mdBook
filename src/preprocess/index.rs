@@ -11,6 +11,8 @@ use book::{Book, BookItem};
 pub struct IndexPreprocessor;
 
 impl IndexPreprocessor {
+    pub(crate) const NAME: &'static str = "index";
+
     /// Create a new `IndexPreprocessor`.
     pub fn new() -> Self {
         IndexPreprocessor
@@ -19,10 +21,10 @@ impl IndexPreprocessor {
 
 impl Preprocessor for IndexPreprocessor {
     fn name(&self) -> &str {
-        "index"
+        Self::NAME
     }
 
-    fn run(&self, ctx: &PreprocessorContext, book: &mut Book) -> Result<()> {
+    fn run(&self, ctx: &PreprocessorContext, mut book: Book) -> Result<Book> {
         let source_dir = ctx.root.join(&ctx.config.book.src);
         book.for_each_mut(|section: &mut BookItem| {
             if let BookItem::Chapter(ref mut ch) = *section {
@@ -37,7 +39,7 @@ impl Preprocessor for IndexPreprocessor {
             }
         });
 
-        Ok(())
+        Ok(book)
     }
 }
 
