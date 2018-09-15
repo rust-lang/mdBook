@@ -292,6 +292,7 @@ impl<'a> SummaryParser<'a> {
     /// already been consumed by a previous parser.
     fn parse_numbered(&mut self) -> Result<Vec<SummaryItem>> {
         let mut items = Vec::new();
+        let mut root_items = 0;
         let root_number = SectionNumber::default();
 
         // we need to do this funny loop-match-if-let dance because a rule will
@@ -308,8 +309,10 @@ impl<'a> SummaryParser<'a> {
             // if we've resumed after something like a rule the root sections
             // will be numbered from 1. We need to manually go back and update
             // them
-            update_section_numbers(&mut bunch_of_items, 0, items.len() as u32);
+            update_section_numbers(&mut bunch_of_items, 0, root_items);
+            root_items += bunch_of_items.len() as u32;
             items.extend(bunch_of_items);
+
 
             match self.next_event() {
                 Some(Event::Start(Tag::Paragraph)) => {
@@ -723,5 +726,41 @@ mod tests {
 
         let got = parser.parse_numbered();
         assert!(got.is_err());
+    }
+
+    /// Regression test for https://github.com/rust-lang-nursery/mdBook/issues/779
+    /// Ensure section numbers are correctly incremented after a horizontal separator.
+    #[test]
+    fn keep_numbering_after_separator() {
+        let src = "- [First](./first.md)\n---\n- [Second](./second.md)\n---\n- [Third](./third.md)\n";
+        let should_be = vec![
+            SummaryItem::Link(Link {
+                name: String::from("First"),
+                location: PathBuf::from("./first.md"),
+                number: Some(SectionNumber(vec![1])),
+                nested_items: Vec::new(),
+            }),
+            SummaryItem::Separator,
+            SummaryItem::Link(Link {
+                name: String::from("Second"),
+                location: PathBuf::from("./second.md"),
+                number: Some(SectionNumber(vec![2])),
+                nested_items: Vec::new(),
+            }),
+            SummaryItem::Separator,
+            SummaryItem::Link(Link {
+                name: String::from("Third"),
+                location: PathBuf::from("./third.md"),
+                number: Some(SectionNumber(vec![3])),
+                nested_items: Vec::new(),
+            }),
+        ];
+
+        let mut parser = SummaryParser::new(src);
+        let _ = parser.stream.next();
+
+        let got = parser.parse_numbered().unwrap();
+
+        assert_eq!(got, should_be);
     }
 }
