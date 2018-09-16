@@ -1,10 +1,10 @@
 use super::{Preprocessor, PreprocessorContext};
 use book::Book;
 use errors::*;
+use serde_json;
 use shlex::Shlex;
 use std::io::{self, Read};
-use serde_json;
-use std::process::{Command, Stdio, Child};
+use std::process::{Child, Command, Stdio};
 
 /// A custom preprocessor which will shell out to a 3rd-party program.
 ///
@@ -31,21 +31,27 @@ impl CmdPreprocessor {
     pub fn parse_input<R: Read>(
         reader: R,
     ) -> Result<(PreprocessorContext, Book)> {
-        serde_json::from_reader(reader).chain_err(|| "Unable to parse the input")
+        serde_json::from_reader(reader)
+            .chain_err(|| "Unable to parse the input")
     }
 
-    fn write_input(&self, child: &mut Child, book: Book, ctx: PreprocessorContext) {
-            let mut stdin = child.stdin.take().expect("Child has stdin");
-            let input = (ctx, book);
+    fn write_input(
+        &self,
+        child: &mut Child,
+        book: Book,
+        ctx: PreprocessorContext,
+    ) {
+        let mut stdin = child.stdin.take().expect("Child has stdin");
+        let input = (ctx, book);
 
-            if let Err(e) = serde_json::to_writer(&mut stdin, &input) {
-                // Looks like the backend hung up before we could finish
-                // sending it the render context. Log the error and keep going
-                warn!("Error writing the RenderContext to the backend, {}", e);
-            }
+        if let Err(e) = serde_json::to_writer(&mut stdin, &input) {
+            // Looks like the backend hung up before we could finish
+            // sending it the render context. Log the error and keep going
+            warn!("Error writing the RenderContext to the backend, {}", e);
+        }
 
-            // explicitly close the `stdin` file handle
-            drop(stdin);
+        // explicitly close the `stdin` file handle
+        drop(stdin);
     }
 
     fn command(&self) -> Result<Command> {
@@ -75,6 +81,8 @@ impl Preprocessor for CmdPreprocessor {
     }
 
     fn supports_renderer(&self, renderer: &str) -> bool {
+        debug!("Checking if the \"{}\" preprocessor supports \"{}\"", self.name(), renderer);
+
         let mut cmd = match self.command() {
             Ok(c) => c,
             Err(e) => {
@@ -83,29 +91,25 @@ impl Preprocessor for CmdPreprocessor {
             }
         };
 
-        cmd
+        let outcome = cmd
             .arg("supports")
             .arg(renderer)
-            .stdin(Stdio::piped())
+            .stdin(Stdio::null())
             .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit());
+            .stderr(Stdio::inherit())
+            .status()
+            .map(|status| status.code() == Some(0));
 
-        let child = match cmd.spawn() {
-            Ok(c) => c,
-            Err(e) => {
-                if e.kind() == io::ErrorKind::NotFound {
-                    warn!(
+        if let Err(ref e) = outcome {
+            if e.kind() == io::ErrorKind::NotFound {
+                warn!(
                     "The command wasn't found, is the \"{}\" preprocessor installed?",
                     self.name
                 );
-                    warn!("\tCommand: {}", self.cmd);
-                }
-
-                // give it the benefit of the doubt
-                return true;
+                warn!("\tCommand: {}", self.cmd);
             }
-        };
+        }
 
-        unimplemented!()
+        outcome.unwrap_or(false)
     }
 }

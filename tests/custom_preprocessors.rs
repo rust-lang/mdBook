@@ -7,10 +7,19 @@ fn example() -> CmdPreprocessor {
 }
 
 #[test]
-fn check_if_renderer_is_supported() {
+fn example_supports_whatever() {
     let cmd = example();
 
     let got = cmd.supports_renderer("whatever");
 
     assert_eq!(got, true);
+}
+
+#[test]
+fn example_doesnt_support_not_supported() {
+    let cmd = example();
+
+    let got = cmd.supports_renderer("not-supported");
+
+    assert_eq!(got, false);
 }

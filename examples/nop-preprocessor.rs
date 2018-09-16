@@ -2,8 +2,9 @@ extern crate mdbook;
 #[macro_use]
 extern crate clap;
 
-use clap::{App, Arg, SubCommand, ArgMatches};
+use clap::{App, Arg, ArgMatches, SubCommand};
 use mdbook::preprocess::{Preprocessor, PreprocessorContext};
+use std::process;
 
 fn main() {
     let matches = app().get_matches();
@@ -16,16 +17,23 @@ fn main() {
 }
 
 fn handle_preprocessing(args: &ArgMatches) {
-
+    unimplemented!()
 }
 
 fn handle_supports(sub_args: &ArgMatches) {
-        let renderer = sub_args.value_of("renderer").expect("Required argument");
-        let supported = renderer_is_supported(&renderer);
+    let renderer = sub_args.value_of("renderer").expect("Required argument");
+    let supported = renderer_is_supported(&renderer);
+
+    if supported {
+        process::exit(0);
+    } else {
+        process::exit(1);
+    }
 }
 
 fn renderer_is_supported(renderer: &str) -> bool {
-    true
+    // We support everything except the `not-supported` renderer
+    renderer != "not-supported"
 }
 
 fn app() -> App<'static, 'static> {
@@ -37,4 +45,3 @@ fn app() -> App<'static, 'static> {
             ),
     )
 }
-
