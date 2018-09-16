@@ -8,12 +8,27 @@ use std::process::{Child, Command, Stdio};
 
 /// A custom preprocessor which will shell out to a 3rd-party program.
 ///
-/// # Preprocessing
+/// # Preprocessing Protocol
 ///
 /// When the `supports_renderer()` method is executed, `CmdPreprocessor` will
 /// execute the shell command `$cmd supports $renderer`. If the renderer is
 /// supported, custom preprocessors should exit with a exit code of `0`,
 /// any other exit code be considered as unsupported.
+///
+/// The `run()` method is implemented by passing a `(PreprocessorContext, Book)`
+/// tuple to the spawned command (`$cmd`) as JSON via `stdin`. Preprocessors
+/// should then "return" a processed book by printing it to `stdout` as JSON.
+/// For convenience, the `CmdPreprocessor::parse_input()` function can be used
+/// to parse the input provided by `mdbook`.
+///
+/// Exiting with a non-zero exit code while preprocessing is considered an
+/// error. `stderr` is passed directly through to the user, so it can be used
+/// for logging or emitting warnings if desired.
+///
+/// # Examples
+///
+/// An example preprocessor is available in this project's `examples/`
+/// directory.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CmdPreprocessor {
     name: String,
