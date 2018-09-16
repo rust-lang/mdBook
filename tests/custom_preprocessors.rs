@@ -1,8 +1,10 @@
 extern crate mdbook;
 
+mod dummy_book;
+
+use dummy_book::DummyBook;
 use mdbook::preprocess::{CmdPreprocessor, Preprocessor};
 use mdbook::MDBook;
-use std::path::Path;
 
 fn example() -> CmdPreprocessor {
     CmdPreprocessor::new("nop-preprocessor".to_string(), "cargo run --example nop-preprocessor --".to_string())
@@ -28,8 +30,9 @@ fn example_doesnt_support_not_supported() {
 
 #[test]
 fn ask_the_preprocessor_to_blow_up() {
-    let dummy_book = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests").join("dummy_book");
-    let mut md = MDBook::load(&dummy_book).unwrap();
+    let dummy_book = DummyBook::new();
+    let temp = dummy_book.build().unwrap();
+    let mut md = MDBook::load(temp.path()).unwrap();
     md.with_preprecessor(example());
 
     md.config.set("preprocessor.nop-preprocessor.blow-up", true).unwrap();
@@ -41,8 +44,9 @@ fn ask_the_preprocessor_to_blow_up() {
 
 #[test]
 fn process_the_dummy_book() {
-    let dummy_book = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests").join("dummy_book");
-    let mut md = MDBook::load(&dummy_book).unwrap();
+    let dummy_book = DummyBook::new();
+    let temp = dummy_book.build().unwrap();
+    let mut md = MDBook::load(temp.path()).unwrap();
     md.with_preprecessor(example());
 
     md.build().unwrap();
