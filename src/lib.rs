@@ -114,6 +114,12 @@ pub mod renderer;
 pub mod theme;
 pub mod utils;
 
+/// The current version of `mdbook`.
+///
+/// This is provided as a way for custom preprocessors and renderers to do
+/// compatibility checks.
+pub const MDBOOK_VERSION: &str = env!("CARGO_PKG_VERSION");
+
 pub use book::BookItem;
 pub use book::MDBook;
 pub use config::Config;

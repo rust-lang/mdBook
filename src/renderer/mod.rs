@@ -26,8 +26,6 @@ use book::Book;
 use config::Config;
 use errors::*;
 
-const MDBOOK_VERSION: &str = env!("CARGO_PKG_VERSION");
-
 /// An arbitrary `mdbook` backend.
 ///
 /// Although it's quite possible for you to import `mdbook` as a library and
@@ -78,7 +76,7 @@ impl RenderContext {
         RenderContext {
             book: book,
             config: config,
-            version: MDBOOK_VERSION.to_string(),
+            version: ::MDBOOK_VERSION.to_string(),
             root: root.into(),
             destination: destination.into(),
         }
