@@ -21,12 +21,21 @@ pub struct PreprocessorContext {
     pub config: Config,
     /// The `Renderer` this preprocessor is being used with.
     pub renderer: String,
+    /// The calling `mdbook` version.
+    pub mdbook_version: String,
+    __non_exhaustive: (),
 }
 
 impl PreprocessorContext {
     /// Create a new `PreprocessorContext`.
     pub(crate) fn new(root: PathBuf, config: Config, renderer: String) -> Self {
-        PreprocessorContext { root, config, renderer }
+        PreprocessorContext {
+            root,
+            config,
+            renderer,
+            mdbook_version: ::MDBOOK_VERSION.to_string(),
+            __non_exhaustive: (),
+        }
     }
 }
 

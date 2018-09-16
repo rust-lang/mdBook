@@ -64,6 +64,7 @@ pub struct RenderContext {
     /// renderers to cache intermediate results, this directory is not
     /// guaranteed to be empty or even exist.
     pub destination: PathBuf,
+    __non_exhaustive: (),
 }
 
 impl RenderContext {
@@ -79,6 +80,7 @@ impl RenderContext {
             version: ::MDBOOK_VERSION.to_string(),
             root: root.into(),
             destination: destination.into(),
+            __non_exhaustive: (),
         }
     }
 
