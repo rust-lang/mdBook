@@ -48,6 +48,57 @@ mdBook builds on stable Rust, if you want to build mdBook from source, here are 
 
 The resulting binary can be found in `mdBook/target/debug/` under the name `mdBook` or `mdBook.exe`.
 
+### Code Quality
+
+We love code quality and Rust has some excellent tools to assist you with contributions.
+
+#### Formatting Code with rustfmt
+
+Before you make your Pull Request to the project, please run it through the `rustfmt` utility.
+This will ensure we have good quality source code that is better for us all to maintain.
+
+[rustfmt](https://github.com/rust-lang-nursery/rustfmt) has a lot more information on the project.
+The quick guide is
+
+1. Install it
+    ```
+    rustup component add rustfmt-preview
+    ```
+1. You can now run `rustfmt` on a single file simply by...
+    ```
+    rustfmt src/path/to/your/file.rs
+    ```
+   ... or you can format the entire project with
+   ```
+   cargo fmt
+   ```
+   When run through `cargo` it will format all bin and lib files in the current crate.
+
+For more information, such as running it from your favourite editor, please see the `rustfmt` project. [rustfmt](https://github.com/rust-lang-nursery/rustfmt)
+
+
+#### Finding Issues with Clippy
+
+Clippy is a code analyser/linter detecting mistakes, and therfore helps to improve your code.
+Like formatting your code with `rustfmt`, running clippy regularly and before your Pull Request will
+help us maintain awesome code.
+
+The best documentation can be found over at [rust-clippy](https://github.com/rust-lang-nursery/rust-clippy)
+
+1. To install
+    ```
+    rustup update
+    rustup install nightly
+    rustup component add clippy-preview --toolchain=nightly
+    ```
+2. Running clippy
+    As you may notice from the previous step, Clippy is on the nightly branch, so running it is like
+    ```
+    cargo +nightly clippy
+    ```
+
+Clippy has an ever growing list of checks, that are managed in [lint files](https://rust-lang-nursery.github.io/rust-clippy/master/index.html).
+
 ### Making a pull-request
 
 When you feel comfortable that your changes could be integrated into mdBook, you can create a pull-request on GitHub.
