@@ -39,7 +39,7 @@ impl CmdPreprocessor {
         &self,
         child: &mut Child,
         book: Book,
-        ctx: PreprocessorContext,
+        ctx: &PreprocessorContext,
     ) {
         let mut stdin = child.stdin.take().expect("Child has stdin");
         let input = (ctx, book);
@@ -77,7 +77,25 @@ impl Preprocessor for CmdPreprocessor {
     }
 
     fn run(&self, ctx: &PreprocessorContext, book: Book) -> Result<Book> {
-        unimplemented!()
+        let mut cmd = self.command()?;
+
+        let mut child = cmd
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::inherit())
+            .spawn()
+            .chain_err(|| format!("Unable to start the \"{}\" preprocessor. Is it installed?", self.name()))?;
+
+        self.write_input(&mut child, book, ctx);
+
+        let output = child
+            .wait_with_output()
+            .chain_err(|| "Error waiting for the preprocessor to complete")?;
+
+        trace!("{} exited with output: {:?}", self.cmd, output);
+        ensure!(output.status.success(), "The preprocessor exited unsuccessfully");
+
+        serde_json::from_slice(&output.stdout).chain_err(|| "Unable to parse the preprocessed book")
     }
 
     fn supports_renderer(&self, renderer: &str) -> bool {

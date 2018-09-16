@@ -3,8 +3,9 @@ extern crate mdbook;
 extern crate clap;
 
 use clap::{App, Arg, ArgMatches, SubCommand};
-use mdbook::preprocess::{Preprocessor, PreprocessorContext};
+use mdbook::preprocess::{Preprocessor, PreprocessorContext, CmdPreprocessor};
 use std::process;
+use std::io;
 
 fn main() {
     let matches = app().get_matches();
@@ -17,7 +18,18 @@ fn main() {
 }
 
 fn handle_preprocessing(args: &ArgMatches) {
-    unimplemented!()
+    let (ctx, book) = CmdPreprocessor::parse_input(io::stdin())
+        .expect("Couldn't parse the input");
+
+    // You can tell the preprocessor to blow up by setting a particular
+    // config value
+    if let Some(table) = ctx.config.get_preprocessor("nop-preprocessor") {
+        let should_blow_up = table.get("blow-up").is_some();
+
+        if should_blow_up {
+            panic!("Boom!!!1!");
+        }
+    }
 }
 
 fn handle_supports(sub_args: &ArgMatches) {
