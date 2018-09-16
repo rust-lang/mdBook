@@ -105,7 +105,7 @@ impl Preprocessor for CmdPreprocessor {
             Ok(c) => c,
             Err(e) => {
                 warn!("Unable to create the command for the \"{}\" preprocessor, {}", self.name(), e);
-                return true;
+                return false;
             }
         };
 

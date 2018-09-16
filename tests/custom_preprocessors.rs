@@ -32,7 +32,7 @@ fn ask_the_preprocessor_to_blow_up() {
     let mut md = MDBook::load(&dummy_book).unwrap();
     md.with_preprecessor(example());
 
-    md.config.set("preprocess.nop-preprocessor.blow-up", true).unwrap();
+    md.config.set("preprocessor.nop-preprocessor.blow-up", true).unwrap();
 
     let got = md.build();
 

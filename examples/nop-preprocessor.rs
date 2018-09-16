@@ -1,9 +1,10 @@
 extern crate mdbook;
+extern crate serde_json;
 #[macro_use]
 extern crate clap;
 
 use clap::{App, Arg, ArgMatches, SubCommand};
-use mdbook::preprocess::{Preprocessor, PreprocessorContext, CmdPreprocessor};
+use mdbook::preprocess::CmdPreprocessor;
 use std::process;
 use std::io;
 
@@ -21,6 +22,8 @@ fn handle_preprocessing(args: &ArgMatches) {
     let (ctx, book) = CmdPreprocessor::parse_input(io::stdin())
         .expect("Couldn't parse the input");
 
+    eprintln!("{:?}", ctx.config);
+
     // You can tell the preprocessor to blow up by setting a particular
     // config value
     if let Some(table) = ctx.config.get_preprocessor("nop-preprocessor") {
@@ -30,6 +33,8 @@ fn handle_preprocessing(args: &ArgMatches) {
             panic!("Boom!!!1!");
         }
     }
+
+    serde_json::to_writer(io::stdout(), &book).unwrap();
 }
 
 fn handle_supports(sub_args: &ArgMatches) {
