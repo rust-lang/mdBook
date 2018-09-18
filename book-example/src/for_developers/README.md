@@ -42,5 +42,5 @@ explanation on the configuration system.
 
 
 [`MDBook`]: http://rust-lang-nursery.github.io/mdBook/mdbook/book/struct.MDBook.html
-[API Docs]: http://rust-lang-nursery.github.io/mdBook/mdbook/
+[API Docs]: https://docs.rs/mdbook/*/mdbook/
 [config]: file:///home/michael/Documents/forks/mdBook/target/doc/mdbook/config/index.html
