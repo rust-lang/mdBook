@@ -20,7 +20,8 @@ use tempfile::Builder as TempFileBuilder;
 use toml::Value;
 
 use errors::*;
-use preprocess::{IndexPreprocessor, LinkPreprocessor, Preprocessor, PreprocessorContext};
+use preprocess::{IndexPreprocessor, LinkPreprocessor, Preprocessor,
+    PreprocessorContext, CmdPreprocessor};
 use renderer::{CmdRenderer, HtmlHandlebars, RenderContext, Renderer};
 use utils;
 
@@ -356,36 +357,48 @@ fn is_default_preprocessor(pre: &Preprocessor) -> bool {
 
 /// Look at the `MDBook` and try to figure out what preprocessors to run.
 fn determine_preprocessors(config: &Config) -> Result<Vec<Box<Preprocessor>>> {
-    let preprocessor_keys = config.get("preprocessor")
-        .and_then(|value| value.as_table())
-        .map(|table| table.keys());
+    let mut preprocessors = Vec::new();
 
-    let mut preprocessors = if config.build.use_default_preprocessors {
-        default_preprocessors()
-    } else {
-        Vec::new()
-    };
+    if config.build.use_default_preprocessors {
+        preprocessors.extend(default_preprocessors());
+    }
 
-    let preprocessor_keys = match preprocessor_keys {
-        Some(keys) => keys,
-        // If no preprocessor field is set, default to the LinkPreprocessor and
-        // IndexPreprocessor. This allows you to disable default preprocessors
-        // by setting "preprocess" to an empty list.
-        None => return Ok(preprocessors),
-    };
-
-    for key in preprocessor_keys {
-        match key.as_ref() {
-            "links" => preprocessors.push(Box::new(LinkPreprocessor::new())),
-            "index" => preprocessors.push(Box::new(IndexPreprocessor::new())),
-            _ => bail!("{:?} is not a recognised preprocessor", key),
+    if let Some(preprocessor_table) =
+        config.get("preprocessor").and_then(|v| v.as_table())
+    {
+        for key in preprocessor_table.keys() {
+            match key.as_ref() {
+                "links" => {
+                    preprocessors.push(Box::new(LinkPreprocessor::new()))
+                }
+                "index" => {
+                    preprocessors.push(Box::new(IndexPreprocessor::new()))
+                }
+                name => preprocessors.push(interpret_custom_preprocessor(
+                    name,
+                    &preprocessor_table[name],
+                )),
+            }
         }
     }
 
     Ok(preprocessors)
 }
 
-fn interpret_custom_renderer(key: &str, table: &Value) -> Box<Renderer> {
+fn interpret_custom_preprocessor(
+    key: &str,
+    table: &Value,
+) -> Box<CmdPreprocessor> {
+    let command = table
+        .get("command")
+        .and_then(|c| c.as_str())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| format!("mdbook-{}", key));
+
+    Box::new(CmdPreprocessor::new(key.to_string(), command.to_string()))
+}
+
+fn interpret_custom_renderer(key: &str, table: &Value) -> Box<CmdRenderer> {
     // look for the `command` field, falling back to using the key
     // prepended by "mdbook-"
     let table_dot_command = table
@@ -393,7 +406,8 @@ fn interpret_custom_renderer(key: &str, table: &Value) -> Box<Renderer> {
         .and_then(|c| c.as_str())
         .map(|s| s.to_string());
 
-    let command = table_dot_command.unwrap_or_else(|| format!("mdbook-{}", key));
+    let command =
+        table_dot_command.unwrap_or_else(|| format!("mdbook-{}", key));
 
     Box::new(CmdRenderer::new(key.to_string(), command.to_string()))
 }
@@ -492,7 +506,7 @@ mod tests {
     }
 
     #[test]
-    fn config_complains_if_unimplemented_preprocessor() {
+    fn can_determine_third_party_preprocessors() {
         let cfg_str: &'static str = r#"
         [book]
         title = "Some Book"
@@ -509,9 +523,28 @@ mod tests {
         // make sure the `preprocessor.random` table exists
         assert!(cfg.get_preprocessor("random").is_some());
 
-        let got = determine_preprocessors(&cfg);
+        let got = determine_preprocessors(&cfg).unwrap();
 
-        assert!(got.is_err());
+        assert!(got.into_iter().any(|p| p.name() == "random"));
+    }
+
+    #[test]
+    fn preprocessors_can_provide_their_own_commands() {
+        let cfg_str = r#"
+        [preprocessor.random]
+        command = "python random.py"
+        "#;
+
+        let cfg = Config::from_str(cfg_str).unwrap();
+
+        // make sure the `preprocessor.random` table exists
+        let random = cfg.get_preprocessor("random").unwrap();
+        let random = interpret_custom_preprocessor(
+            "random",
+            &Value::Table(random.clone()),
+        );
+
+        assert_eq!(random.cmd(), "python random.py");
     }
 
     #[test]

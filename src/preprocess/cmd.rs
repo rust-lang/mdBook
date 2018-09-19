@@ -69,6 +69,11 @@ impl CmdPreprocessor {
         drop(stdin);
     }
 
+    /// The command this `Preprocessor` will invoke.
+    pub fn cmd(&self) -> &str {
+        &self.cmd
+    }
+
     fn command(&self) -> Result<Command> {
         let mut words = Shlex::new(&self.cmd);
         let executable = match words.next() {
