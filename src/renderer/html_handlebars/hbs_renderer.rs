@@ -422,13 +422,7 @@ fn make_data(
         for script in &html.additional_js {
             match script.strip_prefix(root) {
                 Ok(p) => js.push(p.to_str().expect("Could not convert to str")),
-                Err(_) => js.push(
-                    script
-                        .file_name()
-                        .expect("File has a file name")
-                        .to_str()
-                        .expect("Could not convert to str"),
-                ),
+                Err(_) => js.push(script.to_str().expect("Could not convert to str")),
             }
         }
         data.insert("additional_js".to_owned(), json!(js));
