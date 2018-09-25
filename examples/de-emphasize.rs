@@ -1,4 +1,6 @@
-//! This program removes all forms of emphasis from the markdown of the book.
+//! An example preprocessor for removing all forms of emphasis from a markdown
+//! book.
+
 extern crate mdbook;
 extern crate pulldown_cmark;
 extern crate pulldown_cmark_to_cmark;
@@ -6,31 +8,13 @@ extern crate pulldown_cmark_to_cmark;
 use mdbook::book::{Book, BookItem, Chapter};
 use mdbook::errors::{Error, Result};
 use mdbook::preprocess::{Preprocessor, PreprocessorContext};
-use mdbook::MDBook;
 use pulldown_cmark::{Event, Parser, Tag};
 use pulldown_cmark_to_cmark::fmt::cmark;
 
-use std::env::{args, args_os};
-use std::ffi::OsString;
-use std::process;
-
 const NAME: &str = "md-links-to-html-links";
 
-fn do_it(book: OsString) -> Result<()> {
-    let mut book = MDBook::load(book)?;
-    book.with_preprecessor(Deemphasize);
-    book.build()
-}
-
 fn main() {
-    if args_os().count() != 2 {
-        eprintln!("USAGE: {} <book>", args().next().expect("executable"));
-        return;
-    }
-    if let Err(e) = do_it(args_os().skip(1).next().expect("one argument")) {
-        eprintln!("{}", e);
-        process::exit(1);
-    }
+    panic!("This example is intended to be part of a library");
 }
 
 struct Deemphasize;

@@ -11,68 +11,71 @@ the book. Possible use cases are:
   mathjax equivalents
 
 
-## Implementing a Preprocessor
+## Hooking Into MDBook
 
-A preprocessor is represented by the `Preprocessor` trait.
+MDBook uses a fairly simple mechanism for discovering third party plugins.
+A new table is added to `book.toml` (e.g. `preprocessor.foo` for the `foo`
+preprocessor) and then `mdbook` will try to invoke the `mdbook-foo` program as
+part of the build process.
 
-```rust
-pub trait Preprocessor {
-    fn name(&self) -> &str;
-    fn run(&self, ctx: &PreprocessorContext, book: Book) -> Result<Book>;
-    fn supports_renderer(&self, _renderer: &str) -> bool {
-        true
-    }
-}
+While preprocessors can be hard-coded to specify which backend it should be run
+for (e.g. it doesn't make sense for MathJax to be used for non-HTML renderers)
+with the `preprocessor.foo.renderer` key.
+
+```toml
+[book]
+title = "My Book"
+authors = ["Michael-F-Bryan"]
+
+[preprocessor.foo]
+# The command can also be specified manually
+command = "python3 /path/to/foo.py"
+# Only run the `foo` preprocessor for the HTML and EPUB renderer
+renderer = ["html", "epub"]
 ```
 
-Where the `PreprocessorContext` is defined as
+In typical unix style, all inputs to the plugin will be written to `stdin` as
+JSON and `mdbook` will read from `stdout` if it is expecting output.
+
+The easiest way to get started is by creating your own implementation of the
+`Preprocessor` trait (e.g. in `lib.rs`) and then creating a shell binary which
+translates inputs to the correct `Preprocessor` method. For convenience, there
+is [an example no-op preprocessor] in the `examples/` directory which can easily
+be adapted for other preprocessors.
+
+<details>
+<summary>Example no-op preprocessor</summary>
 
 ```rust
-pub struct PreprocessorContext {
-    pub root: PathBuf,
-    pub config: Config,
-    /// The `Renderer` this preprocessor is being used with.
-    pub renderer: String,
-}
+// nop-preprocessors.rs
+
+{{#include ../../../examples/nop-preprocessor.rs}}
 ```
+</details>
 
-The `renderer` value allows you react accordingly, for example, PDF or HTML.
+## Hints For Implementing A Preprocessor
 
-## A complete Example
+By pulling in `mdbook` as a library, preprocessors can have access to the
+existing infrastructure for dealing with books.
 
-The magic happens within the `run(...)` method of the
-[`Preprocessor`][preprocessor-docs] trait implementation.
+For example, a custom preprocessor could use the
+[`CmdPreprocessor::parse_input()`] function to deserialize the JSON written to
+`stdin`. Then each chapter of the `Book` can be mutated in-place via
+[`Book::for_each_mut()`], and then written to `stdout` with the `serde_json`
+crate.
 
-As direct access to the chapters is not possible, you will probably end up
-iterating them using `for_each_mut(...)`:
+Chapters can be accessed either directly (by recursively iterating over
+chapters) or via the `Book::for_each_mut()` convenience method.
 
-```rust
-book.for_each_mut(|item: &mut BookItem| {
-    if let BookItem::Chapter(ref mut chapter) = *item {
-      eprintln!("{}: processing chapter '{}'", self.name(), chapter.name);
-      res = Some(
-          match Deemphasize::remove_emphasis(&mut num_removed_items, chapter) {
-              Ok(md) => {
-                  chapter.content = md;
-                  Ok(())
-              }
-              Err(err) => Err(err),
-          },
-      );
-  }
-});
-```
+The `chapter.content` is just a string which happens to be markdown. While it's
+entirely possible to use regular expressions or do a manual find & replace,
+you'll probably want to process the input into something more computer-friendly.
+The [`pulldown-cmark`][pc] crate implements a production-quality event-based
+Markdown parser, with the [`pulldown-cmark-to-cmark`][pctc] allowing you to
+translate events back into markdown text.
 
-The `chapter.content` is just a markdown formatted string, and you will have to
-process it in some way. Even though it's entirely possible to implement some
-sort of manual find & replace operation, if that feels too unsafe you can use
-[`pulldown-cmark`][pc] to parse the string into events and work on them instead.
-
-Finally you can use [`pulldown-cmark-to-cmark`][pctc] to transform these events
-back to a string.
-
-The following code block shows how to remove all emphasis from markdown, and do
-so safely.
+The following code block shows how to remove all emphasis from markdown,
+without accidentally breaking the document.
 
 ```rust
 fn remove_emphasis(
@@ -107,3 +110,6 @@ For everything else, have a look [at the complete example][example].
 [pc]: https://crates.io/crates/pulldown-cmark
 [pctc]: https://crates.io/crates/pulldown-cmark-to-cmark
 [example]: https://github.com/rust-lang-nursery/mdBook/blob/master/examples/de-emphasize.rs
+[an example no-op preprocessor]: https://github.com/rust-lang-nursery/mdBook/blob/master/examples/nop-preprocessor.rs
+[`CmdPreprocessor::parse_input()`]: https://docs.rs/mdbook/latest/mdbook/preprocess/trait.Preprocessor.html#method.parse_input
+[`Book::for_each_mut()`]: https://docs.rs/mdbook/latest/mdbook/book/struct.Book.html#method.for_each_mut

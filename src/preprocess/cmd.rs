@@ -3,7 +3,7 @@ use book::Book;
 use errors::*;
 use serde_json;
 use shlex::Shlex;
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
 use std::process::{Child, Command, Stdio};
 
 /// A custom preprocessor which will shell out to a 3rd-party program.
@@ -50,23 +50,24 @@ impl CmdPreprocessor {
             .chain_err(|| "Unable to parse the input")
     }
 
-    fn write_input(
+    fn write_input_to_child(
         &self,
         child: &mut Child,
-        book: Book,
+        book: &Book,
         ctx: &PreprocessorContext,
     ) {
-        let mut stdin = child.stdin.take().expect("Child has stdin");
-        let input = (ctx, book);
+        let stdin = child.stdin.take().expect("Child has stdin");
 
-        if let Err(e) = serde_json::to_writer(&mut stdin, &input) {
+        if let Err(e) = self.write_input(stdin, &book, &ctx) {
             // Looks like the backend hung up before we could finish
             // sending it the render context. Log the error and keep going
             warn!("Error writing the RenderContext to the backend, {}", e);
         }
+    }
 
-        // explicitly close the `stdin` file handle
-        drop(stdin);
+    fn write_input<W: Write>(&self, writer: W, book: &Book, ctx: &PreprocessorContext) -> Result<()> {
+        serde_json::to_writer(writer, &(ctx, book))
+            .map_err(Into::into)
     }
 
     /// The command this `Preprocessor` will invoke.
@@ -106,7 +107,7 @@ impl Preprocessor for CmdPreprocessor {
             .spawn()
             .chain_err(|| format!("Unable to start the \"{}\" preprocessor. Is it installed?", self.name()))?;
 
-        self.write_input(&mut child, book, ctx);
+        self.write_input_to_child(&mut child, &book, ctx);
 
         let output = child
             .wait_with_output()

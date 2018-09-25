@@ -69,7 +69,12 @@ where
             Ok(new_content) => {
                 if depth < MAX_LINK_NESTED_DEPTH {
                     if let Some(rel_path) = playpen.link.relative_path(path) {
-                        replaced.push_str(&replace_all(&new_content, rel_path, source, depth + 1));
+                        replaced.push_str(&replace_all(
+                            &new_content,
+                            rel_path,
+                            source,
+                            depth + 1,
+                        ));
                     } else {
                         replaced.push_str(&new_content);
                     }
@@ -83,6 +88,10 @@ where
             }
             Err(e) => {
                 error!("Error updating \"{}\", {}", playpen.link_text, e);
+                for cause in e.iter().skip(1) {
+                    warn!("Caused By: {}", cause);
+                }
+
                 // This should make sure we include the raw `{{# ... }}` snippet
                 // in the page content if there are any errors.
                 previous_end_index = playpen.start_index;
@@ -109,10 +118,18 @@ impl<'a> LinkType<'a> {
         let base = base.as_ref();
         match self {
             LinkType::Escaped => None,
-            LinkType::IncludeRange(p, _) => Some(return_relative_path(base, &p)),
-            LinkType::IncludeRangeFrom(p, _) => Some(return_relative_path(base, &p)),
-            LinkType::IncludeRangeTo(p, _) => Some(return_relative_path(base, &p)),
-            LinkType::IncludeRangeFull(p, _) => Some(return_relative_path(base, &p)),
+            LinkType::IncludeRange(p, _) => {
+                Some(return_relative_path(base, &p))
+            }
+            LinkType::IncludeRangeFrom(p, _) => {
+                Some(return_relative_path(base, &p))
+            }
+            LinkType::IncludeRangeTo(p, _) => {
+                Some(return_relative_path(base, &p))
+            }
+            LinkType::IncludeRangeFull(p, _) => {
+                Some(return_relative_path(base, &p))
+            }
             LinkType::Playpen(p, _) => Some(return_relative_path(base, &p)),
         }
     }
@@ -182,11 +199,15 @@ impl<'a> Link<'a> {
 
                 match (typ.as_str(), file_arg) {
                     ("include", Some(pth)) => Some(parse_include_path(pth)),
-                    ("playpen", Some(pth)) => Some(LinkType::Playpen(pth.into(), props)),
+                    ("playpen", Some(pth)) => {
+                        Some(LinkType::Playpen(pth.into(), props))
+                    }
                     _ => None,
                 }
             }
-            (Some(mat), None, None) if mat.as_str().starts_with(ESCAPE_CHAR) => {
+            (Some(mat), None, None)
+                if mat.as_str().starts_with(ESCAPE_CHAR) =>
+            {
                 Some(LinkType::Escaped)
             }
             _ => None,
@@ -207,20 +228,65 @@ impl<'a> Link<'a> {
         match self.link {
             // omit the escape char
             LinkType::Escaped => Ok((&self.link_text[1..]).to_owned()),
-            LinkType::IncludeRange(ref pat, ref range) => file_to_string(base.join(pat))
-                .map(|s| take_lines(&s, range.clone()))
-                .chain_err(|| format!("Could not read file for link {}", self.link_text)),
-            LinkType::IncludeRangeFrom(ref pat, ref range) => file_to_string(base.join(pat))
-                .map(|s| take_lines(&s, range.clone()))
-                .chain_err(|| format!("Could not read file for link {}", self.link_text)),
-            LinkType::IncludeRangeTo(ref pat, ref range) => file_to_string(base.join(pat))
-                .map(|s| take_lines(&s, range.clone()))
-                .chain_err(|| format!("Could not read file for link {}", self.link_text)),
-            LinkType::IncludeRangeFull(ref pat, _) => file_to_string(base.join(pat))
-                .chain_err(|| format!("Could not read file for link {}", self.link_text)),
+            LinkType::IncludeRange(ref pat, ref range) => {
+                let target = base.join(pat);
+
+                file_to_string(&target)
+                    .map(|s| take_lines(&s, range.clone()))
+                    .chain_err(|| {
+                        format!(
+                            "Could not read file for link {} ({})",
+                            self.link_text,
+                            target.display(),
+                        )
+                    })
+            }
+            LinkType::IncludeRangeFrom(ref pat, ref range) => {
+                let target = base.join(pat);
+
+                file_to_string(&target)
+                    .map(|s| take_lines(&s, range.clone()))
+                    .chain_err(|| {
+                        format!(
+                            "Could not read file for link {} ({})",
+                            self.link_text,
+                            target.display(),
+                        )
+                    })
+            }
+            LinkType::IncludeRangeTo(ref pat, ref range) => {
+                let target = base.join(pat);
+
+                file_to_string(&target)
+                    .map(|s| take_lines(&s, range.clone()))
+                    .chain_err(|| {
+                        format!(
+                            "Could not read file for link {} ({})",
+                            self.link_text,
+                            target.display(),
+                        )
+                    })
+            }
+            LinkType::IncludeRangeFull(ref pat, _) => {
+                let target = base.join(pat);
+
+                file_to_string(&target).chain_err(|| {
+                    format!("Could not read file for link {} ({})",
+                            self.link_text,
+                            target.display())
+                })
+            }
             LinkType::Playpen(ref pat, ref attrs) => {
-                let contents = file_to_string(base.join(pat))
-                    .chain_err(|| format!("Could not read file for link {}", self.link_text))?;
+                let target = base.join(pat);
+
+                let contents =
+                file_to_string(&target).chain_err(|| {
+                        format!(
+                            "Could not read file for link {} ({})",
+                            self.link_text,
+                            target.display()
+                        )
+                    })?;
                 let ftype = if !attrs.is_empty() { "rust," } else { "rust" };
                 Ok(format!(
                     "```{}{}\n{}\n```\n",
@@ -465,7 +531,10 @@ mod tests {
                 Link {
                     start_index: 38,
                     end_index: 68,
-                    link: LinkType::Playpen(PathBuf::from("file.rs"), vec!["editable"]),
+                    link: LinkType::Playpen(
+                        PathBuf::from("file.rs"),
+                        vec!["editable"]
+                    ),
                     link_text: "{{#playpen file.rs editable }}",
                 },
                 Link {
@@ -475,7 +544,8 @@ mod tests {
                         PathBuf::from("my.rs"),
                         vec!["editable", "no_run", "should_panic"],
                     ),
-                    link_text: "{{#playpen my.rs editable no_run should_panic}}",
+                    link_text:
+                        "{{#playpen my.rs editable no_run should_panic}}",
                 },
             ]
         );

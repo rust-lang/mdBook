@@ -1,56 +1,64 @@
+extern crate clap;
 extern crate mdbook;
 extern crate serde_json;
-#[macro_use]
-extern crate clap;
 
 use clap::{App, Arg, ArgMatches, SubCommand};
-use mdbook::preprocess::CmdPreprocessor;
 use mdbook::book::Book;
-use std::process;
+use mdbook::errors::Error;
+use mdbook::preprocess::{CmdPreprocessor, Preprocessor, PreprocessorContext};
 use std::io;
+use std::process;
+use nop_lib::Nop;
+
+pub fn make_app() -> App<'static, 'static> {
+    App::new("nop-preprocessor")
+        .about("A mdbook preprocessor which does precisely nothing")
+        .subcommand(
+            SubCommand::with_name("supports")
+                .arg(Arg::with_name("renderer").required(true))
+                .about("Check whether a renderer is supported by this preprocessor"))
+}
 
 fn main() {
-    let matches = app().get_matches();
+    let matches = make_app().get_matches();
+
+    // Users will want to construct their own preprocessor here
+    let preprocessor = Nop::new();
 
     if let Some(sub_args) = matches.subcommand_matches("supports") {
-        handle_supports(sub_args);
+        handle_supports(&preprocessor, sub_args);
     } else {
-        handle_preprocessing();
-    }
-}
-
-fn handle_preprocessing() {
-    let (ctx, book) = CmdPreprocessor::parse_input(io::stdin())
-        .expect("Couldn't parse the input");
-
-    // You can inspect the calling mdbook's version to check for compatibility
-    if ctx.mdbook_version != mdbook::MDBOOK_VERSION  {
-        panic!("The version check failed!");
-    }
-
-    // In testing we want to tell the preprocessor to blow up by setting a
-    // particular config value
-    if let Some(table) = ctx.config.get_preprocessor("nop-preprocessor") {
-        let should_blow_up = table.get("blow-up").is_some();
-
-        if should_blow_up {
-            panic!("Boom!!!1!");
+        if let Err(e) = handle_preprocessing(&preprocessor) {
+            eprintln!("{}", e);
+            process::exit(1);
         }
     }
-
-    let processed_book = do_processing(book);
-
-    serde_json::to_writer(io::stdout(), &processed_book).unwrap();
 }
 
-fn do_processing(book: Book) -> Book {
-    // We *are* a nop preprocessor after all...
-    book
+fn handle_preprocessing(pre: &dyn Preprocessor) -> Result<(), Error> {
+    let (ctx, book) = CmdPreprocessor::parse_input(io::stdin())?;
+
+    if ctx.mdbook_version != mdbook::MDBOOK_VERSION {
+        // We should probably use the `semver` crate to check compatibility
+        // here...
+        eprintln!(
+            "Warning: The {} plugin was built against version {} of mdbook, \
+             but we're being called from version {}",
+            pre.name(),
+            mdbook::MDBOOK_VERSION,
+            ctx.mdbook_version
+        );
+    }
+
+    let processed_book = pre.run(&ctx, book)?;
+    serde_json::to_writer(io::stdout(), &processed_book)?;
+
+    Ok(())
 }
 
-fn handle_supports(sub_args: &ArgMatches) {
+fn handle_supports(pre: &dyn Preprocessor, sub_args: &ArgMatches) -> ! {
     let renderer = sub_args.value_of("renderer").expect("Required argument");
-    let supported = renderer_is_supported(&renderer);
+    let supported = pre.supports_renderer(&renderer);
 
     // Signal whether the renderer is supported by exiting with 1 or 0.
     if supported {
@@ -60,17 +68,45 @@ fn handle_supports(sub_args: &ArgMatches) {
     }
 }
 
-fn renderer_is_supported(renderer: &str) -> bool {
-    // We support everything except the `not-supported` renderer
-    renderer != "not-supported"
+/// The actual implementation of the `Nop` preprocessor. This would usually go
+/// in your main `lib.rs` file.
+mod nop_lib {
+    use super::*;
+
+    /// A no-op preprocessor.
+    pub struct Nop;
+
+    impl Nop {
+        pub fn new() -> Nop {
+            Nop
+        }
+    }
+
+    impl Preprocessor for Nop {
+        fn name(&self) -> &str {
+            "nop-preprocessor"
+        }
+
+        fn run(
+            &self,
+            ctx: &PreprocessorContext,
+            book: Book,
+        ) -> Result<Book, Error> {
+            // In testing we want to tell the preprocessor to blow up by setting a
+            // particular config value
+            if let Some(nop_cfg) = ctx.config.get_preprocessor(self.name()) {
+                if nop_cfg.contains_key("blow-up") {
+                    return Err("Boom!!1!".into());
+                }
+            }
+
+            // we *are* a no-op preprocessor after all
+            Ok(book)
+        }
+
+        fn supports_renderer(&self, renderer: &str) -> bool {
+            renderer != "not-supported"
+        }
+    }
 }
 
-fn app() -> App<'static, 'static> {
-    app_from_crate!().subcommand(
-        SubCommand::with_name("supports")
-            .arg(Arg::with_name("renderer").required(true))
-            .about(
-                "Check whether a renderer is supported by this preprocessor",
-            ),
-    )
-}
