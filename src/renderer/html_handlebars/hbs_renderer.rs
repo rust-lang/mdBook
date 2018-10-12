@@ -395,6 +395,12 @@ fn make_data(
         data.insert("livereload".to_owned(), json!(livereload));
     }
 
+    let default_theme = match html_config.default_theme {
+        Some(ref theme) => theme,
+        None => "light",
+    };
+    data.insert("default_theme".to_owned(), json!(default_theme));
+
     // Add google analytics tag
     if let Some(ref ga) = config.html_config().and_then(|html| html.google_analytics) {
         data.insert("google_analytics".to_owned(), json!(ga));

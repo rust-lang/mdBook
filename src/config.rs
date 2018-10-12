@@ -415,6 +415,8 @@ impl Default for BuildConfig {
 pub struct HtmlConfig {
     /// The theme directory, if specified.
     pub theme: Option<PathBuf>,
+    /// The default theme to use, defaults to 'light'
+    pub default_theme: Option<String>,
     /// Use "smart quotes" instead of the usual `"` character.
     pub curly_quotes: bool,
     /// Should mathjax be enabled?
