@@ -440,6 +440,8 @@ pub struct HtmlConfig {
     pub no_section_label: bool,
     /// Search settings. If `None`, the default will be used.
     pub search: Option<Search>,
+    /// Git repository url. If 'None', the git button will not be shown.
+    pub git_repository_url: Option<String>,
 }
 
 impl HtmlConfig {

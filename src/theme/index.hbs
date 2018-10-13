@@ -113,6 +113,11 @@
                             <a href="{{ path_to_root }}print.html" title="Print this book" aria-label="Print this book">
                                 <i id="print-button" class="fa fa-print"></i>
                             </a>
+                            {{#if git-repository-url}}
+                            <a href="{{git-repository-url}}" title="Git repository" aria-label="Git repository">
+                                <i id="github-button" class="fa fa-git"></i>
+                            </a>
+                            {{/if}}
                         </div>
                     </div>
                 </div>

@@ -454,6 +454,10 @@ fn make_data(
         )
     }
 
+    if let Some(ref git_repository_url) = html_config.git_repository_url {
+        data.insert("git-repository-url".to_owned(), json!(git_repository_url));
+    }
+
     let mut chapters = vec![];
 
     for item in book.iter() {
