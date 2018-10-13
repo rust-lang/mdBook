@@ -214,6 +214,7 @@ impl HtmlHandlebars {
         );
         handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
         handlebars.register_helper("next", Box::new(helpers::navigation::next));
+        handlebars.register_helper("theme_option", Box::new(helpers::theme::theme_option));
     }
 
     /// Copy across any additional CSS and JavaScript files which the book
