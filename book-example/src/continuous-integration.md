@@ -26,7 +26,7 @@ before_script:
   - cargo install-update -a
 
 script:
-  - cd path/to/mybook && mdbook build && mdbook test
+  - mdbook build path/to/mybook && mdbook test path/to/mybook
 ```
 
 ## Deploying Your Book to GitHub Pages
