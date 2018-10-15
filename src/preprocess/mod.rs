@@ -2,9 +2,11 @@
 
 pub use self::index::IndexPreprocessor;
 pub use self::links::LinkPreprocessor;
+pub use self::cmd::CmdPreprocessor;
 
 mod index;
 mod links;
+mod cmd;
 
 use book::Book;
 use config::Config;
@@ -14,6 +16,7 @@ use std::path::PathBuf;
 
 /// Extra information for a `Preprocessor` to give them more context when
 /// processing a book.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PreprocessorContext {
     /// The location of the book directory on disk.
     pub root: PathBuf,
@@ -21,12 +24,21 @@ pub struct PreprocessorContext {
     pub config: Config,
     /// The `Renderer` this preprocessor is being used with.
     pub renderer: String,
+    /// The calling `mdbook` version.
+    pub mdbook_version: String,
+    __non_exhaustive: (),
 }
 
 impl PreprocessorContext {
     /// Create a new `PreprocessorContext`.
     pub(crate) fn new(root: PathBuf, config: Config, renderer: String) -> Self {
-        PreprocessorContext { root, config, renderer }
+        PreprocessorContext {
+            root,
+            config,
+            renderer,
+            mdbook_version: ::MDBOOK_VERSION.to_string(),
+            __non_exhaustive: (),
+        }
     }
 }
 
