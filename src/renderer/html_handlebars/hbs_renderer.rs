@@ -455,8 +455,13 @@ fn make_data(
     }
 
     if let Some(ref git_repository_url) = html_config.git_repository_url {
-        data.insert("git-repository-url".to_owned(), json!(git_repository_url));
+        data.insert("git_repository_url".to_owned(), json!(git_repository_url));
     }
+    let git_repository_icon = match html_config.git_repository_icon {
+        Some(ref git_repository_icon) => git_repository_icon,
+        None => "fa-github",
+    };
+    data.insert("git_repository_icon".to_owned(), json!(git_repository_icon));
 
     let mut chapters = vec![];
 

@@ -149,6 +149,10 @@ The following configuration options are available:
 - **playpen:** A subtable for configuring various playpen settings.
 - **search:** A subtable for configuring the in-browser search functionality.
   mdBook must be compiled with the `search` feature enabled (on by default).
+- **git_repository_url:**  A url to the git repository for the book. If provided
+  an icon link will be output in the menu bar of the book.
+- **git_repository_icon:** The FontAwesome icon class to use for the git
+  repository link. Defaults to `fa-github`.
 
 Available configuration options for the `[output.html.playpen]` table:
 
