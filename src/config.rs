@@ -570,6 +570,7 @@ mod tests {
 
         [output.html]
         theme = "./themedir"
+        default-theme = "rust"
         curly-quotes = true
         google-analytics = "123456"
         additional-css = ["./foo/bar/baz.css"]
@@ -609,6 +610,7 @@ mod tests {
             google_analytics: Some(String::from("123456")),
             additional_css: vec![PathBuf::from("./foo/bar/baz.css")],
             theme: Some(PathBuf::from("./themedir")),
+            default_theme: Some(String::from("rust")),
             playpen: playpen_should_be,
             ..Default::default()
         };
