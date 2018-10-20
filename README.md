@@ -145,6 +145,57 @@ explanation, check out the [User Guide].
 
     Delete directory in which generated book is located.
 
+### 3rd Party Plugins
+
+The way a book is loaded and rendered can be configured by the user via third
+party plugins. These plugins are just programs which will be invoked during the
+build process and are split into roughly two categories, *preprocessors* and
+*renderers*.
+
+Preprocessors are used to transform a book before it is sent to a renderer. 
+One example would be to replace all occurrences of 
+`{{#include some_file.ext}}` with the contents of that file. Some existing 
+preprocessors are:
+
+- `index` - a built-in preprocessor (enabled by default) which will transform
+  all `README.md` chapters to `index.md` so `foo/README.md` can be accessed via
+  the url `foo/` when published to a browser
+- `links` - a built-in preprocessor (enabled by default) for expanding the
+  `{{# playpen}}` and `{{# include}}` helpers in a chapter.
+
+Renderers are given the final book so they can do something with it. This is
+typically used for, as the name suggests, rendering the document in a particular
+format, however there's nothing stopping a renderer from doing static analysis
+of a book in order to validate links or run tests. Some existing renderers are:
+
+- `html` - the built-in renderer which will generate a HTML version of the book
+- [`linkcheck`] - a backend which will check that all links are valid
+- [`epub`] - an experimental EPUB generator
+
+> **Note for Developers:** Feel free to send us a PR if you've developed your
+> own plugin and want it mentioned here.
+
+A preprocessor or renderer is enabled by installing the appropriate program and
+then mentioning it in the book's `book.toml` file.
+
+```console
+$ cargo install mdbook-linkcheck
+$ edit book.toml && cat book.toml
+[book]
+title = "My Awesome Book"
+authors = ["Michael-F-Bryan"]
+
+[output.html]
+
+[output.linkcheck]  # enable the "mdbook-linkcheck" renderer
+
+$ mdbook build
+2018-10-20 13:57:51 [INFO] (mdbook::book): Book building has started
+2018-10-20 13:57:51 [INFO] (mdbook::book): Running the html backend
+2018-10-20 13:57:53 [INFO] (mdbook::book): Running the linkcheck backend
+```
+
+For more information on the plugin system, consult the [User Guide].
 
 ### As a library
 
@@ -189,3 +240,5 @@ All the code in this repository is released under the ***Mozilla Public License 
 [Rust]: https://www.rust-lang.org/
 [CLI docs]: http://rust-lang-nursery.github.io/mdBook/cli/init.html
 [master-docs]: http://rust-lang-nursery.github.io/mdBook/mdbook/
+[`linkcheck`]: https://crates.io/crates/mdbook-linkcheck
+[`epub`]: https://crates.io/crates/mdbook-epub
