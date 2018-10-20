@@ -64,6 +64,7 @@ pub struct RenderContext {
     /// renderers to cache intermediate results, this directory is not
     /// guaranteed to be empty or even exist.
     pub destination: PathBuf,
+    #[serde(skip)]
     __non_exhaustive: (),
 }
 

@@ -26,6 +26,7 @@ pub struct PreprocessorContext {
     pub renderer: String,
     /// The calling `mdbook` version.
     pub mdbook_version: String,
+    #[serde(skip)]
     __non_exhaustive: (),
 }
 
