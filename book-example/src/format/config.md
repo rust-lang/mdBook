@@ -79,8 +79,8 @@ This controls the build process of your book.
 
 The following preprocessors are available and included by default:
 
-- `links`: Expand the `{{ #playpen }}` and `{{ #include }}` handlebars helpers in
-  a chapter to include the contents of a file.
+- `links`: Expand the `{{ #playpen }}` and `{{ #include }}` handlebars
+  helpers in a chapter to include the contents of a file.
 - `index`: Convert all chapter files named `README.md` into `index.md`. That is
   to say, all `README.md` would be rendered to an index file `index.html` in the
   rendered book.
@@ -99,8 +99,9 @@ create-missing = false
 
 ### Custom Preprocessor Configuration
 
-Like renderers, preprocessor will need to be given its own table (e.g. `[preprocessor.mathjax]`). 
-In the section, you may then pass extra configuration to the preprocessor by adding key-value pairs to the table.
+Like renderers, preprocessor will need to be given its own table (e.g.
+`[preprocessor.mathjax]`). In the section, you may then pass extra
+configuration to the preprocessor by adding key-value pairs to the table.
 
 For example
 
@@ -113,11 +114,24 @@ some_extra_feature = true
 
 #### Locking a Preprocessor dependency to a renderer
 
-You can explicitly specify that a preprocessor should run for a renderer by binding the two together.
+You can explicitly specify that a preprocessor should run for a renderer by
+binding the two together.
 
 ```
 [preprocessor.mathjax]
 renderers = ["html"]  # mathjax only makes sense with the HTML renderer
+```
+
+### Provide Your Own Command
+
+By default when you add a `[preprocessor.foo]` table to your `book.toml` file,
+`mdbook` will try to invoke the `mdbook-foo` executa`ble. If you want to use a
+different program name or pass in command-line arguments, this behaviour can
+be overridden by adding a `command` field.
+
+```toml
+[preprocessor.random]
+command = "python random.py"
 ```
 
 ## Configuring Renderers
@@ -181,7 +195,8 @@ Available configuration options for the `[output.html.search]` table:
 - **copy-js:** Copy JavaScript files for the search implementation to the output
   directory. Defaults to `true`.
 
-This shows all available options in the **book.toml**:
+This shows all available HTML output options in the **book.toml**:
+
 ```toml
 [book]
 title = "Example book"
@@ -218,6 +233,16 @@ heading-split-level = 3
 copy-js = true
 ```
 
+### Custom Renderers
+
+A custom renderer can be enabled by adding a `[output.foo]` table to your 
+`book.toml`. Similar to [preprocessors](#configuring-preprocessors) this will 
+instruct `mdbook` to pass a representation of the book to `mdbook-foo` for 
+rendering.
+
+Custom renderers will have access to all configuration within their table
+(i.e. anything under `[output.foo]`), and the command to be invoked can be 
+manually specified with the `command` field.
 
 ## Environment Variables
 

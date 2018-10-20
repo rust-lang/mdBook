@@ -172,6 +172,9 @@ of a book in order to validate links or run tests. Some existing renderers are:
 - [`linkcheck`] - a backend which will check that all links are valid
 - [`epub`] - an experimental EPUB generator
 
+> **Note for Developers:** Feel free to send us a PR if you've developed your
+> own plugin and want it mentioned here.
+
 A preprocessor or renderer is enabled by installing the appropriate program and
 then mentioning it in the book's `book.toml` file.
 
