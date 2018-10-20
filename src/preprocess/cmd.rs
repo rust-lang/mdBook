@@ -65,9 +65,13 @@ impl CmdPreprocessor {
         }
     }
 
-    fn write_input<W: Write>(&self, writer: W, book: &Book, ctx: &PreprocessorContext) -> Result<()> {
-        serde_json::to_writer(writer, &(ctx, book))
-            .map_err(Into::into)
+    fn write_input<W: Write>(
+        &self,
+        writer: W,
+        book: &Book,
+        ctx: &PreprocessorContext,
+    ) -> Result<()> {
+        serde_json::to_writer(writer, &(ctx, book)).map_err(Into::into)
     }
 
     /// The command this `Preprocessor` will invoke.
@@ -105,7 +109,12 @@ impl Preprocessor for CmdPreprocessor {
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit())
             .spawn()
-            .chain_err(|| format!("Unable to start the \"{}\" preprocessor. Is it installed?", self.name()))?;
+            .chain_err(|| {
+                format!(
+                    "Unable to start the \"{}\" preprocessor. Is it installed?",
+                    self.name()
+                )
+            })?;
 
         self.write_input_to_child(&mut child, &book, ctx);
 
@@ -114,13 +123,21 @@ impl Preprocessor for CmdPreprocessor {
             .chain_err(|| "Error waiting for the preprocessor to complete")?;
 
         trace!("{} exited with output: {:?}", self.cmd, output);
-        ensure!(output.status.success(), "The preprocessor exited unsuccessfully");
+        ensure!(
+            output.status.success(),
+            "The preprocessor exited unsuccessfully"
+        );
 
-        serde_json::from_slice(&output.stdout).chain_err(|| "Unable to parse the preprocessed book")
+        serde_json::from_slice(&output.stdout)
+            .chain_err(|| "Unable to parse the preprocessed book")
     }
 
     fn supports_renderer(&self, renderer: &str) -> bool {
-        debug!("Checking if the \"{}\" preprocessor supports \"{}\"", self.name(), renderer);
+        debug!(
+            "Checking if the \"{}\" preprocessor supports \"{}\"",
+            self.name(),
+            renderer
+        );
 
         let mut cmd = match self.command() {
             Ok(c) => c,
@@ -150,5 +167,38 @@ impl Preprocessor for CmdPreprocessor {
         }
 
         outcome.unwrap_or(false)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::Path;
+    use MDBook;
+
+    fn book_example() -> MDBook {
+        let example =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("book-example");
+        MDBook::load(example).unwrap()
+    }
+
+    #[test]
+    fn round_trip_write_and_parse_input() {
+        let cmd = CmdPreprocessor::new("test".to_string(), "test".to_string());
+        let md = book_example();
+        let ctx = PreprocessorContext::new(
+            md.root.clone(),
+            md.config.clone(),
+            "some-renderer".to_string(),
+        );
+
+        let mut buffer = Vec::new();
+        cmd.write_input(&mut buffer, &md.book, &ctx).unwrap();
+
+        let (got_ctx, got_book) =
+            CmdPreprocessor::parse_input(buffer.as_slice()).unwrap();
+
+        assert_eq!(got_book, md.book);
+        assert_eq!(got_ctx, ctx);
     }
 }
