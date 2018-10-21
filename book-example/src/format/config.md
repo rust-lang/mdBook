@@ -132,7 +132,8 @@ The following configuration options are available:
 - **theme:** mdBook comes with a default theme and all the resource files needed
   for it. But if this option is set, mdBook will selectively overwrite the theme
   files with the ones found in the specified folder.
-- **default-theme:** The theme to be used by default. Defaults to `light`.
+- **default-theme:** The theme color scheme to select by default in the 
+  'Change Theme' dropdown. Defaults to `light`.
 - **curly-quotes:** Convert straight quotes to curly quotes, except for those
   that occur in code blocks and code spans. Defaults to `false`.
 - **google-analytics:** If you use Google Analytics, this option lets you enable
