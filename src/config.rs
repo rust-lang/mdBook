@@ -436,7 +436,7 @@ pub struct HtmlConfig {
     /// This config item *should not be edited* by the end user.
     #[doc(hidden)]
     pub livereload_url: Option<String>,
-    /// Should section labels be rendered?
+    /// Don't render section labels.
     pub no_section_label: bool,
     /// Search settings. If `None`, the default will be used.
     pub search: Option<Search>,
