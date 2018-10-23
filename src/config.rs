@@ -440,6 +440,11 @@ pub struct HtmlConfig {
     pub no_section_label: bool,
     /// Search settings. If `None`, the default will be used.
     pub search: Option<Search>,
+    /// Git repository url. If `None`, the git button will not be shown.
+    pub git_repository_url: Option<String>,
+    /// FontAwesome icon class to use for the Git repository link. 
+    /// Defaults to `fa-github` if `None`.
+    pub git_repository_icon: Option<String>,
 }
 
 impl HtmlConfig {
@@ -571,6 +576,8 @@ mod tests {
         curly-quotes = true
         google-analytics = "123456"
         additional-css = ["./foo/bar/baz.css"]
+        git-repository-url = "https://foo.com/"
+        git-repository-icon = "fa-code-fork"
 
         [output.html.playpen]
         editable = true
@@ -608,6 +615,8 @@ mod tests {
             additional_css: vec![PathBuf::from("./foo/bar/baz.css")],
             theme: Some(PathBuf::from("./themedir")),
             playpen: playpen_should_be,
+            git_repository_url: Some(String::from("https://foo.com/")),
+            git_repository_icon: Some(String::from("fa-code-fork")),
             ..Default::default()
         };
 

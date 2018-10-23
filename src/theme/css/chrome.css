@@ -63,8 +63,11 @@ a > .hljs {
     margin: 0;
 }
 
-#print-button {
+.right-buttons {
     margin: 0 15px;
+}
+.right-buttons a {
+    text-decoration: none;
 }
 
 html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-container {
