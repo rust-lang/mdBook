@@ -21,9 +21,10 @@ pub fn collapse_whitespace<'a>(text: &'a str) -> Cow<'a, str> {
     RE.replace_all(text, " ")
 }
 
-/// Convert the given string to a valid HTML element ID
+/// Convert the given string to a valid HTML element ID.
+/// The only restriction is that the ID must not contain any ASCII whitespace.
 pub fn normalize_id(content: &str) -> String {
-    let mut ret = content
+    content
         .chars()
         .filter_map(|ch| {
             if ch.is_alphanumeric() || ch == '_' || ch == '-' {
@@ -33,16 +34,7 @@ pub fn normalize_id(content: &str) -> String {
             } else {
                 None
             }
-        }).collect::<String>();
-    // Ensure that the first character is [A-Za-z]
-    if ret
-        .chars()
-        .next()
-        .map_or(false, |c| !c.is_ascii_alphabetic())
-    {
-        ret.insert(0, 'a');
-    }
-    ret
+        }).collect::<String>()
 }
 
 /// Generate an ID for use with anchors which is derived from a "normalised"
@@ -329,12 +321,32 @@ more text with spaces
         #[test]
         fn it_generates_anchors() {
             assert_eq!(
-                id_from_content("## `--passes`: add more rustdoc passes"),
-                "a--passes-add-more-rustdoc-passes"
-            );
-            assert_eq!(
                 id_from_content("## Method-call expressions"),
                 "method-call-expressions"
+            );
+            assert_eq!(
+                id_from_content("## **Bold** title"),
+                "bold-title"
+            );
+            assert_eq!(
+                id_from_content("## `Code` title"),
+                "code-title"
+            );
+        }
+
+        #[test]
+        fn it_generates_anchors_from_non_ascii_initial() {
+            assert_eq!(
+                id_from_content("## `--passes`: add more rustdoc passes"),
+                "--passes-add-more-rustdoc-passes"
+            );
+            assert_eq!(
+                id_from_content("## 中文標題 CJK title"),
+                "中文標題-cjk-title"
+            );
+            assert_eq!(
+                id_from_content("## Über"),
+                "Über"
             );
         }
 
@@ -342,14 +354,17 @@ more text with spaces
         fn it_normalizes_ids() {
             assert_eq!(
                 normalize_id("`--passes`: add more rustdoc passes"),
-                "a--passes-add-more-rustdoc-passes"
+                "--passes-add-more-rustdoc-passes"
             );
             assert_eq!(
                 normalize_id("Method-call 🐙 expressions \u{1f47c}"),
                 "method-call--expressions-"
             );
-            assert_eq!(normalize_id("_-_12345"), "a_-_12345");
-            assert_eq!(normalize_id("12345"), "a12345");
+            assert_eq!(normalize_id("_-_12345"), "_-_12345");
+            assert_eq!(normalize_id("12345"), "12345");
+            assert_eq!(normalize_id("中文"), "中文");
+            assert_eq!(normalize_id("にほんご"), "にほんご");
+            assert_eq!(normalize_id("한국어"), "한국어");
             assert_eq!(normalize_id(""), "");
         }
     }
