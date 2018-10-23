@@ -10,7 +10,9 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
         .about("Deletes a built book")
         .arg_from_usage(
             "-d, --dest-dir=[dest-dir] 'Output directory for the book{n}\
-             (If omitted, uses build.build-dir from book.toml or defaults to ./book)'",
+             Relative paths are interpreted relative to the book's root directory.{n}\
+             Running this command deletes this directory.{n}\
+             If omitted, mdBook uses build.build-dir from book.toml or defaults to `./book`.'",
         ).arg_from_usage(
             "[dir] 'Root directory for the book{n}\
              (Defaults to the Current Directory when omitted)'",
