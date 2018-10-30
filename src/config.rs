@@ -415,6 +415,8 @@ impl Default for BuildConfig {
 pub struct HtmlConfig {
     /// The theme directory, if specified.
     pub theme: Option<PathBuf>,
+    /// The default theme to use, defaults to 'light'
+    pub default_theme: Option<String>,
     /// Use "smart quotes" instead of the usual `"` character.
     pub curly_quotes: bool,
     /// Should mathjax be enabled?
@@ -573,6 +575,7 @@ mod tests {
 
         [output.html]
         theme = "./themedir"
+        default-theme = "rust"
         curly-quotes = true
         google-analytics = "123456"
         additional-css = ["./foo/bar/baz.css"]
@@ -614,6 +617,7 @@ mod tests {
             google_analytics: Some(String::from("123456")),
             additional_css: vec![PathBuf::from("./foo/bar/baz.css")],
             theme: Some(PathBuf::from("./themedir")),
+            default_theme: Some(String::from("rust")),
             playpen: playpen_should_be,
             git_repository_url: Some(String::from("https://foo.com/")),
             git_repository_icon: Some(String::from("fa-code-fork")),

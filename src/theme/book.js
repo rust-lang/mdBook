@@ -352,7 +352,7 @@ function playpen_text(playpen) {
 
         var previousTheme;
         try { previousTheme = localStorage.getItem('mdbook-theme'); } catch (e) { }
-        if (previousTheme === null || previousTheme === undefined) { previousTheme = 'light'; }
+        if (previousTheme === null || previousTheme === undefined) { previousTheme = default_theme; }
 
         try { localStorage.setItem('mdbook-theme', theme); } catch (e) { }
 
@@ -364,7 +364,7 @@ function playpen_text(playpen) {
     // Set theme
     var theme;
     try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
-    if (theme === null || theme === undefined) { theme = 'light'; }
+    if (theme === null || theme === undefined) { theme = default_theme; }
 
     set_theme(theme);
 

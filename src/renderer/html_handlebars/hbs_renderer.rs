@@ -214,6 +214,7 @@ impl HtmlHandlebars {
         );
         handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
         handlebars.register_helper("next", Box::new(helpers::navigation::next));
+        handlebars.register_helper("theme_option", Box::new(helpers::theme::theme_option));
     }
 
     /// Copy across any additional CSS and JavaScript files which the book
@@ -394,6 +395,12 @@ fn make_data(
     if let Some(ref livereload) = html_config.livereload_url {
         data.insert("livereload".to_owned(), json!(livereload));
     }
+
+    let default_theme = match html_config.default_theme {
+        Some(ref theme) => theme,
+        None => "light",
+    };
+    data.insert("default_theme".to_owned(), json!(default_theme));
 
     // Add google analytics tag
     if let Some(ref ga) = config.html_config().and_then(|html| html.google_analytics) {
