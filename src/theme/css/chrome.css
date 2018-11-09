@@ -181,6 +181,7 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
     padding: 0.1em 0.3em;
     border-radius: 3px;
     color: var(--inline-code-color);
+    overflow-x: initial;
 }
 
 a:hover > .hljs {
