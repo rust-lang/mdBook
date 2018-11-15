@@ -92,6 +92,9 @@ table thead td {
     font-weight: 700;
     border: none;
 }
+table thead th {
+    padding: 3px 20px;
+}
 table thead tr {
     border: 1px var(--table-header-bg) solid;
 }
