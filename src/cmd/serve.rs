@@ -12,6 +12,7 @@ use mdbook::errors::*;
 use mdbook::utils;
 use mdbook::MDBook;
 use std;
+use std::path::Path;
 use {get_book_dir, open};
 
 struct ErrorRecover;
@@ -28,6 +29,11 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
         .arg_from_usage(
             "[dir] 'Root directory for the book{n}\
              (Defaults to the Current Directory when omitted)'",
+        )
+        .arg_from_usage(
+            "-m, --markdown-only 'Only watch for Markdown (.md) files{n}\
+             By default, any change in the source directory will trigger a rebuild.{n}\
+             However, sometimes this is undesirable (e.g. for swap files).'"
         )
         .arg(
             Arg::with_name("hostname")
@@ -114,25 +120,31 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         open(serving_url);
     }
 
+    let md_only = args.is_present("markdown-only");
+    let is_md_file = |file: &Path| file.extension()
+        .map_or(false, |ext| ext == "md");
+
     #[cfg(feature = "watch")]
     watch::trigger_on_change(&mut book, move |path, book_dir| {
-        info!("File changed: {:?}", path);
-        info!("Building book...");
+        if !md_only || is_md_file(path) {
+            info!("File changed: {:?}", path);
+            info!("Building book...");
 
-        // FIXME: This area is really ugly because we need to re-set livereload :(
+            // FIXME: This area is really ugly because we need to re-set livereload :(
 
-        let result = MDBook::load(&book_dir)
-            .and_then(|mut b| {
-                b.config
-                    .set("output.html.livereload-url", &livereload_url)?;
-                Ok(b)
-            }).and_then(|b| b.build());
+            let result = MDBook::load(&book_dir)
+                .and_then(|mut b| {
+                    b.config
+                        .set("output.html.livereload-url", &livereload_url)?;
+                    Ok(b)
+                }).and_then(|b| b.build());
 
-        if let Err(e) = result {
-            error!("Unable to load the book");
-            utils::log_backtrace(&e);
-        } else {
-            let _ = broadcaster.send("reload");
+            if let Err(e) = result {
+                error!("Unable to load the book");
+                utils::log_backtrace(&e);
+            } else {
+                let _ = broadcaster.send("reload");
+            }
         }
     });
 

@@ -22,6 +22,11 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
             "[dir] 'Root directory for the book{n}\
              (Defaults to the Current Directory when omitted)'",
         ).arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
+        .arg_from_usage(
+            "-m, --markdown-only 'Only watch for Markdown (.md) files{n}\
+             By default, any change in the source directory will trigger a rebuild.{n}\
+             However, sometimes this is undesirable (e.g. for swap files).'"
+        )
 }
 
 // Watch command implementation
@@ -34,13 +39,19 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         open(book.build_dir_for("html").join("index.html"));
     }
 
-    trigger_on_change(&book, |path, book_dir| {
-        info!("File changed: {:?}\nBuilding book...\n", path);
-        let result = MDBook::load(&book_dir).and_then(|b| b.build());
+    let md_only = args.is_present("markdown-only");
+    let is_md_file = |file: &Path| file.extension()
+        .map_or(false, |ext| ext == "md");
 
-        if let Err(e) = result {
-            error!("Unable to build the book");
-            utils::log_backtrace(&e);
+    trigger_on_change(&book, |path, book_dir| {
+        if !md_only || is_md_file(path) {
+            info!("File changed: {:?}\nBuilding book...\n", path);
+            let result = MDBook::load(&book_dir).and_then(|b| b.build());
+
+            if let Err(e) = result {
+                error!("Unable to build the book");
+                utils::log_backtrace(&e);
+            }
         }
     });
 
