@@ -352,7 +352,6 @@ ul#searchresults span.teaser em {
 }
 
 .chapter li a:hover {
-    /* text-decoration: none; */
     color: var(--sidebar-active);
 }
 
