@@ -43,19 +43,11 @@ impl CmdPreprocessor {
 
     /// A convenience function custom preprocessors can use to parse the input
     /// written to `stdin` by a `CmdRenderer`.
-    pub fn parse_input<R: Read>(
-        reader: R,
-    ) -> Result<(PreprocessorContext, Book)> {
-        serde_json::from_reader(reader)
-            .chain_err(|| "Unable to parse the input")
+    pub fn parse_input<R: Read>(reader: R) -> Result<(PreprocessorContext, Book)> {
+        serde_json::from_reader(reader).chain_err(|| "Unable to parse the input")
     }
 
-    fn write_input_to_child(
-        &self,
-        child: &mut Child,
-        book: &Book,
-        ctx: &PreprocessorContext,
-    ) {
+    fn write_input_to_child(&self, child: &mut Child, book: &Book, ctx: &PreprocessorContext) {
         let stdin = child.stdin.take().expect("Child has stdin");
 
         if let Err(e) = self.write_input(stdin, &book, &ctx) {
@@ -128,8 +120,7 @@ impl Preprocessor for CmdPreprocessor {
             "The preprocessor exited unsuccessfully"
         );
 
-        serde_json::from_slice(&output.stdout)
-            .chain_err(|| "Unable to parse the preprocessed book")
+        serde_json::from_slice(&output.stdout).chain_err(|| "Unable to parse the preprocessed book")
     }
 
     fn supports_renderer(&self, renderer: &str) -> bool {
@@ -142,7 +133,11 @@ impl Preprocessor for CmdPreprocessor {
         let mut cmd = match self.command() {
             Ok(c) => c,
             Err(e) => {
-                warn!("Unable to create the command for the \"{}\" preprocessor, {}", self.name(), e);
+                warn!(
+                    "Unable to create the command for the \"{}\" preprocessor, {}",
+                    self.name(),
+                    e
+                );
                 return false;
             }
         };
@@ -177,8 +172,7 @@ mod tests {
     use MDBook;
 
     fn book_example() -> MDBook {
-        let example =
-            Path::new(env!("CARGO_MANIFEST_DIR")).join("book-example");
+        let example = Path::new(env!("CARGO_MANIFEST_DIR")).join("book-example");
         MDBook::load(example).unwrap()
     }
 
@@ -195,8 +189,7 @@ mod tests {
         let mut buffer = Vec::new();
         cmd.write_input(&mut buffer, &md.book, &ctx).unwrap();
 
-        let (got_ctx, got_book) =
-            CmdPreprocessor::parse_input(buffer.as_slice()).unwrap();
+        let (got_ctx, got_book) = CmdPreprocessor::parse_input(buffer.as_slice()).unwrap();
 
         assert_eq!(got_book, md.book);
         assert_eq!(got_ctx, ctx);

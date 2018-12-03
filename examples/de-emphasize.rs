@@ -56,10 +56,7 @@ where
     Ok(())
 }
 
-fn remove_emphasis(
-    num_removed_items: &mut usize,
-    chapter: &mut Chapter,
-) -> Result<String> {
+fn remove_emphasis(num_removed_items: &mut usize, chapter: &mut Chapter) -> Result<String> {
     let mut buf = String::with_capacity(chapter.content.len());
 
     let events = Parser::new(&chapter.content).filter(|e| {
@@ -76,7 +73,7 @@ fn remove_emphasis(
         should_keep
     });
 
-    cmark(events, &mut buf, None).map(|_| buf).map_err(|err| {
-        Error::from(format!("Markdown serialization failed: {}", err))
-    })
+    cmark(events, &mut buf, None)
+        .map(|_| buf)
+        .map_err(|err| Error::from(format!("Markdown serialization failed: {}", err)))
 }

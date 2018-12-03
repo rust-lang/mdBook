@@ -6,9 +6,9 @@ use clap::{App, Arg, ArgMatches, SubCommand};
 use mdbook::book::Book;
 use mdbook::errors::Error;
 use mdbook::preprocess::{CmdPreprocessor, Preprocessor, PreprocessorContext};
+use nop_lib::Nop;
 use std::io;
 use std::process;
-use nop_lib::Nop;
 
 pub fn make_app() -> App<'static, 'static> {
     App::new("nop-preprocessor")
@@ -16,7 +16,8 @@ pub fn make_app() -> App<'static, 'static> {
         .subcommand(
             SubCommand::with_name("supports")
                 .arg(Arg::with_name("renderer").required(true))
-                .about("Check whether a renderer is supported by this preprocessor"))
+                .about("Check whether a renderer is supported by this preprocessor"),
+        )
 }
 
 fn main() {
@@ -87,11 +88,7 @@ mod nop_lib {
             "nop-preprocessor"
         }
 
-        fn run(
-            &self,
-            ctx: &PreprocessorContext,
-            book: Book,
-        ) -> Result<Book, Error> {
+        fn run(&self, ctx: &PreprocessorContext, book: Book) -> Result<Book, Error> {
             // In testing we want to tell the preprocessor to blow up by setting a
             // particular config value
             if let Some(nop_cfg) = ctx.config.get_preprocessor(self.name()) {
@@ -109,4 +106,3 @@ mod nop_lib {
         }
     }
 }
-
