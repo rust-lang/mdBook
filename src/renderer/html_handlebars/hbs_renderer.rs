@@ -30,75 +30,67 @@ impl HtmlHandlebars {
         print_content: &mut String,
     ) -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
-        match *item {
-            BookItem::Chapter(ref ch) => {
-                let content = ch.content.clone();
-                let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
-                print_content.push_str(&content);
+        if let BookItem::Chapter(ref ch) = *item {
+            let content = ch.content.clone();
+            let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
+            print_content.push_str(&content);
 
-                // Update the context with data for this file
-                let path = ch
-                    .path
-                    .to_str()
-                    .chain_err(|| "Could not convert path to str")?;
-                let filepath = Path::new(&ch.path).with_extension("html");
+            // Update the context with data for this file
+            let path = ch
+                .path
+                .to_str()
+                .chain_err(|| "Could not convert path to str")?;
+            let filepath = Path::new(&ch.path).with_extension("html");
 
-                // "print.html" is used for the print page.
-                if ch.path == Path::new("print.md") {
-                    bail!(ErrorKind::ReservedFilenameError(ch.path.clone()));
-                };
+            // "print.html" is used for the print page.
+            if ch.path == Path::new("print.md") {
+                bail!(ErrorKind::ReservedFilenameError(ch.path.clone()));
+            };
 
-                // Non-lexical lifetimes needed :'(
-                let title: String;
-                {
-                    let book_title = ctx
-                        .data
-                        .get("book_title")
-                        .and_then(serde_json::Value::as_str)
-                        .unwrap_or("");
-                    title = ch.name.clone() + " - " + book_title;
-                }
-
-                ctx.data.insert("path".to_owned(), json!(path));
-                ctx.data.insert("content".to_owned(), json!(content));
-                ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
-                ctx.data.insert("title".to_owned(), json!(title));
-                ctx.data.insert(
-                    "path_to_root".to_owned(),
-                    json!(utils::fs::path_to_root(&ch.path)),
-                );
-
-                // Render the handlebars template with the data
-                debug!("Render template");
-                let rendered = ctx.handlebars.render("index", &ctx.data)?;
-
-                let rendered = self.post_process(rendered, &ctx.html_config.playpen);
-
-                // Write to file
-                debug!("Creating {}", filepath.display());
-                utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
-
-                if ctx.is_index {
-                    ctx.data.insert("path".to_owned(), json!("index.html"));
-                    ctx.data.insert("path_to_root".to_owned(), json!(""));
-                    let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
-                    let rendered_index =
-                        self.post_process(rendered_index, &ctx.html_config.playpen);
-                    debug!("Creating index.html from {}", path);
-                    utils::fs::write_file(
-                        &ctx.destination,
-                        "index.html",
-                        rendered_index.as_bytes(),
-                    )?;
-                }
+            // Non-lexical lifetimes needed :'(
+            let title: String;
+            {
+                let book_title = ctx
+                    .data
+                    .get("book_title")
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or("");
+                title = ch.name.clone() + " - " + book_title;
             }
-            _ => {}
+
+            ctx.data.insert("path".to_owned(), json!(path));
+            ctx.data.insert("content".to_owned(), json!(content));
+            ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
+            ctx.data.insert("title".to_owned(), json!(title));
+            ctx.data.insert(
+                "path_to_root".to_owned(),
+                json!(utils::fs::path_to_root(&ch.path)),
+            );
+
+            // Render the handlebars template with the data
+            debug!("Render template");
+            let rendered = ctx.handlebars.render("index", &ctx.data)?;
+
+            let rendered = self.post_process(rendered, &ctx.html_config.playpen);
+
+            // Write to file
+            debug!("Creating {}", filepath.display());
+            utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
+
+            if ctx.is_index {
+                ctx.data.insert("path".to_owned(), json!("index.html"));
+                ctx.data.insert("path_to_root".to_owned(), json!(""));
+                let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
+                let rendered_index = self.post_process(rendered_index, &ctx.html_config.playpen);
+                debug!("Creating index.html from {}", path);
+                utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
+            }
         }
 
         Ok(())
     }
 
-    #[cfg_attr(feature = "cargo-clippy", allow(let_and_return))]
+    #[cfg_attr(feature = "cargo-clippy", allow(clippy::let_and_return))]
     fn post_process(&self, rendered: String, playpen_config: &Playpen) -> String {
         let rendered = build_header_links(&rendered);
         let rendered = fix_code_blocks(&rendered);
@@ -328,7 +320,7 @@ impl Renderer for HtmlHandlebars {
                 handlebars: &handlebars,
                 destination: destination.to_path_buf(),
                 data: data.clone(),
-                is_index: is_index,
+                is_index,
                 html_config: html_config.clone(),
             };
             self.render_item(item, ctx, &mut print_content)?;

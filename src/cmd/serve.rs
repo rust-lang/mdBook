@@ -115,7 +115,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     }
 
     #[cfg(feature = "watch")]
-    watch::trigger_on_change(&mut book, move |path, book_dir| {
+    watch::trigger_on_change(&book, move |path, book_dir| {
         info!("File changed: {:?}", path);
         info!("Building book...");
 

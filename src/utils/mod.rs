@@ -119,7 +119,7 @@ struct EventQuoteConverter {
 impl EventQuoteConverter {
     fn new(enabled: bool) -> Self {
         EventQuoteConverter {
-            enabled: enabled,
+            enabled,
             convert_text: true,
         }
     }
@@ -324,14 +324,8 @@ more text with spaces
                 id_from_content("## Method-call expressions"),
                 "method-call-expressions"
             );
-            assert_eq!(
-                id_from_content("## **Bold** title"),
-                "bold-title"
-            );
-            assert_eq!(
-                id_from_content("## `Code` title"),
-                "code-title"
-            );
+            assert_eq!(id_from_content("## **Bold** title"), "bold-title");
+            assert_eq!(id_from_content("## `Code` title"), "code-title");
         }
 
         #[test]
@@ -344,10 +338,7 @@ more text with spaces
                 id_from_content("## 中文標題 CJK title"),
                 "中文標題-cjk-title"
             );
-            assert_eq!(
-                id_from_content("## Über"),
-                "Über"
-            );
+            assert_eq!(id_from_content("## Über"), "Über");
         }
 
         #[test]
