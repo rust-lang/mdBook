@@ -17,6 +17,7 @@ fn main() {
     panic!("This example is intended to be part of a library");
 }
 
+#[allow(dead_code)]
 struct Deemphasize;
 
 impl Preprocessor for Deemphasize {
