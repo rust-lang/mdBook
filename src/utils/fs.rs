@@ -144,7 +144,13 @@ pub fn copy_files_except_ext(
                 true,
                 ext_blacklist,
             )?;
-        } else if metadata.is_file() {
+
+        // DirEntry.metadata() does not read through symlinks, so we have to
+        // use fs::metadata().
+        } else if fs::metadata(entry.path())?.is_file() {
+            // resolve symlinks when copying files
+            let realpath = fs::canonicalize(entry.path())?;
+
             // Check if it is in the blacklist
             if let Some(ext) = entry.path().extension() {
                 if ext_blacklist.contains(&ext.to_str().unwrap()) {
@@ -172,7 +178,7 @@ pub fn copy_files_except_ext(
                 )
             );
             fs::copy(
-                entry.path(),
+                realpath,
                 &to.join(
                     entry
                         .path()
