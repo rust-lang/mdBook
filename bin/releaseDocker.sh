@@ -11,7 +11,7 @@ PROJECT_DIRECTORY="$(dirname "${SCRIPT_DIRECTORY}")"
 
 cd "${PROJECT_DIRECTORY}"
 
-docker build --no-cache  -t mdbook .
+docker build --no-cache --build-arg VERSION="${2}" -t mdbook .
 docker tag mdbook "${1}/mdbook:${2}"
 
 echo "To run image:"
