@@ -397,6 +397,20 @@ fn theme_dir_overrides_work_correctly() {
     dummy_book::assert_contains_strings(built_index, &["This is a modified index.hbs!"]);
 }
 
+
+#[test]
+fn no_index_for_print_html() {
+    let temp = DummyBook::new().build().unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
+    md.build().unwrap();
+
+    let print_html = temp.path().join("book/print.html");
+    assert_contains_strings(print_html, &[r##"noindex"##]);
+
+    let index_html = temp.path().join("book/index.html");
+    assert_doesnt_contain_strings(index_html, &[r##"noindex"##]);
+}
+
 #[cfg(feature = "search")]
 mod search {
     extern crate serde_json;
