@@ -20,8 +20,8 @@ use std::path::{Path, PathBuf};
 
 mod cmd;
 
-const NAME: &'static str = "mdBook";
-const VERSION: &'static str = concat!("v", crate_version!());
+const NAME: &str = "mdBook";
+const VERSION: &str = concat!("v", crate_version!());
 
 fn main() {
     init_logger();

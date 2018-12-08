@@ -54,7 +54,7 @@ fn add_doc(
     section_id: &Option<String>,
     items: &[&str],
 ) {
-    let url = if let &Some(ref id) = section_id {
+    let url = if let Some(ref id) = *section_id {
         Cow::Owned(format!("{}#{}", anchor_base, id))
     } else {
         Cow::Borrowed(anchor_base)
@@ -74,8 +74,8 @@ fn render_item(
     doc_urls: &mut Vec<String>,
     item: &BookItem,
 ) -> Result<()> {
-    let chapter = match item {
-        &BookItem::Chapter(ref ch) => ch,
+    let chapter = match *item {
+        BookItem::Chapter(ref ch) => ch,
         _ => return Ok(()),
     };
 
@@ -101,7 +101,7 @@ fn render_item(
     for event in p {
         match event {
             Event::Start(Tag::Header(i)) if i <= max_section_depth => {
-                if heading.len() > 0 {
+                if !heading.is_empty() {
                     // Section finished, the next header is following now
                     // Write the data to the index, and clear it for the next section
                     add_doc(
@@ -155,7 +155,7 @@ fn render_item(
         }
     }
 
-    if heading.len() > 0 {
+    if !heading.is_empty() {
         // Make sure the last section is added to the index
         add_doc(
             index,

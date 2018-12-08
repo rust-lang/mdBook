@@ -175,7 +175,7 @@ impl BookBuilder {
         let summary = src_dir.join("SUMMARY.md");
         let mut f = File::create(&summary).chain_err(|| "Unable to create SUMMARY.md")?;
         writeln!(f, "# Summary")?;
-        writeln!(f, "")?;
+        writeln!(f)?;
         writeln!(f, "- [Chapter 1](./chapter_1.md)")?;
 
         let chapter_1 = src_dir.join("chapter_1.md");

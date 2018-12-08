@@ -18,13 +18,13 @@ impl Target {
     /// Returns target if found.
     fn find(
         &self,
-        base_path: &String,
-        current_path: &String,
+        base_path: &str,
+        current_path: &str,
         current_item: &StringMap,
         previous_item: &StringMap,
     ) -> Result<Option<StringMap>, RenderError> {
-        match self {
-            &Target::Next => {
+        match *self {
+            Target::Next => {
                 let previous_path = previous_item
                     .get("path")
                     .ok_or_else(|| RenderError::new("No path found for chapter in JSON data"))?;
@@ -34,7 +34,7 @@ impl Target {
                 }
             }
 
-            &Target::Previous => {
+            Target::Previous => {
                 if current_path == base_path {
                     return Ok(Some(previous_item.clone()));
                 }

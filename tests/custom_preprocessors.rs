@@ -7,7 +7,10 @@ use mdbook::preprocess::{CmdPreprocessor, Preprocessor};
 use mdbook::MDBook;
 
 fn example() -> CmdPreprocessor {
-    CmdPreprocessor::new("nop-preprocessor".to_string(), "cargo run --example nop-preprocessor --".to_string())
+    CmdPreprocessor::new(
+        "nop-preprocessor".to_string(),
+        "cargo run --example nop-preprocessor --".to_string(),
+    )
 }
 
 #[test]
@@ -35,7 +38,9 @@ fn ask_the_preprocessor_to_blow_up() {
     let mut md = MDBook::load(temp.path()).unwrap();
     md.with_preprecessor(example());
 
-    md.config.set("preprocessor.nop-preprocessor.blow-up", true).unwrap();
+    md.config
+        .set("preprocessor.nop-preprocessor.blow-up", true)
+        .unwrap();
 
     let got = md.build();
 

@@ -1,12 +1,12 @@
 //! Book preprocessing.
 
+pub use self::cmd::CmdPreprocessor;
 pub use self::index::IndexPreprocessor;
 pub use self::links::LinkPreprocessor;
-pub use self::cmd::CmdPreprocessor;
 
+mod cmd;
 mod index;
 mod links;
-mod cmd;
 
 use book::Book;
 use config::Config;

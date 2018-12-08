@@ -76,8 +76,8 @@ impl RenderContext {
         Q: Into<PathBuf>,
     {
         RenderContext {
-            book: book,
-            config: config,
+            book,
+            config,
             version: ::MDBOOK_VERSION.to_string(),
             root: root.into(),
             destination: destination.into(),
