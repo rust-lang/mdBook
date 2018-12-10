@@ -6,6 +6,7 @@ use renderer::{RenderContext, Renderer};
 use theme::{self, playpen_editor, Theme};
 use utils;
 
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::fs;
@@ -571,6 +572,7 @@ fn fix_code_blocks(html: &str) -> String {
 }
 
 fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
+    let boring_line_regex = Regex::new(r"^(\s*)#(#|.)(.*)$").unwrap();
     let regex = Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap();
     regex
         .replace_all(html, |caps: &Captures| {
@@ -584,21 +586,45 @@ fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
                 || classes.contains("mdbook-runnable")
             {
                 // wrap the contents in an external pre block
-                if playpen_config.editable && classes.contains("editable")
-                    || text.contains("fn main")
-                    || text.contains("quick_main!")
-                {
-                    format!("<pre class=\"playpen\">{}</pre>", text)
-                } else {
-                    // we need to inject our own main
-                    let (attrs, code) = partition_source(code);
+                format!("<pre class=\"playpen\"><code class=\"{}\">{}</code></pre>",
+                    classes,
+                    {
+                        let content: Cow<str> = if playpen_config.editable && classes.contains("editable")
+                            || text.contains("fn main")
+                            || text.contains("quick_main!")
+                        {
+                            code.into()
+                        } else {
+                            // we need to inject our own main
+                            let (attrs, code) = partition_source(code);
 
-                    format!(
-                        "<pre class=\"playpen\"><code class=\"{}\">\n# \
-                         #![allow(unused_variables)]\n{}#fn main() {{\n{}#}}</code></pre>",
-                        classes, attrs, code
-                    )
-                }
+                            format!("\n# #![allow(unused_variables)]\n{}#fn main() {{\n{}#}}",
+                                attrs, code
+                            ).into()
+                        };
+                        let mut prev_line_hidden = false;
+                        let mut result = String::with_capacity(content.len());
+                        for line in content.lines() {
+                            if let Some(caps) = boring_line_regex.captures(line) {
+                                if !prev_line_hidden && &caps[2] != "#" {
+                                    result += "<span class=\"boring\">";
+                                    prev_line_hidden = true;
+                                }
+                                result += &caps[1];
+                                if &caps[2] != " " { result += &caps[2]; }
+                                result += &caps[3];
+                            } else {
+                                if prev_line_hidden {
+                                    result += "</span>";
+                                    prev_line_hidden = false;
+                                }
+                                result += line;
+                            }
+                            result += "\n";
+                        }
+                        result
+                    }
+                )
             } else {
                 // not language-rust, so no-op
                 text.to_owned()
@@ -671,6 +697,24 @@ mod tests {
         for (src, should_be) in inputs {
             let got = build_header_links(&src);
             assert_eq!(got, should_be);
+        }
+    }
+
+    #[test]
+    fn add_playpen() {
+        let inputs = [
+          ("<code class=\"language-rust\">x()</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust\">\n<span class=\"boring\">#![allow(unused_variables)]\nfn main() {\n</span>x()\n<span class=\"boring\">}\n</code></pre>"),
+          ("<code class=\"language-rust\">fn main() {}</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust\">fn main() {}\n</code></pre>"),
+          ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";\n</code></pre>"),
+          ("<code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";\n</code></pre>"),
+        ];
+        for (src, should_be) in &inputs {
+            let got = add_playpen_pre(src, &Playpen { editable: true, ..Playpen::default() });
+            assert_eq!(&*got, *should_be);
         }
     }
 }
