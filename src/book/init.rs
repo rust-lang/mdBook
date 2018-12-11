@@ -134,6 +134,9 @@ impl BookBuilder {
         let mut general_css = File::create(cssdir.join("general.css"))?;
         general_css.write_all(theme::GENERAL_CSS)?;
 
+        let mut fonts_css = File::create(cssdir.join("fonts.css"))?;
+        fonts_css.write_all(theme::FONTS_CSS)?;
+
         let mut chrome_css = File::create(cssdir.join("chrome.css"))?;
         chrome_css.write_all(theme::CHROME_CSS)?;
 

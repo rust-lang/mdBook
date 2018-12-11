@@ -15,6 +15,7 @@ pub static INDEX: &'static [u8] = include_bytes!("index.hbs");
 pub static HEADER: &'static [u8] = include_bytes!("header.hbs");
 pub static CHROME_CSS: &'static [u8] = include_bytes!("css/chrome.css");
 pub static GENERAL_CSS: &'static [u8] = include_bytes!("css/general.css");
+pub static FONTS_CSS: &'static [u8] = include_bytes!("css/fonts.css");
 pub static PRINT_CSS: &'static [u8] = include_bytes!("css/print.css");
 pub static VARIABLES_CSS: &'static [u8] = include_bytes!("css/variables.css");
 pub static FAVICON: &'static [u8] = include_bytes!("favicon.png");
@@ -37,6 +38,36 @@ pub static FONT_AWESOME_WOFF2: &'static [u8] =
     include_bytes!("FontAwesome/fonts/fontawesome-webfont.woff2");
 pub static FONT_AWESOME_OTF: &'static [u8] = include_bytes!("FontAwesome/fonts/FontAwesome.otf");
 
+pub static FONT_OPEN_SANS_V15_LATIN_300_WOFF: &'static [u8] = include_bytes!("fonts/open-sans-v15-latin-300.woff");
+pub static FONT_OPEN_SANS_V15_LATIN_300_WOFF2: &'static [u8] = include_bytes!("fonts/open-sans-v15-latin-300.woff2");
+pub static FONT_OPEN_SANS_V15_LATIN_300_ITALIC_WOFF: &'static [u8] = include_bytes!("fonts/open-sans-v15-latin-300italic.woff");
+pub static FONT_OPEN_SANS_V15_LATIN_300_ITALIC_WOFF2: &'static [u8] = include_bytes!("fonts/open-sans-v15-latin-300italic.woff2");
+
+// Regular is 400
+pub static FONT_OPEN_SANS_V15_LATIN_REGULAR_WOFF: &'static [u8] = include_bytes!("fonts/open-sans-v15-latin-regular.woff");
+pub static FONT_OPEN_SANS_V15_LATIN_REGULAR_WOFF2: &'static [u8] = include_bytes!("fonts/open-sans-v15-latin-regular.woff2");
+pub static FONT_OPEN_SANS_V15_LATIN_ITALIC_WOFF: &'static [u8] = include_bytes!("fonts/open-sans-v15-latin-italic.woff");
+pub static FONT_OPEN_SANS_V15_LATIN_ITALIC_WOFF2: &'static [u8] = include_bytes!("fonts/open-sans-v15-latin-italic.woff2");
+
+pub static FONT_OPEN_SANS_V15_LATIN_600_WOFF: &'static [u8] = include_bytes!("fonts/open-sans-v15-latin-600.woff");
+pub static FONT_OPEN_SANS_V15_LATIN_600_WOFF2: &'static [u8] = include_bytes!("fonts/open-sans-v15-latin-600.woff2");
+pub static FONT_OPEN_SANS_V15_LATIN_600_ITALIC_WOFF: &'static [u8] = include_bytes!("fonts/open-sans-v15-latin-600italic.woff");
+pub static FONT_OPEN_SANS_V15_LATIN_600_ITALIC_WOFF2: &'static [u8] = include_bytes!("fonts/open-sans-v15-latin-600italic.woff2");
+
+pub static FONT_OPEN_SANS_V15_LATIN_700_WOFF: &'static [u8] = include_bytes!("fonts/open-sans-v15-latin-700.woff");
+pub static FONT_OPEN_SANS_V15_LATIN_700_WOFF2: &'static [u8] = include_bytes!("fonts/open-sans-v15-latin-700.woff2");
+pub static FONT_OPEN_SANS_V15_LATIN_700_ITALIC_WOFF: &'static [u8] = include_bytes!("fonts/open-sans-v15-latin-700italic.woff");
+pub static FONT_OPEN_SANS_V15_LATIN_700_ITALIC_WOFF2: &'static [u8] = include_bytes!("fonts/open-sans-v15-latin-700italic.woff2");
+
+pub static FONT_OPEN_SANS_V15_LATIN_800_WOFF: &'static [u8] = include_bytes!("fonts/open-sans-v15-latin-800.woff");
+pub static FONT_OPEN_SANS_V15_LATIN_800_WOFF2: &'static [u8] = include_bytes!("fonts/open-sans-v15-latin-800.woff2");
+pub static FONT_OPEN_SANS_V15_LATIN_800_ITALIC_WOFF: &'static [u8] = include_bytes!("fonts/open-sans-v15-latin-800italic.woff");
+pub static FONT_OPEN_SANS_V15_LATIN_800_ITALIC_WOFF2: &'static [u8] = include_bytes!("fonts/open-sans-v15-latin-800italic.woff2");
+
+pub static FONT_SOURCE_CODE_PRO_V8_LATIN_500_WOFF: &'static [u8] = include_bytes!("fonts/source-code-pro-v8-latin-500.woff");
+pub static FONT_SOURCE_CODE_PRO_V8_LATIN_500_WOFF2: &'static [u8] = include_bytes!("fonts/source-code-pro-v8-latin-500.woff2");
+
+
 /// The `Theme` struct should be used instead of the static variables because
 /// the `new()` method will look if the user has a theme directory in their
 /// source folder and use the users theme instead of the default.
@@ -48,6 +79,7 @@ pub struct Theme {
     pub index: Vec<u8>,
     pub header: Vec<u8>,
     pub chrome_css: Vec<u8>,
+    pub fonts_css: Vec<u8>,
     pub general_css: Vec<u8>,
     pub print_css: Vec<u8>,
     pub variables_css: Vec<u8>,
@@ -79,6 +111,7 @@ impl Theme {
                 (theme_dir.join("header.hbs"), &mut theme.header),
                 (theme_dir.join("book.js"), &mut theme.js),
                 (theme_dir.join("css/chrome.css"), &mut theme.chrome_css),
+                (theme_dir.join("css/fonts.css"), &mut theme.fonts_css),
                 (theme_dir.join("css/general.css"), &mut theme.general_css),
                 (theme_dir.join("css/print.css"), &mut theme.print_css),
                 (
@@ -120,6 +153,7 @@ impl Default for Theme {
             index: INDEX.to_owned(),
             header: HEADER.to_owned(),
             chrome_css: CHROME_CSS.to_owned(),
+            fonts_css: FONTS_CSS.to_owned(),
             general_css: GENERAL_CSS.to_owned(),
             print_css: PRINT_CSS.to_owned(),
             variables_css: VARIABLES_CSS.to_owned(),
@@ -175,6 +209,7 @@ mod tests {
             "header.hbs",
             "favicon.png",
             "css/chrome.css",
+            "css/fonts.css",
             "css/general.css",
             "css/print.css",
             "css/variables.css",
@@ -200,6 +235,7 @@ mod tests {
             index: Vec::new(),
             header: Vec::new(),
             chrome_css: Vec::new(),
+            fonts_css: Vec::new(),
             general_css: Vec::new(),
             print_css: Vec::new(),
             variables_css: Vec::new(),

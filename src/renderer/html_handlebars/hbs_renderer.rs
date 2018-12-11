@@ -115,6 +115,7 @@ impl HtmlHandlebars {
 
         write_file(destination, "book.js", &theme.js)?;
         write_file(destination, "css/general.css", &theme.general_css)?;
+        write_file(destination, "css/fonts.css", &theme.fonts_css)?;
         write_file(destination, "css/chrome.css", &theme.chrome_css)?;
         write_file(destination, "css/print.css", &theme.print_css)?;
         write_file(destination, "css/variables.css", &theme.variables_css)?;
@@ -158,6 +159,106 @@ impl HtmlHandlebars {
             destination,
             "FontAwesome/fonts/FontAwesome.ttf",
             theme::FONT_AWESOME_TTF,
+        )?;
+        write_file(
+            destination,
+            "fonts/open-sans-v15-latin-300.woff",
+            theme::FONT_OPEN_SANS_V15_LATIN_300_WOFF,
+        )?;
+        write_file(
+            destination,
+            "fonts/open-sans-v15-latin-300.woff2",
+            theme::FONT_OPEN_SANS_V15_LATIN_300_WOFF2,
+        )?;
+        write_file(
+            destination,
+            "fonts/open-sans-v15-latin-300italic.woff",
+            theme::FONT_OPEN_SANS_V15_LATIN_300_ITALIC_WOFF,
+        )?;
+        write_file(
+            destination,
+            "fonts/open-sans-v15-latin-300italic.woff2",
+            theme::FONT_OPEN_SANS_V15_LATIN_300_ITALIC_WOFF2,
+        )?;
+        write_file(
+            destination,
+            "fonts/open-sans-v15-latin-regular.woff",
+            theme::FONT_OPEN_SANS_V15_LATIN_REGULAR_WOFF,
+        )?;
+        write_file(
+            destination,
+            "fonts/open-sans-v15-latin-regular.woff2",
+            theme::FONT_OPEN_SANS_V15_LATIN_REGULAR_WOFF2,
+        )?;
+        write_file(
+            destination,
+            "fonts/open-sans-v15-latin-italic.woff",
+            theme::FONT_OPEN_SANS_V15_LATIN_ITALIC_WOFF,
+        )?;
+        write_file(
+            destination,
+            "fonts/open-sans-v15-latin-italic.woff2",
+            theme::FONT_OPEN_SANS_V15_LATIN_ITALIC_WOFF2,
+        )?;
+        write_file(
+            destination,
+            "fonts/open-sans-v15-latin-600.woff",
+            theme::FONT_OPEN_SANS_V15_LATIN_600_WOFF,
+        )?;
+        write_file(
+            destination,
+            "fonts/open-sans-v15-latin-600.woff2",
+            theme::FONT_OPEN_SANS_V15_LATIN_600_WOFF2,
+        )?;
+        write_file(
+            destination,
+            "fonts/open-sans-v15-latin-600italic.woff",
+            theme::FONT_OPEN_SANS_V15_LATIN_600_ITALIC_WOFF,
+        )?;
+        write_file(
+            destination,
+            "fonts/open-sans-v15-latin-600italic.woff2",
+            theme::FONT_OPEN_SANS_V15_LATIN_600_ITALIC_WOFF2,
+        )?;
+        write_file(
+            destination,
+            "fonts/open-sans-v15-latin-700.woff",
+            theme::FONT_OPEN_SANS_V15_LATIN_700_WOFF,
+        )?;
+        write_file(
+            destination,
+            "fonts/open-sans-v15-latin-700.woff2",
+            theme::FONT_OPEN_SANS_V15_LATIN_700_WOFF2,
+        )?;
+        write_file(
+            destination,
+            "fonts/open-sans-v15-latin-700italic.woff",
+            theme::FONT_OPEN_SANS_V15_LATIN_700_ITALIC_WOFF,
+        )?;
+        write_file(
+            destination,
+            "fonts/open-sans-v15-latin-700italic.woff2",
+            theme::FONT_OPEN_SANS_V15_LATIN_700_ITALIC_WOFF2,
+        )?;
+        write_file(
+            destination,
+            "fonts/open-sans-v15-latin-800.woff",
+            theme::FONT_OPEN_SANS_V15_LATIN_800_WOFF,
+        )?;
+        write_file(
+            destination,
+            "fonts/open-sans-v15-latin-800.woff2",
+            theme::FONT_OPEN_SANS_V15_LATIN_800_WOFF2,
+        )?;
+        write_file(
+            destination,
+            "fonts/open-sans-v15-latin-800italic.woff",
+            theme::FONT_OPEN_SANS_V15_LATIN_800_ITALIC_WOFF,
+        )?;
+        write_file(
+            destination,
+            "fonts/open-sans-v15-latin-800italic.woff2",
+            theme::FONT_OPEN_SANS_V15_LATIN_800_ITALIC_WOFF2,
         )?;
 
         let playpen_config = &html_config.playpen;
