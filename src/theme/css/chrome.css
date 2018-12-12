@@ -308,7 +308,13 @@ ul#searchresults span.teaser em {
     background-color: var(--sidebar-bg);
     color: var(--sidebar-fg);
 }
-.js .sidebar {
+.sidebar-resizing {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.js:not(.sidebar-resizing) .sidebar {
     transition: transform 0.3s; /* Animation: slide away */
 }
 .sidebar code {
