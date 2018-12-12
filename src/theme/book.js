@@ -435,6 +435,7 @@ function playpen_text(playpen) {
     var sidebar = document.getElementById("sidebar");
     var sidebarLinks = document.querySelectorAll('#sidebar a');
     var sidebarToggleButton = document.getElementById("sidebar-toggle");
+    var sidebarResizeHandle = document.getElementById("sidebar-resize-handle");
     var firstContact = null;
 
     function showSidebar() {
@@ -473,6 +474,21 @@ function playpen_text(playpen) {
             }
         }
     });
+
+    sidebarResizeHandle.addEventListener('mousedown', initResize, false);
+
+    function initResize(e) {
+        window.addEventListener('mousemove', resize, false);
+        window.addEventListener('mouseup', stopResize, false);
+    }
+    function resize(e) {
+        document.documentElement.style.setProperty('--sidebar-width', (e.clientX - sidebar.offsetLeft) + 'px');
+    }
+    //on mouseup remove windows functions mousemove & mouseup
+    function stopResize(e) {
+        window.removeEventListener('mousemove', resize, false);
+        window.removeEventListener('mouseup', stopResize, false);
+    }
 
     document.addEventListener('touchstart', function (e) {
         firstContact = {
