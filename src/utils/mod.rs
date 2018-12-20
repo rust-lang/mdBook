@@ -11,7 +11,7 @@ use pulldown_cmark::{
 
 use std::borrow::Cow;
 
-pub use self::string::{take_lines, RangeArgument};
+pub use self::string::{take_lines, take_lines_commented, RangeArgument};
 
 /// Replaces multiple consecutive whitespace characters with a single space character.
 pub fn collapse_whitespace<'a>(text: &'a str) -> Cow<'a, str> {
