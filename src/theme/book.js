@@ -103,18 +103,19 @@ function playpen_text(playpen) {
         let text = playpen_text(code_block);
 
         var params = {
-            version: "stable",
-            optimize: "0",
+            channel: "stable",
+            mode: "debug",
+            edition: "2018",
             code: text
         };
 
         if (text.indexOf("#![feature") !== -1) {
-            params.version = "nightly";
+            params.channel = "nightly";
         }
 
         result_block.innerText = "Running...";
 
-        fetch_with_timeout("https://play.rust-lang.org/evaluate.json", {
+        fetch_with_timeout("https://play.rust-lang.org/execute", {
             headers: {
                 'Content-Type': "application/json",
             },
@@ -123,7 +124,7 @@ function playpen_text(playpen) {
             body: JSON.stringify(params)
         })
         .then(response => response.json())
-        .then(response => result_block.innerText = response.result)
+        .then(response => result_block.innerText = response.stderr + response.stdout)
         .catch(error => result_block.innerText = "Playground Communication: " + error.message);
     }
 
