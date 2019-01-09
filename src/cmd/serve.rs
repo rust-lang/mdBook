@@ -76,7 +76,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let port = args.value_of("port").unwrap();
     let ws_port = args.value_of("websocket-port").unwrap();
     let hostname = args.value_of("hostname").unwrap();
-    let public_address = args.value_of("websocket-address").unwrap_or(hostname);
+    let public_address = args.value_of("websocket-hostname").unwrap_or(hostname);
     let open_browser = args.is_present("open");
 
     let address = format!("{}:{}", hostname, port);
