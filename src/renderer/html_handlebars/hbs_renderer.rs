@@ -33,7 +33,11 @@ impl HtmlHandlebars {
         if let BookItem::Chapter(ref ch) = *item {
             let content = ch.content.clone();
             let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
-            print_content.push_str(&content);
+
+            let string_path = ch.path.parent().unwrap().display().to_string();
+
+            let fixed_content = utils::render_markdown_with_base(&ch.content, ctx.html_config.curly_quotes, &string_path);
+            print_content.push_str(&fixed_content);
 
             // Update the context with data for this file
             let path = ch
