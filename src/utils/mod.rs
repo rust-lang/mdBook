@@ -69,7 +69,7 @@ pub fn id_from_content(content: &str) -> String {
 fn adjust_links<'a>(event: Event<'a>, with_base: &str) -> Event<'a> {
     lazy_static! {
         static ref HTTP_LINK: Regex = Regex::new("^https?://").unwrap();
-        static ref MD_LINK: Regex = Regex::new("(?P<link>.*).md(?P<anchor>#.*)?").unwrap();
+        static ref MD_LINK: Regex = Regex::new(r"(?P<link>.*)\.md(?P<anchor>#.*)?").unwrap();
     }
 
     match event {
@@ -229,6 +229,12 @@ mod tests {
             assert_eq!(
                 render_markdown("[example_anchor](example.md#anchor)", false),
                 "<p><a href=\"example.html#anchor\">example_anchor</a></p>\n"
+            );
+
+            // this anchor contains 'md' inside of it
+            assert_eq!(
+                render_markdown("[phantom data](foo.html#phantomdata)", false),
+                "<p><a href=\"foo.html#phantomdata\">phantom data</a></p>\n"
             );
         }
 
