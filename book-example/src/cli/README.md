@@ -18,7 +18,7 @@ mdBook can also be installed from source
 
 mdBook is written in **[Rust](https://www.rust-lang.org/)** and therefore needs
 to be compiled with **Cargo**. If you haven't already installed Rust, please go
-ahead and [install it](https://www.rust-lang.org/downloads.html) now.
+ahead and [install it](https://www.rust-lang.org/tools/install) now.
 
 ### Install Crates.io version
 
