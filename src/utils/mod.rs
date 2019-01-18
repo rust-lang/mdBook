@@ -5,9 +5,7 @@ mod string;
 use errors::Error;
 use regex::Regex;
 
-use pulldown_cmark::{
-    html, Event, Options, Parser, Tag, OPTION_ENABLE_FOOTNOTES, OPTION_ENABLE_TABLES,
-};
+use pulldown_cmark::{html, Event, Options, Parser, Tag};
 
 use std::borrow::Cow;
 
@@ -107,8 +105,8 @@ pub fn render_markdown_with_base(text: &str, curly_quotes: bool, base: &str) -> 
     let mut s = String::with_capacity(text.len() * 3 / 2);
 
     let mut opts = Options::empty();
-    opts.insert(OPTION_ENABLE_TABLES);
-    opts.insert(OPTION_ENABLE_FOOTNOTES);
+    opts.insert(Options::ENABLE_TABLES);
+    opts.insert(Options::ENABLE_FOOTNOTES);
 
     let p = Parser::new_ext(text, opts);
     let mut converter = EventQuoteConverter::new(curly_quotes);

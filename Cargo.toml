@@ -2,7 +2,7 @@
 name = "mdbook"
 version = "0.2.4-alpha.0"
 authors = [
-    "Mathieu David <mathieudavid@mathieudavid.org>", 
+    "Mathieu David <mathieudavid@mathieudavid.org>",
     "Michael-F-Bryan <michaelfbryan@gmail.com>",
     "Matt Ickstadt <mattico8@gmail.com>"
 ]
@@ -22,7 +22,7 @@ serde = "1.0"
 serde_derive = "1.0"
 error-chain = "0.12"
 serde_json = "1.0"
-pulldown-cmark = "0.1.2"
+pulldown-cmark = "0.2"
 lazy_static = "1.0"
 log = "0.4"
 env_logger = "0.5"
@@ -51,7 +51,7 @@ ammonia = { version = "1.1", optional = true }
 select = "0.4"
 pretty_assertions = "0.5"
 walkdir = "2.0"
-pulldown-cmark-to-cmark = "1.1.0"
+pulldown-cmark-to-cmark = "1.2"
 
 [features]
 default = ["output", "watch", "serve", "search"]

@@ -86,8 +86,8 @@ fn render_item(
     let anchor_base = utils::fs::normalize_path(filepath);
 
     let mut opts = Options::empty();
-    opts.insert(OPTION_ENABLE_TABLES);
-    opts.insert(OPTION_ENABLE_FOOTNOTES);
+    opts.insert(Options::ENABLE_TABLES);
+    opts.insert(Options::ENABLE_FOOTNOTES);
     let p = Parser::new_ext(&chapter.content, opts);
 
     let mut in_header = false;
