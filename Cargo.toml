@@ -6,7 +6,7 @@ authors = [
     "Michael-F-Bryan <michaelfbryan@gmail.com>",
     "Matt Ickstadt <mattico8@gmail.com>"
 ]
-description = "Create books from markdown files"
+description = "Creates a book from markdown files"
 documentation = "http://rust-lang-nursery.github.io/mdBook/index.html"
 repository = "https://github.com/rust-lang-nursery/mdBook"
 keywords = ["book", "gitbook", "rustbook", "markdown"]
