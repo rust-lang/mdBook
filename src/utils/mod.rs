@@ -68,31 +68,40 @@ pub fn id_from_content(content: &str) -> String {
 
 fn adjust_links<'a>(event: Event<'a>, with_base: &str) -> Event<'a> {
     lazy_static! {
-        static ref HTTP_LINK: Regex = Regex::new("^https?://").unwrap();
+        static ref SCHEME_LINK: Regex = Regex::new(r"^[a-z][a-z0-9+.-]*:").unwrap();
         static ref MD_LINK: Regex = Regex::new(r"(?P<link>.*)\.md(?P<anchor>#.*)?").unwrap();
+    }
+
+    fn fix<'a>(dest: Cow<'a, str>, base: &str) -> Cow<'a, str> {
+        // Don't modify links with schemes like `https`.
+        if !SCHEME_LINK.is_match(&dest) {
+            // This is a relative link, adjust it as necessary.
+            let mut fixed_link = String::new();
+            if !base.is_empty() {
+                fixed_link.push_str(base);
+                fixed_link.push_str("/");
+            }
+
+            if let Some(caps) = MD_LINK.captures(&dest) {
+                fixed_link.push_str(&caps["link"]);
+                fixed_link.push_str(".html");
+                if let Some(anchor) = caps.name("anchor") {
+                    fixed_link.push_str(anchor.as_str());
+                }
+            } else {
+                fixed_link.push_str(&dest);
+            };
+            return Cow::from(fixed_link);
+        }
+        dest
     }
 
     match event {
         Event::Start(Tag::Link(dest, title)) => {
-            if !HTTP_LINK.is_match(&dest) {
-                let dest = if !with_base.is_empty() {
-                    format!("{}/{}", with_base, dest)
-                } else {
-                    dest.clone().into_owned()
-                };
-
-                if let Some(caps) = MD_LINK.captures(&dest) {
-                    let mut html_link = [&caps["link"], ".html"].concat();
-
-                    if let Some(anchor) = caps.name("anchor") {
-                        html_link.push_str(anchor.as_str());
-                    }
-
-                    return Event::Start(Tag::Link(Cow::from(html_link), title));
-                }
-            }
-
-            Event::Start(Tag::Link(dest, title))
+            Event::Start(Tag::Link(fix(dest, with_base), title))
+        }
+        Event::Start(Tag::Image(dest, title)) => {
+            Event::Start(Tag::Image(fix(dest, with_base), title))
         }
         _ => event,
     }
