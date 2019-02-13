@@ -284,11 +284,6 @@ impl Renderer for HtmlHandlebars {
         trace!("render");
         let mut handlebars = Handlebars::new();
 
-        let theme_dir = match html_config.theme {
-            Some(ref theme) => theme.to_path_buf(),
-            None => ctx.root.join("theme"),
-        };
-
         if html_config.theme.is_none()
             && maybe_wrong_theme_dir(&src_dir.join("theme")).unwrap_or(false)
         {
@@ -298,6 +293,11 @@ impl Renderer for HtmlHandlebars {
             );
             warn!("Please move your theme files to `./theme` for them to continue being used");
         }
+
+        let theme_dir = match html_config.theme {
+            Some(ref theme) => theme.to_path_buf(),
+            None => ctx.root.join("theme"),
+        };
 
         let theme = theme::Theme::new(theme_dir);
 
