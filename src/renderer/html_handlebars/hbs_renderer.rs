@@ -201,18 +201,6 @@ impl HtmlHandlebars {
         );
     }
 
-    fn register_hbs_helpers(&self, handlebars: &mut Handlebars, html_config: &HtmlConfig) {
-        handlebars.register_helper(
-            "toc",
-            Box::new(helpers::toc::RenderToc {
-                no_section_label: html_config.no_section_label,
-            }),
-        );
-        handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
-        handlebars.register_helper("next", Box::new(helpers::navigation::next));
-        handlebars.register_helper("theme_option", Box::new(helpers::theme::theme_option));
-    }
-
     /// Copy across any additional CSS and JavaScript files which the book
     /// has been configured to use.
     fn copy_additional_css_and_js(
@@ -299,16 +287,12 @@ impl Renderer for HtmlHandlebars {
 
         let theme = theme::Theme::new(theme_dir);
 
-        let mut handlebars = Handlebars::new();
-
-        debug!("Register the index handlebars template");
-        handlebars.register_template_string("index", String::from_utf8(theme.index.clone())?)?;
-
-        debug!("Register the header handlebars template");
-        handlebars.register_partial("header", String::from_utf8(theme.header.clone())?)?;
-
-        debug!("Register handlebars helpers");
-        self.register_hbs_helpers(&mut handlebars, &html_config);
+        let handlebars_config = HandlebarsConfig {
+            index_template: String::from_utf8(theme.index.clone())?,
+            headers_template: String::from_utf8(theme.header.clone())?,
+            no_section_label: html_config.no_section_label,
+        };
+        let handlebars = create_handlebars(handlebars_config)?;
 
         let mut data = make_data(&ctx.root, &book, &ctx.config, &html_config)?;
 
@@ -366,6 +350,36 @@ impl Renderer for HtmlHandlebars {
 
         Ok(())
     }
+}
+
+fn create_handlebars(cfg: HandlebarsConfig) -> Result<Handlebars> {
+    let mut handlebars = Handlebars::new();
+
+    debug!("Register the index handlebars template");
+    handlebars.register_template_string("index", cfg.index_template)?;
+
+    debug!("Register the header handlebars template");
+    handlebars.register_partial("header", cfg.headers_template)?;
+
+    debug!("Register handlebars helpers");
+    handlebars.register_helper(
+        "toc",
+        Box::new(helpers::toc::RenderToc {
+            no_section_label: cfg.no_section_label,
+        }),
+    );
+
+    handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
+    handlebars.register_helper("next", Box::new(helpers::navigation::next));
+    handlebars.register_helper("theme_option", Box::new(helpers::theme::theme_option));
+
+    Ok(handlebars)
+}
+
+struct HandlebarsConfig {
+    index_template: String,
+    headers_template: String,
+    no_section_label: bool,
 }
 
 fn make_data(
