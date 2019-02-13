@@ -23,6 +23,48 @@ impl HtmlHandlebars {
         HtmlHandlebars
     }
 
+    fn render_markdown(&self, md: &str, curly_quotes: bool) -> String {
+        utils::render_markdown(&md, curly_quotes)
+    }
+
+    fn render_page(&self, content: &str, ctx: &RenderPageContext) -> Result<String> {
+        let title = {
+            let book_title = ctx.data
+                .get("book_title")
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or("");
+
+            if let Some(chapter_name) = ctx.chapter_name {
+                chapter_name.to_owned() + " - " + book_title
+            } else {
+                book_title.to_string()
+            }
+        };
+
+        let mut data = ctx.data.clone();
+        if ctx.is_index {
+            data.insert("path".to_owned(), json!("index.html"));
+            data.insert("path_to_root".to_owned(), json!(""));
+        } else {
+            data.insert("path".to_owned(), json!(ctx.path));
+            data.insert(
+                "path_to_root".to_owned(),
+                json!(utils::fs::path_to_root(&ctx.path)),
+            );
+        }
+
+        data.insert("content".to_owned(), json!(content));
+        data.insert("chapter_title".to_owned(), json!(ctx.chapter_name));
+        data.insert("title".to_owned(), json!(title));
+
+        // Render the handlebars template with the data
+        debug!("Render template");
+        let rendered = ctx.handlebars.render("index", &data)?;
+        let rendered = self.post_process(rendered, &ctx.playpen);
+
+        Ok(rendered)
+    }
+
     fn render_item(
         &self,
         item: &BookItem,
@@ -31,9 +73,6 @@ impl HtmlHandlebars {
     ) -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
         if let BookItem::Chapter(ref ch) = *item {
-            let content = ch.content.clone();
-            let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
-
             let string_path = ch.path.parent().unwrap().display().to_string();
 
             let fixed_content = utils::render_markdown_with_base(&ch.content, ctx.html_config.curly_quotes, &string_path);
@@ -51,41 +90,25 @@ impl HtmlHandlebars {
                 bail!(ErrorKind::ReservedFilenameError(ch.path.clone()));
             };
 
-            // Non-lexical lifetimes needed :'(
-            let title: String;
-            {
-                let book_title = ctx
-                    .data
-                    .get("book_title")
-                    .and_then(serde_json::Value::as_str)
-                    .unwrap_or("");
-                title = ch.name.clone() + " - " + book_title;
-            }
-
-            ctx.data.insert("path".to_owned(), json!(path));
-            ctx.data.insert("content".to_owned(), json!(content));
-            ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
-            ctx.data.insert("title".to_owned(), json!(title));
-            ctx.data.insert(
-                "path_to_root".to_owned(),
-                json!(utils::fs::path_to_root(&ch.path)),
-            );
-
-            // Render the handlebars template with the data
             debug!("Render template");
-            let rendered = ctx.handlebars.render("index", &ctx.data)?;
-
-            let rendered = self.post_process(rendered, &ctx.html_config.playpen);
+            let rendered_md = self.render_markdown(&ch.content, ctx.html_config.curly_quotes);
+            let page_context = RenderPageContext {
+                data: &ctx.data,
+                path,
+                playpen: &ctx.html_config.playpen,
+                is_index: false,
+                handlebars: &ctx.handlebars,
+                chapter_name: Some(&ch.name),
+            };
+            let rendered = self.render_page(&rendered_md, &page_context)?;
 
             // Write to file
             debug!("Creating {}", filepath.display());
             utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
 
             if ctx.is_index {
-                ctx.data.insert("path".to_owned(), json!("index.html"));
-                ctx.data.insert("path_to_root".to_owned(), json!(""));
-                let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
-                let rendered_index = self.post_process(rendered_index, &ctx.html_config.playpen);
+                let page_context = RenderPageContext { is_index: true, ..page_context };
+                let rendered_index = self.render_page(&rendered_md, &page_context)?;
                 debug!("Creating index.html from {}", path);
                 utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
             }
@@ -239,6 +262,15 @@ impl HtmlHandlebars {
     }
 }
 
+struct RenderPageContext<'a, 'd, 'p, 'h, 'c> {
+    path: &'a str,
+    data: &'d serde_json::Map<String, serde_json::Value>,
+    playpen: &'p Playpen,
+    is_index: bool,
+    handlebars: &'h Handlebars,
+    chapter_name: Option<&'c str>,
+}
+
 // TODO(mattico): Remove some time after the 0.1.8 release
 fn maybe_wrong_theme_dir(dir: &Path) -> Result<bool> {
     fn entry_is_maybe_book_file(entry: fs::DirEntry) -> Result<bool> {
@@ -323,11 +355,16 @@ impl Renderer for HtmlHandlebars {
 
         // Render the handlebars template with the data
         debug!("Render template");
-        let rendered = handlebars.render("index", &data)?;
-
-        let rendered = self.post_process(rendered, &html_config.playpen);
-
-        utils::fs::write_file(&destination, "print.html", rendered.as_bytes())?;
+        let page_ctx = RenderPageContext {
+            data: &data,
+            path: "print.md",
+            playpen: &html_config.playpen,
+            is_index: false,
+            handlebars: &handlebars,
+            chapter_name: None,
+        };
+        let rendered_print = self.render_page(&print_content, &page_ctx)?;
+        utils::fs::write_file(&ctx.destination, "print.html", rendered_print.as_bytes())?;
         debug!("Creating print.html ✓");
 
         debug!("Copy static files");
