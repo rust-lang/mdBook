@@ -65,7 +65,7 @@ impl HtmlHandlebars {
         Ok(rendered)
     }
 
-    fn render_item(
+    fn process_item(
         &self,
         item: &BookItem,
         mut ctx: RenderItemContext,
@@ -343,7 +343,7 @@ impl Renderer for HtmlHandlebars {
                 is_index,
                 html_config: html_config.clone(),
             };
-            self.render_item(item, ctx, &mut print_content)?;
+            self.process_item(item, ctx, &mut print_content)?;
             is_index = false;
         }
 
