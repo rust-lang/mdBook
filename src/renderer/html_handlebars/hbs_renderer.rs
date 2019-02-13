@@ -282,8 +282,6 @@ impl Renderer for HtmlHandlebars {
         let book = &ctx.book;
 
         trace!("render");
-        let mut handlebars = Handlebars::new();
-
         if html_config.theme.is_none()
             && maybe_wrong_theme_dir(&src_dir.join("theme")).unwrap_or(false)
         {
@@ -300,6 +298,8 @@ impl Renderer for HtmlHandlebars {
         };
 
         let theme = theme::Theme::new(theme_dir);
+
+        let mut handlebars = Handlebars::new();
 
         debug!("Register the index handlebars template");
         handlebars.register_template_string("index", String::from_utf8(theme.index.clone())?)?;
