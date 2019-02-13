@@ -29,7 +29,8 @@ impl HtmlHandlebars {
 
     fn render_page(&self, content: &str, ctx: &RenderPageContext) -> Result<String> {
         let title = {
-            let book_title = ctx.data
+            let book_title = ctx
+                .data
                 .get("book_title")
                 .and_then(serde_json::Value::as_str)
                 .unwrap_or("");
@@ -68,14 +69,18 @@ impl HtmlHandlebars {
     fn process_item(
         &self,
         item: &BookItem,
-        mut ctx: RenderItemContext,
+        ctx: RenderItemContext,
         print_content: &mut String,
     ) -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
         if let BookItem::Chapter(ref ch) = *item {
             let string_path = ch.path.parent().unwrap().display().to_string();
 
-            let fixed_content = utils::render_markdown_with_base(&ch.content, ctx.html_config.curly_quotes, &string_path);
+            let fixed_content = utils::render_markdown_with_base(
+                &ch.content,
+                ctx.html_config.curly_quotes,
+                &string_path,
+            );
             print_content.push_str(&fixed_content);
 
             // Update the context with data for this file
@@ -107,7 +112,10 @@ impl HtmlHandlebars {
             utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
 
             if ctx.is_index {
-                let page_context = RenderPageContext { is_index: true, ..page_context };
+                let page_context = RenderPageContext {
+                    is_index: true,
+                    ..page_context
+                };
                 let rendered_index = self.render_page(&rendered_md, &page_context)?;
                 debug!("Creating index.html from {}", path);
                 utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
