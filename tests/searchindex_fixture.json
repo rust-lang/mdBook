@@ -46,7 +46,7 @@
           "title": 2
         },
         "5": {
-          "body": 0,
+          "body": 1,
           "breadcrumbs": 3,
           "title": 1
         },
@@ -109,7 +109,7 @@
           "title": "Nested Chapter"
         },
         "5": {
-          "body": "",
+          "body": "assert!(true);",
           "breadcrumbs": "First Chapter » Some Section",
           "id": "5",
           "title": "Some Section"
@@ -177,9 +177,12 @@
                               "df": 0,
                               "docs": {},
                               "u": {
-                                "df": 1,
+                                "df": 2,
                                 "docs": {
                                   "4": {
+                                    "tf": 1.0
+                                  },
+                                  "5": {
                                     "tf": 1.0
                                   }
                                 }
@@ -1336,9 +1339,12 @@
                               "df": 0,
                               "docs": {},
                               "u": {
-                                "df": 1,
+                                "df": 2,
                                 "docs": {
                                   "4": {
+                                    "tf": 1.0
+                                  },
+                                  "5": {
                                     "tf": 1.0
                                   }
                                 }

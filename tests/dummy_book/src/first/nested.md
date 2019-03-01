@@ -7,3 +7,7 @@ assert!($TEST_STATUS);
 ```
 
 ## Some Section
+
+```rust
+{{#include nested-test.rs}}
+```
