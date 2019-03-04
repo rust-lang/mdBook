@@ -95,6 +95,29 @@ impl MDBook {
         })
     }
 
+    /// Load a book from its root directory using a custom config and a custom summary.
+    pub fn load_with_config_and_summary<P: Into<PathBuf>>(
+        book_root: P,
+        config: Config,
+        summary: Summary
+    ) -> Result<MDBook> {
+        let root = book_root.into();
+
+        let src_dir = root.join(&config.book.src);
+        let book = book::load_book_from_disk(&summary, &src_dir)?;
+
+        let renderers = determine_renderers(&config);
+        let preprocessors = determine_preprocessors(&config)?;
+
+        Ok(MDBook {
+            root,
+            config,
+            book,
+            renderers,
+            preprocessors,
+        })
+    }
+
     /// Returns a flat depth-first iterator over the elements of the book,
     /// it returns an [BookItem enum](bookitem.html):
     /// `(section: String, bookitem: &BookItem)`
