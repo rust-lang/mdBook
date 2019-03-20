@@ -332,7 +332,7 @@ function playpen_text(playpen) {
             stylesheets.highlight.disabled = true;
 
             ace_theme = "ace/theme/tomorrow_night";
-        } else if (theme == 'classic') {
+        } else if (theme == 'book') {
             stylesheets.ayuHighlight.disabled = true;
             stylesheets.tomorrowNight.disabled = true;
             stylesheets.highlight.disabled = true;
