@@ -332,6 +332,12 @@ function playpen_text(playpen) {
             stylesheets.highlight.disabled = true;
 
             ace_theme = "ace/theme/tomorrow_night";
+        } else if (theme == 'classic') {
+            stylesheets.ayuHighlight.disabled = true;
+            stylesheets.tomorrowNight.disabled = true;
+            stylesheets.highlight.disabled = true;
+
+            ace_theme = "ace/theme/tomorrow_night";
         } else {
             stylesheets.ayuHighlight.disabled = true;
             stylesheets.tomorrowNight.disabled = true;

@@ -13,6 +13,7 @@
         <link rel="stylesheet" href="{{ path_to_root }}css/variables.css">
         <link rel="stylesheet" href="{{ path_to_root }}css/general.css">
         <link rel="stylesheet" href="{{ path_to_root }}css/chrome.css">
+        <link rel="stylesheet" href="{{ path_to_root }}css/book.css">
         <link rel="stylesheet" href="{{ path_to_root }}css/print.css" media="print">
 
         <!-- Fonts -->
@@ -24,7 +25,6 @@
         <link rel="stylesheet" href="{{ path_to_root }}highlight.css">
         <link rel="stylesheet" href="{{ path_to_root }}tomorrow-night.css">
         <link rel="stylesheet" href="{{ path_to_root }}ayu-highlight.css">
-
         <!-- Custom theme stylesheets -->
         {{#each additional_css}}
         <link rel="stylesheet" href="{{ ../path_to_root }}{{ this }}">
@@ -102,6 +102,7 @@
                                 <li role="none"><button role="menuitem" class="theme" id="coal">{{ theme_option "Coal" }}</button></li>
                                 <li role="none"><button role="menuitem" class="theme" id="navy">{{ theme_option "Navy" }}</button></li>
                                 <li role="none"><button role="menuitem" class="theme" id="ayu">{{ theme_option "Ayu" }}</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="book">{{ theme_option "Book" }}</button></li>
                             </ul>
                             {{#if search_enabled}}
                             <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
