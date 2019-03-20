@@ -1,33 +1,13 @@
-@font-face {
-  font-family: "Liberation Serif";
-  src: url("/fonts/LiberationSerif-Regular.ttf");
-  font-weight: normal;
-}
-@font-face {
-  font-family: "Liberation Serif";
-  src: url("/fonts/LiberationSerif-Bold.ttf");
-  font-weight: bold;
-}
-@font-face {
-  font-family: "Liberation Serif";
-  src: url("/fonts/LiberationSerif-Italic.ttf");
-  font-style: italic;
-}
-@font-face {
-  font-family: "Liberation Mono";
-  src: url("/fonts/LiberationMono-Regular.ttf");
-  font-weight: normal;
-}
-
 body {
-    font-family: "Liberation Serif", serif;
+    font-family: "Source Serif Pro", serif;
 }
 p {
     text-align: justify;
     line-height: 1.25em;
 }
 code {
-    font-family: "Liberation Mono", monospace;
+    font-family: "Source Code Pro", monospace;
+    padding: 0 0 1pt 0 !important;
 }
 pre {
     margin-left: 2em;
