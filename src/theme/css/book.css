@@ -7,7 +7,16 @@ p {
 }
 code {
     font-family: "Source Code Pro", monospace;
+    padding: 0 !important;
+}
+code:not(.block) {
     padding: 0 0 1pt 0 !important;
+}
+code:not(.block)::before {
+    content: '‘';
+}
+code:not(.block)::after {
+    content: '’';
 }
 pre {
     margin-left: 2em;
