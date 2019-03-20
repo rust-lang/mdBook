@@ -43,6 +43,14 @@ h4::before {
     display: inline-block;
     margin-left: -1em;
 }
+.left-buttons {
+    position: absolute;
+}
+.right-buttons {
+    position: absolute;
+    right: 0;
+}
+    
 #menu-bar-sticky-container {
     background-color: rgba(255, 255, 255, 0.8) !important;
 }
