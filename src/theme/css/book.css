@@ -56,7 +56,7 @@ h4::before {
 }
 
 @media print {
-    .bottons {
+    .menu-bar, .buttons {
         display: none;
     }
     body {
