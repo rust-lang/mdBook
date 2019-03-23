@@ -61,7 +61,7 @@ pub fn id_from_content(content: &str) -> String {
     }
 
     // Remove spaces and hashes indicating a header
-    let trimmed = content.trim().trim_left_matches('#').trim();
+    let trimmed = content.trim().trim_start_matches('#').trim();
 
     normalize_id(trimmed)
 }
