@@ -85,8 +85,8 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 .menu-title {
     display: inline-block;
     font-weight: 200;
-    font-size: 20px;
-    line-height: 50px;
+    font-size: 2rem;
+    line-height: 5rem;
     text-align: center;
     margin: 0;
     flex: 1;

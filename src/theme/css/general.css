@@ -2,6 +2,11 @@
 
 @import 'variables.css';
 
+:root {
+    /* Browser default font-size is 16px, this way 1 rem = 10px */
+    font-size: 62.5%;
+}
+
 html {
     font-family: "Open Sans", sans-serif;
     color: var(--fg);
@@ -11,7 +16,7 @@ html {
 
 body {
     margin: 0;
-    font-size: 1rem;
+    font-size: 1.6rem;
     overflow-x: hidden;
 }
 
