@@ -1,4 +1,4 @@
-use book::{Book, BookItem};
+use book::{Book, BookItem, Chapter};
 use config::{Config, HtmlConfig, Playpen};
 use errors::*;
 use renderer::html_handlebars::helpers;
@@ -668,5 +668,42 @@ mod tests {
             let got = build_header_links(&src);
             assert_eq!(got, should_be);
         }
+    }
+
+    #[test]
+    fn print_dot_md_is_reserved() {
+        let handlebars = HtmlHandlebars::new();
+        let item = BookItem::Chapter(Chapter::new(
+                        "Goodbye World",
+                        String::new(),
+                        "print.md",
+                        Vec::new(),
+                    ));
+        let ctx = RenderItemContext {
+                handlebars: &Handlebars::new(),
+                destination: PathBuf::new(),
+                data: serde_json::from_str("{}").unwrap(),
+                is_index: false,
+                html_config: HtmlConfig {
+                    curly_quotes: true,
+                    google_analytics: Some(String::from("123456")),
+                    additional_css: vec![PathBuf::from("./foo/bar/baz.css")],
+                    theme: Some(PathBuf::from("./themedir")),
+                    default_theme: Some(String::from("rust")),
+                    playpen: Playpen {
+                        editable: true,
+                        copy_js: true,
+                    },
+                    git_repository_url: Some(String::from("https://foo.com/")),
+                    git_repository_icon: Some(String::from("fa-code-fork")),
+                    ..Default::default()
+                }
+            };
+            
+        let mut content = String::new();
+        match handlebars.render_item(&item, ctx, &mut content) {
+            Ok(_) => assert!(false, "Expected a failure"),
+            Err(error)=> assert_eq!(error.to_string(), "print.md is reserved for internal use"),
+        };
     }
 }
