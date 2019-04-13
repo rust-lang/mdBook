@@ -31,6 +31,11 @@ impl HtmlHandlebars {
     ) -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
         if let BookItem::Chapter(ref ch) = *item {
+            // "print.html" is used for the print page.
+            if ch.path == Path::new("print.md") {
+                bail!(ErrorKind::ReservedFilenameError(ch.path.clone()));
+            };
+
             let content = ch.content.clone();
             let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
 
@@ -46,10 +51,6 @@ impl HtmlHandlebars {
                 .chain_err(|| "Could not convert path to str")?;
             let filepath = Path::new(&ch.path).with_extension("html");
 
-            // "print.html" is used for the print page.
-            if ch.path == Path::new("print.md") {
-                bail!(ErrorKind::ReservedFilenameError(ch.path.clone()));
-            };
 
             // Non-lexical lifetimes needed :'(
             let title: String;
@@ -673,32 +674,20 @@ mod tests {
     #[test]
     fn print_dot_md_is_reserved() {
         let handlebars = HtmlHandlebars::new();
-        let item = BookItem::Chapter(Chapter::new(
-                        "Goodbye World",
-                        String::new(),
-                        "print.md",
-                        Vec::new(),
-                    ));
+        let item = BookItem::Chapter(Chapter{
+            path: PathBuf::from("print.md"),
+            ..Default::default()
+        });
+
         let ctx = RenderItemContext {
-                handlebars: &Handlebars::new(),
-                destination: PathBuf::new(),
-                data: serde_json::from_str("{}").unwrap(),
-                is_index: false,
-                html_config: HtmlConfig {
-                    curly_quotes: true,
-                    google_analytics: Some(String::from("123456")),
-                    additional_css: vec![PathBuf::from("./foo/bar/baz.css")],
-                    theme: Some(PathBuf::from("./themedir")),
-                    default_theme: Some(String::from("rust")),
-                    playpen: Playpen {
-                        editable: true,
-                        copy_js: true,
-                    },
-                    git_repository_url: Some(String::from("https://foo.com/")),
-                    git_repository_icon: Some(String::from("fa-code-fork")),
-                    ..Default::default()
-                }
-            };
+            handlebars: &Handlebars::new(),
+            destination: PathBuf::new(),
+            data: serde_json::from_str("{}").unwrap(),
+            is_index: false,
+            html_config: HtmlConfig {
+                ..Default::default()
+            }
+        };
             
         let mut content = String::new();
         match handlebars.render_item(&item, ctx, &mut content) {
