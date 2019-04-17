@@ -423,8 +423,8 @@ mod search {
     fn read_book_index(root: &Path) -> serde_json::Value {
         let index = root.join("book/searchindex.js");
         let index = file_to_string(index).unwrap();
-        let index = index.trim_left_matches("window.search = ");
-        let index = index.trim_right_matches(";");
+        let index = index.trim_start_matches("window.search = ");
+        let index = index.trim_end_matches(";");
         serde_json::from_str(&index).unwrap()
     }
 
