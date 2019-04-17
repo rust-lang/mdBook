@@ -1,4 +1,4 @@
-use book::{Book, BookItem, Chapter};
+use book::{Book, BookItem};
 use config::{Config, HtmlConfig, Playpen};
 use errors::*;
 use renderer::html_handlebars::helpers;
@@ -36,6 +36,10 @@ impl HtmlHandlebars {
                 bail!(ErrorKind::ReservedFilenameError(ch.path.clone()));
             };
 
+            let path = ch.path
+                .to_str()
+                .chain_err(|| "Could not convert path to str")?;
+
             let content = ch.content.clone();
             let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
 
@@ -45,13 +49,6 @@ impl HtmlHandlebars {
             print_content.push_str(&fixed_content);
 
             // Update the context with data for this file
-            let path = ch
-                .path
-                .to_str()
-                .chain_err(|| "Could not convert path to str")?;
-            let filepath = Path::new(&ch.path).with_extension("html");
-
-
             // Non-lexical lifetimes needed :'(
             let title: String;
             {
@@ -79,6 +76,7 @@ impl HtmlHandlebars {
             let rendered = self.post_process(rendered, &ctx.html_config.playpen);
 
             // Write to file
+            let filepath = Path::new(&ch.path).with_extension("html");
             debug!("Creating {}", filepath.display());
             utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
 
@@ -635,6 +633,8 @@ struct RenderItemContext<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use book::Chapter;
+
 
     #[test]
     fn original_build_header_links() {
@@ -671,28 +671,65 @@ mod tests {
         }
     }
 
+    struct PathTestContext<'a> {
+        render_context: RenderItemContext<'a>,
+        item : BookItem,
+    }
+
+    impl<'a> PathTestContext<'a> {
+        pub fn new(path: String, dummy_handlebars: &'a Handlebars) -> PathTestContext<'a> {
+            
+            PathTestContext {
+                render_context: RenderItemContext {
+                        handlebars: dummy_handlebars,
+                        destination: PathBuf::new(),
+                        data: serde_json::from_str("{}").unwrap(),
+                        is_index: false,
+                        html_config: HtmlConfig {
+                            ..Default::default()
+                        }
+                },
+                item : BookItem::Chapter(
+                    Chapter {
+                        path: PathBuf::from(path),
+                        ..Default::default()
+                    }
+                ),
+            }
+        }
+    }
+
     #[test]
     fn print_dot_md_is_reserved() {
-        let handlebars = HtmlHandlebars::new();
-        let item = BookItem::Chapter(Chapter{
-            path: PathBuf::from("print.md"),
-            ..Default::default()
-        });
-
-        let ctx = RenderItemContext {
-            handlebars: &Handlebars::new(),
-            destination: PathBuf::new(),
-            data: serde_json::from_str("{}").unwrap(),
-            is_index: false,
-            html_config: HtmlConfig {
-                ..Default::default()
-            }
-        };
+        let dummy_handlebars = Handlebars::new();
+        let ctx = PathTestContext::new(String::from("print.md"), &dummy_handlebars);
+        let html_handlebars = HtmlHandlebars::new();
             
         let mut content = String::new();
-        match handlebars.render_item(&item, ctx, &mut content) {
-            Ok(_) => assert!(false, "Expected a failure"),
+        match html_handlebars.render_item(&ctx.item, ctx.render_context, &mut content) {
+            Ok(_) => assert!(false, "Expected a failure, because print.md is a reserved filename"),
             Err(error)=> assert_eq!(error.to_string(), "print.md is reserved for internal use"),
+        };
+    }
+
+    #[test]
+    #[cfg(not(target_os = "windows"))] //The failure we're after does not occur on windows :(, on Linux it does.
+    fn invalid_utf8_path_returns_error() {
+        let mut invalid_unicode = String::from("AB");
+        unsafe {
+            let bytes = invalid_unicode.as_bytes_mut();
+            bytes[0] = 0xC2;
+            bytes[1] = 0xC2;
+        }
+
+        let dummy_handlebars = Handlebars::new();
+        let ctx = PathTestContext::new(String::from(invalid_unicode), &dummy_handlebars);
+        let html_handlebars = HtmlHandlebars::new();
+            
+        let mut content = String::new();
+        match html_handlebars.render_item(&ctx.item, ctx.render_context, &mut content) {
+            Ok(_) => assert!(false, "Expected a failure in PathBuf::to_str (for BookItem::Chapter::path)"),
+            Err(error) => assert_eq!(error.to_string(), "Could not convert path to str"),
         };
     }
 }
