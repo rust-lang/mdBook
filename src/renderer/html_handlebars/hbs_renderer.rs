@@ -36,7 +36,8 @@ impl HtmlHandlebars {
                 bail!(ErrorKind::ReservedFilenameError(ch.path.clone()));
             };
 
-            let path = ch.path
+            let path = ch
+                .path
                 .to_str()
                 .chain_err(|| "Could not convert path to str")?;
 
@@ -45,7 +46,11 @@ impl HtmlHandlebars {
 
             let string_path = ch.path.parent().unwrap().display().to_string();
 
-            let fixed_content = utils::render_markdown_with_base(&ch.content, ctx.html_config.curly_quotes, &string_path);
+            let fixed_content = utils::render_markdown_with_base(
+                &ch.content,
+                ctx.html_config.curly_quotes,
+                &string_path,
+            );
             print_content.push_str(&fixed_content);
 
             // Update the context with data for this file
@@ -511,7 +516,8 @@ fn build_header_links(html: &str) -> String {
                 .expect("Regex should ensure we only ever get numbers here");
 
             wrap_header_with_link(level, &caps[2], &mut id_counter)
-        }).into_owned()
+        })
+        .into_owned()
 }
 
 /// Wraps a single header tag with a link, making sure each tag gets its own
@@ -562,7 +568,8 @@ fn fix_code_blocks(html: &str) -> String {
                 classes = classes,
                 after = after
             )
-        }).into_owned()
+        })
+        .into_owned()
 }
 
 fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
@@ -598,7 +605,8 @@ fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
                 // not language-rust, so no-op
                 text.to_owned()
             }
-        }).into_owned()
+        })
+        .into_owned()
 }
 
 fn partition_source(s: &str) -> (String, String) {
@@ -634,7 +642,6 @@ struct RenderItemContext<'a> {
 mod tests {
     use super::*;
     use book::Chapter;
-
 
     #[test]
     fn original_build_header_links() {
@@ -673,28 +680,25 @@ mod tests {
 
     struct PathTestContext<'a> {
         render_context: RenderItemContext<'a>,
-        item : BookItem,
+        item: BookItem,
     }
 
     impl<'a> PathTestContext<'a> {
         pub fn new(path: String, dummy_handlebars: &'a Handlebars) -> PathTestContext<'a> {
-            
             PathTestContext {
                 render_context: RenderItemContext {
-                        handlebars: dummy_handlebars,
-                        destination: PathBuf::new(),
-                        data: serde_json::from_str("{}").unwrap(),
-                        is_index: false,
-                        html_config: HtmlConfig {
-                            ..Default::default()
-                        }
-                },
-                item : BookItem::Chapter(
-                    Chapter {
-                        path: PathBuf::from(path),
+                    handlebars: dummy_handlebars,
+                    destination: PathBuf::new(),
+                    data: serde_json::from_str("{}").unwrap(),
+                    is_index: false,
+                    html_config: HtmlConfig {
                         ..Default::default()
-                    }
-                ),
+                    },
+                },
+                item: BookItem::Chapter(Chapter {
+                    path: PathBuf::from(path),
+                    ..Default::default()
+                }),
             }
         }
     }
@@ -704,11 +708,14 @@ mod tests {
         let dummy_handlebars = Handlebars::new();
         let ctx = PathTestContext::new(String::from("print.md"), &dummy_handlebars);
         let html_handlebars = HtmlHandlebars::new();
-            
+
         let mut content = String::new();
         match html_handlebars.render_item(&ctx.item, ctx.render_context, &mut content) {
-            Ok(_) => assert!(false, "Expected a failure, because print.md is a reserved filename"),
-            Err(error)=> assert_eq!(error.to_string(), "print.md is reserved for internal use"),
+            Ok(_) => assert!(
+                false,
+                "Expected a failure, because print.md is a reserved filename"
+            ),
+            Err(error) => assert_eq!(error.to_string(), "print.md is reserved for internal use"),
         };
     }
 
@@ -725,10 +732,13 @@ mod tests {
         let dummy_handlebars = Handlebars::new();
         let ctx = PathTestContext::new(String::from(invalid_unicode), &dummy_handlebars);
         let html_handlebars = HtmlHandlebars::new();
-            
+
         let mut content = String::new();
         match html_handlebars.render_item(&ctx.item, ctx.render_context, &mut content) {
-            Ok(_) => assert!(false, "Expected a failure in PathBuf::to_str (for BookItem::Chapter::path)"),
+            Ok(_) => assert!(
+                false,
+                "Expected a failure in PathBuf::to_str (for BookItem::Chapter::path)"
+            ),
             Err(error) => assert_eq!(error.to_string(), "Could not convert path to str"),
         };
     }
