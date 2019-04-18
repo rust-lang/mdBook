@@ -1,4 +1,4 @@
-use book::{Book, BookItem};
+use book::{Book, BookItem, Chapter};
 use config::{Config, HtmlConfig, Playpen};
 use errors::*;
 use renderer::html_handlebars::helpers;
@@ -41,34 +41,22 @@ impl HtmlHandlebars {
                 .to_str()
                 .chain_err(|| "Could not convert path to str")?;
 
+            self.render_print_content(
+                print_content,
+                &ch.content,
+                &ch.path,
+                ctx.html_config.curly_quotes,
+            );
+
             let content = ch.content.clone();
             let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
-
-            let string_path = ch.path.parent().unwrap().display().to_string();
-
-            let fixed_content = utils::render_markdown_with_base(
-                &ch.content,
-                ctx.html_config.curly_quotes,
-                &string_path,
-            );
-            print_content.push_str(&fixed_content);
-
-            // Update the context with data for this file
-            // Non-lexical lifetimes needed :'(
-            let title: String;
-            {
-                let book_title = ctx
-                    .data
-                    .get("book_title")
-                    .and_then(serde_json::Value::as_str)
-                    .unwrap_or("");
-                title = ch.name.clone() + " - " + book_title;
-            }
-
             ctx.data.insert("path".to_owned(), json!(path));
             ctx.data.insert("content".to_owned(), json!(content));
             ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
+
+            let title = self.get_title(&ctx.data, &ch.name);
             ctx.data.insert("title".to_owned(), json!(title));
+
             ctx.data.insert(
                 "path_to_root".to_owned(),
                 json!(utils::fs::path_to_root(&ch.path)),
@@ -96,6 +84,34 @@ impl HtmlHandlebars {
         }
 
         Ok(())
+    }
+
+    fn render_print_content(
+        &self,
+        print_content: &mut String,
+        content: &String,
+        path: &PathBuf,
+        curly_quotes: bool,
+    ) {
+        let string_path = path.parent().unwrap().display().to_string();
+
+        let fixed_content = utils::render_markdown_with_base(content, curly_quotes, &string_path);
+
+        print_content.push_str(&fixed_content);
+    }
+
+    fn get_title(
+        &self,
+        render_data: &serde_json::Map<String, serde_json::Value>,
+        chapter_name: &String,
+    ) -> String {
+        let book_title = render_data
+            .get("book_title")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("");
+
+        let title = chapter_name.clone() + " - " + book_title;
+        title
     }
 
     #[cfg_attr(feature = "cargo-clippy", allow(clippy::let_and_return))]
@@ -641,7 +657,6 @@ struct RenderItemContext<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use book::Chapter;
 
     #[test]
     fn original_build_header_links() {
@@ -741,5 +756,37 @@ mod tests {
             ),
             Err(error) => assert_eq!(error.to_string(), "Could not convert path to str"),
         };
+    }
+
+    #[test]
+    fn test_get_title() {
+        let json: serde_json::Map<String, serde_json::Value> =
+            serde_json::from_str("{\"book_title\": \"Electric\"}").unwrap();
+        let chapter_name = String::from("Froboz");
+
+        let html_handlebars = HtmlHandlebars::new();
+        let title = html_handlebars.get_title(&json, &chapter_name);
+        assert_eq!("Froboz - Electric", title);
+    }
+
+    #[test]
+    fn test_get_title_no_book_title() {
+        let json: serde_json::Map<String, serde_json::Value> = serde_json::from_str("{}").unwrap();
+        let chapter_name = String::from("Froboz");
+
+        let html_handlebars = HtmlHandlebars::new();
+        let title = html_handlebars.get_title(&json, &chapter_name);
+        assert_eq!("Froboz - ", title); // Mmm, I'd ditch the " - " here
+    }
+
+    #[test]
+    fn test_render_print_content() {
+        let mut print_content = String::from("");
+        let path = PathBuf::from("foobar.md");
+        let content = String::from("# Awesome");
+
+        let html_handlebars = HtmlHandlebars::new();
+        html_handlebars.render_print_content(&mut print_content, &content, &path, true);
+        assert_eq!("<h1>Awesome</h1>\n", print_content);
     }
 }
