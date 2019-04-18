@@ -11,14 +11,14 @@ use tempfile::{Builder as TempFileBuilder, TempDir};
 
 #[test]
 fn passing_alternate_backend() {
-    let (md, _temp) = dummy_book_with_backend("passing", "true");
+    let (md, _temp) = dummy_book_with_backend("passing", success_cmd());
 
     md.build().unwrap();
 }
 
 #[test]
 fn failing_alternate_backend() {
-    let (md, _temp) = dummy_book_with_backend("failing", "false");
+    let (md, _temp) = dummy_book_with_backend("failing", fail_cmd());
 
     md.build().unwrap_err();
 }
@@ -83,4 +83,20 @@ fn dummy_book_with_backend(name: &str, command: &str) -> (MDBook, TempDir) {
         .unwrap();
 
     (md, temp)
+}
+
+fn fail_cmd() -> &'static str {
+    if cfg!(windows) {
+        r#"cmd.exe /c "exit 1""#
+    } else {
+        "false"
+    }
+}
+
+fn success_cmd() -> &'static str {
+    if cfg!(windows) {
+        r#"cmd.exe /c "exit 0""#
+    } else {
+        "true"
+    }
 }

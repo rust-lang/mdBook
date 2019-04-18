@@ -280,7 +280,7 @@ impl<'a> SummaryParser<'a> {
             Err(self.parse_error("You can't have an empty link."))
         } else {
             Ok(Link {
-                name: name,
+                name,
                 location: PathBuf::from(href.to_string()),
                 number: None,
                 nested_items: Vec::new(),
@@ -312,7 +312,6 @@ impl<'a> SummaryParser<'a> {
             update_section_numbers(&mut bunch_of_items, 0, root_items);
             root_items += bunch_of_items.len() as u32;
             items.extend(bunch_of_items);
-
 
             match self.next_event() {
                 Some(Event::Start(Tag::Paragraph)) => {
@@ -732,7 +731,8 @@ mod tests {
     /// Ensure section numbers are correctly incremented after a horizontal separator.
     #[test]
     fn keep_numbering_after_separator() {
-        let src = "- [First](./first.md)\n---\n- [Second](./second.md)\n---\n- [Third](./third.md)\n";
+        let src =
+            "- [First](./first.md)\n---\n- [Second](./second.md)\n---\n- [Third](./third.md)\n";
         let should_be = vec![
             SummaryItem::Link(Link {
                 name: String::from("First"),

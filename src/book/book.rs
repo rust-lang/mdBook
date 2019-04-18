@@ -167,9 +167,9 @@ impl Chapter {
     ) -> Chapter {
         Chapter {
             name: name.to_string(),
-            content: content,
+            content,
             path: path.into(),
-            parent_names: parent_names,
+            parent_names,
             ..Default::default()
         }
     }
@@ -210,7 +210,7 @@ fn load_summary_item<P: AsRef<Path>>(
     match *item {
         SummaryItem::Separator => Ok(BookItem::Separator),
         SummaryItem::Link(ref link) => {
-            load_chapter(link, src_dir, parent_names).map(|c| BookItem::Chapter(c))
+            load_chapter(link, src_dir, parent_names).map(BookItem::Chapter)
         }
     }
 }

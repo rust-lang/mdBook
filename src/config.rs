@@ -301,8 +301,8 @@ impl<'de> Deserialize<'de> for Config {
             .unwrap_or_default();
 
         Ok(Config {
-            book: book,
-            build: build,
+            book,
+            build,
             rest: Value::Table(table),
         })
     }
@@ -444,7 +444,7 @@ pub struct HtmlConfig {
     pub search: Option<Search>,
     /// Git repository url. If `None`, the git button will not be shown.
     pub git_repository_url: Option<String>,
-    /// FontAwesome icon class to use for the Git repository link. 
+    /// FontAwesome icon class to use for the Git repository link.
     /// Defaults to `fa-github` if `None`.
     pub git_repository_icon: Option<String>,
 }

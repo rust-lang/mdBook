@@ -7,7 +7,7 @@ use super::{Preprocessor, PreprocessorContext};
 use book::{Book, BookItem};
 
 /// A preprocessor for converting file name `README.md` to `index.md` since
-/// `README.md` is the de facto index file in a markdown-based documentation.
+/// `README.md` is the de facto index file in markdown-based documentation.
 pub struct IndexPreprocessor;
 
 impl IndexPreprocessor {

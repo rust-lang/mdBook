@@ -20,8 +20,9 @@ use tempfile::Builder as TempFileBuilder;
 use toml::Value;
 
 use errors::*;
-use preprocess::{IndexPreprocessor, LinkPreprocessor, Preprocessor,
-    PreprocessorContext, CmdPreprocessor};
+use preprocess::{
+    CmdPreprocessor, IndexPreprocessor, LinkPreprocessor, Preprocessor, PreprocessorContext,
+};
 use renderer::{CmdRenderer, HtmlHandlebars, RenderContext, Renderer};
 use utils;
 
@@ -160,15 +161,16 @@ impl MDBook {
     /// Run the entire build process for a particular `Renderer`.
     fn execute_build_process(&self, renderer: &Renderer) -> Result<()> {
         let mut preprocessed_book = self.book.clone();
-        let preprocess_ctx = PreprocessorContext::new(self.root.clone(),
-                                     self.config.clone(),
-                                     renderer.name().to_string());
+        let preprocess_ctx = PreprocessorContext::new(
+            self.root.clone(),
+            self.config.clone(),
+            renderer.name().to_string(),
+        );
 
         for preprocessor in &self.preprocessors {
             if preprocessor_should_run(&**preprocessor, renderer, &self.config) {
                 debug!("Running the {} preprocessor.", preprocessor.name());
-                preprocessed_book =
-                    preprocessor.run(&preprocess_ctx, preprocessed_book)?;
+                preprocessed_book = preprocessor.run(&preprocess_ctx, preprocessed_book)?;
             }
         }
 
@@ -178,11 +180,7 @@ impl MDBook {
         Ok(())
     }
 
-    fn render(
-        &self,
-        preprocessed_book: &Book,
-        renderer: &Renderer,
-    ) -> Result<()> {
+    fn render(&self, preprocessed_book: &Book, renderer: &Renderer) -> Result<()> {
         let name = renderer.name();
         let build_dir = self.build_dir_for(name);
         if build_dir.exists() {
@@ -233,9 +231,8 @@ impl MDBook {
         let temp_dir = TempFileBuilder::new().prefix("mdbook-").tempdir()?;
 
         // FIXME: Is "test" the proper renderer name to use here?
-        let preprocess_context = PreprocessorContext::new(self.root.clone(),
-                                                          self.config.clone(),
-                                                          "test".to_string());
+        let preprocess_context =
+            PreprocessorContext::new(self.root.clone(), self.config.clone(), "test".to_string());
 
         let book = LinkPreprocessor::new().run(&preprocess_context, self.book.clone())?;
         // Index Preprocessor is disabled so that chapter paths continue to point to the
@@ -363,17 +360,11 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<Preprocessor>>> {
         preprocessors.extend(default_preprocessors());
     }
 
-    if let Some(preprocessor_table) =
-        config.get("preprocessor").and_then(|v| v.as_table())
-    {
+    if let Some(preprocessor_table) = config.get("preprocessor").and_then(|v| v.as_table()) {
         for key in preprocessor_table.keys() {
             match key.as_ref() {
-                "links" => {
-                    preprocessors.push(Box::new(LinkPreprocessor::new()))
-                }
-                "index" => {
-                    preprocessors.push(Box::new(IndexPreprocessor::new()))
-                }
+                "links" => preprocessors.push(Box::new(LinkPreprocessor::new())),
+                "index" => preprocessors.push(Box::new(IndexPreprocessor::new())),
                 name => preprocessors.push(interpret_custom_preprocessor(
                     name,
                     &preprocessor_table[name],
@@ -385,10 +376,7 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<Preprocessor>>> {
     Ok(preprocessors)
 }
 
-fn interpret_custom_preprocessor(
-    key: &str,
-    table: &Value,
-) -> Box<CmdPreprocessor> {
+fn interpret_custom_preprocessor(key: &str, table: &Value) -> Box<CmdPreprocessor> {
     let command = table
         .get("command")
         .and_then(|c| c.as_str())
@@ -406,8 +394,7 @@ fn interpret_custom_renderer(key: &str, table: &Value) -> Box<CmdRenderer> {
         .and_then(|c| c.as_str())
         .map(|s| s.to_string());
 
-    let command =
-        table_dot_command.unwrap_or_else(|| format!("mdbook-{}", key));
+    let command = table_dot_command.unwrap_or_else(|| format!("mdbook-{}", key));
 
     Box::new(CmdRenderer::new(key.to_string(), command.to_string()))
 }
@@ -428,14 +415,14 @@ fn preprocessor_should_run(preprocessor: &Preprocessor, renderer: &Renderer, cfg
     let renderer_name = renderer.name();
 
     if let Some(Value::Array(ref explicit_renderers)) = cfg.get(&key) {
-        return explicit_renderers.into_iter()
+        return explicit_renderers
+            .iter()
             .filter_map(|val| val.as_str())
             .any(|name| name == renderer_name);
     }
 
     preprocessor.supports_renderer(renderer_name)
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -539,10 +526,7 @@ mod tests {
 
         // make sure the `preprocessor.random` table exists
         let random = cfg.get_preprocessor("random").unwrap();
-        let random = interpret_custom_preprocessor(
-            "random",
-            &Value::Table(random.clone()),
-        );
+        let random = interpret_custom_preprocessor("random", &Value::Table(random.clone()));
 
         assert_eq!(random.cmd(), "python random.py");
     }
@@ -557,7 +541,8 @@ mod tests {
         let cfg = Config::from_str(cfg_str).unwrap();
 
         // double-check that we can access preprocessor.links.renderers[0]
-        let html = cfg.get_preprocessor("links")
+        let html = cfg
+            .get_preprocessor("links")
             .and_then(|links| links.get("renderers"))
             .and_then(|renderers| renderers.as_array())
             .and_then(|renderers| renderers.get(0))
