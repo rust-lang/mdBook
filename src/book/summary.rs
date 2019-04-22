@@ -259,7 +259,7 @@ impl<'a> SummaryParser<'a> {
                         bail!(self.parse_error("Suffix chapters cannot be followed by a list"));
                     }
                 }
-                Some(Event::Start(Tag::Link(href, _))) => {
+                Some(Event::Start(Tag::Link(_type, href, _title))) => {
                     let link = self.parse_link(href.to_string())?;
                     items.push(SummaryItem::Link(link));
                 }
@@ -397,7 +397,7 @@ impl<'a> SummaryParser<'a> {
         loop {
             match self.next_event() {
                 Some(Event::Start(Tag::Paragraph)) => continue,
-                Some(Event::Start(Tag::Link(href, _))) => {
+                Some(Event::Start(Tag::Link(_type, href, _title))) => {
                     let mut link = self.parse_link(href.to_string())?;
 
                     let mut number = parent.clone();
@@ -475,7 +475,7 @@ fn stringify_events(events: Vec<Event<'_>>) -> String {
     events
         .into_iter()
         .filter_map(|t| match t {
-            Event::Text(text) => Some(text.into_owned()),
+            Event::Text(text) => Some(text.into_string()),
             _ => None,
         })
         .collect()
@@ -629,7 +629,7 @@ mod tests {
         let _ = parser.stream.next(); // skip past start of paragraph
 
         let href = match parser.stream.next() {
-            Some(Event::Start(Tag::Link(href, _))) => href.to_string(),
+            Some(Event::Start(Tag::Link(_type, href, _title))) => href.to_string(),
             other => panic!("Unreachable, {:?}", other),
         };
 

@@ -82,8 +82,8 @@ fn render_item(
     let anchor_base = utils::fs::normalize_path(filepath);
 
     let mut opts = Options::empty();
-    opts.insert(OPTION_ENABLE_TABLES);
-    opts.insert(OPTION_ENABLE_FOOTNOTES);
+    opts.insert(Options::ENABLE_TABLES);
+    opts.insert(Options::ENABLE_FOOTNOTES);
     let p = Parser::new_ext(&chapter.content, opts);
 
     let mut in_header = false;
@@ -91,6 +91,7 @@ fn render_item(
     let mut section_id = None;
     let mut heading = String::new();
     let mut body = String::new();
+    let mut html_block = String::new();
     let mut breadcrumbs = chapter.parent_names.clone();
     let mut footnote_numbers = HashMap::new();
 
@@ -124,6 +125,13 @@ fn render_item(
                 let number = footnote_numbers.len() + 1;
                 footnote_numbers.entry(name).or_insert(number);
             }
+            Event::Html(html) => {
+                html_block.push_str(&html);
+            }
+            Event::End(Tag::HtmlBlock) => {
+                body.push_str(&clean_html(&html_block));
+                html_block.clear();
+            }
             Event::Start(_) | Event::End(_) | Event::SoftBreak | Event::HardBreak => {
                 // Insert spaces where HTML output would usually seperate text
                 // to ensure words don't get merged together
@@ -140,7 +148,7 @@ fn render_item(
                     body.push_str(&text);
                 }
             }
-            Event::Html(html) | Event::InlineHtml(html) => {
+            Event::InlineHtml(html) => {
                 body.push_str(&clean_html(&html));
             }
             Event::FootnoteReference(name) => {
@@ -148,6 +156,7 @@ fn render_item(
                 let number = footnote_numbers.entry(name).or_insert(len);
                 body.push_str(&format!(" [{}] ", number));
             }
+            Event::TaskListMarker(_checked) => {}
         }
     }
 

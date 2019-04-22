@@ -89,11 +89,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "bitflags"
-version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "bitflags"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
@@ -646,8 +641,8 @@ dependencies = [
  "notify 4.0.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "open 1.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "pretty_assertions 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "pulldown-cmark 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "pulldown-cmark-to-cmark 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pulldown-cmark 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pulldown-cmark-to-cmark 1.2.0 (git+https://github.com/euclio/pulldown-cmark-to-cmark.git?branch=cmark-upgrade)",
  "regex 1.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "select 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.91 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -936,19 +931,21 @@ dependencies = [
 
 [[package]]
 name = "pulldown-cmark"
-version = "0.1.2"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "bitflags 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "getopts 0.2.19 (registry+https://github.com/rust-lang/crates.io-index)",
+ "memchr 2.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "unicase 2.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "pulldown-cmark-to-cmark"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+version = "1.2.0"
+source = "git+https://github.com/euclio/pulldown-cmark-to-cmark.git?branch=cmark-upgrade#9a87b4e328766b8754b686a8344f7155aae37c8d"
 dependencies = [
- "pulldown-cmark 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pulldown-cmark 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1480,6 +1477,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "unicase"
+version = "2.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "version_check 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "unicode-bidi"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1659,7 +1664,6 @@ dependencies = [
 "checksum base64 0.9.3 (registry+https://github.com/rust-lang/crates.io-index)" = "489d6c0ed21b11d038c31b6ceccca973e65d73ba3bd8ecb9a2babf5546164643"
 "checksum bit-set 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d9bf6104718e80d7b26a68fdbacff3481cfc05df670821affc7e9cbc1884400c"
 "checksum bit-vec 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)" = "02b4ff8b16e6076c3e14220b39fbc1fabb6737522281a388998046859400895f"
-"checksum bitflags 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)" = "4efd02e230a02e18f92fc2735f44597385ed02ad8f831e7c1c1156ee5e1ab3a5"
 "checksum bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)" = "228047a76f468627ca71776ecdebd732a3423081fcf5125585bcd7c49886ce12"
 "checksum block-buffer 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)" = "c0940dc441f31689269e10ac70eb1002a3a1d3ad1390e030043662eb7fe4688b"
 "checksum block-padding 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "6d4dc3af3ee2e12f3e5d224e5e1e3d73668abbeb69e566d361f7d5563a4fdf09"
@@ -1755,8 +1759,8 @@ dependencies = [
 "checksum precomputed-hash 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "925383efa346730478fb4838dbe9137d2a47675ad789c546d150a6e1dd4ab31c"
 "checksum pretty_assertions 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)" = "3f81e1644e1b54f5a68959a29aa86cde704219254669da328ecfdf6a1f09d427"
 "checksum proc-macro2 0.4.30 (registry+https://github.com/rust-lang/crates.io-index)" = "cf3d2011ab5c909338f7887f4fc896d35932e29146c12c8d01da6b22a80ba759"
-"checksum pulldown-cmark 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "d6fdf85cda6cadfae5428a54661d431330b312bc767ddbc57adbedc24da66e32"
-"checksum pulldown-cmark-to-cmark 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "57efca5f52f63336ee3a49bceee1a1169f18ef01c75aa7e71949441b49bbe7e4"
+"checksum pulldown-cmark 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "d1b74cc784b038a9921fd1a48310cc2e238101aa8ae0b94201e2d85121dd68b5"
+"checksum pulldown-cmark-to-cmark 1.2.0 (git+https://github.com/euclio/pulldown-cmark-to-cmark.git?branch=cmark-upgrade)" = "<none>"
 "checksum quick-error 1.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "9274b940887ce9addde99c4eee6b5c44cc494b182b97e73dc8ffdcb3397fd3f0"
 "checksum quote 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)" = "7a6e920b65c65f10b2ae65c831a81a073a89edd28c7cce89475bff467ab4167a"
 "checksum quote 0.6.12 (registry+https://github.com/rust-lang/crates.io-index)" = "faf4799c5d274f3868a4aae320a0a182cbd2baee377b378f080e16a23e9d80db"
@@ -1821,6 +1825,7 @@ dependencies = [
 "checksum ucd-trie 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "71a9c5b1fe77426cf144cc30e49e955270f5086e31a6441dfa8b32efc09b9d77"
 "checksum ucd-util 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)" = "535c204ee4d8434478593480b8f86ab45ec9aae0e83c568ca81abf0fd0e88f86"
 "checksum unicase 1.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7f4765f83163b74f957c797ad9253caf97f103fb064d3999aea9568d09fc8a33"
+"checksum unicase 2.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "a84e5511b2a947f3ae965dcb29b13b7b1691b6e7332cf5dbc1744138d5acb7f6"
 "checksum unicode-bidi 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)" = "49f2bd0c6468a8230e1db229cff8029217cf623c767ea5d60bfbd42729ea54d5"
 "checksum unicode-normalization 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)" = "141339a08b982d942be2ca06ff8b076563cbe223d1befd5450716790d44e2426"
 "checksum unicode-segmentation 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1967f4cdfc355b37fd76d2a954fb2ed3871034eb4f26d60537d88795cfc332a9"
