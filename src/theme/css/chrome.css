@@ -345,15 +345,17 @@ ul#searchresults span.teaser em {
     color: var(--sidebar-non-existant);
 }
 .chapter li a {
-    color: var(--sidebar-fg);
     display: block;
     padding: 0;
     text-decoration: none;
+    color: var(--sidebar-fg);
 }
-.chapter li a:hover { text-decoration: none }
-.chapter li .active,
-a:hover {
-    /* Animate color change */
+
+.chapter li a:hover {
+    color: var(--sidebar-active);
+}
+
+.chapter li .active {
     color: var(--sidebar-active);
 }
 
