@@ -41,12 +41,11 @@ impl HtmlHandlebars {
                 .to_str()
                 .chain_err(|| "Could not convert path to str")?;
 
-            self.render_print_content(
-                print_content,
+            print_content.push_str(&self.render_print_content(
                 &ch.content,
                 &ch.path,
-                ctx.html_config.curly_quotes,
-            );
+                &ctx.html_config,
+            ));
 
             let content = ch.content.clone();
             let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
@@ -88,16 +87,16 @@ impl HtmlHandlebars {
 
     fn render_print_content(
         &self,
-        print_content: &mut String,
         content: &String,
         path: &PathBuf,
-        curly_quotes: bool,
-    ) {
+        config: &HtmlConfig,
+    ) -> String {
         let string_path = path.parent().unwrap().display().to_string();
 
-        let fixed_content = utils::render_markdown_with_base(content, curly_quotes, &string_path);
+        let fixed_content =
+            utils::render_markdown_with_base(content, config.curly_quotes, &string_path);
 
-        print_content.push_str(&fixed_content);
+        fixed_content
     }
 
     fn get_title(
@@ -781,12 +780,33 @@ mod tests {
 
     #[test]
     fn test_render_print_content() {
-        let mut print_content = String::from("");
         let path = PathBuf::from("foobar.md");
-        let content = String::from("# Awesome");
+        let content = String::from("# Awesome 'quotes'");
+        let html_config = HtmlConfig {
+            curly_quotes: false,
+            ..Default::default()
+        };
 
         let html_handlebars = HtmlHandlebars::new();
-        html_handlebars.render_print_content(&mut print_content, &content, &path, true);
-        assert_eq!("<h1>Awesome</h1>\n", print_content);
+        assert_eq!(
+            "<h1>Awesome 'quotes'</h1>\n",
+            html_handlebars.render_print_content(&content, &path, &html_config)
+        );
+    }
+
+    #[test]
+    fn test_render_print_content_with_curly_quotes() {
+        let path = PathBuf::from("foobar.md");
+        let content = String::from("# Some curly 'quotes'?");
+        let html_config = HtmlConfig {
+            curly_quotes: true,
+            ..Default::default()
+        };
+
+        let html_handlebars = HtmlHandlebars::new();
+        assert_eq!(
+            "<h1>Some curly ‘quotes’?</h1>\n",
+            html_handlebars.render_print_content(&content, &path, &html_config)
+        );
     }
 }
