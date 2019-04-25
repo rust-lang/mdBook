@@ -29,7 +29,7 @@ impl HtmlHandlebars {
         mut ctx: RenderItemContext,
         print_content: &mut String,
     ) -> Result<()> {
-        // FIXME: This should be made DRY-er and rely less on mutable state
+        // FIXME: This should rely less on mutable state
         if let BookItem::Chapter(ref ch) = *item {
             // "print.html" is used for the print page.
             if ch.path == Path::new("print.md") {
@@ -62,27 +62,32 @@ impl HtmlHandlebars {
             );
 
             // Render the handlebars template with the data
-            debug!("Render template");
-            let rendered = ctx.handlebars.render("index", &ctx.data)?;
-
-            let rendered = self.post_process(rendered, &ctx.html_config.playpen);
-
-            // Write to file
-            let filepath = Path::new(&ch.path).with_extension("html");
-            debug!("Creating {}", filepath.display());
-            utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
+            debug!("Render template for {}", ch.path.display());
+            self.render_content(&ctx, &Path::new(&ch.path).with_extension("html"))?;
 
             if ctx.is_index {
                 ctx.data.insert("path".to_owned(), json!("index.html"));
                 ctx.data.insert("path_to_root".to_owned(), json!(""));
-                let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
-                let rendered_index = self.post_process(rendered_index, &ctx.html_config.playpen);
+
                 debug!("Creating index.html from {}", path);
-                utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
+                self.render_content(&ctx, &Path::new("index.html"))?;
             }
         }
 
         Ok(())
+    }
+
+    fn render_content(
+        &self,
+        ctx: &RenderItemContext,
+        filepath: &Path
+    ) -> Result <()> {
+        let rendered = ctx.handlebars.render("index", &ctx.data)?;
+        let rendered = self.post_process(rendered, &ctx.html_config.playpen);
+
+        // Write to file
+        debug!("Creating {}", filepath.display());
+        utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())
     }
 
     fn render_print_content(
