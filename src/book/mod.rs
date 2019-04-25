@@ -167,6 +167,19 @@ impl MDBook {
             renderer.name().to_string(),
         );
 
+        let name = renderer.name();
+        let build_dir = self.build_dir_for(name);
+        if build_dir.exists() {
+            debug!(
+                "Cleaning build dir for the \"{}\" renderer ({})",
+                name,
+                build_dir.display()
+            );
+
+            utils::fs::remove_dir_content(&build_dir)
+                .chain_err(|| "Unable to clear output directory")?;
+        }
+
         for preprocessor in &self.preprocessors {
             if preprocessor_should_run(&**preprocessor, renderer, &self.config) {
                 debug!("Running the {} preprocessor.", preprocessor.name());
@@ -183,16 +196,6 @@ impl MDBook {
     fn render(&self, preprocessed_book: &Book, renderer: &Renderer) -> Result<()> {
         let name = renderer.name();
         let build_dir = self.build_dir_for(name);
-        if build_dir.exists() {
-            debug!(
-                "Cleaning build dir for the \"{}\" renderer ({})",
-                name,
-                build_dir.display()
-            );
-
-            utils::fs::remove_dir_content(&build_dir)
-                .chain_err(|| "Unable to clear output directory")?;
-        }
 
         let render_context = RenderContext::new(
             self.root.clone(),
