@@ -141,7 +141,7 @@ fn render_item(
                     body.push(' ');
                 }
             }
-            Event::Text(text) => {
+            Event::Text(text) | Event::Code(text) => {
                 if in_header {
                     heading.push_str(&text);
                 } else {

@@ -150,11 +150,11 @@ impl EventQuoteConverter {
         }
 
         match event {
-            Event::Start(Tag::CodeBlock(_)) | Event::Start(Tag::Code) => {
+            Event::Start(Tag::CodeBlock(_)) => {
                 self.convert_text = false;
                 event
             }
-            Event::End(Tag::CodeBlock(_)) | Event::End(Tag::Code) => {
+            Event::End(Tag::CodeBlock(_)) => {
                 self.convert_text = true;
                 event
             }

@@ -475,7 +475,7 @@ fn stringify_events(events: Vec<Event<'_>>) -> String {
     events
         .into_iter()
         .filter_map(|t| match t {
-            Event::Text(text) => Some(text.into_string()),
+            Event::Text(text) | Event::Code(text) => Some(text.into_string()),
             _ => None,
         })
         .collect()
