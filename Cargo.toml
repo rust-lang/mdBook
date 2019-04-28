@@ -17,7 +17,7 @@ exclude = ["book-example/*"]
 [dependencies]
 clap = "2.24"
 chrono = "0.4"
-handlebars = "1.0"
+handlebars = { version = "1.0", default-features = false, features = ["no_dir_source"] }
 serde = "1.0"
 serde_derive = "1.0"
 error-chain = "0.12"
