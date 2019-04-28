@@ -30,7 +30,7 @@ h4, h5 { margin-top: 2em; }
 
 .header + .header h3,
 .header + .header h4,
-.header + .header h5 { 
+.header + .header h5 {
     margin-top: 1em;
 }
 
@@ -51,7 +51,7 @@ a.header:target h4:before {
 .page-wrapper {
     box-sizing: border-box;
 }
-.js .page-wrapper {
+.js:not(.sidebar-resizing) .page-wrapper {
     transition: margin-left 0.3s ease, transform 0.3s ease; /* Animation: slide away */
 }
 
@@ -141,4 +141,3 @@ blockquote {
 .tooltipped .tooltiptext {
     visibility: visible;
 }
-  
