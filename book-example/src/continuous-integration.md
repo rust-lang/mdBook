@@ -58,7 +58,8 @@ That's it!
 ### Deploying to GitHub Pages manually
 
 If you're CI doesn't support a GitHub pages, or you're deploying somewhere else
-with GitHub pages like integration, *note: you may want to use different tmp dirs*:
+with integrations such as Github Pages: 
+ *note: you may want to use different tmp dirs*:
 
 ```console
 $> git worktree add /tmp/book gh-pages
