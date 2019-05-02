@@ -180,6 +180,9 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
     vertical-align: middle;
     padding: 0.1em 0.3em;
     border-radius: 3px;
+}
+
+:not(pre):not(a) > .hljs {
     color: var(--inline-code-color);
 }
 
