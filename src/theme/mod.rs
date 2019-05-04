@@ -15,6 +15,7 @@ pub static INDEX: &'static [u8] = include_bytes!("index.hbs");
 pub static HEADER: &'static [u8] = include_bytes!("header.hbs");
 pub static CHROME_CSS: &'static [u8] = include_bytes!("css/chrome.css");
 pub static GENERAL_CSS: &'static [u8] = include_bytes!("css/general.css");
+pub static BOOK_CSS: &'static [u8] = include_bytes!("css/book.css");
 pub static PRINT_CSS: &'static [u8] = include_bytes!("css/print.css");
 pub static VARIABLES_CSS: &'static [u8] = include_bytes!("css/variables.css");
 pub static FAVICON: &'static [u8] = include_bytes!("favicon.png");
@@ -49,6 +50,7 @@ pub struct Theme {
     pub header: Vec<u8>,
     pub chrome_css: Vec<u8>,
     pub general_css: Vec<u8>,
+    pub book_css: Vec<u8>,
     pub print_css: Vec<u8>,
     pub variables_css: Vec<u8>,
     pub favicon: Vec<u8>,
@@ -80,6 +82,7 @@ impl Theme {
                 (theme_dir.join("book.js"), &mut theme.js),
                 (theme_dir.join("css/chrome.css"), &mut theme.chrome_css),
                 (theme_dir.join("css/general.css"), &mut theme.general_css),
+                (theme_dir.join("css/book.css"), &mut theme.book_css),
                 (theme_dir.join("css/print.css"), &mut theme.print_css),
                 (
                     theme_dir.join("css/variables.css"),
@@ -121,6 +124,7 @@ impl Default for Theme {
             header: HEADER.to_owned(),
             chrome_css: CHROME_CSS.to_owned(),
             general_css: GENERAL_CSS.to_owned(),
+            book_css: BOOK_CSS.to_owned(),
             print_css: PRINT_CSS.to_owned(),
             variables_css: VARIABLES_CSS.to_owned(),
             favicon: FAVICON.to_owned(),
@@ -176,6 +180,7 @@ mod tests {
             "favicon.png",
             "css/chrome.css",
             "css/general.css",
+            "css/book.css",
             "css/print.css",
             "css/variables.css",
             "book.js",
@@ -208,6 +213,7 @@ mod tests {
             highlight_css: Vec::new(),
             tomorrow_night_css: Vec::new(),
             ayu_highlight_css: Vec::new(),
+            book_css: Vec::new(),
             highlight_js: Vec::new(),
             clipboard_js: Vec::new(),
         };
