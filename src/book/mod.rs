@@ -241,7 +241,7 @@ impl MDBook {
     }
 
     /// Register a [`Preprocessor`](../preprocess/trait.Preprocessor.html) to be used when rendering the book.
-    pub fn with_preprecessor<P: Preprocessor + 'static>(&mut self, preprocessor: P) -> &mut Self {
+    pub fn with_preprocessor<P: Preprocessor + 'static>(&mut self, preprocessor: P) -> &mut Self {
         self.preprocessors.push(Box::new(preprocessor));
         self
     }
