@@ -178,23 +178,23 @@ mod tests {
     #[test]
     fn test_next_previous() {
         let data = json!({
-         "name": "two",
-         "path": "two.path",
-         "chapters": [
-            {
-               "name": "one",
-               "path": "one.path"
-            },
-            {
-               "name": "two",
-               "path": "two.path",
-            },
-            {
-               "name": "three",
-               "path": "three.path"
-            }
-         ]
-      });
+           "name": "two",
+           "path": "two.path",
+           "chapters": [
+              {
+                 "name": "one",
+                 "path": "one.path"
+              },
+              {
+                 "name": "two",
+                 "path": "two.path",
+              },
+              {
+                 "name": "three",
+                 "path": "three.path"
+              }
+           ]
+        });
 
         let mut h = Handlebars::new();
         h.register_helper("previous", Box::new(previous));
@@ -209,23 +209,23 @@ mod tests {
     #[test]
     fn test_first() {
         let data = json!({
-         "name": "one",
-         "path": "one.path",
-         "chapters": [
-            {
-               "name": "one",
-               "path": "one.path"
-            },
-            {
-               "name": "two",
-               "path": "two.path",
-            },
-            {
-               "name": "three",
-               "path": "three.path"
-            }
-         ]
-      });
+           "name": "one",
+           "path": "one.path",
+           "chapters": [
+              {
+                 "name": "one",
+                 "path": "one.path"
+              },
+              {
+                 "name": "two",
+                 "path": "two.path",
+              },
+              {
+                 "name": "three",
+                 "path": "three.path"
+              }
+           ]
+        });
 
         let mut h = Handlebars::new();
         h.register_helper("previous", Box::new(previous));
@@ -239,23 +239,23 @@ mod tests {
     #[test]
     fn test_last() {
         let data = json!({
-         "name": "three",
-         "path": "three.path",
-         "chapters": [
-            {
-               "name": "one",
-               "path": "one.path"
-            },
-            {
-               "name": "two",
-               "path": "two.path",
-            },
-            {
-               "name": "three",
-               "path": "three.path"
-            }
-         ]
-      });
+           "name": "three",
+           "path": "three.path",
+           "chapters": [
+              {
+                 "name": "one",
+                 "path": "one.path"
+              },
+              {
+                 "name": "two",
+                 "path": "two.path",
+              },
+              {
+                 "name": "three",
+                 "path": "three.path"
+              }
+           ]
+        });
 
         let mut h = Handlebars::new();
         h.register_helper("previous", Box::new(previous));

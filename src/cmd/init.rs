@@ -15,7 +15,8 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
         .arg_from_usage(
             "[dir] 'Directory to create the book in{n}\
              (Defaults to the Current Directory when omitted)'",
-        ).arg_from_usage("--theme 'Copies the default theme into your source folder'")
+        )
+        .arg_from_usage("--theme 'Copies the default theme into your source folder'")
         .arg_from_usage("--force 'Skips confirmation prompts'")
 }
 

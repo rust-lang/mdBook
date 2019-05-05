@@ -129,7 +129,7 @@ pub use renderer::Renderer;
 pub mod errors {
     use std::path::PathBuf;
 
-    error_chain!{
+    error_chain! {
         foreign_links {
             Io(::std::io::Error) #[doc = "A wrapper around `std::io::Error`"];
             HandlebarsRender(::handlebars::RenderError) #[doc = "Handlebars rendering failed"];

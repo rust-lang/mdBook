@@ -7,8 +7,8 @@ use mdbook::utils;
 use mdbook::MDBook;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::channel;
-use std::time::Duration;
 use std::thread::sleep;
+use std::time::Duration;
 use {get_book_dir, open};
 
 // Create clap subcommand arguments

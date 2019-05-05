@@ -11,10 +11,12 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
             "-d, --dest-dir=[dest-dir] 'Output directory for the book{n}\
              Relative paths are interpreted relative to the book's root directory.{n}\
              If omitted, mdBook uses build.build-dir from book.toml or defaults to `./book`.'",
-        ).arg_from_usage(
+        )
+        .arg_from_usage(
             "[dir] 'Root directory for the book{n}\
              (Defaults to the Current Directory when omitted)'",
-        ).arg_from_usage("-o, --open 'Opens the compiled book in a web browser'")
+        )
+        .arg_from_usage("-o, --open 'Opens the compiled book in a web browser'")
 }
 
 // Build command implementation
