@@ -51,7 +51,8 @@ ammonia = { version = "1.1", optional = true }
 select = "0.4"
 pretty_assertions = "0.5"
 walkdir = "2.0"
-pulldown-cmark-to-cmark = "1.1.0"
+# FIXME(issue #898)
+pulldown-cmark-to-cmark = "=1.1.0"
 
 [features]
 default = ["output", "watch", "serve", "search"]
