@@ -13,7 +13,8 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
              Relative paths are interpreted relative to the book's root directory.{n}\
              Running this command deletes this directory.{n}\
              If omitted, mdBook uses build.build-dir from book.toml or defaults to `./book`.'",
-        ).arg_from_usage(
+        )
+        .arg_from_usage(
             "[dir] 'Root directory for the book{n}\
              (Defaults to the Current Directory when omitted)'",
         )

@@ -99,7 +99,7 @@ impl MDBook {
     pub fn load_with_config_and_summary<P: Into<PathBuf>>(
         book_root: P,
         config: Config,
-        summary: Summary
+        summary: Summary,
     ) -> Result<MDBook> {
         let root = book_root.into();
 

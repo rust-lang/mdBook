@@ -30,8 +30,12 @@ const TOC_TOP_LEVEL: &[&'static str] = &[
     "Dummy Book",
     "Introduction",
 ];
-const TOC_SECOND_LEVEL: &[&'static str] =
-    &["1.1. Nested Chapter", "1.2. Includes", "2.1. Nested Chapter", "1.3. Recursive"];
+const TOC_SECOND_LEVEL: &[&'static str] = &[
+    "1.1. Nested Chapter",
+    "1.2. Includes",
+    "2.1. Nested Chapter",
+    "1.3. Recursive",
+];
 
 /// Make sure you can load the dummy book and build it without panicking.
 #[test]
