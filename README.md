@@ -57,7 +57,7 @@ There are multiple ways to install mdBook.
    another CI server, we recommend that you specify a semver version range for
    mdBook when you install it through your script!
 
-   This will constrain the server to install the latests **non-breaking**
+   This will constrain the server to install the latest **non-breaking**
    version of mdBook and will prevent your books from failing to build because
    we released a new version. For example:
 

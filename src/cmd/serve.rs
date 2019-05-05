@@ -76,7 +76,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let port = args.value_of("port").unwrap();
     let ws_port = args.value_of("websocket-port").unwrap();
     let hostname = args.value_of("hostname").unwrap();
-    let public_address = args.value_of("websocket-address").unwrap_or(hostname);
+    let public_address = args.value_of("websocket-hostname").unwrap_or(hostname);
     let open_browser = args.is_present("open");
 
     let address = format!("{}:{}", hostname, port);
@@ -115,8 +115,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     }
 
     #[cfg(feature = "watch")]
-    watch::trigger_on_change(&book, move |path, book_dir| {
-        info!("File changed: {:?}", path);
+    watch::trigger_on_change(&book, move |paths, book_dir| {
+        info!("Files changed: {:?}", paths);
         info!("Building book...");
 
         // FIXME: This area is really ugly because we need to re-set livereload :(

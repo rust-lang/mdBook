@@ -33,7 +33,11 @@ impl HtmlHandlebars {
         if let BookItem::Chapter(ref ch) = *item {
             let content = ch.content.clone();
             let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
-            print_content.push_str(&content);
+
+            let string_path = ch.path.parent().unwrap().display().to_string();
+
+            let fixed_content = utils::render_markdown_with_base(&ch.content, ctx.html_config.curly_quotes, &string_path);
+            print_content.push_str(&fixed_content);
 
             // Update the context with data for this file
             let path = ch
@@ -115,6 +119,7 @@ impl HtmlHandlebars {
 
         write_file(destination, "book.js", &theme.js)?;
         write_file(destination, "css/general.css", &theme.general_css)?;
+        write_file(destination, "css/book.css", &theme.book_css)?;
         write_file(destination, "css/chrome.css", &theme.chrome_css)?;
         write_file(destination, "css/print.css", &theme.print_css)?;
         write_file(destination, "css/variables.css", &theme.variables_css)?;
@@ -421,13 +426,7 @@ fn make_data(
         for script in &html.additional_js {
             match script.strip_prefix(root) {
                 Ok(p) => js.push(p.to_str().expect("Could not convert to str")),
-                Err(_) => js.push(
-                    script
-                        .file_name()
-                        .expect("File has a file name")
-                        .to_str()
-                        .expect("Could not convert to str"),
-                ),
+                Err(_) => js.push(script.to_str().expect("Could not convert to str")),
             }
         }
         data.insert("additional_js".to_owned(), json!(js));
@@ -554,7 +553,7 @@ fn fix_code_blocks(html: &str) -> String {
             let after = &caps[3];
 
             format!(
-                r#"<code{before}class="{classes}"{after}>"#,
+                r#"<code{before}class="block  {classes}"{after}>"#,
                 before = before,
                 classes = classes,
                 after = after

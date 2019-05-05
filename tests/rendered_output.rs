@@ -31,7 +31,7 @@ const TOC_TOP_LEVEL: &[&'static str] = &[
     "Introduction",
 ];
 const TOC_SECOND_LEVEL: &[&'static str] =
-    &["1.1. Nested Chapter", "1.2. Includes", "1.3. Recursive"];
+    &["1.1. Nested Chapter", "1.2. Includes", "2.1. Nested Chapter", "1.3. Recursive"];
 
 /// Make sure you can load the dummy book and build it without panicking.
 #[test]
@@ -106,6 +106,20 @@ fn check_correct_cross_links_in_nested_dir() {
     assert_contains_strings(
         first.join("nested.html"),
         &[r##"href="#some-section" id="some-section""##],
+    );
+}
+
+#[test]
+fn check_correct_relative_links_in_print_page() {
+    let temp = DummyBook::new().build().unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
+    md.build().unwrap();
+
+    let first = temp.path().join("book");
+
+    assert_contains_strings(
+        first.join("print.html"),
+        &[r##"<a href="second/../first/nested.html">the first section</a>,"##],
     );
 }
 
@@ -409,8 +423,8 @@ mod search {
     fn read_book_index(root: &Path) -> serde_json::Value {
         let index = root.join("book/searchindex.js");
         let index = file_to_string(index).unwrap();
-        let index = index.trim_left_matches("window.search = ");
-        let index = index.trim_right_matches(";");
+        let index = index.trim_start_matches("window.search = ");
+        let index = index.trim_end_matches(";");
         serde_json::from_str(&index).unwrap()
     }
 
@@ -443,7 +457,7 @@ mod search {
         assert_eq!(docs[&some_section]["body"], "");
         assert_eq!(
             docs[&summary]["body"],
-            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Second Chapter Conclusion"
+            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Second Chapter Nested Chapter Conclusion"
         );
         assert_eq!(docs[&summary]["breadcrumbs"], "First Chapter » Summary");
         assert_eq!(docs[&conclusion]["body"], "I put &lt;HTML&gt; in here!");

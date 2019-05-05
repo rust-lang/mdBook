@@ -95,6 +95,29 @@ impl MDBook {
         })
     }
 
+    /// Load a book from its root directory using a custom config and a custom summary.
+    pub fn load_with_config_and_summary<P: Into<PathBuf>>(
+        book_root: P,
+        config: Config,
+        summary: Summary
+    ) -> Result<MDBook> {
+        let root = book_root.into();
+
+        let src_dir = root.join(&config.book.src);
+        let book = book::load_book_from_disk(&summary, &src_dir)?;
+
+        let renderers = determine_renderers(&config);
+        let preprocessors = determine_preprocessors(&config)?;
+
+        Ok(MDBook {
+            root,
+            config,
+            book,
+            renderers,
+            preprocessors,
+        })
+    }
+
     /// Returns a flat depth-first iterator over the elements of the book,
     /// it returns an [BookItem enum](bookitem.html):
     /// `(section: String, bookitem: &BookItem)`
@@ -167,6 +190,19 @@ impl MDBook {
             renderer.name().to_string(),
         );
 
+        let name = renderer.name();
+        let build_dir = self.build_dir_for(name);
+        if build_dir.exists() {
+            debug!(
+                "Cleaning build dir for the \"{}\" renderer ({})",
+                name,
+                build_dir.display()
+            );
+
+            utils::fs::remove_dir_content(&build_dir)
+                .chain_err(|| "Unable to clear output directory")?;
+        }
+
         for preprocessor in &self.preprocessors {
             if preprocessor_should_run(&**preprocessor, renderer, &self.config) {
                 debug!("Running the {} preprocessor.", preprocessor.name());
@@ -183,16 +219,6 @@ impl MDBook {
     fn render(&self, preprocessed_book: &Book, renderer: &Renderer) -> Result<()> {
         let name = renderer.name();
         let build_dir = self.build_dir_for(name);
-        if build_dir.exists() {
-            debug!(
-                "Cleaning build dir for the \"{}\" renderer ({})",
-                name,
-                build_dir.display()
-            );
-
-            utils::fs::remove_dir_content(&build_dir)
-                .chain_err(|| "Unable to clear output directory")?;
-        }
 
         let render_context = RenderContext::new(
             self.root.clone(),
@@ -215,7 +241,7 @@ impl MDBook {
     }
 
     /// Register a [`Preprocessor`](../preprocess/trait.Preprocessor.html) to be used when rendering the book.
-    pub fn with_preprecessor<P: Preprocessor + 'static>(&mut self, preprocessor: P) -> &mut Self {
+    pub fn with_preprocessor<P: Preprocessor + 'static>(&mut self, preprocessor: P) -> &mut Self {
         self.preprocessors.push(Box::new(preprocessor));
         self
     }

@@ -62,7 +62,7 @@ The quick guide is
 
 1. Install it
     ```
-    rustup component add rustfmt-preview
+    rustup component add rustfmt
     ```
 1. You can now run `rustfmt` on a single file simply by...
     ```
@@ -87,14 +87,11 @@ The best documentation can be found over at [rust-clippy](https://github.com/rus
 
 1. To install
     ```
-    rustup update
-    rustup install nightly
-    rustup component add clippy-preview --toolchain=nightly
+    rustup component add clippy
     ```
 2. Running clippy
-    As you may notice from the previous step, Clippy is on the nightly branch, so running it is like
     ```
-    cargo +nightly clippy
+    cargo clippy
     ```
 
 Clippy has an ever growing list of checks, that are managed in [lint files](https://rust-lang-nursery.github.io/rust-clippy/master/index.html).

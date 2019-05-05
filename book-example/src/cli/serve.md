@@ -37,7 +37,7 @@ configured.
 
 #### --open
 
-When you use the `--open` (`-o`) flag, mdbook will open the book in your your
+When you use the `--open` (`-o`) flag, mdbook will open the book in your
 default web browser after starting the server.
 
 #### --dest-dir

@@ -20,19 +20,19 @@ use std::path::{Path, PathBuf};
 
 mod cmd;
 
-const NAME: &str = "mdBook";
 const VERSION: &str = concat!("v", crate_version!());
 
 fn main() {
     init_logger();
 
     // Create a list of valid arguments and sub-commands
-    let app = App::new(NAME)
-        .about("Creates a book from markdown files")
+    let app = App::new(crate_name!())
+        .about(crate_description!())
         .author("Mathieu David <mathieudavid@mathieudavid.org>")
         .version(VERSION)
         .setting(AppSettings::GlobalVersion)
         .setting(AppSettings::ArgRequiredElseHelp)
+        .setting(AppSettings::ColoredHelp)
         .after_help(
             "For more information about a specific command, try `mdbook <command> --help`\n\
              The source code for mdBook is available at: https://github.com/rust-lang-nursery/mdBook",

@@ -1,12 +1,12 @@
 [package]
 name = "mdbook"
-version = "0.2.3-alpha.0"
+version = "0.2.4-alpha.0"
 authors = [
-    "Mathieu David <mathieudavid@mathieudavid.org>", 
+    "Mathieu David <mathieudavid@mathieudavid.org>",
     "Michael-F-Bryan <michaelfbryan@gmail.com>",
     "Matt Ickstadt <mattico8@gmail.com>"
 ]
-description = "Create books from markdown files"
+description = "Creates a book from markdown files"
 documentation = "http://rust-lang-nursery.github.io/mdBook/index.html"
 repository = "https://github.com/rust-lang-nursery/mdBook"
 keywords = ["book", "gitbook", "rustbook", "markdown"]
@@ -17,7 +17,7 @@ exclude = ["book-example/*"]
 [dependencies]
 clap = "2.24"
 chrono = "0.4"
-handlebars = "1.0"
+handlebars = { version = "1.0", default-features = false, features = ["no_dir_source"] }
 serde = "1.0"
 serde_derive = "1.0"
 error-chain = "0.12"

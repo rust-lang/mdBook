@@ -61,20 +61,26 @@ pub fn id_from_content(content: &str) -> String {
     }
 
     // Remove spaces and hashes indicating a header
-    let trimmed = content.trim().trim_left_matches('#').trim();
+    let trimmed = content.trim().trim_start_matches('#').trim();
 
     normalize_id(trimmed)
 }
 
-fn adjust_links(event: Event) -> Event {
+fn adjust_links<'a>(event: Event<'a>, with_base: &str) -> Event<'a> {
     lazy_static! {
         static ref HTTP_LINK: Regex = Regex::new("^https?://").unwrap();
-        static ref MD_LINK: Regex = Regex::new("(?P<link>.*).md(?P<anchor>#.*)?").unwrap();
+        static ref MD_LINK: Regex = Regex::new(r"(?P<link>.*)\.md(?P<anchor>#.*)?").unwrap();
     }
 
     match event {
         Event::Start(Tag::Link(dest, title)) => {
             if !HTTP_LINK.is_match(&dest) {
+                let dest = if !with_base.is_empty() {
+                    format!("{}/{}", with_base, dest)
+                } else {
+                    dest.clone().into_owned()
+                };
+
                 if let Some(caps) = MD_LINK.captures(&dest) {
                     let mut html_link = [&caps["link"], ".html"].concat();
 
@@ -94,6 +100,10 @@ fn adjust_links(event: Event) -> Event {
 
 /// Wrapper around the pulldown-cmark parser for rendering markdown to HTML.
 pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
+    render_markdown_with_base(text, curly_quotes, "")
+}
+
+pub fn render_markdown_with_base(text: &str, curly_quotes: bool, base: &str) -> String {
     let mut s = String::with_capacity(text.len() * 3 / 2);
 
     let mut opts = Options::empty();
@@ -104,7 +114,7 @@ pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
     let mut converter = EventQuoteConverter::new(curly_quotes);
     let events = p
         .map(clean_codeblock_headers)
-        .map(adjust_links)
+        .map(|event| adjust_links(event, base))
         .map(|event| converter.convert(event));
 
     html::push_html(&mut s, events);
@@ -219,6 +229,12 @@ mod tests {
             assert_eq!(
                 render_markdown("[example_anchor](example.md#anchor)", false),
                 "<p><a href=\"example.html#anchor\">example_anchor</a></p>\n"
+            );
+
+            // this anchor contains 'md' inside of it
+            assert_eq!(
+                render_markdown("[phantom data](foo.html#phantomdata)", false),
+                "<p><a href=\"foo.html#phantomdata\">phantom data</a></p>\n"
             );
         }
 

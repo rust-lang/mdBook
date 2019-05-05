@@ -1,0 +1,65 @@
+body {
+    font-family: "Source Serif Pro", serif;
+}
+p {
+    text-align: justify;
+    line-height: 1.25em;
+}
+code {
+    font-family: "Source Code Pro", monospace;
+    padding: 0 !important;
+}
+code:not(.block) {
+    padding: 0 0 1pt 0 !important;
+}
+code:not(.block)::before {
+    content: '‘';
+}
+code:not(.block)::after {
+    content: '’';
+}
+pre {
+    margin-left: 2em;
+}
+pre pre {
+    margin-left: 0;
+}
+pre.playpen > div.buttons {
+    float: right;
+    height: 0;
+}
+em {
+    font-style: italic;
+}
+h3::before {
+    content: "¶";
+    width: 1em;
+    display: inline-block;
+    margin-left: -1em;
+}
+h4::before {
+    content: "§";
+    width: 1em;
+    display: inline-block;
+    margin-left: -1em;
+}
+.left-buttons {
+    position: absolute;
+}
+.right-buttons {
+    position: absolute;
+    right: 0;
+}
+    
+#menu-bar-sticky-container {
+    background-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+@media print {
+    .menu-bar, .buttons {
+        display: none;
+    }
+    body {
+        font-size: 11pt;
+    }
+}
