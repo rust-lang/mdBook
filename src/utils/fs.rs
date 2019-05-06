@@ -231,9 +231,10 @@ mod tests {
             panic!("Could not create output/sub_dir_exists: {}", err);
         }
 
-        match copy_files_except_ext(&tmp.path(), &tmp.path().join("output"), true, &["md"]) {
-            Err(e) => panic!("Error while executing the function:\n{:?}", e),
-            Ok(_) => {}
+        if let Err(e) =
+            copy_files_except_ext(&tmp.path(), &tmp.path().join("output"), true, &["md"])
+        {
+            panic!("Error while executing the function:\n{:?}", e);
         }
 
         // Check if the correct files where created
