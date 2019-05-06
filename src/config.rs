@@ -566,7 +566,7 @@ impl<'de, T> Updateable<'de> for T where T: Serialize + Deserialize<'de> {}
 mod tests {
     use super::*;
 
-    const COMPLEX_CONFIG: &'static str = r#"
+    const COMPLEX_CONFIG: &str = r#"
         [book]
         title = "Some Book"
         authors = ["Michael-F-Bryan <michaelfbryan@gmail.com>"]

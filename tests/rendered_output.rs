@@ -22,15 +22,15 @@ use std::path::Path;
 use tempfile::Builder as TempFileBuilder;
 use walkdir::{DirEntry, WalkDir};
 
-const BOOK_ROOT: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/dummy_book");
-const TOC_TOP_LEVEL: &[&'static str] = &[
+const BOOK_ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/dummy_book");
+const TOC_TOP_LEVEL: &[&str] = &[
     "1. First Chapter",
     "2. Second Chapter",
     "Conclusion",
     "Dummy Book",
     "Introduction",
 ];
-const TOC_SECOND_LEVEL: &[&'static str] = &[
+const TOC_SECOND_LEVEL: &[&str] = &[
     "1.1. Nested Chapter",
     "1.2. Includes",
     "2.1. Nested Chapter",

@@ -301,7 +301,7 @@ mod tests {
     use std::io::Write;
     use tempfile::{Builder as TempFileBuilder, TempDir};
 
-    const DUMMY_SRC: &'static str = "
+    const DUMMY_SRC: &str = "
 # Dummy Chapter
 
 this is some dummy text.
