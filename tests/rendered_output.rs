@@ -390,7 +390,7 @@ fn by_default_mdbook_use_index_preprocessor_to_convert_readme_to_index() {
         "First README",
     ];
     assert_contains_strings(&first_index, &expected_strings);
-    assert_doesnt_contain_strings(&first_index, &vec!["README.html"]);
+    assert_doesnt_contain_strings(&first_index, &["README.html"]);
 
     let second_index = temp.path().join("book").join("second").join("index.html");
     let unexpected_strings = vec!["Second README"];
