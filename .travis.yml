@@ -1,5 +1,16 @@
 language: rust
 
+cache:
+  directories:
+    - "$HOME/.cargo"
+    - "$HOME/.cache/sccache"
+before_cache:
+  - rm -rf "$HOME/.cargo/registry"
+
+env:
+  global:
+    - CRATE_NAME=mdbook
+
 matrix:
   include:
     - rust: stable
@@ -13,16 +24,22 @@ matrix:
       os: osx
       env: TARGET=x86_64-apple-darwin
 
-cache:
-  timeout: 360
-  cargo: true
-
-before_cache:
-  - chmod -R a+r $HOME/.cargo
-
-env:
-  global:
-    - CRATE_NAME=mdbook
+before_install:
+  - export SCCACHE_VER=0.2.8 RUSTC_WRAPPER=sccache
+  - case "$TRAVIS_OS_NAME" in
+      linux )
+        cd /tmp
+          && travis_retry curl -sSL "https://github.com/mozilla/sccache/releases/download/${SCCACHE_VER}/sccache-${SCCACHE_VER}-x86_64-unknown-linux-musl.tar.gz" | tar xzf -
+          && sudo mv "sccache-${SCCACHE_VER}-x86_64-unknown-linux-musl/sccache" /usr/local/bin/sccache;
+        ;;
+      osx )
+        cd "${TMPDIR}"
+          && travis_retry curl -sSL "https://github.com/mozilla/sccache/releases/download/${SCCACHE_VER}/sccache-${SCCACHE_VER}-x86_64-apple-darwin.tar.gz" | tar xzf -
+          && sudo mv "sccache-${SCCACHE_VER}-x86_64-apple-darwin/sccache" /usr/local/bin/sccache;
+        ;;
+      * ) unset RUSTC_WRAPPER;;
+    esac
+  - cd "$TRAVIS_BUILD_DIR"
 
 script:
   - cargo test --all
