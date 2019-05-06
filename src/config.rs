@@ -607,7 +607,6 @@ mod tests {
             description: Some(String::from("A completely useless book")),
             multilingual: true,
             src: PathBuf::from("source"),
-            ..Default::default()
         };
         let build_should_be = BuildConfig {
             build_dir: PathBuf::from("outputs"),
