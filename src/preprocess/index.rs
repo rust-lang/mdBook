@@ -8,6 +8,7 @@ use book::{Book, BookItem};
 
 /// A preprocessor for converting file name `README.md` to `index.md` since
 /// `README.md` is the de facto index file in markdown-based documentation.
+#[derive(Default)]
 pub struct IndexPreprocessor;
 
 impl IndexPreprocessor {
