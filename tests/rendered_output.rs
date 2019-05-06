@@ -428,7 +428,7 @@ mod search {
         let index = root.join("book/searchindex.js");
         let index = file_to_string(index).unwrap();
         let index = index.trim_start_matches("window.search = ");
-        let index = index.trim_end_matches(";");
+        let index = index.trim_end_matches(';');
         serde_json::from_str(&index).unwrap()
     }
 
