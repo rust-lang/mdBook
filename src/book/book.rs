@@ -82,7 +82,7 @@ impl Book {
     }
 
     /// Get a depth-first iterator over the items in the book.
-    pub fn iter(&self) -> BookItems {
+    pub fn iter(&self) -> BookItems<'_> {
         BookItems {
             items: self.sections.iter().collect(),
         }
@@ -286,7 +286,7 @@ impl<'a> Iterator for BookItems<'a> {
 }
 
 impl Display for Chapter {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         if let Some(ref section_number) = self.number {
             write!(f, "{} ", section_number)?;
         }

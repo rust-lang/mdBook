@@ -294,7 +294,7 @@ impl<'a> Iterator for LinkIter<'a> {
     }
 }
 
-fn find_links(contents: &str) -> LinkIter {
+fn find_links(contents: &str) -> LinkIter<'_> {
     // lazily compute following regex
     // r"\\\{\{#.*\}\}|\{\{#([a-zA-Z0-9]+)\s*([a-zA-Z0-9_.\-:/\\\s]+)\}\}")?;
     lazy_static! {

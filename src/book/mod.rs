@@ -37,10 +37,10 @@ pub struct MDBook {
     pub config: Config,
     /// A representation of the book's contents in memory.
     pub book: Book,
-    renderers: Vec<Box<Renderer>>,
+    renderers: Vec<Box<dyn Renderer>>,
 
     /// List of pre-processors to be run on the book
-    preprocessors: Vec<Box<Preprocessor>>,
+    preprocessors: Vec<Box<dyn Preprocessor>>,
 }
 
 impl MDBook {
@@ -146,7 +146,7 @@ impl MDBook {
     /// // etc.
     /// # }
     /// ```
-    pub fn iter(&self) -> BookItems {
+    pub fn iter(&self) -> BookItems<'_> {
         self.book.iter()
     }
 
@@ -183,7 +183,7 @@ impl MDBook {
     }
 
     /// Run the entire build process for a particular `Renderer`.
-    fn execute_build_process(&self, renderer: &Renderer) -> Result<()> {
+    fn execute_build_process(&self, renderer: &dyn Renderer) -> Result<()> {
         let mut preprocessed_book = self.book.clone();
         let preprocess_ctx = PreprocessorContext::new(
             self.root.clone(),
@@ -217,7 +217,7 @@ impl MDBook {
         Ok(())
     }
 
-    fn render(&self, preprocessed_book: &Book, renderer: &Renderer) -> Result<()> {
+    fn render(&self, preprocessed_book: &Book, renderer: &dyn Renderer) -> Result<()> {
         let name = renderer.name();
         let build_dir = self.build_dir_for(name);
 
@@ -344,8 +344,8 @@ impl MDBook {
 }
 
 /// Look at the `Config` and try to figure out what renderers to use.
-fn determine_renderers(config: &Config) -> Vec<Box<Renderer>> {
-    let mut renderers: Vec<Box<Renderer>> = Vec::new();
+fn determine_renderers(config: &Config) -> Vec<Box<dyn Renderer>> {
+    let mut renderers: Vec<Box<dyn Renderer>> = Vec::new();
 
     if let Some(output_table) = config.get("output").and_then(Value::as_table) {
         for (key, table) in output_table.iter() {
@@ -367,20 +367,20 @@ fn determine_renderers(config: &Config) -> Vec<Box<Renderer>> {
     renderers
 }
 
-fn default_preprocessors() -> Vec<Box<Preprocessor>> {
+fn default_preprocessors() -> Vec<Box<dyn Preprocessor>> {
     vec![
         Box::new(LinkPreprocessor::new()),
         Box::new(IndexPreprocessor::new()),
     ]
 }
 
-fn is_default_preprocessor(pre: &Preprocessor) -> bool {
+fn is_default_preprocessor(pre: &dyn Preprocessor) -> bool {
     let name = pre.name();
     name == LinkPreprocessor::NAME || name == IndexPreprocessor::NAME
 }
 
 /// Look at the `MDBook` and try to figure out what preprocessors to run.
-fn determine_preprocessors(config: &Config) -> Result<Vec<Box<Preprocessor>>> {
+fn determine_preprocessors(config: &Config) -> Result<Vec<Box<dyn Preprocessor>>> {
     let mut preprocessors = Vec::new();
 
     if config.build.use_default_preprocessors {
@@ -432,7 +432,11 @@ fn interpret_custom_renderer(key: &str, table: &Value) -> Box<CmdRenderer> {
 ///
 /// The `build.use-default-preprocessors` config option can be used to ensure
 /// default preprocessors always run if they support the renderer.
-fn preprocessor_should_run(preprocessor: &Preprocessor, renderer: &Renderer, cfg: &Config) -> bool {
+fn preprocessor_should_run(
+    preprocessor: &dyn Preprocessor,
+    renderer: &dyn Renderer,
+    cfg: &Config,
+) -> bool {
     // default preprocessors should be run by default (if supported)
     if cfg.build.use_default_preprocessors && is_default_preprocessor(preprocessor) {
         return preprocessor.supports_renderer(renderer.name());

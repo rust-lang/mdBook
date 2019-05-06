@@ -157,7 +157,7 @@ impl EventQuoteConverter {
     }
 }
 
-fn clean_codeblock_headers(event: Event) -> Event {
+fn clean_codeblock_headers(event: Event<'_>) -> Event<'_> {
     match event {
         Event::Start(Tag::CodeBlock(ref info)) => {
             let info: String = info.chars().filter(|ch| !ch.is_whitespace()).collect();

@@ -47,7 +47,7 @@ impl Target {
 
 fn find_chapter(
     ctx: &Context,
-    rc: &mut RenderContext,
+    rc: &mut RenderContext<'_>,
     target: Target,
 ) -> Result<Option<StringMap>, RenderError> {
     debug!("Get data from context");
@@ -86,11 +86,11 @@ fn find_chapter(
 }
 
 fn render(
-    _h: &Helper,
+    _h: &Helper<'_, '_>,
     r: &Handlebars,
     ctx: &Context,
-    rc: &mut RenderContext,
-    out: &mut Output,
+    rc: &mut RenderContext<'_>,
+    out: &mut dyn Output,
     chapter: &StringMap,
 ) -> Result<(), RenderError> {
     trace!("Creating BTreeMap to inject in context");
@@ -137,11 +137,11 @@ fn render(
 }
 
 pub fn previous(
-    _h: &Helper,
+    _h: &Helper<'_, '_>,
     r: &Handlebars,
     ctx: &Context,
-    rc: &mut RenderContext,
-    out: &mut Output,
+    rc: &mut RenderContext<'_>,
+    out: &mut dyn Output,
 ) -> Result<(), RenderError> {
     trace!("previous (handlebars helper)");
 
@@ -153,11 +153,11 @@ pub fn previous(
 }
 
 pub fn next(
-    _h: &Helper,
+    _h: &Helper<'_, '_>,
     r: &Handlebars,
     ctx: &Context,
-    rc: &mut RenderContext,
-    out: &mut Output,
+    rc: &mut RenderContext<'_>,
+    out: &mut dyn Output,
 ) -> Result<(), RenderError> {
     trace!("next (handlebars helper)");
 
