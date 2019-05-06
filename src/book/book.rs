@@ -333,7 +333,7 @@ And here is some \
 
         File::create(&second_path)
             .unwrap()
-            .write_all("Hello World!".as_bytes())
+            .write_all(b"Hello World!")
             .unwrap();
 
         let mut second = Link::new("Nested Chapter 1", &second_path);
