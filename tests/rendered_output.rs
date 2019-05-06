@@ -187,7 +187,7 @@ fn chapter_files_were_rendered_to_html() {
     let chapter_files = WalkDir::new(&src)
         .into_iter()
         .filter_entry(|entry| entry_ends_with(entry, ".md"))
-        .filter_map(|entry| entry.ok())
+        .filter_map(std::result::Result::ok)
         .map(|entry| entry.path().to_path_buf())
         .filter(|path| path.file_name().and_then(OsStr::to_str) != Some("SUMMARY.md"));
 

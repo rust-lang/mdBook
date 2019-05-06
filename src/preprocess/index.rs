@@ -71,7 +71,7 @@ fn is_readme_file<P: AsRef<Path>>(path: P) -> bool {
     RE.is_match(
         path.as_ref()
             .file_stem()
-            .and_then(|s| s.to_str())
+            .and_then(std::ffi::OsStr::to_str)
             .unwrap_or_default(),
     )
 }

@@ -16,6 +16,7 @@ pub use self::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
+use std::string::ToString;
 use tempfile::Builder as TempFileBuilder;
 use toml::Value;
 
@@ -346,7 +347,7 @@ impl MDBook {
 fn determine_renderers(config: &Config) -> Vec<Box<Renderer>> {
     let mut renderers: Vec<Box<Renderer>> = Vec::new();
 
-    if let Some(output_table) = config.get("output").and_then(|o| o.as_table()) {
+    if let Some(output_table) = config.get("output").and_then(Value::as_table) {
         for (key, table) in output_table.iter() {
             // the "html" backend has its own Renderer
             if key == "html" {
@@ -386,7 +387,7 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<Preprocessor>>> {
         preprocessors.extend(default_preprocessors());
     }
 
-    if let Some(preprocessor_table) = config.get("preprocessor").and_then(|v| v.as_table()) {
+    if let Some(preprocessor_table) = config.get("preprocessor").and_then(Value::as_table) {
         for key in preprocessor_table.keys() {
             match key.as_ref() {
                 "links" => preprocessors.push(Box::new(LinkPreprocessor::new())),
@@ -405,8 +406,8 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<Preprocessor>>> {
 fn interpret_custom_preprocessor(key: &str, table: &Value) -> Box<CmdPreprocessor> {
     let command = table
         .get("command")
-        .and_then(|c| c.as_str())
-        .map(|s| s.to_string())
+        .and_then(Value::as_str)
+        .map(ToString::to_string)
         .unwrap_or_else(|| format!("mdbook-{}", key));
 
     Box::new(CmdPreprocessor::new(key.to_string(), command.to_string()))
@@ -417,8 +418,8 @@ fn interpret_custom_renderer(key: &str, table: &Value) -> Box<CmdRenderer> {
     // prepended by "mdbook-"
     let table_dot_command = table
         .get("command")
-        .and_then(|c| c.as_str())
-        .map(|s| s.to_string());
+        .and_then(Value::as_str)
+        .map(ToString::to_string);
 
     let command = table_dot_command.unwrap_or_else(|| format!("mdbook-{}", key));
 
@@ -443,7 +444,7 @@ fn preprocessor_should_run(preprocessor: &Preprocessor, renderer: &Renderer, cfg
     if let Some(Value::Array(ref explicit_renderers)) = cfg.get(&key) {
         return explicit_renderers
             .iter()
-            .filter_map(|val| val.as_str())
+            .filter_map(Value::as_str)
             .any(|name| name == renderer_name);
     }
 
@@ -571,9 +572,9 @@ mod tests {
         let html = cfg
             .get_preprocessor("links")
             .and_then(|links| links.get("renderers"))
-            .and_then(|renderers| renderers.as_array())
+            .and_then(Value::as_array)
             .and_then(|renderers| renderers.get(0))
-            .and_then(|renderer| renderer.as_str())
+            .and_then(Value::as_str)
             .unwrap();
         assert_eq!(html, "html");
         let html_renderer = HtmlHandlebars::default();

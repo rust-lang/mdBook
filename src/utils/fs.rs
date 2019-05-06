@@ -1,4 +1,5 @@
 use errors::*;
+use std::convert::Into;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Component, Path, PathBuf};
@@ -28,7 +29,7 @@ pub fn normalize_path(path: &str) -> String {
 pub fn write_file<P: AsRef<Path>>(build_dir: &Path, filename: P, content: &[u8]) -> Result<()> {
     let path = build_dir.join(filename);
 
-    create_file(&path)?.write_all(content).map_err(|e| e.into())
+    create_file(&path)?.write_all(content).map_err(Into::into)
 }
 
 /// Takes a path and returns a path containing just enough `../` to point to
@@ -85,7 +86,7 @@ pub fn create_file(path: &Path) -> Result<File> {
         fs::create_dir_all(p)?;
     }
 
-    File::create(path).map_err(|e| e.into())
+    File::create(path).map_err(Into::into)
 }
 
 /// Removes all the content of a directory but not the directory itself
