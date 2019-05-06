@@ -35,7 +35,7 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
         utils::fs::write_file(
             destination,
             "searchindex.js",
-            format!("window.search = {};", index).as_bytes(),
+            format!("Object.assign(window.search, {});", index).as_bytes(),
         )?;
         utils::fs::write_file(destination, "searcher.js", searcher::JS)?;
         utils::fs::write_file(destination, "mark.min.js", searcher::MARK_JS)?;
