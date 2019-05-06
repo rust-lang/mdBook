@@ -14,7 +14,7 @@ use std::borrow::Cow;
 pub use self::string::{take_lines, RangeArgument};
 
 /// Replaces multiple consecutive whitespace characters with a single space character.
-pub fn collapse_whitespace<'a>(text: &'a str) -> Cow<'a, str> {
+pub fn collapse_whitespace(text: &str) -> Cow<'_, str> {
     lazy_static! {
         static ref RE: Regex = Regex::new(r"\s\s+").unwrap();
     }
