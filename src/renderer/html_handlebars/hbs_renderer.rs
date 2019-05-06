@@ -26,7 +26,7 @@ impl HtmlHandlebars {
     fn render_item(
         &self,
         item: &BookItem,
-        mut ctx: RenderItemContext,
+        mut ctx: RenderItemContext<'_>,
         print_content: &mut String,
     ) -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
@@ -505,7 +505,7 @@ fn build_header_links(html: &str) -> String {
     let mut id_counter = HashMap::new();
 
     regex
-        .replace_all(html, |caps: &Captures| {
+        .replace_all(html, |caps: &Captures<'_>| {
             let level = caps[1]
                 .parse()
                 .expect("Regex should ensure we only ever get numbers here");
@@ -552,7 +552,7 @@ fn wrap_header_with_link(
 fn fix_code_blocks(html: &str) -> String {
     let regex = Regex::new(r##"<code([^>]+)class="([^"]+)"([^>]*)>"##).unwrap();
     regex
-        .replace_all(html, |caps: &Captures| {
+        .replace_all(html, |caps: &Captures<'_>| {
             let before = &caps[1];
             let classes = &caps[2].replace(",", " ");
             let after = &caps[3];
@@ -570,7 +570,7 @@ fn fix_code_blocks(html: &str) -> String {
 fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
     let regex = Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap();
     regex
-        .replace_all(html, |caps: &Captures| {
+        .replace_all(html, |caps: &Captures<'_>| {
             let text = &caps[1];
             let classes = &caps[2];
             let code = &caps[3];

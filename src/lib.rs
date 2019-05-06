@@ -81,6 +81,7 @@
 //! [`Config`]: config/struct.Config.html
 
 #![deny(missing_docs)]
+#![deny(rust_2018_idioms)]
 
 #[macro_use]
 extern crate error_chain;
