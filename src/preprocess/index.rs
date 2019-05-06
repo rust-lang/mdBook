@@ -46,7 +46,10 @@ impl Preprocessor for IndexPreprocessor {
 
 fn warn_readme_name_conflict<P: AsRef<Path>>(readme_path: P, index_path: P) {
     let file_name = readme_path.as_ref().file_name().unwrap_or_default();
-    let parent_dir = index_path.as_ref().parent().unwrap_or(index_path.as_ref());
+    let parent_dir = index_path
+        .as_ref()
+        .parent()
+        .unwrap_or_else(|| index_path.as_ref());
     warn!(
         "It seems that there are both {:?} and index.md under \"{}\".",
         file_name,
