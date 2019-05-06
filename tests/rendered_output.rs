@@ -22,15 +22,15 @@ use std::path::Path;
 use tempfile::Builder as TempFileBuilder;
 use walkdir::{DirEntry, WalkDir};
 
-const BOOK_ROOT: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/dummy_book");
-const TOC_TOP_LEVEL: &[&'static str] = &[
+const BOOK_ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/dummy_book");
+const TOC_TOP_LEVEL: &[&str] = &[
     "1. First Chapter",
     "2. Second Chapter",
     "Conclusion",
     "Dummy Book",
     "Introduction",
 ];
-const TOC_SECOND_LEVEL: &[&'static str] = &[
+const TOC_SECOND_LEVEL: &[&str] = &[
     "1.1. Nested Chapter",
     "1.2. Includes",
     "2.1. Nested Chapter",
@@ -187,7 +187,7 @@ fn chapter_files_were_rendered_to_html() {
     let chapter_files = WalkDir::new(&src)
         .into_iter()
         .filter_entry(|entry| entry_ends_with(entry, ".md"))
-        .filter_map(|entry| entry.ok())
+        .filter_map(std::result::Result::ok)
         .map(|entry| entry.path().to_path_buf())
         .filter(|path| path.file_name().and_then(OsStr::to_str) != Some("SUMMARY.md"));
 
@@ -390,7 +390,7 @@ fn by_default_mdbook_use_index_preprocessor_to_convert_readme_to_index() {
         "First README",
     ];
     assert_contains_strings(&first_index, &expected_strings);
-    assert_doesnt_contain_strings(&first_index, &vec!["README.html"]);
+    assert_doesnt_contain_strings(&first_index, &["README.html"]);
 
     let second_index = temp.path().join("book").join("second").join("index.html");
     let unexpected_strings = vec!["Second README"];
@@ -428,11 +428,12 @@ mod search {
         let index = root.join("book/searchindex.js");
         let index = file_to_string(index).unwrap();
         let index = index.trim_start_matches("window.search = ");
-        let index = index.trim_end_matches(";");
+        let index = index.trim_end_matches(';');
         serde_json::from_str(&index).unwrap()
     }
 
     #[test]
+    #[allow(clippy::float_cmp)]
     fn book_creates_reasonable_search_index() {
         let temp = DummyBook::new().build().unwrap();
         let md = MDBook::load(temp.path()).unwrap();

@@ -611,7 +611,7 @@ fn partition_source(s: &str) -> (String, String) {
 
     for line in s.lines() {
         let trimline = line.trim();
-        let header = trimline.chars().all(|c| c.is_whitespace()) || trimline.starts_with("#![");
+        let header = trimline.chars().all(char::is_whitespace) || trimline.starts_with("#![");
         if !header || after_header {
             after_header = true;
             after.push_str(line);

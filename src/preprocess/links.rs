@@ -13,6 +13,7 @@ const MAX_LINK_NESTED_DEPTH: usize = 10;
 
 /// A preprocessor for expanding the `{{# playpen}}` and `{{# include}}`
 /// helpers in a chapter.
+#[derive(Default)]
 pub struct LinkPreprocessor;
 
 impl LinkPreprocessor {

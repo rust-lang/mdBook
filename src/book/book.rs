@@ -116,7 +116,7 @@ where
     I: IntoIterator<Item = &'a mut BookItem>,
 {
     for item in items {
-        if let &mut BookItem::Chapter(ref mut ch) = item {
+        if let BookItem::Chapter(ch) = item {
             for_each_mut(func, &mut ch.sub_items);
         }
 
@@ -301,7 +301,7 @@ mod tests {
     use std::io::Write;
     use tempfile::{Builder as TempFileBuilder, TempDir};
 
-    const DUMMY_SRC: &'static str = "
+    const DUMMY_SRC: &str = "
 # Dummy Chapter
 
 this is some dummy text.
@@ -317,7 +317,7 @@ And here is some \
         let chapter_path = temp.path().join("chapter_1.md");
         File::create(&chapter_path)
             .unwrap()
-            .write(DUMMY_SRC.as_bytes())
+            .write_all(DUMMY_SRC.as_bytes())
             .unwrap();
 
         let link = Link::new("Chapter 1", chapter_path);
@@ -333,7 +333,7 @@ And here is some \
 
         File::create(&second_path)
             .unwrap()
-            .write_all("Hello World!".as_bytes())
+            .write_all(b"Hello World!")
             .unwrap();
 
         let mut second = Link::new("Nested Chapter 1", &second_path);
