@@ -453,6 +453,7 @@ fn preprocessor_should_run(preprocessor: &Preprocessor, renderer: &Renderer, cfg
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::str::FromStr;
     use toml::value::{Table, Value};
 
     #[test]

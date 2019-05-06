@@ -13,6 +13,7 @@
 //! # use mdbook::errors::*;
 //! # extern crate toml;
 //! use std::path::PathBuf;
+//! use std::str::FromStr;
 //! use mdbook::Config;
 //! use toml::Value;
 //!
@@ -56,6 +57,7 @@ use std::env;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use toml::value::Table;
 use toml::{self, Value};
 use toml_query::delete::TomlValueDeleteExt;
@@ -75,12 +77,16 @@ pub struct Config {
     rest: Value,
 }
 
-impl Config {
+impl FromStr for Config {
+    type Err = Error;
+
     /// Load a `Config` from some string.
-    pub fn from_str(src: &str) -> Result<Config> {
+    fn from_str(src: &str) -> Result<Self> {
         toml::from_str(src).chain_err(|| Error::from("Invalid configuration file"))
     }
+}
 
+impl Config {
     /// Load the configuration file from disk.
     pub fn from_disk<P: AsRef<Path>>(config_file: P) -> Result<Config> {
         let mut buffer = String::new();
