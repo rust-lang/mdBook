@@ -44,6 +44,11 @@ before_install:
 script:
   - cargo test --all
   - cargo test --all --no-default-features
+  - if [ "$TARGET" = x86_64-unknown-linux-gnu ] && [ "$TRAVIS_RUST_VERSION" = stable ]; then
+      rustup component add rustfmt;
+      rustfmt -vV;
+      cargo fmt --all -- --check;
+    fi
 
 before_deploy:
   - sh ci/before_deploy.sh
