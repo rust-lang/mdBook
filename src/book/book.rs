@@ -317,7 +317,7 @@ And here is some \
         let chapter_path = temp.path().join("chapter_1.md");
         File::create(&chapter_path)
             .unwrap()
-            .write(DUMMY_SRC.as_bytes())
+            .write_all(DUMMY_SRC.as_bytes())
             .unwrap();
 
         let link = Link::new("Chapter 1", chapter_path);
