@@ -663,10 +663,10 @@ mod tests {
 
         assert_eq!(got, should_be);
 
-        let baz: Vec<bool> = cfg.get_deserialized("output.random.baz").unwrap();
+        let got_baz: Vec<bool> = cfg.get_deserialized("output.random.baz").unwrap();
         let baz_should_be = vec![true, true, false];
 
-        assert_eq!(baz, baz_should_be);
+        assert_eq!(got_baz, baz_should_be);
     }
 
     #[test]
