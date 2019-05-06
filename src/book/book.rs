@@ -116,7 +116,7 @@ where
     I: IntoIterator<Item = &'a mut BookItem>,
 {
     for item in items {
-        if let &mut BookItem::Chapter(ref mut ch) = item {
+        if let BookItem::Chapter(ch) = item {
             for_each_mut(func, &mut ch.sub_items);
         }
 
