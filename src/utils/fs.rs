@@ -197,7 +197,7 @@ mod tests {
     fn copy_files_except_ext_test() {
         let tmp = match tempfile::TempDir::new() {
             Ok(t) => t,
-            Err(_) => panic!("Could not create a temp dir"),
+            Err(e) => panic!("Could not create a temp dir: {}", e),
         };
 
         // Create a couple of files
