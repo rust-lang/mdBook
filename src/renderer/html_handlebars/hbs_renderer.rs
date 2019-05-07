@@ -86,7 +86,7 @@ impl HtmlHandlebars {
             utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
 
             if ctx.is_index {
-                ctx.data.insert("path".to_owned(), json!("index.html"));
+                ctx.data.insert("path".to_owned(), json!("index.md"));
                 ctx.data.insert("path_to_root".to_owned(), json!(""));
                 let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
                 let rendered_index = self.post_process(rendered_index, &ctx.html_config.playpen);
