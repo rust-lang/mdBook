@@ -184,6 +184,7 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 
 :not(pre):not(a) > .hljs {
     color: var(--inline-code-color);
+    overflow-x: initial;
 }
 
 a:hover > .hljs {
