@@ -66,7 +66,7 @@
           "title": 2
         },
         "9": {
-          "body": 10,
+          "body": 13,
           "breadcrumbs": 7,
           "title": 5
         }
@@ -133,7 +133,7 @@
           "title": "Second Chapter"
         },
         "9": {
-          "body": "When we link to the first section , it should work on both the print page and the non-print page.",
+          "body": "When we link to the first section , it should work on both the print page and the non-print page. Link outside . Some image",
           "breadcrumbs": "Second Chapter » Testing relative links for the print page",
           "id": "9",
           "title": "Testing relative links for the print page"
@@ -555,6 +555,22 @@
           "i": {
             "df": 0,
             "docs": {},
+            "m": {
+              "a": {
+                "df": 0,
+                "docs": {},
+                "g": {
+                  "df": 1,
+                  "docs": {
+                    "9": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {}
+            },
             "n": {
               "c": {
                 "df": 0,
@@ -715,7 +731,7 @@
                   "df": 1,
                   "docs": {
                     "9": {
-                      "tf": 1.4142135623730951
+                      "tf": 1.7320508075688772
                     }
                   }
                 }
@@ -840,6 +856,34 @@
                 "docs": {
                   "9": {
                     "tf": 1.0
+                  }
+                }
+              }
+            }
+          },
+          "o": {
+            "df": 0,
+            "docs": {},
+            "u": {
+              "df": 0,
+              "docs": {},
+              "t": {
+                "df": 0,
+                "docs": {},
+                "s": {
+                  "df": 0,
+                  "docs": {},
+                  "i": {
+                    "d": {
+                      "df": 1,
+                      "docs": {
+                        "9": {
+                          "tf": 1.0
+                        }
+                      }
+                    },
+                    "df": 0,
+                    "docs": {}
                   }
                 }
               }
@@ -1732,6 +1776,22 @@
           "i": {
             "df": 0,
             "docs": {},
+            "m": {
+              "a": {
+                "df": 0,
+                "docs": {},
+                "g": {
+                  "df": 1,
+                  "docs": {
+                    "9": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {}
+            },
             "n": {
               "c": {
                 "df": 0,
@@ -1892,7 +1952,7 @@
                   "df": 1,
                   "docs": {
                     "9": {
-                      "tf": 1.7320508075688772
+                      "tf": 2.0
                     }
                   }
                 }
@@ -2017,6 +2077,34 @@
                 "docs": {
                   "9": {
                     "tf": 1.0
+                  }
+                }
+              }
+            }
+          },
+          "o": {
+            "df": 0,
+            "docs": {},
+            "u": {
+              "df": 0,
+              "docs": {},
+              "t": {
+                "df": 0,
+                "docs": {},
+                "s": {
+                  "df": 0,
+                  "docs": {},
+                  "i": {
+                    "d": {
+                      "df": 1,
+                      "docs": {
+                        "9": {
+                          "tf": 1.0
+                        }
+                      }
+                    },
+                    "df": 0,
+                    "docs": {}
                   }
                 }
               }

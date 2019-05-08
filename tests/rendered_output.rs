@@ -123,7 +123,11 @@ fn check_correct_relative_links_in_print_page() {
 
     assert_contains_strings(
         first.join("print.html"),
-        &[r##"<a href="second/../first/nested.html">the first section</a>,"##],
+        &[
+            r##"<a href="second/../first/nested.html">the first section</a>,"##,
+            r##"<a href="second/../../std/foo/bar.html">outside</a>"##,
+            r##"<img src="second/../images/picture.png" alt="Some image" />"##,
+        ],
     );
 }
 
