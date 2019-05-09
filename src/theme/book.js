@@ -330,19 +330,11 @@ function playpen_text(playpen) {
             stylesheets.ayuHighlight.disabled = false;
             stylesheets.tomorrowNight.disabled = true;
             stylesheets.highlight.disabled = true;
-
-            ace_theme = "ace/theme/tomorrow_night";
-        } else if (theme == 'book') {
-            stylesheets.ayuHighlight.disabled = true;
-            stylesheets.tomorrowNight.disabled = true;
-            stylesheets.highlight.disabled = true;
-
             ace_theme = "ace/theme/tomorrow_night";
         } else {
             stylesheets.ayuHighlight.disabled = true;
             stylesheets.tomorrowNight.disabled = true;
             stylesheets.highlight.disabled = false;
-
             ace_theme = "ace/theme/dawn";
         }
 

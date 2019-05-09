@@ -419,7 +419,6 @@ fn theme_dir_overrides_work_correctly() {
     dummy_book::assert_contains_strings(built_index, &["This is a modified index.hbs!"]);
 }
 
-
 #[test]
 fn no_index_for_print_html() {
     let temp = DummyBook::new().build().unwrap();
