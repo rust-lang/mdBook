@@ -123,7 +123,6 @@ impl HtmlHandlebars {
 
         write_file(destination, "book.js", &theme.js)?;
         write_file(destination, "css/general.css", &theme.general_css)?;
-        write_file(destination, "css/book.css", &theme.book_css)?;
         write_file(destination, "css/chrome.css", &theme.chrome_css)?;
         write_file(destination, "css/print.css", &theme.print_css)?;
         write_file(destination, "css/variables.css", &theme.variables_css)?;
@@ -558,7 +557,7 @@ fn fix_code_blocks(html: &str) -> String {
             let after = &caps[3];
 
             format!(
-                r#"<code{before}class="block  {classes}"{after}>"#,
+                r#"<code{before}class="{classes}"{after}>"#,
                 before = before,
                 classes = classes,
                 after = after
