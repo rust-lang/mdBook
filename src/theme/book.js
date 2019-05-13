@@ -303,6 +303,7 @@ function playpen_text(playpen) {
         ayuHighlight: document.querySelector("[href$='ayu-highlight.css']"),
         tomorrowNight: document.querySelector("[href$='tomorrow-night.css']"),
         highlight: document.querySelector("[href$='highlight.css']"),
+        book: document.querySelector("[href$='book.css']"),
     };
 
     function showThemes() {
@@ -324,24 +325,28 @@ function playpen_text(playpen) {
             stylesheets.ayuHighlight.disabled = true;
             stylesheets.tomorrowNight.disabled = false;
             stylesheets.highlight.disabled = true;
+            stylesheets.book.disabled = true;
 
             ace_theme = "ace/theme/tomorrow_night";
         } else if (theme == 'ayu') {
             stylesheets.ayuHighlight.disabled = false;
             stylesheets.tomorrowNight.disabled = true;
             stylesheets.highlight.disabled = true;
+            stylesheets.book.disabled = true;
 
             ace_theme = "ace/theme/tomorrow_night";
         } else if (theme == 'book') {
             stylesheets.ayuHighlight.disabled = true;
             stylesheets.tomorrowNight.disabled = true;
             stylesheets.highlight.disabled = true;
+            stylesheets.book.disabled = false;
 
             ace_theme = "ace/theme/tomorrow_night";
         } else {
             stylesheets.ayuHighlight.disabled = true;
             stylesheets.tomorrowNight.disabled = true;
             stylesheets.highlight.disabled = false;
+            stylesheets.book.disabled = true;
 
             ace_theme = "ace/theme/dawn";
         }
