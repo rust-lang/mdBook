@@ -81,6 +81,7 @@
 //! [`Config`]: config/struct.Config.html
 
 #![deny(missing_docs)]
+#![deny(rust_2018_idioms)]
 
 #[macro_use]
 extern crate error_chain;
@@ -129,7 +130,7 @@ pub use renderer::Renderer;
 pub mod errors {
     use std::path::PathBuf;
 
-    error_chain!{
+    error_chain! {
         foreign_links {
             Io(::std::io::Error) #[doc = "A wrapper around `std::io::Error`"];
             HandlebarsRender(::handlebars::RenderError) #[doc = "Handlebars rendering failed"];

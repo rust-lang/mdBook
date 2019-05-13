@@ -134,9 +134,6 @@ impl BookBuilder {
         let mut general_css = File::create(cssdir.join("general.css"))?;
         general_css.write_all(theme::GENERAL_CSS)?;
 
-        let mut book_css = File::create(cssdir.join("book.css"))?;
-        book_css.write_all(theme::BOOK_CSS)?;
-        
         let mut chrome_css = File::create(cssdir.join("chrome.css"))?;
         chrome_css.write_all(theme::CHROME_CSS)?;
 
@@ -176,15 +173,19 @@ impl BookBuilder {
         let src_dir = self.root.join(&self.config.book.src);
 
         let summary = src_dir.join("SUMMARY.md");
-        let mut f = File::create(&summary).chain_err(|| "Unable to create SUMMARY.md")?;
-        writeln!(f, "# Summary")?;
-        writeln!(f)?;
-        writeln!(f, "- [Chapter 1](./chapter_1.md)")?;
+        if !summary.exists() {
+            trace!("No summary found creating stub summary and chapter_1.md.");
+            let mut f = File::create(&summary).chain_err(|| "Unable to create SUMMARY.md")?;
+            writeln!(f, "# Summary")?;
+            writeln!(f)?;
+            writeln!(f, "- [Chapter 1](./chapter_1.md)")?;
 
-        let chapter_1 = src_dir.join("chapter_1.md");
-        let mut f = File::create(&chapter_1).chain_err(|| "Unable to create chapter_1.md")?;
-        writeln!(f, "# Chapter 1")?;
-
+            let chapter_1 = src_dir.join("chapter_1.md");
+            let mut f = File::create(&chapter_1).chain_err(|| "Unable to create chapter_1.md")?;
+            writeln!(f, "# Chapter 1")?;
+        } else {
+            trace!("Existing summary found, no need to create stub files.");
+        }
         Ok(())
     }
 

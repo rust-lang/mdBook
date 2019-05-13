@@ -13,6 +13,7 @@ const MAX_LINK_NESTED_DEPTH: usize = 10;
 
 /// A preprocessor for expanding the `{{# playpen}}` and `{{# include}}`
 /// helpers in a chapter.
+#[derive(Default)]
 pub struct LinkPreprocessor;
 
 impl LinkPreprocessor {
@@ -143,17 +144,19 @@ fn parse_include_path(path: &str) -> LinkType<'static> {
     match start {
         Some(start) => match end {
             Some(end) => LinkType::IncludeRange(path, Range { start, end }),
-            None => if has_end {
-                LinkType::IncludeRangeFrom(path, RangeFrom { start })
-            } else {
-                LinkType::IncludeRange(
-                    path,
-                    Range {
-                        start,
-                        end: start + 1,
-                    },
-                )
-            },
+            None => {
+                if has_end {
+                    LinkType::IncludeRangeFrom(path, RangeFrom { start })
+                } else {
+                    LinkType::IncludeRange(
+                        path,
+                        Range {
+                            start,
+                            end: start + 1,
+                        },
+                    )
+                }
+            }
         },
         None => match end {
             Some(end) => LinkType::IncludeRangeTo(path, RangeTo { end }),
@@ -291,7 +294,7 @@ impl<'a> Iterator for LinkIter<'a> {
     }
 }
 
-fn find_links(contents: &str) -> LinkIter {
+fn find_links(contents: &str) -> LinkIter<'_> {
     // lazily compute following regex
     // r"\\\{\{#.*\}\}|\{\{#([a-zA-Z0-9]+)\s*([a-zA-Z0-9_.\-:/\\\s]+)\}\}")?;
     lazy_static! {
@@ -304,7 +307,8 @@ fn find_links(contents: &str) -> LinkIter {
             \s+                        # separating whitespace
             ([a-zA-Z0-9\s_.\-:/\\]+)   # link target path and space separated properties
             \s*\}\}                    # whitespace and link closing parens"
-        ).unwrap();
+        )
+        .unwrap();
     }
     LinkIter(RE.captures_iter(contents))
 }

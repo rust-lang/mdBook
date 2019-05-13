@@ -14,7 +14,7 @@ use std::borrow::Cow;
 pub use self::string::{take_lines, RangeArgument};
 
 /// Replaces multiple consecutive whitespace characters with a single space character.
-pub fn collapse_whitespace<'a>(text: &'a str) -> Cow<'a, str> {
+pub fn collapse_whitespace(text: &str) -> Cow<'_, str> {
     lazy_static! {
         static ref RE: Regex = Regex::new(r"\s\s+").unwrap();
     }
@@ -34,7 +34,8 @@ pub fn normalize_id(content: &str) -> String {
             } else {
                 None
             }
-        }).collect::<String>()
+        })
+        .collect::<String>()
 }
 
 /// Generate an ID for use with anchors which is derived from a "normalised"
@@ -61,38 +62,47 @@ pub fn id_from_content(content: &str) -> String {
     }
 
     // Remove spaces and hashes indicating a header
-    let trimmed = content.trim().trim_left_matches('#').trim();
+    let trimmed = content.trim().trim_start_matches('#').trim();
 
     normalize_id(trimmed)
 }
 
 fn adjust_links<'a>(event: Event<'a>, with_base: &str) -> Event<'a> {
     lazy_static! {
-        static ref HTTP_LINK: Regex = Regex::new("^https?://").unwrap();
+        static ref SCHEME_LINK: Regex = Regex::new(r"^[a-z][a-z0-9+.-]*:").unwrap();
         static ref MD_LINK: Regex = Regex::new(r"(?P<link>.*)\.md(?P<anchor>#.*)?").unwrap();
+    }
+
+    fn fix<'a>(dest: Cow<'a, str>, base: &str) -> Cow<'a, str> {
+        // Don't modify links with schemes like `https`.
+        if !SCHEME_LINK.is_match(&dest) {
+            // This is a relative link, adjust it as necessary.
+            let mut fixed_link = String::new();
+            if !base.is_empty() {
+                fixed_link.push_str(base);
+                fixed_link.push_str("/");
+            }
+
+            if let Some(caps) = MD_LINK.captures(&dest) {
+                fixed_link.push_str(&caps["link"]);
+                fixed_link.push_str(".html");
+                if let Some(anchor) = caps.name("anchor") {
+                    fixed_link.push_str(anchor.as_str());
+                }
+            } else {
+                fixed_link.push_str(&dest);
+            };
+            return Cow::from(fixed_link);
+        }
+        dest
     }
 
     match event {
         Event::Start(Tag::Link(dest, title)) => {
-            if !HTTP_LINK.is_match(&dest) {
-                let dest = if !with_base.is_empty() {
-                    format!("{}/{}", with_base, dest)
-                } else {
-                    dest.clone().into_owned()
-                };
-
-                if let Some(caps) = MD_LINK.captures(&dest) {
-                    let mut html_link = [&caps["link"], ".html"].concat();
-
-                    if let Some(anchor) = caps.name("anchor") {
-                        html_link.push_str(anchor.as_str());
-                    }
-
-                    return Event::Start(Tag::Link(Cow::from(html_link), title));
-                }
-            }
-
-            Event::Start(Tag::Link(dest, title))
+            Event::Start(Tag::Link(fix(dest, with_base), title))
+        }
+        Event::Start(Tag::Image(dest, title)) => {
+            Event::Start(Tag::Image(fix(dest, with_base), title))
         }
         _ => event,
     }
@@ -156,7 +166,7 @@ impl EventQuoteConverter {
     }
 }
 
-fn clean_codeblock_headers(event: Event) -> Event {
+fn clean_codeblock_headers(event: Event<'_>) -> Event<'_> {
     match event {
         Event::Start(Tag::CodeBlock(ref info)) => {
             let info: String = info.chars().filter(|ch| !ch.is_whitespace()).collect();
@@ -195,7 +205,8 @@ fn convert_quotes_to_curly(original_text: &str) -> String {
             preceded_by_whitespace = original_char.is_whitespace();
 
             converted_char
-        }).collect()
+        })
+        .collect()
 }
 
 /// Prints a "backtrace" of some `Error`.

@@ -78,7 +78,7 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
     display: flex;
     margin: 0 5px;
 }
-.no-js .left-buttons { 
+.no-js .left-buttons {
     display: none;
 }
 
@@ -145,7 +145,7 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
     display: none;
 }
 
-.mobile-nav-chapters { 
+.mobile-nav-chapters {
     font-size: 2.5em;
     text-align: center;
     text-decoration: none;
@@ -180,7 +180,11 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
     vertical-align: middle;
     padding: 0.1em 0.3em;
     border-radius: 3px;
+}
+
+:not(pre):not(a) > .hljs {
     color: var(--inline-code-color);
+    overflow-x: initial;
 }
 
 a:hover > .hljs {
@@ -301,8 +305,6 @@ ul#searchresults span.teaser em {
     top: 0;
     bottom: 0;
     width: var(--sidebar-width);
-    overflow-y: auto;
-    padding: 10px 10px;
     font-size: 0.875em;
     box-sizing: border-box;
     -webkit-overflow-scrolling: touch;
@@ -310,11 +312,38 @@ ul#searchresults span.teaser em {
     background-color: var(--sidebar-bg);
     color: var(--sidebar-fg);
 }
-.js .sidebar {
+.sidebar-resizing {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.js:not(.sidebar-resizing) .sidebar {
     transition: transform 0.3s; /* Animation: slide away */
 }
 .sidebar code {
     line-height: 2em;
+}
+.sidebar .sidebar-scrollbox {
+    overflow-y: auto;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px 10px;
+}
+.sidebar .sidebar-resize-handle {
+    position: absolute;
+    cursor: col-resize;
+    width: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+.js .sidebar .sidebar-resize-handle {
+    cursor: col-resize;
+    width: 5px;
 }
 .sidebar-hidden .sidebar {
     transform: translateX(calc(0px - var(--sidebar-width)));
@@ -345,15 +374,17 @@ ul#searchresults span.teaser em {
     color: var(--sidebar-non-existant);
 }
 .chapter li a {
-    color: var(--sidebar-fg);
     display: block;
     padding: 0;
     text-decoration: none;
+    color: var(--sidebar-fg);
 }
-.chapter li a:hover { text-decoration: none }
-.chapter li .active,
-a:hover {
-    /* Animate color change */
+
+.chapter li a:hover {
+    color: var(--sidebar-active);
+}
+
+.chapter li .active {
     color: var(--sidebar-active);
 }
 
@@ -366,7 +397,7 @@ a:hover {
     background-color: var(--sidebar-spacer);
 }
 
-@media (-moz-touch-enabled: 1), (pointer: coarse) { 
+@media (-moz-touch-enabled: 1), (pointer: coarse) {
     .chapter li a { padding: 5px 0; }
     .spacer { margin: 10px 0; }
 }

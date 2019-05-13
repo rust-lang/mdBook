@@ -35,7 +35,7 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
         utils::fs::write_file(
             destination,
             "searchindex.js",
-            format!("window.search = {};", index).as_bytes(),
+            format!("Object.assign(window.search, {});", index).as_bytes(),
         )?;
         utils::fs::write_file(destination, "searcher.js", searcher::JS)?;
         utils::fs::write_file(destination, "mark.min.js", searcher::MARK_JS)?;
@@ -91,7 +91,7 @@ fn render_item(
     let p = Parser::new_ext(&chapter.content, opts);
 
     let mut in_header = false;
-    let max_section_depth = search_config.heading_split_level as i32;
+    let max_section_depth = i32::from(search_config.heading_split_level);
     let mut section_id = None;
     let mut heading = String::new();
     let mut body = String::new();
