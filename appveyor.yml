@@ -44,8 +44,7 @@ before_deploy:
 deploy:
   description: 'Windows release'
   artifact: /.*\.zip/
-  auth_token:
-    secure: $(GITHUB_TOKEN)
+  auth_token: $(GITHUB_TOKEN)
   provider: GitHub
   on:
     RUST_CHANNEL: stable
