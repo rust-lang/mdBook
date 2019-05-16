@@ -51,18 +51,26 @@ script:
     fi
 
 before_deploy:
+  - cargo run -- build book-example
   - sh ci/before_deploy.sh
 
 deploy:
-  provider: releases
-  api_key:
-    - secure: cURRWBr034iqBz/ifD7uOunBfNR30YxIXfgLX0osWz+iafkVbhDGYYz9sBmRraqO2P7L2koEXMADVb/md1kI2+ykiq/ml+l9zuEAZPVmvSGUN7ZD+7s+lu3l5OBPG5z175T+b2q2q2m8XVR7TW20ra4QbE0bq06KAoOyjSgQVBTSCYsL9uTsGwiVRMEqqJT/BmKhKJNkpGsTKyBSKkOXvfeAAbE260vXUDEN9TYdJ3fvteRrpwLX56ee64gIZUq0RjDc4SKIEqilM6iUtNMvurqaewYNGkiXKRruV6BPCHxEHo6NNT46kOJLBJTf7gZw//dWhSoWpg9P0gdAnPWm407kSa3F7aJ1eRShAFQ4BLyfz9efTqm+jP3fOp7Mm7igSh9w6caSRuOnSsUf5+raRQ8E5Y9HsWGzzpZQk24Fx9EGZ04EeDSdpZAFz+jcbMpHf8t2p4CEx0CCNwYvKx6EydMKbMF5QteQ8SQkXNLhv7Rz2OgtXWYZPRVCMfQfOplsi2InsLCrQxTgwh+6u654SqVSgaHG+IncEAxBrdWy4rHcg7qereUcKfcY3k96vaDxdn/T2c00Ig0aNFR91YnixGMd6J6tQgDcRK9jh6fUm1CCBE9hT+pNUmtgYKuWBoLZexUZFFnfuBed0WciBot1bGDDamndqKq0jJiAzg+GMHk=
+- provider: releases
+  api_key: "$GITHUB_TOKEN"
   file_glob: true
   file: "$CRATE_NAME-$TRAVIS_TAG-$TARGET.*"
   on:
     condition: "$TRAVIS_RUST_VERSION = stable"
     tags: true
   skip_cleanup: true
+- provider: pages
+  local_dir: book-example/book
+  skip_cleanup: true
+  github_token: "$GITHUB_TOKEN"
+  keep_history: true
+  on:
+    condition: $TRAVIS_OS_NAME = "linux" && $TRAVIS_RUST_VERSION = "stable"
+    tags: true
 
 branches:
   only:
