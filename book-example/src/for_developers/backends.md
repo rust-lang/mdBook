@@ -24,9 +24,9 @@ no reason why it couldn't be accomplished using something like Python or Ruby.
 First you'll want to create a new binary program and add `mdbook` as a
 dependency.
 
-```
+```shell
 $ cargo new --bin mdbook-wordcount
-$ cd mdbook-wordcount 
+$ cd mdbook-wordcount
 $ cargo add mdbook
 ```
 
@@ -52,8 +52,8 @@ fn main() {
 > **Note:** The `RenderContext` contains a `version` field. This lets backends
   figure out whether they are compatible with the version of `mdbook` it's being
   called by. This `version` comes directly from the corresponding field in
-  `mdbook`'s `Cargo.toml`. 
-  
+  `mdbook`'s `Cargo.toml`.
+
   It is recommended that backends use the [`semver`] crate to inspect this field
   and emit a warning if there may be a compatibility issue.
 
@@ -92,12 +92,12 @@ fn count_words(ch: &Chapter) -> usize {
 Now we've got the basics running, we want to actually use it. First, install the
 program.
 
-```
+```shell
 $ cargo install
 ```
 
 Then `cd` to the particular book you'd like to count the words of and update its
-`book.toml` file. 
+`book.toml` file.
 
 ```diff
   [book]
@@ -112,7 +112,7 @@ Then `cd` to the particular book you'd like to count the words of and update its
 
 When it loads a book into memory, `mdbook` will inspect your `book.toml` file to
 try and figure out which backends to use by looking for all `output.*` tables.
-If none are provided it'll fall back to using the default HTML renderer. 
+If none are provided it'll fall back to using the default HTML renderer.
 
 Notably, this means if you want to add your own custom backend you'll also need
 to make sure to add the HTML backend, even if its table just stays empty.
@@ -120,7 +120,7 @@ to make sure to add the HTML backend, even if its table just stays empty.
 Now you just need to build your book like normal, and everything should *Just
 Work*.
 
-```
+```shell
 $ mdbook build
 ...
 2018-01-16 07:31:15 [INFO] (mdbook::renderer): Invoking the "mdbook-wordcount" renderer
@@ -169,7 +169,7 @@ arguments or be an interpreted script), you can use the `command` field.
 Now imagine you don't want to count the number of words on a particular chapter
 (it might be generated text/code, etc). The canonical way to do this is via the
 usual `book.toml` configuration file by adding items to your `[output.foo]`
-table. 
+table.
 
 The `Config` can be treated roughly as a nested hashmap which lets you call
 methods like `get()` to access the config's contents, with a
@@ -211,13 +211,13 @@ and then add a check to make sure we skip ignored chapters.
 +     let cfg: WordcountConfig = ctx.config
 +         .get_deserialized("output.wordcount")
 +         .unwrap_or_default();
-  
+
       for item in ctx.book.iter() {
           if let BookItem::Chapter(ref ch) = *item {
 +             if cfg.ignores.contains(&ch.name) {
 +                 continue;
 +             }
-+ 
++
               let num_words = count_words(ch);
               println!("{}: {}", ch.name, num_words);
           }
@@ -239,17 +239,17 @@ in [`RenderContext`].
 - use std::io;
   use mdbook::renderer::RenderContext;
   use mdbook::book::{BookItem, Chapter};
-  
+
   fn main() {
     ...
-  
+
 +     let _ = fs::create_dir_all(&ctx.destination);
 +     let mut f = File::create(ctx.destination.join("wordcounts.txt")).unwrap();
-+ 
++
       for item in ctx.book.iter() {
           if let BookItem::Chapter(ref ch) = *item {
               ...
-  
+
               let num_words = count_words(ch);
               println!("{}: {}", ch.name, num_words);
 +             writeln!(f, "{}: {}", ch.name, num_words).unwrap();
@@ -276,11 +276,11 @@ like this:
 
   fn main() {
       ...
-  
+
       for item in ctx.book.iter() {
           if let BookItem::Chapter(ref ch) = *item {
               ...
-  
+
               let num_words = count_words(ch);
               println!("{}: {}", ch.name, num_words);
               writeln!(f, "{}: {}", ch.name, num_words).unwrap();
@@ -303,7 +303,7 @@ like this:
 
 Now, if we reinstall the backend and build a book,
 
-```
+```shell
 $ cargo install --force
 $ mdbook build /path/to/book
 ...
