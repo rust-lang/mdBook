@@ -5,7 +5,7 @@ rendering process. This program is passed a JSON representation of the book and
 configuration information via `stdin`. Once the backend receives this
 information it is free to do whatever it wants.
 
-There are already several alternate backends on GitHub which can be used as a
+There are already several alternative backends on GitHub which can be used as a
 rough example of how this is accomplished in practice.
 
 - [mdbook-linkcheck] - a simple program for verifying the book doesn't contain
