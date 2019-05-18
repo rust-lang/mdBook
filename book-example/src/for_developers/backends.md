@@ -1,4 +1,4 @@
-# Alternate Backends
+# Alternative Backends
 
 A "backend" is simply a program which `mdbook` will invoke during the book
 rendering process. This program is passed a JSON representation of the book and
@@ -140,7 +140,7 @@ Syntax highlighting: 314
 MathJax Support: 153
 Rust code specific features: 148
 For Developers: 788
-Alternate Backends: 710
+Alternative Backends: 710
 Contributors: 85
 ```
 
