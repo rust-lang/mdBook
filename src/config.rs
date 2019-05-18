@@ -592,9 +592,9 @@ mod tests {
         editable = true
         editor = "ace"
 
-        [preprocess.first]
+        [preprocessor.first]
 
-        [preprocess.second]
+        [preprocessor.second]
         "#;
 
     #[test]

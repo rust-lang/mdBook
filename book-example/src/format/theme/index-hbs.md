@@ -45,51 +45,55 @@ at your disposal.
 
 ### 1. toc
 
-    The toc helper is used like this
+The toc helper is used like this
 
-    ```handlebars
-    {{#toc}}{{/toc}}
-    ```
+```handlebars
+{{#toc}}{{/toc}}
+```
 
-    and outputs something that looks like this, depending on the structure of your book
+and outputs something that looks like this, depending on the structure of your
+book
 
-    ```html
-    <ul class="chapter">
-        <li><a href="link/to/file.html">Some chapter</a></li>
-        <li>
-            <ul class="section">
-                <li><a href="link/to/other_file.html">Some other Chapter</a></li>
-            </ul>
-        </li>
-    </ul>
-    ```
+```html
+<ul class="chapter">
+    <li><a href="link/to/file.html">Some chapter</a></li>
+    <li>
+        <ul class="section">
+            <li><a href="link/to/other_file.html">Some other Chapter</a></li>
+        </ul>
+    </li>
+</ul>
+```
 
-    If you would like to make a toc with another structure, you have access to the chapters property containing all the data.
-    The only limitation at the moment is that you would have to do it with JavaScript instead of with a handlebars helper.
+If you would like to make a toc with another structure, you have access to the
+chapters property containing all the data. The only limitation at the moment
+is that you would have to do it with JavaScript instead of with a handlebars
+helper.
 
-    ```html
-    <script>
-    var chapters = {{chapters}};
-    // Processing here
-    </script>
-    ```
+```html
+<script>
+var chapters = {{chapters}};
+// Processing here
+</script>
+```
 
 ### 2. previous / next
 
-    The previous and next helpers expose a `link` and `name` property to the previous and next chapters.
+The previous and next helpers expose a `link` and `name` property to the
+previous and next chapters.
 
-    They are used like this
+They are used like this
 
-    ```handlebars
-    {{#previous}}
-        <a href="{{link}}" class="nav-chapters previous">
-            <i class="fa fa-angle-left"></i>
-        </a>
-    {{/previous}}
-    ```
+```handlebars
+{{#previous}}
+    <a href="{{link}}" class="nav-chapters previous">
+        <i class="fa fa-angle-left"></i>
+    </a>
+{{/previous}}
+```
 
-    The inner html will only be rendered if the previous / next chapter exists.
-    Of course the inner html can be changed to your liking.
+The inner html will only be rendered if the previous / next chapter exists.
+Of course the inner html can be changed to your liking.
 
 ------
 
