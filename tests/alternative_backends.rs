@@ -1,4 +1,4 @@
-//! Integration tests to make sure alternate backends work.
+//! Integration tests to make sure alternative backends work.
 
 extern crate mdbook;
 extern crate tempfile;

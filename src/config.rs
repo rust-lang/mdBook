@@ -3,7 +3,7 @@
 //! The main entrypoint of the `config` module is the `Config` struct. This acts
 //! essentially as a bag of configuration information, with a couple
 //! pre-determined tables (`BookConfig` and `BuildConfig`) as well as support
-//! for arbitrary data which is exposed to plugins and alternate backends.
+//! for arbitrary data which is exposed to plugins and alternative backends.
 //!
 //!
 //! # Examples

@@ -14,7 +14,7 @@ rough example of how this is accomplished in practice.
 - [mdbook-test] - a program to run the book's contents through [rust-skeptic] to
   verify everything compiles and runs correctly (similar to `rustdoc --test`)
 
-This page will step you through creating your own alternate backend in the form
+This page will step you through creating your own alternative backend in the form
 of a simple word counting program. Although it will be written in Rust, there's
 no reason why it couldn't be accomplished using something like Python or Ruby.
 
@@ -329,7 +329,7 @@ the usual `RUST_LOG` to control logging verbosity.
 ## Wrapping Up
 
 Although contrived, hopefully this example was enough to show how you'd create
-an alternate backend for `mdbook`. If you feel it's missing something, don't
+an alternative backend for `mdbook`. If you feel it's missing something, don't
 hesitate to create an issue in the [issue tracker] so we can improve the user
 guide.
 
