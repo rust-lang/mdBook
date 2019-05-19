@@ -20,7 +20,7 @@
 - [Continuous Integration](continuous-integration.md)
 - [For Developers](for_developers/README.md)
     - [Preprocessors](for_developers/preprocessors.md)
-    - [Alternate Backends](for_developers/backends.md)
+    - [Alternative Backends](for_developers/backends.md)
 
 -----------
 

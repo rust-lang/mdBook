@@ -12,7 +12,7 @@ The *For Developers* chapters are here to show you the more advanced usage of
 The two main ways a developer can hook into the book's build process is via,
 
 - [Preprocessors](preprocessors.md)
-- [Alternate Backends](backends.md)
+- [Alternative Backends](backends.md)
 
 
 ## The Build Process
