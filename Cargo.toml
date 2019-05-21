@@ -52,8 +52,6 @@ ammonia = { version = "2.1", optional = true }
 select = "0.4"
 pretty_assertions = "0.6"
 walkdir = "2.0"
-# This is temporary until https://github.com/Byron/pulldown-cmark-to-cmark/pull/2 is merged.
-pulldown-cmark-to-cmark = { git="https://github.com/euclio/pulldown-cmark-to-cmark.git", branch="cmark-upgrade" }
 
 [features]
 default = ["output", "watch", "serve", "search"]
