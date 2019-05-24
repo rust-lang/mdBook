@@ -1,10 +1,10 @@
 use regex::Regex;
 use std::path::Path;
 
-use errors::*;
+use crate::errors::*;
 
 use super::{Preprocessor, PreprocessorContext};
-use book::{Book, BookItem};
+use crate::book::{Book, BookItem};
 
 /// A preprocessor for converting file name `README.md` to `index.md` since
 /// `README.md` is the de facto index file in markdown-based documentation.

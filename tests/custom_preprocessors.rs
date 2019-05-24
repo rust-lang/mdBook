@@ -2,7 +2,7 @@ extern crate mdbook;
 
 mod dummy_book;
 
-use dummy_book::DummyBook;
+use crate::dummy_book::DummyBook;
 use mdbook::preprocess::{CmdPreprocessor, Preprocessor};
 use mdbook::MDBook;
 

@@ -1,6 +1,6 @@
 use super::{Preprocessor, PreprocessorContext};
-use book::Book;
-use errors::*;
+use crate::book::Book;
+use crate::errors::*;
 use serde_json;
 use shlex::Shlex;
 use std::io::{self, Read, Write};
@@ -168,8 +168,8 @@ impl Preprocessor for CmdPreprocessor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::MDBook;
     use std::path::Path;
-    use MDBook;
 
     fn book_example() -> MDBook {
         let example = Path::new(env!("CARGO_MANIFEST_DIR")).join("book-example");

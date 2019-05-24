@@ -1,5 +1,5 @@
+use crate::get_book_dir;
 use clap::{App, ArgMatches, SubCommand};
-use get_book_dir;
 use mdbook::errors::*;
 use mdbook::MDBook;
 use std::fs;

@@ -64,7 +64,7 @@ use toml_query::delete::TomlValueDeleteExt;
 use toml_query::insert::TomlValueInsertExt;
 use toml_query::read::TomlValueReadExt;
 
-use errors::*;
+use crate::errors::*;
 
 /// The overall configuration object for MDBook, essentially an in-memory
 /// representation of `book.toml`.

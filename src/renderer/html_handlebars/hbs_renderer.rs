@@ -1,10 +1,10 @@
-use book::{Book, BookItem};
-use config::{Config, HtmlConfig, Playpen};
-use errors::*;
-use renderer::html_handlebars::helpers;
-use renderer::{RenderContext, Renderer};
-use theme::{self, playpen_editor, Theme};
-use utils;
+use crate::book::{Book, BookItem};
+use crate::config::{Config, HtmlConfig, Playpen};
+use crate::errors::*;
+use crate::renderer::html_handlebars::helpers;
+use crate::renderer::{RenderContext, Renderer};
+use crate::theme::{self, playpen_editor, Theme};
+use crate::utils;
 
 use std::collections::BTreeMap;
 use std::collections::HashMap;
@@ -113,7 +113,7 @@ impl HtmlHandlebars {
         theme: &Theme,
         html_config: &HtmlConfig,
     ) -> Result<()> {
-        use utils::fs::write_file;
+        use crate::utils::fs::write_file;
 
         write_file(
             destination,

@@ -22,9 +22,9 @@ use std::io::{self, Read};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
-use book::Book;
-use config::Config;
-use errors::*;
+use crate::book::Book;
+use crate::config::Config;
+use crate::errors::*;
 
 /// An arbitrary `mdbook` backend.
 ///
@@ -78,7 +78,7 @@ impl RenderContext {
         RenderContext {
             book,
             config,
-            version: ::MDBOOK_VERSION.to_string(),
+            version: crate::MDBOOK_VERSION.to_string(),
             root: root.into(),
             destination: destination.into(),
             __non_exhaustive: (),

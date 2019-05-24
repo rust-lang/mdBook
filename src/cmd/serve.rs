@@ -7,12 +7,12 @@ use self::iron::{
 };
 #[cfg(feature = "watch")]
 use super::watch;
+use crate::{get_book_dir, open};
 use clap::{App, Arg, ArgMatches, SubCommand};
 use mdbook::errors::*;
 use mdbook::utils;
 use mdbook::MDBook;
 use std;
-use {get_book_dir, open};
 
 struct ErrorRecover;
 

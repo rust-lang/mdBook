@@ -9,11 +9,11 @@ use self::elasticlunr::Index;
 use pulldown_cmark::*;
 use serde_json;
 
-use book::{Book, BookItem};
-use config::Search;
-use errors::*;
-use theme::searcher;
-use utils;
+use crate::book::{Book, BookItem};
+use crate::config::Search;
+use crate::errors::*;
+use crate::theme::searcher;
+use crate::utils;
 
 /// Creates all files required for search.
 pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> Result<()> {

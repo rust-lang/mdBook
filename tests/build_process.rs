@@ -2,7 +2,7 @@ extern crate mdbook;
 
 mod dummy_book;
 
-use dummy_book::DummyBook;
+use crate::dummy_book::DummyBook;
 use mdbook::book::Book;
 use mdbook::config::Config;
 use mdbook::errors::*;

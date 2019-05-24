@@ -7,7 +7,7 @@ extern crate walkdir;
 
 mod dummy_book;
 
-use dummy_book::{assert_contains_strings, assert_doesnt_contain_strings, DummyBook};
+use crate::dummy_book::{assert_contains_strings, assert_doesnt_contain_strings, DummyBook};
 
 use mdbook::config::Config;
 use mdbook::errors::*;
@@ -435,7 +435,7 @@ fn no_index_for_print_html() {
 #[cfg(feature = "search")]
 mod search {
     extern crate serde_json;
-    use dummy_book::DummyBook;
+    use crate::dummy_book::DummyBook;
     use mdbook::utils::fs::file_to_string;
     use mdbook::MDBook;
     use std::fs::File;

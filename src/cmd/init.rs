@@ -1,5 +1,5 @@
+use crate::get_book_dir;
 use clap::{App, ArgMatches, SubCommand};
-use get_book_dir;
 use mdbook::config;
 use mdbook::errors::Result;
 use mdbook::MDBook;

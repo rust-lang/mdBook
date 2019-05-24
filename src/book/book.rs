@@ -5,8 +5,8 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
 use super::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
-use config::BuildConfig;
-use errors::*;
+use crate::config::BuildConfig;
+use crate::errors::*;
 
 /// Load a book into memory from its `src/` directory.
 pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> {
