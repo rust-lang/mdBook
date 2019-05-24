@@ -32,7 +32,7 @@ memchr = "2.0"
 open = "1.1"
 regex = "1.0.0"
 tempfile = "3.0"
-itertools = "0.7"
+itertools = "0.8"
 shlex = "0.1"
 toml-query = "0.7"
 
