@@ -156,7 +156,7 @@
   help serve` for details.
 
 - Embedded rust playpens now use the "stable" playground API.
-  [#754](https://github.com/rust-lang-nursery/mdBook/pull/756)
+  [#754](https://github.com/rust-lang-nursery/mdBook/pull/754)
 
 ### Fixed
 - Escaped includes (`\{{#include file.rs}}`) will now render correctly.
