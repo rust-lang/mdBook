@@ -50,7 +50,7 @@ ammonia = { version = "2.1", optional = true }
 
 [dev-dependencies]
 select = "0.4"
-pretty_assertions = "0.5"
+pretty_assertions = "0.6"
 walkdir = "2.0"
 # FIXME(issue #898)
 pulldown-cmark-to-cmark = "=1.1.0"
