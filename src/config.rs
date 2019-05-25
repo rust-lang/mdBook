@@ -9,9 +9,7 @@
 //! # Examples
 //!
 //! ```rust
-//! # extern crate mdbook;
 //! # use mdbook::errors::*;
-//! # extern crate toml;
 //! use std::path::PathBuf;
 //! use std::str::FromStr;
 //! use mdbook::Config;
@@ -52,7 +50,6 @@
 #![deny(missing_docs)]
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use serde_json;
 use std::env;
 use std::fs::File;
 use std::io::Read;

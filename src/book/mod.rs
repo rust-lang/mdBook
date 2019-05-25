@@ -124,7 +124,6 @@ impl MDBook {
     /// `(section: String, bookitem: &BookItem)`
     ///
     /// ```no_run
-    /// # extern crate mdbook;
     /// # use mdbook::MDBook;
     /// # use mdbook::book::BookItem;
     /// # #[allow(unused_variables)]

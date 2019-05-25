@@ -13,7 +13,6 @@ use std::path::{Path, PathBuf};
 
 use handlebars::Handlebars;
 use regex::{Captures, Regex};
-use serde_json;
 
 #[derive(Default)]
 pub struct HtmlHandlebars;

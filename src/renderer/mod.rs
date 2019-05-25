@@ -15,7 +15,6 @@ pub use self::html_handlebars::HtmlHandlebars;
 
 mod html_handlebars;
 
-use serde_json;
 use shlex::Shlex;
 use std::fs;
 use std::io::{self, Read};

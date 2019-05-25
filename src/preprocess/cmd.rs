@@ -1,7 +1,6 @@
 use super::{Preprocessor, PreprocessorContext};
 use crate::book::Book;
 use crate::errors::*;
-use serde_json;
 use shlex::Shlex;
 use std::io::{self, Read, Write};
 use std::process::{Child, Command, Stdio};

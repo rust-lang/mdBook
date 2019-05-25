@@ -1,9 +1,5 @@
-extern crate mdbook;
 #[macro_use]
 extern crate pretty_assertions;
-extern crate select;
-extern crate tempfile;
-extern crate walkdir;
 
 mod dummy_book;
 
@@ -434,7 +430,6 @@ fn no_index_for_print_html() {
 
 #[cfg(feature = "search")]
 mod search {
-    extern crate serde_json;
     use crate::dummy_book::DummyBook;
     use mdbook::utils::fs::file_to_string;
     use mdbook::MDBook;

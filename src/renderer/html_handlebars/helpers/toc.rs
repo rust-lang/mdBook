@@ -5,7 +5,6 @@ use crate::utils;
 
 use handlebars::{Context, Handlebars, Helper, HelperDef, Output, RenderContext, RenderError};
 use pulldown_cmark::{html, Event, Parser, Tag};
-use serde_json;
 
 // Handlebars helper to construct TOC
 #[derive(Clone, Copy)]

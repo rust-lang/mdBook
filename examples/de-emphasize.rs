@@ -1,10 +1,5 @@
 //! An example preprocessor for removing all forms of emphasis from a markdown
 //! book.
-
-extern crate mdbook;
-extern crate pulldown_cmark;
-extern crate pulldown_cmark_to_cmark;
-
 use mdbook::book::{Book, BookItem, Chapter};
 use mdbook::errors::{Error, Result};
 use mdbook::preprocess::{Preprocessor, PreprocessorContext};

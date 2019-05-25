@@ -1,5 +1,3 @@
-extern crate mdbook;
-
 mod dummy_book;
 
 use crate::dummy_book::DummyBook;

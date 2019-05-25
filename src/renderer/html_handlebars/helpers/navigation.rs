@@ -2,7 +2,6 @@ use std::collections::BTreeMap;
 use std::path::Path;
 
 use handlebars::{Context, Handlebars, Helper, Output, RenderContext, RenderError, Renderable};
-use serde_json;
 
 use crate::utils;
 

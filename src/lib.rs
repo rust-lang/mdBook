@@ -85,24 +85,14 @@
 
 #[macro_use]
 extern crate error_chain;
-extern crate handlebars;
-extern crate itertools;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
-extern crate memchr;
-extern crate pulldown_cmark;
-extern crate regex;
-extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
-extern crate shlex;
-extern crate tempfile;
-extern crate toml;
-extern crate toml_query;
 
 #[cfg(test)]
 #[macro_use]
