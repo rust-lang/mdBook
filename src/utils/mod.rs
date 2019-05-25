@@ -5,9 +5,7 @@ mod string;
 use crate::errors::Error;
 use regex::Regex;
 
-use pulldown_cmark::{
-    html, CowStr, Event, Options, Parser, Tag,
-};
+use pulldown_cmark::{html, CowStr, Event, Options, Parser, Tag};
 
 use std::borrow::Cow;
 
