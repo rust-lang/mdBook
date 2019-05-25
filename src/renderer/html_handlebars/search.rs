@@ -1,19 +1,15 @@
-extern crate ammonia;
-extern crate elasticlunr;
-
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
-use self::elasticlunr::Index;
+use elasticlunr::Index;
 use pulldown_cmark::*;
-use serde_json;
 
-use book::{Book, BookItem};
-use config::Search;
-use errors::*;
-use theme::searcher;
-use utils;
+use crate::book::{Book, BookItem};
+use crate::config::Search;
+use crate::errors::*;
+use crate::theme::searcher;
+use crate::utils;
 
 /// Creates all files required for search.
 pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> Result<()> {
@@ -170,7 +166,7 @@ fn render_item(
 }
 
 fn write_to_json(index: Index, search_config: &Search, doc_urls: Vec<String>) -> Result<String> {
-    use self::elasticlunr::config::{SearchBool, SearchOptions, SearchOptionsField};
+    use elasticlunr::config::{SearchBool, SearchOptions, SearchOptionsField};
     use std::collections::BTreeMap;
 
     #[derive(Serialize)]

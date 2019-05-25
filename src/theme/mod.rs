@@ -9,7 +9,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
-use errors::*;
+use crate::errors::*;
 
 pub static INDEX: &'static [u8] = include_bytes!("index.hbs");
 pub static HEADER: &'static [u8] = include_bytes!("header.hbs");

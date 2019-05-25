@@ -2,9 +2,8 @@ use std::collections::BTreeMap;
 use std::path::Path;
 
 use handlebars::{Context, Handlebars, Helper, Output, RenderContext, RenderError, Renderable};
-use serde_json;
 
-use utils;
+use crate::utils;
 
 type StringMap = BTreeMap<String, String>;
 

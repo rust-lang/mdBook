@@ -1,12 +1,12 @@
-use errors::*;
+use crate::errors::*;
+use crate::utils::fs::file_to_string;
+use crate::utils::take_lines;
 use regex::{CaptureMatches, Captures, Regex};
 use std::ops::{Range, RangeFrom, RangeFull, RangeTo};
 use std::path::{Path, PathBuf};
-use utils::fs::file_to_string;
-use utils::take_lines;
 
 use super::{Preprocessor, PreprocessorContext};
-use book::{Book, BookItem};
+use crate::book::{Book, BookItem};
 
 const ESCAPE_CHAR: char = '\\';
 const MAX_LINK_NESTED_DEPTH: usize = 10;

@@ -1,6 +1,3 @@
-extern crate mdbook;
-extern crate tempfile;
-
 use mdbook::config::Config;
 use mdbook::MDBook;
 use std::fs;

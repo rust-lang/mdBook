@@ -1,8 +1,5 @@
 //! Integration tests to make sure alternative backends work.
 
-extern crate mdbook;
-extern crate tempfile;
-
 use mdbook::config::Config;
 use mdbook::MDBook;
 #[cfg(not(windows))]

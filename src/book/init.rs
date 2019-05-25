@@ -1,12 +1,11 @@
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::PathBuf;
-use toml;
 
 use super::MDBook;
-use config::Config;
-use errors::*;
-use theme;
+use crate::config::Config;
+use crate::errors::*;
+use crate::theme;
 
 /// A helper for setting up a new book and its directory structure.
 #[derive(Debug, Clone, PartialEq)]

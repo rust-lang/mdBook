@@ -20,14 +20,14 @@ use std::string::ToString;
 use tempfile::Builder as TempFileBuilder;
 use toml::Value;
 
-use errors::*;
-use preprocess::{
+use crate::errors::*;
+use crate::preprocess::{
     CmdPreprocessor, IndexPreprocessor, LinkPreprocessor, Preprocessor, PreprocessorContext,
 };
-use renderer::{CmdRenderer, HtmlHandlebars, RenderContext, Renderer};
-use utils;
+use crate::renderer::{CmdRenderer, HtmlHandlebars, RenderContext, Renderer};
+use crate::utils;
 
-use config::Config;
+use crate::config::Config;
 
 /// The object used to manage and build a book.
 pub struct MDBook {
@@ -124,7 +124,6 @@ impl MDBook {
     /// `(section: String, bookitem: &BookItem)`
     ///
     /// ```no_run
-    /// # extern crate mdbook;
     /// # use mdbook::MDBook;
     /// # use mdbook::book::BookItem;
     /// # #[allow(unused_variables)]

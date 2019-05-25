@@ -1,4 +1,4 @@
-use errors::*;
+use crate::errors::*;
 use memchr::{self, Memchr};
 use pulldown_cmark::{self, Event, Tag};
 use std::fmt::{self, Display, Formatter};

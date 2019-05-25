@@ -1,4 +1,4 @@
-use errors::*;
+use crate::errors::*;
 use std::convert::Into;
 use std::fs::{self, File};
 use std::io::{Read, Write};
@@ -39,8 +39,6 @@ pub fn write_file<P: AsRef<Path>>(build_dir: &Path, filename: P, content: &[u8])
 /// directory from where the path starts.
 ///
 /// ```rust
-/// # extern crate mdbook;
-/// #
 /// # use std::path::Path;
 /// # use mdbook::utils::fs::path_to_root;
 /// #
@@ -188,8 +186,6 @@ pub fn copy_files_except_ext(
 
 #[cfg(test)]
 mod tests {
-    extern crate tempfile;
-
     use super::copy_files_except_ext;
     use std::fs;
 
