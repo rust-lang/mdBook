@@ -1,5 +1,5 @@
 use crate::book::{Book, BookItem};
-use config::{Config, HtmlConfig, AdditionalResource, Playpen};
+use crate::config::{Config, HtmlConfig, AdditionalResource, Playpen};
 use crate::errors::*;
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
@@ -13,9 +13,8 @@ use std::path::{Path, PathBuf};
 
 use handlebars::Handlebars;
 use regex::{Captures, Regex};
+use glob::glob;
 
-extern crate glob;
-use self::glob::glob;
 
 #[derive(Default)]
 pub struct HtmlHandlebars;

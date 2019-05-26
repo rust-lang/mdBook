@@ -1,5 +1,4 @@
 extern crate notify;
-extern crate glob;
 use self::notify::Watcher;
 use crate::{get_book_dir, open};
 use clap::{App, ArgMatches, SubCommand};
@@ -10,6 +9,7 @@ use std::path::{Path, PathBuf};
 use std::sync::mpsc::channel;
 use std::thread::sleep;
 use std::time::Duration;
+use glob::glob;
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
@@ -51,8 +51,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 }
 
 fn watch_additional_resources(book: &MDBook, watcher : &mut impl notify::Watcher) {
-    use self::glob::glob;
-    use self::notify::RecursiveMode::NonRecursive;
+    use notify::RecursiveMode::NonRecursive;
 
     book.config.html_config()
         .and_then(|html_config| html_config.additional_resources)
