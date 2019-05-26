@@ -81,27 +81,18 @@
 //! [`Config`]: config/struct.Config.html
 
 #![deny(missing_docs)]
+#![deny(rust_2018_idioms)]
 
 #[macro_use]
 extern crate error_chain;
-extern crate handlebars;
-extern crate itertools;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
-extern crate memchr;
-extern crate pulldown_cmark;
-extern crate regex;
-extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
-extern crate shlex;
-extern crate tempfile;
-extern crate toml;
-extern crate toml_query;
 
 #[cfg(test)]
 #[macro_use]
@@ -120,16 +111,16 @@ pub mod utils;
 /// compatibility checks.
 pub const MDBOOK_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub use book::BookItem;
-pub use book::MDBook;
-pub use config::Config;
-pub use renderer::Renderer;
+pub use crate::book::BookItem;
+pub use crate::book::MDBook;
+pub use crate::config::Config;
+pub use crate::renderer::Renderer;
 
 /// The error types used through out this crate.
 pub mod errors {
     use std::path::PathBuf;
 
-    error_chain!{
+    error_chain! {
         foreign_links {
             Io(::std::io::Error) #[doc = "A wrapper around `std::io::Error`"];
             HandlebarsRender(::handlebars::RenderError) #[doc = "Handlebars rendering failed"];

@@ -1,4 +1,4 @@
-use errors::*;
+use crate::errors::*;
 use memchr::{self, Memchr};
 use pulldown_cmark::{self, Event, Tag};
 use std::fmt::{self, Display, Formatter};
@@ -195,7 +195,7 @@ macro_rules! collect_events {
 }
 
 impl<'a> SummaryParser<'a> {
-    fn new(text: &str) -> SummaryParser {
+    fn new(text: &str) -> SummaryParser<'_> {
         let pulldown_parser = pulldown_cmark::Parser::new(text);
 
         SummaryParser {
@@ -471,13 +471,14 @@ fn get_last_link(links: &mut [SummaryItem]) -> Result<(usize, &mut Link)> {
 
 /// Removes the styling from a list of Markdown events and returns just the
 /// plain text.
-fn stringify_events(events: Vec<Event>) -> String {
+fn stringify_events(events: Vec<Event<'_>>) -> String {
     events
         .into_iter()
         .filter_map(|t| match t {
             Event::Text(text) => Some(text.into_owned()),
             _ => None,
-        }).collect()
+        })
+        .collect()
 }
 
 /// A section number like "1.2.3", basically just a newtype'd `Vec<u32>` with
@@ -486,7 +487,7 @@ fn stringify_events(events: Vec<Event>) -> String {
 pub struct SectionNumber(pub Vec<u32>);
 
 impl Display for SectionNumber {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         if self.0.is_empty() {
             write!(f, "0")
         } else {

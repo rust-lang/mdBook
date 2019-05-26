@@ -1,12 +1,8 @@
-extern crate clap;
-extern crate mdbook;
-extern crate serde_json;
-
+use crate::nop_lib::Nop;
 use clap::{App, Arg, ArgMatches, SubCommand};
 use mdbook::book::Book;
 use mdbook::errors::Error;
 use mdbook::preprocess::{CmdPreprocessor, Preprocessor, PreprocessorContext};
-use nop_lib::Nop;
 use std::io;
 use std::process;
 
@@ -28,11 +24,9 @@ fn main() {
 
     if let Some(sub_args) = matches.subcommand_matches("supports") {
         handle_supports(&preprocessor, sub_args);
-    } else {
-        if let Err(e) = handle_preprocessing(&preprocessor) {
-            eprintln!("{}", e);
-            process::exit(1);
-        }
+    } else if let Err(e) = handle_preprocessing(&preprocessor) {
+        eprintln!("{}", e);
+        process::exit(1);
     }
 }
 

@@ -1,7 +1,4 @@
-//! Integration tests to make sure alternate backends work.
-
-extern crate mdbook;
-extern crate tempfile;
+//! Integration tests to make sure alternative backends work.
 
 use mdbook::config::Config;
 use mdbook::MDBook;

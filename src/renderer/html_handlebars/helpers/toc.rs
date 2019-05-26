@@ -1,11 +1,10 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use utils;
+use crate::utils;
 
 use handlebars::{Context, Handlebars, Helper, HelperDef, Output, RenderContext, RenderError};
 use pulldown_cmark::{html, Event, Parser, Tag};
-use serde_json;
 
 // Handlebars helper to construct TOC
 #[derive(Clone, Copy)]
@@ -16,11 +15,11 @@ pub struct RenderToc {
 impl HelperDef for RenderToc {
     fn call<'reg: 'rc, 'rc>(
         &self,
-        _h: &Helper,
-        _: &Handlebars,
-        ctx: &Context,
-        rc: &mut RenderContext,
-        out: &mut Output,
+        _h: &Helper<'reg, 'rc>,
+        _r: &'reg Handlebars,
+        ctx: &'rc Context,
+        rc: &mut RenderContext<'reg>,
+        out: &mut dyn Output,
     ) -> Result<(), RenderError> {
         // get value from context data
         // rc.get_path() is current json parent path, you should always use it like this

@@ -22,7 +22,7 @@ rust:
 
 before_script:
   - (test -x $HOME/.cargo/bin/cargo-install-update || cargo install cargo-update)
-  - (test -x $HOME/.cargo/bin/mdbook || cargo install --vers "^0.1" mdbook)
+  - (test -x $HOME/.cargo/bin/mdbook || cargo install --vers "^0.2" mdbook)
   - cargo install-update -a
 
 script:
@@ -54,3 +54,36 @@ deploy:
 ```
 
 That's it!
+
+### Deploying to GitHub Pages manually
+
+If your CI doesn't support GitHub pages, or you're deploying somewhere else
+with integrations such as Github Pages: 
+ *note: you may want to use different tmp dirs*:
+
+```console
+$> git worktree add /tmp/book gh-pages
+$> mdbook build
+$> rm -rf /tmp/book/* # this won't delete the .git directory
+$> cp -rp book/* /tmp/book/
+$> cd /tmp/book
+$> git add -A
+$> git commit 'new book message'
+$> git push origin gh-pages
+$> cd -
+```
+
+Or put this into a Makefile rule:
+
+```makefile
+.PHONY: deploy
+deploy: book
+	@echo "====> deploying to github"
+	git worktree add /tmp/book gh-pages
+	rm -rf /tmp/book/*
+	cp -rp book/* /tmp/book/
+	cd /tmp/book && \
+		git add -A && \
+		git commit -m "deployed on $(shell date) by ${USER}" && \
+		git push origin gh-pages
+```

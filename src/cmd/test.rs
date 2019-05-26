@@ -1,5 +1,5 @@
+use crate::get_book_dir;
 use clap::{App, Arg, ArgMatches, SubCommand};
-use get_book_dir;
 use mdbook::errors::Result;
 use mdbook::MDBook;
 
@@ -31,7 +31,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let library_paths: Vec<&str> = args
         .values_of("library-path")
-        .map(|v| v.collect())
+        .map(std::iter::Iterator::collect)
         .unwrap_or_default();
     let book_dir = get_book_dir(args);
     let mut book = MDBook::load(&book_dir)?;

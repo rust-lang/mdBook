@@ -1,18 +1,11 @@
-extern crate iron;
-extern crate staticfile;
-extern crate ws;
-
-use self::iron::{
-    status, AfterMiddleware, Chain, Iron, IronError, IronResult, Request, Response, Set,
-};
 #[cfg(feature = "watch")]
 use super::watch;
+use crate::{get_book_dir, open};
 use clap::{App, Arg, ArgMatches, SubCommand};
+use iron::{status, AfterMiddleware, Chain, Iron, IronError, IronResult, Request, Response, Set};
 use mdbook::errors::*;
 use mdbook::utils;
 use mdbook::MDBook;
-use std;
-use {get_book_dir, open};
 
 struct ErrorRecover;
 
@@ -115,8 +108,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     }
 
     #[cfg(feature = "watch")]
-    watch::trigger_on_change(&book, move |path, book_dir| {
-        info!("File changed: {:?}", path);
+    watch::trigger_on_change(&book, move |paths, book_dir| {
+        info!("Files changed: {:?}", paths);
         info!("Building book...");
 
         // FIXME: This area is really ugly because we need to re-set livereload :(
@@ -126,7 +119,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
                 b.config
                     .set("output.html.livereload-url", &livereload_url)?;
                 Ok(b)
-            }).and_then(|b| b.build());
+            })
+            .and_then(|b| b.build());
 
         if let Err(e) = result {
             error!("Unable to load the book");

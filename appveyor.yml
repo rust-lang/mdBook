@@ -7,14 +7,7 @@ environment:
       RUST_CHANNEL: stable
     - TARGET: x86_64-pc-windows-msvc
       RUST_CHANNEL: stable
-    # Beta channel
-    - TARGET: i686-pc-windows-msvc
-      RUST_CHANNEL: beta
-    - TARGET: x86_64-pc-windows-msvc
-      RUST_CHANNEL: beta
     # Nightly channel
-    - TARGET: i686-pc-windows-msvc
-      RUST_CHANNEL: nightly
     - TARGET: x86_64-pc-windows-msvc
       RUST_CHANNEL: nightly
 
@@ -51,8 +44,7 @@ before_deploy:
 deploy:
   description: 'Windows release'
   artifact: /.*\.zip/
-  auth_token:
-    secure: QQhjKVyz7mpjlyGhlXytbFQQfKFQWTahHkD+B0NzIUoEVqO7ZLWjnoWasvLqW4nE
+  auth_token: $(GITHUB_TOKEN)
   provider: GitHub
   on:
     RUST_CHANNEL: stable

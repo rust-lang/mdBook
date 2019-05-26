@@ -8,9 +8,9 @@ mod cmd;
 mod index;
 mod links;
 
-use book::Book;
-use config::Config;
-use errors::*;
+use crate::book::Book;
+use crate::config::Config;
+use crate::errors::*;
 
 use std::path::PathBuf;
 
@@ -37,7 +37,7 @@ impl PreprocessorContext {
             root,
             config,
             renderer,
-            mdbook_version: ::MDBOOK_VERSION.to_string(),
+            mdbook_version: crate::MDBOOK_VERSION.to_string(),
             __non_exhaustive: (),
         }
     }

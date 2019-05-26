@@ -1,4 +1,5 @@
-use errors::*;
+use crate::errors::*;
+use std::convert::Into;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Component, Path, PathBuf};
@@ -28,7 +29,7 @@ pub fn normalize_path(path: &str) -> String {
 pub fn write_file<P: AsRef<Path>>(build_dir: &Path, filename: P, content: &[u8]) -> Result<()> {
     let path = build_dir.join(filename);
 
-    create_file(&path)?.write_all(content).map_err(|e| e.into())
+    create_file(&path)?.write_all(content).map_err(Into::into)
 }
 
 /// Takes a path and returns a path containing just enough `../` to point to
@@ -38,8 +39,6 @@ pub fn write_file<P: AsRef<Path>>(build_dir: &Path, filename: P, content: &[u8])
 /// directory from where the path starts.
 ///
 /// ```rust
-/// # extern crate mdbook;
-/// #
 /// # use std::path::Path;
 /// # use mdbook::utils::fs::path_to_root;
 /// #
@@ -85,7 +84,7 @@ pub fn create_file(path: &Path) -> Result<File> {
         fs::create_dir_all(p)?;
     }
 
-    File::create(path).map_err(|e| e.into())
+    File::create(path).map_err(Into::into)
 }
 
 /// Removes all the content of a directory but not the directory itself
@@ -187,8 +186,6 @@ pub fn copy_files_except_ext(
 
 #[cfg(test)]
 mod tests {
-    extern crate tempfile;
-
     use super::copy_files_except_ext;
     use std::fs;
 
@@ -196,43 +193,44 @@ mod tests {
     fn copy_files_except_ext_test() {
         let tmp = match tempfile::TempDir::new() {
             Ok(t) => t,
-            Err(_) => panic!("Could not create a temp dir"),
+            Err(e) => panic!("Could not create a temp dir: {}", e),
         };
 
         // Create a couple of files
-        if let Err(_) = fs::File::create(&tmp.path().join("file.txt")) {
-            panic!("Could not create file.txt")
+        if let Err(err) = fs::File::create(&tmp.path().join("file.txt")) {
+            panic!("Could not create file.txt: {}", err);
         }
-        if let Err(_) = fs::File::create(&tmp.path().join("file.md")) {
-            panic!("Could not create file.md")
+        if let Err(err) = fs::File::create(&tmp.path().join("file.md")) {
+            panic!("Could not create file.md: {}", err);
         }
-        if let Err(_) = fs::File::create(&tmp.path().join("file.png")) {
-            panic!("Could not create file.png")
+        if let Err(err) = fs::File::create(&tmp.path().join("file.png")) {
+            panic!("Could not create file.png: {}", err);
         }
-        if let Err(_) = fs::create_dir(&tmp.path().join("sub_dir")) {
-            panic!("Could not create sub_dir")
+        if let Err(err) = fs::create_dir(&tmp.path().join("sub_dir")) {
+            panic!("Could not create sub_dir: {}", err);
         }
-        if let Err(_) = fs::File::create(&tmp.path().join("sub_dir/file.png")) {
-            panic!("Could not create sub_dir/file.png")
+        if let Err(err) = fs::File::create(&tmp.path().join("sub_dir/file.png")) {
+            panic!("Could not create sub_dir/file.png: {}", err);
         }
-        if let Err(_) = fs::create_dir(&tmp.path().join("sub_dir_exists")) {
-            panic!("Could not create sub_dir_exists")
+        if let Err(err) = fs::create_dir(&tmp.path().join("sub_dir_exists")) {
+            panic!("Could not create sub_dir_exists: {}", err);
         }
-        if let Err(_) = fs::File::create(&tmp.path().join("sub_dir_exists/file.txt")) {
-            panic!("Could not create sub_dir_exists/file.txt")
+        if let Err(err) = fs::File::create(&tmp.path().join("sub_dir_exists/file.txt")) {
+            panic!("Could not create sub_dir_exists/file.txt: {}", err);
         }
 
         // Create output dir
-        if let Err(_) = fs::create_dir(&tmp.path().join("output")) {
-            panic!("Could not create output")
+        if let Err(err) = fs::create_dir(&tmp.path().join("output")) {
+            panic!("Could not create output: {}", err);
         }
-        if let Err(_) = fs::create_dir(&tmp.path().join("output/sub_dir_exists")) {
-            panic!("Could not create output/sub_dir_exists")
+        if let Err(err) = fs::create_dir(&tmp.path().join("output/sub_dir_exists")) {
+            panic!("Could not create output/sub_dir_exists: {}", err);
         }
 
-        match copy_files_except_ext(&tmp.path(), &tmp.path().join("output"), true, &["md"]) {
-            Err(e) => panic!("Error while executing the function:\n{:?}", e),
-            Ok(_) => {}
+        if let Err(e) =
+            copy_files_except_ext(&tmp.path(), &tmp.path().join("output"), true, &["md"])
+        {
+            panic!("Error while executing the function:\n{:?}", e);
         }
 
         // Check if the correct files where created

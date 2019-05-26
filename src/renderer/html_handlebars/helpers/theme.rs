@@ -1,20 +1,17 @@
 use handlebars::{Context, Handlebars, Helper, Output, RenderContext, RenderError};
 
 pub fn theme_option(
-    h: &Helper,
+    h: &Helper<'_, '_>,
     _r: &Handlebars,
     ctx: &Context,
-    rc: &mut RenderContext,
-    out: &mut Output,
+    rc: &mut RenderContext<'_>,
+    out: &mut dyn Output,
 ) -> Result<(), RenderError> {
     trace!("theme_option (handlebars helper)");
 
-    let param = h
-        .param(0)
-        .and_then(|v| v.value().as_str())
-        .ok_or(RenderError::new(
-            "Param 0 with String type is required for theme_option helper.",
-        ))?;
+    let param = h.param(0).and_then(|v| v.value().as_str()).ok_or_else(|| {
+        RenderError::new("Param 0 with String type is required for theme_option helper.")
+    })?;
 
     let theme_name = rc
         .evaluate_absolute(ctx, "default_theme", true)?

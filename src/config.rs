@@ -3,16 +3,15 @@
 //! The main entrypoint of the `config` module is the `Config` struct. This acts
 //! essentially as a bag of configuration information, with a couple
 //! pre-determined tables (`BookConfig` and `BuildConfig`) as well as support
-//! for arbitrary data which is exposed to plugins and alternate backends.
+//! for arbitrary data which is exposed to plugins and alternative backends.
 //!
 //!
 //! # Examples
 //!
 //! ```rust
-//! # extern crate mdbook;
 //! # use mdbook::errors::*;
-//! # extern crate toml;
 //! use std::path::PathBuf;
+//! use std::str::FromStr;
 //! use mdbook::Config;
 //! use toml::Value;
 //!
@@ -51,18 +50,18 @@
 #![deny(missing_docs)]
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use serde_json;
 use std::env;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use toml::value::Table;
 use toml::{self, Value};
 use toml_query::delete::TomlValueDeleteExt;
 use toml_query::insert::TomlValueInsertExt;
 use toml_query::read::TomlValueReadExt;
 
-use errors::*;
+use crate::errors::*;
 
 /// The overall configuration object for MDBook, essentially an in-memory
 /// representation of `book.toml`.
@@ -75,12 +74,16 @@ pub struct Config {
     rest: Value,
 }
 
-impl Config {
+impl FromStr for Config {
+    type Err = Error;
+
     /// Load a `Config` from some string.
-    pub fn from_str(src: &str) -> Result<Config> {
+    fn from_str(src: &str) -> Result<Self> {
         toml::from_str(src).chain_err(|| Error::from("Invalid configuration file"))
     }
+}
 
+impl Config {
     /// Load the configuration file from disk.
     pub fn from_disk<P: AsRef<Path>>(config_file: P) -> Result<Config> {
         let mut buffer = String::new();
@@ -212,13 +215,13 @@ impl Config {
     /// Get the table associated with a particular renderer.
     pub fn get_renderer<I: AsRef<str>>(&self, index: I) -> Option<&Table> {
         let key = format!("output.{}", index.as_ref());
-        self.get(&key).and_then(|v| v.as_table())
+        self.get(&key).and_then(Value::as_table)
     }
 
     /// Get the table associated with a particular preprocessor.
     pub fn get_preprocessor<I: AsRef<str>>(&self, index: I) -> Option<&Table> {
         let key = format!("preprocessor.{}", index.as_ref());
-        self.get(&key).and_then(|v| v.as_table())
+        self.get(&key).and_then(Value::as_table)
     }
 
     fn from_legacy(mut table: Value) -> Config {
@@ -598,7 +601,7 @@ impl<'de, T> Updateable<'de> for T where T: Serialize + Deserialize<'de> {}
 mod tests {
     use super::*;
 
-    const COMPLEX_CONFIG: &'static str = r#"
+    const COMPLEX_CONFIG: &str = r#"
         [book]
         title = "Some Book"
         authors = ["Michael-F-Bryan <michaelfbryan@gmail.com>"]
@@ -632,9 +635,9 @@ mod tests {
         editable = true
         editor = "ace"
 
-        [preprocess.first]
+        [preprocessor.first]
 
-        [preprocess.second]
+        [preprocessor.second]
         "#;
 
     #[test]
@@ -647,7 +650,6 @@ mod tests {
             description: Some(String::from("A completely useless book")),
             multilingual: true,
             src: PathBuf::from("source"),
-            ..Default::default()
         };
         let build_should_be = BuildConfig {
             build_dir: PathBuf::from("outputs"),
@@ -714,10 +716,10 @@ mod tests {
 
         assert_eq!(got, should_be);
 
-        let baz: Vec<bool> = cfg.get_deserialized("output.random.baz").unwrap();
+        let got_baz: Vec<bool> = cfg.get_deserialized("output.random.baz").unwrap();
         let baz_should_be = vec![true, true, false];
 
-        assert_eq!(baz, baz_should_be);
+        assert_eq!(got_baz, baz_should_be);
     }
 
     #[test]
@@ -809,7 +811,7 @@ mod tests {
 
         for (src, should_be) in inputs {
             let got = parse_env(src);
-            let should_be = should_be.map(|s| s.to_string());
+            let should_be = should_be.map(ToString::to_string);
 
             assert_eq!(got, should_be);
         }
@@ -839,6 +841,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::approx_constant)]
     fn update_config_using_env_var_and_complex_value() {
         let mut cfg = Config::default();
         let key = "foo-bar.baz";

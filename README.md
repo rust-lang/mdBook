@@ -4,7 +4,7 @@
     <tr>
         <td><strong>Linux / OS X</strong></td>
         <td>
-            <a href="https://travis-ci.org/rust-lang-nursery/mdBook"><img src="https://travis-ci.org/rust-lang-nursery/mdBook.svg?branch=master"></a>
+            <a href="https://travis-ci.com/rust-lang-nursery/mdBook"><img src="https://travis-ci.com/rust-lang-nursery/mdBook.svg?branch=master"></a>
         </td>
     </tr>
     <tr>
@@ -57,7 +57,7 @@ There are multiple ways to install mdBook.
    another CI server, we recommend that you specify a semver version range for
    mdBook when you install it through your script!
 
-   This will constrain the server to install the latests **non-breaking**
+   This will constrain the server to install the latest **non-breaking**
    version of mdBook and will prevent your books from failing to build because
    we released a new version. For example:
 
@@ -65,7 +65,7 @@ There are multiple ways to install mdBook.
    cargo install mdbook --vers "^0.1.0"
    ```
 
-3. **From Git**  
+3. **From Git**
 
    The version published to crates.io will ever so slightly be behind the
    version hosted here on GitHub. If you need the latest version you can build
@@ -77,7 +77,7 @@ There are multiple ways to install mdBook.
 
    Again, make sure to add the Cargo bin directory to your `PATH`.
 
-4. **For Contributions**  
+4. **For Contributions**
 
    If you want to contribute to mdBook you will have to clone the repository on
    your local machine:
@@ -152,9 +152,9 @@ party plugins. These plugins are just programs which will be invoked during the
 build process and are split into roughly two categories, *preprocessors* and
 *renderers*.
 
-Preprocessors are used to transform a book before it is sent to a renderer. 
-One example would be to replace all occurrences of 
-`{{#include some_file.ext}}` with the contents of that file. Some existing 
+Preprocessors are used to transform a book before it is sent to a renderer.
+One example would be to replace all occurrences of
+`{{#include some_file.ext}}` with the contents of that file. Some existing
 preprocessors are:
 
 - `index` - a built-in preprocessor (enabled by default) which will transform

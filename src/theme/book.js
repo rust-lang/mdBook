@@ -330,13 +330,11 @@ function playpen_text(playpen) {
             stylesheets.ayuHighlight.disabled = false;
             stylesheets.tomorrowNight.disabled = true;
             stylesheets.highlight.disabled = true;
-
             ace_theme = "ace/theme/tomorrow_night";
         } else {
             stylesheets.ayuHighlight.disabled = true;
             stylesheets.tomorrowNight.disabled = true;
             stylesheets.highlight.disabled = false;
-
             ace_theme = "ace/theme/dawn";
         }
 
@@ -435,6 +433,7 @@ function playpen_text(playpen) {
     var sidebar = document.getElementById("sidebar");
     var sidebarLinks = document.querySelectorAll('#sidebar a');
     var sidebarToggleButton = document.getElementById("sidebar-toggle");
+    var sidebarResizeHandle = document.getElementById("sidebar-resize-handle");
     var firstContact = null;
 
     function showSidebar() {
@@ -473,6 +472,23 @@ function playpen_text(playpen) {
             }
         }
     });
+
+    sidebarResizeHandle.addEventListener('mousedown', initResize, false);
+
+    function initResize(e) {
+        window.addEventListener('mousemove', resize, false);
+        window.addEventListener('mouseup', stopResize, false);
+        html.classList.add('sidebar-resizing');
+    }
+    function resize(e) {
+        document.documentElement.style.setProperty('--sidebar-width', (e.clientX - sidebar.offsetLeft) + 'px');
+    }
+    //on mouseup remove windows functions mousemove & mouseup
+    function stopResize(e) {
+        html.classList.remove('sidebar-resizing');
+        window.removeEventListener('mousemove', resize, false);
+        window.removeEventListener('mouseup', stopResize, false);
+    }
 
     document.addEventListener('touchstart', function (e) {
         firstContact = {
@@ -543,7 +559,7 @@ function playpen_text(playpen) {
         elem.className = 'fa fa-copy tooltipped';
     }
 
-    var clipboardSnippets = new Clipboard('.clip-button', {
+    var clipboardSnippets = new ClipboardJS('.clip-button', {
         text: function (trigger) {
             hideTooltip(trigger);
             let playpen = trigger.closest("pre");
