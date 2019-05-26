@@ -1,11 +1,12 @@
 extern crate notify;
+extern crate glob;
 
 use self::notify::Watcher;
 use clap::{App, ArgMatches, SubCommand};
 use mdbook::errors::Result;
 use mdbook::utils;
 use mdbook::MDBook;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::mpsc::channel;
 use std::time::Duration;
 use {get_book_dir, open};
@@ -47,6 +48,24 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     Ok(())
 }
 
+fn watch_additional_resources(book: &MDBook, watcher : &mut impl notify::Watcher) {
+    use self::glob::glob;
+    use self::notify::RecursiveMode::NonRecursive;
+
+    book.config.html_config()
+        .and_then(|html_config| html_config.additional_resources)
+        .map(|additional_resources| {
+            for res in additional_resources {
+                let found_files = glob(res.src.as_str())
+                    .expect("Failed to read glob pattern for additional resource");
+                for path in found_files.filter_map(std::result::Result::ok) {
+                    let _ = watcher.watch(&path, NonRecursive);
+                    debug!("Watching {:?}", path);
+                }
+            }
+        });
+}
+
 /// Calls the closure when a book source file is changed, blocking indefinitely.
 pub fn trigger_on_change<F>(book: &MDBook, closure: F)
 where
@@ -76,6 +95,8 @@ where
 
     // Add the book.toml file to the watcher if it exists
     let _ = watcher.watch(book.root.join("book.toml"), NonRecursive);
+
+    watch_additional_resources(book, &mut watcher);
 
     info!("Listening for changes...");
 

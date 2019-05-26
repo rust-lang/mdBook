@@ -385,6 +385,41 @@ impl Default for BookConfig {
     }
 }
 
+
+/// Additional files not normaly copied (like external images etc), which
+/// you want to add to the book output.
+/// In book.toml:
+/// ```toml
+/// [[output.html.additional-resources]]
+/// output-dir="img"
+/// src="../plantuml/*.png"
+///  
+/// [[output.html.additional-resources]]
+/// output-dir="foo"
+/// src="bar/*.xml"
+/// ```
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct AdditionalResource {
+    /// Glob string for the files to add (e.g. "../foo/*.png"), path is
+    /// relative to book root dir. The files found by the pattern
+    /// are flattened in the output dir (i.e. the directory structure
+    /// is not copied, only the files)
+    pub src: String,
+    /// Path relative to the book output dir
+    pub output_dir: PathBuf,
+}
+
+impl Default for AdditionalResource {
+    fn default() -> AdditionalResource {
+        AdditionalResource {
+            src: String::from(""),
+            output_dir: PathBuf::from("src"),
+        }
+    }
+}
+
+
 /// Configuration for the build procedure.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
@@ -447,6 +482,9 @@ pub struct HtmlConfig {
     /// FontAwesome icon class to use for the Git repository link.
     /// Defaults to `fa-github` if `None`.
     pub git_repository_icon: Option<String>,
+
+    /// The additional resources to copy
+    pub additional_resources: Option<Vec<AdditionalResource>>
 }
 
 impl HtmlConfig {
@@ -582,6 +620,14 @@ mod tests {
         git-repository-url = "https://foo.com/"
         git-repository-icon = "fa-code-fork"
 
+        [[output.html.additional-resources]]
+        src="foo*.*"
+        output-dir="bar"
+
+        [[output.html.additional-resources]]
+        src="chuck*.*"
+        output-dir="norris"
+
         [output.html.playpen]
         editable = true
         editor = "ace"
@@ -621,6 +667,16 @@ mod tests {
             playpen: playpen_should_be,
             git_repository_url: Some(String::from("https://foo.com/")),
             git_repository_icon: Some(String::from("fa-code-fork")),
+            additional_resources: Some(vec![
+                    AdditionalResource {
+                        src: String::from("foo*.*"),
+                        output_dir: PathBuf::from("bar"),
+                    },
+                    AdditionalResource {
+                        src: String::from("chuck*.*"),
+                        output_dir: PathBuf::from("norris"),
+                    }                
+                ]),
             ..Default::default()
         };
 
