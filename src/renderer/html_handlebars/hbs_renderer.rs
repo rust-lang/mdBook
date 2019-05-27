@@ -1,5 +1,5 @@
 use crate::book::{Book, BookItem};
-use crate::config::{Config, HtmlConfig, AdditionalResource, Playpen};
+use crate::config::{AdditionalResource, Config, HtmlConfig, Playpen};
 use crate::errors::*;
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
@@ -11,10 +11,9 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use glob::glob;
 use handlebars::Handlebars;
 use regex::{Captures, Regex};
-use glob::glob;
-
 
 #[derive(Default)]
 pub struct HtmlHandlebars;
@@ -379,7 +378,6 @@ fn copy_additional_resources(
     resources: &Option<Vec<AdditionalResource>>,
     destination: &PathBuf,
 ) -> Result<()> {
-
     match resources {
         Some(additional_resources) => {
             for res in additional_resources {
@@ -409,8 +407,8 @@ fn copy_additional_resource(res: &AdditionalResource, destination: &PathBuf) -> 
         }
     }
 
-    let found_files = glob(res.src.as_str())
-        .expect("Failed to read glob pattern for additional resource");
+    let found_files =
+        glob(res.src.as_str()).expect("Failed to read glob pattern for additional resource");
     for path in found_files.filter_map(std::result::Result::ok) {
         let file_name = path.file_name().unwrap();
         let dest_file = dest_dir.join(file_name);
@@ -743,10 +741,7 @@ mod tests {
         };
 
         match copy_additional_resource(&resource, &destination) {
-            Ok(_) => assert!(
-                false,
-                "Expected a failure when creating the output dir"
-            ),
+            Ok(_) => assert!(false, "Expected a failure when creating the output dir"),
             //Error is OS dependant, so not much use in checking the error text
             Err(_e) => (),
         }
@@ -774,15 +769,24 @@ mod tests {
             Ok(_) => {
                 //Just test the most likely candidates have been copied
                 let test_file = destination.join("i_will_be_copied.txt");
-                assert!(test_file.is_file(), "Expected 'i_will_be_copied.txt' to be copied");
+                assert!(
+                    test_file.is_file(),
+                    "Expected 'i_will_be_copied.txt' to be copied"
+                );
 
                 let test_file = destination.join("i_will_be_copied_too.txt");
-                assert!(test_file.is_file(), "Expected 'i_will_be_copied_too.txt' to be copied");
+                assert!(
+                    test_file.is_file(),
+                    "Expected 'i_will_be_copied_too.txt' to be copied"
+                );
 
                 let test_file = destination.join("i_will_not_be_copied.doc");
-                assert!(!test_file.is_file(), "Did not expect 'i_will_not_be_copied.doc' to be copied");
-            },
-            Err(e) => assert!(false, "Failed to copy additional resources ({})", e)
+                assert!(
+                    !test_file.is_file(),
+                    "Did not expect 'i_will_not_be_copied.doc' to be copied"
+                );
+            }
+            Err(e) => assert!(false, "Failed to copy additional resources ({})", e),
         }
     }
 }
