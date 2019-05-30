@@ -58,7 +58,7 @@ fn main() {
     if let Err(e) = res {
         utils::log_backtrace(&e);
 
-        ::std::process::exit(101);
+        std::process::exit(101);
     }
 }
 
