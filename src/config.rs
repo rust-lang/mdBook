@@ -374,6 +374,8 @@ pub struct BookConfig {
     pub src: PathBuf,
     /// Does this book support more than one language?
     pub multilingual: bool,
+    /// The main language of the book.
+    pub language: Option<String>,
 }
 
 impl Default for BookConfig {
@@ -384,6 +386,7 @@ impl Default for BookConfig {
             description: None,
             src: PathBuf::from("src"),
             multilingual: false,
+            language: Some(String::from("en")),
         }
     }
 }
@@ -570,6 +573,7 @@ mod tests {
         description = "A completely useless book"
         multilingual = true
         src = "source"
+        language = "ja"
 
         [build]
         build-dir = "outputs"
@@ -604,6 +608,7 @@ mod tests {
             description: Some(String::from("A completely useless book")),
             multilingual: true,
             src: PathBuf::from("source"),
+            language: Some(String::from("ja")),
         };
         let build_should_be = BuildConfig {
             build_dir: PathBuf::from("outputs"),
