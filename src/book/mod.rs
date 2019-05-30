@@ -68,7 +68,7 @@ impl MDBook {
 
         config.update_from_env();
 
-        if log_enabled!(::log::Level::Trace) {
+        if log_enabled!(log::Level::Trace) {
             for line in format!("Config: {:#?}", config).lines() {
                 trace!("{}", line);
             }

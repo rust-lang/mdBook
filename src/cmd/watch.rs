@@ -63,14 +63,14 @@ where
         Ok(w) => w,
         Err(e) => {
             error!("Error while trying to watch the files:\n\n\t{:?}", e);
-            ::std::process::exit(1)
+            std::process::exit(1)
         }
     };
 
     // Add the source directory to the watcher
     if let Err(e) = watcher.watch(book.source_dir(), Recursive) {
         error!("Error while watching {:?}:\n    {:?}", book.source_dir(), e);
-        ::std::process::exit(1);
+        std::process::exit(1);
     };
 
     let _ = watcher.watch(book.theme_dir(), Recursive);
