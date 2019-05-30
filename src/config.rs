@@ -388,7 +388,6 @@ impl Default for BookConfig {
     }
 }
 
-
 /// Additional files not normaly copied (like external images etc), which
 /// you want to add to the book output.
 /// In book.toml:
@@ -421,7 +420,6 @@ impl Default for AdditionalResource {
         }
     }
 }
-
 
 /// Configuration for the build procedure.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -487,7 +485,7 @@ pub struct HtmlConfig {
     pub git_repository_icon: Option<String>,
 
     /// The additional resources to copy
-    pub additional_resources: Option<Vec<AdditionalResource>>
+    pub additional_resources: Option<Vec<AdditionalResource>>,
 }
 
 impl HtmlConfig {
@@ -670,15 +668,15 @@ mod tests {
             git_repository_url: Some(String::from("https://foo.com/")),
             git_repository_icon: Some(String::from("fa-code-fork")),
             additional_resources: Some(vec![
-                    AdditionalResource {
-                        src: String::from("foo*.*"),
-                        output_dir: PathBuf::from("bar"),
-                    },
-                    AdditionalResource {
-                        src: String::from("chuck*.*"),
-                        output_dir: PathBuf::from("norris"),
-                    }                
-                ]),
+                AdditionalResource {
+                    src: String::from("foo*.*"),
+                    output_dir: PathBuf::from("bar"),
+                },
+                AdditionalResource {
+                    src: String::from("chuck*.*"),
+                    output_dir: PathBuf::from("norris"),
+                },
+            ]),
             ..Default::default()
         };
 
