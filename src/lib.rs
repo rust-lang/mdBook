@@ -129,10 +129,6 @@ pub mod errors {
             SerdeJson(serde_json::Error) #[doc = "JSON conversion failed"];
         }
 
-        links {
-            TomlQuery(toml_query::error::Error, toml_query::error::ErrorKind) #[doc = "A TomlQuery error"];
-        }
-
         errors {
             /// A subprocess exited with an unsuccessful return code.
             Subprocess(message: String, output: std::process::Output) {
@@ -150,6 +146,12 @@ pub mod errors {
             ReservedFilenameError(filename: PathBuf) {
                 description("Reserved Filename")
                 display("{} is reserved for internal use", filename.display())
+            }
+
+            /// Error with a TOML file.
+            TomlQueryError(inner: toml_query::error::Error) {
+                description("toml_query error")
+                display("{}", inner)
             }
         }
     }
