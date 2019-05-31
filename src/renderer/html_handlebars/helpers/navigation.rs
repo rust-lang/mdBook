@@ -171,7 +171,7 @@ pub fn next(
 mod tests {
     use super::*;
 
-    static TEMPLATE: &'static str =
+    static TEMPLATE: &str =
         "{{#previous}}{{title}}: {{link}}{{/previous}}|{{#next}}{{title}}: {{link}}{{/next}}";
 
     #[test]
