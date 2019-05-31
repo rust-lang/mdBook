@@ -8,7 +8,17 @@ authors = [
 ]
 documentation = "http://rust-lang-nursery.github.io/mdBook/index.html"
 edition = "2018"
-exclude = ["/book-example/*"]
+exclude = [
+    "/book-example/*",
+    "/ci/*",
+    "/examples/*",
+    "/tests/*",
+    "/.travis.yml",
+    "/appveyor.yml",
+    "/CHANGELOG.md",
+    "/CONTRIBUTING.md",
+    "/release.toml",
+]
 keywords = ["book", "gitbook", "rustbook", "markdown"]
 license = "MPL-2.0"
 readme = "README.md"
