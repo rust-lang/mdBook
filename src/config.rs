@@ -206,7 +206,7 @@ impl Config {
         } else if index.starts_with("build.") {
             self.build.update_value(&index[6..], value);
         } else {
-            self.rest.insert(index, value)?;
+            self.rest.insert(index, value).map_err(|e| ErrorKind::TomlQueryError(e))?;
         }
 
         Ok(())
