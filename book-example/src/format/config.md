@@ -161,6 +161,10 @@ The following configuration options are available:
 - **additional-js:** If you need to add some behaviour to your book without
   removing the current behaviour, you can specify a set of JavaScript files that
   will be loaded alongside the default one.
+- **additional-resources:** If you need to include some additional resources,
+  like for instance image files, that are located outside of the book
+  directory, you can specify one or more additional-resources sections to
+  include these.
 - **no-section-label:** mdBook by defaults adds section label in table of
   contents column. For example, "1.", "2.1". Set this option to true to disable
   those labels. Defaults to `false`.
@@ -171,6 +175,16 @@ The following configuration options are available:
   an icon link will be output in the menu bar of the book.
 - **git-repository-icon:** The FontAwesome icon class to use for the git
   repository link. Defaults to `fa-github`.
+
+Available configuration options for the `[[output.html.additional-resources]]`
+table array:
+
+- **output-dir:** The directory to copy the files to (relative to book output
+  directory). The directory is created recursively. 
+- **src:** The glob pattern to use when locating the additional resource files.
+
+Note that the found files are flattened in the output dircetory, meaning the
+original directory structure is lost.
 
 Available configuration options for the `[output.html.playpen]` table:
 
@@ -238,6 +252,14 @@ boost-paragraph = 1
 expand = true
 heading-split-level = 3
 copy-js = true
+
+[[output.html.additional-resources]]
+output-dir="img"
+src="../img/*.png"
+
+[[output.html.additional-resources]]
+output-dir="img/project"
+src="../project/uml/*.png"
 ```
 
 ### Custom Renderers
