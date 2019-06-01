@@ -122,20 +122,16 @@ pub mod errors {
 
     error_chain! {
         foreign_links {
-            Io(::std::io::Error) #[doc = "A wrapper around `std::io::Error`"];
-            HandlebarsRender(::handlebars::RenderError) #[doc = "Handlebars rendering failed"];
-            HandlebarsTemplate(Box<::handlebars::TemplateError>) #[doc = "Unable to parse the template"];
-            Utf8(::std::string::FromUtf8Error) #[doc = "Invalid UTF-8"];
-            SerdeJson(::serde_json::Error) #[doc = "JSON conversion failed"];
-        }
-
-        links {
-            TomlQuery(::toml_query::error::Error, ::toml_query::error::ErrorKind) #[doc = "A TomlQuery error"];
+            Io(std::io::Error) #[doc = "A wrapper around `std::io::Error`"];
+            HandlebarsRender(handlebars::RenderError) #[doc = "Handlebars rendering failed"];
+            HandlebarsTemplate(Box<handlebars::TemplateError>) #[doc = "Unable to parse the template"];
+            Utf8(std::string::FromUtf8Error) #[doc = "Invalid UTF-8"];
+            SerdeJson(serde_json::Error) #[doc = "JSON conversion failed"];
         }
 
         errors {
             /// A subprocess exited with an unsuccessful return code.
-            Subprocess(message: String, output: ::std::process::Output) {
+            Subprocess(message: String, output: std::process::Output) {
                 description("A subprocess failed")
                 display("{}: {}", message, String::from_utf8_lossy(&output.stdout))
             }
@@ -151,12 +147,18 @@ pub mod errors {
                 description("Reserved Filename")
                 display("{} is reserved for internal use", filename.display())
             }
+
+            /// Error with a TOML file.
+            TomlQueryError(inner: toml_query::error::Error) {
+                description("toml_query error")
+                display("{}", inner)
+            }
         }
     }
 
     // Box to halve the size of Error
-    impl From<::handlebars::TemplateError> for Error {
-        fn from(e: ::handlebars::TemplateError) -> Error {
+    impl From<handlebars::TemplateError> for Error {
+        fn from(e: handlebars::TemplateError) -> Error {
             From::from(Box::new(e))
         }
     }

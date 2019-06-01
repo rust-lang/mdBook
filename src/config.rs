@@ -206,7 +206,9 @@ impl Config {
         } else if index.starts_with("build.") {
             self.build.update_value(&index[6..], value);
         } else {
-            self.rest.insert(index, value)?;
+            self.rest
+                .insert(index, value)
+                .map_err(|e| ErrorKind::TomlQueryError(e))?;
         }
 
         Ok(())
@@ -268,7 +270,7 @@ impl Default for Config {
     }
 }
 impl<'de> Deserialize<'de> for Config {
-    fn deserialize<D: Deserializer<'de>>(de: D) -> ::std::result::Result<Self, D::Error> {
+    fn deserialize<D: Deserializer<'de>>(de: D) -> std::result::Result<Self, D::Error> {
         let raw = Value::deserialize(de)?;
 
         if is_legacy_format(&raw) {
@@ -312,7 +314,7 @@ impl<'de> Deserialize<'de> for Config {
 }
 
 impl Serialize for Config {
-    fn serialize<S: Serializer>(&self, s: S) -> ::std::result::Result<S::Ok, S::Error> {
+    fn serialize<S: Serializer>(&self, s: S) -> std::result::Result<S::Ok, S::Error> {
         use serde::ser::Error;
 
         let mut table = self.rest.clone();

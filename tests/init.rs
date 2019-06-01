@@ -35,7 +35,7 @@ fn run_mdbook_init_should_create_content_from_summary() {
     let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
     let src_dir = temp.path().join("src");
     fs::create_dir_all(src_dir.clone()).unwrap();
-    static SUMMARY: &'static str = r#"# Summary
+    static SUMMARY: &str = r#"# Summary
 
 [intro](intro.md)
 

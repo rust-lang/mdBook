@@ -68,7 +68,7 @@ impl MDBook {
 
         config.update_from_env();
 
-        if log_enabled!(::log::Level::Trace) {
+        if log_enabled!(log::Level::Trace) {
             for line in format!("Config: {:#?}", config).lines() {
                 trace!("{}", line);
             }
@@ -525,7 +525,7 @@ mod tests {
 
     #[test]
     fn can_determine_third_party_preprocessors() {
-        let cfg_str: &'static str = r#"
+        let cfg_str = r#"
         [book]
         title = "Some Book"
 
@@ -564,7 +564,7 @@ mod tests {
 
     #[test]
     fn config_respects_preprocessor_selection() {
-        let cfg_str: &'static str = r#"
+        let cfg_str = r#"
         [preprocessor.links]
         renderers = ["html"]
         "#;

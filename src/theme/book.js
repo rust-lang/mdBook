@@ -101,11 +101,15 @@ function playpen_text(playpen) {
         }
 
         let text = playpen_text(code_block);
+        let classes = code_block.querySelector('code').classList;
+        let has_2018 = classes.contains("edition2018");
+        let edition = has_2018 ? "2018" : "2015";
 
         var params = {
             version: "stable",
             optimize: "0",
-            code: text
+            code: text,
+            edition: edition
         };
 
         if (text.indexOf("#![feature") !== -1) {
