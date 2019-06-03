@@ -496,8 +496,8 @@ fn make_data(
     Ok(data)
 }
 
-/// Goes through the rendered HTML, making sure all header tags are wrapped in
-/// an anchor so people can link to sections directly.
+/// Goes through the rendered HTML, making sure all header tags have
+/// an anchor respectively so people can link to sections directly.
 fn build_header_links(html: &str) -> String {
     let regex = Regex::new(r"<h(\d)>(.*?)</h\d>").unwrap();
     let mut id_counter = HashMap::new();
@@ -513,7 +513,7 @@ fn build_header_links(html: &str) -> String {
         .into_owned()
 }
 
-/// Wraps a single header tag with a link, making sure each tag gets its own
+/// Insert a sinle link into a header, making sure each link gets its own
 /// unique ID by appending an auto-incremented number (if necessary).
 fn insert_link_into_header(
     level: usize,
