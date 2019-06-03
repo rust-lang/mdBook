@@ -496,8 +496,8 @@ fn make_data(
     Ok(data)
 }
 
-/// Goes through the rendered HTML, making sure all header tags are wrapped in
-/// an anchor so people can link to sections directly.
+/// Goes through the rendered HTML, making sure all header tags have
+/// an anchor respectively so people can link to sections directly.
 fn build_header_links(html: &str) -> String {
     let regex = Regex::new(r"<h(\d)>(.*?)</h\d>").unwrap();
     let mut id_counter = HashMap::new();
@@ -508,14 +508,14 @@ fn build_header_links(html: &str) -> String {
                 .parse()
                 .expect("Regex should ensure we only ever get numbers here");
 
-            wrap_header_with_link(level, &caps[2], &mut id_counter)
+            insert_link_into_header(level, &caps[2], &mut id_counter)
         })
         .into_owned()
 }
 
-/// Wraps a single header tag with a link, making sure each tag gets its own
+/// Insert a sinle link into a header, making sure each link gets its own
 /// unique ID by appending an auto-incremented number (if necessary).
-fn wrap_header_with_link(
+fn insert_link_into_header(
     level: usize,
     content: &str,
     id_counter: &mut HashMap<String, usize>,
@@ -532,7 +532,7 @@ fn wrap_header_with_link(
     *id_count += 1;
 
     format!(
-        r##"<a class="header" href="#{id}" id="{id}"><h{level}>{text}</h{level}></a>"##,
+        r##"<h{level}><a class="header" href="#{id}" id="{id}">{text}</a></h{level}>"##,
         level = level,
         id = id,
         text = content
@@ -640,27 +640,27 @@ mod tests {
         let inputs = vec![
             (
                 "blah blah <h1>Foo</h1>",
-                r##"blah blah <a class="header" href="#foo" id="foo"><h1>Foo</h1></a>"##,
+                r##"blah blah <h1><a class="header" href="#foo" id="foo">Foo</a></h1>"##,
             ),
             (
                 "<h1>Foo</h1>",
-                r##"<a class="header" href="#foo" id="foo"><h1>Foo</h1></a>"##,
+                r##"<h1><a class="header" href="#foo" id="foo">Foo</a></h1>"##,
             ),
             (
                 "<h3>Foo^bar</h3>",
-                r##"<a class="header" href="#foobar" id="foobar"><h3>Foo^bar</h3></a>"##,
+                r##"<h3><a class="header" href="#foobar" id="foobar">Foo^bar</a></h3>"##,
             ),
             (
                 "<h4></h4>",
-                r##"<a class="header" href="#" id=""><h4></h4></a>"##,
+                r##"<h4><a class="header" href="#" id=""></a></h4>"##,
             ),
             (
                 "<h4><em>Hï</em></h4>",
-                r##"<a class="header" href="#hï" id="hï"><h4><em>Hï</em></h4></a>"##,
+                r##"<h4><a class="header" href="#hï" id="hï"><em>Hï</em></a></h4>"##,
             ),
             (
                 "<h1>Foo</h1><h3>Foo</h3>",
-                r##"<a class="header" href="#foo" id="foo"><h1>Foo</h1></a><a class="header" href="#foo-1" id="foo-1"><h3>Foo</h3></a>"##,
+                r##"<h1><a class="header" href="#foo" id="foo">Foo</a></h1><h3><a class="header" href="#foo-1" id="foo-1">Foo</a></h3>"##,
             ),
         ];
 
