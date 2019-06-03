@@ -327,7 +327,10 @@ fn able_to_include_files_in_chapters() {
 
     let includes = temp.path().join("book/first/includes.html");
 
-    let summary_strings = &["<h1>Summary</h1>", ">First Chapter</a>"];
+    let summary_strings = &[
+        r##"<h1><a class="header" href="#summary" id="summary">Summary</a></h1>"##,
+        ">First Chapter</a>",
+    ];
     assert_contains_strings(&includes, summary_strings);
 
     assert_doesnt_contain_strings(&includes, &["{{#include ../SUMMARY.md::}}"]);
