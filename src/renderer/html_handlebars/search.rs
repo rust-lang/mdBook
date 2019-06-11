@@ -81,10 +81,7 @@ fn render_item(
         .chain_err(|| "Could not convert HTML path to str")?;
     let anchor_base = utils::fs::normalize_path(filepath);
 
-    let mut opts = Options::empty();
-    opts.insert(Options::ENABLE_TABLES);
-    opts.insert(Options::ENABLE_FOOTNOTES);
-    let p = Parser::new_ext(&chapter.content, opts);
+    let p = utils::new_cmark_parser(&chapter.content);
 
     let mut in_header = false;
     let max_section_depth = i32::from(search_config.heading_split_level);
