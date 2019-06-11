@@ -4,7 +4,7 @@ use std::path::Path;
 use crate::utils;
 
 use handlebars::{Context, Handlebars, Helper, HelperDef, Output, RenderContext, RenderError};
-use pulldown_cmark::{html, Event, Parser, Tag};
+use pulldown_cmark::{html, Event, Parser};
 
 // Handlebars helper to construct TOC
 #[derive(Clone, Copy)]
@@ -117,10 +117,7 @@ impl HelperDef for RenderToc {
 
                 // filter all events that are not inline code blocks
                 let parser = Parser::new(name).filter(|event| match *event {
-                    Event::Start(Tag::Code)
-                    | Event::End(Tag::Code)
-                    | Event::InlineHtml(_)
-                    | Event::Text(_) => true,
+                    Event::Code(_) | Event::InlineHtml(_) | Event::Text(_) => true,
                     _ => false,
                 });
 

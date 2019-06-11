@@ -5,9 +5,7 @@ mod string;
 use crate::errors::Error;
 use regex::Regex;
 
-use pulldown_cmark::{
-    html, Event, Options, Parser, Tag, OPTION_ENABLE_FOOTNOTES, OPTION_ENABLE_TABLES,
-};
+use pulldown_cmark::{html, CowStr, Event, Options, Parser, Tag};
 
 use std::borrow::Cow;
 
@@ -73,7 +71,7 @@ fn adjust_links<'a>(event: Event<'a>, with_base: &str) -> Event<'a> {
         static ref MD_LINK: Regex = Regex::new(r"(?P<link>.*)\.md(?P<anchor>#.*)?").unwrap();
     }
 
-    fn fix<'a>(dest: Cow<'a, str>, base: &str) -> Cow<'a, str> {
+    fn fix<'a>(dest: CowStr<'a>, base: &str) -> CowStr<'a> {
         // Don't modify links with schemes like `https`.
         if !SCHEME_LINK.is_match(&dest) {
             // This is a relative link, adjust it as necessary.
@@ -92,17 +90,17 @@ fn adjust_links<'a>(event: Event<'a>, with_base: &str) -> Event<'a> {
             } else {
                 fixed_link.push_str(&dest);
             };
-            return Cow::from(fixed_link);
+            return CowStr::from(fixed_link);
         }
         dest
     }
 
     match event {
-        Event::Start(Tag::Link(dest, title)) => {
-            Event::Start(Tag::Link(fix(dest, with_base), title))
+        Event::Start(Tag::Link(link_type, dest, title)) => {
+            Event::Start(Tag::Link(link_type, fix(dest, with_base), title))
         }
-        Event::Start(Tag::Image(dest, title)) => {
-            Event::Start(Tag::Image(fix(dest, with_base), title))
+        Event::Start(Tag::Image(link_type, dest, title)) => {
+            Event::Start(Tag::Image(link_type, fix(dest, with_base), title))
         }
         _ => event,
     }
@@ -117,8 +115,8 @@ pub fn render_markdown_with_base(text: &str, curly_quotes: bool, base: &str) -> 
     let mut s = String::with_capacity(text.len() * 3 / 2);
 
     let mut opts = Options::empty();
-    opts.insert(OPTION_ENABLE_TABLES);
-    opts.insert(OPTION_ENABLE_FOOTNOTES);
+    opts.insert(Options::ENABLE_TABLES);
+    opts.insert(Options::ENABLE_FOOTNOTES);
 
     let p = Parser::new_ext(text, opts);
     let mut converter = EventQuoteConverter::new(curly_quotes);
@@ -150,16 +148,16 @@ impl EventQuoteConverter {
         }
 
         match event {
-            Event::Start(Tag::CodeBlock(_)) | Event::Start(Tag::Code) => {
+            Event::Start(Tag::CodeBlock(_)) => {
                 self.convert_text = false;
                 event
             }
-            Event::End(Tag::CodeBlock(_)) | Event::End(Tag::Code) => {
+            Event::End(Tag::CodeBlock(_)) => {
                 self.convert_text = true;
                 event
             }
             Event::Text(ref text) if self.convert_text => {
-                Event::Text(Cow::from(convert_quotes_to_curly(text)))
+                Event::Text(CowStr::from(convert_quotes_to_curly(text)))
             }
             _ => event,
         }
@@ -171,7 +169,7 @@ fn clean_codeblock_headers(event: Event<'_>) -> Event<'_> {
         Event::Start(Tag::CodeBlock(ref info)) => {
             let info: String = info.chars().filter(|ch| !ch.is_whitespace()).collect();
 
-            Event::Start(Tag::CodeBlock(Cow::from(info)))
+            Event::Start(Tag::CodeBlock(CowStr::from(info)))
         }
         _ => event,
     }
