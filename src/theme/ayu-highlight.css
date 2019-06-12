@@ -69,3 +69,11 @@ Original by Dempfi (https://github.com/dempfi/ayu)
 .hljs-strong {
   font-weight: bold;
 }
+
+.hljs-addition {
+  color: #91b362;
+}
+
+.hljs-deletion {
+  color: #d96c75;
+}

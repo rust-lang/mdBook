@@ -67,3 +67,13 @@
 .hljs-strong {
   font-weight: bold;
 }
+
+.hljs-addition {
+  color: #22863a;
+  background-color: #f0fff4;
+}
+
+.hljs-deletion {
+  color: #b31d28;
+  background-color: #ffeef0;
+}
