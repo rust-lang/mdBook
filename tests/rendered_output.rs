@@ -29,8 +29,9 @@ const TOC_TOP_LEVEL: &[&str] = &[
 const TOC_SECOND_LEVEL: &[&str] = &[
     "1.1. Nested Chapter",
     "1.2. Includes",
-    "2.1. Nested Chapter",
     "1.3. Recursive",
+    "1.4. Markdown",
+    "2.1. Nested Chapter",
 ];
 
 /// Make sure you can load the dummy book and build it without panicking.
@@ -431,6 +432,39 @@ fn no_index_for_print_html() {
     assert_doesnt_contain_strings(index_html, &[r##"noindex"##]);
 }
 
+#[test]
+fn markdown_options() {
+    let temp = DummyBook::new().build().unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
+    md.build().unwrap();
+
+    let path = temp.path().join("book/first/markdown.html");
+    assert_contains_strings(
+        &path,
+        &[
+            "<th>foo</th>",
+            "<th>bar</th>",
+            "<td>baz</td>",
+            "<td>bim</td>",
+        ],
+    );
+    assert_contains_strings(&path, &[
+        r##"<sup class="footnote-reference"><a href="#1">1</a></sup>"##,
+        r##"<sup class="footnote-reference"><a href="#word">2</a></sup>"##,
+        r##"<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>"##,
+        r##"<div class="footnote-definition" id="word"><sup class="footnote-definition-label">2</sup>"##,
+    ]);
+    assert_contains_strings(&path, &["<del>strikethrough example</del>"]);
+    assert_contains_strings(
+        &path,
+        &[
+            "<li><input disabled=\"\" type=\"checkbox\" checked=\"\"/>\nApples",
+            "<li><input disabled=\"\" type=\"checkbox\" checked=\"\"/>\nBroccoli",
+            "<li><input disabled=\"\" type=\"checkbox\"/>\nCarrots",
+        ],
+    );
+}
+
 #[cfg(feature = "search")]
 mod search {
     use crate::dummy_book::DummyBook;
@@ -477,7 +511,7 @@ mod search {
         assert_eq!(docs[&some_section]["body"], "");
         assert_eq!(
             docs[&summary]["body"],
-            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Second Chapter Nested Chapter Conclusion"
+            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Markdown Second Chapter Nested Chapter Conclusion"
         );
         assert_eq!(docs[&summary]["breadcrumbs"], "First Chapter » Summary");
         assert_eq!(docs[&conclusion]["body"], "I put &lt;HTML&gt; in here!");

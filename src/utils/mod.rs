@@ -111,14 +111,18 @@ pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
     render_markdown_with_base(text, curly_quotes, "")
 }
 
-pub fn render_markdown_with_base(text: &str, curly_quotes: bool, base: &str) -> String {
-    let mut s = String::with_capacity(text.len() * 3 / 2);
-
+pub fn new_cmark_parser(text: &str) -> Parser<'_> {
     let mut opts = Options::empty();
     opts.insert(Options::ENABLE_TABLES);
     opts.insert(Options::ENABLE_FOOTNOTES);
+    opts.insert(Options::ENABLE_STRIKETHROUGH);
+    opts.insert(Options::ENABLE_TASKLISTS);
+    Parser::new_ext(text, opts)
+}
 
-    let p = Parser::new_ext(text, opts);
+pub fn render_markdown_with_base(text: &str, curly_quotes: bool, base: &str) -> String {
+    let mut s = String::with_capacity(text.len() * 3 / 2);
+    let p = new_cmark_parser(text);
     let mut converter = EventQuoteConverter::new(curly_quotes);
     let events = p
         .map(clean_codeblock_headers)
