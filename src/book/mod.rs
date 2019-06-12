@@ -268,13 +268,12 @@ impl MDBook {
             if let BookItem::Chapter(ref ch) = *item {
                 if !ch.path.as_os_str().is_empty() {
                     let path = self.source_dir().join(&ch.path);
-                    let content = utils::fs::file_to_string(&path)?;
                     info!("Testing file: {:?}", path);
 
                     // write preprocessed file to tempdir
                     let path = temp_dir.path().join(&ch.path);
                     let mut tmpf = utils::fs::create_file(&path)?;
-                    tmpf.write_all(content.as_bytes())?;
+                    tmpf.write_all(ch.content.as_bytes())?;
 
                     let output = Command::new("rustdoc")
                         .arg(&path)

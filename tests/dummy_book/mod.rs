@@ -53,8 +53,11 @@ impl DummyBook {
         })?;
 
         let sub_pattern = if self.passing_test { "true" } else { "false" };
-        let file_containing_test = temp.path().join("src/first/nested.md");
-        replace_pattern_in_file(&file_containing_test, "$TEST_STATUS", sub_pattern)?;
+        let files_containing_tests = ["src/first/nested.md", "src/first/nested-test.rs"];
+        for file in &files_containing_tests {
+            let path_containing_tests = temp.path().join(file);
+            replace_pattern_in_file(&path_containing_tests, "$TEST_STATUS", sub_pattern)?;
+        }
 
         Ok(temp)
     }
