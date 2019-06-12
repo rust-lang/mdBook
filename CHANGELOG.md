@@ -11,6 +11,8 @@
   [#883](https://github.com/rust-lang-nursery/mdBook/pull/883)
 - Set `noindex` on `print.html` page to prevent robots from indexing it.
   [#844](https://github.com/rust-lang-nursery/mdBook/pull/844)
+- Added support for ~~strikethrough~~ and GitHub-style tasklists.
+  [#952](https://github.com/rust-lang-nursery/mdBook/pull/952)
 
 ### Changed
 - Command-line help output is now colored.
@@ -22,6 +24,23 @@
   [#903](https://github.com/rust-lang-nursery/mdBook/pull/903)
 - 💥 Renamed `with_preprecessor` to `with_preprocessor`.
   [#906](https://github.com/rust-lang-nursery/mdBook/pull/906)
+- Updated ACE editor to 1.4.4, should remove a JavaScript console warning.
+  [#935](https://github.com/rust-lang-nursery/mdBook/pull/935)
+- Dependencies have been updated.
+  [#934](https://github.com/rust-lang-nursery/mdBook/pull/934)
+  [#945](https://github.com/rust-lang-nursery/mdBook/pull/945)
+- Highlight.js has been updated. This fixes some TOML highlighting, and adds
+  Julia support.
+  [#942](https://github.com/rust-lang-nursery/mdBook/pull/942)
+- 🔥 Updated to pulldown-cmark 0.5. This may have significant changes to the
+  formatting of existing books, as the newer version has more accurate
+  interpretation of the CommonMark spec and a large number of bug fixes and
+  changes.
+  [#898](https://github.com/rust-lang-nursery/mdBook/pull/898)
+- The `diff` language should now highlight correctly.
+  [#943](https://github.com/rust-lang-nursery/mdBook/pull/943)
+- Make the blank region of a header not clickable.
+  [#948](https://github.com/rust-lang-nursery/mdBook/pull/948)
 
 ### Fixed
 - Fixed file change detection so that `mdbook serve` only reloads once when
@@ -45,6 +64,8 @@
   [#841](https://github.com/rust-lang-nursery/mdBook/pull/841)
 - Fixed some broken links in `print.html`.
   [#871](https://github.com/rust-lang-nursery/mdBook/pull/871)
+- The Rust Playground link now supports the 2018 edition.
+  [#946](https://github.com/rust-lang-nursery/mdBook/pull/946)
 
 ## mdBook 0.2.3 (2018-01-18)
 [2c20c99...6cbc41d](https://github.com/rust-lang-nursery/mdBook/compare/2c20c99...6cbc41d)
