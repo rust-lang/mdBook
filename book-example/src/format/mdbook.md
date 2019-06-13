@@ -35,10 +35,20 @@ With the following syntax, you can include files into your book:
 
 The path to the file has to be relative from the current source file.
 
-Usually, this command is used for including code snippets and examples. In this
-case, oftens one would include a specific part of the file e.g. which only
-contains the relevant lines for the example. We support four different modes of
-partial includes:
+mdBook will interpret included files as markdown. Since the include command
+is usually used for inserting code snippets and examples, you will often
+wrap the command with ```` ``` ```` to display the file contents without
+interpretting them.
+
+````hbs
+```
+\{{#include file.rs}}
+```
+````
+
+## Including portions of a file
+Often you only need a specific part of the file e.g. relevant lines for an
+example. We support four different modes of partial includes:
 
 ```hbs
 \{{#include file.rs:2}}
