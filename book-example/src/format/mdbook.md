@@ -25,7 +25,6 @@ Will render as
 # }
 ```
 
-
 ## Including files
 
 With the following syntax, you can include files into your book:
@@ -63,7 +62,6 @@ command includes all lines up to line 10, i.e. the lines from 11 till the end of
 the file are omitted. The third command includes all lines from line 2, i.e. the
 first line is omitted. The last command includes the excerpt of `file.rs`
 consisting of lines 2 to 10.
-
 
 ## Inserting runnable Rust files
 
