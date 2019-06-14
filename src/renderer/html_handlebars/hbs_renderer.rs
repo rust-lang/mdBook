@@ -579,21 +579,7 @@ fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
                 || classes.contains("mdbook-runnable")
             {
                 // wrap the contents in an external pre block
-                if playpen_config.editable && classes.contains("editable")
-                    || text.contains("fn main")
-                    || text.contains("quick_main!")
-                {
-                    format!("<pre class=\"playpen\">{}</pre>", text)
-                } else {
-                    // we need to inject our own main
-                    let (attrs, code) = partition_source(code);
-
-                    format!(
-                        "<pre class=\"playpen\"><code class=\"{}\">\n# \
-                         #![allow(unused_variables)]\n{}#fn main() {{\n{}#}}</code></pre>",
-                        classes, attrs, code
-                    )
-                }
+                format!("<pre class=\"playpen\">{}</pre>", text)
             } else {
                 // not language-rust, so no-op
                 text.to_owned()
