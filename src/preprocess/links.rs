@@ -63,13 +63,13 @@ where
     let mut previous_end_index = 0;
     let mut replaced = String::new();
 
-    for playpen in find_links(s) {
-        replaced.push_str(&s[previous_end_index..playpen.start_index]);
+    for link in find_links(s) {
+        replaced.push_str(&s[previous_end_index..link.start_index]);
 
-        match playpen.render_with_path(&path) {
+        match link.render_with_path(&path) {
             Ok(new_content) => {
                 if depth < MAX_LINK_NESTED_DEPTH {
-                    if let Some(rel_path) = playpen.link.relative_path(path) {
+                    if let Some(rel_path) = link.link.relative_path(path) {
                         replaced.push_str(&replace_all(&new_content, rel_path, source, depth + 1));
                     } else {
                         replaced.push_str(&new_content);
@@ -80,17 +80,17 @@ where
                         source.display()
                     );
                 }
-                previous_end_index = playpen.end_index;
+                previous_end_index = link.end_index;
             }
             Err(e) => {
-                error!("Error updating \"{}\", {}", playpen.link_text, e);
+                error!("Error updating \"{}\", {}", link.link_text, e);
                 for cause in e.iter().skip(1) {
                     warn!("Caused By: {}", cause);
                 }
 
                 // This should make sure we include the raw `{{# ... }}` snippet
                 // in the page content if there are any errors.
-                previous_end_index = playpen.start_index;
+                previous_end_index = link.start_index;
             }
         }
     }
