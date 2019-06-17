@@ -69,7 +69,7 @@ where
         match link.render_with_path(&path) {
             Ok(new_content) => {
                 if depth < MAX_LINK_NESTED_DEPTH {
-                    if let Some(rel_path) = link.link.relative_path(path) {
+                    if let Some(rel_path) = link.link_type.relative_path(path) {
                         replaced.push_str(&replace_all(&new_content, rel_path, source, depth + 1));
                     } else {
                         replaced.push_str(&new_content);
@@ -169,7 +169,7 @@ fn parse_include_path(path: &str) -> LinkType<'static> {
 struct Link<'a> {
     start_index: usize,
     end_index: usize,
-    link: LinkType<'a>,
+    link_type: LinkType<'a>,
     link_text: &'a str,
 }
 
@@ -193,11 +193,11 @@ impl<'a> Link<'a> {
             _ => None,
         };
 
-        link_type.and_then(|lnk| {
+        link_type.and_then(|lnk_type| {
             cap.get(0).map(|mat| Link {
                 start_index: mat.start(),
                 end_index: mat.end(),
-                link: lnk,
+                link_type: lnk_type,
                 link_text: mat.as_str(),
             })
         })
@@ -205,7 +205,7 @@ impl<'a> Link<'a> {
 
     fn render_with_path<P: AsRef<Path>>(&self, base: P) -> Result<String> {
         let base = base.as_ref();
-        match self.link {
+        match self.link_type {
             // omit the escape char
             LinkType::Escaped => Ok((&self.link_text[1..]).to_owned()),
             LinkType::IncludeRange(ref pat, ref range) => {
@@ -373,13 +373,13 @@ mod tests {
                 Link {
                     start_index: 22,
                     end_index: 42,
-                    link: LinkType::Playpen(PathBuf::from("file.rs"), vec![]),
+                    link_type: LinkType::Playpen(PathBuf::from("file.rs"), vec![]),
                     link_text: "{{#playpen file.rs}}",
                 },
                 Link {
                     start_index: 47,
                     end_index: 68,
-                    link: LinkType::Playpen(PathBuf::from("test.rs"), vec![]),
+                    link_type: LinkType::Playpen(PathBuf::from("test.rs"), vec![]),
                     link_text: "{{#playpen test.rs }}",
                 },
             ]
@@ -396,7 +396,7 @@ mod tests {
             vec![Link {
                 start_index: 22,
                 end_index: 48,
-                link: LinkType::IncludeRange(PathBuf::from("file.rs"), 9..20),
+                link_type: LinkType::IncludeRange(PathBuf::from("file.rs"), 9..20),
                 link_text: "{{#include file.rs:10:20}}",
             }]
         );
@@ -412,7 +412,7 @@ mod tests {
             vec![Link {
                 start_index: 22,
                 end_index: 45,
-                link: LinkType::IncludeRange(PathBuf::from("file.rs"), 9..10),
+                link_type: LinkType::IncludeRange(PathBuf::from("file.rs"), 9..10),
                 link_text: "{{#include file.rs:10}}",
             }]
         );
@@ -428,7 +428,7 @@ mod tests {
             vec![Link {
                 start_index: 22,
                 end_index: 46,
-                link: LinkType::IncludeRangeFrom(PathBuf::from("file.rs"), 9..),
+                link_type: LinkType::IncludeRangeFrom(PathBuf::from("file.rs"), 9..),
                 link_text: "{{#include file.rs:10:}}",
             }]
         );
@@ -444,7 +444,7 @@ mod tests {
             vec![Link {
                 start_index: 22,
                 end_index: 46,
-                link: LinkType::IncludeRangeTo(PathBuf::from("file.rs"), ..20),
+                link_type: LinkType::IncludeRangeTo(PathBuf::from("file.rs"), ..20),
                 link_text: "{{#include file.rs::20}}",
             }]
         );
@@ -460,7 +460,7 @@ mod tests {
             vec![Link {
                 start_index: 22,
                 end_index: 44,
-                link: LinkType::IncludeRangeFull(PathBuf::from("file.rs"), ..),
+                link_type: LinkType::IncludeRangeFull(PathBuf::from("file.rs"), ..),
                 link_text: "{{#include file.rs::}}",
             }]
         );
@@ -476,7 +476,7 @@ mod tests {
             vec![Link {
                 start_index: 22,
                 end_index: 42,
-                link: LinkType::IncludeRangeFull(PathBuf::from("file.rs"), ..),
+                link_type: LinkType::IncludeRangeFull(PathBuf::from("file.rs"), ..),
                 link_text: "{{#include file.rs}}",
             }]
         );
@@ -494,7 +494,7 @@ mod tests {
             vec![Link {
                 start_index: 38,
                 end_index: 68,
-                link: LinkType::Escaped,
+                link_type: LinkType::Escaped,
                 link_text: "\\{{#playpen file.rs editable}}",
             }]
         );
@@ -513,13 +513,13 @@ mod tests {
                 Link {
                     start_index: 38,
                     end_index: 68,
-                    link: LinkType::Playpen(PathBuf::from("file.rs"), vec!["editable"]),
+                    link_type: LinkType::Playpen(PathBuf::from("file.rs"), vec!["editable"]),
                     link_text: "{{#playpen file.rs editable }}",
                 },
                 Link {
                     start_index: 89,
                     end_index: 136,
-                    link: LinkType::Playpen(
+                    link_type: LinkType::Playpen(
                         PathBuf::from("my.rs"),
                         vec!["editable", "no_run", "should_panic"],
                     ),
@@ -543,7 +543,7 @@ mod tests {
             Link {
                 start_index: 38,
                 end_index: 58,
-                link: LinkType::IncludeRangeFull(PathBuf::from("file.rs"), ..),
+                link_type: LinkType::IncludeRangeFull(PathBuf::from("file.rs"), ..),
                 link_text: "{{#include file.rs}}",
             }
         );
@@ -552,7 +552,7 @@ mod tests {
             Link {
                 start_index: 63,
                 end_index: 112,
-                link: LinkType::Escaped,
+                link_type: LinkType::Escaped,
                 link_text: "\\{{#contents are insignifficant in escaped link}}",
             }
         );
@@ -561,7 +561,7 @@ mod tests {
             Link {
                 start_index: 130,
                 end_index: 177,
-                link: LinkType::Playpen(
+                link_type: LinkType::Playpen(
                     PathBuf::from("my.rs"),
                     vec!["editable", "no_run", "should_panic"]
                 ),
