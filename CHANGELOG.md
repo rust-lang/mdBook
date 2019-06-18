@@ -1,7 +1,7 @@
 # Changelog
 
-## mdBook 0.2.4-alpha
-[6cbc41d...HEAD](https://github.com/rust-lang-nursery/mdBook/compare/6cbc41d...HEAD)
+## mdBook 0.3.0
+[6cbc41d...84d4063](https://github.com/rust-lang-nursery/mdBook/compare/6cbc41d...84d4063)
 
 ### Added
 - Added ability to resize the sidebar.
@@ -41,6 +41,9 @@
   [#943](https://github.com/rust-lang-nursery/mdBook/pull/943)
 - Make the blank region of a header not clickable.
   [#948](https://github.com/rust-lang-nursery/mdBook/pull/948)
+- Rustdoc tests now use the preprocessed content instead of the raw,
+  unpreprocessed content.
+  [#891](https://github.com/rust-lang-nursery/mdBook/pull/891)
 
 ### Fixed
 - Fixed file change detection so that `mdbook serve` only reloads once when

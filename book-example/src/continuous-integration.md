@@ -22,7 +22,7 @@ rust:
 
 before_script:
   - (test -x $HOME/.cargo/bin/cargo-install-update || cargo install cargo-update)
-  - (test -x $HOME/.cargo/bin/mdbook || cargo install --vers "^0.2" mdbook)
+  - (test -x $HOME/.cargo/bin/mdbook || cargo install --vers "^0.3" mdbook)
   - cargo install-update -a
 
 script:
@@ -58,7 +58,7 @@ That's it!
 ### Deploying to GitHub Pages manually
 
 If your CI doesn't support GitHub pages, or you're deploying somewhere else
-with integrations such as Github Pages: 
+with integrations such as Github Pages:
  *note: you may want to use different tmp dirs*:
 
 ```console
