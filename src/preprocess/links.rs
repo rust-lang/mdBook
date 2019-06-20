@@ -1,7 +1,7 @@
 use crate::errors::*;
-use crate::utils::fs::file_to_string;
 use crate::utils::take_lines;
 use regex::{CaptureMatches, Captures, Regex};
+use std::fs;
 use std::ops::{Range, RangeFrom, RangeFull, RangeTo};
 use std::path::{Path, PathBuf};
 
@@ -211,7 +211,7 @@ impl<'a> Link<'a> {
             LinkType::IncludeRange(ref pat, ref range) => {
                 let target = base.join(pat);
 
-                file_to_string(&target)
+                fs::read_to_string(&target)
                     .map(|s| take_lines(&s, range.clone()))
                     .chain_err(|| {
                         format!(
@@ -224,7 +224,7 @@ impl<'a> Link<'a> {
             LinkType::IncludeRangeFrom(ref pat, ref range) => {
                 let target = base.join(pat);
 
-                file_to_string(&target)
+                fs::read_to_string(&target)
                     .map(|s| take_lines(&s, range.clone()))
                     .chain_err(|| {
                         format!(
@@ -237,7 +237,7 @@ impl<'a> Link<'a> {
             LinkType::IncludeRangeTo(ref pat, ref range) => {
                 let target = base.join(pat);
 
-                file_to_string(&target)
+                fs::read_to_string(&target)
                     .map(|s| take_lines(&s, *range))
                     .chain_err(|| {
                         format!(
@@ -250,7 +250,7 @@ impl<'a> Link<'a> {
             LinkType::IncludeRangeFull(ref pat, _) => {
                 let target = base.join(pat);
 
-                file_to_string(&target).chain_err(|| {
+                fs::read_to_string(&target).chain_err(|| {
                     format!(
                         "Could not read file for link {} ({})",
                         self.link_text,
@@ -261,7 +261,7 @@ impl<'a> Link<'a> {
             LinkType::Playpen(ref pat, ref attrs) => {
                 let target = base.join(pat);
 
-                let contents = file_to_string(&target).chain_err(|| {
+                let contents = fs::read_to_string(&target).chain_err(|| {
                     format!(
                         "Could not read file for link {} ({})",
                         self.link_text,
