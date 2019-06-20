@@ -156,7 +156,7 @@ impl Config {
     }
 
     /// Fetch a value from the `Config` so you can mutate it.
-    pub fn get_mut<'a>(&'a mut self, key: &str) -> Option<&'a mut Value> {
+    pub fn get_mut(&mut self, key: &str) -> Option<&mut Value> {
         match self.rest.read_mut(key) {
             Ok(inner) => inner,
             Err(_) => None,
