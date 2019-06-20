@@ -149,10 +149,7 @@ impl Config {
     /// `output.html.playpen` will fetch the "playpen" out of the html output
     /// table).
     pub fn get(&self, key: &str) -> Option<&Value> {
-        match self.rest.read(key) {
-            Ok(inner) => inner,
-            Err(_) => None,
-        }
+        self.rest.read(key).unwrap_or(None)
     }
 
     /// Fetch a value from the `Config` so you can mutate it.
