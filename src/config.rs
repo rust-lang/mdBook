@@ -540,12 +540,10 @@ trait Updateable<'de>: Serialize + Deserialize<'de> {
     fn update_value<S: Serialize>(&mut self, key: &str, value: S) {
         let mut raw = Value::try_from(&self).expect("unreachable");
 
-        {
-            if let Ok(value) = Value::try_from(value) {
-                let _ = raw.insert(key, value);
-            } else {
-                return;
-            }
+        if let Ok(value) = Value::try_from(value) {
+            let _ = raw.insert(key, value);
+        } else {
+            return;
         }
 
         if let Ok(updated) = raw.try_into() {
