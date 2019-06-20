@@ -239,6 +239,6 @@ All the code in this repository is released under the ***Mozilla Public License 
 [releases]: https://github.com/rust-lang-nursery/mdBook/releases
 [Rust]: https://www.rust-lang.org/
 [CLI docs]: http://rust-lang-nursery.github.io/mdBook/cli/init.html
-[master-docs]: http://rust-lang-nursery.github.io/mdBook/mdbook/
+[master-docs]: http://rust-lang-nursery.github.io/mdBook/
 [`linkcheck`]: https://crates.io/crates/mdbook-linkcheck
 [`epub`]: https://crates.io/crates/mdbook-epub
