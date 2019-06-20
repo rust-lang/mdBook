@@ -343,18 +343,16 @@ impl MDBook {
 
 /// Look at the `Config` and try to figure out what renderers to use.
 fn determine_renderers(config: &Config) -> Vec<Box<dyn Renderer>> {
-    let mut renderers: Vec<Box<dyn Renderer>> = Vec::new();
+    let mut renderers = Vec::new();
 
     if let Some(output_table) = config.get("output").and_then(Value::as_table) {
-        for (key, table) in output_table.iter() {
-            // the "html" backend has its own Renderer
+        renderers.extend(output_table.iter().map(|(key, table)| {
             if key == "html" {
-                renderers.push(Box::new(HtmlHandlebars::new()));
+                Box::new(HtmlHandlebars::new()) as Box<dyn Renderer>
             } else {
-                let renderer = interpret_custom_renderer(key, table);
-                renderers.push(renderer);
+                interpret_custom_renderer(key, table)
             }
-        }
+        }));
     }
 
     // if we couldn't find anything, add the HTML renderer as a default
