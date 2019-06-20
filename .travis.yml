@@ -19,6 +19,8 @@ matrix:
       env: TARGET=x86_64-unknown-linux-gnu
     - rust: nightly
       env: TARGET=x86_64-unknown-linux-gnu
+    - rust: 1.34.0 # Minimum required Rust version
+      env: TARGET=x86_64-unknown-linux-gnu
 
     - rust: stable
       os: osx
