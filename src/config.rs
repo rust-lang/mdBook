@@ -203,7 +203,7 @@ impl Config {
         } else {
             self.rest
                 .insert(index, value)
-                .map_err(|e| ErrorKind::TomlQueryError(e))?;
+                .map_err(ErrorKind::TomlQueryError)?;
         }
 
         Ok(())
