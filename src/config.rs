@@ -131,10 +131,8 @@ impl Config {
     pub fn update_from_env(&mut self) {
         debug!("Updating the config from environment variables");
 
-        let overrides = env::vars().filter_map(|(key, value)| match parse_env(&key) {
-            Some(index) => Some((index, value)),
-            None => None,
-        });
+        let overrides =
+            env::vars().filter_map(|(key, value)| parse_env(&key).map(|index| (index, value)));
 
         for (key, value) in overrides {
             trace!("{} => {}", key, value);
