@@ -27,26 +27,28 @@ matrix:
       env: TARGET=x86_64-apple-darwin
 
 before_install:
-  - export SCCACHE_VER=0.2.8 RUSTC_WRAPPER=sccache
-  - case "$TRAVIS_OS_NAME" in
+  - |
+    export RUSTC_WRAPPER=sccache;
+    cd "$(mktemp -d)";
+    case "$TRAVIS_OS_NAME" in
       linux )
-        cd /tmp
-          && travis_retry curl -sSL "https://github.com/mozilla/sccache/releases/download/${SCCACHE_VER}/sccache-${SCCACHE_VER}-x86_64-unknown-linux-musl.tar.gz" | tar xzf -
-          && sudo mv "sccache-${SCCACHE_VER}-x86_64-unknown-linux-musl/sccache" /usr/local/bin/sccache;
+          travis_retry curl -sSL 'https://github.com/mozilla/sccache/releases/download/0.2.9/sccache-0.2.9-x86_64-unknown-linux-musl.tar.gz' | tar -xzf - --strip-components=1 &&
+          sudo cp sccache /usr/local/bin/sccache;
         ;;
       osx )
-        cd "${TMPDIR}"
-          && travis_retry curl -sSL "https://github.com/mozilla/sccache/releases/download/${SCCACHE_VER}/sccache-${SCCACHE_VER}-x86_64-apple-darwin.tar.gz" | tar xzf -
-          && sudo mv "sccache-${SCCACHE_VER}-x86_64-apple-darwin/sccache" /usr/local/bin/sccache;
+          travis_retry curl -sSL 'https://github.com/mozilla/sccache/releases/download/0.2.9/sccache-0.2.9-x86_64-apple-darwin.tar.gz' | tar -xzf - --strip-components=1 &&
+          sudo cp sccache /usr/local/bin/sccache;
         ;;
       * ) unset RUSTC_WRAPPER;;
-    esac
-  - cd "$TRAVIS_BUILD_DIR"
+    esac;
+    cd "$TRAVIS_BUILD_DIR";
 
 script:
   - cargo test --all
   - cargo test --all --no-default-features
-  - if [ "$TARGET" = x86_64-unknown-linux-gnu ] && [ "$TRAVIS_RUST_VERSION" = stable ]; then
+  - |
+    sh -ex;
+    if [ "$TARGET" = x86_64-unknown-linux-gnu ] && [ "$TRAVIS_RUST_VERSION" = stable ]; then
       rustup component add rustfmt;
       rustfmt -vV;
       cargo fmt --all -- --check;
