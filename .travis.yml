@@ -69,7 +69,7 @@ deploy:
   local_dir: book-example/book
   skip_cleanup: true
   github_token: "$GITHUB_TOKEN"
-  keep_history: true
+  keep_history: false
   on:
     condition: $TRAVIS_OS_NAME = "linux" && $TRAVIS_RUST_VERSION = "stable"
     tags: true
