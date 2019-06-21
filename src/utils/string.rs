@@ -1,57 +1,19 @@
 use itertools::Itertools;
-use std::ops::{Range, RangeFrom, RangeFull, RangeTo};
-
-// This trait is already contained in the standard lib, however it is unstable.
-// TODO: Remove when the `collections_range` feature stabilises
-// (https://github.com/rust-lang/rust/issues/30877)
-pub trait RangeArgument<T: ?Sized> {
-    fn start(&self) -> Option<&T>;
-    fn end(&self) -> Option<&T>;
-}
-
-impl<T: ?Sized> RangeArgument<T> for RangeFull {
-    fn start(&self) -> Option<&T> {
-        None
-    }
-    fn end(&self) -> Option<&T> {
-        None
-    }
-}
-
-impl<T> RangeArgument<T> for RangeFrom<T> {
-    fn start(&self) -> Option<&T> {
-        Some(&self.start)
-    }
-    fn end(&self) -> Option<&T> {
-        None
-    }
-}
-
-impl<T> RangeArgument<T> for RangeTo<T> {
-    fn start(&self) -> Option<&T> {
-        None
-    }
-    fn end(&self) -> Option<&T> {
-        Some(&self.end)
-    }
-}
-
-impl<T> RangeArgument<T> for Range<T> {
-    fn start(&self) -> Option<&T> {
-        Some(&self.start)
-    }
-    fn end(&self) -> Option<&T> {
-        Some(&self.end)
-    }
-}
+use std::ops::Bound::{Excluded, Included, Unbounded};
+use std::ops::RangeBounds;
 
 /// Take a range of lines from a string.
-pub fn take_lines<R: RangeArgument<usize>>(s: &str, range: R) -> String {
-    let start = *range.start().unwrap_or(&0);
+pub fn take_lines<R: RangeBounds<usize>>(s: &str, range: R) -> String {
+    let start = match range.start_bound() {
+        Excluded(&n) => n + 1,
+        Included(&n) => n,
+        Unbounded => 0,
+    };
     let mut lines = s.lines().skip(start);
-    match range.end() {
-        Some(&end) => lines.take(end.saturating_sub(start)).join("\n"),
-        None => lines.join("\n"),
+    match range.end_bound() {
+        Excluded(end) => lines.take(end.saturating_sub(start)).join("\n"),
+        Included(end) => lines.take((end + 1).saturating_sub(start)).join("\n"),
+        Unbounded => lines.join("\n"),
     }
 }
 

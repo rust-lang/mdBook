@@ -9,7 +9,7 @@ use pulldown_cmark::{html, CowStr, Event, Options, Parser, Tag};
 
 use std::borrow::Cow;
 
-pub use self::string::{take_lines, RangeArgument};
+pub use self::string::take_lines;
 
 /// Replaces multiple consecutive whitespace characters with a single space character.
 pub fn collapse_whitespace(text: &str) -> Cow<'_, str> {
