@@ -131,10 +131,8 @@ impl Config {
     pub fn update_from_env(&mut self) {
         debug!("Updating the config from environment variables");
 
-        let overrides = env::vars().filter_map(|(key, value)| match parse_env(&key) {
-            Some(index) => Some((index, value)),
-            None => None,
-        });
+        let overrides =
+            env::vars().filter_map(|(key, value)| parse_env(&key).map(|index| (index, value)));
 
         for (key, value) in overrides {
             trace!("{} => {}", key, value);
@@ -151,14 +149,11 @@ impl Config {
     /// `output.html.playpen` will fetch the "playpen" out of the html output
     /// table).
     pub fn get(&self, key: &str) -> Option<&Value> {
-        match self.rest.read(key) {
-            Ok(inner) => inner,
-            Err(_) => None,
-        }
+        self.rest.read(key).unwrap_or(None)
     }
 
     /// Fetch a value from the `Config` so you can mutate it.
-    pub fn get_mut<'a>(&'a mut self, key: &str) -> Option<&'a mut Value> {
+    pub fn get_mut(&mut self, key: &str) -> Option<&mut Value> {
         match self.rest.read_mut(key) {
             Ok(inner) => inner,
             Err(_) => None,
@@ -208,7 +203,7 @@ impl Config {
         } else {
             self.rest
                 .insert(index, value)
-                .map_err(|e| ErrorKind::TomlQueryError(e))?;
+                .map_err(ErrorKind::TomlQueryError)?;
         }
 
         Ok(())
@@ -545,12 +540,10 @@ trait Updateable<'de>: Serialize + Deserialize<'de> {
     fn update_value<S: Serialize>(&mut self, key: &str, value: S) {
         let mut raw = Value::try_from(&self).expect("unreachable");
 
-        {
-            if let Ok(value) = Value::try_from(value) {
-                let _ = raw.insert(key, value);
-            } else {
-                return;
-            }
+        if let Ok(value) = Value::try_from(value) {
+            let _ = raw.insert(key, value);
+        } else {
+            return;
         }
 
         if let Ok(updated) = raw.try_into() {
