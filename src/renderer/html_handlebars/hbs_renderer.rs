@@ -1,19 +1,14 @@
 use crate::book::{Book, BookItem};
-use crate::config::{Config, HtmlConfig, Playpen};
+use crate::config::{Config, HtmlConfig};
 use crate::errors::*;
-use crate::renderer::html_handlebars::hbs_wrapper::{HbsWrapper, HbsConfig};
-use crate::renderer::html_handlebars::helpers;
+use crate::renderer::html_handlebars::hbs_wrapper::{HbsConfig, HbsWrapper};
 use crate::renderer::{RenderContext, Renderer};
 use crate::theme::{self, playpen_editor, Theme};
 use crate::utils;
 
 use std::collections::BTreeMap;
-use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-
-use regex::{Captures, Regex};
-
 
 #[derive(Default)]
 pub struct HtmlHandlebars;
@@ -77,7 +72,9 @@ impl HtmlHandlebars {
 
             // Render the handlebars template with the data
             debug!("Render template");
-            let rendered = ctx.handlebars.render("index", &ctx.data, &ctx.html_config.playpen)?;
+            let rendered = ctx
+                .handlebars
+                .render("index", &ctx.data, &ctx.html_config.playpen)?;
 
             // Write to file
             debug!("Creating {}", filepath.display());
@@ -86,7 +83,9 @@ impl HtmlHandlebars {
             if ctx.is_index {
                 ctx.data.insert("path".to_owned(), json!("index.md"));
                 ctx.data.insert("path_to_root".to_owned(), json!(""));
-                let rendered_index = ctx.handlebars.render("index", &ctx.data, &ctx.html_config.playpen)?;
+                let rendered_index =
+                    ctx.handlebars
+                        .render("index", &ctx.data, &ctx.html_config.playpen)?;
                 debug!("Creating index.html from {}", path);
                 utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
             }

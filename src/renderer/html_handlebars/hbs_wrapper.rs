@@ -1,11 +1,11 @@
 use super::helpers;
-use crate::errors::{Result};
 use crate::config::Playpen;
+use crate::errors::Result;
 use crate::utils;
 use handlebars::Handlebars;
-use regex::{Regex, Captures};
-use std::collections::HashMap;
+use regex::{Captures, Regex};
 use serde::Serialize;
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct HbsConfig {
@@ -16,7 +16,7 @@ pub struct HbsConfig {
 
 #[derive(Debug)]
 pub struct HbsWrapper {
-    handlebars: Handlebars
+    handlebars: Handlebars,
 }
 
 impl HbsWrapper {
@@ -169,7 +169,6 @@ fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
         })
         .into_owned()
 }
-
 
 fn partition_source(s: &str) -> (String, String) {
     let mut after_header = false;
