@@ -15,6 +15,7 @@
     "first/markdown.html#tasklisks",
     "second.html#second-chapter",
     "second/nested.html#testing-relative-links-for-the-print-page",
+    "second/nested.html#some-section",
     "conclusion.html#conclusion"
   ],
   "index": {
@@ -51,11 +52,16 @@
           "title": 2
         },
         "14": {
-          "body": 13,
+          "body": 18,
           "breadcrumbs": 7,
           "title": 5
         },
         "15": {
+          "body": 0,
+          "breadcrumbs": 3,
+          "title": 1
+        },
+        "16": {
           "body": 3,
           "breadcrumbs": 1,
           "title": 1
@@ -139,15 +145,21 @@
           "title": "Second Chapter"
         },
         "14": {
-          "body": "When we link to the first section , it should work on both the print page and the non-print page. Link outside . Some image",
+          "body": "When we link to the first section , it should work on both the print page and the non-print page. A fragment link should work. Link outside . Some image HTML Link",
           "breadcrumbs": "Second Chapter » Testing relative links for the print page",
           "id": "14",
           "title": "Testing relative links for the print page"
         },
         "15": {
+          "body": "",
+          "breadcrumbs": "Second Chapter » Some section",
+          "id": "15",
+          "title": "Some section"
+        },
+        "16": {
           "body": "I put &lt;HTML&gt; in here!",
           "breadcrumbs": "Conclusion",
-          "id": "15",
+          "id": "16",
           "title": "Conclusion"
         },
         "2": {
@@ -199,7 +211,7 @@
           "title": "Tables"
         }
       },
-      "length": 16,
+      "length": 17,
       "save": true
     },
     "fields": [
@@ -499,7 +511,7 @@
                       "s": {
                         "df": 2,
                         "docs": {
-                          "15": {
+                          "16": {
                             "tf": 1.0
                           },
                           "7": {
@@ -701,6 +713,38 @@
                   }
                 }
               }
+            },
+            "r": {
+              "a": {
+                "df": 0,
+                "docs": {},
+                "g": {
+                  "df": 0,
+                  "docs": {},
+                  "m": {
+                    "df": 0,
+                    "docs": {},
+                    "e": {
+                      "df": 0,
+                      "docs": {},
+                      "n": {
+                        "df": 0,
+                        "docs": {},
+                        "t": {
+                          "df": 1,
+                          "docs": {
+                            "14": {
+                              "tf": 1.0
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {}
             }
           },
           "g": {
@@ -746,7 +790,7 @@
                     "0": {
                       "tf": 1.0
                     },
-                    "15": {
+                    "16": {
                       "tf": 1.0
                     }
                   }
@@ -784,6 +828,22 @@
               },
               "df": 0,
               "docs": {}
+            },
+            "t": {
+              "df": 0,
+              "docs": {},
+              "m": {
+                "df": 0,
+                "docs": {},
+                "l": {
+                  "df": 1,
+                  "docs": {
+                    "14": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              }
             }
           },
           "i": {
@@ -968,7 +1028,7 @@
                   "df": 1,
                   "docs": {
                     "14": {
-                      "tf": 1.7320508075688772
+                      "tf": 2.23606797749979
                     }
                   }
                 }
@@ -1021,7 +1081,7 @@
                             "t": {
                               "df": 1,
                               "docs": {
-                                "15": {
+                                "16": {
                                   "tf": 1.0
                                 }
                               }
@@ -1382,7 +1442,7 @@
               "t": {
                 "df": 1,
                 "docs": {
-                  "15": {
+                  "16": {
                     "tf": 1.0
                   }
                 }
@@ -1505,9 +1565,12 @@
                       "df": 0,
                       "docs": {},
                       "n": {
-                        "df": 3,
+                        "df": 4,
                         "docs": {
                           "14": {
+                            "tf": 1.0
+                          },
+                          "15": {
                             "tf": 1.0
                           },
                           "3": {
@@ -1793,7 +1856,7 @@
                   "df": 1,
                   "docs": {
                     "14": {
-                      "tf": 1.0
+                      "tf": 1.4142135623730951
                     }
                   }
                 },
@@ -2051,7 +2114,7 @@
                       "df": 0,
                       "docs": {},
                       "r": {
-                        "df": 12,
+                        "df": 13,
                         "docs": {
                           "10": {
                             "tf": 1.0
@@ -2066,6 +2129,9 @@
                             "tf": 1.4142135623730951
                           },
                           "14": {
+                            "tf": 1.0
+                          },
+                          "15": {
                             "tf": 1.0
                           },
                           "2": {
@@ -2129,7 +2195,7 @@
                       "s": {
                         "df": 2,
                         "docs": {
-                          "15": {
+                          "16": {
                             "tf": 1.4142135623730951
                           },
                           "7": {
@@ -2355,6 +2421,38 @@
                   }
                 }
               }
+            },
+            "r": {
+              "a": {
+                "df": 0,
+                "docs": {},
+                "g": {
+                  "df": 0,
+                  "docs": {},
+                  "m": {
+                    "df": 0,
+                    "docs": {},
+                    "e": {
+                      "df": 0,
+                      "docs": {},
+                      "n": {
+                        "df": 0,
+                        "docs": {},
+                        "t": {
+                          "df": 1,
+                          "docs": {
+                            "14": {
+                              "tf": 1.0
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "df": 0,
+              "docs": {}
             }
           },
           "g": {
@@ -2400,7 +2498,7 @@
                     "0": {
                       "tf": 1.0
                     },
-                    "15": {
+                    "16": {
                       "tf": 1.0
                     }
                   }
@@ -2438,6 +2536,22 @@
               },
               "df": 0,
               "docs": {}
+            },
+            "t": {
+              "df": 0,
+              "docs": {},
+              "m": {
+                "df": 0,
+                "docs": {},
+                "l": {
+                  "df": 1,
+                  "docs": {
+                    "14": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              }
             }
           },
           "i": {
@@ -2622,7 +2736,7 @@
                   "df": 1,
                   "docs": {
                     "14": {
-                      "tf": 2.0
+                      "tf": 2.449489742783178
                     }
                   }
                 }
@@ -2675,7 +2789,7 @@
                             "t": {
                               "df": 1,
                               "docs": {
-                                "15": {
+                                "16": {
                                   "tf": 1.0
                                 }
                               }
@@ -3036,7 +3150,7 @@
               "t": {
                 "df": 1,
                 "docs": {
-                  "15": {
+                  "16": {
                     "tf": 1.0
                   }
                 }
@@ -3135,12 +3249,15 @@
                   "docs": {},
                   "n": {
                     "d": {
-                      "df": 3,
+                      "df": 4,
                       "docs": {
                         "13": {
                           "tf": 1.4142135623730951
                         },
                         "14": {
+                          "tf": 1.0
+                        },
+                        "15": {
                           "tf": 1.0
                         },
                         "7": {
@@ -3162,10 +3279,13 @@
                       "df": 0,
                       "docs": {},
                       "n": {
-                        "df": 3,
+                        "df": 4,
                         "docs": {
                           "14": {
                             "tf": 1.0
+                          },
+                          "15": {
+                            "tf": 1.4142135623730951
                           },
                           "3": {
                             "tf": 1.4142135623730951
@@ -3450,7 +3570,7 @@
                   "df": 1,
                   "docs": {
                     "14": {
-                      "tf": 1.0
+                      "tf": 1.4142135623730951
                     }
                   }
                 },
@@ -3546,7 +3666,7 @@
                       "s": {
                         "df": 1,
                         "docs": {
-                          "15": {
+                          "16": {
                             "tf": 1.0
                           }
                         }
@@ -3862,8 +3982,11 @@
                       "df": 0,
                       "docs": {},
                       "n": {
-                        "df": 2,
+                        "df": 3,
                         "docs": {
+                          "15": {
+                            "tf": 1.0
+                          },
                           "3": {
                             "tf": 1.0
                           },

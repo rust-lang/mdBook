@@ -33,12 +33,10 @@ impl HtmlHandlebars {
             let content = ch.content.clone();
             let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
 
-            let string_path = ch.path.parent().unwrap().display().to_string();
-
-            let fixed_content = utils::render_markdown_with_base(
+            let fixed_content = utils::render_markdown_with_path(
                 &ch.content,
                 ctx.html_config.curly_quotes,
-                &string_path,
+                Some(&ch.path),
             );
             print_content.push_str(&fixed_content);
 
