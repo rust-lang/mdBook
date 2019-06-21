@@ -7,7 +7,7 @@ use crate::dummy_book::{assert_contains_strings, assert_doesnt_contain_strings, 
 
 use mdbook::config::Config;
 use mdbook::errors::*;
-use mdbook::utils::fs::{file_to_string, write_file};
+use mdbook::utils::fs::write_file;
 use mdbook::MDBook;
 use select::document::Document;
 use select::predicate::{Class, Name, Predicate};
@@ -220,7 +220,7 @@ fn root_index_html() -> Result<Document> {
         .chain_err(|| "Book building failed")?;
 
     let index_page = temp.path().join("book").join("index.html");
-    let html = file_to_string(&index_page).chain_err(|| "Unable to read index.html")?;
+    let html = fs::read_to_string(&index_page).chain_err(|| "Unable to read index.html")?;
 
     Ok(Document::from(html.as_str()))
 }
@@ -468,14 +468,13 @@ fn markdown_options() {
 #[cfg(feature = "search")]
 mod search {
     use crate::dummy_book::DummyBook;
-    use mdbook::utils::fs::file_to_string;
     use mdbook::MDBook;
-    use std::fs::File;
+    use std::fs::{self, File};
     use std::path::Path;
 
     fn read_book_index(root: &Path) -> serde_json::Value {
         let index = root.join("book/searchindex.js");
-        let index = file_to_string(index).unwrap();
+        let index = fs::read_to_string(index).unwrap();
         let index = index.trim_start_matches("Object.assign(window.search, ");
         let index = index.trim_end_matches(");");
         serde_json::from_str(&index).unwrap()

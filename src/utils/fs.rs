@@ -1,21 +1,8 @@
 use crate::errors::*;
 use std::convert::Into;
 use std::fs::{self, File};
-use std::io::{Read, Write};
+use std::io::Write;
 use std::path::{Component, Path, PathBuf};
-
-/// Takes a path to a file and try to read the file into a String
-pub fn file_to_string<P: AsRef<Path>>(path: P) -> Result<String> {
-    let path = path.as_ref();
-
-    let mut content = String::new();
-    File::open(path)
-        .chain_err(|| "Unable to open the file")?
-        .read_to_string(&mut content)
-        .chain_err(|| "Unable to read the file")?;
-
-    Ok(content)
-}
 
 /// Naively replaces any path seperator with a forward-slash '/'
 pub fn normalize_path(path: &str) -> String {

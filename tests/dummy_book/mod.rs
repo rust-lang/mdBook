@@ -5,7 +5,6 @@
 #![allow(dead_code, unused_variables, unused_imports, unused_extern_crates)]
 
 use mdbook::errors::*;
-use mdbook::utils::fs::file_to_string;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::Path;
@@ -64,7 +63,7 @@ impl DummyBook {
 }
 
 fn replace_pattern_in_file(filename: &Path, from: &str, to: &str) -> Result<()> {
-    let contents = file_to_string(filename)?;
+    let contents = fs::read_to_string(filename)?;
     File::create(filename)?.write_all(contents.replace(from, to).as_bytes())?;
 
     Ok(())
@@ -74,7 +73,7 @@ fn replace_pattern_in_file(filename: &Path, from: &str, to: &str) -> Result<()> 
 /// the list of strings asserting that the file contains all of them.
 pub fn assert_contains_strings<P: AsRef<Path>>(filename: P, strings: &[&str]) {
     let filename = filename.as_ref();
-    let content = file_to_string(filename).expect("Couldn't read the file's contents");
+    let content = fs::read_to_string(filename).expect("Couldn't read the file's contents");
 
     for s in strings {
         assert!(
@@ -89,7 +88,7 @@ pub fn assert_contains_strings<P: AsRef<Path>>(filename: P, strings: &[&str]) {
 
 pub fn assert_doesnt_contain_strings<P: AsRef<Path>>(filename: P, strings: &[&str]) {
     let filename = filename.as_ref();
-    let content = file_to_string(filename).expect("Couldn't read the file's contents");
+    let content = fs::read_to_string(filename).expect("Couldn't read the file's contents");
 
     for s in strings {
         assert!(
