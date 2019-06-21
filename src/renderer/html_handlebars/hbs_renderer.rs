@@ -1,6 +1,7 @@
 use crate::book::{Book, BookItem};
 use crate::config::{Config, HtmlConfig, Playpen};
 use crate::errors::*;
+use crate::renderer::html_handlebars::hbs_wrapper::{HbsWrapper, HbsConfig};
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
 use crate::theme::{self, playpen_editor, Theme};
@@ -11,8 +12,8 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use handlebars::Handlebars;
 use regex::{Captures, Regex};
+
 
 #[derive(Default)]
 pub struct HtmlHandlebars;
@@ -76,9 +77,7 @@ impl HtmlHandlebars {
 
             // Render the handlebars template with the data
             debug!("Render template");
-            let rendered = ctx.handlebars.render("index", &ctx.data)?;
-
-            let rendered = self.post_process(rendered, &ctx.html_config.playpen);
+            let rendered = ctx.handlebars.render("index", &ctx.data, &ctx.html_config.playpen)?;
 
             // Write to file
             debug!("Creating {}", filepath.display());
@@ -87,23 +86,13 @@ impl HtmlHandlebars {
             if ctx.is_index {
                 ctx.data.insert("path".to_owned(), json!("index.md"));
                 ctx.data.insert("path_to_root".to_owned(), json!(""));
-                let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
-                let rendered_index = self.post_process(rendered_index, &ctx.html_config.playpen);
+                let rendered_index = ctx.handlebars.render("index", &ctx.data, &ctx.html_config.playpen)?;
                 debug!("Creating index.html from {}", path);
                 utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
             }
         }
 
         Ok(())
-    }
-
-    #[cfg_attr(feature = "cargo-clippy", allow(clippy::let_and_return))]
-    fn post_process(&self, rendered: String, playpen_config: &Playpen) -> String {
-        let rendered = build_header_links(&rendered);
-        let rendered = fix_code_blocks(&rendered);
-        let rendered = add_playpen_pre(&rendered, playpen_config);
-
-        rendered
     }
 
     fn copy_static_files(
@@ -204,18 +193,6 @@ impl HtmlHandlebars {
         );
     }
 
-    fn register_hbs_helpers(&self, handlebars: &mut Handlebars, html_config: &HtmlConfig) {
-        handlebars.register_helper(
-            "toc",
-            Box::new(helpers::toc::RenderToc {
-                no_section_label: html_config.no_section_label,
-            }),
-        );
-        handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
-        handlebars.register_helper("next", Box::new(helpers::navigation::next));
-        handlebars.register_helper("theme_option", Box::new(helpers::theme::theme_option));
-    }
-
     /// Copy across any additional CSS and JavaScript files which the book
     /// has been configured to use.
     fn copy_additional_css_and_js(
@@ -285,8 +262,6 @@ impl Renderer for HtmlHandlebars {
         let book = &ctx.book;
 
         trace!("render");
-        let mut handlebars = Handlebars::new();
-
         let theme_dir = match html_config.theme {
             Some(ref theme) => theme.to_path_buf(),
             None => ctx.root.join("theme"),
@@ -303,15 +278,12 @@ impl Renderer for HtmlHandlebars {
         }
 
         let theme = theme::Theme::new(theme_dir);
-
-        debug!("Register the index handlebars template");
-        handlebars.register_template_string("index", String::from_utf8(theme.index.clone())?)?;
-
-        debug!("Register the header handlebars template");
-        handlebars.register_partial("header", String::from_utf8(theme.header.clone())?)?;
-
-        debug!("Register handlebars helpers");
-        self.register_hbs_helpers(&mut handlebars, &html_config);
+        let config = HbsConfig {
+            index_template: String::from_utf8(theme.index.clone())?,
+            header_template: String::from_utf8(theme.header.clone())?,
+            no_section_label: html_config.no_section_label,
+        };
+        let handlebars = HbsWrapper::with_config(config)?;
 
         let mut data = make_data(&ctx.root, &book, &ctx.config, &html_config)?;
 
@@ -342,9 +314,7 @@ impl Renderer for HtmlHandlebars {
 
         // Render the handlebars template with the data
         debug!("Render template");
-        let rendered = handlebars.render("index", &data)?;
-
-        let rendered = self.post_process(rendered, &html_config.playpen);
+        let rendered = handlebars.render("index", &data, &html_config.playpen)?;
 
         utils::fs::write_file(&destination, "print.html", rendered.as_bytes())?;
         debug!("Creating print.html ✓");
@@ -499,177 +469,10 @@ fn make_data(
     Ok(data)
 }
 
-/// Goes through the rendered HTML, making sure all header tags have
-/// an anchor respectively so people can link to sections directly.
-fn build_header_links(html: &str) -> String {
-    let regex = Regex::new(r"<h(\d)>(.*?)</h\d>").unwrap();
-    let mut id_counter = HashMap::new();
-
-    regex
-        .replace_all(html, |caps: &Captures<'_>| {
-            let level = caps[1]
-                .parse()
-                .expect("Regex should ensure we only ever get numbers here");
-
-            insert_link_into_header(level, &caps[2], &mut id_counter)
-        })
-        .into_owned()
-}
-
-/// Insert a sinle link into a header, making sure each link gets its own
-/// unique ID by appending an auto-incremented number (if necessary).
-fn insert_link_into_header(
-    level: usize,
-    content: &str,
-    id_counter: &mut HashMap<String, usize>,
-) -> String {
-    let raw_id = utils::id_from_content(content);
-
-    let id_count = id_counter.entry(raw_id.clone()).or_insert(0);
-
-    let id = match *id_count {
-        0 => raw_id,
-        other => format!("{}-{}", raw_id, other),
-    };
-
-    *id_count += 1;
-
-    format!(
-        r##"<h{level}><a class="header" href="#{id}" id="{id}">{text}</a></h{level}>"##,
-        level = level,
-        id = id,
-        text = content
-    )
-}
-
-// The rust book uses annotations for rustdoc to test code snippets,
-// like the following:
-// ```rust,should_panic
-// fn main() {
-//     // Code here
-// }
-// ```
-// This function replaces all commas by spaces in the code block classes
-fn fix_code_blocks(html: &str) -> String {
-    let regex = Regex::new(r##"<code([^>]+)class="([^"]+)"([^>]*)>"##).unwrap();
-    regex
-        .replace_all(html, |caps: &Captures<'_>| {
-            let before = &caps[1];
-            let classes = &caps[2].replace(",", " ");
-            let after = &caps[3];
-
-            format!(
-                r#"<code{before}class="{classes}"{after}>"#,
-                before = before,
-                classes = classes,
-                after = after
-            )
-        })
-        .into_owned()
-}
-
-fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
-    let regex = Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap();
-    regex
-        .replace_all(html, |caps: &Captures<'_>| {
-            let text = &caps[1];
-            let classes = &caps[2];
-            let code = &caps[3];
-
-            if (classes.contains("language-rust")
-                && !classes.contains("ignore")
-                && !classes.contains("noplaypen"))
-                || classes.contains("mdbook-runnable")
-            {
-                // wrap the contents in an external pre block
-                if playpen_config.editable && classes.contains("editable")
-                    || text.contains("fn main")
-                    || text.contains("quick_main!")
-                {
-                    format!("<pre class=\"playpen\">{}</pre>", text)
-                } else {
-                    // we need to inject our own main
-                    let (attrs, code) = partition_source(code);
-
-                    format!(
-                        "<pre class=\"playpen\"><code class=\"{}\">\n# \
-                         #![allow(unused_variables)]\n{}#fn main() {{\n{}#}}</code></pre>",
-                        classes, attrs, code
-                    )
-                }
-            } else {
-                // not language-rust, so no-op
-                text.to_owned()
-            }
-        })
-        .into_owned()
-}
-
-fn partition_source(s: &str) -> (String, String) {
-    let mut after_header = false;
-    let mut before = String::new();
-    let mut after = String::new();
-
-    for line in s.lines() {
-        let trimline = line.trim();
-        let header = trimline.chars().all(char::is_whitespace) || trimline.starts_with("#![");
-        if !header || after_header {
-            after_header = true;
-            after.push_str(line);
-            after.push_str("\n");
-        } else {
-            before.push_str(line);
-            before.push_str("\n");
-        }
-    }
-
-    (before, after)
-}
-
 struct RenderItemContext<'a> {
-    handlebars: &'a Handlebars,
+    handlebars: &'a HbsWrapper,
     destination: PathBuf,
     data: serde_json::Map<String, serde_json::Value>,
     is_index: bool,
     html_config: HtmlConfig,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn original_build_header_links() {
-        let inputs = vec![
-            (
-                "blah blah <h1>Foo</h1>",
-                r##"blah blah <h1><a class="header" href="#foo" id="foo">Foo</a></h1>"##,
-            ),
-            (
-                "<h1>Foo</h1>",
-                r##"<h1><a class="header" href="#foo" id="foo">Foo</a></h1>"##,
-            ),
-            (
-                "<h3>Foo^bar</h3>",
-                r##"<h3><a class="header" href="#foobar" id="foobar">Foo^bar</a></h3>"##,
-            ),
-            (
-                "<h4></h4>",
-                r##"<h4><a class="header" href="#" id=""></a></h4>"##,
-            ),
-            (
-                "<h4><em>Hï</em></h4>",
-                r##"<h4><a class="header" href="#hï" id="hï"><em>Hï</em></a></h4>"##,
-            ),
-            (
-                "<h1>Foo</h1><h3>Foo</h3>",
-                r##"<h1><a class="header" href="#foo" id="foo">Foo</a></h1><h3><a class="header" href="#foo-1" id="foo-1">Foo</a></h3>"##,
-            ),
-        ];
-
-        for (src, should_be) in inputs {
-            let got = build_header_links(&src);
-            assert_eq!(got, should_be);
-        }
-    }
 }
