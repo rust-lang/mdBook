@@ -178,7 +178,7 @@ fn partition_source(s: &str) -> (String, String) {
 
     for line in s.lines() {
         let trimline = line.trim();
-        let header = trimline.chars().all(char::is_whitespace) || trimline.starts_with("#![");
+        let header = trimline.is_empty() || trimline.starts_with("#![");
         if !header || after_header {
             after_header = true;
             after.push_str(line);
@@ -190,6 +190,51 @@ fn partition_source(s: &str) -> (String, String) {
     }
 
     (before, after)
+}
+
+#[cfg(test)]
+mod partition_source_tests {
+    use super::partition_source;
+
+    macro_rules! run_tests {
+        ($($name:ident, $initial:expr => ($before:expr, $after:expr)),+) => {
+            $(
+                #[test]
+                fn $name() {
+                    let sources = partition_source($initial);
+                    assert_eq!(sources, (String::from($before), String::from($after)));
+                }
+            )+
+        };
+    }
+
+    run_tests!(
+        without_header, "some text" => ("", "some text\n"),
+        two_string_without_header, "some\ntext" => ("", "some\ntext\n"),
+        three_string_separated_by_empty_string, "some\n\ntext" => ("", "some\n\ntext\n"),
+
+        some_empty_lines_before_text, "\n\n\nsome text" => ("\n\n\n", "some text\n"),
+
+        only_header, "#![allow(unused_variables)]" => (
+            "#![allow(unused_variables)]\n",
+            ""
+        ),
+
+        one_line_header, "#![allow(unused_variables)]\n#fn main() {\nlet a = 5;\n#}</code></pre>" => (
+            "#![allow(unused_variables)]\n",
+            "#fn main() {\nlet a = 5;\n#}</code></pre>\n"
+        ),
+
+        multiline_header, "#![allow(unused_variables)]\n#![allow(missing_docs)]\n#fn main() {\nlet a = 5;\n#}</code></pre>" => (
+            "#![allow(unused_variables)]\n#![allow(missing_docs)]\n",
+            "#fn main() {\nlet a = 5;\n#}</code></pre>\n"
+        ),
+
+        multiline_header_with_empty_string, "#![allow(unused_variables)]\n\n#![allow(missing_docs)]\n#fn main() {\nlet a = 5;\n#}</code></pre>" => (
+            "#![allow(unused_variables)]\n\n#![allow(missing_docs)]\n",
+            "#fn main() {\nlet a = 5;\n#}</code></pre>\n"
+        )
+    );
 }
 
 #[cfg(test)]
