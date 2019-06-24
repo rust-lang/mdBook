@@ -381,7 +381,10 @@ fn make_data(
     let html = config.html_config().unwrap_or_default();
 
     let mut data = serde_json::Map::new();
-    data.insert("language".to_owned(), json!("en"));
+    data.insert(
+        "language".to_owned(),
+        json!(config.book.language.clone().unwrap_or_default()),
+    );
     data.insert(
         "book_title".to_owned(),
         json!(config.book.title.clone().unwrap_or_default()),

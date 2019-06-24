@@ -42,6 +42,7 @@ This is general information about your book.
 - **src:** By default, the source directory is found in the directory named
   `src` directly under the root folder. But this is configurable with the `src`
   key in the configuration file.
+- **language:** The main language of the book, which is used as a language attribute `<html lang="en">` for example.
 
 **book.toml**
 ```toml
@@ -50,6 +51,7 @@ title = "Example book"
 authors = ["John Doe", "Jane Doe"]
 description = "The example book covers examples."
 src = "my-src"  # the source files will be found in `root/my-src` instead of `root/src`
+language = "en"
 ```
 
 ### Build options
