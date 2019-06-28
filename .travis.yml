@@ -4,8 +4,6 @@ cache:
   directories:
     - "$HOME/.cargo"
     - "$HOME/.cache/sccache"
-before_cache:
-  - rm -rf "$HOME/.cargo/registry"
 
 env:
   global:
