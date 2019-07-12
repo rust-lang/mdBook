@@ -51,13 +51,14 @@ fn find_chapter(
 ) -> Result<Option<StringMap>, RenderError> {
     debug!("Get data from context");
 
-    let chapters = rc.evaluate_absolute(ctx, "chapters", true).and_then(|c| {
-        serde_json::value::from_value::<Vec<StringMap>>(c.clone())
+    let chapters = rc.evaluate(ctx, "@root/chapters").and_then(|c| {
+        serde_json::value::from_value::<Vec<StringMap>>(c.as_json().clone())
             .map_err(|_| RenderError::new("Could not decode the JSON data"))
     })?;
 
     let base_path = rc
-        .evaluate_absolute(ctx, "path", true)?
+        .evaluate(ctx, "@root/path")?
+        .as_json()
         .as_str()
         .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
         .replace("\"", "");
@@ -96,7 +97,8 @@ fn render(
 
     let mut context = BTreeMap::new();
     let base_path = rc
-        .evaluate_absolute(ctx, "path", false)?
+        .evaluate(ctx, "@root/path")?
+        .as_json()
         .as_str()
         .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
         .replace("\"", "");

@@ -24,12 +24,13 @@ impl HelperDef for RenderToc {
         // get value from context data
         // rc.get_path() is current json parent path, you should always use it like this
         // param is the key of value you want to display
-        let chapters = rc.evaluate_absolute(ctx, "chapters", true).and_then(|c| {
-            serde_json::value::from_value::<Vec<BTreeMap<String, String>>>(c.clone())
+        let chapters = rc.evaluate(ctx, "@root/chapters").and_then(|c| {
+            serde_json::value::from_value::<Vec<BTreeMap<String, String>>>(c.as_json().clone())
                 .map_err(|_| RenderError::new("Could not decode the JSON data"))
         })?;
         let current = rc
-            .evaluate_absolute(ctx, "path", true)?
+            .evaluate(ctx, "@root/path")?
+            .as_json()
             .as_str()
             .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
             .replace("\"", "");
