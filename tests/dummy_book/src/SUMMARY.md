@@ -8,6 +8,7 @@
     - [Includes](first/includes.md)
     - [Recursive](first/recursive.md)
     - [Markdown](first/markdown.md)
+    - [Unicode](first/unicode.md)
 - [Second Chapter](second.md)
     - [Nested Chapter](second/nested.md)
 

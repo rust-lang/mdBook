@@ -31,6 +31,7 @@ const TOC_SECOND_LEVEL: &[&str] = &[
     "1.2. Includes",
     "1.3. Recursive",
     "1.4. Markdown",
+    "1.5. Unicode",
     "2.1. Nested Chapter",
 ];
 
@@ -513,7 +514,7 @@ mod search {
         assert_eq!(docs[&some_section]["body"], "");
         assert_eq!(
             docs[&summary]["body"],
-            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Markdown Second Chapter Nested Chapter Conclusion"
+            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Markdown Unicode Second Chapter Nested Chapter Conclusion"
         );
         assert_eq!(docs[&summary]["breadcrumbs"], "First Chapter » Summary");
         assert_eq!(docs[&conclusion]["body"], "I put &lt;HTML&gt; in here!");
