@@ -1,5 +1,5 @@
 use crate::errors::*;
-use crate::utils::take_lines;
+use crate::utils::{take_anchored_lines, take_lines};
 use regex::{CaptureMatches, Captures, Regex};
 use std::fs;
 use std::ops::{Range, RangeFrom, RangeFull, RangeTo};
@@ -106,6 +106,7 @@ enum LinkType<'a> {
     IncludeRangeFrom(PathBuf, RangeFrom<usize>),
     IncludeRangeTo(PathBuf, RangeTo<usize>),
     IncludeRangeFull(PathBuf, RangeFull),
+    IncludeAnchor(PathBuf, String),
     Playpen(PathBuf, Vec<&'a str>),
 }
 
@@ -118,6 +119,7 @@ impl<'a> LinkType<'a> {
             LinkType::IncludeRangeFrom(p, _) => Some(return_relative_path(base, &p)),
             LinkType::IncludeRangeTo(p, _) => Some(return_relative_path(base, &p)),
             LinkType::IncludeRangeFull(p, _) => Some(return_relative_path(base, &p)),
+            LinkType::IncludeAnchor(p, _) => Some(return_relative_path(base, &p)),
             LinkType::Playpen(p, _) => Some(return_relative_path(base, &p)),
         }
     }
@@ -133,11 +135,21 @@ fn return_relative_path<P: AsRef<Path>>(base: P, relative: P) -> PathBuf {
 fn parse_include_path(path: &str) -> LinkType<'static> {
     let mut parts = path.split(':');
     let path = parts.next().unwrap().into();
-    // subtract 1 since line numbers usually begin with 1
-    let start = parts
-        .next()
-        .and_then(|s| s.parse::<usize>().ok())
-        .map(|val| val.saturating_sub(1));
+
+    let next_element = parts.next();
+    let start = if let Some(value) = next_element.and_then(|s| s.parse::<usize>().ok()) {
+        // subtract 1 since line numbers usually begin with 1
+        Some(value.saturating_sub(1))
+    } else if let Some(anchor) = next_element {
+        if anchor == "" {
+            None
+        } else {
+            return LinkType::IncludeAnchor(path, String::from(anchor));
+        }
+    } else {
+        None
+    };
+
     let end = parts.next();
     let has_end = end.is_some();
     let end = end.and_then(|s| s.parse::<usize>().ok());
@@ -257,6 +269,19 @@ impl<'a> Link<'a> {
                         target.display()
                     )
                 })
+            }
+            LinkType::IncludeAnchor(ref pat, ref anchor) => {
+                let target = base.join(pat);
+
+                fs::read_to_string(&target)
+                    .map(|s| take_anchored_lines(&s, anchor))
+                    .chain_err(|| {
+                        format!(
+                            "Could not read file for link {} ({})",
+                            self.link_text,
+                            target.display(),
+                        )
+                    })
             }
             LinkType::Playpen(ref pat, ref attrs) => {
                 let target = base.join(pat);
@@ -478,6 +503,25 @@ mod tests {
                 end_index: 42,
                 link_type: LinkType::IncludeRangeFull(PathBuf::from("file.rs"), ..),
                 link_text: "{{#include file.rs}}",
+            }]
+        );
+    }
+
+    #[test]
+    fn test_find_links_with_anchor() {
+        let s = "Some random text with {{#include file.rs:anchor}}...";
+        let res = find_links(s).collect::<Vec<_>>();
+        println!("\nOUTPUT: {:?}\n", res);
+        assert_eq!(
+            res,
+            vec![Link {
+                start_index: 22,
+                end_index: 49,
+                link_type: LinkType::IncludeAnchor(
+                    PathBuf::from("file.rs"),
+                    String::from("anchor")
+                ),
+                link_text: "{{#include file.rs:anchor}}",
             }]
         );
     }

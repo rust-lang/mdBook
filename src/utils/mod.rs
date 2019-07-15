@@ -11,7 +11,7 @@ use std::borrow::Cow;
 use std::fmt::Write;
 use std::path::Path;
 
-pub use self::string::take_lines;
+pub use self::string::{take_anchored_lines, take_lines};
 
 /// Replaces multiple consecutive whitespace characters with a single space character.
 pub fn collapse_whitespace(text: &str) -> Cow<'_, str> {
