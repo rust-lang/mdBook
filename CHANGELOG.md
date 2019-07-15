@@ -1,7 +1,29 @@
 # Changelog
 
+## mdBook 0.3.1
+[69a08ef...9cd47eb](https://github.com/rust-lang-nursery/mdBook/compare/69a08ef...9cd47eb)
+
+### Added
+- 🔥 Added ability to include files using anchor points instead of line numbers.
+  [#851](https://github.com/rust-lang-nursery/mdBook/pull/851)
+- Added `language` configuration value to set the language of the book, which
+  will affect things like the `<html lang="en">` tag.
+  [#941](https://github.com/rust-lang-nursery/mdBook/pull/941)
+
+### Changed
+- Updated to handlebars 2.0.
+  [#977](https://github.com/rust-lang-nursery/mdBook/pull/977)
+
+### Fixed
+- Fixed memory leak warning.
+  [#967](https://github.com/rust-lang-nursery/mdBook/pull/967)
+- Fix more print.html links.
+  [#963](https://github.com/rust-lang-nursery/mdBook/pull/963)
+- Fixed crash on some unicode input.
+  [#978](https://github.com/rust-lang-nursery/mdBook/pull/978)
+
 ## mdBook 0.3.0
-[6cbc41d...84d4063](https://github.com/rust-lang-nursery/mdBook/compare/6cbc41d...84d4063)
+[6cbc41d...69a08ef](https://github.com/rust-lang-nursery/mdBook/compare/6cbc41d...69a08ef)
 
 ### Added
 - Added ability to resize the sidebar.
