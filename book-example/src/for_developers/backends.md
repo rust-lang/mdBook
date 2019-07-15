@@ -342,10 +342,10 @@ the source code or ask questions.
 [mdbook-epub]: https://github.com/Michael-F-Bryan/mdbook-epub
 [mdbook-test]: https://github.com/Michael-F-Bryan/mdbook-test
 [rust-skeptic]: https://github.com/budziq/rust-skeptic
-[`RenderContext`]: http://rust-lang-nursery.github.io/mdBook/mdbook/renderer/struct.RenderContext.html
-[`RenderContext::from_json()`]: http://rust-lang-nursery.github.io/mdBook/mdbook/renderer/struct.RenderContext.html#method.from_json
+[`RenderContext`]: https://docs.rs/mdbook/*/mdbook/renderer/struct.RenderContext.html
+[`RenderContext::from_json()`]: https://docs.rs/mdbook/*/mdbook/renderer/struct.RenderContext.html#method.from_json
 [`semver`]: https://crates.io/crates/semver
-[`Book`]: http://rust-lang-nursery.github.io/mdBook/mdbook/book/struct.Book.html
-[`Book::iter()`]: http://rust-lang-nursery.github.io/mdBook/mdbook/book/struct.Book.html#method.iter
-[`Config`]: http://rust-lang-nursery.github.io/mdBook/mdbook/config/struct.Config.html
+[`Book`]: https://docs.rs/mdbook/*/mdbook/book/struct.Book.html
+[`Book::iter()`]: https://docs.rs/mdbook/*/mdbook/book/struct.Book.html#method.iter
+[`Config`]: https://docs.rs/mdbook/*/mdbook/config/struct.Config.html
 [issue tracker]: https://github.com/rust-lang-nursery/mdBook/issues
