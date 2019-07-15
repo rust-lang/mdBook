@@ -63,6 +63,50 @@ the file are omitted. The third command includes all lines from line 2, i.e. the
 first line is omitted. The last command includes the excerpt of `file.rs`
 consisting of lines 2 to 10.
 
+To avoid breaking your book when modifying included files, you can also
+include a specific section using anchors instead of line numbers.
+An anchor is a pair of matching lines. The line beginning an anchor must
+match the regex "ANCHOR:\s*[\w_-]+" and similarly the ending line must match
+the regex "ANCHOR_END:\s*[\w_-]+". This allows you to put anchors in
+any kind of commented line.
+
+Consider the following file to include:
+```rs
+/* ANCHOR: all */
+
+// ANCHOR: component
+struct Paddle {
+    hello: f32,
+}
+// ANCHOR_END: component
+
+////////// ANCHOR: system
+impl System for MySystem { ... }
+////////// ANCHOR_END: system
+
+/* ANCHOR_END: all */
+```
+
+Then in the book, all you have to do is:
+````hbs
+Here is a component:
+```rust,no_run,noplaypen
+\{{#include file.rs:component}}
+```
+
+Here is a system:
+```rust,no_run,noplaypen
+\{{#include file.rs:system}}
+```
+
+This is the full file.
+```rust,no_run,noplaypen
+\{{#include file.rs:all}}
+```
+````
+
+Lines containing anchor patterns inside the included anchor are ignored.
+
 ## Inserting runnable Rust files
 
 With the following syntax, you can insert runnable Rust files into your book:
