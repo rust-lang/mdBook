@@ -13,6 +13,9 @@ environment:
 
 # Install Rust and Cargo
 install:
+  # Since rust-lang-libs is currently sharing 1 builder, only run 1 job when a
+  # PR is opened. Merges to master or tags will run all jobs.
+  - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -gt 0 -and ($env:TARGET -ne "x86_64-pc-windows-msvc" -or $env:RUST_CHANNEL -ne "stable") ) {Exit-AppveyorBuild}
   - ps: >-
       If ($Env:TARGET -eq 'x86_64-pc-windows-gnu') {
         $Env:PATH += ';C:\msys64\mingw64\bin'
