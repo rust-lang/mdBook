@@ -27,7 +27,7 @@ limit-results = 15
 
 ## Supported configuration options
 
-It is important to note that **any** relative path specified in the in the
+It is important to note that **any** relative path specified in the
 configuration will always be taken relative from the root of the book where the
 configuration file is located.
 
