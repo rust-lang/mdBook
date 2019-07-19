@@ -26,6 +26,7 @@ a > .hljs {
     margin: auto calc(0px - var(--page-padding));
 }
 #menu-bar > #menu-bar-sticky-container {
+    position: relative;
     display: flex;
     flex-wrap: wrap;
     background-color: var(--bg);
@@ -33,8 +34,10 @@ a > .hljs {
     border-bottom-width: 1px;
     border-bottom-style: solid;
 }
-.js #menu-bar > #menu-bar-sticky-container {
-    transition: transform 0.3s;
+.js #menu-bar:hover > #menu-bar-sticky-container,
+html.sidebar-visible.js #menu-bar-sticky-container {
+    top: 0 !important;
+    transition: top 0.2s;
 }
 #menu-bar.bordered > #menu-bar-sticky-container  {
     border-bottom-color: var(--table-border-color);
@@ -68,10 +71,6 @@ a > .hljs {
 }
 .right-buttons a {
     text-decoration: none;
-}
-
-html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-container {
-    transform: translateY(-60px);
 }
 
 .left-buttons {

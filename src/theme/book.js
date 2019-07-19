@@ -596,25 +596,29 @@ function playpen_text(playpen) {
 })();
 
 (function autoHideMenu() {
-    var menu = document.getElementById('menu-bar');
-
+    var menuStickyContainer = document.getElementById('menu-bar-sticky-container');
     var previousScrollTop = document.scrollingElement.scrollTop;
-
+    menuStickyContainer.style.top = '0px';
     document.addEventListener('scroll', function () {
-        if (menu.classList.contains('folded') && document.scrollingElement.scrollTop < previousScrollTop) {
-            menu.classList.remove('folded');
-        } else if (!menu.classList.contains('folded') && document.scrollingElement.scrollTop > previousScrollTop) {
-            menu.classList.add('folded');
+        var scrollAmount = document.scrollingElement.scrollTop - previousScrollTop;
+        previousScrollTop = document.scrollingElement.scrollTop;
+        var newTopPx = parseInt(menuStickyContainer.style.top.slice(0, -2)) - scrollAmount;
+        if (newTopPx < -menuStickyContainer.clientHeight) {
+            newTopPx = -menuStickyContainer.clientHeight;
+        } else if (newTopPx > 0) {
+            newTopPx = 0;
         }
+        menuStickyContainer.style.top = newTopPx + 'px';
+    }, { passive: true });
+})();
 
-        if (!menu.classList.contains('bordered') && document.scrollingElement.scrollTop > 0) {
+(function controllMenuBorder() {
+    var menu = document.getElementById('menu-bar');
+    document.addEventListener('scroll', function () {
+        if (document.scrollingElement.scrollTop === 0) {
+            menu.classList.remove('bordered');
+        } else {
             menu.classList.add('bordered');
         }
-
-        if (menu.classList.contains('bordered') && document.scrollingElement.scrollTop === 0) {
-            menu.classList.remove('bordered');
-        }
-
-        previousScrollTop = document.scrollingElement.scrollTop;
     }, { passive: true });
 })();
