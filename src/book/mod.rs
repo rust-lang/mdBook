@@ -190,9 +190,6 @@ impl MDBook {
             renderer.name().to_string(),
         );
 
-        let name = renderer.name();
-        let build_dir = self.build_dir_for(name);
-
         for preprocessor in &self.preprocessors {
             if preprocessor_should_run(&**preprocessor, renderer, &self.config) {
                 debug!("Running the {} preprocessor.", preprocessor.name());
