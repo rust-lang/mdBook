@@ -46,7 +46,7 @@ html.sidebar-visible.js #menu-bar-sticky-container {
     position: relative;
     padding: 0 8px;
     z-index: 10;
-    line-height: 50px;
+    line-height: var(--menu-bar-height);
     cursor: pointer;
     transition: color 0.5s;
 }
@@ -85,7 +85,7 @@ html.sidebar-visible.js #menu-bar-sticky-container {
     display: inline-block;
     font-weight: 200;
     font-size: 20px;
-    line-height: 50px;
+    line-height: var(--menu-bar-height);
     text-align: center;
     margin: 0;
     flex: 1;
@@ -123,7 +123,7 @@ html.sidebar-visible.js #menu-bar-sticky-container {
     text-decoration: none;
 
     position: fixed;
-    top: 50px; /* Height of menu-bar */
+    top: var(--menu-bar-height);
     bottom: 0;
     margin: 0;
     max-width: 150px;
@@ -412,7 +412,7 @@ ul#searchresults span.teaser em {
 .theme-popup {
     position: absolute;
     left: 10px;
-    top: 50px;
+    top: var(--menu-bar-height);
     z-index: 1000;
     border-radius: 4px;
     font-size: 0.7em;
