@@ -261,6 +261,10 @@ in [`RenderContext`].
 > **Note:** There is no guarantee that the destination directory exists or is
 > empty (`mdbook` may leave the previous contents to let backends do caching),
 > so it's always a good idea to create it with `fs::create_dir_all()`.
+>
+> If the destination directory already exists, don't assume it will be empty.
+> To allow backends to cache the results from previous runs, `mdbook` may leave
+> old content in the directory.
 
 There's always the possibility that an error will occur while processing a book
 (just look at all the `unwrap()`'s we've written already), so `mdbook` will
