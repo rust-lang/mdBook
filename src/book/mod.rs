@@ -192,16 +192,6 @@ impl MDBook {
 
         let name = renderer.name();
         let build_dir = self.build_dir_for(name);
-        if build_dir.exists() {
-            debug!(
-                "Cleaning build dir for the \"{}\" renderer ({})",
-                name,
-                build_dir.display()
-            );
-
-            utils::fs::remove_dir_content(&build_dir)
-                .chain_err(|| "Unable to clear output directory")?;
-        }
 
         for preprocessor in &self.preprocessors {
             if preprocessor_should_run(&**preprocessor, renderer, &self.config) {
