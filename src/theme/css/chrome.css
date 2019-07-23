@@ -18,14 +18,12 @@ a > .hljs {
 
 /* Menu Bar */
 
-#menu-bar {
-    position: -webkit-sticky;
-    position: sticky;
-    top: 0;
+#menu-bar,
+#menu-bar-hover-placeholder {
     z-index: 101;
     margin: auto calc(0px - var(--page-padding));
 }
-#menu-bar > #menu-bar-sticky-container {
+#menu-bar {
     position: relative;
     display: flex;
     flex-wrap: wrap;
@@ -34,12 +32,21 @@ a > .hljs {
     border-bottom-width: 1px;
     border-bottom-style: solid;
 }
-.js #menu-bar:hover > #menu-bar-sticky-container,
-html.sidebar-visible.js #menu-bar-sticky-container {
+#menu-bar.sticky,
+.js #menu-bar-hover-placeholder:hover + #menu-bar,
+.js #menu-bar:hover,
+.js.sidebar-visible #menu-bar {
+    position: -webkit-sticky;
+    position: sticky;
     top: 0 !important;
-    transition: top 0.2s;
 }
-#menu-bar.bordered > #menu-bar-sticky-container  {
+#menu-bar-hover-placeholder {
+    position: sticky;
+    position: -webkit-sticky;
+    top: 0;
+    height: var(--menu-bar-height);
+}
+#menu-bar.bordered {
     border-bottom-color: var(--table-border-color);
 }
 #menu-bar i, #menu-bar .icon-button {
