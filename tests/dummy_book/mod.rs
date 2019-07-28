@@ -56,6 +56,8 @@ impl DummyBook {
             "src/first/nested.md",
             "src/first/nested-test.rs",
             "src/first/nested-test-with-anchors.rs",
+            "src/first/partially-included-test.rs",
+            "src/first/partially-included-test-with-anchors.rs",
         ];
         for file in &files_containing_tests {
             let path_containing_tests = temp.path().join(file);
