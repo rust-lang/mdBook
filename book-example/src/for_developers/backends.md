@@ -93,7 +93,7 @@ Now we've got the basics running, we want to actually use it. First, install the
 program.
 
 ```shell
-$ cargo install
+$ cargo install --path .
 ```
 
 Then `cd` to the particular book you'd like to count the words of and update its
@@ -304,7 +304,7 @@ like this:
 Now, if we reinstall the backend and build a book,
 
 ```shell
-$ cargo install --force
+$ cargo install --path . --force
 $ mdbook build /path/to/book
 ...
 2018-01-16 21:21:39 [INFO] (mdbook::renderer): Invoking the "wordcount" renderer
