@@ -621,4 +621,138 @@ mod tests {
         );
     }
 
+    #[test]
+    fn parse_without_colon_includes_all() {
+        let link_type = parse_include_path("arbitrary");
+        assert_eq!(
+            link_type,
+            LinkType::IncludeRange(PathBuf::from("arbitrary"), LineRange::from(RangeFull))
+        );
+    }
+
+    #[test]
+    fn parse_with_nothing_after_colon_includes_all() {
+        let link_type = parse_include_path("arbitrary:");
+        assert_eq!(
+            link_type,
+            LinkType::IncludeRange(PathBuf::from("arbitrary"), LineRange::from(RangeFull))
+        );
+    }
+
+    #[test]
+    fn parse_with_two_colons_includes_all() {
+        let link_type = parse_include_path("arbitrary::");
+        assert_eq!(
+            link_type,
+            LinkType::IncludeRange(PathBuf::from("arbitrary"), LineRange::from(RangeFull))
+        );
+    }
+
+    #[test]
+    fn parse_with_garbage_after_two_colons_includes_all() {
+        let link_type = parse_include_path("arbitrary::NaN");
+        assert_eq!(
+            link_type,
+            LinkType::IncludeRange(PathBuf::from("arbitrary"), LineRange::from(RangeFull))
+        );
+    }
+
+    #[test]
+    fn parse_with_one_number_after_colon_only_that_line() {
+        let link_type = parse_include_path("arbitrary:5");
+        assert_eq!(
+            link_type,
+            LinkType::IncludeRange(PathBuf::from("arbitrary"), LineRange::from(4..5))
+        );
+    }
+
+    #[test]
+    fn parse_with_one_based_start_becomes_zero_based() {
+        let link_type = parse_include_path("arbitrary:1");
+        assert_eq!(
+            link_type,
+            LinkType::IncludeRange(PathBuf::from("arbitrary"), LineRange::from(0..1))
+        );
+    }
+
+    #[test]
+    fn parse_with_zero_based_start_stays_zero_based_but_is_probably_an_error() {
+        let link_type = parse_include_path("arbitrary:0");
+        assert_eq!(
+            link_type,
+            LinkType::IncludeRange(PathBuf::from("arbitrary"), LineRange::from(0..1))
+        );
+    }
+
+    #[test]
+    fn parse_start_only_range() {
+        let link_type = parse_include_path("arbitrary:5:");
+        assert_eq!(
+            link_type,
+            LinkType::IncludeRange(PathBuf::from("arbitrary"), LineRange::from(4..))
+        );
+    }
+
+    #[test]
+    fn parse_start_with_garbage_interpreted_as_start_only_range() {
+        let link_type = parse_include_path("arbitrary:5:NaN");
+        assert_eq!(
+            link_type,
+            LinkType::IncludeRange(PathBuf::from("arbitrary"), LineRange::from(4..))
+        );
+    }
+
+    #[test]
+    fn parse_end_only_range() {
+        let link_type = parse_include_path("arbitrary::5");
+        assert_eq!(
+            link_type,
+            LinkType::IncludeRange(PathBuf::from("arbitrary"), LineRange::from(..5))
+        );
+    }
+
+    #[test]
+    fn parse_start_and_end_range() {
+        let link_type = parse_include_path("arbitrary:5:10");
+        assert_eq!(
+            link_type,
+            LinkType::IncludeRange(PathBuf::from("arbitrary"), LineRange::from(4..10))
+        );
+    }
+
+    #[test]
+    fn parse_with_negative_interpreted_as_anchor() {
+        let link_type = parse_include_path("arbitrary:-5");
+        assert_eq!(
+            link_type,
+            LinkType::IncludeAnchor(PathBuf::from("arbitrary"), "-5".to_string())
+        );
+    }
+
+    #[test]
+    fn parse_with_floating_point_interpreted_as_anchor() {
+        let link_type = parse_include_path("arbitrary:-5.7");
+        assert_eq!(
+            link_type,
+            LinkType::IncludeAnchor(PathBuf::from("arbitrary"), "-5.7".to_string())
+        );
+    }
+
+    #[test]
+    fn parse_with_anchor_followed_by_colon() {
+        let link_type = parse_include_path("arbitrary:some-anchor:this-gets-ignored");
+        assert_eq!(
+            link_type,
+            LinkType::IncludeAnchor(PathBuf::from("arbitrary"), "some-anchor".to_string())
+        );
+    }
+
+    #[test]
+    fn parse_with_more_than_three_colons_ignores_everything_after_third_colon() {
+        let link_type = parse_include_path("arbitrary:5:10:17:anything:");
+        assert_eq!(
+            link_type,
+            LinkType::IncludeRange(PathBuf::from("arbitrary"), LineRange::from(4..10))
+        );
+    }
 }
