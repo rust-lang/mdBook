@@ -180,7 +180,7 @@ fn return_relative_path<P: AsRef<Path>>(base: P, relative: P) -> PathBuf {
 }
 
 fn parse_include_path(path: &str) -> LinkType<'static> {
-    let mut parts = path.split(':');
+    let mut parts = path.split(':').fuse();
     let path = parts.next().unwrap().into();
 
     let next_element = parts.next();
