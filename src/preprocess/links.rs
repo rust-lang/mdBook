@@ -198,24 +198,15 @@ fn parse_include_path(path: &str) -> LinkType<'static> {
     let end = parts.next();
     let has_end = end.is_some();
     let end = end.and_then(|s| s.parse::<usize>().ok());
-    match start {
-        Some(start) => match end {
-            Some(end) => LinkType::IncludeRange(path, LineRange::from(start..end)),
-            None => {
-                if has_end {
-                    LinkType::IncludeRange(path, LineRange::from(start..))
-                } else {
-                    LinkType::IncludeRange(
-                        path,
-                        LineRange::from(start..start + 1),
-                    )
-                }
-            }
-        },
-        None => match end {
-            Some(end) => LinkType::IncludeRange(path, LineRange::from(..end)),
-            None => LinkType::IncludeRange(path, LineRange::from(RangeFull)),
-        },
+
+    match (start, end, has_end) {
+        (Some(start), Some(end), _) => LinkType::IncludeRange(path, LineRange::from(start..end)),
+        (Some(start), None, true) => LinkType::IncludeRange(path, LineRange::from(start..)),
+        (Some(start), None, false) => {
+            LinkType::IncludeRange(path, LineRange::from(start..start + 1))
+        }
+        (None, Some(end), _) => LinkType::IncludeRange(path, LineRange::from(..end)),
+        (None, None, _) => LinkType::IncludeRange(path, LineRange::from(RangeFull)),
     }
 }
 
