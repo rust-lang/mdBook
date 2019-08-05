@@ -196,17 +196,19 @@ fn parse_include_path(path: &str) -> LinkType<'static> {
     };
 
     let end = parts.next();
-    let has_end = end.is_some();
-    let end = end.and_then(|s| s.parse::<usize>().ok());
+    // If `end` is empty string or any other value that can't be parsed as a usize, treat this
+    // include as a range with only a start bound. However, if end isn't specified, include only
+    // the single line specified by `start`.
+    let end = end.map(|s| s.parse::<usize>());
 
-    match (start, end, has_end) {
-        (Some(start), Some(end), _) => LinkType::IncludeRange(path, LineRange::from(start..end)),
-        (Some(start), None, true) => LinkType::IncludeRange(path, LineRange::from(start..)),
-        (Some(start), None, false) => {
-            LinkType::IncludeRange(path, LineRange::from(start..start + 1))
+    match (start, end) {
+        (Some(start), Some(Ok(end))) => LinkType::IncludeRange(path, LineRange::from(start..end)),
+        (Some(start), Some(Err(_))) => LinkType::IncludeRange(path, LineRange::from(start..)),
+        (Some(start), None) => LinkType::IncludeRange(path, LineRange::from(start..start + 1)),
+        (None, Some(Ok(end))) => LinkType::IncludeRange(path, LineRange::from(..end)),
+        (None, None) | (None, Some(Err(_))) => {
+            LinkType::IncludeRange(path, LineRange::from(RangeFull))
         }
-        (None, Some(end), _) => LinkType::IncludeRange(path, LineRange::from(..end)),
-        (None, None, _) => LinkType::IncludeRange(path, LineRange::from(RangeFull)),
     }
 }
 
