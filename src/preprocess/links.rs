@@ -187,12 +187,10 @@ fn parse_include_path(path: &str) -> LinkType<'static> {
     let start = if let Some(value) = next_element.and_then(|s| s.parse::<usize>().ok()) {
         // subtract 1 since line numbers usually begin with 1
         Some(value.saturating_sub(1))
+    } else if let Some("") = next_element {
+        None
     } else if let Some(anchor) = next_element {
-        if anchor == "" {
-            None
-        } else {
-            return LinkType::IncludeAnchor(path, String::from(anchor));
-        }
+        return LinkType::IncludeAnchor(path, String::from(anchor));
     } else {
         None
     };
