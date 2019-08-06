@@ -3,7 +3,7 @@ language: rust
 cache:
   directories:
     - "$HOME/.cargo"
-    - "$HOME/.cache/sccache"
+    # - "$HOME/.cache/sccache"
 
 env:
   global:
@@ -26,7 +26,7 @@ matrix:
 
 before_install:
   - |
-    export RUSTC_WRAPPER=sccache;
+    # export RUSTC_WRAPPER=sccache;
     cd "$(mktemp -d)";
     case "$TRAVIS_OS_NAME" in
       linux )
