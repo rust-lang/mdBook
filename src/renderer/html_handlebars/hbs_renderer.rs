@@ -282,6 +282,11 @@ impl Renderer for HtmlHandlebars {
         let destination = &ctx.destination;
         let book = &ctx.book;
 
+        if destination.exists() {
+            utils::fs::remove_dir_content(destination)
+                .chain_err(|| "Unable to remove stale HTML output")?;
+        }
+
         trace!("render");
         let mut handlebars = Handlebars::new();
 
