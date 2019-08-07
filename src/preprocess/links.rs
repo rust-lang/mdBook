@@ -326,7 +326,7 @@ fn find_links(contents: &str) -> LinkIter<'_> {
             \\\{\{\#.*\}\}             # match escaped link
             |                          # or
             \{\{\s*                    # link opening parens and whitespace
-            \#([a-zA-Z0-9]+)           # link type
+            \#([a-zA-Z0-9_]+)          # link type
             \s+                        # separating whitespace
             ([a-zA-Z0-9\s_.\-:/\\]+)   # link target path and space separated properties
             \s*\}\}                    # whitespace and link closing parens"
