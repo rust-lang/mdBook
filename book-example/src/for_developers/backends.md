@@ -93,7 +93,7 @@ Now we've got the basics running, we want to actually use it. First, install the
 program.
 
 ```shell
-$ cargo install
+$ cargo install --path .
 ```
 
 Then `cd` to the particular book you'd like to count the words of and update its
@@ -261,6 +261,10 @@ in [`RenderContext`].
 > **Note:** There is no guarantee that the destination directory exists or is
 > empty (`mdbook` may leave the previous contents to let backends do caching),
 > so it's always a good idea to create it with `fs::create_dir_all()`.
+>
+> If the destination directory already exists, don't assume it will be empty.
+> To allow backends to cache the results from previous runs, `mdbook` may leave
+> old content in the directory.
 
 There's always the possibility that an error will occur while processing a book
 (just look at all the `unwrap()`'s we've written already), so `mdbook` will
@@ -304,7 +308,7 @@ like this:
 Now, if we reinstall the backend and build a book,
 
 ```shell
-$ cargo install --force
+$ cargo install --path . --force
 $ mdbook build /path/to/book
 ...
 2018-01-16 21:21:39 [INFO] (mdbook::renderer): Invoking the "wordcount" renderer

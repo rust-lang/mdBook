@@ -8,7 +8,9 @@
 ::-webkit-scrollbar-thumb {
     background: var(--scrollbar);
 }
-
+html {
+    scrollbar-color: var(--scrollbar) var(--bg);
+}
 #searchresults a,
 .content a:link,
 a:visited,
@@ -130,7 +132,7 @@ a > .hljs {
     text-decoration: none;
 
     position: fixed;
-    top: var(--menu-bar-height);
+    top: 0;
     bottom: 0;
     margin: 0;
     max-width: 150px;
@@ -141,10 +143,14 @@ a > .hljs {
     align-content: center;
     flex-direction: column;
 
-    transition: color 0.5s;
+    transition: color 0.5s, background-color 0.5s;
 }
 
-.nav-chapters:hover { text-decoration: none; }
+.nav-chapters:hover {
+    text-decoration: none;
+    background-color: var(--theme-hover);
+    transition: background-color 0.15s, color 0.15s;
+}
 
 .nav-wrapper {
     margin-top: 50px;
