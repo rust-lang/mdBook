@@ -23,6 +23,7 @@ pub static HIGHLIGHT_JS: &[u8] = include_bytes!("highlight.js");
 pub static TOMORROW_NIGHT_CSS: &[u8] = include_bytes!("tomorrow-night.css");
 pub static HIGHLIGHT_CSS: &[u8] = include_bytes!("highlight.css");
 pub static AYU_HIGHLIGHT_CSS: &[u8] = include_bytes!("ayu-highlight.css");
+pub static SERVICE_WORKER: &'static [u8] = include_bytes!("sw.js");
 pub static CLIPBOARD_JS: &[u8] = include_bytes!("clipboard.min.js");
 pub static FONT_AWESOME: &[u8] = include_bytes!("FontAwesome/css/font-awesome.min.css");
 pub static FONT_AWESOME_EOT: &[u8] = include_bytes!("FontAwesome/fonts/fontawesome-webfont.eot");
@@ -52,6 +53,7 @@ pub struct Theme {
     pub highlight_css: Vec<u8>,
     pub tomorrow_night_css: Vec<u8>,
     pub ayu_highlight_css: Vec<u8>,
+    pub service_worker: Vec<u8>,
     pub highlight_js: Vec<u8>,
     pub clipboard_js: Vec<u8>,
 }
@@ -84,6 +86,7 @@ impl Theme {
                 (theme_dir.join("favicon.png"), &mut theme.favicon),
                 (theme_dir.join("highlight.js"), &mut theme.highlight_js),
                 (theme_dir.join("clipboard.min.js"), &mut theme.clipboard_js),
+                (theme_dir.join("sw.js"), &mut theme.service_worker),
                 (theme_dir.join("highlight.css"), &mut theme.highlight_css),
                 (
                     theme_dir.join("tomorrow-night.css"),
@@ -124,6 +127,7 @@ impl Default for Theme {
             highlight_css: HIGHLIGHT_CSS.to_owned(),
             tomorrow_night_css: TOMORROW_NIGHT_CSS.to_owned(),
             ayu_highlight_css: AYU_HIGHLIGHT_CSS.to_owned(),
+            service_worker: SERVICE_WORKER.to_owned(),
             highlight_js: HIGHLIGHT_JS.to_owned(),
             clipboard_js: CLIPBOARD_JS.to_owned(),
         }
@@ -204,6 +208,7 @@ mod tests {
             highlight_css: Vec::new(),
             tomorrow_night_css: Vec::new(),
             ayu_highlight_css: Vec::new(),
+            service_worker: Vec::new(),
             highlight_js: Vec::new(),
             clipboard_js: Vec::new(),
         };

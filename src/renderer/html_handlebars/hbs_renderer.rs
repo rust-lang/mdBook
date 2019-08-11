@@ -9,11 +9,20 @@ use crate::utils;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
-use std::fs;
+use std::collections::hash_map::DefaultHasher;
+use std::hash::Hasher;
+use std::fs::{self, OpenOptions};
+use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use handlebars::Handlebars;
 use regex::{Captures, Regex};
+
+#[derive(Default)]
+pub struct ChapterFile {
+    pub path: String,
+    pub revision: u64,
+}
 
 #[derive(Default)]
 pub struct HtmlHandlebars;
@@ -23,12 +32,46 @@ impl HtmlHandlebars {
         HtmlHandlebars
     }
 
+    fn build_service_worker(&self, build_dir: &Path, chapter_files: &Vec<ChapterFile>) -> Result<()> {
+        let path = build_dir.join("sw.js");
+        let mut file = OpenOptions::new().append(true).open(path)?;
+        let mut content = String::from("\nconst chapters = [\n");
+
+         for chapter_file in chapter_files {
+            content.push_str("  { url: ");
+
+             // Rewrite "/" to point to the current directory
+            // https://rust-lang-nursery.github.io/ => https://rust-lang-nursery.github.io/mdBook/
+            // location.href is https://rust-lang-nursery.github.io/mdBook/sw.js
+            // so we remove the sw.js from the end to get the correct path
+            if chapter_file.path == "/" {
+                content.push_str("location.href.slice(0, location.href.length - 5)");
+            } else {
+                content.push_str("'");
+                content.push_str(&chapter_file.path);
+                content.push_str("'");
+            }
+
+             content.push_str(", revision: '");
+            content.push_str(&chapter_file.revision.to_string());
+            content.push_str("' },\n");
+        }
+
+         content.push_str("];\n");
+        content.push_str("\nworkbox.precache(chapters);\n");
+
+         file.write(content.as_bytes())?;
+
+         Ok(())
+    }
+
     fn render_item(
         &self,
         item: &BookItem,
         mut ctx: RenderItemContext<'_>,
         print_content: &mut String,
-    ) -> Result<()> {
+    ) -> Result<Vec<ChapterFile>> {
+        let mut chapter_files = Vec::new();
         // FIXME: This should be made DRY-er and rely less on mutable state
         if let BookItem::Chapter(ref ch) = *item {
             let content = ch.content.clone();
@@ -47,6 +90,9 @@ impl HtmlHandlebars {
                 .to_str()
                 .chain_err(|| "Could not convert path to str")?;
             let filepath = Path::new(&ch.path).with_extension("html");
+	        let filepath_str = filepath.to_str().ok_or_else(|| {
+                Error::from(format!("Bad file name: {}", filepath.display()))
+            })?;
 
             // "print.html" is used for the print page.
             if ch.path == Path::new("print.md") {
@@ -78,10 +124,14 @@ impl HtmlHandlebars {
             let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
             let rendered = self.post_process(rendered, &ctx.html_config.playpen);
+            let rendered_bytes = rendered.into_bytes();
 
             // Write to file
             debug!("Creating {}", filepath.display());
-            utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
+            utils::fs::write_file(&ctx.destination, &filepath, &rendered_bytes)?;
+
+            let mut hasher = DefaultHasher::new();
+            hasher.write(&rendered_bytes);
 
             if ctx.is_index {
                 ctx.data.insert("path".to_owned(), json!("index.md"));
@@ -91,10 +141,20 @@ impl HtmlHandlebars {
                 let rendered_index = self.post_process(rendered_index, &ctx.html_config.playpen);
                 debug!("Creating index.html from {}", path);
                 utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
+
+                chapter_files.push(ChapterFile {
+                    path: String::from("/"),
+                    revision: hasher.finish(),
+                });
             }
+
+            chapter_files.push(ChapterFile {
+                path: filepath_str.into(),
+                revision: hasher.finish(),
+            });
         }
 
-        Ok(())
+        Ok(chapter_files)
     }
 
     #[cfg_attr(feature = "cargo-clippy", allow(clippy::let_and_return))]
@@ -127,6 +187,7 @@ impl HtmlHandlebars {
         write_file(destination, "css/variables.css", &theme.variables_css)?;
         write_file(destination, "favicon.png", &theme.favicon)?;
         write_file(destination, "highlight.css", &theme.highlight_css)?;
+        write_file(destination, "sw.js", &theme.service_worker)?;
         write_file(destination, "tomorrow-night.css", &theme.tomorrow_night_css)?;
         write_file(destination, "ayu-highlight.css", &theme.ayu_highlight_css)?;
         write_file(destination, "highlight.js", &theme.highlight_js)?;
@@ -326,6 +387,7 @@ impl Renderer for HtmlHandlebars {
         fs::create_dir_all(&destination)
             .chain_err(|| "Unexpected error when constructing destination path")?;
 
+        let mut chapter_files = Vec::new();
         let mut is_index = true;
         for item in book.iter() {
             let ctx = RenderItemContext {
@@ -335,7 +397,8 @@ impl Renderer for HtmlHandlebars {
                 is_index,
                 html_config: html_config.clone(),
             };
-            self.render_item(item, ctx, &mut print_content)?;
+            let mut item_chapter_files = self.render_item(item, ctx, &mut print_content)?;
+            chapter_files.append(&mut item_chapter_files);
             is_index = false;
         }
 
@@ -359,6 +422,11 @@ impl Renderer for HtmlHandlebars {
             .chain_err(|| "Unable to copy across static files")?;
         self.copy_additional_css_and_js(&html_config, &ctx.root, &destination)
             .chain_err(|| "Unable to copy across additional CSS and JS")?;
+
+        if html_config.offline_support {
+            debug!("[*] Patching Service Worker to precache chapters");
+            self.build_service_worker(destination, &chapter_files)?;
+        }
 
         // Render search index
         #[cfg(feature = "search")]

@@ -1,8 +1,8 @@
 # Configuration
 
-You can configure the parameters for your book in the ***book.toml*** file.
+You can configure the parameters for your book in the **_book.toml_** file.
 
-Here is an example of what a ***book.toml*** file might look like:
+Here is an example of what a **_book.toml_** file might look like:
 
 ```toml
 [book]
@@ -45,6 +45,7 @@ This is general information about your book.
 - **language:** The main language of the book, which is used as a language attribute `<html lang="en">` for example.
 
 **book.toml**
+
 ```toml
 [book]
 title = "Example book"
@@ -87,8 +88,8 @@ The following preprocessors are available and included by default:
   to say, all `README.md` would be rendered to an index file `index.html` in the
   rendered book.
 
-
 **book.toml**
+
 ```toml
 [build]
 build-dir = "build"
@@ -148,6 +149,8 @@ The following configuration options are available:
 - **theme:** mdBook comes with a default theme and all the resource files needed
   for it. But if this option is set, mdBook will selectively overwrite the theme
   files with the ones found in the specified folder.
+- **offline-support** Precache the chapters so that users can view the book
+  while offline. Available in [browsers supporting Service Worker](https://caniuse.com/#feat=serviceworkers).
 - **default-theme:** The theme color scheme to select by default in the
   'Change Theme' dropdown. Defaults to `light`.
 - **preferred-dark-theme:** The default dark theme. This theme will be used if
@@ -173,7 +176,7 @@ The following configuration options are available:
 - **playpen:** A subtable for configuring various playpen settings.
 - **search:** A subtable for configuring the in-browser search functionality.
   mdBook must be compiled with the `search` feature enabled (on by default).
-- **git-repository-url:**  A url to the git repository for the book. If provided
+- **git-repository-url:** A url to the git repository for the book. If provided
   an icon link will be output in the menu bar of the book.
 - **git-repository-icon:** The FontAwesome icon class to use for the git
   repository link. Defaults to `fa-github`.
@@ -186,7 +189,7 @@ Available configuration options for the `[output.html.playpen]` table:
   Defaults to `true`.
 - **line-numbers** Display line numbers on editable sections of code. Requires both `editable` and `copy-js` to be `true`. Defaults to `false`.
 
-[Ace]: https://ace.c9.io/
+[ace]: https://ace.c9.io/
 
 Available configuration options for the `[output.html.search]` table:
 

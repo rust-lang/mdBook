@@ -594,3 +594,17 @@ function playpen_text(playpen) {
         previousScrollTop = document.scrollingElement.scrollTop;
     }, { passive: true });
 })();
+
+
+(function serviceWorker() {
+  var isLocalhost =
+    ["localhost", "127.0.0.1", ""].indexOf(document.location.hostname) !== -1;
+
+  if ("serviceWorker" in navigator && true) {
+    navigator.serviceWorker
+      .register(document.baseURI + "sw.js")
+      .catch(function(error) {
+        console.error("Service worker registration failed:", error);
+      });
+  }
+})();

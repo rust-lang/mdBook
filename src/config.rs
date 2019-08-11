@@ -447,6 +447,8 @@ pub struct HtmlConfig {
     pub curly_quotes: bool,
     /// Should mathjax be enabled?
     pub mathjax_support: bool,
+    /// Cache chapters for offline viewing
+    pub offline_support: bool,
     /// An optional google analytics code.
     pub google_analytics: Option<String>,
     /// Additional CSS stylesheets to include in the rendered page's `<head>`.
@@ -609,6 +611,7 @@ mod tests {
         default-theme = "rust"
         curly-quotes = true
         google-analytics = "123456"
+        offline-support = true
         additional-css = ["./foo/bar/baz.css"]
         git-repository-url = "https://foo.com/"
         git-repository-icon = "fa-code-fork"
@@ -647,6 +650,7 @@ mod tests {
         };
         let html_should_be = HtmlConfig {
             curly_quotes: true,
+            offline_support: true,
             google_analytics: Some(String::from("123456")),
             additional_css: vec![PathBuf::from("./foo/bar/baz.css")],
             theme: Some(PathBuf::from("./themedir")),
