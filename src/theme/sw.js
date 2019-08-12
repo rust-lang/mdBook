@@ -30,7 +30,7 @@ workbox.routing.registerRoute(
 
 // Local resources
 workbox.routing.registerRoute(
-  new RegExp(".woff2?|.ttf|.css|.js|.json"),
+  new RegExp(".woff2?|.ttf|.css|.js|.json|.png|.svg"),
   staleWhileRevalidate
 );
 

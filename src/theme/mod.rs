@@ -180,6 +180,7 @@ mod tests {
             "css/variables.css",
             "book.js",
             "highlight.js",
+            "sw.js",
             "tomorrow-night.css",
             "highlight.css",
             "ayu-highlight.css",
