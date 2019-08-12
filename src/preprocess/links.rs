@@ -183,9 +183,8 @@ fn return_relative_path<P: AsRef<Path>>(base: P, relative: P) -> PathBuf {
         .to_path_buf()
 }
 
-fn parse_include_path(path: &str) -> LinkType<'static> {
-    let mut parts = path.splitn(4, ':').fuse();
-    let path = parts.next().unwrap().into();
+fn parse_range_or_anchor(parts: Option<&str>) -> RangeOrAnchor {
+    let mut parts = parts.unwrap_or("").splitn(3, ':').fuse();
 
     let next_element = parts.next();
     let start = if let Some(value) = next_element.and_then(|s| s.parse::<usize>().ok()) {
@@ -194,7 +193,7 @@ fn parse_include_path(path: &str) -> LinkType<'static> {
     } else if let Some("") = next_element {
         None
     } else if let Some(anchor) = next_element {
-        return LinkType::Include(path, RangeOrAnchor::Anchor(String::from(anchor)));
+        return RangeOrAnchor::Anchor(String::from(anchor));
     } else {
         None
     };
@@ -206,23 +205,21 @@ fn parse_include_path(path: &str) -> LinkType<'static> {
     let end = end.map(|s| s.parse::<usize>());
 
     match (start, end) {
-        (Some(start), Some(Ok(end))) => {
-            LinkType::Include(path, RangeOrAnchor::Range(LineRange::from(start..end)))
-        }
-        (Some(start), Some(Err(_))) => {
-            LinkType::Include(path, RangeOrAnchor::Range(LineRange::from(start..)))
-        }
-        (Some(start), None) => LinkType::Include(
-            path,
-            RangeOrAnchor::Range(LineRange::from(start..start + 1)),
-        ),
-        (None, Some(Ok(end))) => {
-            LinkType::Include(path, RangeOrAnchor::Range(LineRange::from(..end)))
-        }
-        (None, None) | (None, Some(Err(_))) => {
-            LinkType::Include(path, RangeOrAnchor::Range(LineRange::from(RangeFull)))
-        }
+        (Some(start), Some(Ok(end))) => RangeOrAnchor::Range(LineRange::from(start..end)),
+        (Some(start), Some(Err(_))) => RangeOrAnchor::Range(LineRange::from(start..)),
+        (Some(start), None) => RangeOrAnchor::Range(LineRange::from(start..start + 1)),
+        (None, Some(Ok(end))) => RangeOrAnchor::Range(LineRange::from(..end)),
+        (None, None) | (None, Some(Err(_))) => RangeOrAnchor::Range(LineRange::from(RangeFull)),
     }
+}
+
+fn parse_include_path(path: &str) -> LinkType<'static> {
+    let mut parts = path.splitn(2, ':');
+
+    let path = parts.next().unwrap().into();
+    let range_or_anchor = parse_range_or_anchor(parts.next());
+
+    LinkType::Include(path, range_or_anchor)
 }
 
 #[derive(PartialEq, Debug, Clone)]
