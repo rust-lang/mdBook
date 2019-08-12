@@ -29,8 +29,10 @@ workbox.routing.registerRoute(
 );
 
 // Local resources
-workbox.routing.registerRoute(new RegExp(".js$"), staleWhileRevalidate);
-workbox.routing.registerRoute(new RegExp(".css$"), staleWhileRevalidate);
+workbox.routing.registerRoute(
+  new RegExp(".woff2?|.ttf|.css|.js|.json"),
+  staleWhileRevalidate
+);
 
 // Here hbs_renderer.rs will inject the chapters, making sure they are precached.
 //

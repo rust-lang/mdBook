@@ -602,7 +602,7 @@ function playpen_text(playpen) {
 
   if ("serviceWorker" in navigator && !isLocalhost) {
     navigator.serviceWorker
-      .register(document.baseURI + "sw.js")
+      .register(document.location.origin + "/sw.js")
       .catch(function(error) {
         console.error("Service worker registration failed:", error);
       });
