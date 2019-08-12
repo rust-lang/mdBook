@@ -600,7 +600,7 @@ function playpen_text(playpen) {
   var isLocalhost =
     ["localhost", "127.0.0.1", ""].indexOf(document.location.hostname) !== -1;
 
-  if ("serviceWorker" in navigator && true) {
+  if ("serviceWorker" in navigator && !isLocalhost) {
     navigator.serviceWorker
       .register(document.baseURI + "sw.js")
       .catch(function(error) {

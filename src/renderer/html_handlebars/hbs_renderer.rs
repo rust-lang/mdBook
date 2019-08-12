@@ -58,7 +58,7 @@ impl HtmlHandlebars {
         }
 
          content.push_str("];\n");
-        content.push_str("\nworkbox.precache(chapters);\n");
+        content.push_str("\nworkbox.precaching.precacheAndRoute(chapters);\n");
 
          file.write(content.as_bytes())?;
 
