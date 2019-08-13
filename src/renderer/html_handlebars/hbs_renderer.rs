@@ -7,11 +7,11 @@ use crate::theme::{self, playpen_editor, Theme};
 use crate::utils;
 
 use std::borrow::Cow;
+use std::collections::hash_map::DefaultHasher;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
-use std::collections::hash_map::DefaultHasher;
-use std::hash::Hasher;
 use std::fs::{self, OpenOptions};
+use std::hash::Hasher;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
@@ -32,15 +32,19 @@ impl HtmlHandlebars {
         HtmlHandlebars
     }
 
-    fn build_service_worker(&self, build_dir: &Path, chapter_files: &Vec<ChapterFile>) -> Result<()> {
+    fn build_service_worker(
+        &self,
+        build_dir: &Path,
+        chapter_files: &Vec<ChapterFile>,
+    ) -> Result<()> {
         let path = build_dir.join("sw.js");
         let mut file = OpenOptions::new().append(true).open(path)?;
         let mut content = String::from("\nconst chapters = [\n");
 
-         for chapter_file in chapter_files {
+        for chapter_file in chapter_files {
             content.push_str("  { url: ");
 
-             // Rewrite "/" to point to the current directory
+            // Rewrite "/" to point to the current directory
             // https://rust-lang-nursery.github.io/ => https://rust-lang-nursery.github.io/mdBook/
             // location.href is https://rust-lang-nursery.github.io/mdBook/sw.js
             // so we remove the sw.js from the end to get the correct path
@@ -52,17 +56,17 @@ impl HtmlHandlebars {
                 content.push_str("'");
             }
 
-             content.push_str(", revision: '");
+            content.push_str(", revision: '");
             content.push_str(&chapter_file.revision.to_string());
             content.push_str("' },\n");
         }
 
-         content.push_str("];\n");
+        content.push_str("];\n");
         content.push_str("\nworkbox.precaching.precacheAndRoute(chapters);\n");
 
-         file.write(content.as_bytes())?;
+        file.write(content.as_bytes())?;
 
-         Ok(())
+        Ok(())
     }
 
     fn render_item(
@@ -90,9 +94,9 @@ impl HtmlHandlebars {
                 .to_str()
                 .chain_err(|| "Could not convert path to str")?;
             let filepath = Path::new(&ch.path).with_extension("html");
-	        let filepath_str = filepath.to_str().ok_or_else(|| {
-                Error::from(format!("Bad file name: {}", filepath.display()))
-            })?;
+            let filepath_str = filepath
+                .to_str()
+                .ok_or_else(|| Error::from(format!("Bad file name: {}", filepath.display())))?;
 
             // "print.html" is used for the print page.
             if ch.path == Path::new("print.md") {
