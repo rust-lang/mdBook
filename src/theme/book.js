@@ -601,10 +601,8 @@ function playpen_text(playpen) {
     ["localhost", "127.0.0.1", ""].indexOf(document.location.hostname) !== -1;
 
   if ("serviceWorker" in navigator && !isLocalhost) {
-    navigator.serviceWorker
-      .register(document.location.origin + "/sw.js")
-      .catch(function(error) {
-        console.error("Service worker registration failed:", error);
-      });
+    navigator.serviceWorker.register("sw.js").catch(function(error) {
+      console.error("Service worker registration failed:", error);
+    });
   }
 })();
