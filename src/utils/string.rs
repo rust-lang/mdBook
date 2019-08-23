@@ -242,5 +242,11 @@ mod tests {
             take_rustdoc_include_anchored_lines(s, "something"),
             "# Lorem\n# ipsum\n# dolor\n# sit\n# amet\n# lorem\n# ipsum"
         );
+
+        let s = "Lorem\nANCHOR: test\nipsum\nANCHOR_END: test\ndolor\nANCHOR: test\nsit\nANCHOR_END: test\namet";
+        assert_eq!(
+            take_rustdoc_include_anchored_lines(s, "test"),
+            "# Lorem\nipsum\n# dolor\nsit\n# amet"
+        );
     }
 }
