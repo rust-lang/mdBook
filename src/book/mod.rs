@@ -24,7 +24,7 @@ use crate::errors::*;
 use crate::preprocess::{
     CmdPreprocessor, IndexPreprocessor, LinkPreprocessor, Preprocessor, PreprocessorContext,
 };
-use crate::renderer::{CmdRenderer, HtmlHandlebars, RenderContext, Renderer};
+use crate::renderer::{CmdRenderer, HtmlHandlebars, MarkdownRenderer, RenderContext, Renderer};
 use crate::utils;
 
 use crate::config::Config;
@@ -336,6 +336,8 @@ fn determine_renderers(config: &Config) -> Vec<Box<dyn Renderer>> {
         renderers.extend(output_table.iter().map(|(key, table)| {
             if key == "html" {
                 Box::new(HtmlHandlebars::new()) as Box<dyn Renderer>
+            } else if key == "markdown" {
+                Box::new(MarkdownRenderer::new()) as Box<dyn Renderer>
             } else {
                 interpret_custom_renderer(key, table)
             }
