@@ -242,6 +242,26 @@ heading-split-level = 3
 copy-js = true
 ```
 
+### Markdown Renderer
+
+The Markdown renderer will run preprocessors and then output the resulting
+Markdown. This is mostly useful for debugging preprocessors, especially in
+conjunction with `mdbook test` to see the Markdown that `mdbook` is passing
+to `rustdoc`.
+
+The Markdown renderer is included with `mdbook` but disabled by default.
+Enable it by adding an emtpy table to your `book.toml` as follows:
+
+```toml
+[output.markdown]
+```
+
+There are no configuration options for the Markdown renderer at this time;
+only whether it is enabled or disabled.
+
+See [the preprocessors documentation](#configuring-preprocessors) for how to
+specify which preprocessors should run before the Markdown renderer.
+
 ### Custom Renderers
 
 A custom renderer can be enabled by adding a `[output.foo]` table to your

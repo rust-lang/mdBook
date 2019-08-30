@@ -169,6 +169,9 @@ format, however there's nothing stopping a renderer from doing static analysis
 of a book in order to validate links or run tests. Some existing renderers are:
 
 - `html` - the built-in renderer which will generate a HTML version of the book
+- `markdown` - the built-in renderer (disabled by default) which will run
+  preprocessors then output the resulting Markdown. Useful for debugging
+  preprocessors.
 - [`linkcheck`] - a backend which will check that all links are valid
 - [`epub`] - an experimental EPUB generator
 
