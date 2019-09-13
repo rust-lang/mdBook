@@ -5,7 +5,6 @@ use mdbook::utils;
 use mdbook::MDBook;
 use notify::Watcher;
 use std::path::{Path, PathBuf};
-use std::sync::mpsc::channel;
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -53,11 +52,10 @@ pub fn trigger_on_change<F>(book: &MDBook, closure: F)
 where
     F: Fn(Vec<PathBuf>, &Path),
 {
-    use notify::DebouncedEvent::*;
     use notify::RecursiveMode::*;
 
     // Create a channel to receive the events.
-    let (tx, rx) = channel();
+    let (tx, rx) = crossbeam_channel::unbounded();
 
     let mut watcher = match notify::watcher(tx, Duration::from_secs(1)) {
         Ok(w) => w,
@@ -88,13 +86,11 @@ where
         let all_events = std::iter::once(first_event).chain(other_events);
 
         let paths = all_events
-            .filter_map(|event| {
+            .filter_map(|e| e.ok())
+            .flat_map(|event| {
                 debug!("Received filesystem event: {:?}", event);
 
-                match event {
-                    Create(path) | Write(path) | Remove(path) | Rename(_, path) => Some(path),
-                    _ => None,
-                }
+                event.paths
             })
             .collect();
 

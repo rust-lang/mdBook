@@ -37,7 +37,7 @@ toml = "0.5.1"
 toml-query = "0.9"
 
 # Watch feature
-notify = { version = "4.0", optional = true }
+notify = { version = "5.0.0-pre.1", optional = true }
 
 # Serve feature
 iron = { version = "0.6", optional = true }
@@ -47,6 +47,7 @@ ws = { version = "0.8", optional = true}
 # Search feature
 elasticlunr-rs = { version = "2.3", optional = true, default-features = false }
 ammonia = { version = "2.1.2", optional = true }
+crossbeam-channel = "0.3.9"
 
 [dev-dependencies]
 select = "0.4"
