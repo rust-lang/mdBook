@@ -235,7 +235,12 @@ fn check_second_toc_level() {
     let mut should_be = Vec::from(TOC_SECOND_LEVEL);
     should_be.sort();
 
-    let pred = descendants!(Class("chapter"), Name("li"), Name("li"), Name("a"));
+    let pred = descendants!(
+        Class("chapter"),
+        Name("li"),
+        Name("li"),
+        Name("a").and(Class("toggle").not())
+    );
 
     let mut children_of_children: Vec<_> = doc
         .find(pred)
@@ -254,7 +259,11 @@ fn check_first_toc_level() {
     should_be.extend(TOC_SECOND_LEVEL);
     should_be.sort();
 
-    let pred = descendants!(Class("chapter"), Name("li"), Name("a"));
+    let pred = descendants!(
+        Class("chapter"),
+        Name("li"),
+        Name("a").and(Class("toggle").not())
+    );
 
     let mut children: Vec<_> = doc
         .find(pred)
