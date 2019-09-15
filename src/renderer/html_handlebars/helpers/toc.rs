@@ -28,12 +28,19 @@ impl HelperDef for RenderToc {
             serde_json::value::from_value::<Vec<BTreeMap<String, String>>>(c.as_json().clone())
                 .map_err(|_| RenderError::new("Could not decode the JSON data"))
         })?;
-        let current = rc
+        let current_path = rc
             .evaluate(ctx, "@root/path")?
             .as_json()
             .as_str()
-            .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
+            .ok_or(RenderError::new("Type error for `path`, string expected"))?
             .replace("\"", "");
+
+        let current_section = rc
+            .evaluate(ctx, "@root/section")?
+            .as_json()
+            .as_str()
+            .map(str::to_owned)
+            .unwrap_or_default();
 
         out.write("<ol class=\"chapter\">")?;
 
@@ -46,11 +53,13 @@ impl HelperDef for RenderToc {
                 continue;
             }
 
-            let level = if let Some(s) = item.get("section") {
-                s.matches('.').count()
+            let (section, level) = if let Some(s) = item.get("section") {
+                (s.as_str(), s.matches('.').count())
             } else {
-                1
+                ("", 1)
             };
+
+            let is_expanded = !section.is_empty() && current_section.starts_with(section);
 
             if level > current_level {
                 while level > current_level {
@@ -58,20 +67,16 @@ impl HelperDef for RenderToc {
                     out.write("<ol class=\"section\">")?;
                     current_level += 1;
                 }
-                out.write("<li>")?;
+                write_li_open_tag(out, is_expanded, false)?;
             } else if level < current_level {
                 while level < current_level {
                     out.write("</ol>")?;
                     out.write("</li>")?;
                     current_level -= 1;
                 }
-                out.write("<li>")?;
+                write_li_open_tag(out, is_expanded, false)?;
             } else {
-                out.write("<li")?;
-                if item.get("section").is_none() {
-                    out.write(" class=\"affix\"")?;
-                }
-                out.write(">")?;
+                write_li_open_tag(out, is_expanded, item.get("section").is_none())?;
             }
 
             // Link
@@ -87,11 +92,11 @@ impl HelperDef for RenderToc {
                         .replace("\\", "/");
 
                     // Add link
-                    out.write(&utils::fs::path_to_root(&current))?;
+                    out.write(&utils::fs::path_to_root(&current_path))?;
                     out.write(&tmp)?;
                     out.write("\"")?;
 
-                    if path == &current {
+                    if path == &current_path {
                         out.write(" class=\"active\"")?;
                     }
 
@@ -134,6 +139,13 @@ impl HelperDef for RenderToc {
                 out.write("</a>")?;
             }
 
+            // Render expand/collapse toggle
+            if let Some(count) = item.get("sub_items_count") {
+                let count: u32 = count.parse().unwrap_or_default();
+                if count > 0 {
+                    out.write("<a class=\"toggle\"><div>❱</div></a>")?;
+                }
+            }
             out.write("</li>")?;
         }
         while current_level > 1 {
@@ -145,4 +157,20 @@ impl HelperDef for RenderToc {
         out.write("</ol>")?;
         Ok(())
     }
+}
+
+fn write_li_open_tag(
+    out: &mut dyn Output,
+    is_expanded: bool,
+    is_affix: bool,
+) -> Result<(), std::io::Error> {
+    let mut li = String::from("<li class=\"");
+    if is_expanded {
+        li.push_str("expanded ");
+    }
+    if is_affix {
+        li.push_str("affix ");
+    }
+    li.push_str("\">");
+    out.write(&li)
 }

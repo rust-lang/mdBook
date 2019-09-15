@@ -71,6 +71,10 @@ impl HtmlHandlebars {
                 "path_to_root".to_owned(),
                 json!(utils::fs::path_to_root(&ch.path)),
             );
+            if let Some(ref section) = ch.number {
+                ctx.data
+                    .insert("section".to_owned(), json!(section.to_string()));
+            }
 
             // Render the handlebars template with the data
             debug!("Render template");
@@ -480,6 +484,11 @@ fn make_data(
                 if let Some(ref section) = ch.number {
                     chapter.insert("section".to_owned(), json!(section.to_string()));
                 }
+
+                chapter.insert(
+                    "sub_items_count".to_owned(),
+                    json!(ch.sub_items.len().to_string()),
+                );
 
                 chapter.insert("name".to_owned(), json!(ch.name));
                 let path = ch
