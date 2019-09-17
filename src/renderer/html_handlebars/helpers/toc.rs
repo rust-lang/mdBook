@@ -42,6 +42,22 @@ impl HelperDef for RenderToc {
             .map(str::to_owned)
             .unwrap_or_default();
 
+        let fold_enable = rc
+            .evaluate(ctx, "@root/fold_enable")?
+            .as_json()
+            .as_bool()
+            .ok_or(RenderError::new(
+                "Type error for `fold_enable`, bool expected",
+            ))?;
+
+        let fold_level = rc
+            .evaluate(ctx, "@root/fold_level")?
+            .as_json()
+            .as_u64()
+            .ok_or(RenderError::new(
+                "Type error for `fold_level`, u64 expected",
+            ))?;
+
         out.write("<ol class=\"chapter\">")?;
 
         let mut current_level = 1;
@@ -59,7 +75,18 @@ impl HelperDef for RenderToc {
                 ("", 1)
             };
 
-            let is_expanded = !section.is_empty() && current_section.starts_with(section);
+            let is_expanded = {
+                if !fold_enable {
+                    // Disable fold. Expand all chapters.
+                    true
+                } else if !section.is_empty() && current_section.starts_with(section) {
+                    // The section is ancestor or the current section itself.
+                    true
+                } else {
+                    // Levels that are larger than this would be folded.
+                    current_level - 1 < fold_level as usize
+                }
+            };
 
             if level > current_level {
                 while level > current_level {
@@ -140,9 +167,9 @@ impl HelperDef for RenderToc {
             }
 
             // Render expand/collapse toggle
-            if let Some(count) = item.get("sub_items_count") {
-                let count: u32 = count.parse().unwrap_or_default();
-                if count > 0 {
+            if let Some(flag) = item.get("has_sub_items") {
+                let has_sub_items = flag.parse::<bool>().unwrap_or_default();
+                if fold_enable && has_sub_items {
                     out.write("<a class=\"toggle\"><div>❱</div></a>")?;
                 }
             }
