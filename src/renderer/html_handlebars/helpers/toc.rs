@@ -84,7 +84,7 @@ impl HelperDef for RenderToc {
                     true
                 } else {
                     // Levels that are larger than this would be folded.
-                    current_level - 1 < fold_level as usize
+                    level - 1 < fold_level as usize
                 }
             };
 
