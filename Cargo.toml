@@ -42,7 +42,7 @@ notify = { version = "4.0", optional = true }
 # Serve feature
 iron = { version = "0.6", optional = true }
 staticfile = { version = "0.5", optional = true }
-ws = { version = "0.8", optional = true}
+ws = { version = "0.9", optional = true}
 
 # Search feature
 elasticlunr-rs = { version = "2.3", optional = true, default-features = false }
