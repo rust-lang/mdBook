@@ -381,7 +381,6 @@ fn make_data(
     html_config: &HtmlConfig,
 ) -> Result<serde_json::Map<String, serde_json::Value>> {
     trace!("make_data");
-    let html = config.html_config().unwrap_or_default();
 
     let mut data = serde_json::Map::new();
     data.insert(
@@ -408,18 +407,18 @@ fn make_data(
     data.insert("default_theme".to_owned(), json!(default_theme));
 
     // Add google analytics tag
-    if let Some(ref ga) = config.html_config().and_then(|html| html.google_analytics) {
+    if let Some(ref ga) = html_config.google_analytics {
         data.insert("google_analytics".to_owned(), json!(ga));
     }
 
-    if html.mathjax_support {
+    if html_config.mathjax_support {
         data.insert("mathjax_support".to_owned(), json!(true));
     }
 
     // Add check to see if there is an additional style
-    if !html.additional_css.is_empty() {
+    if !html_config.additional_css.is_empty() {
         let mut css = Vec::new();
-        for style in &html.additional_css {
+        for style in &html_config.additional_css {
             match style.strip_prefix(root) {
                 Ok(p) => css.push(p.to_str().expect("Could not convert to str")),
                 Err(_) => css.push(style.to_str().expect("Could not convert to str")),
@@ -429,9 +428,9 @@ fn make_data(
     }
 
     // Add check to see if there is an additional script
-    if !html.additional_js.is_empty() {
+    if !html_config.additional_js.is_empty() {
         let mut js = Vec::new();
-        for script in &html.additional_js {
+        for script in &html_config.additional_js {
             match script.strip_prefix(root) {
                 Ok(p) => js.push(p.to_str().expect("Could not convert to str")),
                 Err(_) => js.push(script.to_str().expect("Could not convert to str")),
@@ -440,7 +439,7 @@ fn make_data(
         data.insert("additional_js".to_owned(), json!(js));
     }
 
-    if html.playpen.editable && html.playpen.copy_js {
+    if html_config.playpen.editable && html_config.playpen.copy_js {
         data.insert("playpen_js".to_owned(), json!(true));
     }
 
