@@ -179,6 +179,7 @@ Available configuration options for the `[output.html.playpen]` table:
 - **editable:** Allow editing the source code. Defaults to `false`.
 - **copy-js:** Copy JavaScript files for the editor to the output directory.
   Defaults to `true`.
+- **line-numbers** Display line numbers on editable sections of code. Requires both `editable` and `copy-js` to be `true`. Defaults to `false`.
 
 [Ace]: https://ace.c9.io/
 
@@ -228,6 +229,7 @@ git-repository-icon = "fa-github"
 [output.html.playpen]
 editable = false
 copy-js = true
+line-numbers = false
 
 [output.html.search]
 enable = true

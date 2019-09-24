@@ -442,6 +442,9 @@ fn make_data(
 
     if html.playpen.editable && html.playpen.copy_js {
         data.insert("playpen_js".to_owned(), json!(true));
+        if html.playpen.line_numbers {
+            data.insert("playpen_line_numbers".to_owned(), json!(true));
+        }
     }
 
     let search = html_config.search.clone();

@@ -230,6 +230,12 @@
         </script>
         {{/if}}
 
+        {{#if playpen_line_numbers}}
+        <script type="text/javascript">
+            window.playpen_line_numbers = true;
+        </script>
+        {{/if}}
+
         {{#if playpen_js}}
         <script src="{{ path_to_root }}ace.js" type="text/javascript" charset="utf-8"></script>
         <script src="{{ path_to_root }}editor.js" type="text/javascript" charset="utf-8"></script>
