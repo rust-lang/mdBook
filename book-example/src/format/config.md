@@ -218,6 +218,7 @@ description = "The example book covers examples."
 [output.html]
 theme = "my-theme"
 default-theme = "light"
+preferred-dark-theme = "navy"
 curly-quotes = true
 mathjax-support = false
 google-analytics = "123456"
