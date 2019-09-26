@@ -479,6 +479,8 @@ pub struct Playpen {
     /// Copy JavaScript files for the editor to the output directory?
     /// Default: `true`.
     pub copy_js: bool,
+    /// Display line numbers on playpen snippets
+    pub line_numbers: bool,
 }
 
 impl Default for Playpen {
@@ -486,6 +488,7 @@ impl Default for Playpen {
         Playpen {
             editable: false,
             copy_js: true,
+            line_numbers: false,
         }
     }
 }
@@ -620,6 +623,7 @@ mod tests {
         let playpen_should_be = Playpen {
             editable: true,
             copy_js: true,
+            line_numbers: false,
         };
         let html_should_be = HtmlConfig {
             curly_quotes: true,
