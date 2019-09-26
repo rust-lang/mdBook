@@ -448,18 +448,12 @@ more text with spaces
 
         #[test]
         fn it_converts_single_quotes() {
-            assert_eq!(
-                convert_quotes_to_curly("'one', 'two'"),
-                "‘one’, ‘two’"
-            );
+            assert_eq!(convert_quotes_to_curly("'one', 'two'"), "‘one’, ‘two’");
         }
 
         #[test]
         fn it_converts_double_quotes() {
-            assert_eq!(
-                convert_quotes_to_curly(r#""one", "two""#),
-                "“one”, “two”"
-            );
+            assert_eq!(convert_quotes_to_curly(r#""one", "two""#), "“one”, “two”");
         }
 
         #[test]
