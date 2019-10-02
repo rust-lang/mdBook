@@ -68,8 +68,7 @@ fn remove_ignored_files<'a, 'b>(book_root: &'a PathBuf, paths: &'b [PathBuf]) ->
         Err(error) => {
             warn!(
                 "Unable to read gitignore file at {:?} file: {:?}. All files will be allowed.",
-                gitignore_path,
-                error
+                gitignore_path, error
             );
             paths.iter().collect()
         }
