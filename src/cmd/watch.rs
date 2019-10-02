@@ -1,5 +1,6 @@
 use crate::{get_book_dir, open};
 use clap::{App, ArgMatches, SubCommand};
+use ignore::gitignore::Gitignore;
 use mdbook::errors::Result;
 use mdbook::utils;
 use mdbook::MDBook;
@@ -23,6 +24,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
              (Defaults to the Current Directory when omitted)'",
         )
         .arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
+        .arg_from_usage("-i, --gitignore 'Respect .gitignore and skip changes to ignored files'")
 }
 
 // Watch command implementation
@@ -35,7 +37,15 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         open(book.build_dir_for("html").join("index.html"));
     }
 
-    trigger_on_change(&book, |paths, book_dir| {
+    let gitignore_path: Option<PathBuf> = if args.is_present("gitignore") {
+        let mut path = book_dir.clone();
+        path.push(".gitignore");
+        Some(path)
+    } else {
+        None
+    };
+
+    trigger_on_change(&book, gitignore_path, |paths, book_dir| {
         info!("Files changed: {:?}\nBuilding book...\n", paths);
         let result = MDBook::load(&book_dir).and_then(|b| b.build());
 
@@ -49,12 +59,20 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 }
 
 /// Calls the closure when a book source file is changed, blocking indefinitely.
-pub fn trigger_on_change<F>(book: &MDBook, closure: F)
+pub fn trigger_on_change<F>(book: &MDBook, gitignore_path: Option<PathBuf>, closure: F)
 where
     F: Fn(Vec<PathBuf>, &Path),
 {
     use notify::DebouncedEvent::*;
     use notify::RecursiveMode::*;
+
+    let gitignore = match gitignore_path {
+        Some(path) => {
+            info!("Skipping updates for files ignored by .gitignore");
+            Gitignore::new(path).0
+        }
+        _ => Gitignore::empty(),
+    };
 
     // Create a channel to receive the events.
     let (tx, rx) = channel();
@@ -87,17 +105,25 @@ where
 
         let all_events = std::iter::once(first_event).chain(other_events);
 
-        let paths = all_events
+        let paths: Vec<PathBuf> = all_events
             .filter_map(|event| {
                 debug!("Received filesystem event: {:?}", event);
 
                 match event {
-                    Create(path) | Write(path) | Remove(path) | Rename(_, path) => Some(path),
+                    Create(path) | Write(path) | Remove(path) | Rename(_, path) => {
+                        if !gitignore.matched(&path, false).is_ignore() {
+                            Some(path)
+                        } else {
+                            None
+                        }
+                    }
                     _ => None,
                 }
             })
             .collect();
 
-        closure(paths, &book.root);
+        if !paths.is_empty() {
+            closure(paths, &book.root);
+        }
     }
 }

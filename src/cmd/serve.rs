@@ -6,6 +6,7 @@ use iron::{status, AfterMiddleware, Chain, Iron, IronError, IronResult, Request,
 use mdbook::errors::*;
 use mdbook::utils;
 use mdbook::MDBook;
+use std::path::PathBuf;
 
 struct ErrorRecover;
 
@@ -59,6 +60,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
                 .help("Port to use for WebSockets livereload connections"),
         )
         .arg_from_usage("-o, --open 'Opens the book server in a web browser'")
+        .arg_from_usage("-i, --gitignore 'Respect .gitignore and skip changes to ignored files'")
 }
 
 // Watch command implementation
@@ -107,8 +109,16 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         open(serving_url);
     }
 
+    let gitignore_path: Option<PathBuf> = if args.is_present("gitignore") {
+        let mut path = book_dir.clone();
+        path.push(".gitignore");
+        Some(path)
+    } else {
+        None
+    };
+
     #[cfg(feature = "watch")]
-    watch::trigger_on_change(&book, move |paths, book_dir| {
+    watch::trigger_on_change(&book, gitignore_path, move |paths, book_dir| {
         info!("Files changed: {:?}", paths);
         info!("Building book...");
 
