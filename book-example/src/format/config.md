@@ -190,7 +190,7 @@ Available configuration options for the `[output.html.search]` table:
 - **teaser-word-count:** The number of words used for a search result teaser.
   Defaults to `30`.
 - **use-boolean-and:** Define the logical link between multiple search words. If
-  true, all search words must appear in each result. Defaults to `true`.
+  true, all search words must appear in each result. Defaults to `false`.
 - **boost-title:** Boost factor for the search result score if a search word
   appears in the header. Defaults to `2`.
 - **boost-hierarchy:** Boost factor for the search result score if a search word

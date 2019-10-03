@@ -504,7 +504,7 @@ pub struct Search {
     /// The number of words used for a search result teaser. Default: `30`.
     pub teaser_word_count: u32,
     /// Define the logical link between multiple search words.
-    /// If true, all search words must appear in each result. Default: `true`.
+    /// If true, all search words must appear in each result. Default: `false`.
     pub use_boolean_and: bool,
     /// Boost factor for the search result score if a search word appears in the header.
     /// Default: `2`.
