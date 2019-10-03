@@ -48,7 +48,11 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     Ok(())
 }
 
-fn remove_ignored_files<'a, 'b>(book_root: &'a PathBuf, paths: &'b [PathBuf]) -> Vec<&'b PathBuf> {
+fn remove_ignored_files(book_root: &PathBuf, paths: &[PathBuf]) -> Vec<PathBuf> {
+    if paths.is_empty() {
+        return vec![];
+    }
+
     let gitignore_path = book_root.with_file_name(".gitignore");
 
     match gitignore::File::new(gitignore_path.as_path()) {
@@ -64,13 +68,14 @@ fn remove_ignored_files<'a, 'b>(book_root: &'a PathBuf, paths: &'b [PathBuf]) ->
                     true
                 }
             })
+            .map(|path| path.to_path_buf())
             .collect(),
         Err(error) => {
             warn!(
                 "Unable to read gitignore file at {:?} file: {:?}. All files will be allowed.",
                 gitignore_path, error
             );
-            paths.iter().collect()
+            paths.iter().map(|path| path.to_path_buf()).collect()
         }
     }
 }
@@ -78,7 +83,7 @@ fn remove_ignored_files<'a, 'b>(book_root: &'a PathBuf, paths: &'b [PathBuf]) ->
 /// Calls the closure when a book source file is changed, blocking indefinitely.
 pub fn trigger_on_change<F>(book: &MDBook, closure: F)
 where
-    F: Fn(Vec<&PathBuf>, &Path),
+    F: Fn(Vec<PathBuf>, &Path),
 {
     use notify::DebouncedEvent::*;
     use notify::RecursiveMode::*;
@@ -125,12 +130,10 @@ where
             })
             .collect::<Vec<_>>();
 
-        if !paths.is_empty() {
-            let paths = remove_ignored_files(&book.root, &paths[..]);
+        let paths = remove_ignored_files(&book.root, &paths[..]);
 
-            if !paths.is_empty() {
-                closure(paths, &book.root);
-            }
+        if !paths.is_empty() {
+            closure(paths, &book.root);
         }
     }
 }
