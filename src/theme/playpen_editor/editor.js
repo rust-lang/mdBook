@@ -6,12 +6,14 @@ window.editors = [];
     }
 
     Array.from(document.querySelectorAll('.editable')).forEach(function(editable) {
+        let display_line_numbers = window.playpen_line_numbers || false;
+
         let editor = ace.edit(editable);
             editor.setOptions({
             highlightActiveLine: false,
             showPrintMargin: false,
-            showLineNumbers: false,
-            showGutter: false,
+            showLineNumbers: display_line_numbers,
+            showGutter: display_line_numbers,
             maxLines: Infinity,
             fontSize: "0.875em" // please adjust the font size of the code in general.css
         });

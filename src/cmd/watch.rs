@@ -48,6 +48,38 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     Ok(())
 }
 
+fn remove_ignored_files(book_root: &PathBuf, paths: &[PathBuf]) -> Vec<PathBuf> {
+    if paths.is_empty() {
+        return vec![];
+    }
+
+    let gitignore_path = book_root.with_file_name(".gitignore");
+
+    match gitignore::File::new(gitignore_path.as_path()) {
+        Ok(exclusion_checker) => paths
+            .iter()
+            .filter(|path| match exclusion_checker.is_excluded(path) {
+                Ok(exclude) => !exclude,
+                Err(error) => {
+                    warn!(
+                        "Unable to determine if {:?} is excluded: {:?}. Including it.",
+                        &path, error
+                    );
+                    true
+                }
+            })
+            .map(|path| path.to_path_buf())
+            .collect(),
+        Err(error) => {
+            warn!(
+                "Unable to read gitignore file at {:?} file: {:?}. All files will be allowed.",
+                gitignore_path, error
+            );
+            paths.iter().map(|path| path.to_path_buf()).collect()
+        }
+    }
+}
+
 /// Calls the closure when a book source file is changed, blocking indefinitely.
 pub fn trigger_on_change<F>(book: &MDBook, closure: F)
 where
@@ -96,8 +128,12 @@ where
                     _ => None,
                 }
             })
-            .collect();
+            .collect::<Vec<_>>();
 
-        closure(paths, &book.root);
+        let paths = remove_ignored_files(&book.root, &paths[..]);
+
+        if !paths.is_empty() {
+            closure(paths, &book.root);
+        }
     }
 }
