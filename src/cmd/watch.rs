@@ -53,7 +53,7 @@ fn remove_ignored_files(book_root: &PathBuf, paths: &[PathBuf]) -> Vec<PathBuf> 
         return vec![];
     }
 
-    let gitignore_path = book_root.with_file_name(".gitignore");
+    let gitignore_path = book_root.join(".gitignore");
 
     match gitignore::File::new(gitignore_path.as_path()) {
         Ok(exclusion_checker) => paths
