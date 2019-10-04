@@ -177,6 +177,7 @@ The following configuration options are available:
 Available configuration options for the `[output.html.playpen]` table:
 
 - **editable:** Allow editing the source code. Defaults to `false`.
+- **copyable:** Display the copy button on code snippets. Defaults to `true`.
 - **copy-js:** Copy JavaScript files for the editor to the output directory.
   Defaults to `true`.
 

@@ -469,6 +469,8 @@ impl HtmlConfig {
 pub struct Playpen {
     /// Should playpen snippets be editable? Default: `false`.
     pub editable: bool,
+    /// display the copy button
+    pub copyable: bool,
     /// Copy JavaScript files for the editor to the output directory?
     /// Default: `true`.
     pub copy_js: bool,
@@ -478,6 +480,7 @@ impl Default for Playpen {
     fn default() -> Playpen {
         Playpen {
             editable: false,
+            copyable: true,
             copy_js: true,
         }
     }
@@ -612,6 +615,7 @@ mod tests {
         };
         let playpen_should_be = Playpen {
             editable: true,
+            copyable: true,
             copy_js: true,
         };
         let html_should_be = HtmlConfig {
