@@ -150,8 +150,10 @@ The following configuration options are available:
   files with the ones found in the specified folder.
 - **default-theme:** The theme color scheme to select by default in the
   'Change Theme' dropdown. Defaults to `light`.
-- **preferred-dark-theme:** The default theme to use if the browser
-  requests the dark version of the site. Defaults to `navy`.
+- **preferred-dark-theme:** The default dark theme. This theme will be used if
+  the browser requests the dark version of the site via the
+  ['prefers-color-scheme'](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)
+  CSS media query. Defaults to the same theme as `default-theme`.
 - **curly-quotes:** Convert straight quotes to curly quotes, except for those
   that occur in code blocks and code spans. Defaults to `false`.
 - **mathjax-support:** Adds support for [MathJax](mathjax.md). Defaults to

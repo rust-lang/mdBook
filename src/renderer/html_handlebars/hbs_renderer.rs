@@ -409,7 +409,7 @@ fn make_data(
 
     let preferred_dark_theme = match html_config.preferred_dark_theme {
         Some(ref theme) => theme,
-        None => "navy",
+        None => default_theme,
     };
     data.insert(
         "preferred_dark_theme".to_owned(),
