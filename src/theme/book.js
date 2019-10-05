@@ -435,6 +435,7 @@ function playpen_text(playpen) {
 (function sidebar() {
     var html = document.querySelector("html");
     var sidebar = document.getElementById("sidebar");
+    var sidebarScrollBox = document.getElementById("sidebar-scrollbox");
     var sidebarLinks = document.querySelectorAll('#sidebar a');
     var sidebarToggleButton = document.getElementById("sidebar-toggle");
     var sidebarResizeHandle = document.getElementById("sidebar-resize-handle");
@@ -522,7 +523,7 @@ function playpen_text(playpen) {
     // Scroll sidebar to current active section
     var activeSection = sidebar.querySelector(".active");
     if (activeSection) {
-        sidebar.scrollTop = activeSection.offsetTop;
+        sidebarScrollBox.scrollTop = activeSection.offsetTop;
     }
 })();
 
