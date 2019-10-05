@@ -40,8 +40,8 @@
 //! cfg.set("output.html.theme", "./themes");
 //!
 //! // then load it again, automatically deserializing to a `PathBuf`.
-//! let got: PathBuf = cfg.get_deserialized("output.html.theme")?;
-//! assert_eq!(got, PathBuf::from("./themes"));
+//! let got: Option<PathBuf> = cfg.get_deserialized_opt("output.html.theme")?;
+//! assert_eq!(got, Some(PathBuf::from("./themes")));
 //! # Ok(())
 //! # }
 //! # fn main() { run().unwrap() }
@@ -169,8 +169,9 @@ impl Config {
     /// HTML renderer is refactored to be less coupled to `mdbook` internals.
     #[doc(hidden)]
     pub fn html_config(&self) -> Option<HtmlConfig> {
-        match self.get_deserialized("output.html") {
-            Ok(config) => Some(config),
+        match self.get_deserialized_opt("output.html") {
+            Ok(Some(config)) => Some(config),
+            Ok(None) => None,
             Err(e) => {
                 utils::log_backtrace(&e.chain_err(|| "Parsing configuration [output.html]"));
                 None
@@ -178,19 +179,31 @@ impl Config {
         }
     }
 
-    /// Convenience function to fetch a value from the config and deserialize it
-    /// into some arbitrary type.
+    /// Deprecated, use get_deserialized_opt instead.
+    #[deprecated = "use get_deserialized_opt instead"]
     pub fn get_deserialized<'de, T: Deserialize<'de>, S: AsRef<str>>(&self, name: S) -> Result<T> {
         let name = name.as_ref();
-
-        if let Some(value) = self.get(name) {
-            value
-                .clone()
-                .try_into()
-                .chain_err(|| "Couldn't deserialize the value")
-        } else {
-            bail!("Key not found, {:?}", name)
+        match self.get_deserialized_opt(name)? {
+            Some(value) => Ok(value),
+            None => bail!("Key not found, {:?}", name),
         }
+    }
+
+    /// Convenience function to fetch a value from the config and deserialize it
+    /// into some arbitrary type.
+    pub fn get_deserialized_opt<'de, T: Deserialize<'de>, S: AsRef<str>>(
+        &self,
+        name: S,
+    ) -> Result<Option<T>> {
+        let name = name.as_ref();
+        self.get(name)
+            .map(|value| {
+                value
+                    .clone()
+                    .try_into()
+                    .chain_err(|| "Couldn't deserialize the value")
+            })
+            .transpose()
     }
 
     /// Set a config key, clobbering any existing values along the way.
@@ -670,11 +683,14 @@ mod tests {
         };
 
         let cfg = Config::from_str(src).unwrap();
-        let got: RandomOutput = cfg.get_deserialized("output.random").unwrap();
+        let got: RandomOutput = cfg.get_deserialized_opt("output.random").unwrap().unwrap();
 
         assert_eq!(got, should_be);
 
-        let got_baz: Vec<bool> = cfg.get_deserialized("output.random.baz").unwrap();
+        let got_baz: Vec<bool> = cfg
+            .get_deserialized_opt("output.random.baz")
+            .unwrap()
+            .unwrap();
         let baz_should_be = vec![true, true, false];
 
         assert_eq!(got_baz, baz_should_be);
@@ -754,7 +770,7 @@ mod tests {
         assert!(cfg.get(key).is_none());
         cfg.set(key, value).unwrap();
 
-        let got: String = cfg.get_deserialized(key).unwrap();
+        let got: String = cfg.get_deserialized_opt(key).unwrap().unwrap();
         assert_eq!(got, value);
     }
 
@@ -795,7 +811,10 @@ mod tests {
 
         cfg.update_from_env();
 
-        assert_eq!(cfg.get_deserialized::<String, _>(key).unwrap(), value);
+        assert_eq!(
+            cfg.get_deserialized_opt::<String, _>(key).unwrap().unwrap(),
+            value
+        );
     }
 
     #[test]
@@ -814,7 +833,9 @@ mod tests {
         cfg.update_from_env();
 
         assert_eq!(
-            cfg.get_deserialized::<serde_json::Value, _>(key).unwrap(),
+            cfg.get_deserialized_opt::<serde_json::Value, _>(key)
+                .unwrap()
+                .unwrap(),
             value
         );
     }
