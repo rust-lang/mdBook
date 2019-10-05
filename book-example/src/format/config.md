@@ -81,7 +81,7 @@ This controls the build process of your book.
 
 The following preprocessors are available and included by default:
 
-- `links`: Expand the `{{ #playpen }}` and `{{ #include }}` handlebars
+- `links`: Expand the `{{ #playpen }}`, `{{ #include }}`, and `{{ #rustdoc_include }}` handlebars
   helpers in a chapter to include the contents of a file.
 - `index`: Convert all chapter files named `README.md` into `index.md`. That is
   to say, all `README.md` would be rendered to an index file `index.html` in the

@@ -3,7 +3,9 @@
 ## Hiding code lines
 
 There is a feature in mdBook that lets you hide code lines by prepending them
-with a `#`.
+with a `#` [in the same way that Rustdoc does][rustdoc-hide].
+
+[rustdoc-hide]: https://doc.rust-lang.org/stable/rustdoc/documentation-tests.html#hiding-portions-of-the-example
 
 ```bash
 # fn main() {
@@ -106,6 +108,70 @@ This is the full file.
 ````
 
 Lines containing anchor patterns inside the included anchor are ignored.
+
+## Including a file but initially hiding all except specified lines
+
+The `rustdoc_include` helper is for including code from external Rust files that contain complete
+examples, but only initially showing particular lines specified with line numbers or anchors in the
+same way as with `include`.
+
+The lines not in the line number range or between the anchors will still be included, but they will
+be prefaced with `#`. This way, a reader can expand the snippet to see the complete example, and
+Rustdoc will use the complete example when you run `mdbook test`.
+
+For example, consider a file named `file.rs` that contains this Rust program:
+
+```rust
+fn main() {
+    let x = add_one(2);
+    assert_eq!(x, 3);
+}
+
+fn add_one(num: i32) -> i32 {
+    num + 1
+}
+```
+
+We can include a snippet that initially shows only line 2 by using this syntax:
+
+````hbs
+To call the `add_one` function, we pass it an `i32` and bind the returned value to `x`:
+
+```rust
+\{{#rustdoc_include file.rs:2}}
+```
+````
+
+This would have the same effect as if we had manually inserted the code and hidden all but line 2
+using `#`:
+
+````hbs
+To call the `add_one` function, we pass it an `i32` and bind the returned value to `x`:
+
+```rust
+# fn main() {
+    let x = add_one(2);
+#     assert_eq!(x, 3);
+# }
+#
+# fn add_one(num: i32) -> i32 {
+#     num + 1
+#}
+```
+````
+
+That is, it looks like this (click the "expand" icon to see the rest of the file):
+
+```rust
+# fn main() {
+    let x = add_one(2);
+#     assert_eq!(x, 3);
+# }
+#
+# fn add_one(num: i32) -> i32 {
+#     num + 1
+#}
+```
 
 ## Inserting runnable Rust files
 

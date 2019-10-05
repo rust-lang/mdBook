@@ -1,5 +1,8 @@
 use crate::errors::*;
-use crate::utils::{take_anchored_lines, take_lines};
+use crate::utils::{
+    take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,
+    take_rustdoc_include_lines,
+};
 use regex::{CaptureMatches, Captures, Regex};
 use std::fs;
 use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeTo};
@@ -11,8 +14,15 @@ use crate::book::{Book, BookItem};
 const ESCAPE_CHAR: char = '\\';
 const MAX_LINK_NESTED_DEPTH: usize = 10;
 
-/// A preprocessor for expanding the `{{# playpen}}` and `{{# include}}`
-/// helpers in a chapter.
+/// A preprocessor for expanding helpers in a chapter. Supported helpers are:
+///
+/// - `{{# include}}` - Insert an external file of any type. Include the whole file, only particular
+///.  lines, or only between the specified anchors.
+/// - `{{# rustdoc_include}}` - Insert an external Rust file, showing the particular lines
+///.  specified or the lines between specified anchors, and include the rest of the file behind `#`.
+///   This hides the lines from initial display but shows them when the reader expands the code
+///   block and provides them to Rustdoc for testing.
+/// - `{{# playpen}}` - Insert runnable Rust files
 #[derive(Default)]
 pub struct LinkPreprocessor;
 
@@ -104,6 +114,7 @@ enum LinkType<'a> {
     Escaped,
     Include(PathBuf, RangeOrAnchor),
     Playpen(PathBuf, Vec<&'a str>),
+    RustdocInclude(PathBuf, RangeOrAnchor),
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -172,6 +183,7 @@ impl<'a> LinkType<'a> {
             LinkType::Escaped => None,
             LinkType::Include(p, _) => Some(return_relative_path(base, &p)),
             LinkType::Playpen(p, _) => Some(return_relative_path(base, &p)),
+            LinkType::RustdocInclude(p, _) => Some(return_relative_path(base, &p)),
         }
     }
 }
@@ -222,6 +234,15 @@ fn parse_include_path(path: &str) -> LinkType<'static> {
     LinkType::Include(path, range_or_anchor)
 }
 
+fn parse_rustdoc_include_path(path: &str) -> LinkType<'static> {
+    let mut parts = path.splitn(2, ':');
+
+    let path = parts.next().unwrap().into();
+    let range_or_anchor = parse_range_or_anchor(parts.next());
+
+    LinkType::RustdocInclude(path, range_or_anchor)
+}
+
 #[derive(PartialEq, Debug, Clone)]
 struct Link<'a> {
     start_index: usize,
@@ -241,6 +262,7 @@ impl<'a> Link<'a> {
                 match (typ.as_str(), file_arg) {
                     ("include", Some(pth)) => Some(parse_include_path(pth)),
                     ("playpen", Some(pth)) => Some(LinkType::Playpen(pth.into(), props)),
+                    ("rustdoc_include", Some(pth)) => Some(parse_rustdoc_include_path(pth)),
                     _ => None,
                 }
             }
@@ -272,6 +294,26 @@ impl<'a> Link<'a> {
                     .map(|s| match range_or_anchor {
                         RangeOrAnchor::Range(range) => take_lines(&s, range.clone()),
                         RangeOrAnchor::Anchor(anchor) => take_anchored_lines(&s, anchor),
+                    })
+                    .chain_err(|| {
+                        format!(
+                            "Could not read file for link {} ({})",
+                            self.link_text,
+                            target.display(),
+                        )
+                    })
+            }
+            LinkType::RustdocInclude(ref pat, ref range_or_anchor) => {
+                let target = base.join(pat);
+
+                fs::read_to_string(&target)
+                    .map(|s| match range_or_anchor {
+                        RangeOrAnchor::Range(range) => {
+                            take_rustdoc_include_lines(&s, range.clone())
+                        }
+                        RangeOrAnchor::Anchor(anchor) => {
+                            take_rustdoc_include_anchored_lines(&s, anchor)
+                        }
                     })
                     .chain_err(|| {
                         format!(
@@ -326,7 +368,7 @@ fn find_links(contents: &str) -> LinkIter<'_> {
             \\\{\{\#.*\}\}             # match escaped link
             |                          # or
             \{\{\s*                    # link opening parens and whitespace
-            \#([a-zA-Z0-9]+)           # link type
+            \#([a-zA-Z0-9_]+)          # link type
             \s+                        # separating whitespace
             ([a-zA-Z0-9\s_.\-:/\\]+)   # link target path and space separated properties
             \s*\}\}                    # whitespace and link closing parens"

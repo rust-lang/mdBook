@@ -148,6 +148,32 @@ fn rendered_code_has_playpen_stuff() {
 }
 
 #[test]
+fn anchors_include_text_between_but_not_anchor_comments() {
+    let temp = DummyBook::new().build().unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
+    md.build().unwrap();
+
+    let nested = temp.path().join("book/first/nested.html");
+    let text_between_anchors = vec!["unique-string-for-anchor-test"];
+    let anchor_text = vec!["ANCHOR"];
+
+    assert_contains_strings(nested.clone(), &text_between_anchors);
+    assert_doesnt_contain_strings(nested, &anchor_text);
+}
+
+#[test]
+fn rustdoc_include_hides_the_unspecified_part_of_the_file() {
+    let temp = DummyBook::new().build().unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
+    md.build().unwrap();
+
+    let nested = temp.path().join("book/first/nested.html");
+    let text = vec!["# fn some_function() {", "# fn some_other_function() {"];
+
+    assert_contains_strings(nested, &text);
+}
+
+#[test]
 fn chapter_content_appears_in_rendered_document() {
     let content = vec![
         ("index.html", "This file is just here to cause the"),
