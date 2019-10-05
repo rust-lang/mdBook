@@ -427,6 +427,9 @@ pub struct HtmlConfig {
     pub theme: Option<PathBuf>,
     /// The default theme to use, defaults to 'light'
     pub default_theme: Option<String>,
+    /// The theme to use if the browser requests the dark version of the site.
+    /// Defaults to the same as 'default_theme'
+    pub preferred_dark_theme: Option<String>,
     /// Use "smart quotes" instead of the usual `"` character.
     pub curly_quotes: bool,
     /// Should mathjax be enabled?

@@ -406,6 +406,15 @@ fn make_data(
     };
     data.insert("default_theme".to_owned(), json!(default_theme));
 
+    let preferred_dark_theme = match html_config.preferred_dark_theme {
+        Some(ref theme) => theme,
+        None => default_theme,
+    };
+    data.insert(
+        "preferred_dark_theme".to_owned(),
+        json!(preferred_dark_theme),
+    );
+
     // Add google analytics tag
     if let Some(ref ga) = html_config.google_analytics {
         data.insert("google_analytics".to_owned(), json!(ga));
