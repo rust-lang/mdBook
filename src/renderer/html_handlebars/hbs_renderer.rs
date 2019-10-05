@@ -491,7 +491,7 @@ fn make_data(
 
                 chapter.insert(
                     "has_sub_items".to_owned(),
-                    json!((ch.sub_items.len() > 0).to_string()),
+                    json!((!ch.sub_items.is_empty()).to_string()),
                 );
 
                 chapter.insert("name".to_owned(), json!(ch.name));

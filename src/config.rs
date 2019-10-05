@@ -466,7 +466,7 @@ impl HtmlConfig {
 }
 
 /// Configuration for how to fold chapters of sidebar.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Fold {
     /// When off, all folds are open. Default: `false`.
@@ -475,15 +475,6 @@ pub struct Fold {
     /// are closed.
     /// Default: `0`.
     pub level: u8,
-}
-
-impl Default for Fold {
-    fn default() -> Self {
-        Self {
-            enable: false,
-            level: 0,
-        }
-    }
 }
 
 /// Configuration for tweaking how the the HTML renderer handles the playpen.
