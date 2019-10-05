@@ -29,7 +29,10 @@ pub fn execute(args: &ArgMatches) -> mdbook::errors::Result<()> {
         Some(dest_dir) => dest_dir.into(),
         None => book.root.join(&book.config.build.build_dir),
     };
-    fs::remove_dir_all(&dir_to_remove).chain_err(|| "Unable to remove the build directory")?;
+
+    if dir_to_remove.exists() {
+        fs::remove_dir_all(&dir_to_remove).chain_err(|| "Unable to remove the build directory")?;
+    }
 
     Ok(())
 }
