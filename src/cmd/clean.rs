@@ -3,7 +3,6 @@ use clap::{App, ArgMatches, SubCommand};
 use mdbook::errors::*;
 use mdbook::MDBook;
 use std::fs;
-use std::path::Path;
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
@@ -30,11 +29,7 @@ pub fn execute(args: &ArgMatches) -> mdbook::errors::Result<()> {
         Some(dest_dir) => dest_dir.into(),
         None => book.root.join(&book.config.build.build_dir),
     };
-
-    let path_to_dir_to_remove = Path::new(&dir_to_remove);
-    if path_to_dir_to_remove.exists() {
-        fs::remove_dir_all(&dir_to_remove).chain_err(|| "Unable to remove the build directory")?;
-    }
+    fs::remove_dir_all(&dir_to_remove).chain_err(|| "Unable to remove the build directory")?;
 
     Ok(())
 }
