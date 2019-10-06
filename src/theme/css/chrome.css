@@ -182,8 +182,7 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
 /* Inline code */
 
 :not(pre) > .hljs {
-    display: inline-block;
-    vertical-align: middle;
+    display: inline;
     padding: 0.1em 0.3em;
     border-radius: 3px;
 }
