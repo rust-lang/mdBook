@@ -22,9 +22,8 @@ code {
 
 .left { float: left; }
 .right { float: right; }
-.boring { opacity: 0.6; }
-.hide-boring .boring { display: none; }
 .hidden { display: none; }
+.play-button.hidden { display: none; }
 
 h2, h3 { margin-top: 2.5em; }
 h4, h5 { margin-top: 2em; }
