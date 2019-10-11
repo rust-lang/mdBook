@@ -55,6 +55,15 @@ function playpen_text(playpen) {
                 editor.addEventListener("change", function (e) {
                     update_play_button(playpen_block, playground_crates);
                 });
+                // add Ctrl-Enter command to execute rust code
+                editor.commands.addCommand({
+                    name: "run",
+                    bindKey: {
+                        win: "Ctrl-Enter",
+                        mac: "Ctrl-Enter"
+                    },
+                    exec: _editor => run_rust_code(playpen_block)
+                });
             }
         }
     }
