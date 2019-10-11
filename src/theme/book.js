@@ -505,10 +505,12 @@ function playpen_text(playpen) {
     }, { passive: true });
 
     // Scroll sidebar to current active section
-    var activeSection = document.getElementById("sidebar").querySelector(".active");
-    if (activeSection) {
-        sidebarScrollBox.scrollTop = activeSection.offsetTop;
-    }
+    window.addEventListener('load', function() {
+        var activeSection = document.getElementById("sidebar").querySelector(".active");
+        if (activeSection) {
+            activeSection.scrollIntoViewIfNeeded();
+        }
+    });
 })();
 
 (function chapterNavigation() {
