@@ -523,7 +523,8 @@ function playpen_text(playpen) {
     window.addEventListener('load', function() {
         var activeSection = sidebar.querySelector(".active");
         if (activeSection) {
-            activeSection.scrollIntoViewIfNeeded();
+            // https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
+            activeSection.scrollIntoView({ block: 'center' });
         }
     });
 })();
