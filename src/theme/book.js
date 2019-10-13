@@ -321,7 +321,7 @@ function playpen_text(playpen) {
         themeToggleButton.focus();
     }
 
-    function set_theme(theme) {
+    function set_theme(theme, store = true) {
         let ace_theme;
 
         if (theme == 'coal' || theme == 'navy') {
@@ -356,9 +356,10 @@ function playpen_text(playpen) {
         try { previousTheme = localStorage.getItem('mdbook-theme'); } catch (e) { }
         if (previousTheme === null || previousTheme === undefined) { previousTheme = default_theme; }
 
-        try { localStorage.setItem('mdbook-theme', theme); } catch (e) { }
+        if (store) {
+            try { localStorage.setItem('mdbook-theme', theme); } catch (e) { }
+        }
 
-        document.body.className = theme;
         html.classList.remove(previousTheme);
         html.classList.add(theme);
     }
@@ -368,7 +369,7 @@ function playpen_text(playpen) {
     try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
     if (theme === null || theme === undefined) { theme = default_theme; }
 
-    set_theme(theme);
+    set_theme(theme, false);
 
     themeToggleButton.addEventListener('click', function () {
         if (themePopup.style.display === 'block') {
