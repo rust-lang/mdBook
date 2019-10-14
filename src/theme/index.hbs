@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html lang="{{ language }}" class="sidebar-visible no-js">
+<html lang="{{ language }}" class="sidebar-visible no-js {{ default_theme }}">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
@@ -69,6 +69,7 @@
             if (theme === null || theme === undefined) { theme = default_theme; }
             var html = document.querySelector('html');
             html.classList.remove('no-js')
+            html.classList.remove('{{ default_theme }}')
             html.classList.add(theme);
             html.classList.add('js');
         </script>

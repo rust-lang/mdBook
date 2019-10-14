@@ -210,7 +210,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-    .no-js {
+    .light.no-js {
         --bg: hsl(200, 7%, 8%);
         --fg: #98a3ad;
 
