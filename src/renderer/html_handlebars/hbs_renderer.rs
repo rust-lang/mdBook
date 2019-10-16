@@ -445,7 +445,7 @@ fn make_data(
             data.insert("playpen_line_numbers".to_owned(), json!(true));
         }
     }
-    if html.playpen.copyable {
+    if html_config.playpen.copyable {
         data.insert("playpen_copyable".to_owned(), json!(true));
     }
 
