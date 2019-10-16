@@ -170,72 +170,34 @@ function playpen_text(playpen) {
 
     Array.from(document.querySelectorAll("code.language-rust")).forEach(function (block) {
 
-        var code_block = block;
-        var pre_block = block.parentNode;
-        // hide lines
-        var lines = code_block.innerHTML.split("\n");
-        var first_non_hidden_line = false;
-        var lines_hidden = false;
-        var trimmed_line = "";
-
-        for (var n = 0; n < lines.length; n++) {
-            trimmed_line = lines[n].trim();
-            if (trimmed_line[0] == hiding_character && trimmed_line[1] != hiding_character) {
-                if (first_non_hidden_line) {
-                    lines[n] = "<span class=\"hidden\">" + "\n" + lines[n].replace(/(\s*)# ?/, "$1") + "</span>";
-                }
-                else {
-                    lines[n] = "<span class=\"hidden\">" + lines[n].replace(/(\s*)# ?/, "$1") + "\n" + "</span>";
-                }
-                lines_hidden = true;
-            }
-            else if (first_non_hidden_line) {
-                lines[n] = "\n" + lines[n];
-            }
-            else {
-                first_non_hidden_line = true;
-            }
-            if (trimmed_line[0] == hiding_character && trimmed_line[1] == hiding_character) {
-                lines[n] = lines[n].replace("##", "#")
-            }
-        }
-        code_block.innerHTML = lines.join("");
-
+        var lines = Array.from(block.querySelectorAll('.boring'));
         // If no lines were hidden, return
-        if (!lines_hidden) { return; }
+        if (!lines.length) { return; }
+        block.classList.add("hide-boring");
 
         var buttons = document.createElement('div');
         buttons.className = 'buttons';
         buttons.innerHTML = "<button class=\"fa fa-expand\" title=\"Show hidden lines\" aria-label=\"Show hidden lines\"></button>";
 
         // add expand button
+        var pre_block = block.parentNode;
         pre_block.insertBefore(buttons, pre_block.firstChild);
 
         pre_block.querySelector('.buttons').addEventListener('click', function (e) {
             if (e.target.classList.contains('fa-expand')) {
-                var lines = pre_block.querySelectorAll('span.hidden');
-
                 e.target.classList.remove('fa-expand');
                 e.target.classList.add('fa-compress');
                 e.target.title = 'Hide lines';
                 e.target.setAttribute('aria-label', e.target.title);
 
-                Array.from(lines).forEach(function (line) {
-                    line.classList.remove('hidden');
-                    line.classList.add('unhidden');
-                });
+                block.classList.remove('hide-boring');
             } else if (e.target.classList.contains('fa-compress')) {
-                var lines = pre_block.querySelectorAll('span.unhidden');
-
                 e.target.classList.remove('fa-compress');
                 e.target.classList.add('fa-expand');
                 e.target.title = 'Show hidden lines';
                 e.target.setAttribute('aria-label', e.target.title);
 
-                Array.from(lines).forEach(function (line) {
-                    line.classList.remove('unhidden');
-                    line.classList.add('hidden');
-                });
+                block.classList.add('hide-boring');
             }
         });
     });

@@ -168,7 +168,10 @@ fn rustdoc_include_hides_the_unspecified_part_of_the_file() {
     md.build().unwrap();
 
     let nested = temp.path().join("book/first/nested.html");
-    let text = vec!["# fn some_function() {", "# fn some_other_function() {"];
+    let text = vec![
+        "<span class=\"boring\">fn some_function() {",
+        "<span class=\"boring\">fn some_other_function() {",
+    ];
 
     assert_contains_strings(nested, &text);
 }
