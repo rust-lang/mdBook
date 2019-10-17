@@ -202,25 +202,27 @@ function playpen_text(playpen) {
         });
     });
 
-    Array.from(document.querySelectorAll('pre code')).forEach(function (block) {
-        var pre_block = block.parentNode;
-        if (!pre_block.classList.contains('playpen')) {
-            var buttons = pre_block.querySelector(".buttons");
-            if (!buttons) {
-                buttons = document.createElement('div');
-                buttons.className = 'buttons';
-                pre_block.insertBefore(buttons, pre_block.firstChild);
+    if (window.playpen_copyable) {
+        Array.from(document.querySelectorAll('pre code')).forEach(function (block) {
+            var pre_block = block.parentNode;
+            if (!pre_block.classList.contains('playpen')) {
+                var buttons = pre_block.querySelector(".buttons");
+                if (!buttons) {
+                    buttons = document.createElement('div');
+                    buttons.className = 'buttons';
+                    pre_block.insertBefore(buttons, pre_block.firstChild);
+                }
+
+                var clipButton = document.createElement('button');
+                clipButton.className = 'fa fa-copy clip-button';
+                clipButton.title = 'Copy to clipboard';
+                clipButton.setAttribute('aria-label', clipButton.title);
+                clipButton.innerHTML = '<i class=\"tooltiptext\"></i>';
+
+                buttons.insertBefore(clipButton, buttons.firstChild);
             }
-
-            var clipButton = document.createElement('button');
-            clipButton.className = 'fa fa-copy clip-button';
-            clipButton.title = 'Copy to clipboard';
-            clipButton.setAttribute('aria-label', clipButton.title);
-            clipButton.innerHTML = '<i class=\"tooltiptext\"></i>';
-
-            buttons.insertBefore(clipButton, buttons.firstChild);
-        }
-    });
+        });
+    }
 
     // Process playpen code blocks
     Array.from(document.querySelectorAll(".playpen")).forEach(function (pre_block) {
@@ -238,18 +240,20 @@ function playpen_text(playpen) {
         runCodeButton.title = 'Run this code';
         runCodeButton.setAttribute('aria-label', runCodeButton.title);
 
-        var copyCodeClipboardButton = document.createElement('button');
-        copyCodeClipboardButton.className = 'fa fa-copy clip-button';
-        copyCodeClipboardButton.innerHTML = '<i class="tooltiptext"></i>';
-        copyCodeClipboardButton.title = 'Copy to clipboard';
-        copyCodeClipboardButton.setAttribute('aria-label', copyCodeClipboardButton.title);
-
         buttons.insertBefore(runCodeButton, buttons.firstChild);
-        buttons.insertBefore(copyCodeClipboardButton, buttons.firstChild);
-
         runCodeButton.addEventListener('click', function (e) {
             run_rust_code(pre_block);
         });
+
+        if (window.playpen_copyable) {
+            var copyCodeClipboardButton = document.createElement('button');
+            copyCodeClipboardButton.className = 'fa fa-copy clip-button';
+            copyCodeClipboardButton.innerHTML = '<i class="tooltiptext"></i>';
+            copyCodeClipboardButton.title = 'Copy to clipboard';
+            copyCodeClipboardButton.setAttribute('aria-label', copyCodeClipboardButton.title);
+
+            buttons.insertBefore(copyCodeClipboardButton, buttons.firstChild);
+        }
 
         let code_block = pre_block.querySelector("code");
         if (window.ace && code_block.classList.contains("editable")) {
