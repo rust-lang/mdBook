@@ -602,6 +602,6 @@ function playpen_text(playpen) {
             menu.classList.remove('bordered');
         }
 
-        previousScrollTop = document.scrollingElement.scrollTop;
+        previousScrollTop = Math.max(document.scrollingElement.scrollTop, 0);
     }, { passive: true });
 })();
