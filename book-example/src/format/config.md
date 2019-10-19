@@ -170,6 +170,7 @@ The following configuration options are available:
 - **no-section-label:** mdBook by defaults adds section label in table of
   contents column. For example, "1.", "2.1". Set this option to true to disable
   those labels. Defaults to `false`.
+- **fold:** A subtable for configuring sidebar section-folding behavior.
 - **playpen:** A subtable for configuring various playpen settings.
 - **search:** A subtable for configuring the in-browser search functionality.
   mdBook must be compiled with the `search` feature enabled (on by default).
@@ -177,6 +178,13 @@ The following configuration options are available:
   an icon link will be output in the menu bar of the book.
 - **git-repository-icon:** The FontAwesome icon class to use for the git
   repository link. Defaults to `fa-github`.
+  
+Available configuration options for the `[output.html.fold]` table:
+
+- **enable:** Enable section-folding. When off, all folds are open.
+  Defaults to `false`.
+- **level:** The higher the more folded regions are open. When level is 0, all
+  folds are closed. Defaults to `0`.
 
 Available configuration options for the `[output.html.playpen]` table:
 
@@ -231,6 +239,10 @@ additional-js = ["custom.js"]
 no-section-label = false
 git-repository-url = "https://github.com/rust-lang-nursery/mdBook"
 git-repository-icon = "fa-github"
+
+[output.html.fold]
+enable = false
+level = 0
 
 [output.html.playpen]
 editable = false

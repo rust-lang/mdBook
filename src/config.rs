@@ -454,16 +454,10 @@ pub struct HtmlConfig {
     /// Additional JS scripts to include at the bottom of the rendered page's
     /// `<body>`.
     pub additional_js: Vec<PathBuf>,
+    /// Fold settings.
+    pub fold: Fold,
     /// Playpen settings.
     pub playpen: Playpen,
-    /// This is used as a bit of a workaround for the `mdbook serve` command.
-    /// Basically, because you set the websocket port from the command line, the
-    /// `mdbook serve` command needs a way to let the HTML renderer know where
-    /// to point livereloading at, if it has been enabled.
-    ///
-    /// This config item *should not be edited* by the end user.
-    #[doc(hidden)]
-    pub livereload_url: Option<String>,
     /// Don't render section labels.
     pub no_section_label: bool,
     /// Search settings. If `None`, the default will be used.
@@ -473,6 +467,14 @@ pub struct HtmlConfig {
     /// FontAwesome icon class to use for the Git repository link.
     /// Defaults to `fa-github` if `None`.
     pub git_repository_icon: Option<String>,
+    /// This is used as a bit of a workaround for the `mdbook serve` command.
+    /// Basically, because you set the websocket port from the command line, the
+    /// `mdbook serve` command needs a way to let the HTML renderer know where
+    /// to point livereloading at, if it has been enabled.
+    ///
+    /// This config item *should not be edited* by the end user.
+    #[doc(hidden)]
+    pub livereload_url: Option<String>,
 }
 
 impl HtmlConfig {
@@ -484,6 +486,18 @@ impl HtmlConfig {
             None => root.join("theme"),
         }
     }
+}
+
+/// Configuration for how to fold chapters of sidebar.
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct Fold {
+    /// When off, all folds are open. Default: `false`.
+    pub enable: bool,
+    /// The higher the more folded regions are open. When level is 0, all folds
+    /// are closed.
+    /// Default: `0`.
+    pub level: u8,
 }
 
 /// Configuration for tweaking how the the HTML renderer handles the playpen.

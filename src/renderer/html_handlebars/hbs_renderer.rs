@@ -72,6 +72,10 @@ impl HtmlHandlebars {
                 "path_to_root".to_owned(),
                 json!(utils::fs::path_to_root(&ch.path)),
             );
+            if let Some(ref section) = ch.number {
+                ctx.data
+                    .insert("section".to_owned(), json!(section.to_string()));
+            }
 
             // Render the handlebars template with the data
             debug!("Render template");
@@ -460,6 +464,9 @@ fn make_data(
         data.insert("playpen_copyable".to_owned(), json!(true));
     }
 
+    data.insert("fold_enable".to_owned(), json!((html_config.fold.enable)));
+    data.insert("fold_level".to_owned(), json!((html_config.fold.level)));
+
     let search = html_config.search.clone();
     if cfg!(feature = "search") {
         let search = search.unwrap_or_default();
@@ -479,6 +486,7 @@ fn make_data(
     if let Some(ref git_repository_url) = html_config.git_repository_url {
         data.insert("git_repository_url".to_owned(), json!(git_repository_url));
     }
+
     let git_repository_icon = match html_config.git_repository_icon {
         Some(ref git_repository_icon) => git_repository_icon,
         None => "fa-github",
@@ -496,6 +504,11 @@ fn make_data(
                 if let Some(ref section) = ch.number {
                     chapter.insert("section".to_owned(), json!(section.to_string()));
                 }
+
+                chapter.insert(
+                    "has_sub_items".to_owned(),
+                    json!((!ch.sub_items.is_empty()).to_string()),
+                );
 
                 chapter.insert("name".to_owned(), json!(ch.name));
                 let path = ch

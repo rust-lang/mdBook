@@ -427,6 +427,17 @@ function playpen_text(playpen) {
         try { localStorage.setItem('mdbook-sidebar', 'visible'); } catch (e) { }
     }
 
+
+    var sidebarAnchorToggles = document.querySelectorAll('#sidebar a.toggle');
+
+    function toggleSection(ev) {
+        ev.currentTarget.parentElement.classList.toggle('expanded');
+    }
+
+    Array.from(sidebarAnchorToggles).forEach(function (el) {
+        el.addEventListener('click', toggleSection);
+    });
+
     function hideSidebar() {
         html.classList.remove('sidebar-visible')
         html.classList.add('sidebar-hidden');
