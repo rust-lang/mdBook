@@ -1,25 +1,8 @@
 # mdBook
 
-<table>
-    <tr>
-        <td><strong>Linux / OS X</strong></td>
-        <td>
-            <a href="https://travis-ci.com/rust-lang-nursery/mdBook"><img src="https://travis-ci.com/rust-lang-nursery/mdBook.svg?branch=master"></a>
-        </td>
-    </tr>
-    <tr>
-        <td><strong>Windows</strong></td>
-        <td>
-            <a href="https://ci.appveyor.com/project/rust-lang-libs/mdbook"><img src="https://ci.appveyor.com/api/projects/status/ysyke2rvo85sni55?svg=true"></a>
-        </td>
-    </tr>
-    <tr>
-        <td colspan="2">
-            <a href="https://crates.io/crates/mdbook"><img src="https://img.shields.io/crates/v/mdbook.svg"></a>
-            <a href="LICENSE"><img src="https://img.shields.io/github/license/rust-lang-nursery/mdBook.svg"></a>
-        </td>
-    </tr>
-</table>
+[![Build Status](https://github.com/rust-lang-nursery/mdBook/workflows/CI/badge.svg)](https://github.com/rust-lang-nursery/mdBook/actions?workflow=CI)
+[![crates.io](https://img.shields.io/crates/v/mdbook.svg)](https://crates.io/crates/mdbook)
+[![LICENSE](https://img.shields.io/github/license/rust-lang-nursery/mdBook.svg)](LICENSE)
 
 mdBook is a utility to create modern online books from Markdown files.
 
