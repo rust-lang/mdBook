@@ -1,5 +1,78 @@
 # Changelog
 
+## mdBook 0.3.2
+[9cd47eb...2b649fe](https://github.com/rust-lang-nursery/mdBook/compare/9cd47eb...2b649fe)
+
+### Added
+- Added a markdown renderer, which is off by default. This may be useful for
+  debugging preprocessors.
+  [#1018](https://github.com/rust-lang-nursery/mdBook/pull/1018)
+- Code samples may now include line numbers with the
+  `output.html.playpen.line-numbers` configuration value.
+  [#1035](https://github.com/rust-lang-nursery/mdBook/pull/1035)
+- The `watch` and `serve` commands will now ignore files listed in
+  `.gitignore`.
+  [#1044](https://github.com/rust-lang-nursery/mdBook/pull/1044)
+- Added automatic dark-theme detection based on the CSS `prefers-color-scheme`
+  feature. This may be enabled by setting `output.html.preferred-dark-theme`
+  to your preferred dark theme.
+  [#1037](https://github.com/rust-lang-nursery/mdBook/pull/1037)
+- Added `rustdoc_include` preprocessor. This makes it easier to include
+  portions of an external Rust source file. The rest of the file is hidden,
+  but the user may expand it to see the entire file, and will continue to work
+  with `mdbook test`.
+  [#1003](https://github.com/rust-lang-nursery/mdBook/pull/1003)
+- Added Ctrl-Enter shortcut to the playpen editor to automatically run the
+  sample.
+  [#1066](https://github.com/rust-lang-nursery/mdBook/pull/1066)
+- Added `output.html.playpen.copyable` configuration option to disable
+  the copy button.
+  [#1050](https://github.com/rust-lang-nursery/mdBook/pull/1050)
+- Added ability to dynamically expand and fold sections within the sidebar.
+  See the `output.html.fold` configuration to enable this feature.
+  [#1027](https://github.com/rust-lang-nursery/mdBook/pull/1027)
+
+### Changed
+- Use standard `scrollbar-color` CSS along with webkit extension
+  [#816](https://github.com/rust-lang-nursery/mdBook/pull/816)
+- The renderer build directory is no longer deleted before the renderer is
+  run. This allows a backend to cache results between runs.
+  [#985](https://github.com/rust-lang-nursery/mdBook/pull/985)
+- Next/prev links now highlight on hover to indicate it is clickable.
+  [#994](https://github.com/rust-lang-nursery/mdBook/pull/994)
+- Increase padding of table headers.
+  [#824](https://github.com/rust-lang-nursery/mdBook/pull/824)
+- Errors in `[output.html]` config are no longer ignored.
+  [#1033](https://github.com/rust-lang-nursery/mdBook/pull/1033)
+- Updated highlight.js for syntax highlighting updates (primarily to add
+  async/await to Rust highlighting).
+  [#1041](https://github.com/rust-lang-nursery/mdBook/pull/1041)
+- Raised minimum supported rust version to 1.35.
+  [#1003](https://github.com/rust-lang-nursery/mdBook/pull/1003)
+- Hidden code lines are no longer dynamically removed via JavaScript, but
+  instead managed with CSS.
+  [#846](https://github.com/rust-lang-nursery/mdBook/pull/846)
+  [#1065](https://github.com/rust-lang-nursery/mdBook/pull/1065)
+- Changed the default font set for the ACE editor, giving preference to
+  "Source Code Pro".
+  [#1062](https://github.com/rust-lang-nursery/mdBook/pull/1062)
+- Windows 32-bit releases are no longer published.
+  [#1071](https://github.com/rust-lang-nursery/mdBook/pull/1071)
+
+### Fixed
+- Fixed sidebar auto-scrolling.
+  [#1052](https://github.com/rust-lang-nursery/mdBook/pull/1052)
+- Fixed error message when running `clean` multiple times.
+  [#1055](https://github.com/rust-lang-nursery/mdBook/pull/1055)
+- Actually fix the "next" link on index.html. The previous fix didn't work.
+  [#1005](https://github.com/rust-lang-nursery/mdBook/pull/1005)
+- Stop using `inline-block` for `inline code`, fixing selection highlighting
+  and some rendering issues.
+  [#1058](https://github.com/rust-lang-nursery/mdBook/pull/1058)
+- Fix header auto-hide on browsers with momentum scrolling that allows
+  negative `scrollTop`.
+  [#1070](https://github.com/rust-lang-nursery/mdBook/pull/1070)
+
 ## mdBook 0.3.1
 [69a08ef...9cd47eb](https://github.com/rust-lang-nursery/mdBook/compare/69a08ef...9cd47eb)
 
