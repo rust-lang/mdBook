@@ -6,6 +6,7 @@ language = "en"
 
 [output.html]
 mathjax-support = true
+offline-support = true
 
 [output.html.playpen]
 editable = true
