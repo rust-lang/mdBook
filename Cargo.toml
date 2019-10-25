@@ -54,9 +54,8 @@ pretty_assertions = "0.6"
 walkdir = "2.0"
 
 [features]
-default = ["output", "watch", "serve", "search"]
+default = ["watch", "serve", "search"]
 debug = []
-output = []
 watch = ["notify", "gitignore"]
 serve = ["iron", "staticfile", "ws"]
 search = ["elasticlunr-rs", "ammonia"]
