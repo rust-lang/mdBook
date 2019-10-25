@@ -548,6 +548,10 @@ fn make_data(
         )
     }
 
+    if html_config.offline_support {
+        data.insert("offline_support".to_owned(), json!(true));
+    }
+
     if let Some(ref git_repository_url) = html_config.git_repository_url {
         data.insert("git_repository_url".to_owned(), json!(git_repository_url));
     }

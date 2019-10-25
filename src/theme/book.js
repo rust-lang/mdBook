@@ -600,9 +600,15 @@ function playpen_text(playpen) {
   var isLocalhost =
     ["localhost", "127.0.0.1", ""].indexOf(document.location.hostname) !== -1;
 
-  if ("serviceWorker" in navigator && !isLocalhost) {
-    navigator.serviceWorker.register("sw.js").catch(function(error) {
-      console.error("Service worker registration failed:", error);
-    });
+  if (
+    window.sevice_worker_script_src &&
+    "serviceWorker" in navigator &&
+    !isLocalhost
+  ) {
+    navigator.serviceWorker
+      .register(window.sevice_worker_script_src)
+      .catch(function(error) {
+        console.error("Service worker registration failed:", error);
+      });
   }
 })();
