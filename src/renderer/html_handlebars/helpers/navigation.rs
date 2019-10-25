@@ -69,7 +69,15 @@ fn find_chapter(
         // "index.md" (unless there really is an index.md in SUMMARY.md).
         match target {
             Target::Previous => return Ok(None),
-            Target::Next => match chapters.iter().skip(1).next() {
+            Target::Next => match chapters
+                .iter()
+                .filter(|chapter| {
+                    // Skip things like "spacer"
+                    chapter.contains_key("path")
+                })
+                .skip(1)
+                .next()
+            {
                 Some(chapter) => return Ok(Some(chapter.clone())),
                 None => return Ok(None),
             },

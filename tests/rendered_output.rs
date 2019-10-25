@@ -306,7 +306,7 @@ fn check_first_toc_level() {
 #[test]
 fn check_spacers() {
     let doc = root_index_html().unwrap();
-    let should_be = 1;
+    let should_be = 2;
 
     let num_spacers = doc
         .find(Class("chapter").descendant(Name("li").and(Class("spacer"))))
