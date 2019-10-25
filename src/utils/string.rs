@@ -11,8 +11,14 @@ pub fn take_lines<R: RangeBounds<usize>>(s: &str, range: R) -> String {
     };
     let lines = s.lines().skip(start);
     match range.end_bound() {
-        Excluded(end) => lines.take(end.saturating_sub(start)).collect::<Vec<_>>().join("\n"),
-        Included(end) => lines.take((end + 1).saturating_sub(start)).collect::<Vec<_>>().join("\n"),
+        Excluded(end) => lines
+            .take(end.saturating_sub(start))
+            .collect::<Vec<_>>()
+            .join("\n"),
+        Included(end) => lines
+            .take((end + 1).saturating_sub(start))
+            .collect::<Vec<_>>()
+            .join("\n"),
         Unbounded => lines.collect::<Vec<_>>().join("\n"),
     }
 }

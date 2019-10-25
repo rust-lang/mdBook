@@ -359,8 +359,7 @@ more text with spaces
 ```
 "#;
 
-            let expected =
-                r#"<pre><code class="language-rust,no_run,should_panic,property_3"></code></pre>
+            let expected = r#"<pre><code class="language-rust,no_run,should_panic,property_3"></code></pre>
 "#;
             assert_eq!(render_markdown(input, false), expected);
             assert_eq!(render_markdown(input, true), expected);
@@ -373,8 +372,7 @@ more text with spaces
 ```
 "#;
 
-            let expected =
-                r#"<pre><code class="language-rust,no_run,,,should_panic,,property_3"></code></pre>
+            let expected = r#"<pre><code class="language-rust,no_run,,,should_panic,,property_3"></code></pre>
 "#;
             assert_eq!(render_markdown(input, false), expected);
             assert_eq!(render_markdown(input, true), expected);

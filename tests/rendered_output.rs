@@ -490,12 +490,15 @@ fn markdown_options() {
             "<td>bim</td>",
         ],
     );
-    assert_contains_strings(&path, &[
-        r##"<sup class="footnote-reference"><a href="#1">1</a></sup>"##,
-        r##"<sup class="footnote-reference"><a href="#word">2</a></sup>"##,
-        r##"<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>"##,
-        r##"<div class="footnote-definition" id="word"><sup class="footnote-definition-label">2</sup>"##,
-    ]);
+    assert_contains_strings(
+        &path,
+        &[
+            r##"<sup class="footnote-reference"><a href="#1">1</a></sup>"##,
+            r##"<sup class="footnote-reference"><a href="#word">2</a></sup>"##,
+            r##"<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>"##,
+            r##"<div class="footnote-definition" id="word"><sup class="footnote-definition-label">2</sup>"##,
+        ],
+    );
     assert_contains_strings(&path, &["<del>strikethrough example</del>"]);
     assert_contains_strings(
         &path,
