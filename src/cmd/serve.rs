@@ -2,12 +2,10 @@
 use super::watch;
 use crate::{get_book_dir, open};
 use clap::{App, Arg, ArgMatches, SubCommand};
-use iron::{status, AfterMiddleware, Chain, Iron, IronError, IronResult, Request, Response, Set};
 use mdbook::errors::*;
 use mdbook::utils;
 use mdbook::MDBook;
-
-struct ErrorRecover;
+use simple_server::{Server, StatusCode};
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
@@ -85,17 +83,22 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     book.build()?;
 
-    let mut chain = Chain::new(staticfile::Static::new(book.build_dir_for("html")));
-    chain.link_after(ErrorRecover);
-    let _iron = Iron::new(chain)
-        .http(&*address)
-        .chain_err(|| "Unable to launch the server")?;
+    let mut server = Server::new(|_, mut response| {
+        Ok(response
+            .status(StatusCode::NOT_FOUND)
+            .body(Vec::from("asd"))?)
+    });
+    server.set_static_directory(book.build_dir_for("html"));
 
     let ws_server =
         ws::WebSocket::new(|_| |_| Ok(())).chain_err(|| "Unable to start the websocket")?;
 
     let broadcaster = ws_server.broadcaster();
 
+    // run the websocket and HTTP servers on background threads
+    let hostname = hostname.to_string();
+    let port = port.to_string();
+    std::thread::spawn(move || server.listen(&hostname, &port));
     std::thread::spawn(move || {
         ws_server.listen(&*ws_address).unwrap();
     });
@@ -131,14 +134,4 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     });
 
     Ok(())
-}
-
-impl AfterMiddleware for ErrorRecover {
-    fn catch(&self, _: &mut Request, err: IronError) -> IronResult<Response> {
-        match err.response.status {
-            // each error will result in 404 response
-            Some(_) => Ok(err.response.set(status::NotFound)),
-            _ => Err(err),
-        }
-    }
 }
