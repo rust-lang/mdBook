@@ -2,6 +2,7 @@
 
 pub mod fs;
 mod string;
+pub(crate) mod toml_ext;
 use crate::errors::Error;
 use regex::Regex;
 

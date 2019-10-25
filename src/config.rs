@@ -57,12 +57,9 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use toml::value::Table;
 use toml::{self, Value};
-use toml_query::delete::TomlValueDeleteExt;
-use toml_query::insert::TomlValueInsertExt;
-use toml_query::read::TomlValueReadExt;
 
 use crate::errors::*;
-use crate::utils;
+use crate::utils::{self, toml_ext::TomlExt};
 
 /// The overall configuration object for MDBook, essentially an in-memory
 /// representation of `book.toml`.
@@ -163,15 +160,12 @@ impl Config {
     /// `output.html.playpen` will fetch the "playpen" out of the html output
     /// table).
     pub fn get(&self, key: &str) -> Option<&Value> {
-        self.rest.read(key).unwrap_or(None)
+        self.rest.read(key)
     }
 
     /// Fetch a value from the `Config` so you can mutate it.
     pub fn get_mut(&mut self, key: &str) -> Option<&mut Value> {
-        match self.rest.read_mut(key) {
-            Ok(inner) => inner,
-            Err(_) => None,
-        }
+        self.rest.read_mut(key)
     }
 
     /// Convenience method for getting the html renderer's configuration.
@@ -234,9 +228,7 @@ impl Config {
         } else if index.starts_with("build.") {
             self.build.update_value(&index[6..], value);
         } else {
-            self.rest
-                .insert(index, value)
-                .map_err(ErrorKind::TomlQueryError)?;
+            self.rest.insert(index, value);
         }
 
         Ok(())
@@ -277,7 +269,7 @@ impl Config {
         get_and_insert!(table, "source" => cfg.book.src);
         get_and_insert!(table, "description" => cfg.book.description);
 
-        if let Ok(Some(dest)) = table.delete("output.html.destination") {
+        if let Some(dest) = table.delete("output.html.destination") {
             if let Ok(destination) = dest.try_into() {
                 cfg.build.build_dir = destination;
             }
@@ -363,8 +355,8 @@ impl Serialize for Config {
         };
         let rust_config = Value::try_from(&self.rust).expect("should always be serializable");
 
-        table.insert("book", book_config).expect("unreachable");
-        table.insert("rust", rust_config).expect("unreachable");
+        table.insert("book", book_config);
+        table.insert("rust", rust_config);
         table.serialize(s)
     }
 }
@@ -391,7 +383,7 @@ fn is_legacy_format(table: &Value) -> bool {
     ];
 
     for item in &legacy_items {
-        if let Ok(Some(_)) = table.read(item) {
+        if table.read(item).is_some() {
             return true;
         }
     }

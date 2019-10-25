@@ -148,12 +148,6 @@ pub mod errors {
                 description("Reserved Filename")
                 display("{} is reserved for internal use", filename.display())
             }
-
-            /// Error with a TOML file.
-            TomlQueryError(inner: toml_query::error::Error) {
-                description("toml_query error")
-                display("{}", inner)
-            }
         }
     }
 
