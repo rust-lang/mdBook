@@ -1,5 +1,19 @@
 # Changelog
 
+## mdBook 0.3.3
+[2b649fe...e5f77aa](https://github.com/rust-lang-nursery/mdBook/compare/2b649fe...e5f77aa)
+
+### Changed
+- Improvements to the automatic dark theme selection.
+  [#1069](https://github.com/rust-lang-nursery/mdBook/pull/1069)
+- Fragment links now prevent scrolling the header behind the menu bar.
+  [#1077](https://github.com/rust-lang-nursery/mdBook/pull/1077)
+
+### Fixed
+- Fixed error when building a book that has a spacer immediately after the
+  first chapter.
+  [#1075](https://github.com/rust-lang-nursery/mdBook/pull/1075)
+
 ## mdBook 0.3.2
 [9cd47eb...2b649fe](https://github.com/rust-lang-nursery/mdBook/compare/9cd47eb...2b649fe)
 
