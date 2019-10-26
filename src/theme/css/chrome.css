@@ -45,7 +45,7 @@ a > .hljs {
     position: relative;
     padding: 0 8px;
     z-index: 10;
-    line-height: 50px;
+    line-height: var(--menu-bar-height);
     cursor: pointer;
     transition: color 0.5s;
 }
@@ -73,7 +73,7 @@ a > .hljs {
 }
 
 html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-container {
-    transform: translateY(-60px);
+    transform: translateY(calc(-10px - var(--menu-bar-height)));
 }
 
 .left-buttons {
@@ -88,7 +88,7 @@ html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-conta
     display: inline-block;
     font-weight: 200;
     font-size: 20px;
-    line-height: 50px;
+    line-height: var(--menu-bar-height);
     text-align: center;
     margin: 0;
     flex: 1;
@@ -446,7 +446,7 @@ ul#searchresults span.teaser em {
 .theme-popup {
     position: absolute;
     left: 10px;
-    top: 50px;
+    top: var(--menu-bar-height);
     z-index: 1000;
     border-radius: 4px;
     font-size: 0.7em;

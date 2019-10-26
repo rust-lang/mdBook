@@ -49,7 +49,7 @@ h1 a.header:target,
 h2 a.header:target,
 h3 a.header:target,
 h4 a.header:target {
-    scroll-margin-top: 62px;
+    scroll-margin-top: calc(var(--menu-bar-height) + 0.5em);
 }
 
 .page {
