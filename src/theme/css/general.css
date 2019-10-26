@@ -45,6 +45,13 @@ h4 a.header:target::before {
     width: 30px;
 }
 
+h1 a.header:target,
+h2 a.header:target,
+h3 a.header:target,
+h4 a.header:target {
+    scroll-margin-top: 62px;
+}
+
 .page {
     outline: 0;
     padding: 0 var(--page-padding);
