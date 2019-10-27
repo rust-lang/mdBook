@@ -1,9 +1,8 @@
-extern crate mdbook;
-extern crate tempfile;
-
 use mdbook::config::Config;
 use mdbook::MDBook;
 use std::fs;
+use std::fs::File;
+use std::io::prelude::*;
 use std::path::PathBuf;
 use tempfile::Builder as TempFileBuilder;
 
@@ -22,6 +21,36 @@ fn base_mdbook_init_should_create_default_content() {
 
     for file in &created_files {
         let target = temp.path().join(file);
+        println!("{}", target.display());
+        assert!(target.exists(), "{} doesn't exist", file);
+    }
+}
+
+/// Run `mdbook init` in a directory containing a SUMMARY.md should create the
+/// files listed in the summary.
+#[test]
+fn run_mdbook_init_should_create_content_from_summary() {
+    let created_files = vec!["intro.md", "first.md", "outro.md"];
+
+    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
+    let src_dir = temp.path().join("src");
+    fs::create_dir_all(src_dir.clone()).unwrap();
+    static SUMMARY: &str = r#"# Summary
+
+[intro](intro.md)
+
+- [First chapter](first.md)
+
+[outro](outro.md)
+
+"#;
+
+    let mut summary = File::create(src_dir.join("SUMMARY.md")).unwrap();
+    summary.write_all(SUMMARY.as_bytes()).unwrap();
+    MDBook::init(temp.path()).build().unwrap();
+
+    for file in &created_files {
+        let target = src_dir.join(file);
         println!("{}", target.display());
         assert!(target.exists(), "{} doesn't exist", file);
     }

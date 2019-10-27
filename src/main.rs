@@ -1,12 +1,7 @@
-extern crate chrono;
 #[macro_use]
 extern crate clap;
-extern crate env_logger;
-extern crate error_chain;
 #[macro_use]
 extern crate log;
-extern crate mdbook;
-extern crate open;
 
 use chrono::Local;
 use clap::{App, AppSettings, ArgMatches};
@@ -20,19 +15,19 @@ use std::path::{Path, PathBuf};
 
 mod cmd;
 
-const NAME: &str = "mdBook";
 const VERSION: &str = concat!("v", crate_version!());
 
 fn main() {
     init_logger();
 
     // Create a list of valid arguments and sub-commands
-    let app = App::new(NAME)
-        .about("Creates a book from markdown files")
+    let app = App::new(crate_name!())
+        .about(crate_description!())
         .author("Mathieu David <mathieudavid@mathieudavid.org>")
         .version(VERSION)
         .setting(AppSettings::GlobalVersion)
         .setting(AppSettings::ArgRequiredElseHelp)
+        .setting(AppSettings::ColoredHelp)
         .after_help(
             "For more information about a specific command, try `mdbook <command> --help`\n\
              The source code for mdBook is available at: https://github.com/rust-lang-nursery/mdBook",
@@ -63,7 +58,7 @@ fn main() {
     if let Err(e) = res {
         utils::log_backtrace(&e);
 
-        ::std::process::exit(101);
+        std::process::exit(101);
     }
 }
 
@@ -82,7 +77,7 @@ fn init_logger() {
     });
 
     if let Ok(var) = env::var("RUST_LOG") {
-        builder.parse(&var);
+        builder.parse_filters(&var);
     } else {
         // if no RUST_LOG provided, default to logging at the Info level
         builder.filter(None, LevelFilter::Info);

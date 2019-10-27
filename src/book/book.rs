@@ -5,8 +5,8 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
 use super::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
-use config::BuildConfig;
-use errors::*;
+use crate::config::BuildConfig;
+use crate::errors::*;
 
 /// Load a book into memory from its `src/` directory.
 pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> {
@@ -82,7 +82,7 @@ impl Book {
     }
 
     /// Get a depth-first iterator over the items in the book.
-    pub fn iter(&self) -> BookItems {
+    pub fn iter(&self) -> BookItems<'_> {
         BookItems {
             items: self.sections.iter().collect(),
         }
@@ -116,7 +116,7 @@ where
     I: IntoIterator<Item = &'a mut BookItem>,
 {
     for item in items {
-        if let &mut BookItem::Chapter(ref mut ch) = item {
+        if let BookItem::Chapter(ch) = item {
             for_each_mut(func, &mut ch.sub_items);
         }
 
@@ -179,7 +179,7 @@ impl Chapter {
 ///
 /// You need to pass in the book's source directory because all the links in
 /// `SUMMARY.md` give the chapter locations relative to it.
-fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P) -> Result<Book> {
+pub(crate) fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P) -> Result<Book> {
     debug!("Loading the book from disk");
     let src_dir = src_dir.as_ref();
 
@@ -286,7 +286,7 @@ impl<'a> Iterator for BookItems<'a> {
 }
 
 impl Display for Chapter {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         if let Some(ref section_number) = self.number {
             write!(f, "{} ", section_number)?;
         }
@@ -301,7 +301,7 @@ mod tests {
     use std::io::Write;
     use tempfile::{Builder as TempFileBuilder, TempDir};
 
-    const DUMMY_SRC: &'static str = "
+    const DUMMY_SRC: &str = "
 # Dummy Chapter
 
 this is some dummy text.
@@ -317,7 +317,7 @@ And here is some \
         let chapter_path = temp.path().join("chapter_1.md");
         File::create(&chapter_path)
             .unwrap()
-            .write(DUMMY_SRC.as_bytes())
+            .write_all(DUMMY_SRC.as_bytes())
             .unwrap();
 
         let link = Link::new("Chapter 1", chapter_path);
@@ -333,7 +333,7 @@ And here is some \
 
         File::create(&second_path)
             .unwrap()
-            .write_all("Hello World!".as_bytes())
+            .write_all(b"Hello World!")
             .unwrap();
 
         let mut second = Link::new("Nested Chapter 1", &second_path);
@@ -481,7 +481,8 @@ And here is some \
             .filter_map(|i| match *i {
                 BookItem::Chapter(ref ch) => Some(ch.name.clone()),
                 _ => None,
-            }).collect();
+            })
+            .collect();
         let should_be: Vec<_> = vec![
             String::from("Chapter 1"),
             String::from("Hello World"),

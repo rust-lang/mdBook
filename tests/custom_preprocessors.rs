@@ -1,8 +1,6 @@
-extern crate mdbook;
-
 mod dummy_book;
 
-use dummy_book::DummyBook;
+use crate::dummy_book::DummyBook;
 use mdbook::preprocess::{CmdPreprocessor, Preprocessor};
 use mdbook::MDBook;
 
@@ -36,7 +34,7 @@ fn ask_the_preprocessor_to_blow_up() {
     let dummy_book = DummyBook::new();
     let temp = dummy_book.build().unwrap();
     let mut md = MDBook::load(temp.path()).unwrap();
-    md.with_preprecessor(example());
+    md.with_preprocessor(example());
 
     md.config
         .set("preprocessor.nop-preprocessor.blow-up", true)
@@ -52,7 +50,7 @@ fn process_the_dummy_book() {
     let dummy_book = DummyBook::new();
     let temp = dummy_book.build().unwrap();
     let mut md = MDBook::load(temp.path()).unwrap();
-    md.with_preprecessor(example());
+    md.with_preprocessor(example());
 
     md.build().unwrap();
 }

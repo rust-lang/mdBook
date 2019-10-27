@@ -1,4 +1,4 @@
-use errors::*;
+use crate::errors::*;
 use memchr::{self, Memchr};
 use pulldown_cmark::{self, Event, Tag};
 use std::fmt::{self, Display, Formatter};
@@ -195,7 +195,7 @@ macro_rules! collect_events {
 }
 
 impl<'a> SummaryParser<'a> {
-    fn new(text: &str) -> SummaryParser {
+    fn new(text: &str) -> SummaryParser<'_> {
         let pulldown_parser = pulldown_cmark::Parser::new(text);
 
         SummaryParser {
@@ -259,7 +259,7 @@ impl<'a> SummaryParser<'a> {
                         bail!(self.parse_error("Suffix chapters cannot be followed by a list"));
                     }
                 }
-                Some(Event::Start(Tag::Link(href, _))) => {
+                Some(Event::Start(Tag::Link(_type, href, _title))) => {
                     let link = self.parse_link(href.to_string())?;
                     items.push(SummaryItem::Link(link));
                 }
@@ -397,7 +397,7 @@ impl<'a> SummaryParser<'a> {
         loop {
             match self.next_event() {
                 Some(Event::Start(Tag::Paragraph)) => continue,
-                Some(Event::Start(Tag::Link(href, _))) => {
+                Some(Event::Start(Tag::Link(_type, href, _title))) => {
                     let mut link = self.parse_link(href.to_string())?;
 
                     let mut number = parent.clone();
@@ -471,13 +471,14 @@ fn get_last_link(links: &mut [SummaryItem]) -> Result<(usize, &mut Link)> {
 
 /// Removes the styling from a list of Markdown events and returns just the
 /// plain text.
-fn stringify_events(events: Vec<Event>) -> String {
+fn stringify_events(events: Vec<Event<'_>>) -> String {
     events
         .into_iter()
         .filter_map(|t| match t {
-            Event::Text(text) => Some(text.into_owned()),
+            Event::Text(text) | Event::Code(text) => Some(text.into_string()),
             _ => None,
-        }).collect()
+        })
+        .collect()
 }
 
 /// A section number like "1.2.3", basically just a newtype'd `Vec<u32>` with
@@ -486,7 +487,7 @@ fn stringify_events(events: Vec<Event>) -> String {
 pub struct SectionNumber(pub Vec<u32>);
 
 impl Display for SectionNumber {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         if self.0.is_empty() {
             write!(f, "0")
         } else {
@@ -628,7 +629,7 @@ mod tests {
         let _ = parser.stream.next(); // skip past start of paragraph
 
         let href = match parser.stream.next() {
-            Some(Event::Start(Tag::Link(href, _))) => href.to_string(),
+            Some(Event::Start(Tag::Link(_type, href, _title))) => href.to_string(),
             other => panic!("Unreachable, {:?}", other),
         };
 

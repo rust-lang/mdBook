@@ -14,9 +14,9 @@ description = "The example book covers examples."
 build-dir = "my-example-book"
 create-missing = false
 
-[preprocess.index]
+[preprocessor.index]
 
-[preprocess.links]
+[preprocessor.links]
 
 [output.html]
 additional-css = ["custom.css"]
@@ -27,7 +27,7 @@ limit-results = 15
 
 ## Supported configuration options
 
-It is important to note that **any** relative path specified in the in the
+It is important to note that **any** relative path specified in the
 configuration will always be taken relative from the root of the book where the
 configuration file is located.
 
@@ -42,6 +42,7 @@ This is general information about your book.
 - **src:** By default, the source directory is found in the directory named
   `src` directly under the root folder. But this is configurable with the `src`
   key in the configuration file.
+- **language:** The main language of the book, which is used as a language attribute `<html lang="en">` for example.
 
 **book.toml**
 ```toml
@@ -50,6 +51,7 @@ title = "Example book"
 authors = ["John Doe", "Jane Doe"]
 description = "The example book covers examples."
 src = "my-src"  # the source files will be found in `root/my-src` instead of `root/src`
+language = "en"
 ```
 
 ### Build options
@@ -68,18 +70,18 @@ This controls the build process of your book.
   If you have the same, and/or other preprocessors declared via their table
   of configuration, they will run instead.
 
-  - For clarity, with no preprocessor configuration, the default `links` and 
+  - For clarity, with no preprocessor configuration, the default `links` and
     `index` will run.
   - Setting `use-default-preprocessors = false` will disable these
     default preprocessors from running.
-  - Adding `[preprocessor.links]`, for example, will ensure, regardless of 
+  - Adding `[preprocessor.links]`, for example, will ensure, regardless of
     `use-default-preprocessors` that `links` it will run.
 
 ## Configuring Preprocessors
 
 The following preprocessors are available and included by default:
 
-- `links`: Expand the `{{ #playpen }}` and `{{ #include }}` handlebars
+- `links`: Expand the `{{ #playpen }}`, `{{ #include }}`, and `{{ #rustdoc_include }}` handlebars
   helpers in a chapter to include the contents of a file.
 - `index`: Convert all chapter files named `README.md` into `index.md`. That is
   to say, all `README.md` would be rendered to an index file `index.html` in the
@@ -92,9 +94,9 @@ The following preprocessors are available and included by default:
 build-dir = "build"
 create-missing = false
 
-[preprocess.links]
+[preprocessor.links]
 
-[preprocess.index]
+[preprocessor.index]
 ```
 
 ### Custom Preprocessor Configuration
@@ -105,8 +107,8 @@ configuration to the preprocessor by adding key-value pairs to the table.
 
 For example
 
-```
-[preprocess.links]
+```toml
+[preprocessor.links]
 # set the renderers this preprocessor will run for
 renderers = ["html"]
 some_extra_feature = true
@@ -117,7 +119,7 @@ some_extra_feature = true
 You can explicitly specify that a preprocessor should run for a renderer by
 binding the two together.
 
-```
+```toml
 [preprocessor.mathjax]
 renderers = ["html"]  # mathjax only makes sense with the HTML renderer
 ```
@@ -125,7 +127,7 @@ renderers = ["html"]  # mathjax only makes sense with the HTML renderer
 ### Provide Your Own Command
 
 By default when you add a `[preprocessor.foo]` table to your `book.toml` file,
-`mdbook` will try to invoke the `mdbook-foo` executa`ble. If you want to use a
+`mdbook` will try to invoke the `mdbook-foo` executable. If you want to use a
 different program name or pass in command-line arguments, this behaviour can
 be overridden by adding a `command` field.
 
@@ -146,10 +148,16 @@ The following configuration options are available:
 - **theme:** mdBook comes with a default theme and all the resource files needed
   for it. But if this option is set, mdBook will selectively overwrite the theme
   files with the ones found in the specified folder.
-- **default-theme:** The theme color scheme to select by default in the 
+- **default-theme:** The theme color scheme to select by default in the
   'Change Theme' dropdown. Defaults to `light`.
+- **preferred-dark-theme:** The default dark theme. This theme will be used if
+  the browser requests the dark version of the site via the
+  ['prefers-color-scheme'](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)
+  CSS media query. Defaults to the same theme as `default-theme`.
 - **curly-quotes:** Convert straight quotes to curly quotes, except for those
   that occur in code blocks and code spans. Defaults to `false`.
+- **mathjax-support:** Adds support for [MathJax](mathjax.md). Defaults to
+  `false`.
 - **google-analytics:** If you use Google Analytics, this option lets you enable
   it by simply specifying your ID in the configuration file.
 - **additional-css:** If you need to slightly change the appearance of your book
@@ -162,19 +170,29 @@ The following configuration options are available:
 - **no-section-label:** mdBook by defaults adds section label in table of
   contents column. For example, "1.", "2.1". Set this option to true to disable
   those labels. Defaults to `false`.
+- **fold:** A subtable for configuring sidebar section-folding behavior.
 - **playpen:** A subtable for configuring various playpen settings.
 - **search:** A subtable for configuring the in-browser search functionality.
   mdBook must be compiled with the `search` feature enabled (on by default).
-- **git_repository_url:**  A url to the git repository for the book. If provided
+- **git-repository-url:**  A url to the git repository for the book. If provided
   an icon link will be output in the menu bar of the book.
-- **git_repository_icon:** The FontAwesome icon class to use for the git
+- **git-repository-icon:** The FontAwesome icon class to use for the git
   repository link. Defaults to `fa-github`.
+  
+Available configuration options for the `[output.html.fold]` table:
+
+- **enable:** Enable section-folding. When off, all folds are open.
+  Defaults to `false`.
+- **level:** The higher the more folded regions are open. When level is 0, all
+  folds are closed. Defaults to `0`.
 
 Available configuration options for the `[output.html.playpen]` table:
 
 - **editable:** Allow editing the source code. Defaults to `false`.
+- **copyable:** Display the copy button on code snippets. Defaults to `true`.
 - **copy-js:** Copy JavaScript files for the editor to the output directory.
   Defaults to `true`.
+- **line-numbers** Display line numbers on editable sections of code. Requires both `editable` and `copy-js` to be `true`. Defaults to `false`.
 
 [Ace]: https://ace.c9.io/
 
@@ -185,7 +203,7 @@ Available configuration options for the `[output.html.search]` table:
 - **teaser-word-count:** The number of words used for a search result teaser.
   Defaults to `30`.
 - **use-boolean-and:** Define the logical link between multiple search words. If
-  true, all search words must appear in each result. Defaults to `true`.
+  true, all search words must appear in each result. Defaults to `false`.
 - **boost-title:** Boost factor for the search result score if a search word
   appears in the header. Defaults to `2`.
 - **boost-hierarchy:** Boost factor for the search result score if a search word
@@ -209,25 +227,30 @@ title = "Example book"
 authors = ["John Doe", "Jane Doe"]
 description = "The example book covers examples."
 
-[build]
-build-dir = "book"
-create-missing = true
-preprocess = ["links", "index"]
-
 [output.html]
 theme = "my-theme"
+default-theme = "light"
+preferred-dark-theme = "navy"
 curly-quotes = true
+mathjax-support = false
 google-analytics = "123456"
 additional-css = ["custom.css", "custom2.css"]
 additional-js = ["custom.js"]
+no-section-label = false
+git-repository-url = "https://github.com/rust-lang-nursery/mdBook"
+git-repository-icon = "fa-github"
+
+[output.html.fold]
+enable = false
+level = 0
 
 [output.html.playpen]
-editor = "./path/to/editor"
 editable = false
+copy-js = true
+line-numbers = false
 
 [output.html.search]
 enable = true
-searcher = "./path/to/searcher"
 limit-results = 30
 teaser-word-count = 30
 use-boolean-and = true
@@ -239,15 +262,35 @@ heading-split-level = 3
 copy-js = true
 ```
 
+### Markdown Renderer
+
+The Markdown renderer will run preprocessors and then output the resulting
+Markdown. This is mostly useful for debugging preprocessors, especially in
+conjunction with `mdbook test` to see the Markdown that `mdbook` is passing
+to `rustdoc`.
+
+The Markdown renderer is included with `mdbook` but disabled by default.
+Enable it by adding an emtpy table to your `book.toml` as follows:
+
+```toml
+[output.markdown]
+```
+
+There are no configuration options for the Markdown renderer at this time;
+only whether it is enabled or disabled.
+
+See [the preprocessors documentation](#configuring-preprocessors) for how to
+specify which preprocessors should run before the Markdown renderer.
+
 ### Custom Renderers
 
-A custom renderer can be enabled by adding a `[output.foo]` table to your 
-`book.toml`. Similar to [preprocessors](#configuring-preprocessors) this will 
-instruct `mdbook` to pass a representation of the book to `mdbook-foo` for 
+A custom renderer can be enabled by adding a `[output.foo]` table to your
+`book.toml`. Similar to [preprocessors](#configuring-preprocessors) this will
+instruct `mdbook` to pass a representation of the book to `mdbook-foo` for
 rendering.
 
 Custom renderers will have access to all configuration within their table
-(i.e. anything under `[output.foo]`), and the command to be invoked can be 
+(i.e. anything under `[output.foo]`), and the command to be invoked can be
 manually specified with the `command` field.
 
 ## Environment Variables
@@ -280,7 +323,7 @@ book's title without needing to touch your `book.toml`.
 > This means, if you so desired, you could override all book metadata when
 > building the book with something like
 >
-> ```text
+> ```shell
 > $ export MDBOOK_BOOK="{'title': 'My Awesome Book', authors: ['Michael-F-Bryan']}"
 > $ mdbook build
 > ```

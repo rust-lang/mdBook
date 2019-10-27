@@ -1,8 +1,6 @@
-extern crate mdbook;
-
 mod dummy_book;
 
-use dummy_book::DummyBook;
+use crate::dummy_book::DummyBook;
 use mdbook::book::Book;
 use mdbook::config::Config;
 use mdbook::errors::*;
@@ -52,7 +50,7 @@ fn mdbook_runs_preprocessors() {
     let cfg = Config::default();
 
     let mut book = MDBook::load_with_config(temp.path(), cfg).unwrap();
-    book.with_preprecessor(Spy(Arc::clone(&spy)));
+    book.with_preprocessor(Spy(Arc::clone(&spy)));
     book.build().unwrap();
 
     let inner = spy.lock().unwrap();

@@ -1,11 +1,12 @@
-use book::{Book, BookItem};
-use config::{Config, HtmlConfig, Playpen};
-use errors::*;
-use renderer::html_handlebars::helpers;
-use renderer::{RenderContext, Renderer};
-use theme::{self, playpen_editor, Theme};
-use utils;
+use crate::book::{Book, BookItem};
+use crate::config::{Config, HtmlConfig, Playpen};
+use crate::errors::*;
+use crate::renderer::html_handlebars::helpers;
+use crate::renderer::{RenderContext, Renderer};
+use crate::theme::{self, playpen_editor, Theme};
+use crate::utils;
 
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::fs;
@@ -13,7 +14,6 @@ use std::path::{Path, PathBuf};
 
 use handlebars::Handlebars;
 use regex::{Captures, Regex};
-use serde_json;
 
 #[derive(Default)]
 pub struct HtmlHandlebars;
@@ -26,7 +26,7 @@ impl HtmlHandlebars {
     fn render_item(
         &self,
         item: &BookItem,
-        mut ctx: RenderItemContext,
+        mut ctx: RenderItemContext<'_>,
         print_content: &mut String,
     ) -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
@@ -34,9 +34,11 @@ impl HtmlHandlebars {
             let content = ch.content.clone();
             let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
 
-            let string_path = ch.path.parent().unwrap().display().to_string();
-
-            let fixed_content = utils::render_markdown_with_base(&ch.content, ctx.html_config.curly_quotes, &string_path);
+            let fixed_content = utils::render_markdown_with_path(
+                &ch.content,
+                ctx.html_config.curly_quotes,
+                Some(&ch.path),
+            );
             print_content.push_str(&fixed_content);
 
             // Update the context with data for this file
@@ -70,6 +72,10 @@ impl HtmlHandlebars {
                 "path_to_root".to_owned(),
                 json!(utils::fs::path_to_root(&ch.path)),
             );
+            if let Some(ref section) = ch.number {
+                ctx.data
+                    .insert("section".to_owned(), json!(section.to_string()));
+            }
 
             // Render the handlebars template with the data
             debug!("Render template");
@@ -82,8 +88,9 @@ impl HtmlHandlebars {
             utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
 
             if ctx.is_index {
-                ctx.data.insert("path".to_owned(), json!("index.html"));
+                ctx.data.insert("path".to_owned(), json!("index.md"));
                 ctx.data.insert("path_to_root".to_owned(), json!(""));
+                ctx.data.insert("is_index".to_owned(), json!("true"));
                 let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
                 let rendered_index = self.post_process(rendered_index, &ctx.html_config.playpen);
                 debug!("Creating index.html from {}", path);
@@ -109,7 +116,7 @@ impl HtmlHandlebars {
         theme: &Theme,
         html_config: &HtmlConfig,
     ) -> Result<()> {
-        use utils::fs::write_file;
+        use crate::utils::fs::write_file;
 
         write_file(
             destination,
@@ -281,6 +288,11 @@ impl Renderer for HtmlHandlebars {
         let destination = &ctx.destination;
         let book = &ctx.book;
 
+        if destination.exists() {
+            utils::fs::remove_dir_content(destination)
+                .chain_err(|| "Unable to remove stale HTML output")?;
+        }
+
         trace!("render");
         let mut handlebars = Handlebars::new();
 
@@ -375,10 +387,12 @@ fn make_data(
     html_config: &HtmlConfig,
 ) -> Result<serde_json::Map<String, serde_json::Value>> {
     trace!("make_data");
-    let html = config.html_config().unwrap_or_default();
 
     let mut data = serde_json::Map::new();
-    data.insert("language".to_owned(), json!("en"));
+    data.insert(
+        "language".to_owned(),
+        json!(config.book.language.clone().unwrap_or_default()),
+    );
     data.insert(
         "book_title".to_owned(),
         json!(config.book.title.clone().unwrap_or_default()),
@@ -398,19 +412,28 @@ fn make_data(
     };
     data.insert("default_theme".to_owned(), json!(default_theme));
 
+    let preferred_dark_theme = match html_config.preferred_dark_theme {
+        Some(ref theme) => theme,
+        None => default_theme,
+    };
+    data.insert(
+        "preferred_dark_theme".to_owned(),
+        json!(preferred_dark_theme),
+    );
+
     // Add google analytics tag
-    if let Some(ref ga) = config.html_config().and_then(|html| html.google_analytics) {
+    if let Some(ref ga) = html_config.google_analytics {
         data.insert("google_analytics".to_owned(), json!(ga));
     }
 
-    if html.mathjax_support {
+    if html_config.mathjax_support {
         data.insert("mathjax_support".to_owned(), json!(true));
     }
 
     // Add check to see if there is an additional style
-    if !html.additional_css.is_empty() {
+    if !html_config.additional_css.is_empty() {
         let mut css = Vec::new();
-        for style in &html.additional_css {
+        for style in &html_config.additional_css {
             match style.strip_prefix(root) {
                 Ok(p) => css.push(p.to_str().expect("Could not convert to str")),
                 Err(_) => css.push(style.to_str().expect("Could not convert to str")),
@@ -420,26 +443,29 @@ fn make_data(
     }
 
     // Add check to see if there is an additional script
-    if !html.additional_js.is_empty() {
+    if !html_config.additional_js.is_empty() {
         let mut js = Vec::new();
-        for script in &html.additional_js {
+        for script in &html_config.additional_js {
             match script.strip_prefix(root) {
                 Ok(p) => js.push(p.to_str().expect("Could not convert to str")),
-                Err(_) => js.push(
-                    script
-                        .file_name()
-                        .expect("File has a file name")
-                        .to_str()
-                        .expect("Could not convert to str"),
-                ),
+                Err(_) => js.push(script.to_str().expect("Could not convert to str")),
             }
         }
         data.insert("additional_js".to_owned(), json!(js));
     }
 
-    if html.playpen.editable && html.playpen.copy_js {
+    if html_config.playpen.editable && html_config.playpen.copy_js {
         data.insert("playpen_js".to_owned(), json!(true));
+        if html_config.playpen.line_numbers {
+            data.insert("playpen_line_numbers".to_owned(), json!(true));
+        }
     }
+    if html_config.playpen.copyable {
+        data.insert("playpen_copyable".to_owned(), json!(true));
+    }
+
+    data.insert("fold_enable".to_owned(), json!((html_config.fold.enable)));
+    data.insert("fold_level".to_owned(), json!((html_config.fold.level)));
 
     let search = html_config.search.clone();
     if cfg!(feature = "search") {
@@ -460,6 +486,7 @@ fn make_data(
     if let Some(ref git_repository_url) = html_config.git_repository_url {
         data.insert("git_repository_url".to_owned(), json!(git_repository_url));
     }
+
     let git_repository_icon = match html_config.git_repository_icon {
         Some(ref git_repository_icon) => git_repository_icon,
         None => "fa-github",
@@ -477,6 +504,11 @@ fn make_data(
                 if let Some(ref section) = ch.number {
                     chapter.insert("section".to_owned(), json!(section.to_string()));
                 }
+
+                chapter.insert(
+                    "has_sub_items".to_owned(),
+                    json!((!ch.sub_items.is_empty()).to_string()),
+                );
 
                 chapter.insert("name".to_owned(), json!(ch.name));
                 let path = ch
@@ -499,25 +531,26 @@ fn make_data(
     Ok(data)
 }
 
-/// Goes through the rendered HTML, making sure all header tags are wrapped in
-/// an anchor so people can link to sections directly.
+/// Goes through the rendered HTML, making sure all header tags have
+/// an anchor respectively so people can link to sections directly.
 fn build_header_links(html: &str) -> String {
     let regex = Regex::new(r"<h(\d)>(.*?)</h\d>").unwrap();
     let mut id_counter = HashMap::new();
 
     regex
-        .replace_all(html, |caps: &Captures| {
+        .replace_all(html, |caps: &Captures<'_>| {
             let level = caps[1]
                 .parse()
                 .expect("Regex should ensure we only ever get numbers here");
 
-            wrap_header_with_link(level, &caps[2], &mut id_counter)
-        }).into_owned()
+            insert_link_into_header(level, &caps[2], &mut id_counter)
+        })
+        .into_owned()
 }
 
-/// Wraps a single header tag with a link, making sure each tag gets its own
+/// Insert a sinle link into a header, making sure each link gets its own
 /// unique ID by appending an auto-incremented number (if necessary).
-fn wrap_header_with_link(
+fn insert_link_into_header(
     level: usize,
     content: &str,
     id_counter: &mut HashMap<String, usize>,
@@ -534,7 +567,7 @@ fn wrap_header_with_link(
     *id_count += 1;
 
     format!(
-        r##"<a class="header" href="#{id}" id="{id}"><h{level}>{text}</h{level}></a>"##,
+        r##"<h{level}><a class="header" href="#{id}" id="{id}">{text}</a></h{level}>"##,
         level = level,
         id = id,
         text = content
@@ -552,7 +585,7 @@ fn wrap_header_with_link(
 fn fix_code_blocks(html: &str) -> String {
     let regex = Regex::new(r##"<code([^>]+)class="([^"]+)"([^>]*)>"##).unwrap();
     regex
-        .replace_all(html, |caps: &Captures| {
+        .replace_all(html, |caps: &Captures<'_>| {
             let before = &caps[1];
             let classes = &caps[2].replace(",", " ");
             let after = &caps[3];
@@ -563,13 +596,15 @@ fn fix_code_blocks(html: &str) -> String {
                 classes = classes,
                 after = after
             )
-        }).into_owned()
+        })
+        .into_owned()
 }
 
 fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
+    let boring_line_regex = Regex::new(r"^(\s*)#(#|.)(.*)$").unwrap();
     let regex = Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap();
     regex
-        .replace_all(html, |caps: &Captures| {
+        .replace_all(html, |caps: &Captures<'_>| {
             let text = &caps[1];
             let classes = &caps[2];
             let code = &caps[3];
@@ -580,26 +615,57 @@ fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
                 || classes.contains("mdbook-runnable")
             {
                 // wrap the contents in an external pre block
-                if playpen_config.editable && classes.contains("editable")
-                    || text.contains("fn main")
-                    || text.contains("quick_main!")
-                {
-                    format!("<pre class=\"playpen\">{}</pre>", text)
-                } else {
-                    // we need to inject our own main
-                    let (attrs, code) = partition_source(code);
+                format!(
+                    "<pre class=\"playpen\"><code class=\"{}\">{}</code></pre>",
+                    classes,
+                    {
+                        let content: Cow<'_, str> = if playpen_config.editable
+                            && classes.contains("editable")
+                            || text.contains("fn main")
+                            || text.contains("quick_main!")
+                        {
+                            code.into()
+                        } else {
+                            // we need to inject our own main
+                            let (attrs, code) = partition_source(code);
 
-                    format!(
-                        "<pre class=\"playpen\"><code class=\"{}\">\n# \
-                         #![allow(unused_variables)]\n{}#fn main() {{\n{}#}}</code></pre>",
-                        classes, attrs, code
-                    )
-                }
+                            format!(
+                                "\n# #![allow(unused_variables)]\n{}#fn main() {{\n{}#}}",
+                                attrs, code
+                            )
+                            .into()
+                        };
+                        let mut prev_line_hidden = false;
+                        let mut result = String::with_capacity(content.len());
+                        for line in content.lines() {
+                            if let Some(caps) = boring_line_regex.captures(line) {
+                                if !prev_line_hidden && &caps[2] != "#" {
+                                    result += "<span class=\"boring\">";
+                                    prev_line_hidden = true;
+                                }
+                                result += &caps[1];
+                                if &caps[2] != " " {
+                                    result += &caps[2];
+                                }
+                                result += &caps[3];
+                            } else {
+                                if prev_line_hidden {
+                                    result += "</span>";
+                                    prev_line_hidden = false;
+                                }
+                                result += line;
+                            }
+                            result += "\n";
+                        }
+                        result
+                    }
+                )
             } else {
                 // not language-rust, so no-op
                 text.to_owned()
             }
-        }).into_owned()
+        })
+        .into_owned()
 }
 
 fn partition_source(s: &str) -> (String, String) {
@@ -609,7 +675,7 @@ fn partition_source(s: &str) -> (String, String) {
 
     for line in s.lines() {
         let trimline = line.trim();
-        let header = trimline.chars().all(|c| c.is_whitespace()) || trimline.starts_with("#![");
+        let header = trimline.chars().all(char::is_whitespace) || trimline.starts_with("#![");
         if !header || after_header {
             after_header = true;
             after.push_str(line);
@@ -640,33 +706,57 @@ mod tests {
         let inputs = vec![
             (
                 "blah blah <h1>Foo</h1>",
-                r##"blah blah <a class="header" href="#foo" id="foo"><h1>Foo</h1></a>"##,
+                r##"blah blah <h1><a class="header" href="#foo" id="foo">Foo</a></h1>"##,
             ),
             (
                 "<h1>Foo</h1>",
-                r##"<a class="header" href="#foo" id="foo"><h1>Foo</h1></a>"##,
+                r##"<h1><a class="header" href="#foo" id="foo">Foo</a></h1>"##,
             ),
             (
                 "<h3>Foo^bar</h3>",
-                r##"<a class="header" href="#foobar" id="foobar"><h3>Foo^bar</h3></a>"##,
+                r##"<h3><a class="header" href="#foobar" id="foobar">Foo^bar</a></h3>"##,
             ),
             (
                 "<h4></h4>",
-                r##"<a class="header" href="#" id=""><h4></h4></a>"##,
+                r##"<h4><a class="header" href="#" id=""></a></h4>"##,
             ),
             (
                 "<h4><em>Hï</em></h4>",
-                r##"<a class="header" href="#hï" id="hï"><h4><em>Hï</em></h4></a>"##,
+                r##"<h4><a class="header" href="#hï" id="hï"><em>Hï</em></a></h4>"##,
             ),
             (
                 "<h1>Foo</h1><h3>Foo</h3>",
-                r##"<a class="header" href="#foo" id="foo"><h1>Foo</h1></a><a class="header" href="#foo-1" id="foo-1"><h3>Foo</h3></a>"##,
+                r##"<h1><a class="header" href="#foo" id="foo">Foo</a></h1><h3><a class="header" href="#foo-1" id="foo-1">Foo</a></h3>"##,
             ),
         ];
 
         for (src, should_be) in inputs {
             let got = build_header_links(&src);
             assert_eq!(got, should_be);
+        }
+    }
+
+    #[test]
+    fn add_playpen() {
+        let inputs = [
+          ("<code class=\"language-rust\">x()</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust\">\n<span class=\"boring\">#![allow(unused_variables)]\nfn main() {\n</span>x()\n<span class=\"boring\">}\n</code></pre>"),
+          ("<code class=\"language-rust\">fn main() {}</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust\">fn main() {}\n</code></pre>"),
+          ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";\n</code></pre>"),
+          ("<code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";\n</code></pre>"),
+        ];
+        for (src, should_be) in &inputs {
+            let got = add_playpen_pre(
+                src,
+                &Playpen {
+                    editable: true,
+                    ..Playpen::default()
+                },
+            );
+            assert_eq!(&*got, *should_be);
         }
     }
 }

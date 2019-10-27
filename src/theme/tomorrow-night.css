@@ -94,3 +94,11 @@
 .xml .hljs-cdata {
   opacity: 0.5;
 }
+
+.hljs-addition {
+  color: #718c00;
+}
+
+.hljs-deletion {
+  color: #c82829;
+}

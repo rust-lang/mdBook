@@ -1,19 +1,15 @@
-extern crate ammonia;
-extern crate elasticlunr;
-
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
-use self::elasticlunr::Index;
+use elasticlunr::Index;
 use pulldown_cmark::*;
-use serde_json;
 
-use book::{Book, BookItem};
-use config::Search;
-use errors::*;
-use theme::searcher;
-use utils;
+use crate::book::{Book, BookItem};
+use crate::config::Search;
+use crate::errors::*;
+use crate::theme::searcher;
+use crate::utils;
 
 /// Creates all files required for search.
 pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> Result<()> {
@@ -35,7 +31,7 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
         utils::fs::write_file(
             destination,
             "searchindex.js",
-            format!("window.search = {};", index).as_bytes(),
+            format!("Object.assign(window.search, {});", index).as_bytes(),
         )?;
         utils::fs::write_file(destination, "searcher.js", searcher::JS)?;
         utils::fs::write_file(destination, "mark.min.js", searcher::MARK_JS)?;
@@ -85,16 +81,14 @@ fn render_item(
         .chain_err(|| "Could not convert HTML path to str")?;
     let anchor_base = utils::fs::normalize_path(filepath);
 
-    let mut opts = Options::empty();
-    opts.insert(OPTION_ENABLE_TABLES);
-    opts.insert(OPTION_ENABLE_FOOTNOTES);
-    let p = Parser::new_ext(&chapter.content, opts);
+    let p = utils::new_cmark_parser(&chapter.content);
 
     let mut in_header = false;
-    let max_section_depth = search_config.heading_split_level as i32;
+    let max_section_depth = i32::from(search_config.heading_split_level);
     let mut section_id = None;
     let mut heading = String::new();
     let mut body = String::new();
+    let mut html_block = String::new();
     let mut breadcrumbs = chapter.parent_names.clone();
     let mut footnote_numbers = HashMap::new();
 
@@ -128,6 +122,13 @@ fn render_item(
                 let number = footnote_numbers.len() + 1;
                 footnote_numbers.entry(name).or_insert(number);
             }
+            Event::Html(html) => {
+                html_block.push_str(&html);
+            }
+            Event::End(Tag::HtmlBlock) => {
+                body.push_str(&clean_html(&html_block));
+                html_block.clear();
+            }
             Event::Start(_) | Event::End(_) | Event::SoftBreak | Event::HardBreak => {
                 // Insert spaces where HTML output would usually seperate text
                 // to ensure words don't get merged together
@@ -137,14 +138,14 @@ fn render_item(
                     body.push(' ');
                 }
             }
-            Event::Text(text) => {
+            Event::Text(text) | Event::Code(text) => {
                 if in_header {
                     heading.push_str(&text);
                 } else {
                     body.push_str(&text);
                 }
             }
-            Event::Html(html) | Event::InlineHtml(html) => {
+            Event::InlineHtml(html) => {
                 body.push_str(&clean_html(&html));
             }
             Event::FootnoteReference(name) => {
@@ -152,6 +153,7 @@ fn render_item(
                 let number = footnote_numbers.entry(name).or_insert(len);
                 body.push_str(&format!(" [{}] ", number));
             }
+            Event::TaskListMarker(_checked) => {}
         }
     }
 
@@ -170,7 +172,7 @@ fn render_item(
 }
 
 fn write_to_json(index: Index, search_config: &Search, doc_urls: Vec<String>) -> Result<String> {
-    use self::elasticlunr::config::{SearchBool, SearchOptions, SearchOptionsField};
+    use elasticlunr::config::{SearchBool, SearchOptions, SearchOptionsField};
     use std::collections::BTreeMap;
 
     #[derive(Serialize)]

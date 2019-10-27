@@ -1,13 +1,14 @@
 use regex::Regex;
 use std::path::Path;
 
-use errors::*;
+use crate::errors::*;
 
 use super::{Preprocessor, PreprocessorContext};
-use book::{Book, BookItem};
+use crate::book::{Book, BookItem};
 
 /// A preprocessor for converting file name `README.md` to `index.md` since
 /// `README.md` is the de facto index file in markdown-based documentation.
+#[derive(Default)]
 pub struct IndexPreprocessor;
 
 impl IndexPreprocessor {
@@ -45,7 +46,10 @@ impl Preprocessor for IndexPreprocessor {
 
 fn warn_readme_name_conflict<P: AsRef<Path>>(readme_path: P, index_path: P) {
     let file_name = readme_path.as_ref().file_name().unwrap_or_default();
-    let parent_dir = index_path.as_ref().parent().unwrap_or(index_path.as_ref());
+    let parent_dir = index_path
+        .as_ref()
+        .parent()
+        .unwrap_or_else(|| index_path.as_ref());
     warn!(
         "It seems that there are both {:?} and index.md under \"{}\".",
         file_name,
@@ -67,7 +71,7 @@ fn is_readme_file<P: AsRef<Path>>(path: P) -> bool {
     RE.is_match(
         path.as_ref()
             .file_stem()
-            .and_then(|s| s.to_str())
+            .and_then(std::ffi::OsStr::to_str)
             .unwrap_or_default(),
     )
 }

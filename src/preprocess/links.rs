@@ -1,18 +1,29 @@
-use errors::*;
+use crate::errors::*;
+use crate::utils::{
+    take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,
+    take_rustdoc_include_lines,
+};
 use regex::{CaptureMatches, Captures, Regex};
-use std::ops::{Range, RangeFrom, RangeFull, RangeTo};
+use std::fs;
+use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeTo};
 use std::path::{Path, PathBuf};
-use utils::fs::file_to_string;
-use utils::take_lines;
 
 use super::{Preprocessor, PreprocessorContext};
-use book::{Book, BookItem};
+use crate::book::{Book, BookItem};
 
 const ESCAPE_CHAR: char = '\\';
 const MAX_LINK_NESTED_DEPTH: usize = 10;
 
-/// A preprocessor for expanding the `{{# playpen}}` and `{{# include}}`
-/// helpers in a chapter.
+/// A preprocessor for expanding helpers in a chapter. Supported helpers are:
+///
+/// - `{{# include}}` - Insert an external file of any type. Include the whole file, only particular
+///.  lines, or only between the specified anchors.
+/// - `{{# rustdoc_include}}` - Insert an external Rust file, showing the particular lines
+///.  specified or the lines between specified anchors, and include the rest of the file behind `#`.
+///   This hides the lines from initial display but shows them when the reader expands the code
+///   block and provides them to Rustdoc for testing.
+/// - `{{# playpen}}` - Insert runnable Rust files
+#[derive(Default)]
 pub struct LinkPreprocessor;
 
 impl LinkPreprocessor {
@@ -62,13 +73,13 @@ where
     let mut previous_end_index = 0;
     let mut replaced = String::new();
 
-    for playpen in find_links(s) {
-        replaced.push_str(&s[previous_end_index..playpen.start_index]);
+    for link in find_links(s) {
+        replaced.push_str(&s[previous_end_index..link.start_index]);
 
-        match playpen.render_with_path(&path) {
+        match link.render_with_path(&path) {
             Ok(new_content) => {
                 if depth < MAX_LINK_NESTED_DEPTH {
-                    if let Some(rel_path) = playpen.link.relative_path(path) {
+                    if let Some(rel_path) = link.link_type.relative_path(path) {
                         replaced.push_str(&replace_all(&new_content, rel_path, source, depth + 1));
                     } else {
                         replaced.push_str(&new_content);
@@ -79,17 +90,17 @@ where
                         source.display()
                     );
                 }
-                previous_end_index = playpen.end_index;
+                previous_end_index = link.end_index;
             }
             Err(e) => {
-                error!("Error updating \"{}\", {}", playpen.link_text, e);
+                error!("Error updating \"{}\", {}", link.link_text, e);
                 for cause in e.iter().skip(1) {
                     warn!("Caused By: {}", cause);
                 }
 
                 // This should make sure we include the raw `{{# ... }}` snippet
                 // in the page content if there are any errors.
-                previous_end_index = playpen.start_index;
+                previous_end_index = link.start_index;
             }
         }
     }
@@ -101,11 +112,68 @@ where
 #[derive(PartialEq, Debug, Clone)]
 enum LinkType<'a> {
     Escaped,
-    IncludeRange(PathBuf, Range<usize>),
-    IncludeRangeFrom(PathBuf, RangeFrom<usize>),
-    IncludeRangeTo(PathBuf, RangeTo<usize>),
-    IncludeRangeFull(PathBuf, RangeFull),
+    Include(PathBuf, RangeOrAnchor),
     Playpen(PathBuf, Vec<&'a str>),
+    RustdocInclude(PathBuf, RangeOrAnchor),
+}
+
+#[derive(PartialEq, Debug, Clone)]
+enum RangeOrAnchor {
+    Range(LineRange),
+    Anchor(String),
+}
+
+// A range of lines specified with some include directive.
+#[derive(PartialEq, Debug, Clone)]
+enum LineRange {
+    Range(Range<usize>),
+    RangeFrom(RangeFrom<usize>),
+    RangeTo(RangeTo<usize>),
+    RangeFull(RangeFull),
+}
+
+impl RangeBounds<usize> for LineRange {
+    fn start_bound(&self) -> Bound<&usize> {
+        match self {
+            LineRange::Range(r) => r.start_bound(),
+            LineRange::RangeFrom(r) => r.start_bound(),
+            LineRange::RangeTo(r) => r.start_bound(),
+            LineRange::RangeFull(r) => r.start_bound(),
+        }
+    }
+
+    fn end_bound(&self) -> Bound<&usize> {
+        match self {
+            LineRange::Range(r) => r.end_bound(),
+            LineRange::RangeFrom(r) => r.end_bound(),
+            LineRange::RangeTo(r) => r.end_bound(),
+            LineRange::RangeFull(r) => r.end_bound(),
+        }
+    }
+}
+
+impl From<Range<usize>> for LineRange {
+    fn from(r: Range<usize>) -> LineRange {
+        LineRange::Range(r)
+    }
+}
+
+impl From<RangeFrom<usize>> for LineRange {
+    fn from(r: RangeFrom<usize>) -> LineRange {
+        LineRange::RangeFrom(r)
+    }
+}
+
+impl From<RangeTo<usize>> for LineRange {
+    fn from(r: RangeTo<usize>) -> LineRange {
+        LineRange::RangeTo(r)
+    }
+}
+
+impl From<RangeFull> for LineRange {
+    fn from(r: RangeFull) -> LineRange {
+        LineRange::RangeFull(r)
+    }
 }
 
 impl<'a> LinkType<'a> {
@@ -113,11 +181,9 @@ impl<'a> LinkType<'a> {
         let base = base.as_ref();
         match self {
             LinkType::Escaped => None,
-            LinkType::IncludeRange(p, _) => Some(return_relative_path(base, &p)),
-            LinkType::IncludeRangeFrom(p, _) => Some(return_relative_path(base, &p)),
-            LinkType::IncludeRangeTo(p, _) => Some(return_relative_path(base, &p)),
-            LinkType::IncludeRangeFull(p, _) => Some(return_relative_path(base, &p)),
+            LinkType::Include(p, _) => Some(return_relative_path(base, &p)),
             LinkType::Playpen(p, _) => Some(return_relative_path(base, &p)),
+            LinkType::RustdocInclude(p, _) => Some(return_relative_path(base, &p)),
         }
     }
 }
@@ -129,44 +195,59 @@ fn return_relative_path<P: AsRef<Path>>(base: P, relative: P) -> PathBuf {
         .to_path_buf()
 }
 
-fn parse_include_path(path: &str) -> LinkType<'static> {
-    let mut parts = path.split(':');
-    let path = parts.next().unwrap().into();
-    // subtract 1 since line numbers usually begin with 1
-    let start = parts
-        .next()
-        .and_then(|s| s.parse::<usize>().ok())
-        .map(|val| val.saturating_sub(1));
+fn parse_range_or_anchor(parts: Option<&str>) -> RangeOrAnchor {
+    let mut parts = parts.unwrap_or("").splitn(3, ':').fuse();
+
+    let next_element = parts.next();
+    let start = if let Some(value) = next_element.and_then(|s| s.parse::<usize>().ok()) {
+        // subtract 1 since line numbers usually begin with 1
+        Some(value.saturating_sub(1))
+    } else if let Some("") = next_element {
+        None
+    } else if let Some(anchor) = next_element {
+        return RangeOrAnchor::Anchor(String::from(anchor));
+    } else {
+        None
+    };
+
     let end = parts.next();
-    let has_end = end.is_some();
-    let end = end.and_then(|s| s.parse::<usize>().ok());
-    match start {
-        Some(start) => match end {
-            Some(end) => LinkType::IncludeRange(path, Range { start, end }),
-            None => if has_end {
-                LinkType::IncludeRangeFrom(path, RangeFrom { start })
-            } else {
-                LinkType::IncludeRange(
-                    path,
-                    Range {
-                        start,
-                        end: start + 1,
-                    },
-                )
-            },
-        },
-        None => match end {
-            Some(end) => LinkType::IncludeRangeTo(path, RangeTo { end }),
-            None => LinkType::IncludeRangeFull(path, RangeFull),
-        },
+    // If `end` is empty string or any other value that can't be parsed as a usize, treat this
+    // include as a range with only a start bound. However, if end isn't specified, include only
+    // the single line specified by `start`.
+    let end = end.map(|s| s.parse::<usize>());
+
+    match (start, end) {
+        (Some(start), Some(Ok(end))) => RangeOrAnchor::Range(LineRange::from(start..end)),
+        (Some(start), Some(Err(_))) => RangeOrAnchor::Range(LineRange::from(start..)),
+        (Some(start), None) => RangeOrAnchor::Range(LineRange::from(start..start + 1)),
+        (None, Some(Ok(end))) => RangeOrAnchor::Range(LineRange::from(..end)),
+        (None, None) | (None, Some(Err(_))) => RangeOrAnchor::Range(LineRange::from(RangeFull)),
     }
+}
+
+fn parse_include_path(path: &str) -> LinkType<'static> {
+    let mut parts = path.splitn(2, ':');
+
+    let path = parts.next().unwrap().into();
+    let range_or_anchor = parse_range_or_anchor(parts.next());
+
+    LinkType::Include(path, range_or_anchor)
+}
+
+fn parse_rustdoc_include_path(path: &str) -> LinkType<'static> {
+    let mut parts = path.splitn(2, ':');
+
+    let path = parts.next().unwrap().into();
+    let range_or_anchor = parse_range_or_anchor(parts.next());
+
+    LinkType::RustdocInclude(path, range_or_anchor)
 }
 
 #[derive(PartialEq, Debug, Clone)]
 struct Link<'a> {
     start_index: usize,
     end_index: usize,
-    link: LinkType<'a>,
+    link_type: LinkType<'a>,
     link_text: &'a str,
 }
 
@@ -181,6 +262,7 @@ impl<'a> Link<'a> {
                 match (typ.as_str(), file_arg) {
                     ("include", Some(pth)) => Some(parse_include_path(pth)),
                     ("playpen", Some(pth)) => Some(LinkType::Playpen(pth.into(), props)),
+                    ("rustdoc_include", Some(pth)) => Some(parse_rustdoc_include_path(pth)),
                     _ => None,
                 }
             }
@@ -190,11 +272,11 @@ impl<'a> Link<'a> {
             _ => None,
         };
 
-        link_type.and_then(|lnk| {
+        link_type.and_then(|lnk_type| {
             cap.get(0).map(|mat| Link {
                 start_index: mat.start(),
                 end_index: mat.end(),
-                link: lnk,
+                link_type: lnk_type,
                 link_text: mat.as_str(),
             })
         })
@@ -202,14 +284,17 @@ impl<'a> Link<'a> {
 
     fn render_with_path<P: AsRef<Path>>(&self, base: P) -> Result<String> {
         let base = base.as_ref();
-        match self.link {
+        match self.link_type {
             // omit the escape char
             LinkType::Escaped => Ok((&self.link_text[1..]).to_owned()),
-            LinkType::IncludeRange(ref pat, ref range) => {
+            LinkType::Include(ref pat, ref range_or_anchor) => {
                 let target = base.join(pat);
 
-                file_to_string(&target)
-                    .map(|s| take_lines(&s, range.clone()))
+                fs::read_to_string(&target)
+                    .map(|s| match range_or_anchor {
+                        RangeOrAnchor::Range(range) => take_lines(&s, range.clone()),
+                        RangeOrAnchor::Anchor(anchor) => take_anchored_lines(&s, anchor),
+                    })
                     .chain_err(|| {
                         format!(
                             "Could not read file for link {} ({})",
@@ -218,11 +303,18 @@ impl<'a> Link<'a> {
                         )
                     })
             }
-            LinkType::IncludeRangeFrom(ref pat, ref range) => {
+            LinkType::RustdocInclude(ref pat, ref range_or_anchor) => {
                 let target = base.join(pat);
 
-                file_to_string(&target)
-                    .map(|s| take_lines(&s, range.clone()))
+                fs::read_to_string(&target)
+                    .map(|s| match range_or_anchor {
+                        RangeOrAnchor::Range(range) => {
+                            take_rustdoc_include_lines(&s, range.clone())
+                        }
+                        RangeOrAnchor::Anchor(anchor) => {
+                            take_rustdoc_include_anchored_lines(&s, anchor)
+                        }
+                    })
                     .chain_err(|| {
                         format!(
                             "Could not read file for link {} ({})",
@@ -230,35 +322,11 @@ impl<'a> Link<'a> {
                             target.display(),
                         )
                     })
-            }
-            LinkType::IncludeRangeTo(ref pat, ref range) => {
-                let target = base.join(pat);
-
-                file_to_string(&target)
-                    .map(|s| take_lines(&s, *range))
-                    .chain_err(|| {
-                        format!(
-                            "Could not read file for link {} ({})",
-                            self.link_text,
-                            target.display(),
-                        )
-                    })
-            }
-            LinkType::IncludeRangeFull(ref pat, _) => {
-                let target = base.join(pat);
-
-                file_to_string(&target).chain_err(|| {
-                    format!(
-                        "Could not read file for link {} ({})",
-                        self.link_text,
-                        target.display()
-                    )
-                })
             }
             LinkType::Playpen(ref pat, ref attrs) => {
                 let target = base.join(pat);
 
-                let contents = file_to_string(&target).chain_err(|| {
+                let contents = fs::read_to_string(&target).chain_err(|| {
                     format!(
                         "Could not read file for link {} ({})",
                         self.link_text,
@@ -291,7 +359,7 @@ impl<'a> Iterator for LinkIter<'a> {
     }
 }
 
-fn find_links(contents: &str) -> LinkIter {
+fn find_links(contents: &str) -> LinkIter<'_> {
     // lazily compute following regex
     // r"\\\{\{#.*\}\}|\{\{#([a-zA-Z0-9]+)\s*([a-zA-Z0-9_.\-:/\\\s]+)\}\}")?;
     lazy_static! {
@@ -300,11 +368,12 @@ fn find_links(contents: &str) -> LinkIter {
             \\\{\{\#.*\}\}             # match escaped link
             |                          # or
             \{\{\s*                    # link opening parens and whitespace
-            \#([a-zA-Z0-9]+)           # link type
+            \#([a-zA-Z0-9_]+)          # link type
             \s+                        # separating whitespace
             ([a-zA-Z0-9\s_.\-:/\\]+)   # link target path and space separated properties
             \s*\}\}                    # whitespace and link closing parens"
-        ).unwrap();
+        )
+        .unwrap();
     }
     LinkIter(RE.captures_iter(contents))
 }
@@ -369,13 +438,13 @@ mod tests {
                 Link {
                     start_index: 22,
                     end_index: 42,
-                    link: LinkType::Playpen(PathBuf::from("file.rs"), vec![]),
+                    link_type: LinkType::Playpen(PathBuf::from("file.rs"), vec![]),
                     link_text: "{{#playpen file.rs}}",
                 },
                 Link {
                     start_index: 47,
                     end_index: 68,
-                    link: LinkType::Playpen(PathBuf::from("test.rs"), vec![]),
+                    link_type: LinkType::Playpen(PathBuf::from("test.rs"), vec![]),
                     link_text: "{{#playpen test.rs }}",
                 },
             ]
@@ -392,7 +461,10 @@ mod tests {
             vec![Link {
                 start_index: 22,
                 end_index: 48,
-                link: LinkType::IncludeRange(PathBuf::from("file.rs"), 9..20),
+                link_type: LinkType::Include(
+                    PathBuf::from("file.rs"),
+                    RangeOrAnchor::Range(LineRange::from(9..20))
+                ),
                 link_text: "{{#include file.rs:10:20}}",
             }]
         );
@@ -408,7 +480,10 @@ mod tests {
             vec![Link {
                 start_index: 22,
                 end_index: 45,
-                link: LinkType::IncludeRange(PathBuf::from("file.rs"), 9..10),
+                link_type: LinkType::Include(
+                    PathBuf::from("file.rs"),
+                    RangeOrAnchor::Range(LineRange::from(9..10))
+                ),
                 link_text: "{{#include file.rs:10}}",
             }]
         );
@@ -424,7 +499,10 @@ mod tests {
             vec![Link {
                 start_index: 22,
                 end_index: 46,
-                link: LinkType::IncludeRangeFrom(PathBuf::from("file.rs"), 9..),
+                link_type: LinkType::Include(
+                    PathBuf::from("file.rs"),
+                    RangeOrAnchor::Range(LineRange::from(9..))
+                ),
                 link_text: "{{#include file.rs:10:}}",
             }]
         );
@@ -440,7 +518,10 @@ mod tests {
             vec![Link {
                 start_index: 22,
                 end_index: 46,
-                link: LinkType::IncludeRangeTo(PathBuf::from("file.rs"), ..20),
+                link_type: LinkType::Include(
+                    PathBuf::from("file.rs"),
+                    RangeOrAnchor::Range(LineRange::from(..20))
+                ),
                 link_text: "{{#include file.rs::20}}",
             }]
         );
@@ -456,7 +537,10 @@ mod tests {
             vec![Link {
                 start_index: 22,
                 end_index: 44,
-                link: LinkType::IncludeRangeFull(PathBuf::from("file.rs"), ..),
+                link_type: LinkType::Include(
+                    PathBuf::from("file.rs"),
+                    RangeOrAnchor::Range(LineRange::from(..))
+                ),
                 link_text: "{{#include file.rs::}}",
             }]
         );
@@ -472,8 +556,30 @@ mod tests {
             vec![Link {
                 start_index: 22,
                 end_index: 42,
-                link: LinkType::IncludeRangeFull(PathBuf::from("file.rs"), ..),
+                link_type: LinkType::Include(
+                    PathBuf::from("file.rs"),
+                    RangeOrAnchor::Range(LineRange::from(..))
+                ),
                 link_text: "{{#include file.rs}}",
+            }]
+        );
+    }
+
+    #[test]
+    fn test_find_links_with_anchor() {
+        let s = "Some random text with {{#include file.rs:anchor}}...";
+        let res = find_links(s).collect::<Vec<_>>();
+        println!("\nOUTPUT: {:?}\n", res);
+        assert_eq!(
+            res,
+            vec![Link {
+                start_index: 22,
+                end_index: 49,
+                link_type: LinkType::Include(
+                    PathBuf::from("file.rs"),
+                    RangeOrAnchor::Anchor(String::from("anchor"))
+                ),
+                link_text: "{{#include file.rs:anchor}}",
             }]
         );
     }
@@ -490,7 +596,7 @@ mod tests {
             vec![Link {
                 start_index: 38,
                 end_index: 68,
-                link: LinkType::Escaped,
+                link_type: LinkType::Escaped,
                 link_text: "\\{{#playpen file.rs editable}}",
             }]
         );
@@ -509,13 +615,13 @@ mod tests {
                 Link {
                     start_index: 38,
                     end_index: 68,
-                    link: LinkType::Playpen(PathBuf::from("file.rs"), vec!["editable"]),
+                    link_type: LinkType::Playpen(PathBuf::from("file.rs"), vec!["editable"]),
                     link_text: "{{#playpen file.rs editable }}",
                 },
                 Link {
                     start_index: 89,
                     end_index: 136,
-                    link: LinkType::Playpen(
+                    link_type: LinkType::Playpen(
                         PathBuf::from("my.rs"),
                         vec!["editable", "no_run", "should_panic"],
                     ),
@@ -539,7 +645,10 @@ mod tests {
             Link {
                 start_index: 38,
                 end_index: 58,
-                link: LinkType::IncludeRangeFull(PathBuf::from("file.rs"), ..),
+                link_type: LinkType::Include(
+                    PathBuf::from("file.rs"),
+                    RangeOrAnchor::Range(LineRange::from(..))
+                ),
                 link_text: "{{#include file.rs}}",
             }
         );
@@ -548,7 +657,7 @@ mod tests {
             Link {
                 start_index: 63,
                 end_index: 112,
-                link: LinkType::Escaped,
+                link_type: LinkType::Escaped,
                 link_text: "\\{{#contents are insignifficant in escaped link}}",
             }
         );
@@ -557,7 +666,7 @@ mod tests {
             Link {
                 start_index: 130,
                 end_index: 177,
-                link: LinkType::Playpen(
+                link_type: LinkType::Playpen(
                     PathBuf::from("my.rs"),
                     vec!["editable", "no_run", "should_panic"]
                 ),
@@ -566,4 +675,183 @@ mod tests {
         );
     }
 
+    #[test]
+    fn parse_without_colon_includes_all() {
+        let link_type = parse_include_path("arbitrary");
+        assert_eq!(
+            link_type,
+            LinkType::Include(
+                PathBuf::from("arbitrary"),
+                RangeOrAnchor::Range(LineRange::from(RangeFull))
+            )
+        );
+    }
+
+    #[test]
+    fn parse_with_nothing_after_colon_includes_all() {
+        let link_type = parse_include_path("arbitrary:");
+        assert_eq!(
+            link_type,
+            LinkType::Include(
+                PathBuf::from("arbitrary"),
+                RangeOrAnchor::Range(LineRange::from(RangeFull))
+            )
+        );
+    }
+
+    #[test]
+    fn parse_with_two_colons_includes_all() {
+        let link_type = parse_include_path("arbitrary::");
+        assert_eq!(
+            link_type,
+            LinkType::Include(
+                PathBuf::from("arbitrary"),
+                RangeOrAnchor::Range(LineRange::from(RangeFull))
+            )
+        );
+    }
+
+    #[test]
+    fn parse_with_garbage_after_two_colons_includes_all() {
+        let link_type = parse_include_path("arbitrary::NaN");
+        assert_eq!(
+            link_type,
+            LinkType::Include(
+                PathBuf::from("arbitrary"),
+                RangeOrAnchor::Range(LineRange::from(RangeFull))
+            )
+        );
+    }
+
+    #[test]
+    fn parse_with_one_number_after_colon_only_that_line() {
+        let link_type = parse_include_path("arbitrary:5");
+        assert_eq!(
+            link_type,
+            LinkType::Include(
+                PathBuf::from("arbitrary"),
+                RangeOrAnchor::Range(LineRange::from(4..5))
+            )
+        );
+    }
+
+    #[test]
+    fn parse_with_one_based_start_becomes_zero_based() {
+        let link_type = parse_include_path("arbitrary:1");
+        assert_eq!(
+            link_type,
+            LinkType::Include(
+                PathBuf::from("arbitrary"),
+                RangeOrAnchor::Range(LineRange::from(0..1))
+            )
+        );
+    }
+
+    #[test]
+    fn parse_with_zero_based_start_stays_zero_based_but_is_probably_an_error() {
+        let link_type = parse_include_path("arbitrary:0");
+        assert_eq!(
+            link_type,
+            LinkType::Include(
+                PathBuf::from("arbitrary"),
+                RangeOrAnchor::Range(LineRange::from(0..1))
+            )
+        );
+    }
+
+    #[test]
+    fn parse_start_only_range() {
+        let link_type = parse_include_path("arbitrary:5:");
+        assert_eq!(
+            link_type,
+            LinkType::Include(
+                PathBuf::from("arbitrary"),
+                RangeOrAnchor::Range(LineRange::from(4..))
+            )
+        );
+    }
+
+    #[test]
+    fn parse_start_with_garbage_interpreted_as_start_only_range() {
+        let link_type = parse_include_path("arbitrary:5:NaN");
+        assert_eq!(
+            link_type,
+            LinkType::Include(
+                PathBuf::from("arbitrary"),
+                RangeOrAnchor::Range(LineRange::from(4..))
+            )
+        );
+    }
+
+    #[test]
+    fn parse_end_only_range() {
+        let link_type = parse_include_path("arbitrary::5");
+        assert_eq!(
+            link_type,
+            LinkType::Include(
+                PathBuf::from("arbitrary"),
+                RangeOrAnchor::Range(LineRange::from(..5))
+            )
+        );
+    }
+
+    #[test]
+    fn parse_start_and_end_range() {
+        let link_type = parse_include_path("arbitrary:5:10");
+        assert_eq!(
+            link_type,
+            LinkType::Include(
+                PathBuf::from("arbitrary"),
+                RangeOrAnchor::Range(LineRange::from(4..10))
+            )
+        );
+    }
+
+    #[test]
+    fn parse_with_negative_interpreted_as_anchor() {
+        let link_type = parse_include_path("arbitrary:-5");
+        assert_eq!(
+            link_type,
+            LinkType::Include(
+                PathBuf::from("arbitrary"),
+                RangeOrAnchor::Anchor("-5".to_string())
+            )
+        );
+    }
+
+    #[test]
+    fn parse_with_floating_point_interpreted_as_anchor() {
+        let link_type = parse_include_path("arbitrary:-5.7");
+        assert_eq!(
+            link_type,
+            LinkType::Include(
+                PathBuf::from("arbitrary"),
+                RangeOrAnchor::Anchor("-5.7".to_string())
+            )
+        );
+    }
+
+    #[test]
+    fn parse_with_anchor_followed_by_colon() {
+        let link_type = parse_include_path("arbitrary:some-anchor:this-gets-ignored");
+        assert_eq!(
+            link_type,
+            LinkType::Include(
+                PathBuf::from("arbitrary"),
+                RangeOrAnchor::Anchor("some-anchor".to_string())
+            )
+        );
+    }
+
+    #[test]
+    fn parse_with_more_than_three_colons_ignores_everything_after_third_colon() {
+        let link_type = parse_include_path("arbitrary:5:10:17:anything:");
+        assert_eq!(
+            link_type,
+            LinkType::Include(
+                PathBuf::from("arbitrary"),
+                RangeOrAnchor::Range(LineRange::from(4..10))
+            )
+        );
+    }
 }

@@ -21,32 +21,40 @@ body {
 }
 
 code {
-    font-family: "Source Code Pro", Consolas, "Ubuntu Mono", Menlo, "DejaVu Sans Mono", monospace, monospace;
+    font-family: "Source Code Pro", Consolas, "Ubuntu Mono", Menlo, "DejaVu Sans Mono", monospace, monospace !important;
     font-size: 0.875em; /* please adjust the ace font size accordingly in editor.js */
 }
 
 .left { float: left; }
 .right { float: right; }
+.boring { opacity: 0.6; }
+.hide-boring .boring { display: none; }
 .hidden { display: none; }
-.play-button.hidden { display: none; }
 
 h2, h3 { margin-top: 2.5em; }
 h4, h5 { margin-top: 2em; }
 
 .header + .header h3,
 .header + .header h4,
-.header + .header h5 { 
+.header + .header h5 {
     margin-top: 1em;
 }
 
-a.header:target h1:before,
-a.header:target h2:before,
-a.header:target h3:before,
-a.header:target h4:before {
+h1 a.header:target::before,
+h2 a.header:target::before,
+h3 a.header:target::before,
+h4 a.header:target::before {
     display: inline-block;
     content: "»";
     margin-left: -30px;
     width: 30px;
+}
+
+h1 a.header:target,
+h2 a.header:target,
+h3 a.header:target,
+h4 a.header:target {
+    scroll-margin-top: calc(var(--menu-bar-height) + 0.5em);
 }
 
 .page {
@@ -56,7 +64,7 @@ a.header:target h4:before {
 .page-wrapper {
     box-sizing: border-box;
 }
-.js .page-wrapper {
+.js:not(.sidebar-resizing) .page-wrapper {
     transition: margin-left 0.3s ease, transform 0.3s ease; /* Animation: slide away */
 }
 
@@ -96,6 +104,9 @@ table thead {
 table thead td {
     font-weight: 700;
     border: none;
+}
+table thead th {
+    padding: 3px 20px;
 }
 table thead tr {
     border: 1px var(--table-header-bg) solid;
@@ -146,4 +157,3 @@ blockquote {
 .tooltipped .tooltiptext {
     visibility: visible;
 }
-  

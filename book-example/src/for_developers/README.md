@@ -12,14 +12,14 @@ The *For Developers* chapters are here to show you the more advanced usage of
 The two main ways a developer can hook into the book's build process is via,
 
 - [Preprocessors](preprocessors.md)
-- [Alternate Backends](backends.md)
+- [Alternative Backends](backends.md)
 
 
 ## The Build Process
 
 The process of rendering a book project goes through several steps.
 
-1. Load the book 
+1. Load the book
     - Parse the `book.toml`, falling back to the default `Config` if it doesn't
        exist
     - Load the book chapters into memory
@@ -41,6 +41,6 @@ The easiest way to find out how to use the `mdbook` crate is by looking at the
 explanation on the configuration system.
 
 
-[`MDBook`]: http://rust-lang-nursery.github.io/mdBook/mdbook/book/struct.MDBook.html
+[`MDBook`]: https://docs.rs/mdbook/*/mdbook/book/struct.MDBook.html
 [API Docs]: https://docs.rs/mdbook/*/mdbook/
-[config]: file:///home/michael/Documents/forks/mdBook/target/doc/mdbook/config/index.html
+[config]: https://docs.rs/mdbook/*/mdbook/config/index.html

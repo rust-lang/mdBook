@@ -1,11 +1,11 @@
-# Alternate Backends
+# Alternative Backends
 
 A "backend" is simply a program which `mdbook` will invoke during the book
 rendering process. This program is passed a JSON representation of the book and
 configuration information via `stdin`. Once the backend receives this
 information it is free to do whatever it wants.
 
-There are already several alternate backends on GitHub which can be used as a
+There are already several alternative backends on GitHub which can be used as a
 rough example of how this is accomplished in practice.
 
 - [mdbook-linkcheck] - a simple program for verifying the book doesn't contain
@@ -14,7 +14,7 @@ rough example of how this is accomplished in practice.
 - [mdbook-test] - a program to run the book's contents through [rust-skeptic] to
   verify everything compiles and runs correctly (similar to `rustdoc --test`)
 
-This page will step you through creating your own alternate backend in the form
+This page will step you through creating your own alternative backend in the form
 of a simple word counting program. Although it will be written in Rust, there's
 no reason why it couldn't be accomplished using something like Python or Ruby.
 
@@ -24,9 +24,9 @@ no reason why it couldn't be accomplished using something like Python or Ruby.
 First you'll want to create a new binary program and add `mdbook` as a
 dependency.
 
-```
+```shell
 $ cargo new --bin mdbook-wordcount
-$ cd mdbook-wordcount 
+$ cd mdbook-wordcount
 $ cargo add mdbook
 ```
 
@@ -52,8 +52,8 @@ fn main() {
 > **Note:** The `RenderContext` contains a `version` field. This lets backends
   figure out whether they are compatible with the version of `mdbook` it's being
   called by. This `version` comes directly from the corresponding field in
-  `mdbook`'s `Cargo.toml`. 
-  
+  `mdbook`'s `Cargo.toml`.
+
   It is recommended that backends use the [`semver`] crate to inspect this field
   and emit a warning if there may be a compatibility issue.
 
@@ -92,12 +92,12 @@ fn count_words(ch: &Chapter) -> usize {
 Now we've got the basics running, we want to actually use it. First, install the
 program.
 
-```
-$ cargo install
+```shell
+$ cargo install --path .
 ```
 
 Then `cd` to the particular book you'd like to count the words of and update its
-`book.toml` file. 
+`book.toml` file.
 
 ```diff
   [book]
@@ -112,7 +112,7 @@ Then `cd` to the particular book you'd like to count the words of and update its
 
 When it loads a book into memory, `mdbook` will inspect your `book.toml` file to
 try and figure out which backends to use by looking for all `output.*` tables.
-If none are provided it'll fall back to using the default HTML renderer. 
+If none are provided it'll fall back to using the default HTML renderer.
 
 Notably, this means if you want to add your own custom backend you'll also need
 to make sure to add the HTML backend, even if its table just stays empty.
@@ -120,7 +120,7 @@ to make sure to add the HTML backend, even if its table just stays empty.
 Now you just need to build your book like normal, and everything should *Just
 Work*.
 
-```
+```shell
 $ mdbook build
 ...
 2018-01-16 07:31:15 [INFO] (mdbook::renderer): Invoking the "mdbook-wordcount" renderer
@@ -140,7 +140,7 @@ Syntax highlighting: 314
 MathJax Support: 153
 Rust code specific features: 148
 For Developers: 788
-Alternate Backends: 710
+Alternative Backends: 710
 Contributors: 85
 ```
 
@@ -169,7 +169,7 @@ arguments or be an interpreted script), you can use the `command` field.
 Now imagine you don't want to count the number of words on a particular chapter
 (it might be generated text/code, etc). The canonical way to do this is via the
 usual `book.toml` configuration file by adding items to your `[output.foo]`
-table. 
+table.
 
 The `Config` can be treated roughly as a nested hashmap which lets you call
 methods like `get()` to access the config's contents, with a
@@ -211,13 +211,13 @@ and then add a check to make sure we skip ignored chapters.
 +     let cfg: WordcountConfig = ctx.config
 +         .get_deserialized("output.wordcount")
 +         .unwrap_or_default();
-  
+
       for item in ctx.book.iter() {
           if let BookItem::Chapter(ref ch) = *item {
 +             if cfg.ignores.contains(&ch.name) {
 +                 continue;
 +             }
-+ 
++
               let num_words = count_words(ch);
               println!("{}: {}", ch.name, num_words);
           }
@@ -239,17 +239,17 @@ in [`RenderContext`].
 - use std::io;
   use mdbook::renderer::RenderContext;
   use mdbook::book::{BookItem, Chapter};
-  
+
   fn main() {
     ...
-  
+
 +     let _ = fs::create_dir_all(&ctx.destination);
 +     let mut f = File::create(ctx.destination.join("wordcounts.txt")).unwrap();
-+ 
++
       for item in ctx.book.iter() {
           if let BookItem::Chapter(ref ch) = *item {
               ...
-  
+
               let num_words = count_words(ch);
               println!("{}: {}", ch.name, num_words);
 +             writeln!(f, "{}: {}", ch.name, num_words).unwrap();
@@ -261,6 +261,10 @@ in [`RenderContext`].
 > **Note:** There is no guarantee that the destination directory exists or is
 > empty (`mdbook` may leave the previous contents to let backends do caching),
 > so it's always a good idea to create it with `fs::create_dir_all()`.
+>
+> If the destination directory already exists, don't assume it will be empty.
+> To allow backends to cache the results from previous runs, `mdbook` may leave
+> old content in the directory.
 
 There's always the possibility that an error will occur while processing a book
 (just look at all the `unwrap()`'s we've written already), so `mdbook` will
@@ -276,11 +280,11 @@ like this:
 
   fn main() {
       ...
-  
+
       for item in ctx.book.iter() {
           if let BookItem::Chapter(ref ch) = *item {
               ...
-  
+
               let num_words = count_words(ch);
               println!("{}: {}", ch.name, num_words);
               writeln!(f, "{}: {}", ch.name, num_words).unwrap();
@@ -303,8 +307,8 @@ like this:
 
 Now, if we reinstall the backend and build a book,
 
-```
-$ cargo install --force
+```shell
+$ cargo install --path . --force
 $ mdbook build /path/to/book
 ...
 2018-01-16 21:21:39 [INFO] (mdbook::renderer): Invoking the "wordcount" renderer
@@ -329,7 +333,7 @@ the usual `RUST_LOG` to control logging verbosity.
 ## Wrapping Up
 
 Although contrived, hopefully this example was enough to show how you'd create
-an alternate backend for `mdbook`. If you feel it's missing something, don't
+an alternative backend for `mdbook`. If you feel it's missing something, don't
 hesitate to create an issue in the [issue tracker] so we can improve the user
 guide.
 
@@ -342,10 +346,10 @@ the source code or ask questions.
 [mdbook-epub]: https://github.com/Michael-F-Bryan/mdbook-epub
 [mdbook-test]: https://github.com/Michael-F-Bryan/mdbook-test
 [rust-skeptic]: https://github.com/budziq/rust-skeptic
-[`RenderContext`]: http://rust-lang-nursery.github.io/mdBook/mdbook/renderer/struct.RenderContext.html
-[`RenderContext::from_json()`]: http://rust-lang-nursery.github.io/mdBook/mdbook/renderer/struct.RenderContext.html#method.from_json
+[`RenderContext`]: https://docs.rs/mdbook/*/mdbook/renderer/struct.RenderContext.html
+[`RenderContext::from_json()`]: https://docs.rs/mdbook/*/mdbook/renderer/struct.RenderContext.html#method.from_json
 [`semver`]: https://crates.io/crates/semver
-[`Book`]: http://rust-lang-nursery.github.io/mdBook/mdbook/book/struct.Book.html
-[`Book::iter()`]: http://rust-lang-nursery.github.io/mdBook/mdbook/book/struct.Book.html#method.iter
-[`Config`]: http://rust-lang-nursery.github.io/mdBook/mdbook/config/struct.Config.html
+[`Book`]: https://docs.rs/mdbook/*/mdbook/book/struct.Book.html
+[`Book::iter()`]: https://docs.rs/mdbook/*/mdbook/book/struct.Book.html#method.iter
+[`Config`]: https://docs.rs/mdbook/*/mdbook/config/struct.Config.html
 [issue tracker]: https://github.com/rust-lang-nursery/mdBook/issues

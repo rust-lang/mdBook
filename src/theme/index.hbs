@@ -1,9 +1,13 @@
 <!DOCTYPE HTML>
-<html lang="{{ language }}" class="sidebar-visible no-js">
+<html lang="{{ language }}" class="sidebar-visible no-js {{ default_theme }}">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
         <title>{{ title }}</title>
+        {{#if is_print }}
+        <meta name="robots" content="noindex" />
+        {{/if}}
+
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="{{ description }}">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -35,11 +39,11 @@
         <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
         {{/if}}
     </head>
-    <body class="{{ default_theme }}">
+    <body>
         <!-- Provide site root to javascript -->
         <script type="text/javascript">
             var path_to_root = "{{ path_to_root }}";
-            var default_theme = "{{ default_theme }}";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "{{ preferred_dark_theme }}" : "{{ default_theme }}";
         </script>
 
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
@@ -61,10 +65,13 @@
         <!-- Set the theme before any content is loaded, prevents flash -->
         <script type="text/javascript">
             var theme;
-            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { } 
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
-            document.body.className = theme;
-            document.querySelector('html').className = theme + ' js';
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('{{ default_theme }}')
+            html.classList.add(theme);
+            html.classList.add('js');
         </script>
 
         <!-- Hide / unhide sidebar before it is displayed -->
@@ -80,7 +87,10 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            {{#toc}}{{/toc}}
+            <div id="sidebar-scrollbox" class="sidebar-scrollbox">
+                {{#toc}}{{/toc}}
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -110,7 +120,7 @@
                             {{/if}}
                         </div>
 
-                        <h1 class="menu-title">{{ book_title }}</h1> 
+                        <h1 class="menu-title">{{ book_title }}</h1>
 
                         <div class="right-buttons">
                             <a href="{{ path_to_root }}print.html" title="Print this book" aria-label="Print this book">
@@ -220,6 +230,18 @@
                 ga('create', '{{google_analytics}}', 'auto');
                 ga('send', 'pageview');
             }
+        </script>
+        {{/if}}
+
+        {{#if playpen_line_numbers}}
+        <script type="text/javascript">
+            window.playpen_line_numbers = true;
+        </script>
+        {{/if}}
+        
+        {{#if playpen_copyable}}
+        <script type="text/javascript">
+            window.playpen_copyable = true;
         </script>
         {{/if}}
 

@@ -2,9 +2,8 @@ use std::collections::BTreeMap;
 use std::path::Path;
 
 use handlebars::{Context, Handlebars, Helper, Output, RenderContext, RenderError, Renderable};
-use serde_json;
 
-use utils;
+use crate::utils;
 
 type StringMap = BTreeMap<String, String>;
 
@@ -47,21 +46,43 @@ impl Target {
 
 fn find_chapter(
     ctx: &Context,
-    rc: &mut RenderContext,
+    rc: &mut RenderContext<'_>,
     target: Target,
 ) -> Result<Option<StringMap>, RenderError> {
     debug!("Get data from context");
 
-    let chapters = rc.evaluate_absolute(ctx, "chapters", true).and_then(|c| {
-        serde_json::value::from_value::<Vec<StringMap>>(c.clone())
+    let chapters = rc.evaluate(ctx, "@root/chapters").and_then(|c| {
+        serde_json::value::from_value::<Vec<StringMap>>(c.as_json().clone())
             .map_err(|_| RenderError::new("Could not decode the JSON data"))
     })?;
 
     let base_path = rc
-        .evaluate_absolute(ctx, "path", true)?
+        .evaluate(ctx, "@root/path")?
+        .as_json()
         .as_str()
         .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
         .replace("\"", "");
+
+    if !rc.evaluate(ctx, "@root/is_index")?.is_missing() {
+        // Special case for index.md which may be a synthetic page.
+        // Target::find won't match because there is no page with the path
+        // "index.md" (unless there really is an index.md in SUMMARY.md).
+        match target {
+            Target::Previous => return Ok(None),
+            Target::Next => match chapters
+                .iter()
+                .filter(|chapter| {
+                    // Skip things like "spacer"
+                    chapter.contains_key("path")
+                })
+                .skip(1)
+                .next()
+            {
+                Some(chapter) => return Ok(Some(chapter.clone())),
+                None => return Ok(None),
+            },
+        }
+    }
 
     let mut previous: Option<StringMap> = None;
 
@@ -86,18 +107,19 @@ fn find_chapter(
 }
 
 fn render(
-    _h: &Helper,
+    _h: &Helper<'_, '_>,
     r: &Handlebars,
     ctx: &Context,
-    rc: &mut RenderContext,
-    out: &mut Output,
+    rc: &mut RenderContext<'_>,
+    out: &mut dyn Output,
     chapter: &StringMap,
 ) -> Result<(), RenderError> {
     trace!("Creating BTreeMap to inject in context");
 
     let mut context = BTreeMap::new();
     let base_path = rc
-        .evaluate_absolute(ctx, "path", false)?
+        .evaluate(ctx, "@root/path")?
+        .as_json()
         .as_str()
         .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
         .replace("\"", "");
@@ -137,11 +159,11 @@ fn render(
 }
 
 pub fn previous(
-    _h: &Helper,
+    _h: &Helper<'_, '_>,
     r: &Handlebars,
     ctx: &Context,
-    rc: &mut RenderContext,
-    out: &mut Output,
+    rc: &mut RenderContext<'_>,
+    out: &mut dyn Output,
 ) -> Result<(), RenderError> {
     trace!("previous (handlebars helper)");
 
@@ -153,11 +175,11 @@ pub fn previous(
 }
 
 pub fn next(
-    _h: &Helper,
+    _h: &Helper<'_, '_>,
     r: &Handlebars,
     ctx: &Context,
-    rc: &mut RenderContext,
-    out: &mut Output,
+    rc: &mut RenderContext<'_>,
+    out: &mut dyn Output,
 ) -> Result<(), RenderError> {
     trace!("next (handlebars helper)");
 
@@ -172,29 +194,29 @@ pub fn next(
 mod tests {
     use super::*;
 
-    static TEMPLATE: &'static str =
+    static TEMPLATE: &str =
         "{{#previous}}{{title}}: {{link}}{{/previous}}|{{#next}}{{title}}: {{link}}{{/next}}";
 
     #[test]
     fn test_next_previous() {
         let data = json!({
-         "name": "two",
-         "path": "two.path",
-         "chapters": [
-            {
-               "name": "one",
-               "path": "one.path"
-            },
-            {
-               "name": "two",
-               "path": "two.path",
-            },
-            {
-               "name": "three",
-               "path": "three.path"
-            }
-         ]
-      });
+           "name": "two",
+           "path": "two.path",
+           "chapters": [
+              {
+                 "name": "one",
+                 "path": "one.path"
+              },
+              {
+                 "name": "two",
+                 "path": "two.path",
+              },
+              {
+                 "name": "three",
+                 "path": "three.path"
+              }
+           ]
+        });
 
         let mut h = Handlebars::new();
         h.register_helper("previous", Box::new(previous));
@@ -209,23 +231,23 @@ mod tests {
     #[test]
     fn test_first() {
         let data = json!({
-         "name": "one",
-         "path": "one.path",
-         "chapters": [
-            {
-               "name": "one",
-               "path": "one.path"
-            },
-            {
-               "name": "two",
-               "path": "two.path",
-            },
-            {
-               "name": "three",
-               "path": "three.path"
-            }
-         ]
-      });
+           "name": "one",
+           "path": "one.path",
+           "chapters": [
+              {
+                 "name": "one",
+                 "path": "one.path"
+              },
+              {
+                 "name": "two",
+                 "path": "two.path",
+              },
+              {
+                 "name": "three",
+                 "path": "three.path"
+              }
+           ]
+        });
 
         let mut h = Handlebars::new();
         h.register_helper("previous", Box::new(previous));
@@ -239,23 +261,23 @@ mod tests {
     #[test]
     fn test_last() {
         let data = json!({
-         "name": "three",
-         "path": "three.path",
-         "chapters": [
-            {
-               "name": "one",
-               "path": "one.path"
-            },
-            {
-               "name": "two",
-               "path": "two.path",
-            },
-            {
-               "name": "three",
-               "path": "three.path"
-            }
-         ]
-      });
+           "name": "three",
+           "path": "three.path",
+           "chapters": [
+              {
+                 "name": "one",
+                 "path": "one.path"
+              },
+              {
+                 "name": "two",
+                 "path": "two.path",
+              },
+              {
+                 "name": "three",
+                 "path": "three.path"
+              }
+           ]
+        });
 
         let mut h = Handlebars::new();
         h.register_helper("previous", Box::new(previous));

@@ -3,21 +3,15 @@
 
 // Not all features are used in all test crates, so...
 #![allow(dead_code, unused_variables, unused_imports, unused_extern_crates)]
-extern crate mdbook;
-extern crate tempfile;
-extern crate walkdir;
 
 use mdbook::errors::*;
-use mdbook::utils::fs::file_to_string;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::Path;
 
-// The funny `self::` here is because we've got an `extern crate ...` and are
-// in a submodule
-use self::mdbook::MDBook;
-use self::tempfile::{Builder as TempFileBuilder, TempDir};
-use self::walkdir::WalkDir;
+use mdbook::MDBook;
+use tempfile::{Builder as TempFileBuilder, TempDir};
+use walkdir::WalkDir;
 
 /// Create a dummy book in a temporary directory, using the contents of
 /// `SUMMARY_MD` as a guide.
@@ -58,15 +52,24 @@ impl DummyBook {
         })?;
 
         let sub_pattern = if self.passing_test { "true" } else { "false" };
-        let file_containing_test = temp.path().join("src/first/nested.md");
-        replace_pattern_in_file(&file_containing_test, "$TEST_STATUS", sub_pattern)?;
+        let files_containing_tests = [
+            "src/first/nested.md",
+            "src/first/nested-test.rs",
+            "src/first/nested-test-with-anchors.rs",
+            "src/first/partially-included-test.rs",
+            "src/first/partially-included-test-with-anchors.rs",
+        ];
+        for file in &files_containing_tests {
+            let path_containing_tests = temp.path().join(file);
+            replace_pattern_in_file(&path_containing_tests, "$TEST_STATUS", sub_pattern)?;
+        }
 
         Ok(temp)
     }
 }
 
 fn replace_pattern_in_file(filename: &Path, from: &str, to: &str) -> Result<()> {
-    let contents = file_to_string(filename)?;
+    let contents = fs::read_to_string(filename)?;
     File::create(filename)?.write_all(contents.replace(from, to).as_bytes())?;
 
     Ok(())
@@ -76,7 +79,7 @@ fn replace_pattern_in_file(filename: &Path, from: &str, to: &str) -> Result<()> 
 /// the list of strings asserting that the file contains all of them.
 pub fn assert_contains_strings<P: AsRef<Path>>(filename: P, strings: &[&str]) {
     let filename = filename.as_ref();
-    let content = file_to_string(filename).expect("Couldn't read the file's contents");
+    let content = fs::read_to_string(filename).expect("Couldn't read the file's contents");
 
     for s in strings {
         assert!(
@@ -91,7 +94,7 @@ pub fn assert_contains_strings<P: AsRef<Path>>(filename: P, strings: &[&str]) {
 
 pub fn assert_doesnt_contain_strings<P: AsRef<Path>>(filename: P, strings: &[&str]) {
     let filename = filename.as_ref();
-    let content = file_to_string(filename).expect("Couldn't read the file's contents");
+    let content = fs::read_to_string(filename).expect("Couldn't read the file's contents");
 
     for s in strings {
         assert!(
