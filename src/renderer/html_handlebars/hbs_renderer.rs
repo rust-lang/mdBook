@@ -407,13 +407,13 @@ fn make_data(
     }
 
     let default_theme = match html_config.default_theme {
-        Some(ref theme) => theme,
-        None => "light",
+        Some(ref theme) => theme.to_lowercase(),
+        None => "light".to_string(),
     };
     data.insert("default_theme".to_owned(), json!(default_theme));
 
     let preferred_dark_theme = match html_config.preferred_dark_theme {
-        Some(ref theme) => theme,
+        Some(ref theme) => theme.to_string(),
         None => default_theme,
     };
     data.insert(
