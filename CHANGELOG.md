@@ -1,5 +1,14 @@
 # Changelog
 
+## mdBook 0.3.4
+[e5f77aa...6e0d0fa](https://github.com/rust-lang/mdBook/compare/e5f77aa...6e0d0fa)
+
+### Changed
+- Switch to relative `rem` font sizes from `px`.
+  [#894](https://github.com/rust-lang/mdBook/pull/894)
+- Migrated repository to https://github.com/rust-lang/mdBook/
+  [#1083](https://github.com/rust-lang/mdBook/pull/1083)
+
 ## mdBook 0.3.3
 [2b649fe...e5f77aa](https://github.com/rust-lang/mdBook/compare/2b649fe...e5f77aa)
 
