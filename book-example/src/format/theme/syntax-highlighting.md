@@ -62,7 +62,7 @@ everyone can benefit from it.**
 
 If you think the default theme doesn't look quite right for a specific language,
 or could be improved. Feel free to [submit a new
-issue](https://github.com/rust-lang-nursery/mdBook/issues) explaining what you
+issue](https://github.com/rust-lang/mdBook/issues) explaining what you
 have in mind and I will take a look at it.
 
 You could also create a pull-request with the proposed improvements.

@@ -728,7 +728,7 @@ mod tests {
         assert!(got.is_err());
     }
 
-    /// Regression test for https://github.com/rust-lang-nursery/mdBook/issues/779
+    /// Regression test for https://github.com/rust-lang/mdBook/issues/779
     /// Ensure section numbers are correctly incremented after a horizontal separator.
     #[test]
     fn keep_numbering_after_separator() {

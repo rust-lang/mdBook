@@ -7,7 +7,7 @@ capabilities first.
 ## Install From Binaries
 
 Precompiled binaries are provided for major platforms on a best-effort basis.
-Visit [the releases page](https://github.com/rust-lang-nursery/mdBook/releases)
+Visit [the releases page](https://github.com/rust-lang/mdBook/releases)
 to download the appropriate version for your platform.
 
 ## Install From Source
@@ -39,14 +39,14 @@ have installed mdBook!
 
 ### Install Git version
 
-The **[git version](https://github.com/rust-lang-nursery/mdBook)** contains all
+The **[git version](https://github.com/rust-lang/mdBook)** contains all
 the latest bug-fixes and features, that will be released in the next version on
 **Crates.io**, if you can't wait until the next release. You can build the git
 version yourself. Open your terminal and navigate to the directory of you
 choice. We need to clone the git repository and then build it with Cargo.
 
 ```bash
-git clone --depth=1 https://github.com/rust-lang-nursery/mdBook.git
+git clone --depth=1 https://github.com/rust-lang/mdBook.git
 cd mdBook
 cargo build --release
 ```

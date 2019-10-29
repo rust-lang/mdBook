@@ -6,13 +6,13 @@ authors = [
     "Michael-F-Bryan <michaelfbryan@gmail.com>",
     "Matt Ickstadt <mattico8@gmail.com>"
 ]
-documentation = "http://rust-lang-nursery.github.io/mdBook/index.html"
+documentation = "http://rust-lang.github.io/mdBook/index.html"
 edition = "2018"
 exclude = ["/book-example/*"]
 keywords = ["book", "gitbook", "rustbook", "markdown"]
 license = "MPL-2.0"
 readme = "README.md"
-repository = "https://github.com/rust-lang-nursery/mdBook"
+repository = "https://github.com/rust-lang/mdBook"
 description = "Creates a book from markdown files"
 
 [dependencies]

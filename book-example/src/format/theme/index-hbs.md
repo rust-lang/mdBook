@@ -97,4 +97,4 @@ Of course the inner html can be changed to your liking.
 ------
 
 *If you would like other properties or helpers exposed, please [create a new
-issue](https://github.com/rust-lang-nursery/mdBook/issues)*
+issue](https://github.com/rust-lang/mdBook/issues)*

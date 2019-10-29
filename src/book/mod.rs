@@ -56,7 +56,7 @@ impl MDBook {
             warn!("This format is no longer used, so you should migrate to the");
             warn!("book.toml format.");
             warn!("Check the user guide for migration information:");
-            warn!("\thttps://rust-lang-nursery.github.io/mdBook/format/config.html");
+            warn!("\thttps://rust-lang.github.io/mdBook/format/config.html");
         }
 
         let mut config = if config_location.exists() {

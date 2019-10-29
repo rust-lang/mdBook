@@ -30,7 +30,7 @@ fn main() {
         .setting(AppSettings::ColoredHelp)
         .after_help(
             "For more information about a specific command, try `mdbook <command> --help`\n\
-             The source code for mdBook is available at: https://github.com/rust-lang-nursery/mdBook",
+             The source code for mdBook is available at: https://github.com/rust-lang/mdBook",
         )
         .subcommand(cmd::init::make_subcommand())
         .subcommand(cmd::build::make_subcommand())

@@ -37,8 +37,8 @@ pub fn write_file<P: AsRef<Path>>(build_dir: &Path, filename: P, content: &[u8])
 ///
 /// **note:** it's not very fool-proof, if you find a situation where
 /// it doesn't return the correct path.
-/// Consider [submitting a new issue](https://github.com/rust-lang-nursery/mdBook/issues)
-/// or a [pull-request](https://github.com/rust-lang-nursery/mdBook/pulls) to improve it.
+/// Consider [submitting a new issue](https://github.com/rust-lang/mdBook/issues)
+/// or a [pull-request](https://github.com/rust-lang/mdBook/pulls) to improve it.
 pub fn path_to_root<P: Into<PathBuf>>(path: P) -> String {
     debug!("path_to_root");
     // Remove filename and add "../" for every directory

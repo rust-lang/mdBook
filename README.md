@@ -1,8 +1,8 @@
 # mdBook
 
-[![Build Status](https://github.com/rust-lang-nursery/mdBook/workflows/CI/badge.svg)](https://github.com/rust-lang-nursery/mdBook/actions?workflow=CI)
+[![Build Status](https://github.com/rust-lang/mdBook/workflows/CI/badge.svg)](https://github.com/rust-lang/mdBook/actions?workflow=CI)
 [![crates.io](https://img.shields.io/crates/v/mdbook.svg)](https://crates.io/crates/mdbook)
-[![LICENSE](https://img.shields.io/github/license/rust-lang-nursery/mdBook.svg)](LICENSE)
+[![LICENSE](https://img.shields.io/github/license/rust-lang/mdBook.svg)](LICENSE)
 
 mdBook is a utility to create modern online books from Markdown files.
 
@@ -55,7 +55,7 @@ There are multiple ways to install mdBook.
    the git version of mdBook yourself. Cargo makes this ***super easy***!
 
    ```
-   cargo install --git https://github.com/rust-lang-nursery/mdBook.git mdbook
+   cargo install --git https://github.com/rust-lang/mdBook.git mdbook
    ```
 
    Again, make sure to add the Cargo bin directory to your `PATH`.
@@ -66,7 +66,7 @@ There are multiple ways to install mdBook.
    your local machine:
 
    ```
-   git clone https://github.com/rust-lang-nursery/mdBook.git
+   git clone https://github.com/rust-lang/mdBook.git
    ```
 
    `cd` into `mdBook/` and run
@@ -217,14 +217,14 @@ available, for those hacking on `master`.
 All the code in this repository is released under the ***Mozilla Public License v2.0***, for more information take a look at the [LICENSE] file.
 
 
-[User Guide]: https://rust-lang-nursery.github.io/mdBook/
+[User Guide]: https://rust-lang.github.io/mdBook/
 [API docs]: https://docs.rs/mdbook/*/mdbook/
-[E-Easy]: https://github.com/rust-lang-nursery/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AE-Easy
-[contribution guide]: https://github.com/rust-lang-nursery/mdBook/blob/master/CONTRIBUTING.md
-[LICENSE]: https://github.com/rust-lang-nursery/mdBook/blob/master/LICENSE
-[releases]: https://github.com/rust-lang-nursery/mdBook/releases
+[E-Easy]: https://github.com/rust-lang/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AE-Easy
+[contribution guide]: https://github.com/rust-lang/mdBook/blob/master/CONTRIBUTING.md
+[LICENSE]: https://github.com/rust-lang/mdBook/blob/master/LICENSE
+[releases]: https://github.com/rust-lang/mdBook/releases
 [Rust]: https://www.rust-lang.org/
-[CLI docs]: http://rust-lang-nursery.github.io/mdBook/cli/init.html
-[master-docs]: http://rust-lang-nursery.github.io/mdBook/
+[CLI docs]: http://rust-lang.github.io/mdBook/cli/init.html
+[master-docs]: http://rust-lang.github.io/mdBook/
 [`linkcheck`]: https://crates.io/crates/mdbook-linkcheck
 [`epub`]: https://crates.io/crates/mdbook-epub
