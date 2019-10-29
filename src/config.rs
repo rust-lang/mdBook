@@ -296,7 +296,7 @@ impl<'de> Deserialize<'de> for Config {
             warn!("`description` under a table called `[book]`, move the `destination` entry");
             warn!("from `[output.html]`, renamed to `build-dir`, under a table called");
             warn!("`[build]`, and it should all work.");
-            warn!("Documentation: http://rust-lang-nursery.github.io/mdBook/format/config.html");
+            warn!("Documentation: http://rust-lang.github.io/mdBook/format/config.html");
             return Ok(Config::from_legacy(raw));
         }
 

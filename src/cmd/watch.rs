@@ -59,7 +59,7 @@ fn remove_ignored_files(book_root: &PathBuf, paths: &[PathBuf]) -> Vec<PathBuf> 
                 Ok(exclusion_checker) => filter_ignored_files(exclusion_checker, paths),
                 Err(_) => {
                     // We're unable to read the .gitignore file, so we'll silently allow everything.
-                    // Please see discussion: https://github.com/rust-lang-nursery/mdBook/pull/1051
+                    // Please see discussion: https://github.com/rust-lang/mdBook/pull/1051
                     paths.iter().map(|path| path.to_path_buf()).collect()
                 }
             }

@@ -237,7 +237,7 @@ google-analytics = "123456"
 additional-css = ["custom.css", "custom2.css"]
 additional-js = ["custom.js"]
 no-section-label = false
-git-repository-url = "https://github.com/rust-lang-nursery/mdBook"
+git-repository-url = "https://github.com/rust-lang/mdBook"
 git-repository-icon = "fa-github"
 
 [output.html.fold]

@@ -8,9 +8,9 @@ What you are reading serves as an example of the output of mdBook and at the
 same time as a high-level documentation.
 
 mdBook is free and open source, you can find the source code on
-[GitHub](https://github.com/rust-lang-nursery/mdBook). Issues and feature
+[GitHub](https://github.com/rust-lang/mdBook). Issues and feature
 requests can be posted on the [GitHub issue
-tracker](https://github.com/rust-lang-nursery/mdBook/issues).
+tracker](https://github.com/rust-lang/mdBook/issues).
 
 ## API docs
 
