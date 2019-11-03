@@ -10,6 +10,7 @@ mathjax-support = true
 [output.html.playpen]
 editable = true
 line-numbers = true
+edition = "2018"
 
 [output.html.search]
 limit-results = 20

@@ -1,5 +1,5 @@
 use crate::book::{Book, BookItem};
-use crate::config::{Config, HtmlConfig, Playpen};
+use crate::config::{Config, HtmlConfig, Playpen, RustEdition};
 use crate::errors::*;
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
@@ -614,6 +614,12 @@ fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
                 && !classes.contains("noplaypen"))
                 || classes.contains("mdbook-runnable")
             {
+                let mut classes = classes.to_string();
+                match playpen_config.edition {
+                    RustEdition::E2018 => classes += " edition2018",
+                    _ => (),
+                }
+
                 // wrap the contents in an external pre block
                 format!(
                     "<pre class=\"playpen\"><code class=\"{}\">{}</code></pre>",
