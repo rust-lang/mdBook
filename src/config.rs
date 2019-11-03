@@ -559,7 +559,7 @@ impl Serialize for RustEdition {
 impl<'de> Deserialize<'de> for RustEdition {
     fn deserialize<D>(de: D) -> std::result::Result<Self, D::Error>
     where
-        D: Deserializer<'de>
+        D: Deserializer<'de>,
     {
         use serde::de::Error;
 
@@ -568,9 +568,7 @@ impl<'de> Deserialize<'de> for RustEdition {
         let edition = match raw {
             Value::String(s) => s,
             _ => {
-                return Err(D::Error::custom(
-                    "Rust edition should be a string",
-                ));
+                return Err(D::Error::custom("Rust edition should be a string"));
             }
         };
 
@@ -578,9 +576,7 @@ impl<'de> Deserialize<'de> for RustEdition {
             "2018" => RustEdition::E2018,
             "2015" => RustEdition::E2015,
             _ => {
-                return Err(D::Error::custom(
-                    "Unknown Rust edition"
-                ));
+                return Err(D::Error::custom("Unknown Rust edition"));
             }
         };
 

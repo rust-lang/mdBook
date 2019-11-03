@@ -264,10 +264,7 @@ impl MDBook {
 
                     let mut cmd = Command::new("rustdoc");
 
-                    cmd
-                        .arg(&path)
-                        .arg("--test")
-                        .args(&library_args);
+                    cmd.arg(&path).arg("--test").args(&library_args);
 
                     if let Some(html_cfg) = self.config.html_config() {
                         if html_cfg.playpen.edition == RustEdition::E2018 {
