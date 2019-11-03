@@ -550,8 +550,8 @@ impl Serialize for RustEdition {
         S: Serializer,
     {
         match self {
-            Self::E2015 => serializer.serialize_str("2015"),
-            Self::E2018 => serializer.serialize_str("2018"),
+            RustEdition::E2015 => serializer.serialize_str("2015"),
+            RustEdition::E2018 => serializer.serialize_str("2018"),
         }
     }
 }
