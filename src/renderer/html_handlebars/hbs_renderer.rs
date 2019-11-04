@@ -601,7 +601,7 @@ fn fix_code_blocks(html: &str) -> String {
 }
 
 fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
-    let boring_line_regex = Regex::new(r"^(\s*)#(#|.)(.*)$").unwrap();
+    let boring_line_regex = Regex::new(r"^(\s*)#(.?)(.*)$").unwrap();
     let regex = Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap();
     regex
         .replace_all(html, |caps: &Captures<'_>| {
@@ -747,6 +747,8 @@ mod tests {
            "<pre class=\"playpen\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";\n</code></pre>"),
           ("<code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code>",
            "<pre class=\"playpen\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";\n</code></pre>"),
+          ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n\n</span>\";\n</code></pre>"),
         ];
         for (src, should_be) in &inputs {
             let got = add_playpen_pre(
