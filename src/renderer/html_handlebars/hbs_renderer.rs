@@ -413,7 +413,7 @@ fn make_data(
     data.insert("default_theme".to_owned(), json!(default_theme));
 
     let preferred_dark_theme = match html_config.preferred_dark_theme {
-        Some(ref theme) => theme.to_string(),
+        Some(ref theme) => theme.to_lowercase(),
         None => default_theme,
     };
     data.insert(
