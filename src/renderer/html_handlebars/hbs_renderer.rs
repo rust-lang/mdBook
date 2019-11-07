@@ -652,26 +652,28 @@ lazy_static! {
 }
 
 fn hide_lines(content: &str) -> String {
-    let mut prev_line_hidden = false;
     let mut result = String::with_capacity(content.len());
     for line in content.lines() {
         if let Some(caps) = BORING_LINES_REGEX.captures(line) {
-            if !prev_line_hidden && &caps[2] != "#" {
-                result += "<span class=\"boring\">";
-                prev_line_hidden = true;
-            }
-            result += &caps[1];
-            if &caps[2] != " " {
+            if &caps[2] == "#" {
+                result += &caps[1];
                 result += &caps[2];
-            }
-            result += &caps[3];
-        } else {
-            if prev_line_hidden {
+                result += &caps[3];
+                result += "\n";
+                continue;
+            } else if &caps[2] != "!" && &caps[2] != "[" {
+                result += "<span class=\"boring\">";
+                result += &caps[1];
+                if &caps[2] != " " {
+                    result += &caps[2];
+                }
+                result += &caps[3];
+                result += "\n";
                 result += "</span>";
-                prev_line_hidden = false;
+                continue;
             }
-            result += line;
         }
+        result += line;
         result += "\n";
     }
     result
@@ -749,7 +751,7 @@ mod tests {
     fn add_playpen() {
         let inputs = [
           ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playpen\"><code class=\"language-rust\">\n<span class=\"boring\">#![allow(unused_variables)]\nfn main() {\n</span>x()\n<span class=\"boring\">}\n</code></pre>"),
+           "<pre class=\"playpen\"><code class=\"language-rust\">\n<span class=\"boring\">#![allow(unused_variables)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
           ("<code class=\"language-rust\">fn main() {}</code>",
            "<pre class=\"playpen\"><code class=\"language-rust\">fn main() {}\n</code></pre>"),
           ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code>",
@@ -757,9 +759,11 @@ mod tests {
           ("<code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code>",
            "<pre class=\"playpen\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";\n</code></pre>"),
           ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code>",
-           "<pre class=\"playpen\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n\n</span>\";\n</code></pre>"),
-          ("<code class=\"language-rust ignore\">let s = \"foo\n # bar\n#\n\";</code>",
-           "<code class=\"language-rust ignore\">let s = \"foo\n<span class=\"boring\"> bar\n\n</span>\";\n</code>"),
+           "<pre class=\"playpen\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span><span class=\"boring\">\n</span>\";\n</code></pre>"),
+          ("<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>",
+           "<code class=\"language-rust ignore\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";\n</code>"),
+          ("<code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]\n</code></pre>"),
         ];
         for (src, should_be) in &inputs {
             let got = add_playpen_pre(
