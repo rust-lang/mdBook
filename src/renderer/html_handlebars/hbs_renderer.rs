@@ -601,7 +601,6 @@ fn fix_code_blocks(html: &str) -> String {
 }
 
 fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
-    let boring_line_regex = Regex::new(r"^(\s*)#(#|.)(.*)$").unwrap();
     let regex = Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap();
     regex
         .replace_all(html, |caps: &Captures<'_>| {
@@ -609,63 +608,75 @@ fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
             let classes = &caps[2];
             let code = &caps[3];
 
-            if (classes.contains("language-rust")
-                && !classes.contains("ignore")
-                && !classes.contains("noplaypen"))
-                || classes.contains("mdbook-runnable")
-            {
-                // wrap the contents in an external pre block
-                format!(
-                    "<pre class=\"playpen\"><code class=\"{}\">{}</code></pre>",
-                    classes,
-                    {
-                        let content: Cow<'_, str> = if playpen_config.editable
-                            && classes.contains("editable")
-                            || text.contains("fn main")
-                            || text.contains("quick_main!")
+            if classes.contains("language-rust") {
+                if (!classes.contains("ignore") && !classes.contains("noplaypen"))
+                    || classes.contains("mdbook-runnable")
+                {
+                    // wrap the contents in an external pre block
+                    format!(
+                        "<pre class=\"playpen\"><code class=\"{}\">{}</code></pre>",
+                        classes,
                         {
-                            code.into()
-                        } else {
-                            // we need to inject our own main
-                            let (attrs, code) = partition_source(code);
-
-                            format!(
-                                "\n# #![allow(unused_variables)]\n{}#fn main() {{\n{}#}}",
-                                attrs, code
-                            )
-                            .into()
-                        };
-                        let mut prev_line_hidden = false;
-                        let mut result = String::with_capacity(content.len());
-                        for line in content.lines() {
-                            if let Some(caps) = boring_line_regex.captures(line) {
-                                if !prev_line_hidden && &caps[2] != "#" {
-                                    result += "<span class=\"boring\">";
-                                    prev_line_hidden = true;
-                                }
-                                result += &caps[1];
-                                if &caps[2] != " " {
-                                    result += &caps[2];
-                                }
-                                result += &caps[3];
+                            let content: Cow<'_, str> = if playpen_config.editable
+                                && classes.contains("editable")
+                                || text.contains("fn main")
+                                || text.contains("quick_main!")
+                            {
+                                code.into()
                             } else {
-                                if prev_line_hidden {
-                                    result += "</span>";
-                                    prev_line_hidden = false;
-                                }
-                                result += line;
-                            }
-                            result += "\n";
+                                // we need to inject our own main
+                                let (attrs, code) = partition_source(code);
+
+                                format!(
+                                    "\n# #![allow(unused_variables)]\n{}#fn main() {{\n{}#}}",
+                                    attrs, code
+                                )
+                                .into()
+                            };
+                            hide_lines(&content)
                         }
-                        result
-                    }
-                )
+                    )
+                } else {
+                    format!("<code class=\"{}\">{}</code>", classes, hide_lines(code))
+                }
             } else {
                 // not language-rust, so no-op
                 text.to_owned()
             }
         })
         .into_owned()
+}
+
+lazy_static! {
+    static ref BORING_LINES_REGEX: Regex = Regex::new(r"^(\s*)#(.?)(.*)$").unwrap();
+}
+
+fn hide_lines(content: &str) -> String {
+    let mut result = String::with_capacity(content.len());
+    for line in content.lines() {
+        if let Some(caps) = BORING_LINES_REGEX.captures(line) {
+            if &caps[2] == "#" {
+                result += &caps[1];
+                result += &caps[2];
+                result += &caps[3];
+                result += "\n";
+                continue;
+            } else if &caps[2] != "!" && &caps[2] != "[" {
+                result += "<span class=\"boring\">";
+                result += &caps[1];
+                if &caps[2] != " " {
+                    result += &caps[2];
+                }
+                result += &caps[3];
+                result += "\n";
+                result += "</span>";
+                continue;
+            }
+        }
+        result += line;
+        result += "\n";
+    }
+    result
 }
 
 fn partition_source(s: &str) -> (String, String) {
@@ -740,13 +751,19 @@ mod tests {
     fn add_playpen() {
         let inputs = [
           ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playpen\"><code class=\"language-rust\">\n<span class=\"boring\">#![allow(unused_variables)]\nfn main() {\n</span>x()\n<span class=\"boring\">}\n</code></pre>"),
+           "<pre class=\"playpen\"><code class=\"language-rust\">\n<span class=\"boring\">#![allow(unused_variables)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
           ("<code class=\"language-rust\">fn main() {}</code>",
            "<pre class=\"playpen\"><code class=\"language-rust\">fn main() {}\n</code></pre>"),
           ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code>",
            "<pre class=\"playpen\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";\n</code></pre>"),
           ("<code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code>",
            "<pre class=\"playpen\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";\n</code></pre>"),
+          ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span><span class=\"boring\">\n</span>\";\n</code></pre>"),
+          ("<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>",
+           "<code class=\"language-rust ignore\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";\n</code>"),
+          ("<code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]\n</code></pre>"),
         ];
         for (src, should_be) in &inputs {
             let got = add_playpen_pre(
