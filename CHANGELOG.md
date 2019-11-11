@@ -1,5 +1,18 @@
 # Changelog
 
+## mdBook 0.3.5
+[6e0d0fa...efdb832](https://github.com/rust-lang/mdBook/compare/6e0d0fa...efdb832)
+
+### Changed
+- The `default-theme` config setting is now case-insensitive.
+  [#1079](https://github.com/rust-lang/mdBook/pull/1079)
+
+### Fixed
+- Fixed `#` hidden Rust code lines not rendering properly.
+  [#1088](https://github.com/rust-lang/mdBook/pull/1088)
+- Updated pulldown-cmark to 0.6.1, fixing several issues.
+  [#1021](https://github.com/rust-lang/mdBook/pull/1021)
+
 ## mdBook 0.3.4
 [e5f77aa...6e0d0fa](https://github.com/rust-lang/mdBook/compare/e5f77aa...6e0d0fa)
 
