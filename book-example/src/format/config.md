@@ -178,7 +178,7 @@ The following configuration options are available:
   an icon link will be output in the menu bar of the book.
 - **git-repository-icon:** The FontAwesome icon class to use for the git
   repository link. Defaults to `fa-github`.
-  
+
 Available configuration options for the `[output.html.fold]` table:
 
 - **enable:** Enable section-folding. When off, all folds are open.
@@ -193,6 +193,7 @@ Available configuration options for the `[output.html.playpen]` table:
 - **copy-js:** Copy JavaScript files for the editor to the output directory.
   Defaults to `true`.
 - **line-numbers** Display line numbers on editable sections of code. Requires both `editable` and `copy-js` to be `true`. Defaults to `false`.
+- **edition**: Rust edition to use by default for the code snippets. Defaults to `2015`.
 
 [Ace]: https://ace.c9.io/
 
