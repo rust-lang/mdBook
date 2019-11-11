@@ -513,8 +513,6 @@ pub struct Playpen {
     pub copy_js: bool,
     /// Display line numbers on playpen snippets. Default: `false`.
     pub line_numbers: bool,
-    /// Rust edition to use for the code. Default: `2015`.
-    pub edition: RustEdition,
 }
 
 impl Default for Playpen {
@@ -524,63 +522,7 @@ impl Default for Playpen {
             copyable: true,
             copy_js: true,
             line_numbers: false,
-            edition: RustEdition::E2015,
         }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-/// The edition of Rust used in a playpen code snippet
-pub enum RustEdition {
-    /// The 2018 edition of Rust
-    E2018,
-    /// The 2015 edition of Rust
-    E2015,
-}
-
-impl Default for RustEdition {
-    fn default() -> Self {
-        RustEdition::E2015
-    }
-}
-
-impl Serialize for RustEdition {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        match self {
-            RustEdition::E2015 => serializer.serialize_str("2015"),
-            RustEdition::E2018 => serializer.serialize_str("2018"),
-        }
-    }
-}
-
-impl<'de> Deserialize<'de> for RustEdition {
-    fn deserialize<D>(de: D) -> std::result::Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        use serde::de::Error;
-
-        let raw = Value::deserialize(de)?;
-
-        let edition = match raw {
-            Value::String(s) => s,
-            _ => {
-                return Err(D::Error::custom("Rust edition should be a string"));
-            }
-        };
-
-        let edition = match edition.as_str() {
-            "2018" => RustEdition::E2018,
-            "2015" => RustEdition::E2015,
-            _ => {
-                return Err(D::Error::custom("Unknown Rust edition"));
-            }
-        };
-
-        Ok(edition)
     }
 }
 
@@ -688,7 +630,6 @@ mod tests {
         [output.html.playpen]
         editable = true
         editor = "ace"
-        edition = "2018"
 
         [preprocessor.first]
 
@@ -717,7 +658,6 @@ mod tests {
             copyable: true,
             copy_js: true,
             line_numbers: false,
-            edition: RustEdition::E2018,
         };
         let html_should_be = HtmlConfig {
             curly_quotes: true,
