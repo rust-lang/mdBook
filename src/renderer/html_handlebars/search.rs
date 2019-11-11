@@ -81,22 +81,21 @@ fn render_item(
         .chain_err(|| "Could not convert HTML path to str")?;
     let anchor_base = utils::fs::normalize_path(filepath);
 
-    let p = utils::new_cmark_parser(&chapter.content);
+    let mut p = utils::new_cmark_parser(&chapter.content).peekable();
 
-    let mut in_header = false;
-    let max_section_depth = i32::from(search_config.heading_split_level);
+    let mut in_heading = false;
+    let max_section_depth = u32::from(search_config.heading_split_level);
     let mut section_id = None;
     let mut heading = String::new();
     let mut body = String::new();
-    let mut html_block = String::new();
     let mut breadcrumbs = chapter.parent_names.clone();
     let mut footnote_numbers = HashMap::new();
 
-    for event in p {
+    while let Some(event) = p.next() {
         match event {
-            Event::Start(Tag::Header(i)) if i <= max_section_depth => {
+            Event::Start(Tag::Heading(i)) if i <= max_section_depth => {
                 if !heading.is_empty() {
-                    // Section finished, the next header is following now
+                    // Section finished, the next heading is following now
                     // Write the data to the index, and clear it for the next section
                     add_doc(
                         index,
@@ -111,10 +110,10 @@ fn render_item(
                     breadcrumbs.pop();
                 }
 
-                in_header = true;
+                in_heading = true;
             }
-            Event::End(Tag::Header(i)) if i <= max_section_depth => {
-                in_header = false;
+            Event::End(Tag::Heading(i)) if i <= max_section_depth => {
+                in_heading = false;
                 section_id = Some(utils::id_from_content(&heading));
                 breadcrumbs.push(heading.clone());
             }
@@ -123,30 +122,33 @@ fn render_item(
                 footnote_numbers.entry(name).or_insert(number);
             }
             Event::Html(html) => {
-                html_block.push_str(&html);
-            }
-            Event::End(Tag::HtmlBlock) => {
+                let mut html_block = html.into_string();
+
+                // As of pulldown_cmark 0.6, html events are no longer contained
+                // in an HtmlBlock tag. We must collect consecutive Html events
+                // into a block ourselves.
+                while let Some(Event::Html(html)) = p.peek() {
+                    html_block.push_str(&html);
+                    p.next();
+                }
+
                 body.push_str(&clean_html(&html_block));
-                html_block.clear();
             }
-            Event::Start(_) | Event::End(_) | Event::SoftBreak | Event::HardBreak => {
+            Event::Start(_) | Event::End(_) | Event::Rule | Event::SoftBreak | Event::HardBreak => {
                 // Insert spaces where HTML output would usually seperate text
                 // to ensure words don't get merged together
-                if in_header {
+                if in_heading {
                     heading.push(' ');
                 } else {
                     body.push(' ');
                 }
             }
             Event::Text(text) | Event::Code(text) => {
-                if in_header {
+                if in_heading {
                     heading.push_str(&text);
                 } else {
                     body.push_str(&text);
                 }
-            }
-            Event::InlineHtml(html) => {
-                body.push_str(&clean_html(&html));
             }
             Event::FootnoteReference(name) => {
                 let len = footnote_numbers.len() + 1;

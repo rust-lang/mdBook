@@ -158,7 +158,6 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
             Event::Start(Tag::Image(link_type, fix(dest, path), title))
         }
         Event::Html(html) => Event::Html(fix_html(html, path)),
-        Event::InlineHtml(html) => Event::InlineHtml(fix_html(html, path)),
         _ => event,
     }
 }
