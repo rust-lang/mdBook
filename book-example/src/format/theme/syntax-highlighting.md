@@ -22,7 +22,7 @@ overridden with your own.
 
 If you want to use another theme for `highlight.js` download it from their
 website, or make it yourself, rename it to `highlight.css` and put it in
-`src/theme` (or the equivalent if you changed your source folder)
+the `theme` folder of your book.
 
 Now your theme will be used instead of the default theme.
 
