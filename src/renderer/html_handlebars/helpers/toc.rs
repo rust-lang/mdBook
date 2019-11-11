@@ -150,7 +150,7 @@ impl HelperDef for RenderToc {
 
                 // filter all events that are not inline code blocks
                 let parser = Parser::new(name).filter(|event| match *event {
-                    Event::Code(_) | Event::InlineHtml(_) | Event::Text(_) => true,
+                    Event::Code(_) | Event::Html(_) | Event::Text(_) => true,
                     _ => false,
                 });
 
