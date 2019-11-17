@@ -1,5 +1,5 @@
 use crate::book::{Book, BookItem};
-use crate::config::{Config, HtmlConfig, Playpen};
+use crate::config::{Config, HtmlConfig, Playpen, RustEdition};
 use crate::errors::*;
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
@@ -85,7 +85,7 @@ impl HtmlHandlebars {
             debug!("Render template");
             let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
-            let rendered = self.post_process(rendered, &ctx.html_config.playpen);
+            let rendered = self.post_process(rendered, &ctx.html_config.playpen, ctx.edition);
 
             // Write to file
             debug!("Creating {}", filepath.display());
@@ -96,7 +96,8 @@ impl HtmlHandlebars {
                 ctx.data.insert("path_to_root".to_owned(), json!(""));
                 ctx.data.insert("is_index".to_owned(), json!("true"));
                 let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
-                let rendered_index = self.post_process(rendered_index, &ctx.html_config.playpen);
+                let rendered_index =
+                    self.post_process(rendered_index, &ctx.html_config.playpen, ctx.edition);
                 debug!("Creating index.html from {}", path);
                 utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
             }
@@ -106,10 +107,15 @@ impl HtmlHandlebars {
     }
 
     #[cfg_attr(feature = "cargo-clippy", allow(clippy::let_and_return))]
-    fn post_process(&self, rendered: String, playpen_config: &Playpen) -> String {
+    fn post_process(
+        &self,
+        rendered: String,
+        playpen_config: &Playpen,
+        edition: Option<RustEdition>,
+    ) -> String {
         let rendered = build_header_links(&rendered);
         let rendered = fix_code_blocks(&rendered);
-        let rendered = add_playpen_pre(&rendered, playpen_config);
+        let rendered = add_playpen_pre(&rendered, playpen_config, edition);
 
         rendered
     }
@@ -343,6 +349,7 @@ impl Renderer for HtmlHandlebars {
                 data: data.clone(),
                 is_index,
                 html_config: html_config.clone(),
+                edition: ctx.config.book.edition,
             };
             self.render_item(item, ctx, &mut print_content)?;
             is_index = false;
@@ -358,7 +365,7 @@ impl Renderer for HtmlHandlebars {
         debug!("Render template");
         let rendered = handlebars.render("index", &data)?;
 
-        let rendered = self.post_process(rendered, &html_config.playpen);
+        let rendered = self.post_process(rendered, &html_config.playpen, ctx.config.book.edition);
 
         utils::fs::write_file(&destination, "print.html", rendered.as_bytes())?;
         debug!("Creating print.html ✓");
@@ -605,7 +612,7 @@ fn fix_code_blocks(html: &str) -> String {
         .into_owned()
 }
 
-fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
+fn add_playpen_pre(html: &str, playpen_config: &Playpen, edition: Option<RustEdition>) -> String {
     let regex = Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap();
     regex
         .replace_all(html, |caps: &Captures<'_>| {
@@ -617,10 +624,24 @@ fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
                 if (!classes.contains("ignore") && !classes.contains("noplaypen"))
                     || classes.contains("mdbook-runnable")
                 {
+                    let contains_e2015 = classes.contains("edition2015");
+                    let contains_e2018 = classes.contains("edition2018");
+                    let edition_class = if contains_e2015 || contains_e2018 {
+                        // the user forced edition, we should not overwrite it
+                        ""
+                    } else {
+                        match edition {
+                            Some(RustEdition::E2015) => " edition2015",
+                            Some(RustEdition::E2018) => " edition2018",
+                            None => "",
+                        }
+                    };
+
                     // wrap the contents in an external pre block
                     format!(
-                        "<pre class=\"playpen\"><code class=\"{}\">{}</code></pre>",
+                        "<pre class=\"playpen\"><code class=\"{}{}\">{}</code></pre>",
                         classes,
+                        edition_class,
                         {
                             let content: Cow<'_, str> = if playpen_config.editable
                                 && classes.contains("editable")
@@ -711,6 +732,7 @@ struct RenderItemContext<'a> {
     data: serde_json::Map<String, serde_json::Value>,
     is_index: bool,
     html_config: HtmlConfig,
+    edition: Option<RustEdition>,
 }
 
 #[cfg(test)]
@@ -777,6 +799,55 @@ mod tests {
                     editable: true,
                     ..Playpen::default()
                 },
+                None,
+            );
+            assert_eq!(&*got, *should_be);
+        }
+    }
+    #[test]
+    fn add_playpen_edition2015() {
+        let inputs = [
+          ("<code class=\"language-rust\">x()</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust edition2015\">\n<span class=\"boring\">#![allow(unused_variables)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
+          ("<code class=\"language-rust\">fn main() {}</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust edition2015\">fn main() {}\n</code></pre>"),
+          ("<code class=\"language-rust edition2015\">fn main() {}</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust edition2015\">fn main() {}\n</code></pre>"),
+          ("<code class=\"language-rust edition2018\">fn main() {}</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust edition2018\">fn main() {}\n</code></pre>"),
+        ];
+        for (src, should_be) in &inputs {
+            let got = add_playpen_pre(
+                src,
+                &Playpen {
+                    editable: true,
+                    ..Playpen::default()
+                },
+                Some(RustEdition::E2015),
+            );
+            assert_eq!(&*got, *should_be);
+        }
+    }
+    #[test]
+    fn add_playpen_edition2018() {
+        let inputs = [
+          ("<code class=\"language-rust\">x()</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust edition2018\">\n<span class=\"boring\">#![allow(unused_variables)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
+          ("<code class=\"language-rust\">fn main() {}</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust edition2018\">fn main() {}\n</code></pre>"),
+          ("<code class=\"language-rust edition2015\">fn main() {}</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust edition2015\">fn main() {}\n</code></pre>"),
+          ("<code class=\"language-rust edition2018\">fn main() {}</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust edition2018\">fn main() {}\n</code></pre>"),
+        ];
+        for (src, should_be) in &inputs {
+            let got = add_playpen_pre(
+                src,
+                &Playpen {
+                    editable: true,
+                    ..Playpen::default()
+                },
+                Some(RustEdition::E2018),
             );
             assert_eq!(&*got, *should_be);
         }
