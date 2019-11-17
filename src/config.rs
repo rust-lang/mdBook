@@ -393,6 +393,8 @@ pub struct BookConfig {
     pub multilingual: bool,
     /// The main language of the book.
     pub language: Option<String>,
+    /// Rust edition to use for the code.
+    pub edition: Option<RustEdition>,
 }
 
 impl Default for BookConfig {
@@ -404,7 +406,57 @@ impl Default for BookConfig {
             src: PathBuf::from("src"),
             multilingual: false,
             language: Some(String::from("en")),
+            edition: None,
         }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+/// Rust edition to use for the code.
+pub enum RustEdition {
+    /// The 2018 edition of Rust
+    E2018,
+    /// The 2015 edition of Rust
+    E2015,
+}
+
+impl Serialize for RustEdition {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            RustEdition::E2015 => serializer.serialize_str("2015"),
+            RustEdition::E2018 => serializer.serialize_str("2018"),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for RustEdition {
+    fn deserialize<D>(de: D) -> std::result::Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        use serde::de::Error;
+
+        let raw = Value::deserialize(de)?;
+
+        let edition = match raw {
+            Value::String(s) => s,
+            _ => {
+                return Err(D::Error::custom("Rust edition should be a string"));
+            }
+        };
+
+        let edition = match edition.as_str() {
+            "2018" => RustEdition::E2018,
+            "2015" => RustEdition::E2015,
+            _ => {
+                return Err(D::Error::custom("Unknown Rust edition"));
+            }
+        };
+
+        Ok(edition)
     }
 }
 
@@ -647,6 +699,7 @@ mod tests {
             multilingual: true,
             src: PathBuf::from("source"),
             language: Some(String::from("ja")),
+            edition: None,
         };
         let build_should_be = BuildConfig {
             build_dir: PathBuf::from("outputs"),
@@ -676,6 +729,58 @@ mod tests {
         assert_eq!(got.book, book_should_be);
         assert_eq!(got.build, build_should_be);
         assert_eq!(got.html_config().unwrap(), html_should_be);
+    }
+
+    #[test]
+    fn edition_2015() {
+        let src = r#"
+        [book]
+        title = "mdBook Documentation"
+        description = "Create book from markdown files. Like Gitbook but implemented in Rust"
+        authors = ["Mathieu David"]
+        src = "./source"
+        edition = "2015"
+        "#;
+
+        let book_should_be = BookConfig {
+            title: Some(String::from("mdBook Documentation")),
+            description: Some(String::from(
+                "Create book from markdown files. Like Gitbook but implemented in Rust",
+            )),
+            authors: vec![String::from("Mathieu David")],
+            src: PathBuf::from("./source"),
+            edition: Some(RustEdition::E2015),
+            ..Default::default()
+        };
+
+        let got = Config::from_str(src).unwrap();
+        assert_eq!(got.book, book_should_be);
+    }
+
+    #[test]
+    fn edition_2018() {
+        let src = r#"
+        [book]
+        title = "mdBook Documentation"
+        description = "Create book from markdown files. Like Gitbook but implemented in Rust"
+        authors = ["Mathieu David"]
+        src = "./source"
+        edition = "2018"
+        "#;
+
+        let book_should_be = BookConfig {
+            title: Some(String::from("mdBook Documentation")),
+            description: Some(String::from(
+                "Create book from markdown files. Like Gitbook but implemented in Rust",
+            )),
+            authors: vec![String::from("Mathieu David")],
+            src: PathBuf::from("./source"),
+            edition: Some(RustEdition::E2018),
+            ..Default::default()
+        };
+
+        let got = Config::from_str(src).unwrap();
+        assert_eq!(got.book, book_should_be);
     }
 
     #[test]
