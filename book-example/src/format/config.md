@@ -9,6 +9,7 @@ Here is an example of what a ***book.toml*** file might look like:
 title = "Example book"
 author = "John Doe"
 description = "The example book covers examples."
+edition = "2018"
 
 [build]
 build-dir = "my-example-book"
@@ -43,6 +44,7 @@ This is general information about your book.
   `src` directly under the root folder. But this is configurable with the `src`
   key in the configuration file.
 - **language:** The main language of the book, which is used as a language attribute `<html lang="en">` for example.
+- **edition**: Rust edition to use by default for the code snippets. Defaults to `rustdoc` defaults (2015).
 
 **book.toml**
 ```toml
@@ -52,6 +54,7 @@ authors = ["John Doe", "Jane Doe"]
 description = "The example book covers examples."
 src = "my-src"  # the source files will be found in `root/my-src` instead of `root/src`
 language = "en"
+edition = "2018"
 ```
 
 ### Build options
@@ -178,7 +181,7 @@ The following configuration options are available:
   an icon link will be output in the menu bar of the book.
 - **git-repository-icon:** The FontAwesome icon class to use for the git
   repository link. Defaults to `fa-github`.
-  
+
 Available configuration options for the `[output.html.fold]` table:
 
 - **enable:** Enable section-folding. When off, all folds are open.

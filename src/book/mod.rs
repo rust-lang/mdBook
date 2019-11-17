@@ -27,7 +27,7 @@ use crate::preprocess::{
 use crate::renderer::{CmdRenderer, HtmlHandlebars, MarkdownRenderer, RenderContext, Renderer};
 use crate::utils;
 
-use crate::config::Config;
+use crate::config::{Config, RustEdition};
 
 /// The object used to manage and build a book.
 pub struct MDBook {
@@ -262,11 +262,21 @@ impl MDBook {
                     let mut tmpf = utils::fs::create_file(&path)?;
                     tmpf.write_all(ch.content.as_bytes())?;
 
-                    let output = Command::new("rustdoc")
-                        .arg(&path)
-                        .arg("--test")
-                        .args(&library_args)
-                        .output()?;
+                    let mut cmd = Command::new("rustdoc");
+                    cmd.arg(&path).arg("--test").args(&library_args);
+
+                    if let Some(edition) = self.config.book.edition {
+                        match edition {
+                            RustEdition::E2015 => {
+                                cmd.args(&["--edition", "2015"]);
+                            }
+                            RustEdition::E2018 => {
+                                cmd.args(&["--edition", "2018"]);
+                            }
+                        }
+                    }
+
+                    let output = cmd.output()?;
 
                     if !output.status.success() {
                         bail!(ErrorKind::Subprocess(
