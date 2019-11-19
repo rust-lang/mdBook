@@ -204,7 +204,7 @@
             socket.onmessage = function (event) {
                 if (event.data === "reload") {
                     socket.close();
-                    location.reload(true); // force reload from server (not from cache)
+                    location.reload();
                 }
             };
 
