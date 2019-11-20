@@ -323,7 +323,7 @@ window.search = window.search || {};
             }
             showSearch(false);
             marker.unmark();
-        } else if (!hasFocus() && e.keyCode === SEARCH_HOTKEY_KEYCODE) {
+        } else if (!hasFocus() && e.keyCode === SEARCH_HOTKEY_KEYCODE && e.altKey) {
             e.preventDefault();
             showSearch(true);
             window.scrollTo(0, 0);
