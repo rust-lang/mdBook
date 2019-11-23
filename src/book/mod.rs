@@ -182,7 +182,7 @@ impl MDBook {
     }
 
     /// Run the entire build process for a particular `Renderer`.
-    fn execute_build_process(&self, renderer: &dyn Renderer) -> Result<()> {
+    pub fn execute_build_process(&self, renderer: &dyn Renderer) -> Result<()> {
         let mut preprocessed_book = self.book.clone();
         let preprocess_ctx = PreprocessorContext::new(
             self.root.clone(),
