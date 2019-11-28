@@ -414,7 +414,7 @@ impl Default for BookConfig {
 pub struct BuildConfig {
     /// Where to put built artefacts relative to the book's root directory.
     pub build_dir: PathBuf,
-    /// Should non-existent markdown files specified in `SETTINGS.md` be created
+    /// Should non-existent markdown files specified in `SUMMARY.md` be created
     /// if they don't exist?
     pub create_missing: bool,
     /// Should the default preprocessors always be used when they are
