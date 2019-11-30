@@ -42,10 +42,14 @@ There are multiple ways to install mdBook.
 
    This will constrain the server to install the latest **non-breaking**
    version of mdBook and will prevent your books from failing to build because
-   we released a new version. For example:
+   we released a new version.
+   
+   You can also disable default features to speed up compile time.
+   
+   Example:
 
    ```
-   cargo install mdbook --vers "^0.1.0"
+   cargo install mdbook --no-default-features --features output --vers "^0.1.0"
    ```
 
 3. **From Git**
