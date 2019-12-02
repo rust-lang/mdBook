@@ -64,6 +64,13 @@ fn find_chapter(
         .replace("\"", "");
 
     if !rc.evaluate(ctx, "@root/is_index")?.is_missing() {
+        // If the first chapter is a draft, don't skip the first real chapter
+        // otherwise skip it because the index is a copy of it
+        let skip_n = if chapters[0].contains_key("draft") {
+            0
+        } else {
+            1
+        };
         // Special case for index.md which may be a synthetic page.
         // Target::find won't match because there is no page with the path
         // "index.md" (unless there really is an index.md in SUMMARY.md).
@@ -75,7 +82,7 @@ fn find_chapter(
                     // Skip things like "spacer"
                     chapter.contains_key("path")
                 })
-                .skip(1)
+                .skip(skip_n)
                 .next()
             {
                 Some(chapter) => return Ok(Some(chapter.clone())),

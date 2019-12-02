@@ -132,6 +132,7 @@ impl MDBook {
     /// for item in book.iter() {
     ///     match *item {
     ///         BookItem::Chapter(ref chapter) => {},
+    ///         BookItem::DraftChapter(ref chapter) => {},
     ///         BookItem::Separator => {},
     ///     }
     /// }

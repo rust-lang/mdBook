@@ -4,7 +4,7 @@ use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
-use super::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
+use super::summary::{parse_summary, DraftLink, Link, SectionNumber, Summary, SummaryItem};
 use crate::config::BuildConfig;
 use crate::errors::*;
 
@@ -116,8 +116,10 @@ where
     I: IntoIterator<Item = &'a mut BookItem>,
 {
     for item in items {
-        if let BookItem::Chapter(ch) = item {
-            for_each_mut(func, &mut ch.sub_items);
+        match item {
+            BookItem::Chapter(ch) => for_each_mut(func, &mut ch.sub_items),
+            BookItem::DraftChapter(ch) => for_each_mut(func, &mut ch.sub_items),
+            _ => {}
         }
 
         func(item);
@@ -129,6 +131,8 @@ where
 pub enum BookItem {
     /// A nested chapter.
     Chapter(Chapter),
+    /// A draft chapter that only shows in the summary
+    DraftChapter(DraftChapter),
     /// A section separator.
     Separator,
 }
@@ -136,6 +140,40 @@ pub enum BookItem {
 impl From<Chapter> for BookItem {
     fn from(other: Chapter) -> BookItem {
         BookItem::Chapter(other)
+    }
+}
+
+impl From<DraftChapter> for BookItem {
+    fn from(other: DraftChapter) -> BookItem {
+        BookItem::DraftChapter(other)
+    }
+}
+
+impl BookItem {
+    /// Returns the name of the chapter if the BookItem is a chapter or draft chapter
+    pub(crate) fn get_name(&self) -> Option<&str> {
+        match self {
+            BookItem::Chapter(ch) => Some(&ch.name),
+            BookItem::DraftChapter(ch) => Some(&ch.name),
+            _ => None,
+        }
+    }
+
+    /// Returns the section of the chapter if the BookItem is a chapter or draft chapter
+    pub(crate) fn get_section(&self) -> Option<&SectionNumber> {
+        match self {
+            BookItem::Chapter(ch) => ch.number.as_ref(),
+            BookItem::DraftChapter(ch) => ch.number.as_ref(),
+            _ => None,
+        }
+    }
+
+    /// Returns true if the BookItem is a chapter or draft chapter, false otherwise
+    pub(crate) fn is_chapter(&self) -> bool {
+        match self {
+            BookItem::Chapter(_) | BookItem::DraftChapter(_) => true,
+            _ => false,
+        }
     }
 }
 
@@ -175,6 +213,31 @@ impl Chapter {
     }
 }
 
+/// The representation of a "draft chapter", it does not map to a file
+/// but appears in the summary / TOC and can have nested chapters.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct DraftChapter {
+    /// The chapter's name.
+    pub name: String,
+    /// The chapter's section number, if it has one.
+    pub number: Option<SectionNumber>,
+    /// Nested items.
+    pub sub_items: Vec<BookItem>,
+    /// An ordered list of the names of each chapter above this one, in the hierarchy.
+    pub parent_names: Vec<String>,
+}
+
+impl DraftChapter {
+    /// Create a new chapter with the provided content.
+    pub fn new(name: &str, parent_names: Vec<String>) -> DraftChapter {
+        DraftChapter {
+            name: name.to_string(),
+            parent_names,
+            ..Default::default()
+        }
+    }
+}
+
 /// Use the provided `Summary` to load a `Book` from disk.
 ///
 /// You need to pass in the book's source directory because all the links in
@@ -202,9 +265,9 @@ pub(crate) fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P)
     })
 }
 
-fn load_summary_item<P: AsRef<Path>>(
+fn load_summary_item(
     item: &SummaryItem,
-    src_dir: P,
+    src_dir: &Path,
     parent_names: Vec<String>,
 ) -> Result<BookItem> {
     match *item {
@@ -212,16 +275,14 @@ fn load_summary_item<P: AsRef<Path>>(
         SummaryItem::Link(ref link) => {
             load_chapter(link, src_dir, parent_names).map(BookItem::Chapter)
         }
+        SummaryItem::DraftLink(ref link) => {
+            load_draft_chapter(link, src_dir, parent_names).map(BookItem::DraftChapter)
+        }
     }
 }
 
-fn load_chapter<P: AsRef<Path>>(
-    link: &Link,
-    src_dir: P,
-    parent_names: Vec<String>,
-) -> Result<Chapter> {
+fn load_chapter(link: &Link, src_dir: &Path, parent_names: Vec<String>) -> Result<Chapter> {
     debug!("Loading {} ({})", link.name, link.location.display());
-    let src_dir = src_dir.as_ref();
 
     let location = if link.location.is_absolute() {
         link.location.clone()
@@ -248,7 +309,28 @@ fn load_chapter<P: AsRef<Path>>(
     let sub_items = link
         .nested_items
         .iter()
-        .map(|i| load_summary_item(i, src_dir, sub_item_parents.clone()))
+        .map(|i| load_summary_item(i, &src_dir, sub_item_parents.clone()))
+        .collect::<Result<Vec<_>>>()?;
+
+    ch.sub_items = sub_items;
+
+    Ok(ch)
+}
+
+fn load_draft_chapter(
+    link: &DraftLink,
+    src_dir: &Path,
+    parent_names: Vec<String>,
+) -> Result<DraftChapter> {
+    let mut sub_item_parents = parent_names.clone();
+    let mut ch = DraftChapter::new(&link.name, parent_names);
+    ch.number = link.number.clone();
+
+    sub_item_parents.push(link.name.clone());
+    let sub_items = link
+        .nested_items
+        .iter()
+        .map(|i| load_summary_item(i, &src_dir, sub_item_parents.clone()))
         .collect::<Result<Vec<_>>>()?;
 
     ch.sub_items = sub_items;
@@ -274,11 +356,18 @@ impl<'a> Iterator for BookItems<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         let item = self.items.pop_front();
 
-        if let Some(&BookItem::Chapter(ref ch)) = item {
-            // if we wanted a breadth-first iterator we'd `extend()` here
-            for sub_item in ch.sub_items.iter().rev() {
-                self.items.push_front(sub_item);
+        match item {
+            Some(&BookItem::Chapter(ref ch)) => {
+                for sub_item in ch.sub_items.iter().rev() {
+                    self.items.push_front(sub_item);
+                }
             }
+            Some(&BookItem::DraftChapter(ref ch)) => {
+                for sub_item in ch.sub_items.iter().rev() {
+                    self.items.push_front(sub_item);
+                }
+            }
+            _ => {}
         }
 
         item
@@ -364,7 +453,7 @@ And here is some \
     fn cant_load_a_nonexistent_chapter() {
         let link = Link::new("Chapter 1", "/foo/bar/baz.md");
 
-        let got = load_chapter(&link, "", Vec::new());
+        let got = load_chapter(&link, Path::new(""), Vec::new());
         assert!(got.is_err());
     }
 

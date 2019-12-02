@@ -139,7 +139,7 @@ impl HelperDef for RenderToc {
             if !self.no_section_label {
                 // Section does not necessarily exist
                 if let Some(section) = item.get("section") {
-                    out.write("<strong aria-hidden=\"true\">")?;
+                    out.write("<span><strong aria-hidden=\"true\">")?;
                     out.write(&section)?;
                     out.write("</strong> ")?;
                 }
@@ -160,6 +160,7 @@ impl HelperDef for RenderToc {
 
                 // write to the handlebars template
                 out.write(&markdown_parsed_name)?;
+                out.write("</span>")?;
             }
 
             if path_exists {

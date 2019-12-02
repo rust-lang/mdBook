@@ -101,20 +101,58 @@ impl Default for Link {
     }
 }
 
+/// A struct representing an entry in the `SUMMARY.md`, possibly with nested
+/// entries, but that doesn't have a source file associated with it. This indicates
+/// a chapter that will be added in the future.
+///
+/// This is roughly the equivalent of `[Some section]()`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct DraftLink {
+    /// The name of the chapter.
+    pub name: String,
+    /// The section number, if this chapter is in the numbered section.
+    pub number: Option<SectionNumber>,
+    /// Any nested items this chapter may contain.
+    pub nested_items: Vec<SummaryItem>,
+}
+
+impl DraftLink {
+    /// Create a new draft link with no nested items.
+    pub fn new<S: Into<String>>(name: S) -> DraftLink {
+        DraftLink {
+            name: name.into(),
+            number: None,
+            nested_items: Vec::new(),
+        }
+    }
+}
+
+impl Default for DraftLink {
+    fn default() -> Self {
+        DraftLink {
+            name: String::new(),
+            number: None,
+            nested_items: Vec::new(),
+        }
+    }
+}
+
 /// An item in `SUMMARY.md` which could be either a separator or a `Link`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum SummaryItem {
     /// A link to a chapter.
     Link(Link),
+    /// A draft link that has no content yet but appears in the summary
+    DraftLink(DraftLink),
     /// A separator (`---`).
     Separator,
 }
 
 impl SummaryItem {
-    fn maybe_link_mut(&mut self) -> Option<&mut Link> {
-        match *self {
-            SummaryItem::Link(ref mut l) => Some(l),
-            _ => None,
+    fn is_chapter(&self) -> bool {
+        match self {
+            SummaryItem::Link(_) | SummaryItem::DraftLink(_) => true,
+            _ => false,
         }
     }
 }
@@ -122,6 +160,12 @@ impl SummaryItem {
 impl From<Link> for SummaryItem {
     fn from(other: Link) -> SummaryItem {
         SummaryItem::Link(other)
+    }
+}
+
+impl From<DraftLink> for SummaryItem {
+    fn from(other: DraftLink) -> SummaryItem {
+        SummaryItem::DraftLink(other)
     }
 }
 
@@ -260,8 +304,8 @@ impl<'a> SummaryParser<'a> {
                     }
                 }
                 Some(Event::Start(Tag::Link(_type, href, _title))) => {
-                    let link = self.parse_link(href.to_string())?;
-                    items.push(SummaryItem::Link(link));
+                    let link = self.parse_link(href.to_string());
+                    items.push(link);
                 }
                 Some(Event::Rule) => items.push(SummaryItem::Separator),
                 Some(_) => {}
@@ -272,19 +316,14 @@ impl<'a> SummaryParser<'a> {
         Ok(items)
     }
 
-    fn parse_link(&mut self, href: String) -> Result<Link> {
+    fn parse_link(&mut self, href: String) -> SummaryItem {
         let link_content = collect_events!(self.stream, end Tag::Link(..));
         let name = stringify_events(link_content);
 
         if href.is_empty() {
-            Err(self.parse_error("You can't have an empty link."))
+            SummaryItem::DraftLink(DraftLink::new(name))
         } else {
-            Ok(Link {
-                name,
-                location: PathBuf::from(href.to_string()),
-                number: None,
-                nested_items: Vec::new(),
-            })
+            SummaryItem::Link(Link::new(name, href.to_string()))
         }
     }
 
@@ -378,15 +417,28 @@ impl<'a> SummaryParser<'a> {
                 }
                 Some(Event::Start(Tag::List(..))) => {
                     // recurse to parse the nested list
-                    let (_, last_item) = get_last_link(&mut items)?;
-                    let last_item_number = last_item
-                        .number
-                        .as_ref()
-                        .expect("All numbered chapters have numbers");
+                    let last_link = get_last_link(&mut items)?;
+                    match last_link {
+                        SummaryItem::Link(ref mut last_item) => {
+                            let last_item_number = last_item
+                                .number
+                                .as_ref()
+                                .expect("All numbered chapters have numbers");
 
-                    let sub_items = self.parse_nested_numbered(last_item_number)?;
+                            last_item.nested_items =
+                                self.parse_nested_numbered(last_item_number)?;
+                        }
+                        SummaryItem::DraftLink(ref mut last_item) => {
+                            let last_item_number = last_item
+                                .number
+                                .as_ref()
+                                .expect("All numbered chapters have numbers");
 
-                    last_item.nested_items = sub_items;
+                            last_item.nested_items =
+                                self.parse_nested_numbered(last_item_number)?;
+                        }
+                        _ => unreachable!(),
+                    };
                 }
                 Some(Event::End(Tag::List(..))) => break,
                 Some(_) => {}
@@ -406,20 +458,31 @@ impl<'a> SummaryParser<'a> {
             match self.next_event() {
                 Some(Event::Start(Tag::Paragraph)) => continue,
                 Some(Event::Start(Tag::Link(_type, href, _title))) => {
-                    let mut link = self.parse_link(href.to_string())?;
+                    let mut link = self.parse_link(href.to_string());
 
                     let mut number = parent.clone();
                     number.0.push(num_existing_items as u32 + 1);
-                    trace!(
-                        "Found chapter: {} {} ({})",
-                        number,
-                        link.name,
-                        link.location.display()
-                    );
 
-                    link.number = Some(number);
+                    match link {
+                        SummaryItem::Link(ref mut l) => {
+                            trace!(
+                                "Found chapter: {} {} ({})",
+                                number,
+                                l.name,
+                                l.location.display()
+                            );
 
-                    return Ok(SummaryItem::Link(link));
+                            l.number = Some(number);
+                        }
+                        SummaryItem::DraftLink(ref mut l) => {
+                            trace!("Found draft chapter: {} {}", number, l.name);
+
+                            l.number = Some(number);
+                        }
+                        _ => unreachable!(),
+                    }
+
+                    return Ok(link);
                 }
                 other => {
                     warn!("Expected a start of a link, actually got {:?}", other);
@@ -452,23 +515,30 @@ impl<'a> SummaryParser<'a> {
 
 fn update_section_numbers(sections: &mut [SummaryItem], level: usize, by: u32) {
     for section in sections {
-        if let SummaryItem::Link(ref mut link) = *section {
-            if let Some(ref mut number) = link.number {
-                number.0[level] += by;
+        match *section {
+            SummaryItem::Link(ref mut link) => {
+                if let Some(ref mut number) = link.number {
+                    number.0[level] += by;
+                }
+                update_section_numbers(&mut link.nested_items, level, by);
             }
-
-            update_section_numbers(&mut link.nested_items, level, by);
+            SummaryItem::DraftLink(ref mut link) => {
+                if let Some(ref mut number) = link.number {
+                    number.0[level] += by;
+                }
+                update_section_numbers(&mut link.nested_items, level, by);
+            }
+            _ => {}
         }
     }
 }
 
 /// Gets a pointer to the last `Link` in a list of `SummaryItem`s, and its
-/// index.
-fn get_last_link(links: &mut [SummaryItem]) -> Result<(usize, &mut Link)> {
+/// index. This will only return chapters or draft chapters, never separators.
+fn get_last_link(links: &mut [SummaryItem]) -> Result<&mut SummaryItem> {
     links
         .iter_mut()
-        .enumerate()
-        .filter_map(|(i, item)| item.maybe_link_mut().map(|l| (i, l)))
+        .filter(|item| item.is_chapter())
         .rev()
         .next()
         .ok_or_else(|| {
@@ -627,11 +697,11 @@ mod tests {
     #[test]
     fn parse_a_link() {
         let src = "[First](./first.md)";
-        let should_be = Link {
+        let should_be = SummaryItem::Link(Link {
             name: String::from("First"),
             location: PathBuf::from("./first.md"),
             ..Default::default()
-        };
+        });
 
         let mut parser = SummaryParser::new(src);
         let _ = parser.stream.next(); // skip past start of paragraph
@@ -641,7 +711,7 @@ mod tests {
             other => panic!("Unreachable, {:?}", other),
         };
 
-        let got = parser.parse_link(href).unwrap();
+        let got = parser.parse_link(href);
         assert_eq!(got, should_be);
     }
 
@@ -665,6 +735,24 @@ mod tests {
     }
 
     #[test]
+    fn parse_a_numbered_draft_chapter() {
+        let src = "- [First]()\n";
+        let link = DraftLink {
+            name: String::from("First"),
+            number: Some(SectionNumber(vec![1])),
+            ..Default::default()
+        };
+        let should_be = vec![SummaryItem::DraftLink(link)];
+
+        let mut parser = SummaryParser::new(src);
+        let _ = parser.stream.next();
+
+        let got = parser.parse_numbered().unwrap();
+
+        assert_eq!(got, should_be);
+    }
+
+    #[test]
     fn parse_nested_numbered_chapters() {
         let src = "- [First](./first.md)\n  - [Nested](./nested.md)\n- [Second](./second.md)";
 
@@ -676,6 +764,36 @@ mod tests {
                 nested_items: vec![SummaryItem::Link(Link {
                     name: String::from("Nested"),
                     location: PathBuf::from("./nested.md"),
+                    number: Some(SectionNumber(vec![1, 1])),
+                    nested_items: Vec::new(),
+                })],
+            }),
+            SummaryItem::Link(Link {
+                name: String::from("Second"),
+                location: PathBuf::from("./second.md"),
+                number: Some(SectionNumber(vec![2])),
+                nested_items: Vec::new(),
+            }),
+        ];
+
+        let mut parser = SummaryParser::new(src);
+        let _ = parser.stream.next();
+
+        let got = parser.parse_numbered().unwrap();
+
+        assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn parse_nested_numbered_draft_chapters() {
+        let src = "- [First]()\n  - [Nested]()\n- [Second](./second.md)";
+
+        let should_be = vec![
+            SummaryItem::DraftLink(DraftLink {
+                name: String::from("First"),
+                number: Some(SectionNumber(vec![1])),
+                nested_items: vec![SummaryItem::DraftLink(DraftLink {
+                    name: String::from("Nested"),
                     number: Some(SectionNumber(vec![1, 1])),
                     nested_items: Vec::new(),
                 })],
@@ -724,16 +842,6 @@ mod tests {
         let got = parser.parse_numbered().unwrap();
 
         assert_eq!(got, should_be);
-    }
-
-    #[test]
-    fn an_empty_link_location_is_an_error() {
-        let src = "- [Empty]()\n";
-        let mut parser = SummaryParser::new(src);
-        parser.stream.next();
-
-        let got = parser.parse_numbered();
-        assert!(got.is_err());
     }
 
     /// Regression test for https://github.com/rust-lang/mdBook/issues/779

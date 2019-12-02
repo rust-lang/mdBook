@@ -1,4 +1,4 @@
-use crate::book::{Book, BookItem};
+use crate::book::{Book, BookItem, SectionNumber};
 use crate::config::{Config, HtmlConfig, Playpen};
 use crate::errors::*;
 use crate::renderer::html_handlebars::helpers;
@@ -29,18 +29,17 @@ impl HtmlHandlebars {
         mut ctx: RenderItemContext<'_>,
         print_content: &mut String,
     ) -> Result<()> {
-        // FIXME: This should be made DRY-er and rely less on mutable state
+        let (content, fixed_content) =
+            self.render_markdown_content(item, ctx.html_config.curly_quotes);
+        print_content.push_str(&fixed_content);
+
+        let ch_name = item.get_name().expect("Chapter always have a name");
+        let ch_section = item.get_section();
+        let title = self.concat_with_book_title(&ctx, ch_name);
+
+        self.insert_chapter_info_in_context(&mut ctx, ch_name, &content, &title, ch_section);
+
         if let BookItem::Chapter(ref ch) = *item {
-            let content = ch.content.clone();
-            let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
-
-            let fixed_content = utils::render_markdown_with_path(
-                &ch.content,
-                ctx.html_config.curly_quotes,
-                Some(&ch.path),
-            );
-            print_content.push_str(&fixed_content);
-
             // Update the context with data for this file
             let path = ch
                 .path
@@ -48,34 +47,13 @@ impl HtmlHandlebars {
                 .chain_err(|| "Could not convert path to str")?;
             let filepath = Path::new(&ch.path).with_extension("html");
 
-            // "print.html" is used for the print page.
-            if ch.path == Path::new("print.md") {
-                bail!(ErrorKind::ReservedFilenameError(ch.path.clone()));
-            };
+            self.check_reserved_filenames(&ch.path)?;
 
-            // Non-lexical lifetimes needed :'(
-            let title: String;
-            {
-                let book_title = ctx
-                    .data
-                    .get("book_title")
-                    .and_then(serde_json::Value::as_str)
-                    .unwrap_or("");
-                title = ch.name.clone() + " - " + book_title;
-            }
-
-            ctx.data.insert("path".to_owned(), json!(path));
-            ctx.data.insert("content".to_owned(), json!(content));
-            ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
-            ctx.data.insert("title".to_owned(), json!(title));
+            ctx.data.insert("path".to_string(), json!(path));
             ctx.data.insert(
-                "path_to_root".to_owned(),
-                json!(utils::fs::path_to_root(&ch.path)),
+                "path_to_root".to_string(),
+                json!(utils::fs::path_to_root(&path)),
             );
-            if let Some(ref section) = ch.number {
-                ctx.data
-                    .insert("section".to_owned(), json!(section.to_string()));
-            }
 
             // Render the handlebars template with the data
             debug!("Render template");
@@ -86,19 +64,79 @@ impl HtmlHandlebars {
             // Write to file
             debug!("Creating {}", filepath.display());
             utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
+        }
 
-            if ctx.is_index {
-                ctx.data.insert("path".to_owned(), json!("index.md"));
-                ctx.data.insert("path_to_root".to_owned(), json!(""));
-                ctx.data.insert("is_index".to_owned(), json!("true"));
-                let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
-                let rendered_index = self.post_process(rendered_index, &ctx.html_config.playpen);
-                debug!("Creating index.html from {}", path);
-                utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
-            }
+        if ctx.is_index {
+            self.render_index_page(&mut ctx)?;
         }
 
         Ok(())
+    }
+
+    fn render_index_page(&self, ctx: &mut RenderItemContext<'_>) -> Result<()> {
+        ctx.data.insert("path".to_owned(), json!("index.md"));
+        ctx.data.insert("path_to_root".to_owned(), json!(""));
+        ctx.data.insert("is_index".to_owned(), json!("true"));
+
+        let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
+        let rendered_index = self.post_process(rendered_index, &ctx.html_config.playpen);
+
+        if let Some(path) = ctx.data.get("path") {
+            debug!("Creating index.html from {}", path);
+        }
+
+        utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
+        Ok(())
+    }
+
+    fn render_markdown_content(&self, item: &BookItem, curly_quotes: bool) -> (String, String) {
+        match item {
+            BookItem::Chapter(ch) => {
+                let content = ch.content.clone();
+                let content = utils::render_markdown(&content, curly_quotes);
+
+                let fixed_content =
+                    utils::render_markdown_with_path(&ch.content, curly_quotes, Some(&ch.path));
+
+                (content, fixed_content)
+            }
+            BookItem::DraftChapter(_) => (String::new(), String::new()),
+            _ => unreachable!(),
+        }
+    }
+
+    fn check_reserved_filenames(&self, path_to_check: &Path) -> Result<()> {
+        match path_to_check.to_str().unwrap_or("") {
+            "print.md" => bail!(ErrorKind::ReservedFilenameError(path_to_check.to_owned())),
+            _ => Ok(()),
+        }
+    }
+
+    fn concat_with_book_title(&self, ctx: &RenderItemContext<'_>, name: &str) -> String {
+        let book_title = ctx
+            .data
+            .get("book_title")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("");
+
+        name.to_string() + " - " + book_title
+    }
+
+    fn insert_chapter_info_in_context(
+        &self,
+        ctx: &mut RenderItemContext<'_>,
+        name: &str,
+        content: &str,
+        title: &str,
+        section: Option<&SectionNumber>,
+    ) {
+        ctx.data.insert("content".to_string(), json!(content));
+        ctx.data.insert("chapter_title".to_string(), json!(name));
+        ctx.data.insert("title".to_string(), json!(title));
+
+        if let Some(ref s) = section {
+            ctx.data.insert("section".to_string(), json!(s.to_string()));
+        }
     }
 
     #[cfg_attr(feature = "cargo-clippy", allow(clippy::let_and_return))]
@@ -331,7 +369,7 @@ impl Renderer for HtmlHandlebars {
             .chain_err(|| "Unexpected error when constructing destination path")?;
 
         let mut is_index = true;
-        for item in book.iter() {
+        for item in book.iter().filter(|x| x.is_chapter()) {
             let ctx = RenderItemContext {
                 handlebars: &handlebars,
                 destination: destination.to_path_buf(),
@@ -511,11 +549,25 @@ fn make_data(
                 );
 
                 chapter.insert("name".to_owned(), json!(ch.name));
+
                 let path = ch
                     .path
                     .to_str()
                     .chain_err(|| "Could not convert path to str")?;
                 chapter.insert("path".to_owned(), json!(path));
+            }
+            BookItem::DraftChapter(ref ch) => {
+                if let Some(ref section) = ch.number {
+                    chapter.insert("section".to_owned(), json!(section.to_string()));
+                }
+
+                chapter.insert(
+                    "has_sub_items".to_owned(),
+                    json!((!ch.sub_items.is_empty()).to_string()),
+                );
+
+                chapter.insert("name".to_owned(), json!(ch.name));
+                chapter.insert("draft".to_owned(), json!("true"));
             }
             BookItem::Separator => {
                 chapter.insert("spacer".to_owned(), json!("_spacer_"));
