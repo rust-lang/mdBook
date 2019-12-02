@@ -7,7 +7,7 @@ are. Without this file, there is no book.
 Even though `SUMMARY.md` is a markdown file, the formatting is very strict to
 allow for easy parsing. Let's see how you should format your `SUMMARY.md` file.
 
-#### Allowed elements
+#### Structure
 
 1. ***Title*** It's common practice to begin with a title, generally <code
    class="language-markdown"># Summary</code>. But it is not mandatory, the
@@ -36,3 +36,19 @@ allow for easy parsing. Let's see how you should format your `SUMMARY.md` file.
 
 All other elements are unsupported and will be ignored at best or result in an
 error.
+
+#### Other elements
+
+- ***Separators*** In between chapters you can add a separator. In the HTML renderer
+  this will result in a line being rendered in the table of contents. A separator is
+  a line containing exclusively dashes and at least three of them: `---`.
+- ***Draft chapters*** Draft chapters are chapters without a file and thus content.
+  The purpose of a draft chapter is to signal future chapters still to be written.
+  Or when still laying out the structure of the book to avoid creating the files
+  while you are still changing the structure of the book a lot.
+  Draft chapters will be rendered in the HTML renderer as disabled links in the table
+  of contents, as you can see for the next chapter in the table of contents on the left.
+  Draft chapters are written like normal chapters but without writing the path to the file
+  ```markdown
+  - [Draft chapter]()  
+  ``` 
