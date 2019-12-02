@@ -408,7 +408,7 @@ function playpen_text(playpen) {
 (function sidebar() {
     var html = document.querySelector("html");
     var sidebar = document.getElementById("sidebar");
-    var sidebarScrollBox = document.getElementsByClassName("sidebar-scrollbox");
+    var sidebarScrollBox = document.querySelector(".sidebar-scrollbox");
     var sidebarLinks = document.querySelectorAll('#sidebar a');
     var sidebarToggleButton = document.getElementById("sidebar-toggle");
     var sidebarResizeHandle = document.getElementById("sidebar-resize-handle");
@@ -505,7 +505,7 @@ function playpen_text(playpen) {
     }, { passive: true });
 
     // Scroll sidebar to current active section
-    var activeSection =  document.getElementById("sidebar").querySelector(".active");
+    var activeSection = document.getElementById("sidebar").querySelector(".active");
     if (activeSection) {
         sidebarScrollBox.scrollTop = activeSection.offsetTop;
     }
