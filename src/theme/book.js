@@ -6,12 +6,19 @@ window.onunload = function () { };
 // Global variable, shared between modules
 function playpen_text(playpen) {
     let code_block = playpen.querySelector("code");
+    let rgex = /^\$(?: )/;
 
     if (window.ace && code_block.classList.contains("editable")) {
         let editor = window.ace.edit(code_block);
         return editor.getValue();
     } else {
-        return code_block.textContent;
+        // It is common for code blocks to contain $ in the text. If they do, clipboard will copy that symbol and the ensuing paste into terminal will fail
+        if (regex.test(code_block.textContent)) {
+          let clean_string = code_block.textContent.replace(regex, "")
+          return clean_string;
+        } else {
+          return code_block.textContent;
+        }
     }
 }
 
