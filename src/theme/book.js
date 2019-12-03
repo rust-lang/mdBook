@@ -6,7 +6,7 @@ window.onunload = function () { };
 // Global variable, shared between modules
 function playpen_text(playpen) {
     let code_block = playpen.querySelector("code");
-    let rgex = /^\$(?: )/;
+    let regex = /^\$(?: )/;
 
     if (window.ace && code_block.classList.contains("editable")) {
         let editor = window.ace.edit(code_block);
