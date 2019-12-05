@@ -115,7 +115,7 @@ pub fn copy_files_except_ext(
         let entry = entry?;
         let metadata = entry.metadata()?;
 
-        // If the entry is a dir and the recursive option is enabled , call itself
+        // If the entry is a dir and the recursive option is enabled, call itself
         if metadata.is_dir() && recursive {
             if entry.path() == to.to_path_buf() {
                 continue;

@@ -36,5 +36,4 @@ not specified it will default to the value of the `build.build-dir` key in
 -------------------
 
 ***Note:*** *The build command copies all files (excluding files with `.md` extension) from the source directory
-into the build directory. If the build directory is under the source directory it is not copied as this would
-result in a recursive copy until your disk is full.*
+into the build directory.*
