@@ -49,12 +49,7 @@
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script type="text/javascript">
             try {
-                var theme = localStorage.getItem('mdbook-theme');
                 var sidebar = localStorage.getItem('mdbook-sidebar');
-
-                if (theme.startsWith('"') && theme.endsWith('"')) {
-                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
-                }
 
                 if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
                     localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
@@ -64,9 +59,50 @@
 
         <!-- Set the theme before any content is loaded, prevents flash -->
         <script type="text/javascript">
-            var theme;
-            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
-            if (theme === null || theme === undefined) { theme = default_theme; }
+
+            function getCookie (name) {
+                if (document.cookie.length > 0) {
+                    c_start = document.cookie.indexOf(name + "=");
+                    if (c_start != -1) {
+                        c_start = c_start + name.length + 1;
+                        c_end = document.cookie.indexOf(";", c_start);
+                        if (c_end == -1) {
+                            c_end = document.cookie.length;
+                        }
+                        const cookie = unescape(document.cookie.substring(c_start, c_end));
+                        return cookie === '' ? null : cookie
+                    }
+                }
+                return null;
+            }
+
+            function getTheme () {
+                var theme
+                var localAddrs = ["localhost", "127.0.0.1", ""];
+                // Only check cookies for theme if user is viewing book locally
+                if (localAddrs.indexOf(document.location.hostname) > -1) {
+                    // Get remembered theme from cookies
+                    const THEME_COOKIE = getCookie('mdbook-theme')
+                    if (THEME_COOKIE !== null && THEME_COOKIE !== undefined) {
+                        theme = THEME_COOKIE
+                    } else {
+                        // Check localStorage
+                        theme = localStorage.getItem('mdbook-theme')
+                    }
+                } else {
+                    // Check localStorage
+                    theme = localStorage.getItem('mdbook-theme')
+                }
+                // Check if a theme was found
+                if (theme === null && theme === undefined) {
+                    // Use default theme
+                    theme = default_theme
+                }
+                return theme === 'null' || theme === null || theme === ''
+                     ? default_theme : theme
+            }
+            
+            var theme = getTheme()
             var html = document.querySelector('html');
             html.classList.remove('no-js')
             html.classList.remove('{{ default_theme }}')
@@ -238,7 +274,7 @@
             window.playpen_line_numbers = true;
         </script>
         {{/if}}
-        
+
         {{#if playpen_copyable}}
         <script type="text/javascript">
             window.playpen_copyable = true;

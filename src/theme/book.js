@@ -284,7 +284,6 @@ function playpen_text(playpen) {
     function showThemes() {
         themePopup.style.display = 'block';
         themeToggleButton.setAttribute('aria-expanded', true);
-        themePopup.querySelector("button#" + document.body.className).focus();
     }
 
     function hideThemes() {
@@ -293,7 +292,7 @@ function playpen_text(playpen) {
         themeToggleButton.focus();
     }
 
-    function set_theme(theme, store = true) {
+    function setTheme(theme, store = true) {
         let ace_theme;
 
         if (theme == 'coal' || theme == 'navy') {
@@ -330,18 +329,63 @@ function playpen_text(playpen) {
 
         if (store) {
             try { localStorage.setItem('mdbook-theme', theme); } catch (e) { }
+            try { createCookie('mdbook-theme', theme); } catch (e) { }
         }
 
         html.classList.remove(previousTheme);
         html.classList.add(theme);
     }
 
-    // Set theme
-    var theme;
-    try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
-    if (theme === null || theme === undefined) { theme = default_theme; }
+    function getTheme() {
+        var theme
+        var localAddrs = ["localhost", "127.0.0.1", ""];
+        // Only check cookies for theme if user is viewing book locally
+        if (localAddrs.indexOf(document.location.hostname) > -1) {
+            // Get remembered theme from cookies
+            const THEME_COOKIE = getCookie('mdbook-theme')
+            if (THEME_COOKIE !== null && THEME_COOKIE !== undefined) {
+                theme = THEME_COOKIE
+            } else {
+                // Check localStorage
+                theme = localStorage.getItem('mdbook-theme')
+            }
+        } else {
+            // Check localStorage
+            theme = localStorage.getItem('mdbook-theme')
+        }
+        // Check if a theme was found and valid
+        if (theme === null || theme === '' || theme === undefined) {
+            // Use default theme
+            theme = default_theme
+        }
+        // Return user selected theme
+        return theme
+    }
 
-    set_theme(theme, false);
+    function createCookie(name, value, days) {
+        document.cookie = name + "=" + value + "; path=/";
+    }
+
+    function getCookie(name) {
+        if (document.cookie.length > 0) {
+            c_start = document.cookie.indexOf(name + "=");
+            if (c_start != -1) {
+                c_start = c_start + name.length + 1;
+                c_end = document.cookie.indexOf(";", c_start);
+                if (c_end == -1) {
+                    c_end = document.cookie.length;
+                }
+                const cookie = unescape(document.cookie.substring(c_start, c_end));
+                return cookie === '' ? null : cookie
+            }
+        }
+        return null;
+    }
+
+    // Get theme
+    var theme = getTheme()
+    // Set theme
+    setTheme(theme, true);
 
     themeToggleButton.addEventListener('click', function () {
         if (themePopup.style.display === 'block') {
@@ -353,7 +397,7 @@ function playpen_text(playpen) {
 
     themePopup.addEventListener('click', function (e) {
         var theme = e.target.id || e.target.parentElement.id;
-        set_theme(theme);
+        setTheme(theme);
     });
 
     themePopup.addEventListener('focusout', function(e) {
