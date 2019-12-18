@@ -601,12 +601,12 @@ function playpen_text(playpen) {
     ["localhost", "127.0.0.1", ""].indexOf(document.location.hostname) !== -1;
 
   if (
-    window.sevice_worker_script_src &&
+    window.service_worker_script_src &&
     "serviceWorker" in navigator &&
     !isLocalhost
   ) {
     navigator.serviceWorker
-      .register(window.sevice_worker_script_src)
+      .register(window.service_worker_script_src)
       .catch(function(error) {
         console.error("Service worker registration failed:", error);
       });
