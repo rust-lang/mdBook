@@ -8,28 +8,33 @@ use tempfile::{Builder as TempFileBuilder, TempDir};
 
 #[test]
 fn passing_alternate_backend() {
-    let (md, _temp) = dummy_book_with_backend("passing", success_cmd());
+    let (md, _temp) = dummy_book_with_backend("passing", success_cmd(), false);
 
     md.build().unwrap();
 }
 
 #[test]
 fn failing_alternate_backend() {
-    let (md, _temp) = dummy_book_with_backend("failing", fail_cmd());
+    let (md, _temp) = dummy_book_with_backend("failing", fail_cmd(), false);
 
     md.build().unwrap_err();
 }
 
 #[test]
-fn missing_backends_arent_fatal() {
-    let (md, _temp) = dummy_book_with_backend("missing", "trduyvbhijnorgevfuhn");
+fn missing_backends_are_fatal() {
+    let (md, _temp) = dummy_book_with_backend("missing", "trduyvbhijnorgevfuhn", false);
+    assert!(md.build().is_err());
+}
 
+#[test]
+fn missing_optional_backends_are_not_fatal() {
+    let (md, _temp) = dummy_book_with_backend("missing", "trduyvbhijnorgevfuhn", true);
     assert!(md.build().is_ok());
 }
 
 #[test]
 fn alternate_backend_with_arguments() {
-    let (md, _temp) = dummy_book_with_backend("arguments", "echo Hello World!");
+    let (md, _temp) = dummy_book_with_backend("arguments", "echo Hello World!", false);
 
     md.build().unwrap();
 }
@@ -56,7 +61,7 @@ fn backends_receive_render_context_via_stdin() {
     let out_file = temp.path().join("out.txt");
     let cmd = tee_command(&out_file);
 
-    let (md, _temp) = dummy_book_with_backend("cat-to-file", &cmd);
+    let (md, _temp) = dummy_book_with_backend("cat-to-file", &cmd, false);
 
     assert!(!out_file.exists());
     md.build().unwrap();
@@ -66,13 +71,23 @@ fn backends_receive_render_context_via_stdin() {
     assert!(got.is_ok());
 }
 
-fn dummy_book_with_backend(name: &str, command: &str) -> (MDBook, TempDir) {
+fn dummy_book_with_backend(
+    name: &str,
+    command: &str,
+    backend_is_optional: bool,
+) -> (MDBook, TempDir) {
     let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
 
     let mut config = Config::default();
     config
         .set(format!("output.{}.command", name), command)
         .unwrap();
+
+    if backend_is_optional {
+        config
+            .set(format!("output.{}.optional", name), true)
+            .unwrap();
+    }
 
     let md = MDBook::init(temp.path())
         .with_config(config)
