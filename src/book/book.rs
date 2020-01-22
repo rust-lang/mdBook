@@ -262,11 +262,12 @@ fn load_chapter<P: AsRef<Path>>(
             src_dir.join(link_location)
         };
         if !location.exists() {
-            let file_name = location
-                .file_name()
-                .map(OsStr::to_str)
-                .flatten()
-                .map(String::from);
+            let file_name =
+                if let Some(Some(file_name_str)) = location.file_name().map(OsStr::to_str) {
+                    Some(String::from(file_name_str))
+                } else {
+                    None
+                };
             if let Some(name) = file_name {
                 if name.contains("#") {
                     let values = name.rsplitn(2, "#").collect::<Vec<_>>();
