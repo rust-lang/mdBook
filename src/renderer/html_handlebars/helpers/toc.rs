@@ -122,6 +122,10 @@ impl HelperDef for RenderToc {
                     // Add link
                     out.write(&utils::fs::path_to_root(&current_path))?;
                     out.write(&tmp)?;
+                    if let Some(anchor) = item.get("anchor") {
+                        out.write("#")?;
+                        out.write(anchor)?;
+                    }
                     out.write("\"")?;
 
                     if path == &current_path {

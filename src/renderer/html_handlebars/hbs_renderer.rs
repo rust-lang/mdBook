@@ -621,6 +621,9 @@ fn make_data(
                         .with_context(|| "Could not convert path to str")?;
                     chapter.insert("path".to_owned(), json!(p));
                 }
+                if let Some(anchor) = &ch.anchor {
+                    chapter.insert("anchor".to_owned(), json!(anchor));
+                }
             }
             BookItem::Separator => {
                 chapter.insert("spacer".to_owned(), json!("_spacer_"));
