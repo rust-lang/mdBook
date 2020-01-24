@@ -46,7 +46,7 @@ impl Target {
 
 fn find_chapter(
     ctx: &Context,
-    rc: &mut RenderContext<'_>,
+    rc: &mut RenderContext<'_, '_>,
     target: Target,
 ) -> Result<Option<StringMap>, RenderError> {
     debug!("Get data from context");
@@ -108,9 +108,9 @@ fn find_chapter(
 
 fn render(
     _h: &Helper<'_, '_>,
-    r: &Handlebars,
+    r: &Handlebars<'_>,
     ctx: &Context,
-    rc: &mut RenderContext<'_>,
+    rc: &mut RenderContext<'_, '_>,
     out: &mut dyn Output,
     chapter: &StringMap,
 ) -> Result<(), RenderError> {
@@ -150,7 +150,7 @@ fn render(
     _h.template()
         .ok_or_else(|| RenderError::new("Error with the handlebars template"))
         .and_then(|t| {
-            let mut local_rc = rc.new_for_block();
+            let mut local_rc = rc.clone();
             let local_ctx = Context::wraps(&context)?;
             t.render(r, &local_ctx, &mut local_rc, out)
         })?;
@@ -160,9 +160,9 @@ fn render(
 
 pub fn previous(
     _h: &Helper<'_, '_>,
-    r: &Handlebars,
+    r: &Handlebars<'_>,
     ctx: &Context,
-    rc: &mut RenderContext<'_>,
+    rc: &mut RenderContext<'_, '_>,
     out: &mut dyn Output,
 ) -> Result<(), RenderError> {
     trace!("previous (handlebars helper)");
@@ -176,9 +176,9 @@ pub fn previous(
 
 pub fn next(
     _h: &Helper<'_, '_>,
-    r: &Handlebars,
+    r: &Handlebars<'_>,
     ctx: &Context,
-    rc: &mut RenderContext<'_>,
+    rc: &mut RenderContext<'_, '_>,
     out: &mut dyn Output,
 ) -> Result<(), RenderError> {
     trace!("next (handlebars helper)");

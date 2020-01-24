@@ -16,9 +16,9 @@ impl HelperDef for RenderToc {
     fn call<'reg: 'rc, 'rc>(
         &self,
         _h: &Helper<'reg, 'rc>,
-        _r: &'reg Handlebars,
+        _r: &'reg Handlebars<'_>,
         ctx: &'rc Context,
-        rc: &mut RenderContext<'reg>,
+        rc: &mut RenderContext<'reg, 'rc>,
         out: &mut dyn Output,
     ) -> Result<(), RenderError> {
         // get value from context data
