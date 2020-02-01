@@ -12,8 +12,7 @@ Original by Dempfi (https://github.com/dempfi/ayu)
 }
 
 .hljs-comment,
-.hljs-quote,
-.hljs-meta {
+.hljs-quote {
   color: #5c6773;
   font-style: italic;
 }
@@ -30,6 +29,7 @@ Original by Dempfi (https://github.com/dempfi/ayu)
 }
 
 .hljs-number,
+.hljs-meta,
 .hljs-builtin-name,
 .hljs-literal,
 .hljs-type,
