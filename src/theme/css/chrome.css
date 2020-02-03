@@ -417,6 +417,11 @@ ul#searchresults span.teaser em {
     display: none;
 }
 
+.chapter li.expanded {
+    line-height: 1.5em;
+    margin-top: 0.6em;
+}
+
 .chapter li.expanded > a.toggle div {
     transform: rotate(90deg);
 }
