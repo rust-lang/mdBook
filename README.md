@@ -204,7 +204,7 @@ Contributions are highly appreciated and encouraged! Don't hesitate to
 participate to discussions in the issues, propose new features and ask for
 help.
 
-If you are just starting out with Rust, there are a series of issus that are
+If you are just starting out with Rust, there are a series of issues that are
 tagged [E-Easy] and **we will gladly mentor you** so that you can successfully
 go through the process of fixing a bug or adding a new feature! Let us know if
 you need any help.
