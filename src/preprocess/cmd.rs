@@ -169,6 +169,7 @@ mod tests {
     use super::*;
     use crate::MDBook;
     use std::path::Path;
+    use std::path::PathBuf;
 
     fn book_example() -> MDBook {
         let example = Path::new(env!("CARGO_MANIFEST_DIR")).join("book-example");
@@ -181,6 +182,7 @@ mod tests {
         let md = book_example();
         let ctx = PreprocessorContext::new(
             md.root.clone(),
+            PathBuf::from(""),
             md.config.clone(),
             "some-renderer".to_string(),
         );

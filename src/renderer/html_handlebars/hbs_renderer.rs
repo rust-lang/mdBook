@@ -375,6 +375,7 @@ impl Renderer for HtmlHandlebars {
 
         // Copy all remaining files
         utils::fs::copy_files_except_ext(&src_dir, &destination, true, &["md"])?;
+        utils::fs::copy_files_except_ext(&ctx.preproc_output_dir, &destination, true, &[])?;
 
         Ok(())
     }

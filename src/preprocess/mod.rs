@@ -20,6 +20,9 @@ use std::path::PathBuf;
 pub struct PreprocessorContext {
     /// The location of the book directory on disk.
     pub root: PathBuf,
+    /// The directory where a preprocessor can write generated files to
+    /// Generated files are copied directly to the book output dir
+    pub output_dir: PathBuf,
     /// The book configuration (`book.toml`).
     pub config: Config,
     /// The `Renderer` this preprocessor is being used with.
@@ -32,9 +35,15 @@ pub struct PreprocessorContext {
 
 impl PreprocessorContext {
     /// Create a new `PreprocessorContext`.
-    pub(crate) fn new(root: PathBuf, config: Config, renderer: String) -> Self {
+    pub(crate) fn new(
+        root: PathBuf,
+        output_dir: PathBuf,
+        config: Config,
+        renderer: String,
+    ) -> Self {
         PreprocessorContext {
             root,
+            output_dir: output_dir,
             config,
             renderer,
             mdbook_version: crate::MDBOOK_VERSION.to_string(),
