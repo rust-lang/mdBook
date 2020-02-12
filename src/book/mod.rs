@@ -260,7 +260,7 @@ impl MDBook {
         // FIXME: Is "test" the proper renderer name to use here?
         let preprocess_context = PreprocessorContext::new(
             self.root.clone(),
-            preproc_out_dir.into_path(),
+            preproc_out_dir.path().to_path_buf(), //TempDir::into_path disables the auto delete option
             self.config.clone(),
             "test".to_string(),
         );
