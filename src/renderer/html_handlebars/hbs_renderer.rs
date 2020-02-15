@@ -61,7 +61,11 @@ impl HtmlHandlebars {
                     .get("book_title")
                     .and_then(serde_json::Value::as_str)
                     .unwrap_or("");
-                title = ch.name.clone() + " - " + book_title;
+
+                title = match book_title {
+                    "" => ch.name.clone(),
+                    _ => ch.name.clone() + " - " + book_title,
+                }
             }
 
             ctx.data.insert("path".to_owned(), json!(path));
