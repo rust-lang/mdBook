@@ -522,6 +522,11 @@ pub struct HtmlConfig {
     ///
     /// [custom domain]: https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site
     pub cname: Option<String>,
+    /// Git repository file edit baseurl, below which e.g. src/SUMMARY.md can
+    /// be viewed/edited
+    /// Defaults to git_repository_url + `/blob/master` if `None` and
+    /// git_repository_url is not `None` - works for e.g. GitHub master branch
+    pub git_repository_edit_baseurl: Option<String>,
     /// This is used as a bit of a workaround for the `mdbook serve` command.
     /// Basically, because you set the websocket port from the command line, the
     /// `mdbook serve` command needs a way to let the HTML renderer know where
