@@ -489,10 +489,10 @@ fn make_data(
 
     if let Some(ref git_repository_url) = html_config.git_repository_url {
         data.insert("git_repository_url".to_owned(), json!(git_repository_url));
-        let defaultEditBaseUrl = git_repository_url.to_owned() + "/blob/master";
+        let default_edit_baseurl = git_repository_url.to_owned() + "/blob/master";
         let git_repository_edit_baseurl = match html_config.git_repository_edit_baseurl {
             Some(ref git_repository_edit_baseurl) => git_repository_edit_baseurl,
-            None => &defaultEditBaseUrl,
+            None => &default_edit_baseurl,
         };
         data.insert("git_repository_edit_baseurl".to_owned(), json!(git_repository_edit_baseurl));
     } else {
