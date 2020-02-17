@@ -467,11 +467,11 @@ pub struct HtmlConfig {
     /// FontAwesome icon class to use for the Git repository link.
     /// Defaults to `fa-github` if `None`.
     pub git_repository_icon: Option<String>,
-    /// Git repository file edit baseurl, below which e.g. src/SUMMARY.md can
-    /// be viewed/edited
-    /// Defaults to git_repository_url + `/blob/master` if `None` and
-    /// git_repository_url is not `None` - works for e.g. GitHub master branch
-    pub git_repository_edit_baseurl: Option<String>,
+    /// Git repository file edit url template, when set shows an
+    /// "Suggest an edit" button for directly jumping to editing the
+    /// currently viewed page in the git repository. Contains {path}
+    /// that is replaced with chapter source file path
+    pub git_repository_edit_url_template: Option<String>,
     /// This is used as a bit of a workaround for the `mdbook serve` command.
     /// Basically, because you set the websocket port from the command line, the
     /// `mdbook serve` command needs a way to let the HTML renderer know where
