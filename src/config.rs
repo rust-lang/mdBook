@@ -522,19 +522,11 @@ pub struct HtmlConfig {
     ///
     /// [custom domain]: https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site
     pub cname: Option<String>,
-    /// Edit url template, when set shows a "Suggest an edit" button for
-    /// directly jumping to editing the currently viewed page.
-    /// Contains {path} that is replaced with chapter source file path
-    pub edit_url_template: Option<String>,
-    /// Endpoint of websocket, for livereload usage. Value loaded from .toml file
-    /// is ignored, because our code overrides this field with the value [`LIVE_RELOAD_ENDPOINT`]
-    ///
-    /// [`LIVE_RELOAD_ENDPOINT`]: cmd::serve::LIVE_RELOAD_ENDPOINT
-    /// Git repository file edit baseurl, below which e.g. src/SUMMARY.md can
-    /// be viewed/edited
-    /// Defaults to git_repository_url + `/blob/master` if `None` and
-    /// git_repository_url is not `None` - works for e.g. GitHub master branch
-    pub git_repository_edit_baseurl: Option<String>,
+    /// Git repository file edit url template, when set shows an
+    /// "Suggest an edit" button for directly jumping to editing the
+    /// currently viewed page in the git repository. Contains {path}
+    /// that is replaced with chapter source file path
+    pub git_repository_edit_url_template: Option<String>,
     /// This is used as a bit of a workaround for the `mdbook serve` command.
     /// Basically, because you set the websocket port from the command line, the
     /// `mdbook serve` command needs a way to let the HTML renderer know where

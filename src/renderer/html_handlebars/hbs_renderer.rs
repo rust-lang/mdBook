@@ -37,16 +37,11 @@ impl HtmlHandlebars {
             _ => return Ok(()),
         };
 
-        if let Some(ref edit_url_template) = ctx.html_config.edit_url_template {
-            let full_path = ctx.book_config.src.to_str().unwrap_or_default().to_owned()
-                + "/"
-                + ch.source_path
-                    .clone()
-                    .unwrap_or_default()
-                    .to_str()
-                    .unwrap_or_default();
-
-            let edit_url = edit_url_template.replace("{path}", &full_path);
+        if let Some(ref git_repository_edit_url_template) =
+            ctx.html_config.git_repository_edit_url_template
+        {
+            let full_path = "src/".to_owned() + path.to_str().unwrap();
+            let edit_url = git_repository_edit_url_template.replace("{path}", &full_path);
             ctx.data
                 .insert("git_repository_edit_url".to_owned(), json!(edit_url));
         }
@@ -766,16 +761,6 @@ fn make_data(
 
     if let Some(ref git_repository_url) = html_config.git_repository_url {
         data.insert("git_repository_url".to_owned(), json!(git_repository_url));
-        let defaultEditBaseUrl = git_repository_url.to_owned() + "/blob/master";
-        let git_repository_edit_baseurl = match html_config.git_repository_edit_baseurl {
-            Some(ref git_repository_edit_baseurl) => git_repository_edit_baseurl,
-            None => &defaultEditBaseUrl,
-        };
-        data.insert("git_repository_edit_baseurl".to_owned(), json!(git_repository_edit_baseurl));
-    } else {
-        if let Some(ref git_repository_edit_baseurl) = html_config.git_repository_edit_baseurl {
-            data.insert("git_repository_edit_baseurl".to_owned(), json!(git_repository_edit_baseurl));
-        }
     }
 
     let git_repository_icon = match html_config.git_repository_icon {
