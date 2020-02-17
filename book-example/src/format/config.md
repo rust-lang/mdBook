@@ -201,6 +201,12 @@ The following configuration options are available:
   an icon link will be output in the menu bar of the book.
 - **git-repository-icon:** The FontAwesome icon class to use for the git
   repository link. Defaults to `fa-github`.
+- **git-repository-edit-baseurl:** The base url for suggesting an edit
+  to individual pages/chapters of the book. If **git-repository-url** is defined,
+  defaults to **git-repository-url**/blob/master which works for e.g. GitHub.
+  The page source path is appended to this url, e.g. `/src/SUMMARY.md`. So when
+  this or **git-repository-url** is configured an icon link will be output in
+  the menu bar of the book.
 - **redirect:** A subtable used for generating redirects when a page is moved.
   The table contains key-value pairs where the key is where the redirect file
   needs to be created, as an absolute path from the build directory, (e.g.
