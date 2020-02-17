@@ -131,6 +131,11 @@
                                 <i id="git-repository-button" class="fa {{git_repository_icon}}"></i>
                             </a>
                             {{/if}}
+                            {{#if git_repository_edit_baseurl}}
+                            <a href="{{git_repository_edit_baseurl}}/src/{{path}}" title="Suggest an edit" aria-label="Suggest an edit">
+                                <i id="git-edit-button" class="fa fa-edit"></i>
+                            </a>
+                            {{/if}}
                         </div>
                     </div>
                 </div>
