@@ -494,10 +494,16 @@ fn make_data(
             Some(ref git_repository_edit_baseurl) => git_repository_edit_baseurl,
             None => &default_edit_baseurl,
         };
-        data.insert("git_repository_edit_baseurl".to_owned(), json!(git_repository_edit_baseurl));
+        data.insert(
+            "git_repository_edit_baseurl".to_owned(),
+            json!(git_repository_edit_baseurl),
+        );
     } else {
         if let Some(ref git_repository_edit_baseurl) = html_config.git_repository_edit_baseurl {
-            data.insert("git_repository_edit_baseurl".to_owned(), json!(git_repository_edit_baseurl));
+            data.insert(
+                "git_repository_edit_baseurl".to_owned(),
+                json!(git_repository_edit_baseurl),
+            );
         }
     }
 
