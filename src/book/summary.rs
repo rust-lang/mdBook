@@ -71,7 +71,7 @@ pub struct Link {
     pub name: String,
     /// The location of the chapter's source file, taking the book's `src`
     /// directory as the root.
-    pub location: PathBuf,
+    pub location: Option<PathBuf>,
     /// The section number, if this chapter is in the numbered section.
     pub number: Option<SectionNumber>,
     /// Any nested items this chapter may contain.
@@ -83,7 +83,7 @@ impl Link {
     pub fn new<S: Into<String>, P: AsRef<Path>>(name: S, location: P) -> Link {
         Link {
             name: name.into(),
-            location: location.as_ref().to_path_buf(),
+            location: Some(location.as_ref().to_path_buf()),
             number: None,
             nested_items: Vec::new(),
         }
@@ -94,7 +94,7 @@ impl Default for Link {
     fn default() -> Self {
         Link {
             name: String::new(),
-            location: PathBuf::new(),
+            location: Some(PathBuf::new()),
             number: None,
             nested_items: Vec::new(),
         }
@@ -260,7 +260,7 @@ impl<'a> SummaryParser<'a> {
                     }
                 }
                 Some(Event::Start(Tag::Link(_type, href, _title))) => {
-                    let link = self.parse_link(href.to_string())?;
+                    let link = self.parse_link(href.to_string());
                     items.push(SummaryItem::Link(link));
                 }
                 Some(Event::Rule) => items.push(SummaryItem::Separator),
@@ -272,19 +272,21 @@ impl<'a> SummaryParser<'a> {
         Ok(items)
     }
 
-    fn parse_link(&mut self, href: String) -> Result<Link> {
+    fn parse_link(&mut self, href: String) -> Link {
         let link_content = collect_events!(self.stream, end Tag::Link(..));
         let name = stringify_events(link_content);
 
-        if href.is_empty() {
-            Err(self.parse_error("You can't have an empty link."))
+        let path = if href.is_empty() {
+            None
         } else {
-            Ok(Link {
-                name,
-                location: PathBuf::from(href),
-                number: None,
-                nested_items: Vec::new(),
-            })
+            Some(PathBuf::from(href))
+        };
+
+        Link {
+            name,
+            location: path,
+            number: None,
+            nested_items: Vec::new(),
         }
     }
 
@@ -410,7 +412,7 @@ impl<'a> SummaryParser<'a> {
             match self.next_event() {
                 Some(Event::Start(Tag::Paragraph)) => continue,
                 Some(Event::Start(Tag::Link(_type, href, _title))) => {
-                    let mut link = self.parse_link(href.to_string())?;
+                    let mut link = self.parse_link(href.to_string());
 
                     let mut number = parent.clone();
                     number.0.push(num_existing_items as u32 + 1);
@@ -418,7 +420,10 @@ impl<'a> SummaryParser<'a> {
                         "Found chapter: {} {} ({})",
                         number,
                         link.name,
-                        link.location.display()
+                        link.location
+                            .as_ref()
+                            .map(|p| p.to_str().unwrap_or(""))
+                            .unwrap_or("[draft]")
                     );
 
                     link.number = Some(number);
@@ -589,12 +594,12 @@ mod tests {
         let should_be = vec![
             SummaryItem::Link(Link {
                 name: String::from("First"),
-                location: PathBuf::from("./first.md"),
+                location: Some(PathBuf::from("./first.md")),
                 ..Default::default()
             }),
             SummaryItem::Link(Link {
                 name: String::from("Second"),
-                location: PathBuf::from("./second.md"),
+                location: Some(PathBuf::from("./second.md")),
                 ..Default::default()
             }),
         ];
@@ -633,7 +638,7 @@ mod tests {
         let src = "[First](./first.md)";
         let should_be = Link {
             name: String::from("First"),
-            location: PathBuf::from("./first.md"),
+            location: Some(PathBuf::from("./first.md")),
             ..Default::default()
         };
 
@@ -645,7 +650,7 @@ mod tests {
             other => panic!("Unreachable, {:?}", other),
         };
 
-        let got = parser.parse_link(href).unwrap();
+        let got = parser.parse_link(href);
         assert_eq!(got, should_be);
     }
 
@@ -654,7 +659,7 @@ mod tests {
         let src = "- [First](./first.md)\n";
         let link = Link {
             name: String::from("First"),
-            location: PathBuf::from("./first.md"),
+            location: Some(PathBuf::from("./first.md")),
             number: Some(SectionNumber(vec![1])),
             ..Default::default()
         };
@@ -675,18 +680,18 @@ mod tests {
         let should_be = vec![
             SummaryItem::Link(Link {
                 name: String::from("First"),
-                location: PathBuf::from("./first.md"),
+                location: Some(PathBuf::from("./first.md")),
                 number: Some(SectionNumber(vec![1])),
                 nested_items: vec![SummaryItem::Link(Link {
                     name: String::from("Nested"),
-                    location: PathBuf::from("./nested.md"),
+                    location: Some(PathBuf::from("./nested.md")),
                     number: Some(SectionNumber(vec![1, 1])),
                     nested_items: Vec::new(),
                 })],
             }),
             SummaryItem::Link(Link {
                 name: String::from("Second"),
-                location: PathBuf::from("./second.md"),
+                location: Some(PathBuf::from("./second.md")),
                 number: Some(SectionNumber(vec![2])),
                 nested_items: Vec::new(),
             }),
@@ -707,13 +712,13 @@ mod tests {
         let should_be = vec![
             SummaryItem::Link(Link {
                 name: String::from("First"),
-                location: PathBuf::from("./first.md"),
+                location: Some(PathBuf::from("./first.md")),
                 number: Some(SectionNumber(vec![1])),
                 nested_items: Vec::new(),
             }),
             SummaryItem::Link(Link {
                 name: String::from("Second"),
-                location: PathBuf::from("./second.md"),
+                location: Some(PathBuf::from("./second.md")),
                 number: Some(SectionNumber(vec![2])),
                 nested_items: Vec::new(),
             }),
@@ -737,13 +742,13 @@ mod tests {
         let should_be = vec![
             SummaryItem::Link(Link {
                 name: String::from("First"),
-                location: PathBuf::from("./first.md"),
+                location: Some(PathBuf::from("./first.md")),
                 number: Some(SectionNumber(vec![1])),
                 nested_items: Vec::new(),
             }),
             SummaryItem::Link(Link {
                 name: String::from("Second"),
-                location: PathBuf::from("./second.md"),
+                location: Some(PathBuf::from("./second.md")),
                 number: Some(SectionNumber(vec![2])),
                 nested_items: Vec::new(),
             }),
@@ -758,13 +763,21 @@ mod tests {
     }
 
     #[test]
-    fn an_empty_link_location_is_an_error() {
+    fn an_empty_link_location_is_a_draft_chapter() {
         let src = "- [Empty]()\n";
         let mut parser = SummaryParser::new(src);
         parser.stream.next();
 
         let got = parser.parse_numbered();
-        assert!(got.is_err());
+        let should_be = vec![SummaryItem::Link(Link {
+            name: String::from("Empty"),
+            location: None,
+            number: Some(SectionNumber(vec![1])),
+            nested_items: Vec::new(),
+        })];
+
+        assert!(got.is_ok());
+        assert_eq!(got.unwrap(), should_be);
     }
 
     /// Regression test for https://github.com/rust-lang/mdBook/issues/779
@@ -776,21 +789,21 @@ mod tests {
         let should_be = vec![
             SummaryItem::Link(Link {
                 name: String::from("First"),
-                location: PathBuf::from("./first.md"),
+                location: Some(PathBuf::from("./first.md")),
                 number: Some(SectionNumber(vec![1])),
                 nested_items: Vec::new(),
             }),
             SummaryItem::Separator,
             SummaryItem::Link(Link {
                 name: String::from("Second"),
-                location: PathBuf::from("./second.md"),
+                location: Some(PathBuf::from("./second.md")),
                 number: Some(SectionNumber(vec![2])),
                 nested_items: Vec::new(),
             }),
             SummaryItem::Separator,
             SummaryItem::Link(Link {
                 name: String::from("Third"),
-                location: PathBuf::from("./third.md"),
+                location: Some(PathBuf::from("./third.md")),
                 number: Some(SectionNumber(vec![3])),
                 nested_items: Vec::new(),
             }),

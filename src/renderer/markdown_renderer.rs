@@ -34,7 +34,13 @@ impl Renderer for MarkdownRenderer {
         trace!("markdown render");
         for item in book.iter() {
             if let BookItem::Chapter(ref ch) = *item {
-                utils::fs::write_file(&ctx.destination, &ch.path, ch.content.as_bytes())?;
+                if !ch.is_draft_chapter() {
+                    utils::fs::write_file(
+                        &ctx.destination,
+                        &ch.path.as_ref().expect("Checked path exists before"),
+                        ch.content.as_bytes(),
+                    )?;
+                }
             }
         }
 

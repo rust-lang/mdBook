@@ -10,6 +10,7 @@
     - [clean](cli/clean.md)
 - [Format](format/README.md)
     - [SUMMARY.md](format/summary.md)
+        - [Draft chapter]()
     - [Configuration](format/config.md)
     - [Theme](format/theme/README.md)
         - [index.hbs](format/theme/index-hbs.md)
