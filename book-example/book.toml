@@ -9,6 +9,7 @@ mathjax-support = true
 
 [output.html.playpen]
 editable = true
+line-numbers = true
 
 [output.html.search]
 limit-results = 20

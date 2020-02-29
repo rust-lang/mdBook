@@ -40,8 +40,8 @@
 //! cfg.set("output.html.theme", "./themes");
 //!
 //! // then load it again, automatically deserializing to a `PathBuf`.
-//! let got: PathBuf = cfg.get_deserialized("output.html.theme")?;
-//! assert_eq!(got, PathBuf::from("./themes"));
+//! let got: Option<PathBuf> = cfg.get_deserialized_opt("output.html.theme")?;
+//! assert_eq!(got, Some(PathBuf::from("./themes")));
 //! # Ok(())
 //! # }
 //! # fn main() { run().unwrap() }
@@ -62,6 +62,7 @@ use toml_query::insert::TomlValueInsertExt;
 use toml_query::read::TomlValueReadExt;
 
 use crate::errors::*;
+use crate::utils;
 
 /// The overall configuration object for MDBook, essentially an in-memory
 /// representation of `book.toml`.
@@ -168,22 +169,41 @@ impl Config {
     /// HTML renderer is refactored to be less coupled to `mdbook` internals.
     #[doc(hidden)]
     pub fn html_config(&self) -> Option<HtmlConfig> {
-        self.get_deserialized("output.html").ok()
+        match self.get_deserialized_opt("output.html") {
+            Ok(Some(config)) => Some(config),
+            Ok(None) => None,
+            Err(e) => {
+                utils::log_backtrace(&e.chain_err(|| "Parsing configuration [output.html]"));
+                None
+            }
+        }
+    }
+
+    /// Deprecated, use get_deserialized_opt instead.
+    #[deprecated = "use get_deserialized_opt instead"]
+    pub fn get_deserialized<'de, T: Deserialize<'de>, S: AsRef<str>>(&self, name: S) -> Result<T> {
+        let name = name.as_ref();
+        match self.get_deserialized_opt(name)? {
+            Some(value) => Ok(value),
+            None => bail!("Key not found, {:?}", name),
+        }
     }
 
     /// Convenience function to fetch a value from the config and deserialize it
     /// into some arbitrary type.
-    pub fn get_deserialized<'de, T: Deserialize<'de>, S: AsRef<str>>(&self, name: S) -> Result<T> {
+    pub fn get_deserialized_opt<'de, T: Deserialize<'de>, S: AsRef<str>>(
+        &self,
+        name: S,
+    ) -> Result<Option<T>> {
         let name = name.as_ref();
-
-        if let Some(value) = self.get(name) {
-            value
-                .clone()
-                .try_into()
-                .chain_err(|| "Couldn't deserialize the value")
-        } else {
-            bail!("Key not found, {:?}", name)
-        }
+        self.get(name)
+            .map(|value| {
+                value
+                    .clone()
+                    .try_into()
+                    .chain_err(|| "Couldn't deserialize the value")
+            })
+            .transpose()
     }
 
     /// Set a config key, clobbering any existing values along the way.
@@ -276,7 +296,7 @@ impl<'de> Deserialize<'de> for Config {
             warn!("`description` under a table called `[book]`, move the `destination` entry");
             warn!("from `[output.html]`, renamed to `build-dir`, under a table called");
             warn!("`[build]`, and it should all work.");
-            warn!("Documentation: http://rust-lang-nursery.github.io/mdBook/format/config.html");
+            warn!("Documentation: http://rust-lang.github.io/mdBook/format/config.html");
             return Ok(Config::from_legacy(raw));
         }
 
@@ -394,7 +414,7 @@ impl Default for BookConfig {
 pub struct BuildConfig {
     /// Where to put built artefacts relative to the book's root directory.
     pub build_dir: PathBuf,
-    /// Should non-existent markdown files specified in `SETTINGS.md` be created
+    /// Should non-existent markdown files specified in `SUMMARY.md` be created
     /// if they don't exist?
     pub create_missing: bool,
     /// Should the default preprocessors always be used when they are
@@ -420,6 +440,9 @@ pub struct HtmlConfig {
     pub theme: Option<PathBuf>,
     /// The default theme to use, defaults to 'light'
     pub default_theme: Option<String>,
+    /// The theme to use if the browser requests the dark version of the site.
+    /// Defaults to the same as 'default_theme'
+    pub preferred_dark_theme: Option<String>,
     /// Use "smart quotes" instead of the usual `"` character.
     pub curly_quotes: bool,
     /// Should mathjax be enabled?
@@ -431,16 +454,10 @@ pub struct HtmlConfig {
     /// Additional JS scripts to include at the bottom of the rendered page's
     /// `<body>`.
     pub additional_js: Vec<PathBuf>,
+    /// Fold settings.
+    pub fold: Fold,
     /// Playpen settings.
     pub playpen: Playpen,
-    /// This is used as a bit of a workaround for the `mdbook serve` command.
-    /// Basically, because you set the websocket port from the command line, the
-    /// `mdbook serve` command needs a way to let the HTML renderer know where
-    /// to point livereloading at, if it has been enabled.
-    ///
-    /// This config item *should not be edited* by the end user.
-    #[doc(hidden)]
-    pub livereload_url: Option<String>,
     /// Don't render section labels.
     pub no_section_label: bool,
     /// Search settings. If `None`, the default will be used.
@@ -450,6 +467,14 @@ pub struct HtmlConfig {
     /// FontAwesome icon class to use for the Git repository link.
     /// Defaults to `fa-github` if `None`.
     pub git_repository_icon: Option<String>,
+    /// This is used as a bit of a workaround for the `mdbook serve` command.
+    /// Basically, because you set the websocket port from the command line, the
+    /// `mdbook serve` command needs a way to let the HTML renderer know where
+    /// to point livereloading at, if it has been enabled.
+    ///
+    /// This config item *should not be edited* by the end user.
+    #[doc(hidden)]
+    pub livereload_url: Option<String>,
 }
 
 impl HtmlConfig {
@@ -463,22 +488,40 @@ impl HtmlConfig {
     }
 }
 
+/// Configuration for how to fold chapters of sidebar.
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct Fold {
+    /// When off, all folds are open. Default: `false`.
+    pub enable: bool,
+    /// The higher the more folded regions are open. When level is 0, all folds
+    /// are closed.
+    /// Default: `0`.
+    pub level: u8,
+}
+
 /// Configuration for tweaking how the the HTML renderer handles the playpen.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Playpen {
     /// Should playpen snippets be editable? Default: `false`.
     pub editable: bool,
+    /// Display the copy button. Default: `true`.
+    pub copyable: bool,
     /// Copy JavaScript files for the editor to the output directory?
     /// Default: `true`.
     pub copy_js: bool,
+    /// Display line numbers on playpen snippets. Default: `false`.
+    pub line_numbers: bool,
 }
 
 impl Default for Playpen {
     fn default() -> Playpen {
         Playpen {
             editable: false,
+            copyable: true,
             copy_js: true,
+            line_numbers: false,
         }
     }
 }
@@ -494,7 +537,7 @@ pub struct Search {
     /// The number of words used for a search result teaser. Default: `30`.
     pub teaser_word_count: u32,
     /// Define the logical link between multiple search words.
-    /// If true, all search words must appear in each result. Default: `true`.
+    /// If true, all search words must appear in each result. Default: `false`.
     pub use_boolean_and: bool,
     /// Boost factor for the search result score if a search word appears in the header.
     /// Default: `2`.
@@ -612,7 +655,9 @@ mod tests {
         };
         let playpen_should_be = Playpen {
             editable: true,
+            copyable: true,
             copy_js: true,
+            line_numbers: false,
         };
         let html_should_be = HtmlConfig {
             curly_quotes: true,
@@ -656,11 +701,14 @@ mod tests {
         };
 
         let cfg = Config::from_str(src).unwrap();
-        let got: RandomOutput = cfg.get_deserialized("output.random").unwrap();
+        let got: RandomOutput = cfg.get_deserialized_opt("output.random").unwrap().unwrap();
 
         assert_eq!(got, should_be);
 
-        let got_baz: Vec<bool> = cfg.get_deserialized("output.random.baz").unwrap();
+        let got_baz: Vec<bool> = cfg
+            .get_deserialized_opt("output.random.baz")
+            .unwrap()
+            .unwrap();
         let baz_should_be = vec![true, true, false];
 
         assert_eq!(got_baz, baz_should_be);
@@ -740,7 +788,7 @@ mod tests {
         assert!(cfg.get(key).is_none());
         cfg.set(key, value).unwrap();
 
-        let got: String = cfg.get_deserialized(key).unwrap();
+        let got: String = cfg.get_deserialized_opt(key).unwrap().unwrap();
         assert_eq!(got, value);
     }
 
@@ -781,7 +829,10 @@ mod tests {
 
         cfg.update_from_env();
 
-        assert_eq!(cfg.get_deserialized::<String, _>(key).unwrap(), value);
+        assert_eq!(
+            cfg.get_deserialized_opt::<String, _>(key).unwrap().unwrap(),
+            value
+        );
     }
 
     #[test]
@@ -800,7 +851,9 @@ mod tests {
         cfg.update_from_env();
 
         assert_eq!(
-            cfg.get_deserialized::<serde_json::Value, _>(key).unwrap(),
+            cfg.get_deserialized_opt::<serde_json::Value, _>(key)
+                .unwrap()
+                .unwrap(),
             value
         );
     }

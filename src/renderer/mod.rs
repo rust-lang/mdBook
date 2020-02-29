@@ -8,12 +8,14 @@
 //!
 //! The definition for [RenderContext] may be useful though.
 //!
-//! [For Developers]: https://rust-lang-nursery.github.io/mdBook/for_developers/index.html
+//! [For Developers]: https://rust-lang.github.io/mdBook/for_developers/index.html
 //! [RenderContext]: struct.RenderContext.html
 
 pub use self::html_handlebars::HtmlHandlebars;
+pub use self::markdown_renderer::MarkdownRenderer;
 
 mod html_handlebars;
+mod markdown_renderer;
 
 use shlex::Shlex;
 use std::fs;

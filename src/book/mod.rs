@@ -24,7 +24,7 @@ use crate::errors::*;
 use crate::preprocess::{
     CmdPreprocessor, IndexPreprocessor, LinkPreprocessor, Preprocessor, PreprocessorContext,
 };
-use crate::renderer::{CmdRenderer, HtmlHandlebars, RenderContext, Renderer};
+use crate::renderer::{CmdRenderer, HtmlHandlebars, MarkdownRenderer, RenderContext, Renderer};
 use crate::utils;
 
 use crate::config::Config;
@@ -56,7 +56,7 @@ impl MDBook {
             warn!("This format is no longer used, so you should migrate to the");
             warn!("book.toml format.");
             warn!("Check the user guide for migration information:");
-            warn!("\thttps://rust-lang-nursery.github.io/mdBook/format/config.html");
+            warn!("\thttps://rust-lang.github.io/mdBook/format/config.html");
         }
 
         let mut config = if config_location.exists() {
@@ -182,7 +182,7 @@ impl MDBook {
     }
 
     /// Run the entire build process for a particular `Renderer`.
-    fn execute_build_process(&self, renderer: &dyn Renderer) -> Result<()> {
+    pub fn execute_build_process(&self, renderer: &dyn Renderer) -> Result<()> {
         let mut preprocessed_book = self.book.clone();
         let preprocess_ctx = PreprocessorContext::new(
             self.root.clone(),
@@ -336,6 +336,8 @@ fn determine_renderers(config: &Config) -> Vec<Box<dyn Renderer>> {
         renderers.extend(output_table.iter().map(|(key, table)| {
             if key == "html" {
                 Box::new(HtmlHandlebars::new()) as Box<dyn Renderer>
+            } else if key == "markdown" {
+                Box::new(MarkdownRenderer::new()) as Box<dyn Renderer>
             } else {
                 interpret_custom_renderer(key, table)
             }

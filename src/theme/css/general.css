@@ -2,6 +2,11 @@
 
 @import 'variables.css';
 
+:root {
+    /* Browser default font-size is 16px, this way 1 rem = 10px */
+    font-size: 62.5%;
+}
+
 html {
     font-family: "Open Sans", sans-serif;
     color: var(--fg);
@@ -11,19 +16,20 @@ html {
 
 body {
     margin: 0;
-    font-size: 1rem;
+    font-size: 1.6rem;
     overflow-x: hidden;
 }
 
 code {
-    font-family: "Source Code Pro", Consolas, "Ubuntu Mono", Menlo, "DejaVu Sans Mono", monospace, monospace;
+    font-family: "Source Code Pro", Consolas, "Ubuntu Mono", Menlo, "DejaVu Sans Mono", monospace, monospace !important;
     font-size: 0.875em; /* please adjust the ace font size accordingly in editor.js */
 }
 
 .left { float: left; }
 .right { float: right; }
+.boring { opacity: 0.6; }
+.hide-boring .boring { display: none; }
 .hidden { display: none; }
-.play-button.hidden { display: none; }
 
 h2, h3 { margin-top: 2.5em; }
 h4, h5 { margin-top: 2em; }
@@ -42,6 +48,13 @@ h4 a.header:target::before {
     content: "»";
     margin-left: -30px;
     width: 30px;
+}
+
+h1 a.header:target,
+h2 a.header:target,
+h3 a.header:target,
+h4 a.header:target {
+    scroll-margin-top: calc(var(--menu-bar-height) + 0.5em);
 }
 
 .page {
@@ -92,6 +105,9 @@ table thead {
 table thead td {
     font-weight: 700;
     border: none;
+}
+table thead th {
+    padding: 3px 20px;
 }
 table thead tr {
     border: 1px var(--table-header-bg) solid;

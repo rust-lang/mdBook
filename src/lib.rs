@@ -75,9 +75,9 @@
 //! directly, making deserializing the `RenderContext` easy and giving you
 //! access to the various methods for working with the [`Config`].
 //!
-//! [user guide]: https://rust-lang-nursery.github.io/mdBook/
+//! [user guide]: https://rust-lang.github.io/mdBook/
 //! [`RenderContext`]: renderer/struct.RenderContext.html
-//! [relevant chapter]: https://rust-lang-nursery.github.io/mdBook/for_developers/backends.html
+//! [relevant chapter]: https://rust-lang.github.io/mdBook/for_developers/backends.html
 //! [`Config`]: config/struct.Config.html
 
 #![deny(missing_docs)]

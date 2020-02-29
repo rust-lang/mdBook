@@ -93,7 +93,7 @@ a > .hljs {
 .menu-title {
     display: inline-block;
     font-weight: 200;
-    font-size: 20px;
+    font-size: 2rem;
     line-height: var(--menu-bar-height);
     text-align: center;
     margin: 0;
@@ -188,8 +188,7 @@ a > .hljs {
 /* Inline code */
 
 :not(pre) > .hljs {
-    display: inline-block;
-    vertical-align: middle;
+    display: inline;
     padding: 0.1em 0.3em;
     border-radius: 3px;
 }
@@ -382,7 +381,13 @@ ul#searchresults span.teaser em {
     padding-left: 0;
     line-height: 2.2em;
 }
+
+.chapter ol {
+    width: 100%;
+}
+
 .chapter li {
+    display: flex;
     color: var(--sidebar-non-existant);
 }
 .chapter li a {
@@ -396,8 +401,35 @@ ul#searchresults span.teaser em {
     color: var(--sidebar-active);
 }
 
-.chapter li .active {
+.chapter li a.active {
     color: var(--sidebar-active);
+}
+
+.chapter li > a.toggle {
+    cursor: pointer;
+    display: block;
+    margin-left: auto;
+    padding: 0 10px;
+    user-select: none;
+    opacity: 0.68;
+}
+
+.chapter li > a.toggle div {
+    transition: transform 0.5s;
+}
+
+/* collapse the section */
+.chapter li:not(.expanded) + li > ol {
+    display: none;
+}
+
+.chapter li.expanded {
+    line-height: 1.5em;
+    margin-top: 0.6em;
+}
+
+.chapter li.expanded > a.toggle div {
+    transform: rotate(90deg);
 }
 
 .spacer {

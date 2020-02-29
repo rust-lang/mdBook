@@ -2,12 +2,15 @@
 use super::watch;
 use crate::{get_book_dir, open};
 use clap::{App, Arg, ArgMatches, SubCommand};
+use iron::headers;
 use iron::{status, AfterMiddleware, Chain, Iron, IronError, IronResult, Request, Response, Set};
 use mdbook::errors::*;
 use mdbook::utils;
 use mdbook::MDBook;
 
 struct ErrorRecover;
+
+struct NoCache;
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
@@ -86,6 +89,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     book.build()?;
 
     let mut chain = Chain::new(staticfile::Static::new(book.build_dir_for("html")));
+    chain.link_after(NoCache);
     chain.link_after(ErrorRecover);
     let _iron = Iron::new(chain)
         .http(&*address)
@@ -131,6 +135,17 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     });
 
     Ok(())
+}
+
+impl AfterMiddleware for NoCache {
+    fn after(&self, _: &mut Request, mut res: Response) -> IronResult<Response> {
+        res.headers.set(headers::CacheControl(vec![
+            headers::CacheDirective::NoStore,
+            headers::CacheDirective::MaxAge(0u32),
+        ]));
+
+        Ok(res)
+    }
 }
 
 impl AfterMiddleware for ErrorRecover {

@@ -19,7 +19,7 @@ book-test/
     └── SUMMARY.md
 ```
 
-- The `src` directory is were you write your book in markdown. It contains all
+- The `src` directory is where you write your book in markdown. It contains all
   the source files, configuration files, etc.
 
 - The `book` directory is where your book is rendered. All the output is ready

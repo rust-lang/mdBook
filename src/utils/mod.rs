@@ -11,7 +11,10 @@ use std::borrow::Cow;
 use std::fmt::Write;
 use std::path::Path;
 
-pub use self::string::{take_anchored_lines, take_lines};
+pub use self::string::{
+    take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,
+    take_rustdoc_include_lines,
+};
 
 /// Replaces multiple consecutive whitespace characters with a single space character.
 pub fn collapse_whitespace(text: &str) -> Cow<'_, str> {
@@ -155,7 +158,6 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
             Event::Start(Tag::Image(link_type, fix(dest, path), title))
         }
         Event::Html(html) => Event::Html(fix_html(html, path)),
-        Event::InlineHtml(html) => Event::InlineHtml(fix_html(html, path)),
         _ => event,
     }
 }
@@ -356,8 +358,7 @@ more text with spaces
 ```
 "#;
 
-            let expected =
-                r#"<pre><code class="language-rust,no_run,should_panic,property_3"></code></pre>
+            let expected = r#"<pre><code class="language-rust,no_run,should_panic,property_3"></code></pre>
 "#;
             assert_eq!(render_markdown(input, false), expected);
             assert_eq!(render_markdown(input, true), expected);
@@ -370,8 +371,7 @@ more text with spaces
 ```
 "#;
 
-            let expected =
-                r#"<pre><code class="language-rust,no_run,,,should_panic,,property_3"></code></pre>
+            let expected = r#"<pre><code class="language-rust,no_run,,,should_panic,,property_3"></code></pre>
 "#;
             assert_eq!(render_markdown(input, false), expected);
             assert_eq!(render_markdown(input, true), expected);
@@ -448,18 +448,12 @@ more text with spaces
 
         #[test]
         fn it_converts_single_quotes() {
-            assert_eq!(
-                convert_quotes_to_curly("'one', 'two'"),
-                "‘one’, ‘two’"
-            );
+            assert_eq!(convert_quotes_to_curly("'one', 'two'"), "‘one’, ‘two’");
         }
 
         #[test]
         fn it_converts_double_quotes() {
-            assert_eq!(
-                convert_quotes_to_curly(r#""one", "two""#),
-                "“one”, “two”"
-            );
+            assert_eq!(convert_quotes_to_curly(r#""one", "two""#), "“one”, “two”");
         }
 
         #[test]

@@ -148,6 +148,35 @@ fn rendered_code_has_playpen_stuff() {
 }
 
 #[test]
+fn anchors_include_text_between_but_not_anchor_comments() {
+    let temp = DummyBook::new().build().unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
+    md.build().unwrap();
+
+    let nested = temp.path().join("book/first/nested.html");
+    let text_between_anchors = vec!["unique-string-for-anchor-test"];
+    let anchor_text = vec!["ANCHOR"];
+
+    assert_contains_strings(nested.clone(), &text_between_anchors);
+    assert_doesnt_contain_strings(nested, &anchor_text);
+}
+
+#[test]
+fn rustdoc_include_hides_the_unspecified_part_of_the_file() {
+    let temp = DummyBook::new().build().unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
+    md.build().unwrap();
+
+    let nested = temp.path().join("book/first/nested.html");
+    let text = vec![
+        "<span class=\"boring\">fn some_function() {",
+        "<span class=\"boring\">fn some_other_function() {",
+    ];
+
+    assert_contains_strings(nested, &text);
+}
+
+#[test]
 fn chapter_content_appears_in_rendered_document() {
     let content = vec![
         ("index.html", "This file is just here to cause the"),
@@ -235,7 +264,12 @@ fn check_second_toc_level() {
     let mut should_be = Vec::from(TOC_SECOND_LEVEL);
     should_be.sort();
 
-    let pred = descendants!(Class("chapter"), Name("li"), Name("li"), Name("a"));
+    let pred = descendants!(
+        Class("chapter"),
+        Name("li"),
+        Name("li"),
+        Name("a").and(Class("toggle").not())
+    );
 
     let mut children_of_children: Vec<_> = doc
         .find(pred)
@@ -254,7 +288,11 @@ fn check_first_toc_level() {
     should_be.extend(TOC_SECOND_LEVEL);
     should_be.sort();
 
-    let pred = descendants!(Class("chapter"), Name("li"), Name("a"));
+    let pred = descendants!(
+        Class("chapter"),
+        Name("li"),
+        Name("a").and(Class("toggle").not())
+    );
 
     let mut children: Vec<_> = doc
         .find(pred)
@@ -268,7 +306,7 @@ fn check_first_toc_level() {
 #[test]
 fn check_spacers() {
     let doc = root_index_html().unwrap();
-    let should_be = 1;
+    let should_be = 2;
 
     let num_spacers = doc
         .find(Class("chapter").descendant(Name("li").and(Class("spacer"))))
@@ -452,12 +490,15 @@ fn markdown_options() {
             "<td>bim</td>",
         ],
     );
-    assert_contains_strings(&path, &[
-        r##"<sup class="footnote-reference"><a href="#1">1</a></sup>"##,
-        r##"<sup class="footnote-reference"><a href="#word">2</a></sup>"##,
-        r##"<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>"##,
-        r##"<div class="footnote-definition" id="word"><sup class="footnote-definition-label">2</sup>"##,
-    ]);
+    assert_contains_strings(
+        &path,
+        &[
+            r##"<sup class="footnote-reference"><a href="#1">1</a></sup>"##,
+            r##"<sup class="footnote-reference"><a href="#word">2</a></sup>"##,
+            r##"<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>"##,
+            r##"<div class="footnote-definition" id="word"><sup class="footnote-definition-label">2</sup>"##,
+        ],
+    );
     assert_contains_strings(&path, &["<del>strikethrough example</del>"]);
     assert_contains_strings(
         &path,

@@ -22,7 +22,7 @@ overridden with your own.
 
 If you want to use another theme for `highlight.js` download it from their
 website, or make it yourself, rename it to `highlight.css` and put it in
-`src/theme` (or the equivalent if you changed your source folder)
+the `theme` folder of your book.
 
 Now your theme will be used instead of the default theme.
 
@@ -62,7 +62,7 @@ everyone can benefit from it.**
 
 If you think the default theme doesn't look quite right for a specific language,
 or could be improved. Feel free to [submit a new
-issue](https://github.com/rust-lang-nursery/mdBook/issues) explaining what you
+issue](https://github.com/rust-lang/mdBook/issues) explaining what you
 have in mind and I will take a look at it.
 
 You could also create a pull-request with the proposed improvements.

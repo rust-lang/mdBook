@@ -6,6 +6,7 @@ use crate::renderer::{RenderContext, Renderer};
 use crate::theme::{self, playpen_editor, Theme};
 use crate::utils;
 
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::fs;
@@ -60,7 +61,11 @@ impl HtmlHandlebars {
                     .get("book_title")
                     .and_then(serde_json::Value::as_str)
                     .unwrap_or("");
-                title = ch.name.clone() + " - " + book_title;
+
+                title = match book_title {
+                    "" => ch.name.clone(),
+                    _ => ch.name.clone() + " - " + book_title,
+                }
             }
 
             ctx.data.insert("path".to_owned(), json!(path));
@@ -71,6 +76,10 @@ impl HtmlHandlebars {
                 "path_to_root".to_owned(),
                 json!(utils::fs::path_to_root(&ch.path)),
             );
+            if let Some(ref section) = ch.number {
+                ctx.data
+                    .insert("section".to_owned(), json!(section.to_string()));
+            }
 
             // Render the handlebars template with the data
             debug!("Render template");
@@ -85,6 +94,7 @@ impl HtmlHandlebars {
             if ctx.is_index {
                 ctx.data.insert("path".to_owned(), json!("index.md"));
                 ctx.data.insert("path_to_root".to_owned(), json!(""));
+                ctx.data.insert("is_index".to_owned(), json!("true"));
                 let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
                 let rendered_index = self.post_process(rendered_index, &ctx.html_config.playpen);
                 debug!("Creating index.html from {}", path);
@@ -381,7 +391,6 @@ fn make_data(
     html_config: &HtmlConfig,
 ) -> Result<serde_json::Map<String, serde_json::Value>> {
     trace!("make_data");
-    let html = config.html_config().unwrap_or_default();
 
     let mut data = serde_json::Map::new();
     data.insert(
@@ -402,24 +411,33 @@ fn make_data(
     }
 
     let default_theme = match html_config.default_theme {
-        Some(ref theme) => theme,
-        None => "light",
+        Some(ref theme) => theme.to_lowercase(),
+        None => "light".to_string(),
     };
     data.insert("default_theme".to_owned(), json!(default_theme));
 
+    let preferred_dark_theme = match html_config.preferred_dark_theme {
+        Some(ref theme) => theme.to_lowercase(),
+        None => default_theme,
+    };
+    data.insert(
+        "preferred_dark_theme".to_owned(),
+        json!(preferred_dark_theme),
+    );
+
     // Add google analytics tag
-    if let Some(ref ga) = config.html_config().and_then(|html| html.google_analytics) {
+    if let Some(ref ga) = html_config.google_analytics {
         data.insert("google_analytics".to_owned(), json!(ga));
     }
 
-    if html.mathjax_support {
+    if html_config.mathjax_support {
         data.insert("mathjax_support".to_owned(), json!(true));
     }
 
     // Add check to see if there is an additional style
-    if !html.additional_css.is_empty() {
+    if !html_config.additional_css.is_empty() {
         let mut css = Vec::new();
-        for style in &html.additional_css {
+        for style in &html_config.additional_css {
             match style.strip_prefix(root) {
                 Ok(p) => css.push(p.to_str().expect("Could not convert to str")),
                 Err(_) => css.push(style.to_str().expect("Could not convert to str")),
@@ -429,9 +447,9 @@ fn make_data(
     }
 
     // Add check to see if there is an additional script
-    if !html.additional_js.is_empty() {
+    if !html_config.additional_js.is_empty() {
         let mut js = Vec::new();
-        for script in &html.additional_js {
+        for script in &html_config.additional_js {
             match script.strip_prefix(root) {
                 Ok(p) => js.push(p.to_str().expect("Could not convert to str")),
                 Err(_) => js.push(script.to_str().expect("Could not convert to str")),
@@ -440,9 +458,18 @@ fn make_data(
         data.insert("additional_js".to_owned(), json!(js));
     }
 
-    if html.playpen.editable && html.playpen.copy_js {
+    if html_config.playpen.editable && html_config.playpen.copy_js {
         data.insert("playpen_js".to_owned(), json!(true));
+        if html_config.playpen.line_numbers {
+            data.insert("playpen_line_numbers".to_owned(), json!(true));
+        }
     }
+    if html_config.playpen.copyable {
+        data.insert("playpen_copyable".to_owned(), json!(true));
+    }
+
+    data.insert("fold_enable".to_owned(), json!((html_config.fold.enable)));
+    data.insert("fold_level".to_owned(), json!((html_config.fold.level)));
 
     let search = html_config.search.clone();
     if cfg!(feature = "search") {
@@ -463,6 +490,7 @@ fn make_data(
     if let Some(ref git_repository_url) = html_config.git_repository_url {
         data.insert("git_repository_url".to_owned(), json!(git_repository_url));
     }
+
     let git_repository_icon = match html_config.git_repository_icon {
         Some(ref git_repository_icon) => git_repository_icon,
         None => "fa-github",
@@ -480,6 +508,11 @@ fn make_data(
                 if let Some(ref section) = ch.number {
                     chapter.insert("section".to_owned(), json!(section.to_string()));
                 }
+
+                chapter.insert(
+                    "has_sub_items".to_owned(),
+                    json!((!ch.sub_items.is_empty()).to_string()),
+                );
 
                 chapter.insert("name".to_owned(), json!(ch.name));
                 let path = ch
@@ -579,26 +612,36 @@ fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
             let classes = &caps[2];
             let code = &caps[3];
 
-            if (classes.contains("language-rust")
-                && !classes.contains("ignore")
-                && !classes.contains("noplaypen"))
-                || classes.contains("mdbook-runnable")
-            {
-                // wrap the contents in an external pre block
-                if playpen_config.editable && classes.contains("editable")
-                    || text.contains("fn main")
-                    || text.contains("quick_main!")
+            if classes.contains("language-rust") {
+                if (!classes.contains("ignore") && !classes.contains("noplaypen"))
+                    || classes.contains("mdbook-runnable")
                 {
-                    format!("<pre class=\"playpen\">{}</pre>", text)
-                } else {
-                    // we need to inject our own main
-                    let (attrs, code) = partition_source(code);
-
+                    // wrap the contents in an external pre block
                     format!(
-                        "<pre class=\"playpen\"><code class=\"{}\">\n# \
-                         #![allow(unused_variables)]\n{}#fn main() {{\n{}#}}</code></pre>",
-                        classes, attrs, code
+                        "<pre class=\"playpen\"><code class=\"{}\">{}</code></pre>",
+                        classes,
+                        {
+                            let content: Cow<'_, str> = if playpen_config.editable
+                                && classes.contains("editable")
+                                || text.contains("fn main")
+                                || text.contains("quick_main!")
+                            {
+                                code.into()
+                            } else {
+                                // we need to inject our own main
+                                let (attrs, code) = partition_source(code);
+
+                                format!(
+                                    "\n# #![allow(unused_variables)]\n{}#fn main() {{\n{}#}}",
+                                    attrs, code
+                                )
+                                .into()
+                            };
+                            hide_lines(&content)
+                        }
                     )
+                } else {
+                    format!("<code class=\"{}\">{}</code>", classes, hide_lines(code))
                 }
             } else {
                 // not language-rust, so no-op
@@ -606,6 +649,38 @@ fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
             }
         })
         .into_owned()
+}
+
+lazy_static! {
+    static ref BORING_LINES_REGEX: Regex = Regex::new(r"^(\s*)#(.?)(.*)$").unwrap();
+}
+
+fn hide_lines(content: &str) -> String {
+    let mut result = String::with_capacity(content.len());
+    for line in content.lines() {
+        if let Some(caps) = BORING_LINES_REGEX.captures(line) {
+            if &caps[2] == "#" {
+                result += &caps[1];
+                result += &caps[2];
+                result += &caps[3];
+                result += "\n";
+                continue;
+            } else if &caps[2] != "!" && &caps[2] != "[" {
+                result += "<span class=\"boring\">";
+                result += &caps[1];
+                if &caps[2] != " " {
+                    result += &caps[2];
+                }
+                result += &caps[3];
+                result += "\n";
+                result += "</span>";
+                continue;
+            }
+        }
+        result += line;
+        result += "\n";
+    }
+    result
 }
 
 fn partition_source(s: &str) -> (String, String) {
@@ -673,6 +748,36 @@ mod tests {
         for (src, should_be) in inputs {
             let got = build_header_links(&src);
             assert_eq!(got, should_be);
+        }
+    }
+
+    #[test]
+    fn add_playpen() {
+        let inputs = [
+          ("<code class=\"language-rust\">x()</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust\">\n<span class=\"boring\">#![allow(unused_variables)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
+          ("<code class=\"language-rust\">fn main() {}</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust\">fn main() {}\n</code></pre>"),
+          ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";\n</code></pre>"),
+          ("<code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";\n</code></pre>"),
+          ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span><span class=\"boring\">\n</span>\";\n</code></pre>"),
+          ("<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>",
+           "<code class=\"language-rust ignore\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";\n</code>"),
+          ("<code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code>",
+           "<pre class=\"playpen\"><code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]\n</code></pre>"),
+        ];
+        for (src, should_be) in &inputs {
+            let got = add_playpen_pre(
+                src,
+                &Playpen {
+                    editable: true,
+                    ..Playpen::default()
+                },
+            );
+            assert_eq!(&*got, *should_be);
         }
     }
 }

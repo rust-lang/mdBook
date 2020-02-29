@@ -153,7 +153,8 @@ impl From<Link> for SummaryItem {
 /// > match the following regex: "[^<>\n[]]+".
 struct SummaryParser<'a> {
     src: &'a str,
-    stream: pulldown_cmark::Parser<'a>,
+    stream: pulldown_cmark::OffsetIter<'a>,
+    offset: usize,
 }
 
 /// Reads `Events` from the provided stream until the corresponding
@@ -174,7 +175,7 @@ macro_rules! collect_events {
         let mut events = Vec::new();
 
         loop {
-            let event = $stream.next();
+            let event = $stream.next().map(|(ev, _range)| ev);
             trace!("Next event: {:?}", event);
 
             match event {
@@ -196,23 +197,22 @@ macro_rules! collect_events {
 
 impl<'a> SummaryParser<'a> {
     fn new(text: &str) -> SummaryParser<'_> {
-        let pulldown_parser = pulldown_cmark::Parser::new(text);
+        let pulldown_parser = pulldown_cmark::Parser::new(text).into_offset_iter();
 
         SummaryParser {
             src: text,
             stream: pulldown_parser,
+            offset: 0,
         }
     }
 
     /// Get the current line and column to give the user more useful error
     /// messages.
     fn current_location(&self) -> (usize, usize) {
-        let byte_offset = self.stream.get_offset();
-
-        let previous_text = self.src[..byte_offset].as_bytes();
+        let previous_text = self.src[..self.offset].as_bytes();
         let line = Memchr::new(b'\n', previous_text).count() + 1;
         let start_of_line = memchr::memrchr(b'\n', previous_text).unwrap_or(0);
-        let col = self.src[start_of_line..byte_offset].chars().count();
+        let col = self.src[start_of_line..self.offset].chars().count();
 
         (line, col)
     }
@@ -263,7 +263,7 @@ impl<'a> SummaryParser<'a> {
                     let link = self.parse_link(href.to_string())?;
                     items.push(SummaryItem::Link(link));
                 }
-                Some(Event::Start(Tag::Rule)) => items.push(SummaryItem::Separator),
+                Some(Event::Rule) => items.push(SummaryItem::Separator),
                 Some(_) => {}
                 None => break,
             }
@@ -319,9 +319,6 @@ impl<'a> SummaryParser<'a> {
                     break;
                 }
                 Some(Event::Start(other_tag)) => {
-                    if other_tag == Tag::Rule {
-                        items.push(SummaryItem::Separator);
-                    }
                     trace!("Skipping contents of {:?}", other_tag);
 
                     // Skip over the contents of this tag
@@ -331,6 +328,14 @@ impl<'a> SummaryParser<'a> {
                         }
                     }
 
+                    if let Some(Event::Start(Tag::List(..))) = self.next_event() {
+                        continue;
+                    } else {
+                        break;
+                    }
+                }
+                Some(Event::Rule) => {
+                    items.push(SummaryItem::Separator);
                     if let Some(Event::Start(Tag::List(..))) = self.next_event() {
                         continue;
                     } else {
@@ -352,7 +357,10 @@ impl<'a> SummaryParser<'a> {
     }
 
     fn next_event(&mut self) -> Option<Event<'a>> {
-        let next = self.stream.next();
+        let next = self.stream.next().map(|(ev, range)| {
+            self.offset = range.start;
+            ev
+        });
         trace!("Next event: {:?}", next);
 
         next
@@ -431,10 +439,10 @@ impl<'a> SummaryParser<'a> {
 
     /// Try to parse the title line.
     fn parse_title(&mut self) -> Option<String> {
-        if let Some(Event::Start(Tag::Header(1))) = self.next_event() {
+        if let Some(Event::Start(Tag::Heading(1))) = self.next_event() {
             debug!("Found a h1 in the SUMMARY");
 
-            let tags = collect_events!(self.stream, end Tag::Header(1));
+            let tags = collect_events!(self.stream, end Tag::Heading(1));
             Some(stringify_events(tags))
         } else {
             None
@@ -629,7 +637,7 @@ mod tests {
         let _ = parser.stream.next(); // skip past start of paragraph
 
         let href = match parser.stream.next() {
-            Some(Event::Start(Tag::Link(_type, href, _title))) => href.to_string(),
+            Some((Event::Start(Tag::Link(_type, href, _title)), _range)) => href.to_string(),
             other => panic!("Unreachable, {:?}", other),
         };
 
@@ -728,7 +736,7 @@ mod tests {
         assert!(got.is_err());
     }
 
-    /// Regression test for https://github.com/rust-lang-nursery/mdBook/issues/779
+    /// Regression test for https://github.com/rust-lang/mdBook/issues/779
     /// Ensure section numbers are correctly incremented after a horizontal separator.
     #[test]
     fn keep_numbering_after_separator() {

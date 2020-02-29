@@ -81,7 +81,7 @@ This controls the build process of your book.
 
 The following preprocessors are available and included by default:
 
-- `links`: Expand the `{{ #playpen }}` and `{{ #include }}` handlebars
+- `links`: Expand the `{{ #playpen }}`, `{{ #include }}`, and `{{ #rustdoc_include }}` handlebars
   helpers in a chapter to include the contents of a file.
 - `index`: Convert all chapter files named `README.md` into `index.md`. That is
   to say, all `README.md` would be rendered to an index file `index.html` in the
@@ -150,6 +150,10 @@ The following configuration options are available:
   files with the ones found in the specified folder.
 - **default-theme:** The theme color scheme to select by default in the
   'Change Theme' dropdown. Defaults to `light`.
+- **preferred-dark-theme:** The default dark theme. This theme will be used if
+  the browser requests the dark version of the site via the
+  ['prefers-color-scheme'](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)
+  CSS media query. Defaults to the same theme as `default-theme`.
 - **curly-quotes:** Convert straight quotes to curly quotes, except for those
   that occur in code blocks and code spans. Defaults to `false`.
 - **mathjax-support:** Adds support for [MathJax](mathjax.md). Defaults to
@@ -166,6 +170,7 @@ The following configuration options are available:
 - **no-section-label:** mdBook by defaults adds section label in table of
   contents column. For example, "1.", "2.1". Set this option to true to disable
   those labels. Defaults to `false`.
+- **fold:** A subtable for configuring sidebar section-folding behavior.
 - **playpen:** A subtable for configuring various playpen settings.
 - **search:** A subtable for configuring the in-browser search functionality.
   mdBook must be compiled with the `search` feature enabled (on by default).
@@ -173,12 +178,21 @@ The following configuration options are available:
   an icon link will be output in the menu bar of the book.
 - **git-repository-icon:** The FontAwesome icon class to use for the git
   repository link. Defaults to `fa-github`.
+  
+Available configuration options for the `[output.html.fold]` table:
+
+- **enable:** Enable section-folding. When off, all folds are open.
+  Defaults to `false`.
+- **level:** The higher the more folded regions are open. When level is 0, all
+  folds are closed. Defaults to `0`.
 
 Available configuration options for the `[output.html.playpen]` table:
 
 - **editable:** Allow editing the source code. Defaults to `false`.
+- **copyable:** Display the copy button on code snippets. Defaults to `true`.
 - **copy-js:** Copy JavaScript files for the editor to the output directory.
   Defaults to `true`.
+- **line-numbers** Display line numbers on editable sections of code. Requires both `editable` and `copy-js` to be `true`. Defaults to `false`.
 
 [Ace]: https://ace.c9.io/
 
@@ -189,7 +203,7 @@ Available configuration options for the `[output.html.search]` table:
 - **teaser-word-count:** The number of words used for a search result teaser.
   Defaults to `30`.
 - **use-boolean-and:** Define the logical link between multiple search words. If
-  true, all search words must appear in each result. Defaults to `true`.
+  true, all search words must appear in each result. Defaults to `false`.
 - **boost-title:** Boost factor for the search result score if a search word
   appears in the header. Defaults to `2`.
 - **boost-hierarchy:** Boost factor for the search result score if a search word
@@ -216,18 +230,24 @@ description = "The example book covers examples."
 [output.html]
 theme = "my-theme"
 default-theme = "light"
+preferred-dark-theme = "navy"
 curly-quotes = true
 mathjax-support = false
 google-analytics = "123456"
 additional-css = ["custom.css", "custom2.css"]
 additional-js = ["custom.js"]
 no-section-label = false
-git-repository-url = "https://github.com/rust-lang-nursery/mdBook"
+git-repository-url = "https://github.com/rust-lang/mdBook"
 git-repository-icon = "fa-github"
+
+[output.html.fold]
+enable = false
+level = 0
 
 [output.html.playpen]
 editable = false
 copy-js = true
+line-numbers = false
 
 [output.html.search]
 enable = true
@@ -241,6 +261,26 @@ expand = true
 heading-split-level = 3
 copy-js = true
 ```
+
+### Markdown Renderer
+
+The Markdown renderer will run preprocessors and then output the resulting
+Markdown. This is mostly useful for debugging preprocessors, especially in
+conjunction with `mdbook test` to see the Markdown that `mdbook` is passing
+to `rustdoc`.
+
+The Markdown renderer is included with `mdbook` but disabled by default.
+Enable it by adding an emtpy table to your `book.toml` as follows:
+
+```toml
+[output.markdown]
+```
+
+There are no configuration options for the Markdown renderer at this time;
+only whether it is enabled or disabled.
+
+See [the preprocessors documentation](#configuring-preprocessors) for how to
+specify which preprocessors should run before the Markdown renderer.
 
 ### Custom Renderers
 

@@ -63,6 +63,27 @@ fn find_chapter(
         .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
         .replace("\"", "");
 
+    if !rc.evaluate(ctx, "@root/is_index")?.is_missing() {
+        // Special case for index.md which may be a synthetic page.
+        // Target::find won't match because there is no page with the path
+        // "index.md" (unless there really is an index.md in SUMMARY.md).
+        match target {
+            Target::Previous => return Ok(None),
+            Target::Next => match chapters
+                .iter()
+                .filter(|chapter| {
+                    // Skip things like "spacer"
+                    chapter.contains_key("path")
+                })
+                .skip(1)
+                .next()
+            {
+                Some(chapter) => return Ok(Some(chapter.clone())),
+                None => return Ok(None),
+            },
+        }
+    }
+
     let mut previous: Option<StringMap> = None;
 
     debug!("Search for chapter");
