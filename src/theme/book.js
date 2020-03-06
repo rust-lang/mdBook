@@ -580,26 +580,60 @@ function playpen_text(playpen) {
     });
 })();
 
-(function autoHideMenu() {
+(function controllMenu() {
     var menu = document.getElementById('menu-bar');
 
-    var previousScrollTop = document.scrollingElement.scrollTop;
-
-    document.addEventListener('scroll', function () {
-        if (menu.classList.contains('folded') && document.scrollingElement.scrollTop < previousScrollTop) {
-            menu.classList.remove('folded');
-        } else if (!menu.classList.contains('folded') && document.scrollingElement.scrollTop > previousScrollTop) {
-            menu.classList.add('folded');
-        }
-
-        if (!menu.classList.contains('bordered') && document.scrollingElement.scrollTop > 0) {
-            menu.classList.add('bordered');
-        }
-
-        if (menu.classList.contains('bordered') && document.scrollingElement.scrollTop === 0) {
-            menu.classList.remove('bordered');
-        }
-
-        previousScrollTop = Math.max(document.scrollingElement.scrollTop, 0);
-    }, { passive: true });
+    (function controllPosition() {
+        var scrollTop = document.scrollingElement.scrollTop;
+        var prevScrollTop = scrollTop;
+        var minMenuY = -menu.clientHeight - 50;
+        // When the script loads, the page can be at any scroll (e.g. if you reforesh it).
+        menu.style.top = scrollTop + 'px';
+        // Same as parseInt(menu.style.top.slice(0, -2), but faster
+        var topCache = menu.style.top.slice(0, -2);
+        menu.classList.remove('sticky');
+        var stickyCache = false; // Same as menu.classList.contains('sticky'), but faster
+        document.addEventListener('scroll', function () {
+            scrollTop = Math.max(document.scrollingElement.scrollTop, 0);
+            // `null` means that it doesn't need to be updated
+            var nextSticky = null;
+            var nextTop = null;
+            var scrollDown = scrollTop > prevScrollTop;
+            var menuPosAbsoluteY = topCache - scrollTop;
+            if (scrollDown) {
+                nextSticky = false;
+                if (menuPosAbsoluteY > 0) {
+                    nextTop = prevScrollTop;
+                }
+            } else {
+                if (menuPosAbsoluteY > 0) {
+                    nextSticky = true;
+                } else if (menuPosAbsoluteY < minMenuY) {
+                    nextTop = prevScrollTop + minMenuY;
+                }
+            }
+            if (nextSticky === true && stickyCache === false) {
+                menu.classList.add('sticky');
+                stickyCache = true;
+            } else if (nextSticky === false && stickyCache === true) {
+                menu.classList.remove('sticky');
+                stickyCache = false;
+            }
+            if (nextTop !== null) {
+                menu.style.top = nextTop + 'px';
+                topCache = nextTop;
+            }
+            prevScrollTop = scrollTop;
+        }, { passive: true });
+    })();
+    (function controllBorder() {
+        menu.classList.remove('bordered');
+        document.addEventListener('scroll', function () {
+            if (menu.offsetTop === 0) {
+                menu.classList.remove('bordered');
+            } else {
+                menu.classList.add('bordered');
+            }
+        }, { passive: true });
+    })();
 })();

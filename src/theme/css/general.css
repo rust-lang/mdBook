@@ -60,6 +60,7 @@ h4 a.header:target {
 .page {
     outline: 0;
     padding: 0 var(--page-padding);
+    margin-top: calc(0px - var(--menu-bar-height)); /* Compensate for the #menu-bar-hover-placeholder */
 }
 .page-wrapper {
     box-sizing: border-box;
