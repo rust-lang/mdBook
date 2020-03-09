@@ -20,7 +20,7 @@ chrono = "0.4"
 clap = "2.24"
 env_logger = "0.6"
 error-chain = "0.12"
-handlebars = { version = "2.0", default-features = false, features = ["no_dir_source"] }
+handlebars = "3.0"
 itertools = "0.8"
 lazy_static = "1.0"
 log = "0.4"

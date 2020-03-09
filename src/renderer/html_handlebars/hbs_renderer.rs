@@ -212,7 +212,7 @@ impl HtmlHandlebars {
         );
     }
 
-    fn register_hbs_helpers(&self, handlebars: &mut Handlebars, html_config: &HtmlConfig) {
+    fn register_hbs_helpers(&self, handlebars: &mut Handlebars<'_>, html_config: &HtmlConfig) {
         handlebars.register_helper(
             "toc",
             Box::new(helpers::toc::RenderToc {
@@ -705,7 +705,7 @@ fn partition_source(s: &str) -> (String, String) {
 }
 
 struct RenderItemContext<'a> {
-    handlebars: &'a Handlebars,
+    handlebars: &'a Handlebars<'a>,
     destination: PathBuf,
     data: serde_json::Map<String, serde_json::Value>,
     is_index: bool,

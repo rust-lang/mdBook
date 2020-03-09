@@ -2,9 +2,9 @@ use handlebars::{Context, Handlebars, Helper, Output, RenderContext, RenderError
 
 pub fn theme_option(
     h: &Helper<'_, '_>,
-    _r: &Handlebars,
+    _r: &Handlebars<'_>,
     ctx: &Context,
-    rc: &mut RenderContext<'_>,
+    rc: &mut RenderContext<'_, '_>,
     out: &mut dyn Output,
 ) -> Result<(), RenderError> {
     trace!("theme_option (handlebars helper)");
