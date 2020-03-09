@@ -237,14 +237,15 @@ fn load_summary_item<P: AsRef<Path> + Clone>(
     }
 }
 
-fn load_chapter<P: AsRef<Path> + Clone>(
+fn load_chapter<P: AsRef<Path>>(
     link: &Link,
     src_dir: P,
     parent_names: Vec<String>,
 ) -> Result<Chapter> {
+    let src_dir = src_dir.as_ref();
+
     let mut ch = if let Some(ref link_location) = link.location {
         debug!("Loading {} ({})", link.name, link_location.display());
-        let src_dir = src_dir.as_ref();
 
         let location = if link_location.is_absolute() {
             link_location.clone()
@@ -276,7 +277,7 @@ fn load_chapter<P: AsRef<Path> + Clone>(
     let sub_items = link
         .nested_items
         .iter()
-        .map(|i| load_summary_item(i, src_dir.clone(), sub_item_parents.clone()))
+        .map(|i| load_summary_item(i, src_dir, sub_item_parents.clone()))
         .collect::<Result<Vec<_>>>()?;
 
     ch.sub_items = sub_items;

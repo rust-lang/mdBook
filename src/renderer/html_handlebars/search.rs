@@ -71,13 +71,7 @@ fn render_item(
     item: &BookItem,
 ) -> Result<()> {
     let chapter = match *item {
-        BookItem::Chapter(ref ch) => {
-            if let Some(_) = ch.path {
-                ch
-            } else {
-                return Ok(());
-            }
-        }
+        BookItem::Chapter(ref ch) if !ch.is_draft_chapter() => ch,
         _ => return Ok(()),
     };
 

@@ -251,39 +251,40 @@ impl MDBook {
 
         for item in book.iter() {
             if let BookItem::Chapter(ref ch) = *item {
-                if let Some(ref chapter_path) = ch.path {
-                    if !chapter_path.as_os_str().is_empty() {
-                        let path = self.source_dir().join(&chapter_path);
-                        info!("Testing file: {:?}", path);
+                let chapter_path = match ch.path {
+                    Some(ref path) if !path.as_os_str().is_empty() => path,
+                    _ => continue,
+                };
 
-                        // write preprocessed file to tempdir
-                        let path = temp_dir.path().join(&chapter_path);
-                        let mut tmpf = utils::fs::create_file(&path)?;
-                        tmpf.write_all(ch.content.as_bytes())?;
+                let path = self.source_dir().join(&chapter_path);
+                info!("Testing file: {:?}", path);
 
-                        let mut cmd = Command::new("rustdoc");
-                        cmd.arg(&path).arg("--test").args(&library_args);
+                // write preprocessed file to tempdir
+                let path = temp_dir.path().join(&chapter_path);
+                let mut tmpf = utils::fs::create_file(&path)?;
+                tmpf.write_all(ch.content.as_bytes())?;
 
-                        if let Some(edition) = self.config.rust.edition {
-                            match edition {
-                                RustEdition::E2015 => {
-                                    cmd.args(&["--edition", "2015"]);
-                                }
-                                RustEdition::E2018 => {
-                                    cmd.args(&["--edition", "2018"]);
-                                }
-                            }
+                let mut cmd = Command::new("rustdoc");
+                cmd.arg(&path).arg("--test").args(&library_args);
+
+                if let Some(edition) = self.config.rust.edition {
+                    match edition {
+                        RustEdition::E2015 => {
+                            cmd.args(&["--edition", "2015"]);
                         }
-
-                        let output = cmd.output()?;
-
-                        if !output.status.success() {
-                            bail!(ErrorKind::Subprocess(
-                                "Rustdoc returned an error".to_string(),
-                                output
-                            ));
+                        RustEdition::E2018 => {
+                            cmd.args(&["--edition", "2018"]);
                         }
                     }
+                }
+
+                let output = cmd.output()?;
+
+                if !output.status.success() {
+                    bail!(ErrorKind::Subprocess(
+                        "Rustdoc returned an error".to_string(),
+                        output
+                    ));
                 }
             }
         }
