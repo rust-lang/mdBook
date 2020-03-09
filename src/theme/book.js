@@ -504,13 +504,11 @@ function playpen_text(playpen) {
     }, { passive: true });
 
     // Scroll sidebar to current active section
-    window.addEventListener('load', function() {
-        var activeSection = document.getElementById("sidebar").querySelector(".active");
-        if (activeSection) {
-            // https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
-            activeSection.scrollIntoView({ block: 'center' });
-        }
-    });
+    var activeSection = document.getElementById("sidebar").querySelector(".active");
+    if (activeSection) {
+        // https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
+        activeSection.scrollIntoView({ block: 'center' });
+    }
 })();
 
 (function chapterNavigation() {
