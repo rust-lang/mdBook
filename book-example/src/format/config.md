@@ -9,6 +9,8 @@ Here is an example of what a ***book.toml*** file might look like:
 title = "Example book"
 author = "John Doe"
 description = "The example book covers examples."
+
+[rust]
 edition = "2018"
 
 [build]
@@ -44,7 +46,6 @@ This is general information about your book.
   `src` directly under the root folder. But this is configurable with the `src`
   key in the configuration file.
 - **language:** The main language of the book, which is used as a language attribute `<html lang="en">` for example.
-- **edition**: Rust edition to use by default for the code snippets. Defaults to `rustdoc` defaults (2015).
 
 **book.toml**
 ```toml
@@ -54,8 +55,13 @@ authors = ["John Doe", "Jane Doe"]
 description = "The example book covers examples."
 src = "my-src"  # the source files will be found in `root/my-src` instead of `root/src`
 language = "en"
-edition = "2018"
 ```
+
+### Rust options
+
+Options for the Rust compiler used for playpen.
+
+- **edition**: Rust edition to use by default for the code snippets. Defaults to `rustdoc` defaults (2015).
 
 ### Build options
 

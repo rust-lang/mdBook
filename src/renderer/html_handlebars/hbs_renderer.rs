@@ -349,7 +349,7 @@ impl Renderer for HtmlHandlebars {
                 data: data.clone(),
                 is_index,
                 html_config: html_config.clone(),
-                edition: ctx.config.book.edition,
+                edition: ctx.config.rust.edition,
             };
             self.render_item(item, ctx, &mut print_content)?;
             is_index = false;
@@ -365,7 +365,7 @@ impl Renderer for HtmlHandlebars {
         debug!("Render template");
         let rendered = handlebars.render("index", &data)?;
 
-        let rendered = self.post_process(rendered, &html_config.playpen, ctx.config.book.edition);
+        let rendered = self.post_process(rendered, &html_config.playpen, ctx.config.rust.edition);
 
         utils::fs::write_file(&destination, "print.html", rendered.as_bytes())?;
         debug!("Creating print.html ✓");

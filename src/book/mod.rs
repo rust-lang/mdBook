@@ -265,7 +265,7 @@ impl MDBook {
                     let mut cmd = Command::new("rustdoc");
                     cmd.arg(&path).arg("--test").args(&library_args);
 
-                    if let Some(edition) = self.config.book.edition {
+                    if let Some(edition) = self.config.rust.edition {
                         match edition {
                             RustEdition::E2015 => {
                                 cmd.args(&["--edition", "2015"]);

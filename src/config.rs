@@ -72,6 +72,8 @@ pub struct Config {
     pub book: BookConfig,
     /// Information about the build environment.
     pub build: BuildConfig,
+    /// Information passed to the Rust playground
+    pub rust: RustConfig,
     rest: Value,
 }
 
@@ -280,6 +282,7 @@ impl Default for Config {
         Config {
             book: BookConfig::default(),
             build: BuildConfig::default(),
+            rust: RustConfig::default(),
             rest: Value::Table(Table::default()),
         }
     }
@@ -320,9 +323,15 @@ impl<'de> Deserialize<'de> for Config {
             .and_then(|value| value.try_into().ok())
             .unwrap_or_default();
 
+        let rust: RustConfig = table
+            .remove("rust")
+            .and_then(|value| value.try_into().ok())
+            .unwrap_or_default();
+
         Ok(Config {
             book,
             build,
+            rust,
             rest: Value::Table(table),
         })
     }
@@ -393,8 +402,6 @@ pub struct BookConfig {
     pub multilingual: bool,
     /// The main language of the book.
     pub language: Option<String>,
-    /// Rust edition to use for the code.
-    pub edition: Option<RustEdition>,
 }
 
 impl Default for BookConfig {
@@ -406,9 +413,40 @@ impl Default for BookConfig {
             src: PathBuf::from("src"),
             multilingual: false,
             language: Some(String::from("en")),
-            edition: None,
         }
     }
+}
+
+/// Configuration for the build procedure.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct BuildConfig {
+    /// Where to put built artefacts relative to the book's root directory.
+    pub build_dir: PathBuf,
+    /// Should non-existent markdown files specified in `SUMMARY.md` be created
+    /// if they don't exist?
+    pub create_missing: bool,
+    /// Should the default preprocessors always be used when they are
+    /// compatible with the renderer?
+    pub use_default_preprocessors: bool,
+}
+
+impl Default for BuildConfig {
+    fn default() -> BuildConfig {
+        BuildConfig {
+            build_dir: PathBuf::from("book"),
+            create_missing: true,
+            use_default_preprocessors: true,
+        }
+    }
+}
+
+/// Configuration for the Rust compiler(e.g., for playpen)
+#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct RustConfig {
+    /// Rust edition used in playpen
+    pub edition: Option<RustEdition>,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -451,36 +489,12 @@ impl<'de> Deserialize<'de> for RustEdition {
         let edition = match edition.as_str() {
             "2018" => RustEdition::E2018,
             "2015" => RustEdition::E2015,
-            _ => {
-                return Err(D::Error::custom("Unknown Rust edition"));
+            e => {
+                return Err(D::Error::custom(format!("Unknown Rust edition: {}", e)));
             }
         };
 
         Ok(edition)
-    }
-}
-
-/// Configuration for the build procedure.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(default, rename_all = "kebab-case")]
-pub struct BuildConfig {
-    /// Where to put built artefacts relative to the book's root directory.
-    pub build_dir: PathBuf,
-    /// Should non-existent markdown files specified in `SUMMARY.md` be created
-    /// if they don't exist?
-    pub create_missing: bool,
-    /// Should the default preprocessors always be used when they are
-    /// compatible with the renderer?
-    pub use_default_preprocessors: bool,
-}
-
-impl Default for BuildConfig {
-    fn default() -> BuildConfig {
-        BuildConfig {
-            build_dir: PathBuf::from("book"),
-            create_missing: true,
-            use_default_preprocessors: true,
-        }
     }
 }
 
@@ -699,13 +713,13 @@ mod tests {
             multilingual: true,
             src: PathBuf::from("source"),
             language: Some(String::from("ja")),
-            edition: None,
         };
         let build_should_be = BuildConfig {
             build_dir: PathBuf::from("outputs"),
             create_missing: false,
             use_default_preprocessors: true,
         };
+        let rust_should_be = RustConfig { edition: None };
         let playpen_should_be = Playpen {
             editable: true,
             copyable: true,
@@ -728,6 +742,7 @@ mod tests {
 
         assert_eq!(got.book, book_should_be);
         assert_eq!(got.build, build_should_be);
+        assert_eq!(got.rust, rust_should_be);
         assert_eq!(got.html_config().unwrap(), html_should_be);
     }
 
@@ -739,6 +754,7 @@ mod tests {
         description = "Create book from markdown files. Like Gitbook but implemented in Rust"
         authors = ["Mathieu David"]
         src = "./source"
+        [rust]
         edition = "2015"
         "#;
 
@@ -749,12 +765,17 @@ mod tests {
             )),
             authors: vec![String::from("Mathieu David")],
             src: PathBuf::from("./source"),
-            edition: Some(RustEdition::E2015),
             ..Default::default()
         };
 
         let got = Config::from_str(src).unwrap();
         assert_eq!(got.book, book_should_be);
+
+        let rust_should_be = RustConfig {
+            edition: Some(RustEdition::E2015),
+        };
+        let got = Config::from_str(src).unwrap();
+        assert_eq!(got.rust, rust_should_be);
     }
 
     #[test]
@@ -765,22 +786,16 @@ mod tests {
         description = "Create book from markdown files. Like Gitbook but implemented in Rust"
         authors = ["Mathieu David"]
         src = "./source"
+        [rust]
         edition = "2018"
         "#;
 
-        let book_should_be = BookConfig {
-            title: Some(String::from("mdBook Documentation")),
-            description: Some(String::from(
-                "Create book from markdown files. Like Gitbook but implemented in Rust",
-            )),
-            authors: vec![String::from("Mathieu David")],
-            src: PathBuf::from("./source"),
+        let rust_should_be = RustConfig {
             edition: Some(RustEdition::E2018),
-            ..Default::default()
         };
 
         let got = Config::from_str(src).unwrap();
-        assert_eq!(got.book, book_should_be);
+        assert_eq!(got.rust, rust_should_be);
     }
 
     #[test]
