@@ -25,6 +25,11 @@ code {
     font-size: 0.875em; /* please adjust the ace font size accordingly in editor.js */
 }
 
+/* Don't change font size in headers. */
+h1 code, h2 code, h3 code, h4 code, h5 code, h6 code {
+    font-size: unset;
+}
+
 .left { float: left; }
 .right { float: right; }
 .boring { opacity: 0.6; }
