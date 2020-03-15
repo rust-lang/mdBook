@@ -72,6 +72,8 @@ pub struct Link {
     /// The location of the chapter's source file, taking the book's `src`
     /// directory as the root.
     pub location: PathBuf,
+    /// An optional anchor in the original link.
+    pub anchor: Option<String>,
     /// The section number, if this chapter is in the numbered section.
     pub number: Option<SectionNumber>,
     /// Any nested items this chapter may contain.
@@ -80,10 +82,15 @@ pub struct Link {
 
 impl Link {
     /// Create a new link with no nested items.
-    pub fn new<S: Into<String>, P: AsRef<Path>>(name: S, location: P) -> Link {
+    pub fn new<S: Into<String>, P: AsRef<Path>>(
+        name: S,
+        location: P,
+        anchor: Option<String>,
+    ) -> Link {
         Link {
             name: name.into(),
             location: location.as_ref().to_path_buf(),
+            anchor,
             number: None,
             nested_items: Vec::new(),
         }
@@ -95,6 +102,7 @@ impl Default for Link {
         Link {
             name: String::new(),
             location: PathBuf::new(),
+            anchor: None,
             number: None,
             nested_items: Vec::new(),
         }
@@ -276,15 +284,18 @@ impl<'a> SummaryParser<'a> {
         let link_content = collect_events!(self.stream, end Tag::Link(..));
         let name = stringify_events(link_content);
 
-        if href.is_empty() {
-            Err(self.parse_error("You can't have an empty link."))
-        } else {
-            Ok(Link {
+        let mut split = href.splitn(2, '#');
+        let (href, anchor) = (split.next(), split.next());
+
+        match href {
+            Some(href) if !href.is_empty() => Ok(Link {
                 name,
                 location: PathBuf::from(href.to_string()),
+                anchor: anchor.map(String::from),
                 number: None,
                 nested_items: Vec::new(),
-            })
+            }),
+            _ => Err(self.parse_error("You can't have an empty link.")),
         }
     }
 
@@ -676,10 +687,12 @@ mod tests {
             SummaryItem::Link(Link {
                 name: String::from("First"),
                 location: PathBuf::from("./first.md"),
+                anchor: None,
                 number: Some(SectionNumber(vec![1])),
                 nested_items: vec![SummaryItem::Link(Link {
                     name: String::from("Nested"),
                     location: PathBuf::from("./nested.md"),
+                    anchor: None,
                     number: Some(SectionNumber(vec![1, 1])),
                     nested_items: Vec::new(),
                 })],
@@ -687,6 +700,7 @@ mod tests {
             SummaryItem::Link(Link {
                 name: String::from("Second"),
                 location: PathBuf::from("./second.md"),
+                anchor: None,
                 number: Some(SectionNumber(vec![2])),
                 nested_items: Vec::new(),
             }),
@@ -708,12 +722,14 @@ mod tests {
             SummaryItem::Link(Link {
                 name: String::from("First"),
                 location: PathBuf::from("./first.md"),
+                anchor: None,
                 number: Some(SectionNumber(vec![1])),
                 nested_items: Vec::new(),
             }),
             SummaryItem::Link(Link {
                 name: String::from("Second"),
                 location: PathBuf::from("./second.md"),
+                anchor: None,
                 number: Some(SectionNumber(vec![2])),
                 nested_items: Vec::new(),
             }),
@@ -738,12 +754,14 @@ mod tests {
             SummaryItem::Link(Link {
                 name: String::from("First"),
                 location: PathBuf::from("./first.md"),
+                anchor: None,
                 number: Some(SectionNumber(vec![1])),
                 nested_items: Vec::new(),
             }),
             SummaryItem::Link(Link {
                 name: String::from("Second"),
                 location: PathBuf::from("./second.md"),
+                anchor: None,
                 number: Some(SectionNumber(vec![2])),
                 nested_items: Vec::new(),
             }),
@@ -791,6 +809,7 @@ mod tests {
             SummaryItem::Link(Link {
                 name: String::from("Third"),
                 location: PathBuf::from("./third.md"),
+                anchor: None,
                 number: Some(SectionNumber(vec![3])),
                 nested_items: Vec::new(),
             }),

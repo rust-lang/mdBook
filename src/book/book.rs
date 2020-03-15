@@ -320,7 +320,7 @@ And here is some \
             .write_all(DUMMY_SRC.as_bytes())
             .unwrap();
 
-        let link = Link::new("Chapter 1", chapter_path);
+        let link = Link::new("Chapter 1", chapter_path, None);
 
         (link, temp)
     }
@@ -336,7 +336,7 @@ And here is some \
             .write_all(b"Hello World!")
             .unwrap();
 
-        let mut second = Link::new("Nested Chapter 1", &second_path);
+        let mut second = Link::new("Nested Chapter 1", &second_path, None);
         second.number = Some(SectionNumber(vec![1, 2]));
 
         root.nested_items.push(second.clone().into());
@@ -362,7 +362,7 @@ And here is some \
 
     #[test]
     fn cant_load_a_nonexistent_chapter() {
-        let link = Link::new("Chapter 1", "/foo/bar/baz.md");
+        let link = Link::new("Chapter 1", "/foo/bar/baz.md", None);
 
         let got = load_chapter(&link, "", Vec::new());
         assert!(got.is_err());
