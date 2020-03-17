@@ -377,6 +377,10 @@ impl<'a> SummaryParser<'a> {
                     items.push(item);
                 }
                 Some(Event::Start(Tag::List(..))) => {
+                    // Skip this tag after comment bacause it is not nested.
+                    if items.is_empty() {
+                        continue;
+                    }
                     // recurse to parse the nested list
                     let (_, last_item) = get_last_link(&mut items)?;
                     let last_item_number = last_item
@@ -679,6 +683,33 @@ mod tests {
                     number: Some(SectionNumber(vec![1, 1])),
                     nested_items: Vec::new(),
                 })],
+            }),
+            SummaryItem::Link(Link {
+                name: String::from("Second"),
+                location: PathBuf::from("./second.md"),
+                number: Some(SectionNumber(vec![2])),
+                nested_items: Vec::new(),
+            }),
+        ];
+
+        let mut parser = SummaryParser::new(src);
+        let _ = parser.stream.next();
+
+        let got = parser.parse_numbered().unwrap();
+
+        assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn parse_numbered_chapters_separated_by_comment() {
+        let src = "- [First](./first.md)\n<!-- this is a comment -->\n- [Second](./second.md)";
+
+        let should_be = vec![
+            SummaryItem::Link(Link {
+                name: String::from("First"),
+                location: PathBuf::from("./first.md"),
+                number: Some(SectionNumber(vec![1])),
+                nested_items: Vec::new(),
             }),
             SummaryItem::Link(Link {
                 name: String::from("Second"),
