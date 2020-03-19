@@ -1,5 +1,42 @@
 # Changelog
 
+## mdBook 0.3.6
+[efdb832...88684d8](https://github.com/rust-lang/mdBook/compare/efdb832...88684d8)
+
+### Added
+- `MDBook::execute_build_process` is now publicly accessible in the API so
+  that plugins can more easily initiate the build process.
+  [#1099](https://github.com/rust-lang/mdBook/pull/1099)
+
+### Changed
+- Use a different color for Ayu theme's highlighting for Rust attributes (uses
+  a bright color instead of the comment color).
+  [#1133](https://github.com/rust-lang/mdBook/pull/1133)
+- Adjusted spacing of sidebar entries.
+  [#1137](https://github.com/rust-lang/mdBook/pull/1137)
+- Slightly adjusted line-height of `<p>`, `<ul>`, and `<ol>`.
+  [#1136](https://github.com/rust-lang/mdBook/pull/1136)
+- Handlebars updated to 3.0.
+  [#1130](https://github.com/rust-lang/mdBook/pull/1130)
+
+### Fixed
+- Fix an issue with sidebar scroll position on reload.
+  [#1108](https://github.com/rust-lang/mdBook/pull/1108)
+- `mdbook serve` will retain the current scroll position when the page is reloaded.
+  [#1097](https://github.com/rust-lang/mdBook/pull/1097)
+- Fixed the page name if the book didn't have a title to not be prefixed with ` - `.
+  [#1145](https://github.com/rust-lang/mdBook/pull/1145)
+- HTML attributes `rel=next` and `rel=previous` are now supported in "wide"
+  mode (previously they were only set in narrow mode).
+  [#1150](https://github.com/rust-lang/mdBook/pull/1150)
+- Prevent recursive copies when the destination directory is contained in the
+  source directory.
+  [#1135](https://github.com/rust-lang/mdBook/pull/1135)
+- Adjusted the menu bar animation to not immediately obscure the top content.
+  [#989](https://github.com/rust-lang/mdBook/pull/989)
+- Fix for comments in SUMMARY.md that appear between items.
+  [#1167](https://github.com/rust-lang/mdBook/pull/1167)
+
 ## mdBook 0.3.5
 [6e0d0fa...efdb832](https://github.com/rust-lang/mdBook/compare/6e0d0fa...efdb832)
 
