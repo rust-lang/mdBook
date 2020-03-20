@@ -743,6 +743,26 @@ mod tests {
         assert_eq!(got, should_be);
     }
 
+    #[test]
+    fn parse_anchors() {
+        let src = "- [Link to anchor](./page.md#Foo)";
+
+        let should_be = vec![SummaryItem::Link(Link {
+            name: String::from("Link to anchor"),
+            location: PathBuf::from("./page.md"),
+            anchor: Some("Foo".to_string()),
+            number: Some(SectionNumber(vec![1])),
+            nested_items: Vec::new(),
+        })];
+
+        let mut parser = SummaryParser::new(src);
+        let _ = parser.stream.next();
+
+        let got = parser.parse_numbered().unwrap();
+
+        assert_eq!(got, should_be);
+    }
+
     /// This test ensures the book will continue to pass because it breaks the
     /// `SUMMARY.md` up using level 2 headers ([example]).
     ///
@@ -777,12 +797,13 @@ mod tests {
 
     #[test]
     fn an_empty_link_location_is_an_error() {
-        let src = "- [Empty]()\n";
-        let mut parser = SummaryParser::new(src);
-        parser.stream.next();
+        for src in &["- [Empty]()\n", "- [Empty](#Foo)\n"] {
+            let mut parser = SummaryParser::new(src);
+            parser.stream.next();
 
-        let got = parser.parse_numbered();
-        assert!(got.is_err());
+            let got = parser.parse_numbered();
+            assert!(got.is_err());
+        }
     }
 
     /// Regression test for https://github.com/rust-lang/mdBook/issues/779
@@ -797,6 +818,7 @@ mod tests {
                 location: PathBuf::from("./first.md"),
                 number: Some(SectionNumber(vec![1])),
                 nested_items: Vec::new(),
+                anchor: None,
             }),
             SummaryItem::Separator,
             SummaryItem::Link(Link {
@@ -804,6 +826,7 @@ mod tests {
                 location: PathBuf::from("./second.md"),
                 number: Some(SectionNumber(vec![2])),
                 nested_items: Vec::new(),
+                anchor: None,
             }),
             SummaryItem::Separator,
             SummaryItem::Link(Link {
