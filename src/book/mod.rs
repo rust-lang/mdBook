@@ -132,6 +132,7 @@ impl MDBook {
     ///     match *item {
     ///         BookItem::Chapter(ref chapter) => {},
     ///         BookItem::Separator => {},
+    ///         BookItem::PartTitle(ref title) => {}
     ///     }
     /// }
     ///

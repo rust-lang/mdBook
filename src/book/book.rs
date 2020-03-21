@@ -31,7 +31,12 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
     let mut items: Vec<_> = summary
         .prefix_chapters
         .iter()
-        .chain(summary.numbered_chapters.iter())
+        .chain(
+            summary
+                .parts
+                .iter()
+                .flat_map(|part| part.numbered_chapters.iter()),
+        )
         .chain(summary.suffix_chapters.iter())
         .collect();
 
@@ -133,6 +138,8 @@ pub enum BookItem {
     Chapter(Chapter),
     /// A section separator.
     Separator,
+    /// A part title.
+    PartTitle(String),
 }
 
 impl From<Chapter> for BookItem {
@@ -205,17 +212,24 @@ pub(crate) fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P)
     debug!("Loading the book from disk");
     let src_dir = src_dir.as_ref();
 
-    let prefix = summary.prefix_chapters.iter();
-    let numbered = summary.numbered_chapters.iter();
-    let suffix = summary.suffix_chapters.iter();
-
-    let summary_items = prefix.chain(numbered).chain(suffix);
-
     let mut chapters = Vec::new();
 
-    for summary_item in summary_items {
-        let chapter = load_summary_item(summary_item, src_dir, Vec::new())?;
-        chapters.push(chapter);
+    for prefix_chapter in &summary.prefix_chapters {
+        chapters.push(load_summary_item(prefix_chapter, src_dir, Vec::new())?);
+    }
+
+    for part in &summary.parts {
+        if let Some(title) = &part.title {
+            chapters.push(BookItem::PartTitle(title.clone()));
+        }
+
+        for numbered_chapter in &part.numbered_chapters {
+            chapters.push(load_summary_item(numbered_chapter, src_dir, Vec::new())?);
+        }
+    }
+
+    for suffix_chapter in &summary.suffix_chapters {
+        chapters.push(load_summary_item(suffix_chapter, src_dir, Vec::new())?);
     }
 
     Ok(Book {
@@ -327,6 +341,7 @@ impl Display for Chapter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::book::summary::Part;
     use std::io::Write;
     use tempfile::{Builder as TempFileBuilder, TempDir};
 
@@ -430,7 +445,10 @@ And here is some \
     fn load_a_book_with_a_single_chapter() {
         let (link, temp) = dummy_link();
         let summary = Summary {
-            numbered_chapters: vec![SummaryItem::Link(link)],
+            parts: vec![Part {
+                title: None,
+                numbered_chapters: vec![SummaryItem::Link(link)],
+            }],
             ..Default::default()
         };
         let should_be = Book {
@@ -564,11 +582,14 @@ And here is some \
     fn cant_load_chapters_with_an_empty_path() {
         let (_, temp) = dummy_link();
         let summary = Summary {
-            numbered_chapters: vec![SummaryItem::Link(Link {
-                name: String::from("Empty"),
-                location: Some(PathBuf::from("")),
-                ..Default::default()
-            })],
+            parts: vec![Part {
+                title: None,
+                numbered_chapters: vec![SummaryItem::Link(Link {
+                    name: String::from("Empty"),
+                    location: Some(PathBuf::from("")),
+                    ..Default::default()
+                })],
+            }],
             ..Default::default()
         };
 
@@ -583,11 +604,14 @@ And here is some \
         fs::create_dir(&dir).unwrap();
 
         let summary = Summary {
-            numbered_chapters: vec![SummaryItem::Link(Link {
-                name: String::from("nested"),
-                location: Some(dir),
-                ..Default::default()
-            })],
+            parts: vec![Part {
+                title: None,
+                numbered_chapters: vec![SummaryItem::Link(Link {
+                    name: String::from("nested"),
+                    location: Some(dir),
+                    ..Default::default()
+                })],
+            }],
             ..Default::default()
         };
 
