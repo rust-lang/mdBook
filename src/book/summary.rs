@@ -374,10 +374,12 @@ impl<'a> SummaryParser<'a> {
 
         loop {
             match self.next_event() {
-                Some(ev @ Event::Start(Tag::Paragraph)) if !first => {
-                    // we're starting the suffix chapters
-                    self.back(ev);
-                    break;
+                Some(ev @ Event::Start(Tag::Paragraph)) => {
+                    if !first {
+                        // we're starting the suffix chapters
+                        self.back(ev);
+                        break;
+                    }
                 }
                 // The expectation is that pulldown cmark will terminate a paragraph before a new
                 // heading, so we can always count on this to return without skipping headings.
