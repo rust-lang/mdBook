@@ -72,8 +72,8 @@ fn find_chapter(
             Target::Next => match chapters
                 .iter()
                 .filter(|chapter| {
-                    // Skip things like "spacer" or sub-links
-                    chapter.contains_key("path") && !chapter.contains_key("anchor")
+                    // Skip things like "spacer"
+                    chapter.contains_key("path")
                 })
                 .skip(1)
                 .next()
@@ -90,7 +90,7 @@ fn find_chapter(
 
     for item in chapters {
         match item.get("path") {
-            Some(path) if !path.is_empty() && item.get("anchor").is_none() => {
+            Some(path) if !path.is_empty() => {
                 if let Some(previous) = previous {
                     if let Some(item) = target.find(&base_path, &path, &item, &previous)? {
                         return Ok(Some(item));

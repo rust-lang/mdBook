@@ -153,8 +153,6 @@ pub struct Chapter {
     pub sub_items: Vec<BookItem>,
     /// The chapter's location, relative to the `SUMMARY.md` file.
     pub path: PathBuf,
-    /// An optional anchor in the original link.
-    pub anchor: Option<String>,
     /// An ordered list of the names of each chapter above this one, in the hierarchy.
     pub parent_names: Vec<String>,
 }
@@ -245,7 +243,6 @@ fn load_chapter<P: AsRef<Path>>(
     let mut sub_item_parents = parent_names.clone();
     let mut ch = Chapter::new(&link.name, content, stripped, parent_names);
     ch.number = link.number.clone();
-    ch.anchor = link.anchor.clone();
 
     sub_item_parents.push(link.name.clone());
     let sub_items = link
@@ -323,7 +320,7 @@ And here is some \
             .write_all(DUMMY_SRC.as_bytes())
             .unwrap();
 
-        let link = Link::new("Chapter 1", chapter_path, None);
+        let link = Link::new("Chapter 1", chapter_path);
 
         (link, temp)
     }
@@ -339,7 +336,7 @@ And here is some \
             .write_all(b"Hello World!")
             .unwrap();
 
-        let mut second = Link::new("Nested Chapter 1", &second_path, None);
+        let mut second = Link::new("Nested Chapter 1", &second_path);
         second.number = Some(SectionNumber(vec![1, 2]));
 
         root.nested_items.push(second.clone().into());
@@ -365,7 +362,7 @@ And here is some \
 
     #[test]
     fn cant_load_a_nonexistent_chapter() {
-        let link = Link::new("Chapter 1", "/foo/bar/baz.md", None);
+        let link = Link::new("Chapter 1", "/foo/bar/baz.md");
 
         let got = load_chapter(&link, "", Vec::new());
         assert!(got.is_err());
@@ -382,7 +379,6 @@ And here is some \
             path: PathBuf::from("second.md"),
             parent_names: vec![String::from("Chapter 1")],
             sub_items: Vec::new(),
-            anchor: None,
         };
         let should_be = BookItem::Chapter(Chapter {
             name: String::from("Chapter 1"),
@@ -395,7 +391,6 @@ And here is some \
                 BookItem::Separator,
                 BookItem::Chapter(nested.clone()),
             ],
-            anchor: None,
         });
 
         let got = load_summary_item(&SummaryItem::Link(root), temp.path(), Vec::new()).unwrap();
@@ -470,7 +465,6 @@ And here is some \
                             Vec::new(),
                         )),
                     ],
-                    anchor: None,
                 }),
                 BookItem::Separator,
             ],
@@ -523,7 +517,6 @@ And here is some \
                             Vec::new(),
                         )),
                     ],
-                    anchor: None,
                 }),
                 BookItem::Separator,
             ],

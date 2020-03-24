@@ -111,7 +111,7 @@ impl HelperDef for RenderToc {
                 if !path.is_empty() {
                     out.write("<a href=\"")?;
 
-                    let tmp = Path::new(path)
+                    let tmp = Path::new(item.get("path").expect("Error: path should be Some(_)"))
                         .with_extension("html")
                         .to_str()
                         .unwrap()
@@ -121,16 +121,9 @@ impl HelperDef for RenderToc {
                     // Add link
                     out.write(&utils::fs::path_to_root(&current_path))?;
                     out.write(&tmp)?;
-
-                    let anchor = item.get("anchor");
-                    if let Some(anchor) = anchor {
-                        out.write("#")?;
-                        out.write(anchor)?;
-                    }
-
                     out.write("\"")?;
 
-                    if anchor.is_none() && path == &current_path {
+                    if path == &current_path {
                         out.write(" class=\"active\"")?;
                     }
 
