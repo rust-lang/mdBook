@@ -143,6 +143,11 @@ function playpen_text(playpen) {
         languages: [],      // Languages used for auto-detection
     });
 
+    let code_nodes = Array
+        .from(document.querySelectorAll('code'))
+        // Don't highlight `inline code` blocks in headers.
+        .filter(function (node) {return !node.parentElement.classList.contains("header"); });
+
     if (window.ace) {
         // language-rust class needs to be removed for editable
         // blocks or highlightjs will capture events
@@ -154,16 +159,12 @@ function playpen_text(playpen) {
             .from(document.querySelectorAll('code:not(.editable)'))
             .forEach(function (block) { hljs.highlightBlock(block); });
     } else {
-        Array
-            .from(document.querySelectorAll('code'))
-            .forEach(function (block) { hljs.highlightBlock(block); });
+        code_nodes.forEach(function (block) { hljs.highlightBlock(block); });
     }
 
     // Adding the hljs class gives code blocks the color css
     // even if highlighting doesn't apply
-    Array
-        .from(document.querySelectorAll('code'))
-        .forEach(function (block) { block.classList.add('hljs'); });
+    code_nodes.forEach(function (block) { block.classList.add('hljs'); });
 
     Array.from(document.querySelectorAll("code.language-rust")).forEach(function (block) {
 
