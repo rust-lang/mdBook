@@ -31,8 +31,7 @@ impl HtmlHandlebars {
     ) -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
         if let BookItem::Chapter(ref ch) = *item {
-            let content = ch.content.clone();
-            let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
+            let content = utils::render_markdown(&ch.content, ctx.html_config.curly_quotes);
 
             let fixed_content = utils::render_markdown_with_path(
                 &ch.content,
@@ -79,6 +78,10 @@ impl HtmlHandlebars {
             if let Some(ref section) = ch.number {
                 ctx.data
                     .insert("section".to_owned(), json!(section.to_string()));
+            }
+
+            if let Some(anchor) = &ch.anchor {
+                ctx.data.insert("anchor".to_owned(), json!(anchor));
             }
 
             // Render the handlebars template with the data
@@ -520,6 +523,10 @@ fn make_data(
                     .to_str()
                     .chain_err(|| "Could not convert path to str")?;
                 chapter.insert("path".to_owned(), json!(path));
+
+                if let Some(anchor) = &ch.anchor {
+                    chapter.insert("anchor".to_owned(), json!(anchor));
+                }
             }
             BookItem::Separator => {
                 chapter.insert("spacer".to_owned(), json!("_spacer_"));
