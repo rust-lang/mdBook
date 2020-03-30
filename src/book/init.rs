@@ -110,7 +110,10 @@ impl BookBuilder {
         debug!("Copying theme");
 
         let html_config = self.config.html_config().unwrap_or_default();
-        let themedir = html_config.theme_dir(&self.root);
+        let themedir = html_config
+            .theme
+            .unwrap_or_else(|| self.config.book.src.join("theme"));
+        let themedir = self.root.join(themedir);
 
         if !themedir.exists() {
             debug!(

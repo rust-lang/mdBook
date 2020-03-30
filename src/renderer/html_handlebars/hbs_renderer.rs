@@ -618,7 +618,7 @@ impl Renderer for HtmlHandlebars {
             let rendered =
                 self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
 
-            utils::fs::write_file(destination, "print.html", rendered.as_bytes())?;
+            utils::fs::write_file(&destination, "print.html", rendered.as_bytes())?;
             debug!("Creating print.html ✓");
         }
 
@@ -744,9 +744,9 @@ fn make_data(
         data.insert("playground_copyable".to_owned(), json!(true));
     }
 
-    data.insert("print_enable".to_owned(), json!(html_config.print.enable));
-    data.insert("fold_enable".to_owned(), json!(html_config.fold.enable));
-    data.insert("fold_level".to_owned(), json!(html_config.fold.level));
+    data.insert("print_enable".to_owned(), json!(!html_config.print.enable));
+    data.insert("fold_enable".to_owned(), json!((html_config.fold.enable)));
+    data.insert("fold_level".to_owned(), json!((html_config.fold.level)));
 
     let search = html_config.search.clone();
     if cfg!(feature = "search") {
