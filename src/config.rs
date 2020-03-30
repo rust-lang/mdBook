@@ -495,6 +495,8 @@ pub struct HtmlConfig {
     /// Playground settings.
     #[serde(alias = "playpen")]
     pub playground: Playground,
+    /// Print settings.
+    pub print: Print,
     /// Don't render section labels.
     pub no_section_label: bool,
     /// Search settings. If `None`, the default will be used.
@@ -542,6 +544,7 @@ impl Default for HtmlConfig {
             additional_js: Vec::new(),
             fold: Fold::default(),
             playground: Playground::default(),
+            print: Print::default(),
             no_section_label: false,
             search: None,
             git_repository_url: None,
@@ -563,6 +566,20 @@ impl HtmlConfig {
             Some(ref d) => root.join(d),
             None => root.join("theme"),
         }
+    }
+}
+
+/// Configuration for how to render the print icon, print.html, and print.css.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct Print {
+    /// Whether print support is enabled.
+    pub enable: bool,
+}
+
+impl Default for Print {
+    fn default() -> Self {
+        Self { enable: true }
     }
 }
 
