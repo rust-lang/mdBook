@@ -1,5 +1,24 @@
 # Changelog
 
+## mdBook 0.3.7
+[88684d8...99ecd4f](https://github.com/rust-lang/mdBook/compare/88684d8...99ecd4f)
+
+### Changed
+- Code spans in headers are no longer highlighted as code.
+  [#1162](https://github.com/rust-lang/mdBook/pull/1162)
+- The sidebar will now scroll the activate page to the middle instead of the top.
+  [#1161](https://github.com/rust-lang/mdBook/pull/1161)
+- Reverted change to reject build output within the `src` directory, and
+  instead add a check that prevents infinite copies.
+  [#1181](https://github.com/rust-lang/mdBook/pull/1181)
+  [#1026](https://github.com/rust-lang/mdBook/pull/1026)
+
+### Fixed
+- Fixed sidebar line-height jumping for collapsed chapters.
+  [#1182](https://github.com/rust-lang/mdBook/pull/1182)
+- Fixed theme selector focus.
+  [#1170](https://github.com/rust-lang/mdBook/pull/1170)
+
 ## mdBook 0.3.6
 [efdb832...88684d8](https://github.com/rust-lang/mdBook/compare/efdb832...88684d8)
 
