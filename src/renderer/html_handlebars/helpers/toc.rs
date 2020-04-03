@@ -191,7 +191,7 @@ fn write_li_open_tag(
     is_expanded: bool,
     is_affix: bool,
 ) -> Result<(), std::io::Error> {
-    let mut li = String::from("<li class=\"");
+    let mut li = String::from("<li class=\"chapter-item ");
     if is_expanded {
         li.push_str("expanded ");
     }
