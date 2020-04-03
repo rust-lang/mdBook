@@ -285,13 +285,23 @@ function playpen_text(playpen) {
     function showThemes() {
         themePopup.style.display = 'block';
         themeToggleButton.setAttribute('aria-expanded', true);
-        themePopup.querySelector("button#" + document.body.className).focus();
+        themePopup.querySelector("button#" + get_theme()).focus();
     }
 
     function hideThemes() {
         themePopup.style.display = 'none';
         themeToggleButton.setAttribute('aria-expanded', false);
         themeToggleButton.focus();
+    }
+
+    function get_theme() {
+        var theme;
+        try { theme = localStorage.getItem('mdbook-theme'); } catch (e) { }
+        if (theme === null || theme === undefined) {
+            return default_theme;
+        } else {
+            return theme;
+        }
     }
 
     function set_theme(theme, store = true) {
@@ -325,9 +335,7 @@ function playpen_text(playpen) {
             });
         }
 
-        var previousTheme;
-        try { previousTheme = localStorage.getItem('mdbook-theme'); } catch (e) { }
-        if (previousTheme === null || previousTheme === undefined) { previousTheme = default_theme; }
+        var previousTheme = get_theme();
 
         if (store) {
             try { localStorage.setItem('mdbook-theme', theme); } catch (e) { }
@@ -338,9 +346,7 @@ function playpen_text(playpen) {
     }
 
     // Set theme
-    var theme;
-    try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
-    if (theme === null || theme === undefined) { theme = default_theme; }
+    var theme = get_theme();
 
     set_theme(theme, false);
 
