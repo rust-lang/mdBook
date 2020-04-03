@@ -109,15 +109,6 @@ pub fn copy_files_except_ext(
         return Ok(());
     }
 
-    // Is the destination inside of the source?
-    if to.canonicalize()?.starts_with(from.canonicalize()?) {
-        return Err(Error::from(format!(
-            "Destination directory cannot be contained in source directory: '{}' is in '{}'",
-            to.display(),
-            from.display()
-        )));
-    }
-
     for entry in fs::read_dir(from)? {
         let entry = entry?;
         let metadata = entry.metadata()?;
@@ -186,81 +177,63 @@ mod tests {
     use std::fs;
 
     #[test]
-    fn it_fails_when_destination_is_in_source() {
-        let tmp = match tempfile::TempDir::new() {
-            Ok(t) => t,
-            Err(e) => panic!("Could not create a temp dir: {}", e),
-        };
-        let dst = tmp.path().join("destination");
-        fs::create_dir(&dst).unwrap();
-        assert!(
-            format!("{:?}", copy_files_except_ext(tmp.path(), &dst, true, &[]))
-                .contains("Destination directory cannot be contained in source directory: ")
-        );
-    }
-
-    #[test]
     fn copy_files_except_ext_test() {
-        let src = match tempfile::TempDir::new() {
+        let tmp = match tempfile::TempDir::new() {
             Ok(t) => t,
             Err(e) => panic!("Could not create a temp dir: {}", e),
         };
 
         // Create a couple of files
-        if let Err(err) = fs::File::create(&src.path().join("file.txt")) {
+        if let Err(err) = fs::File::create(&tmp.path().join("file.txt")) {
             panic!("Could not create file.txt: {}", err);
         }
-        if let Err(err) = fs::File::create(&src.path().join("file.md")) {
+        if let Err(err) = fs::File::create(&tmp.path().join("file.md")) {
             panic!("Could not create file.md: {}", err);
         }
-        if let Err(err) = fs::File::create(&src.path().join("file.png")) {
+        if let Err(err) = fs::File::create(&tmp.path().join("file.png")) {
             panic!("Could not create file.png: {}", err);
         }
-        if let Err(err) = fs::create_dir(&src.path().join("sub_dir")) {
+        if let Err(err) = fs::create_dir(&tmp.path().join("sub_dir")) {
             panic!("Could not create sub_dir: {}", err);
         }
-        if let Err(err) = fs::File::create(&src.path().join("sub_dir/file.png")) {
+        if let Err(err) = fs::File::create(&tmp.path().join("sub_dir/file.png")) {
             panic!("Could not create sub_dir/file.png: {}", err);
         }
-        if let Err(err) = fs::create_dir(&src.path().join("sub_dir_exists")) {
+        if let Err(err) = fs::create_dir(&tmp.path().join("sub_dir_exists")) {
             panic!("Could not create sub_dir_exists: {}", err);
         }
-        if let Err(err) = fs::File::create(&src.path().join("sub_dir_exists/file.txt")) {
+        if let Err(err) = fs::File::create(&tmp.path().join("sub_dir_exists/file.txt")) {
             panic!("Could not create sub_dir_exists/file.txt: {}", err);
         }
 
         // Create output dir
-        let dst = match tempfile::TempDir::new() {
-            Ok(t) => t,
-            Err(e) => panic!("Could not create a temp dir: {}", e),
-        };
-        if let Err(err) = fs::create_dir(&dst.path().join("output")) {
+        if let Err(err) = fs::create_dir(&tmp.path().join("output")) {
             panic!("Could not create output: {}", err);
         }
-        if let Err(err) = fs::create_dir(&dst.path().join("output/sub_dir_exists")) {
+        if let Err(err) = fs::create_dir(&tmp.path().join("output/sub_dir_exists")) {
             panic!("Could not create output/sub_dir_exists: {}", err);
         }
 
         if let Err(e) =
-            copy_files_except_ext(&src.path(), &dst.path().join("output"), true, &["md"])
+            copy_files_except_ext(&tmp.path(), &tmp.path().join("output"), true, &["md"])
         {
             panic!("Error while executing the function:\n{:?}", e);
         }
 
         // Check if the correct files where created
-        if !(&dst.path().join("output/file.txt")).exists() {
+        if !(&tmp.path().join("output/file.txt")).exists() {
             panic!("output/file.txt should exist")
         }
-        if (&dst.path().join("output/file.md")).exists() {
+        if (&tmp.path().join("output/file.md")).exists() {
             panic!("output/file.md should not exist")
         }
-        if !(&dst.path().join("output/file.png")).exists() {
+        if !(&tmp.path().join("output/file.png")).exists() {
             panic!("output/file.png should exist")
         }
-        if !(&dst.path().join("output/sub_dir/file.png")).exists() {
+        if !(&tmp.path().join("output/sub_dir/file.png")).exists() {
             panic!("output/sub_dir/file.png should exist")
         }
-        if !(&dst.path().join("output/sub_dir_exists/file.txt")).exists() {
+        if !(&tmp.path().join("output/sub_dir_exists/file.txt")).exists() {
             panic!("output/sub_dir/file.png should exist")
         }
     }
