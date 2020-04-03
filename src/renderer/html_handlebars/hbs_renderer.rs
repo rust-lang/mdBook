@@ -291,6 +291,7 @@ impl Renderer for HtmlHandlebars {
         let src_dir = ctx.root.join(&ctx.config.book.src);
         let destination = &ctx.destination;
         let book = &ctx.book;
+        let build_dir = ctx.root.join(&ctx.config.build.build_dir);
 
         if destination.exists() {
             utils::fs::remove_dir_content(destination)
@@ -377,8 +378,8 @@ impl Renderer for HtmlHandlebars {
             }
         }
 
-        // Copy all remaining files
-        utils::fs::copy_files_except_ext(&src_dir, &destination, true, &["md"])?;
+        // Copy all remaining files, avoid a recursive copy from/to the book build dir
+        utils::fs::copy_files_except_ext(&src_dir, &destination, true, Some(&build_dir), &["md"])?;
 
         Ok(())
     }
