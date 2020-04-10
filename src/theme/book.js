@@ -279,6 +279,7 @@ function playpen_text(playpen) {
     var stylesheets = {
         ayuHighlight: document.querySelector("[href$='ayu-highlight.css']"),
         edgeDarkHighlight: document.querySelector("[href$='edge-dark-highlight.css']"),
+        edgeLightHighlight: document.querySelector("[href$='edge-light-highlight.css']"),
         tomorrowNight: document.querySelector("[href$='tomorrow-night.css']"),
         highlight: document.querySelector("[href$='highlight.css']"),
     };
@@ -311,6 +312,7 @@ function playpen_text(playpen) {
         if (theme == 'coal' || theme == 'navy') {
             stylesheets.ayuHighlight.disabled = true;
             stylesheets.edgeDarkHighlight.disabled = true;
+            stylesheets.edgeLightHighlight.disabled = true;
             stylesheets.tomorrowNight.disabled = false;
             stylesheets.highlight.disabled = true;
 
@@ -318,18 +320,28 @@ function playpen_text(playpen) {
         } else if (theme == 'ayu') {
             stylesheets.ayuHighlight.disabled = false;
             stylesheets.edgeDarkHighlight.disabled = true;
+            stylesheets.edgeLightHighlight.disabled = true;
             stylesheets.tomorrowNight.disabled = true;
             stylesheets.highlight.disabled = true;
             ace_theme = "ace/theme/tomorrow_night";
         } else if (theme == 'edge-dark') {
             stylesheets.ayuHighlight.disabled = true;
             stylesheets.edgeDarkHighlight.disabled = false;
+            stylesheets.edgeLightHighlight.disabled = true;
+            stylesheets.tomorrowNight.disabled = true;
+            stylesheets.highlight.disabled = true;
+            ace_theme = "ace/theme/tomorrow_night";
+        } else if (theme == 'edge-light') {
+            stylesheets.ayuHighlight.disabled = true;
+            stylesheets.edgeDarkHighlight.disabled = true;
+            stylesheets.edgeLightHighlight.disabled = false;
             stylesheets.tomorrowNight.disabled = true;
             stylesheets.highlight.disabled = true;
             ace_theme = "ace/theme/tomorrow_night";
         } else {
             stylesheets.ayuHighlight.disabled = true;
             stylesheets.edgeDarkHighlight.disabled = true;
+            stylesheets.edgeLightHighlight.disabled = true;
             stylesheets.tomorrowNight.disabled = true;
             stylesheets.highlight.disabled = false;
             ace_theme = "ace/theme/dawn";

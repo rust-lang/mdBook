@@ -9,6 +9,46 @@
 }
 
 /* Themes */
+.edge-light {
+    --bg: #fff;
+    --fg: #34373c;
+
+    --sidebar-bg: #fff;
+    --sidebar-fg: #949ba5;
+    --sidebar-non-existant: #dde2e7;
+    --sidebar-active: #b05ccc;
+    --sidebar-spacer: #dde2e7;
+
+    --scrollbar: #eef2f6;
+
+    --icons: #bcc5cf;
+    --icons-hover: #bf75d6;
+
+    --links: #5079be;
+
+    --inline-code-color: #383b42;
+
+    --theme-popup-bg: #f7fafc;
+    --theme-popup-border: #eef2f6;
+    --theme-hover: #f3f6f8;
+
+    --quote-bg: #f7fafc;
+    --quote-border: #eef2f6;
+
+    --table-border-color: #e8ebf0;
+    --table-header-bg: #eef2f6;
+    --table-alternate-bg: #f7fafc;
+
+    --searchbar-border-color: #f3f6f8;
+    --searchbar-bg: #f3f6f8;
+    --searchbar-fg: #608e32;
+    --searchbar-shadow-color: #aaa;
+    --searchresults-header-fg: #b05ccc;
+    --searchresults-border-color: #e8ebf0;
+    --searchresults-li-bg: #f7fafc;
+    --search-mark-bg: #d05858;
+}
+
 .edge-dark {
     --bg: #2b2d37;
     --fg: #c5cdd9;

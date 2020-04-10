@@ -138,6 +138,7 @@ impl HtmlHandlebars {
         write_file(destination, "tomorrow-night.css", &theme.tomorrow_night_css)?;
         write_file(destination, "ayu-highlight.css", &theme.ayu_highlight_css)?;
         write_file(destination, "edge-dark-highlight.css", &theme.edge_dark_highlight_css)?;
+        write_file(destination, "edge-light-highlight.css", &theme.edge_light_highlight_css)?;
         write_file(destination, "highlight.js", &theme.highlight_js)?;
         write_file(destination, "clipboard.min.js", &theme.clipboard_js)?;
         write_file(
