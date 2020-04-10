@@ -23,6 +23,7 @@ pub static HIGHLIGHT_JS: &[u8] = include_bytes!("highlight.js");
 pub static TOMORROW_NIGHT_CSS: &[u8] = include_bytes!("tomorrow-night.css");
 pub static HIGHLIGHT_CSS: &[u8] = include_bytes!("highlight.css");
 pub static AYU_HIGHLIGHT_CSS: &[u8] = include_bytes!("ayu-highlight.css");
+pub static EDGE_DARK_HIGHLIGHT_CSS: &[u8] = include_bytes!("edge-dark-highlight.css");
 pub static CLIPBOARD_JS: &[u8] = include_bytes!("clipboard.min.js");
 pub static FONT_AWESOME: &[u8] = include_bytes!("FontAwesome/css/font-awesome.min.css");
 pub static FONT_AWESOME_EOT: &[u8] = include_bytes!("FontAwesome/fonts/fontawesome-webfont.eot");
@@ -52,6 +53,7 @@ pub struct Theme {
     pub highlight_css: Vec<u8>,
     pub tomorrow_night_css: Vec<u8>,
     pub ayu_highlight_css: Vec<u8>,
+    pub edge_dark_highlight_css: Vec<u8>,
     pub highlight_js: Vec<u8>,
     pub clipboard_js: Vec<u8>,
 }
@@ -93,6 +95,10 @@ impl Theme {
                     theme_dir.join("ayu-highlight.css"),
                     &mut theme.ayu_highlight_css,
                 ),
+                (
+                    theme_dir.join("edge-dark-highlight.css"),
+                    &mut theme.edge_dark_highlight_css,
+                ),
             ];
 
             for (filename, dest) in files {
@@ -124,6 +130,7 @@ impl Default for Theme {
             highlight_css: HIGHLIGHT_CSS.to_owned(),
             tomorrow_night_css: TOMORROW_NIGHT_CSS.to_owned(),
             ayu_highlight_css: AYU_HIGHLIGHT_CSS.to_owned(),
+            edge_dark_highlight_css: EDGE_DARK_HIGHLIGHT_CSS.to_owned(),
             highlight_js: HIGHLIGHT_JS.to_owned(),
             clipboard_js: CLIPBOARD_JS.to_owned(),
         }
@@ -179,6 +186,7 @@ mod tests {
             "tomorrow-night.css",
             "highlight.css",
             "ayu-highlight.css",
+            "edge-dark-highlight.css",
             "clipboard.min.js",
         ];
 
@@ -204,6 +212,7 @@ mod tests {
             highlight_css: Vec::new(),
             tomorrow_night_css: Vec::new(),
             ayu_highlight_css: Vec::new(),
+            edge_dark_highlight_css: Vec::new(),
             highlight_js: Vec::new(),
             clipboard_js: Vec::new(),
         };

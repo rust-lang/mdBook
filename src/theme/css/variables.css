@@ -9,6 +9,45 @@
 }
 
 /* Themes */
+.edge-dark {
+    --bg: #2b2d37;
+    --fg: #c5cdd9;
+
+    --sidebar-bg: #2b2d37;
+    --sidebar-fg: #7e869b;
+    --sidebar-non-existant: #404455;
+    --sidebar-active: #d38aea;
+    --sidebar-spacer: #404455;
+
+    --scrollbar: #404455;
+
+    --icons: #7e869b;
+    --icons-hover: #d38aea;
+
+    --links: #6cb6eb;
+
+    --inline-code-color: #c5cdd9;
+
+    --theme-popup-bg: #2f323e;
+    --theme-popup-border: #3a3e4e;
+    --theme-hover: #313441;
+
+    --quote-bg: #313441;
+    --quote-border: #313441;
+
+    --table-border-color: #404455;
+    --table-header-bg: #363a49;
+    --table-alternate-bg: #2f323e;
+
+    --searchbar-border-color: #313441;
+    --searchbar-bg: #313441;
+    --searchbar-fg: #a0c980;
+    --searchbar-shadow-color: #00000060;
+    --searchresults-header-fg: #d38aea;
+    --searchresults-border-color: #3a3e4e;
+    --searchresults-li-bg: #2f323e;
+    --search-mark-bg: #ec7279;
+}
 
 .ayu {
     --bg: hsl(210, 25%, 8%);
