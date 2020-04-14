@@ -175,6 +175,47 @@ impl HtmlHandlebars {
             theme::FONT_AWESOME_TTF,
         )?;
 
+        // Always write the CSS and woff2 files when enabled
+        if html_config.font.enable {
+            write_file(
+                destination,
+                "fonts/open-sans/css/open-sans.css",
+                theme::OPEN_SANS_CSS,
+            )?;
+            write_file(
+                destination,
+                "fonts/source-code-pro/css/source-code-pro.css",
+                theme::SOURCE_CODE_PRO_CSS,
+            )?;
+            write_file(destination, "fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-300.woff2", theme::OPEN_SANS_300_WOFF2)?;
+            write_file(destination, "fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-300italic.woff2", theme::OPEN_SANS_300ITALIC_WOFF2)?;
+            write_file(destination, "fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-600.woff2", theme::OPEN_SANS_600_WOFF2)?;
+            write_file(destination, "fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-600italic.woff2", theme::OPEN_SANS_600ITALIC_WOFF2)?;
+            write_file(destination, "fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-700.woff2", theme::OPEN_SANS_700_WOFF2)?;
+            write_file(destination, "fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-700italic.woff2", theme::OPEN_SANS_700ITALIC_WOFF2)?;
+            write_file(destination, "fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-800.woff2", theme::OPEN_SANS_800_WOFF2)?;
+            write_file(destination, "fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-800italic.woff2", theme::OPEN_SANS_800ITALIC_WOFF2)?;
+            write_file(destination, "fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-italic.woff2", theme::OPEN_SANS_ITALIC_WOFF2)?;
+            write_file(destination, "fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-regular.woff2", theme::OPEN_SANS_REGULAR_WOFF2)?;
+            write_file(destination, "fonts/source-code-pro/fonts/source-code-pro-v11-latin_vietnamese_latin-ext_greek_cyrillic-ext_cyrillic-500.woff2", theme::SOURCE_CODE_PRO_WOFF2)?;
+
+            // Allow loading of woff files to be disabled. These files are
+            // larger than woff2 but are supported by older browsers
+            if html_config.font.woff {
+                write_file(destination, "fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-300.woff", theme::OPEN_SANS_300_WOFF)?;
+                write_file(destination, "fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-300italic.woff", theme::OPEN_SANS_300ITALIC_WOFF)?;
+                write_file(destination, "fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-600.woff", theme::OPEN_SANS_600_WOFF)?;
+                write_file(destination, "fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-600italic.woff", theme::OPEN_SANS_600ITALIC_WOFF)?;
+                write_file(destination, "fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-700.woff", theme::OPEN_SANS_700_WOFF)?;
+                write_file(destination, "fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-700italic.woff", theme::OPEN_SANS_700ITALIC_WOFF)?;
+                write_file(destination, "fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-800.woff", theme::OPEN_SANS_800_WOFF)?;
+                write_file(destination, "fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-800italic.woff", theme::OPEN_SANS_800ITALIC_WOFF)?;
+                write_file(destination, "fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-italic.woff", theme::OPEN_SANS_ITALIC_WOFF)?;
+                write_file(destination, "fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-regular.woff", theme::OPEN_SANS_REGULAR_WOFF)?;
+                write_file(destination, "fonts/source-code-pro/fonts/source-code-pro-v11-latin_vietnamese_latin-ext_greek_cyrillic-ext_cyrillic-500.woff", theme::SOURCE_CODE_PRO_WOFF)?;
+            }
+        }
+
         let playpen_config = &html_config.playpen;
 
         // Ace is a very large dependency, so only load it when requested
@@ -497,6 +538,8 @@ fn make_data(
         None => "fa-github",
     };
     data.insert("git_repository_icon".to_owned(), json!(git_repository_icon));
+
+    data.insert("font_enable".to_owned(), json!(html_config.font.enable));
 
     let mut chapters = vec![];
 

@@ -32,6 +32,31 @@ pub static FONT_AWESOME_WOFF: &[u8] = include_bytes!("FontAwesome/fonts/fontawes
 pub static FONT_AWESOME_WOFF2: &[u8] =
     include_bytes!("FontAwesome/fonts/fontawesome-webfont.woff2");
 pub static FONT_AWESOME_OTF: &[u8] = include_bytes!("FontAwesome/fonts/FontAwesome.otf");
+pub static OPEN_SANS_CSS: &[u8] = include_bytes!("fonts/open-sans/css/open-sans.css");
+pub static OPEN_SANS_300_WOFF: &[u8] = include_bytes!("fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-300.woff");
+pub static OPEN_SANS_300ITALIC_WOFF: &[u8] = include_bytes!("fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-300italic.woff");
+pub static OPEN_SANS_600_WOFF: &[u8] = include_bytes!("fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-600.woff");
+pub static OPEN_SANS_600ITALIC_WOFF: &[u8] = include_bytes!("fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-600italic.woff");
+pub static OPEN_SANS_700_WOFF: &[u8] = include_bytes!("fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-700.woff");
+pub static OPEN_SANS_700ITALIC_WOFF: &[u8] = include_bytes!("fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-700italic.woff");
+pub static OPEN_SANS_800_WOFF: &[u8] = include_bytes!("fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-800.woff");
+pub static OPEN_SANS_800ITALIC_WOFF: &[u8] = include_bytes!("fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-800italic.woff");
+pub static OPEN_SANS_ITALIC_WOFF: &[u8] = include_bytes!("fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-italic.woff");
+pub static OPEN_SANS_REGULAR_WOFF: &[u8] = include_bytes!("fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-regular.woff");
+pub static OPEN_SANS_300_WOFF2: &[u8] = include_bytes!("fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-300.woff2");
+pub static OPEN_SANS_300ITALIC_WOFF2: &[u8] = include_bytes!("fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-300italic.woff2");
+pub static OPEN_SANS_600_WOFF2: &[u8] = include_bytes!("fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-600.woff2");
+pub static OPEN_SANS_600ITALIC_WOFF2: &[u8] = include_bytes!("fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-600italic.woff2");
+pub static OPEN_SANS_700_WOFF2: &[u8] = include_bytes!("fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-700.woff2");
+pub static OPEN_SANS_700ITALIC_WOFF2: &[u8] = include_bytes!("fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-700italic.woff2");
+pub static OPEN_SANS_800_WOFF2: &[u8] = include_bytes!("fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-800.woff2");
+pub static OPEN_SANS_800ITALIC_WOFF2: &[u8] = include_bytes!("fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-800italic.woff2");
+pub static OPEN_SANS_ITALIC_WOFF2: &[u8] = include_bytes!("fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-italic.woff2");
+pub static OPEN_SANS_REGULAR_WOFF2: &[u8] = include_bytes!("fonts/open-sans/fonts/open-sans-v17-latin_vietnamese_latin-ext_greek-ext_greek_cyrillic-ext_cyrillic-regular.woff2");
+pub static SOURCE_CODE_PRO_CSS: &[u8] =
+    include_bytes!("fonts/source-code-pro/css/source-code-pro.css");
+pub static SOURCE_CODE_PRO_WOFF: &[u8] = include_bytes!("fonts/source-code-pro/fonts/source-code-pro-v11-latin_vietnamese_latin-ext_greek_cyrillic-ext_cyrillic-500.woff");
+pub static SOURCE_CODE_PRO_WOFF2: &[u8] = include_bytes!("fonts/source-code-pro/fonts/source-code-pro-v11-latin_vietnamese_latin-ext_greek_cyrillic-ext_cyrillic-500.woff2");
 
 /// The `Theme` struct should be used instead of the static variables because
 /// the `new()` method will look if the user has a theme directory in their

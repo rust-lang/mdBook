@@ -467,6 +467,8 @@ pub struct HtmlConfig {
     /// FontAwesome icon class to use for the Git repository link.
     /// Defaults to `fa-github` if `None`.
     pub git_repository_icon: Option<String>,
+    /// Font settings.
+    pub font: Font,
     /// This is used as a bit of a workaround for the `mdbook serve` command.
     /// Basically, because you set the websocket port from the command line, the
     /// `mdbook serve` command needs a way to let the HTML renderer know where
@@ -498,6 +500,27 @@ pub struct Fold {
     /// are closed.
     /// Default: `0`.
     pub level: u8,
+}
+
+/// Configuration for the inclusion of vendored fonts and their compression
+/// formats.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct Font {
+    /// When disabled, Open Sans and Source Code Pro are not included included
+    /// in the output directory. Default: `true`.
+    pub enable: bool,
+    /// Include woff format files. Default: `true`.
+    pub woff: bool,
+}
+
+impl Default for Font {
+    fn default() -> Self {
+        Font {
+            enable: true,
+            woff: true,
+        }
+    }
 }
 
 /// Configuration for tweaking how the the HTML renderer handles the playpen.

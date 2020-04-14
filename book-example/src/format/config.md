@@ -186,6 +186,12 @@ Available configuration options for the `[output.html.fold]` table:
 - **level:** The higher the more folded regions are open. When level is 0, all
   folds are closed. Defaults to `0`.
 
+Available configuration options for the `[output.html.font]` table:
+
+- **enable:** When disabled, Open Sans and Source Code Pro are not included in
+  the output directory. Defaults to `true`.
+- **woff:** Include woff format files. Defaults to `true`.
+
 Available configuration options for the `[output.html.playpen]` table:
 
 - **editable:** Allow editing the source code. Defaults to `false`.
@@ -243,6 +249,10 @@ git-repository-icon = "fa-github"
 [output.html.fold]
 enable = false
 level = 0
+
+[output.html.font]
+enable = true
+woff = true
 
 [output.html.playpen]
 editable = false
