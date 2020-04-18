@@ -633,7 +633,7 @@ fn add_playpen_pre(html: &str, playpen_config: &Playpen) -> String {
                                 let (attrs, code) = partition_source(code);
 
                                 format!(
-                                    "\n# #![allow(unused_variables)]\n{}#fn main() {{\n{}#}}",
+                                    "\n# #![allow(unused)]\n{}#fn main() {{\n{}#}}",
                                     attrs, code
                                 )
                                 .into()
@@ -756,7 +756,7 @@ mod tests {
     fn add_playpen() {
         let inputs = [
           ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playpen\"><code class=\"language-rust\">\n<span class=\"boring\">#![allow(unused_variables)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
+           "<pre class=\"playpen\"><code class=\"language-rust\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
           ("<code class=\"language-rust\">fn main() {}</code>",
            "<pre class=\"playpen\"><code class=\"language-rust\">fn main() {}\n</code></pre>"),
           ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code>",
