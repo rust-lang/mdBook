@@ -644,3 +644,21 @@ function playpen_text(playpen) {
         }, { passive: true });
     })();
 })();
+
+
+(function serviceWorker() {
+  var isLocalhost =
+    ["localhost", "127.0.0.1", ""].indexOf(document.location.hostname) !== -1;
+
+  if (
+    window.service_worker_script_src &&
+    "serviceWorker" in navigator &&
+    !isLocalhost
+  ) {
+    navigator.serviceWorker
+      .register(window.service_worker_script_src)
+      .catch(function(error) {
+        console.error("Service worker registration failed:", error);
+      });
+  }
+})();

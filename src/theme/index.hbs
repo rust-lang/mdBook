@@ -237,7 +237,7 @@
             window.playpen_line_numbers = true;
         </script>
         {{/if}}
-        
+
         {{#if playpen_copyable}}
         <script type="text/javascript">
             window.playpen_copyable = true;
@@ -256,6 +256,13 @@
         <script src="{{ path_to_root }}elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="{{ path_to_root }}mark.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="{{ path_to_root }}searcher.js" type="text/javascript" charset="utf-8"></script>
+        {{/if}}
+
+        {{#if offline_support}}
+        <script type="text/javascript">
+            // Must insert before loading book.js
+            window.service_worker_script_src = "{{ path_to_root }}sw.js";
+        </script>
         {{/if}}
 
         <script src="{{ path_to_root }}clipboard.min.js" type="text/javascript" charset="utf-8"></script>
