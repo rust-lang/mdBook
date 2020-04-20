@@ -1,5 +1,9 @@
 # Changelog
 
+## mdBook 0.4.0
+[99ecd4f...HEAD](https://github.com/rust-lang/mdBook/compare/99ecd4f...HEAD)
+
+
 ## mdBook 0.3.7
 [88684d8...99ecd4f](https://github.com/rust-lang/mdBook/compare/88684d8...99ecd4f)
 
