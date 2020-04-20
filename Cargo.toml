@@ -18,7 +18,7 @@ description = "Creates a book from markdown files"
 [dependencies]
 chrono = "0.4"
 clap = "2.24"
-env_logger = "0.6"
+env_logger = "0.7.1"
 error-chain = "0.12"
 handlebars = "3.0"
 itertools = "0.8"
