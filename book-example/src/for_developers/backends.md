@@ -331,7 +331,7 @@ the usual `RUST_LOG` to control logging verbosity.
 
 ## Handling missing backends
 
-If you should enable a backend that isn't installed, the default behavior is to throw an error:
+If you enable a backend that isn't installed, the default behavior is to throw an error:
 
 ```text
 The command wasn't found, is the "wordcount" backend installed?

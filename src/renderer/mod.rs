@@ -166,15 +166,17 @@ impl CmdRenderer {
                 };
 
                 if is_optional {
-                    warn!("The command was not found, but was marked as optional.");
-                    warn!("\tCommand: {}", self.cmd);
+                    warn!(
+                        "The command `{}` for backend `{}` was not found, \
+                        but was marked as optional.",
+                        self.cmd, self.name
+                    );
                     return Ok(());
                 } else {
                     error!(
-                        "The command wasn't found, is the \"{}\" backend installed?",
-                        self.name
+                        "The command `{}` wasn't found, is the `{}` backend installed?",
+                        self.cmd, self.name
                     );
-                    error!("\tCommand: {}", self.cmd);
                 }
             }
             _ => {}
