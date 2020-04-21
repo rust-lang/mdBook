@@ -25,3 +25,15 @@ The `--dest-dir` (`-d`) option allows you to change the output directory for the
 book. Relative paths are interpreted relative to the book's root directory. If
 not specified it will default to the value of the `build.build-dir` key in
 `book.toml`, or to `./book`.
+
+
+#### Specify exclude patterns
+
+The `watch` command will not automatically trigger a build for files listed in
+the `.gitignore` file in the book root directory. The `.gitignore` file may
+contain file patterns described in the [gitignore
+documentation](https://git-scm.com/docs/gitignore). This can be useful for
+ignoring temporary files created by some editors.
+
+_Note: Only `.gitignore` from book root directory is used. Global
+`$HOME/.gitignore` or `.gitignore` files in parent directories are not used._
