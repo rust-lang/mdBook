@@ -72,6 +72,8 @@ pub struct Config {
     pub book: BookConfig,
     /// Information about the build environment.
     pub build: BuildConfig,
+    /// Information about Rust language support.
+    pub rust: RustConfig,
     rest: Value,
 }
 
@@ -280,6 +282,7 @@ impl Default for Config {
         Config {
             book: BookConfig::default(),
             build: BuildConfig::default(),
+            rust: RustConfig::default(),
             rest: Value::Table(Table::default()),
         }
     }
@@ -320,9 +323,15 @@ impl<'de> Deserialize<'de> for Config {
             .and_then(|value| value.try_into().ok())
             .unwrap_or_default();
 
+        let rust: RustConfig = table
+            .remove("rust")
+            .and_then(|value| value.try_into().ok())
+            .unwrap_or_default();
+
         Ok(Config {
             book,
             build,
+            rust,
             rest: Value::Table(table),
         })
     }
@@ -331,6 +340,7 @@ impl<'de> Deserialize<'de> for Config {
 impl Serialize for Config {
     fn serialize<S: Serializer>(&self, s: S) -> std::result::Result<S::Ok, S::Error> {
         use serde::ser::Error;
+        // TODO: This should probably be removed and use a derive instead.
 
         let mut table = self.rest.clone();
 
@@ -340,8 +350,10 @@ impl Serialize for Config {
                 return Err(S::Error::custom("Unable to serialize the BookConfig"));
             }
         };
+        let rust_config = Value::try_from(&self.rust).expect("should always be serializable");
 
         table.insert("book", book_config).expect("unreachable");
+        table.insert("rust", rust_config).expect("unreachable");
         table.serialize(s)
     }
 }
@@ -430,6 +442,25 @@ impl Default for BuildConfig {
             use_default_preprocessors: true,
         }
     }
+}
+
+/// Configuration for the Rust compiler(e.g., for playpen)
+#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct RustConfig {
+    /// Rust edition used in playpen
+    pub edition: Option<RustEdition>,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+/// Rust edition to use for the code.
+pub enum RustEdition {
+    /// The 2018 edition of Rust
+    #[serde(rename = "2018")]
+    E2018,
+    /// The 2015 edition of Rust
+    #[serde(rename = "2015")]
+    E2015,
 }
 
 /// Configuration for the HTML renderer.
@@ -653,6 +684,7 @@ mod tests {
             create_missing: false,
             use_default_preprocessors: true,
         };
+        let rust_should_be = RustConfig { edition: None };
         let playpen_should_be = Playpen {
             editable: true,
             copyable: true,
@@ -675,7 +707,60 @@ mod tests {
 
         assert_eq!(got.book, book_should_be);
         assert_eq!(got.build, build_should_be);
+        assert_eq!(got.rust, rust_should_be);
         assert_eq!(got.html_config().unwrap(), html_should_be);
+    }
+
+    #[test]
+    fn edition_2015() {
+        let src = r#"
+        [book]
+        title = "mdBook Documentation"
+        description = "Create book from markdown files. Like Gitbook but implemented in Rust"
+        authors = ["Mathieu David"]
+        src = "./source"
+        [rust]
+        edition = "2015"
+        "#;
+
+        let book_should_be = BookConfig {
+            title: Some(String::from("mdBook Documentation")),
+            description: Some(String::from(
+                "Create book from markdown files. Like Gitbook but implemented in Rust",
+            )),
+            authors: vec![String::from("Mathieu David")],
+            src: PathBuf::from("./source"),
+            ..Default::default()
+        };
+
+        let got = Config::from_str(src).unwrap();
+        assert_eq!(got.book, book_should_be);
+
+        let rust_should_be = RustConfig {
+            edition: Some(RustEdition::E2015),
+        };
+        let got = Config::from_str(src).unwrap();
+        assert_eq!(got.rust, rust_should_be);
+    }
+
+    #[test]
+    fn edition_2018() {
+        let src = r#"
+        [book]
+        title = "mdBook Documentation"
+        description = "Create book from markdown files. Like Gitbook but implemented in Rust"
+        authors = ["Mathieu David"]
+        src = "./source"
+        [rust]
+        edition = "2018"
+        "#;
+
+        let rust_should_be = RustConfig {
+            edition: Some(RustEdition::E2018),
+        };
+
+        let got = Config::from_str(src).unwrap();
+        assert_eq!(got.rust, rust_should_be);
     }
 
     #[test]

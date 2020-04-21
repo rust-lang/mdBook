@@ -10,6 +10,9 @@ title = "Example book"
 author = "John Doe"
 description = "The example book covers examples."
 
+[rust]
+edition = "2018"
+
 [build]
 build-dir = "my-example-book"
 create-missing = false
@@ -53,6 +56,22 @@ description = "The example book covers examples."
 src = "my-src"  # the source files will be found in `root/my-src` instead of `root/src`
 language = "en"
 ```
+
+### Rust options
+
+Options for the Rust language, relevant to running tests and playground
+integration.
+
+- **edition**: Rust edition to use by default for the code snippets. Default
+  is "2015". Individual code blocks can be controlled with the `edition2015`
+  or `edition2018` annotations, such as:
+
+  ~~~text
+  ```rust,edition2015
+  // This only works in 2015.
+  let try = true;
+  ```
+  ~~~
 
 ### Build options
 
@@ -178,7 +197,7 @@ The following configuration options are available:
   an icon link will be output in the menu bar of the book.
 - **git-repository-icon:** The FontAwesome icon class to use for the git
   repository link. Defaults to `fa-github`.
-  
+
 Available configuration options for the `[output.html.fold]` table:
 
 - **enable:** Enable section-folding. When off, all folds are open.
