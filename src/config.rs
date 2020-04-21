@@ -72,7 +72,7 @@ pub struct Config {
     pub book: BookConfig,
     /// Information about the build environment.
     pub build: BuildConfig,
-    /// Information passed to the Rust playground
+    /// Information about Rust language support.
     pub rust: RustConfig,
     rest: Value,
 }
@@ -340,6 +340,7 @@ impl<'de> Deserialize<'de> for Config {
 impl Serialize for Config {
     fn serialize<S: Serializer>(&self, s: S) -> std::result::Result<S::Ok, S::Error> {
         use serde::ser::Error;
+        // TODO: This should probably be removed and use a derive instead.
 
         let mut table = self.rest.clone();
 
@@ -349,8 +350,10 @@ impl Serialize for Config {
                 return Err(S::Error::custom("Unable to serialize the BookConfig"));
             }
         };
+        let rust_config = Value::try_from(&self.rust).expect("should always be serializable");
 
         table.insert("book", book_config).expect("unreachable");
+        table.insert("rust", rust_config).expect("unreachable");
         table.serialize(s)
     }
 }
@@ -449,53 +452,15 @@ pub struct RustConfig {
     pub edition: Option<RustEdition>,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 /// Rust edition to use for the code.
 pub enum RustEdition {
     /// The 2018 edition of Rust
+    #[serde(rename = "2018")]
     E2018,
     /// The 2015 edition of Rust
+    #[serde(rename = "2015")]
     E2015,
-}
-
-impl Serialize for RustEdition {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        match self {
-            RustEdition::E2015 => serializer.serialize_str("2015"),
-            RustEdition::E2018 => serializer.serialize_str("2018"),
-        }
-    }
-}
-
-impl<'de> Deserialize<'de> for RustEdition {
-    fn deserialize<D>(de: D) -> std::result::Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        use serde::de::Error;
-
-        let raw = Value::deserialize(de)?;
-
-        let edition = match raw {
-            Value::String(s) => s,
-            _ => {
-                return Err(D::Error::custom("Rust edition should be a string"));
-            }
-        };
-
-        let edition = match edition.as_str() {
-            "2018" => RustEdition::E2018,
-            "2015" => RustEdition::E2015,
-            e => {
-                return Err(D::Error::custom(format!("Unknown Rust edition: {}", e)));
-            }
-        };
-
-        Ok(edition)
-    }
 }
 
 /// Configuration for the HTML renderer.

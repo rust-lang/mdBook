@@ -59,9 +59,19 @@ language = "en"
 
 ### Rust options
 
-Options for the Rust compiler used for playpen.
+Options for the Rust language, relevant to running tests and playground
+integration.
 
-- **edition**: Rust edition to use by default for the code snippets. Defaults to `rustdoc` defaults (2015).
+- **edition**: Rust edition to use by default for the code snippets. Default
+  is "2015". Individual code blocks can be controlled with the `edition2015`
+  or `edition2018` annotations, such as:
+
+  ~~~text
+  ```rust,edition2015
+  // This only works in 2015.
+  let try = true;
+  ```
+  ~~~
 
 ### Build options
 

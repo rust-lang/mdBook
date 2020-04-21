@@ -808,7 +808,7 @@ mod tests {
     fn add_playpen_edition2015() {
         let inputs = [
           ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playpen\"><code class=\"language-rust edition2015\">\n<span class=\"boring\">#![allow(unused_variables)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
+           "<pre class=\"playpen\"><code class=\"language-rust edition2015\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
           ("<code class=\"language-rust\">fn main() {}</code>",
            "<pre class=\"playpen\"><code class=\"language-rust edition2015\">fn main() {}\n</code></pre>"),
           ("<code class=\"language-rust edition2015\">fn main() {}</code>",
@@ -832,7 +832,7 @@ mod tests {
     fn add_playpen_edition2018() {
         let inputs = [
           ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playpen\"><code class=\"language-rust edition2018\">\n<span class=\"boring\">#![allow(unused_variables)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
+           "<pre class=\"playpen\"><code class=\"language-rust edition2018\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
           ("<code class=\"language-rust\">fn main() {}</code>",
            "<pre class=\"playpen\"><code class=\"language-rust edition2018\">fn main() {}\n</code></pre>"),
           ("<code class=\"language-rust edition2015\">fn main() {}</code>",
