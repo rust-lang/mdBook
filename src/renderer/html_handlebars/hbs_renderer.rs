@@ -49,12 +49,12 @@ impl HtmlHandlebars {
         // Update the context with data for this file
         let ctx_path = path
             .to_str()
-            .chain_err(|| "Could not convert path to str")?;
+            .with_context(|| "Could not convert path to str")?;
         let filepath = Path::new(&ctx_path).with_extension("html");
 
         // "print.html" is used for the print page.
         if path == Path::new("print.md") {
-            bail!(ErrorKind::ReservedFilenameError(path.clone()));
+            bail!("{} is reserved for internal use", path.display());
         };
 
         let book_title = ctx
@@ -260,7 +260,7 @@ impl HtmlHandlebars {
             let output_location = destination.join(custom_file);
             if let Some(parent) = output_location.parent() {
                 fs::create_dir_all(parent)
-                    .chain_err(|| format!("Unable to create {}", parent.display()))?;
+                    .with_context(|| format!("Unable to create {}", parent.display()))?;
             }
             debug!(
                 "Copying {} -> {}",
@@ -268,7 +268,7 @@ impl HtmlHandlebars {
                 output_location.display()
             );
 
-            fs::copy(&input_location, &output_location).chain_err(|| {
+            fs::copy(&input_location, &output_location).with_context(|| {
                 format!(
                     "Unable to copy {} to {}",
                     input_location.display(),
@@ -314,7 +314,7 @@ impl Renderer for HtmlHandlebars {
 
         if destination.exists() {
             utils::fs::remove_dir_content(destination)
-                .chain_err(|| "Unable to remove stale HTML output")?;
+                .with_context(|| "Unable to remove stale HTML output")?;
         }
 
         trace!("render");
@@ -355,7 +355,7 @@ impl Renderer for HtmlHandlebars {
         let mut print_content = String::new();
 
         fs::create_dir_all(&destination)
-            .chain_err(|| "Unexpected error when constructing destination path")?;
+            .with_context(|| "Unexpected error when constructing destination path")?;
 
         let mut is_index = true;
         for item in book.iter() {
@@ -388,9 +388,9 @@ impl Renderer for HtmlHandlebars {
 
         debug!("Copy static files");
         self.copy_static_files(&destination, &theme, &html_config)
-            .chain_err(|| "Unable to copy across static files")?;
+            .with_context(|| "Unable to copy across static files")?;
         self.copy_additional_css_and_js(&html_config, &ctx.root, &destination)
-            .chain_err(|| "Unable to copy across additional CSS and JS")?;
+            .with_context(|| "Unable to copy across additional CSS and JS")?;
 
         // Render search index
         #[cfg(feature = "search")]
@@ -549,7 +549,7 @@ fn make_data(
                 if let Some(ref path) = ch.path {
                     let p = path
                         .to_str()
-                        .chain_err(|| "Could not convert path to str")?;
+                        .with_context(|| "Could not convert path to str")?;
                     chapter.insert("path".to_owned(), json!(p));
                 }
             }

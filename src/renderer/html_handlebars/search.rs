@@ -82,7 +82,7 @@ fn render_item(
     let filepath = Path::new(&chapter_path).with_extension("html");
     let filepath = filepath
         .to_str()
-        .chain_err(|| "Could not convert HTML path to str")?;
+        .with_context(|| "Could not convert HTML path to str")?;
     let anchor_base = utils::fs::normalize_path(filepath);
 
     let mut p = utils::new_cmark_parser(&chapter.content).peekable();

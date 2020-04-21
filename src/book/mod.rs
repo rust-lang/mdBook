@@ -215,7 +215,7 @@ impl MDBook {
 
         renderer
             .render(&render_context)
-            .chain_err(|| "Rendering failed")
+            .with_context(|| "Rendering failed")
     }
 
     /// You can change the default renderer to another one by using this method.
@@ -282,10 +282,12 @@ impl MDBook {
                 let output = cmd.output()?;
 
                 if !output.status.success() {
-                    bail!(ErrorKind::Subprocess(
-                        "Rustdoc returned an error".to_string(),
-                        output
-                    ));
+                    bail!(
+                        "rustdoc returned an error:\n\
+                        \n--- stdout\n{}\n--- stderr\n{}",
+                        String::from_utf8_lossy(&output.stdout),
+                        String::from_utf8_lossy(&output.stderr)
+                    );
                 }
             }
         }

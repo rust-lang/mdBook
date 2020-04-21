@@ -16,10 +16,10 @@ repository = "https://github.com/rust-lang/mdBook"
 description = "Creates a book from markdown files"
 
 [dependencies]
+anyhow = "1.0.28"
 chrono = "0.4"
 clap = "2.24"
 env_logger = "0.7.1"
-error-chain = "0.12"
 handlebars = "3.0"
 lazy_static = "1.0"
 log = "0.4"

@@ -28,11 +28,9 @@ macro_rules! summary_md_test {
                 .unwrap();
 
             if let Err(e) = book::parse_summary(&content) {
-                use error_chain::ChainedError;
-
                 eprintln!("Error parsing {}", filename.display());
                 eprintln!();
-                eprintln!("{}", e.display_chain());
+                eprintln!("{:?}", e);
                 panic!();
             }
         }

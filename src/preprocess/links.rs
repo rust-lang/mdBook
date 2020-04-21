@@ -95,7 +95,7 @@ where
             }
             Err(e) => {
                 error!("Error updating \"{}\", {}", link.link_text, e);
-                for cause in e.iter().skip(1) {
+                for cause in e.chain().skip(1) {
                     warn!("Caused By: {}", cause);
                 }
 
@@ -296,7 +296,7 @@ impl<'a> Link<'a> {
                         RangeOrAnchor::Range(range) => take_lines(&s, range.clone()),
                         RangeOrAnchor::Anchor(anchor) => take_anchored_lines(&s, anchor),
                     })
-                    .chain_err(|| {
+                    .with_context(|| {
                         format!(
                             "Could not read file for link {} ({})",
                             self.link_text,
@@ -316,7 +316,7 @@ impl<'a> Link<'a> {
                             take_rustdoc_include_anchored_lines(&s, anchor)
                         }
                     })
-                    .chain_err(|| {
+                    .with_context(|| {
                         format!(
                             "Could not read file for link {} ({})",
                             self.link_text,
@@ -327,7 +327,7 @@ impl<'a> Link<'a> {
             LinkType::Playpen(ref pat, ref attrs) => {
                 let target = base.join(pat);
 
-                let contents = fs::read_to_string(&target).chain_err(|| {
+                let contents = fs::read_to_string(&target).with_context(|| {
                     format!(
                         "Could not read file for link {} ({})",
                         self.link_text,

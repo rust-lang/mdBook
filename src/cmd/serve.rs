@@ -74,7 +74,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let sockaddr: SocketAddr = address
         .to_socket_addrs()?
         .next()
-        .ok_or_else(|| format!("no address found for {}", address))?;
+        .ok_or_else(|| anyhow::anyhow!("no address found for {}", address))?;
     let build_dir = book.build_dir_for("html");
 
     // A channel used to broadcast to any websockets to reload when a file changes.

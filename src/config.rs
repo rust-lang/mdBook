@@ -79,7 +79,7 @@ impl FromStr for Config {
 
     /// Load a `Config` from some string.
     fn from_str(src: &str) -> Result<Self> {
-        toml::from_str(src).chain_err(|| Error::from("Invalid configuration file"))
+        toml::from_str(src).with_context(|| "Invalid configuration file")
     }
 }
 
@@ -88,9 +88,9 @@ impl Config {
     pub fn from_disk<P: AsRef<Path>>(config_file: P) -> Result<Config> {
         let mut buffer = String::new();
         File::open(config_file)
-            .chain_err(|| "Unable to open the configuration file")?
+            .with_context(|| "Unable to open the configuration file")?
             .read_to_string(&mut buffer)
-            .chain_err(|| "Couldn't read the file")?;
+            .with_context(|| "Couldn't read the file")?;
 
         Config::from_str(&buffer)
     }
@@ -176,11 +176,14 @@ impl Config {
     /// HTML renderer is refactored to be less coupled to `mdbook` internals.
     #[doc(hidden)]
     pub fn html_config(&self) -> Option<HtmlConfig> {
-        match self.get_deserialized_opt("output.html") {
+        match self
+            .get_deserialized_opt("output.html")
+            .with_context(|| "Parsing configuration [output.html]")
+        {
             Ok(Some(config)) => Some(config),
             Ok(None) => None,
             Err(e) => {
-                utils::log_backtrace(&e.chain_err(|| "Parsing configuration [output.html]"));
+                utils::log_backtrace(&e);
                 None
             }
         }
@@ -208,7 +211,7 @@ impl Config {
                 value
                     .clone()
                     .try_into()
-                    .chain_err(|| "Couldn't deserialize the value")
+                    .with_context(|| "Couldn't deserialize the value")
             })
             .transpose()
     }
@@ -220,8 +223,8 @@ impl Config {
     pub fn set<S: Serialize, I: AsRef<str>>(&mut self, index: I, value: S) -> Result<()> {
         let index = index.as_ref();
 
-        let value =
-            Value::try_from(value).chain_err(|| "Unable to represent the item as a JSON Value")?;
+        let value = Value::try_from(value)
+            .with_context(|| "Unable to represent the item as a JSON Value")?;
 
         if index.starts_with("book.") {
             self.book.update_value(&index[5..], value);
