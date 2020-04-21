@@ -172,7 +172,7 @@ The following configuration options are available:
 - **preferred-dark-theme:** The default dark theme. This theme will be used if
   the browser requests the dark version of the site via the
   ['prefers-color-scheme'](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)
-  CSS media query. Defaults to the same theme as `default-theme`.
+  CSS media query. Defaults to `navy`.
 - **curly-quotes:** Convert straight quotes to curly quotes, except for those
   that occur in code blocks and code spans. Defaults to `false`.
 - **mathjax-support:** Adds support for [MathJax](mathjax.md). Defaults to
