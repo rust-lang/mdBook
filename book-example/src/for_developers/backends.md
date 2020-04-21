@@ -329,6 +329,36 @@ generation or a warning).
 All environment variables are passed through to the backend, allowing you to use
 the usual `RUST_LOG` to control logging verbosity.
 
+## Handling missing backends
+
+If you enable a backend that isn't installed, the default behavior is to throw an error:
+
+```text
+The command wasn't found, is the "wordcount" backend installed?
+```
+
+This behavior can be changed by marking the backend as optional.
+
+```diff
+  [book]
+  title = "mdBook Documentation"
+  description = "Create book from markdown files. Like Gitbook but implemented in Rust"
+  authors = ["Mathieu David", "Michael-F-Bryan"]
+
+  [output.html]
+
+  [output.wordcount]
+  command = "python /path/to/wordcount.py"
++ optional = true
+```
+
+This demotes the error to a warning, and it will instead look like this:
+
+```text
+The command was not found, but was marked as optional.
+    Command: wordcount
+```
+
 
 ## Wrapping Up
 

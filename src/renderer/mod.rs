@@ -19,13 +19,14 @@ mod markdown_renderer;
 
 use shlex::Shlex;
 use std::fs;
-use std::io::{self, Read};
+use std::io::{self, ErrorKind, Read};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
 use crate::book::Book;
 use crate::config::Config;
 use crate::errors::*;
+use toml::Value;
 
 /// An arbitrary `mdbook` backend.
 ///
@@ -149,6 +150,41 @@ impl CmdRenderer {
     }
 }
 
+impl CmdRenderer {
+    fn handle_render_command_error(&self, ctx: &RenderContext, error: io::Error) -> Result<()> {
+        match error.kind() {
+            ErrorKind::NotFound => {
+                // Look for "output.{self.name}.optional".
+                // If it exists and is true, treat this as a warning.
+                // Otherwise, fail the build.
+
+                let optional_key = format!("output.{}.optional", self.name);
+
+                let is_optional = match ctx.config.get(&optional_key) {
+                    Some(Value::Boolean(value)) => *value,
+                    _ => false,
+                };
+
+                if is_optional {
+                    warn!(
+                        "The command `{}` for backend `{}` was not found, \
+                        but was marked as optional.",
+                        self.cmd, self.name
+                    );
+                    return Ok(());
+                } else {
+                    error!(
+                        "The command `{}` wasn't found, is the `{}` backend installed?",
+                        self.cmd, self.name
+                    );
+                }
+            }
+            _ => {}
+        }
+        Err(error).chain_err(|| "Unable to start the backend")?
+    }
+}
+
 impl Renderer for CmdRenderer {
     fn name(&self) -> &str {
         &self.name
@@ -168,17 +204,7 @@ impl Renderer for CmdRenderer {
             .spawn()
         {
             Ok(c) => c,
-            Err(ref e) if e.kind() == io::ErrorKind::NotFound => {
-                warn!(
-                    "The command wasn't found, is the \"{}\" backend installed?",
-                    self.name
-                );
-                warn!("\tCommand: {}", self.cmd);
-                return Ok(());
-            }
-            Err(e) => {
-                return Err(e).chain_err(|| "Unable to start the backend")?;
-            }
+            Err(e) => return self.handle_render_command_error(ctx, e),
         };
 
         {
