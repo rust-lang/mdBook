@@ -1,8 +1,10 @@
 [book]
-title = "mdBook Documentation"
+title = "{{fluent \"book-title\"}}"
 description = "Create book from markdown files. Like Gitbook but implemented in Rust"
 authors = ["Mathieu David", "Michael-F-Bryan"]
 language = "en"
+shared-locale-resources = ["locales/core.ftl"]
+multilingual = true
 
 [rust]
 edition = "2018"

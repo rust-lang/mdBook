@@ -12,7 +12,9 @@ A lot of data is exposed to the handlebars template with the "context". In the
 handlebars template you can access this information by using
 
 ```handlebars
+{{{{raw}}}}
 {{name_of_property}}
+{{{{/raw}}}}
 ```
 
 Here is a list of the properties that are exposed:
@@ -47,7 +49,7 @@ at your disposal.
 The toc helper is used like this
 
 ```handlebars
-{{#toc}}{{/toc}}
+{{{{raw}}}}{{#toc}}{{/toc}}{{{{/raw}}}}
 ```
 
 and outputs something that looks like this, depending on the structure of your
@@ -84,11 +86,13 @@ previous and next chapters.
 They are used like this
 
 ```handlebars
+{{{{raw}}}}
 {{#previous}}
     <a href="{{link}}" class="nav-chapters previous">
         <i class="fa fa-angle-left"></i>
     </a>
 {{/previous}}
+{{{{/raw}}}}
 ```
 
 The inner html will only be rendered if the previous / next chapter exists.
