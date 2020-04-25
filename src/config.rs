@@ -410,7 +410,14 @@ pub struct BookConfig {
     /// Does this book support more than one language?
     pub multilingual: bool,
     /// The main language of the book.
-    pub language: Option<String>,
+    pub language: String,
+    /// The location of the fluent localisation files.
+    pub locales: PathBuf,
+    /// The location of the "core" fluent files that are shared across all
+    /// localisations.
+    pub shared_locale_resources: Option<Vec<PathBuf>>,
+    /// The languages that are ready for public consumption.
+    pub available_languages: Option<Vec<String>>,
 }
 
 impl Default for BookConfig {
@@ -421,7 +428,10 @@ impl Default for BookConfig {
             description: None,
             src: PathBuf::from("src"),
             multilingual: false,
-            language: Some(String::from("en")),
+            language: String::from("en"),
+            locales: PathBuf::from("locales"),
+            shared_locale_resources: None,
+            available_languages: None,
         }
     }
 }
@@ -673,6 +683,9 @@ mod tests {
         description = "A completely useless book"
         multilingual = true
         src = "source"
+        locales = "locales"
+        shared-locale-resources = ["locales/core.ftl"]
+        available-languages = ["ja"]
         language = "ja"
 
         [build]
@@ -708,7 +721,10 @@ mod tests {
             description: Some(String::from("A completely useless book")),
             multilingual: true,
             src: PathBuf::from("source"),
-            language: Some(String::from("ja")),
+            locales: PathBuf::from("locales"),
+            available_languages: Some(vec!["ja".to_string()]),
+            shared_locale_resources: Some(vec![PathBuf::from("locales/core.ftl")]),
+            language: String::from("ja"),
         };
         let build_should_be = BuildConfig {
             build_dir: PathBuf::from("outputs"),

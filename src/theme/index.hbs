@@ -127,6 +127,17 @@
                     <h1 class="menu-title">{{ book_title }}</h1>
 
                     <div class="right-buttons">
+                        {{#if multilingual}}
+                        <select id="locale-list" class="locales-menu" aria-label="locales" role="menu">
+                            <option value="{{ language.permalink }}" selected>{{ language.identifier }}</option>
+
+                            {{#each available_languages}}
+                            {{#unless (eq this.identifier ../language.identifier) }}
+                            <option value="{{ this.permalink }}">{{ this.identifier }}</option>
+                            {{/unless}}
+                            {{/each}}
+                        </select>
+                        {{/if}}
                         <a href="{{ path_to_root }}print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
@@ -150,6 +161,13 @@
                     </div>
                 </div>
                 {{/if}}
+
+                <!-- Handle use selecting locale option -->
+                <script type="text/javascript">
+                    document.querySelector('#locale-list').addEventListener('change', function () {
+                        window.location = this.value;
+                    })
+                </script>
 
                 <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
                 <script type="text/javascript">

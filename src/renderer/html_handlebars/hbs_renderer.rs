@@ -14,6 +14,7 @@ use std::path::{Path, PathBuf};
 
 use handlebars::Handlebars;
 use regex::{Captures, Regex};
+use unic_langid::LanguageIdentifier;
 
 #[derive(Default)]
 pub struct HtmlHandlebars;
@@ -26,7 +27,7 @@ impl HtmlHandlebars {
     fn render_item(
         &self,
         item: &BookItem,
-        mut ctx: RenderItemContext<'_>,
+        mut ctx: RenderItemContext<'_, '_, '_, '_>,
         print_content: &mut String,
     ) -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
@@ -36,45 +37,99 @@ impl HtmlHandlebars {
             _ => return Ok(()),
         };
 
-        let content = ch.content.clone();
-        let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
-
-        let fixed_content = utils::render_markdown_with_path(
-            &ch.content,
-            ctx.html_config.curly_quotes,
-            Some(&path),
-        );
-        print_content.push_str(&fixed_content);
-
-        // Update the context with data for this file
-        let ctx_path = path
-            .to_str()
-            .with_context(|| "Could not convert path to str")?;
-        let filepath = Path::new(&ctx_path).with_extension("html");
-
         // "print.html" is used for the print page.
         if path == Path::new("print.md") {
             bail!("{} is reserved for internal use", path.display());
         };
 
-        let book_title = ctx
-            .data
-            .get("book_title")
-            .and_then(serde_json::Value::as_str)
-            .unwrap_or("");
+        let filepath = Path::new(path).with_extension("html");
 
-        let title = match book_title {
-            "" => ch.name.clone(),
-            _ => ch.name.clone() + " - " + book_title,
+        let current_language_path = ctx
+            .locale_data
+            .paths
+            .get(ctx.current_language)
+            .unwrap()
+            .strip_prefix(ctx.root_path)
+            .unwrap()
+            .join(&filepath);
+        let relative_to_root = utils::fs::path_to_root(&current_language_path);
+
+        let available_languages = ctx
+            .locale_data
+            .languages
+            .iter()
+            .map(|locale| {
+                let relative_path = relative_to_root.join(
+                    ctx.locale_data
+                        .paths
+                        .get(locale)
+                        .unwrap()
+                        .strip_prefix(&ctx.root_path)
+                        .unwrap(),
+                );
+
+                json!({
+                    "identifier": locale.to_string(),
+                    "permalink": relative_path.join(&filepath)
+                })
+            })
+            .collect::<Vec<_>>();
+
+        let language = ctx.current_language.to_string();
+        ctx.data.insert("lang".to_owned(), json!(language));
+
+        let locale_content = ctx.handlebars.render_template(&ch.content, &ctx.data)?;
+        let content = utils::render_markdown(&locale_content, ctx.html_config.curly_quotes);
+        let path_to_root = ctx
+            .destination
+            .strip_prefix(ctx.root_path)
+            .with_context(|| "Destination outside of root_path")?;
+
+        let fixed_content = utils::render_markdown_with_path(
+            &locale_content,
+            ctx.html_config.curly_quotes,
+            Some(path),
+        );
+        print_content.push_str(&fixed_content);
+
+        let title = {
+            let chapter_title = ctx
+                .handlebars
+                .render_template(
+                    &ch.name,
+                    &json!({ "lang": ctx.current_language.to_string() }),
+                )
+                .with_context(|| "Couldn't render chapter title")?;
+            let book_title = ctx
+                .data
+                .get("book_title")
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or("");
+
+            if book_title.is_empty() {
+                ch.name.clone()
+            } else {
+                format!(
+                    "{chapter} - {book}",
+                    chapter = chapter_title,
+                    book = book_title
+                )
+            }
         };
 
+        ctx.data.insert(
+            "language".to_owned(),
+            json!({ "identifier": language, "permalink": current_language_path }),
+        );
+        ctx.data
+            .insert("available_languages".to_owned(), json!(available_languages));
         ctx.data.insert("path".to_owned(), json!(path));
         ctx.data.insert("content".to_owned(), json!(content));
         ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
         ctx.data.insert("title".to_owned(), json!(title));
         ctx.data.insert(
             "path_to_root".to_owned(),
-            json!(utils::fs::path_to_root(&path)),
+            json!(utils::fs::path_to_root(path_to_root.join(path))),
         );
         if let Some(ref section) = ch.number {
             ctx.data
@@ -93,12 +148,15 @@ impl HtmlHandlebars {
 
         if ctx.is_index {
             ctx.data.insert("path".to_owned(), json!("index.md"));
-            ctx.data.insert("path_to_root".to_owned(), json!(""));
+            ctx.data.insert(
+                "path_to_root".to_owned(),
+                json!(utils::fs::path_to_root(path_to_root.join("index.md"))),
+            );
             ctx.data.insert("is_index".to_owned(), json!("true"));
             let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
             let rendered_index =
                 self.post_process(rendered_index, &ctx.html_config.playpen, ctx.edition);
-            debug!("Creating index.html from {}", ctx_path);
+            debug!("Creating index.html from {}", path.display());
             utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
         }
 
@@ -218,6 +276,7 @@ impl HtmlHandlebars {
         &self,
         data: &mut serde_json::Map<String, serde_json::Value>,
         print_content: &str,
+        root_path: &Path,
     ) {
         // Make sure that the Print chapter does not display the title from
         // the last rendered chapter by removing it from its context
@@ -227,7 +286,7 @@ impl HtmlHandlebars {
         data.insert("content".to_owned(), json!(print_content));
         data.insert(
             "path_to_root".to_owned(),
-            json!(utils::fs::path_to_root(Path::new("print.md"))),
+            json!(utils::fs::path_to_root(root_path.join("print.md"))),
         );
     }
 
@@ -308,12 +367,40 @@ impl Renderer for HtmlHandlebars {
     fn render(&self, ctx: &RenderContext) -> Result<()> {
         let html_config = ctx.config.html_config().unwrap_or_default();
         let src_dir = ctx.root.join(&ctx.config.book.src);
-        let destination = &ctx.destination;
+        let locale_dir = ctx.root.join(&ctx.config.book.locales);
+
+        let base_destination = &ctx.destination;
         let book = &ctx.book;
+        let multilingual = ctx.config.book.multilingual;
+        let available_languages = &ctx.config.book.available_languages;
         let build_dir = ctx.root.join(&ctx.config.build.build_dir);
 
-        if destination.exists() {
-            utils::fs::remove_dir_content(destination)
+        if base_destination.exists() {
+            utils::fs::remove_dir_content(base_destination)
+                .with_context(|| "Unable to remove stale HTML output")?;
+        }
+
+        let shared_locale_resources =
+            ctx.config
+                .book
+                .shared_locale_resources
+                .clone()
+                .map(|mut v| {
+                    for path in &mut v {
+                        *path = ctx.root.join(&path).to_path_buf();
+                    }
+                    v
+                });
+
+        let language = ctx
+            .config
+            .book
+            .language
+            .parse::<LanguageIdentifier>()
+            .with_context(|| "Invalid unicode language identifier")?;
+
+        if base_destination.exists() {
+            utils::fs::remove_dir_content(base_destination)
                 .with_context(|| "Unable to remove stale HTML output")?;
         }
 
@@ -349,47 +436,110 @@ impl Renderer for HtmlHandlebars {
         debug!("Register handlebars helpers");
         self.register_hbs_helpers(&mut handlebars, &html_config);
 
-        let mut data = make_data(&ctx.root, &book, &ctx.config, &html_config)?;
+        debug!("Register Fluent helpers");
 
-        // Print version
-        let mut print_content = String::new();
+        let locales = if multilingual {
+            let loader = fluent_templates::ArcLoader::new(&locale_dir, language.clone())
+                .shared_resources(shared_locale_resources.as_deref())
+                .build()
+                .expect("Couldn't load fluent");
+            let locales = loader.locales();
+            let helper = fluent_templates::FluentHelper::new(loader);
+            handlebars.register_helper("fluent", Box::new(helper));
 
-        fs::create_dir_all(&destination)
+            if let Some(languages) = available_languages {
+                languages
+                    .iter()
+                    .map(|s| s.parse::<LanguageIdentifier>())
+                    .collect::<std::result::Result<Vec<_>, unic_langid::LanguageIdentifierError>>()
+                    .with_context(|| "Invalid language identifiers")?
+            } else {
+                locales
+            }
+        } else {
+            vec![language.clone()]
+        };
+
+        let locale_destination_iter = locales.iter().cloned().map(|locale| {
+            let dir = if locale != language {
+                base_destination.join(locale.to_string())
+            } else {
+                base_destination.clone()
+            };
+
+            (locale, dir)
+        });
+
+        fs::create_dir_all(&base_destination)
             .with_context(|| "Unexpected error when constructing destination path")?;
 
-        let mut is_index = true;
-        for item in book.iter() {
-            let ctx = RenderItemContext {
-                handlebars: &handlebars,
-                destination: destination.to_path_buf(),
-                data: data.clone(),
-                is_index,
-                html_config: html_config.clone(),
-                edition: ctx.config.rust.edition,
-            };
-            self.render_item(item, ctx, &mut print_content)?;
-            is_index = false;
+        let locale_data = LocalizationData {
+            languages: locales
+                .iter()
+                .cloned()
+                .collect::<std::collections::HashSet<_>>(),
+            paths: locale_destination_iter.collect(),
+        };
+
+        for locale in locales.clone() {
+            let destination = locale_data.paths.get(&locale).unwrap();
+            let mut data = make_data(
+                &ctx.root,
+                &book,
+                &handlebars,
+                &ctx.config,
+                &html_config,
+                &locale,
+            )?;
+
+            // Print version
+            let mut print_content = String::new();
+
+            fs::create_dir_all(&destination)
+                .with_context(|| "Unexpected error when constructing destination path")?;
+
+            let mut is_index = true;
+            for item in book.iter() {
+                let ctx = RenderItemContext {
+                    handlebars: &handlebars,
+                    destination: destination.to_path_buf(),
+                    root_path: base_destination,
+                    data: data.clone(),
+                    is_index,
+                    locale_data: &locale_data,
+                    current_language: &locale,
+                    html_config: html_config.clone(),
+                    edition: ctx.config.rust.edition,
+                };
+                self.render_item(item, ctx, &mut print_content)?;
+                is_index = false;
+            }
+
+            let path_to_root = destination
+                .strip_prefix(base_destination)
+                .with_context(|| "destination is outside of root_path")?;
+
+            // Print version
+            self.configure_print_version(&mut data, &print_content, path_to_root);
+            if let Some(ref title) = ctx.config.book.title {
+                data.insert("title".to_owned(), json!(title));
+            }
+
+            // Render the handlebars template with the data
+            debug!("Render template");
+            let rendered = handlebars.render("index", &data)?;
+
+            let rendered =
+                self.post_process(rendered, &html_config.playpen, ctx.config.rust.edition);
+
+            utils::fs::write_file(&destination, "print.html", rendered.as_bytes())?;
+            debug!("Creating print.html ✓");
         }
-
-        // Print version
-        self.configure_print_version(&mut data, &print_content);
-        if let Some(ref title) = ctx.config.book.title {
-            data.insert("title".to_owned(), json!(title));
-        }
-
-        // Render the handlebars template with the data
-        debug!("Render template");
-        let rendered = handlebars.render("index", &data)?;
-
-        let rendered = self.post_process(rendered, &html_config.playpen, ctx.config.rust.edition);
-
-        utils::fs::write_file(&destination, "print.html", rendered.as_bytes())?;
-        debug!("Creating print.html ✓");
 
         debug!("Copy static files");
-        self.copy_static_files(&destination, &theme, &html_config)
+        self.copy_static_files(&base_destination, &theme, &html_config)
             .with_context(|| "Unable to copy across static files")?;
-        self.copy_additional_css_and_js(&html_config, &ctx.root, &destination)
+        self.copy_additional_css_and_js(&html_config, &ctx.root, &base_destination)
             .with_context(|| "Unable to copy across additional CSS and JS")?;
 
         // Render search index
@@ -397,12 +547,18 @@ impl Renderer for HtmlHandlebars {
         {
             let search = html_config.search.unwrap_or_default();
             if search.enable {
-                super::search::create_files(&search, &destination, &book)?;
+                super::search::create_files(&search, &base_destination, &book)?;
             }
         }
 
         // Copy all remaining files, avoid a recursive copy from/to the book build dir
-        utils::fs::copy_files_except_ext(&src_dir, &destination, true, Some(&build_dir), &["md"])?;
+        utils::fs::copy_files_except_ext(
+            &src_dir,
+            &base_destination,
+            true,
+            Some(&build_dir),
+            &["md"],
+        )?;
 
         Ok(())
     }
@@ -411,23 +567,30 @@ impl Renderer for HtmlHandlebars {
 fn make_data(
     root: &Path,
     book: &Book,
+    handlebars: &Handlebars<'_>,
     config: &Config,
     html_config: &HtmlConfig,
+    locale: &LanguageIdentifier,
 ) -> Result<serde_json::Map<String, serde_json::Value>> {
     trace!("make_data");
+    let locale_json = json!({ "lang": locale.to_string() });
 
     let mut data = serde_json::Map::new();
-    data.insert(
-        "language".to_owned(),
-        json!(config.book.language.clone().unwrap_or_default()),
-    );
+    data.insert("multilingual".to_owned(), json!(config.book.multilingual));
     data.insert(
         "book_title".to_owned(),
-        json!(config.book.title.clone().unwrap_or_default()),
+        json!(handlebars
+            .render_template(config.book.title.as_deref().unwrap_or(""), &locale_json)
+            .with_context(|| "Failed to render book title")?),
     );
     data.insert(
         "description".to_owned(),
-        json!(config.book.description.clone().unwrap_or_default()),
+        json!(handlebars
+            .render_template(
+                config.book.description.as_deref().unwrap_or(""),
+                &locale_json,
+            )
+            .with_context(|| "Failed to render book title")?),
     );
     data.insert("favicon".to_owned(), json!("favicon.png"));
     if let Some(ref livereload) = html_config.livereload_url {
@@ -545,12 +708,16 @@ fn make_data(
                     json!((!ch.sub_items.is_empty()).to_string()),
                 );
 
-                chapter.insert("name".to_owned(), json!(ch.name));
-                if let Some(ref path) = ch.path {
-                    let p = path
+                let name = handlebars
+                    .render_template(&ch.name, &locale_json)
+                    .with_context(|| "Couldn't render chapter title")?;
+
+                chapter.insert("name".to_owned(), json!(name));
+                if let Some(path) = &ch.path {
+                    let path = path
                         .to_str()
                         .with_context(|| "Could not convert path to str")?;
-                    chapter.insert("path".to_owned(), json!(p));
+                    chapter.insert("path".to_owned(), json!(path));
                 }
             }
             BookItem::Separator => {
@@ -750,13 +917,23 @@ fn partition_source(s: &str) -> (String, String) {
     (before, after)
 }
 
-struct RenderItemContext<'a> {
+struct RenderItemContext<'a, 'b, 'c, 'd> {
     handlebars: &'a Handlebars<'a>,
     destination: PathBuf,
+    root_path: &'b Path,
+    locale_data: &'c LocalizationData,
+    current_language: &'d LanguageIdentifier,
     data: serde_json::Map<String, serde_json::Value>,
     is_index: bool,
     html_config: HtmlConfig,
     edition: Option<RustEdition>,
+}
+
+struct LocalizationData {
+    /// What languages are available.
+    languages: std::collections::HashSet<LanguageIdentifier>,
+    /// The location of each languages build directory.
+    paths: HashMap<LanguageIdentifier, PathBuf>,
 }
 
 #[cfg(test)]

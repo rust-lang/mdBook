@@ -120,7 +120,7 @@ impl HelperDef for RenderToc {
                         .replace("\\", "/");
 
                     // Add link
-                    out.write(&utils::fs::path_to_root(&current_path))?;
+                    out.write(&utils::fs::path_to_root(&current_path).to_string_lossy())?;
                     out.write(&tmp)?;
                     out.write("\"")?;
 
