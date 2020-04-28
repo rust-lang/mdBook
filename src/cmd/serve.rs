@@ -53,6 +53,15 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
                 ),
         )
         .arg(
+            Arg::with_name("websocket-public-path")
+                .long("websocket-public-path")
+                .takes_value(true)
+                .empty_values(false)
+                .help(
+                    "Public path to connect to for WebSockets connections (for use with a reverse proxy)",
+                ),
+        )
+        .arg(
             Arg::with_name("websocket-port")
                 .short("w")
                 .long("websocket-port")
@@ -73,12 +82,13 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let ws_port = args.value_of("websocket-port").unwrap();
     let hostname = args.value_of("hostname").unwrap();
     let public_address = args.value_of("websocket-hostname").unwrap_or(hostname);
+    let ws_public_path = args.value_of("websocket-public-path").unwrap_or("");
     let open_browser = args.is_present("open");
 
     let address = format!("{}:{}", hostname, port);
     let ws_address = format!("{}:{}", hostname, ws_port);
 
-    let livereload_url = format!("ws://{}:{}", public_address, ws_port);
+    let livereload_url = format!("ws://{}:{}{}", public_address, ws_port, ws_public_path);
     book.config
         .set("output.html.livereload-url", &livereload_url)?;
 
