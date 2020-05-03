@@ -142,6 +142,22 @@ impl Config {
             let parsed_value = serde_json::from_str(&value)
                 .unwrap_or_else(|_| serde_json::Value::String(value.to_string()));
 
+            if matches!(&*key, "book" | "build") {
+                if let serde_json::Value::Object(ref map) = parsed_value {
+                    // To `set` each `key`, we wrap them as `prefix.key`
+                    let prefix = &key; // "book" or "build"
+                    let mut s = String::new();
+                    for (k, v) in map {
+                        s.clear();
+                        s.push_str(prefix);
+                        s.push('.');
+                        s.push_str(k);
+                        self.set(&s, v).expect("unreachable");
+                    }
+                    return;
+                }
+            }
+
             self.set(key, parsed_value).expect("unreachable");
         }
     }
