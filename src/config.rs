@@ -142,7 +142,7 @@ impl Config {
             let parsed_value = serde_json::from_str(&value)
                 .unwrap_or_else(|_| serde_json::Value::String(value.to_string()));
 
-            if matches!(&*key, "book" | "build") {
+            if key == "book" || key == "build" {
                 if let serde_json::Value::Object(ref map) = parsed_value {
                     // To `set` each `key`, we wrap them as `prefix.key`
                     let prefix = &key; // "book" or "build"
