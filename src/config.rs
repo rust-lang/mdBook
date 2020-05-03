@@ -124,7 +124,7 @@ impl Config {
     /// > when building the book with something like
     /// >
     /// > ```text
-    /// > $ export MDBOOK_BOOK="{'title': 'My Awesome Book', authors: ['Michael-F-Bryan']}"
+    /// > $ export MDBOOK_BOOK="{'title': 'My Awesome Book', 'authors': ['Michael-F-Bryan']}"
     /// > $ mdbook build
     /// > ```
     ///
