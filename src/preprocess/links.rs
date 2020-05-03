@@ -452,6 +452,24 @@ mod tests {
     }
 
     #[test]
+    fn test_find_links_with_special_characters() {
+        let s = "Some random text with {{#playpen foo-bar\\baz/_c++.rs}}...";
+
+        let res = find_links(s).collect::<Vec<_>>();
+        println!("\nOUTPUT: {:?}\n", res);
+
+        assert_eq!(
+            res,
+            vec![Link {
+                start_index: 22,
+                end_index: 54,
+                link_type: LinkType::Playpen(PathBuf::from("foo-bar\\baz/_c++.rs"), vec![]),
+                link_text: "{{#playpen foo-bar\\baz/_c++.rs}}",
+            },]
+        );
+    }
+
+    #[test]
     fn test_find_links_with_range() {
         let s = "Some random text with {{#include file.rs:10:20}}...";
         let res = find_links(s).collect::<Vec<_>>();
