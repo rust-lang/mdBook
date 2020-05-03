@@ -364,14 +364,14 @@ fn find_links(contents: &str) -> LinkIter<'_> {
     // r"\\\{\{#.*\}\}|\{\{#([a-zA-Z0-9]+)\s*([a-zA-Z0-9_.\-:/\\\s]+)\}\}")?;
     lazy_static! {
         static ref RE: Regex = Regex::new(
-            r"(?x)                     # insignificant whitespace mode
-            \\\{\{\#.*\}\}             # match escaped link
-            |                          # or
-            \{\{\s*                    # link opening parens and whitespace
-            \#([a-zA-Z0-9_]+)          # link type
-            \s+                        # separating whitespace
-            ([a-zA-Z0-9\s_.\-:/\\]+)   # link target path and space separated properties
-            \s*\}\}                    # whitespace and link closing parens"
+            r"(?x)                       # insignificant whitespace mode
+            \\\{\{\#.*\}\}               # match escaped link
+            |                            # or
+            \{\{\s*                      # link opening parens and whitespace
+            \#([a-zA-Z0-9_]+)            # link type
+            \s+                          # separating whitespace
+            ([a-zA-Z0-9\s_.\-:/\\\+]+)   # link target path and space separated properties
+            \s*\}\}                      # whitespace and link closing parens"
         )
         .unwrap();
     }
