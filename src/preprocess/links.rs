@@ -364,14 +364,14 @@ fn find_links(contents: &str) -> LinkIter<'_> {
     // r"\\\{\{#.*\}\}|\{\{#([a-zA-Z0-9]+)\s*([a-zA-Z0-9_.\-:/\\\s]+)\}\}")?;
     lazy_static! {
         static ref RE: Regex = Regex::new(
-            r"(?x)                     # insignificant whitespace mode
-            \\\{\{\#.*\}\}             # match escaped link
-            |                          # or
-            \{\{\s*                    # link opening parens and whitespace
-            \#([a-zA-Z0-9_]+)          # link type
-            \s+                        # separating whitespace
-            ([a-zA-Z0-9\s_.\-:/\\]+)   # link target path and space separated properties
-            \s*\}\}                    # whitespace and link closing parens"
+            r"(?x)                       # insignificant whitespace mode
+            \\\{\{\#.*\}\}               # match escaped link
+            |                            # or
+            \{\{\s*                      # link opening parens and whitespace
+            \#([a-zA-Z0-9_]+)            # link type
+            \s+                          # separating whitespace
+            ([a-zA-Z0-9\s_.\-:/\\\+]+)   # link target path and space separated properties
+            \s*\}\}                      # whitespace and link closing parens"
         )
         .unwrap();
     }
@@ -448,6 +448,24 @@ mod tests {
                     link_text: "{{#playpen test.rs }}",
                 },
             ]
+        );
+    }
+
+    #[test]
+    fn test_find_links_with_special_characters() {
+        let s = "Some random text with {{#playpen foo-bar\\baz/_c++.rs}}...";
+
+        let res = find_links(s).collect::<Vec<_>>();
+        println!("\nOUTPUT: {:?}\n", res);
+
+        assert_eq!(
+            res,
+            vec![Link {
+                start_index: 22,
+                end_index: 54,
+                link_type: LinkType::Playpen(PathBuf::from("foo-bar\\baz/_c++.rs"), vec![]),
+                link_text: "{{#playpen foo-bar\\baz/_c++.rs}}",
+            },]
         );
     }
 
