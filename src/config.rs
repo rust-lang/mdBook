@@ -145,14 +145,9 @@ impl Config {
             if key == "book" || key == "build" {
                 if let serde_json::Value::Object(ref map) = parsed_value {
                     // To `set` each `key`, we wrap them as `prefix.key`
-                    let prefix = &key; // "book" or "build"
-                    let mut s = String::new();
                     for (k, v) in map {
-                        s.clear();
-                        s.push_str(prefix);
-                        s.push('.');
-                        s.push_str(k);
-                        self.set(&s, v).expect("unreachable");
+                        let full_key = format!("{}.{}", key, k);
+                        self.set(&full_key, v).expect("unreachable");
                     }
                     return;
                 }
