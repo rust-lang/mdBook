@@ -152,34 +152,31 @@ impl CmdRenderer {
 
 impl CmdRenderer {
     fn handle_render_command_error(&self, ctx: &RenderContext, error: io::Error) -> Result<()> {
-        match error.kind() {
-            ErrorKind::NotFound => {
-                // Look for "output.{self.name}.optional".
-                // If it exists and is true, treat this as a warning.
-                // Otherwise, fail the build.
+        if let ErrorKind::NotFound = error.kind() {
+            // Look for "output.{self.name}.optional".
+            // If it exists and is true, treat this as a warning.
+            // Otherwise, fail the build.
 
-                let optional_key = format!("output.{}.optional", self.name);
+            let optional_key = format!("output.{}.optional", self.name);
 
-                let is_optional = match ctx.config.get(&optional_key) {
-                    Some(Value::Boolean(value)) => *value,
-                    _ => false,
-                };
+            let is_optional = match ctx.config.get(&optional_key) {
+                Some(Value::Boolean(value)) => *value,
+                _ => false,
+            };
 
-                if is_optional {
-                    warn!(
-                        "The command `{}` for backend `{}` was not found, \
-                        but was marked as optional.",
-                        self.cmd, self.name
-                    );
-                    return Ok(());
-                } else {
-                    error!(
-                        "The command `{}` wasn't found, is the `{}` backend installed?",
-                        self.cmd, self.name
-                    );
-                }
+            if is_optional {
+                warn!(
+                    "The command `{}` for backend `{}` was not found, \
+                    but was marked as optional.",
+                    self.cmd, self.name
+                );
+                return Ok(());
+            } else {
+                error!(
+                    "The command `{}` wasn't found, is the `{}` backend installed?",
+                    self.cmd, self.name
+                );
             }
-            _ => {}
         }
         Err(error).chain_err(|| "Unable to start the backend")?
     }

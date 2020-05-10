@@ -5,6 +5,7 @@
 //!
 //! [1]: ../index.html
 
+#[allow(clippy::module_inception)]
 mod book;
 mod init;
 mod summary;
@@ -126,8 +127,6 @@ impl MDBook {
     /// ```no_run
     /// # use mdbook::MDBook;
     /// # use mdbook::book::BookItem;
-    /// # #[allow(unused_variables)]
-    /// # fn main() {
     /// # let book = MDBook::load("mybook").unwrap();
     /// for item in book.iter() {
     ///     match *item {
@@ -143,7 +142,6 @@ impl MDBook {
     /// // 2. Chapter 2
     /// //
     /// // etc.
-    /// # }
     /// ```
     pub fn iter(&self) -> BookItems<'_> {
         self.book.iter()
@@ -405,7 +403,7 @@ fn interpret_custom_preprocessor(key: &str, table: &Value) -> Box<CmdPreprocesso
         .map(ToString::to_string)
         .unwrap_or_else(|| format!("mdbook-{}", key));
 
-    Box::new(CmdPreprocessor::new(key.to_string(), command.to_string()))
+    Box::new(CmdPreprocessor::new(key.to_string(), command))
 }
 
 fn interpret_custom_renderer(key: &str, table: &Value) -> Box<CmdRenderer> {
@@ -418,7 +416,7 @@ fn interpret_custom_renderer(key: &str, table: &Value) -> Box<CmdRenderer> {
 
     let command = table_dot_command.unwrap_or_else(|| format!("mdbook-{}", key));
 
-    Box::new(CmdRenderer::new(key.to_string(), command.to_string()))
+    Box::new(CmdRenderer::new(key.to_string(), command))
 }
 
 /// Check whether we should run a particular `Preprocessor` in combination

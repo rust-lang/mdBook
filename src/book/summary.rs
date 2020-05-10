@@ -281,7 +281,7 @@ impl<'a> SummaryParser<'a> {
         } else {
             Ok(Link {
                 name,
-                location: PathBuf::from(href.to_string()),
+                location: PathBuf::from(href),
                 number: None,
                 nested_items: Vec::new(),
             })

@@ -43,11 +43,9 @@ pub fn take_anchored_lines(s: &str, anchor: &str) -> String {
                     }
                 }
             }
-        } else {
-            if let Some(cap) = ANCHOR_START.captures(l) {
-                if &cap["anchor_name"] == anchor {
-                    anchor_found = true;
-                }
+        } else if let Some(cap) = ANCHOR_START.captures(l) {
+            if &cap["anchor_name"] == anchor {
+                anchor_found = true;
             }
         }
     }
@@ -96,16 +94,14 @@ pub fn take_rustdoc_include_anchored_lines(s: &str, anchor: &str) -> String {
                     }
                 }
             }
-        } else {
-            if let Some(cap) = ANCHOR_START.captures(l) {
-                if &cap["anchor_name"] == anchor {
-                    within_anchored_section = true;
-                }
-            } else if !ANCHOR_END.is_match(l) {
-                output.push_str("# ");
-                output.push_str(l);
-                output.push_str("\n");
+        } else if let Some(cap) = ANCHOR_START.captures(l) {
+            if &cap["anchor_name"] == anchor {
+                within_anchored_section = true;
             }
+        } else if !ANCHOR_END.is_match(l) {
+            output.push_str("# ");
+            output.push_str(l);
+            output.push_str("\n");
         }
     }
 

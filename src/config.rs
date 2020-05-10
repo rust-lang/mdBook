@@ -44,7 +44,7 @@
 //! assert_eq!(got, Some(PathBuf::from("./themes")));
 //! # Ok(())
 //! # }
-//! # fn main() { run().unwrap() }
+//! # run().unwrap()
 //! ```
 
 #![deny(missing_docs)]
