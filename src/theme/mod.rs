@@ -12,6 +12,7 @@ use std::path::Path;
 use crate::errors::*;
 
 pub static INDEX: &[u8] = include_bytes!("index.hbs");
+pub static HEAD: &[u8] = include_bytes!("head.hbs");
 pub static HEADER: &[u8] = include_bytes!("header.hbs");
 pub static CHROME_CSS: &[u8] = include_bytes!("css/chrome.css");
 pub static GENERAL_CSS: &[u8] = include_bytes!("css/general.css");
@@ -42,6 +43,7 @@ pub static FONT_AWESOME_OTF: &[u8] = include_bytes!("FontAwesome/fonts/FontAweso
 #[derive(Debug, PartialEq)]
 pub struct Theme {
     pub index: Vec<u8>,
+    pub head: Vec<u8>,
     pub header: Vec<u8>,
     pub chrome_css: Vec<u8>,
     pub general_css: Vec<u8>,
@@ -72,6 +74,7 @@ impl Theme {
         {
             let files = vec![
                 (theme_dir.join("index.hbs"), &mut theme.index),
+                (theme_dir.join("head.hbs"), &mut theme.head),
                 (theme_dir.join("header.hbs"), &mut theme.header),
                 (theme_dir.join("book.js"), &mut theme.js),
                 (theme_dir.join("css/chrome.css"), &mut theme.chrome_css),
@@ -114,6 +117,7 @@ impl Default for Theme {
     fn default() -> Theme {
         Theme {
             index: INDEX.to_owned(),
+            head: HEAD.to_owned(),
             header: HEADER.to_owned(),
             chrome_css: CHROME_CSS.to_owned(),
             general_css: GENERAL_CSS.to_owned(),
@@ -168,6 +172,7 @@ mod tests {
     fn theme_dir_overrides_defaults() {
         let files = [
             "index.hbs",
+            "head.hbs",
             "header.hbs",
             "favicon.png",
             "css/chrome.css",
@@ -194,6 +199,7 @@ mod tests {
 
         let empty = Theme {
             index: Vec::new(),
+            head: Vec::new(),
             header: Vec::new(),
             chrome_css: Vec::new(),
             general_css: Vec::new(),
