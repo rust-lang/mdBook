@@ -204,17 +204,15 @@ impl Renderer for CmdRenderer {
             Err(e) => return self.handle_render_command_error(ctx, e),
         };
 
-        {
-            let mut stdin = child.stdin.take().expect("Child has stdin");
-            if let Err(e) = serde_json::to_writer(&mut stdin, &ctx) {
-                // Looks like the backend hung up before we could finish
-                // sending it the render context. Log the error and keep going
-                warn!("Error writing the RenderContext to the backend, {}", e);
-            }
-
-            // explicitly close the `stdin` file handle
-            drop(stdin);
+        let mut stdin = child.stdin.take().expect("Child has stdin");
+        if let Err(e) = serde_json::to_writer(&mut stdin, &ctx) {
+            // Looks like the backend hung up before we could finish
+            // sending it the render context. Log the error and keep going
+            warn!("Error writing the RenderContext to the backend, {}", e);
         }
+
+        // explicitly close the `stdin` file handle
+        drop(stdin);
 
         let status = child
             .wait()
