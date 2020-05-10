@@ -82,6 +82,7 @@
 
 #![deny(missing_docs)]
 #![deny(rust_2018_idioms)]
+#![allow(clippy::comparison_chain)]
 
 #[macro_use]
 extern crate error_chain;

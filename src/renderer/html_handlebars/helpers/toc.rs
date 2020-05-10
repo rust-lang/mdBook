@@ -32,7 +32,7 @@ impl HelperDef for RenderToc {
             .evaluate(ctx, "@root/path")?
             .as_json()
             .as_str()
-            .ok_or(RenderError::new("Type error for `path`, string expected"))?
+            .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
             .replace("\"", "");
 
         let current_section = rc
@@ -46,17 +46,13 @@ impl HelperDef for RenderToc {
             .evaluate(ctx, "@root/fold_enable")?
             .as_json()
             .as_bool()
-            .ok_or(RenderError::new(
-                "Type error for `fold_enable`, bool expected",
-            ))?;
+            .ok_or_else(|| RenderError::new("Type error for `fold_enable`, bool expected"))?;
 
         let fold_level = rc
             .evaluate(ctx, "@root/fold_level")?
             .as_json()
             .as_u64()
-            .ok_or(RenderError::new(
-                "Type error for `fold_level`, u64 expected",
-            ))?;
+            .ok_or_else(|| RenderError::new("Type error for `fold_level`, u64 expected"))?;
 
         out.write("<ol class=\"chapter\">")?;
 
@@ -75,18 +71,15 @@ impl HelperDef for RenderToc {
                 ("", 1)
             };
 
-            let is_expanded = {
-                if !fold_enable {
-                    // Disable fold. Expand all chapters.
-                    true
-                } else if !section.is_empty() && current_section.starts_with(section) {
-                    // The section is ancestor or the current section itself.
+            let is_expanded =
+                if !fold_enable || (!section.is_empty() && current_section.starts_with(section)) {
+                    // Expand if folding is disabled, or if the section is an
+                    // ancestor or the current section itself.
                     true
                 } else {
                     // Levels that are larger than this would be folded.
                     level - 1 < fold_level as usize
-                }
-            };
+                };
 
             if level > current_level {
                 while level > current_level {

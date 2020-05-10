@@ -75,8 +75,7 @@ fn find_chapter(
                     // Skip things like "spacer"
                     chapter.contains_key("path")
                 })
-                .skip(1)
-                .next()
+                .nth(1)
             {
                 Some(chapter) => return Ok(Some(chapter.clone())),
                 None => return Ok(None),
