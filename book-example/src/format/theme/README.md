@@ -11,16 +11,17 @@ and now that file will be used instead of the default file.
 
 Here are the files you can override:
 
-- ***index.hbs*** is the handlebars template.
-- ***book.css*** is the style used in the output. If you want to change the
+- **_index.hbs_** is the handlebars template.
+- **_head.hbs_** is appended to the HTML `<head>` section
+- **_book.css_** is the style used in the output. If you want to change the
   design of your book, this is probably the file you want to modify. Sometimes
   in conjunction with `index.hbs` when you want to radically change the layout.
-- ***book.js*** is mostly used to add client side functionality, like hiding /
+- **_book.js_** is mostly used to add client side functionality, like hiding /
   un-hiding the sidebar, changing the theme, ...
-- ***highlight.js*** is the JavaScript that is used to highlight code snippets,
-  you should not need to modify this.  
-- ***highlight.css*** is the theme used for the code highlighting
-- ***favicon.png*** the favicon that will be used
+- **_highlight.js_** is the JavaScript that is used to highlight code snippets,
+  you should not need to modify this.
+- **_highlight.css_** is the theme used for the code highlighting
+- **_favicon.png_** the favicon that will be used
 
 Generally, when you want to tweak the theme, you don't need to override all the
 files. If you only need changes in the stylesheet, there is no point in
