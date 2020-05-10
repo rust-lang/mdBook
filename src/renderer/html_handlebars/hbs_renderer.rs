@@ -57,20 +57,16 @@ impl HtmlHandlebars {
             bail!(ErrorKind::ReservedFilenameError(path.clone()));
         };
 
-        // Non-lexical lifetimes needed :'(
-        let title: String;
-        {
-            let book_title = ctx
-                .data
-                .get("book_title")
-                .and_then(serde_json::Value::as_str)
-                .unwrap_or("");
+        let book_title = ctx
+            .data
+            .get("book_title")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("");
 
-            title = match book_title {
-                "" => ch.name.clone(),
-                _ => ch.name.clone() + " - " + book_title,
-            }
-        }
+        let title = match book_title {
+            "" => ch.name.clone(),
+            _ => ch.name.clone() + " - " + book_title,
+        };
 
         ctx.data.insert("path".to_owned(), json!(path));
         ctx.data.insert("content".to_owned(), json!(content));
