@@ -71,11 +71,15 @@ fn render_item(
     item: &BookItem,
 ) -> Result<()> {
     let chapter = match *item {
-        BookItem::Chapter(ref ch) => ch,
+        BookItem::Chapter(ref ch) if !ch.is_draft_chapter() => ch,
         _ => return Ok(()),
     };
 
-    let filepath = Path::new(&chapter.path).with_extension("html");
+    let chapter_path = chapter
+        .path
+        .as_ref()
+        .expect("Checked that path exists above");
+    let filepath = Path::new(&chapter_path).with_extension("html");
     let filepath = filepath
         .to_str()
         .chain_err(|| "Could not convert HTML path to str")?;

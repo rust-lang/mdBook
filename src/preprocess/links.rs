@@ -45,14 +45,15 @@ impl Preprocessor for LinkPreprocessor {
 
         book.for_each_mut(|section: &mut BookItem| {
             if let BookItem::Chapter(ref mut ch) = *section {
-                let base = ch
-                    .path
-                    .parent()
-                    .map(|dir| src_dir.join(dir))
-                    .expect("All book items have a parent");
+                if let Some(ref chapter_path) = ch.path {
+                    let base = chapter_path
+                        .parent()
+                        .map(|dir| src_dir.join(dir))
+                        .expect("All book items have a parent");
 
-                let content = replace_all(&ch.content, base, &ch.path, 0);
-                ch.content = content;
+                    let content = replace_all(&ch.content, base, chapter_path, 0);
+                    ch.content = content;
+                }
             }
         });
 

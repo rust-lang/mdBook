@@ -30,77 +30,80 @@ impl HtmlHandlebars {
         print_content: &mut String,
     ) -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
-        if let BookItem::Chapter(ref ch) = *item {
-            let content = ch.content.clone();
-            let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
 
-            let fixed_content = utils::render_markdown_with_path(
-                &ch.content,
-                ctx.html_config.curly_quotes,
-                Some(&ch.path),
-            );
-            print_content.push_str(&fixed_content);
+        let (ch, path) = match item {
+            BookItem::Chapter(ch) if !ch.is_draft_chapter() => (ch, ch.path.as_ref().unwrap()),
+            _ => return Ok(()),
+        };
 
-            // Update the context with data for this file
-            let path = ch
-                .path
-                .to_str()
-                .chain_err(|| "Could not convert path to str")?;
-            let filepath = Path::new(&ch.path).with_extension("html");
+        let content = ch.content.clone();
+        let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
 
-            // "print.html" is used for the print page.
-            if ch.path == Path::new("print.md") {
-                bail!(ErrorKind::ReservedFilenameError(ch.path.clone()));
-            };
+        let fixed_content = utils::render_markdown_with_path(
+            &ch.content,
+            ctx.html_config.curly_quotes,
+            Some(&path),
+        );
+        print_content.push_str(&fixed_content);
 
-            // Non-lexical lifetimes needed :'(
-            let title: String;
-            {
-                let book_title = ctx
-                    .data
-                    .get("book_title")
-                    .and_then(serde_json::Value::as_str)
-                    .unwrap_or("");
+        // Update the context with data for this file
+        let ctx_path = path
+            .to_str()
+            .chain_err(|| "Could not convert path to str")?;
+        let filepath = Path::new(&ctx_path).with_extension("html");
 
-                title = match book_title {
-                    "" => ch.name.clone(),
-                    _ => ch.name.clone() + " - " + book_title,
-                }
+        // "print.html" is used for the print page.
+        if path == Path::new("print.md") {
+            bail!(ErrorKind::ReservedFilenameError(path.clone()));
+        };
+
+        // Non-lexical lifetimes needed :'(
+        let title: String;
+        {
+            let book_title = ctx
+                .data
+                .get("book_title")
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or("");
+
+            title = match book_title {
+                "" => ch.name.clone(),
+                _ => ch.name.clone() + " - " + book_title,
             }
+        }
 
-            ctx.data.insert("path".to_owned(), json!(path));
-            ctx.data.insert("content".to_owned(), json!(content));
-            ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
-            ctx.data.insert("title".to_owned(), json!(title));
-            ctx.data.insert(
-                "path_to_root".to_owned(),
-                json!(utils::fs::path_to_root(&ch.path)),
-            );
-            if let Some(ref section) = ch.number {
-                ctx.data
-                    .insert("section".to_owned(), json!(section.to_string()));
-            }
+        ctx.data.insert("path".to_owned(), json!(path));
+        ctx.data.insert("content".to_owned(), json!(content));
+        ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
+        ctx.data.insert("title".to_owned(), json!(title));
+        ctx.data.insert(
+            "path_to_root".to_owned(),
+            json!(utils::fs::path_to_root(&path)),
+        );
+        if let Some(ref section) = ch.number {
+            ctx.data
+                .insert("section".to_owned(), json!(section.to_string()));
+        }
 
-            // Render the handlebars template with the data
-            debug!("Render template");
-            let rendered = ctx.handlebars.render("index", &ctx.data)?;
+        // Render the handlebars template with the data
+        debug!("Render template");
+        let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
-            let rendered = self.post_process(rendered, &ctx.html_config.playpen, ctx.edition);
+        let rendered = self.post_process(rendered, &ctx.html_config.playpen, ctx.edition);
 
-            // Write to file
-            debug!("Creating {}", filepath.display());
-            utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
+        // Write to file
+        debug!("Creating {}", filepath.display());
+        utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
 
-            if ctx.is_index {
-                ctx.data.insert("path".to_owned(), json!("index.md"));
-                ctx.data.insert("path_to_root".to_owned(), json!(""));
-                ctx.data.insert("is_index".to_owned(), json!("true"));
-                let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
-                let rendered_index =
-                    self.post_process(rendered_index, &ctx.html_config.playpen, ctx.edition);
-                debug!("Creating index.html from {}", path);
-                utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
-            }
+        if ctx.is_index {
+            ctx.data.insert("path".to_owned(), json!("index.md"));
+            ctx.data.insert("path_to_root".to_owned(), json!(""));
+            ctx.data.insert("is_index".to_owned(), json!("true"));
+            let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
+            let rendered_index =
+                self.post_process(rendered_index, &ctx.html_config.playpen, ctx.edition);
+            debug!("Creating index.html from {}", ctx_path);
+            utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
         }
 
         Ok(())
@@ -526,11 +529,12 @@ fn make_data(
                 );
 
                 chapter.insert("name".to_owned(), json!(ch.name));
-                let path = ch
-                    .path
-                    .to_str()
-                    .chain_err(|| "Could not convert path to str")?;
-                chapter.insert("path".to_owned(), json!(path));
+                if let Some(ref path) = ch.path {
+                    let p = path
+                        .to_str()
+                        .chain_err(|| "Could not convert path to str")?;
+                    chapter.insert("path".to_owned(), json!(p));
+                }
             }
             BookItem::Separator => {
                 chapter.insert("spacer".to_owned(), json!("_spacer_"));

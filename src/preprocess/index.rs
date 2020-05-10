@@ -29,13 +29,15 @@ impl Preprocessor for IndexPreprocessor {
         let source_dir = ctx.root.join(&ctx.config.book.src);
         book.for_each_mut(|section: &mut BookItem| {
             if let BookItem::Chapter(ref mut ch) = *section {
-                if is_readme_file(&ch.path) {
-                    let index_md = source_dir.join(ch.path.with_file_name("index.md"));
-                    if index_md.exists() {
-                        warn_readme_name_conflict(&ch.path, &index_md);
-                    }
+                if let Some(ref mut path) = ch.path {
+                    if is_readme_file(&path) {
+                        let mut index_md = source_dir.join(path.with_file_name("index.md"));
+                        if index_md.exists() {
+                            warn_readme_name_conflict(&path, &&mut index_md);
+                        }
 
-                    ch.path.set_file_name("index.md");
+                        path.set_file_name("index.md");
+                    }
                 }
             }
         });
