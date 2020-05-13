@@ -507,6 +507,10 @@ pub struct HtmlConfig {
     /// FontAwesome icon class to use for the Git repository link.
     /// Defaults to `fa-github` if `None`.
     pub git_repository_icon: Option<String>,
+    /// Input path for the 404 file, defaults to 404.md
+    pub input_404: Option<String>,
+    /// Output path for 404.html file, defaults to 404.html, set to "" to disable 404 file output
+    pub output_404: Option<String>,
     /// This is used as a bit of a workaround for the `mdbook serve` command.
     /// Basically, because you set the websocket port from the command line, the
     /// `mdbook serve` command needs a way to let the HTML renderer know where
@@ -538,6 +542,8 @@ impl Default for HtmlConfig {
             search: None,
             git_repository_url: None,
             git_repository_icon: None,
+            input_404: None,
+            output_404: None,
             livereload_url: None,
             redirect: HashMap::new(),
         }
@@ -1003,5 +1009,32 @@ mod tests {
         cfg.update_from_env();
 
         assert_eq!(cfg.book.title, Some(should_be));
+    }
+
+    #[test]
+    fn file_404_default() {
+        let src = r#"
+        [output.html]
+        destination = "my-book"
+        "#;
+
+        let got = Config::from_str(src).unwrap();
+        let html_config = got.html_config().unwrap();
+        assert_eq!(html_config.input_404, None);
+        assert_eq!(html_config.output_404, None);
+    }
+
+    #[test]
+    fn file_404_custom() {
+        let src = r#"
+        [output.html]
+        input-404= "missing.md"
+        output-404= "missing.html"
+        "#;
+
+        let got = Config::from_str(src).unwrap();
+        let html_config = got.html_config().unwrap();
+        assert_eq!(html_config.input_404, Some("missing.md".to_string()));
+        assert_eq!(html_config.output_404, Some("missing.html".to_string()));
     }
 }

@@ -142,7 +142,11 @@ async fn serve(build_dir: PathBuf, address: SocketAddr, reload_tx: broadcast::Se
             })
         });
     // A warp Filter that serves from the filesystem.
-    let book_route = warp::fs::dir(build_dir);
-    let routes = livereload.or(book_route);
+    let book_route = warp::fs::dir(build_dir.clone());
+    // The fallback route for 404 errors
+    let fallback_file = "404.html";
+    let fallback_route = warp::fs::file(build_dir.join(fallback_file))
+        .map(|reply| warp::reply::with_status(reply, warp::http::StatusCode::NOT_FOUND));
+    let routes = livereload.or(book_route).or(fallback_route);
     warp::serve(routes).run(address).await;
 }

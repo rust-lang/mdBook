@@ -437,6 +437,47 @@ impl Renderer for HtmlHandlebars {
             is_index = false;
         }
 
+        // Render 404 page
+        if html_config.output_404 != Some("".to_string()) {
+            let default_404_location = src_dir.join("404.md");
+            let content_404 = if let Some(ref filename) = html_config.input_404 {
+                let path = src_dir.join(filename);
+                std::fs::read_to_string(&path).map_err(|failure| {
+                    std::io::Error::new(
+                        failure.kind(),
+                        format!("Unable to open 404 input file {:?}", &path),
+                    )
+                })?
+            } else if default_404_location.exists() {
+                std::fs::read_to_string(&default_404_location).map_err(|failure| {
+                    std::io::Error::new(
+                        failure.kind(),
+                        format!(
+                            "Unable to open default 404 input file {:?}",
+                            &default_404_location
+                        ),
+                    )
+                })?
+            } else {
+                "# 404 - Document not found\n\nUnfortunately, this URL is no longer valid, please use the navigation bar or search to continue.".to_string()
+            };
+            let html_content_404 = utils::render_markdown(&content_404, html_config.curly_quotes);
+
+            let mut data_404 = data.clone();
+            data_404.insert("path".to_owned(), json!("404.md"));
+            data_404.insert("content".to_owned(), json!(html_content_404));
+            let rendered = handlebars.render("index", &data_404)?;
+
+            let rendered =
+                self.post_process(rendered, &html_config.playpen, ctx.config.rust.edition);
+            let output_file = match &html_config.output_404 {
+                None => "404.html",
+                Some(file) => &file,
+            };
+            utils::fs::write_file(&destination, output_file, rendered.as_bytes())?;
+            debug!("Creating 404.html ✓");
+        }
+
         // Print version
         self.configure_print_version(&mut data, &print_content);
         if let Some(ref title) = ctx.config.book.title {
