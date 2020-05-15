@@ -2,6 +2,8 @@
 
 pub mod playpen_editor;
 
+pub mod fonts;
+
 #[cfg(feature = "search")]
 pub mod searcher;
 
@@ -176,6 +178,7 @@ mod tests {
             "header.hbs",
             "favicon.png",
             "css/chrome.css",
+            "css/fonts.css",
             "css/general.css",
             "css/print.css",
             "css/variables.css",

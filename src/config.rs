@@ -489,6 +489,8 @@ pub struct HtmlConfig {
     pub curly_quotes: bool,
     /// Should mathjax be enabled?
     pub mathjax_support: bool,
+    /// Prevents fonts.css and respective font files from being copied.
+    pub no_copy_fonts: bool,
     /// An optional google analytics code.
     pub google_analytics: Option<String>,
     /// Additional CSS stylesheets to include in the rendered page's `<head>`.
