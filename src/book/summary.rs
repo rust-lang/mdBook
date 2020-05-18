@@ -61,20 +61,9 @@ pub struct Summary {
     /// Chapters before the main text (e.g. an introduction).
     pub prefix_chapters: Vec<SummaryItem>,
     /// The main numbered chapters of the book, broken into one or more possibly named parts.
-    pub parts: Vec<Part>,
+    pub numbered_chapters: Vec<SummaryItem>,
     /// Items which come after the main document (e.g. a conclusion).
     pub suffix_chapters: Vec<SummaryItem>,
-}
-
-/// A struct representing a "part" in the `SUMMARY.md`. This is a possibly-titled section with
-/// numbered chapters in it.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-pub struct Part {
-    /// An optional title for the `SUMMARY.md`, currently just ignored.
-    pub title: Option<String>,
-
-    /// The main chapters in the document.
-    pub numbered_chapters: Vec<SummaryItem>,
 }
 
 /// A struct representing an entry in the `SUMMARY.md`, possibly with nested
@@ -124,6 +113,8 @@ pub enum SummaryItem {
     Link(Link),
     /// A separator (`---`).
     Separator,
+    /// A part title.
+    PartTitle(String),
 }
 
 impl SummaryItem {
@@ -246,7 +237,7 @@ impl<'a> SummaryParser<'a> {
         let prefix_chapters = self
             .parse_affix(true)
             .chain_err(|| "There was an error parsing the prefix chapters")?;
-        let parts = self
+        let numbered_chapters = self
             .parse_parts()
             .chain_err(|| "There was an error parsing the numbered chapters")?;
         let suffix_chapters = self
@@ -256,7 +247,7 @@ impl<'a> SummaryParser<'a> {
         Ok(Summary {
             title,
             prefix_chapters,
-            parts,
+            numbered_chapters,
             suffix_chapters,
         })
     }
@@ -295,7 +286,7 @@ impl<'a> SummaryParser<'a> {
         Ok(items)
     }
 
-    fn parse_parts(&mut self) -> Result<Vec<Part>> {
+    fn parse_parts(&mut self) -> Result<Vec<SummaryItem>> {
         let mut parts = vec![];
 
         // We want the section numbers to be continues through all parts.
@@ -331,10 +322,10 @@ impl<'a> SummaryParser<'a> {
                 .parse_numbered(&mut root_items, &mut root_number)
                 .chain_err(|| "There was an error parsing the numbered chapters")?;
 
-            parts.push(Part {
-                title,
-                numbered_chapters,
-            });
+            if let Some(title) = title {
+                parts.push(SummaryItem::PartTitle(title));
+            }
+            parts.extend(numbered_chapters);
         }
 
         Ok(parts)
@@ -817,37 +808,30 @@ mod tests {
                    # Title 2\n- [Third](./third.md)\n\t- [Fourth](./fourth.md)";
 
         let should_be = vec![
-            Part {
-                title: None,
-                numbered_chapters: vec![
-                    SummaryItem::Link(Link {
-                        name: String::from("First"),
-                        location: Some(PathBuf::from("./first.md")),
-                        number: Some(SectionNumber(vec![1])),
-                        nested_items: Vec::new(),
-                    }),
-                    SummaryItem::Link(Link {
-                        name: String::from("Second"),
-                        location: Some(PathBuf::from("./second.md")),
-                        number: Some(SectionNumber(vec![2])),
-                        nested_items: Vec::new(),
-                    }),
-                ],
-            },
-            Part {
-                title: Some(String::from("Title 2")),
-                numbered_chapters: vec![SummaryItem::Link(Link {
-                    name: String::from("Third"),
-                    location: Some(PathBuf::from("./third.md")),
-                    number: Some(SectionNumber(vec![3])),
-                    nested_items: vec![SummaryItem::Link(Link {
-                        name: String::from("Fourth"),
-                        location: Some(PathBuf::from("./fourth.md")),
-                        number: Some(SectionNumber(vec![3, 1])),
-                        nested_items: Vec::new(),
-                    })],
+            SummaryItem::Link(Link {
+                name: String::from("First"),
+                location: Some(PathBuf::from("./first.md")),
+                number: Some(SectionNumber(vec![1])),
+                nested_items: Vec::new(),
+            }),
+            SummaryItem::Link(Link {
+                name: String::from("Second"),
+                location: Some(PathBuf::from("./second.md")),
+                number: Some(SectionNumber(vec![2])),
+                nested_items: Vec::new(),
+            }),
+            SummaryItem::PartTitle(String::from("Title 2")),
+            SummaryItem::Link(Link {
+                name: String::from("Third"),
+                location: Some(PathBuf::from("./third.md")),
+                number: Some(SectionNumber(vec![3])),
+                nested_items: vec![SummaryItem::Link(Link {
+                    name: String::from("Fourth"),
+                    location: Some(PathBuf::from("./fourth.md")),
+                    number: Some(SectionNumber(vec![3, 1])),
+                    nested_items: Vec::new(),
                 })],
-            },
+            }),
         ];
 
         let mut parser = SummaryParser::new(src);
