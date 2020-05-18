@@ -192,7 +192,8 @@ impl HtmlHandlebars {
         write_file(destination, "css/chrome.css", &theme.chrome_css)?;
         write_file(destination, "css/print.css", &theme.print_css)?;
         write_file(destination, "css/variables.css", &theme.variables_css)?;
-        write_file(destination, "favicon.png", &theme.favicon)?;
+        write_file(destination, "favicon.png", &theme.favicon_png)?;
+        write_file(destination, "favicon.svg", &theme.favicon_svg)?;
         write_file(destination, "highlight.css", &theme.highlight_css)?;
         write_file(destination, "tomorrow-night.css", &theme.tomorrow_night_css)?;
         write_file(destination, "ayu-highlight.css", &theme.ayu_highlight_css)?;
@@ -562,7 +563,6 @@ fn make_data(
         "description".to_owned(),
         json!(config.book.description.clone().unwrap_or_default()),
     );
-    data.insert("favicon".to_owned(), json!("favicon.png"));
     if let Some(ref livereload) = html_config.livereload_url {
         data.insert("livereload".to_owned(), json!(livereload));
     }

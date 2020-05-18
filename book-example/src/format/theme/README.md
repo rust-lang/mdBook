@@ -22,7 +22,8 @@ Here are the files you can override:
 - **_highlight.js_** is the JavaScript that is used to highlight code snippets,
   you should not need to modify this.
 - **_highlight.css_** is the theme used for the code highlighting.
-- **_favicon.png_** the favicon that will be used.
+- **_favicon.svg_** and **_favicon.png_** the favicon that will be used. The SVG
+  version is used by [newer browsers].
 
 Generally, when you want to tweak the theme, you don't need to override all the
 files. If you only need changes in the stylesheet, there is no point in
@@ -40,3 +41,4 @@ If you completely replace all built-in themes, be sure to also set
 built-in `navy` theme.
 
 [`output.html.preferred-dark-theme`]: ../config.md#html-renderer-options
+[newer browsers]: https://caniuse.com/#feat=link-icon-svg
