@@ -181,6 +181,9 @@ impl HtmlHandlebars {
         )?;
         if html_config.copy_fonts {
             write_file(destination, "fonts/fonts.css", theme::fonts::CSS)?;
+            for (file_name, contents) in theme::fonts::LICENSES.iter() {
+                write_file(destination, file_name, contents)?;
+            }
             for (file_name, contents) in theme::fonts::OPEN_SANS.iter() {
                 write_file(destination, file_name, contents)?;
             }

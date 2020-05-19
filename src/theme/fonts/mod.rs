@@ -1,5 +1,16 @@
 pub static CSS: &[u8] = include_bytes!("fonts.css");
 // An array of (file_name, file_contents) pairs
+pub static LICENSES: [(&str, &[u8]); 2] = [
+    (
+        "fonts/OPEN-SANS-LICENSE.txt",
+        include_bytes!("OPEN-SANS-LICENSE.txt"),
+    ),
+    (
+        "fonts/SOURCE-CODE-PRO-LICENSE.txt",
+        include_bytes!("SOURCE-CODE-PRO-LICENSE.txt"),
+    ),
+];
+// An array of (file_name, file_contents) pairs
 pub static OPEN_SANS: [(&str, &[u8]); 10] = [
     (
         "fonts/open-sans-v17-all-charsets-300.woff2",
