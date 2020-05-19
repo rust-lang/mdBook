@@ -179,7 +179,7 @@ impl HtmlHandlebars {
             "FontAwesome/fonts/FontAwesome.ttf",
             theme::FONT_AWESOME_TTF,
         )?;
-        if !html_config.no_copy_fonts {
+        if html_config.copy_fonts {
             write_file(destination, "fonts/fonts.css", theme::fonts::CSS)?;
             for (file_name, contents) in theme::fonts::OPEN_SANS.iter() {
                 write_file(destination, file_name, contents)?;
@@ -455,8 +455,8 @@ fn make_data(
         data.insert("mathjax_support".to_owned(), json!(true));
     }
 
-    if html_config.no_copy_fonts {
-        data.insert("no_copy_fonts".to_owned(), json!(true));
+    if html_config.copy_fonts {
+        data.insert("copy_fonts".to_owned(), json!(true));
     }
 
     // Add check to see if there is an additional style

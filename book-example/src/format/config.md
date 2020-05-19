@@ -177,7 +177,7 @@ The following configuration options are available:
   that occur in code blocks and code spans. Defaults to `false`.
 - **mathjax-support:** Adds support for [MathJax](mathjax.md). Defaults to
   `false`.
-- **no-copy-fonts:** Prevents fonts.css and respective font files from being copied. Defaults to `false`.
+- **copy-fonts:** Copies fonts.css and respective font files to the output directory and use them in the default theme. Defaults to `true`.
 - **google-analytics:** If you use Google Analytics, this option lets you enable
   it by simply specifying your ID in the configuration file.
 - **additional-css:** If you need to slightly change the appearance of your book
@@ -253,7 +253,7 @@ default-theme = "light"
 preferred-dark-theme = "navy"
 curly-quotes = true
 mathjax-support = false
-no-copy-fonts = false
+copy-fonts = true
 google-analytics = "123456"
 additional-css = ["custom.css", "custom2.css"]
 additional-js = ["custom.js"]

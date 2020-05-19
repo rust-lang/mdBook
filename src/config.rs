@@ -475,7 +475,7 @@ pub enum RustEdition {
 }
 
 /// Configuration for the HTML renderer.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct HtmlConfig {
     /// The theme directory, if specified.
@@ -489,8 +489,8 @@ pub struct HtmlConfig {
     pub curly_quotes: bool,
     /// Should mathjax be enabled?
     pub mathjax_support: bool,
-    /// Prevents fonts.css and respective font files from being copied.
-    pub no_copy_fonts: bool,
+    /// Whether to fonts.css and respective font files to the output directory.
+    pub copy_fonts: bool,
     /// An optional google analytics code.
     pub google_analytics: Option<String>,
     /// Additional CSS stylesheets to include in the rendered page's `<head>`.
@@ -519,6 +519,29 @@ pub struct HtmlConfig {
     /// This config item *should not be edited* by the end user.
     #[doc(hidden)]
     pub livereload_url: Option<String>,
+}
+
+impl Default for HtmlConfig {
+    fn default() -> HtmlConfig {
+        HtmlConfig {
+            theme: None,
+            default_theme: None,
+            preferred_dark_theme: None,
+            curly_quotes: false,
+            mathjax_support: false,
+            copy_fonts: true,
+            google_analytics: None,
+            additional_css: Vec::new(),
+            additional_js: Vec::new(),
+            fold: Fold::default(),
+            playpen: Playpen::default(),
+            no_section_label: false,
+            search: None,
+            git_repository_url: None,
+            git_repository_icon: None,
+            livereload_url: None,
+        }
+    }
 }
 
 impl HtmlConfig {
