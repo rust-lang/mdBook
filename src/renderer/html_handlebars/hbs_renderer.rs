@@ -532,6 +532,9 @@ fn make_data(
         let mut chapter = BTreeMap::new();
 
         match *item {
+            BookItem::PartTitle(ref title) => {
+                chapter.insert("part".to_owned(), json!(title));
+            }
             BookItem::Chapter(ref ch) => {
                 if let Some(ref section) = ch.number {
                     chapter.insert("section".to_owned(), json!(section.to_string()));

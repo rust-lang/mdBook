@@ -166,3 +166,9 @@ blockquote {
 .tooltipped .tooltiptext {
     visibility: visible;
 }
+
+.chapter li.part-title {
+    color: var(--sidebar-fg);
+    margin: 5px 0px;
+    font-weight: bold;
+}

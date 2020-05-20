@@ -133,6 +133,8 @@ pub enum BookItem {
     Chapter(Chapter),
     /// A section separator.
     Separator,
+    /// A part title.
+    PartTitle(String),
 }
 
 impl From<Chapter> for BookItem {
@@ -229,11 +231,12 @@ fn load_summary_item<P: AsRef<Path> + Clone>(
     src_dir: P,
     parent_names: Vec<String>,
 ) -> Result<BookItem> {
-    match *item {
+    match item {
         SummaryItem::Separator => Ok(BookItem::Separator),
         SummaryItem::Link(ref link) => {
             load_chapter(link, src_dir, parent_names).map(BookItem::Chapter)
         }
+        SummaryItem::PartTitle(title) => Ok(BookItem::PartTitle(title.clone())),
     }
 }
 
@@ -569,6 +572,7 @@ And here is some \
                 location: Some(PathBuf::from("")),
                 ..Default::default()
             })],
+
             ..Default::default()
         };
 
