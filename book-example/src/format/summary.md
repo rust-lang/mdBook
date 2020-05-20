@@ -22,9 +22,11 @@ allow for easy parsing. Let's see how you should format your `SUMMARY.md` file.
    [Title of prefix element](relative/path/to/markdown.md)
    ```
 
-3. ***Part Title:*** An optional title for the next collect of numbered
-   chapters. The numbered chapters can be broken into as many parts as
-   desired.
+3. ***Part Title:*** Headers can be used as a title for the following numbered
+   chapters. This can be used to logically separate different sections
+   of book. The title is rendered as unclickable text.
+   Titles are optional, and the numbered chapters can be broken into as many
+   parts as desired.
 
 4. ***Numbered Chapter*** Numbered chapters are the main content of the book,
    they will be numbered and can be nested, resulting in a nice hierarchy
