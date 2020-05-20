@@ -346,21 +346,17 @@ impl<'de> Deserialize<'de> for Config {
 
 impl Serialize for Config {
     fn serialize<S: Serializer>(&self, s: S) -> std::result::Result<S::Ok, S::Error> {
-        use serde::ser::Error;
         // TODO: This should probably be removed and use a derive instead.
-
         let mut table = self.rest.clone();
 
-        let book_config = match Value::try_from(self.book.clone()) {
-            Ok(cfg) => cfg,
-            Err(_) => {
-                return Err(S::Error::custom("Unable to serialize the BookConfig"));
-            }
-        };
-        let rust_config = Value::try_from(&self.rust).expect("should always be serializable");
-
+        let book_config = Value::try_from(&self.book).expect("should always be serializable");
         table.insert("book", book_config);
-        table.insert("rust", rust_config);
+
+        if self.rust != RustConfig::default() {
+            let rust_config = Value::try_from(&self.rust).expect("should always be serializable");
+            table.insert("rust", rust_config);
+        }
+
         table.serialize(s)
     }
 }
