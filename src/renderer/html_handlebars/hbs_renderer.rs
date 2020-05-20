@@ -179,6 +179,20 @@ impl HtmlHandlebars {
             "FontAwesome/fonts/FontAwesome.ttf",
             theme::FONT_AWESOME_TTF,
         )?;
+        if html_config.copy_fonts {
+            write_file(destination, "fonts/fonts.css", theme::fonts::CSS)?;
+            for (file_name, contents) in theme::fonts::LICENSES.iter() {
+                write_file(destination, file_name, contents)?;
+            }
+            for (file_name, contents) in theme::fonts::OPEN_SANS.iter() {
+                write_file(destination, file_name, contents)?;
+            }
+            write_file(
+                destination,
+                theme::fonts::SOURCE_CODE_PRO.0,
+                theme::fonts::SOURCE_CODE_PRO.1,
+            )?;
+        }
 
         let playpen_config = &html_config.playpen;
 
@@ -442,6 +456,10 @@ fn make_data(
 
     if html_config.mathjax_support {
         data.insert("mathjax_support".to_owned(), json!(true));
+    }
+
+    if html_config.copy_fonts {
+        data.insert("copy_fonts".to_owned(), json!(true));
     }
 
     // Add check to see if there is an additional style
