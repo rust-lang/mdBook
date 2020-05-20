@@ -94,7 +94,7 @@ impl RenderContext {
 
     /// Load a `RenderContext` from its JSON representation.
     pub fn from_json<R: Read>(reader: R) -> Result<RenderContext> {
-        serde_json::from_reader(reader).chain_err(|| "Unable to deserialize the `RenderContext`")
+        serde_json::from_reader(reader).with_context(|| "Unable to deserialize the `RenderContext`")
     }
 }
 
@@ -178,7 +178,7 @@ impl CmdRenderer {
                 );
             }
         }
-        Err(error).chain_err(|| "Unable to start the backend")?
+        Err(error).with_context(|| "Unable to start the backend")?
     }
 }
 
@@ -216,7 +216,7 @@ impl Renderer for CmdRenderer {
 
         let status = child
             .wait()
-            .chain_err(|| "Error waiting for the backend to complete")?;
+            .with_context(|| "Error waiting for the backend to complete")?;
 
         trace!("{} exited with output: {:?}", self.cmd, status);
 

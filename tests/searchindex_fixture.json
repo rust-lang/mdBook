@@ -6350,6 +6350,7 @@
         }
       }
     },
+    "lang": "English",
     "pipeline": [
       "trimmer",
       "stopWordFilter",
