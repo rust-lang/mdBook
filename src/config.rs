@@ -539,6 +539,7 @@ impl Default for HtmlConfig {
             git_repository_url: None,
             git_repository_icon: None,
             livereload_url: None,
+            redirect: HashMap::new(),
         }
     }
 }
