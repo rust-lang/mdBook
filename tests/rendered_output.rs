@@ -12,10 +12,11 @@ use mdbook::utils::fs::write_file;
 use mdbook::MDBook;
 use select::document::Document;
 use select::predicate::{Class, Name, Predicate};
+use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs;
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use tempfile::Builder as TempFileBuilder;
 use walkdir::{DirEntry, WalkDir};
 
@@ -509,6 +510,32 @@ fn markdown_options() {
             "<li><input disabled=\"\" type=\"checkbox\"/>\nCarrots",
         ],
     );
+}
+
+#[test]
+fn redirects_are_emitted_correctly() {
+    let temp = DummyBook::new().build().unwrap();
+    let mut md = MDBook::load(temp.path()).unwrap();
+
+    // override the "outputs.html.redirect" table
+    let redirects: HashMap<PathBuf, String> = vec![
+        (PathBuf::from("index.html"), String::from("overview.html")),
+        (
+            PathBuf::from("nexted/page.md"),
+            String::from("https://rust-lang.org/"),
+        ),
+    ]
+    .into_iter()
+    .collect();
+    md.config.set("output.html.redirect", &redirects).unwrap();
+
+    md.build().unwrap();
+
+    for (original, redirect) in &redirects {
+        let redirect_file = md.build_dir_for("html").join(original);
+        let contents = fs::read_to_string(&redirect_file).unwrap();
+        assert!(contents.contains(redirect));
+    }
 }
 
 #[cfg(feature = "search")]
