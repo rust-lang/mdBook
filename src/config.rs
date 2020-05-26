@@ -517,7 +517,7 @@ pub struct HtmlConfig {
     pub livereload_url: Option<String>,
     /// The mapping from old pages to new pages/URLs to use when generating
     /// redirects.
-    pub redirect: HashMap<PathBuf, String>,
+    pub redirect: HashMap<String, String>,
 }
 
 impl Default for HtmlConfig {
@@ -741,9 +741,9 @@ mod tests {
             git_repository_url: Some(String::from("https://foo.com/")),
             git_repository_icon: Some(String::from("fa-code-fork")),
             redirect: vec![
-                (PathBuf::from("index.html"), String::from("overview.html")),
+                (String::from("index.html"), String::from("overview.html")),
                 (
-                    PathBuf::from("nexted/page.md"),
+                    String::from("nexted/page.md"),
                     String::from("https://rust-lang.org/"),
                 ),
             ]

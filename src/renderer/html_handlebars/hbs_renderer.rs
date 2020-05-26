@@ -284,7 +284,7 @@ impl HtmlHandlebars {
         &self,
         root: &Path,
         handlebars: &Handlebars<'_>,
-        redirects: &HashMap<PathBuf, String>,
+        redirects: &HashMap<String, String>,
     ) -> Result<()> {
         if redirects.is_empty() {
             return Ok(());
@@ -293,7 +293,11 @@ impl HtmlHandlebars {
         log::debug!("Emitting redirects");
 
         for (original, new) in redirects {
-            log::debug!("Redirecting \"{}\" → \"{}\"", original.display(), new);
+            log::debug!("Redirecting \"{}\" → \"{}\"", original, new);
+            // Note: all paths are relative to the build directory, so the
+            // leading slash in an absolute path means nothing (and would mess
+            // up `root.join(original)`).
+            let original = original.trim_start_matches("/");
             let filename = root.join(original);
             self.emit_redirect(handlebars, &filename, new)?;
         }
@@ -307,15 +311,33 @@ impl HtmlHandlebars {
         original: &Path,
         destination: &str,
     ) -> Result<()> {
+        if original.exists() {
+            // sanity check to avoid accidentally overwriting a real file.
+            let msg = format!(
+                "Not redirecting \"{}\" to \"{}\" because it already exists. Are you sure it needs to be redirected?",
+                original.display(),
+                destination,
+            );
+            return Err(Error::msg(msg));
+        }
+
         if let Some(parent) = original.parent() {
-            std::fs::create_dir_all(parent)?;
+            std::fs::create_dir_all(parent)
+                .with_context(|| format!("Unable to ensure \"{}\" exists", parent.display()))?;
         }
 
         let ctx = json!({
             "url": destination,
         });
         let f = File::create(original)?;
-        handlebars.render_to_write("redirect", &ctx, f)?;
+        handlebars
+            .render_to_write("redirect", &ctx, f)
+            .with_context(|| {
+                format!(
+                    "Unable to create a redirect file at \"{}\"",
+                    original.display()
+                )
+            })?;
 
         Ok(())
     }
@@ -445,7 +467,8 @@ impl Renderer for HtmlHandlebars {
             }
         }
 
-        self.emit_redirects(&ctx.destination, &handlebars, &html_config.redirect)?;
+        self.emit_redirects(&ctx.destination, &handlebars, &html_config.redirect)
+            .context("Unable to emit redirects")?;
 
         // Copy all remaining files, avoid a recursive copy from/to the book build dir
         utils::fs::copy_files_except_ext(&src_dir, &destination, true, Some(&build_dir), &["md"])?;
