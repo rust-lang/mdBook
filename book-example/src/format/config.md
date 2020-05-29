@@ -199,9 +199,11 @@ The following configuration options are available:
 - **git-repository-icon:** The FontAwesome icon class to use for the git
   repository link. Defaults to `fa-github`.
 - **redirect:** A subtable used for generating redirects when a page is moved.
-  The table contains key-value pairs where the key is the path to the moved
-  page, relative to the build directory and the value can be an ordinary URL
-  or the *absolute* path to another page in the book
+  The table contains key-value pairs where the key is where the redirect file
+  needs to be created, as an absolute path from the build directory, (e.g.
+  `/appendices/bibliography.html`). The value can be any valid URI the
+  browser should navigate to (e.g. `https://rust-lang.org/`,
+  `/overview.html`, or `../bibliography.html`).
 
 Available configuration options for the `[output.html.fold]` table:
 
@@ -287,8 +289,8 @@ heading-split-level = 3
 copy-js = true
 
 [output.html.redirect]
-"other-installation-methods.html" = "/infra/other-installation-methods.html"
-"bibliography.html" = "https://rustc-dev-guide.rust-lang.org/appendix/bibliography.html"
+/appendices/"bibliography.html" = "https://rustc-dev-guide.rust-lang.org/appendix/bibliography.html"
+"/other-installation-methods.html" = "../infra/other-installation-methods.html"
 ```
 
 ### Markdown Renderer
