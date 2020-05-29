@@ -519,9 +519,9 @@ fn redirects_are_emitted_correctly() {
 
     // override the "outputs.html.redirect" table
     let redirects: HashMap<PathBuf, String> = vec![
-        (PathBuf::from("overview.html"), String::from("index.html")),
+        (PathBuf::from("/overview.html"), String::from("index.html")),
         (
-            PathBuf::from("nexted/page.md"),
+            PathBuf::from("/nexted/page.md"),
             String::from("https://rust-lang.org/"),
         ),
     ]
