@@ -16,7 +16,7 @@ use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use tempfile::Builder as TempFileBuilder;
 use walkdir::{DirEntry, WalkDir};
 
@@ -532,10 +532,20 @@ fn redirects_are_emitted_correctly() {
     md.build().unwrap();
 
     for (original, redirect) in &redirects {
-        let redirect_file = md.build_dir_for("html").join(original);
+        let mut redirect_file = md.build_dir_for("html");
+        // append everything except the bits that make it absolute
+        // (e.g. "/" or "C:\")
+        redirect_file.extend(remove_absolute_components(&original));
         let contents = fs::read_to_string(&redirect_file).unwrap();
         assert!(contents.contains(redirect));
     }
+}
+
+fn remove_absolute_components(path: &Path) -> impl Iterator<Item = Component> + '_ {
+    path.components().skip_while(|c| match c {
+        Component::Prefix(_) | Component::RootDir => true,
+        _ => false,
+    })
 }
 
 #[cfg(feature = "search")]
