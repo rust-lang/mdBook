@@ -15,13 +15,13 @@ pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> 
 
     let mut summary_content = String::new();
     File::open(summary_md)
-        .chain_err(|| "Couldn't open SUMMARY.md")?
+        .with_context(|| "Couldn't open SUMMARY.md")?
         .read_to_string(&mut summary_content)?;
 
-    let summary = parse_summary(&summary_content).chain_err(|| "Summary parsing failed")?;
+    let summary = parse_summary(&summary_content).with_context(|| "Summary parsing failed")?;
 
     if cfg.create_missing {
-        create_missing(&src_dir, &summary).chain_err(|| "Unable to create missing chapters")?;
+        create_missing(&src_dir, &summary).with_context(|| "Unable to create missing chapters")?;
     }
 
     load_book_from_disk(&summary, src_dir)
@@ -133,6 +133,8 @@ pub enum BookItem {
     Chapter(Chapter),
     /// A section separator.
     Separator,
+    /// A part title.
+    PartTitle(String),
 }
 
 impl From<Chapter> for BookItem {
@@ -229,11 +231,12 @@ fn load_summary_item<P: AsRef<Path> + Clone>(
     src_dir: P,
     parent_names: Vec<String>,
 ) -> Result<BookItem> {
-    match *item {
+    match item {
         SummaryItem::Separator => Ok(BookItem::Separator),
         SummaryItem::Link(ref link) => {
             load_chapter(link, src_dir, parent_names).map(BookItem::Chapter)
         }
+        SummaryItem::PartTitle(title) => Ok(BookItem::PartTitle(title.clone())),
     }
 }
 
@@ -254,11 +257,12 @@ fn load_chapter<P: AsRef<Path>>(
         };
 
         let mut f = File::open(&location)
-            .chain_err(|| format!("Chapter file not found, {}", link_location.display()))?;
+            .with_context(|| format!("Chapter file not found, {}", link_location.display()))?;
 
         let mut content = String::new();
-        f.read_to_string(&mut content)
-            .chain_err(|| format!("Unable to read \"{}\" ({})", link.name, location.display()))?;
+        f.read_to_string(&mut content).with_context(|| {
+            format!("Unable to read \"{}\" ({})", link.name, location.display())
+        })?;
 
         let stripped = location
             .strip_prefix(&src_dir)
@@ -569,6 +573,7 @@ And here is some \
                 location: Some(PathBuf::from("")),
                 ..Default::default()
             })],
+
             ..Default::default()
         };
 

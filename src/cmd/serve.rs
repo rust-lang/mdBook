@@ -2,15 +2,19 @@
 use super::watch;
 use crate::{get_book_dir, open};
 use clap::{App, Arg, ArgMatches, SubCommand};
-use iron::headers;
-use iron::{status, AfterMiddleware, Chain, Iron, IronError, IronResult, Request, Response, Set};
+use futures_util::sink::SinkExt;
+use futures_util::StreamExt;
 use mdbook::errors::*;
 use mdbook::utils;
 use mdbook::MDBook;
+use std::net::{SocketAddr, ToSocketAddrs};
+use std::path::PathBuf;
+use tokio::sync::broadcast;
+use warp::ws::Message;
+use warp::Filter;
 
-struct ErrorRecover;
-
-struct NoCache;
+/// The HTTP endpoint for the websocket used to trigger reloads when a file changes.
+const LIVE_RELOAD_ENDPOINT: &str = "__livereload";
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
@@ -43,42 +47,21 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
                 .empty_values(false)
                 .help("Port to use for HTTP connections"),
         )
-        .arg(
-            Arg::with_name("websocket-hostname")
-                .long("websocket-hostname")
-                .takes_value(true)
-                .empty_values(false)
-                .help(
-                    "Hostname to connect to for WebSockets connections (Defaults to the HTTP hostname)",
-                ),
-        )
-        .arg(
-            Arg::with_name("websocket-port")
-                .short("w")
-                .long("websocket-port")
-                .takes_value(true)
-                .default_value("3001")
-                .empty_values(false)
-                .help("Port to use for WebSockets livereload connections"),
-        )
         .arg_from_usage("-o, --open 'Opens the book server in a web browser'")
 }
 
-// Watch command implementation
+// Serve command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
     let mut book = MDBook::load(&book_dir)?;
 
     let port = args.value_of("port").unwrap();
-    let ws_port = args.value_of("websocket-port").unwrap();
     let hostname = args.value_of("hostname").unwrap();
-    let public_address = args.value_of("websocket-hostname").unwrap_or(hostname);
     let open_browser = args.is_present("open");
 
     let address = format!("{}:{}", hostname, port);
-    let ws_address = format!("{}:{}", hostname, ws_port);
 
-    let livereload_url = format!("ws://{}:{}", public_address, ws_port);
+    let livereload_url = format!("ws://{}/{}", address, LIVE_RELOAD_ENDPOINT);
     book.config
         .set("output.html.livereload-url", &livereload_url)?;
 
@@ -88,20 +71,18 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     book.build()?;
 
-    let mut chain = Chain::new(staticfile::Static::new(book.build_dir_for("html")));
-    chain.link_after(NoCache);
-    chain.link_after(ErrorRecover);
-    let _iron = Iron::new(chain)
-        .http(&*address)
-        .chain_err(|| "Unable to launch the server")?;
+    let sockaddr: SocketAddr = address
+        .to_socket_addrs()?
+        .next()
+        .ok_or_else(|| anyhow::anyhow!("no address found for {}", address))?;
+    let build_dir = book.build_dir_for("html");
 
-    let ws_server =
-        ws::WebSocket::new(|_| |_| Ok(())).chain_err(|| "Unable to start the websocket")?;
+    // A channel used to broadcast to any websockets to reload when a file changes.
+    let (tx, _rx) = tokio::sync::broadcast::channel::<Message>(100);
 
-    let broadcaster = ws_server.broadcaster();
-
-    std::thread::spawn(move || {
-        ws_server.listen(&*ws_address).unwrap();
+    let reload_tx = tx.clone();
+    let thread_handle = std::thread::spawn(move || {
+        serve(build_dir, sockaddr, reload_tx);
     });
 
     let serving_url = format!("http://{}", address);
@@ -117,7 +98,6 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         info!("Building book...");
 
         // FIXME: This area is really ugly because we need to re-set livereload :(
-
         let result = MDBook::load(&book_dir)
             .and_then(|mut b| {
                 b.config
@@ -130,30 +110,39 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
             error!("Unable to load the book");
             utils::log_backtrace(&e);
         } else {
-            let _ = broadcaster.send("reload");
+            let _ = tx.send(Message::text("reload"));
         }
     });
+
+    let _ = thread_handle.join();
 
     Ok(())
 }
 
-impl AfterMiddleware for NoCache {
-    fn after(&self, _: &mut Request, mut res: Response) -> IronResult<Response> {
-        res.headers.set(headers::CacheControl(vec![
-            headers::CacheDirective::NoStore,
-            headers::CacheDirective::MaxAge(0u32),
-        ]));
+#[tokio::main]
+async fn serve(build_dir: PathBuf, address: SocketAddr, reload_tx: broadcast::Sender<Message>) {
+    // A warp Filter which captures `reload_tx` and provides an `rx` copy to
+    // receive reload messages.
+    let sender = warp::any().map(move || reload_tx.subscribe());
 
-        Ok(res)
-    }
-}
-
-impl AfterMiddleware for ErrorRecover {
-    fn catch(&self, _: &mut Request, err: IronError) -> IronResult<Response> {
-        match err.response.status {
-            // each error will result in 404 response
-            Some(_) => Ok(err.response.set(status::NotFound)),
-            _ => Err(err),
-        }
-    }
+    // A warp Filter to handle the livereload endpoint. This upgrades to a
+    // websocket, and then waits for any filesystem change notifications, and
+    // relays them over the websocket.
+    let livereload = warp::path(LIVE_RELOAD_ENDPOINT)
+        .and(warp::ws())
+        .and(sender)
+        .map(|ws: warp::ws::Ws, mut rx: broadcast::Receiver<Message>| {
+            ws.on_upgrade(move |ws| async move {
+                let (mut user_ws_tx, _user_ws_rx) = ws.split();
+                trace!("websocket got connection");
+                if let Ok(m) = rx.recv().await {
+                    trace!("notify of reload");
+                    let _ = user_ws_tx.send(m).await;
+                }
+            })
+        });
+    // A warp Filter that serves from the filesystem.
+    let book_route = warp::fs::dir(build_dir);
+    let routes = livereload.or(book_route);
+    warp::serve(routes).run(address).await;
 }

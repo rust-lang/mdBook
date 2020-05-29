@@ -99,6 +99,14 @@ impl HelperDef for RenderToc {
                 write_li_open_tag(out, is_expanded, item.get("section").is_none())?;
             }
 
+            // Part title
+            if let Some(title) = item.get("part") {
+                out.write("<li class=\"part-title active\">")?;
+                out.write(title)?;
+                out.write("</li>")?;
+                continue;
+            }
+
             // Link
             let path_exists = if let Some(path) = item.get("path") {
                 if !path.is_empty() {

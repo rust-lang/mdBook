@@ -49,12 +49,12 @@ impl HtmlHandlebars {
         // Update the context with data for this file
         let ctx_path = path
             .to_str()
-            .chain_err(|| "Could not convert path to str")?;
+            .with_context(|| "Could not convert path to str")?;
         let filepath = Path::new(&ctx_path).with_extension("html");
 
         // "print.html" is used for the print page.
         if path == Path::new("print.md") {
-            bail!(ErrorKind::ReservedFilenameError(path.clone()));
+            bail!("{} is reserved for internal use", path.display());
         };
 
         let book_title = ctx
@@ -179,6 +179,20 @@ impl HtmlHandlebars {
             "FontAwesome/fonts/FontAwesome.ttf",
             theme::FONT_AWESOME_TTF,
         )?;
+        if html_config.copy_fonts {
+            write_file(destination, "fonts/fonts.css", theme::fonts::CSS)?;
+            for (file_name, contents) in theme::fonts::LICENSES.iter() {
+                write_file(destination, file_name, contents)?;
+            }
+            for (file_name, contents) in theme::fonts::OPEN_SANS.iter() {
+                write_file(destination, file_name, contents)?;
+            }
+            write_file(
+                destination,
+                theme::fonts::SOURCE_CODE_PRO.0,
+                theme::fonts::SOURCE_CODE_PRO.1,
+            )?;
+        }
 
         let playpen_config = &html_config.playpen;
 
@@ -246,7 +260,7 @@ impl HtmlHandlebars {
             let output_location = destination.join(custom_file);
             if let Some(parent) = output_location.parent() {
                 fs::create_dir_all(parent)
-                    .chain_err(|| format!("Unable to create {}", parent.display()))?;
+                    .with_context(|| format!("Unable to create {}", parent.display()))?;
             }
             debug!(
                 "Copying {} -> {}",
@@ -254,7 +268,7 @@ impl HtmlHandlebars {
                 output_location.display()
             );
 
-            fs::copy(&input_location, &output_location).chain_err(|| {
+            fs::copy(&input_location, &output_location).with_context(|| {
                 format!(
                     "Unable to copy {} to {}",
                     input_location.display(),
@@ -300,7 +314,7 @@ impl Renderer for HtmlHandlebars {
 
         if destination.exists() {
             utils::fs::remove_dir_content(destination)
-                .chain_err(|| "Unable to remove stale HTML output")?;
+                .with_context(|| "Unable to remove stale HTML output")?;
         }
 
         trace!("render");
@@ -341,7 +355,7 @@ impl Renderer for HtmlHandlebars {
         let mut print_content = String::new();
 
         fs::create_dir_all(&destination)
-            .chain_err(|| "Unexpected error when constructing destination path")?;
+            .with_context(|| "Unexpected error when constructing destination path")?;
 
         let mut is_index = true;
         for item in book.iter() {
@@ -374,9 +388,9 @@ impl Renderer for HtmlHandlebars {
 
         debug!("Copy static files");
         self.copy_static_files(&destination, &theme, &html_config)
-            .chain_err(|| "Unable to copy across static files")?;
+            .with_context(|| "Unable to copy across static files")?;
         self.copy_additional_css_and_js(&html_config, &ctx.root, &destination)
-            .chain_err(|| "Unable to copy across additional CSS and JS")?;
+            .with_context(|| "Unable to copy across additional CSS and JS")?;
 
         // Render search index
         #[cfg(feature = "search")]
@@ -442,6 +456,10 @@ fn make_data(
 
     if html_config.mathjax_support {
         data.insert("mathjax_support".to_owned(), json!(true));
+    }
+
+    if html_config.copy_fonts {
+        data.insert("copy_fonts".to_owned(), json!(true));
     }
 
     // Add check to see if there is an additional style
@@ -514,6 +532,9 @@ fn make_data(
         let mut chapter = BTreeMap::new();
 
         match *item {
+            BookItem::PartTitle(ref title) => {
+                chapter.insert("part".to_owned(), json!(title));
+            }
             BookItem::Chapter(ref ch) => {
                 if let Some(ref section) = ch.number {
                     chapter.insert("section".to_owned(), json!(section.to_string()));
@@ -528,7 +549,7 @@ fn make_data(
                 if let Some(ref path) = ch.path {
                     let p = path
                         .to_str()
-                        .chain_err(|| "Could not convert path to str")?;
+                        .with_context(|| "Could not convert path to str")?;
                     chapter.insert("path".to_owned(), json!(p));
                 }
             }

@@ -28,7 +28,7 @@ impl Renderer for MarkdownRenderer {
 
         if destination.exists() {
             utils::fs::remove_dir_content(destination)
-                .chain_err(|| "Unable to remove stale Markdown output")?;
+                .with_context(|| "Unable to remove stale Markdown output")?;
         }
 
         trace!("markdown render");
@@ -45,7 +45,7 @@ impl Renderer for MarkdownRenderer {
         }
 
         fs::create_dir_all(&destination)
-            .chain_err(|| "Unexpected error when constructing destination path")?;
+            .with_context(|| "Unexpected error when constructing destination path")?;
 
         Ok(())
     }
