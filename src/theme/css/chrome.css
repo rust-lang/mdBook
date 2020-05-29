@@ -230,6 +230,33 @@ pre > .result {
     margin-top: 10px;
 }
 
+code + code + .buttons {
+    z-index: 100;
+    right: 5px;
+    top: 5px;
+
+    color: var(--sidebar-fg);
+    cursor: pointer;
+}
+code + code + .buttons :hover {
+    color: var(--sidebar-active);
+}
+code + code + .buttons i {
+    margin-left: 8px;
+}
+code + code + .buttons button {
+    color: inherit;
+    background: transparent;
+    border: none;
+    cursor: inherit;
+    outline: none;
+}
+code + code + .buttons i.tooltiptext{
+    position: inherit;
+}
+
+
+
 /* Search */
 
 #searchresults a {
