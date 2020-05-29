@@ -598,11 +598,11 @@ function cmd_text(trigger) {
         text: function (trigger) {
             hideTooltip(trigger);
             let playpen = trigger.closest("pre");
-	    if (playpen !== null) {
+            if (playpen !== null) {
                 return playpen_text(playpen);
-	    } else {
-		return cmd_text(trigger);
-	    }
+            } else {
+                return cmd_text(trigger);
+            }
         }
     });
 
