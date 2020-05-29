@@ -15,6 +15,11 @@ function playpen_text(playpen) {
     }
 }
 
+function cmd_text(trigger) {
+    let code_block = trigger.parentElement.previousElementSibling
+    return code_block.textContent;
+}
+
 (function codeSnippets() {
     function fetch_with_timeout(url, options, timeout = 6000) {
         return Promise.race([
@@ -198,6 +203,25 @@ function playpen_text(playpen) {
                 block.classList.add('hide-boring');
             }
         });
+    });
+
+    Array.from(document.querySelectorAll('p > code + code')).forEach(function (cmd) {
+        var pre_cmd = cmd.parentNode;
+	if (pre_cmd.childNodes.length == 3) {
+            var buttons = pre_cmd.querySelector(".buttons");
+            if (!buttons) {
+                buttons = document.createElement('span');
+                buttons.className = 'buttons';
+                pre_cmd.appendChild(buttons);
+            }
+            var clipButton = document.createElement('button');
+            clipButton.className = 'fa fa-copy clip-button cmd';
+            clipButton.title = 'Copy to clipboard';
+            clipButton.setAttribute('aria-label', clipButton.title);
+            clipButton.innerHTML = '<i class=\"tooltiptext\"></i>';
+
+            buttons.appendChild(clipButton);
+        } 
     });
 
     if (window.playpen_copyable) {
@@ -456,11 +480,6 @@ function playpen_text(playpen) {
     // Toggle sidebar
     sidebarToggleButton.addEventListener('click', function sidebarToggle() {
         if (html.classList.contains("sidebar-hidden")) {
-            var current_width = parseInt(
-                document.documentElement.style.getPropertyValue('--sidebar-width'), 10);
-            if (current_width < 150) {
-                document.documentElement.style.setProperty('--sidebar-width', '150px');
-            }
             showSidebar();
         } else if (html.classList.contains("sidebar-visible")) {
             hideSidebar();
@@ -481,16 +500,7 @@ function playpen_text(playpen) {
         html.classList.add('sidebar-resizing');
     }
     function resize(e) {
-        var pos = (e.clientX - sidebar.offsetLeft);
-        if (pos < 20) {
-            hideSidebar();
-        } else {
-            if (html.classList.contains("sidebar-hidden")) {
-                showSidebar();
-            }
-            pos = Math.min(pos, window.innerWidth - 100);
-            document.documentElement.style.setProperty('--sidebar-width', pos + 'px');
-        }
+        document.documentElement.style.setProperty('--sidebar-width', (e.clientX - sidebar.offsetLeft) + 'px');
     }
     //on mouseup remove windows functions mousemove & mouseup
     function stopResize(e) {
@@ -573,7 +583,11 @@ function playpen_text(playpen) {
         text: function (trigger) {
             hideTooltip(trigger);
             let playpen = trigger.closest("pre");
-            return playpen_text(playpen);
+	    if (playpen !== null) {
+                return playpen_text(playpen);
+	    } else {
+		return cmd_text(trigger);
+	    }
         }
     });
 
