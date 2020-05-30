@@ -9,7 +9,7 @@ use crate::utils;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
-use std::fs;
+use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 
 use handlebars::Handlebars;
@@ -279,6 +279,68 @@ impl HtmlHandlebars {
 
         Ok(())
     }
+
+    fn emit_redirects(
+        &self,
+        root: &Path,
+        handlebars: &Handlebars<'_>,
+        redirects: &HashMap<String, String>,
+    ) -> Result<()> {
+        if redirects.is_empty() {
+            return Ok(());
+        }
+
+        log::debug!("Emitting redirects");
+
+        for (original, new) in redirects {
+            log::debug!("Redirecting \"{}\" → \"{}\"", original, new);
+            // Note: all paths are relative to the build directory, so the
+            // leading slash in an absolute path means nothing (and would mess
+            // up `root.join(original)`).
+            let original = original.trim_start_matches("/");
+            let filename = root.join(original);
+            self.emit_redirect(handlebars, &filename, new)?;
+        }
+
+        Ok(())
+    }
+
+    fn emit_redirect(
+        &self,
+        handlebars: &Handlebars<'_>,
+        original: &Path,
+        destination: &str,
+    ) -> Result<()> {
+        if original.exists() {
+            // sanity check to avoid accidentally overwriting a real file.
+            let msg = format!(
+                "Not redirecting \"{}\" to \"{}\" because it already exists. Are you sure it needs to be redirected?",
+                original.display(),
+                destination,
+            );
+            return Err(Error::msg(msg));
+        }
+
+        if let Some(parent) = original.parent() {
+            std::fs::create_dir_all(parent)
+                .with_context(|| format!("Unable to ensure \"{}\" exists", parent.display()))?;
+        }
+
+        let ctx = json!({
+            "url": destination,
+        });
+        let f = File::create(original)?;
+        handlebars
+            .render_to_write("redirect", &ctx, f)
+            .with_context(|| {
+                format!(
+                    "Unable to create a redirect file at \"{}\"",
+                    original.display()
+                )
+            })?;
+
+        Ok(())
+    }
 }
 
 // TODO(mattico): Remove some time after the 0.1.8 release
@@ -343,6 +405,10 @@ impl Renderer for HtmlHandlebars {
         debug!("Register the head handlebars template");
         handlebars.register_partial("head", String::from_utf8(theme.head.clone())?)?;
 
+        debug!("Register the redirect handlebars template");
+        handlebars
+            .register_template_string("redirect", String::from_utf8(theme.redirect.clone())?)?;
+
         debug!("Register the header handlebars template");
         handlebars.register_partial("header", String::from_utf8(theme.header.clone())?)?;
 
@@ -400,6 +466,9 @@ impl Renderer for HtmlHandlebars {
                 super::search::create_files(&search, &destination, &book)?;
             }
         }
+
+        self.emit_redirects(&ctx.destination, &handlebars, &html_config.redirect)
+            .context("Unable to emit redirects")?;
 
         // Copy all remaining files, avoid a recursive copy from/to the book build dir
         utils::fs::copy_files_except_ext(&src_dir, &destination, true, Some(&build_dir), &["md"])?;

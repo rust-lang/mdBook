@@ -198,6 +198,12 @@ The following configuration options are available:
   an icon link will be output in the menu bar of the book.
 - **git-repository-icon:** The FontAwesome icon class to use for the git
   repository link. Defaults to `fa-github`.
+- **redirect:** A subtable used for generating redirects when a page is moved.
+  The table contains key-value pairs where the key is where the redirect file
+  needs to be created, as an absolute path from the build directory, (e.g.
+  `/appendices/bibliography.html`). The value can be any valid URI the
+  browser should navigate to (e.g. `https://rust-lang.org/`,
+  `/overview.html`, or `../bibliography.html`).
 
 Available configuration options for the `[output.html.fold]` table:
 
@@ -281,6 +287,10 @@ boost-paragraph = 1
 expand = true
 heading-split-level = 3
 copy-js = true
+
+[output.html.redirect]
+"/appendices/bibliography.html" = "https://rustc-dev-guide.rust-lang.org/appendix/bibliography.html"
+"/other-installation-methods.html" = "../infra/other-installation-methods.html"
 ```
 
 ### Markdown Renderer
@@ -291,7 +301,7 @@ conjunction with `mdbook test` to see the Markdown that `mdbook` is passing
 to `rustdoc`.
 
 The Markdown renderer is included with `mdbook` but disabled by default.
-Enable it by adding an emtpy table to your `book.toml` as follows:
+Enable it by adding an empty table to your `book.toml` as follows:
 
 ```toml
 [output.markdown]

@@ -50,6 +50,7 @@
 #![deny(missing_docs)]
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::collections::HashMap;
 use std::env;
 use std::fs::File;
 use std::io::Read;
@@ -514,6 +515,9 @@ pub struct HtmlConfig {
     /// This config item *should not be edited* by the end user.
     #[doc(hidden)]
     pub livereload_url: Option<String>,
+    /// The mapping from old pages to new pages/URLs to use when generating
+    /// redirects.
+    pub redirect: HashMap<String, String>,
 }
 
 impl Default for HtmlConfig {
@@ -535,6 +539,7 @@ impl Default for HtmlConfig {
             git_repository_url: None,
             git_repository_icon: None,
             livereload_url: None,
+            redirect: HashMap::new(),
         }
     }
 }
@@ -693,6 +698,10 @@ mod tests {
         editable = true
         editor = "ace"
 
+        [output.html.redirect]
+        "index.html" = "overview.html"
+        "nexted/page.md" = "https://rust-lang.org/"
+
         [preprocessor.first]
 
         [preprocessor.second]
@@ -731,6 +740,15 @@ mod tests {
             playpen: playpen_should_be,
             git_repository_url: Some(String::from("https://foo.com/")),
             git_repository_icon: Some(String::from("fa-code-fork")),
+            redirect: vec![
+                (String::from("index.html"), String::from("overview.html")),
+                (
+                    String::from("nexted/page.md"),
+                    String::from("https://rust-lang.org/"),
+                ),
+            ]
+            .into_iter()
+            .collect(),
             ..Default::default()
         };
 
