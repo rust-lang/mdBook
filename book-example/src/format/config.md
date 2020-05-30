@@ -289,7 +289,7 @@ heading-split-level = 3
 copy-js = true
 
 [output.html.redirect]
-/appendices/"bibliography.html" = "https://rustc-dev-guide.rust-lang.org/appendix/bibliography.html"
+"/appendices/bibliography.html" = "https://rustc-dev-guide.rust-lang.org/appendix/bibliography.html"
 "/other-installation-methods.html" = "../infra/other-installation-methods.html"
 ```
 
