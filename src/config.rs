@@ -158,7 +158,7 @@ impl Config {
     /// Fetch an arbitrary item from the `Config` as a `toml::Value`.
     ///
     /// You can use dotted indices to access nested items (e.g.
-    /// `output.html.playpen` will fetch the "playpen" out of the html output
+    /// `output.html.playground` will fetch the "playground" out of the html output
     /// table).
     pub fn get(&self, key: &str) -> Option<&Value> {
         self.rest.read(key)
@@ -451,11 +451,11 @@ impl Default for BuildConfig {
     }
 }
 
-/// Configuration for the Rust compiler(e.g., for playpen)
+/// Configuration for the Rust compiler(e.g., for playground)
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct RustConfig {
-    /// Rust edition used in playpen
+    /// Rust edition used in playground
     pub edition: Option<RustEdition>,
 }
 
@@ -496,8 +496,9 @@ pub struct HtmlConfig {
     pub additional_js: Vec<PathBuf>,
     /// Fold settings.
     pub fold: Fold,
-    /// Playpen settings.
-    pub playpen: Playpen,
+    /// Playground settings.
+    #[serde(alias = "playpen")]
+    pub playground: Playground,
     /// Don't render section labels.
     pub no_section_label: bool,
     /// Search settings. If `None`, the default will be used.
@@ -533,7 +534,7 @@ impl Default for HtmlConfig {
             additional_css: Vec::new(),
             additional_js: Vec::new(),
             fold: Fold::default(),
-            playpen: Playpen::default(),
+            playground: Playground::default(),
             no_section_label: false,
             search: None,
             git_repository_url: None,
@@ -567,24 +568,24 @@ pub struct Fold {
     pub level: u8,
 }
 
-/// Configuration for tweaking how the the HTML renderer handles the playpen.
+/// Configuration for tweaking how the the HTML renderer handles the playground.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
-pub struct Playpen {
-    /// Should playpen snippets be editable? Default: `false`.
+pub struct Playground {
+    /// Should playground snippets be editable? Default: `false`.
     pub editable: bool,
     /// Display the copy button. Default: `true`.
     pub copyable: bool,
     /// Copy JavaScript files for the editor to the output directory?
     /// Default: `true`.
     pub copy_js: bool,
-    /// Display line numbers on playpen snippets. Default: `false`.
+    /// Display line numbers on playground snippets. Default: `false`.
     pub line_numbers: bool,
 }
 
-impl Default for Playpen {
-    fn default() -> Playpen {
-        Playpen {
+impl Default for Playground {
+    fn default() -> Playground {
+        Playground {
             editable: false,
             copyable: true,
             copy_js: true,
@@ -694,7 +695,7 @@ mod tests {
         git-repository-url = "https://foo.com/"
         git-repository-icon = "fa-code-fork"
 
-        [output.html.playpen]
+        [output.html.playground]
         editable = true
         editor = "ace"
 
@@ -725,7 +726,7 @@ mod tests {
             use_default_preprocessors: true,
         };
         let rust_should_be = RustConfig { edition: None };
-        let playpen_should_be = Playpen {
+        let playground_should_be = Playground {
             editable: true,
             copyable: true,
             copy_js: true,
@@ -737,7 +738,7 @@ mod tests {
             additional_css: vec![PathBuf::from("./foo/bar/baz.css")],
             theme: Some(PathBuf::from("./themedir")),
             default_theme: Some(String::from("rust")),
-            playpen: playpen_should_be,
+            playground: playground_should_be,
             git_repository_url: Some(String::from("https://foo.com/")),
             git_repository_icon: Some(String::from("fa-code-fork")),
             redirect: vec![
@@ -854,7 +855,7 @@ mod tests {
         // is happy...
         let src = COMPLEX_CONFIG;
         let mut config = Config::from_str(src).unwrap();
-        let key = "output.html.playpen.editable";
+        let key = "output.html.playground.editable";
 
         assert_eq!(config.get(key).unwrap(), &Value::Boolean(true));
         *config.get_mut(key).unwrap() = Value::Boolean(false);

@@ -10,7 +10,7 @@ edition = "2018"
 [output.html]
 mathjax-support = true
 
-[output.html.playpen]
+[output.html.playground]
 editable = true
 line-numbers = true
 

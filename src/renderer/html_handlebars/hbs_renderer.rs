@@ -1,9 +1,9 @@
 use crate::book::{Book, BookItem};
-use crate::config::{Config, HtmlConfig, Playpen, RustEdition};
+use crate::config::{Config, HtmlConfig, Playground, RustEdition};
 use crate::errors::*;
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
-use crate::theme::{self, playpen_editor, Theme};
+use crate::theme::{self, playground_editor, Theme};
 use crate::utils;
 
 use std::borrow::Cow;
@@ -85,7 +85,7 @@ impl HtmlHandlebars {
         debug!("Render template");
         let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
-        let rendered = self.post_process(rendered, &ctx.html_config.playpen, ctx.edition);
+        let rendered = self.post_process(rendered, &ctx.html_config.playground, ctx.edition);
 
         // Write to file
         debug!("Creating {}", filepath.display());
@@ -97,7 +97,7 @@ impl HtmlHandlebars {
             ctx.data.insert("is_index".to_owned(), json!("true"));
             let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
             let rendered_index =
-                self.post_process(rendered_index, &ctx.html_config.playpen, ctx.edition);
+                self.post_process(rendered_index, &ctx.html_config.playground, ctx.edition);
             debug!("Creating index.html from {}", ctx_path);
             utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
         }
@@ -109,12 +109,12 @@ impl HtmlHandlebars {
     fn post_process(
         &self,
         rendered: String,
-        playpen_config: &Playpen,
+        playground_config: &Playground,
         edition: Option<RustEdition>,
     ) -> String {
         let rendered = build_header_links(&rendered);
         let rendered = fix_code_blocks(&rendered);
-        let rendered = add_playpen_pre(&rendered, playpen_config, edition);
+        let rendered = add_playground_pre(&rendered, playground_config, edition);
 
         rendered
     }
@@ -194,19 +194,23 @@ impl HtmlHandlebars {
             )?;
         }
 
-        let playpen_config = &html_config.playpen;
+        let playground_config = &html_config.playground;
 
         // Ace is a very large dependency, so only load it when requested
-        if playpen_config.editable && playpen_config.copy_js {
+        if playground_config.editable && playground_config.copy_js {
             // Load the editor
-            write_file(destination, "editor.js", playpen_editor::JS)?;
-            write_file(destination, "ace.js", playpen_editor::ACE_JS)?;
-            write_file(destination, "mode-rust.js", playpen_editor::MODE_RUST_JS)?;
-            write_file(destination, "theme-dawn.js", playpen_editor::THEME_DAWN_JS)?;
+            write_file(destination, "editor.js", playground_editor::JS)?;
+            write_file(destination, "ace.js", playground_editor::ACE_JS)?;
+            write_file(destination, "mode-rust.js", playground_editor::MODE_RUST_JS)?;
+            write_file(
+                destination,
+                "theme-dawn.js",
+                playground_editor::THEME_DAWN_JS,
+            )?;
             write_file(
                 destination,
                 "theme-tomorrow_night.js",
-                playpen_editor::THEME_TOMORROW_NIGHT_JS,
+                playground_editor::THEME_TOMORROW_NIGHT_JS,
             )?;
         }
 
@@ -447,7 +451,8 @@ impl Renderer for HtmlHandlebars {
         debug!("Render template");
         let rendered = handlebars.render("index", &data)?;
 
-        let rendered = self.post_process(rendered, &html_config.playpen, ctx.config.rust.edition);
+        let rendered =
+            self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
 
         utils::fs::write_file(&destination, "print.html", rendered.as_bytes())?;
         debug!("Creating print.html ✓");
@@ -555,14 +560,14 @@ fn make_data(
         data.insert("additional_js".to_owned(), json!(js));
     }
 
-    if html_config.playpen.editable && html_config.playpen.copy_js {
-        data.insert("playpen_js".to_owned(), json!(true));
-        if html_config.playpen.line_numbers {
-            data.insert("playpen_line_numbers".to_owned(), json!(true));
+    if html_config.playground.editable && html_config.playground.copy_js {
+        data.insert("playground_js".to_owned(), json!(true));
+        if html_config.playground.line_numbers {
+            data.insert("playground_line_numbers".to_owned(), json!(true));
         }
     }
-    if html_config.playpen.copyable {
-        data.insert("playpen_copyable".to_owned(), json!(true));
+    if html_config.playground.copyable {
+        data.insert("playground_copyable".to_owned(), json!(true));
     }
 
     data.insert("fold_enable".to_owned(), json!((html_config.fold.enable)));
@@ -705,7 +710,11 @@ fn fix_code_blocks(html: &str) -> String {
         .into_owned()
 }
 
-fn add_playpen_pre(html: &str, playpen_config: &Playpen, edition: Option<RustEdition>) -> String {
+fn add_playground_pre(
+    html: &str,
+    playground_config: &Playground,
+    edition: Option<RustEdition>,
+) -> String {
     let regex = Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap();
     regex
         .replace_all(html, |caps: &Captures<'_>| {
@@ -714,7 +723,9 @@ fn add_playpen_pre(html: &str, playpen_config: &Playpen, edition: Option<RustEdi
             let code = &caps[3];
 
             if classes.contains("language-rust") {
-                if (!classes.contains("ignore") && !classes.contains("noplaypen"))
+                if (!classes.contains("ignore")
+                    && !classes.contains("noplayground")
+                    && !classes.contains("noplaypen"))
                     || classes.contains("mdbook-runnable")
                 {
                     let contains_e2015 = classes.contains("edition2015");
@@ -732,11 +743,11 @@ fn add_playpen_pre(html: &str, playpen_config: &Playpen, edition: Option<RustEdi
 
                     // wrap the contents in an external pre block
                     format!(
-                        "<pre class=\"playpen\"><code class=\"{}{}\">{}</code></pre>",
+                        "<pre class=\"playground\"><code class=\"{}{}\">{}</code></pre>",
                         classes,
                         edition_class,
                         {
-                            let content: Cow<'_, str> = if playpen_config.editable
+                            let content: Cow<'_, str> = if playground_config.editable
                                 && classes.contains("editable")
                                 || text.contains("fn main")
                                 || text.contains("quick_main!")
@@ -868,29 +879,29 @@ mod tests {
     }
 
     #[test]
-    fn add_playpen() {
+    fn add_playground() {
         let inputs = [
           ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playpen\"><code class=\"language-rust\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
           ("<code class=\"language-rust\">fn main() {}</code>",
-           "<pre class=\"playpen\"><code class=\"language-rust\">fn main() {}\n</code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust\">fn main() {}\n</code></pre>"),
           ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code>",
-           "<pre class=\"playpen\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";\n</code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";\n</code></pre>"),
           ("<code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code>",
-           "<pre class=\"playpen\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";\n</code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";\n</code></pre>"),
           ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code>",
-           "<pre class=\"playpen\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span><span class=\"boring\">\n</span>\";\n</code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span><span class=\"boring\">\n</span>\";\n</code></pre>"),
           ("<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>",
            "<code class=\"language-rust ignore\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";\n</code>"),
           ("<code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code>",
-           "<pre class=\"playpen\"><code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]\n</code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]\n</code></pre>"),
         ];
         for (src, should_be) in &inputs {
-            let got = add_playpen_pre(
+            let got = add_playground_pre(
                 src,
-                &Playpen {
+                &Playground {
                     editable: true,
-                    ..Playpen::default()
+                    ..Playground::default()
                 },
                 None,
             );
@@ -898,23 +909,23 @@ mod tests {
         }
     }
     #[test]
-    fn add_playpen_edition2015() {
+    fn add_playground_edition2015() {
         let inputs = [
           ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playpen\"><code class=\"language-rust edition2015\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust edition2015\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
           ("<code class=\"language-rust\">fn main() {}</code>",
-           "<pre class=\"playpen\"><code class=\"language-rust edition2015\">fn main() {}\n</code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}\n</code></pre>"),
           ("<code class=\"language-rust edition2015\">fn main() {}</code>",
-           "<pre class=\"playpen\"><code class=\"language-rust edition2015\">fn main() {}\n</code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}\n</code></pre>"),
           ("<code class=\"language-rust edition2018\">fn main() {}</code>",
-           "<pre class=\"playpen\"><code class=\"language-rust edition2018\">fn main() {}\n</code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}\n</code></pre>"),
         ];
         for (src, should_be) in &inputs {
-            let got = add_playpen_pre(
+            let got = add_playground_pre(
                 src,
-                &Playpen {
+                &Playground {
                     editable: true,
-                    ..Playpen::default()
+                    ..Playground::default()
                 },
                 Some(RustEdition::E2015),
             );
@@ -922,23 +933,23 @@ mod tests {
         }
     }
     #[test]
-    fn add_playpen_edition2018() {
+    fn add_playground_edition2018() {
         let inputs = [
           ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playpen\"><code class=\"language-rust edition2018\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust edition2018\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
           ("<code class=\"language-rust\">fn main() {}</code>",
-           "<pre class=\"playpen\"><code class=\"language-rust edition2018\">fn main() {}\n</code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}\n</code></pre>"),
           ("<code class=\"language-rust edition2015\">fn main() {}</code>",
-           "<pre class=\"playpen\"><code class=\"language-rust edition2015\">fn main() {}\n</code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}\n</code></pre>"),
           ("<code class=\"language-rust edition2018\">fn main() {}</code>",
-           "<pre class=\"playpen\"><code class=\"language-rust edition2018\">fn main() {}\n</code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}\n</code></pre>"),
         ];
         for (src, should_be) in &inputs {
-            let got = add_playpen_pre(
+            let got = add_playground_pre(
                 src,
-                &Playpen {
+                &Playground {
                     editable: true,
-                    ..Playpen::default()
+                    ..Playground::default()
                 },
                 Some(RustEdition::E2018),
             );
