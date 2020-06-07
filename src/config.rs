@@ -511,6 +511,8 @@ pub struct HtmlConfig {
     pub input_404: Option<String>,
     /// Output path for 404.html file, defaults to 404.html, set to "" to disable 404 file output
     pub output_404: Option<String>,
+    /// Absolute url to site, used to emit correct paths for the 404 page, which might be accessed in a deeply nested directory
+    pub site_url: Option<String>,
     /// This is used as a bit of a workaround for the `mdbook serve` command.
     /// Basically, because you set the websocket port from the command line, the
     /// `mdbook serve` command needs a way to let the HTML renderer know where
@@ -544,6 +546,7 @@ impl Default for HtmlConfig {
             git_repository_icon: None,
             input_404: None,
             output_404: None,
+            site_url: None,
             livereload_url: None,
             redirect: HashMap::new(),
         }

@@ -464,6 +464,13 @@ impl Renderer for HtmlHandlebars {
             let html_content_404 = utils::render_markdown(&content_404, html_config.curly_quotes);
 
             let mut data_404 = data.clone();
+            let base_url = if let Some(site_url) = &html_config.site_url {
+                site_url
+            } else {
+                warn!("HTML 'site-url' parameter not set, defaulting to '/'. Please configure this to ensure the 404 page work correctly, especially if your site is hosted in a subdirectory on the HTTP server.");
+                "/"
+            };
+            data_404.insert("base_url".to_owned(), json!(base_url));
             data_404.insert("path".to_owned(), json!("404.md"));
             data_404.insert("content".to_owned(), json!(html_content_404));
             let rendered = handlebars.render("index", &data_404)?;

@@ -9,6 +9,7 @@ edition = "2018"
 
 [output.html]
 mathjax-support = true
+site-url = "/"
 
 [output.html.playpen]
 editable = true
