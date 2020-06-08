@@ -34,3 +34,9 @@ functionality. Therefore I recommend to use the file from the default theme as
 template and only add / modify what you need. You can copy the default theme
 into your source directory automatically by using `mdbook init --theme` just
 remove the files you don't want to override.
+
+If you completely replace all built-in themes, be sure to also set
+[`output.html.preferred-dark-theme`] in the config, which defaults to the
+built-in `navy` theme.
+
+[`output.html.preferred-dark-theme`]: ../config.md#html-renderer-options
