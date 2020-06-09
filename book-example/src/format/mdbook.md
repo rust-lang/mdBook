@@ -31,9 +31,11 @@ Will render as
 
 With the following syntax, you can include files into your book:
 
+{{{{raw}}}}
 ```hbs
 \{{#include file.rs}}
 ```
+{{{{/raw}}}}
 
 The path to the file has to be relative from the current source file.
 
@@ -42,22 +44,26 @@ is usually used for inserting code snippets and examples, you will often
 wrap the command with ```` ``` ```` to display the file contents without
 interpretting them.
 
+{{{{raw}}}}
 ````hbs
 ```
 \{{#include file.rs}}
 ```
 ````
+{{{{/raw}}}}
 
 ## Including portions of a file
 Often you only need a specific part of the file e.g. relevant lines for an
 example. We support four different modes of partial includes:
 
+{{{{raw}}}}
 ```hbs
 \{{#include file.rs:2}}
 \{{#include file.rs::10}}
 \{{#include file.rs:2:}}
 \{{#include file.rs:2:10}}
 ```
+{{{{/raw}}}}
 
 The first command only includes the second line from file `file.rs`. The second
 command includes all lines up to line 10, i.e. the lines from 11 till the end of
@@ -89,6 +95,7 @@ impl System for MySystem { ... }
 /* ANCHOR_END: all */
 ```
 
+{{{{raw}}}}
 Then in the book, all you have to do is:
 ````hbs
 Here is a component:
@@ -106,6 +113,7 @@ This is the full file.
 \{{#include file.rs:all}}
 ```
 ````
+{{{{/raw}}}}
 
 Lines containing anchor patterns inside the included anchor are ignored.
 
@@ -137,10 +145,12 @@ We can include a snippet that initially shows only line 2 by using this syntax:
 ````hbs
 To call the `add_one` function, we pass it an `i32` and bind the returned value to `x`:
 
+{{{{raw}}}}
 ```rust
 \{{#rustdoc_include file.rs:2}}
 ```
 ````
+{{{{/raw}}}}
 
 This would have the same effect as if we had manually inserted the code and hidden all but line 2
 using `#`:
@@ -177,9 +187,11 @@ That is, it looks like this (click the "expand" icon to see the rest of the file
 
 With the following syntax, you can insert runnable Rust files into your book:
 
+{{{{raw}}}}
 ```hbs
 \{{#playpen file.rs}}
 ```
+{{{{/raw}}}}
 
 The path to the Rust file has to be relative from the current source file.
 
@@ -187,8 +199,9 @@ When play is clicked, the code snippet will be sent to the [Rust Playpen] to be
 compiled and run. The result is sent back and displayed directly underneath the
 code.
 
+[Rust Playpen]: https://play.rust-lang.org/
+
 Here is what a rendered code snippet looks like:
 
-{{#playpen example.rs}}
+{{{{raw}}}}{{#playpen example.rs}}{{{{/raw}}}}
 
-[Rust Playpen]: https://play.rust-lang.org/

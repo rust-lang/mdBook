@@ -18,6 +18,8 @@
         - [Editor](format/theme/editor.md)
     - [MathJax Support](format/mathjax.md)
     - [mdBook specific features](format/mdbook.md)
+    - [Localization](format/localization/README.md)
+        - [{{fluent "localized-chapter-title"}}](format/localization/example.md)
 - [Continuous Integration](continuous-integration.md)
 - [For Developers](for_developers/README.md)
     - [Preprocessors](for_developers/preprocessors.md)

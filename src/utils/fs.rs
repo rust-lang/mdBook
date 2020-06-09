@@ -29,14 +29,14 @@ pub fn write_file<P: AsRef<Path>>(build_dir: &Path, filename: P, content: &[u8])
 /// # use std::path::Path;
 /// # use mdbook::utils::fs::path_to_root;
 /// let path = Path::new("some/relative/path");
-/// assert_eq!(path_to_root(path), "../../");
+/// assert_eq!(path_to_root(path), Path::new("../../"));
 /// ```
 ///
 /// **note:** it's not very fool-proof, if you find a situation where
 /// it doesn't return the correct path.
 /// Consider [submitting a new issue](https://github.com/rust-lang/mdBook/issues)
 /// or a [pull-request](https://github.com/rust-lang/mdBook/pulls) to improve it.
-pub fn path_to_root<P: Into<PathBuf>>(path: P) -> String {
+pub fn path_to_root<P: Into<PathBuf>>(path: P) -> PathBuf {
     debug!("path_to_root");
     // Remove filename and add "../" for every directory
 
@@ -44,9 +44,9 @@ pub fn path_to_root<P: Into<PathBuf>>(path: P) -> String {
         .parent()
         .expect("")
         .components()
-        .fold(String::new(), |mut s, c| {
+        .fold(PathBuf::new(), |mut s, c| {
             match c {
-                Component::Normal(_) => s.push_str("../"),
+                Component::Normal(_) => s.push("../"),
                 _ => {
                     debug!("Other path component... {:?}", c);
                 }
