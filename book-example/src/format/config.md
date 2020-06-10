@@ -204,6 +204,12 @@ The following configuration options are available:
   `/appendices/bibliography.html`). The value can be any valid URI the
   browser should navigate to (e.g. `https://rust-lang.org/`,
   `/overview.html`, or `../bibliography.html`).
+- **input-404:** The name of the markdown file used for misssing files.
+  The corresponding output file will be the same, with the extension replaced with `html`.
+  Defaults to `404.md`.
+- **site-url:** The url where the book will be hosted. This is required to ensure
+  navigation links and script/css imports in the 404 file work correctly, even when accessing
+  urls in subdirectories. Defaults to `/`.
 
 Available configuration options for the `[output.html.fold]` table:
 
@@ -266,6 +272,8 @@ additional-js = ["custom.js"]
 no-section-label = false
 git-repository-url = "https://github.com/rust-lang/mdBook"
 git-repository-icon = "fa-github"
+site-url = "/example-book/"
+input-404 = "not-found.md"
 
 [output.html.fold]
 enable = false
