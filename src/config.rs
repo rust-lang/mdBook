@@ -1023,7 +1023,7 @@ mod tests {
         let html_config = got.html_config().unwrap();
         assert_eq!(html_config.input_404, None);
         assert_eq!(
-            &get_404_output_file(html_config.input_404.as_deref()),
+            &get_404_output_file(&html_config.input_404),
             "404.html"
         );
     }
@@ -1040,7 +1040,7 @@ mod tests {
         let html_config = got.html_config().unwrap();
         assert_eq!(html_config.input_404, Some("missing.md".to_string()));
         assert_eq!(
-            &get_404_output_file(html_config.input_404.as_deref()),
+            &get_404_output_file(&html_config.input_404),
             "missing.html"
         );
     }

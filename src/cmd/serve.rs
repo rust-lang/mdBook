@@ -83,8 +83,9 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         .config
         .get("output.html.input-404")
         .map(toml::Value::as_str)
-        .flatten();
-    let file_404 = get_404_output_file(input_404);
+        .flatten()
+        .map(ToString::to_string);
+    let file_404 = get_404_output_file(&input_404);
 
     // A channel used to broadcast to any websockets to reload when a file changes.
     let (tx, _rx) = tokio::sync::broadcast::channel::<Message>(100);
