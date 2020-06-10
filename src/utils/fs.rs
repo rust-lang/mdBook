@@ -177,6 +177,10 @@ pub fn copy_files_except_ext(
     Ok(())
 }
 
+pub fn get_404_output_file(input_404: Option<&str>) -> String {
+    input_404.unwrap_or("404.md").replace(".md", ".html")
+}
+
 #[cfg(test)]
 mod tests {
     use super::copy_files_except_ext;

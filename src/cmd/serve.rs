@@ -6,6 +6,7 @@ use futures_util::sink::SinkExt;
 use futures_util::StreamExt;
 use mdbook::errors::*;
 use mdbook::utils;
+use mdbook::utils::fs::get_404_output_file;
 use mdbook::MDBook;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::path::PathBuf;
@@ -68,6 +69,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     if let Some(dest_dir) = args.value_of("dest-dir") {
         book.config.build.build_dir = dest_dir.into();
     }
+    // Override site-url for local serving of the 404 file
+    book.config.set("output.html.site-url", "/")?;
 
     book.build()?;
 
@@ -76,13 +79,19 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         .next()
         .ok_or_else(|| anyhow::anyhow!("no address found for {}", address))?;
     let build_dir = book.build_dir_for("html");
+    let input_404 = book
+        .config
+        .get("output.html.input-404")
+        .map(toml::Value::as_str)
+        .flatten();
+    let file_404 = get_404_output_file(input_404);
 
     // A channel used to broadcast to any websockets to reload when a file changes.
     let (tx, _rx) = tokio::sync::broadcast::channel::<Message>(100);
 
     let reload_tx = tx.clone();
     let thread_handle = std::thread::spawn(move || {
-        serve(build_dir, sockaddr, reload_tx);
+        serve(build_dir, sockaddr, reload_tx, &file_404);
     });
 
     let serving_url = format!("http://{}", address);
@@ -120,7 +129,12 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 }
 
 #[tokio::main]
-async fn serve(build_dir: PathBuf, address: SocketAddr, reload_tx: broadcast::Sender<Message>) {
+async fn serve(
+    build_dir: PathBuf,
+    address: SocketAddr,
+    reload_tx: broadcast::Sender<Message>,
+    file_404: &str,
+) {
     // A warp Filter which captures `reload_tx` and provides an `rx` copy to
     // receive reload messages.
     let sender = warp::any().map(move || reload_tx.subscribe());
@@ -144,8 +158,7 @@ async fn serve(build_dir: PathBuf, address: SocketAddr, reload_tx: broadcast::Se
     // A warp Filter that serves from the filesystem.
     let book_route = warp::fs::dir(build_dir.clone());
     // The fallback route for 404 errors
-    let fallback_file = "404.html";
-    let fallback_route = warp::fs::file(build_dir.join(fallback_file))
+    let fallback_route = warp::fs::file(build_dir.join(file_404))
         .map(|reply| warp::reply::with_status(reply, warp::http::StatusCode::NOT_FOUND));
     let routes = livereload.or(book_route).or(fallback_route);
     warp::serve(routes).run(address).await;

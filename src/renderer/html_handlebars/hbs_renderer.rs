@@ -12,6 +12,7 @@ use std::collections::HashMap;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 
+use crate::utils::fs::get_404_output_file;
 use handlebars::Handlebars;
 use regex::{Captures, Regex};
 
@@ -102,6 +103,58 @@ impl HtmlHandlebars {
             utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
         }
 
+        Ok(())
+    }
+
+    fn render_404(
+        &self,
+        ctx: &RenderContext,
+        html_config: &HtmlConfig,
+        src_dir: &PathBuf,
+        handlebars: &mut Handlebars<'_>,
+        data: &mut serde_json::Map<String, serde_json::Value>,
+    ) -> Result<()> {
+        let destination = &ctx.destination;
+        let content_404 = if let Some(ref filename) = html_config.input_404 {
+            let path = src_dir.join(filename);
+            std::fs::read_to_string(&path)
+                .with_context(|| format!("unable to open 404 input file {:?}", path))?
+        } else {
+            // 404 input not explicitly configured try the default file 404.md
+            let default_404_location = src_dir.join("404.md");
+            if default_404_location.exists() {
+                std::fs::read_to_string(&default_404_location).with_context(|| {
+                    format!("unable to open 404 input file {:?}", default_404_location)
+                })?
+            } else {
+                "# Document not found (404)\n\nThis URL is invalid, sorry. Please use the \
+                navigation bar or search to continue."
+                    .to_string()
+            }
+        };
+        let html_content_404 = utils::render_markdown(&content_404, html_config.curly_quotes);
+
+        let mut data_404 = data.clone();
+        let base_url = if let Some(site_url) = &html_config.site_url {
+            site_url
+        } else {
+            debug!(
+                "HTML 'site-url' parameter not set, defaulting to '/'. Please configure \
+                this to ensure the 404 page work correctly, especially if your site is hosted in a \
+                subdirectory on the HTTP server."
+            );
+            "/"
+        };
+        data_404.insert("base_url".to_owned(), json!(base_url));
+        // Set a dummy path to ensure other paths (e.g. in the TOC) are generated correctly
+        data_404.insert("path".to_owned(), json!("404.md"));
+        data_404.insert("content".to_owned(), json!(html_content_404));
+        let rendered = handlebars.render("index", &data_404)?;
+
+        let rendered = self.post_process(rendered, &html_config.playpen, ctx.config.rust.edition);
+        let output_file = get_404_output_file(html_config.input_404.as_deref());
+        utils::fs::write_file(&destination, output_file, rendered.as_bytes())?;
+        debug!("Creating 404.html ✓");
         Ok(())
     }
 
@@ -438,51 +491,8 @@ impl Renderer for HtmlHandlebars {
         }
 
         // Render 404 page
-        if html_config.output_404 != Some("".to_string()) {
-            let default_404_location = src_dir.join("404.md");
-            let content_404 = if let Some(ref filename) = html_config.input_404 {
-                let path = src_dir.join(filename);
-                std::fs::read_to_string(&path).map_err(|failure| {
-                    std::io::Error::new(
-                        failure.kind(),
-                        format!("Unable to open 404 input file {:?}", &path),
-                    )
-                })?
-            } else if default_404_location.exists() {
-                std::fs::read_to_string(&default_404_location).map_err(|failure| {
-                    std::io::Error::new(
-                        failure.kind(),
-                        format!(
-                            "Unable to open default 404 input file {:?}",
-                            &default_404_location
-                        ),
-                    )
-                })?
-            } else {
-                "# 404 - Document not found\n\nUnfortunately, this URL is no longer valid, please use the navigation bar or search to continue.".to_string()
-            };
-            let html_content_404 = utils::render_markdown(&content_404, html_config.curly_quotes);
-
-            let mut data_404 = data.clone();
-            let base_url = if let Some(site_url) = &html_config.site_url {
-                site_url
-            } else {
-                warn!("HTML 'site-url' parameter not set, defaulting to '/'. Please configure this to ensure the 404 page work correctly, especially if your site is hosted in a subdirectory on the HTTP server.");
-                "/"
-            };
-            data_404.insert("base_url".to_owned(), json!(base_url));
-            data_404.insert("path".to_owned(), json!("404.md"));
-            data_404.insert("content".to_owned(), json!(html_content_404));
-            let rendered = handlebars.render("index", &data_404)?;
-
-            let rendered =
-                self.post_process(rendered, &html_config.playpen, ctx.config.rust.edition);
-            let output_file = match &html_config.output_404 {
-                None => "404.html",
-                Some(file) => &file,
-            };
-            utils::fs::write_file(&destination, output_file, rendered.as_bytes())?;
-            debug!("Creating 404.html ✓");
+        if html_config.input_404 != Some("".to_string()) {
+            self.render_404(ctx, &html_config, &src_dir, &mut handlebars, &mut data)?;
         }
 
         // Print version

@@ -9,7 +9,7 @@ edition = "2018"
 
 [output.html]
 mathjax-support = true
-site-url = "/"
+site-url = "/mdBook/"
 
 [output.html.playpen]
 editable = true
