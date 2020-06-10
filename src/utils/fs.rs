@@ -178,7 +178,10 @@ pub fn copy_files_except_ext(
 }
 
 pub fn get_404_output_file(input_404: &Option<String>) -> String {
-    input_404.as_ref().unwrap_or(&"404.md".to_string()).replace(".md", ".html")
+    input_404
+        .as_ref()
+        .unwrap_or(&"404.md".to_string())
+        .replace(".md", ".html")
 }
 
 #[cfg(test)]

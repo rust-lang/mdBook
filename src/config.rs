@@ -1022,10 +1022,7 @@ mod tests {
         let got = Config::from_str(src).unwrap();
         let html_config = got.html_config().unwrap();
         assert_eq!(html_config.input_404, None);
-        assert_eq!(
-            &get_404_output_file(&html_config.input_404),
-            "404.html"
-        );
+        assert_eq!(&get_404_output_file(&html_config.input_404), "404.html");
     }
 
     #[test]
@@ -1039,9 +1036,6 @@ mod tests {
         let got = Config::from_str(src).unwrap();
         let html_config = got.html_config().unwrap();
         assert_eq!(html_config.input_404, Some("missing.md".to_string()));
-        assert_eq!(
-            &get_404_output_file(&html_config.input_404),
-            "missing.html"
-        );
+        assert_eq!(&get_404_output_file(&html_config.input_404), "missing.html");
     }
 }

@@ -83,7 +83,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         .config
         .get("output.html.input-404")
         .map(toml::Value::as_str)
-        .flatten()
+        .and_then(std::convert::identity) // flatten
         .map(ToString::to_string);
     let file_404 = get_404_output_file(&input_404);
 
