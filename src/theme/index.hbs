@@ -40,7 +40,7 @@
 
         {{#if mathjax_support}}
         <!-- MathJax -->
-        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async type="text/javascript" src="{{ path_to_root }}mathjax.js"></script>
         {{/if}}
     </head>
     <body>
@@ -241,7 +241,7 @@
             window.playpen_line_numbers = true;
         </script>
         {{/if}}
-        
+
         {{#if playpen_copyable}}
         <script type="text/javascript">
             window.playpen_copyable = true;
