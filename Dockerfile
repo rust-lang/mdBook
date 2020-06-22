@@ -21,4 +21,5 @@ RUN apk add --no-cache libgcc && \
 
 USER mdbook
 VOLUME ["/book"]
+WORKDIR /book
 ENTRYPOINT ["/docker-entrypoint.sh"]
