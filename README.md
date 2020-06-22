@@ -148,7 +148,7 @@ preprocessors are:
   all `README.md` chapters to `index.md` so `foo/README.md` can be accessed via
   the url `foo/` when published to a browser
 - `links` - a built-in preprocessor (enabled by default) for expanding the
-  `{{# playpen}}` and `{{# include}}` helpers in a chapter.
+  `{{# playground}}` and `{{# include}}` helpers in a chapter.
 
 Renderers are given the final book so they can do something with it. This is
 typically used for, as the name suggests, rendering the document in a particular

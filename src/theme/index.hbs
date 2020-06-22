@@ -236,19 +236,19 @@
         </script>
         {{/if}}
 
-        {{#if playpen_line_numbers}}
+        {{#if playground_line_numbers}}
         <script type="text/javascript">
-            window.playpen_line_numbers = true;
-        </script>
-        {{/if}}
-        
-        {{#if playpen_copyable}}
-        <script type="text/javascript">
-            window.playpen_copyable = true;
+            window.playground_line_numbers = true;
         </script>
         {{/if}}
 
-        {{#if playpen_js}}
+        {{#if playground_copyable}}
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        {{/if}}
+
+        {{#if playground_js}}
         <script src="{{ path_to_root }}ace.js" type="text/javascript" charset="utf-8"></script>
         <script src="{{ path_to_root }}editor.js" type="text/javascript" charset="utf-8"></script>
         <script src="{{ path_to_root }}mode-rust.js" type="text/javascript" charset="utf-8"></script>

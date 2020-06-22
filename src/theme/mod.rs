@@ -1,6 +1,6 @@
 #![allow(missing_docs)]
 
-pub mod playpen_editor;
+pub mod playground_editor;
 
 pub mod fonts;
 

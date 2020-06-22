@@ -6,7 +6,7 @@ window.editors = [];
     }
 
     Array.from(document.querySelectorAll('.editable')).forEach(function(editable) {
-        let display_line_numbers = window.playpen_line_numbers || false;
+        let display_line_numbers = window.playground_line_numbers || false;
 
         let editor = ace.edit(editable);
             editor.setOptions({
