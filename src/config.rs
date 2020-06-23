@@ -504,6 +504,10 @@ pub struct HtmlConfig {
     /// FontAwesome icon class to use for the Git repository link.
     /// Defaults to `fa-github` if `None`.
     pub git_repository_icon: Option<String>,
+    /// Input path for the 404 file, defaults to 404.md, set to "" to disable 404 file output
+    pub input_404: Option<String>,
+    /// Absolute url to site, used to emit correct paths for the 404 page, which might be accessed in a deeply nested directory
+    pub site_url: Option<String>,
     /// This is used as a bit of a workaround for the `mdbook serve` command.
     /// Basically, because you set the websocket port from the command line, the
     /// `mdbook serve` command needs a way to let the HTML renderer know where
@@ -535,6 +539,8 @@ impl Default for HtmlConfig {
             search: None,
             git_repository_url: None,
             git_repository_icon: None,
+            input_404: None,
+            site_url: None,
             livereload_url: None,
             redirect: HashMap::new(),
         }
@@ -667,6 +673,7 @@ impl<'de, T> Updateable<'de> for T where T: Serialize + Deserialize<'de> {}
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utils::fs::get_404_output_file;
 
     const COMPLEX_CONFIG: &str = r#"
         [book]
@@ -1000,5 +1007,32 @@ mod tests {
         cfg.update_from_env();
 
         assert_eq!(cfg.book.title, Some(should_be));
+    }
+
+    #[test]
+    fn file_404_default() {
+        let src = r#"
+        [output.html]
+        destination = "my-book"
+        "#;
+
+        let got = Config::from_str(src).unwrap();
+        let html_config = got.html_config().unwrap();
+        assert_eq!(html_config.input_404, None);
+        assert_eq!(&get_404_output_file(&html_config.input_404), "404.html");
+    }
+
+    #[test]
+    fn file_404_custom() {
+        let src = r#"
+        [output.html]
+        input-404= "missing.md"
+        output-404= "missing.html"
+        "#;
+
+        let got = Config::from_str(src).unwrap();
+        let html_config = got.html_config().unwrap();
+        assert_eq!(html_config.input_404, Some("missing.md".to_string()));
+        assert_eq!(&get_404_output_file(&html_config.input_404), "missing.html");
     }
 }
