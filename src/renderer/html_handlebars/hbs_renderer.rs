@@ -151,7 +151,8 @@ impl HtmlHandlebars {
         data_404.insert("content".to_owned(), json!(html_content_404));
         let rendered = handlebars.render("index", &data_404)?;
 
-        let rendered = self.post_process(rendered, &html_config.playpen, ctx.config.rust.edition);
+        let rendered =
+            self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
         let output_file = get_404_output_file(&html_config.input_404);
         utils::fs::write_file(&destination, output_file, rendered.as_bytes())?;
         debug!("Creating 404.html ✓");

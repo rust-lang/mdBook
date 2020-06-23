@@ -63,15 +63,17 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let address = format!("{}:{}", hostname, port);
 
     let livereload_url = format!("ws://{}/{}", address, LIVE_RELOAD_ENDPOINT);
-    book.config
-        .set("output.html.livereload-url", &livereload_url)?;
-
-    if let Some(dest_dir) = args.value_of("dest-dir") {
-        book.config.build.build_dir = dest_dir.into();
-    }
-    // Override site-url for local serving of the 404 file
-    book.config.set("output.html.site-url", "/")?;
-
+    let update_config = |book: &mut MDBook| {
+        book.config
+            .set("output.html.livereload-url", &livereload_url)
+            .expect("livereload-url update failed");
+        if let Some(dest_dir) = args.value_of("dest-dir") {
+            book.config.build.build_dir = dest_dir.into();
+        }
+        // Override site-url for local serving of the 404 file
+        book.config.set("output.html.site-url", "/").unwrap();
+    };
+    update_config(&mut book);
     book.build()?;
 
     let sockaddr: SocketAddr = address
@@ -108,13 +110,10 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         info!("Building book...");
 
         // FIXME: This area is really ugly because we need to re-set livereload :(
-        let result = MDBook::load(&book_dir)
-            .and_then(|mut b| {
-                b.config
-                    .set("output.html.livereload-url", &livereload_url)?;
-                Ok(b)
-            })
-            .and_then(|b| b.build());
+        let result = MDBook::load(&book_dir).and_then(|mut b| {
+            update_config(&mut b);
+            b.build()
+        });
 
         if let Err(e) = result {
             error!("Unable to load the book");
