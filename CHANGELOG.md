@@ -28,6 +28,9 @@
   the old behavior of ignoring missing renderers, set the `optional` setting
   for that renderer.
   [#1122](https://github.com/rust-lang/mdBook/pull/1122)
+- If you have a custom favicon, you may need to look into adding an SVG
+  version, otherwise the default SVG icon will be displayed.
+  [#1230](https://github.com/rust-lang/mdBook/pull/1230)
 
 ### Added
 - Added a new `[rust]` configuration section to `book.toml`, which allows
