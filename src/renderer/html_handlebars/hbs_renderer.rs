@@ -192,8 +192,12 @@ impl HtmlHandlebars {
         write_file(destination, "css/chrome.css", &theme.chrome_css)?;
         write_file(destination, "css/print.css", &theme.print_css)?;
         write_file(destination, "css/variables.css", &theme.variables_css)?;
-        write_file(destination, "favicon.png", &theme.favicon_png)?;
-        write_file(destination, "favicon.svg", &theme.favicon_svg)?;
+        if let Some(contents) = &theme.favicon_png {
+            write_file(destination, "favicon.png", &contents)?;
+        }
+        if let Some(contents) = &theme.favicon_svg {
+            write_file(destination, "favicon.svg", &contents)?;
+        }
         write_file(destination, "highlight.css", &theme.highlight_css)?;
         write_file(destination, "tomorrow-night.css", &theme.tomorrow_night_css)?;
         write_file(destination, "ayu-highlight.css", &theme.ayu_highlight_css)?;
