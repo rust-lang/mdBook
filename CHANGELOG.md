@@ -1,5 +1,18 @@
 # Changelog
 
+## mdBook 0.4.1
+[d4df7e7...649f355](https://github.com/rust-lang/mdBook/compare/d4df7e7...649f355)
+
+### Changed
+- Removed several outdated dev-dependencies.
+  [#1267](https://github.com/rust-lang/mdBook/pull/1267)
+
+### Fixed
+- Fixed sidebar scrolling if the book includes part titles.
+  [#1265](https://github.com/rust-lang/mdBook/pull/1265)
+- Don't include the default favicon if only one of the PNG or SVG is overridden.
+  [#1266](https://github.com/rust-lang/mdBook/pull/1266)
+
 ## mdBook 0.4.0
 [99ecd4f...d4df7e7](https://github.com/rust-lang/mdBook/compare/99ecd4f...d4df7e7)
 
