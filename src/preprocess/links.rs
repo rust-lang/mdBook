@@ -140,6 +140,7 @@ enum LinkType<'a> {
     Title(&'a str),
     Template(PathBuf, HashMap<String, String>),
     Title(&'a str),
+    Template(PathBuf, HashMap<String, String>),
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -213,6 +214,7 @@ impl<'a> LinkType<'a> {
             LinkType::Title(_) => None,
             LinkType::Template(p, _) => Some(return_relative_path(base, &p)),
             LinkType::Title(_) => None,
+            LinkType::Template(p, _) => Some(return_relative_path(base, &p)),
         }
     }
 }
@@ -430,6 +432,23 @@ impl<'a> Link<'a> {
             LinkType::Title(title) => {
                 *chapter_title = title.to_owned();
                 Ok(String::new())
+            }
+
+            LinkType::Template(ref pat, ref dict) => {
+                let target = base.join(pat);
+                fs::read_to_string(&target)
+                    .map(|s| {
+                        dict.iter().fold(s, |r, (key, value)| {
+                            r.replace(format!("{{ {} }}", key).as_str(), value)
+                        })
+                    })
+                    .with_context(|| {
+                        format!(
+                            "Could not read file for template {} ({})",
+                            self.link_text,
+                            target.display(),
+                        )
+                    })
             }
         }
     }
