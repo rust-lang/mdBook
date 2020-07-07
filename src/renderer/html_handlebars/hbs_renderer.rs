@@ -478,7 +478,7 @@ impl Renderer for HtmlHandlebars {
         debug!("Register handlebars helpers");
         self.register_hbs_helpers(&mut handlebars, &html_config);
 
-        let mut data = make_data(&ctx.root, &book, &ctx.config, &html_config)?;
+        let mut data = make_data(&ctx.root, &book, &ctx.config, &html_config, &theme)?;
 
         // Print version
         let mut print_content = String::new();
@@ -551,6 +551,7 @@ fn make_data(
     book: &Book,
     config: &Config,
     html_config: &HtmlConfig,
+    theme: &Theme,
 ) -> Result<serde_json::Map<String, serde_json::Value>> {
     trace!("make_data");
 
@@ -567,6 +568,12 @@ fn make_data(
         "description".to_owned(),
         json!(config.book.description.clone().unwrap_or_default()),
     );
+    if theme.favicon_png.is_some() {
+        data.insert("favicon_png".to_owned(), json!("favicon.png"));
+    }
+    if theme.favicon_svg.is_some() {
+        data.insert("favicon_svg".to_owned(), json!("favicon.svg"));
+    }
     if let Some(ref livereload) = html_config.livereload_url {
         data.insert("livereload".to_owned(), json!(livereload));
     }
