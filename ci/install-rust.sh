@@ -12,7 +12,7 @@ TOOLCHAIN="$1"
 
 rustup set profile minimal
 rustup component remove --toolchain=$TOOLCHAIN rust-docs || echo "already removed"
-rustup update $TOOLCHAIN
+rustup update --no-self-update $TOOLCHAIN
 rustup default $TOOLCHAIN
 rustup -V
 rustc -Vv
