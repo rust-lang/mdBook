@@ -143,7 +143,10 @@ impl BookBuilder {
         variables_css.write_all(theme::VARIABLES_CSS)?;
 
         let mut favicon = File::create(themedir.join("favicon.png"))?;
-        favicon.write_all(theme::FAVICON)?;
+        favicon.write_all(theme::FAVICON_PNG)?;
+
+        let mut favicon = File::create(themedir.join("favicon.svg"))?;
+        favicon.write_all(theme::FAVICON_SVG)?;
 
         let mut js = File::create(themedir.join("book.js"))?;
         js.write_all(theme::JS)?;

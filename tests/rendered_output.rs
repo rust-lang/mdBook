@@ -135,18 +135,18 @@ fn check_correct_relative_links_in_print_page() {
 }
 
 #[test]
-fn rendered_code_has_playpen_stuff() {
+fn rendered_code_has_playground_stuff() {
     let temp = DummyBook::new().build().unwrap();
     let md = MDBook::load(temp.path()).unwrap();
     md.build().unwrap();
 
     let nested = temp.path().join("book/first/nested.html");
-    let playpen_class = vec![r#"class="playpen""#];
+    let playground_class = vec![r#"class="playground""#];
 
-    assert_contains_strings(nested, &playpen_class);
+    assert_contains_strings(nested, &playground_class);
 
     let book_js = temp.path().join("book/book.js");
-    assert_contains_strings(book_js, &[".playpen"]);
+    assert_contains_strings(book_js, &[".playground"]);
 }
 
 #[test]
@@ -344,23 +344,23 @@ fn create_missing_file_with_config() {
     assert!(temp.path().join("src").join("intro.md").exists());
 }
 
-/// This makes sure you can include a Rust file with `{{#playpen example.rs}}`.
+/// This makes sure you can include a Rust file with `{{#playground example.rs}}`.
 /// Specification is in `book-example/src/format/rust.md`
 #[test]
-fn able_to_include_playpen_files_in_chapters() {
+fn able_to_include_playground_files_in_chapters() {
     let temp = DummyBook::new().build().unwrap();
     let md = MDBook::load(temp.path()).unwrap();
     md.build().unwrap();
 
     let second = temp.path().join("book/second.html");
 
-    let playpen_strings = &[
-        r#"class="playpen""#,
+    let playground_strings = &[
+        r#"class="playground""#,
         r#"println!(&quot;Hello World!&quot;);"#,
     ];
 
-    assert_contains_strings(&second, playpen_strings);
-    assert_doesnt_contain_strings(&second, &["{{#playpen example.rs}}"]);
+    assert_contains_strings(&second, playground_strings);
+    assert_doesnt_contain_strings(&second, &["{{#playground example.rs}}"]);
 }
 
 /// This makes sure you can include a Rust file with `{{#include ../SUMMARY.md}}`.

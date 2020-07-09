@@ -22,7 +22,7 @@ const MAX_LINK_NESTED_DEPTH: usize = 10;
 ///.  specified or the lines between specified anchors, and include the rest of the file behind `#`.
 ///   This hides the lines from initial display but shows them when the reader expands the code
 ///   block and provides them to Rustdoc for testing.
-/// - `{{# playpen}}` - Insert runnable Rust files
+/// - `{{# playground}}` - Insert runnable Rust files
 #[derive(Default)]
 pub struct LinkPreprocessor;
 
@@ -114,7 +114,7 @@ where
 enum LinkType<'a> {
     Escaped,
     Include(PathBuf, RangeOrAnchor),
-    Playpen(PathBuf, Vec<&'a str>),
+    Playground(PathBuf, Vec<&'a str>),
     RustdocInclude(PathBuf, RangeOrAnchor),
 }
 
@@ -183,7 +183,7 @@ impl<'a> LinkType<'a> {
         match self {
             LinkType::Escaped => None,
             LinkType::Include(p, _) => Some(return_relative_path(base, &p)),
-            LinkType::Playpen(p, _) => Some(return_relative_path(base, &p)),
+            LinkType::Playground(p, _) => Some(return_relative_path(base, &p)),
             LinkType::RustdocInclude(p, _) => Some(return_relative_path(base, &p)),
         }
     }
@@ -262,7 +262,15 @@ impl<'a> Link<'a> {
 
                 match (typ.as_str(), file_arg) {
                     ("include", Some(pth)) => Some(parse_include_path(pth)),
-                    ("playpen", Some(pth)) => Some(LinkType::Playpen(pth.into(), props)),
+                    ("playground", Some(pth)) => Some(LinkType::Playground(pth.into(), props)),
+                    ("playpen", Some(pth)) => {
+                        warn!(
+                            "the {{{{#playpen}}}} expression has been \
+                            renamed to {{{{#playground}}}}, \
+                            please update your book to use the new name"
+                        );
+                        Some(LinkType::Playground(pth.into(), props))
+                    }
                     ("rustdoc_include", Some(pth)) => Some(parse_rustdoc_include_path(pth)),
                     _ => None,
                 }
@@ -324,7 +332,7 @@ impl<'a> Link<'a> {
                         )
                     })
             }
-            LinkType::Playpen(ref pat, ref attrs) => {
+            LinkType::Playground(ref pat, ref attrs) => {
                 let target = base.join(pat);
 
                 let contents = fs::read_to_string(&target).with_context(|| {
@@ -406,7 +414,7 @@ mod tests {
 
     #[test]
     fn test_find_links_partial_link() {
-        let s = "Some random text with {{#playpen...";
+        let s = "Some random text with {{#playground...";
         assert!(find_links(s).collect::<Vec<_>>() == vec![]);
         let s = "Some random text with {{#include...";
         assert!(find_links(s).collect::<Vec<_>>() == vec![]);
@@ -416,19 +424,19 @@ mod tests {
 
     #[test]
     fn test_find_links_empty_link() {
-        let s = "Some random text with {{#playpen}} and {{#playpen   }} {{}} {{#}}...";
+        let s = "Some random text with {{#playground}} and {{#playground   }} {{}} {{#}}...";
         assert!(find_links(s).collect::<Vec<_>>() == vec![]);
     }
 
     #[test]
     fn test_find_links_unknown_link_type() {
-        let s = "Some random text with {{#playpenz ar.rs}} and {{#incn}} {{baz}} {{#bar}}...";
+        let s = "Some random text with {{#playgroundz ar.rs}} and {{#incn}} {{baz}} {{#bar}}...";
         assert!(find_links(s).collect::<Vec<_>>() == vec![]);
     }
 
     #[test]
     fn test_find_links_simple_link() {
-        let s = "Some random text with {{#playpen file.rs}} and {{#playpen test.rs }}...";
+        let s = "Some random text with {{#playground file.rs}} and {{#playground test.rs }}...";
 
         let res = find_links(s).collect::<Vec<_>>();
         println!("\nOUTPUT: {:?}\n", res);
@@ -438,15 +446,15 @@ mod tests {
             vec![
                 Link {
                     start_index: 22,
-                    end_index: 42,
-                    link_type: LinkType::Playpen(PathBuf::from("file.rs"), vec![]),
-                    link_text: "{{#playpen file.rs}}",
+                    end_index: 45,
+                    link_type: LinkType::Playground(PathBuf::from("file.rs"), vec![]),
+                    link_text: "{{#playground file.rs}}",
                 },
                 Link {
-                    start_index: 47,
-                    end_index: 68,
-                    link_type: LinkType::Playpen(PathBuf::from("test.rs"), vec![]),
-                    link_text: "{{#playpen test.rs }}",
+                    start_index: 50,
+                    end_index: 74,
+                    link_type: LinkType::Playground(PathBuf::from("test.rs"), vec![]),
+                    link_text: "{{#playground test.rs }}",
                 },
             ]
         );
@@ -454,7 +462,7 @@ mod tests {
 
     #[test]
     fn test_find_links_with_special_characters() {
-        let s = "Some random text with {{#playpen foo-bar\\baz/_c++.rs}}...";
+        let s = "Some random text with {{#playground foo-bar\\baz/_c++.rs}}...";
 
         let res = find_links(s).collect::<Vec<_>>();
         println!("\nOUTPUT: {:?}\n", res);
@@ -463,9 +471,9 @@ mod tests {
             res,
             vec![Link {
                 start_index: 22,
-                end_index: 54,
-                link_type: LinkType::Playpen(PathBuf::from("foo-bar\\baz/_c++.rs"), vec![]),
-                link_text: "{{#playpen foo-bar\\baz/_c++.rs}}",
+                end_index: 57,
+                link_type: LinkType::Playground(PathBuf::from("foo-bar\\baz/_c++.rs"), vec![]),
+                link_text: "{{#playground foo-bar\\baz/_c++.rs}}",
             },]
         );
     }
@@ -605,7 +613,7 @@ mod tests {
 
     #[test]
     fn test_find_links_escaped_link() {
-        let s = "Some random text with escaped playpen \\{{#playpen file.rs editable}} ...";
+        let s = "Some random text with escaped playground \\{{#playground file.rs editable}} ...";
 
         let res = find_links(s).collect::<Vec<_>>();
         println!("\nOUTPUT: {:?}\n", res);
@@ -613,18 +621,19 @@ mod tests {
         assert_eq!(
             res,
             vec![Link {
-                start_index: 38,
-                end_index: 68,
+                start_index: 41,
+                end_index: 74,
                 link_type: LinkType::Escaped,
-                link_text: "\\{{#playpen file.rs editable}}",
+                link_text: "\\{{#playground file.rs editable}}",
             }]
         );
     }
 
     #[test]
-    fn test_find_playpens_with_properties() {
-        let s = "Some random text with escaped playpen {{#playpen file.rs editable }} and some \
-                 more\n text {{#playpen my.rs editable no_run should_panic}} ...";
+    fn test_find_playgrounds_with_properties() {
+        let s =
+            "Some random text with escaped playground {{#playground file.rs editable }} and some \
+                 more\n text {{#playground my.rs editable no_run should_panic}} ...";
 
         let res = find_links(s).collect::<Vec<_>>();
         println!("\nOUTPUT: {:?}\n", res);
@@ -632,19 +641,19 @@ mod tests {
             res,
             vec![
                 Link {
-                    start_index: 38,
-                    end_index: 68,
-                    link_type: LinkType::Playpen(PathBuf::from("file.rs"), vec!["editable"]),
-                    link_text: "{{#playpen file.rs editable }}",
+                    start_index: 41,
+                    end_index: 74,
+                    link_type: LinkType::Playground(PathBuf::from("file.rs"), vec!["editable"]),
+                    link_text: "{{#playground file.rs editable }}",
                 },
                 Link {
-                    start_index: 89,
-                    end_index: 136,
-                    link_type: LinkType::Playpen(
+                    start_index: 95,
+                    end_index: 145,
+                    link_type: LinkType::Playground(
                         PathBuf::from("my.rs"),
                         vec!["editable", "no_run", "should_panic"],
                     ),
-                    link_text: "{{#playpen my.rs editable no_run should_panic}}",
+                    link_text: "{{#playground my.rs editable no_run should_panic}}",
                 },
             ]
         );
@@ -652,8 +661,9 @@ mod tests {
 
     #[test]
     fn test_find_all_link_types() {
-        let s = "Some random text with escaped playpen {{#include file.rs}} and \\{{#contents are \
-                 insignifficant in escaped link}} some more\n text  {{#playpen my.rs editable \
+        let s =
+            "Some random text with escaped playground {{#include file.rs}} and \\{{#contents are \
+                 insignifficant in escaped link}} some more\n text  {{#playground my.rs editable \
                  no_run should_panic}} ...";
 
         let res = find_links(s).collect::<Vec<_>>();
@@ -662,8 +672,8 @@ mod tests {
         assert_eq!(
             res[0],
             Link {
-                start_index: 38,
-                end_index: 58,
+                start_index: 41,
+                end_index: 61,
                 link_type: LinkType::Include(
                     PathBuf::from("file.rs"),
                     RangeOrAnchor::Range(LineRange::from(..))
@@ -674,8 +684,8 @@ mod tests {
         assert_eq!(
             res[1],
             Link {
-                start_index: 63,
-                end_index: 112,
+                start_index: 66,
+                end_index: 115,
                 link_type: LinkType::Escaped,
                 link_text: "\\{{#contents are insignifficant in escaped link}}",
             }
@@ -683,13 +693,13 @@ mod tests {
         assert_eq!(
             res[2],
             Link {
-                start_index: 130,
-                end_index: 177,
-                link_type: LinkType::Playpen(
+                start_index: 133,
+                end_index: 183,
+                link_type: LinkType::Playground(
                     PathBuf::from("my.rs"),
                     vec!["editable", "no_run", "should_panic"]
                 ),
-                link_text: "{{#playpen my.rs editable no_run should_panic}}",
+                link_text: "{{#playground my.rs editable no_run should_panic}}",
             }
         );
     }

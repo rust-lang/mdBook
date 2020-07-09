@@ -92,17 +92,17 @@ impl System for MySystem { ... }
 Then in the book, all you have to do is:
 ````hbs
 Here is a component:
-```rust,no_run,noplaypen
+```rust,no_run,noplayground
 \{{#include file.rs:component}}
 ```
 
 Here is a system:
-```rust,no_run,noplaypen
+```rust,no_run,noplayground
 \{{#include file.rs:system}}
 ```
 
 This is the full file.
-```rust,no_run,noplaypen
+```rust,no_run,noplayground
 \{{#include file.rs:all}}
 ```
 ````
@@ -178,17 +178,17 @@ That is, it looks like this (click the "expand" icon to see the rest of the file
 With the following syntax, you can insert runnable Rust files into your book:
 
 ```hbs
-\{{#playpen file.rs}}
+\{{#playground file.rs}}
 ```
 
 The path to the Rust file has to be relative from the current source file.
 
-When play is clicked, the code snippet will be sent to the [Rust Playpen] to be
+When play is clicked, the code snippet will be sent to the [Rust Playground] to be
 compiled and run. The result is sent back and displayed directly underneath the
 code.
 
 Here is what a rendered code snippet looks like:
 
-{{#playpen example.rs}}
+{{#playground example.rs}}
 
-[Rust Playpen]: https://play.rust-lang.org/
+[Rust Playground]: https://play.rust-lang.org/

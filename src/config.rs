@@ -158,7 +158,7 @@ impl Config {
     /// Fetch an arbitrary item from the `Config` as a `toml::Value`.
     ///
     /// You can use dotted indices to access nested items (e.g.
-    /// `output.html.playpen` will fetch the "playpen" out of the html output
+    /// `output.html.playground` will fetch the "playground" out of the html output
     /// table).
     pub fn get(&self, key: &str) -> Option<&Value> {
         self.rest.read(key)
@@ -346,21 +346,17 @@ impl<'de> Deserialize<'de> for Config {
 
 impl Serialize for Config {
     fn serialize<S: Serializer>(&self, s: S) -> std::result::Result<S::Ok, S::Error> {
-        use serde::ser::Error;
         // TODO: This should probably be removed and use a derive instead.
-
         let mut table = self.rest.clone();
 
-        let book_config = match Value::try_from(self.book.clone()) {
-            Ok(cfg) => cfg,
-            Err(_) => {
-                return Err(S::Error::custom("Unable to serialize the BookConfig"));
-            }
-        };
-        let rust_config = Value::try_from(&self.rust).expect("should always be serializable");
-
+        let book_config = Value::try_from(&self.book).expect("should always be serializable");
         table.insert("book", book_config);
-        table.insert("rust", rust_config);
+
+        if self.rust != RustConfig::default() {
+            let rust_config = Value::try_from(&self.rust).expect("should always be serializable");
+            table.insert("rust", rust_config);
+        }
+
         table.serialize(s)
     }
 }
@@ -451,11 +447,11 @@ impl Default for BuildConfig {
     }
 }
 
-/// Configuration for the Rust compiler(e.g., for playpen)
+/// Configuration for the Rust compiler(e.g., for playground)
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct RustConfig {
-    /// Rust edition used in playpen
+    /// Rust edition used in playground
     pub edition: Option<RustEdition>,
 }
 
@@ -496,8 +492,9 @@ pub struct HtmlConfig {
     pub additional_js: Vec<PathBuf>,
     /// Fold settings.
     pub fold: Fold,
-    /// Playpen settings.
-    pub playpen: Playpen,
+    /// Playground settings.
+    #[serde(alias = "playpen")]
+    pub playground: Playground,
     /// Don't render section labels.
     pub no_section_label: bool,
     /// Search settings. If `None`, the default will be used.
@@ -507,6 +504,10 @@ pub struct HtmlConfig {
     /// FontAwesome icon class to use for the Git repository link.
     /// Defaults to `fa-github` if `None`.
     pub git_repository_icon: Option<String>,
+    /// Input path for the 404 file, defaults to 404.md, set to "" to disable 404 file output
+    pub input_404: Option<String>,
+    /// Absolute url to site, used to emit correct paths for the 404 page, which might be accessed in a deeply nested directory
+    pub site_url: Option<String>,
     /// This is used as a bit of a workaround for the `mdbook serve` command.
     /// Basically, because you set the websocket port from the command line, the
     /// `mdbook serve` command needs a way to let the HTML renderer know where
@@ -533,11 +534,13 @@ impl Default for HtmlConfig {
             additional_css: Vec::new(),
             additional_js: Vec::new(),
             fold: Fold::default(),
-            playpen: Playpen::default(),
+            playground: Playground::default(),
             no_section_label: false,
             search: None,
             git_repository_url: None,
             git_repository_icon: None,
+            input_404: None,
+            site_url: None,
             livereload_url: None,
             redirect: HashMap::new(),
         }
@@ -567,24 +570,24 @@ pub struct Fold {
     pub level: u8,
 }
 
-/// Configuration for tweaking how the the HTML renderer handles the playpen.
+/// Configuration for tweaking how the the HTML renderer handles the playground.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
-pub struct Playpen {
-    /// Should playpen snippets be editable? Default: `false`.
+pub struct Playground {
+    /// Should playground snippets be editable? Default: `false`.
     pub editable: bool,
     /// Display the copy button. Default: `true`.
     pub copyable: bool,
     /// Copy JavaScript files for the editor to the output directory?
     /// Default: `true`.
     pub copy_js: bool,
-    /// Display line numbers on playpen snippets. Default: `false`.
+    /// Display line numbers on playground snippets. Default: `false`.
     pub line_numbers: bool,
 }
 
-impl Default for Playpen {
-    fn default() -> Playpen {
-        Playpen {
+impl Default for Playground {
+    fn default() -> Playground {
+        Playground {
             editable: false,
             copyable: true,
             copy_js: true,
@@ -670,6 +673,7 @@ impl<'de, T> Updateable<'de> for T where T: Serialize + Deserialize<'de> {}
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utils::fs::get_404_output_file;
 
     const COMPLEX_CONFIG: &str = r#"
         [book]
@@ -694,7 +698,7 @@ mod tests {
         git-repository-url = "https://foo.com/"
         git-repository-icon = "fa-code-fork"
 
-        [output.html.playpen]
+        [output.html.playground]
         editable = true
         editor = "ace"
 
@@ -725,7 +729,7 @@ mod tests {
             use_default_preprocessors: true,
         };
         let rust_should_be = RustConfig { edition: None };
-        let playpen_should_be = Playpen {
+        let playground_should_be = Playground {
             editable: true,
             copyable: true,
             copy_js: true,
@@ -737,7 +741,7 @@ mod tests {
             additional_css: vec![PathBuf::from("./foo/bar/baz.css")],
             theme: Some(PathBuf::from("./themedir")),
             default_theme: Some(String::from("rust")),
-            playpen: playpen_should_be,
+            playground: playground_should_be,
             git_repository_url: Some(String::from("https://foo.com/")),
             git_repository_icon: Some(String::from("fa-code-fork")),
             redirect: vec![
@@ -854,7 +858,7 @@ mod tests {
         // is happy...
         let src = COMPLEX_CONFIG;
         let mut config = Config::from_str(src).unwrap();
-        let key = "output.html.playpen.editable";
+        let key = "output.html.playground.editable";
 
         assert_eq!(config.get(key).unwrap(), &Value::Boolean(true));
         *config.get_mut(key).unwrap() = Value::Boolean(false);
@@ -1003,5 +1007,32 @@ mod tests {
         cfg.update_from_env();
 
         assert_eq!(cfg.book.title, Some(should_be));
+    }
+
+    #[test]
+    fn file_404_default() {
+        let src = r#"
+        [output.html]
+        destination = "my-book"
+        "#;
+
+        let got = Config::from_str(src).unwrap();
+        let html_config = got.html_config().unwrap();
+        assert_eq!(html_config.input_404, None);
+        assert_eq!(&get_404_output_file(&html_config.input_404), "404.html");
+    }
+
+    #[test]
+    fn file_404_custom() {
+        let src = r#"
+        [output.html]
+        input-404= "missing.md"
+        output-404= "missing.html"
+        "#;
+
+        let got = Config::from_str(src).unwrap();
+        let html_config = got.html_config().unwrap();
+        assert_eq!(html_config.input_404, Some("missing.md".to_string()));
+        assert_eq!(&get_404_output_file(&html_config.input_404), "missing.html");
     }
 }

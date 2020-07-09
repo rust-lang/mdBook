@@ -101,7 +101,7 @@ impl HelperDef for RenderToc {
 
             // Part title
             if let Some(title) = item.get("part") {
-                out.write("<li class=\"part-title active\">")?;
+                out.write("<li class=\"part-title\">")?;
                 out.write(title)?;
                 out.write("</li>")?;
                 continue;
