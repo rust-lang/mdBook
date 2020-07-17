@@ -175,23 +175,23 @@ function playground_text(playground) {
 
         var buttons = document.createElement('div');
         buttons.className = 'buttons';
-        buttons.innerHTML = "<button class=\"fa fa-expand\" title=\"Show hidden lines\" aria-label=\"Show hidden lines\"></button>";
+        buttons.innerHTML = "<button class=\"fa fa-eye\" title=\"Show hidden lines\" aria-label=\"Show hidden lines\"></button>";
 
         // add expand button
         var pre_block = block.parentNode;
         pre_block.insertBefore(buttons, pre_block.firstChild);
 
         pre_block.querySelector('.buttons').addEventListener('click', function (e) {
-            if (e.target.classList.contains('fa-expand')) {
-                e.target.classList.remove('fa-expand');
-                e.target.classList.add('fa-compress');
+            if (e.target.classList.contains('fa-eye')) {
+                e.target.classList.remove('fa-eye');
+                e.target.classList.add('fa-eye-slash');
                 e.target.title = 'Hide lines';
                 e.target.setAttribute('aria-label', e.target.title);
 
                 block.classList.remove('hide-boring');
-            } else if (e.target.classList.contains('fa-compress')) {
-                e.target.classList.remove('fa-compress');
-                e.target.classList.add('fa-expand');
+            } else if (e.target.classList.contains('fa-eye-slash')) {
+                e.target.classList.remove('fa-eye-slash');
+                e.target.classList.add('fa-eye');
                 e.target.title = 'Show hidden lines';
                 e.target.setAttribute('aria-label', e.target.title);
 
