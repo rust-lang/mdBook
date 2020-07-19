@@ -30,6 +30,8 @@
   can disable the 404 page generation, or set up your own 404 handling in your
   web server.
   [#1221](https://github.com/rust-lang/mdBook/pull/1221)
+- The `debug` and `output` features have been removed as they were unused.
+  [#1211](https://github.com/rust-lang/mdBook/pull/1211)
 - If you are using customized themes, you may want to consider setting the
   `preferred-dark-theme` config setting, as it now defaults to "navy".
   [#1199](https://github.com/rust-lang/mdBook/pull/1199)
