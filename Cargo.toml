@@ -1,6 +1,6 @@
 [package]
 name = "mdbook"
-version = "0.4.0"
+version = "0.4.1"
 authors = [
     "Mathieu David <mathieudavid@mathieudavid.org>",
     "Michael-F-Bryan <michaelfbryan@gmail.com>",
@@ -48,7 +48,7 @@ elasticlunr-rs = { version = "2.3", optional = true, default-features = false }
 ammonia = { version = "3", optional = true }
 
 [dev-dependencies]
-select = "0.4"
+select = "0.5"
 pretty_assertions = "0.6"
 walkdir = "2.0"
 
