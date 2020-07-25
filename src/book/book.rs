@@ -264,6 +264,10 @@ fn load_chapter<P: AsRef<Path>>(
             format!("Unable to read \"{}\" ({})", link.name, location.display())
         })?;
 
+        if content.as_bytes().starts_with(b"\xef\xbb\xbf") {
+            content = content[3..].to_string()
+        }
+
         let stripped = location
             .strip_prefix(&src_dir)
             .expect("Chapters are always inside a book");
