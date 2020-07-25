@@ -173,7 +173,9 @@ impl CmdRenderer {
                 return Ok(());
             } else {
                 error!(
-                    "The command `{}` wasn't found, is the `{}` backend installed?",
+                    "The command `{0}` wasn't found, is the \"{1}\" backend installed? \
+                    If you want to ignore this error when the \"{1}\" backend is not installed, \
+                    set `optional = true` in the `[output.{1}]` section of the book.toml configuration file.",
                     self.cmd, self.name
                 );
             }

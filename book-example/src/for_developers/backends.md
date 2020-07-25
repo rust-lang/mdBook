@@ -334,7 +334,9 @@ the usual `RUST_LOG` to control logging verbosity.
 If you enable a backend that isn't installed, the default behavior is to throw an error:
 
 ```text
-The command wasn't found, is the "wordcount" backend installed?
+The command `mdbook-wordcount` wasn't found, is the "wordcount" backend installed?
+If you want to ignore this error when the "wordcount" backend is not installed,
+set `optional = true` in the `[output.wordcount]` section of the book.toml configuration file.
 ```
 
 This behavior can be changed by marking the backend as optional.
