@@ -569,6 +569,7 @@ fn stringify_events(events: Vec<Event<'_>>) -> String {
         .into_iter()
         .filter_map(|t| match t {
             Event::Text(text) | Event::Code(text) => Some(text.into_string()),
+            Event::SoftBreak => Some(String::from(" ")),
             _ => None,
         })
         .collect()
@@ -918,6 +919,26 @@ mod tests {
                 nested_items: Vec::new(),
             }),
         ];
+
+        let mut parser = SummaryParser::new(src);
+        let got = parser
+            .parse_numbered(&mut 0, &mut SectionNumber::default())
+            .unwrap();
+
+        assert_eq!(got, should_be);
+    }
+
+    /// Regression test for https://github.com/rust-lang/mdBook/issues/1218
+    /// Ensure chapter names spread across multiple lines have spaces between all the words.
+    #[test]
+    fn add_space_for_multi_line_chapter_names() {
+        let src = "- [Chapter\ntitle](./chapter.md)";
+        let should_be = vec![SummaryItem::Link(Link {
+            name: String::from("Chapter title"),
+            location: Some(PathBuf::from("./chapter.md")),
+            number: Some(SectionNumber(vec![1])),
+            nested_items: Vec::new(),
+        })];
 
         let mut parser = SummaryParser::new(src);
         let got = parser
