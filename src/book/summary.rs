@@ -333,7 +333,7 @@ impl<'a> SummaryParser<'a> {
 
     /// Finishes parsing a link once the `Event::Start(Tag::Link(..))` has been opened.
     fn parse_link(&mut self, href: String) -> Link {
-        let href = href.replace("%20", " ").replace("+", " ");
+        let href = href.replace("%20", " ");
         let link_content = collect_events!(self.stream, end Tag::Link(..));
         let name = stringify_events(link_content);
 
@@ -948,10 +948,10 @@ mod tests {
 
         assert_eq!(got, should_be);
     }
-    
+
     #[test]
     fn allow_space_in_link_destination() {
-        let src = "- [test1](./test%20link1.md)\n- [test2](./test+link2.md)\n- [test3](<./test link3.md>)";
+        let src = "- [test1](./test%20link1.md)\n- [test2](<./test link2.md>)";
         let should_be = vec![
             SummaryItem::Link(Link {
                 name: String::from("test1"),
@@ -965,18 +965,12 @@ mod tests {
                 number: Some(SectionNumber(vec![2])),
                 nested_items: Vec::new(),
             }),
-            SummaryItem::Link(Link {
-                name: String::from("test3"),
-                location: Some(PathBuf::from("./test link3.md")),
-                number: Some(SectionNumber(vec![3])),
-                nested_items: Vec::new(),
-            }),
         ];
         let mut parser = SummaryParser::new(src);
         let got = parser
             .parse_numbered(&mut 0, &mut SectionNumber::default())
             .unwrap();
-        
+
         assert_eq!(got, should_be);
     }
 }
