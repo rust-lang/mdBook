@@ -11,7 +11,8 @@ fi
 TAG=${GITHUB_REF#*/tags/}
 
 host=$(rustc -Vv | grep ^host: | sed -e "s/host: //g")
-cargo rustc --bin mdbook --release -- -C lto
+export CARGO_PROFILE_RELEASE_LTO=true
+cargo build --bin mdbook --release
 cd target/release
 case $1 in
   ubuntu* | macos*)
