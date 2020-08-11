@@ -1,5 +1,25 @@
 # Changelog
 
+## mdBook 0.4.2
+[649f355...9278b83](https://github.com/rust-lang/mdBook/compare/649f355...9278b83)
+
+### Changed
+- The "show hidden lines" icon has changed from the "expand" icon to an "eye".
+  [#1281](https://github.com/rust-lang/mdBook/pull/1281)
+- Updated highlight.js. This adds several languages: c, c-like (effectively
+  cpp), csharp (replaces cs), kotlin, less, lua, php-template, plaintext,
+  python-repl, r, scss, typescript.
+  [#1277](https://github.com/rust-lang/mdBook/pull/1277)
+
+### Fixed
+- Fixed SUMMARY links that contained newlines.
+  [#1291](https://github.com/rust-lang/mdBook/pull/1291)
+- Fixed SUMMARY links that contain `%20` spaces.
+  [#1293](https://github.com/rust-lang/mdBook/pull/1293)
+- Fixed favicon so that if only the png or svg is overridden, the other is not
+  automatically included in the `<link>` tag.
+  [#1272](https://github.com/rust-lang/mdBook/pull/1272)
+
 ## mdBook 0.4.1
 [d4df7e7...649f355](https://github.com/rust-lang/mdBook/compare/d4df7e7...649f355)
 
