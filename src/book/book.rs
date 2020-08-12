@@ -1,4 +1,5 @@
 use std::collections::VecDeque;
+use std::ffi::OsStr;
 use std::fmt::{self, Display, Formatter};
 use std::fs::{self, File};
 use std::io::{Read, Write};
@@ -159,6 +160,8 @@ pub struct Chapter {
     pub path: Option<PathBuf>,
     /// An ordered list of the names of each chapter above this one, in the hierarchy.
     pub parent_names: Vec<String>,
+    /// The link anchor, if this character is reached from a anchor.
+    pub anchor: Option<String>,
 }
 
 impl Chapter {
@@ -168,12 +171,14 @@ impl Chapter {
         content: String,
         path: P,
         parent_names: Vec<String>,
+        anchor: Option<String>,
     ) -> Chapter {
         Chapter {
             name: name.to_string(),
             content,
             path: Some(path.into()),
             parent_names,
+            anchor,
             ..Default::default()
         }
     }
@@ -246,15 +251,31 @@ fn load_chapter<P: AsRef<Path>>(
     parent_names: Vec<String>,
 ) -> Result<Chapter> {
     let src_dir = src_dir.as_ref();
+    let mut anchor = None;
 
     let mut ch = if let Some(ref link_location) = link.location {
         debug!("Loading {} ({})", link.name, link_location.display());
 
-        let location = if link_location.is_absolute() {
+        let mut location = if link_location.is_absolute() {
             link_location.clone()
         } else {
             src_dir.join(link_location)
         };
+        if !location.exists() {
+            let file_name =
+                if let Some(Some(file_name_str)) = location.file_name().map(OsStr::to_str) {
+                    Some(String::from(file_name_str))
+                } else {
+                    None
+                };
+            if let Some(name) = file_name {
+                if name.contains("#") {
+                    let values = name.rsplitn(2, "#").collect::<Vec<_>>();
+                    anchor = Some(values[0].to_string());
+                    location.set_file_name(values[1]);
+                }
+            }
+        }
 
         let mut f = File::open(&location)
             .with_context(|| format!("Chapter file not found, {}", link_location.display()))?;
@@ -268,13 +289,12 @@ fn load_chapter<P: AsRef<Path>>(
             .strip_prefix(&src_dir)
             .expect("Chapters are always inside a book");
 
-        Chapter::new(&link.name, content, stripped, parent_names.clone())
+        Chapter::new(&link.name, content, stripped, parent_names.clone(), anchor)
     } else {
         Chapter::new_draft(&link.name, parent_names.clone())
     };
 
     let mut sub_item_parents = parent_names.clone();
-
     ch.number = link.number.clone();
 
     sub_item_parents.push(link.name.clone());
@@ -387,9 +407,27 @@ And here is some \
             DUMMY_SRC.to_string(),
             "chapter_1.md",
             Vec::new(),
+            None,
         );
 
         let got = load_chapter(&link, temp_dir.path(), Vec::new()).unwrap();
+        assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn load_a_single_chapter_from_disk_with_anchor() {
+        let (link, temp_dir) = dummy_link();
+        let should_be = Chapter::new(
+            "Chapter 1",
+            DUMMY_SRC.to_string(),
+            "chapter_1.md",
+            Vec::new(),
+            Some("some".to_owned()),
+        );
+        let mut path = link.location.unwrap().clone();
+        path.set_file_name("chapter_1.md#some");
+        let new_link = Link::new(link.name, path);
+        let got = load_chapter(&new_link, temp_dir.path(), Vec::new()).unwrap();
         assert_eq!(got, should_be);
     }
 
@@ -412,6 +450,7 @@ And here is some \
             path: Some(PathBuf::from("second.md")),
             parent_names: vec![String::from("Chapter 1")],
             sub_items: Vec::new(),
+            anchor: None,
         };
         let should_be = BookItem::Chapter(Chapter {
             name: String::from("Chapter 1"),
@@ -424,6 +463,7 @@ And here is some \
                 BookItem::Separator,
                 BookItem::Chapter(nested.clone()),
             ],
+            anchor: None,
         });
 
         let got = load_summary_item(&SummaryItem::Link(root), temp.path(), Vec::new()).unwrap();
@@ -489,6 +529,7 @@ And here is some \
                             String::new(),
                             "Chapter_1/hello.md",
                             Vec::new(),
+                            None,
                         )),
                         BookItem::Separator,
                         BookItem::Chapter(Chapter::new(
@@ -496,8 +537,10 @@ And here is some \
                             String::new(),
                             "Chapter_1/goodbye.md",
                             Vec::new(),
+                            None,
                         )),
                     ],
+                    anchor: None,
                 }),
                 BookItem::Separator,
             ],
@@ -541,6 +584,7 @@ And here is some \
                             String::new(),
                             "Chapter_1/hello.md",
                             Vec::new(),
+                            None,
                         )),
                         BookItem::Separator,
                         BookItem::Chapter(Chapter::new(
@@ -548,8 +592,10 @@ And here is some \
                             String::new(),
                             "Chapter_1/goodbye.md",
                             Vec::new(),
+                            None,
                         )),
                     ],
+                    anchor: None,
                 }),
                 BookItem::Separator,
             ],
