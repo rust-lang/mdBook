@@ -210,6 +210,7 @@ The following configuration options are available:
 - **site-url:** The url where the book will be hosted. This is required to ensure
   navigation links and script/css imports in the 404 file work correctly, even when accessing
   urls in subdirectories. Defaults to `/`.
+- **print:** A subtable for configuring the printed version (PDF in most case) of HTML.
 
 Available configuration options for the `[output.html.fold]` table:
 
@@ -250,6 +251,11 @@ Available configuration options for the `[output.html.search]` table:
   level or less. Defaults to `3`. (`### This is a level 3 heading`)
 - **copy-js:** Copy JavaScript files for the search implementation to the output
   directory. Defaults to `true`.
+
+Available configuration options for the `[output.html.print]` table:
+
+- **page-break:** Insert page breaks between chapters. Defaults to `false`.
+- **chapter-name** Insert chapter name before each chapter. Defaults to `false`.
 
 This shows all available HTML output options in the **book.toml**:
 
@@ -295,6 +301,10 @@ boost-paragraph = 1
 expand = true
 heading-split-level = 3
 copy-js = true
+
+[output.html.print]
+page-break = true
+chapter-name = true
 
 [output.html.redirect]
 "/appendices/bibliography.html" = "https://rustc-dev-guide.rust-lang.org/appendix/bibliography.html"

@@ -519,6 +519,8 @@ pub struct HtmlConfig {
     /// The mapping from old pages to new pages/URLs to use when generating
     /// redirects.
     pub redirect: HashMap<String, String>,
+    /// Print settings.
+    pub print: Print,
 }
 
 impl Default for HtmlConfig {
@@ -543,6 +545,7 @@ impl Default for HtmlConfig {
             site_url: None,
             livereload_url: None,
             redirect: HashMap::new(),
+            print: Print::default(),
         }
     }
 }
@@ -592,6 +595,25 @@ impl Default for Playground {
             copyable: true,
             copy_js: true,
             line_numbers: false,
+        }
+    }
+}
+
+/// Configuration for printing of HTML
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct Print {
+    /// Insert page breaks between chapters. Default: `false`.
+    pub page_break: bool,
+    /// Insert chapter name before each chapter. Default: `false`.
+    pub chapter_name: bool,
+}
+
+impl Default for Print {
+    fn default() -> Print {
+        Print {
+            page_break: false,
+            chapter_name: false,
         }
     }
 }
@@ -706,6 +728,10 @@ mod tests {
         "index.html" = "overview.html"
         "nexted/page.md" = "https://rust-lang.org/"
 
+        [output.html.print]
+        page-break = true
+        chapter-name = true
+
         [preprocessor.first]
 
         [preprocessor.second]
@@ -735,6 +761,10 @@ mod tests {
             copy_js: true,
             line_numbers: false,
         };
+        let print_should_be = Print {
+            page_break: true,
+            chapter_name: true,
+        };
         let html_should_be = HtmlConfig {
             curly_quotes: true,
             google_analytics: Some(String::from("123456")),
@@ -753,6 +783,7 @@ mod tests {
             ]
             .into_iter()
             .collect(),
+            print: print_should_be,
             ..Default::default()
         };
 
