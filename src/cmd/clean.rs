@@ -1,6 +1,6 @@
 use crate::get_book_dir;
+use anyhow::Context;
 use clap::{App, ArgMatches, SubCommand};
-use mdbook::errors::*;
 use mdbook::MDBook;
 use std::fs;
 
@@ -31,7 +31,8 @@ pub fn execute(args: &ArgMatches) -> mdbook::errors::Result<()> {
     };
 
     if dir_to_remove.exists() {
-        fs::remove_dir_all(&dir_to_remove).chain_err(|| "Unable to remove the build directory")?;
+        fs::remove_dir_all(&dir_to_remove)
+            .with_context(|| "Unable to remove the build directory")?;
     }
 
     Ok(())

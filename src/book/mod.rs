@@ -5,6 +5,7 @@
 //!
 //! [1]: ../index.html
 
+#[allow(clippy::module_inception)]
 mod book;
 mod init;
 mod summary;
@@ -27,7 +28,7 @@ use crate::preprocess::{
 use crate::renderer::{CmdRenderer, HtmlHandlebars, MarkdownRenderer, RenderContext, Renderer};
 use crate::utils;
 
-use crate::config::Config;
+use crate::config::{Config, RustEdition};
 
 /// The object used to manage and build a book.
 pub struct MDBook {
@@ -126,13 +127,12 @@ impl MDBook {
     /// ```no_run
     /// # use mdbook::MDBook;
     /// # use mdbook::book::BookItem;
-    /// # #[allow(unused_variables)]
-    /// # fn main() {
     /// # let book = MDBook::load("mybook").unwrap();
     /// for item in book.iter() {
     ///     match *item {
     ///         BookItem::Chapter(ref chapter) => {},
     ///         BookItem::Separator => {},
+    ///         BookItem::PartTitle(ref title) => {}
     ///     }
     /// }
     ///
@@ -143,7 +143,6 @@ impl MDBook {
     /// // 2. Chapter 2
     /// //
     /// // etc.
-    /// # }
     /// ```
     pub fn iter(&self) -> BookItems<'_> {
         self.book.iter()
@@ -229,7 +228,7 @@ impl MDBook {
 
         renderer
             .render(&render_context)
-            .chain_err(|| "Rendering failed")
+            .with_context(|| "Rendering failed")
     }
 
     /// You can change the default renderer to another one by using this method.
@@ -271,27 +270,42 @@ impl MDBook {
 
         for item in book.iter() {
             if let BookItem::Chapter(ref ch) = *item {
-                if !ch.path.as_os_str().is_empty() {
-                    let path = self.source_dir().join(&ch.path);
-                    info!("Testing file: {:?}", path);
+                let chapter_path = match ch.path {
+                    Some(ref path) if !path.as_os_str().is_empty() => path,
+                    _ => continue,
+                };
 
-                    // write preprocessed file to tempdir
-                    let path = temp_dir.path().join(&ch.path);
-                    let mut tmpf = utils::fs::create_file(&path)?;
-                    tmpf.write_all(ch.content.as_bytes())?;
+                let path = self.source_dir().join(&chapter_path);
+                info!("Testing file: {:?}", path);
 
-                    let output = Command::new("rustdoc")
-                        .arg(&path)
-                        .arg("--test")
-                        .args(&library_args)
-                        .output()?;
+                // write preprocessed file to tempdir
+                let path = temp_dir.path().join(&chapter_path);
+                let mut tmpf = utils::fs::create_file(&path)?;
+                tmpf.write_all(ch.content.as_bytes())?;
 
-                    if !output.status.success() {
-                        bail!(ErrorKind::Subprocess(
-                            "Rustdoc returned an error".to_string(),
-                            output
-                        ));
+                let mut cmd = Command::new("rustdoc");
+                cmd.arg(&path).arg("--test").args(&library_args);
+
+                if let Some(edition) = self.config.rust.edition {
+                    match edition {
+                        RustEdition::E2015 => {
+                            cmd.args(&["--edition", "2015"]);
+                        }
+                        RustEdition::E2018 => {
+                            cmd.args(&["--edition", "2018"]);
+                        }
                     }
+                }
+
+                let output = cmd.output()?;
+
+                if !output.status.success() {
+                    bail!(
+                        "rustdoc returned an error:\n\
+                        \n--- stdout\n{}\n--- stderr\n{}",
+                        String::from_utf8_lossy(&output.stdout),
+                        String::from_utf8_lossy(&output.stderr)
+                    );
                 }
             }
         }
@@ -413,7 +427,7 @@ fn interpret_custom_preprocessor(key: &str, table: &Value) -> Box<CmdPreprocesso
         .map(ToString::to_string)
         .unwrap_or_else(|| format!("mdbook-{}", key));
 
-    Box::new(CmdPreprocessor::new(key.to_string(), command.to_string()))
+    Box::new(CmdPreprocessor::new(key.to_string(), command))
 }
 
 fn interpret_custom_renderer(key: &str, table: &Value) -> Box<CmdRenderer> {
@@ -426,7 +440,7 @@ fn interpret_custom_renderer(key: &str, table: &Value) -> Box<CmdRenderer> {
 
     let command = table_dot_command.unwrap_or_else(|| format!("mdbook-{}", key));
 
-    Box::new(CmdRenderer::new(key.to_string(), command.to_string()))
+    Box::new(CmdRenderer::new(key.to_string(), command))
 }
 
 /// Check whether we should run a particular `Preprocessor` in combination

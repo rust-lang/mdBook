@@ -16,9 +16,9 @@ impl HelperDef for RenderToc {
     fn call<'reg: 'rc, 'rc>(
         &self,
         _h: &Helper<'reg, 'rc>,
-        _r: &'reg Handlebars,
+        _r: &'reg Handlebars<'_>,
         ctx: &'rc Context,
-        rc: &mut RenderContext<'reg>,
+        rc: &mut RenderContext<'reg, 'rc>,
         out: &mut dyn Output,
     ) -> Result<(), RenderError> {
         // get value from context data
@@ -32,7 +32,7 @@ impl HelperDef for RenderToc {
             .evaluate(ctx, "@root/path")?
             .as_json()
             .as_str()
-            .ok_or(RenderError::new("Type error for `path`, string expected"))?
+            .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
             .replace("\"", "");
 
         let current_section = rc
@@ -46,17 +46,13 @@ impl HelperDef for RenderToc {
             .evaluate(ctx, "@root/fold_enable")?
             .as_json()
             .as_bool()
-            .ok_or(RenderError::new(
-                "Type error for `fold_enable`, bool expected",
-            ))?;
+            .ok_or_else(|| RenderError::new("Type error for `fold_enable`, bool expected"))?;
 
         let fold_level = rc
             .evaluate(ctx, "@root/fold_level")?
             .as_json()
             .as_u64()
-            .ok_or(RenderError::new(
-                "Type error for `fold_level`, u64 expected",
-            ))?;
+            .ok_or_else(|| RenderError::new("Type error for `fold_level`, u64 expected"))?;
 
         out.write("<ol class=\"chapter\">")?;
 
@@ -75,18 +71,15 @@ impl HelperDef for RenderToc {
                 ("", 1)
             };
 
-            let is_expanded = {
-                if !fold_enable {
-                    // Disable fold. Expand all chapters.
-                    true
-                } else if !section.is_empty() && current_section.starts_with(section) {
-                    // The section is ancestor or the current section itself.
+            let is_expanded =
+                if !fold_enable || (!section.is_empty() && current_section.starts_with(section)) {
+                    // Expand if folding is disabled, or if the section is an
+                    // ancestor or the current section itself.
                     true
                 } else {
                     // Levels that are larger than this would be folded.
                     level - 1 < fold_level as usize
-                }
-            };
+                };
 
             if level > current_level {
                 while level > current_level {
@@ -104,6 +97,14 @@ impl HelperDef for RenderToc {
                 write_li_open_tag(out, is_expanded, false)?;
             } else {
                 write_li_open_tag(out, is_expanded, item.get("section").is_none())?;
+            }
+
+            // Part title
+            if let Some(title) = item.get("part") {
+                out.write("<li class=\"part-title\">")?;
+                out.write(title)?;
+                out.write("</li>")?;
+                continue;
             }
 
             // Link
@@ -191,7 +192,7 @@ fn write_li_open_tag(
     is_expanded: bool,
     is_affix: bool,
 ) -> Result<(), std::io::Error> {
-    let mut li = String::from("<li class=\"");
+    let mut li = String::from("<li class=\"chapter-item ");
     if is_expanded {
         li.push_str("expanded ");
     }

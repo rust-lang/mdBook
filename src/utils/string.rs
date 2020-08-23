@@ -1,4 +1,3 @@
-use itertools::Itertools;
 use regex::Regex;
 use std::ops::Bound::{Excluded, Included, Unbounded};
 use std::ops::RangeBounds;
@@ -10,11 +9,17 @@ pub fn take_lines<R: RangeBounds<usize>>(s: &str, range: R) -> String {
         Included(&n) => n,
         Unbounded => 0,
     };
-    let mut lines = s.lines().skip(start);
+    let lines = s.lines().skip(start);
     match range.end_bound() {
-        Excluded(end) => lines.take(end.saturating_sub(start)).join("\n"),
-        Included(end) => lines.take((end + 1).saturating_sub(start)).join("\n"),
-        Unbounded => lines.join("\n"),
+        Excluded(end) => lines
+            .take(end.saturating_sub(start))
+            .collect::<Vec<_>>()
+            .join("\n"),
+        Included(end) => lines
+            .take((end + 1).saturating_sub(start))
+            .collect::<Vec<_>>()
+            .join("\n"),
+        Unbounded => lines.collect::<Vec<_>>().join("\n"),
     }
 }
 
@@ -43,11 +48,9 @@ pub fn take_anchored_lines(s: &str, anchor: &str) -> String {
                     }
                 }
             }
-        } else {
-            if let Some(cap) = ANCHOR_START.captures(l) {
-                if &cap["anchor_name"] == anchor {
-                    anchor_found = true;
-                }
+        } else if let Some(cap) = ANCHOR_START.captures(l) {
+            if &cap["anchor_name"] == anchor {
+                anchor_found = true;
             }
         }
     }
@@ -96,16 +99,14 @@ pub fn take_rustdoc_include_anchored_lines(s: &str, anchor: &str) -> String {
                     }
                 }
             }
-        } else {
-            if let Some(cap) = ANCHOR_START.captures(l) {
-                if &cap["anchor_name"] == anchor {
-                    within_anchored_section = true;
-                }
-            } else if !ANCHOR_END.is_match(l) {
-                output.push_str("# ");
-                output.push_str(l);
-                output.push_str("\n");
+        } else if let Some(cap) = ANCHOR_START.captures(l) {
+            if &cap["anchor_name"] == anchor {
+                within_anchored_section = true;
             }
+        } else if !ANCHOR_END.is_match(l) {
+            output.push_str("# ");
+            output.push_str(l);
+            output.push_str("\n");
         }
     }
 

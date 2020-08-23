@@ -28,11 +28,8 @@ pub fn write_file<P: AsRef<Path>>(build_dir: &Path, filename: P, content: &[u8])
 /// ```rust
 /// # use std::path::Path;
 /// # use mdbook::utils::fs::path_to_root;
-/// #
-/// # fn main() {
 /// let path = Path::new("some/relative/path");
 /// assert_eq!(path_to_root(path), "../../");
-/// # }
 /// ```
 ///
 /// **note:** it's not very fool-proof, if you find a situation where
@@ -95,13 +92,15 @@ pub fn copy_files_except_ext(
     from: &Path,
     to: &Path,
     recursive: bool,
+    avoid_dir: Option<&PathBuf>,
     ext_blacklist: &[&str],
 ) -> Result<()> {
     debug!(
-        "Copying all files from {} to {} (blacklist: {:?})",
+        "Copying all files from {} to {} (blacklist: {:?}), avoiding {:?}",
         from.display(),
         to.display(),
-        ext_blacklist
+        ext_blacklist,
+        avoid_dir
     );
 
     // Check that from and to are different
@@ -119,6 +118,12 @@ pub fn copy_files_except_ext(
                 continue;
             }
 
+            if let Some(avoid) = avoid_dir {
+                if entry.path() == *avoid {
+                    continue;
+                }
+            }
+
             // check if output dir already exists
             if !to.join(entry.file_name()).exists() {
                 fs::create_dir(&to.join(entry.file_name()))?;
@@ -128,6 +133,7 @@ pub fn copy_files_except_ext(
                 &from.join(entry.file_name()),
                 &to.join(entry.file_name()),
                 true,
+                avoid_dir,
                 ext_blacklist,
             )?;
         } else if metadata.is_file() {
@@ -169,6 +175,13 @@ pub fn copy_files_except_ext(
         }
     }
     Ok(())
+}
+
+pub fn get_404_output_file(input_404: &Option<String>) -> String {
+    input_404
+        .as_ref()
+        .unwrap_or(&"404.md".to_string())
+        .replace(".md", ".html")
 }
 
 #[cfg(test)]
@@ -215,7 +228,7 @@ mod tests {
         }
 
         if let Err(e) =
-            copy_files_except_ext(&tmp.path(), &tmp.path().join("output"), true, &["md"])
+            copy_files_except_ext(&tmp.path(), &tmp.path().join("output"), true, None, &["md"])
         {
             panic!("Error while executing the function:\n{:?}", e);
         }

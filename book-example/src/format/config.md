@@ -10,6 +10,9 @@ title = "Example book"
 author = "John Doe"
 description = "The example book covers examples."
 
+[rust]
+edition = "2018"
+
 [build]
 build-dir = "my-example-book"
 create-missing = false
@@ -54,6 +57,22 @@ src = "my-src"  # the source files will be found in `root/my-src` instead of `ro
 language = "en"
 ```
 
+### Rust options
+
+Options for the Rust language, relevant to running tests and playground
+integration.
+
+- **edition**: Rust edition to use by default for the code snippets. Default
+  is "2015". Individual code blocks can be controlled with the `edition2015`
+  or `edition2018` annotations, such as:
+
+  ~~~text
+  ```rust,edition2015
+  // This only works in 2015.
+  let try = true;
+  ```
+  ~~~
+
 ### Build options
 
 This controls the build process of your book.
@@ -81,7 +100,7 @@ This controls the build process of your book.
 
 The following preprocessors are available and included by default:
 
-- `links`: Expand the `{{ #playpen }}`, `{{ #include }}`, and `{{ #rustdoc_include }}` handlebars
+- `links`: Expand the `{{ #playground }}`, `{{ #include }}`, and `{{ #rustdoc_include }}` handlebars
   helpers in a chapter to include the contents of a file.
 - `index`: Convert all chapter files named `README.md` into `index.md`. That is
   to say, all `README.md` would be rendered to an index file `index.html` in the
@@ -153,11 +172,12 @@ The following configuration options are available:
 - **preferred-dark-theme:** The default dark theme. This theme will be used if
   the browser requests the dark version of the site via the
   ['prefers-color-scheme'](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)
-  CSS media query. Defaults to the same theme as `default-theme`.
+  CSS media query. Defaults to `navy`.
 - **curly-quotes:** Convert straight quotes to curly quotes, except for those
   that occur in code blocks and code spans. Defaults to `false`.
 - **mathjax-support:** Adds support for [MathJax](mathjax.md). Defaults to
   `false`.
+- **copy-fonts:** Copies fonts.css and respective font files to the output directory and use them in the default theme. Defaults to `true`.
 - **google-analytics:** If you use Google Analytics, this option lets you enable
   it by simply specifying your ID in the configuration file.
 - **additional-css:** If you need to slightly change the appearance of your book
@@ -171,14 +191,26 @@ The following configuration options are available:
   contents column. For example, "1.", "2.1". Set this option to true to disable
   those labels. Defaults to `false`.
 - **fold:** A subtable for configuring sidebar section-folding behavior.
-- **playpen:** A subtable for configuring various playpen settings.
+- **playground:** A subtable for configuring various playground settings.
 - **search:** A subtable for configuring the in-browser search functionality.
   mdBook must be compiled with the `search` feature enabled (on by default).
 - **git-repository-url:**  A url to the git repository for the book. If provided
   an icon link will be output in the menu bar of the book.
 - **git-repository-icon:** The FontAwesome icon class to use for the git
   repository link. Defaults to `fa-github`.
-  
+- **redirect:** A subtable used for generating redirects when a page is moved.
+  The table contains key-value pairs where the key is where the redirect file
+  needs to be created, as an absolute path from the build directory, (e.g.
+  `/appendices/bibliography.html`). The value can be any valid URI the
+  browser should navigate to (e.g. `https://rust-lang.org/`,
+  `/overview.html`, or `../bibliography.html`).
+- **input-404:** The name of the markdown file used for misssing files.
+  The corresponding output file will be the same, with the extension replaced with `html`.
+  Defaults to `404.md`.
+- **site-url:** The url where the book will be hosted. This is required to ensure
+  navigation links and script/css imports in the 404 file work correctly, even when accessing
+  urls in subdirectories. Defaults to `/`.
+
 Available configuration options for the `[output.html.fold]` table:
 
 - **enable:** Enable section-folding. When off, all folds are open.
@@ -186,7 +218,7 @@ Available configuration options for the `[output.html.fold]` table:
 - **level:** The higher the more folded regions are open. When level is 0, all
   folds are closed. Defaults to `0`.
 
-Available configuration options for the `[output.html.playpen]` table:
+Available configuration options for the `[output.html.playground]` table:
 
 - **editable:** Allow editing the source code. Defaults to `false`.
 - **copyable:** Display the copy button on code snippets. Defaults to `true`.
@@ -233,18 +265,21 @@ default-theme = "light"
 preferred-dark-theme = "navy"
 curly-quotes = true
 mathjax-support = false
-google-analytics = "123456"
+copy-fonts = true
+google-analytics = "UA-123456-7"
 additional-css = ["custom.css", "custom2.css"]
 additional-js = ["custom.js"]
 no-section-label = false
 git-repository-url = "https://github.com/rust-lang/mdBook"
 git-repository-icon = "fa-github"
+site-url = "/example-book/"
+input-404 = "not-found.md"
 
 [output.html.fold]
 enable = false
 level = 0
 
-[output.html.playpen]
+[output.html.playground]
 editable = false
 copy-js = true
 line-numbers = false
@@ -260,6 +295,10 @@ boost-paragraph = 1
 expand = true
 heading-split-level = 3
 copy-js = true
+
+[output.html.redirect]
+"/appendices/bibliography.html" = "https://rustc-dev-guide.rust-lang.org/appendix/bibliography.html"
+"/other-installation-methods.html" = "../infra/other-installation-methods.html"
 ```
 
 ### Markdown Renderer
@@ -270,7 +309,7 @@ conjunction with `mdbook test` to see the Markdown that `mdbook` is passing
 to `rustdoc`.
 
 The Markdown renderer is included with `mdbook` but disabled by default.
-Enable it by adding an emtpy table to your `book.toml` as follows:
+Enable it by adding an empty table to your `book.toml` as follows:
 
 ```toml
 [output.markdown]
@@ -287,11 +326,17 @@ specify which preprocessors should run before the Markdown renderer.
 A custom renderer can be enabled by adding a `[output.foo]` table to your
 `book.toml`. Similar to [preprocessors](#configuring-preprocessors) this will
 instruct `mdbook` to pass a representation of the book to `mdbook-foo` for
-rendering.
+rendering. See the [alternative backends] chapter for more detail.
 
-Custom renderers will have access to all configuration within their table
-(i.e. anything under `[output.foo]`), and the command to be invoked can be
-manually specified with the `command` field.
+The custom renderer has access to all the fields within its table (i.e.
+anything under `[output.foo]`). mdBook checks for two common fields:
+
+- **command:** The command to execute for this custom renderer. Defaults to
+  the name of the renderer with the `mdbook-` prefix (such as `mdbook-foo`).
+- **optional:** If `true`, then the command will be ignored if it is not
+  installed, otherwise mdBook will fail with an error. Defaults to `false`.
+
+[alternative backends]: ../for_developers/backends.md
 
 ## Environment Variables
 

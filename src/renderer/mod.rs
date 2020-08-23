@@ -19,13 +19,14 @@ mod markdown_renderer;
 
 use shlex::Shlex;
 use std::fs;
-use std::io::{self, Read};
+use std::io::{self, ErrorKind, Read};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
 use crate::book::Book;
 use crate::config::Config;
 use crate::errors::*;
+use toml::Value;
 
 /// An arbitrary `mdbook` backend.
 ///
@@ -102,7 +103,7 @@ impl RenderContext {
 
     /// Load a `RenderContext` from its JSON representation.
     pub fn from_json<R: Read>(reader: R) -> Result<RenderContext> {
-        serde_json::from_reader(reader).chain_err(|| "Unable to deserialize the `RenderContext`")
+        serde_json::from_reader(reader).with_context(|| "Unable to deserialize the `RenderContext`")
     }
 }
 
@@ -158,6 +159,40 @@ impl CmdRenderer {
     }
 }
 
+impl CmdRenderer {
+    fn handle_render_command_error(&self, ctx: &RenderContext, error: io::Error) -> Result<()> {
+        if let ErrorKind::NotFound = error.kind() {
+            // Look for "output.{self.name}.optional".
+            // If it exists and is true, treat this as a warning.
+            // Otherwise, fail the build.
+
+            let optional_key = format!("output.{}.optional", self.name);
+
+            let is_optional = match ctx.config.get(&optional_key) {
+                Some(Value::Boolean(value)) => *value,
+                _ => false,
+            };
+
+            if is_optional {
+                warn!(
+                    "The command `{}` for backend `{}` was not found, \
+                    but was marked as optional.",
+                    self.cmd, self.name
+                );
+                return Ok(());
+            } else {
+                error!(
+                    "The command `{0}` wasn't found, is the \"{1}\" backend installed? \
+                    If you want to ignore this error when the \"{1}\" backend is not installed, \
+                    set `optional = true` in the `[output.{1}]` section of the book.toml configuration file.",
+                    self.cmd, self.name
+                );
+            }
+        }
+        Err(error).with_context(|| "Unable to start the backend")?
+    }
+}
+
 impl Renderer for CmdRenderer {
     fn name(&self) -> &str {
         &self.name
@@ -177,34 +212,22 @@ impl Renderer for CmdRenderer {
             .spawn()
         {
             Ok(c) => c,
-            Err(ref e) if e.kind() == io::ErrorKind::NotFound => {
-                warn!(
-                    "The command wasn't found, is the \"{}\" backend installed?",
-                    self.name
-                );
-                warn!("\tCommand: {}", self.cmd);
-                return Ok(());
-            }
-            Err(e) => {
-                return Err(e).chain_err(|| "Unable to start the backend")?;
-            }
+            Err(e) => return self.handle_render_command_error(ctx, e),
         };
 
-        {
-            let mut stdin = child.stdin.take().expect("Child has stdin");
-            if let Err(e) = serde_json::to_writer(&mut stdin, &ctx) {
-                // Looks like the backend hung up before we could finish
-                // sending it the render context. Log the error and keep going
-                warn!("Error writing the RenderContext to the backend, {}", e);
-            }
-
-            // explicitly close the `stdin` file handle
-            drop(stdin);
+        let mut stdin = child.stdin.take().expect("Child has stdin");
+        if let Err(e) = serde_json::to_writer(&mut stdin, &ctx) {
+            // Looks like the backend hung up before we could finish
+            // sending it the render context. Log the error and keep going
+            warn!("Error writing the RenderContext to the backend, {}", e);
         }
+
+        // explicitly close the `stdin` file handle
+        drop(stdin);
 
         let status = child
             .wait()
-            .chain_err(|| "Error waiting for the backend to complete")?;
+            .with_context(|| "Error waiting for the backend to complete")?;
 
         trace!("{} exited with output: {:?}", self.cmd, status);
 

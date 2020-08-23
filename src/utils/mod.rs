@@ -2,10 +2,11 @@
 
 pub mod fs;
 mod string;
+pub(crate) mod toml_ext;
 use crate::errors::Error;
 use regex::Regex;
 
-use pulldown_cmark::{html, CowStr, Event, Options, Parser, Tag};
+use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, Options, Parser, Tag};
 
 use std::borrow::Cow;
 use std::fmt::Write;
@@ -226,10 +227,10 @@ impl EventQuoteConverter {
 
 fn clean_codeblock_headers(event: Event<'_>) -> Event<'_> {
     match event {
-        Event::Start(Tag::CodeBlock(ref info)) => {
+        Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(ref info))) => {
             let info: String = info.chars().filter(|ch| !ch.is_whitespace()).collect();
 
-            Event::Start(Tag::CodeBlock(CowStr::from(info)))
+            Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(CowStr::from(info))))
         }
         _ => event,
     }
@@ -271,7 +272,7 @@ fn convert_quotes_to_curly(original_text: &str) -> String {
 pub fn log_backtrace(e: &Error) {
     error!("Error: {}", e);
 
-    for cause in e.iter().skip(1) {
+    for cause in e.chain().skip(1) {
         error!("\tCaused By: {}", cause);
     }
 }

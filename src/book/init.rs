@@ -64,19 +64,19 @@ impl BookBuilder {
         info!("Creating a new book with stub content");
 
         self.create_directory_structure()
-            .chain_err(|| "Unable to create directory structure")?;
+            .with_context(|| "Unable to create directory structure")?;
 
         self.create_stub_files()
-            .chain_err(|| "Unable to create stub files")?;
+            .with_context(|| "Unable to create stub files")?;
 
         if self.create_gitignore {
             self.build_gitignore()
-                .chain_err(|| "Unable to create .gitignore")?;
+                .with_context(|| "Unable to create .gitignore")?;
         }
 
         if self.copy_theme {
             self.copy_across_theme()
-                .chain_err(|| "Unable to copy across the theme")?;
+                .with_context(|| "Unable to copy across the theme")?;
         }
 
         self.write_book_toml()?;
@@ -97,12 +97,12 @@ impl BookBuilder {
     fn write_book_toml(&self) -> Result<()> {
         debug!("Writing book.toml");
         let book_toml = self.root.join("book.toml");
-        let cfg = toml::to_vec(&self.config).chain_err(|| "Unable to serialize the config")?;
+        let cfg = toml::to_vec(&self.config).with_context(|| "Unable to serialize the config")?;
 
         File::create(book_toml)
-            .chain_err(|| "Couldn't create book.toml")?
+            .with_context(|| "Couldn't create book.toml")?
             .write_all(&cfg)
-            .chain_err(|| "Unable to write config to book.toml")?;
+            .with_context(|| "Unable to write config to book.toml")?;
         Ok(())
     }
 
@@ -143,7 +143,10 @@ impl BookBuilder {
         variables_css.write_all(theme::VARIABLES_CSS)?;
 
         let mut favicon = File::create(themedir.join("favicon.png"))?;
-        favicon.write_all(theme::FAVICON)?;
+        favicon.write_all(theme::FAVICON_PNG)?;
+
+        let mut favicon = File::create(themedir.join("favicon.svg"))?;
+        favicon.write_all(theme::FAVICON_SVG)?;
 
         let mut js = File::create(themedir.join("book.js"))?;
         js.write_all(theme::JS)?;
@@ -174,13 +177,14 @@ impl BookBuilder {
         let summary = src_dir.join("SUMMARY.md");
         if !summary.exists() {
             trace!("No summary found creating stub summary and chapter_1.md.");
-            let mut f = File::create(&summary).chain_err(|| "Unable to create SUMMARY.md")?;
+            let mut f = File::create(&summary).with_context(|| "Unable to create SUMMARY.md")?;
             writeln!(f, "# Summary")?;
             writeln!(f)?;
             writeln!(f, "- [Chapter 1](./chapter_1.md)")?;
 
             let chapter_1 = src_dir.join("chapter_1.md");
-            let mut f = File::create(&chapter_1).chain_err(|| "Unable to create chapter_1.md")?;
+            let mut f =
+                File::create(&chapter_1).with_context(|| "Unable to create chapter_1.md")?;
             writeln!(f, "# Chapter 1")?;
         } else {
             trace!("Existing summary found, no need to create stub files.");

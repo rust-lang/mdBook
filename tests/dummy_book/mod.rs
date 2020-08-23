@@ -4,12 +4,12 @@
 // Not all features are used in all test crates, so...
 #![allow(dead_code, unused_variables, unused_imports, unused_extern_crates)]
 
+use anyhow::Context;
 use mdbook::errors::*;
+use mdbook::MDBook;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::Path;
-
-use mdbook::MDBook;
 use tempfile::{Builder as TempFileBuilder, TempDir};
 use walkdir::WalkDir;
 
@@ -43,10 +43,10 @@ impl DummyBook {
         let temp = TempFileBuilder::new()
             .prefix("dummy_book-")
             .tempdir()
-            .chain_err(|| "Unable to create temp directory")?;
+            .with_context(|| "Unable to create temp directory")?;
 
         let dummy_book_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/dummy_book");
-        recursive_copy(&dummy_book_root, temp.path()).chain_err(|| {
+        recursive_copy(&dummy_book_root, temp.path()).with_context(|| {
             "Couldn't copy files into a \
              temporary directory"
         })?;
@@ -113,7 +113,7 @@ fn recursive_copy<A: AsRef<Path>, B: AsRef<Path>>(from: A, to: B) -> Result<()> 
     let to = to.as_ref();
 
     for entry in WalkDir::new(&from) {
-        let entry = entry.chain_err(|| "Unable to inspect directory entry")?;
+        let entry = entry.with_context(|| "Unable to inspect directory entry")?;
 
         let original_location = entry.path();
         let relative = original_location
@@ -123,11 +123,11 @@ fn recursive_copy<A: AsRef<Path>, B: AsRef<Path>>(from: A, to: B) -> Result<()> 
 
         if original_location.is_file() {
             if let Some(parent) = new_location.parent() {
-                fs::create_dir_all(parent).chain_err(|| "Couldn't create directory")?;
+                fs::create_dir_all(parent).with_context(|| "Couldn't create directory")?;
             }
 
             fs::copy(&original_location, &new_location)
-                .chain_err(|| "Unable to copy file contents")?;
+                .with_context(|| "Unable to copy file contents")?;
         }
     }
 

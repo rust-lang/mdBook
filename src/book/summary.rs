@@ -25,12 +25,17 @@ use std::path::{Path, PathBuf};
 /// [Title of prefix element](relative/path/to/markdown.md)
 /// ```
 ///
+/// **Part Title:** An optional title for the next collect of numbered chapters. The numbered
+/// chapters can be broken into as many parts as desired.
+///
 /// **Numbered Chapter:** Numbered chapters are the main content of the book,
 /// they
 /// will be numbered and can be nested, resulting in a nice hierarchy (chapters,
 /// sub-chapters, etc.)
 ///
 /// ```markdown
+/// # Title of Part
+///
 /// - [Title of the Chapter](relative/path/to/markdown.md)
 /// ```
 ///
@@ -55,7 +60,7 @@ pub struct Summary {
     pub title: Option<String>,
     /// Chapters before the main text (e.g. an introduction).
     pub prefix_chapters: Vec<SummaryItem>,
-    /// The main chapters in the document.
+    /// The main numbered chapters of the book, broken into one or more possibly named parts.
     pub numbered_chapters: Vec<SummaryItem>,
     /// Items which come after the main document (e.g. a conclusion).
     pub suffix_chapters: Vec<SummaryItem>,
@@ -71,7 +76,7 @@ pub struct Link {
     pub name: String,
     /// The location of the chapter's source file, taking the book's `src`
     /// directory as the root.
-    pub location: PathBuf,
+    pub location: Option<PathBuf>,
     /// The section number, if this chapter is in the numbered section.
     pub number: Option<SectionNumber>,
     /// Any nested items this chapter may contain.
@@ -83,7 +88,7 @@ impl Link {
     pub fn new<S: Into<String>, P: AsRef<Path>>(name: S, location: P) -> Link {
         Link {
             name: name.into(),
-            location: location.as_ref().to_path_buf(),
+            location: Some(location.as_ref().to_path_buf()),
             number: None,
             nested_items: Vec::new(),
         }
@@ -94,7 +99,7 @@ impl Default for Link {
     fn default() -> Self {
         Link {
             name: String::new(),
-            location: PathBuf::new(),
+            location: Some(PathBuf::new()),
             number: None,
             nested_items: Vec::new(),
         }
@@ -108,6 +113,8 @@ pub enum SummaryItem {
     Link(Link),
     /// A separator (`---`).
     Separator,
+    /// A part title.
+    PartTitle(String),
 }
 
 impl SummaryItem {
@@ -134,12 +141,13 @@ impl From<Link> for SummaryItem {
 ///
 /// ```text
 /// summary           ::= title prefix_chapters numbered_chapters
-/// suffix_chapters
+///                         suffix_chapters
 /// title             ::= "# " TEXT
 ///                     | EPSILON
 /// prefix_chapters   ::= item*
 /// suffix_chapters   ::= item*
-/// numbered_chapters ::= dotted_item+
+/// numbered_chapters ::= part+
+/// part              ::= title dotted_item+
 /// dotted_item       ::= INDENT* DOT_POINT item
 /// item              ::= link
 ///                     | separator
@@ -155,6 +163,10 @@ struct SummaryParser<'a> {
     src: &'a str,
     stream: pulldown_cmark::OffsetIter<'a>,
     offset: usize,
+
+    /// We can't actually put an event back into the `OffsetIter` stream, so instead we store it
+    /// here until somebody calls `next_event` again.
+    back: Option<Event<'a>>,
 }
 
 /// Reads `Events` from the provided stream until the corresponding
@@ -203,6 +215,7 @@ impl<'a> SummaryParser<'a> {
             src: text,
             stream: pulldown_parser,
             offset: 0,
+            back: None,
         }
     }
 
@@ -223,13 +236,13 @@ impl<'a> SummaryParser<'a> {
 
         let prefix_chapters = self
             .parse_affix(true)
-            .chain_err(|| "There was an error parsing the prefix chapters")?;
+            .with_context(|| "There was an error parsing the prefix chapters")?;
         let numbered_chapters = self
-            .parse_numbered()
-            .chain_err(|| "There was an error parsing the numbered chapters")?;
+            .parse_parts()
+            .with_context(|| "There was an error parsing the numbered chapters")?;
         let suffix_chapters = self
             .parse_affix(false)
-            .chain_err(|| "There was an error parsing the suffix chapters")?;
+            .with_context(|| "There was an error parsing the suffix chapters")?;
 
         Ok(Summary {
             title,
@@ -239,8 +252,7 @@ impl<'a> SummaryParser<'a> {
         })
     }
 
-    /// Parse the affix chapters. This expects the first event (start of
-    /// paragraph) to have already been consumed by the previous parser.
+    /// Parse the affix chapters.
     fn parse_affix(&mut self, is_prefix: bool) -> Result<Vec<SummaryItem>> {
         let mut items = Vec::new();
         debug!(
@@ -250,17 +262,19 @@ impl<'a> SummaryParser<'a> {
 
         loop {
             match self.next_event() {
-                Some(Event::Start(Tag::List(..))) => {
+                Some(ev @ Event::Start(Tag::List(..)))
+                | Some(ev @ Event::Start(Tag::Heading(1))) => {
                     if is_prefix {
                         // we've finished prefix chapters and are at the start
                         // of the numbered section.
+                        self.back(ev);
                         break;
                     } else {
                         bail!(self.parse_error("Suffix chapters cannot be followed by a list"));
                     }
                 }
                 Some(Event::Start(Tag::Link(_type, href, _title))) => {
-                    let link = self.parse_link(href.to_string())?;
+                    let link = self.parse_link(href.to_string());
                     items.push(SummaryItem::Link(link));
                 }
                 Some(Event::Rule) => items.push(SummaryItem::Separator),
@@ -272,51 +286,110 @@ impl<'a> SummaryParser<'a> {
         Ok(items)
     }
 
-    fn parse_link(&mut self, href: String) -> Result<Link> {
+    fn parse_parts(&mut self) -> Result<Vec<SummaryItem>> {
+        let mut parts = vec![];
+
+        // We want the section numbers to be continues through all parts.
+        let mut root_number = SectionNumber::default();
+        let mut root_items = 0;
+
+        loop {
+            // Possibly match a title or the end of the "numbered chapters part".
+            let title = match self.next_event() {
+                Some(ev @ Event::Start(Tag::Paragraph)) => {
+                    // we're starting the suffix chapters
+                    self.back(ev);
+                    break;
+                }
+
+                Some(Event::Start(Tag::Heading(1))) => {
+                    debug!("Found a h1 in the SUMMARY");
+
+                    let tags = collect_events!(self.stream, end Tag::Heading(1));
+                    Some(stringify_events(tags))
+                }
+
+                Some(ev) => {
+                    self.back(ev);
+                    None
+                }
+
+                None => break, // EOF, bail...
+            };
+
+            // Parse the rest of the part.
+            let numbered_chapters = self
+                .parse_numbered(&mut root_items, &mut root_number)
+                .with_context(|| "There was an error parsing the numbered chapters")?;
+
+            if let Some(title) = title {
+                parts.push(SummaryItem::PartTitle(title));
+            }
+            parts.extend(numbered_chapters);
+        }
+
+        Ok(parts)
+    }
+
+    /// Finishes parsing a link once the `Event::Start(Tag::Link(..))` has been opened.
+    fn parse_link(&mut self, href: String) -> Link {
+        let href = href.replace("%20", " ");
         let link_content = collect_events!(self.stream, end Tag::Link(..));
         let name = stringify_events(link_content);
 
-        if href.is_empty() {
-            Err(self.parse_error("You can't have an empty link."))
+        let path = if href.is_empty() {
+            None
         } else {
-            Ok(Link {
-                name,
-                location: PathBuf::from(href.to_string()),
-                number: None,
-                nested_items: Vec::new(),
-            })
+            Some(PathBuf::from(href))
+        };
+
+        Link {
+            name,
+            location: path,
+            number: None,
+            nested_items: Vec::new(),
         }
     }
 
-    /// Parse the numbered chapters. This assumes the opening list tag has
-    /// already been consumed by a previous parser.
-    fn parse_numbered(&mut self) -> Result<Vec<SummaryItem>> {
+    /// Parse the numbered chapters.
+    fn parse_numbered(
+        &mut self,
+        root_items: &mut u32,
+        root_number: &mut SectionNumber,
+    ) -> Result<Vec<SummaryItem>> {
         let mut items = Vec::new();
-        let mut root_items = 0;
-        let root_number = SectionNumber::default();
 
-        // we need to do this funny loop-match-if-let dance because a rule will
-        // close off any currently running list. Therefore we try to read the
-        // list items before the rule, then if we encounter a rule we'll add a
-        // separator and try to resume parsing numbered chapters if we start a
-        // list immediately afterwards.
-        //
-        // If you can think of a better way to do this then please make a PR :)
+        // For the first iteration, we want to just skip any opening paragraph tags, as that just
+        // marks the start of the list. But after that, another opening paragraph indicates that we
+        // have started a new part or the suffix chapters.
+        let mut first = true;
 
         loop {
-            let mut bunch_of_items = self.parse_nested_numbered(&root_number)?;
-
-            // if we've resumed after something like a rule the root sections
-            // will be numbered from 1. We need to manually go back and update
-            // them
-            update_section_numbers(&mut bunch_of_items, 0, root_items);
-            root_items += bunch_of_items.len() as u32;
-            items.extend(bunch_of_items);
-
             match self.next_event() {
-                Some(Event::Start(Tag::Paragraph)) => {
-                    // we're starting the suffix chapters
+                Some(ev @ Event::Start(Tag::Paragraph)) => {
+                    if !first {
+                        // we're starting the suffix chapters
+                        self.back(ev);
+                        break;
+                    }
+                }
+                // The expectation is that pulldown cmark will terminate a paragraph before a new
+                // heading, so we can always count on this to return without skipping headings.
+                Some(ev @ Event::Start(Tag::Heading(1))) => {
+                    // we're starting a new part
+                    self.back(ev);
                     break;
+                }
+                Some(ev @ Event::Start(Tag::List(..))) => {
+                    self.back(ev);
+                    let mut bunch_of_items = self.parse_nested_numbered(&root_number)?;
+
+                    // if we've resumed after something like a rule the root sections
+                    // will be numbered from 1. We need to manually go back and update
+                    // them
+                    update_section_numbers(&mut bunch_of_items, 0, *root_items);
+                    *root_items += bunch_of_items.len() as u32;
+                    items.extend(bunch_of_items);
                 }
                 Some(Event::Start(other_tag)) => {
                     trace!("Skipping contents of {:?}", other_tag);
@@ -327,40 +400,42 @@ impl<'a> SummaryParser<'a> {
                             break;
                         }
                     }
-
-                    if let Some(Event::Start(Tag::List(..))) = self.next_event() {
-                        continue;
-                    } else {
-                        break;
-                    }
                 }
                 Some(Event::Rule) => {
                     items.push(SummaryItem::Separator);
-                    if let Some(Event::Start(Tag::List(..))) = self.next_event() {
-                        continue;
-                    } else {
-                        break;
-                    }
                 }
-                Some(_) => {
-                    // something else... ignore
-                    continue;
-                }
+
+                // something else... ignore
+                Some(_) => {}
+
+                // EOF, bail...
                 None => {
-                    // EOF, bail...
                     break;
                 }
             }
+
+            // From now on, we cannot accept any new paragraph opening tags.
+            first = false;
         }
 
         Ok(items)
     }
 
+    /// Push an event back to the tail of the stream.
+    fn back(&mut self, ev: Event<'a>) {
+        assert!(self.back.is_none());
+        trace!("Back: {:?}", ev);
+        self.back = Some(ev);
+    }
+
     fn next_event(&mut self) -> Option<Event<'a>> {
-        let next = self.stream.next().map(|(ev, range)| {
-            self.offset = range.start;
-            ev
+        let next = self.back.take().or_else(|| {
+            self.stream.next().map(|(ev, range)| {
+                self.offset = range.start;
+                ev
+            })
         });
+
         trace!("Next event: {:?}", next);
 
         next
@@ -377,6 +452,10 @@ impl<'a> SummaryParser<'a> {
                     items.push(item);
                 }
                 Some(Event::Start(Tag::List(..))) => {
+                    // Skip this tag after comment bacause it is not nested.
+                    if items.is_empty() {
+                        continue;
+                    }
                     // recurse to parse the nested list
                     let (_, last_item) = get_last_link(&mut items)?;
                     let last_item_number = last_item
@@ -406,7 +485,7 @@ impl<'a> SummaryParser<'a> {
             match self.next_event() {
                 Some(Event::Start(Tag::Paragraph)) => continue,
                 Some(Event::Start(Tag::Link(_type, href, _title))) => {
-                    let mut link = self.parse_link(href.to_string())?;
+                    let mut link = self.parse_link(href.to_string());
 
                     let mut number = parent.clone();
                     number.0.push(num_existing_items as u32 + 1);
@@ -414,7 +493,10 @@ impl<'a> SummaryParser<'a> {
                         "Found chapter: {} {} ({})",
                         number,
                         link.name,
-                        link.location.display()
+                        link.location
+                            .as_ref()
+                            .map(|p| p.to_str().unwrap_or(""))
+                            .unwrap_or("[draft]")
                     );
 
                     link.number = Some(number);
@@ -433,19 +515,24 @@ impl<'a> SummaryParser<'a> {
 
     fn parse_error<D: Display>(&self, msg: D) -> Error {
         let (line, col) = self.current_location();
-
-        ErrorKind::ParseError(line, col, msg.to_string()).into()
+        anyhow::anyhow!(
+            "failed to parse SUMMARY.md line {}, column {}: {}",
+            line,
+            col,
+            msg
+        )
     }
 
     /// Try to parse the title line.
     fn parse_title(&mut self) -> Option<String> {
-        if let Some(Event::Start(Tag::Heading(1))) = self.next_event() {
-            debug!("Found a h1 in the SUMMARY");
+        match self.next_event() {
+            Some(Event::Start(Tag::Heading(1))) => {
+                debug!("Found a h1 in the SUMMARY");
 
-            let tags = collect_events!(self.stream, end Tag::Heading(1));
-            Some(stringify_events(tags))
-        } else {
-            None
+                let tags = collect_events!(self.stream, end Tag::Heading(1));
+                Some(stringify_events(tags))
+            }
+            _ => None,
         }
     }
 }
@@ -471,10 +558,9 @@ fn get_last_link(links: &mut [SummaryItem]) -> Result<(usize, &mut Link)> {
         .filter_map(|(i, item)| item.maybe_link_mut().map(|l| (i, l)))
         .rev()
         .next()
-        .ok_or_else(|| {
-            "Unable to get last link because the list of SummaryItems doesn't contain any Links"
-                .into()
-        })
+        .ok_or_else(||
+            anyhow::anyhow!("Unable to get last link because the list of SummaryItems doesn't contain any Links")
+            )
 }
 
 /// Removes the styling from a list of Markdown events and returns just the
@@ -484,6 +570,7 @@ fn stringify_events(events: Vec<Event<'_>>) -> String {
         .into_iter()
         .filter_map(|t| match t {
             Event::Text(text) | Event::Code(text) => Some(text.into_string()),
+            Event::SoftBreak => Some(String::from(" ")),
             _ => None,
         })
         .collect()
@@ -585,17 +672,16 @@ mod tests {
         let should_be = vec![
             SummaryItem::Link(Link {
                 name: String::from("First"),
-                location: PathBuf::from("./first.md"),
+                location: Some(PathBuf::from("./first.md")),
                 ..Default::default()
             }),
             SummaryItem::Link(Link {
                 name: String::from("Second"),
-                location: PathBuf::from("./second.md"),
+                location: Some(PathBuf::from("./second.md")),
                 ..Default::default()
             }),
         ];
 
-        let _ = parser.stream.next(); // step past first event
         let got = parser.parse_affix(true).unwrap();
 
         assert_eq!(got, should_be);
@@ -606,7 +692,6 @@ mod tests {
         let src = "[First](./first.md)\n\n---\n\n[Second](./second.md)\n";
         let mut parser = SummaryParser::new(src);
 
-        let _ = parser.stream.next(); // step past first event
         let got = parser.parse_affix(true).unwrap();
 
         assert_eq!(got.len(), 3);
@@ -618,7 +703,6 @@ mod tests {
         let src = "[First](./first.md)\n- [Second](./second.md)\n";
         let mut parser = SummaryParser::new(src);
 
-        let _ = parser.stream.next(); // step past first event
         let got = parser.parse_affix(false);
 
         assert!(got.is_err());
@@ -629,19 +713,19 @@ mod tests {
         let src = "[First](./first.md)";
         let should_be = Link {
             name: String::from("First"),
-            location: PathBuf::from("./first.md"),
+            location: Some(PathBuf::from("./first.md")),
             ..Default::default()
         };
 
         let mut parser = SummaryParser::new(src);
-        let _ = parser.stream.next(); // skip past start of paragraph
+        let _ = parser.stream.next(); // Discard opening paragraph
 
         let href = match parser.stream.next() {
             Some((Event::Start(Tag::Link(_type, href, _title)), _range)) => href.to_string(),
             other => panic!("Unreachable, {:?}", other),
         };
 
-        let got = parser.parse_link(href).unwrap();
+        let got = parser.parse_link(href);
         assert_eq!(got, should_be);
     }
 
@@ -650,16 +734,16 @@ mod tests {
         let src = "- [First](./first.md)\n";
         let link = Link {
             name: String::from("First"),
-            location: PathBuf::from("./first.md"),
+            location: Some(PathBuf::from("./first.md")),
             number: Some(SectionNumber(vec![1])),
             ..Default::default()
         };
         let should_be = vec![SummaryItem::Link(link)];
 
         let mut parser = SummaryParser::new(src);
-        let _ = parser.stream.next();
-
-        let got = parser.parse_numbered().unwrap();
+        let got = parser
+            .parse_numbered(&mut 0, &mut SectionNumber::default())
+            .unwrap();
 
         assert_eq!(got, should_be);
     }
@@ -671,27 +755,92 @@ mod tests {
         let should_be = vec![
             SummaryItem::Link(Link {
                 name: String::from("First"),
-                location: PathBuf::from("./first.md"),
+                location: Some(PathBuf::from("./first.md")),
                 number: Some(SectionNumber(vec![1])),
                 nested_items: vec![SummaryItem::Link(Link {
                     name: String::from("Nested"),
-                    location: PathBuf::from("./nested.md"),
+                    location: Some(PathBuf::from("./nested.md")),
                     number: Some(SectionNumber(vec![1, 1])),
                     nested_items: Vec::new(),
                 })],
             }),
             SummaryItem::Link(Link {
                 name: String::from("Second"),
-                location: PathBuf::from("./second.md"),
+                location: Some(PathBuf::from("./second.md")),
                 number: Some(SectionNumber(vec![2])),
                 nested_items: Vec::new(),
             }),
         ];
 
         let mut parser = SummaryParser::new(src);
-        let _ = parser.stream.next();
+        let got = parser
+            .parse_numbered(&mut 0, &mut SectionNumber::default())
+            .unwrap();
 
-        let got = parser.parse_numbered().unwrap();
+        assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn parse_numbered_chapters_separated_by_comment() {
+        let src = "- [First](./first.md)\n<!-- this is a comment -->\n- [Second](./second.md)";
+
+        let should_be = vec![
+            SummaryItem::Link(Link {
+                name: String::from("First"),
+                location: Some(PathBuf::from("./first.md")),
+                number: Some(SectionNumber(vec![1])),
+                nested_items: Vec::new(),
+            }),
+            SummaryItem::Link(Link {
+                name: String::from("Second"),
+                location: Some(PathBuf::from("./second.md")),
+                number: Some(SectionNumber(vec![2])),
+                nested_items: Vec::new(),
+            }),
+        ];
+
+        let mut parser = SummaryParser::new(src);
+        let got = parser
+            .parse_numbered(&mut 0, &mut SectionNumber::default())
+            .unwrap();
+
+        assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn parse_titled_parts() {
+        let src = "- [First](./first.md)\n- [Second](./second.md)\n\
+                   # Title 2\n- [Third](./third.md)\n\t- [Fourth](./fourth.md)";
+
+        let should_be = vec![
+            SummaryItem::Link(Link {
+                name: String::from("First"),
+                location: Some(PathBuf::from("./first.md")),
+                number: Some(SectionNumber(vec![1])),
+                nested_items: Vec::new(),
+            }),
+            SummaryItem::Link(Link {
+                name: String::from("Second"),
+                location: Some(PathBuf::from("./second.md")),
+                number: Some(SectionNumber(vec![2])),
+                nested_items: Vec::new(),
+            }),
+            SummaryItem::PartTitle(String::from("Title 2")),
+            SummaryItem::Link(Link {
+                name: String::from("Third"),
+                location: Some(PathBuf::from("./third.md")),
+                number: Some(SectionNumber(vec![3])),
+                nested_items: vec![SummaryItem::Link(Link {
+                    name: String::from("Fourth"),
+                    location: Some(PathBuf::from("./fourth.md")),
+                    number: Some(SectionNumber(vec![3, 1])),
+                    nested_items: Vec::new(),
+                })],
+            }),
+        ];
+
+        let mut parser = SummaryParser::new(src);
+        let got = parser.parse_parts().unwrap();
 
         assert_eq!(got, should_be);
     }
@@ -706,34 +855,41 @@ mod tests {
         let should_be = vec![
             SummaryItem::Link(Link {
                 name: String::from("First"),
-                location: PathBuf::from("./first.md"),
+                location: Some(PathBuf::from("./first.md")),
                 number: Some(SectionNumber(vec![1])),
                 nested_items: Vec::new(),
             }),
             SummaryItem::Link(Link {
                 name: String::from("Second"),
-                location: PathBuf::from("./second.md"),
+                location: Some(PathBuf::from("./second.md")),
                 number: Some(SectionNumber(vec![2])),
                 nested_items: Vec::new(),
             }),
         ];
 
         let mut parser = SummaryParser::new(src);
-        let _ = parser.stream.next();
-
-        let got = parser.parse_numbered().unwrap();
+        let got = parser
+            .parse_numbered(&mut 0, &mut SectionNumber::default())
+            .unwrap();
 
         assert_eq!(got, should_be);
     }
 
     #[test]
-    fn an_empty_link_location_is_an_error() {
+    fn an_empty_link_location_is_a_draft_chapter() {
         let src = "- [Empty]()\n";
         let mut parser = SummaryParser::new(src);
-        parser.stream.next();
 
-        let got = parser.parse_numbered();
-        assert!(got.is_err());
+        let got = parser.parse_numbered(&mut 0, &mut SectionNumber::default());
+        let should_be = vec![SummaryItem::Link(Link {
+            name: String::from("Empty"),
+            location: None,
+            number: Some(SectionNumber(vec![1])),
+            nested_items: Vec::new(),
+        })];
+
+        assert!(got.is_ok());
+        assert_eq!(got.unwrap(), should_be);
     }
 
     /// Regression test for https://github.com/rust-lang/mdBook/issues/779
@@ -745,30 +901,75 @@ mod tests {
         let should_be = vec![
             SummaryItem::Link(Link {
                 name: String::from("First"),
-                location: PathBuf::from("./first.md"),
+                location: Some(PathBuf::from("./first.md")),
                 number: Some(SectionNumber(vec![1])),
                 nested_items: Vec::new(),
             }),
             SummaryItem::Separator,
             SummaryItem::Link(Link {
                 name: String::from("Second"),
-                location: PathBuf::from("./second.md"),
+                location: Some(PathBuf::from("./second.md")),
                 number: Some(SectionNumber(vec![2])),
                 nested_items: Vec::new(),
             }),
             SummaryItem::Separator,
             SummaryItem::Link(Link {
                 name: String::from("Third"),
-                location: PathBuf::from("./third.md"),
+                location: Some(PathBuf::from("./third.md")),
                 number: Some(SectionNumber(vec![3])),
                 nested_items: Vec::new(),
             }),
         ];
 
         let mut parser = SummaryParser::new(src);
-        let _ = parser.stream.next();
+        let got = parser
+            .parse_numbered(&mut 0, &mut SectionNumber::default())
+            .unwrap();
 
-        let got = parser.parse_numbered().unwrap();
+        assert_eq!(got, should_be);
+    }
+
+    /// Regression test for https://github.com/rust-lang/mdBook/issues/1218
+    /// Ensure chapter names spread across multiple lines have spaces between all the words.
+    #[test]
+    fn add_space_for_multi_line_chapter_names() {
+        let src = "- [Chapter\ntitle](./chapter.md)";
+        let should_be = vec![SummaryItem::Link(Link {
+            name: String::from("Chapter title"),
+            location: Some(PathBuf::from("./chapter.md")),
+            number: Some(SectionNumber(vec![1])),
+            nested_items: Vec::new(),
+        })];
+
+        let mut parser = SummaryParser::new(src);
+        let got = parser
+            .parse_numbered(&mut 0, &mut SectionNumber::default())
+            .unwrap();
+
+        assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn allow_space_in_link_destination() {
+        let src = "- [test1](./test%20link1.md)\n- [test2](<./test link2.md>)";
+        let should_be = vec![
+            SummaryItem::Link(Link {
+                name: String::from("test1"),
+                location: Some(PathBuf::from("./test link1.md")),
+                number: Some(SectionNumber(vec![1])),
+                nested_items: Vec::new(),
+            }),
+            SummaryItem::Link(Link {
+                name: String::from("test2"),
+                location: Some(PathBuf::from("./test link2.md")),
+                number: Some(SectionNumber(vec![2])),
+                nested_items: Vec::new(),
+            }),
+        ];
+        let mut parser = SummaryParser::new(src);
+        let got = parser
+            .parse_numbered(&mut 0, &mut SectionNumber::default())
+            .unwrap();
 
         assert_eq!(got, should_be);
     }

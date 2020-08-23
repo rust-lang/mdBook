@@ -1,6 +1,6 @@
 # mdBook
 
-[![Build Status](https://github.com/rust-lang/mdBook/workflows/CI/badge.svg)](https://github.com/rust-lang/mdBook/actions?workflow=CI)
+[![Build Status](https://github.com/rust-lang/mdBook/workflows/CI/badge.svg?event=push)](https://github.com/rust-lang/mdBook/actions?workflow=CI)
 [![crates.io](https://img.shields.io/crates/v/mdbook.svg)](https://crates.io/crates/mdbook)
 [![LICENSE](https://img.shields.io/github/license/rust-lang/mdBook.svg)](LICENSE)
 
@@ -24,7 +24,7 @@ There are multiple ways to install mdBook.
 
 2. **From Crates.io**
 
-   This requires at least [Rust] 1.35 and Cargo to be installed. Once you have installed
+   This requires at least [Rust] 1.39 and Cargo to be installed. Once you have installed
    Rust, type the following in the terminal:
 
    ```
@@ -43,9 +43,9 @@ There are multiple ways to install mdBook.
    This will constrain the server to install the latest **non-breaking**
    version of mdBook and will prevent your books from failing to build because
    we released a new version.
-   
+
    You can also disable default features to speed up compile time.
-   
+
    Example:
 
    ```
@@ -148,7 +148,7 @@ preprocessors are:
   all `README.md` chapters to `index.md` so `foo/README.md` can be accessed via
   the url `foo/` when published to a browser
 - `links` - a built-in preprocessor (enabled by default) for expanding the
-  `{{# playpen}}` and `{{# include}}` helpers in a chapter.
+  `{{# playground}}` and `{{# include}}` helpers in a chapter.
 
 Renderers are given the final book so they can do something with it. This is
 typically used for, as the name suggests, rendering the document in a particular

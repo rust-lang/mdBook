@@ -44,12 +44,13 @@
 //! assert_eq!(got, Some(PathBuf::from("./themes")));
 //! # Ok(())
 //! # }
-//! # fn main() { run().unwrap() }
+//! # run().unwrap()
 //! ```
 
 #![deny(missing_docs)]
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::collections::HashMap;
 use std::env;
 use std::fs::File;
 use std::io::Read;
@@ -57,12 +58,9 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use toml::value::Table;
 use toml::{self, Value};
-use toml_query::delete::TomlValueDeleteExt;
-use toml_query::insert::TomlValueInsertExt;
-use toml_query::read::TomlValueReadExt;
 
 use crate::errors::*;
-use crate::utils;
+use crate::utils::{self, toml_ext::TomlExt};
 
 /// The overall configuration object for MDBook, essentially an in-memory
 /// representation of `book.toml`.
@@ -72,6 +70,8 @@ pub struct Config {
     pub book: BookConfig,
     /// Information about the build environment.
     pub build: BuildConfig,
+    /// Information about Rust language support.
+    pub rust: RustConfig,
     rest: Value,
 }
 
@@ -80,7 +80,7 @@ impl FromStr for Config {
 
     /// Load a `Config` from some string.
     fn from_str(src: &str) -> Result<Self> {
-        toml::from_str(src).chain_err(|| Error::from("Invalid configuration file"))
+        toml::from_str(src).with_context(|| "Invalid configuration file")
     }
 }
 
@@ -89,9 +89,9 @@ impl Config {
     pub fn from_disk<P: AsRef<Path>>(config_file: P) -> Result<Config> {
         let mut buffer = String::new();
         File::open(config_file)
-            .chain_err(|| "Unable to open the configuration file")?
+            .with_context(|| "Unable to open the configuration file")?
             .read_to_string(&mut buffer)
-            .chain_err(|| "Couldn't read the file")?;
+            .with_context(|| "Couldn't read the file")?;
 
         Config::from_str(&buffer)
     }
@@ -122,7 +122,7 @@ impl Config {
     /// > when building the book with something like
     /// >
     /// > ```text
-    /// > $ export MDBOOK_BOOK="{'title': 'My Awesome Book', authors: ['Michael-F-Bryan']}"
+    /// > $ export MDBOOK_BOOK='{"title": "My Awesome Book", "authors": ["Michael-F-Bryan"]}'
     /// > $ mdbook build
     /// > ```
     ///
@@ -140,6 +140,17 @@ impl Config {
             let parsed_value = serde_json::from_str(&value)
                 .unwrap_or_else(|_| serde_json::Value::String(value.to_string()));
 
+            if key == "book" || key == "build" {
+                if let serde_json::Value::Object(ref map) = parsed_value {
+                    // To `set` each `key`, we wrap them as `prefix.key`
+                    for (k, v) in map {
+                        let full_key = format!("{}.{}", key, k);
+                        self.set(&full_key, v).expect("unreachable");
+                    }
+                    return;
+                }
+            }
+
             self.set(key, parsed_value).expect("unreachable");
         }
     }
@@ -147,18 +158,15 @@ impl Config {
     /// Fetch an arbitrary item from the `Config` as a `toml::Value`.
     ///
     /// You can use dotted indices to access nested items (e.g.
-    /// `output.html.playpen` will fetch the "playpen" out of the html output
+    /// `output.html.playground` will fetch the "playground" out of the html output
     /// table).
     pub fn get(&self, key: &str) -> Option<&Value> {
-        self.rest.read(key).unwrap_or(None)
+        self.rest.read(key)
     }
 
     /// Fetch a value from the `Config` so you can mutate it.
     pub fn get_mut(&mut self, key: &str) -> Option<&mut Value> {
-        match self.rest.read_mut(key) {
-            Ok(inner) => inner,
-            Err(_) => None,
-        }
+        self.rest.read_mut(key)
     }
 
     /// Convenience method for getting the html renderer's configuration.
@@ -169,11 +177,14 @@ impl Config {
     /// HTML renderer is refactored to be less coupled to `mdbook` internals.
     #[doc(hidden)]
     pub fn html_config(&self) -> Option<HtmlConfig> {
-        match self.get_deserialized_opt("output.html") {
+        match self
+            .get_deserialized_opt("output.html")
+            .with_context(|| "Parsing configuration [output.html]")
+        {
             Ok(Some(config)) => Some(config),
             Ok(None) => None,
             Err(e) => {
-                utils::log_backtrace(&e.chain_err(|| "Parsing configuration [output.html]"));
+                utils::log_backtrace(&e);
                 None
             }
         }
@@ -201,7 +212,7 @@ impl Config {
                 value
                     .clone()
                     .try_into()
-                    .chain_err(|| "Couldn't deserialize the value")
+                    .with_context(|| "Couldn't deserialize the value")
             })
             .transpose()
     }
@@ -213,17 +224,15 @@ impl Config {
     pub fn set<S: Serialize, I: AsRef<str>>(&mut self, index: I, value: S) -> Result<()> {
         let index = index.as_ref();
 
-        let value =
-            Value::try_from(value).chain_err(|| "Unable to represent the item as a JSON Value")?;
+        let value = Value::try_from(value)
+            .with_context(|| "Unable to represent the item as a JSON Value")?;
 
         if index.starts_with("book.") {
             self.book.update_value(&index[5..], value);
         } else if index.starts_with("build.") {
             self.build.update_value(&index[6..], value);
         } else {
-            self.rest
-                .insert(index, value)
-                .map_err(ErrorKind::TomlQueryError)?;
+            self.rest.insert(index, value);
         }
 
         Ok(())
@@ -264,7 +273,7 @@ impl Config {
         get_and_insert!(table, "source" => cfg.book.src);
         get_and_insert!(table, "description" => cfg.book.description);
 
-        if let Ok(Some(dest)) = table.delete("output.html.destination") {
+        if let Some(dest) = table.delete("output.html.destination") {
             if let Ok(destination) = dest.try_into() {
                 cfg.build.build_dir = destination;
             }
@@ -280,6 +289,7 @@ impl Default for Config {
         Config {
             book: BookConfig::default(),
             build: BuildConfig::default(),
+            rust: RustConfig::default(),
             rest: Value::Table(Table::default()),
         }
     }
@@ -320,9 +330,15 @@ impl<'de> Deserialize<'de> for Config {
             .and_then(|value| value.try_into().ok())
             .unwrap_or_default();
 
+        let rust: RustConfig = table
+            .remove("rust")
+            .and_then(|value| value.try_into().ok())
+            .unwrap_or_default();
+
         Ok(Config {
             book,
             build,
+            rust,
             rest: Value::Table(table),
         })
     }
@@ -330,18 +346,17 @@ impl<'de> Deserialize<'de> for Config {
 
 impl Serialize for Config {
     fn serialize<S: Serializer>(&self, s: S) -> std::result::Result<S::Ok, S::Error> {
-        use serde::ser::Error;
-
+        // TODO: This should probably be removed and use a derive instead.
         let mut table = self.rest.clone();
 
-        let book_config = match Value::try_from(self.book.clone()) {
-            Ok(cfg) => cfg,
-            Err(_) => {
-                return Err(S::Error::custom("Unable to serialize the BookConfig"));
-            }
-        };
+        let book_config = Value::try_from(&self.book).expect("should always be serializable");
+        table.insert("book", book_config);
 
-        table.insert("book", book_config).expect("unreachable");
+        if self.rust != RustConfig::default() {
+            let rust_config = Value::try_from(&self.rust).expect("should always be serializable");
+            table.insert("rust", rust_config);
+        }
+
         table.serialize(s)
     }
 }
@@ -368,7 +383,7 @@ fn is_legacy_format(table: &Value) -> bool {
     ];
 
     for item in &legacy_items {
-        if let Ok(Some(_)) = table.read(item) {
+        if table.read(item).is_some() {
             return true;
         }
     }
@@ -432,8 +447,27 @@ impl Default for BuildConfig {
     }
 }
 
+/// Configuration for the Rust compiler(e.g., for playground)
+#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct RustConfig {
+    /// Rust edition used in playground
+    pub edition: Option<RustEdition>,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+/// Rust edition to use for the code.
+pub enum RustEdition {
+    /// The 2018 edition of Rust
+    #[serde(rename = "2018")]
+    E2018,
+    /// The 2015 edition of Rust
+    #[serde(rename = "2015")]
+    E2015,
+}
+
 /// Configuration for the HTML renderer.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct HtmlConfig {
     /// The theme directory, if specified.
@@ -441,12 +475,14 @@ pub struct HtmlConfig {
     /// The default theme to use, defaults to 'light'
     pub default_theme: Option<String>,
     /// The theme to use if the browser requests the dark version of the site.
-    /// Defaults to the same as 'default_theme'
+    /// Defaults to 'navy'.
     pub preferred_dark_theme: Option<String>,
     /// Use "smart quotes" instead of the usual `"` character.
     pub curly_quotes: bool,
     /// Should mathjax be enabled?
     pub mathjax_support: bool,
+    /// Whether to fonts.css and respective font files to the output directory.
+    pub copy_fonts: bool,
     /// An optional google analytics code.
     pub google_analytics: Option<String>,
     /// Additional CSS stylesheets to include in the rendered page's `<head>`.
@@ -456,8 +492,9 @@ pub struct HtmlConfig {
     pub additional_js: Vec<PathBuf>,
     /// Fold settings.
     pub fold: Fold,
-    /// Playpen settings.
-    pub playpen: Playpen,
+    /// Playground settings.
+    #[serde(alias = "playpen")]
+    pub playground: Playground,
     /// Don't render section labels.
     pub no_section_label: bool,
     /// Search settings. If `None`, the default will be used.
@@ -467,6 +504,10 @@ pub struct HtmlConfig {
     /// FontAwesome icon class to use for the Git repository link.
     /// Defaults to `fa-github` if `None`.
     pub git_repository_icon: Option<String>,
+    /// Input path for the 404 file, defaults to 404.md, set to "" to disable 404 file output
+    pub input_404: Option<String>,
+    /// Absolute url to site, used to emit correct paths for the 404 page, which might be accessed in a deeply nested directory
+    pub site_url: Option<String>,
     /// This is used as a bit of a workaround for the `mdbook serve` command.
     /// Basically, because you set the websocket port from the command line, the
     /// `mdbook serve` command needs a way to let the HTML renderer know where
@@ -475,6 +516,35 @@ pub struct HtmlConfig {
     /// This config item *should not be edited* by the end user.
     #[doc(hidden)]
     pub livereload_url: Option<String>,
+    /// The mapping from old pages to new pages/URLs to use when generating
+    /// redirects.
+    pub redirect: HashMap<String, String>,
+}
+
+impl Default for HtmlConfig {
+    fn default() -> HtmlConfig {
+        HtmlConfig {
+            theme: None,
+            default_theme: None,
+            preferred_dark_theme: None,
+            curly_quotes: false,
+            mathjax_support: false,
+            copy_fonts: true,
+            google_analytics: None,
+            additional_css: Vec::new(),
+            additional_js: Vec::new(),
+            fold: Fold::default(),
+            playground: Playground::default(),
+            no_section_label: false,
+            search: None,
+            git_repository_url: None,
+            git_repository_icon: None,
+            input_404: None,
+            site_url: None,
+            livereload_url: None,
+            redirect: HashMap::new(),
+        }
+    }
 }
 
 impl HtmlConfig {
@@ -500,24 +570,24 @@ pub struct Fold {
     pub level: u8,
 }
 
-/// Configuration for tweaking how the the HTML renderer handles the playpen.
+/// Configuration for tweaking how the the HTML renderer handles the playground.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
-pub struct Playpen {
-    /// Should playpen snippets be editable? Default: `false`.
+pub struct Playground {
+    /// Should playground snippets be editable? Default: `false`.
     pub editable: bool,
     /// Display the copy button. Default: `true`.
     pub copyable: bool,
     /// Copy JavaScript files for the editor to the output directory?
     /// Default: `true`.
     pub copy_js: bool,
-    /// Display line numbers on playpen snippets. Default: `false`.
+    /// Display line numbers on playground snippets. Default: `false`.
     pub line_numbers: bool,
 }
 
-impl Default for Playpen {
-    fn default() -> Playpen {
-        Playpen {
+impl Default for Playground {
+    fn default() -> Playground {
+        Playground {
             editable: false,
             copyable: true,
             copy_js: true,
@@ -603,6 +673,7 @@ impl<'de, T> Updateable<'de> for T where T: Serialize + Deserialize<'de> {}
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utils::fs::get_404_output_file;
 
     const COMPLEX_CONFIG: &str = r#"
         [book]
@@ -627,9 +698,13 @@ mod tests {
         git-repository-url = "https://foo.com/"
         git-repository-icon = "fa-code-fork"
 
-        [output.html.playpen]
+        [output.html.playground]
         editable = true
         editor = "ace"
+
+        [output.html.redirect]
+        "index.html" = "overview.html"
+        "nexted/page.md" = "https://rust-lang.org/"
 
         [preprocessor.first]
 
@@ -653,7 +728,8 @@ mod tests {
             create_missing: false,
             use_default_preprocessors: true,
         };
-        let playpen_should_be = Playpen {
+        let rust_should_be = RustConfig { edition: None };
+        let playground_should_be = Playground {
             editable: true,
             copyable: true,
             copy_js: true,
@@ -665,9 +741,18 @@ mod tests {
             additional_css: vec![PathBuf::from("./foo/bar/baz.css")],
             theme: Some(PathBuf::from("./themedir")),
             default_theme: Some(String::from("rust")),
-            playpen: playpen_should_be,
+            playground: playground_should_be,
             git_repository_url: Some(String::from("https://foo.com/")),
             git_repository_icon: Some(String::from("fa-code-fork")),
+            redirect: vec![
+                (String::from("index.html"), String::from("overview.html")),
+                (
+                    String::from("nexted/page.md"),
+                    String::from("https://rust-lang.org/"),
+                ),
+            ]
+            .into_iter()
+            .collect(),
             ..Default::default()
         };
 
@@ -675,7 +760,60 @@ mod tests {
 
         assert_eq!(got.book, book_should_be);
         assert_eq!(got.build, build_should_be);
+        assert_eq!(got.rust, rust_should_be);
         assert_eq!(got.html_config().unwrap(), html_should_be);
+    }
+
+    #[test]
+    fn edition_2015() {
+        let src = r#"
+        [book]
+        title = "mdBook Documentation"
+        description = "Create book from markdown files. Like Gitbook but implemented in Rust"
+        authors = ["Mathieu David"]
+        src = "./source"
+        [rust]
+        edition = "2015"
+        "#;
+
+        let book_should_be = BookConfig {
+            title: Some(String::from("mdBook Documentation")),
+            description: Some(String::from(
+                "Create book from markdown files. Like Gitbook but implemented in Rust",
+            )),
+            authors: vec![String::from("Mathieu David")],
+            src: PathBuf::from("./source"),
+            ..Default::default()
+        };
+
+        let got = Config::from_str(src).unwrap();
+        assert_eq!(got.book, book_should_be);
+
+        let rust_should_be = RustConfig {
+            edition: Some(RustEdition::E2015),
+        };
+        let got = Config::from_str(src).unwrap();
+        assert_eq!(got.rust, rust_should_be);
+    }
+
+    #[test]
+    fn edition_2018() {
+        let src = r#"
+        [book]
+        title = "mdBook Documentation"
+        description = "Create book from markdown files. Like Gitbook but implemented in Rust"
+        authors = ["Mathieu David"]
+        src = "./source"
+        [rust]
+        edition = "2018"
+        "#;
+
+        let rust_should_be = RustConfig {
+            edition: Some(RustEdition::E2018),
+        };
+
+        let got = Config::from_str(src).unwrap();
+        assert_eq!(got.rust, rust_should_be);
     }
 
     #[test]
@@ -720,7 +858,7 @@ mod tests {
         // is happy...
         let src = COMPLEX_CONFIG;
         let mut config = Config::from_str(src).unwrap();
-        let key = "output.html.playpen.editable";
+        let key = "output.html.playground.editable";
 
         assert_eq!(config.get(key).unwrap(), &Value::Boolean(true));
         *config.get_mut(key).unwrap() = Value::Boolean(false);
@@ -869,5 +1007,32 @@ mod tests {
         cfg.update_from_env();
 
         assert_eq!(cfg.book.title, Some(should_be));
+    }
+
+    #[test]
+    fn file_404_default() {
+        let src = r#"
+        [output.html]
+        destination = "my-book"
+        "#;
+
+        let got = Config::from_str(src).unwrap();
+        let html_config = got.html_config().unwrap();
+        assert_eq!(html_config.input_404, None);
+        assert_eq!(&get_404_output_file(&html_config.input_404), "404.html");
+    }
+
+    #[test]
+    fn file_404_custom() {
+        let src = r#"
+        [output.html]
+        input-404= "missing.md"
+        output-404= "missing.html"
+        "#;
+
+        let got = Config::from_str(src).unwrap();
+        let html_config = got.html_config().unwrap();
+        assert_eq!(html_config.input_404, Some("missing.md".to_string()));
+        assert_eq!(&get_404_output_file(&html_config.input_404), "missing.html");
     }
 }

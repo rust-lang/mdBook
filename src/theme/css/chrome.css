@@ -20,14 +20,13 @@ a > .hljs {
 
 /* Menu Bar */
 
-#menu-bar {
-    position: -webkit-sticky;
-    position: sticky;
-    top: 0;
+#menu-bar,
+#menu-bar-hover-placeholder {
     z-index: 101;
     margin: auto calc(0px - var(--page-padding));
 }
-#menu-bar > #menu-bar-sticky-container {
+#menu-bar {
+    position: relative;
     display: flex;
     flex-wrap: wrap;
     background-color: var(--bg);
@@ -35,10 +34,21 @@ a > .hljs {
     border-bottom-width: 1px;
     border-bottom-style: solid;
 }
-.js #menu-bar > #menu-bar-sticky-container {
-    transition: transform 0.3s;
+#menu-bar.sticky,
+.js #menu-bar-hover-placeholder:hover + #menu-bar,
+.js #menu-bar:hover,
+.js.sidebar-visible #menu-bar {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0 !important;
 }
-#menu-bar.bordered > #menu-bar-sticky-container  {
+#menu-bar-hover-placeholder {
+    position: sticky;
+    position: -webkit-sticky;
+    top: 0;
+    height: var(--menu-bar-height);
+}
+#menu-bar.bordered {
     border-bottom-color: var(--table-border-color);
 }
 #menu-bar i, #menu-bar .icon-button {
@@ -70,10 +80,6 @@ a > .hljs {
 }
 .right-buttons a {
     text-decoration: none;
-}
-
-html:not(.sidebar-visible) #menu-bar:not(:hover).folded > #menu-bar-sticky-container {
-    transform: translateY(calc(-10px - var(--menu-bar-height)));
 }
 
 .left-buttons {
@@ -415,6 +421,11 @@ ul#searchresults span.teaser em {
 /* collapse the section */
 .chapter li:not(.expanded) + li > ol {
     display: none;
+}
+
+.chapter li.chapter-item {
+    line-height: 1.5em;
+    margin-top: 0.6em;
 }
 
 .chapter li.expanded > a.toggle div {

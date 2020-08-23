@@ -25,11 +25,16 @@ code {
     font-size: 0.875em; /* please adjust the ace font size accordingly in editor.js */
 }
 
+/* Don't change font size in headers. */
+h1 code, h2 code, h3 code, h4 code, h5 code, h6 code {
+    font-size: unset;
+}
+
 .left { float: left; }
 .right { float: right; }
 .boring { opacity: 0.6; }
 .hide-boring .boring { display: none; }
-.hidden { display: none; }
+.hidden { display: none !important; }
 
 h2, h3 { margin-top: 2.5em; }
 h4, h5 { margin-top: 2em; }
@@ -60,6 +65,7 @@ h4 a.header:target {
 .page {
     outline: 0;
     padding: 0 var(--page-padding);
+    margin-top: calc(0px - var(--menu-bar-height)); /* Compensate for the #menu-bar-hover-placeholder */
 }
 .page-wrapper {
     box-sizing: border-box;
@@ -78,6 +84,9 @@ h4 a.header:target {
     margin-right: auto;
     max-width: var(--content-max-width);
 }
+.content p { line-height: 1.45em; }
+.content ol { line-height: 1.45em; }
+.content ul { line-height: 1.45em; }
 .content a { text-decoration: none; }
 .content a:hover { text-decoration: underline; }
 .content img { max-width: 100%; }
@@ -156,4 +165,10 @@ blockquote {
 }
 .tooltipped .tooltiptext {
     visibility: visible;
+}
+
+.chapter li.part-title {
+    color: var(--sidebar-fg);
+    margin: 5px 0px;
+    font-weight: bold;
 }

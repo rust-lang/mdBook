@@ -28,18 +28,24 @@ impl Renderer for MarkdownRenderer {
 
         if destination.exists() {
             utils::fs::remove_dir_content(destination)
-                .chain_err(|| "Unable to remove stale Markdown output")?;
+                .with_context(|| "Unable to remove stale Markdown output")?;
         }
 
         trace!("markdown render");
         for item in book.iter() {
             if let BookItem::Chapter(ref ch) = *item {
-                utils::fs::write_file(&ctx.destination, &ch.path, ch.content.as_bytes())?;
+                if !ch.is_draft_chapter() {
+                    utils::fs::write_file(
+                        &ctx.destination,
+                        &ch.path.as_ref().expect("Checked path exists before"),
+                        ch.content.as_bytes(),
+                    )?;
+                }
             }
         }
 
         fs::create_dir_all(&destination)
-            .chain_err(|| "Unexpected error when constructing destination path")?;
+            .with_context(|| "Unexpected error when constructing destination path")?;
 
         Ok(())
     }

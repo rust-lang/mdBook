@@ -5,16 +5,18 @@ mod dummy_book;
 
 use crate::dummy_book::{assert_contains_strings, assert_doesnt_contain_strings, DummyBook};
 
+use anyhow::Context;
 use mdbook::config::Config;
 use mdbook::errors::*;
 use mdbook::utils::fs::write_file;
 use mdbook::MDBook;
 use select::document::Document;
 use select::predicate::{Class, Name, Predicate};
+use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs;
 use std::io::Write;
-use std::path::Path;
+use std::path::{Component, Path, PathBuf};
 use tempfile::Builder as TempFileBuilder;
 use walkdir::{DirEntry, WalkDir};
 
@@ -133,18 +135,18 @@ fn check_correct_relative_links_in_print_page() {
 }
 
 #[test]
-fn rendered_code_has_playpen_stuff() {
+fn rendered_code_has_playground_stuff() {
     let temp = DummyBook::new().build().unwrap();
     let md = MDBook::load(temp.path()).unwrap();
     md.build().unwrap();
 
     let nested = temp.path().join("book/first/nested.html");
-    let playpen_class = vec![r#"class="playpen""#];
+    let playground_class = vec![r#"class="playground""#];
 
-    assert_contains_strings(nested, &playpen_class);
+    assert_contains_strings(nested, &playground_class);
 
     let book_js = temp.path().join("book/book.js");
-    assert_contains_strings(book_js, &[".playpen"]);
+    assert_contains_strings(book_js, &[".playground"]);
 }
 
 #[test]
@@ -247,13 +249,13 @@ fn entry_ends_with(entry: &DirEntry, ending: &str) -> bool {
 fn root_index_html() -> Result<Document> {
     let temp = DummyBook::new()
         .build()
-        .chain_err(|| "Couldn't create the dummy book")?;
+        .with_context(|| "Couldn't create the dummy book")?;
     MDBook::load(temp.path())?
         .build()
-        .chain_err(|| "Book building failed")?;
+        .with_context(|| "Book building failed")?;
 
     let index_page = temp.path().join("book").join("index.html");
-    let html = fs::read_to_string(&index_page).chain_err(|| "Unable to read index.html")?;
+    let html = fs::read_to_string(&index_page).with_context(|| "Unable to read index.html")?;
 
     Ok(Document::from(html.as_str()))
 }
@@ -342,23 +344,23 @@ fn create_missing_file_with_config() {
     assert!(temp.path().join("src").join("intro.md").exists());
 }
 
-/// This makes sure you can include a Rust file with `{{#playpen example.rs}}`.
+/// This makes sure you can include a Rust file with `{{#playground example.rs}}`.
 /// Specification is in `book-example/src/format/rust.md`
 #[test]
-fn able_to_include_playpen_files_in_chapters() {
+fn able_to_include_playground_files_in_chapters() {
     let temp = DummyBook::new().build().unwrap();
     let md = MDBook::load(temp.path()).unwrap();
     md.build().unwrap();
 
     let second = temp.path().join("book/second.html");
 
-    let playpen_strings = &[
-        r#"class="playpen""#,
+    let playground_strings = &[
+        r#"class="playground""#,
         r#"println!(&quot;Hello World!&quot;);"#,
     ];
 
-    assert_contains_strings(&second, playpen_strings);
-    assert_doesnt_contain_strings(&second, &["{{#playpen example.rs}}"]);
+    assert_contains_strings(&second, playground_strings);
+    assert_doesnt_contain_strings(&second, &["{{#playground example.rs}}"]);
 }
 
 /// This makes sure you can include a Rust file with `{{#include ../SUMMARY.md}}`.
@@ -508,6 +510,42 @@ fn markdown_options() {
             "<li><input disabled=\"\" type=\"checkbox\"/>\nCarrots",
         ],
     );
+}
+
+#[test]
+fn redirects_are_emitted_correctly() {
+    let temp = DummyBook::new().build().unwrap();
+    let mut md = MDBook::load(temp.path()).unwrap();
+
+    // override the "outputs.html.redirect" table
+    let redirects: HashMap<PathBuf, String> = vec![
+        (PathBuf::from("/overview.html"), String::from("index.html")),
+        (
+            PathBuf::from("/nexted/page.md"),
+            String::from("https://rust-lang.org/"),
+        ),
+    ]
+    .into_iter()
+    .collect();
+    md.config.set("output.html.redirect", &redirects).unwrap();
+
+    md.build().unwrap();
+
+    for (original, redirect) in &redirects {
+        let mut redirect_file = md.build_dir_for("html");
+        // append everything except the bits that make it absolute
+        // (e.g. "/" or "C:\")
+        redirect_file.extend(remove_absolute_components(&original));
+        let contents = fs::read_to_string(&redirect_file).unwrap();
+        assert!(contents.contains(redirect));
+    }
+}
+
+fn remove_absolute_components(path: &Path) -> impl Iterator<Item = Component> + '_ {
+    path.components().skip_while(|c| match c {
+        Component::Prefix(_) | Component::RootDir => true,
+        _ => false,
+    })
 }
 
 #[cfg(feature = "search")]

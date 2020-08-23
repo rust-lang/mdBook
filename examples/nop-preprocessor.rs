@@ -87,7 +87,7 @@ mod nop_lib {
             // particular config value
             if let Some(nop_cfg) = ctx.config.get_preprocessor(self.name()) {
                 if nop_cfg.contains_key("blow-up") {
-                    return Err("Boom!!1!".into());
+                    anyhow::bail!("Boom!!1!");
                 }
             }
 

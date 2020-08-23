@@ -43,7 +43,7 @@ impl CmdPreprocessor {
     /// A convenience function custom preprocessors can use to parse the input
     /// written to `stdin` by a `CmdRenderer`.
     pub fn parse_input<R: Read>(reader: R) -> Result<(PreprocessorContext, Book)> {
-        serde_json::from_reader(reader).chain_err(|| "Unable to parse the input")
+        serde_json::from_reader(reader).with_context(|| "Unable to parse the input")
     }
 
     fn write_input_to_child(&self, child: &mut Child, book: &Book, ctx: &PreprocessorContext) {
@@ -100,7 +100,7 @@ impl Preprocessor for CmdPreprocessor {
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit())
             .spawn()
-            .chain_err(|| {
+            .with_context(|| {
                 format!(
                     "Unable to start the \"{}\" preprocessor. Is it installed?",
                     self.name()
@@ -111,7 +111,7 @@ impl Preprocessor for CmdPreprocessor {
 
         let output = child
             .wait_with_output()
-            .chain_err(|| "Error waiting for the preprocessor to complete")?;
+            .with_context(|| "Error waiting for the preprocessor to complete")?;
 
         trace!("{} exited with output: {:?}", self.cmd, output);
         ensure!(
@@ -119,7 +119,8 @@ impl Preprocessor for CmdPreprocessor {
             "The preprocessor exited unsuccessfully"
         );
 
-        serde_json::from_slice(&output.stdout).chain_err(|| "Unable to parse the preprocessed book")
+        serde_json::from_slice(&output.stdout)
+            .with_context(|| "Unable to parse the preprocessed book")
     }
 
     fn supports_renderer(&self, renderer: &str) -> bool {
