@@ -191,7 +191,9 @@ impl MDBook {
         let mut preprocessed_book = self.book.clone();
         let preprocess_ctx = PreprocessorContext::new(
             self.root.clone(),
-            preproc_out_dir.path().to_path_buf(), //TempDir::into_path disables the auto delete option
+            // TempDir::into_path disables the auto delete option, so we need to
+            // use the long way to get to the path.
+            preproc_out_dir.path().to_path_buf(),
             self.config.clone(),
             renderer.name().to_string(),
         );
