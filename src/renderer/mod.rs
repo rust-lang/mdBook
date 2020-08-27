@@ -26,6 +26,7 @@ use std::process::{Command, Stdio};
 
 use crate::book::Book;
 use crate::config::Config;
+use crate::build_opts::BuildOpts;
 use crate::errors::*;
 use toml::Value;
 
@@ -58,6 +59,8 @@ pub struct RenderContext {
     pub root: PathBuf,
     /// A loaded representation of the book itself.
     pub book: Book,
+    /// The build options passed from the frontend.
+    pub build_opts: BuildOpts,
     /// The loaded configuration file.
     pub config: Config,
     /// Where the renderer *must* put any build artefacts generated. To allow
@@ -72,13 +75,14 @@ pub struct RenderContext {
 
 impl RenderContext {
     /// Create a new `RenderContext`.
-    pub fn new<P, Q>(root: P, book: Book, config: Config, destination: Q) -> RenderContext
+    pub fn new<P, Q>(root: P, book: Book, build_opts: BuildOpts, config: Config, destination: Q) -> RenderContext
     where
         P: Into<PathBuf>,
         Q: Into<PathBuf>,
     {
         RenderContext {
             book,
+            build_opts,
             config,
             version: crate::MDBOOK_VERSION.to_string(),
             root: root.into(),
@@ -90,7 +94,8 @@ impl RenderContext {
 
     /// Get the source directory's (absolute) path on disk.
     pub fn source_dir(&self) -> PathBuf {
-        self.root.join(&self.config.book.src)
+        let src = self.config.get_localized_src_path(self.build_opts.language_ident.as_ref()).unwrap();
+        self.root.join(src)
     }
 
     /// Load a `RenderContext` from its JSON representation.

@@ -252,6 +252,31 @@ impl Config {
         self.get(&key).and_then(Value::as_table)
     }
 
+    /// Get the source directory of a localized book corresponding to language ident `index`.
+    pub fn get_localized_src_path<I: AsRef<str>>(&self, index: Option<I>) -> Option<PathBuf> {
+        match self.language.default_language() {
+            Some(default) => match index {
+                // Make sure that the language we passed was actually
+                // declared in the config, and return `None` if not.
+                Some(lang_ident) => self.language.0.get(lang_ident.as_ref()).map(|_| {
+                    let mut buf = PathBuf::new();
+                    buf.push(self.book.src.clone());
+                    buf.push(lang_ident.as_ref());
+                    buf
+                }),
+                // Use the default specified in book.toml.
+                None => Some(PathBuf::from(default))
+            }
+
+            // No default language was configured in book.toml. Preserve
+            // backwards compatibility by just returning `src`.
+            None => match index {
+                Some(_) => None,
+                None => Some(self.book.src.clone()),
+            }
+        }
+    }
+
     fn from_legacy(mut table: Value) -> Config {
         let mut cfg = Config::default();
 
@@ -354,7 +379,6 @@ impl<'de> Deserialize<'de> for Config {
                 .count();
 
             if default_languages != 1  {
-                use serde::de::Error;
                 return Err(D::Error::custom(
                     "If languages are specified, exactly one must be set as 'default'"
                 ));
@@ -727,10 +751,10 @@ pub struct Language {
 
 impl LanguageConfig {
     /// Returns the default language specified in the config.
-    pub fn default_language(&self) -> Option<&Language> {
+    pub fn default_language(&self) -> Option<&String> {
         self.0.iter()
               .find(|(_, lang)| lang.default)
-              .map(|(_, lang)| lang)
+              .map(|(lang_ident, _)| lang_ident)
     }
 }
 

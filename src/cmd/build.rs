@@ -1,4 +1,4 @@
-use crate::{get_book_dir, open};
+use crate::{get_book_dir, get_build_opts, open};
 use clap::{App, ArgMatches, SubCommand};
 use mdbook::errors::Result;
 use mdbook::MDBook;
@@ -22,7 +22,8 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 // Build command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::load(&book_dir)?;
+    let opts = get_build_opts(args);
+    let mut book = MDBook::load_with_build_opts(&book_dir, opts)?;
 
     if let Some(dest_dir) = args.value_of("dest-dir") {
         book.config.build.build_dir = dest_dir.into();

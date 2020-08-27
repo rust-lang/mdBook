@@ -42,7 +42,7 @@ impl Preprocessor for LinkPreprocessor {
     }
 
     fn run(&self, ctx: &PreprocessorContext, mut book: Book) -> Result<Book> {
-        let src_dir = ctx.root.join(&ctx.config.book.src);
+        let src_dir = ctx.source_dir();
 
         book.for_each_mut(|section: &mut BookItem| {
             if let BookItem::Chapter(ref mut ch) = *section {

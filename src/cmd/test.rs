@@ -1,4 +1,4 @@
-use crate::get_book_dir;
+use crate::{get_book_dir, get_build_opts};
 use clap::{App, Arg, ArgMatches, SubCommand};
 use mdbook::errors::Result;
 use mdbook::MDBook;
@@ -34,7 +34,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         .map(std::iter::Iterator::collect)
         .unwrap_or_default();
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::load(&book_dir)?;
+    let build_opts = get_build_opts(args);
+    let mut book = MDBook::load_with_build_opts(&book_dir, build_opts)?;
 
     if let Some(dest_dir) = args.value_of("dest-dir") {
         book.config.build.build_dir = dest_dir.into();
