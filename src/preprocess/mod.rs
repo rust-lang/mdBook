@@ -53,8 +53,7 @@ impl PreprocessorContext {
 
     /// Get the directory containing this book's source files.
     pub fn source_dir(&self) -> PathBuf {
-        let src = self.config.get_localized_src_path(self.build_opts.language_ident.as_ref()).unwrap();
-        self.root.join(src)
+        self.root.join(&self.config.book.src)
     }
 }
 

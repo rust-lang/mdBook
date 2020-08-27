@@ -94,8 +94,7 @@ impl RenderContext {
 
     /// Get the source directory's (absolute) path on disk.
     pub fn source_dir(&self) -> PathBuf {
-        let src = self.config.get_localized_src_path(self.build_opts.language_ident.as_ref()).unwrap();
-        self.root.join(src)
+        self.root.join(&self.config.book.src)
     }
 
     /// Load a `RenderContext` from its JSON representation.
