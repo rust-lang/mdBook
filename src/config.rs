@@ -72,6 +72,8 @@ pub struct Config {
     pub build: BuildConfig,
     /// Information about Rust language support.
     pub rust: RustConfig,
+    /// Information about localizations of this book.
+    pub language: LanguageConfig,
     rest: Value,
 }
 
@@ -290,6 +292,7 @@ impl Default for Config {
             book: BookConfig::default(),
             build: BuildConfig::default(),
             rust: RustConfig::default(),
+            language: LanguageConfig::default(),
             rest: Value::Table(Table::default()),
         }
     }
@@ -339,9 +342,29 @@ impl<'de> Deserialize<'de> for Config {
             .transpose()?
             .unwrap_or_default();
 
+        let language: LanguageConfig = table
+            .remove("language")
+            .and_then(|value| value.try_into().ok())
+            .unwrap_or_default();
+
+        if !language.0.is_empty() {
+            let default_languages = language.0
+                .iter()
+                .filter(|(_, lang)| lang.default)
+                .count();
+
+            if default_languages != 1  {
+                use serde::de::Error;
+                return Err(D::Error::custom(
+                    "If languages are specified, exactly one must be set as 'default'"
+                ));
+            }
+        }
+
         Ok(Config {
             book,
             build,
+            language,
             rust,
             rest: Value::Table(table),
         })
@@ -689,6 +712,28 @@ impl Default for Search {
     }
 }
 
+/// Configuration for localizations of this book
+#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct LanguageConfig(HashMap<String, Language>);
+
+/// Configuration for a single localization
+#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct Language {
+    name: String,
+    default: bool,
+}
+
+impl LanguageConfig {
+    /// Returns the default language specified in the config.
+    pub fn default_language(&self) -> Option<&Language> {
+        self.0.iter()
+              .find(|(_, lang)| lang.default)
+              .map(|(_, lang)| lang)
+    }
+}
+
 /// Allows you to "update" any arbitrary field in a struct by round-tripping via
 /// a `toml::Value`.
 ///
@@ -751,6 +796,13 @@ mod tests {
         [preprocessor.first]
 
         [preprocessor.second]
+
+        [language.en]
+        name = "English"
+        default = true
+
+        [language.fr]
+        name = "Français"
         "#;
 
     #[test]
@@ -797,6 +849,9 @@ mod tests {
             .collect(),
             ..Default::default()
         };
+        let mut language_should_be = LanguageConfig::default();
+        language_should_be.0.insert(String::from("en"), Language { name: String::from("English"), default: true });
+        language_should_be.0.insert(String::from("fr"), Language { name: String::from("Français"), default: false });
 
         let got = Config::from_str(src).unwrap();
 
@@ -804,6 +859,7 @@ mod tests {
         assert_eq!(got.build, build_should_be);
         assert_eq!(got.rust, rust_should_be);
         assert_eq!(got.html_config().unwrap(), html_should_be);
+        assert_eq!(got.language, language_should_be);
     }
 
     #[test]
@@ -1146,6 +1202,33 @@ mod tests {
         let src = r#"
         [rust]
         edition = "1999"
+        "#;
+
+        Config::from_str(src).unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid configuration file")]
+    fn validate_default_language() {
+        let src = r#"
+        [language.en]
+        name = "English"
+        "#;
+
+        Config::from_str(src).unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid configuration file")]
+    fn validate_default_language_2() {
+        let src = r#"
+        [language.en]
+        name = "English"
+        default = true
+
+        [language.fr]
+        name = "Français"
+        default = true
         "#;
 
         Config::from_str(src).unwrap();
