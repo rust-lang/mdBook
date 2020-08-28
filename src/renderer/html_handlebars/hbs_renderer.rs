@@ -62,31 +62,49 @@ impl HtmlHandlebars {
                         let mut path = src_dir.clone();
                         path.push(lang_ident);
                         path
-                    },
+                    }
                     // `src_dir` is where index.html and the other extra files
                     // are, so use that.
-                    None => src_dir.clone()
+                    None => src_dir.clone(),
                 };
-                self.render_book(ctx, &book, src_dir, &extra_file_dir, &ctx.destination, &ctx.config.build.build_dir, html_config, handlebars, theme)?;
+                self.render_book(
+                    ctx,
+                    &book,
+                    src_dir,
+                    &extra_file_dir,
+                    &ctx.destination,
+                    &ctx.config.build.build_dir,
+                    html_config,
+                    handlebars,
+                    theme,
+                )?;
             }
         }
 
         Ok(())
     }
 
-    fn render_book<'a>(&self,
-                   ctx: &RenderContext,
-                   book: &Book,
-                   src_dir: &PathBuf,
-                   extra_file_dir: &PathBuf,
-                   destination: &PathBuf,
-                   build_dir: &PathBuf,
-                   html_config: &HtmlConfig,
-                   handlebars: &mut Handlebars<'a>,
-                   theme: &Theme,
+    fn render_book<'a>(
+        &self,
+        ctx: &RenderContext,
+        book: &Book,
+        src_dir: &PathBuf,
+        extra_file_dir: &PathBuf,
+        destination: &PathBuf,
+        build_dir: &PathBuf,
+        html_config: &HtmlConfig,
+        handlebars: &mut Handlebars<'a>,
+        theme: &Theme,
     ) -> Result<()> {
         let build_dir = ctx.root.join(build_dir);
-        let mut data = make_data(&ctx.root, &book, &ctx.book, &ctx.config, &html_config, &theme)?;
+        let mut data = make_data(
+            &ctx.root,
+            &book,
+            &ctx.book,
+            &ctx.config,
+            &html_config,
+            &theme,
+        )?;
 
         // Print version
         let mut print_content = String::new();
@@ -110,7 +128,14 @@ impl HtmlHandlebars {
 
         // Render 404 page
         if html_config.input_404 != Some("".to_string()) {
-            self.render_404(ctx, &html_config, src_dir, destination, handlebars, &mut data)?;
+            self.render_404(
+                ctx,
+                &html_config,
+                src_dir,
+                destination,
+                handlebars,
+                &mut data,
+            )?;
         }
 
         // Print version
@@ -123,7 +148,8 @@ impl HtmlHandlebars {
         debug!("Render template");
         let rendered = handlebars.render("index", &data)?;
 
-        let rendered = self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
+        let rendered =
+            self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
 
         utils::fs::write_file(&destination, "print.html", rendered.as_bytes())?;
         debug!("Creating print.html ✓");
@@ -147,11 +173,16 @@ impl HtmlHandlebars {
             .context("Unable to emit redirects")?;
 
         // Copy all remaining files, avoid a recursive copy from/to the book build dir
-        utils::fs::copy_files_except_ext(&extra_file_dir, &destination, true, Some(&build_dir), &["md"])?;
+        utils::fs::copy_files_except_ext(
+            &extra_file_dir,
+            &destination,
+            true,
+            Some(&build_dir),
+            &["md"],
+        )?;
 
         Ok(())
     }
-
 
     fn render_item(
         &self,
@@ -229,7 +260,7 @@ impl HtmlHandlebars {
         );
         if let Some(ref section) = ch.number {
             ctx.data
-               .insert("section".to_owned(), json!(section.to_string()));
+                .insert("section".to_owned(), json!(section.to_string()));
         }
 
         // Render the handlebars template with the data
@@ -461,7 +492,10 @@ impl HtmlHandlebars {
         handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
         handlebars.register_helper("next", Box::new(helpers::navigation::next));
         handlebars.register_helper("theme_option", Box::new(helpers::theme::theme_option));
-        handlebars.register_helper("language_option", Box::new(helpers::language::language_option));
+        handlebars.register_helper(
+            "language_option",
+            Box::new(helpers::language::language_option),
+        );
     }
 
     /// Copy across any additional CSS and JavaScript files which the book
@@ -568,7 +602,7 @@ impl HtmlHandlebars {
 fn maybe_wrong_theme_dir(dir: &Path) -> Result<bool> {
     fn entry_is_maybe_book_file(entry: fs::DirEntry) -> Result<bool> {
         Ok(entry.file_type()?.is_file()
-           && entry.path().extension().map_or(false, |ext| ext == "md"))
+            && entry.path().extension().map_or(false, |ext| ext == "md"))
     }
 
     if dir.is_dir() {
@@ -842,7 +876,7 @@ fn make_data(
             languages.sort();
             data.insert("languages".to_owned(), json!(languages));
             data.insert("language_config".to_owned(), json!(config.language.clone()));
-        },
+        }
         LoadedBook::Single(_) => {
             data.insert("languages_enabled".to_owned(), json!(false));
         }
@@ -1012,7 +1046,7 @@ fn add_playground_pre(
                                     "\n# #![allow(unused)]\n{}#fn main() {{\n{}#}}",
                                     attrs, code
                                 )
-                                    .into()
+                                .into()
                             };
                             hide_lines(&content)
                         }

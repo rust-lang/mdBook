@@ -1,4 +1,4 @@
-use crate::book::{BookItem, LoadedBook, Book};
+use crate::book::{Book, BookItem, LoadedBook};
 use crate::errors::*;
 use crate::renderer::{RenderContext, Renderer};
 use crate::utils;

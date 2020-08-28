@@ -92,7 +92,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
             Some(lang_ident) => Some(lang_ident.clone()),
             // If not, it will be at the root.
             None => None,
-        }
+        },
     };
 
     let sockaddr: SocketAddr = address
@@ -177,9 +177,6 @@ async fn serve(
         });
     // A warp Filter that serves from the filesystem.
     let book_route = warp::fs::dir(build_dir.clone());
-    // The fallback route for 404 errors
-    let fallback_route = warp::fs::file(build_dir.join(file_404))
-        .map(|reply| warp::reply::with_status(reply, warp::http::StatusCode::NOT_FOUND));
 
     std::panic::set_hook(Box::new(move |panic_info| {
         // exit if serve panics
@@ -189,13 +186,31 @@ async fn serve(
 
     if let Some(lang_ident) = language {
         // Redirect root to the default translation directory, if serving a localized book.
-        // BUG: This can't be `/{lang_ident}`, or the static assets won't get loaded.
-        let index_for_language = format!("/{}/index.html", lang_ident).parse::<Uri>().unwrap();
-        let redirect_to_index = warp::path::end().map(move || warp::redirect(index_for_language.clone()));
-        let routes = livereload.or(redirect_to_index).or(book_route).or(fallback_route);
+        // NOTE: This can't be `/{lang_ident}`, or the static assets won't get loaded.
+        // BUG: Redirects get cached if you change the --language parameter,
+        // meaning you'll get a 404 unless you disable cache in the developer tools.
+        let index_for_language = format!("/{}/index.html", lang_ident)
+            .parse::<Uri>()
+            .unwrap();
+        let redirect_to_index =
+            warp::path::end().map(move || warp::redirect(index_for_language.clone()));
+
+        // BUG: It is not possible to conditionally redirect to the correct 404
+        // page depending on the URL in warp, so just redirect to the one in the
+        // default language.
+        // See: https://github.com/seanmonstar/warp/issues/171
+        let fallback_route = warp::fs::file(build_dir.join(lang_ident).join(file_404))
+            .map(|reply| warp::reply::with_status(reply, warp::http::StatusCode::NOT_FOUND));
+
+        let routes = livereload
+            .or(redirect_to_index)
+            .or(book_route)
+            .or(fallback_route);
         warp::serve(routes).run(address).await;
-    }
-    else {
+    } else {
+        // The fallback route for 404 errors
+        let fallback_route = warp::fs::file(build_dir.join(file_404))
+            .map(|reply| warp::reply::with_status(reply, warp::http::StatusCode::NOT_FOUND));
         let routes = livereload.or(book_route).or(fallback_route);
         warp::serve(routes).run(address).await;
     };

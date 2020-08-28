@@ -1,6 +1,6 @@
+use crate::config::LanguageConfig;
 use handlebars::{Context, Handlebars, Helper, Output, RenderContext, RenderError};
 use std::path::Path;
-use crate::config::LanguageConfig;
 
 pub fn language_option(
     h: &Helper<'_, '_>,
@@ -22,10 +22,10 @@ pub fn language_option(
 
     let current_path = rc
         .evaluate(ctx, "@root/path")?
-    .as_json()
-    .as_str()
-    .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
-    .replace("\"", "");
+        .as_json()
+        .as_str()
+        .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
+        .replace("\"", "");
 
     let rendered_path = Path::new(&current_path)
         .with_extension("html")
@@ -35,14 +35,15 @@ pub fn language_option(
 
     let path_to_root = rc
         .evaluate(ctx, "@root/path_to_root")?
-    .as_json()
-    .as_str()
-    .ok_or_else(|| RenderError::new("Type error for `path_to_root`, string expected"))?
-    .to_string();
+        .as_json()
+        .as_str()
+        .ok_or_else(|| RenderError::new("Type error for `path_to_root`, string expected"))?
+        .to_string();
 
-    let language = languages.0.get(param).ok_or_else(|| {
-        RenderError::new(format!("Unknown language identifier '{}'", param))
-    })?;
+    let language = languages
+        .0
+        .get(param)
+        .ok_or_else(|| RenderError::new(format!("Unknown language identifier '{}'", param)))?;
 
     let mut href = String::new();
     href.push_str(&path_to_root);
@@ -51,7 +52,10 @@ pub fn language_option(
     href.push_str("/");
     href.push_str(&rendered_path);
 
-    out.write(&format!("<a href=\"{}\"><button role=\"menuitem\" class=\"language\" id=\"light\">", href))?;
+    out.write(&format!(
+        "<a href=\"{}\"><button role=\"menuitem\" class=\"language\" id=\"light\">",
+        href
+    ))?;
     out.write(&language.name)?;
     out.write("</button></a>")?;
 
