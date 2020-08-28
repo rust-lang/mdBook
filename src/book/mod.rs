@@ -215,26 +215,35 @@ impl MDBook {
 
     /// Run the entire build process for a particular [`Renderer`].
     pub fn execute_build_process(&self, renderer: &dyn Renderer) -> Result<()> {
-        let preprocess_ctx = PreprocessorContext::new(
-            self.root.clone(),
-            self.build_opts.clone(),
-            self.config.clone(),
-            renderer.name().to_string(),
-        );
-
         let preprocessed_books = match &self.book {
             LoadedBook::Localized(ref books) => {
                 let mut new_books = HashMap::new();
 
-                for (ident, book) in books.0.iter() {
+                for (language_ident, book) in books.0.iter() {
+                    let preprocess_ctx = PreprocessorContext::new(
+                        self.root.clone(),
+                        Some(language_ident.clone()),
+                        self.build_opts.clone(),
+                        self.config.clone(),
+                        renderer.name().to_string(),
+                    );
+
                     let preprocessed_book =
                         self.preprocess(&preprocess_ctx, renderer, book.clone())?;
-                    new_books.insert(ident.clone(), preprocessed_book);
+                    new_books.insert(language_ident.clone(), preprocessed_book);
                 }
 
                 LoadedBook::Localized(LocalizedBooks(new_books))
             }
             LoadedBook::Single(ref book) => {
+                let preprocess_ctx = PreprocessorContext::new(
+                    self.root.clone(),
+                    None,
+                    self.build_opts.clone(),
+                    self.config.clone(),
+                    renderer.name().to_string(),
+                );
+
                 LoadedBook::Single(self.preprocess(&preprocess_ctx, renderer, book.clone())?)
             }
         };
@@ -273,10 +282,17 @@ impl MDBook {
         self
     }
 
-    fn test_book(&self, book: &Book, temp_dir: &TempDir, library_args: &Vec<&str>) -> Result<()> {
+    fn test_book(
+        &self,
+        book: &Book,
+        temp_dir: &TempDir,
+        library_args: &Vec<&str>,
+        language_ident: Option<String>,
+    ) -> Result<()> {
         // FIXME: Is "test" the proper renderer name to use here?
         let preprocess_context = PreprocessorContext::new(
             self.root.clone(),
+            language_ident,
             self.build_opts.clone(),
             self.config.clone(),
             "test".to_string(),

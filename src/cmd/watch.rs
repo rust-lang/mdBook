@@ -50,10 +50,11 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     trigger_on_change(&book, |paths, book_dir| {
         info!("Files changed: {:?}\nBuilding book...\n", paths);
-        let result = MDBook::load_with_build_opts(&book_dir, build_opts.clone()).and_then(|mut b| {
-            update_config(&mut b);
-            b.build()
-        });
+        let result =
+            MDBook::load_with_build_opts(&book_dir, build_opts.clone()).and_then(|mut b| {
+                update_config(&mut b);
+                b.build()
+            });
 
         if let Err(e) = result {
             error!("Unable to build the book");

@@ -23,6 +23,9 @@ use std::path::PathBuf;
 pub struct PreprocessorContext {
     /// The location of the book directory on disk.
     pub root: PathBuf,
+    /// The language of the book being built. Is only `Some` if the book is part
+    /// of a multilingual build output.
+    pub language_ident: Option<String>,
     /// The build options passed from the frontend.
     pub build_opts: BuildOpts,
     /// The book configuration (`book.toml`).
@@ -41,12 +44,14 @@ impl PreprocessorContext {
     /// Create a new `PreprocessorContext`.
     pub(crate) fn new(
         root: PathBuf,
+        language_ident: Option<String>,
         build_opts: BuildOpts,
         config: Config,
         renderer: String,
     ) -> Self {
         PreprocessorContext {
             root,
+            language_ident,
             build_opts,
             config,
             renderer,
