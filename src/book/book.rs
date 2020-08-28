@@ -404,7 +404,10 @@ fn load_chapter<P: AsRef<Path>>(
         if !location.exists() && !link_location.is_absolute() {
             src_dir = src_dir_fallback;
             location = src_dir.join(link_location);
-            debug!("Falling back to {}", location.display());
+            debug!(
+                "Falling back to default translation in path \"{}\"",
+                location.display()
+            );
         }
         if !location.exists() && cfg.build.create_missing {
             create_missing(&location, &link)
@@ -586,7 +589,10 @@ more text.
     fn cant_load_a_nonexistent_chapter() {
         let link = Link::new("Chapter 1", "/foo/bar/baz.md");
 
-        let got = load_chapter(&link, "", "", Vec::new(), &Config::default());
+        let mut cfg = Config::default();
+        cfg.build.create_missing = false;
+
+        let got = load_chapter(&link, "", "", Vec::new(), &cfg);
         assert!(got.is_err());
     }
 

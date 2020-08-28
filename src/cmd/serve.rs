@@ -188,7 +188,8 @@ async fn serve(
         // Redirect root to the default translation directory, if serving a localized book.
         // NOTE: This can't be `/{lang_ident}`, or the static assets won't get loaded.
         // BUG: Redirects get cached if you change the --language parameter,
-        // meaning you'll get a 404 unless you disable cache in the developer tools.
+        // meaning you'll get a 404 unless you disable the cache in Developer
+        // Tools.
         let index_for_language = format!("/{}/index.html", lang_ident)
             .parse::<Uri>()
             .unwrap();
@@ -211,6 +212,7 @@ async fn serve(
         // The fallback route for 404 errors
         let fallback_route = warp::fs::file(build_dir.join(file_404))
             .map(|reply| warp::reply::with_status(reply, warp::http::StatusCode::NOT_FOUND));
+
         let routes = livereload.or(book_route).or(fallback_route);
         warp::serve(routes).run(address).await;
     };

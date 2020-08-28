@@ -297,9 +297,9 @@ impl Config {
         }
     }
 
-    /// Get the fallback source directory of a book. For example, if chapters
-    /// are missing in a localization, the links will gracefully degrade to the
-    /// files that exist in this directory.
+    /// Get the fallback source directory of a book. If chapters/sections are
+    /// missing in a localization, any links to them will gracefully degrade to
+    /// the files that exist in this directory.
     pub fn get_fallback_src_path(&self) -> PathBuf {
         match self.language.default_language() {
             // Languages have been specified, assume directory structure with
@@ -417,7 +417,7 @@ impl<'de> Deserialize<'de> for Config {
 
             if default_languages != 1  {
                 return Err(D::Error::custom(
-                    "If languages are specified, exactly one must be set as 'default'",
+                    "If [languages] table is specified, exactly one entry must be set as 'default'",
                 ));
             }
         }
@@ -784,7 +784,7 @@ pub struct LanguageConfig(pub HashMap<String, Language>);
 pub struct Language {
     /// Human-readable name of the language.
     pub name: String,
-    /// If true, this language is the default. There can only be one default
+    /// If true, this language is the default. There must be exactly one default
     /// language in the config.
     pub default: bool,
 }
