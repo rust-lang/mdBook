@@ -776,17 +776,27 @@ impl Default for Search {
 /// Configuration for localizations of this book
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct LanguageConfig(HashMap<String, Language>);
+pub struct LanguageConfig(pub HashMap<String, Language>);
 
 /// Configuration for a single localization
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Language {
-    name: String,
-    default: bool,
+    /// Human-readable name of the language.
+    pub name: String,
+    /// If true, this language is the default. There can only be one default
+    /// language in the config.
+    pub default: bool,
 }
 
 impl LanguageConfig {
+    /// If true, mdBook should assume there are subdirectories under src/
+    /// corresponding to the localizations in the config. If false, src/ is a
+    /// single directory containing the summary file and the rest.
+    pub fn has_localized_dir_structure(&self) -> bool {
+        self.default_language().is_some()
+    }
+
     /// Returns the default language specified in the config.
     pub fn default_language(&self) -> Option<&String> {
         self.0

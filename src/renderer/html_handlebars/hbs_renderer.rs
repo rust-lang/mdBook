@@ -1,4 +1,4 @@
-use crate::book::{Book, BookItem};
+use crate::book::{Book, BookItem, LoadedBook};
 use crate::config::{BookConfig, Config, HtmlConfig, Playground, RustEdition};
 use crate::errors::*;
 use crate::renderer::html_handlebars::helpers;
@@ -23,6 +23,135 @@ impl HtmlHandlebars {
     pub fn new() -> Self {
         HtmlHandlebars
     }
+
+    fn render_books<'a>(
+        &self,
+        ctx: &RenderContext,
+        src_dir: &PathBuf,
+        html_config: &HtmlConfig,
+        handlebars: &mut Handlebars<'a>,
+        theme: &Theme,
+    ) -> Result<()> {
+        match ctx.book {
+            LoadedBook::Localized(ref books) => {
+                for (lang_ident, book) in books.0.iter() {
+                    let localized_src_dir = src_dir.join(lang_ident);
+                    let localized_destination = ctx.destination.join(lang_ident);
+                    let localized_build_dir = ctx.config.build.build_dir.join(lang_ident);
+                    self.render_book(
+                        ctx,
+                        &book,
+                        &localized_src_dir,
+                        &localized_src_dir,
+                        &localized_destination,
+                        &localized_build_dir,
+                        html_config,
+                        handlebars,
+                        theme,
+                    )?;
+                }
+            }
+            LoadedBook::Single(ref book) => {
+                let extra_file_dir = match &ctx.build_opts.language_ident {
+                    // `src_dir` points to the root source directory, not the
+                    // subdirectory with the translation's index/summary files.
+                    // We have to append the language identifier to prevent the
+                    // files from the other translations from being copied in
+                    // the final step.
+                    Some(lang_ident) => {
+                        let mut path = src_dir.clone();
+                        path.push(lang_ident);
+                        path
+                    },
+                    // `src_dir` is where index.html and the other extra files
+                    // are, so use that.
+                    None => src_dir.clone()
+                };
+                self.render_book(ctx, &book, src_dir, &extra_file_dir, &ctx.destination, &ctx.config.build.build_dir, html_config, handlebars, theme)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    fn render_book<'a>(&self,
+                   ctx: &RenderContext,
+                   book: &Book,
+                   src_dir: &PathBuf,
+                   extra_file_dir: &PathBuf,
+                   destination: &PathBuf,
+                   build_dir: &PathBuf,
+                   html_config: &HtmlConfig,
+                   handlebars: &mut Handlebars<'a>,
+                   theme: &Theme,
+    ) -> Result<()> {
+        let build_dir = ctx.root.join(build_dir);
+        let mut data = make_data(&ctx.root, &book, &ctx.book, &ctx.config, &html_config, &theme)?;
+
+        // Print version
+        let mut print_content = String::new();
+
+        fs::create_dir_all(&destination)
+            .with_context(|| "Unexpected error when constructing destination path")?;
+
+        let mut is_index = true;
+        for item in book.iter() {
+            let ctx = RenderItemContext {
+                handlebars: &handlebars,
+                destination: destination.to_path_buf(),
+                data: data.clone(),
+                is_index,
+                html_config: html_config.clone(),
+                edition: ctx.config.rust.edition,
+            };
+            self.render_item(item, ctx, &mut print_content)?;
+            is_index = false;
+        }
+
+        // Render 404 page
+        if html_config.input_404 != Some("".to_string()) {
+            self.render_404(ctx, &html_config, src_dir, destination, handlebars, &mut data)?;
+        }
+
+        // Print version
+        self.configure_print_version(&mut data, &print_content);
+        if let Some(ref title) = ctx.config.book.title {
+            data.insert("title".to_owned(), json!(title));
+        }
+
+        // Render the handlebars template with the data
+        debug!("Render template");
+        let rendered = handlebars.render("index", &data)?;
+
+        let rendered = self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
+
+        utils::fs::write_file(&destination, "print.html", rendered.as_bytes())?;
+        debug!("Creating print.html ✓");
+
+        debug!("Copy static files");
+        self.copy_static_files(&destination, &theme, &html_config)
+            .with_context(|| "Unable to copy across static files")?;
+        self.copy_additional_css_and_js(&html_config, &ctx.root, &destination)
+            .with_context(|| "Unable to copy across additional CSS and JS")?;
+
+        // Render search index
+        #[cfg(feature = "search")]
+        {
+            let search = html_config.search.clone().unwrap_or_default();
+            if search.enable {
+                super::search::create_files(&search, &destination, &book)?;
+            }
+        }
+
+        self.emit_redirects(&ctx.destination, handlebars, &html_config.redirect)
+            .context("Unable to emit redirects")?;
+
+        // Copy all remaining files, avoid a recursive copy from/to the book build dir
+        utils::fs::copy_files_except_ext(&extra_file_dir, &destination, true, Some(&build_dir), &["md"])?;
+
+        Ok(())
+    }
+
 
     fn render_item(
         &self,
@@ -100,7 +229,7 @@ impl HtmlHandlebars {
         );
         if let Some(ref section) = ch.number {
             ctx.data
-                .insert("section".to_owned(), json!(section.to_string()));
+               .insert("section".to_owned(), json!(section.to_string()));
         }
 
         // Render the handlebars template with the data
@@ -131,11 +260,11 @@ impl HtmlHandlebars {
         &self,
         ctx: &RenderContext,
         html_config: &HtmlConfig,
-        src_dir: &Path,
+        src_dir: &PathBuf,
+        destination: &PathBuf,
         handlebars: &mut Handlebars<'_>,
         data: &mut serde_json::Map<String, serde_json::Value>,
     ) -> Result<()> {
-        let destination = &ctx.destination;
         let content_404 = if let Some(ref filename) = html_config.input_404 {
             let path = src_dir.join(filename);
             std::fs::read_to_string(&path)
@@ -149,7 +278,7 @@ impl HtmlHandlebars {
                 })?
             } else {
                 "# Document not found (404)\n\nThis URL is invalid, sorry. Please use the \
-                navigation bar or search to continue."
+                 navigation bar or search to continue."
                     .to_string()
             }
         };
@@ -161,14 +290,15 @@ impl HtmlHandlebars {
         } else {
             debug!(
                 "HTML 'site-url' parameter not set, defaulting to '/'. Please configure \
-                this to ensure the 404 page work correctly, especially if your site is hosted in a \
-                subdirectory on the HTTP server."
+                 this to ensure the 404 page work correctly, especially if your site is hosted in a \
+                 subdirectory on the HTTP server."
             );
             "/"
         };
         data_404.insert("base_url".to_owned(), json!(base_url));
         // Set a dummy path to ensure other paths (e.g. in the TOC) are generated correctly
         data_404.insert("path".to_owned(), json!("404.md"));
+        data_404.insert("path_to_root".to_owned(), json!(""));
         data_404.insert("content".to_owned(), json!(html_content_404));
         let rendered = handlebars.render("index", &data_404)?;
 
@@ -331,6 +461,7 @@ impl HtmlHandlebars {
         handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
         handlebars.register_helper("next", Box::new(helpers::navigation::next));
         handlebars.register_helper("theme_option", Box::new(helpers::theme::theme_option));
+        handlebars.register_helper("language_option", Box::new(helpers::language::language_option));
     }
 
     /// Copy across any additional CSS and JavaScript files which the book
@@ -437,7 +568,7 @@ impl HtmlHandlebars {
 fn maybe_wrong_theme_dir(dir: &Path) -> Result<bool> {
     fn entry_is_maybe_book_file(entry: fs::DirEntry) -> Result<bool> {
         Ok(entry.file_type()?.is_file()
-            && entry.path().extension().map_or(false, |ext| ext == "md"))
+           && entry.path().extension().map_or(false, |ext| ext == "md"))
     }
 
     if dir.is_dir() {
@@ -462,8 +593,6 @@ impl Renderer for HtmlHandlebars {
         let html_config = ctx.config.html_config().unwrap_or_default();
         let src_dir = ctx.source_dir();
         let destination = &ctx.destination;
-        let book = &ctx.book;
-        let build_dir = ctx.root.join(&ctx.config.build.build_dir);
 
         if destination.exists() {
             utils::fs::remove_dir_content(destination)
@@ -581,6 +710,7 @@ impl Renderer for HtmlHandlebars {
 fn make_data(
     root: &Path,
     book: &Book,
+    loaded_book: &LoadedBook,
     config: &Config,
     html_config: &HtmlConfig,
     theme: &Theme,
@@ -701,6 +831,22 @@ fn make_data(
         None => "fa-github",
     };
     data.insert("git_repository_icon".to_owned(), json!(git_repository_icon));
+
+    match loaded_book {
+        LoadedBook::Localized(books) => {
+            data.insert("languages_enabled".to_owned(), json!(true));
+            let mut languages = Vec::new();
+            for (lang_ident, _) in books.0.iter() {
+                languages.push(lang_ident.clone());
+            }
+            languages.sort();
+            data.insert("languages".to_owned(), json!(languages));
+            data.insert("language_config".to_owned(), json!(config.language.clone()));
+        },
+        LoadedBook::Single(_) => {
+            data.insert("languages_enabled".to_owned(), json!(false));
+        }
+    }
 
     let mut chapters = vec![];
 
@@ -866,7 +1012,7 @@ fn add_playground_pre(
                                     "\n# #![allow(unused)]\n{}#fn main() {{\n{}#}}",
                                     attrs, code
                                 )
-                                .into()
+                                    .into()
                             };
                             hide_lines(&content)
                         }
@@ -988,20 +1134,20 @@ mod tests {
     #[test]
     fn add_playground() {
         let inputs = [
-          ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
-          ("<code class=\"language-rust\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust\">fn main() {}\n</code></pre>"),
-          ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";\n</code></pre>"),
-          ("<code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";\n</code></pre>"),
-          ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span><span class=\"boring\">\n</span>\";\n</code></pre>"),
-          ("<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>",
-           "<code class=\"language-rust ignore\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";\n</code>"),
-          ("<code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]\n</code></pre>"),
+            ("<code class=\"language-rust\">x()</code>",
+             "<pre class=\"playground\"><code class=\"language-rust\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
+            ("<code class=\"language-rust\">fn main() {}</code>",
+             "<pre class=\"playground\"><code class=\"language-rust\">fn main() {}\n</code></pre>"),
+            ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code>",
+             "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";\n</code></pre>"),
+            ("<code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code>",
+             "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";\n</code></pre>"),
+            ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code>",
+             "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span><span class=\"boring\">\n</span>\";\n</code></pre>"),
+            ("<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>",
+             "<code class=\"language-rust ignore\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";\n</code>"),
+            ("<code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code>",
+             "<pre class=\"playground\"><code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]\n</code></pre>"),
         ];
         for (src, should_be) in &inputs {
             let got = add_playground_pre(
@@ -1018,14 +1164,14 @@ mod tests {
     #[test]
     fn add_playground_edition2015() {
         let inputs = [
-          ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2015\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
-          ("<code class=\"language-rust\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}\n</code></pre>"),
-          ("<code class=\"language-rust edition2015\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}\n</code></pre>"),
-          ("<code class=\"language-rust edition2018\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}\n</code></pre>"),
+            ("<code class=\"language-rust\">x()</code>",
+             "<pre class=\"playground\"><code class=\"language-rust edition2015\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
+            ("<code class=\"language-rust\">fn main() {}</code>",
+             "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}\n</code></pre>"),
+            ("<code class=\"language-rust edition2015\">fn main() {}</code>",
+             "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}\n</code></pre>"),
+            ("<code class=\"language-rust edition2018\">fn main() {}</code>",
+             "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}\n</code></pre>"),
         ];
         for (src, should_be) in &inputs {
             let got = add_playground_pre(
@@ -1042,14 +1188,14 @@ mod tests {
     #[test]
     fn add_playground_edition2018() {
         let inputs = [
-          ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2018\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
-          ("<code class=\"language-rust\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}\n</code></pre>"),
-          ("<code class=\"language-rust edition2015\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}\n</code></pre>"),
-          ("<code class=\"language-rust edition2018\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}\n</code></pre>"),
+            ("<code class=\"language-rust\">x()</code>",
+             "<pre class=\"playground\"><code class=\"language-rust edition2018\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
+            ("<code class=\"language-rust\">fn main() {}</code>",
+             "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}\n</code></pre>"),
+            ("<code class=\"language-rust edition2015\">fn main() {}</code>",
+             "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}\n</code></pre>"),
+            ("<code class=\"language-rust edition2018\">fn main() {}</code>",
+             "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}\n</code></pre>"),
         ];
         for (src, should_be) in &inputs {
             let got = add_playground_pre(

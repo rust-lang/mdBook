@@ -199,11 +199,11 @@ mod tests {
         );
 
         let mut buffer = Vec::new();
-        cmd.write_input(&mut buffer, &md.book, &ctx).unwrap();
+        cmd.write_input(&mut buffer, &md.book.first(), &ctx).unwrap();
 
         let (got_ctx, got_book) = CmdPreprocessor::parse_input(buffer.as_slice()).unwrap();
 
-        assert_eq!(got_book, md.book);
+        assert_eq!(got_book, *md.book.first());
         assert_eq!(got_ctx, ctx);
     }
 }

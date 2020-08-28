@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 use std::fmt::{self, Display, Formatter};
 use std::fs::{self, File};
 use std::io::{Read, Write};
@@ -14,10 +14,30 @@ pub fn load_book<P: AsRef<Path>>(
     root_dir: P,
     cfg: &Config,
     build_opts: &BuildOpts,
-) -> Result<Book> {
+) -> Result<LoadedBook> {
+    if cfg.language.has_localized_dir_structure() {
+        match build_opts.language_ident {
+            // Build a single book's translation.
+            Some(_) => Ok(LoadedBook::Single(load_single_book_translation(&root_dir, cfg, &build_opts.language_ident)?)),
+            // Build all available translations at once.
+            None => {
+                let mut translations = HashMap::new();
+                for (lang_ident, _) in cfg.language.0.iter() {
+                    let book = load_single_book_translation(&root_dir, cfg, &Some(lang_ident.clone()))?;
+                    translations.insert(lang_ident.clone(), book);
+                }
+                Ok(LoadedBook::Localized(LocalizedBooks(translations)))
+            }
+        }
+    } else {
+        Ok(LoadedBook::Single(load_single_book_translation(&root_dir, cfg, &None)?))
+    }
+}
+
+fn load_single_book_translation<P: AsRef<Path>>(root_dir: P, cfg: &Config, language_ident: &Option<String>) -> Result<Book> {
     let localized_src_dir = root_dir.as_ref().join(
-        cfg.get_localized_src_path(build_opts.language_ident.as_ref())
-            .unwrap(),
+        cfg.get_localized_src_path(language_ident.as_ref())
+           .unwrap(),
     );
     let fallback_src_dir = root_dir.as_ref().join(cfg.get_fallback_src_path());
 
@@ -136,6 +156,91 @@ where
         }
 
         func(item);
+    }
+}
+
+/// A collection of `Books`, each one a single localization.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct LocalizedBooks(pub HashMap<String, Book>);
+
+impl LocalizedBooks {
+    /// Get a depth-first iterator over the items in the book.
+    pub fn iter(&self) -> BookItems<'_> {
+        let mut items = VecDeque::new();
+
+        for (_, book) in self.0.iter() {
+            items.extend(book.iter().items);
+        }
+
+        BookItems {
+            items: items
+        }
+    }
+
+    /// Recursively apply a closure to each item in the book, allowing you to
+    /// mutate them.
+    ///
+    /// # Note
+    ///
+    /// Unlike the `iter()` method, this requires a closure instead of returning
+    /// an iterator. This is because using iterators can possibly allow you
+    /// to have iterator invalidation errors.
+    pub fn for_each_mut<F>(&mut self, mut func: F)
+    where
+        F: FnMut(&mut BookItem),
+    {
+        for (_, book) in self.0.iter_mut() {
+            book.for_each_mut(&mut func);
+        }
+    }
+}
+
+/// A book which has been loaded and is ready for rendering.
+///
+/// This exists because the result of loading a book directory can be multiple
+/// books, each one representing a separate translation, or a single book with
+/// no translations.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum LoadedBook {
+    /// The book was loaded with all translations.
+    Localized(LocalizedBooks),
+    /// The book was loaded without any additional translations.
+    Single(Book),
+}
+
+impl LoadedBook {
+    /// Get a depth-first iterator over the items in the book.
+    pub fn iter(&self) -> BookItems<'_> {
+        match self {
+            LoadedBook::Localized(books) => books.iter(),
+            LoadedBook::Single(book) => book.iter(),
+        }
+    }
+
+    /// Recursively apply a closure to each item in the book, allowing you to
+    /// mutate them.
+    ///
+    /// # Note
+    ///
+    /// Unlike the `iter()` method, this requires a closure instead of returning
+    /// an iterator. This is because using iterators can possibly allow you
+    /// to have iterator invalidation errors.
+    pub fn for_each_mut<F>(&mut self, mut func: F)
+    where
+        F: FnMut(&mut BookItem),
+    {
+        match self {
+            LoadedBook::Localized(books) => books.for_each_mut(&mut func),
+            LoadedBook::Single(book) => book.for_each_mut(&mut func),
+        }
+    }
+
+    /// Returns one of the books loaded. Used for compatibility.
+    pub fn first(&self) -> &Book {
+        match self {
+            LoadedBook::Localized(books) => books.0.iter().next().unwrap().1,
+            LoadedBook::Single(book) => &book
+        }
     }
 }
 
@@ -512,7 +617,7 @@ more text.
             Vec::new(),
             &cfg,
         )
-        .unwrap();
+            .unwrap();
         assert_eq!(got, should_be);
     }
 
