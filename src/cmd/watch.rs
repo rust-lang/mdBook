@@ -25,7 +25,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
         .arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
         .arg_from_usage(
             "-l, --language=[language] 'Language to render the compiled book in.{n}\
-                         Only valid if the [languages] table in the config is not empty.{n}\
+                         Only valid if the [language] table in the config is not empty.{n}\
                          If omitted, builds all translations and provides a menu in the generated output for switching between them.'",
         )
 }

@@ -15,7 +15,7 @@ pub fn load_book<P: AsRef<Path>>(
     cfg: &Config,
     build_opts: &BuildOpts,
 ) -> Result<LoadedBook> {
-    if cfg.language.has_localized_dir_structure() {
+    if cfg.has_localized_dir_structure() {
         match build_opts.language_ident {
             // Build a single book's translation.
             Some(_) => Ok(LoadedBook::Single(load_single_book_translation(

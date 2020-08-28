@@ -52,7 +52,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
         .arg_from_usage("-o, --open 'Opens the book server in a web browser'")
         .arg_from_usage(
             "-l, --language=[language] 'Language to render the compiled book in.{n}\
-                         Only valid if the [languages] table in the config is not empty.{n}\
+                         Only valid if the [language] table in the config is not empty.{n}\
                          If omitted, builds all translations and provides a menu in the generated output for switching between them.'",
         )
 }
@@ -86,7 +86,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let language: Option<String> = match build_opts.language_ident {
         // index.html will be at the root directory.
         Some(_) => None,
-        None => match book.config.language.default_language() {
+        None => match book.config.default_language() {
             // If book has translations, index.html will be under src/en/ or
             // similar.
             Some(lang_ident) => Some(lang_ident.clone()),

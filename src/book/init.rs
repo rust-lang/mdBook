@@ -14,18 +14,18 @@ pub struct BookBuilder {
     create_gitignore: bool,
     config: Config,
     copy_theme: bool,
-    language_ident: String
+    language_ident: String,
 }
 
 fn add_default_language(cfg: &mut Config, language_ident: String) {
     let language = Language {
         name: String::from("English"),
-        default: true,
         title: None,
         authors: None,
         description: None,
     };
-    cfg.language.0.insert(language_ident, language);
+    cfg.language.0.insert(language_ident.clone(), language);
+    cfg.book.language = Some(language_ident);
 }
 
 impl BookBuilder {
@@ -41,13 +41,16 @@ impl BookBuilder {
             create_gitignore: false,
             config: cfg,
             copy_theme: false,
-            language_ident: language_ident
+            language_ident: language_ident,
         }
     }
 
     /// Get the output source directory of the builder.
     pub fn source_dir(&self) -> PathBuf {
-        let src = self.config.get_localized_src_path(Some(&self.language_ident)).unwrap();
+        let src = self
+            .config
+            .get_localized_src_path(Some(&self.language_ident))
+            .unwrap();
         self.root.join(src)
     }
 
@@ -125,8 +128,8 @@ impl BookBuilder {
 
         File::create(book_toml)
             .with_context(|| "Couldn't create book.toml")?
-        .write_all(&cfg)
-        .with_context(|| "Unable to write config to book.toml")?;
+            .write_all(&cfg)
+            .with_context(|| "Unable to write config to book.toml")?;
         Ok(())
     }
 
