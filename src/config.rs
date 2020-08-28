@@ -259,8 +259,8 @@ impl Config {
             // Languages have been specified, assume directory structure with
             // language subfolders.
             Some(ref default) => match index {
-                // Make sure that the language we passed was actually
-                // declared in the config, and return `None` if not.
+                // Make sure that the language we passed was actually declared
+                // in the config, and return an `Err` if not.
                 Some(lang_ident) => match self.language.0.get(lang_ident.as_ref()) {
                     Some(_) => Ok(Some(lang_ident.as_ref().into())),
                     None => Err(anyhow!(
@@ -272,7 +272,7 @@ impl Config {
                 None => Ok(Some(default.to_string())),
             },
 
-            // No default language was configured in book.toml.
+            // No [language] table was declared in book.toml.
             None => match index {
                 // We passed in a language from the frontend, but the config
                 // offers no languages.
@@ -298,8 +298,8 @@ impl Config {
                 Ok(buf)
             }
 
-            // No default language was configured in book.toml. Preserve
-            // backwards compatibility by just returning `src`.
+            // No [language] table was declared in book.toml. Preserve backwards
+            // compatibility by just returning `src`.
             None => Ok(self.book.src.clone()),
         }
     }
@@ -491,6 +491,11 @@ impl Serialize for Config {
             table.insert("rust", rust_config);
         }
 
+        if !self.language.0.is_empty() {
+            let language_config = Value::try_from(&self.language).expect("should always be serializable");
+            table.insert("language", language_config);
+        }
+
         table.serialize(s)
     }
 }
@@ -551,7 +556,7 @@ impl Default for BookConfig {
             authors: Vec::new(),
             description: None,
             src: PathBuf::from("src"),
-            multilingual: false,
+            multilingual: true,
             language: Some(String::from("en")),
         }
     }

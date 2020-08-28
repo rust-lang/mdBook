@@ -53,21 +53,22 @@ impl HtmlHandlebars {
                 }
             }
             LoadedBook::Single(ref book) => {
+                // `src_dir` points to the root source directory. If this book
+                // is actually multilingual and we specified a single language
+                // to build on the command line, then `src_dir` will not be
+                // pointing at the subdirectory with the specified translation's
+                // index/summary files. We have to append the language
+                // identifier to prevent the files from the other translations
+                // from being copied in the final step.
                 let extra_file_dir = match &ctx.build_opts.language_ident {
-                    // `src_dir` points to the root source directory, not the
-                    // subdirectory with the translation's index/summary files.
-                    // We have to append the language identifier to prevent the
-                    // files from the other translations from being copied in
-                    // the final step.
                     Some(lang_ident) => {
                         let mut path = src_dir.clone();
                         path.push(lang_ident);
                         path
                     }
-                    // `src_dir` is where index.html and the other extra files
-                    // are, so use that.
                     None => src_dir.clone(),
                 };
+
                 self.render_book(
                     ctx,
                     &book,

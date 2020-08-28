@@ -197,8 +197,8 @@ async fn serve(
             warp::path::end().map(move || warp::redirect(index_for_language.clone()));
 
         // BUG: It is not possible to conditionally redirect to the correct 404
-        // page depending on the URL in warp, so just redirect to the one in the
-        // default language.
+        // page depending on the URL using warp, so just redirect to the one in
+        // the default language.
         // See: https://github.com/seanmonstar/warp/issues/171
         let fallback_route = warp::fs::file(build_dir.join(lang_ident).join(file_404))
             .map(|reply| warp::reply::with_status(reply, warp::http::StatusCode::NOT_FOUND));
