@@ -789,6 +789,7 @@ dependencies = [
  "futures-util",
  "gitignore",
  "handlebars",
+ "http",
  "lazy_static",
  "log",
  "memchr",

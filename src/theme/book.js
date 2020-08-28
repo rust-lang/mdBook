@@ -428,81 +428,83 @@ function playground_text(playground) {
     var languageToggleButton = document.getElementById('language-toggle');
     var languagePopup = document.getElementById('language-list');
 
-    function showLanguages() {
-        languagePopup.style.display = 'block';
-        languageToggleButton.setAttribute('aria-expanded', true);
-    }
-
-    function hideLanguages() {
-        languagePopup.style.display = 'none';
-        languageToggleButton.setAttribute('aria-expanded', false);
-        languageToggleButton.focus();
-    }
-
-    function set_language(language) {
-        console.log("Set language " + language)
-    }
-
-    languageToggleButton.addEventListener('click', function () {
-        if (languagePopup.style.display === 'block') {
-            hideLanguages();
-        } else {
-            showLanguages();
+    if (languageToggleButton !== null) {
+        function showLanguages() {
+            languagePopup.style.display = 'block';
+            languageToggleButton.setAttribute('aria-expanded', true);
         }
-    });
 
-    languagePopup.addEventListener('click', function (e) {
-        var language = e.target.id || e.target.parentElement.id;
-        set_language(language);
-    });
-
-    languagePopup.addEventListener('focusout', function(e) {
-        // e.relatedTarget is null in Safari and Firefox on macOS (see workaround below)
-        if (!!e.relatedTarget && !languageToggleButton.contains(e.relatedTarget) && !languagePopup.contains(e.relatedTarget)) {
-            hideLanguages();
+        function hideLanguages() {
+            languagePopup.style.display = 'none';
+            languageToggleButton.setAttribute('aria-expanded', false);
+            languageToggleButton.focus();
         }
-    });
 
-    // Should not be needed, but it works around an issue on macOS & iOS: https://github.com/rust-lang/mdBook/issues/628
-    document.addEventListener('click', function(e) {
-        if (languagePopup.style.display === 'block' && !languageToggleButton.contains(e.target) && !languagePopup.contains(e.target)) {
-            hideLanguages();
+        function set_language(language) {
+            console.log("Set language " + language)
         }
-    });
 
-    document.addEventListener('keydown', function (e) {
-        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
-        if (!languagePopup.contains(e.target)) { return; }
-
-        switch (e.key) {
-            case 'Escape':
-                e.preventDefault();
+        languageToggleButton.addEventListener('click', function () {
+            if (languagePopup.style.display === 'block') {
                 hideLanguages();
-                break;
-            case 'ArrowUp':
-                e.preventDefault();
-                var li = document.activeElement.parentElement;
-                if (li && li.previousElementSibling) {
-                    li.previousElementSibling.querySelector('button').focus();
-                }
-                break;
-            case 'ArrowDown':
-                e.preventDefault();
-                var li = document.activeElement.parentElement;
-                if (li && li.nextElementSibling) {
-                    li.nextElementSibling.querySelector('button').focus();
-                }
-                break;
-            case 'Home':
-                e.preventDefault();
-                languagePopup.querySelector('li:first-child button').focus();
-                break;
-            case 'End':
-                e.preventDefault();
-                languagePopup.querySelector('li:last-child button').focus();
-                break;
-        }
-    });
+            } else {
+                showLanguages();
+            }
+        });
+
+        languagePopup.addEventListener('click', function (e) {
+            var language = e.target.id || e.target.parentElement.id;
+            set_language(language);
+        });
+
+        languagePopup.addEventListener('focusout', function(e) {
+            // e.relatedTarget is null in Safari and Firefox on macOS (see workaround below)
+            if (!!e.relatedTarget && !languageToggleButton.contains(e.relatedTarget) && !languagePopup.contains(e.relatedTarget)) {
+                hideLanguages();
+            }
+        });
+
+        // Should not be needed, but it works around an issue on macOS & iOS: https://github.com/rust-lang/mdBook/issues/628
+        document.addEventListener('click', function(e) {
+            if (languagePopup.style.display === 'block' && !languageToggleButton.contains(e.target) && !languagePopup.contains(e.target)) {
+                hideLanguages();
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
+            if (!languagePopup.contains(e.target)) { return; }
+
+            switch (e.key) {
+                case 'Escape':
+                    e.preventDefault();
+                    hideLanguages();
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    var li = document.activeElement.parentElement;
+                    if (li && li.previousElementSibling) {
+                        li.previousElementSibling.querySelector('button').focus();
+                    }
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    var li = document.activeElement.parentElement;
+                    if (li && li.nextElementSibling) {
+                        li.nextElementSibling.querySelector('button').focus();
+                    }
+                    break;
+                case 'Home':
+                    e.preventDefault();
+                    languagePopup.querySelector('li:first-child button').focus();
+                    break;
+                case 'End':
+                    e.preventDefault();
+                    languagePopup.querySelector('li:last-child button').focus();
+                    break;
+            }
+       });
+    }
 })();
 
 (function sidebar() {

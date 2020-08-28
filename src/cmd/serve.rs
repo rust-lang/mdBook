@@ -4,6 +4,7 @@ use crate::{get_book_dir, get_build_opts, open};
 use clap::{App, Arg, ArgMatches, SubCommand};
 use futures_util::sink::SinkExt;
 use futures_util::StreamExt;
+use http::Uri;
 use mdbook::errors::*;
 use mdbook::utils;
 use mdbook::utils::fs::get_404_output_file;
@@ -60,7 +61,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
     let build_opts = get_build_opts(args);
-    let mut book = MDBook::load_with_build_opts(&book_dir, build_opts)?;
+    let mut book = MDBook::load_with_build_opts(&book_dir, build_opts.clone())?;
 
     let port = args.value_of("port").unwrap();
     let hostname = args.value_of("hostname").unwrap();
@@ -82,6 +83,18 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     update_config(&mut book);
     book.build()?;
 
+    let language: Option<String> = match build_opts.language_ident {
+        // index.html will be at the root directory.
+        Some(_) => None,
+        None => match book.config.language.default_language() {
+            // If book has translations, index.html will be under src/en/ or
+            // similar.
+            Some(lang_ident) => Some(lang_ident.clone()),
+            // If not, it will be at the root.
+            None => None,
+        }
+    };
+
     let sockaddr: SocketAddr = address
         .to_socket_addrs()?
         .next()
@@ -100,7 +113,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     let reload_tx = tx.clone();
     let thread_handle = std::thread::spawn(move || {
-        serve(build_dir, sockaddr, reload_tx, &file_404);
+        serve(build_dir, sockaddr, reload_tx, &file_404, language);
     });
 
     let serving_url = format!("http://{}", address);
@@ -140,6 +153,7 @@ async fn serve(
     address: SocketAddr,
     reload_tx: broadcast::Sender<Message>,
     file_404: &str,
+    language: Option<String>,
 ) {
     // A warp Filter which captures `reload_tx` and provides an `rx` copy to
     // receive reload messages.
@@ -166,7 +180,6 @@ async fn serve(
     // The fallback route for 404 errors
     let fallback_route = warp::fs::file(build_dir.join(file_404))
         .map(|reply| warp::reply::with_status(reply, warp::http::StatusCode::NOT_FOUND));
-    let routes = livereload.or(book_route).or(fallback_route);
 
     std::panic::set_hook(Box::new(move |panic_info| {
         // exit if serve panics
@@ -174,5 +187,16 @@ async fn serve(
         std::process::exit(1);
     }));
 
-    warp::serve(routes).run(address).await;
+    if let Some(lang_ident) = language {
+        // Redirect root to the default translation directory, if serving a localized book.
+        // BUG: This can't be `/{lang_ident}`, or the static assets won't get loaded.
+        let index_for_language = format!("/{}/index.html", lang_ident).parse::<Uri>().unwrap();
+        let redirect_to_index = warp::path::end().map(move || warp::redirect(index_for_language.clone()));
+        let routes = livereload.or(redirect_to_index).or(book_route).or(fallback_route);
+        warp::serve(routes).run(address).await;
+    }
+    else {
+        let routes = livereload.or(book_route).or(fallback_route);
+        warp::serve(routes).run(address).await;
+    };
 }
