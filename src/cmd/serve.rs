@@ -129,10 +129,11 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         info!("Building book...");
 
         // FIXME: This area is really ugly because we need to re-set livereload :(
-        let result = MDBook::load(&book_dir).and_then(|mut b| {
-            update_config(&mut b);
-            b.build()
-        });
+        let result =
+            MDBook::load_with_build_opts(&book_dir, build_opts.clone()).and_then(|mut b| {
+                update_config(&mut b);
+                b.build()
+            });
 
         if let Err(e) = result {
             error!("Unable to load the book");

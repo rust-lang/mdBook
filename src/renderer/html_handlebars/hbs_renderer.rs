@@ -119,7 +119,7 @@ impl HtmlHandlebars {
 
         let mut is_index = true;
         for item in book.iter() {
-            let ctx = RenderItemContext {
+            let item_ctx = RenderItemContext {
                 handlebars: &handlebars,
                 destination: destination.to_path_buf(),
                 data: data.clone(),
@@ -127,7 +127,7 @@ impl HtmlHandlebars {
                 html_config: html_config.clone(),
                 edition: ctx.config.rust.edition,
             };
-            self.render_item(item, ctx, &mut print_content)?;
+            self.render_item(item, item_ctx, src_dir, &ctx.config, &mut print_content)?;
             is_index = false;
         }
 
@@ -138,6 +138,7 @@ impl HtmlHandlebars {
                 &html_config,
                 src_dir,
                 destination,
+                language_ident,
                 handlebars,
                 &mut data,
             )?;
@@ -193,6 +194,8 @@ impl HtmlHandlebars {
         &self,
         item: &BookItem,
         mut ctx: RenderItemContext<'_>,
+        src_dir: &PathBuf,
+        cfg: &Config,
         print_content: &mut String,
     ) -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
@@ -216,11 +219,29 @@ impl HtmlHandlebars {
                 .insert("git_repository_edit_url".to_owned(), json!(edit_url));
         }
 
-        let content = ch.content.clone();
-        let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
+        let fallback_path = cfg.default_language().map(|lang_ident| {
+            let mut fallback = PathBuf::from(utils::fs::path_to_root(&path));
+            fallback.push("../");
+            fallback.push(lang_ident.clone());
+            fallback
+        });
 
-        let fixed_content =
-            utils::render_markdown_with_path(&ch.content, ctx.html_config.curly_quotes, Some(path));
+        let content = ch.content.clone();
+        let content = utils::render_markdown_with_path(
+            &content,
+            ctx.html_config.curly_quotes,
+            Some(&path),
+            Some(&src_dir),
+            &fallback_path,
+        );
+
+        let fixed_content = utils::render_markdown_with_path(
+            &ch.content,
+            ctx.html_config.curly_quotes,
+            Some(&path),
+            Some(&src_dir),
+            &fallback_path,
+        );
         if !ctx.is_index {
             // Add page break between chapters
             // See https://developer.mozilla.org/en-US/docs/Web/CSS/break-before and https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-before
@@ -298,6 +319,7 @@ impl HtmlHandlebars {
         html_config: &HtmlConfig,
         src_dir: &PathBuf,
         destination: &PathBuf,
+        language_ident: &Option<String>,
         handlebars: &mut Handlebars<'_>,
         data: &mut serde_json::Map<String, serde_json::Value>,
     ) -> Result<()> {
@@ -321,16 +343,26 @@ impl HtmlHandlebars {
         let html_content_404 = utils::render_markdown(&content_404, html_config.curly_quotes);
 
         let mut data_404 = data.clone();
-        let base_url = if let Some(site_url) = &html_config.site_url {
-            site_url
+        let mut base_url = if let Some(site_url) = &html_config.site_url {
+            site_url.clone()
         } else {
             debug!(
                 "HTML 'site-url' parameter not set, defaulting to '/'. Please configure \
                  this to ensure the 404 page work correctly, especially if your site is hosted in a \
                  subdirectory on the HTTP server."
             );
-            "/"
+            String::from("/")
         };
+
+        // Set the subdirectory to the currently localized version if using a
+        // multilingual output format.
+        if let LoadedBook::Localized(_) = ctx.book {
+            if let Some(lang_ident) = language_ident {
+                base_url.push_str(lang_ident);
+                base_url.push_str("/");
+            }
+        }
+
         data_404.insert("base_url".to_owned(), json!(base_url));
         // Set a dummy path to ensure other paths (e.g. in the TOC) are generated correctly
         data_404.insert("path".to_owned(), json!("404.md"));

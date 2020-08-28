@@ -34,7 +34,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
     let build_opts = get_build_opts(args);
-    let mut book = MDBook::load_with_build_opts(&book_dir, build_opts)?;
+    let mut book = MDBook::load_with_build_opts(&book_dir, build_opts.clone())?;
 
     let update_config = |book: &mut MDBook| {
         if let Some(dest_dir) = args.value_of("dest-dir") {
@@ -50,7 +50,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     trigger_on_change(&book, |paths, book_dir| {
         info!("Files changed: {:?}\nBuilding book...\n", paths);
-        let result = MDBook::load(&book_dir).and_then(|mut b| {
+        let result = MDBook::load_with_build_opts(&book_dir, build_opts.clone()).and_then(|mut b| {
             update_config(&mut b);
             b.build()
         });
