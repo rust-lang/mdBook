@@ -25,8 +25,8 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 use crate::book::Book;
-use crate::config::Config;
 use crate::build_opts::BuildOpts;
+use crate::config::Config;
 use crate::errors::*;
 use toml::Value;
 
@@ -75,7 +75,13 @@ pub struct RenderContext {
 
 impl RenderContext {
     /// Create a new `RenderContext`.
-    pub fn new<P, Q>(root: P, book: Book, build_opts: BuildOpts, config: Config, destination: Q) -> RenderContext
+    pub fn new<P, Q>(
+        root: P,
+        book: Book,
+        build_opts: BuildOpts,
+        config: Config,
+        destination: Q,
+    ) -> RenderContext
     where
         P: Into<PathBuf>,
         Q: Into<PathBuf>,

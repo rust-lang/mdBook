@@ -5,27 +5,37 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
 use super::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
-use crate::config::BuildConfig;
+use crate::build_opts::BuildOpts;
+use crate::config::Config;
 use crate::errors::*;
 
 /// Load a book into memory from its `src/` directory.
-pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> {
-    let src_dir = src_dir.as_ref();
-    let summary_md = src_dir.join("SUMMARY.md");
+pub fn load_book<P: AsRef<Path>>(
+    root_dir: P,
+    cfg: &Config,
+    build_opts: &BuildOpts,
+) -> Result<Book> {
+    let localized_src_dir = root_dir.as_ref().join(
+        cfg.get_localized_src_path(build_opts.language_ident.as_ref())
+            .unwrap(),
+    );
+    let fallback_src_dir = root_dir.as_ref().join(cfg.get_fallback_src_path());
+
+    let summary_md = localized_src_dir.join("SUMMARY.md");
 
     let mut summary_content = String::new();
     File::open(&summary_md)
-        .with_context(|| format!("Couldn't open SUMMARY.md in {:?} directory", src_dir))?
+        .with_context(|| format!("Couldn't open SUMMARY.md in {:?} directory", localized_src_dir))?
         .read_to_string(&mut summary_content)?;
 
     let summary = parse_summary(&summary_content)
         .with_context(|| format!("Summary parsing failed for file={:?}", summary_md))?;
 
     if cfg.create_missing {
-        create_missing(src_dir, &summary).with_context(|| "Unable to create missing chapters")?;
+        create_missing(localized_src_dir, &summary).with_context(|| "Unable to create missing chapters")?;
     }
 
-    load_book_from_disk(&summary, src_dir)
+    load_book_from_disk(&summary, localized_src_dir, fallback_src_dir, cfg)
 }
 
 fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
@@ -208,9 +218,13 @@ impl Chapter {
 ///
 /// You need to pass in the book's source directory because all the links in
 /// `SUMMARY.md` give the chapter locations relative to it.
-pub(crate) fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P) -> Result<Book> {
+pub(crate) fn load_book_from_disk<P: AsRef<Path>>(
+    summary: &Summary,
+    localized_src_dir: P,
+    fallback_src_dir: P,
+    cfg: &Config,
+) -> Result<Book> {
     debug!("Loading the book from disk");
-    let src_dir = src_dir.as_ref();
 
     let prefix = summary.prefix_chapters.iter();
     let numbered = summary.numbered_chapters.iter();
@@ -221,7 +235,13 @@ pub(crate) fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P)
     let mut chapters = Vec::new();
 
     for summary_item in summary_items {
-        let chapter = load_summary_item(summary_item, src_dir, Vec::new())?;
+        let chapter = load_summary_item(
+            summary_item,
+            localized_src_dir.as_ref(),
+            fallback_src_dir.as_ref(),
+            Vec::new(),
+            cfg,
+        )?;
         chapters.push(chapter);
     }
 
@@ -233,13 +253,16 @@ pub(crate) fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P)
 
 fn load_summary_item<P: AsRef<Path> + Clone>(
     item: &SummaryItem,
-    src_dir: P,
+    localized_src_dir: P,
+    fallback_src_dir: P,
     parent_names: Vec<String>,
+    cfg: &Config,
 ) -> Result<BookItem> {
     match item {
         SummaryItem::Separator => Ok(BookItem::Separator),
         SummaryItem::Link(ref link) => {
-            load_chapter(link, src_dir, parent_names).map(BookItem::Chapter)
+            load_chapter(link, localized_src_dir, fallback_src_dir, parent_names, cfg)
+                .map(BookItem::Chapter)
         }
         SummaryItem::PartTitle(title) => Ok(BookItem::PartTitle(title.clone())),
     }
@@ -247,19 +270,33 @@ fn load_summary_item<P: AsRef<Path> + Clone>(
 
 fn load_chapter<P: AsRef<Path>>(
     link: &Link,
-    src_dir: P,
+    localized_src_dir: P,
+    fallback_src_dir: P,
     parent_names: Vec<String>,
+    cfg: &Config,
 ) -> Result<Chapter> {
-    let src_dir = src_dir.as_ref();
+    let src_dir_localized = localized_src_dir.as_ref();
+    let src_dir_fallback = fallback_src_dir.as_ref();
 
     let mut ch = if let Some(ref link_location) = link.location {
         debug!("Loading {} ({})", link.name, link_location.display());
 
-        let location = if link_location.is_absolute() {
+        let mut src_dir = src_dir_localized;
+        let mut location = if link_location.is_absolute() {
             link_location.clone()
         } else {
             src_dir.join(link_location)
         };
+
+        if !location.exists() && !link_location.is_absolute() {
+            src_dir = src_dir_fallback;
+            location = src_dir.join(link_location);
+            debug!("Falling back to {}", location.display());
+        }
+        if !location.exists() && cfg.build.create_missing {
+            create_missing(&location, &link)
+                .with_context(|| "Unable to create missing chapters")?;
+        }
 
         let mut f = File::open(&location)
             .with_context(|| format!("Chapter file not found, {}", link_location.display()))?;
@@ -290,7 +327,15 @@ fn load_chapter<P: AsRef<Path>>(
     let sub_items = link
         .nested_items
         .iter()
-        .map(|i| load_summary_item(i, src_dir, sub_item_parents.clone()))
+        .map(|i| {
+            load_summary_item(
+                i,
+                src_dir_localized,
+                src_dir_fallback,
+                sub_item_parents.clone(),
+                cfg,
+            )
+        })
         .collect::<Result<Vec<_>>>()?;
 
     ch.sub_items = sub_items;
@@ -347,7 +392,7 @@ mod tests {
 this is some dummy text.
 
 And here is some \
-                                     more text.
+more text.
 ";
 
     /// Create a dummy `Link` in a temporary directory.
@@ -389,6 +434,7 @@ And here is some \
     #[test]
     fn load_a_single_chapter_from_disk() {
         let (link, temp_dir) = dummy_link();
+        let cfg = Config::default();
         let should_be = Chapter::new(
             "Chapter 1",
             DUMMY_SRC.to_string(),
@@ -396,7 +442,7 @@ And here is some \
             Vec::new(),
         );
 
-        let got = load_chapter(&link, temp_dir.path(), Vec::new()).unwrap();
+        let got = load_chapter(&link, temp_dir.path(), temp_dir.path(), Vec::new(), &cfg).unwrap();
         assert_eq!(got, should_be);
     }
 
@@ -427,7 +473,7 @@ And here is some \
     fn cant_load_a_nonexistent_chapter() {
         let link = Link::new("Chapter 1", "/foo/bar/baz.md");
 
-        let got = load_chapter(&link, "", Vec::new());
+        let got = load_chapter(&link, "", "", Vec::new(), &Config::default());
         assert!(got.is_err());
     }
 
@@ -444,6 +490,7 @@ And here is some \
             parent_names: vec![String::from("Chapter 1")],
             sub_items: Vec::new(),
         };
+        let cfg = Config::default();
         let should_be = BookItem::Chapter(Chapter {
             name: String::from("Chapter 1"),
             content: String::from(DUMMY_SRC),
@@ -458,7 +505,14 @@ And here is some \
             ],
         });
 
-        let got = load_summary_item(&SummaryItem::Link(root), temp.path(), Vec::new()).unwrap();
+        let got = load_summary_item(
+            &SummaryItem::Link(root),
+            temp.path(),
+            temp.path(),
+            Vec::new(),
+            &cfg,
+        )
+        .unwrap();
         assert_eq!(got, should_be);
     }
 
@@ -469,6 +523,7 @@ And here is some \
             numbered_chapters: vec![SummaryItem::Link(link)],
             ..Default::default()
         };
+        let cfg = Config::default();
         let should_be = Book {
             sections: vec![BookItem::Chapter(Chapter {
                 name: String::from("Chapter 1"),
@@ -480,7 +535,7 @@ And here is some \
             ..Default::default()
         };
 
-        let got = load_book_from_disk(&summary, temp.path()).unwrap();
+        let got = load_book_from_disk(&summary, temp.path(), temp.path(), &cfg).unwrap();
 
         assert_eq!(got, should_be);
     }
@@ -611,8 +666,9 @@ And here is some \
 
             ..Default::default()
         };
+        let cfg = Config::default();
 
-        let got = load_book_from_disk(&summary, temp.path());
+        let got = load_book_from_disk(&summary, temp.path(), temp.path(), &cfg);
         assert!(got.is_err());
     }
 
@@ -630,8 +686,61 @@ And here is some \
             })],
             ..Default::default()
         };
+        let cfg = Config::default();
 
-        let got = load_book_from_disk(&summary, temp.path());
+        let got = load_book_from_disk(&summary, temp.path(), temp.path(), &cfg);
+        assert!(got.is_err());
+    }
+
+    #[test]
+    fn can_load_a_nonexistent_chapter_with_fallback() {
+        let (_, temp_localized) = dummy_link();
+        let chapter_path = temp_localized.path().join("chapter_1.md");
+        fs::remove_file(&chapter_path).unwrap();
+
+        let (_, temp_fallback) = dummy_link();
+
+        let link_relative = Link::new("Chapter 1", "chapter_1.md");
+
+        let summary = Summary {
+            numbered_chapters: vec![SummaryItem::Link(link_relative)],
+            ..Default::default()
+        };
+        let mut cfg = Config::default();
+        cfg.build.create_missing = false;
+        let should_be = Book {
+            sections: vec![BookItem::Chapter(Chapter {
+                name: String::from("Chapter 1"),
+                content: String::from(DUMMY_SRC),
+                path: Some(PathBuf::from("chapter_1.md")),
+                ..Default::default()
+            })],
+            ..Default::default()
+        };
+
+        let got = load_book_from_disk(&summary, temp_localized.path(), temp_fallback.path(), &cfg)
+            .unwrap();
+
+        assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn cannot_load_a_nonexistent_absolute_link_with_fallback() {
+        let (link_absolute, temp_localized) = dummy_link();
+        let chapter_path = temp_localized.path().join("chapter_1.md");
+        fs::remove_file(&chapter_path).unwrap();
+
+        let (_, temp_fallback) = dummy_link();
+
+        let summary = Summary {
+            numbered_chapters: vec![SummaryItem::Link(link_absolute)],
+            ..Default::default()
+        };
+        let mut cfg = Config::default();
+        cfg.build.create_missing = false;
+
+        let got = load_book_from_disk(&summary, temp_localized.path(), temp_fallback.path(), &cfg);
+
         assert!(got.is_err());
     }
 }

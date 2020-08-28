@@ -1,4 +1,4 @@
-use crate::{get_book_dir, open};
+use crate::{get_book_dir, get_build_opts, open};
 use clap::{App, ArgMatches, SubCommand};
 use mdbook::errors::Result;
 use mdbook::utils;
@@ -23,12 +23,18 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
              (Defaults to the Current Directory when omitted)'",
         )
         .arg_from_usage("-o, --open 'Open the compiled book in a web browser'")
+        .arg_from_usage(
+            "-l, --language=[language] 'Language to render the compiled book in.{n}\
+                         Only valid if the [languages] table in the config is not empty.{n}\
+                         If omitted, defaults to the language with `default` set to true.'",
+        )
 }
 
 // Watch command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::load(&book_dir)?;
+    let build_opts = get_build_opts(args);
+    let mut book = MDBook::load_with_build_opts(&book_dir, build_opts)?;
 
     let update_config = |book: &mut MDBook| {
         if let Some(dest_dir) = args.value_of("dest-dir") {

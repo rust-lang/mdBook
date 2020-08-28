@@ -6,8 +6,8 @@ mod dummy_book;
 use crate::dummy_book::{assert_contains_strings, assert_doesnt_contain_strings, DummyBook};
 
 use anyhow::Context;
-use mdbook::config::Config;
 use mdbook::build_opts::BuildOpts;
+use mdbook::config::Config;
 use mdbook::errors::*;
 use mdbook::utils::fs::write_file;
 use mdbook::MDBook;

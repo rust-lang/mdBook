@@ -9,8 +9,8 @@ mod index;
 mod links;
 
 use crate::book::Book;
-use crate::config::Config;
 use crate::build_opts::BuildOpts;
+use crate::config::Config;
 use crate::errors::*;
 
 use std::cell::RefCell;
@@ -39,7 +39,12 @@ pub struct PreprocessorContext {
 
 impl PreprocessorContext {
     /// Create a new `PreprocessorContext`.
-    pub(crate) fn new(root: PathBuf, build_opts: BuildOpts, config: Config, renderer: String) -> Self {
+    pub(crate) fn new(
+        root: PathBuf,
+        build_opts: BuildOpts,
+        config: Config,
+        renderer: String,
+    ) -> Self {
         PreprocessorContext {
             root,
             build_opts,

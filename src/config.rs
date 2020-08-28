@@ -49,6 +49,7 @@
 
 #![deny(missing_docs)]
 
+use anyhow::anyhow;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
 use std::env;
@@ -253,27 +254,66 @@ impl Config {
     }
 
     /// Get the source directory of a localized book corresponding to language ident `index`.
-    pub fn get_localized_src_path<I: AsRef<str>>(&self, index: Option<I>) -> Option<PathBuf> {
+    pub fn get_localized_src_path<I: AsRef<str>>(&self, index: Option<I>) -> Result<PathBuf> {
         match self.language.default_language() {
+            // Languages have been specified, assume directory structure with
+            // language subfolders.
             Some(default) => match index {
                 // Make sure that the language we passed was actually
                 // declared in the config, and return `None` if not.
-                Some(lang_ident) => self.language.0.get(lang_ident.as_ref()).map(|_| {
+                Some(lang_ident) => match self.language.0.get(lang_ident.as_ref()) {
+                    Some(_) => {
+                        let mut buf = PathBuf::new();
+                        buf.push(self.book.src.clone());
+                        buf.push(lang_ident.as_ref());
+                        Ok(buf)
+                    }
+                    None => Err(anyhow!(
+                        "Expected [language.{}] to be declared in book.toml",
+                        lang_ident.as_ref()
+                    )),
+                },
+                // Use the default specified in book.toml.
+                None => {
                     let mut buf = PathBuf::new();
                     buf.push(self.book.src.clone());
-                    buf.push(lang_ident.as_ref());
-                    buf
-                }),
-                // Use the default specified in book.toml.
-                None => Some(PathBuf::from(default))
-            }
+                    buf.push(default);
+                    Ok(buf)
+                }
+            },
 
             // No default language was configured in book.toml. Preserve
             // backwards compatibility by just returning `src`.
             None => match index {
-                Some(_) => None,
-                None => Some(self.book.src.clone()),
+                // We passed in a language from the frontend, but the config
+                // offers no languages.
+                Some(lang_ident) => Err(anyhow!(
+                    "No [language] table in book.toml, expected [language.{}] to be declared",
+                    lang_ident.as_ref()
+                )),
+                // Default to previous non-localized behavior.
+                None => Ok(self.book.src.clone()),
+            },
+        }
+    }
+
+    /// Get the fallback source directory of a book. For example, if chapters
+    /// are missing in a localization, the links will gracefully degrade to the
+    /// files that exist in this directory.
+    pub fn get_fallback_src_path(&self) -> PathBuf {
+        match self.language.default_language() {
+            // Languages have been specified, assume directory structure with
+            // language subfolders.
+            Some(default) => {
+                let mut buf = PathBuf::new();
+                buf.push(self.book.src.clone());
+                buf.push(default);
+                buf
             }
+
+            // No default language was configured in book.toml. Preserve
+            // backwards compatibility by just returning `src`.
+            None => self.book.src.clone(),
         }
     }
 
@@ -373,14 +413,11 @@ impl<'de> Deserialize<'de> for Config {
             .unwrap_or_default();
 
         if !language.0.is_empty() {
-            let default_languages = language.0
-                .iter()
-                .filter(|(_, lang)| lang.default)
-                .count();
+            let default_languages = language.0.iter().filter(|(_, lang)| lang.default).count();
 
             if default_languages != 1  {
                 return Err(D::Error::custom(
-                    "If languages are specified, exactly one must be set as 'default'"
+                    "If languages are specified, exactly one must be set as 'default'",
                 ));
             }
         }
@@ -752,9 +789,10 @@ pub struct Language {
 impl LanguageConfig {
     /// Returns the default language specified in the config.
     pub fn default_language(&self) -> Option<&String> {
-        self.0.iter()
-              .find(|(_, lang)| lang.default)
-              .map(|(lang_ident, _)| lang_ident)
+        self.0
+            .iter()
+            .find(|(_, lang)| lang.default)
+            .map(|(lang_ident, _)| lang_ident)
     }
 }
 
@@ -874,8 +912,20 @@ mod tests {
             ..Default::default()
         };
         let mut language_should_be = LanguageConfig::default();
-        language_should_be.0.insert(String::from("en"), Language { name: String::from("English"), default: true });
-        language_should_be.0.insert(String::from("fr"), Language { name: String::from("Français"), default: false });
+        language_should_be.0.insert(
+            String::from("en"),
+            Language {
+                name: String::from("English"),
+                default: true,
+            },
+        );
+        language_should_be.0.insert(
+            String::from("fr"),
+            Language {
+                name: String::from("Français"),
+                default: false,
+            },
+        );
 
         let got = Config::from_str(src).unwrap();
 

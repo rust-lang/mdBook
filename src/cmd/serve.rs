@@ -1,6 +1,6 @@
 #[cfg(feature = "watch")]
 use super::watch;
-use crate::{get_book_dir, open};
+use crate::{get_book_dir, get_build_opts, open};
 use clap::{App, Arg, ArgMatches, SubCommand};
 use futures_util::sink::SinkExt;
 use futures_util::StreamExt;
@@ -49,12 +49,18 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
                 .help("Port to use for HTTP connections"),
         )
         .arg_from_usage("-o, --open 'Opens the book server in a web browser'")
+        .arg_from_usage(
+            "-l, --language=[language] 'Language to render the compiled book in.{n}\
+                         Only valid if the [languages] table in the config is not empty.{n}\
+                         If omitted, defaults to the language with `default` set to true.'",
+        )
 }
 
 // Serve command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::load(&book_dir)?;
+    let build_opts = get_build_opts(args);
+    let mut book = MDBook::load_with_build_opts(&book_dir, build_opts)?;
 
     let port = args.value_of("port").unwrap();
     let hostname = args.value_of("hostname").unwrap();

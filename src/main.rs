@@ -8,8 +8,8 @@ use chrono::Local;
 use clap::{App, AppSettings, Arg, ArgMatches, Shell, SubCommand};
 use env_logger::Builder;
 use log::LevelFilter;
-use mdbook::utils;
 use mdbook::build_opts::BuildOpts;
+use mdbook::utils;
 use std::env;
 use std::ffi::OsStr;
 use std::io::Write;
@@ -136,7 +136,7 @@ fn get_build_opts(args: &ArgMatches) -> BuildOpts {
     let language = args.value_of("language");
 
     BuildOpts {
-        language_ident: language.map(String::from)
+        language_ident: language.map(String::from),
     }
 }
 

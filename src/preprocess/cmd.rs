@@ -178,8 +178,8 @@ impl Preprocessor for CmdPreprocessor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::MDBook;
     use crate::build_opts::BuildOpts;
+    use crate::MDBook;
     use std::path::Path;
 
     fn guide() -> MDBook {

@@ -28,8 +28,8 @@ use crate::preprocess::{
 use crate::renderer::{CmdRenderer, HtmlHandlebars, MarkdownRenderer, RenderContext, Renderer};
 use crate::utils;
 
-use crate::config::{Config, RustEdition};
 use crate::build_opts::BuildOpts;
+use crate::config::{Config, RustEdition};
 
 /// The object used to manage and build a book.
 pub struct MDBook {
@@ -57,7 +57,10 @@ impl MDBook {
 
     /// Load a book from its root directory on disk, passing in options from the
     /// frontend.
-    pub fn load_with_build_opts<P: Into<PathBuf>>(book_root: P, build_opts: BuildOpts) -> Result<MDBook> {
+    pub fn load_with_build_opts<P: Into<PathBuf>>(
+        book_root: P,
+        build_opts: BuildOpts,
+    ) -> Result<MDBook> {
         let book_root = book_root.into();
         let config_location = book_root.join("book.toml");
 
@@ -90,11 +93,14 @@ impl MDBook {
     }
 
     /// Load a book from its root directory using a custom config.
-    pub fn load_with_config<P: Into<PathBuf>>(book_root: P, config: Config, build_opts: BuildOpts) -> Result<MDBook> {
+    pub fn load_with_config<P: Into<PathBuf>>(
+        book_root: P,
+        config: Config,
+        build_opts: BuildOpts,
+    ) -> Result<MDBook> {
         let root = book_root.into();
 
-        let src_dir = root.join(&config.book.src);
-        let book = book::load_book(&src_dir, &config.build)?;
+        let book = book::load_book(&root, &config, &build_opts)?;
 
         let renderers = determine_renderers(&config);
         let preprocessors = determine_preprocessors(&config)?;
@@ -118,8 +124,14 @@ impl MDBook {
     ) -> Result<MDBook> {
         let root = book_root.into();
 
-        let src_dir = root.join(&config.book.src);
-        let book = book::load_book_from_disk(&summary, &src_dir)?;
+        let localized_src_dir = root.join(
+            config
+                .get_localized_src_path(build_opts.language_ident.as_ref())
+                .unwrap(),
+        );
+        let fallback_src_dir = root.join(config.get_fallback_src_path());
+        let book =
+            book::load_book_from_disk(&summary, localized_src_dir, fallback_src_dir, &config)?;
 
         let renderers = determine_renderers(&config);
         let preprocessors = determine_preprocessors(&config)?;
@@ -256,8 +268,12 @@ impl MDBook {
         let temp_dir = TempFileBuilder::new().prefix("mdbook-").tempdir()?;
 
         // FIXME: Is "test" the proper renderer name to use here?
-        let preprocess_context =
-            PreprocessorContext::new(self.root.clone(), self.build_opts.clone(), self.config.clone(), "test".to_string());
+        let preprocess_context = PreprocessorContext::new(
+            self.root.clone(),
+            self.build_opts.clone(),
+            self.config.clone(),
+            "test".to_string(),
+        );
 
         let book = LinkPreprocessor::new().run(&preprocess_context, self.book.clone())?;
         // Index Preprocessor is disabled so that chapter paths continue to point to the
