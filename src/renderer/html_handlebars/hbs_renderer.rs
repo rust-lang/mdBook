@@ -45,6 +45,7 @@ impl HtmlHandlebars {
                         &localized_src_dir,
                         &localized_destination,
                         &localized_build_dir,
+                        &Some(lang_ident.to_string()),
                         html_config,
                         handlebars,
                         theme,
@@ -74,6 +75,7 @@ impl HtmlHandlebars {
                     &extra_file_dir,
                     &ctx.destination,
                     &ctx.config.build.build_dir,
+                    &ctx.build_opts.language_ident,
                     html_config,
                     handlebars,
                     theme,
@@ -92,6 +94,7 @@ impl HtmlHandlebars {
         extra_file_dir: &PathBuf,
         destination: &PathBuf,
         build_dir: &PathBuf,
+        language_ident: &Option<String>,
         html_config: &HtmlConfig,
         handlebars: &mut Handlebars<'a>,
         theme: &Theme,
@@ -102,6 +105,7 @@ impl HtmlHandlebars {
             &book,
             &ctx.book,
             &ctx.config,
+            language_ident,
             &html_config,
             &theme,
         )?;
@@ -746,23 +750,25 @@ fn make_data(
     book: &Book,
     loaded_book: &LoadedBook,
     config: &Config,
+    language_ident: &Option<String>,
     html_config: &HtmlConfig,
     theme: &Theme,
 ) -> Result<serde_json::Map<String, serde_json::Value>> {
     trace!("make_data");
 
     let mut data = serde_json::Map::new();
+
     data.insert(
         "language".to_owned(),
         json!(config.book.language.clone().unwrap_or_default()),
     );
     data.insert(
         "book_title".to_owned(),
-        json!(config.book.title.clone().unwrap_or_default()),
+        json!(config.get_localized_title(language_ident.as_ref())),
     );
     data.insert(
         "description".to_owned(),
-        json!(config.book.description.clone().unwrap_or_default()),
+        json!(config.get_localized_description(language_ident.as_ref())),
     );
     if theme.favicon_png.is_some() {
         data.insert("favicon_png".to_owned(), json!("favicon.png"));

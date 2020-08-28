@@ -253,37 +253,26 @@ impl Config {
         self.get(&key).and_then(Value::as_table)
     }
 
-    /// Get the source directory of a localized book corresponding to language ident `index`.
-    pub fn get_localized_src_path<I: AsRef<str>>(&self, index: Option<I>) -> Result<PathBuf> {
+    /// Gets the language configured for a book.
+    pub fn get_language<I: AsRef<str>>(&self, index: Option<I>) -> Result<Option<String>> {
         match self.language.default_language() {
             // Languages have been specified, assume directory structure with
             // language subfolders.
-            Some(default) => match index {
+            Some(ref default) => match index {
                 // Make sure that the language we passed was actually
                 // declared in the config, and return `None` if not.
                 Some(lang_ident) => match self.language.0.get(lang_ident.as_ref()) {
-                    Some(_) => {
-                        let mut buf = PathBuf::new();
-                        buf.push(self.book.src.clone());
-                        buf.push(lang_ident.as_ref());
-                        Ok(buf)
-                    }
+                    Some(_) => Ok(Some(lang_ident.as_ref().into())),
                     None => Err(anyhow!(
                         "Expected [language.{}] to be declared in book.toml",
                         lang_ident.as_ref()
                     )),
                 },
                 // Use the default specified in book.toml.
-                None => {
-                    let mut buf = PathBuf::new();
-                    buf.push(self.book.src.clone());
-                    buf.push(default);
-                    Ok(buf)
-                }
+                None => Ok(Some(default.to_string())),
             },
 
-            // No default language was configured in book.toml. Preserve
-            // backwards compatibility by just returning `src`.
+            // No default language was configured in book.toml.
             None => match index {
                 // We passed in a language from the frontend, but the config
                 // offers no languages.
@@ -292,8 +281,60 @@ impl Config {
                     lang_ident.as_ref()
                 )),
                 // Default to previous non-localized behavior.
-                None => Ok(self.book.src.clone()),
+                None => Ok(None),
             },
+        }
+    }
+
+    /// Get the source directory of a localized book corresponding to language ident `index`.
+    pub fn get_localized_src_path<I: AsRef<str>>(&self, index: Option<I>) -> Result<PathBuf> {
+        let language = self.get_language(index)?;
+
+        match language {
+            Some(lang_ident) => {
+                let mut buf = PathBuf::new();
+                buf.push(self.book.src.clone());
+                buf.push(lang_ident);
+                Ok(buf)
+            }
+
+            // No default language was configured in book.toml. Preserve
+            // backwards compatibility by just returning `src`.
+            None => Ok(self.book.src.clone()),
+        }
+    }
+
+    /// Gets the localized title of the book.
+    pub fn get_localized_title<I: AsRef<str>>(&self, index: Option<I>) -> Option<String> {
+        let language = self.get_language(index).unwrap();
+
+        match language {
+            Some(lang_ident) => self
+                .language
+                .0
+                .get(&lang_ident)
+                .unwrap()
+                .title
+                .clone()
+                .or(self.book.title.clone()),
+            None => self.book.title.clone(),
+        }
+    }
+
+    /// Gets the localized description of the book.
+    pub fn get_localized_description<I: AsRef<str>>(&self, index: Option<I>) -> Option<String> {
+        let language = self.get_language(index).unwrap();
+
+        match language {
+            Some(lang_ident) => self
+                .language
+                .0
+                .get(&lang_ident)
+                .unwrap()
+                .description
+                .clone()
+                .or(self.book.description.clone()),
+            None => self.book.description.clone(),
         }
     }
 
@@ -497,9 +538,9 @@ pub struct BookConfig {
     pub description: Option<String>,
     /// Location of the book source relative to the book's root directory.
     pub src: PathBuf,
-    /// Does this book support more than one language?
+    /// Does this book support more than one language? (Deprecated.)
     pub multilingual: bool,
-    /// The main language of the book.
+    /// The main language of the book. (Deprecated.)
     pub language: Option<String>,
 }
 
@@ -787,6 +828,12 @@ pub struct Language {
     /// If true, this language is the default. There must be exactly one default
     /// language in the config.
     pub default: bool,
+    /// Localized title of the book.
+    pub title: Option<String>,
+    /// The authors of the translation.
+    pub authors: Option<Vec<String>>,
+    /// Localized description of the book.
+    pub description: Option<String>,
 }
 
 impl LanguageConfig {
@@ -873,8 +920,11 @@ mod tests {
         name = "English"
         default = true
 
-        [language.fr]
-        name = "Français"
+        [language.ja]
+        name = "日本語"
+        title = "なんかの本"
+        description = "何の役にも立たない本"
+        authors = ["Ruin0x11"]
         "#;
 
     #[test]
@@ -927,13 +977,19 @@ mod tests {
             Language {
                 name: String::from("English"),
                 default: true,
+                title: None,
+                description: None,
+                authors: None,
             },
         );
         language_should_be.0.insert(
-            String::from("fr"),
+            String::from("ja"),
             Language {
-                name: String::from("Français"),
+                name: String::from("日本語"),
                 default: false,
+                title: Some(String::from("なんかの本")),
+                description: Some(String::from("何の役にも立たない本")),
+                authors: Some(vec![String::from("Ruin0x11")]),
             },
         );
 

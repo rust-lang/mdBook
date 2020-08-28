@@ -30,3 +30,6 @@ default = true
 
 [language.ja]
 name = "日本語"
+title = "翻訳された本"
+description = "mdBookの翻訳機能のテスト用の本"
+authors = ["Ruin0x11"]
