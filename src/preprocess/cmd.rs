@@ -193,6 +193,7 @@ mod tests {
         let md = guide();
         let ctx = PreprocessorContext::new(
             md.root.clone(),
+            None,
             BuildOpts::default(),
             md.config.clone(),
             "some-renderer".to_string(),

@@ -4,7 +4,7 @@ use crate::errors::*;
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
 use crate::theme::{self, playground_editor, Theme};
-use crate::utils;
+use crate::utils::{self, RenderMarkdownContext};
 
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -35,14 +35,12 @@ impl HtmlHandlebars {
         match ctx.book {
             LoadedBook::Localized(ref books) => {
                 for (lang_ident, book) in books.0.iter() {
-                    let localized_src_dir = src_dir.join(lang_ident);
                     let localized_destination = ctx.destination.join(lang_ident);
                     let localized_build_dir = ctx.config.build.build_dir.join(lang_ident);
                     self.render_book(
                         ctx,
                         &book,
-                        &localized_src_dir,
-                        &localized_src_dir,
+                        src_dir,
                         &localized_destination,
                         &localized_build_dir,
                         &Some(lang_ident.to_string()),
@@ -53,27 +51,10 @@ impl HtmlHandlebars {
                 }
             }
             LoadedBook::Single(ref book) => {
-                // `src_dir` points to the root source directory. If this book
-                // is actually multilingual and we specified a single language
-                // to build on the command line, then `src_dir` will not be
-                // pointing at the subdirectory with the specified translation's
-                // index/summary files. We have to append the language
-                // identifier to prevent the files from the other translations
-                // from being copied in the final step.
-                let extra_file_dir = match &ctx.build_opts.language_ident {
-                    Some(lang_ident) => {
-                        let mut path = src_dir.clone();
-                        path.push(lang_ident);
-                        path
-                    }
-                    None => src_dir.clone(),
-                };
-
                 self.render_book(
                     ctx,
                     &book,
                     src_dir,
-                    &extra_file_dir,
                     &ctx.destination,
                     &ctx.config.build.build_dir,
                     &ctx.build_opts.language_ident,
@@ -92,10 +73,9 @@ impl HtmlHandlebars {
         ctx: &RenderContext,
         book: &Book,
         src_dir: &PathBuf,
-        extra_file_dir: &PathBuf,
         destination: &PathBuf,
         build_dir: &PathBuf,
-        language_ident: &Option<String>,
+        language: &Option<String>,
         html_config: &HtmlConfig,
         handlebars: &mut Handlebars<'a>,
         theme: &Theme,
@@ -106,7 +86,7 @@ impl HtmlHandlebars {
             &book,
             &ctx.book,
             &ctx.config,
-            language_ident,
+            language,
             &html_config,
             &theme,
         )?;
@@ -127,7 +107,14 @@ impl HtmlHandlebars {
                 html_config: html_config.clone(),
                 edition: ctx.config.rust.edition,
             };
-            self.render_item(item, item_ctx, src_dir, &ctx.config, &mut print_content)?;
+            self.render_item(
+                item,
+                item_ctx,
+                &src_dir,
+                language,
+                &ctx.config,
+                &mut print_content,
+            )?;
             is_index = false;
         }
 
@@ -136,9 +123,9 @@ impl HtmlHandlebars {
             self.render_404(
                 ctx,
                 &html_config,
-                src_dir,
+                &src_dir,
                 destination,
-                language_ident,
+                language,
                 handlebars,
                 &mut data,
             )?;
@@ -178,6 +165,28 @@ impl HtmlHandlebars {
         self.emit_redirects(&ctx.destination, handlebars, &html_config.redirect)
             .context("Unable to emit redirects")?;
 
+        // `src_dir` points to the root source directory. If this book
+        // is actually multilingual and we specified a single language
+        // to build on the command line, then `src_dir` will not be
+        // pointing at the subdirectory with the specified translation's
+        // index/summary files. We have to append the language
+        // identifier to prevent the files from the other translations
+        // from being copied in the final step.
+        let extra_file_dir = match language {
+            Some(lang_ident) => {
+                // my_book/src/ja/
+                let mut path = src_dir.clone();
+                path.push(lang_ident);
+                path
+            }
+            // my_book/src/
+            None => src_dir.clone(),
+        };
+        debug!(
+            "extra file dir {:?} {:?} {:?}",
+            extra_file_dir, language, ctx.config
+        );
+
         // Copy all remaining files, avoid a recursive copy from/to the book build dir
         utils::fs::copy_files_except_ext(
             &extra_file_dir,
@@ -195,6 +204,7 @@ impl HtmlHandlebars {
         item: &BookItem,
         mut ctx: RenderItemContext<'_>,
         src_dir: &PathBuf,
+        language: &Option<String>,
         cfg: &Config,
         print_content: &mut String,
     ) -> Result<()> {
@@ -219,28 +229,32 @@ impl HtmlHandlebars {
                 .insert("git_repository_edit_url".to_owned(), json!(edit_url));
         }
 
-        let fallback_path = cfg.default_language().map(|lang_ident| {
-            let mut fallback = PathBuf::from(utils::fs::path_to_root(&path));
-            fallback.push("../");
-            fallback.push(lang_ident.clone());
-            fallback
-        });
+        let mut md_ctx = match language {
+            Some(lang_ident) => RenderMarkdownContext {
+                path: path.clone(),
+                src_dir: src_dir.clone(),
+                language: Some(lang_ident.clone()),
+                fallback_language: cfg.default_language(),
+                prepend_parent: false,
+            },
+            None => RenderMarkdownContext {
+                path: path.clone(),
+                src_dir: src_dir.clone(),
+                language: None,
+                fallback_language: None,
+                prepend_parent: false,
+            },
+        };
 
         let content = ch.content.clone();
-        let content = utils::render_markdown_with_path(
-            &content,
-            ctx.html_config.curly_quotes,
-            Some(&path),
-            Some(&src_dir),
-            &fallback_path,
-        );
+        let content =
+            utils::render_markdown_with_path(&content, ctx.html_config.curly_quotes, Some(&md_ctx));
 
+        md_ctx.prepend_parent = true;
         let fixed_content = utils::render_markdown_with_path(
             &ch.content,
             ctx.html_config.curly_quotes,
-            Some(&path),
-            Some(&src_dir),
-            &fallback_path,
+            Some(&md_ctx),
         );
         if !ctx.is_index {
             // Add page break between chapters

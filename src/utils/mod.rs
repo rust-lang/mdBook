@@ -10,12 +10,35 @@ use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, Options, Parser, Tag};
 
 use std::borrow::Cow;
 use std::fmt::Write;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 pub use self::string::{
     take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,
     take_rustdoc_include_lines,
 };
+
+/// Context for rendering markdown. This is used for fixing up links in the
+/// output if one is missing in a translation.
+#[derive(Clone, Debug)]
+pub struct RenderMarkdownContext {
+    /// Directory of the file being rendered, relative to the language's directory.
+    /// If the file is "src/en/chapter/README.md", it is "chapter".
+    pub path: PathBuf,
+    /// Absolute path to the source directory of the book being rendered, across
+    /// all languages.
+    /// If the file is "src/en/chapter/README.md", it is "src/".
+    pub src_dir: PathBuf,
+    /// Language of the book being rendered.
+    /// If the file is "src/en/chapter/README.md", it is "en".
+    /// If the book is not multilingual, it is `None`.
+    pub language: Option<String>,
+    /// Fallback language to use if a link is missing. This is configured in
+    /// `book.language` in the config.
+    /// If the book is not multilingual, it is `None`.
+    pub fallback_language: Option<String>,
+    /// If true, prepend the parent path to the link.
+    pub prepend_parent: bool,
+}
 
 lazy_static! {
     static ref SCHEME_LINK: Regex = Regex::new(r"^[a-z][a-z0-9+.-]*:").unwrap();
@@ -76,32 +99,70 @@ pub fn id_from_content(content: &str) -> String {
     normalize_id(trimmed)
 }
 
-fn md_to_html_link<'a>(dest: &CowStr<'a>, fixed_link: &mut String) {
-    if let Some(caps) = MD_LINK.captures(&dest) {
-        fixed_link.push_str(&caps["link"]);
-        fixed_link.push_str(".html");
-        if let Some(anchor) = caps.name("anchor") {
-            fixed_link.push_str(anchor.as_str());
+fn rewrite_if_missing(
+    fixed_link: &mut String,
+    path_to_dest: &PathBuf,
+    dest: &str,
+    src_dir: &PathBuf,
+    language: &str,
+    fallback_language: &str,
+) {
+    // We are inside a multilingual book.
+    //
+    // `fixed_link` is a string relative to the current language directory, like
+    // "cli/README.md". Prepend the language's source directory (like "src/ja") and see
+    // if the file exists.
+    let mut path_on_disk = src_dir.clone();
+    path_on_disk.push(language);
+    path_on_disk.push(path_to_dest);
+    path_on_disk.push(dest);
+
+    debug!("Checking if {} exists", path_on_disk.display());
+    if !path_on_disk.exists() {
+        // Now see if the file exists in the fallback language directory (like "src/en").
+        let mut fallback_path = src_dir.clone();
+        fallback_path.push(fallback_language);
+        fallback_path.push(path_to_dest);
+        fallback_path.push(dest);
+
+        debug!(
+            "Not found, checking if fallback {} exists",
+            fallback_path.display()
+        );
+        if fallback_path.exists() {
+            // We can fall back to this link. Get enough parent directories to
+            // reach the root source directory, append the fallback language
+            // directory to it, the prepend the whole thing to the link.
+            let mut relative_path = PathBuf::from(path_to_dest);
+            relative_path.push(dest);
+
+            let mut path_to_fallback_src = fs::path_to_root(&relative_path);
+            // One more parent directory out of language folder ("en")
+            write!(path_to_fallback_src, "../{}/", fallback_language).unwrap();
+
+            debug!(
+                "Rewriting link to be under fallback: {}",
+                path_to_fallback_src
+            );
+            fixed_link.insert_str(0, &path_to_fallback_src);
         }
-    } else {
-        fixed_link.push_str(&dest);
-    };
+    }
 }
 
-fn fix<'a, P: AsRef<Path>>(
-    dest: CowStr<'a>,
-    path: Option<&Path>,
-    src_dir: Option<&Path>,
-    fallback_path: &Option<P>,
-) -> CowStr<'a> {
+fn fix<'a>(dest: CowStr<'a>, ctx: Option<&RenderMarkdownContext>) -> CowStr<'a> {
     if dest.starts_with('#') {
         // Fragment-only link.
-        if let Some(path) = path {
-            let mut base = path.display().to_string();
-            if base.ends_with(".md") {
-                base.replace_range(base.len() - 3.., ".html");
+        if let Some(ctx) = ctx {
+            if ctx.prepend_parent {
+                let mut base = ctx.path.display().to_string();
+                if base.ends_with(".md") {
+                    base.replace_range(base.len() - 3.., ".html");
+                }
+                info!("{:?} {:?}", base, dest);
+                return format!("{}{}", base, dest).into();
+            } else {
+                return dest;
             }
-            return format!("{}{}", base, dest).into();
         } else {
             return dest;
         }
@@ -111,62 +172,54 @@ fn fix<'a, P: AsRef<Path>>(
         // This is a relative link, adjust it as necessary.
         let mut fixed_link = String::new();
 
-        // If this link is missing on the filesystem in the current directory,
-        // but not in the fallback directory, use the fallback's page.
-        let mut redirected_path = false;
-        if let Some(src_dir) = src_dir {
-            let mut dest_path = src_dir.to_str().unwrap().to_string();
-            write!(dest_path, "/{}", dest).unwrap();
-            trace!("Check existing: {:?}", dest_path);
-            if !PathBuf::from(dest_path).exists() {
-                if let Some(fallback_path) = fallback_path {
-                    let mut fallback_file = src_dir.to_str().unwrap().to_string();
-                    // Check if there is a Markdown or other file in the fallback.
-                    write!(
-                        fallback_file,
-                        "/{}/{}",
-                        fallback_path.as_ref().display(),
-                        dest
-                    )
-                    .unwrap();
-                    trace!("Check fallback: {:?}", fallback_file);
-                    if PathBuf::from(fallback_file).exists() {
-                        write!(fixed_link, "{}/", fallback_path.as_ref().display()).unwrap();
-                        debug!(
-                            "Redirect link to default translation: {:?} -> {:?}",
-                            dest, fixed_link
-                        );
-                        redirected_path = true;
-                    }
+        if let Some(ctx) = ctx {
+            // If the book is multilingual, check if the file actually
+            // exists, and if not rewrite the link to the fallback
+            // language's page.
+            if let Some(language) = &ctx.language {
+                if let Some(fallback_language) = &ctx.fallback_language {
+                    rewrite_if_missing(
+                        &mut fixed_link,
+                        &ctx.path,
+                        &dest,
+                        &ctx.src_dir,
+                        &language,
+                        &fallback_language,
+                    );
+                }
+            }
+
+            if ctx.prepend_parent {
+                let base = ctx
+                    .path
+                    .parent()
+                    .expect("path can't be empty")
+                    .to_str()
+                    .expect("utf-8 paths only");
+
+                if !base.is_empty() {
+                    write!(fixed_link, "{}/", base).unwrap();
                 }
             }
         }
 
-        if let Some(path) = path {
-            let base = path
-                .parent()
-                .expect("path can't be empty")
-                .to_str()
-                .expect("utf-8 paths only");
-            trace!("Base: {:?}", base);
-
-            if !redirected_path && !base.is_empty() {
-                write!(fixed_link, "{}/", base).unwrap();
+        if let Some(caps) = MD_LINK.captures(&dest) {
+            fixed_link.push_str(&caps["link"]);
+            fixed_link.push_str(".html");
+            if let Some(anchor) = caps.name("anchor") {
+                fixed_link.push_str(anchor.as_str());
             }
-        }
+        } else {
+            fixed_link.push_str(&dest);
+        };
 
-        md_to_html_link(&dest, &mut fixed_link);
+        debug!("Fixed link: {:?}, {:?} => {:?}", dest, ctx, fixed_link);
         return CowStr::from(fixed_link);
     }
     dest
 }
 
-fn fix_html<'a, P: AsRef<Path>>(
-    html: CowStr<'a>,
-    path: Option<&Path>,
-    src_dir: Option<&Path>,
-    fallback_path: &Option<P>,
-) -> CowStr<'a> {
+fn fix_html<'a>(html: CowStr<'a>, ctx: Option<&RenderMarkdownContext>) -> CowStr<'a> {
     // This is a terrible hack, but should be reasonably reliable. Nobody
     // should ever parse a tag with a regex. However, there isn't anything
     // in Rust that I know of that is suitable for handling partial html
@@ -182,7 +235,7 @@ fn fix_html<'a, P: AsRef<Path>>(
 
     HTML_LINK
         .replace_all(&html, move |caps: &regex::Captures<'_>| {
-            let fixed = fix(caps[2].into(), path, src_dir, fallback_path);
+            let fixed = fix(caps[2].into(), ctx);
             format!("{}{}\"", &caps[1], fixed)
         })
         .into_owned()
@@ -198,31 +251,22 @@ fn fix_html<'a, P: AsRef<Path>>(
 /// page go to the original location. Normal page rendering sets `path` to
 /// None. Ideally, print page links would link to anchors on the print page,
 /// but that is very difficult.
-fn adjust_links<'a, P: AsRef<Path>>(
-    event: Event<'a>,
-    path: Option<&Path>,
-    src_dir: Option<&Path>,
-    fallback_path: &Option<P>,
-) -> Event<'a> {
+fn adjust_links<'a>(event: Event<'a>, ctx: Option<&RenderMarkdownContext>) -> Event<'a> {
     match event {
-        Event::Start(Tag::Link(link_type, dest, title)) => Event::Start(Tag::Link(
-            link_type,
-            fix(dest, path, src_dir, fallback_path),
-            title,
-        )),
-        Event::Start(Tag::Image(link_type, dest, title)) => Event::Start(Tag::Image(
-            link_type,
-            fix(dest, path, src_dir, fallback_path),
-            title,
-        )),
-        Event::Html(html) => Event::Html(fix_html(html, path, src_dir, fallback_path)),
+        Event::Start(Tag::Link(link_type, dest, title)) => {
+            Event::Start(Tag::Link(link_type, fix(dest, ctx), title))
+        }
+        Event::Start(Tag::Image(link_type, dest, title)) => {
+            Event::Start(Tag::Image(link_type, fix(dest, ctx), title))
+        }
+        Event::Html(html) => Event::Html(fix_html(html, ctx)),
         _ => event,
     }
 }
 
 /// Wrapper around the pulldown-cmark parser for rendering markdown to HTML.
 pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
-    render_markdown_with_path(text, curly_quotes, None, None, &None::<PathBuf>)
+    render_markdown_with_path(text, curly_quotes, None)
 }
 
 pub fn new_cmark_parser(text: &str) -> Parser<'_> {
@@ -234,19 +278,17 @@ pub fn new_cmark_parser(text: &str) -> Parser<'_> {
     Parser::new_ext(text, opts)
 }
 
-pub fn render_markdown_with_path<P: AsRef<Path>>(
+pub fn render_markdown_with_path(
     text: &str,
     curly_quotes: bool,
-    path: Option<&Path>,
-    src_dir: Option<&Path>,
-    fallback_path: &Option<P>,
+    ctx: Option<&RenderMarkdownContext>,
 ) -> String {
     let mut s = String::with_capacity(text.len() * 3 / 2);
     let p = new_cmark_parser(text);
     let mut converter = EventQuoteConverter::new(curly_quotes);
     let events = p
         .map(clean_codeblock_headers)
-        .map(|event| adjust_links(event, path, src_dir, fallback_path))
+        .map(|event| adjust_links(event, ctx))
         .map(|event| converter.convert(event));
 
     html::push_html(&mut s, events);
@@ -350,7 +392,7 @@ pub fn log_backtrace(e: &Error) {
 #[cfg(test)]
 mod tests {
     mod render_markdown {
-        use super::super::{render_markdown, render_markdown_with_path};
+        use super::super::{fix, render_markdown, RenderMarkdownContext};
 
         #[test]
         fn preserves_external_links() {
@@ -468,72 +510,78 @@ more text with spaces
             assert_eq!(render_markdown(input, true), expected);
         }
 
-        use std::fs::{self, File};
+        use std::fs;
+        use std::fs::File;
         use std::io::Write;
         use std::path::PathBuf;
-        use tempfile::{Builder as TempFileBuilder, TempDir};
-
-        const DUMMY_SRC: &str = "
-# Dummy Chapter
-
-this is some dummy text.
-
-And here is some \
-more text.
-";
-
-        /// Create a dummy `Link` in a temporary directory.
-        fn dummy_link() -> (PathBuf, TempDir) {
-            let temp = TempFileBuilder::new().prefix("book").tempdir().unwrap();
-
-            let chapter_path = temp.path().join("chapter_1.md");
-            File::create(&chapter_path)
-                .unwrap()
-                .write_all(DUMMY_SRC.as_bytes())
-                .unwrap();
-
-            let path = chapter_path.to_path_buf();
-
-            (path, temp)
-        }
+        use tempfile;
 
         #[test]
-        fn links_are_rewritten_to_fallback_for_nonexistent_files() {
-            let input = r#"
-[Link](chapter_1.md)
-"#;
+        fn test_link_rewriting() {
+            use pulldown_cmark::CowStr;
 
-            let (localized_file, localized_dir) = dummy_link();
-            fs::remove_file(&localized_file).unwrap();
+            let _ = env_logger::builder().is_test(true).try_init();
+            let test = |dest, path, exists, expected| {
+                let src_dir = tempfile::tempdir().unwrap();
 
-            let (_, fallback_dir) = dummy_link();
-            let mut relative_fallback_dir =
-                PathBuf::from(super::super::fs::path_to_root(localized_dir.path()));
-            relative_fallback_dir.push(fallback_dir.path().file_name().unwrap());
+                let ctx = if exists {
+                    Some(RenderMarkdownContext {
+                        path: PathBuf::from(path),
+                        src_dir: PathBuf::new(),
+                        language: None,
+                        fallback_language: None,
+                        prepend_parent: false,
+                    })
+                } else {
+                    let localized_dir = src_dir.path().join("ja");
+                    fs::create_dir_all(&localized_dir).unwrap();
 
-            let expected_fallback = format!(
-                "<p><a href=\"{}/chapter_1.html\">Link</a></p>\n",
-                relative_fallback_dir.display()
+                    let fallback_dir = src_dir.path().join("en");
+                    fs::create_dir_all(&fallback_dir).unwrap();
+
+                    let chapter_path = fallback_dir.join(path).join(dest);
+                    fs::create_dir_all(chapter_path.parent().unwrap()).unwrap();
+                    debug!("Create: {}", chapter_path.display());
+                    File::create(&chapter_path)
+                        .unwrap()
+                        .write_all(b"# Chapter")
+                        .unwrap();
+
+                    Some(RenderMarkdownContext {
+                        path: PathBuf::from(path),
+                        src_dir: PathBuf::from(src_dir.path()),
+                        language: Some(String::from("ja")),
+                        fallback_language: Some(String::from("en")),
+                        prepend_parent: false,
+                    })
+                };
+
+                assert_eq!(
+                    fix(CowStr::from(dest), ctx.as_ref()),
+                    CowStr::from(expected)
+                );
+            };
+
+            test("../b/summary.md", "a", true, "../b/summary.html");
+            test("../b/summary.md", "a", false, "../../en/../b/summary.html");
+            test("../c/summary.md", "a/b", true, "../c/summary.html");
+            test(
+                "../c/summary.md",
+                "a/b",
+                false,
+                "../../../en/../c/summary.html",
             );
-            assert_eq!(
-                render_markdown_with_path(
-                    input,
-                    false,
-                    None,
-                    Some(localized_dir.path()),
-                    &Some(&relative_fallback_dir)
-                ),
-                expected_fallback
+            test(
+                "#translations",
+                "config.md",
+                true,
+                "#translations",
             );
-            assert_eq!(
-                render_markdown_with_path(
-                    input,
-                    true,
-                    None,
-                    Some(localized_dir.path()),
-                    &Some(&relative_fallback_dir)
-                ),
-                expected_fallback
+            test(
+                "#translations",
+                "config.md",
+                false,
+                "#translations",
             );
         }
     }

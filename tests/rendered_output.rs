@@ -464,7 +464,7 @@ fn theme_dir_overrides_work_correctly() {
     let md = MDBook::load(book_dir).unwrap();
     md.build().unwrap();
 
-    let built_index = book_dir.join("book").join("index.html");
+    let built_index = book_dir.join("book").join("en").join("index.html");
     dummy_book::assert_contains_strings(built_index, &["This is a modified index.hbs!"]);
 }
 

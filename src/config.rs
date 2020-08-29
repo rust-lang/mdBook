@@ -877,8 +877,6 @@ pub struct Language {
     pub description: Option<String>,
 }
 
-impl LanguageConfig {}
-
 /// Allows you to "update" any arbitrary field in a struct by round-tripping via
 /// a `toml::Value`.
 ///
