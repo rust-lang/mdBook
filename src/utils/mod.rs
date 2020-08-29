@@ -518,10 +518,11 @@ more text with spaces
             let _ = env_logger::builder().is_test(true).try_init();
             let test = |dest, path, exists, expected| {
                 let src_dir = tempfile::tempdir().unwrap();
+                let path = PathBuf::from(path);
 
                 let ctx = if exists {
                     Some(RenderMarkdownContext {
-                        path: PathBuf::from(path),
+                        path: path,
                         src_dir: PathBuf::new(),
                         language: None,
                         fallback_language: None,
@@ -534,7 +535,7 @@ more text with spaces
                     let fallback_dir = src_dir.path().join("en");
                     fs::create_dir_all(&fallback_dir).unwrap();
 
-                    let chapter_path = fallback_dir.join(path).join(dest);
+                    let chapter_path = fallback_dir.join(path.parent().unwrap()).join(dest);
                     fs::create_dir_all(chapter_path.parent().unwrap()).unwrap();
                     debug!("Create: {}", chapter_path.display());
                     File::create(&chapter_path)
@@ -543,7 +544,7 @@ more text with spaces
                         .unwrap();
 
                     Some(RenderMarkdownContext {
-                        path: PathBuf::from(path),
+                        path: path,
                         src_dir: PathBuf::from(src_dir.path()),
                         language: Some(String::from("ja")),
                         fallback_language: Some(String::from("en")),
@@ -557,17 +558,17 @@ more text with spaces
                 );
             };
 
-            test("../b/summary.md", "a.md", true, "../b/summary.html");
+            test("../b/summary.md", "a/index.md", true, "../b/summary.html");
             test(
                 "../b/summary.md",
-                "a.md",
+                "a/index.md",
                 false,
                 "../../en/../b/summary.html",
             );
-            test("../c/summary.md", "a/b.md", true, "../c/summary.html");
+            test("../c/summary.md", "a/b/index.md", true, "../c/summary.html");
             test(
                 "../c/summary.md",
-                "a/b.md",
+                "a/b/index.md",
                 false,
                 "../../../en/../c/summary.html",
             );

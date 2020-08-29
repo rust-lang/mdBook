@@ -12,4 +12,9 @@ Here is an [inline link](missing-summary-chapter.md) to a page missing from this
 
 Also, here is an [inline link](blah.md) to a page missing from both translations. It should point to this language's 404 page.
 
+Here is a file included from the default language.
+```rust
+{{ #include example.rs }}
+```
+
 The substitution won't work if you specify the `-l`/`--language` option, since it only builds a single translation in that case.
