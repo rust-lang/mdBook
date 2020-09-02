@@ -508,6 +508,13 @@ pub struct HtmlConfig {
     pub input_404: Option<String>,
     /// Absolute url to site, used to emit correct paths for the 404 page, which might be accessed in a deeply nested directory
     pub site_url: Option<String>,
+    /// The DNS subdomain or apex domain at which your book will be hosted. This
+    /// string will be written to a file named CNAME in the root of your site,
+    /// as required by GitHub Pages (see [*Managing a custom domain for your
+    /// GitHub Pages site*][custom domain]).
+    ///
+    /// [custom domain]: https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site
+    pub cname: Option<String>,
     /// This is used as a bit of a workaround for the `mdbook serve` command.
     /// Basically, because you set the websocket port from the command line, the
     /// `mdbook serve` command needs a way to let the HTML renderer know where
@@ -541,6 +548,7 @@ impl Default for HtmlConfig {
             git_repository_icon: None,
             input_404: None,
             site_url: None,
+            cname: None,
             livereload_url: None,
             redirect: HashMap::new(),
         }

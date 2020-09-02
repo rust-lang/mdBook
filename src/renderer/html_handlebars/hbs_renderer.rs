@@ -187,6 +187,10 @@ impl HtmlHandlebars {
             b"This file makes sure that Github Pages doesn't process mdBook's output.",
         )?;
 
+        if let Some(cname) = &html_config.cname {
+            write_file(destination, "CNAME", format!("{}\n", cname).as_bytes())?;
+        }
+
         write_file(destination, "book.js", &theme.js)?;
         write_file(destination, "css/general.css", &theme.general_css)?;
         write_file(destination, "css/chrome.css", &theme.chrome_css)?;
