@@ -23,6 +23,7 @@ create-missing = false
 
 [output.html]
 additional-css = ["custom.css"]
+git-repository-url = "https://github.com/rust-lang/mdBook"
 
 [output.html.search]
 limit-results = 15
