@@ -39,6 +39,7 @@ impl Preprocessor for IndexPreprocessor {
                         path.set_file_name("index.md");
                     }
                 }
+                ch.content = ch.content.replace("README.md", "index.md");
             }
         });
 
