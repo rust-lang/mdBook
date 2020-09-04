@@ -209,7 +209,7 @@ tagged [E-Easy] and **we will gladly mentor you** so that you can successfully
 go through the process of fixing a bug or adding a new feature! Let us know if
 you need any help.
 
-For more info about contributing, check out our [contribution guide] who helps
+For more info about contributing, check out our [contribution guide] which helps
 you go through the build and contribution process!
 
 There is also a [rendered version][master-docs] of the latest API docs
