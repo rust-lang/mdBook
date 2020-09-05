@@ -98,10 +98,17 @@ function playground_text(playground) {
     }
 
     function run_rust_code(code_block) {
-        var result_block = code_block.querySelector(".result");
+        var result_stderr_block = code_block.querySelector(".result.stderr");
+        if (!result_stderr_block) {
+            result_stderr_block = document.createElement('code');
+            result_stderr_block.className = 'result stderr hljs language-bash';
+
+            code_block.append(result_stderr_block);
+        }
+        var result_block = code_block.querySelector(".result.stdout");
         if (!result_block) {
             result_block = document.createElement('code');
-            result_block.className = 'result hljs language-bash';
+            result_block.className = 'result stdout hljs language-bash';
 
             code_block.append(result_block);
         }
@@ -112,19 +119,23 @@ function playground_text(playground) {
         let edition = has_2018 ? "2018" : "2015";
 
         var params = {
-            version: "stable",
-            optimize: "0",
+            backtrace: true,
+            channel: "stable",
             code: text,
-            edition: edition
+            edition: edition,
+            mode: "debug",
+            tests: false,
+            crateType: "bin",
         };
 
         if (text.indexOf("#![feature") !== -1) {
             params.version = "nightly";
         }
 
+        result_stderr_block.classList.add("hidden")
         result_block.innerText = "Running...";
 
-        fetch_with_timeout("https://play.rust-lang.org/evaluate.json", {
+        fetch_with_timeout("https://play.rust-lang.org/execute", {
             headers: {
                 'Content-Type': "application/json",
             },
@@ -133,7 +144,13 @@ function playground_text(playground) {
             body: JSON.stringify(params)
         })
         .then(response => response.json())
-        .then(response => result_block.innerText = response.result)
+        .then(response => {
+            result_block.innerText = response.stdout;
+            if (!response.success || response.stderr.includes("warning")) {
+                result_stderr_block.innerText = response.stderr;
+                result_stderr_block.classList.remove("hidden")
+            }
+        })
         .catch(error => result_block.innerText = "Playground Communication: " + error.message);
     }
 
