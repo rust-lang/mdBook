@@ -132,7 +132,7 @@ function playground_text(playground) {
             params.version = "nightly";
         }
 
-        result_stderr_block.classList.add("hidden")
+        result_stderr_block.classList.add("hidden");
         result_block.innerText = "Running...";
 
         fetch_with_timeout("https://play.rust-lang.org/execute", {
@@ -146,9 +146,10 @@ function playground_text(playground) {
         .then(response => response.json())
         .then(response => {
             result_block.innerText = response.stdout;
+            // show stderr block only if there is compile error or warning
             if (!response.success || response.stderr.includes("warning")) {
                 result_stderr_block.innerText = response.stderr;
-                result_stderr_block.classList.remove("hidden")
+                result_stderr_block.classList.remove("hidden");
             }
         })
         .catch(error => result_block.innerText = "Playground Communication: " + error.message);
