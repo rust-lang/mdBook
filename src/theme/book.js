@@ -101,14 +101,14 @@ function playground_text(playground) {
         var result_stderr_block = code_block.querySelector(".result.stderr");
         if (!result_stderr_block) {
             result_stderr_block = document.createElement('code');
-            result_stderr_block.className = 'result stderr hljs language-bash';
+            result_stderr_block.className = 'result stderr hljs nohighlight';
 
             code_block.append(result_stderr_block);
         }
         var result_block = code_block.querySelector(".result.stdout");
         if (!result_block) {
             result_block = document.createElement('code');
-            result_block.className = 'result stdout hljs language-bash';
+            result_block.className = 'result stdout hljs nohighlight';
 
             code_block.append(result_block);
         }
