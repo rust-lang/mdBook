@@ -116,6 +116,7 @@ function playground_text(playground) {
         let text = playground_text(code_block);
         let classes = code_block.querySelector('code').classList;
         let has_2018 = classes.contains("edition2018");
+        let should_warn = classes.contains("warn")
         let edition = has_2018 ? "2018" : "2015";
 
         var params = {
@@ -146,8 +147,9 @@ function playground_text(playground) {
         .then(response => response.json())
         .then(response => {
             result_block.innerText = response.stdout;
-            // show stderr block only if there is compile error or warning
-            if (!response.success || response.stderr.includes("warning")) {
+            var show_warnings = should_warn && response.stderr.includes("warning");
+            // show stderr block if there is compile error or warning
+            if (!response.success || show_warnings) {
                 result_stderr_block.innerText = response.stderr;
                 result_stderr_block.classList.remove("hidden");
             }
