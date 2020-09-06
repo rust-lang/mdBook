@@ -250,6 +250,7 @@ impl MDBook {
         // Index Preprocessor is disabled so that chapter paths continue to point to the
         // actual markdown files.
 
+        let mut failed = false;
         for item in book.iter() {
             if let BookItem::Chapter(ref ch) = *item {
                 let chapter_path = match ch.path {
@@ -282,7 +283,8 @@ impl MDBook {
                 let output = cmd.output()?;
 
                 if !output.status.success() {
-                    bail!(
+                    failed = true;
+                    error!(
                         "rustdoc returned an error:\n\
                         \n--- stdout\n{}\n--- stderr\n{}",
                         String::from_utf8_lossy(&output.stdout),
@@ -290,6 +292,9 @@ impl MDBook {
                     );
                 }
             }
+        }
+        if failed {
+            bail!("One or more tests failed");
         }
         Ok(())
     }
