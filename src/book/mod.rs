@@ -294,7 +294,7 @@ impl MDBook {
             }
         }
         if failed {
-            bail!("One of more tests failed");
+            bail!("One or more tests failed");
         }
         Ok(())
     }
