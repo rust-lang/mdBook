@@ -12,7 +12,7 @@
     - [Configuration](format/config.md)
     - [Theme](format/theme/theme.md)
         - [index.hbs](format/theme/index-hbs.md)
-        - [Syntax highlighting](format/theme/syntax-highlighting.md)
+        - [Code Blocks](format/theme/code-blocks.md)
     - [MathJax Support](format/mathjax.md)
     - [Rust code specific features](format/rust.md)
 - [Rust Library](lib/lib.md)

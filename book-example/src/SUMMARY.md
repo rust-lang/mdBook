@@ -14,7 +14,7 @@
     - [Configuration](format/config.md)
     - [Theme](format/theme/README.md)
         - [index.hbs](format/theme/index-hbs.md)
-        - [Syntax highlighting](format/theme/syntax-highlighting.md)
+        - [Code Blocks](format/theme/code-blocks.md)
         - [Editor](format/theme/editor.md)
     - [MathJax Support](format/mathjax.md)
     - [mdBook specific features](format/mdbook.md)

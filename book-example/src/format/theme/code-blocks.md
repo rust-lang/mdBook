@@ -1,16 +1,50 @@
-# Syntax Highlighting
+# Code Blocks
 
-For syntax highlighting I use [Highlight.js](https://highlightjs.org) with a
-custom theme.
-
+Syntax highlighted code blocks are supported using [Highlight.js](https://highlightjs.org)
+with a custom theme.  
 Automatic language detection has been turned off, so you will probably want to
 specify the programming language you use like this
-
 <pre><code class="language-markdown">```rust
 fn main() {
     // Some code
 }
 ```</code></pre>
+
+## Run Button
+Rust code blocks are runnable by default with a run button, for example:
+```rust
+fn main() {
+    println!("hello");
+}
+```
+Other languages are currently not supported.
+
+You can also diable the run button with `no_run`:
+<pre><code class="language-markdown">```rust,no_run
+fn main() {
+    println!("Not runnable.");
+}
+```</code></pre>
+
+```rust,no_run
+fn main() {
+    println!("Not runnable.");
+}
+```
+### Show Warnings
+
+It is possible to show warning when Rust code is run via adding `warn`:
+<pre><code class="language-markdown">```rust,warn
+fn main() {
+    let unused = 7;
+}
+```</code></pre>
+
+```rust,warn
+fn main() {
+    let unused = 7;
+}
+```
 
 ## Custom theme
 Like the rest of the theme, the files used for syntax highlighting can be
