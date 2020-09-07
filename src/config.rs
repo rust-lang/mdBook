@@ -603,7 +603,7 @@ impl Default for Playground {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Print {
-    /// Insert page breaks between chapters. Default: `false`.
+    /// Insert page breaks between chapters. Default: `true`.
     pub page_break: bool,
     /// Insert chapter name before each chapter. Default: `false`.
     pub chapter_name: bool,
@@ -612,7 +612,7 @@ pub struct Print {
 impl Default for Print {
     fn default() -> Print {
         Print {
-            page_break: false,
+            page_break: true,
             chapter_name: false,
         }
     }

@@ -254,7 +254,7 @@ Available configuration options for the `[output.html.search]` table:
 
 Available configuration options for the `[output.html.print]` table:
 
-- **page-break:** Insert page breaks between chapters. Defaults to `false`.
+- **page-break:** Insert page breaks between chapters. Defaults to `true`.
 - **chapter-name** Insert chapter name before each chapter. Defaults to `false`.
 
 This shows all available HTML output options in the **book.toml**:
