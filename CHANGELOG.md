@@ -1,5 +1,27 @@
 # Changelog
 
+## mdBook 0.4.3
+[9278b83...9278b83](https://github.com/rust-lang/mdBook/compare/9278b83...4df9ec9)
+
+### Added
+- Added `output.html.cname` option to emit a `CNAME` file which is used by
+  GitHub Pages to know which domain is being used.
+  [#1311](https://github.com/rust-lang/mdBook/pull/1311)
+
+### Changed
+- `mdbook test` no longer stops on the first test failure, but instead will
+  run all the tests.
+  [#1313](https://github.com/rust-lang/mdBook/pull/1313)
+- Removed the `local` font source for Source Code Pro, as the locally
+  installed font may not render properly on FireFox on macOS.
+  [#1307](https://github.com/rust-lang/mdBook/pull/1307)
+
+### Fixed
+- Added newline to end of `.nojekyll` file.
+  [#1310](https://github.com/rust-lang/mdBook/pull/1310)
+- Fixed missing space before draft chapter titles.
+  [#1309](https://github.com/rust-lang/mdBook/pull/1309)
+
 ## mdBook 0.4.2
 [649f355...9278b83](https://github.com/rust-lang/mdBook/compare/649f355...9278b83)
 
