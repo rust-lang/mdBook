@@ -39,12 +39,51 @@ impl Preprocessor for IndexPreprocessor {
                         path.set_file_name("index.md");
                     }
                 }
-                ch.content = ch.content.replace("README.md", "index.md");
+                ch.content = replace_readme_in_string(&ch.content);
             }
         });
 
         Ok(book)
     }
+}
+
+fn replace_readme_in_string(content: &str) -> String {
+    lazy_static! {
+        static ref RE_INLINE: Regex = Regex::new(
+            r"(?ix)        #ignorecase, allow regex definition eXtended on multiple lines
+            \[([^\[]+)\]       #[name_of_link]
+            \s?                #optional whitespaces
+            \(                 #open parenthesis
+            ([^\[\s]*)         #start of path : url/blabla/
+            (readme.md)        #part that will be replaced by index.md
+            (?:                #BEGIN optional part, '?:' ignores capture of this whole (group)
+                \s+                #whitespace between path and optional title
+                ([^\[]*)           #optional title
+            )                  #END optional part
+            \s*                #trailing whitespaces
+            \)                 #close parenthesis"
+        )
+        .unwrap();
+        static ref RE_REFERENCE: Regex = Regex::new(
+            r"(?ix)        #ignorecase, allow regex definition eXtended on multiple lines
+        ^                  #start of line
+        (\s*)              #optional padding whitespaces
+        \[([^\[]+)\]:      #[name_of_link]:
+        \s*                #optional whitespaces
+        ([^\[\s]*)         #start of path
+        (readme.md)        #part that will be replaced by index.md
+        (?:                #BEGIN optional part, '?:' ignores capture of this whole (group)
+            \s+                #whitespace between path and optional title
+            ([^\[]*)           #optional title
+        )                  #END optional part
+        \s*                #trailing whitespaces
+        $                  #end of line"
+        )
+        .unwrap();
+    }
+    let content = RE_INLINE.replace_all(&content, "[$1](${2}index.md $4)");
+    let content = RE_REFERENCE.replace_all(&content, "${1}[$2]: ${3}index.md $5");
+    content.to_string()
 }
 
 fn warn_readme_name_conflict<P: AsRef<Path>>(readme_path: P, index_path: P) {
@@ -102,5 +141,62 @@ mod tests {
 
         let path = "path/to/README-README.md";
         assert!(!is_readme_file(path));
+    }
+
+    #[test]
+    fn do_not_replace_readme_in_normal_string_test() {
+        let expected = "content: ( index.md)";
+
+        let content = "content: ( Readme.md )";
+        assert_ne!(replace_readme_in_string(content), expected);
+
+        let content = "content: ( README.md )";
+        assert_ne!(replace_readme_in_string(content), expected);
+
+        let content = "content: ( rEaDmE.md )";
+        assert_ne!(replace_readme_in_string(content), expected);
+
+        let content = "content: ( README-README.md )";
+        assert_ne!(replace_readme_in_string(content), expected);
+    }
+    #[test]
+    fn replace_readme_in_inline_link_test() {
+        let expected = "[content](./bla/index.md )";
+        let expected_with_title = "[content](./bla/index.md \"title\" )";
+
+        let content = "[content](./bla/Readme.md )";
+        assert_eq!(replace_readme_in_string(content), expected);
+
+        let content = "[content](./bla/README.md )";
+        assert_eq!(replace_readme_in_string(content), expected);
+
+        let content = "[content](./bla/rEaDmE.md )";
+        assert_eq!(replace_readme_in_string(content), expected);
+
+        let content = "[content](./bla/rEaDmE.md \"title\" )";
+        assert_eq!(replace_readme_in_string(content), expected_with_title);
+
+        let content = "[content](./bla/README-README.md )";
+        assert_ne!(replace_readme_in_string(content), expected);
+    }
+    #[test]
+    fn replace_readme_in_footnote_link_test() {
+        let expected = "[content]: ./bla/index.md ";
+        let expected_with_title = "[content]: ./bla/index.md \"title\" ";
+
+        let content = "[content]: ./bla/Readme.md ";
+        assert_eq!(replace_readme_in_string(content), expected);
+
+        let content = "[content]: ./bla/README.md ";
+        assert_eq!(replace_readme_in_string(content), expected);
+
+        let content = "[content]: ./bla/rEaDmE.md ";
+        assert_eq!(replace_readme_in_string(content), expected);
+
+        let content = "[content]: ./bla/rEaDmE.md \"title\" ";
+        assert_eq!(replace_readme_in_string(content), expected_with_title);
+
+        let content = "[content]: ./bla/README-README.md ";
+        assert_ne!(replace_readme_in_string(content), expected);
     }
 }
