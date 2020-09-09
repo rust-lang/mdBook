@@ -15,7 +15,11 @@ export CARGO_PROFILE_RELEASE_LTO=true
 cargo build --bin mdbook --release
 cd target/release
 case $1 in
-  ubuntu* | macos*)
+  ubuntu*)
+    asset="mdbook-$TAG-$host.tar.gz"
+    tar czf ../../$asset mdbook
+    ;;
+  macos*)
     asset="mdbook-$TAG-$host.tar.gz"
     # There is a bug with BSD tar on macOS where the first 8MB of the file are
     # sometimes all NUL bytes. See https://github.com/actions/cache/issues/403
