@@ -191,7 +191,7 @@ mod tests {
 
     #[cfg(target_os = "windows")]
     fn symlink<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst: Q) -> Result<()> {
-        std::os::window::fs::symlink_file(src, dst)
+        std::os::windows::fs::symlink_file(src, dst)
     }
 
     #[cfg(not(target_os = "windows"))]
