@@ -11,3 +11,7 @@ tests/dummy_book/book/
 
 # Ignore Jetbrains specific files.
 .idea/
+
+# Ignore Vim temporary and swap files.
+*.sw?
+*~
