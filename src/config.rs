@@ -605,16 +605,11 @@ impl Default for Playground {
 pub struct Print {
     /// Insert page breaks between chapters. Default: `true`.
     pub page_break: bool,
-    /// Insert chapter name before each chapter. Default: `false`.
-    pub chapter_name: bool,
 }
 
 impl Default for Print {
     fn default() -> Print {
-        Print {
-            page_break: true,
-            chapter_name: false,
-        }
+        Print { page_break: true }
     }
 }
 
@@ -730,7 +725,6 @@ mod tests {
 
         [output.html.print]
         page-break = true
-        chapter-name = true
 
         [preprocessor.first]
 
@@ -761,10 +755,7 @@ mod tests {
             copy_js: true,
             line_numbers: false,
         };
-        let print_should_be = Print {
-            page_break: true,
-            chapter_name: true,
-        };
+        let print_should_be = Print { page_break: true };
         let html_should_be = HtmlConfig {
             curly_quotes: true,
             google_analytics: Some(String::from("123456")),

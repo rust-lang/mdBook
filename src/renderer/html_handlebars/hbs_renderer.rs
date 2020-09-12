@@ -51,11 +51,6 @@ impl HtmlHandlebars {
             // Add both two CSS properties because of the compatibility issue
             print_content.push_str(r#"<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div>"#);
         }
-        let rendered_chapter_name = utils::render_markdown(&ch.name, ctx.html_config.curly_quotes);
-        if ctx.html_config.print.chapter_name {
-            // Insert chapter name before each chapter.
-            print_content.push_str(&format!("<h1>{}</h1>", rendered_chapter_name));
-        }
         print_content.push_str(&fixed_content);
 
         // Update the context with data for this file

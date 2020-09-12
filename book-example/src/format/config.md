@@ -255,7 +255,6 @@ Available configuration options for the `[output.html.search]` table:
 Available configuration options for the `[output.html.print]` table:
 
 - **page-break:** Insert page breaks between chapters. Defaults to `true`.
-- **chapter-name** Insert chapter name before each chapter. Defaults to `false`.
 
 This shows all available HTML output options in the **book.toml**:
 
@@ -303,8 +302,7 @@ heading-split-level = 3
 copy-js = true
 
 [output.html.print]
-page-break = true
-chapter-name = true
+page-break = false
 
 [output.html.redirect]
 "/appendices/bibliography.html" = "https://rustc-dev-guide.rust-lang.org/appendix/bibliography.html"
