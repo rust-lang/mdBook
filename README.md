@@ -85,7 +85,7 @@ There are multiple ways to install mdBook.
 
 ## Usage
 
-mdBook will primarily be used as a command line tool, even though it exposes
+mdBook is primarily used as a command line tool, even though it exposes
 all its functionality as a Rust crate for integration in other projects.
 
 Here are the main commands you will want to run. For a more exhaustive
