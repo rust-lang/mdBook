@@ -1,4 +1,7 @@
+use core::ops::Range;
+use pulldown_cmark::{Event, LinkType, Parser, Tag};
 use regex::Regex;
+use std::iter::{FromIterator, Iterator};
 use std::path::Path;
 
 use crate::errors::*;
@@ -49,41 +52,37 @@ impl Preprocessor for IndexPreprocessor {
 
 fn replace_readme_in_string(content: &str) -> String {
     lazy_static! {
-        static ref RE_INLINE: Regex = Regex::new(
+        static ref RE: Regex = Regex::new(
             r"(?ix)        #ignorecase, allow regex definition eXtended on multiple lines
-            \[([^\[]+)\]       #[name_of_link]
-            \s?                #optional whitespaces
-            \(                 #open parenthesis
-            ([^\[\s]*)         #start of path : url/blabla/
-            (readme.md)        #part that will be replaced by index.md
-            (?:                #BEGIN optional part, '?:' ignores capture of this whole (group)
-                \s+                #whitespace between path and optional title
-                ([^\[]*)           #optional title
-            )                  #END optional part
-            \s*                #trailing whitespaces
-            \)                 #close parenthesis"
-        )
-        .unwrap();
-        static ref RE_REFERENCE: Regex = Regex::new(
-            r"(?ix)        #ignorecase, allow regex definition eXtended on multiple lines
-        ^                  #start of line
-        (\s*)              #optional padding whitespaces
-        \[([^\[]+)\]:      #[name_of_link]:
-        \s*                #optional whitespaces
-        ([^\[\s]*)         #start of path
-        (readme.md)        #part that will be replaced by index.md
-        (?:                #BEGIN optional part, '?:' ignores capture of this whole (group)
-            \s+                #whitespace between path and optional title
-            ([^\[]*)           #optional title
-        )                  #END optional part
-        \s*                #trailing whitespaces
-        $                  #end of line"
+            (/readme.md)    #part that will be replaced by index.md
+            "
         )
         .unwrap();
     }
-    let content = RE_INLINE.replace_all(&content, "[$1](${2}index.md $4)");
-    let content = RE_REFERENCE.replace_all(&content, "${1}[$2]: ${3}index.md $5");
-    content.to_string()
+    let parser = pulldown_cmark::Parser::new(content).into_offset_iter();
+    let ranges_to_replace_in: Vec<Range<usize>> = parser
+        .filter_map(|(event, range)| match event {
+            Event::Start(Tag::Link(link_type, _, _)) => match link_type {
+                LinkType::Reference | LinkType::Inline => Some(range),
+                _ => None,
+            },
+            Event::End(Tag::Link(link_type, _, _)) => match link_type {
+                LinkType::Reference | LinkType::Inline => Some(range),
+                _ => None,
+            },
+            _ => None,
+        })
+        .collect();
+    let ranges_to_replace_in = vec![..];
+    let content: String = ranges_to_replace_in
+        .iter()
+        .map(|range| {
+            // let substring: &str = "[fdfsd]: sdfsdfsdf/dfsdf/readme.md";
+            let substring: &str = &content[range.clone()];
+            RE.replace_all(substring, "/index.md").into_owned()
+        })
+        .collect();
+    content
 }
 
 fn warn_readme_name_conflict<P: AsRef<Path>>(readme_path: P, index_path: P) {
@@ -148,55 +147,67 @@ mod tests {
         let expected = "content: ( index.md)";
 
         let content = "content: ( Readme.md )";
-        assert_ne!(replace_readme_in_string(content), expected);
+        assert_ne!(expected, replace_readme_in_string(content));
 
         let content = "content: ( README.md )";
-        assert_ne!(replace_readme_in_string(content), expected);
+        assert_ne!(expected, replace_readme_in_string(content));
 
         let content = "content: ( rEaDmE.md )";
-        assert_ne!(replace_readme_in_string(content), expected);
+        assert_ne!(expected, replace_readme_in_string(content));
 
         let content = "content: ( README-README.md )";
-        assert_ne!(replace_readme_in_string(content), expected);
+        assert_ne!(expected, replace_readme_in_string(content));
     }
-    #[test]
-    fn replace_readme_in_inline_link_test() {
-        let expected = "[content](./bla/index.md )";
-        let expected_with_title = "[content](./bla/index.md \"title\" )";
 
-        let content = "[content](./bla/Readme.md )";
-        assert_eq!(replace_readme_in_string(content), expected);
-
-        let content = "[content](./bla/README.md )";
-        assert_eq!(replace_readme_in_string(content), expected);
-
-        let content = "[content](./bla/rEaDmE.md )";
-        assert_eq!(replace_readme_in_string(content), expected);
-
-        let content = "[content](./bla/rEaDmE.md \"title\" )";
-        assert_eq!(replace_readme_in_string(content), expected_with_title);
-
-        let content = "[content](./bla/README-README.md )";
-        assert_ne!(replace_readme_in_string(content), expected);
+    //inspired by https://stackoverflow.com/questions/34662713/how-can-i-create-parameterized-tests-in-rust
+    macro_rules! replace_readme_tests {
+        ($expected:expr,$($name:ident: $value:expr,)*) => {
+        $(
+            #[test]
+            fn $name() {
+                let expected = $expected;
+                let content= $value;
+                assert_eq!(expected, replace_readme_in_string(content));
+            }
+        )*
+        }
     }
-    #[test]
-    fn replace_readme_in_footnote_link_test() {
-        let expected = "[content]: ./bla/index.md ";
-        let expected_with_title = "[content]: ./bla/index.md \"title\" ";
 
-        let content = "[content]: ./bla/Readme.md ";
-        assert_eq!(replace_readme_in_string(content), expected);
+    replace_readme_tests! {
+        "[content](./bla/index.md) content: ( ./readme.md)",
+        replace_readme_only_in_link_cases_1:"[content](./bla/readme.md) content: ( ./readme.md)",
+        replace_readme_only_in_link_cases_2:"[content](./bla/readme.md) content: ( ./reADme.md)",
+        replace_readme_only_in_link_cases_3:"[content](./bla/readme.md) content: ( ./readMe.md)",
+        replace_readme_only_in_link_cases_4:"[content](./bla/readme.md) content: ( ./readme.MD)",
+        replace_readme_only_in_link_cases_5:"[content](./bla/readme.md) content: ( ./readme.md)",
+        replace_readme_only_in_link_cases_6:"[content](./bla/readme.md) content: ( ./REAdme.md)",
+        replace_readme_only_in_link_cases_7:"[content](./bla/readme.md) content: ( ./README.MD)",
+    }
+    replace_readme_tests! {
+        "🤞🏼[content](./bla/index.md)🤞🏼 content: ( ./readme.md)",
+        replace_readme_only_in_link_cases_even_with_multibyte_chars:"🤞🏼[content](./bla/readme.md)🤞🏼 content: ( ./README.MD)",
+    }
 
-        let content = "[content]: ./bla/README.md ";
-        assert_eq!(replace_readme_in_string(content), expected);
-
-        let content = "[content]: ./bla/rEaDmE.md ";
-        assert_eq!(replace_readme_in_string(content), expected);
-
-        let content = "[content]: ./bla/rEaDmE.md \"title\" ";
-        assert_eq!(replace_readme_in_string(content), expected_with_title);
-
-        let content = "[content]: ./bla/README-README.md ";
-        assert_ne!(replace_readme_in_string(content), expected);
+    replace_readme_tests! {
+        "[content]: ./bla/index.md ",
+        replace_readme_in_footnote_link_test_1:"[content]: ./bla/readme.md ",
+        replace_readme_in_footnote_link_test_2:"[content]: ./bla/ReAdme.md ",
+        replace_readme_in_footnote_link_test_3:"[content]: ./bla/ReaDme.md ",
+        replace_readme_in_footnote_link_test_4:"[content]: ./bla/README.MD ",
+        replace_readme_in_footnote_link_test_5:"[content]: ./bla/REadmE.md ",
+        replace_readme_in_footnote_link_test_6:"[content]: ./bla/ReAdme.md ",
+        replace_readme_in_footnote_link_test_7:"[content]: ./bla/Readme.MD ",
+        replace_readme_in_footnote_link_test_8:"[content]: ./bla/readme.MD ",
+    }
+    replace_readme_tests! {
+        "[content]( ./bla/index.md)",
+        replace_readme_in_inline_link_test_1:"[content]( ./bla/readme.md)",
+        replace_readme_in_inline_link_test_2:"[content]( ./bla/ReAdme.md)",
+        replace_readme_in_inline_link_test_3:"[content]( ./bla/ReaDme.md)",
+        replace_readme_in_inline_link_test_4:"[content]( ./bla/README.MD)",
+        replace_readme_in_inline_link_test_5:"[content]( ./bla/REadmE.md)",
+        replace_readme_in_inline_link_test_6:"[content]( ./bla/ReAdme.md)",
+        replace_readme_in_inline_link_test_7:"[content]( ./bla/Readme.MD)",
+        replace_readme_in_inline_link_test_8:"[content]( ./bla/readme.MD)",
     }
 }
