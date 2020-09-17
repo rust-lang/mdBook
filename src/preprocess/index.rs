@@ -1,5 +1,6 @@
 use core::ops::Range;
 use pulldown_cmark::{Event, LinkType, Parser, Tag};
+use pulldown_cmark_to_cmark::cmark;
 use regex::Regex;
 use std::iter::{FromIterator, Iterator};
 use std::path::Path;
@@ -60,20 +61,26 @@ fn replace_readme_in_string(content: &str) -> String {
         .unwrap();
     }
     let parser = pulldown_cmark::Parser::new(content).into_offset_iter();
-    let ranges_to_replace_in: Vec<Range<usize>> = parser
-        .filter_map(|(event, range)| match event {
-            Event::Start(Tag::Link(link_type, _, _)) => match link_type {
-                LinkType::Reference | LinkType::Inline => Some(range),
-                _ => None,
-            },
-            Event::End(Tag::Link(link_type, _, _)) => match link_type {
-                LinkType::Reference | LinkType::Inline => Some(range),
-                _ => None,
-            },
-            _ => None,
-        })
-        .collect();
-    let ranges_to_replace_in = vec![..];
+    let mut ranges_to_replace_in = vec![];
+    let mut start_range: Option<Range<usize>> = None;
+    let mut end_range: Option<Range<usize>> = None;
+    for (event, range) in parser {
+        match event {
+            Event::Start(Tag::Link(link_type, dest, title)) => start_range = Some(range),
+            Event::End(Tag::Link(link_type, dest, title)) => end_range = Some(range),
+            _ => (),
+        }
+        match end_range {
+            Some(_) => {
+                let range = Range::<usize> {
+                    start: start_range.take().unwrap().start,
+                    end: end_range.take().unwrap().end,
+                };
+                ranges_to_replace_in.push(range);
+            }
+            None => {}
+        }
+    }
     let content: String = ranges_to_replace_in
         .iter()
         .map(|range| {
@@ -190,14 +197,14 @@ mod tests {
 
     replace_readme_tests! {
         "[content]: ./bla/index.md ",
-        replace_readme_in_footnote_link_test_1:"[content]: ./bla/readme.md ",
-        replace_readme_in_footnote_link_test_2:"[content]: ./bla/ReAdme.md ",
-        replace_readme_in_footnote_link_test_3:"[content]: ./bla/ReaDme.md ",
-        replace_readme_in_footnote_link_test_4:"[content]: ./bla/README.MD ",
-        replace_readme_in_footnote_link_test_5:"[content]: ./bla/REadmE.md ",
-        replace_readme_in_footnote_link_test_6:"[content]: ./bla/ReAdme.md ",
-        replace_readme_in_footnote_link_test_7:"[content]: ./bla/Readme.MD ",
-        replace_readme_in_footnote_link_test_8:"[content]: ./bla/readme.MD ",
+        replace_readme_in_reference_link_test_1:"[content]: ./bla/readme.md ",
+        replace_readme_in_reference_link_test_2:"[content]: ./bla/ReAdme.md ",
+        replace_readme_in_reference_link_test_3:"[content]: ./bla/ReaDme.md ",
+        replace_readme_in_reference_link_test_4:"[content]: ./bla/README.MD ",
+        replace_readme_in_reference_link_test_5:"[content]: ./bla/REadmE.md ",
+        replace_readme_in_reference_link_test_6:"[content]: ./bla/ReAdme.md ",
+        replace_readme_in_reference_link_test_7:"[content]: ./bla/Readme.MD ",
+        replace_readme_in_reference_link_test_8:"[content]: ./bla/readme.MD ",
     }
     replace_readme_tests! {
         "[content]( ./bla/index.md)",
