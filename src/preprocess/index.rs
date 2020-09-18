@@ -2,7 +2,6 @@ use core::ops::Range;
 use pulldown_cmark::{Event, LinkType, Parser, Tag};
 use pulldown_cmark_to_cmark::cmark;
 use regex::Regex;
-use std::iter::{FromIterator, Iterator};
 use std::path::Path;
 
 use crate::errors::*;
@@ -60,36 +59,54 @@ fn replace_readme_in_string(content: &str) -> String {
         )
         .unwrap();
     }
-    let parser = pulldown_cmark::Parser::new(content).into_offset_iter();
-    let mut ranges_to_replace_in = vec![];
-    let mut start_range: Option<Range<usize>> = None;
-    let mut end_range: Option<Range<usize>> = None;
-    for (event, range) in parser {
-        match event {
-            Event::Start(Tag::Link(link_type, dest, title)) => start_range = Some(range),
-            Event::End(Tag::Link(link_type, dest, title)) => end_range = Some(range),
-            _ => (),
-        }
-        match end_range {
-            Some(_) => {
-                let range = Range::<usize> {
-                    start: start_range.take().unwrap().start,
-                    end: end_range.take().unwrap().end,
-                };
-                ranges_to_replace_in.push(range);
-            }
-            None => {}
-        }
+    let parser = pulldown_cmark::Parser::new(content);
+    let mut buf = String::with_capacity(content.len());
+
+    let mut events = vec![];
+    for event in parser {
+        events.push(match event {
+            Event::Start(Tag::Link(link_type, dest, title)) => Event::Start(Tag::Link(
+                link_type,
+                pulldown_cmark::CowStr::from(RE.replace_all(&dest, "/index.md").into_owned()),
+                title,
+            )),
+            Event::End(Tag::Link(link_type, dest, title)) => Event::End(Tag::Link(
+                link_type,
+                pulldown_cmark::CowStr::from(RE.replace_all(&dest, "/index.md").into_owned()),
+                title,
+            )),
+            // Event::FootnoteReference(text) => Event::FootnoteReference(
+            //     pulldown_cmark::CowStr::from(RE.replace_all(&text, "/index.md").into_owned()),
+            // ),
+            // Event::End(Tag::Link(link_type, dest, title)) => Event::End(Tag::Link(
+            //     link_type,
+            //     pulldown_cmark::CowStr::from(dbg!(RE.replace_all(&dest, "/index.md").into_owned())),
+            //     title,
+            // )),
+            // pulldown_cmark::Event::Text(text)
+            //     if (text.chars().nth(0).unwrap() == Char::from(":")) =>
+            // {
+            //     pulldown_cmark::Event::Text(pulldown_cmark::CowStr::from(dbg!(RE
+            //         .replace_all(&text, "/index.md")
+            //         .into_owned())))
+            // },
+            v => dbg!(v),
+        });
     }
-    let content: String = ranges_to_replace_in
-        .iter()
-        .map(|range| {
-            // let substring: &str = "[fdfsd]: sdfsdfsdf/dfsdf/readme.md";
-            let substring: &str = &content[range.clone()];
-            RE.replace_all(substring, "/index.md").into_owned()
-        })
-        .collect();
-    content
+
+    // dbg!(
+    // match
+    cmark(events.iter(), &mut buf, None).unwrap() // .map(|_| buf)
+                                             // {
+                                             //     Ok(_) => ,
+                                             //     Err(_) => content.to_string(),
+                                             // }
+    // )
+    ;
+    buf
+
+    // //TODO : change
+    // content.to_string()
 }
 
 fn warn_readme_name_conflict<P: AsRef<Path>>(readme_path: P, index_path: P) {
@@ -183,16 +200,16 @@ mod tests {
     replace_readme_tests! {
         "[content](./bla/index.md) content: ( ./readme.md)",
         replace_readme_only_in_link_cases_1:"[content](./bla/readme.md) content: ( ./readme.md)",
-        replace_readme_only_in_link_cases_2:"[content](./bla/readme.md) content: ( ./reADme.md)",
-        replace_readme_only_in_link_cases_3:"[content](./bla/readme.md) content: ( ./readMe.md)",
-        replace_readme_only_in_link_cases_4:"[content](./bla/readme.md) content: ( ./readme.MD)",
-        replace_readme_only_in_link_cases_5:"[content](./bla/readme.md) content: ( ./readme.md)",
-        replace_readme_only_in_link_cases_6:"[content](./bla/readme.md) content: ( ./REAdme.md)",
-        replace_readme_only_in_link_cases_7:"[content](./bla/readme.md) content: ( ./README.MD)",
+        replace_readme_only_in_link_cases_2:"[content](./bla/rEaDme.md) content: ( ./readme.md)",
+        replace_readme_only_in_link_cases_3:"[content](./bla/README.MD) content: ( ./readme.md)",
+        replace_readme_only_in_link_cases_4:"[content](./bla/reAdme.md) content: ( ./readme.md)",
+        replace_readme_only_in_link_cases_5:"[content](./bla/Readme.md) content: ( ./readme.md)",
+        replace_readme_only_in_link_cases_6:"[content](./bla/README.md) content: ( ./readme.md)",
+        replace_readme_only_in_link_cases_7:"[content](./bla/readme.MD) content: ( ./readme.md)",
     }
     replace_readme_tests! {
-        "🤞🏼[content](./bla/index.md)🤞🏼 content: ( ./readme.md)",
-        replace_readme_only_in_link_cases_even_with_multibyte_chars:"🤞🏼[content](./bla/readme.md)🤞🏼 content: ( ./README.MD)",
+        "🤞🏼[content](./bla/index.md)🤞🏼\n[content]: ./index.md",
+        replace_readme_only_in_link_cases_even_with_multibyte_chars:"🤞🏼[content](./bla/readme.md)🤞🏼\n[content]:  ./README.MD",
     }
 
     replace_readme_tests! {
@@ -207,7 +224,7 @@ mod tests {
         replace_readme_in_reference_link_test_8:"[content]: ./bla/readme.MD ",
     }
     replace_readme_tests! {
-        "[content]( ./bla/index.md)",
+        "[content](./bla/index.md)",
         replace_readme_in_inline_link_test_1:"[content]( ./bla/readme.md)",
         replace_readme_in_inline_link_test_2:"[content]( ./bla/ReAdme.md)",
         replace_readme_in_inline_link_test_3:"[content]( ./bla/ReaDme.md)",
