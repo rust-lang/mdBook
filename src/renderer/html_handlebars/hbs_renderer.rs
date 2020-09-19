@@ -6,11 +6,11 @@ use crate::renderer::{RenderContext, Renderer};
 use crate::theme::{self, playground_editor, Theme};
 use crate::utils;
 
-use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
+use std::{borrow::Cow, path::Component};
 
 use crate::utils::fs::get_404_output_file;
 use handlebars::Handlebars;
@@ -33,7 +33,11 @@ impl HtmlHandlebars {
         // FIXME: This should be made DRY-er and rely less on mutable state
 
         let (ch, path) = match item {
-            BookItem::Chapter(ch) if !ch.is_draft_chapter() => (ch, ch.path.as_ref().unwrap()),
+            BookItem::Chapter(ch) if !ch.is_draft_chapter() => (
+                ch,
+                // make sure to not leave the output directory
+                cut_parent_components_from_path(ch.path.as_ref().unwrap()),
+            ),
             _ => return Ok(()),
         };
 
@@ -427,6 +431,19 @@ fn maybe_wrong_theme_dir(dir: &Path) -> Result<bool> {
     } else {
         Ok(false)
     }
+}
+
+fn cut_parent_components_from_path(path: &Path) -> PathBuf {
+    let mut out_path = PathBuf::new();
+    for component in path.components() {
+        match component {
+            Component::ParentDir => {
+                let _ = out_path.pop();
+            }
+            component => out_path.push(component),
+        }
+    }
+    out_path
 }
 
 impl Renderer for HtmlHandlebars {
