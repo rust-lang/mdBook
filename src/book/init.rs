@@ -109,10 +109,9 @@ impl BookBuilder {
     fn copy_across_theme(&self) -> Result<()> {
         debug!("Copying theme");
 
-        let themedir = self
-            .config
-            .html_config()
-            .and_then(|html| html.theme)
+        let html_config = self.config.html_config().unwrap_or_default();
+        let themedir = html_config
+            .theme
             .unwrap_or_else(|| self.config.book.src.join("theme"));
         let themedir = self.root.join(themedir);
 
@@ -136,8 +135,10 @@ impl BookBuilder {
         let mut chrome_css = File::create(cssdir.join("chrome.css"))?;
         chrome_css.write_all(theme::CHROME_CSS)?;
 
-        let mut print_css = File::create(cssdir.join("print.css"))?;
-        print_css.write_all(theme::PRINT_CSS)?;
+        if html_config.print.enable {
+            let mut print_css = File::create(cssdir.join("print.css"))?;
+            print_css.write_all(theme::PRINT_CSS)?;
+        }
 
         let mut variables_css = File::create(cssdir.join("variables.css"))?;
         variables_css.write_all(theme::VARIABLES_CSS)?;
