@@ -135,11 +135,11 @@ fn recursive_copy<A: AsRef<Path>, B: AsRef<Path>>(from: A, to: B) -> Result<()> 
 }
 
 pub fn new_copy_of_example_book() -> Result<TempDir> {
-    let temp = TempFileBuilder::new().prefix("book-example").tempdir()?;
+    let temp = TempFileBuilder::new().prefix("guide").tempdir()?;
 
-    let book_example = Path::new(env!("CARGO_MANIFEST_DIR")).join("book-example");
+    let guide = Path::new(env!("CARGO_MANIFEST_DIR")).join("guide");
 
-    recursive_copy(book_example, temp.path())?;
+    recursive_copy(guide, temp.path())?;
 
     Ok(temp)
 }
