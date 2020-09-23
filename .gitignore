@@ -4,7 +4,7 @@ target
 .DS_Store
 
 book-test
-book-example/book
+guide/book
 
 .vscode
 tests/dummy_book/book/
