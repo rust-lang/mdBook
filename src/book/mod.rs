@@ -10,7 +10,7 @@ mod book;
 mod init;
 mod summary;
 
-pub use self::book::{load_book, Book, BookItem, BookItems, Chapter};
+pub use self::book::{load_book, Book, BookItem, BookItems, Chapter, Resource};
 pub use self::init::BookBuilder;
 pub use self::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
 
@@ -133,6 +133,7 @@ impl MDBook {
     ///         BookItem::Chapter(ref chapter) => {},
     ///         BookItem::Separator => {},
     ///         BookItem::PartTitle(ref title) => {}
+    ///         BookItem::Resource(ref resource) => {}
     ///     }
     /// }
     ///

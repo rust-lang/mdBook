@@ -1,20 +1,18 @@
-use crate::book::{Book, BookItem};
+use crate::book::{Book, BookItem, Chapter};
 use crate::config::{Config, HtmlConfig, Playground, RustEdition};
 use crate::errors::*;
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
 use crate::theme::{self, playground_editor, Theme};
 use crate::utils;
-
+use crate::utils::fs::get_404_output_file;
+use handlebars::Handlebars;
+use regex::{Captures, Regex};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::fs::{self, File};
-use std::path::{Path, PathBuf};
-
-use crate::utils::fs::get_404_output_file;
-use handlebars::Handlebars;
-use regex::{Captures, Regex};
+use std::path::{Component, Path, PathBuf};
 
 #[derive(Default)]
 pub struct HtmlHandlebars;
@@ -92,6 +90,8 @@ impl HtmlHandlebars {
         debug!("Creating {}", filepath.display());
         utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
 
+        self.write_chapter_resources(&ch, &ctx.destination, &filepath)?;
+
         if ctx.is_index {
             ctx.data.insert("path".to_owned(), json!("index.md"));
             ctx.data.insert("path_to_root".to_owned(), json!(""));
@@ -101,6 +101,31 @@ impl HtmlHandlebars {
                 self.post_process(rendered_index, &ctx.html_config.playground, ctx.edition);
             debug!("Creating index.html from {}", ctx_path);
             utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
+        }
+
+        Ok(())
+    }
+
+    fn write_chapter_resources(
+        &self,
+        chapter: &Chapter,
+        destination: &PathBuf,
+        chapter_filepath: &PathBuf,
+    ) -> Result<()> {
+        let chapter_root = {
+            let mut root = chapter_filepath.clone();
+            root.pop(); //Pop chapter filename
+            root
+        };
+
+        for resource in &chapter.resources {
+            let resource_path = chapter_root.join(&resource.relative_url);
+            println!(
+                "Writing {}/{}",
+                destination.to_string_lossy(),
+                resource_path.to_string_lossy()
+            );
+            utils::fs::write_file(&destination, &resource_path, &resource.data)?;
         }
 
         Ok(())
@@ -900,6 +925,69 @@ fn partition_source(s: &str) -> (String, String) {
     (before, after)
 }
 
+/// The resource url is the path to the resource relative to the chapter. We need
+/// to transform that into a PathBuf so we can save the file to that location.
+/// There are several problems we need to address here:
+///  1. An invalid (or malicious for that matter) url may refer to a file outside
+///     the build output dir. We should return an error in that case.
+///  2. When a url has a root it means the resource is located relative to the
+///     build output dir, not the file system dir.
+///  3. The URL may be invalid.
+///
+/// # Arguments
+///
+/// * `output_root` - The book output dir (i.e. the root of the url based path)
+/// * `rel_chapter_root` - The chapter's path relative to output_root
+/// * `resource_url` - The resource URL (as used in an anchor)
+///
+/// Examples can be found in the test
+fn resource_url_to_path(
+    output_root: &PathBuf,
+    rel_chapter_root: &PathBuf,
+    resource_url: &String,
+) -> Result<PathBuf> {
+    let rel_resource_path = {
+        let mut resource_path = PathBuf::from(resource_url);
+        if resource_path.has_root() {
+            // We have a root. A relative URL root should be relative to the build
+            // output dir here, so it needs to be removed.
+            // PathBuf has no way of stripping the root for all platforms :-(
+            // So do it the hard way...
+            let mut no_root_path = PathBuf::new();
+            resource_path.components().for_each(|c| match c {
+                Component::Normal(s) => {
+                    no_root_path.push(s);
+                }
+                _ => {}
+            });
+            resource_path = no_root_path;
+        }
+
+        resource_path
+    };
+
+    //Now we need to normalize the rel_chapter_root joined with the
+    //rel_resource_path to determine if we end up somewhere below the output
+    //root. Cannot call canonicalize, because the file does not exist yet.
+    let rel_resource_path = rel_chapter_root.join(rel_resource_path);
+    let mut normalized_resource_path = PathBuf::new();
+    rel_resource_path.components().for_each(|c| match c {
+        Component::Normal(s) => {
+            normalized_resource_path.push(s);
+        }
+        Component::ParentDir => {
+            if !normalized_resource_path.pop() {
+                bail!("Resource '{}' would be saved outside the build dir, this is not allowed", resource_url);
+
+            }
+        }
+        _ => {}
+    });
+
+
+    Ok(output_root.join(rel_chapter_root).join(rel_resource_path))
+}
+
 struct RenderItemContext<'a> {
     handlebars: &'a Handlebars<'a>,
     destination: PathBuf,
@@ -912,6 +1000,10 @@ struct RenderItemContext<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::book::Chapter;
+    use crate::book::Resource;
+    use crate::config::HtmlConfig;
+    use tempfile::tempdir;
 
     #[test]
     fn original_build_header_links() {
@@ -1025,5 +1117,147 @@ mod tests {
             );
             assert_eq!(&*got, *should_be);
         }
+    }
+
+    #[test]
+    fn resources_handle_book_resources() {
+        let temp_dir = tempdir().unwrap();
+        let temp_dir_path = temp_dir.path(); //do not call into_path here, it persists the directory!
+
+        let renderer = HtmlHandlebars::new();
+        let ctx = RenderItemContext {
+            handlebars: &{
+                let mut hbars = Handlebars::new();
+                hbars
+                    .register_template_string("index", "some template foo")
+                    .unwrap();
+                hbars
+            },
+            destination: temp_dir_path.to_path_buf(),
+            data: serde_json::Map::new(),
+            is_index: true,
+            html_config: HtmlConfig::default(),
+            edition: None,
+        };
+        let mut print_content = String::from("");
+
+        let chapter = {
+            let mut chapter = Chapter::default();
+            chapter.path = Some(PathBuf::from("somewhere"));
+            chapter.resources.push(Resource {
+                relative_url: String::from("foo.bar"),
+                data: Vec::new(),
+            });
+            chapter
+        };
+
+        renderer
+            .render_item(&BookItem::Chapter(chapter), ctx, &mut print_content)
+            .unwrap();
+
+        //If the file exists we've called write_chapter_resources, which is what
+        //we want to test here
+        assert!(temp_dir_path.to_path_buf().join("foo.bar").exists());
+    }
+
+    #[test]
+    fn resources_write_chapter_resources() {
+        let temp_dir = tempdir().unwrap();
+        let temp_dir_path = temp_dir.path(); //do not call into_path here, it persists the directory!
+
+        let chapter = {
+            let mut chapter = Chapter::default();
+            chapter.resources.push(Resource {
+                relative_url: String::from("froboz/electric.svg"),
+                data: "<svg />".as_bytes().to_vec(),
+            });
+            chapter.resources.push(Resource {
+                relative_url: String::from("some_image.png"),
+                data: "png data".as_bytes().to_vec(),
+            });
+            chapter
+        };
+
+        let renderer = HtmlHandlebars::new();
+        let chapter_filepath = PathBuf::from("foo/bar.md");
+        let destination = &temp_dir_path.to_path_buf();
+        renderer
+            .write_chapter_resources(&chapter, destination, &chapter_filepath)
+            .unwrap();
+
+        //The resources should have been copied to the build dir
+        // Note that the root '/' is stripped
+        let resource_path = temp_dir_path.to_path_buf().join("foo/froboz/electric.svg");
+        assert_eq!(
+            "<svg />".as_bytes().to_vec(),
+            std::fs::read(&resource_path).unwrap()
+        );
+
+        let resource_path = temp_dir_path.to_path_buf().join("foo/some_image.png");
+        assert_eq!(
+            "png data".as_bytes().to_vec(),
+            std::fs::read(&resource_path).unwrap()
+        );
+    }
+
+    #[test]
+    fn resources_write_chapter_resources_not_allowed_outside_build_dir() {
+        let temp_dir = tempdir().unwrap();
+        let temp_dir_path = temp_dir.path(); //do not call into_path here, it persists the directory!
+
+        let mut chapter = Chapter::default();
+        let mut set_resource_url = |illegal_url_path: String| {
+            chapter.resources.clear();
+            chapter.resources.push(Resource {
+                relative_url: illegal_url_path,
+                data: Vec::new(),
+            });
+        };
+
+        let renderer = HtmlHandlebars::new();
+        let chapter_filepath = PathBuf::from("bar.md");
+        let destination = &temp_dir_path.to_path_buf();
+
+        set_resource_url(String::from("/illegal.svg")); //Root
+        assert!(renderer
+            .write_chapter_resources(&chapter, destination, &chapter_filepath)
+            .is_err());
+        assert!(!temp_dir_path
+            .to_path_buf()
+            .join("../relative_below_build_dir.svg")
+            .exists());
+    }
+
+    #[test]
+    fn resource_resource_url_to_path() {
+        let output_root = PathBuf::from("/build");
+        let chapter_root = PathBuf::from("chapter");
+
+        macro_rules! assert_happy {
+            ($expected:expr, $resource_url:expr) => {
+                assert_eq!(
+                    PathBuf::from($expected),
+                    resource_url_to_path(&output_root, &chapter_root, &String::from($resource_url))
+                        .unwrap()
+                );
+            };
+        }
+
+        assert_happy!("/build/chapter/bar", "bar");
+        assert_happy!("/build/chapter/bar", "./bar");
+        assert_happy!("/build/chapter/bar/baz", "./bar/baz");
+        assert_happy!("/build/chapter/bar/baz", "/bar/baz");
+        // Someone entered a windows style absolute path, the root is simple
+        // stripped, regardless of teh drive
+        assert_happy!("/build/chapter/weird", r"C:\\weird");
+        assert_happy!("/build/chapter/weird", r"D:\\weird");
+        assert_happy!("/build/chapter/weird", r"\\weird");
+
+        macro_rules! assert_sad {
+            ($resource_url:expr) => {
+                assert!(resource_url_to_path(&output_root, &String::from($resource_url)).is_err());
+            };
+        }
+        //assert_sad!("../bar"); //Not in build dir
     }
 }

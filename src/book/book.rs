@@ -159,6 +159,8 @@ pub struct Chapter {
     pub path: Option<PathBuf>,
     /// An ordered list of the names of each chapter above this one, in the hierarchy.
     pub parent_names: Vec<String>,
+    /// The list of resources associated with this chapter
+    pub resources: Vec<Resource>,
 }
 
 impl Chapter {
@@ -196,6 +198,39 @@ impl Chapter {
             Some(_) => false,
             None => true,
         }
+    }
+}
+
+/// The representation of a "Resource", typically an image.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct Resource {
+    /// The resource's relative url (as used in a chapter, e.g. ![](foo/bar.png)).
+    pub relative_url: String,
+    /// The resource data (binary data, base64 encoded in serialization).
+    #[serde(with = "resource_data_base64")]
+    pub data: Vec<u8>,
+}
+
+/// The resource data is a vec of u8, which would have a huge overhead in JSON
+/// using the default format.
+/// So convert to base64 as a more optimal (and more logical) format
+mod resource_data_base64 {
+    use base64;
+    use serde::{de, Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&base64::encode(bytes))
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = <&str>::deserialize(deserializer)?;
+        base64::decode(s).map_err(de::Error::custom)
     }
 }
 
@@ -331,6 +366,7 @@ impl Display for Chapter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::Value;
     use std::io::Write;
     use tempfile::{Builder as TempFileBuilder, TempDir};
 
@@ -412,6 +448,7 @@ And here is some \
             path: Some(PathBuf::from("second.md")),
             parent_names: vec![String::from("Chapter 1")],
             sub_items: Vec::new(),
+            resources: Vec::new(),
         };
         let should_be = BookItem::Chapter(Chapter {
             name: String::from("Chapter 1"),
@@ -424,6 +461,7 @@ And here is some \
                 BookItem::Separator,
                 BookItem::Chapter(nested.clone()),
             ],
+            resources: Vec::new(),
         });
 
         let got = load_summary_item(&SummaryItem::Link(root), temp.path(), Vec::new()).unwrap();
@@ -498,6 +536,7 @@ And here is some \
                             Vec::new(),
                         )),
                     ],
+                    resources: Vec::new(),
                 }),
                 BookItem::Separator,
             ],
@@ -550,6 +589,7 @@ And here is some \
                             Vec::new(),
                         )),
                     ],
+                    resources: Vec::new(),
                 }),
                 BookItem::Separator,
             ],
@@ -598,5 +638,30 @@ And here is some \
 
         let got = load_book_from_disk(&summary, temp.path());
         assert!(got.is_err());
+    }
+
+    #[test]
+    fn resource_serialization() {
+        let resource = Resource {
+            relative_url: String::from("foo/bar"),
+            data: "File contents\nwith newline".as_bytes().to_vec(),
+        };
+
+        let json = serde_json::to_string(&resource).unwrap();
+        let v: Value = serde_json::from_str(&json).unwrap();
+        let expected_data = base64::encode(&resource.data);
+        assert_eq!(expected_data, v["data"]);
+    }
+
+    #[test]
+    fn resource_deserialization() {
+        let json_resource = json!({
+            "relative_url": "my/relative/url",
+            "data": base64::encode("froboz electric"),
+        });
+
+        let resource: Resource = serde_json::from_str(&json_resource.to_string()).unwrap();
+        assert_eq!("my/relative/url", resource.relative_url);
+        assert_eq!("froboz electric".as_bytes().to_vec(), resource.data);
     }
 }
