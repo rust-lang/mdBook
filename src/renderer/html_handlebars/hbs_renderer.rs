@@ -119,7 +119,7 @@ impl HtmlHandlebars {
         };
 
         for resource in &chapter.resources {
-            let resource_path = chapter_root.join(&resource.relative_url);
+            let resource_path = resource_url_to_path(&chapter_root, &resource.relative_url)?;
             println!(
                 "Writing {}/{}",
                 destination.to_string_lossy(),
@@ -936,17 +936,12 @@ fn partition_source(s: &str) -> (String, String) {
 ///
 /// # Arguments
 ///
-/// * `output_root` - The book output dir (i.e. the root of the url based path)
-/// * `rel_chapter_root` - The chapter's path relative to output_root
+/// * `rel_chapter_root` - The chapter's path relative to the book build dir
 /// * `resource_url` - The resource URL (as used in an anchor)
 ///
 /// Examples can be found in the test
-fn resource_url_to_path(
-    output_root: &PathBuf,
-    rel_chapter_root: &PathBuf,
-    resource_url: &String,
-) -> Result<PathBuf> {
-    let rel_resource_path = {
+fn resource_url_to_path(rel_chapter_root: &PathBuf, resource_url: &String) -> Result<PathBuf> {
+    let resource_path = {
         let mut resource_path = PathBuf::from(resource_url);
         if resource_path.has_root() {
             // We have a root. A relative URL root should be relative to the build
@@ -961,6 +956,8 @@ fn resource_url_to_path(
                 _ => {}
             });
             resource_path = no_root_path;
+        } else {
+            resource_path = rel_chapter_root.join(resource_path);
         }
 
         resource_path
@@ -969,23 +966,26 @@ fn resource_url_to_path(
     //Now we need to normalize the rel_chapter_root joined with the
     //rel_resource_path to determine if we end up somewhere below the output
     //root. Cannot call canonicalize, because the file does not exist yet.
-    let rel_resource_path = rel_chapter_root.join(rel_resource_path);
     let mut normalized_resource_path = PathBuf::new();
-    rel_resource_path.components().for_each(|c| match c {
-        Component::Normal(s) => {
-            normalized_resource_path.push(s);
-        }
-        Component::ParentDir => {
-            if !normalized_resource_path.pop() {
-                bail!("Resource '{}' would be saved outside the build dir, this is not allowed", resource_url);
-
+    //let components = ;
+    for c in resource_path.components() {
+        match c {
+            Component::Normal(s) => {
+                normalized_resource_path.push(s);
             }
+            Component::ParentDir => {
+                if !normalized_resource_path.pop() {
+                    bail!(
+                        "Resource '{}' would be saved outside the build dir, this is not allowed",
+                        resource_url
+                    );
+                }
+            }
+            _ => {}
         }
-        _ => {}
-    });
+    }
 
-
-    Ok(output_root.join(rel_chapter_root).join(rel_resource_path))
+    Ok(normalized_resource_path)
 }
 
 struct RenderItemContext<'a> {
@@ -1120,7 +1120,7 @@ mod tests {
     }
 
     #[test]
-    fn resources_handle_book_resources() {
+    fn handles_book_resources() {
         let temp_dir = tempdir().unwrap();
         let temp_dir_path = temp_dir.path(); //do not call into_path here, it persists the directory!
 
@@ -1161,18 +1161,18 @@ mod tests {
     }
 
     #[test]
-    fn resources_write_chapter_resources() {
+    fn writes_chapter_resources() {
         let temp_dir = tempdir().unwrap();
         let temp_dir_path = temp_dir.path(); //do not call into_path here, it persists the directory!
 
         let chapter = {
             let mut chapter = Chapter::default();
             chapter.resources.push(Resource {
-                relative_url: String::from("froboz/electric.svg"),
+                relative_url: String::from("froboz/../booh/electric.svg"),
                 data: "<svg />".as_bytes().to_vec(),
             });
             chapter.resources.push(Resource {
-                relative_url: String::from("some_image.png"),
+                relative_url: String::from("/some_image.png"),
                 data: "png data".as_bytes().to_vec(),
             });
             chapter
@@ -1187,13 +1187,13 @@ mod tests {
 
         //The resources should have been copied to the build dir
         // Note that the root '/' is stripped
-        let resource_path = temp_dir_path.to_path_buf().join("foo/froboz/electric.svg");
+        let resource_path = temp_dir_path.to_path_buf().join("foo/booh/electric.svg");
         assert_eq!(
             "<svg />".as_bytes().to_vec(),
             std::fs::read(&resource_path).unwrap()
         );
 
-        let resource_path = temp_dir_path.to_path_buf().join("foo/some_image.png");
+        let resource_path = temp_dir_path.to_path_buf().join("some_image.png");
         assert_eq!(
             "png data".as_bytes().to_vec(),
             std::fs::read(&resource_path).unwrap()
@@ -1201,63 +1201,45 @@ mod tests {
     }
 
     #[test]
-    fn resources_write_chapter_resources_not_allowed_outside_build_dir() {
-        let temp_dir = tempdir().unwrap();
-        let temp_dir_path = temp_dir.path(); //do not call into_path here, it persists the directory!
-
-        let mut chapter = Chapter::default();
-        let mut set_resource_url = |illegal_url_path: String| {
-            chapter.resources.clear();
-            chapter.resources.push(Resource {
-                relative_url: illegal_url_path,
-                data: Vec::new(),
-            });
-        };
-
-        let renderer = HtmlHandlebars::new();
-        let chapter_filepath = PathBuf::from("bar.md");
-        let destination = &temp_dir_path.to_path_buf();
-
-        set_resource_url(String::from("/illegal.svg")); //Root
-        assert!(renderer
-            .write_chapter_resources(&chapter, destination, &chapter_filepath)
-            .is_err());
-        assert!(!temp_dir_path
-            .to_path_buf()
-            .join("../relative_below_build_dir.svg")
-            .exists());
-    }
-
-    #[test]
-    fn resource_resource_url_to_path() {
-        let output_root = PathBuf::from("/build");
+    fn converts_resource_url_to_path() {
         let chapter_root = PathBuf::from("chapter");
 
-        macro_rules! assert_happy {
+        macro_rules! assert_returns_path {
             ($expected:expr, $resource_url:expr) => {
                 assert_eq!(
                     PathBuf::from($expected),
-                    resource_url_to_path(&output_root, &chapter_root, &String::from($resource_url))
-                        .unwrap()
+                    resource_url_to_path(&chapter_root, &String::from($resource_url)).unwrap()
                 );
             };
         }
 
-        assert_happy!("/build/chapter/bar", "bar");
-        assert_happy!("/build/chapter/bar", "./bar");
-        assert_happy!("/build/chapter/bar/baz", "./bar/baz");
-        assert_happy!("/build/chapter/bar/baz", "/bar/baz");
-        // Someone entered a windows style absolute path, the root is simple
-        // stripped, regardless of teh drive
-        assert_happy!("/build/chapter/weird", r"C:\\weird");
-        assert_happy!("/build/chapter/weird", r"D:\\weird");
-        assert_happy!("/build/chapter/weird", r"\\weird");
+        assert_returns_path!("chapter/bar", "bar");
+        assert_returns_path!("chapter/bar", "./bar");
+        assert_returns_path!("chapter/bar/baz", "./bar/baz");
+        assert_returns_path!("bar/baz", "/bar/baz");
+        assert_returns_path!("bar/baz", "//bar/baz"); //Could be cygwin network path...
+        if cfg!(windows) {
+            // Someone entered a windows style absolute path, the root is simply
+            // stripped, regardless of the drive (this is guarding against a potential
+            // malicious party, or just someone who misunderstood the meaning of
+            // relative_resource_url).
+            assert_returns_path!("why_would_you_do_this", r"C:\why_would_you_do_this");
+            assert_returns_path!("why_would_you_do_this", r"D:\why_would_you_do_this");
+            assert_returns_path!("why_would_you_do_this", r"\\why_would_you_do_this");
+            //Network path
+        }
 
-        macro_rules! assert_sad {
+        //Paths are normalized
+        assert_returns_path!("chapter/foo/bar", r"some/../foo/bar");
+        assert_returns_path!("bar", r"some/../foo/../../bar");
+        assert_returns_path!("foo/bar", r"../foo/bar");
+
+        macro_rules! assert_returns_error {
             ($resource_url:expr) => {
-                assert!(resource_url_to_path(&output_root, &String::from($resource_url)).is_err());
+                assert!(resource_url_to_path(&chapter_root, &String::from($resource_url)).is_err());
             };
         }
-        //assert_sad!("../bar"); //Not in build dir
+        assert_returns_error!("../../bar"); //Not in build dir
+        assert_returns_error!("../bar/../..");
     }
 }
