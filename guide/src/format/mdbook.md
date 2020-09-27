@@ -7,14 +7,14 @@ with a `#` [in the same way that Rustdoc does][rustdoc-hide].
 
 [rustdoc-hide]: https://doc.rust-lang.org/stable/rustdoc/documentation-tests.html#hiding-portions-of-the-example
 
-```bash
+<pre><code class="language-markdown">```rust
 # fn main() {
     let x = 5;
     let y = 6;
 
     println!("{}", x + y);
 # }
-```
+```</code></pre>
 
 Will render as
 
@@ -26,6 +26,49 @@ Will render as
     println!("{}", x + y);
 # }
 ```
+
+By default, this only works for code examples that are annotated with `rust`. However, you can 
+define custom patterns for other languages in your `book.toml`. Unless you need something complex 
+(e.g. rust uses `#` but doesn't hide `#[...]` lines), adding a new language is trivial. Just add 
+a new `boring-prefix` entry in your `book.toml` with the language name and prefix character 
+(you can also do multi-character prefixes if you really want to):
+
+```toml
+[output.html.playground.boring-prefixes]
+python = "~"
+```
+
+The auto-generated prefix patterns will hide any lines that begin with the given prefix, but
+the prefix can be escaped using a backslash. With the python example above, this:
+
+<pre><code class="language-markdown">```python
+~def fib():
+    a, b = 0, 1
+    while a < n:
+        print(a, end=' ')
+        a, b = b, a+b
+    print()
+    ~ # hide me!
+    \~ # leave me be!
+~fib(1000)
+```</code></pre>
+
+will render as
+
+```python
+~def fib():
+    a, b = 0, 1
+    while a < n:
+        print(a, end=' ')
+        a, b = b, a+b
+    print()
+    ~ # hide me!
+    \~ # leave me be!
+~fib(1000)
+```
+
+If you need something more complex than that, you can use a 
+[fully custom pattern](../config.md#boring-patterns).
 
 ## Including files
 

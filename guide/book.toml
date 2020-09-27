@@ -15,6 +15,9 @@ site-url = "/mdBook/"
 editable = true
 line-numbers = true
 
+[output.html.playground.boring-prefixes]
+python = "~"
+
 [output.html.search]
 limit-results = 20
 use-boolean-and = true

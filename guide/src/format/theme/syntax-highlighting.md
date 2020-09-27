@@ -26,47 +26,6 @@ the `theme` folder of your book.
 
 Now your theme will be used instead of the default theme.
 
-## Hiding code lines
-
-There is a feature in mdBook that lets you hide code lines by prepending them
-with a `#`.
-
-
-```bash
-# fn main() {
-    let x = 5;
-    let y = 6;
-
-    println!("{}", x + y);
-# }
-```
-
-Will render as
-
-```rust
-# fn main() {
-    let x = 5;
-    let y = 7;
-
-    println!("{}", x + y);
-# }
-```
-
-By default, this only works for code examples that are annotated with `rust`. However, you can 
-define custom patterns for other languages in your `book.toml`. Unless you need something complex 
-(e.g. rust uses `#` but doesn't hide `#[...]` lines), adding a new language is trivial. Just add 
-a new `boring-prefix` entry in your `book.toml` with the language name and prefix character 
-(you can also do multi-character prefixes if you really want to):
-
-```toml
-[output.html.playground.boring-prefixes]
-python = "~"
-```
-
-The auto-generated prefix patterns will hide any lines that begin with the given prefix, but
-the prefix can be escaped using a backslash. If you need something more complex than that, 
-you can use a [fully custom pattern](../config.md#boring-patterns).
-
 ## Improve default theme
 
 If you think the default theme doesn't look quite right for a specific language,
