@@ -608,6 +608,17 @@ pub struct Playground {
     pub copy_js: bool,
     /// Display line numbers on playground snippets. Default: `false`.
     pub line_numbers: bool,
+    /// Additional boring line patterns (language name -> pattern)
+    ///
+    /// Expects groups named `escape` and `prefix`
+    /// If the line doesn't match, it's left unchanged
+    /// When `escape` matches, the entire string except the `escape` group is used
+    /// When the line does match, all the groups are concatenated and used
+    pub boring_patterns: HashMap<String, String>,
+    /// Additional boring line prefixes (language name -> pattern)
+    /// This is shorthand for a basic pattern that matches lines starting with the
+    /// passed prefix, using a backslash as the escape character
+    pub boring_prefixes: HashMap<String, String>,
 }
 
 impl Default for Playground {
@@ -617,6 +628,8 @@ impl Default for Playground {
             copyable: true,
             copy_js: true,
             line_numbers: false,
+            boring_patterns: HashMap::new(),
+            boring_prefixes: HashMap::new(),
         }
     }
 }
@@ -759,6 +772,8 @@ mod tests {
             copyable: true,
             copy_js: true,
             line_numbers: false,
+            boring_patterns: HashMap::new(),
+            boring_prefixes: HashMap::new(),
         };
         let html_should_be = HtmlConfig {
             curly_quotes: true,

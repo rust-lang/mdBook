@@ -239,6 +239,60 @@ Available configuration options for the `[output.html.playground]` table:
 - **copy-js:** Copy JavaScript files for the editor to the output directory.
   Defaults to `true`.
 - **line-numbers** Display line numbers on editable sections of code. Requires both `editable` and `copy-js` to be `true`. Defaults to `false`.
+- **boring-prefixes** A map of simple to use prefixes for hiding "boring" lines in various languages.  
+  (e.g. `{ python = "~" }` will hide lines in python blocks that start with `~`, but that `~` can be escaped with a backslash.)
+- **boring-patterns** A map of complex patterns to use for hiding "boring" lines in various languages.
+
+#### Boring patterns
+Boring patterns define what lines in a code block are "boring" and should be hidden. There is already a built-in pattern for rust, 
+which should behave identically to rustdoc. In rust, a boring line starts with a `#`, however that can be escaped using a `##`, and
+lines that start with `#!` (e.g. `#![...]`) or `#[` (e.g. `#[...]`) *won't* be boring.
+
+```toml
+[output.html.playground.boring-prefixes]
+python = "~"
+[output.html.playground.boring-patterns]
+somelanguage = "<custom pattern>"
+```
+
+The simplest way to add a boring pattern is to add a "boring prefix", which is really an auto-generated pattern. 
+The generated pattern will hide any lines that begin with the specified prefix, unless it's preceded by a backslash.
+
+While a simple boring prefix will almost always work, sometimes a more complex pattern is necessary (e.g. rust won't mark `#[...]` lines as boring), 
+and this is where fully-fledged boring patterns kick in. Boring patterns are regular expressions and have to follow a few rules.
+
+- Each pattern should match an entire line.
+- The pattern should have a group named `escape`, and this group should be optional. Note the difference between 
+  the *contents* of the group being optional `(?P<escape>#?)` and the *group itself* being optional `(?P<escape>#)?`.
+- Everything else that you *care about* should be in unnamed groups.
+
+mdBook will then test the regex on each line and follow this pattern:
+
+- If the line doesn't match, the line is left unchanged
+- If the line matches and the `escape` group matches, the output is the entire line with the escape group cut out of the middle.
+- If the line matched and the `escape` group *doesn't* match, the output is the combined contents of *every match group*.
+  (This is why you add unnamed groups around everything you care about.)
+
+Here is the pattern generated for a boring prefix (the `{}` in replaced with the prefix string):
+```re
+^(\s*)(?P<escape>\\)?{} ?(.*)$
+```
+Breaking it down, we have
+- `^(\s*)`  
+  Match the indentation, and put it in a group to preserve it in the output.
+- `(?P<escape>\\)?`  
+  If we find a backslash this group will match and trigger the escape mechanism.
+- `{} ?`  
+  Match the prefix and optionally the space after it. Note how this isn't in a group, meaning it 
+  won't be included in the final line.
+- `(.*)$`  
+  Match the rest of the line, and put it in a group to preserve it in the output.
+
+A more complex example would be the Rust pattern, which is beyond the scope of this guide. Most of the 
+changes are in the block after the `#` prefix, and are dedicated to ignoring `#[...]` and `#![...]` lines.
+```re
+^(\s*)(?P<escape>#)?#(?: (.*)|([^#!\[ ].*))?$
+```
 
 [Ace]: https://ace.c9.io/
 
@@ -301,6 +355,8 @@ level = 0
 editable = false
 copy-js = true
 line-numbers = false
+boring-patterns = {}
+boring-prefixes = {}
 
 [output.html.search]
 enable = true

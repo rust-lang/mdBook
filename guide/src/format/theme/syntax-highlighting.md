@@ -52,11 +52,20 @@ Will render as
 # }
 ```
 
-**At the moment, this only works for code examples that are annotated with
-`rust`. Because it would collide with semantics of some programming languages.
-In the future, we want to make this configurable through the `book.toml` so that
-everyone can benefit from it.**
+By default, this only works for code examples that are annotated with `rust`. However, you can 
+define custom patterns for other languages in your `book.toml`. Unless you need something complex 
+(e.g. rust uses `#` but doesn't hide `#[...]` lines), adding a new language is trivial. Just add 
+a new `boring-prefix` entry in your `book.toml` with the language name and prefix character 
+(you can also do multi-character prefixes if you really want to):
 
+```toml
+[output.html.playground.boring-prefixes]
+python = "~"
+```
+
+The auto-generated prefix patterns will hide any lines that begin with the given prefix, but
+the prefix can be escaped using a backslash. If you need something more complex than that, 
+you can use a [fully custom pattern](../config.md#boring-patterns).
 
 ## Improve default theme
 
