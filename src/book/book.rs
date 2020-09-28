@@ -204,11 +204,12 @@ impl Chapter {
 
 /// The representation of a "Resource", typically an image.
 /// An example of a resource could be:
-/// ```
+/// ```rust,no_run,noplayground
+/// use mdbook::book::Resource;
 /// Resource {
 ///     relative_url: String::from("./circle.svg"),
 ///     data: "<svg height='100' width='100'><circle cx='50' cy='50' r='40' /></svg>".as_bytes().to_vec()
-/// }
+/// };
 /// ```
 /// This resource should be saved by the renderer in such a way that any reference
 /// to ./circle.svg in the chapter somehow renders/links the resource data.

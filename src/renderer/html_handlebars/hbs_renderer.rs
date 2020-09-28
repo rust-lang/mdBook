@@ -941,14 +941,13 @@ fn partition_source(s: &str) -> (String, String) {
 ///     the build output dir. We should return an error in that case.
 ///  2. When a url has a root it means the resource is located relative to the
 ///     build output dir, not the file system dir.
-///  3. The URL may be invalid.
 ///
 /// # Arguments
 ///
 /// * `rel_chapter_root` - The chapter's path relative to the book build dir
 /// * `resource_url` - The resource URL (as used in an anchor)
 ///
-/// Examples can be found in the test
+/// Examples can be found in the test 'converts_resource_url_to_path'
 fn resource_url_to_path(rel_chapter_root: &PathBuf, resource_url: &String) -> Result<PathBuf> {
     let resource_path = {
         let mut resource_path = PathBuf::from(resource_url);
@@ -1239,16 +1238,18 @@ mod tests {
         }
 
         //Paths are normalized
-        assert_returns_path!("chapter/foo/bar", r"some/../foo/bar");
-        assert_returns_path!("bar", r"some/../foo/../../bar");
-        assert_returns_path!("foo/bar", r"../foo/bar");
+        assert_returns_path!("chapter/foo/bar", "some/../foo/bar");
+        assert_returns_path!("bar", "some/../foo/../../bar");
+        assert_returns_path!("foo/bar", "../foo/bar");
 
         macro_rules! assert_returns_error {
             ($resource_url:expr) => {
                 assert!(resource_url_to_path(&chapter_root, &String::from($resource_url)).is_err());
             };
         }
-        assert_returns_error!("../../bar"); //Not in build dir
+
+        //Files would end up outside build dir
+        assert_returns_error!("../../bar");
         assert_returns_error!("../bar/../..");
     }
 }
