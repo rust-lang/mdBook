@@ -209,13 +209,19 @@ impl HtmlHandlebars {
         write_file(
             destination,
             ".nojekyll",
-            b"This file makes sure that Github Pages doesn't process mdBook's output.",
+            b"This file makes sure that Github Pages doesn't process mdBook's output.\n",
         )?;
+
+        if let Some(cname) = &html_config.cname {
+            write_file(destination, "CNAME", format!("{}\n", cname).as_bytes())?;
+        }
 
         write_file(destination, "book.js", &theme.js)?;
         write_file(destination, "css/general.css", &theme.general_css)?;
         write_file(destination, "css/chrome.css", &theme.chrome_css)?;
-        write_file(destination, "css/print.css", &theme.print_css)?;
+        if html_config.print.enable {
+            write_file(destination, "css/print.css", &theme.print_css)?;
+        }
         write_file(destination, "css/variables.css", &theme.variables_css)?;
         if let Some(contents) = &theme.favicon_png {
             write_file(destination, "favicon.png", &contents)?;
@@ -537,14 +543,16 @@ impl Renderer for HtmlHandlebars {
         }
 
         // Render the handlebars template with the data
-        debug!("Render template");
-        let rendered = handlebars.render("index", &data)?;
+        if html_config.print.enable {
+            debug!("Render template");
+            let rendered = handlebars.render("index", &data)?;
 
-        let rendered =
-            self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
+            let rendered =
+                self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
 
-        utils::fs::write_file(&destination, "print.html", rendered.as_bytes())?;
-        debug!("Creating print.html ✓");
+            utils::fs::write_file(&destination, "print.html", rendered.as_bytes())?;
+            debug!("Creating print.html ✓");
+        }
 
         debug!("Copy static files");
         self.copy_static_files(&destination, &theme, &html_config)
@@ -665,8 +673,9 @@ fn make_data(
         data.insert("playground_copyable".to_owned(), json!(true));
     }
 
-    data.insert("fold_enable".to_owned(), json!((html_config.fold.enable)));
-    data.insert("fold_level".to_owned(), json!((html_config.fold.level)));
+    data.insert("print_enable".to_owned(), json!(html_config.print.enable));
+    data.insert("fold_enable".to_owned(), json!(html_config.fold.enable));
+    data.insert("fold_level".to_owned(), json!(html_config.fold.level));
 
     let search = html_config.search.clone();
     if cfg!(feature = "search") {

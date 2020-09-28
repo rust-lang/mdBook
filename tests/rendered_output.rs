@@ -345,7 +345,7 @@ fn create_missing_file_with_config() {
 }
 
 /// This makes sure you can include a Rust file with `{{#playground example.rs}}`.
-/// Specification is in `book-example/src/format/rust.md`
+/// Specification is in `guide/src/format/rust.md`
 #[test]
 fn able_to_include_playground_files_in_chapters() {
     let temp = DummyBook::new().build().unwrap();

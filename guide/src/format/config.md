@@ -187,6 +187,9 @@ The following configuration options are available:
 - **additional-js:** If you need to add some behaviour to your book without
   removing the current behaviour, you can specify a set of JavaScript files that
   will be loaded alongside the default one.
+- **print:** A subtable for configuration print settings. mdBook by default adds
+  support for printing out the book as a single page. This is accessed using the
+  print icon on the top right of the book.
 - **no-section-label:** mdBook by defaults adds section label in table of
   contents column. For example, "1.", "2.1". Set this option to true to disable
   those labels. Defaults to `false`.
@@ -210,6 +213,17 @@ The following configuration options are available:
 - **site-url:** The url where the book will be hosted. This is required to ensure
   navigation links and script/css imports in the 404 file work correctly, even when accessing
   urls in subdirectories. Defaults to `/`.
+- **cname:** The DNS subdomain or apex domain at which your book will be hosted.
+  This string will be written to a file named CNAME in the root of your site, as
+  required by GitHub Pages (see [*Managing a custom domain for your GitHub Pages
+  site*][custom domain]).
+
+[custom domain]: https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site
+
+Available configuration options for the `[output.html.print]` table:
+
+- **enable:** Enable print support. When `false`, all print support will not be
+  rendered. Defaults to `true`.
 
 Available configuration options for the `[output.html.fold]` table:
 
@@ -273,7 +287,11 @@ no-section-label = false
 git-repository-url = "https://github.com/rust-lang/mdBook"
 git-repository-icon = "fa-github"
 site-url = "/example-book/"
+cname = "myproject.rs"
 input-404 = "not-found.md"
+
+[output.html.print]
+enable = true
 
 [output.html.fold]
 enable = false

@@ -108,32 +108,32 @@ impl HelperDef for RenderToc {
             }
 
             // Link
-            let path_exists = if let Some(path) = item.get("path") {
-                if !path.is_empty() {
-                    out.write("<a href=\"")?;
+            let path_exists = if let Some(path) =
+                item.get("path")
+                    .and_then(|p| if p.is_empty() { None } else { Some(p) })
+            {
+                out.write("<a href=\"")?;
 
-                    let tmp = Path::new(item.get("path").expect("Error: path should be Some(_)"))
-                        .with_extension("html")
-                        .to_str()
-                        .unwrap()
-                        // Hack for windows who tends to use `\` as separator instead of `/`
-                        .replace("\\", "/");
+                let tmp = Path::new(item.get("path").expect("Error: path should be Some(_)"))
+                    .with_extension("html")
+                    .to_str()
+                    .unwrap()
+                    // Hack for windows who tends to use `\` as separator instead of `/`
+                    .replace("\\", "/");
 
-                    // Add link
-                    out.write(&utils::fs::path_to_root(&current_path))?;
-                    out.write(&tmp)?;
-                    out.write("\"")?;
+                // Add link
+                out.write(&utils::fs::path_to_root(&current_path))?;
+                out.write(&tmp)?;
+                out.write("\"")?;
 
-                    if path == &current_path {
-                        out.write(" class=\"active\"")?;
-                    }
-
-                    out.write(">")?;
-                    true
-                } else {
-                    false
+                if path == &current_path {
+                    out.write(" class=\"active\"")?;
                 }
+
+                out.write(">")?;
+                true
             } else {
+                out.write("<div>")?;
                 false
             };
 
@@ -165,6 +165,8 @@ impl HelperDef for RenderToc {
 
             if path_exists {
                 out.write("</a>")?;
+            } else {
+                out.write("</div>")?;
             }
 
             // Render expand/collapse toggle

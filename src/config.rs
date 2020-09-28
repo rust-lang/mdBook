@@ -495,6 +495,8 @@ pub struct HtmlConfig {
     /// Playground settings.
     #[serde(alias = "playpen")]
     pub playground: Playground,
+    /// Print settings.
+    pub print: Print,
     /// Don't render section labels.
     pub no_section_label: bool,
     /// Search settings. If `None`, the default will be used.
@@ -508,6 +510,13 @@ pub struct HtmlConfig {
     pub input_404: Option<String>,
     /// Absolute url to site, used to emit correct paths for the 404 page, which might be accessed in a deeply nested directory
     pub site_url: Option<String>,
+    /// The DNS subdomain or apex domain at which your book will be hosted. This
+    /// string will be written to a file named CNAME in the root of your site,
+    /// as required by GitHub Pages (see [*Managing a custom domain for your
+    /// GitHub Pages site*][custom domain]).
+    ///
+    /// [custom domain]: https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site
+    pub cname: Option<String>,
     /// This is used as a bit of a workaround for the `mdbook serve` command.
     /// Basically, because you set the websocket port from the command line, the
     /// `mdbook serve` command needs a way to let the HTML renderer know where
@@ -535,12 +544,14 @@ impl Default for HtmlConfig {
             additional_js: Vec::new(),
             fold: Fold::default(),
             playground: Playground::default(),
+            print: Print::default(),
             no_section_label: false,
             search: None,
             git_repository_url: None,
             git_repository_icon: None,
             input_404: None,
             site_url: None,
+            cname: None,
             livereload_url: None,
             redirect: HashMap::new(),
         }
@@ -555,6 +566,20 @@ impl HtmlConfig {
             Some(ref d) => root.join(d),
             None => root.join("theme"),
         }
+    }
+}
+
+/// Configuration for how to render the print icon, print.html, and print.css.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct Print {
+    /// Whether print support is enabled.
+    pub enable: bool,
+}
+
+impl Default for Print {
+    fn default() -> Self {
+        Self { enable: true }
     }
 }
 

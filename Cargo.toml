@@ -1,6 +1,6 @@
 [package]
 name = "mdbook"
-version = "0.4.2"
+version = "0.4.3"
 authors = [
     "Mathieu David <mathieudavid@mathieudavid.org>",
     "Michael-F-Bryan <michaelfbryan@gmail.com>",
@@ -8,7 +8,7 @@ authors = [
 ]
 documentation = "http://rust-lang.github.io/mdBook/index.html"
 edition = "2018"
-exclude = ["/book-example/*"]
+exclude = ["/guide/*"]
 keywords = ["book", "gitbook", "rustbook", "markdown"]
 license = "MPL-2.0"
 readme = "README.md"
