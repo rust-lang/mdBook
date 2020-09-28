@@ -159,7 +159,8 @@ pub struct Chapter {
     pub path: Option<PathBuf>,
     /// An ordered list of the names of each chapter above this one, in the hierarchy.
     pub parent_names: Vec<String>,
-    /// The list of resources associated with this chapter
+    /// The list of resources associated with this chapter. Typically populated
+    /// by a preprocessor that generates additional content.
     pub resources: Vec<Resource>,
 }
 
@@ -202,9 +203,22 @@ impl Chapter {
 }
 
 /// The representation of a "Resource", typically an image.
+/// An example of a resource could be:
+/// ```
+/// Resource {
+///     relative_url: String::from("./circle.svg"),
+///     data: "<svg height='100' width='100'><circle cx='50' cy='50' r='40' /></svg>".as_bytes().to_vec()
+/// }
+/// ```
+/// This resource should be saved by the renderer in such a way that any reference
+/// to ./circle.svg in the chapter somehow renders/links the resource data.
+/// The HBS renderer for example will save a file called circle.svg next to the
+/// chapter's html file.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct Resource {
-    /// The resource's relative url (as used in a chapter, e.g. ![](foo/bar.png)).
+    /// The resource's relative url (as used in a chapter, e.g. for ![](./foo.png)
+    /// it would be './foo.png'. The URL is relative to the chapter (for the HBS
+    /// renderer this would mean relative to the chapter's output directory).
     pub relative_url: String,
     /// The resource data (binary data, base64 encoded in serialization).
     #[serde(with = "resource_data_base64")]

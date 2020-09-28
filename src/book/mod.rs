@@ -133,7 +133,6 @@ impl MDBook {
     ///         BookItem::Chapter(ref chapter) => {},
     ///         BookItem::Separator => {},
     ///         BookItem::PartTitle(ref title) => {}
-    ///         BookItem::Resource(ref resource) => {}
     ///     }
     /// }
     ///
