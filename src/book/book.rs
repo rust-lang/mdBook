@@ -265,7 +265,7 @@ fn load_chapter<P: AsRef<Path>>(
         })?;
 
         if content.as_bytes().starts_with(b"\xef\xbb\xbf") {
-            content = content[3..].to_string()
+            content.replace_range(..3, "");
         }
 
         let stripped = location
