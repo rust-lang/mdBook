@@ -97,6 +97,46 @@ function playground_text(playground) {
         }
     }
 
+    function expand_rust_macro(code_block) {
+      var result_block = code_block.querySelector(".result");
+      if (!result_block) {
+          result_block = document.createElement('code');
+          result_block.className = 'result hljs language-bash';
+
+          code_block.append(result_block);
+      }
+
+      let text = playground_text(code_block);
+      let classes = code_block.querySelector('code').classList;
+      let has_2018 = classes.contains("edition2018");
+      let edition = has_2018 ? "2018" : "2015";
+
+      var params = {
+          version: "stable",
+          optimize: "0",
+          code: text,
+          edition: edition
+      };
+
+      if (text.indexOf("#![feature") !== -1) {
+          params.version = "nightly";
+      }
+
+      result_block.innerText = "Running...";
+
+      fetch_with_timeout("https://play.rust-lang.org/macro-expansion", {
+          headers: {
+              'Content-Type': "application/json",
+          },
+          method: 'POST',
+          mode: 'cors',
+          body: JSON.stringify(params)
+      })
+      .then(response => response.json())
+      .then(response => result_block.innerText = response.stdout)
+      .catch(error => result_block.innerText = "Playground Communication: " + error.message);
+    }
+
     function run_rust_code(code_block) {
         var result_block = code_block.querySelector(".result");
         if (!result_block) {
@@ -224,7 +264,7 @@ function playground_text(playground) {
 
     // Process playground code blocks
     Array.from(document.querySelectorAll(".playground")).forEach(function (pre_block) {
-        // Add play button
+        // Add play and expand buttons
         var buttons = pre_block.querySelector(".buttons");
         if (!buttons) {
             buttons = document.createElement('div');
@@ -241,6 +281,17 @@ function playground_text(playground) {
         buttons.insertBefore(runCodeButton, buttons.firstChild);
         runCodeButton.addEventListener('click', function (e) {
             run_rust_code(pre_block);
+        });
+
+        var expandCodeButton = document.createElement('button');
+        expandCodeButton.className = 'fa fa-expand expand-button';
+        expandCodeButton.hidden = true;
+        expandCodeButton.title = 'Expand macros in this code';
+        expandCodeButton.setAttribute('aria-label', expandCodeButton.title);
+
+        buttons.insertBefore(expandCodeButton, buttons.firstChild);
+        expandCodeButton.addEventListener('click', function (e) {
+            expand_rust_macro(pre_block);
         });
 
         if (window.playground_copyable) {
