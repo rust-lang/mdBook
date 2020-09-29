@@ -1,7 +1,7 @@
 # Syntax Highlighting
 
-For syntax highlighting we use [Highlight.js](https://highlightjs.org) with a
-custom theme.
+mdBook uses [Highlight.js](https://highlightjs.org) with a custom theme
+for syntax highlighting.
 
 Automatic language detection has been turned off, so you will probably want to
 specify the programming language you use like this:
