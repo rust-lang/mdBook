@@ -1,9 +1,9 @@
-# mdBook-specific markdown
+# mdBook-specific features
 
 ## Hiding code lines
 
 There is a feature in mdBook that lets you hide code lines by prepending them
-with a `#` [in the same way that Rustdoc does][rustdoc-hide].
+with a `#` [like you would with Rustdoc][rustdoc-hide].
 
 [rustdoc-hide]: https://doc.rust-lang.org/stable/rustdoc/documentation-tests.html#hiding-portions-of-the-example
 
@@ -37,7 +37,7 @@ With the following syntax, you can include files into your book:
 
 The path to the file has to be relative from the current source file.
 
-mdBook will interpret included files as markdown. Since the include command
+mdBook will interpret included files as Markdown. Since the include command
 is usually used for inserting code snippets and examples, you will often
 wrap the command with ```` ``` ```` to display the file contents without
 interpretting them.
