@@ -1,7 +1,7 @@
 # Changelog
 
 ## mdBook 0.4.3
-[9278b83...9278b83](https://github.com/rust-lang/mdBook/compare/9278b83...4df9ec9)
+[9278b83...4df9ec9](https://github.com/rust-lang/mdBook/compare/9278b83...4df9ec9)
 
 ### Added
 - Added `output.html.cname` option to emit a `CNAME` file which is used by
