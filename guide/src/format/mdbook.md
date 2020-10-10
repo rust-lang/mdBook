@@ -48,8 +48,8 @@ the prefix can be escaped using a backslash. With the python example above, this
         print(a, end=' ')
         a, b = b, a+b
     print()
-    ~ # hide me!
-    \~ # leave me be!
+    ~# hide me!
+    \~# leave me be!
 ~fib(1000)
 ```</code></pre>
 
@@ -62,8 +62,8 @@ will render as
         print(a, end=' ')
         a, b = b, a+b
     print()
-    ~ # hide me!
-    \~ # leave me be!
+    ~# hide me!
+    \~# leave me be!
 ~fib(1000)
 ```
 

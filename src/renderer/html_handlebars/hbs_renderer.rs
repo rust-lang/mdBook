@@ -897,7 +897,7 @@ impl BoringPattern {
     fn new_simple(prefix: &str) -> BoringPattern {
         BoringPattern {
             regex: Regex::new(&format!(
-                r"^(\s*)(?P<escape>\\)?{} ?(.*)$",
+                r"^(\s*)(?P<escape>\\)?{}(.*)$",
                 regex::escape(prefix)
             ))
             .unwrap(),

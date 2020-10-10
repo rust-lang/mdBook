@@ -275,16 +275,15 @@ mdBook will then test the regex on each line and follow this pattern:
 
 Here is the pattern generated for a boring prefix (the `{}` in replaced with the prefix string):
 ```re
-^(\s*)(?P<escape>\\)?{} ?(.*)$
+^(\s*)(?P<escape>\\)?{}(.*)$
 ```
 Breaking it down, we have
 - `^(\s*)`  
   Match the indentation, and put it in a group to preserve it in the output.
 - `(?P<escape>\\)?`  
   If we find a backslash this group will match and trigger the escape mechanism.
-- `{} ?`  
-  Match the prefix and optionally the space after it. Note how this isn't in a group, meaning it 
-  won't be included in the final line.
+- `{}`  
+  Match the prefix. Note how this isn't in a group, meaning it won't be included in the final line.
 - `(.*)$`  
   Match the rest of the line, and put it in a group to preserve it in the output.
 
