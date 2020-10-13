@@ -192,3 +192,25 @@ Here is what a rendered code snippet looks like:
 {{#playground example.rs}}
 
 [Rust Playground]: https://play.rust-lang.org/
+
+## Adding a BibText-format Bibliography and using References/Citations
+
+You can add a bibliography in [BibTex format](http://www.bibtex.org/Format/) to your
+book. To do this, just add your `.bib` file containing the bibliography items to the
+source root of your book and then add the following configuration to the `book`
+section of the toml config file:
+
+```toml
+[book]
+...
+bibliography = "my_biblio.bib"
+...
+```
+
+The bibliography will appear as a separate section in your book. Then, you can create
+references/citations to the citation-keys in the `.bib` file in your markdown files
+with the following syntax:
+
+```hbs
+\{{#cite my-citation-key}}
+```

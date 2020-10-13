@@ -4,12 +4,13 @@ use crate::utils::{
     take_rustdoc_include_lines,
 };
 use regex::{CaptureMatches, Captures, Regex};
+use std::collections::HashMap;
 use std::fs;
 use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeTo};
 use std::path::{Path, PathBuf};
 
 use super::{Preprocessor, PreprocessorContext};
-use crate::book::{Book, BookItem};
+use crate::book::{Book, BookItem, BibItem};
 
 const ESCAPE_CHAR: char = '\\';
 const MAX_LINK_NESTED_DEPTH: usize = 10;
@@ -23,6 +24,7 @@ const MAX_LINK_NESTED_DEPTH: usize = 10;
 ///   This hides the lines from initial display but shows them when the reader expands the code
 ///   block and provides them to Rustdoc for testing.
 /// - `{{# playground}}` - Insert runnable Rust files
+/// - `{{# cite}}` - Insert reference to bibliography
 #[derive(Default)]
 pub struct LinkPreprocessor;
 
@@ -43,6 +45,7 @@ impl Preprocessor for LinkPreprocessor {
     fn run(&self, ctx: &PreprocessorContext, mut book: Book) -> Result<Book> {
         let src_dir = ctx.root.join(&ctx.config.book.src);
 
+        let bibliography = book.bibliography.clone();
         book.for_each_mut(|section: &mut BookItem| {
             if let BookItem::Chapter(ref mut ch) = *section {
                 if let Some(ref chapter_path) = ch.path {
@@ -51,7 +54,7 @@ impl Preprocessor for LinkPreprocessor {
                         .map(|dir| src_dir.join(dir))
                         .expect("All book items have a parent");
 
-                    let content = replace_all(&ch.content, base, chapter_path, 0);
+                    let content = replace_all(&ch.content, base, chapter_path, 0, &bibliography);
                     ch.content = content;
                 }
             }
@@ -61,7 +64,7 @@ impl Preprocessor for LinkPreprocessor {
     }
 }
 
-fn replace_all<P1, P2>(s: &str, path: P1, source: P2, depth: usize) -> String
+fn replace_all<P1, P2>(s: &str, path: P1, source: P2, depth: usize, bibliography: &HashMap<String, BibItem>) -> String
 where
     P1: AsRef<Path>,
     P2: AsRef<Path>,
@@ -77,11 +80,11 @@ where
     for link in find_links(s) {
         replaced.push_str(&s[previous_end_index..link.start_index]);
 
-        match link.render_with_path(&path) {
+        match link.render_with_path(&path, bibliography) {
             Ok(new_content) => {
                 if depth < MAX_LINK_NESTED_DEPTH {
                     if let Some(rel_path) = link.link_type.relative_path(path) {
-                        replaced.push_str(&replace_all(&new_content, rel_path, source, depth + 1));
+                        replaced.push_str(&replace_all(&new_content, rel_path, source, depth + 1, bibliography));
                     } else {
                         replaced.push_str(&new_content);
                     }
@@ -116,6 +119,7 @@ enum LinkType<'a> {
     Include(PathBuf, RangeOrAnchor),
     Playground(PathBuf, Vec<&'a str>),
     RustdocInclude(PathBuf, RangeOrAnchor),
+    Cite(String),
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -185,6 +189,7 @@ impl<'a> LinkType<'a> {
             LinkType::Include(p, _) => Some(return_relative_path(base, &p)),
             LinkType::Playground(p, _) => Some(return_relative_path(base, &p)),
             LinkType::RustdocInclude(p, _) => Some(return_relative_path(base, &p)),
+            LinkType::Cite(_) => None,
         }
     }
 }
@@ -244,6 +249,10 @@ fn parse_rustdoc_include_path(path: &str) -> LinkType<'static> {
     LinkType::RustdocInclude(path, range_or_anchor)
 }
 
+fn parse_cite(cite: &str) -> LinkType<'static> {
+    LinkType::Cite(cite.to_owned())
+}
+
 #[derive(PartialEq, Debug, Clone)]
 struct Link<'a> {
     start_index: usize,
@@ -272,6 +281,7 @@ impl<'a> Link<'a> {
                         Some(LinkType::Playground(pth.into(), props))
                     }
                     ("rustdoc_include", Some(pth)) => Some(parse_rustdoc_include_path(pth)),
+                    ("cite", Some(cite)) => Some(parse_cite(cite)),
                     _ => None,
                 }
             }
@@ -291,7 +301,7 @@ impl<'a> Link<'a> {
         })
     }
 
-    fn render_with_path<P: AsRef<Path>>(&self, base: P) -> Result<String> {
+    fn render_with_path<P: AsRef<Path>>(&self, base: P, bibliography: &HashMap<String, BibItem>) -> Result<String> {
         let base = base.as_ref();
         match self.link_type {
             // omit the escape char
@@ -350,6 +360,13 @@ impl<'a> Link<'a> {
                     contents
                 ))
             }
+            LinkType::Cite(ref cite) => {
+                if bibliography.contains_key(cite) {
+                    Ok(format!("\\[[{}](biblio.html#{})\\]", cite, cite))
+                } else {
+                    Ok(format!("\\[Unknown bib ref: {}\\]", cite))
+                }
+            }
         }
     }
 }
@@ -403,7 +420,7 @@ mod tests {
         ```hbs
         {{#include file.rs}} << an escaped link!
         ```";
-        assert_eq!(replace_all(start, "", "", 0), end);
+        assert_eq!(replace_all(start, "", "", 0, &HashMap::new()), end);
     }
 
     #[test]

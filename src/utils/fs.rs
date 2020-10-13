@@ -1,8 +1,14 @@
 use crate::errors::*;
 use std::convert::Into;
+use std::ffi::OsStr;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::{Component, Path, PathBuf};
+
+/// Get filename extension
+pub fn get_filename_extension(filename: &Path) -> Option<&str> {
+    filename.extension().and_then(OsStr::to_str)
+}
 
 /// Naively replaces any path seperator with a forward-slash '/'
 pub fn normalize_path(path: &str) -> String {

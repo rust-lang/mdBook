@@ -1,6 +1,16 @@
 <!DOCTYPE HTML>
 <html lang="{{ language }}" class="sidebar-visible no-js {{ default_theme }}">
     <head>
+        <style>
+        .hide {
+            display: none;
+        }
+
+        .bib_div:hover + .hide {
+            display: block;
+            color: green;
+        }
+        </style>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
         <title>{{ title }}</title>

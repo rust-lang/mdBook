@@ -10,7 +10,7 @@ mod book;
 mod init;
 mod summary;
 
-pub use self::book::{load_book, Book, BookItem, BookItems, Chapter};
+pub use self::book::{load_book, Book, BookItem, BookItems, Chapter, BibItem};
 pub use self::init::BookBuilder;
 pub use self::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
 
@@ -83,7 +83,8 @@ impl MDBook {
         let root = book_root.into();
 
         let src_dir = root.join(&config.book.src);
-        let book = book::load_book(&src_dir, &config.build)?;
+        let bibliography_file = config.book.bibliography.clone().unwrap_or_default();
+        let book = book::load_book(&src_dir, &config.build, bibliography_file)?;
 
         let renderers = determine_renderers(&config);
         let preprocessors = determine_preprocessors(&config)?;
@@ -132,7 +133,8 @@ impl MDBook {
     ///     match *item {
     ///         BookItem::Chapter(ref chapter) => {},
     ///         BookItem::Separator => {},
-    ///         BookItem::PartTitle(ref title) => {}
+    ///         BookItem::PartTitle(ref title) => {},
+    ///         BookItem::Bibliography(ref chapter, ref bibliography) => {},
     ///     }
     /// }
     ///

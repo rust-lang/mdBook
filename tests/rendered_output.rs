@@ -6,6 +6,7 @@ mod dummy_book;
 use crate::dummy_book::{assert_contains_strings, assert_doesnt_contain_strings, DummyBook};
 
 use anyhow::Context;
+use mdbook::book::{BookItem, Chapter};
 use mdbook::config::Config;
 use mdbook::errors::*;
 use mdbook::utils::fs::write_file;
@@ -15,6 +16,7 @@ use select::predicate::{Class, Name, Predicate};
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs;
+use std::fs::File;
 use std::io::Write;
 use std::path::{Component, Path, PathBuf};
 use tempfile::Builder as TempFileBuilder;
@@ -344,23 +346,49 @@ fn create_missing_file_with_config() {
     assert!(temp.path().join("src").join("intro.md").exists());
 }
 
-/// This makes sure you can include a Rust file with `{{#playground example.rs}}`.
+/// This makes sure you can include a bibliography reference with `{{#cite <ref>}}`.
 /// Specification is in `guide/src/format/rust.md`
 #[test]
-fn able_to_include_playground_files_in_chapters() {
+fn able_to_include_bibliography_references_in_chapters() {
     let temp = DummyBook::new().build().unwrap();
-    let md = MDBook::load(temp.path()).unwrap();
+
+    let src_dir = temp.path().join("src");
+    fs::create_dir_all(src_dir.clone()).unwrap();
+
+    // Create the bibliography in the source dir and add it to the config
+    static BIBLIO_BIB: &str = r#"
+    @misc {fps,
+        title = "Once upon a time...",
+        author = "Francisco Perez-Sorrosal",
+        month = "oct",
+        year = "2020"
+    }    
+    "#;
+    let mut biblio = File::create(src_dir.join("biblio.bib")).unwrap();
+    biblio.write_all(BIBLIO_BIB.as_bytes()).unwrap();
+
+    let mut cfg = Config::default();
+    cfg.book.bibliography = Some(PathBuf::from("biblio.bib"));
+
+    // Create a mutable book and add a test chapter with a bibliography reference
+    let mut md = MDBook::load_with_config(temp.path(), cfg).unwrap();
+    let book_chapter_with_ref = BookItem::Chapter(Chapter::new(
+        String::from("Test Ref Chapter").as_ref(),
+        String::from(r"# Test Bibliography Reference!\n\n{{#cite fps}}"),
+        PathBuf::from("chapter_biblio_ref.md"),
+        Vec::new(),
+    ));
+    md.book.sections.push(book_chapter_with_ref);
     md.build().unwrap();
 
-    let second = temp.path().join("book/second.html");
+    // Find the html string of the bibliography citation generated
+    let biblio_ref = temp.path().join("book/chapter_biblio_ref.html");
 
-    let playground_strings = &[
-        r#"class="playground""#,
-        r#"println!(&quot;Hello World!&quot;);"#,
+    let citation_strings = &[
+        r#"href="biblio.html#fps""#,
     ];
 
-    assert_contains_strings(&second, playground_strings);
-    assert_doesnt_contain_strings(&second, &["{{#playground example.rs}}"]);
+    assert_contains_strings(&biblio_ref, citation_strings);
 }
 
 /// This makes sure you can include a Rust file with `{{#include ../SUMMARY.md}}`.

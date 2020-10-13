@@ -1,4 +1,4 @@
-use crate::book::{Book, BookItem};
+use crate::book::{BibItem, Book, BookItem};
 use crate::config::{Config, HtmlConfig, Playground, RustEdition};
 use crate::errors::*;
 use crate::renderer::html_handlebars::helpers;
@@ -34,11 +34,19 @@ impl HtmlHandlebars {
 
         let (ch, path) = match item {
             BookItem::Chapter(ch) if !ch.is_draft_chapter() => (ch, ch.path.as_ref().unwrap()),
+            BookItem::Bibliography(ch, _) => (ch, ch.path.as_ref().unwrap()),
             _ => return Ok(()),
         };
 
         let content = ch.content.clone();
-        let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
+        let mut content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
+
+        match item {
+            BookItem::Bibliography(_ch, bibliography) => {
+                self.render_bibliography(bibliography, ctx.handlebars, &mut content)?;
+            }
+            _ => (),
+        }
 
         let fixed_content = utils::render_markdown_with_path(
             &ch.content,
@@ -103,6 +111,22 @@ impl HtmlHandlebars {
             utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
         }
 
+        Ok(())
+    }
+
+    fn render_bibliography(
+        &self,
+        bibliography: &Vec<BibItem>,
+        handlebars: &Handlebars<'_>,
+        print_content: &mut String,
+    ) -> Result<()> {
+        info!("Rendering bibliography!");
+        for bib_item in bibliography.iter() {
+            info!("Rendering bib reference: {:?}", bib_item);
+            let bib_data = make_bib_data(bib_item)?;
+            let rendered_bib_item = handlebars.render("reference", &bib_data)?;
+            print_content.push_str(&rendered_bib_item);
+        }
         Ok(())
     }
 
@@ -481,6 +505,10 @@ impl Renderer for HtmlHandlebars {
         debug!("Register the header handlebars template");
         handlebars.register_partial("header", String::from_utf8(theme.header.clone())?)?;
 
+        info!("Register the reference handlebars template");
+        handlebars
+            .register_template_string("reference", String::from_utf8(theme.reference.clone())?)?;
+
         debug!("Register handlebars helpers");
         self.register_hbs_helpers(&mut handlebars, &html_config);
 
@@ -709,6 +737,23 @@ fn make_data(
             BookItem::Separator => {
                 chapter.insert("spacer".to_owned(), json!("_spacer_"));
             }
+            BookItem::Bibliography(ref ch, ref _bib) => {
+                // chapter.insert("spacer".to_owned(), json!("_spacer_"));
+                if let Some(ref section) = ch.number {
+                    chapter.insert("section".to_owned(), json!(section.to_string()));
+                }
+                chapter.insert(
+                    "has_sub_items".to_owned(),
+                    json!((!ch.sub_items.is_empty()).to_string()),
+                );
+                chapter.insert("name".to_owned(), json!(ch.name));
+                if let Some(ref path) = ch.path {
+                    let p = path
+                        .to_str()
+                        .with_context(|| "Could not convert path to str")?;
+                    chapter.insert("path".to_owned(), json!(p));
+                }
+            }
         }
 
         chapters.push(chapter);
@@ -716,6 +761,23 @@ fn make_data(
 
     data.insert("chapters".to_owned(), json!(chapters));
 
+    debug!("[*]: JSON constructed");
+    Ok(data)
+}
+
+fn make_bib_data(bib_item: &BibItem) -> Result<serde_json::Map<String, serde_json::Value>> {
+    trace!("make_bib_data");
+
+    let mut data = serde_json::Map::new();
+    data.insert(
+        "citation_key".to_owned(),
+        json!(bib_item.citation_key.clone()),
+    );
+    data.insert("title".to_owned(), json!(bib_item.title.clone()));
+    let authors = bib_item.authors.join(",");
+    data.insert("authors".to_owned(), json!(authors));
+    data.insert("pub_date".to_owned(), json!(bib_item.pub_date.clone()));
+    data.insert("abstract".to_owned(), json!(bib_item.summary.clone()));
     debug!("[*]: JSON constructed");
     Ok(data)
 }

@@ -115,6 +115,8 @@ pub enum SummaryItem {
     Separator,
     /// A part title.
     PartTitle(String),
+    /// A Bibiography.
+    Bibliography(String, PathBuf),
 }
 
 impl SummaryItem {

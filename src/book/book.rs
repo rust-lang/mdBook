@@ -1,15 +1,23 @@
+use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::fmt::{self, Display, Formatter};
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
+use nom_bibtex::*;
+
 use super::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
 use crate::config::BuildConfig;
 use crate::errors::*;
+use crate::utils::fs::get_filename_extension;
 
 /// Load a book into memory from its `src/` directory.
-pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> {
+pub fn load_book<P: AsRef<Path>>(
+    src_dir: P,
+    cfg: &BuildConfig,
+    bibliography_file: PathBuf,
+) -> Result<Book> {
     let src_dir = src_dir.as_ref();
     let summary_md = src_dir.join("SUMMARY.md");
 
@@ -18,7 +26,20 @@ pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> 
         .with_context(|| "Couldn't open SUMMARY.md")?
         .read_to_string(&mut summary_content)?;
 
-    let summary = parse_summary(&summary_content).with_context(|| "Summary parsing failed")?;
+    // We have to make summary mutable to add the bibliography
+    let mut summary = parse_summary(&summary_content).with_context(|| "Summary parsing failed")?;
+
+    // Add the bibliography to the book structure if it has been specified in the config and the file exists
+    // TODO Maybe add the check for the .bib extension here
+    if !bibliography_file.to_str().unwrap_or_default().is_empty()
+        && src_dir.join(bibliography_file.clone()).exists()
+    {
+        info!("Adding a bibliography to the summary!!!");
+        summary.suffix_chapters.push(SummaryItem::Bibliography(
+            "Bibliography".to_owned(),
+            bibliography_file,
+        ));
+    }
 
     if cfg.create_missing {
         create_missing(&src_dir, &summary).with_context(|| "Unable to create missing chapters")?;
@@ -74,6 +95,8 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
 pub struct Book {
     /// The sections in this book.
     pub sections: Vec<BookItem>,
+    /// List of bibliographic entries: <citation-key, BibItem info>.
+    pub bibliography: HashMap<String, BibItem>,
     __non_exhaustive: (),
 }
 
@@ -135,6 +158,8 @@ pub enum BookItem {
     Separator,
     /// A part title.
     PartTitle(String),
+    /// A Bibliography (treated as special Chapter).
+    Bibliography(Chapter, Vec<BibItem>),
 }
 
 impl From<Chapter> for BookItem {
@@ -220,8 +245,22 @@ pub(crate) fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P)
         chapters.push(chapter);
     }
 
+    // Check if the last chapter was marked as a Bibliography and if so, create the <citation-key, BibItem> map
+    let last_chapter = chapters.last().unwrap();
+    let mut bibliography: HashMap<String, BibItem> = HashMap::new();
+    match last_chapter {
+        BookItem::Bibliography(_, bib) => {
+            info!("Bibliography recovered from last chapter!!!");
+            for b in bib.iter() {
+                bibliography.insert(b.citation_key.to_owned(), b.to_owned());
+            }
+        }
+        _ => (),
+    }
+
     Ok(Book {
         sections: chapters,
+        bibliography: bibliography,
         __non_exhaustive: (),
     })
 }
@@ -237,6 +276,18 @@ fn load_summary_item<P: AsRef<Path> + Clone>(
             load_chapter(link, src_dir, parent_names).map(BookItem::Chapter)
         }
         SummaryItem::PartTitle(title) => Ok(BookItem::PartTitle(title.clone())),
+        SummaryItem::Bibliography(title, file) => {
+            let bibliography = load_bibliography(src_dir.as_ref().join(&file));
+            Ok(BookItem::Bibliography(
+                Chapter::new(
+                    title,
+                    String::from("# Bibliography\n\n"),
+                    &file,
+                    parent_names.clone(),
+                ),
+                bibliography.unwrap(),
+            ))
+        }
     }
 }
 
@@ -287,6 +338,97 @@ fn load_chapter<P: AsRef<Path>>(
     ch.sub_items = sub_items;
 
     Ok(ch)
+}
+
+/// Bibliography item representation.
+/// TODO: Complete with more fields when necessary
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct BibItem {
+    /// The citation key.
+    pub citation_key: String,
+    /// The article's title.
+    pub title: String,
+    /// The article's author/s.
+    pub authors: Vec<String>,
+    /// Pub date.
+    pub pub_date: String,
+    /// Summary/Abstract.
+    pub summary: String,
+}
+
+impl BibItem {
+    /// Create a new bib item with the provided content.
+    pub fn new(
+        citation_key: &str,
+        title: String,
+        authors: Vec<String>,
+        pub_date: String,
+        summary: String,
+    ) -> BibItem {
+        BibItem {
+            citation_key: citation_key.to_string(),
+            title: title,
+            authors: authors,
+            pub_date: pub_date,
+            summary: summary,
+        }
+    }
+}
+
+/// Load bibliography from file.
+/// TODO: This can return directly a map <citation-key, BibItem> to avoid further conversions.
+pub(crate) fn load_bibliography<P: AsRef<Path>>(biblio_file: P) -> Result<Vec<BibItem>> {
+    info!("Loading bibliography from {:?}...", biblio_file.as_ref());
+
+    let biblio_file_ext = get_filename_extension(biblio_file.as_ref());
+    if biblio_file_ext.unwrap_or_default().to_lowercase() != "bib" {
+        warn!(
+            "Only bib-based bibliography is supported for now! Yours: {:?}",
+            biblio_file.as_ref()
+        );
+        let out: Vec<BibItem> = Vec::new();
+        return Ok(out);
+    }
+
+    let bibtex_content = fs::read_to_string(biblio_file)?.to_string();
+
+    let bibtex = Bibtex::parse(&bibtex_content).unwrap();
+
+    let biblio = bibtex.bibliographies();
+    info!("{} bibliography items read", biblio.len());
+
+    let bibliography: Vec<BibItem> = biblio
+        .into_iter()
+        .map(|bib| {
+            let tm: HashMap<String, String> = bib.tags().into_iter().map(|t| t.clone()).collect();
+            let mut authors_str = tm.get("author").unwrap().to_string();
+            authors_str.retain(|c| c != '\n');
+            let authors: Vec<String> = authors_str
+                .split("and")
+                .map(|a| a.trim().to_string())
+                .collect();
+            BibItem {
+                citation_key: bib.citation_key().to_string(),
+                title: tm
+                    .get("title")
+                    .unwrap_or(&"Not Found".to_owned())
+                    .to_string(),
+                authors: authors,
+                pub_date: [
+                    tm.get("month").unwrap().to_string(),
+                    tm.get("year").unwrap().to_string(),
+                ]
+                .join(" "),
+                summary: tm
+                    .get("abstract")
+                    .unwrap_or(&"Not Found".to_owned())
+                    .to_string(),
+            }
+        })
+        .collect();
+    debug!("Bibiography content:\n{:?}", bibliography);
+
+    Ok(bibliography)
 }
 
 /// A depth-first iterator over the items in a book.
@@ -341,6 +483,15 @@ this is some dummy text.
 
 And here is some \
                                      more text.
+";
+
+    const DUMMY_BIB_SRC: &str = "
+@misc {fps,
+    title = \"This is a bib entry!\",
+    author = \"Francisco Perez-Sorrosal\",
+    month = \"oct\",
+    year = \"2020\"
+}
 ";
 
     /// Create a dummy `Link` in a temporary directory.
@@ -598,5 +749,79 @@ And here is some \
 
         let got = load_book_from_disk(&summary, temp.path());
         assert!(got.is_err());
+    }
+
+    #[test]
+    fn load_bib_bibliography_from_file() {
+        let temp = TempFileBuilder::new().prefix("book").tempdir().unwrap();
+
+        let chapter_path = temp.path().join("biblio.bib");
+        File::create(&chapter_path)
+            .unwrap()
+            .write_all(DUMMY_BIB_SRC.as_bytes())
+            .unwrap();
+
+        let bibliography_loaded: Vec<BibItem> = load_bibliography(chapter_path.as_path()).unwrap();
+        assert_eq!(bibliography_loaded.len(), 1);
+        assert_eq!(bibliography_loaded[0].citation_key, "fps".to_owned());
+        // TODO: Add more asserts if required
+    }
+
+    #[test]
+    fn cant_load_bib_bibliography_from_file() {
+        let temp = TempFileBuilder::new().prefix("book").tempdir().unwrap();
+
+        let chapter_path = temp.path().join("biblio.wrong_extension");
+        File::create(&chapter_path)
+            .unwrap()
+            .write_all(DUMMY_BIB_SRC.as_bytes())
+            .unwrap();
+
+        let bibliography_loaded: Vec<BibItem> = load_bibliography(chapter_path.as_path()).unwrap();
+        assert_eq!(bibliography_loaded.len(), 0);
+    }
+
+    #[test]
+    fn load_a_book_with_a_bibliography() {
+        let temp = TempFileBuilder::new().prefix("book").tempdir().unwrap();
+
+        let biblio_path = temp.path().join("biblio.bib");
+        File::create(&biblio_path)
+            .unwrap()
+            .write_all(DUMMY_BIB_SRC.as_bytes())
+            .unwrap();
+
+        let bibliography_loaded: Vec<BibItem> =
+            load_bibliography(biblio_path.to_owned().as_path()).unwrap();
+        let mut the_bibliography: HashMap<String, BibItem> = HashMap::new();
+        for b in bibliography_loaded.iter() {
+            the_bibliography.insert(b.citation_key.to_owned(), b.to_owned());
+        }
+
+        let should_be = Book {
+            sections: vec![BookItem::Bibliography(
+                Chapter {
+                    name: String::from("Bibliography"),
+                    content: String::from("# Bibliography\n\n"),
+                    path: Some(PathBuf::from(temp.path().join("biblio.bib"))),
+                    ..Default::default()
+                },
+                bibliography_loaded,
+            )],
+            bibliography: the_bibliography,
+            ..Default::default()
+        };
+
+        let summary = Summary {
+            suffix_chapters: vec![SummaryItem::Bibliography(
+                "Bibliography".to_owned(),
+                biblio_path.to_owned(),
+            )],
+            ..Default::default()
+        };
+
+        let got = load_book_from_disk(&summary, temp.path()).unwrap();
+
+        assert_eq!(got, should_be);
     }
 }

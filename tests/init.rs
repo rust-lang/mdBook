@@ -81,7 +81,7 @@ fn run_mdbook_init_with_custom_book_and_src_locations() {
     cfg.book.src = PathBuf::from("in");
     cfg.build.build_dir = PathBuf::from("out");
 
-    MDBook::init(temp.path()).with_config(cfg).build().unwrap();
+    let md_book = MDBook::init(temp.path()).with_config(cfg).build().unwrap();
 
     for file in &created_files {
         let target = temp.path().join(file);
@@ -91,6 +91,9 @@ fn run_mdbook_init_with_custom_book_and_src_locations() {
             file
         );
     }
+
+    // Check the bibliography is empty when no specified in the config
+    assert_eq!(md_book.book.bibliography.len(), 0);
 }
 
 #[test]
@@ -101,4 +104,59 @@ fn book_toml_isnt_required() {
     let _ = fs::remove_file(temp.path().join("book.toml"));
 
     md.build().unwrap();
+}
+
+/// Check bibliography is loaded when custom arguments for where to place the source
+/// and destination files are set and the source dir includes a bib file.
+#[test]
+fn run_mdbook_init_with_custom_book_src_locations_and_bibliography() {
+    let created_files = vec![
+        "out",
+        "in",
+        "in/SUMMARY.md",
+        "in/chapter_1.md",
+        "in/biblio.bib",
+    ];
+
+    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
+    for file in &created_files {
+        assert!(
+            !temp.path().join(file).exists(),
+            "{} shouldn't exist yet!",
+            file
+        );
+    }
+
+    // Create the bibliography in the source dir and add it to the config
+    static BIBLIO_BIB: &str = r#"
+    @misc {fps,
+        title = "Once upon a time...",
+        author = "Francisco Perez-Sorrosal",
+        month = "oct",
+        year = "2020"
+    }
+    "#;
+    let src_dir = temp.path().join("in");
+    fs::create_dir_all(src_dir.clone()).unwrap();
+    let mut biblio = File::create(src_dir.join("biblio.bib")).unwrap();
+    biblio.write_all(BIBLIO_BIB.as_bytes()).unwrap();
+
+    let mut cfg = Config::default();
+    cfg.book.src = PathBuf::from("in");
+    cfg.book.bibliography = Some(PathBuf::from("biblio.bib"));
+    cfg.build.build_dir = PathBuf::from("out");
+
+    let md_book = MDBook::init(temp.path()).with_config(cfg).build().unwrap();
+
+    for file in &created_files {
+        let target = temp.path().join(file);
+        assert!(
+            target.exists(),
+            "{} should have been created by `mdbook init`",
+            file
+        );
+    }
+
+    // Check the bibliography items were loaded from the file
+    assert_eq!(md_book.book.bibliography.len(), 1);
 }

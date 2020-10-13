@@ -408,6 +408,8 @@ pub struct BookConfig {
     pub multilingual: bool,
     /// The main language of the book.
     pub language: Option<String>,
+    /// The bibliography file, if specified.
+    pub bibliography: Option<PathBuf>,
 }
 
 impl Default for BookConfig {
@@ -419,6 +421,7 @@ impl Default for BookConfig {
             src: PathBuf::from("src"),
             multilingual: false,
             language: Some(String::from("en")),
+            bibliography: None,
         }
     }
 }
@@ -708,6 +711,7 @@ mod tests {
         multilingual = true
         src = "source"
         language = "ja"
+        bibliography = "biblio.bib"
 
         [build]
         build-dir = "outputs"
@@ -747,6 +751,7 @@ mod tests {
             multilingual: true,
             src: PathBuf::from("source"),
             language: Some(String::from("ja")),
+            bibliography: Some(PathBuf::from("biblio.bib")),
         };
         let build_should_be = BuildConfig {
             build_dir: PathBuf::from("outputs"),
