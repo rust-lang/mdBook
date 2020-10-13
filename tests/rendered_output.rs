@@ -384,9 +384,7 @@ fn able_to_include_bibliography_references_in_chapters() {
     // Find the html string of the bibliography citation generated
     let biblio_ref = temp.path().join("book/chapter_biblio_ref.html");
 
-    let citation_strings = &[
-        r#"href="biblio.html#fps""#,
-    ];
+    let citation_strings = &[r#"href="biblio.html#fps""#];
 
     assert_contains_strings(&biblio_ref, citation_strings);
 }

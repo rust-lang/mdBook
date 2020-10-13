@@ -10,7 +10,7 @@ use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeTo};
 use std::path::{Path, PathBuf};
 
 use super::{Preprocessor, PreprocessorContext};
-use crate::book::{Book, BookItem, BibItem};
+use crate::book::{BibItem, Book, BookItem};
 
 const ESCAPE_CHAR: char = '\\';
 const MAX_LINK_NESTED_DEPTH: usize = 10;
@@ -64,7 +64,13 @@ impl Preprocessor for LinkPreprocessor {
     }
 }
 
-fn replace_all<P1, P2>(s: &str, path: P1, source: P2, depth: usize, bibliography: &HashMap<String, BibItem>) -> String
+fn replace_all<P1, P2>(
+    s: &str,
+    path: P1,
+    source: P2,
+    depth: usize,
+    bibliography: &HashMap<String, BibItem>,
+) -> String
 where
     P1: AsRef<Path>,
     P2: AsRef<Path>,
@@ -84,7 +90,13 @@ where
             Ok(new_content) => {
                 if depth < MAX_LINK_NESTED_DEPTH {
                     if let Some(rel_path) = link.link_type.relative_path(path) {
-                        replaced.push_str(&replace_all(&new_content, rel_path, source, depth + 1, bibliography));
+                        replaced.push_str(&replace_all(
+                            &new_content,
+                            rel_path,
+                            source,
+                            depth + 1,
+                            bibliography,
+                        ));
                     } else {
                         replaced.push_str(&new_content);
                     }
@@ -301,7 +313,11 @@ impl<'a> Link<'a> {
         })
     }
 
-    fn render_with_path<P: AsRef<Path>>(&self, base: P, bibliography: &HashMap<String, BibItem>) -> Result<String> {
+    fn render_with_path<P: AsRef<Path>>(
+        &self,
+        base: P,
+        bibliography: &HashMap<String, BibItem>,
+    ) -> Result<String> {
         let base = base.as_ref();
         match self.link_type {
             // omit the escape char
