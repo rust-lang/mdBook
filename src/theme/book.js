@@ -278,6 +278,7 @@ function playground_text(playground) {
     var themeColorMetaTag = document.querySelector('meta[name="theme-color"]');
     var stylesheets = {
         ayuHighlight: document.querySelector("[href$='ayu-highlight.css']"),
+        contrastHighlight: document.querySelector("[href$='contrast-highlight.css']"),
         tomorrowNight: document.querySelector("[href$='tomorrow-night.css']"),
         highlight: document.querySelector("[href$='highlight.css']"),
     };
@@ -310,17 +311,26 @@ function playground_text(playground) {
         if (theme == 'coal' || theme == 'navy') {
             stylesheets.ayuHighlight.disabled = true;
             stylesheets.tomorrowNight.disabled = false;
+            stylesheets.contrastHighlight.disabled = true;
             stylesheets.highlight.disabled = true;
 
             ace_theme = "ace/theme/tomorrow_night";
         } else if (theme == 'ayu') {
             stylesheets.ayuHighlight.disabled = false;
             stylesheets.tomorrowNight.disabled = true;
+            stylesheets.contrastHighlight.disabled = true;
             stylesheets.highlight.disabled = true;
             ace_theme = "ace/theme/tomorrow_night";
+        } else if (theme == 'contrast') {
+            stylesheets.ayuHighlight.disabled = true;
+            stylesheets.tomorrowNight.disabled = true;
+            stylesheets.contrastHighlight.disabled = false;
+            stylesheets.highlight.disabled = true;
+            ace_theme = "ace/theme/dawn";
         } else {
             stylesheets.ayuHighlight.disabled = true;
             stylesheets.tomorrowNight.disabled = true;
+            stylesheets.contrastHighlight.disabled = true;
             stylesheets.highlight.disabled = false;
             ace_theme = "ace/theme/dawn";
         }

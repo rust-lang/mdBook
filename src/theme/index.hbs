@@ -43,6 +43,7 @@
         <link rel="stylesheet" href="{{ path_to_root }}highlight.css">
         <link rel="stylesheet" href="{{ path_to_root }}tomorrow-night.css">
         <link rel="stylesheet" href="{{ path_to_root }}ayu-highlight.css">
+        <link rel="stylesheet" href="{{ path_to_root }}contrast-highlight.css">
 
         <!-- Custom theme stylesheets -->
         {{#each additional_css}}
@@ -123,6 +124,7 @@
                         </button>
                         <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
                             <li role="none"><button role="menuitem" class="theme" id="light">{{ theme_option "Light" }}</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="contrast">{{ theme_option "Contrast" }}</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="rust">{{ theme_option "Rust" }}</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="coal">{{ theme_option "Coal" }}</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="navy">{{ theme_option "Navy" }}</button></li>
