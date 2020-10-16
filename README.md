@@ -24,7 +24,7 @@ There are multiple ways to install mdBook.
 
 2. **From Crates.io**
 
-   This requires at least [Rust] 1.39 and Cargo to be installed. Once you have installed
+   This requires at least [Rust] 1.40 and Cargo to be installed. Once you have installed
    Rust, type the following in the terminal:
 
    ```
