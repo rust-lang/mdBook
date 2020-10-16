@@ -40,6 +40,8 @@ jobs:
       run: cargo test
     - name: Test no default
       run: cargo test --no-default-features
+    - name: Install mdbook
+      run: cargo install --path .
 
   rustfmt:
     name: Rustfmt
