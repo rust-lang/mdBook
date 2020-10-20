@@ -1,5 +1,20 @@
 # Changelog
 
+## mdBook 0.4.4
+[4df9ec9...01836ba](https://github.com/rust-lang/mdBook/compare/4df9ec9...01836ba)
+
+### Added
+- Added the `output.html.print.enable` configuration value to disable the
+  "print" page.
+  [#1169](https://github.com/rust-lang/mdBook/pull/1169)
+- Added a list of supported languages for syntax-highlighting to the
+  documentation.
+  [#1345](https://github.com/rust-lang/mdBook/pull/1345)
+
+### Fixed
+- Now supports symbolic links for files in the `src` directory.
+  [#1323](https://github.com/rust-lang/mdBook/pull/1323)
+
 ## mdBook 0.4.3
 [9278b83...4df9ec9](https://github.com/rust-lang/mdBook/compare/9278b83...4df9ec9)
 
