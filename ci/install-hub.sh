@@ -21,4 +21,4 @@ case $1 in
     ;;
 esac
 
-echo "##[add-path]$PWD/hub/bin"
+echo "$PWD/hub/bin" >> $GITHUB_PATH
