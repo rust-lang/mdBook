@@ -9,7 +9,8 @@ use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeTo};
 use std::path::{Path, PathBuf};
 
 use super::{Preprocessor, PreprocessorContext};
-use crate::book::{Book, BookItem};
+use crate::book::{Book, BookItem, Chapter};
+use std::fmt::{Debug, Formatter};
 
 const ESCAPE_CHAR: char = '\\';
 const MAX_LINK_NESTED_DEPTH: usize = 10;
@@ -23,7 +24,7 @@ const MAX_LINK_NESTED_DEPTH: usize = 10;
 ///   This hides the lines from initial display but shows them when the reader expands the code
 ///   block and provides them to Rustdoc for testing.
 /// - `{{# playground}}` - Insert runnable Rust files
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct LinkPreprocessor;
 
 impl LinkPreprocessor {
@@ -59,9 +60,28 @@ impl Preprocessor for LinkPreprocessor {
 
         Ok(book)
     }
+
+    fn preprocess_chapter(&self, ctx: &PreprocessorContext, chapter: &mut Chapter) -> Result<()> {
+        if let Some(ref chapter_path) = chapter.path {
+            let src_dir = ctx.root.join(&ctx.config.book.src);
+            let base = chapter_path
+                .parent()
+                .map(|dir| src_dir.join(dir))
+                .expect("All book items have a parent");
+
+            let content = replace_all(&chapter.content, base, chapter_path, 0);
+            chapter.content = content;
+        }
+        Ok(())
+    }
+}
+impl Debug for LinkPreprocessor {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(Self::NAME)
+    }
 }
 
-fn replace_all<P1, P2>(s: &str, path: P1, source: P2, depth: usize) -> String
+pub fn replace_all<P1, P2>(s: &str, path: P1, source: P2, depth: usize) -> String
 where
     P1: AsRef<Path>,
     P2: AsRef<Path>,

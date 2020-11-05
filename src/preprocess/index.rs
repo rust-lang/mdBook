@@ -5,10 +5,11 @@ use crate::errors::*;
 
 use super::{Preprocessor, PreprocessorContext};
 use crate::book::{Book, BookItem};
+use std::fmt::{Formatter, Debug};
 
 /// A preprocessor for converting file name `README.md` to `index.md` since
 /// `README.md` is the de facto index file in markdown-based documentation.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct IndexPreprocessor;
 
 impl IndexPreprocessor {
@@ -43,6 +44,11 @@ impl Preprocessor for IndexPreprocessor {
         });
 
         Ok(book)
+    }
+}
+impl Debug for IndexPreprocessor {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(Self::NAME)
     }
 }
 

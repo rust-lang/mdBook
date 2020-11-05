@@ -8,7 +8,9 @@ use mdbook::preprocess::{Preprocessor, PreprocessorContext};
 use mdbook::renderer::{RenderContext, Renderer};
 use mdbook::MDBook;
 use std::sync::{Arc, Mutex};
+use std::fmt::{Debug, Formatter};
 
+#[derive(Clone)]
 struct Spy(Arc<Mutex<Inner>>);
 
 #[derive(Debug, Default)]
@@ -27,6 +29,11 @@ impl Preprocessor for Spy {
         inner.run_count += 1;
         inner.rendered_with.push(ctx.renderer.clone());
         Ok(book)
+    }
+}
+impl Debug for Spy {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("dummy-preprocessor")
     }
 }
 
