@@ -12,7 +12,8 @@ run.
 
 ```yaml
 language: rust
-sudo: false
+os: linux
+dist: xenial
 
 cache:
   - cargo
@@ -39,18 +40,24 @@ permissions (or "repo" for private repositories). Go to your repository's Travis
 CI settings page and add an environment variable named `GITHUB_TOKEN` that is
 marked secure and *not* shown in the logs.
 
+Whilst still in your repository's settings page, navigate to Options and change the 
+Source on GitHub pages to `gh-pages`.
+
 Then, append this snippet to your `.travis.yml` and update the path to the
 `book` directory:
 
 ```yaml
 deploy:
   provider: pages
-  skip-cleanup: true
+  strategy: git
+  edge: true
+  cleanup: false
   github-token: $GITHUB_TOKEN
   local-dir: path/to/mybook/book
   keep-history: false
   on:
     branch: master
+  target_branch: gh-pages
 ```
 
 That's it!
