@@ -335,7 +335,7 @@ impl<'a> Link<'a> {
             LinkType::Playground(ref pat, ref attrs) => {
                 let target = base.join(pat);
 
-                let contents = fs::read_to_string(&target).with_context(|| {
+                let mut contents = fs::read_to_string(&target).with_context(|| {
                     format!(
                         "Could not read file for link {} ({})",
                         self.link_text,
@@ -343,8 +343,11 @@ impl<'a> Link<'a> {
                     )
                 })?;
                 let ftype = if !attrs.is_empty() { "rust," } else { "rust" };
+                if !contents.ends_with('\n') {
+                    contents.push('\n');
+                }
                 Ok(format!(
-                    "```{}{}\n{}\n```\n",
+                    "```{}{}\n{}```\n",
                     ftype,
                     attrs.join(","),
                     contents
