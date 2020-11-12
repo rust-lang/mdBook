@@ -91,6 +91,12 @@ fn run_mdbook_init_with_custom_book_and_src_locations() {
             file
         );
     }
+
+    let contents = fs::read_to_string(temp.path().join("book.toml")).unwrap();
+    assert_eq!(
+        contents,
+        "[book]\nauthors = []\nlanguage = \"en\"\nmultilingual = false\nsrc = \"in\"\n\n[build]\nbuild-dir = \"out\"\ncreate-missing = true\nuse-default-preprocessors = true\n"
+    );
 }
 
 #[test]
