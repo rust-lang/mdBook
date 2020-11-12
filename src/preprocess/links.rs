@@ -23,6 +23,7 @@ const MAX_LINK_NESTED_DEPTH: usize = 10;
 ///   This hides the lines from initial display but shows them when the reader expands the code
 ///   block and provides them to Rustdoc for testing.
 /// - `{{# playground}}` - Insert runnable Rust files
+/// - `{{# title}}` - Override \<title\> of a webpage.
 #[derive(Default)]
 pub struct LinkPreprocessor;
 
@@ -51,8 +52,15 @@ impl Preprocessor for LinkPreprocessor {
                         .map(|dir| src_dir.join(dir))
                         .expect("All book items have a parent");
 
-                    let content = replace_all(&ch.content, base, chapter_path, 0);
+                    let mut chapter_title = ch.name.clone();
+                    let content =
+                        replace_all(&ch.content, base, chapter_path, 0, &mut chapter_title);
                     ch.content = content;
+                    if chapter_title != ch.name {
+                        ctx.chapter_titles
+                            .borrow_mut()
+                            .insert(chapter_path.clone(), chapter_title);
+                    }
                 }
             }
         });
@@ -61,7 +69,13 @@ impl Preprocessor for LinkPreprocessor {
     }
 }
 
-fn replace_all<P1, P2>(s: &str, path: P1, source: P2, depth: usize) -> String
+fn replace_all<P1, P2>(
+    s: &str,
+    path: P1,
+    source: P2,
+    depth: usize,
+    chapter_title: &mut String,
+) -> String
 where
     P1: AsRef<Path>,
     P2: AsRef<Path>,
@@ -77,11 +91,17 @@ where
     for link in find_links(s) {
         replaced.push_str(&s[previous_end_index..link.start_index]);
 
-        match link.render_with_path(&path) {
+        match link.render_with_path(&path, chapter_title) {
             Ok(new_content) => {
                 if depth < MAX_LINK_NESTED_DEPTH {
                     if let Some(rel_path) = link.link_type.relative_path(path) {
-                        replaced.push_str(&replace_all(&new_content, rel_path, source, depth + 1));
+                        replaced.push_str(&replace_all(
+                            &new_content,
+                            rel_path,
+                            source,
+                            depth + 1,
+                            chapter_title,
+                        ));
                     } else {
                         replaced.push_str(&new_content);
                     }
@@ -116,6 +136,7 @@ enum LinkType<'a> {
     Include(PathBuf, RangeOrAnchor),
     Playground(PathBuf, Vec<&'a str>),
     RustdocInclude(PathBuf, RangeOrAnchor),
+    Title(&'a str),
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -185,6 +206,7 @@ impl<'a> LinkType<'a> {
             LinkType::Include(p, _) => Some(return_relative_path(base, &p)),
             LinkType::Playground(p, _) => Some(return_relative_path(base, &p)),
             LinkType::RustdocInclude(p, _) => Some(return_relative_path(base, &p)),
+            LinkType::Title(_) => None,
         }
     }
 }
@@ -255,6 +277,9 @@ struct Link<'a> {
 impl<'a> Link<'a> {
     fn from_capture(cap: Captures<'a>) -> Option<Link<'a>> {
         let link_type = match (cap.get(0), cap.get(1), cap.get(2)) {
+            (_, Some(typ), Some(title)) if typ.as_str() == "title" => {
+                Some(LinkType::Title(title.as_str()))
+            }
             (_, Some(typ), Some(rest)) => {
                 let mut path_props = rest.as_str().split_whitespace();
                 let file_arg = path_props.next();
@@ -291,7 +316,11 @@ impl<'a> Link<'a> {
         })
     }
 
-    fn render_with_path<P: AsRef<Path>>(&self, base: P) -> Result<String> {
+    fn render_with_path<P: AsRef<Path>>(
+        &self,
+        base: P,
+        chapter_title: &mut String,
+    ) -> Result<String> {
         let base = base.as_ref();
         match self.link_type {
             // omit the escape char
@@ -353,6 +382,10 @@ impl<'a> Link<'a> {
                     contents
                 ))
             }
+            LinkType::Title(title) => {
+                *chapter_title = title.to_owned();
+                Ok(String::new())
+            }
         }
     }
 }
@@ -373,17 +406,17 @@ impl<'a> Iterator for LinkIter<'a> {
 
 fn find_links(contents: &str) -> LinkIter<'_> {
     // lazily compute following regex
-    // r"\\\{\{#.*\}\}|\{\{#([a-zA-Z0-9]+)\s*([a-zA-Z0-9_.\-:/\\\s]+)\}\}")?;
+    // r"\\\{\{#.*\}\}|\{\{#([a-zA-Z0-9]+)\s*([^}]+)\}\}")?;
     lazy_static! {
         static ref RE: Regex = Regex::new(
-            r"(?x)                       # insignificant whitespace mode
-            \\\{\{\#.*\}\}               # match escaped link
-            |                            # or
-            \{\{\s*                      # link opening parens and whitespace
-            \#([a-zA-Z0-9_]+)            # link type
-            \s+                          # separating whitespace
-            ([a-zA-Z0-9\s_.\-:/\\\+]+)   # link target path and space separated properties
-            \s*\}\}                      # whitespace and link closing parens"
+            r"(?x)              # insignificant whitespace mode
+            \\\{\{\#.*\}\}      # match escaped link
+            |                   # or
+            \{\{\s*             # link opening parens and whitespace
+            \#([a-zA-Z0-9_]+)   # link type
+            \s+                 # separating whitespace
+            ([^}]+)             # link target path and space separated properties
+            \}\}                # link closing parens"
         )
         .unwrap();
     }
@@ -406,7 +439,21 @@ mod tests {
         ```hbs
         {{#include file.rs}} << an escaped link!
         ```";
-        assert_eq!(replace_all(start, "", "", 0), end);
+        let mut chapter_title = "test_replace_all_escaped".to_owned();
+        assert_eq!(replace_all(start, "", "", 0, &mut chapter_title), end);
+    }
+
+    #[test]
+    fn test_set_chapter_title() {
+        let start = r"{{#title My Title}}
+        # My Chapter
+        ";
+        let end = r"
+        # My Chapter
+        ";
+        let mut chapter_title = "test_set_chapter_title".to_owned();
+        assert_eq!(replace_all(start, "", "", 0, &mut chapter_title), end);
+        assert_eq!(chapter_title, "My Title");
     }
 
     #[test]
