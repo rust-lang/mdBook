@@ -39,6 +39,9 @@ permissions (or "repo" for private repositories). Go to your repository's Travis
 CI settings page and add an environment variable named `GITHUB_TOKEN` that is
 marked secure and *not* shown in the logs.
 
+Whilst still in your repository's settings page, navigate to Options and change the 
+Source on GitHub pages to `gh-pages`.
+
 Then, append this snippet to your `.travis.yml` and update the path to the
 `book` directory:
 
@@ -54,6 +57,40 @@ deploy:
 ```
 
 That's it!
+
+Note: Travis has a new [dplv2](https://blog.travis-ci.com/2019-08-27-deployment-tooling-dpl-v2-preview-release) configuration that is currently in beta. To use this new format, update your `.travis.yml` file to:
+
+```yaml
+language: rust
+os: linux
+dist: xenial
+
+cache:
+  - cargo
+
+rust:
+  - stable
+
+before_script:
+  - (test -x $HOME/.cargo/bin/cargo-install-update || cargo install cargo-update)
+  - (test -x $HOME/.cargo/bin/mdbook || cargo install --vers "^0.3" mdbook)
+  - cargo install-update -a
+
+script:
+  - mdbook build path/to/mybook && mdbook test path/to/mybook
+  
+deploy:
+  provider: pages
+  strategy: git
+  edge: true
+  cleanup: false
+  github-token: $GITHUB_TOKEN
+  local-dir: path/to/mybook/book
+  keep-history: false
+  on:
+    branch: master
+  target_branch: gh-pages
+```
 
 ### Deploying to GitHub Pages manually
 
