@@ -12,8 +12,7 @@ run.
 
 ```yaml
 language: rust
-os: linux
-dist: xenial
+sudo: false
 
 cache:
   - cargo
@@ -49,6 +48,39 @@ Then, append this snippet to your `.travis.yml` and update the path to the
 ```yaml
 deploy:
   provider: pages
+  skip-cleanup: true
+  github-token: $GITHUB_TOKEN
+  local-dir: path/to/mybook/book
+  keep-history: false
+  on:
+    branch: master
+```
+
+That's it!
+
+Note: Travis has a new [dplv2](https://blog.travis-ci.com/2019-08-27-deployment-tooling-dpl-v2-preview-release) configuration that is currently in beta. To use this new format, update your `.travis.yml` file to:
+
+```yaml
+language: rust
+os: linux
+dist: xenial
+
+cache:
+  - cargo
+
+rust:
+  - stable
+
+before_script:
+  - (test -x $HOME/.cargo/bin/cargo-install-update || cargo install cargo-update)
+  - (test -x $HOME/.cargo/bin/mdbook || cargo install --vers "^0.3" mdbook)
+  - cargo install-update -a
+
+script:
+  - mdbook build path/to/mybook && mdbook test path/to/mybook
+  
+deploy:
+  provider: pages
   strategy: git
   edge: true
   cleanup: false
@@ -59,8 +91,6 @@ deploy:
     branch: master
   target_branch: gh-pages
 ```
-
-That's it!
 
 ### Deploying to GitHub Pages manually
 
