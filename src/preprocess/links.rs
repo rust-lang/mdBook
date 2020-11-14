@@ -10,7 +10,9 @@ use std::path::{Path, PathBuf};
 
 use super::{Preprocessor, PreprocessorContext};
 use crate::book::{Book, BookItem, Chapter};
-use std::fmt::{Debug, Formatter};
+use std::{
+    fmt::{Debug, Formatter},
+};
 
 const ESCAPE_CHAR: char = '\\';
 const MAX_LINK_NESTED_DEPTH: usize = 10;
@@ -43,6 +45,7 @@ impl Preprocessor for LinkPreprocessor {
 
     fn run(&self, ctx: &PreprocessorContext, mut book: Book) -> Result<Book> {
         let src_dir = ctx.root.join(&ctx.config.book.src);
+        trace!("src = {:?}", &src_dir.display());
 
         book.for_each_mut(|section: &mut BookItem| {
             if let BookItem::Chapter(ref mut ch) = *section {
@@ -64,13 +67,16 @@ impl Preprocessor for LinkPreprocessor {
     fn preprocess_chapter(&self, ctx: &PreprocessorContext, chapter: &mut Chapter) -> Result<()> {
         if let Some(ref chapter_path) = chapter.path {
             let src_dir = ctx.root.join(&ctx.config.book.src);
+            trace!("src_dir = {:?}", &src_dir.display());
             let base = chapter_path
                 .parent()
                 .map(|dir| src_dir.join(dir))
                 .expect("All book items have a parent");
 
-            let content = replace_all(&chapter.content, base, chapter_path, 0);
-            chapter.content = content;
+            trace!("base = {:?}", &base.display());
+            let updated_content = replace_all(&chapter.content.clone(), base, chapter_path, 0);
+            trace!("updated_content = {:?}", updated_content.len());
+            chapter.content = updated_content;
         }
         Ok(())
     }
@@ -91,14 +97,18 @@ where
     // we therefore have to store the difference to correct this
     let path = path.as_ref();
     let source = source.as_ref();
+    trace!("replace_all: path = {:?}, source={:?}", path.display(), source.display());
     let mut previous_end_index = 0;
     let mut replaced = String::new();
 
     for link in find_links(s) {
-        replaced.push_str(&s[previous_end_index..link.start_index]);
+        let slice_string = &s[previous_end_index..link.start_index];
+        trace!("replace_all: slice_string = {:?}", slice_string);
+        replaced.push_str(slice_string);
 
         match link.render_with_path(&path) {
             Ok(new_content) => {
+                trace!("replace_all: new_content = {:?}", new_content);
                 if depth < MAX_LINK_NESTED_DEPTH {
                     if let Some(rel_path) = link.link_type.relative_path(path) {
                         replaced.push_str(&replace_all(&new_content, rel_path, source, depth + 1));
@@ -127,6 +137,7 @@ where
     }
 
     replaced.push_str(&s[previous_end_index..]);
+    trace!("replaced = [{:?}]", replaced.len());
     replaced
 }
 
@@ -318,7 +329,6 @@ impl<'a> Link<'a> {
             LinkType::Escaped => Ok((&self.link_text[1..]).to_owned()),
             LinkType::Include(ref pat, ref range_or_anchor) => {
                 let target = base.join(pat);
-
                 fs::read_to_string(&target)
                     .map(|s| match range_or_anchor {
                         RangeOrAnchor::Range(range) => take_lines(&s, range.clone()),
@@ -334,7 +344,7 @@ impl<'a> Link<'a> {
             }
             LinkType::RustdocInclude(ref pat, ref range_or_anchor) => {
                 let target = base.join(pat);
-
+                debug!("render_with_path: target = {:?}", &target.display());
                 fs::read_to_string(&target)
                     .map(|s| match range_or_anchor {
                         RangeOrAnchor::Range(range) => {

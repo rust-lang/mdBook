@@ -13,7 +13,9 @@ use crate::config::Config;
 use crate::errors::*;
 
 use std::path::PathBuf;
-use std::fmt::Debug;
+use std::{
+    fmt::{Debug},
+};
 
 /// Extra information for a `Preprocessor` to give them more context when
 /// processing a book.
