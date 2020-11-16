@@ -55,7 +55,7 @@ impl Preprocessor for LinkPreprocessor {
                         .map(|dir| src_dir.join(dir))
                         .expect("All book items have a parent");
 
-                    let content = replace_all(&ch.content, base, chapter_path, 0);
+                    let content = replace_all(&ch.content, base, chapter_path, 0, false);
                     ch.content = content;
                 }
             }
@@ -74,7 +74,8 @@ impl Preprocessor for LinkPreprocessor {
                 .expect("All book items have a parent");
 
             trace!("base = {:?}", &base.display());
-            let updated_content = replace_all(&chapter.content.clone(), base, chapter_path, 0);
+            let updated_content = replace_all(
+                &chapter.content.clone(), base, chapter_path, 0, true);
             trace!("updated_content = {:?}", updated_content.len());
             chapter.content = updated_content;
         }
@@ -87,7 +88,7 @@ impl Debug for LinkPreprocessor {
     }
 }
 
-pub fn replace_all<P1, P2>(s: &str, path: P1, source: P2, depth: usize) -> String
+pub fn replace_all<P1, P2>(s: &str, path: P1, source: P2, depth: usize, cutoff_commented_lines: bool) -> String
 where
     P1: AsRef<Path>,
     P2: AsRef<Path>,
@@ -106,12 +107,12 @@ where
         trace!("replace_all: slice_string = {:?}", slice_string);
         replaced.push_str(slice_string);
 
-        match link.render_with_path(&path) {
+        match link.render_with_path(&path, cutoff_commented_lines) {
             Ok(new_content) => {
                 trace!("replace_all: new_content = {:?}", new_content);
                 if depth < MAX_LINK_NESTED_DEPTH {
                     if let Some(rel_path) = link.link_type.relative_path(path) {
-                        replaced.push_str(&replace_all(&new_content, rel_path, source, depth + 1));
+                        replaced.push_str(&replace_all(&new_content, rel_path, source, depth + 1, cutoff_commented_lines));
                     } else {
                         replaced.push_str(&new_content);
                     }
@@ -322,7 +323,7 @@ impl<'a> Link<'a> {
         })
     }
 
-    fn render_with_path<P: AsRef<Path>>(&self, base: P) -> Result<String> {
+    fn render_with_path<P: AsRef<Path>>(&self, base: P, cutoff_commented_lines: bool) -> Result<String> {
         let base = base.as_ref();
         match self.link_type {
             // omit the escape char
@@ -348,10 +349,10 @@ impl<'a> Link<'a> {
                 fs::read_to_string(&target)
                     .map(|s| match range_or_anchor {
                         RangeOrAnchor::Range(range) => {
-                            take_rustdoc_include_lines(&s, range.clone())
+                            take_rustdoc_include_lines(&s, range.clone(), cutoff_commented_lines)
                         }
                         RangeOrAnchor::Anchor(anchor) => {
-                            take_rustdoc_include_anchored_lines(&s, anchor)
+                            take_rustdoc_include_anchored_lines(&s, anchor, cutoff_commented_lines)
                         }
                     })
                     .with_context(|| {
@@ -433,7 +434,22 @@ mod tests {
         ```hbs
         {{#include file.rs}} << an escaped link!
         ```";
-        assert_eq!(replace_all(start, "", "", 0), end);
+        assert_eq!(replace_all(start, "", "", 0, false), end);
+    }
+
+    #[test]
+    fn test_replace_all_escaped_with_cutoff() {
+        let start = r"
+        Some text over here.
+        ```hbs
+        \{{#include file.rs}} << an escaped link!
+        ```";
+        let end = r"
+        Some text over here.
+        ```hbs
+        {{#include file.rs}} << an escaped link!
+        ```";
+        assert_eq!(replace_all(start, "", "", 0, false), end);
     }
 
     #[test]
