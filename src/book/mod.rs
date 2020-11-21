@@ -61,7 +61,8 @@ impl MDBook {
         }
 
         let mut config = if config_location.exists() {
-            debug!("Loading config from {}", config_location.display());
+            debug!("Loading config from: {}", config_location.display());
+            println!("Loading config from: {}", config_location.display());
             Config::from_disk(&config_location)?
         } else {
             Config::default()
