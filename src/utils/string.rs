@@ -67,7 +67,7 @@ pub fn take_rustdoc_include_lines<R: RangeBounds<usize>>(s: &str, range: R, cuto
 
     for (index, line) in s.lines().enumerate() {
         if !range.contains(&index) {
-            if !cutoff_commented_lines {
+            if !cutoff_commented_lines { // do not include 'dashed' lines (for epub format)
                 output.push_str("# ");
             }
         }
@@ -107,7 +107,7 @@ pub fn take_rustdoc_include_anchored_lines(s: &str, anchor: &str, cutoff_comment
                 within_anchored_section = true;
             }
         } else if !ANCHOR_END.is_match(l) {
-            if !cutoff_commented_lines {
+            if !cutoff_commented_lines { // do not include 'dashed' lines (for epub format)
                 output.push_str("# ");
                 output.push_str(l);
                 output.push_str("\n");

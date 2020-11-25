@@ -56,7 +56,7 @@ pub trait Preprocessor: PreprocessorClone {
     /// given to a renderer.
     fn run(&self, ctx: &PreprocessorContext, book: Book) -> Result<Book>;
 
-    /// Pre-Process only one chapter using context
+    /// Pre-Process only one mutable chapter using context and supplied pre-processor
     fn preprocess_chapter(&self, ctx: &PreprocessorContext, chapter: &mut Chapter) -> Result<()> {
         println!("preprocess {} by ctx = {}", chapter.name, ctx.renderer);
         Ok(())
@@ -71,8 +71,8 @@ pub trait Preprocessor: PreprocessorClone {
     }
 }
 
-/// Tha is the stuff for making ability to clone vec[Preprocessor]
-/// We use for cloning vector of preprocessors
+/// That is the code to have ability to clone vec[Preprocessor]
+/// We use for cloning vector of preprocessors and reuse inside 'mdbook-epub'
 pub trait PreprocessorClone {
     /// clone one boxed preprocessor
     fn clone_preprocessor(&self) -> Box<dyn Preprocessor>;

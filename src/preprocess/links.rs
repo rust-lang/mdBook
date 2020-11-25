@@ -51,7 +51,7 @@ impl Preprocessor for LinkPreprocessor {
                         .parent()
                         .map(|dir| src_dir.join(dir))
                         .expect("All book items have a parent");
-
+                    // run normal link replacement by all content with 'dashed' lines inside present
                     let content = replace_all(&ch.content, base, chapter_path, 0, false);
                     ch.content = content;
                 }
@@ -61,6 +61,7 @@ impl Preprocessor for LinkPreprocessor {
         Ok(book)
     }
 
+    /// Pre-process one chapter's content by supplied preprocessor
     fn preprocess_chapter(&self, ctx: &PreprocessorContext, chapter: &mut Chapter) -> Result<()> {
         if let Some(ref chapter_path) = chapter.path {
             let src_dir = ctx.root.join(&ctx.config.book.src);
@@ -71,6 +72,8 @@ impl Preprocessor for LinkPreprocessor {
                 .expect("All book items have a parent");
 
             trace!("base = {:?}", &base.display());
+            // replace link {{#rustdoc_include ../listings/ch02-guessing-game-tutorial/listing-02-01/src/main.rs:print}}
+            // by lined content with removing # dashed lines
             let updated_content = replace_all(
                 &chapter.content.clone(), base, chapter_path, 0, true);
             trace!("updated_content = {:?}", updated_content.len());
@@ -80,6 +83,7 @@ impl Preprocessor for LinkPreprocessor {
     }
 }
 
+/// Replace content with linked content and cutoff (or not) dashed lines
 pub fn replace_all<P1, P2>(s: &str, path: P1, source: P2, depth: usize, cutoff_commented_lines: bool) -> String
 where
     P1: AsRef<Path>,
