@@ -711,6 +711,7 @@ mod tests {
         multilingual = true
         src = "source"
         language = "ja"
+        version = "0.0.1"
 
         [build]
         build-dir = "outputs"
@@ -750,7 +751,7 @@ mod tests {
             multilingual: true,
             src: PathBuf::from("source"),
             language: Some(String::from("ja")),
-            version: Some(String::from("0.0.0")),
+            version: Some(String::from("0.0.1")),
         };
         let build_should_be = BuildConfig {
             build_dir: PathBuf::from("outputs"),

@@ -10,9 +10,6 @@ use std::path::{Path, PathBuf};
 
 use super::{Preprocessor, PreprocessorContext};
 use crate::book::{Book, BookItem, Chapter};
-use std::{
-    fmt::{Debug, Formatter},
-};
 
 const ESCAPE_CHAR: char = '\\';
 const MAX_LINK_NESTED_DEPTH: usize = 10;
@@ -80,11 +77,6 @@ impl Preprocessor for LinkPreprocessor {
             chapter.content = updated_content;
         }
         Ok(())
-    }
-}
-impl Debug for LinkPreprocessor {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str(Self::NAME)
     }
 }
 

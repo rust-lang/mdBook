@@ -28,7 +28,7 @@ fn base_mdbook_init_should_create_default_content() {
     let contents = fs::read_to_string(temp.path().join("book.toml")).unwrap();
     assert_eq!(
         contents,
-        "[book]\nauthors = []\nlanguage = \"en\"\nmultilingual = false\nsrc = \"src\"\n"
+        "[book]\nauthors = []\nlanguage = \"en\"\nmultilingual = false\nsrc = \"src\"\nversion = \"0.0.1\"\n"
     );
 }
 

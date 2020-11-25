@@ -48,7 +48,7 @@ impl PreprocessorContext {
 
 /// An operation which is run immediately after loading a book into memory and
 /// before it gets rendered.
-pub trait Preprocessor: PreprocessorClone + Debug {
+pub trait Preprocessor: PreprocessorClone {
     /// Get the `Preprocessor`'s name.
     fn name(&self) -> &str;
 
