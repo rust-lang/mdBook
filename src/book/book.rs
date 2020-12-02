@@ -264,6 +264,10 @@ fn load_chapter<P: AsRef<Path>>(
             format!("Unable to read \"{}\" ({})", link.name, location.display())
         })?;
 
+        if content.as_bytes().starts_with(b"\xef\xbb\xbf") {
+            content.replace_range(..3, "");
+        }
+
         let stripped = location
             .strip_prefix(&src_dir)
             .expect("Chapters are always inside a book");
@@ -382,6 +386,29 @@ And here is some \
     #[test]
     fn load_a_single_chapter_from_disk() {
         let (link, temp_dir) = dummy_link();
+        let should_be = Chapter::new(
+            "Chapter 1",
+            DUMMY_SRC.to_string(),
+            "chapter_1.md",
+            Vec::new(),
+        );
+
+        let got = load_chapter(&link, temp_dir.path(), Vec::new()).unwrap();
+        assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn load_a_single_chapter_with_utf8_bom_from_disk() {
+        let temp_dir = TempFileBuilder::new().prefix("book").tempdir().unwrap();
+
+        let chapter_path = temp_dir.path().join("chapter_1.md");
+        File::create(&chapter_path)
+            .unwrap()
+            .write_all(("\u{feff}".to_owned() + DUMMY_SRC).as_bytes())
+            .unwrap();
+
+        let link = Link::new("Chapter 1", chapter_path);
+
         let should_be = Chapter::new(
             "Chapter 1",
             DUMMY_SRC.to_string(),

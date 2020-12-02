@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::io;
 use std::path::Path;
 
 use crate::utils;
@@ -102,7 +103,7 @@ impl HelperDef for RenderToc {
             // Part title
             if let Some(title) = item.get("part") {
                 out.write("<li class=\"part-title\">")?;
-                out.write(title)?;
+                write_escaped(out, title)?;
                 out.write("</li>")?;
                 continue;
             }
@@ -160,7 +161,7 @@ impl HelperDef for RenderToc {
                 html::push_html(&mut markdown_parsed_name, parser);
 
                 // write to the handlebars template
-                out.write(&markdown_parsed_name)?;
+                write_escaped(out, &markdown_parsed_name)?;
             }
 
             if path_exists {
@@ -203,4 +204,19 @@ fn write_li_open_tag(
     }
     li.push_str("\">");
     out.write(&li)
+}
+
+fn write_escaped(out: &mut dyn Output, mut title: &str) -> io::Result<()> {
+    let needs_escape: &[char] = &['<', '>'];
+    while let Some(next) = title.find(needs_escape) {
+        out.write(&title[..next])?;
+        match title.as_bytes()[next] {
+            b'<' => out.write("&lt;")?,
+            b'>' => out.write("&gt;")?,
+            _ => unreachable!(),
+        }
+        title = &title[next + 1..];
+    }
+    out.write(title)?;
+    Ok(())
 }
