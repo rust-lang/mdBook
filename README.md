@@ -149,6 +149,7 @@ preprocessors are:
   the url `foo/` when published to a browser
 - `links` - a built-in preprocessor (enabled by default) for expanding the
   `{{# playground}}` and `{{# include}}` helpers in a chapter.
+- [`katex`](https://github.com/lzanini/mdbook-katex) - a preprocessor rendering LaTex equations to HTML.
 
 Renderers are given the final book so they can do something with it. This is
 typically used for, as the name suggests, rendering the document in a particular
