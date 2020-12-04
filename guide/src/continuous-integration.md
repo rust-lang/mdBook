@@ -133,12 +133,12 @@ stages:
 
 pages:
   stage: deploy
-  image: rust:latest
+  image: rust:alpine
   variables:
     CARGO_HOME: $CI_PROJECT_DIR/cargo
   before_script:
     - export PATH="$PATH:$CARGO_HOME/bin"
-    - mdbook --version || cargo install --debug mdbook
+    - mdbook --version || cargo install mdbook
   script:
         - mdbook build -d public
   only:
