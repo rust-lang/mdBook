@@ -49,7 +49,9 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
                     }
                     debug!("Creating missing file {}", filename.display());
 
-                    let mut f = File::create(&filename).with_context(|| format!("Unable to create missing file: {}", filename.display()))?;
+                    let mut f = File::create(&filename).with_context(|| {
+                        format!("Unable to create missing file: {}", filename.display())
+                    })?;
                     writeln!(f, "# {}", link.name)?;
                 }
             }
