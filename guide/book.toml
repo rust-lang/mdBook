@@ -15,7 +15,7 @@ site-url = "/mdBook/"
 editable = true
 line-numbers = true
 
-[output.html.playground.boring-prefixes]
+[output.html.playground.line-hiding-prefixes]
 python = "~"
 
 [output.html.search]

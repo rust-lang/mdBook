@@ -27,19 +27,17 @@ Will render as
 # }
 ```
 
-By default, this only works for code examples that are annotated with `rust`. However, you can 
-define custom patterns for other languages in your `book.toml`. Unless you need something complex 
-(e.g. rust uses `#` but doesn't hide `#[...]` lines), adding a new language is trivial. Just add 
-a new `boring-prefix` entry in your `book.toml` with the language name and prefix character 
-(you can also do multi-character prefixes if you really want to):
+By default, this only works for code examples that are annotated with `rust`. However, you can define 
+custom prefixes for other languages by adding a new line-hiding prefix in your `book.toml` with the 
+language name and prefix character (you can even do multi-character prefixes if you really want to):
 
 ```toml
-[output.html.playground.boring-prefixes]
+[output.html.playground.line-hiding-prefixes]
 python = "~"
 ```
 
-The auto-generated prefix patterns will hide any lines that begin with the given prefix, but
-the prefix can be escaped using a backslash. With the python example above, this:
+The prefix will hide any lines that begin with the given prefix, but the prefix can be escaped using 
+a backslash. With the python prefix shown above, this:
 
 <pre><code class="language-markdown">```python
 ~def fib():
@@ -67,8 +65,8 @@ will render as
 ~fib(1000)
 ```
 
-If you need something more complex than that, you can use a 
-[fully custom pattern](../config.md#boring-patterns).
+If you need something more advanced than a simple prefix (e.g. rust uses `#` but doesn't hide `#[...]` lines), 
+you can define a custom regular expression using [line-hiding patterns](./config.md#line-hiding-patterns).
 
 ## Including files
 

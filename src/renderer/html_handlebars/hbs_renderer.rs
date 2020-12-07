@@ -848,27 +848,27 @@ fn add_playground_pre(
                                 )
                                 .into()
                             };
-                            RUST_BORING_PATTERN.transform_lines(&content)
+                            RUST_LINE_HIDING_PATTERN.transform_lines(&content)
                         }
                     )
                 } else {
                     format!(
                         "<code class=\"{}\">{}</code>",
                         classes,
-                        RUST_BORING_PATTERN.transform_lines(code)
+                        RUST_LINE_HIDING_PATTERN.transform_lines(code)
                     )
                 }
-            } else if let Some(pattern) = playground_config.boring_patterns.get(&language) {
+            } else if let Some(pattern) = playground_config.line_hiding_patterns.get(&language) {
                 format!(
                     "<code class=\"{}\">{}</code>",
                     classes,
-                    BoringPattern::new(pattern).transform_lines(code)
+                    LineHidingPattern::new(pattern).transform_lines(code)
                 )
-            } else if let Some(prefix) = playground_config.boring_prefixes.get(&language) {
+            } else if let Some(prefix) = playground_config.line_hiding_prefixes.get(&language) {
                 format!(
                     "<code class=\"{}\">{}</code>",
                     classes,
-                    BoringPattern::new_simple(prefix).transform_lines(code)
+                    LineHidingPattern::new_simple(prefix).transform_lines(code)
                 )
             } else {
                 // not language-rust, so no-op
@@ -879,23 +879,23 @@ fn add_playground_pre(
 }
 
 lazy_static! {
-    static ref RUST_BORING_PATTERN: BoringPattern =
-        BoringPattern::new(r"^(\s*)(?P<escape>#)?#(?: (.*)|([^#!\[ ].*))?$");
+    static ref RUST_LINE_HIDING_PATTERN: LineHidingPattern =
+        LineHidingPattern::new(r"^(\s*)(?P<escape>#)?#(?: (.*)|([^#!\[ ].*))?$");
 }
 
-struct BoringPattern {
+struct LineHidingPattern {
     regex: Regex,
 }
 
-impl BoringPattern {
-    fn new(pattern: &str) -> BoringPattern {
-        BoringPattern {
+impl LineHidingPattern {
+    fn new(pattern: &str) -> LineHidingPattern {
+        LineHidingPattern {
             regex: Regex::new(pattern).unwrap(),
         }
     }
 
-    fn new_simple(prefix: &str) -> BoringPattern {
-        BoringPattern {
+    fn new_simple(prefix: &str) -> LineHidingPattern {
+        LineHidingPattern {
             regex: Regex::new(&format!(
                 r"^(\s*)(?P<escape>\\)?{}(.*)$",
                 regex::escape(prefix)
@@ -904,12 +904,12 @@ impl BoringPattern {
         }
     }
 
-    /// Expects groups named `escape` and `prefix`
+    /// Expects a group named `escape`
     /// if the string doesn't match, it's returned directly
     /// when `escape` matches, the entire string except the `escape` group is returned
     /// otherwise, all the groups are concatenated and returned
     ///
-    /// returns the resulting string and a bool specifying if the line was boring
+    /// returns the resulting string and a bool specifying if the line should be hidden
     fn transform(&self, line: &str) -> (String, bool) {
         if let Some(captures) = self.regex.captures(line) {
             if let Some(m) = captures.name("escape") {
@@ -936,13 +936,13 @@ impl BoringPattern {
     fn transform_lines(&self, content: &str) -> String {
         let mut result = String::with_capacity(content.len());
         for line in content.lines() {
-            let (out, boring) = self.transform(line);
-            if boring {
+            let (out, should_hide) = self.transform(line);
+            if should_hide {
                 result += "<span class=\"boring\">";
             }
             result += &out;
             result += "\n";
-            if boring {
+            if should_hide {
                 result += "</span>"
             }
         }
