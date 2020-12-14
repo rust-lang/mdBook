@@ -110,7 +110,10 @@ pub fn copy_files_except_ext(
 
     for entry in fs::read_dir(from)? {
         let entry = entry?;
-        let metadata = entry.path().metadata()?;
+        let metadata = entry
+            .path()
+            .metadata()
+            .with_context(|| format!("Failed to read {:?}", entry.path()))?;
 
         // If the entry is a dir and the recursive option is enabled, call itself
         if metadata.is_dir() && recursive {
