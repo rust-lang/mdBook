@@ -90,6 +90,46 @@
     --search-mark-bg: #355c7d;
 }
 
+.grogu {
+    --bg: #c6ebc9;
+    --fg: #4b5452;
+
+    --sidebar-bg: #70af85;
+    --sidebar-fg: #f0e2d0;;
+    --sidebar-non-existant: #5c6773;
+    --sidebar-active: #ffb454;
+    --sidebar-spacer: #5d7561;
+
+    --scrollbar: var(--sidebar-fg);
+
+    --icons: #ffffff;
+    --icons-hover: #ffb454;
+
+    --links: #ffb454;
+
+    --inline-code-color: #70af85;
+
+    --theme-popup-bg: #c6ebc9;
+    --theme-popup-border: #c6ebc9;
+    --theme-hover: #c6ebc9;
+
+    --quote-bg: #f1f1f1;
+    --quote-border: #c6ebc9;
+
+    --table-border-color: #ffffff;
+    --table-header-bg: #70af85;
+    --table-alternate-bg: #70af85;
+
+    --searchbar-border-color: #ffffff;
+    --searchbar-bg: #c6ebc9;
+    --searchbar-fg: #fff;
+    --searchbar-shadow-color: #c6ebc9;
+    --searchresults-header-fg: #70af85;
+    --searchresults-border-color: #ffffff;
+    --searchresults-li-bg: #c6ebc9;
+    --search-mark-bg: #ffb454;
+}
+
 .light {
     --bg: hsl(0, 0%, 100%);
     --fg: #333333;
