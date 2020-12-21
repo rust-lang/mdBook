@@ -539,6 +539,7 @@ function playground_text(playground) {
 
         switch (e.key) {
             case 'ArrowRight':
+            case 'l':
                 e.preventDefault();
                 var nextButton = document.querySelector('.nav-chapters.next');
                 if (nextButton) {
@@ -546,6 +547,7 @@ function playground_text(playground) {
                 }
                 break;
             case 'ArrowLeft':
+            case 'h':
                 e.preventDefault();
                 var previousButton = document.querySelector('.nav-chapters.previous');
                 if (previousButton) {
