@@ -91,10 +91,11 @@ all its functionality as a Rust crate for integration in other projects.
 Here are the main commands you will want to run. For a more exhaustive
 explanation, check out the [User Guide].
 
-- `mdbook init`
+- `mdbook init <directory>`
 
     The init command will create a directory with the minimal boilerplate to
-    start with.
+    start with. If the `<directory>` parameter is omitted, the current 
+    directory will me used.
 
     ```
     book-test/
