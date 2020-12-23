@@ -95,7 +95,7 @@ explanation, check out the [User Guide].
 
     The init command will create a directory with the minimal boilerplate to
     start with. If the `<directory>` parameter is omitted, the current 
-    directory will me used.
+    directory will be used.
 
     ```
     book-test/
