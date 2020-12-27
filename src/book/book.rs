@@ -14,7 +14,7 @@ pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> 
     let summary_md = src_dir.join("SUMMARY.md");
 
     let mut summary_content = String::new();
-    File::open(summary_md.clone())
+    File::open(&summary_md)
         .with_context(|| format!("Couldn't open SUMMARY.md in {:?} directory", src_dir))?
         .read_to_string(&mut summary_content)?;
 
