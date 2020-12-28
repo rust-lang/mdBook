@@ -452,7 +452,7 @@ impl Renderer for HtmlHandlebars {
         let mut handlebars = Handlebars::new();
 
         let theme_dir = match html_config.theme {
-            Some(ref theme) => theme.to_path_buf(),
+            Some(ref theme) => ctx.root.join(theme),
             None => ctx.root.join("theme"),
         };
 
