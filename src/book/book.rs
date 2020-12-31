@@ -280,7 +280,7 @@ fn load_chapter<P: AsRef<Path>>(
         Chapter::new_draft(&link.name, parent_names.clone())
     };
 
-    let mut sub_item_parents = parent_names.clone();
+    let mut sub_item_parents = parent_names;
 
     ch.number = link.number.clone();
 
