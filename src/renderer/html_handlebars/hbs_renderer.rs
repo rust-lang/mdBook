@@ -209,11 +209,7 @@ impl HtmlHandlebars {
         write_file(destination, "ayu-highlight.css", &theme.ayu_highlight_css)?;
         write_file(destination, "highlight.js", &theme.highlight_js)?;
         write_file(destination, "clipboard.min.js", &theme.clipboard_js)?;
-        write_file(
-            destination,
-            "FontAwesome/css/all.css",
-            theme::FONT_AWESOME,
-        )?;
+        write_file(destination, "FontAwesome/css/all.css", theme::FONT_AWESOME)?;
         write_file(
             destination,
             "FontAwesome/css/v4-shims.css",

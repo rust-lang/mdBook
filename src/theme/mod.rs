@@ -51,12 +51,9 @@ pub static FONT_AWESOME_REGULAR_WOFF: &[u8] =
     include_bytes!("FontAwesome/webfonts/fa-regular-400.woff");
 pub static FONT_AWESOME_REGULAR_WOFF2: &[u8] =
     include_bytes!("FontAwesome/webfonts/fa-regular-400.woff2");
-pub static FONT_AWESOME_SOLID_EOT: &[u8] =
-    include_bytes!("FontAwesome/webfonts/fa-solid-900.eot");
-pub static FONT_AWESOME_SOLID_SVG: &[u8] =
-    include_bytes!("FontAwesome/webfonts/fa-solid-900.svg");
-pub static FONT_AWESOME_SOLID_TTF: &[u8] =
-    include_bytes!("FontAwesome/webfonts/fa-solid-900.ttf");
+pub static FONT_AWESOME_SOLID_EOT: &[u8] = include_bytes!("FontAwesome/webfonts/fa-solid-900.eot");
+pub static FONT_AWESOME_SOLID_SVG: &[u8] = include_bytes!("FontAwesome/webfonts/fa-solid-900.svg");
+pub static FONT_AWESOME_SOLID_TTF: &[u8] = include_bytes!("FontAwesome/webfonts/fa-solid-900.ttf");
 pub static FONT_AWESOME_SOLID_WOFF: &[u8] =
     include_bytes!("FontAwesome/webfonts/fa-solid-900.woff");
 pub static FONT_AWESOME_SOLID_WOFF2: &[u8] =
