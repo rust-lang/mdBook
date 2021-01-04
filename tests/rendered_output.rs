@@ -595,7 +595,10 @@ mod search {
             docs[&summary]["body"],
             "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Markdown Unicode Second Chapter Nested Chapter Conclusion"
         );
-        assert_eq!(docs[&summary]["breadcrumbs"], "First Chapter » Summary");
+        assert_eq!(
+            docs[&summary]["breadcrumbs"],
+            "First Chapter » Includes » Summary"
+        );
         assert_eq!(docs[&conclusion]["body"], "I put &lt;HTML&gt; in here!");
     }
 
