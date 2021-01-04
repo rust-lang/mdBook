@@ -29,9 +29,7 @@ pub static TOMORROW_NIGHT_CSS: &[u8] = include_bytes!("tomorrow-night.css");
 pub static HIGHLIGHT_CSS: &[u8] = include_bytes!("highlight.css");
 pub static AYU_HIGHLIGHT_CSS: &[u8] = include_bytes!("ayu-highlight.css");
 pub static CLIPBOARD_JS: &[u8] = include_bytes!("clipboard.min.js");
-pub static FONT_AWESOME_REGULAR: &[u8] = include_bytes!("FontAwesome/css/fontawesome.min.css");
-pub static FONT_AWESOME_SOLID: &[u8] = include_bytes!("FontAwesome/css/solid.min.css");
-pub static FONT_AWESOME_BRANDS: &[u8] = include_bytes!("FontAwesome/css/brands.min.css");
+pub static FONT_AWESOME: &[u8] = include_bytes!("FontAwesome/css/all.min.css");
 pub static FONT_AWESOME_V4_SHIMS: &[u8] = include_bytes!("FontAwesome/css/v4-shims.min.css");
 pub static FONT_AWESOME_BRANDS_EOT: &[u8] =
     include_bytes!("FontAwesome/webfonts/fa-brands-400.eot");

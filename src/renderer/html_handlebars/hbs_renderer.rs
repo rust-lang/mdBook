@@ -211,18 +211,8 @@ impl HtmlHandlebars {
         write_file(destination, "clipboard.min.js", &theme.clipboard_js)?;
         write_file(
             destination,
-            "FontAwesome/css/fontawesome.css",
-            theme::FONT_AWESOME_REGULAR,
-        )?;
-        write_file(
-            destination,
-            "FontAwesome/css/brands.css",
-            theme::FONT_AWESOME_BRANDS,
-        )?;
-        write_file(
-            destination,
-            "FontAwesome/css/solid.css",
-            theme::FONT_AWESOME_SOLID,
+            "FontAwesome/css/all.css",
+            theme::FONT_AWESOME,
         )?;
         write_file(
             destination,
