@@ -366,7 +366,7 @@ impl HtmlHandlebars {
             // Note: all paths are relative to the build directory, so the
             // leading slash in an absolute path means nothing (and would mess
             // up `root.join(original)`).
-            let original = original.trim_start_matches("/");
+            let original = original.trim_start_matches('/');
             let filename = root.join(original);
             self.emit_redirect(handlebars, &filename, new)?;
         }
@@ -899,10 +899,10 @@ fn partition_source(s: &str) -> (String, String) {
         if !header || after_header {
             after_header = true;
             after.push_str(line);
-            after.push_str("\n");
+            after.push('\n');
         } else {
             before.push_str(line);
-            before.push_str("\n");
+            before.push('\n');
         }
     }
 
