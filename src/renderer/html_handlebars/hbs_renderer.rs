@@ -226,6 +226,11 @@ impl HtmlHandlebars {
         )?;
         write_file(
             destination,
+            "FontAwesome/css/v4-shims.css",
+            theme::FONT_AWESOME_V4_SHIMS,
+        )?;
+        write_file(
+            destination,
             "FontAwesome/webfonts/fa-regular-400.eot",
             theme::FONT_AWESOME_REGULAR_EOT,
         )?;

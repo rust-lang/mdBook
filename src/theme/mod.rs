@@ -32,6 +32,7 @@ pub static CLIPBOARD_JS: &[u8] = include_bytes!("clipboard.min.js");
 pub static FONT_AWESOME_REGULAR: &[u8] = include_bytes!("FontAwesome/css/fontawesome.min.css");
 pub static FONT_AWESOME_SOLID: &[u8] = include_bytes!("FontAwesome/css/solid.min.css");
 pub static FONT_AWESOME_BRANDS: &[u8] = include_bytes!("FontAwesome/css/brands.min.css");
+pub static FONT_AWESOME_V4_SHIMS: &[u8] = include_bytes!("FontAwesome/css/v4-shims.min.css");
 pub static FONT_AWESOME_BRANDS_EOT: &[u8] =
     include_bytes!("FontAwesome/webfonts/fa-brands-400.eot");
 pub static FONT_AWESOME_BRANDS_SVG: &[u8] =
