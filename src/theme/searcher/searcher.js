@@ -296,7 +296,7 @@ window.search = window.search || {};
         }
 
         if (url.params.hasOwnProperty(URL_MARK_PARAM)) {
-            var words = url.params[URL_MARK_PARAM].split(' ');
+            var words = decodeURIComponent(url.params[URL_MARK_PARAM]).split(' ');
             marker.mark(words, {
                 exclude: mark_exclude
             });
