@@ -95,6 +95,8 @@ fn render_item(
     let mut breadcrumbs = chapter.parent_names.clone();
     let mut footnote_numbers = HashMap::new();
 
+    breadcrumbs.push(chapter.name.clone());
+
     while let Some(event) = p.next() {
         match event {
             Event::Start(Tag::Heading(i)) if i <= max_section_depth => {

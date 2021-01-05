@@ -14,11 +14,12 @@ pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> 
     let summary_md = src_dir.join("SUMMARY.md");
 
     let mut summary_content = String::new();
-    File::open(summary_md)
-        .with_context(|| "Couldn't open SUMMARY.md")?
+    File::open(&summary_md)
+        .with_context(|| format!("Couldn't open SUMMARY.md in {:?} directory", src_dir))?
         .read_to_string(&mut summary_content)?;
 
-    let summary = parse_summary(&summary_content).with_context(|| "Summary parsing failed")?;
+    let summary = parse_summary(&summary_content)
+        .with_context(|| format!("Summary parsing failed for file={:?}", summary_md))?;
 
     if cfg.create_missing {
         create_missing(&src_dir, &summary).with_context(|| "Unable to create missing chapters")?;
@@ -49,7 +50,9 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
                     }
                     debug!("Creating missing file {}", filename.display());
 
-                    let mut f = File::create(&filename)?;
+                    let mut f = File::create(&filename).with_context(|| {
+                        format!("Unable to create missing file: {}", filename.display())
+                    })?;
                     writeln!(f, "# {}", link.name)?;
                 }
             }
@@ -277,7 +280,7 @@ fn load_chapter<P: AsRef<Path>>(
         Chapter::new_draft(&link.name, parent_names.clone())
     };
 
-    let mut sub_item_parents = parent_names.clone();
+    let mut sub_item_parents = parent_names;
 
     ch.number = link.number.clone();
 

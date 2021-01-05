@@ -1,5 +1,14 @@
 # Changelog
 
+## mdBook 0.4.5
+[eaa6914...f66df09](https://github.com/rust-lang/mdBook/compare/eaa6914...f66df09)
+
+### Fixed
+
+- Fixed XSS in the search page.
+  [CVE-2020-26297](https://groups.google.com/g/rustlang-security-announcements/c/3-sO6of29O0)
+  [648c9ae](https://github.com/rust-lang/mdBook/commit/648c9ae772bec83f0a5954d17b4287d5bb1d6606)
+
 ## mdBook 0.4.4
 [4df9ec9...01836ba](https://github.com/rust-lang/mdBook/compare/4df9ec9...01836ba)
 

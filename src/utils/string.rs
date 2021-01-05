@@ -72,7 +72,7 @@ pub fn take_rustdoc_include_lines<R: RangeBounds<usize>>(s: &str, range: R, cuto
             }
         }
         output.push_str(line);
-        output.push_str("\n");
+        output.push('\n');
     }
     output.pop();
     trace!("take_rustdoc_include_lines = {:?}", output.to_string());
@@ -98,7 +98,7 @@ pub fn take_rustdoc_include_anchored_lines(s: &str, anchor: &str, cutoff_comment
                 None => {
                     if !ANCHOR_START.is_match(l) {
                         output.push_str(l);
-                        output.push_str("\n");
+                        output.push('\n');
                     }
                 }
             }
@@ -110,7 +110,7 @@ pub fn take_rustdoc_include_anchored_lines(s: &str, anchor: &str, cutoff_comment
             if !cutoff_commented_lines { // do not include 'dashed' lines (for epub format)
                 output.push_str("# ");
                 output.push_str(l);
-                output.push_str("\n");
+                output.push('\n');
             }
         }
     }
