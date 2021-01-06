@@ -124,3 +124,31 @@ deploy: book
 		git commit -m "deployed on $(shell date) by ${USER}" && \
 		git push origin gh-pages
 ```
+
+## Deploying Your Book to GitLab Pages
+Inside your repository's project root, create a file named `.gitlab-ci.yml` with the following contents:
+```yml
+stages:
+    - deploy
+
+pages:
+  stage: deploy
+  image: rust:alpine
+  variables:
+    CARGO_HOME: $CI_PROJECT_DIR/cargo
+  before_script:
+    - export PATH="$PATH:$CARGO_HOME/bin"
+    - mdbook --version || cargo install mdbook
+  script:
+        - mdbook build -d public
+  only:
+      - master 
+  artifacts:
+      paths:
+          - public
+  cache:
+    paths:
+    - $CARGO_HOME/bin
+```
+
+After you commit and push this new file, GitLab CI will run and your book will be available!
