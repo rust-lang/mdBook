@@ -14,9 +14,11 @@ Here are the files you can override:
 - **_index.hbs_** is the handlebars template.
 - **_head.hbs_** is appended to the HTML `<head>` section.
 - **_header.hbs_** content is appended on top of every book page.
-- **_book.css_** is the style used in the output. If you want to change the
-  design of your book, this is probably the file you want to modify. Sometimes
-  in conjunction with `index.hbs` when you want to radically change the layout.
+- **_css/_** contains the CSS files for styling the book.
+    - **_css/chrome.css_** is for UI elements.
+    - **_css/general.css_** is the base styles.
+    - **_css/print.css_** is the style for printer output.
+    - **_css/variables.css_** contains variables used in other CSS files.
 - **_book.js_** is mostly used to add client side functionality, like hiding /
   un-hiding the sidebar, changing the theme, ...
 - **_highlight.js_** is the JavaScript that is used to highlight code snippets,
