@@ -66,7 +66,7 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
 
 /// A dumb tree structure representing a book.
 ///
-/// For the moment a book is just a collection of `BookItems` which are
+/// For the moment a book is just a collection of [`BookItems`] which are
 /// accessible by either iterating (immutably) over the book with [`iter()`], or
 /// recursively applying a closure to each section to mutate the chapters, using
 /// [`for_each_mut()`].
@@ -160,7 +160,7 @@ pub struct Chapter {
     pub sub_items: Vec<BookItem>,
     /// The chapter's location, relative to the `SUMMARY.md` file.
     pub path: Option<PathBuf>,
-    /// An ordered list of the names of each chapter above this one, in the hierarchy.
+    /// An ordered list of the names of each chapter above this one in the hierarchy.
     pub parent_names: Vec<String>,
 }
 
@@ -181,8 +181,8 @@ impl Chapter {
         }
     }
 
-    /// Create a new draft chapter that is not attached to a source markdown file and has
-    /// thus no content.
+    /// Create a new draft chapter that is not attached to a source markdown file (and thus
+    /// has no content.
     pub fn new_draft(name: &str, parent_names: Vec<String>) -> Self {
         Chapter {
             name: name.to_string(),
@@ -193,7 +193,7 @@ impl Chapter {
         }
     }
 
-    /// Check if the chapter is a draft chapter, meaning it has no path to a source markdown file
+    /// Check if the chapter is a draft chapter, meaning it has no path to a source markdown file.
     pub fn is_draft_chapter(&self) -> bool {
         match self.path {
             Some(_) => false,
@@ -302,8 +302,6 @@ fn load_chapter<P: AsRef<Path>>(
 ///
 /// This struct shouldn't be created directly, instead prefer the
 /// [`Book::iter()`] method.
-///
-/// [`Book::iter()`]: struct.Book.html#method.iter
 pub struct BookItems<'a> {
     items: VecDeque<&'a BookItem>,
 }

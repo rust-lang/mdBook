@@ -28,7 +28,7 @@ impl BookBuilder {
         }
     }
 
-    /// Set the `Config` to be used.
+    /// Set the [`Config`] to be used.
     pub fn with_config(&mut self, cfg: Config) -> &mut BookBuilder {
         self.config = cfg;
         self
