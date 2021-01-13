@@ -76,9 +76,9 @@
 //! access to the various methods for working with the [`Config`].
 //!
 //! [user guide]: https://rust-lang.github.io/mdBook/
-//! [`RenderContext`]: renderer/struct.RenderContext.html
+//! [`RenderContext`]: renderer::RenderContext
 //! [relevant chapter]: https://rust-lang.github.io/mdBook/for_developers/backends.html
-//! [`Config`]: config/struct.Config.html
+//! [`Config`]: config::Config
 
 #![deny(missing_docs)]
 #![deny(rust_2018_idioms)]

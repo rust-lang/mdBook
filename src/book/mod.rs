@@ -40,7 +40,7 @@ pub struct MDBook {
     pub book: Book,
     renderers: Vec<Box<dyn Renderer>>,
 
-    /// List of pre-processors to be run on the book
+    /// List of pre-processors to be run on the book.
     preprocessors: Vec<Box<dyn Preprocessor>>,
 }
 
@@ -78,7 +78,7 @@ impl MDBook {
         MDBook::load_with_config(book_root, config)
     }
 
-    /// Load a book from its root directory using a custom config.
+    /// Load a book from its root directory using a custom `Config`.
     pub fn load_with_config<P: Into<PathBuf>>(book_root: P, config: Config) -> Result<MDBook> {
         let root = book_root.into();
 
@@ -97,7 +97,7 @@ impl MDBook {
         })
     }
 
-    /// Load a book from its root directory using a custom config and a custom summary.
+    /// Load a book from its root directory using a custom `Config` and a custom summary.
     pub fn load_with_config_and_summary<P: Into<PathBuf>>(
         book_root: P,
         config: Config,
@@ -121,7 +121,7 @@ impl MDBook {
     }
 
     /// Returns a flat depth-first iterator over the elements of the book,
-    /// it returns an [BookItem enum](bookitem.html):
+    /// it returns a [`BookItem`] enum:
     /// `(section: String, bookitem: &BookItem)`
     ///
     /// ```no_run
@@ -180,7 +180,7 @@ impl MDBook {
         Ok(())
     }
 
-    /// Run the entire build process for a particular `Renderer`.
+    /// Run the entire build process for a particular [`Renderer`].
     pub fn execute_build_process(&self, renderer: &dyn Renderer) -> Result<()> {
         let mut preprocessed_book = self.book.clone();
         let preprocess_ctx = PreprocessorContext::new(
@@ -219,14 +219,14 @@ impl MDBook {
     }
 
     /// You can change the default renderer to another one by using this method.
-    /// The only requirement is for your renderer to implement the [`Renderer`
-    /// trait](../renderer/trait.Renderer.html)
+    /// The only requirement is that your renderer implement the [`Renderer`]
+    /// trait.
     pub fn with_renderer<R: Renderer + 'static>(&mut self, renderer: R) -> &mut Self {
         self.renderers.push(Box::new(renderer));
         self
     }
 
-    /// Register a [`Preprocessor`](../preprocess/trait.Preprocessor.html) to be used when rendering the book.
+    /// Register a [`Preprocessor`] to be used when rendering the book.
     pub fn with_preprocessor<P: Preprocessor + 'static>(&mut self, preprocessor: P) -> &mut Self {
         self.preprocessors.push(Box::new(preprocessor));
         self
@@ -303,7 +303,7 @@ impl MDBook {
     /// artefacts.
     ///
     /// If there is only 1 renderer, put it in the directory pointed to by the
-    /// `build.build_dir` key in `Config`. If there is more than one then the
+    /// `build.build_dir` key in [`Config`]. If there is more than one then the
     /// renderer gets its own directory within the main build dir.
     ///
     /// i.e. If there were only one renderer (in this case, the HTML renderer):

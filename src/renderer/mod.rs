@@ -34,12 +34,9 @@ use toml::Value;
 /// provide your own renderer, there are two main renderer implementations that
 /// 99% of users will ever use:
 ///
-/// - [HtmlHandlebars] - the built-in HTML renderer
-/// - [CmdRenderer] - a generic renderer which shells out to a program to do the
+/// - [`HtmlHandlebars`] - the built-in HTML renderer
+/// - [`CmdRenderer`] - a generic renderer which shells out to a program to do the
 ///   actual rendering
-///
-/// [HtmlHandlebars]: struct.HtmlHandlebars.html
-/// [CmdRenderer]: struct.CmdRenderer.html
 pub trait Renderer {
     /// The `Renderer`'s name.
     fn name(&self) -> &str;
