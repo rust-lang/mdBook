@@ -182,7 +182,7 @@ impl Chapter {
     }
 
     /// Create a new draft chapter that is not attached to a source markdown file (and thus
-    /// has no content.
+    /// has no content).
     pub fn new_draft(name: &str, parent_names: Vec<String>) -> Self {
         Chapter {
             name: name.to_string(),
