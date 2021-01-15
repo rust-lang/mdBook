@@ -1,5 +1,40 @@
 # Changelog
 
+## mdBook 0.4.6
+[eaa6914...1a0c296](https://github.com/rust-lang/mdBook/compare/eaa6914...1a0c296)
+
+### Changed
+- The chapter name is now included in the search breadcrumbs.
+  [#1389](https://github.com/rust-lang/mdBook/pull/1389)
+- Pressing Escape will remove the `?highlight` argument from the URL.
+  [#1427](https://github.com/rust-lang/mdBook/pull/1427)
+- `mdbook init --theme` will now place the theme in the root of the book
+  directory instead of in the `src` directory.
+  [#1432](https://github.com/rust-lang/mdBook/pull/1432)
+- A custom renderer that sets the `command` to a relative path now interprets
+  the relative path relative to the book root. Previously it was inconsistent
+  based on the platform (either relative to the current directory, or relative
+  to the renderer output directory). Paths relative to the output directory
+  are still supported with a deprecation warning.
+  [#1418](https://github.com/rust-lang/mdBook/pull/1418)
+- The `theme` directory in the config is now interpreted as relative to the
+  book root, instead of the current directory.
+  [#1405](https://github.com/rust-lang/mdBook/pull/1405)
+- Handle UTF-8 BOM for chapter sources.
+  [#1285](https://github.com/rust-lang/mdBook/pull/1285)
+- Removed extra whitespace added to `{{#playground}}` snippets.
+  [#1375](https://github.com/rust-lang/mdBook/pull/1375)
+
+### Fixed
+- Clicking on a search result with multiple search words will now correctly
+  highlight all of the words.
+  [#1426](https://github.com/rust-lang/mdBook/pull/1426)
+- Properly handle `<` and `>` characters in the table of contents.
+  [#1376](https://github.com/rust-lang/mdBook/pull/1376)
+- Fixed to properly serialize the `build` table in the config, which prevented
+  setting it in the API.
+  [#1378](https://github.com/rust-lang/mdBook/pull/1378)
+
 ## mdBook 0.4.5
 [eaa6914...f66df09](https://github.com/rust-lang/mdBook/compare/eaa6914...f66df09)
 
