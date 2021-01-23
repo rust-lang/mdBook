@@ -175,7 +175,7 @@ a > .hljs {
     right: var(--page-padding);
 }
 
-@media only screen and (max-width: 1080px) {
+@media only screen and (max-width: 900px) {
     .nav-wide-wrapper { display: none; }
     .nav-wrapper { display: block; }
 }
