@@ -28,15 +28,11 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     // If flag `--theme` is present, copy theme to src
     if args.is_present("theme") {
-        config.set("output.html.theme", "src/theme")?;
+        let theme_dir = book_dir.join("theme");
+        println!();
+        println!("Copying the default theme to {}", theme_dir.display());
         // Skip this if `--force` is present
-        if !args.is_present("force") {
-            // Print warning
-            println!();
-            println!(
-                "Copying the default theme to {}",
-                builder.config().book.src.display()
-            );
+        if !args.is_present("force") && theme_dir.exists() {
             println!("This could potentially overwrite files already present in that directory.");
             print!("\nAre you sure you want to continue? (y/n) ");
 

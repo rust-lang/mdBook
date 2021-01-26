@@ -296,7 +296,7 @@ window.search = window.search || {};
         }
 
         if (url.params.hasOwnProperty(URL_MARK_PARAM)) {
-            var words = url.params[URL_MARK_PARAM].split(' ');
+            var words = decodeURIComponent(url.params[URL_MARK_PARAM]).split(' ');
             marker.mark(words, {
                 exclude: mark_exclude
             });
@@ -427,6 +427,7 @@ window.search = window.search || {};
             delete url.params[URL_MARK_PARAM];
             url.hash = "";
         } else {
+            delete url.params[URL_MARK_PARAM];
             delete url.params[URL_SEARCH_PARAM];
         }
         // A new search will also add a new history item, so the user can go back
