@@ -112,10 +112,10 @@ everyone can benefit from it.**
 ## Improve default theme
 
 If you think the default theme doesn't look quite right for a specific language,
-or could be improved. Feel free to [submit a new
+or could be improved, feel free to [submit a new
 issue](https://github.com/rust-lang/mdBook/issues) explaining what you
 have in mind and I will take a look at it.
 
 You could also create a pull-request with the proposed improvements.
 
-Overall the theme should be light and sober, without to many flashy colors.
+Overall the theme should be light and sober, without too many flashy colors.
