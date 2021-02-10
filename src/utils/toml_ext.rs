@@ -53,7 +53,7 @@ impl TomlExt for Value {
 }
 
 fn split(key: &str) -> Option<(&str, &str)> {
-    let ix = key.find(".")?;
+    let ix = key.find('.')?;
 
     let (head, tail) = key.split_at(ix);
     // splitting will leave the "."

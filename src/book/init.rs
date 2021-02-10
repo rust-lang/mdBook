@@ -28,7 +28,7 @@ impl BookBuilder {
         }
     }
 
-    /// Set the `Config` to be used.
+    /// Set the [`Config`] to be used.
     pub fn with_config(&mut self, cfg: Config) -> &mut BookBuilder {
         self.config = cfg;
         self
@@ -109,12 +109,8 @@ impl BookBuilder {
     fn copy_across_theme(&self) -> Result<()> {
         debug!("Copying theme");
 
-        let themedir = self
-            .config
-            .html_config()
-            .and_then(|html| html.theme)
-            .unwrap_or_else(|| self.config.book.src.join("theme"));
-        let themedir = self.root.join(themedir);
+        let html_config = self.config.html_config().unwrap_or_default();
+        let themedir = html_config.theme_dir(&self.root);
 
         if !themedir.exists() {
             debug!(
@@ -128,7 +124,9 @@ impl BookBuilder {
         index.write_all(theme::INDEX)?;
 
         let cssdir = themedir.join("css");
-        fs::create_dir(&cssdir)?;
+        if !cssdir.exists() {
+            fs::create_dir(&cssdir)?;
+        }
 
         let mut general_css = File::create(cssdir.join("general.css"))?;
         general_css.write_all(theme::GENERAL_CSS)?;
@@ -136,14 +134,19 @@ impl BookBuilder {
         let mut chrome_css = File::create(cssdir.join("chrome.css"))?;
         chrome_css.write_all(theme::CHROME_CSS)?;
 
-        let mut print_css = File::create(cssdir.join("print.css"))?;
-        print_css.write_all(theme::PRINT_CSS)?;
+        if html_config.print.enable {
+            let mut print_css = File::create(cssdir.join("print.css"))?;
+            print_css.write_all(theme::PRINT_CSS)?;
+        }
 
         let mut variables_css = File::create(cssdir.join("variables.css"))?;
         variables_css.write_all(theme::VARIABLES_CSS)?;
 
         let mut favicon = File::create(themedir.join("favicon.png"))?;
-        favicon.write_all(theme::FAVICON)?;
+        favicon.write_all(theme::FAVICON_PNG)?;
+
+        let mut favicon = File::create(themedir.join("favicon.svg"))?;
+        favicon.write_all(theme::FAVICON_SVG)?;
 
         let mut js = File::create(themedir.join("book.js"))?;
         js.write_all(theme::JS)?;

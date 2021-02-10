@@ -85,16 +85,17 @@ There are multiple ways to install mdBook.
 
 ## Usage
 
-mdBook will primarily be used as a command line tool, even though it exposes
+mdBook is primarily used as a command line tool, even though it exposes
 all its functionality as a Rust crate for integration in other projects.
 
 Here are the main commands you will want to run. For a more exhaustive
 explanation, check out the [User Guide].
 
-- `mdbook init`
+- `mdbook init <directory>`
 
     The init command will create a directory with the minimal boilerplate to
-    start with.
+    start with. If the `<directory>` parameter is omitted, the current 
+    directory will be used.
 
     ```
     book-test/
@@ -148,7 +149,8 @@ preprocessors are:
   all `README.md` chapters to `index.md` so `foo/README.md` can be accessed via
   the url `foo/` when published to a browser
 - `links` - a built-in preprocessor (enabled by default) for expanding the
-  `{{# playpen}}` and `{{# include}}` helpers in a chapter.
+  `{{# playground}}` and `{{# include}}` helpers in a chapter.
+- [`katex`](https://github.com/lzanini/mdbook-katex) - a preprocessor rendering LaTex equations to HTML.
 
 Renderers are given the final book so they can do something with it. This is
 typically used for, as the name suggests, rendering the document in a particular
@@ -209,7 +211,7 @@ tagged [E-Easy] and **we will gladly mentor you** so that you can successfully
 go through the process of fixing a bug or adding a new feature! Let us know if
 you need any help.
 
-For more info about contributing, check out our [contribution guide] who helps
+For more info about contributing, check out our [contribution guide] which helps
 you go through the build and contribution process!
 
 There is also a [rendered version][master-docs] of the latest API docs

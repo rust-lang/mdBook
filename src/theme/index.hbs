@@ -7,6 +7,10 @@
         {{#if is_print }}
         <meta name="robots" content="noindex" />
         {{/if}}
+        {{#if base_url}}
+        <base href="{{ base_url }}">
+        {{/if}}
+
 
         <!-- Custom HTML head -->
         {{> head}}
@@ -16,11 +20,18 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
-        <link rel="shortcut icon" href="{{ path_to_root }}{{ favicon }}">
+        {{#if favicon_svg}}
+        <link rel="icon" href="{{ path_to_root }}favicon.svg">
+        {{/if}}
+        {{#if favicon_png}}
+        <link rel="shortcut icon" href="{{ path_to_root }}favicon.png">
+        {{/if}}
         <link rel="stylesheet" href="{{ path_to_root }}css/variables.css">
         <link rel="stylesheet" href="{{ path_to_root }}css/general.css">
         <link rel="stylesheet" href="{{ path_to_root }}css/chrome.css">
+        {{#if print_enable}}
         <link rel="stylesheet" href="{{ path_to_root }}css/print.css" media="print">
+        {{/if}}
 
         <!-- Fonts -->
         <link rel="stylesheet" href="{{ path_to_root }}FontAwesome/css/font-awesome.css">
@@ -125,6 +136,19 @@
                     </div>
 
                     <h1 class="menu-title">{{ book_title }}</h1>
+
+                    <div class="right-buttons">
+                        {{#if print_enable}}
+                        <a href="{{ path_to_root }}print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        {{/if}}
+                        {{#if git_repository_url}}
+                        <a href="{{git_repository_url}}" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa {{git_repository_icon}}"></i>
+                        </a>
+                        {{/if}}
+                    </div>
                 </div>
 
                 {{#if search_enabled}}
@@ -225,19 +249,19 @@
         </script>
         {{/if}}
 
-        {{#if playpen_line_numbers}}
+        {{#if playground_line_numbers}}
         <script type="text/javascript">
-            window.playpen_line_numbers = true;
-        </script>
-        {{/if}}
-        
-        {{#if playpen_copyable}}
-        <script type="text/javascript">
-            window.playpen_copyable = true;
+            window.playground_line_numbers = true;
         </script>
         {{/if}}
 
-        {{#if playpen_js}}
+        {{#if playground_copyable}}
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        {{/if}}
+
+        {{#if playground_js}}
         <script src="{{ path_to_root }}ace.js" type="text/javascript" charset="utf-8"></script>
         <script src="{{ path_to_root }}editor.js" type="text/javascript" charset="utf-8"></script>
         <script src="{{ path_to_root }}mode-rust.js" type="text/javascript" charset="utf-8"></script>

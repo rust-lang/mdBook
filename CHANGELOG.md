@@ -1,8 +1,209 @@
 # Changelog
 
-## mdBook 0.4.0
-[99ecd4f...HEAD](https://github.com/rust-lang/mdBook/compare/99ecd4f...HEAD)
+## mdBook 0.4.6
+[eaa6914...1a0c296](https://github.com/rust-lang/mdBook/compare/eaa6914...1a0c296)
 
+### Changed
+- The chapter name is now included in the search breadcrumbs.
+  [#1389](https://github.com/rust-lang/mdBook/pull/1389)
+- Pressing Escape will remove the `?highlight` argument from the URL.
+  [#1427](https://github.com/rust-lang/mdBook/pull/1427)
+- `mdbook init --theme` will now place the theme in the root of the book
+  directory instead of in the `src` directory.
+  [#1432](https://github.com/rust-lang/mdBook/pull/1432)
+- A custom renderer that sets the `command` to a relative path now interprets
+  the relative path relative to the book root. Previously it was inconsistent
+  based on the platform (either relative to the current directory, or relative
+  to the renderer output directory). Paths relative to the output directory
+  are still supported with a deprecation warning.
+  [#1418](https://github.com/rust-lang/mdBook/pull/1418)
+- The `theme` directory in the config is now interpreted as relative to the
+  book root, instead of the current directory.
+  [#1405](https://github.com/rust-lang/mdBook/pull/1405)
+- Handle UTF-8 BOM for chapter sources.
+  [#1285](https://github.com/rust-lang/mdBook/pull/1285)
+- Removed extra whitespace added to `{{#playground}}` snippets.
+  [#1375](https://github.com/rust-lang/mdBook/pull/1375)
+
+### Fixed
+- Clicking on a search result with multiple search words will now correctly
+  highlight all of the words.
+  [#1426](https://github.com/rust-lang/mdBook/pull/1426)
+- Properly handle `<` and `>` characters in the table of contents.
+  [#1376](https://github.com/rust-lang/mdBook/pull/1376)
+- Fixed to properly serialize the `build` table in the config, which prevented
+  setting it in the API.
+  [#1378](https://github.com/rust-lang/mdBook/pull/1378)
+
+## mdBook 0.4.5
+[eaa6914...f66df09](https://github.com/rust-lang/mdBook/compare/eaa6914...f66df09)
+
+### Fixed
+
+- Fixed XSS in the search page.
+  [CVE-2020-26297](https://groups.google.com/g/rustlang-security-announcements/c/3-sO6of29O0)
+  [648c9ae](https://github.com/rust-lang/mdBook/commit/648c9ae772bec83f0a5954d17b4287d5bb1d6606)
+
+## mdBook 0.4.4
+[4df9ec9...01836ba](https://github.com/rust-lang/mdBook/compare/4df9ec9...01836ba)
+
+### Added
+- Added the `output.html.print.enable` configuration value to disable the
+  "print" page.
+  [#1169](https://github.com/rust-lang/mdBook/pull/1169)
+- Added a list of supported languages for syntax-highlighting to the
+  documentation.
+  [#1345](https://github.com/rust-lang/mdBook/pull/1345)
+
+### Fixed
+- Now supports symbolic links for files in the `src` directory.
+  [#1323](https://github.com/rust-lang/mdBook/pull/1323)
+
+## mdBook 0.4.3
+[9278b83...4df9ec9](https://github.com/rust-lang/mdBook/compare/9278b83...4df9ec9)
+
+### Added
+- Added `output.html.cname` option to emit a `CNAME` file which is used by
+  GitHub Pages to know which domain is being used.
+  [#1311](https://github.com/rust-lang/mdBook/pull/1311)
+
+### Changed
+- `mdbook test` no longer stops on the first test failure, but instead will
+  run all the tests.
+  [#1313](https://github.com/rust-lang/mdBook/pull/1313)
+- Removed the `local` font source for Source Code Pro, as the locally
+  installed font may not render properly on FireFox on macOS.
+  [#1307](https://github.com/rust-lang/mdBook/pull/1307)
+
+### Fixed
+- Added newline to end of `.nojekyll` file.
+  [#1310](https://github.com/rust-lang/mdBook/pull/1310)
+- Fixed missing space before draft chapter titles.
+  [#1309](https://github.com/rust-lang/mdBook/pull/1309)
+
+## mdBook 0.4.2
+[649f355...9278b83](https://github.com/rust-lang/mdBook/compare/649f355...9278b83)
+
+### Changed
+- The "show hidden lines" icon has changed from the "expand" icon to an "eye".
+  [#1281](https://github.com/rust-lang/mdBook/pull/1281)
+- Updated highlight.js. This adds several languages: c, c-like (effectively
+  cpp), csharp (replaces cs), kotlin, less, lua, php-template, plaintext,
+  python-repl, r, scss, typescript.
+  [#1277](https://github.com/rust-lang/mdBook/pull/1277)
+
+### Fixed
+- Fixed SUMMARY links that contained newlines.
+  [#1291](https://github.com/rust-lang/mdBook/pull/1291)
+- Fixed SUMMARY links that contain `%20` spaces.
+  [#1293](https://github.com/rust-lang/mdBook/pull/1293)
+- Fixed favicon so that if only the png or svg is overridden, the other is not
+  automatically included in the `<link>` tag.
+  [#1272](https://github.com/rust-lang/mdBook/pull/1272)
+
+## mdBook 0.4.1
+[d4df7e7...649f355](https://github.com/rust-lang/mdBook/compare/d4df7e7...649f355)
+
+### Changed
+- Removed several outdated dev-dependencies.
+  [#1267](https://github.com/rust-lang/mdBook/pull/1267)
+
+### Fixed
+- Fixed sidebar scrolling if the book includes part titles.
+  [#1265](https://github.com/rust-lang/mdBook/pull/1265)
+- Don't include the default favicon if only one of the PNG or SVG is overridden.
+  [#1266](https://github.com/rust-lang/mdBook/pull/1266)
+
+## mdBook 0.4.0
+[99ecd4f...d4df7e7](https://github.com/rust-lang/mdBook/compare/99ecd4f...d4df7e7)
+
+### Breaking Changes
+- Several of the changes in the release have altered the public API of the
+  mdbook library.
+- Many dependencies have been updated or replaced.
+  This also removes the `--websocket-hostname` and `--websocket-port` from
+  the `serve` command.
+  [#1211](https://github.com/rust-lang/mdBook/pull/1211)
+- A new "404" page is now automatically rendered. This requires knowledge of
+  the base URL of your site to work properly. If you decide to use this as
+  your 404 page, you should set the `site-url` setting in the book
+  configuration so mdbook can generate the links correctly. Alternatively you
+  can disable the 404 page generation, or set up your own 404 handling in your
+  web server.
+  [#1221](https://github.com/rust-lang/mdBook/pull/1221)
+- The `debug` and `output` features have been removed as they were unused.
+  [#1211](https://github.com/rust-lang/mdBook/pull/1211)
+- If you are using customized themes, you may want to consider setting the
+  `preferred-dark-theme` config setting, as it now defaults to "navy".
+  [#1199](https://github.com/rust-lang/mdBook/pull/1199)
+- "Playpen" has been renamed to "playground". This is generally backwards
+  compatible for users, but `{{#playpen}}` will now display warnings. This may
+  impact books that have modified the "playpen" elements in the theme.
+  [#1241](https://github.com/rust-lang/mdBook/pull/1241)
+- If a renderer is not installed, it is now treated as an error. If you want
+  the old behavior of ignoring missing renderers, set the `optional` setting
+  for that renderer.
+  [#1122](https://github.com/rust-lang/mdBook/pull/1122)
+- If you have a custom favicon, you may need to look into adding an SVG
+  version, otherwise the default SVG icon will be displayed.
+  [#1230](https://github.com/rust-lang/mdBook/pull/1230)
+
+### Added
+- Added a new `[rust]` configuration section to `book.toml`, which allows
+  setting the default edition with `edition = "2018"`.
+  [#1163](https://github.com/rust-lang/mdBook/pull/1163)
+- Renderers can now be marked as `optional`, so that they will be ignored if
+  the renderer is not installed.
+  [#1122](https://github.com/rust-lang/mdBook/pull/1122)
+- Added `head.hbs` to allow adding content to the `<head>` section in HTML.
+  [#1206](https://github.com/rust-lang/mdBook/pull/1206)
+- Added "draft chapters". These are chapters listed without a link to indicate
+  content yet to be written.
+  [#1153](https://github.com/rust-lang/mdBook/pull/1153)
+- Added "parts" to split a book into different sections. Headers can be added
+  to `SUMMARY.md` to signify different sections.
+  [#1171](https://github.com/rust-lang/mdBook/pull/1171)
+- Added generation of a "404" page for handling missing pages and broken links.
+  [#1221](https://github.com/rust-lang/mdBook/pull/1221)
+- Added configuration section for specifying URL redirects.
+  [#1237](https://github.com/rust-lang/mdBook/pull/1237)
+- Added an SVG favicon that works with light and dark colors schemes.
+  [#1230](https://github.com/rust-lang/mdBook/pull/1230)
+
+### Changed
+- Changed default Rust attribute of `allow(unused_variables)` to `allow(unused)`.
+  [#1195](https://github.com/rust-lang/mdBook/pull/1195)
+- Fonts are now served locally instead of from the Google Fonts CDN. The
+  `copy-fonts` option was added to disable this if you want to supply your own
+  fonts.
+  [#1188](https://github.com/rust-lang/mdBook/pull/1188)
+- Switched the built-in webserver for the `serve` command to a new
+  implementation. This results in some internal differences in how websockets
+  are handled, which removes the separate websocket options. This should also
+  make it easier to serve multiple books at once.
+  [#1211](https://github.com/rust-lang/mdBook/pull/1211)
+- The default dark theme is now "navy".
+  [#1199](https://github.com/rust-lang/mdBook/pull/1199)
+- "Playpen" has been renamed to "playground", matching the actual name of the
+  service which was renamed many years ago.
+  [#1241](https://github.com/rust-lang/mdBook/pull/1241)
+
+### Fixed
+- Links with the `+` symbol should now work.
+  [#1208](https://github.com/rust-lang/mdBook/pull/1208)
+- The `MDBOOK_BOOK` environment variable now correctly allows overriding the
+  entire book configuration.
+  [#1207](https://github.com/rust-lang/mdBook/pull/1207)
+- The sidebar can no longer be dragged outside of the window.
+  [#1229](https://github.com/rust-lang/mdBook/pull/1229)
+- Hide the Rust Playground "play" button for `no_run` code samples.
+  [#1249](https://github.com/rust-lang/mdBook/pull/1249)
+- Fixed the `--dest-dir` command-line option for the `serve` and `watch`
+  commands.
+  [#1228](https://github.com/rust-lang/mdBook/pull/1228)
+- Hotkey handlers are now disabled in `text` input fields (for example, typing
+  `S` in a custom text input field).
+  [#1244](https://github.com/rust-lang/mdBook/pull/1244)
 
 ## mdBook 0.3.7
 [88684d8...99ecd4f](https://github.com/rust-lang/mdBook/compare/88684d8...99ecd4f)

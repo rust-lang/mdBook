@@ -1,6 +1,6 @@
 [package]
 name = "mdbook"
-version = "0.4.0"
+version = "0.4.6"
 authors = [
     "Mathieu David <mathieudavid@mathieudavid.org>",
     "Michael-F-Bryan <michaelfbryan@gmail.com>",
@@ -8,7 +8,7 @@ authors = [
 ]
 documentation = "http://rust-lang.github.io/mdBook/index.html"
 edition = "2018"
-exclude = ["/book-example/*"]
+exclude = ["/guide/*"]
 keywords = ["book", "gitbook", "rustbook", "markdown"]
 license = "MPL-2.0"
 readme = "README.md"
@@ -48,7 +48,7 @@ elasticlunr-rs = { version = "2.3", optional = true, default-features = false }
 ammonia = { version = "3", optional = true }
 
 [dev-dependencies]
-select = "0.4"
+select = "0.5"
 pretty_assertions = "0.6"
 walkdir = "2.0"
 

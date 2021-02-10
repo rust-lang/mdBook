@@ -1,16 +1,67 @@
 # Syntax Highlighting
 
-For syntax highlighting I use [Highlight.js](https://highlightjs.org) with a
-custom theme.
+mdBook uses [Highlight.js](https://highlightjs.org) with a custom theme
+for syntax highlighting.
 
 Automatic language detection has been turned off, so you will probably want to
-specify the programming language you use like this
+specify the programming language you use like this:
 
-<pre><code class="language-markdown">```rust
+~~~markdown
+```rust
 fn main() {
     // Some code
 }
-```</code></pre>
+```
+~~~
+
+## Supported languages
+
+These languages are supported by default, but you can add more by supplying
+your own `highlight.js` file:
+
+- apache
+- armasm
+- bash
+- c
+- coffeescript
+- cpp
+- csharp
+- css
+- d
+- diff
+- go
+- handlebars
+- haskell
+- http
+- ini
+- java
+- javascript
+- json
+- julia
+- kotlin
+- less
+- lua
+- makefile
+- markdown
+- nginx
+- objectivec
+- perl
+- php
+- plaintext
+- properties
+- python
+- r
+- ruby
+- rust
+- scala
+- scss
+- shell
+- sql
+- swift
+- typescript
+- x86asm
+- xml
+- yaml
 
 ## Custom theme
 Like the rest of the theme, the files used for syntax highlighting can be

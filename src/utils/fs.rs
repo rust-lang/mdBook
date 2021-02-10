@@ -110,7 +110,10 @@ pub fn copy_files_except_ext(
 
     for entry in fs::read_dir(from)? {
         let entry = entry?;
-        let metadata = entry.metadata()?;
+        let metadata = entry
+            .path()
+            .metadata()
+            .with_context(|| format!("Failed to read {:?}", entry.path()))?;
 
         // If the entry is a dir and the recursive option is enabled, call itself
         if metadata.is_dir() && recursive {
@@ -177,10 +180,27 @@ pub fn copy_files_except_ext(
     Ok(())
 }
 
+pub fn get_404_output_file(input_404: &Option<String>) -> String {
+    input_404
+        .as_ref()
+        .unwrap_or(&"404.md".to_string())
+        .replace(".md", ".html")
+}
+
 #[cfg(test)]
 mod tests {
     use super::copy_files_except_ext;
-    use std::fs;
+    use std::{fs, io::Result, path::Path};
+
+    #[cfg(target_os = "windows")]
+    fn symlink<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst: Q) -> Result<()> {
+        std::os::windows::fs::symlink_file(src, dst)
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    fn symlink<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst: Q) -> Result<()> {
+        std::os::unix::fs::symlink(src, dst)
+    }
 
     #[test]
     fn copy_files_except_ext_test() {
@@ -210,6 +230,12 @@ mod tests {
         }
         if let Err(err) = fs::File::create(&tmp.path().join("sub_dir_exists/file.txt")) {
             panic!("Could not create sub_dir_exists/file.txt: {}", err);
+        }
+        if let Err(err) = symlink(
+            &tmp.path().join("file.png"),
+            &tmp.path().join("symlink.png"),
+        ) {
+            panic!("Could not symlink file.png: {}", err);
         }
 
         // Create output dir
@@ -241,6 +267,9 @@ mod tests {
         }
         if !(&tmp.path().join("output/sub_dir_exists/file.txt")).exists() {
             panic!("output/sub_dir/file.png should exist")
+        }
+        if !(&tmp.path().join("output/symlink.png")).exists() {
+            panic!("output/symlink.png should exist")
         }
     }
 }

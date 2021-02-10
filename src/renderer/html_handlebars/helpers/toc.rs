@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::io;
 use std::path::Path;
 
 use crate::utils;
@@ -101,39 +102,39 @@ impl HelperDef for RenderToc {
 
             // Part title
             if let Some(title) = item.get("part") {
-                out.write("<li class=\"part-title active\">")?;
-                out.write(title)?;
+                out.write("<li class=\"part-title\">")?;
+                write_escaped(out, title)?;
                 out.write("</li>")?;
                 continue;
             }
 
             // Link
-            let path_exists = if let Some(path) = item.get("path") {
-                if !path.is_empty() {
-                    out.write("<a href=\"")?;
+            let path_exists = if let Some(path) =
+                item.get("path")
+                    .and_then(|p| if p.is_empty() { None } else { Some(p) })
+            {
+                out.write("<a href=\"")?;
 
-                    let tmp = Path::new(item.get("path").expect("Error: path should be Some(_)"))
-                        .with_extension("html")
-                        .to_str()
-                        .unwrap()
-                        // Hack for windows who tends to use `\` as separator instead of `/`
-                        .replace("\\", "/");
+                let tmp = Path::new(item.get("path").expect("Error: path should be Some(_)"))
+                    .with_extension("html")
+                    .to_str()
+                    .unwrap()
+                    // Hack for windows who tends to use `\` as separator instead of `/`
+                    .replace("\\", "/");
 
-                    // Add link
-                    out.write(&utils::fs::path_to_root(&current_path))?;
-                    out.write(&tmp)?;
-                    out.write("\"")?;
+                // Add link
+                out.write(&utils::fs::path_to_root(&current_path))?;
+                out.write(&tmp)?;
+                out.write("\"")?;
 
-                    if path == &current_path {
-                        out.write(" class=\"active\"")?;
-                    }
-
-                    out.write(">")?;
-                    true
-                } else {
-                    false
+                if path == &current_path {
+                    out.write(" class=\"active\"")?;
                 }
+
+                out.write(">")?;
+                true
             } else {
+                out.write("<div>")?;
                 false
             };
 
@@ -160,11 +161,13 @@ impl HelperDef for RenderToc {
                 html::push_html(&mut markdown_parsed_name, parser);
 
                 // write to the handlebars template
-                out.write(&markdown_parsed_name)?;
+                write_escaped(out, &markdown_parsed_name)?;
             }
 
             if path_exists {
                 out.write("</a>")?;
+            } else {
+                out.write("</div>")?;
             }
 
             // Render expand/collapse toggle
@@ -201,4 +204,19 @@ fn write_li_open_tag(
     }
     li.push_str("\">");
     out.write(&li)
+}
+
+fn write_escaped(out: &mut dyn Output, mut title: &str) -> io::Result<()> {
+    let needs_escape: &[char] = &['<', '>'];
+    while let Some(next) = title.find(needs_escape) {
+        out.write(&title[..next])?;
+        match title.as_bytes()[next] {
+            b'<' => out.write("&lt;")?,
+            b'>' => out.write("&gt;")?,
+            _ => unreachable!(),
+        }
+        title = &title[next + 1..];
+    }
+    out.write(title)?;
+    Ok(())
 }

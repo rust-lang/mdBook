@@ -333,6 +333,7 @@ impl<'a> SummaryParser<'a> {
 
     /// Finishes parsing a link once the `Event::Start(Tag::Link(..))` has been opened.
     fn parse_link(&mut self, href: String) -> Link {
+        let href = href.replace("%20", " ");
         let link_content = collect_events!(self.stream, end Tag::Link(..));
         let name = stringify_events(link_content);
 
@@ -569,6 +570,7 @@ fn stringify_events(events: Vec<Event<'_>>) -> String {
         .into_iter()
         .filter_map(|t| match t {
             Event::Text(text) | Event::Code(text) => Some(text.into_string()),
+            Event::SoftBreak => Some(String::from(" ")),
             _ => None,
         })
         .collect()
@@ -919,6 +921,51 @@ mod tests {
             }),
         ];
 
+        let mut parser = SummaryParser::new(src);
+        let got = parser
+            .parse_numbered(&mut 0, &mut SectionNumber::default())
+            .unwrap();
+
+        assert_eq!(got, should_be);
+    }
+
+    /// Regression test for https://github.com/rust-lang/mdBook/issues/1218
+    /// Ensure chapter names spread across multiple lines have spaces between all the words.
+    #[test]
+    fn add_space_for_multi_line_chapter_names() {
+        let src = "- [Chapter\ntitle](./chapter.md)";
+        let should_be = vec![SummaryItem::Link(Link {
+            name: String::from("Chapter title"),
+            location: Some(PathBuf::from("./chapter.md")),
+            number: Some(SectionNumber(vec![1])),
+            nested_items: Vec::new(),
+        })];
+
+        let mut parser = SummaryParser::new(src);
+        let got = parser
+            .parse_numbered(&mut 0, &mut SectionNumber::default())
+            .unwrap();
+
+        assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn allow_space_in_link_destination() {
+        let src = "- [test1](./test%20link1.md)\n- [test2](<./test link2.md>)";
+        let should_be = vec![
+            SummaryItem::Link(Link {
+                name: String::from("test1"),
+                location: Some(PathBuf::from("./test link1.md")),
+                number: Some(SectionNumber(vec![1])),
+                nested_items: Vec::new(),
+            }),
+            SummaryItem::Link(Link {
+                name: String::from("test2"),
+                location: Some(PathBuf::from("./test link2.md")),
+                number: Some(SectionNumber(vec![2])),
+                nested_items: Vec::new(),
+            }),
+        ];
         let mut parser = SummaryParser::new(src);
         let got = parser
             .parse_numbered(&mut 0, &mut SectionNumber::default())

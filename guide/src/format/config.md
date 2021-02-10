@@ -100,7 +100,7 @@ This controls the build process of your book.
 
 The following preprocessors are available and included by default:
 
-- `links`: Expand the `{{ #playpen }}`, `{{ #include }}`, and `{{ #rustdoc_include }}` handlebars
+- `links`: Expand the `{{ #playground }}`, `{{ #include }}`, and `{{ #rustdoc_include }}` handlebars
   helpers in a chapter to include the contents of a file.
 - `index`: Convert all chapter files named `README.md` into `index.md`. That is
   to say, all `README.md` would be rendered to an index file `index.html` in the
@@ -172,7 +172,7 @@ The following configuration options are available:
 - **preferred-dark-theme:** The default dark theme. This theme will be used if
   the browser requests the dark version of the site via the
   ['prefers-color-scheme'](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)
-  CSS media query. Defaults to the same theme as `default-theme`.
+  CSS media query. Defaults to `navy`.
 - **curly-quotes:** Convert straight quotes to curly quotes, except for those
   that occur in code blocks and code spans. Defaults to `false`.
 - **mathjax-support:** Adds support for [MathJax](mathjax.md). Defaults to
@@ -187,17 +187,43 @@ The following configuration options are available:
 - **additional-js:** If you need to add some behaviour to your book without
   removing the current behaviour, you can specify a set of JavaScript files that
   will be loaded alongside the default one.
+- **print:** A subtable for configuration print settings. mdBook by default adds
+  support for printing out the book as a single page. This is accessed using the
+  print icon on the top right of the book.
 - **no-section-label:** mdBook by defaults adds section label in table of
   contents column. For example, "1.", "2.1". Set this option to true to disable
   those labels. Defaults to `false`.
 - **fold:** A subtable for configuring sidebar section-folding behavior.
-- **playpen:** A subtable for configuring various playpen settings.
+- **playground:** A subtable for configuring various playground settings.
 - **search:** A subtable for configuring the in-browser search functionality.
   mdBook must be compiled with the `search` feature enabled (on by default).
 - **git-repository-url:**  A url to the git repository for the book. If provided
   an icon link will be output in the menu bar of the book.
 - **git-repository-icon:** The FontAwesome icon class to use for the git
   repository link. Defaults to `fa-github`.
+- **redirect:** A subtable used for generating redirects when a page is moved.
+  The table contains key-value pairs where the key is where the redirect file
+  needs to be created, as an absolute path from the build directory, (e.g.
+  `/appendices/bibliography.html`). The value can be any valid URI the
+  browser should navigate to (e.g. `https://rust-lang.org/`,
+  `/overview.html`, or `../bibliography.html`).
+- **input-404:** The name of the markdown file used for misssing files.
+  The corresponding output file will be the same, with the extension replaced with `html`.
+  Defaults to `404.md`.
+- **site-url:** The url where the book will be hosted. This is required to ensure
+  navigation links and script/css imports in the 404 file work correctly, even when accessing
+  urls in subdirectories. Defaults to `/`.
+- **cname:** The DNS subdomain or apex domain at which your book will be hosted.
+  This string will be written to a file named CNAME in the root of your site, as
+  required by GitHub Pages (see [*Managing a custom domain for your GitHub Pages
+  site*][custom domain]).
+
+[custom domain]: https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site
+
+Available configuration options for the `[output.html.print]` table:
+
+- **enable:** Enable print support. When `false`, all print support will not be
+  rendered. Defaults to `true`.
 
 Available configuration options for the `[output.html.fold]` table:
 
@@ -206,7 +232,7 @@ Available configuration options for the `[output.html.fold]` table:
 - **level:** The higher the more folded regions are open. When level is 0, all
   folds are closed. Defaults to `0`.
 
-Available configuration options for the `[output.html.playpen]` table:
+Available configuration options for the `[output.html.playground]` table:
 
 - **editable:** Allow editing the source code. Defaults to `false`.
 - **copyable:** Display the copy button on code snippets. Defaults to `true`.
@@ -254,18 +280,24 @@ preferred-dark-theme = "navy"
 curly-quotes = true
 mathjax-support = false
 copy-fonts = true
-google-analytics = "123456"
+google-analytics = "UA-123456-7"
 additional-css = ["custom.css", "custom2.css"]
 additional-js = ["custom.js"]
 no-section-label = false
 git-repository-url = "https://github.com/rust-lang/mdBook"
 git-repository-icon = "fa-github"
+site-url = "/example-book/"
+cname = "myproject.rs"
+input-404 = "not-found.md"
+
+[output.html.print]
+enable = true
 
 [output.html.fold]
 enable = false
 level = 0
 
-[output.html.playpen]
+[output.html.playground]
 editable = false
 copy-js = true
 line-numbers = false
@@ -281,6 +313,10 @@ boost-paragraph = 1
 expand = true
 heading-split-level = 3
 copy-js = true
+
+[output.html.redirect]
+"/appendices/bibliography.html" = "https://rustc-dev-guide.rust-lang.org/appendix/bibliography.html"
+"/other-installation-methods.html" = "../infra/other-installation-methods.html"
 ```
 
 ### Markdown Renderer
@@ -291,7 +327,7 @@ conjunction with `mdbook test` to see the Markdown that `mdbook` is passing
 to `rustdoc`.
 
 The Markdown renderer is included with `mdbook` but disabled by default.
-Enable it by adding an emtpy table to your `book.toml` as follows:
+Enable it by adding an empty table to your `book.toml` as follows:
 
 ```toml
 [output.markdown]

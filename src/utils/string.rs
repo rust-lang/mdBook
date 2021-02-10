@@ -70,7 +70,7 @@ pub fn take_rustdoc_include_lines<R: RangeBounds<usize>>(s: &str, range: R) -> S
             output.push_str("# ");
         }
         output.push_str(line);
-        output.push_str("\n");
+        output.push('\n');
     }
     output.pop();
     output
@@ -95,7 +95,7 @@ pub fn take_rustdoc_include_anchored_lines(s: &str, anchor: &str) -> String {
                 None => {
                     if !ANCHOR_START.is_match(l) {
                         output.push_str(l);
-                        output.push_str("\n");
+                        output.push('\n');
                     }
                 }
             }
@@ -106,7 +106,7 @@ pub fn take_rustdoc_include_anchored_lines(s: &str, anchor: &str) -> String {
         } else if !ANCHOR_END.is_match(l) {
             output.push_str("# ");
             output.push_str(l);
-            output.push_str("\n");
+            output.push('\n');
         }
     }
 

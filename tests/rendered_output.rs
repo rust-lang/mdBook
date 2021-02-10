@@ -12,10 +12,11 @@ use mdbook::utils::fs::write_file;
 use mdbook::MDBook;
 use select::document::Document;
 use select::predicate::{Class, Name, Predicate};
+use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs;
 use std::io::Write;
-use std::path::Path;
+use std::path::{Component, Path, PathBuf};
 use tempfile::Builder as TempFileBuilder;
 use walkdir::{DirEntry, WalkDir};
 
@@ -134,18 +135,18 @@ fn check_correct_relative_links_in_print_page() {
 }
 
 #[test]
-fn rendered_code_has_playpen_stuff() {
+fn rendered_code_has_playground_stuff() {
     let temp = DummyBook::new().build().unwrap();
     let md = MDBook::load(temp.path()).unwrap();
     md.build().unwrap();
 
     let nested = temp.path().join("book/first/nested.html");
-    let playpen_class = vec![r#"class="playpen""#];
+    let playground_class = vec![r#"class="playground""#];
 
-    assert_contains_strings(nested, &playpen_class);
+    assert_contains_strings(nested, &playground_class);
 
     let book_js = temp.path().join("book/book.js");
-    assert_contains_strings(book_js, &[".playpen"]);
+    assert_contains_strings(book_js, &[".playground"]);
 }
 
 #[test]
@@ -343,23 +344,23 @@ fn create_missing_file_with_config() {
     assert!(temp.path().join("src").join("intro.md").exists());
 }
 
-/// This makes sure you can include a Rust file with `{{#playpen example.rs}}`.
-/// Specification is in `book-example/src/format/rust.md`
+/// This makes sure you can include a Rust file with `{{#playground example.rs}}`.
+/// Specification is in `guide/src/format/rust.md`
 #[test]
-fn able_to_include_playpen_files_in_chapters() {
+fn able_to_include_playground_files_in_chapters() {
     let temp = DummyBook::new().build().unwrap();
     let md = MDBook::load(temp.path()).unwrap();
     md.build().unwrap();
 
     let second = temp.path().join("book/second.html");
 
-    let playpen_strings = &[
-        r#"class="playpen""#,
+    let playground_strings = &[
+        r#"class="playground""#,
         r#"println!(&quot;Hello World!&quot;);"#,
     ];
 
-    assert_contains_strings(&second, playpen_strings);
-    assert_doesnt_contain_strings(&second, &["{{#playpen example.rs}}"]);
+    assert_contains_strings(&second, playground_strings);
+    assert_doesnt_contain_strings(&second, &["{{#playground example.rs}}"]);
 }
 
 /// This makes sure you can include a Rust file with `{{#include ../SUMMARY.md}}`.
@@ -511,6 +512,42 @@ fn markdown_options() {
     );
 }
 
+#[test]
+fn redirects_are_emitted_correctly() {
+    let temp = DummyBook::new().build().unwrap();
+    let mut md = MDBook::load(temp.path()).unwrap();
+
+    // override the "outputs.html.redirect" table
+    let redirects: HashMap<PathBuf, String> = vec![
+        (PathBuf::from("/overview.html"), String::from("index.html")),
+        (
+            PathBuf::from("/nexted/page.md"),
+            String::from("https://rust-lang.org/"),
+        ),
+    ]
+    .into_iter()
+    .collect();
+    md.config.set("output.html.redirect", &redirects).unwrap();
+
+    md.build().unwrap();
+
+    for (original, redirect) in &redirects {
+        let mut redirect_file = md.build_dir_for("html");
+        // append everything except the bits that make it absolute
+        // (e.g. "/" or "C:\")
+        redirect_file.extend(remove_absolute_components(&original));
+        let contents = fs::read_to_string(&redirect_file).unwrap();
+        assert!(contents.contains(redirect));
+    }
+}
+
+fn remove_absolute_components(path: &Path) -> impl Iterator<Item = Component> + '_ {
+    path.components().skip_while(|c| match c {
+        Component::Prefix(_) | Component::RootDir => true,
+        _ => false,
+    })
+}
+
 #[cfg(feature = "search")]
 mod search {
     use crate::dummy_book::DummyBook;
@@ -558,7 +595,10 @@ mod search {
             docs[&summary]["body"],
             "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Markdown Unicode Second Chapter Nested Chapter Conclusion"
         );
-        assert_eq!(docs[&summary]["breadcrumbs"], "First Chapter » Summary");
+        assert_eq!(
+            docs[&summary]["breadcrumbs"],
+            "First Chapter » Includes » Summary"
+        );
         assert_eq!(docs[&conclusion]["body"], "I put &lt;HTML&gt; in here!");
     }
 

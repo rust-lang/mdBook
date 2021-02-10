@@ -14,11 +14,12 @@ pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> 
     let summary_md = src_dir.join("SUMMARY.md");
 
     let mut summary_content = String::new();
-    File::open(summary_md)
-        .with_context(|| "Couldn't open SUMMARY.md")?
+    File::open(&summary_md)
+        .with_context(|| format!("Couldn't open SUMMARY.md in {:?} directory", src_dir))?
         .read_to_string(&mut summary_content)?;
 
-    let summary = parse_summary(&summary_content).with_context(|| "Summary parsing failed")?;
+    let summary = parse_summary(&summary_content)
+        .with_context(|| format!("Summary parsing failed for file={:?}", summary_md))?;
 
     if cfg.create_missing {
         create_missing(&src_dir, &summary).with_context(|| "Unable to create missing chapters")?;
@@ -49,7 +50,9 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
                     }
                     debug!("Creating missing file {}", filename.display());
 
-                    let mut f = File::create(&filename)?;
+                    let mut f = File::create(&filename).with_context(|| {
+                        format!("Unable to create missing file: {}", filename.display())
+                    })?;
                     writeln!(f, "# {}", link.name)?;
                 }
             }
@@ -63,7 +66,7 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
 
 /// A dumb tree structure representing a book.
 ///
-/// For the moment a book is just a collection of `BookItems` which are
+/// For the moment a book is just a collection of [`BookItems`] which are
 /// accessible by either iterating (immutably) over the book with [`iter()`], or
 /// recursively applying a closure to each section to mutate the chapters, using
 /// [`for_each_mut()`].
@@ -157,7 +160,7 @@ pub struct Chapter {
     pub sub_items: Vec<BookItem>,
     /// The chapter's location, relative to the `SUMMARY.md` file.
     pub path: Option<PathBuf>,
-    /// An ordered list of the names of each chapter above this one, in the hierarchy.
+    /// An ordered list of the names of each chapter above this one in the hierarchy.
     pub parent_names: Vec<String>,
 }
 
@@ -178,8 +181,8 @@ impl Chapter {
         }
     }
 
-    /// Create a new draft chapter that is not attached to a source markdown file and has
-    /// thus no content.
+    /// Create a new draft chapter that is not attached to a source markdown file (and thus
+    /// has no content).
     pub fn new_draft(name: &str, parent_names: Vec<String>) -> Self {
         Chapter {
             name: name.to_string(),
@@ -190,7 +193,7 @@ impl Chapter {
         }
     }
 
-    /// Check if the chapter is a draft chapter, meaning it has no path to a source markdown file
+    /// Check if the chapter is a draft chapter, meaning it has no path to a source markdown file.
     pub fn is_draft_chapter(&self) -> bool {
         match self.path {
             Some(_) => false,
@@ -264,6 +267,10 @@ fn load_chapter<P: AsRef<Path>>(
             format!("Unable to read \"{}\" ({})", link.name, location.display())
         })?;
 
+        if content.as_bytes().starts_with(b"\xef\xbb\xbf") {
+            content.replace_range(..3, "");
+        }
+
         let stripped = location
             .strip_prefix(&src_dir)
             .expect("Chapters are always inside a book");
@@ -273,7 +280,7 @@ fn load_chapter<P: AsRef<Path>>(
         Chapter::new_draft(&link.name, parent_names.clone())
     };
 
-    let mut sub_item_parents = parent_names.clone();
+    let mut sub_item_parents = parent_names;
 
     ch.number = link.number.clone();
 
@@ -295,8 +302,6 @@ fn load_chapter<P: AsRef<Path>>(
 ///
 /// This struct shouldn't be created directly, instead prefer the
 /// [`Book::iter()`] method.
-///
-/// [`Book::iter()`]: struct.Book.html#method.iter
 pub struct BookItems<'a> {
     items: VecDeque<&'a BookItem>,
 }
@@ -382,6 +387,29 @@ And here is some \
     #[test]
     fn load_a_single_chapter_from_disk() {
         let (link, temp_dir) = dummy_link();
+        let should_be = Chapter::new(
+            "Chapter 1",
+            DUMMY_SRC.to_string(),
+            "chapter_1.md",
+            Vec::new(),
+        );
+
+        let got = load_chapter(&link, temp_dir.path(), Vec::new()).unwrap();
+        assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn load_a_single_chapter_with_utf8_bom_from_disk() {
+        let temp_dir = TempFileBuilder::new().prefix("book").tempdir().unwrap();
+
+        let chapter_path = temp_dir.path().join("chapter_1.md");
+        File::create(&chapter_path)
+            .unwrap()
+            .write_all(("\u{feff}".to_owned() + DUMMY_SRC).as_bytes())
+            .unwrap();
+
+        let link = Link::new("Chapter 1", chapter_path);
+
         let should_be = Chapter::new(
             "Chapter 1",
             DUMMY_SRC.to_string(),

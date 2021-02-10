@@ -1,4 +1,4 @@
-//! Theme dependencies for the playpen editor.
+//! Theme dependencies for the playground editor.
 
 pub static JS: &[u8] = include_bytes!("editor.js");
 pub static ACE_JS: &[u8] = include_bytes!("ace.js");
