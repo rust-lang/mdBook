@@ -23,7 +23,8 @@ use toml::Value;
 
 use crate::errors::*;
 use crate::preprocess::{
-    CmdPreprocessor, IndexPreprocessor, LinkPreprocessor, Preprocessor, PreprocessorContext,
+    CmdPreprocessor, IndexPreprocessor, LinkPreprocessor, MetadataPreprocessor, Preprocessor,
+    PreprocessorContext,
 };
 use crate::renderer::{CmdRenderer, HtmlHandlebars, MarkdownRenderer, RenderContext, Renderer};
 use crate::utils;
@@ -375,12 +376,15 @@ fn default_preprocessors() -> Vec<Box<dyn Preprocessor>> {
     vec![
         Box::new(LinkPreprocessor::new()),
         Box::new(IndexPreprocessor::new()),
+        Box::new(MetadataPreprocessor::new()),
     ]
 }
 
 fn is_default_preprocessor(pre: &dyn Preprocessor) -> bool {
     let name = pre.name();
-    name == LinkPreprocessor::NAME || name == IndexPreprocessor::NAME
+    name == LinkPreprocessor::NAME
+        || name == IndexPreprocessor::NAME
+        || name == MetadataPreprocessor::NAME
 }
 
 /// Look at the `MDBook` and try to figure out what preprocessors to run.
@@ -396,6 +400,7 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<dyn Preprocessor>>
             match key.as_ref() {
                 "links" => preprocessors.push(Box::new(LinkPreprocessor::new())),
                 "index" => preprocessors.push(Box::new(IndexPreprocessor::new())),
+                "metadata" => preprocessors.push(Box::new(MetadataPreprocessor::new())),
                 name => preprocessors.push(interpret_custom_preprocessor(
                     name,
                     &preprocessor_table[name],
@@ -513,9 +518,10 @@ mod tests {
         let got = determine_preprocessors(&cfg);
 
         assert!(got.is_ok());
-        assert_eq!(got.as_ref().unwrap().len(), 2);
+        assert_eq!(got.as_ref().unwrap().len(), 3);
         assert_eq!(got.as_ref().unwrap()[0].name(), "links");
         assert_eq!(got.as_ref().unwrap()[1].name(), "index");
+        assert_eq!(got.as_ref().unwrap()[2].name(), "metadata");
     }
 
     #[test]
