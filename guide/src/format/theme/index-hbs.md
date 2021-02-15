@@ -38,6 +38,8 @@ Here is a list of the properties that are exposed:
   containing all the chapters of the book. It is used for example to construct
   the table of contents (sidebar).
 
+Further properties can be exposed through the `chapter_config` field of a `Chapter` which is accessible to preprocessors.
+
 ## Handlebars Helpers
 
 In addition to the properties you can access, there are some handlebars helpers

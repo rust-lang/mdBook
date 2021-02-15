@@ -105,6 +105,25 @@ The following preprocessors are available and included by default:
 - `index`: Convert all chapter files named `README.md` into `index.md`. That is
   to say, all `README.md` would be rendered to an index file `index.html` in the
   rendered book.
+- `metadata`: Reads an optional TOML header from the markdown chapter sources
+  to provide chapter specific information. This data is then made available to
+  handlebars.js. The supported fields are `author`, `title`, `description`, `keywords`,
+  `date` and `modified`.
+
+**Sample Chapter**
+```toml
+---
+author = "Jane Doe" # this is written to the author meta tag
+title = "Blog Post #1" # this overwrites the default title handlebar
+date = "2021/02/14"
+keywords = [
+  "Rust",
+  "Blog",
+] # this sets the keywords meta tag
+description = "A blog about rust-lang" # this sets the description meta tag
+---
+This is my blog about rust.
+```
 
 
 **book.toml**
@@ -116,6 +135,8 @@ create-missing = false
 [preprocessor.links]
 
 [preprocessor.index]
+
+[preprocessor.metadata]
 ```
 
 ### Custom Preprocessor Configuration
