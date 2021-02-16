@@ -66,7 +66,7 @@ impl Match {
         if let Some(mat) = RE.captures(contents) {
             // safe to unwrap as we know there is a match
             let metadata = mat.name("metadata").unwrap();
-            Some( Match {
+            Some(Match {
                 range: metadata.start()..metadata.end(),
                 end: mat.get(0).unwrap().end(),
             })
@@ -161,7 +161,9 @@ mod tests {
             \"Blog\",
         ]
         date = \"2021/02/15\"
-        ").unwrap();
+        ",
+        )
+        .unwrap();
         let mut map = serde_json::Map::<String, serde_json::Value>::new();
         map.insert("author".to_string(), json!("Adam"));
         map.insert("title".to_string(), json!("Blog Post #1"));
