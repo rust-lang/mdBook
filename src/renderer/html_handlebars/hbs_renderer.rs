@@ -520,12 +520,16 @@ impl Renderer for HtmlHandlebars {
                             };
                             let md_location = fs::canonicalize(md_location).ok();
                             let html_path = md_path.with_extension("html");
-                            let html_location = Some(if html_path.is_absolute() {
+                            let html_location = if html_path.is_absolute() {
                                 html_path.clone()
                             } else {
                                 ctx.destination.join(&html_path)
-                            });
-                            md_location.zip(html_location)
+                            };
+                            if let Some(md_location) = md_location {
+                                Some((md_location, html_location))
+                            } else {
+                                None
+                            }
                         }
                         _ => None,
                     })
