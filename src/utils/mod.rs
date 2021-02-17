@@ -9,8 +9,10 @@ use regex::Regex;
 use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, Options, Parser, Tag};
 
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::fmt::Write;
 use std::path::Path;
+use std::path::PathBuf;
 
 pub use self::string::{
     take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,
@@ -71,6 +73,40 @@ pub fn id_from_content(content: &str) -> String {
     normalize_id(trimmed)
 }
 
+/// Context for resolving markdown symlinks
+pub struct SymlinkResolveContext<'a> {
+    /// The key is canonicalized absolute path of source markdown file, value is absolute path of destination html file
+    pub to_render_paths: &'a HashMap<PathBuf, PathBuf>,
+    /// Path to markdown source dir
+    pub src_dir: &'a Path,
+    /// Current markdown relative path specified in SUMMARY.md
+    pub current_md_relative_path: &'a Path,
+}
+
+/// A hack to get original readme.md name, since in the preprocessing stage,
+/// all markdown files named readme.md (case insensitive) are renamed to index.md.
+fn find_readme_path(dir: &Path) -> Option<PathBuf> {
+    std::fs::read_dir(dir).ok().and_then(|entries| {
+        for entry in entries {
+            if let Ok(entry) = entry {
+                lazy_static! {
+                    static ref RE: Regex = Regex::new(r"(?i)^readme$").unwrap();
+                }
+                if RE.is_match(
+                    entry
+                        .path()
+                        .file_stem()
+                        .and_then(std::ffi::OsStr::to_str)
+                        .unwrap_or_default(),
+                ) {
+                    return Some(entry.path());
+                }
+            }
+        }
+        None
+    })
+}
+
 /// Fix links to the correct location.
 ///
 /// This adjusts links, such as turning `.md` extensions to `.html`.
@@ -80,13 +116,24 @@ pub fn id_from_content(content: &str) -> String {
 /// page go to the original location. Normal page rendering sets `path` to
 /// None. Ideally, print page links would link to anchors on the print page,
 /// but that is very difficult.
-fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
+///
+/// `symlink_resolve_ctx` is context to resolve markdown symlinks. If it is
+/// `None`, we don't resolve symlinks.
+fn adjust_links<'a>(
+    event: Event<'a>,
+    path: Option<&Path>,
+    symlink_resolve_ctx: &Option<SymlinkResolveContext<'_>>,
+) -> Event<'a> {
     lazy_static! {
         static ref SCHEME_LINK: Regex = Regex::new(r"^[a-z][a-z0-9+.-]*:").unwrap();
         static ref MD_LINK: Regex = Regex::new(r"(?P<link>.*)\.md(?P<anchor>#.*)?").unwrap();
     }
 
-    fn fix<'a>(dest: CowStr<'a>, path: Option<&Path>) -> CowStr<'a> {
+    fn fix<'a>(
+        dest: CowStr<'a>,
+        path: Option<&Path>,
+        symlink_resolve_ctx: &Option<SymlinkResolveContext<'_>>,
+    ) -> CowStr<'a> {
         if dest.starts_with('#') {
             // Fragment-only link.
             if let Some(path) = path {
@@ -115,8 +162,68 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
             }
 
             if let Some(caps) = MD_LINK.captures(&dest) {
-                fixed_link.push_str(&caps["link"]);
-                fixed_link.push_str(".html");
+                let mut find_and_convert_target_md_path_success = false;
+                if let Some(SymlinkResolveContext {
+                    to_render_paths,
+                    src_dir,
+                    current_md_relative_path,
+                }) = symlink_resolve_ctx
+                {
+                    let mut current_md_relative_path = current_md_relative_path.to_path_buf();
+                    let mut target_md_relative_path =
+                        PathBuf::from(&format!("{}.md", &caps["link"]));
+                    if target_md_relative_path.ends_with("index.md") {
+                        if let Some(parent) = target_md_relative_path.parent() {
+                            if let Some(readme_path) = find_readme_path(parent) {
+                                target_md_relative_path = readme_path;
+                            }
+                        }
+                    }
+                    let target_md_path = if target_md_relative_path.is_absolute() {
+                        target_md_relative_path.clone()
+                    } else {
+                        src_dir.join(&target_md_relative_path)
+                    };
+                    if current_md_relative_path.ends_with("index.md") {
+                        if let Some(parent) = current_md_relative_path.parent() {
+                            if let Some(readme_path) = find_readme_path(parent) {
+                                current_md_relative_path = readme_path;
+                            }
+                        }
+                    }
+                    let current_md_path = if current_md_relative_path.is_absolute() {
+                        current_md_relative_path.clone()
+                    } else {
+                        src_dir.join(&current_md_relative_path)
+                    };
+                    if let (Ok(target_md_path), Ok(current_md_path)) = (
+                        std::fs::canonicalize(&target_md_path),
+                        std::fs::canonicalize(&current_md_path),
+                    ) {
+                        if let Some(target_html_path) = to_render_paths.get(&target_md_path) {
+                            if let Some(current_html_path) = to_render_paths.get(&current_md_path) {
+                                if let Some(current_parent) = current_html_path.parent() {
+                                    if let Some(target_relative_html_path) =
+                                        pathdiff::diff_paths(target_html_path, current_parent)
+                                    {
+                                        fixed_link
+                                            .push_str(target_relative_html_path.to_str().unwrap());
+                                        find_and_convert_target_md_path_success = true;
+                                    }
+                                } // This should be true since current html path is absolute
+                            } // This should be true since current markdown path are taken from SUMMARY.md
+                        } else {
+                            warn!(
+                                "Links to markdown file {}, which is not translated.",
+                                target_md_relative_path.to_str().unwrap()
+                            );
+                        }
+                    }
+                }
+                if !find_and_convert_target_md_path_success {
+                    fixed_link.push_str(&caps["link"]);
+                    fixed_link.push_str(".html");
+                }
                 if let Some(anchor) = caps.name("anchor") {
                     fixed_link.push_str(anchor.as_str());
                 }
@@ -128,7 +235,11 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
         dest
     }
 
-    fn fix_html<'a>(html: CowStr<'a>, path: Option<&Path>) -> CowStr<'a> {
+    fn fix_html<'a>(
+        html: CowStr<'a>,
+        path: Option<&Path>,
+        symlink_resolve_ctx: &Option<SymlinkResolveContext<'_>>,
+    ) -> CowStr<'a> {
         // This is a terrible hack, but should be reasonably reliable. Nobody
         // should ever parse a tag with a regex. However, there isn't anything
         // in Rust that I know of that is suitable for handling partial html
@@ -144,7 +255,7 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
 
         HTML_LINK
             .replace_all(&html, |caps: &regex::Captures<'_>| {
-                let fixed = fix(caps[2].into(), path);
+                let fixed = fix(caps[2].into(), path, &symlink_resolve_ctx);
                 format!("{}{}\"", &caps[1], fixed)
             })
             .into_owned()
@@ -152,20 +263,31 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
     }
 
     match event {
-        Event::Start(Tag::Link(link_type, dest, title)) => {
-            Event::Start(Tag::Link(link_type, fix(dest, path), title))
-        }
-        Event::Start(Tag::Image(link_type, dest, title)) => {
-            Event::Start(Tag::Image(link_type, fix(dest, path), title))
-        }
-        Event::Html(html) => Event::Html(fix_html(html, path)),
+        Event::Start(Tag::Link(link_type, dest, title)) => Event::Start(Tag::Link(
+            link_type,
+            fix(dest, path, &symlink_resolve_ctx),
+            title,
+        )),
+        Event::Start(Tag::Image(link_type, dest, title)) => Event::Start(Tag::Image(
+            link_type,
+            fix(dest, path, &symlink_resolve_ctx),
+            title,
+        )),
+        Event::Html(html) => Event::Html(fix_html(html, path, &symlink_resolve_ctx)),
         _ => event,
     }
 }
 
 /// Wrapper around the pulldown-cmark parser for rendering markdown to HTML.
-pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
-    render_markdown_with_path(text, curly_quotes, None)
+///
+/// `symlink_resolve_ctx` is context to resolve markdown symlinks. If it is
+/// `None`, we don't resolve symlinks.
+pub fn render_markdown(
+    text: &str,
+    curly_quotes: bool,
+    symlink_resolve_ctx: &Option<SymlinkResolveContext<'_>>,
+) -> String {
+    render_markdown_with_path(text, curly_quotes, None, symlink_resolve_ctx)
 }
 
 pub fn new_cmark_parser(text: &str) -> Parser<'_> {
@@ -177,13 +299,18 @@ pub fn new_cmark_parser(text: &str) -> Parser<'_> {
     Parser::new_ext(text, opts)
 }
 
-pub fn render_markdown_with_path(text: &str, curly_quotes: bool, path: Option<&Path>) -> String {
+pub fn render_markdown_with_path(
+    text: &str,
+    curly_quotes: bool,
+    path: Option<&Path>,
+    symlink_resolve_ctx: &Option<SymlinkResolveContext<'_>>,
+) -> String {
     let mut s = String::with_capacity(text.len() * 3 / 2);
     let p = new_cmark_parser(text);
     let mut converter = EventQuoteConverter::new(curly_quotes);
     let events = p
         .map(clean_codeblock_headers)
-        .map(|event| adjust_links(event, path))
+        .map(|event| adjust_links(event, path, &symlink_resolve_ctx))
         .map(|event| converter.convert(event));
 
     html::push_html(&mut s, events);
@@ -285,7 +412,7 @@ mod tests {
         #[test]
         fn preserves_external_links() {
             assert_eq!(
-                render_markdown("[example](https://www.rust-lang.org/)", false),
+                render_markdown("[example](https://www.rust-lang.org/)", false, &None),
                 "<p><a href=\"https://www.rust-lang.org/\">example</a></p>\n"
             );
         }
@@ -293,24 +420,24 @@ mod tests {
         #[test]
         fn it_can_adjust_markdown_links() {
             assert_eq!(
-                render_markdown("[example](example.md)", false),
+                render_markdown("[example](example.md)", false, &None),
                 "<p><a href=\"example.html\">example</a></p>\n"
             );
             assert_eq!(
-                render_markdown("[example_anchor](example.md#anchor)", false),
+                render_markdown("[example_anchor](example.md#anchor)", false, &None),
                 "<p><a href=\"example.html#anchor\">example_anchor</a></p>\n"
             );
 
             // this anchor contains 'md' inside of it
             assert_eq!(
-                render_markdown("[phantom data](foo.html#phantomdata)", false),
+                render_markdown("[phantom data](foo.html#phantomdata)", false, &None),
                 "<p><a href=\"foo.html#phantomdata\">phantom data</a></p>\n"
             );
         }
 
         #[test]
         fn it_can_keep_quotes_straight() {
-            assert_eq!(render_markdown("'one'", false), "<p>'one'</p>\n");
+            assert_eq!(render_markdown("'one'", false, &None), "<p>'one'</p>\n");
         }
 
         #[test]
@@ -326,7 +453,7 @@ mod tests {
 </code></pre>
 <p><code>'three'</code> ‘four’</p>
 "#;
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, true, &None), expected);
         }
 
         #[test]
@@ -348,8 +475,8 @@ more text with spaces
 </code></pre>
 <p>more text with spaces</p>
 "#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, false, &None), expected);
+            assert_eq!(render_markdown(input, true, &None), expected);
         }
 
         #[test]
@@ -361,8 +488,8 @@ more text with spaces
 
             let expected = r#"<pre><code class="language-rust,no_run,should_panic,property_3"></code></pre>
 "#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, false, &None), expected);
+            assert_eq!(render_markdown(input, true, &None), expected);
         }
 
         #[test]
@@ -374,8 +501,8 @@ more text with spaces
 
             let expected = r#"<pre><code class="language-rust,no_run,,,should_panic,,property_3"></code></pre>
 "#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, false, &None), expected);
+            assert_eq!(render_markdown(input, true, &None), expected);
         }
 
         #[test]
@@ -387,15 +514,15 @@ more text with spaces
 
             let expected = r#"<pre><code class="language-rust"></code></pre>
 "#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, false, &None), expected);
+            assert_eq!(render_markdown(input, true, &None), expected);
 
             let input = r#"
 ```rust
 ```
 "#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, false, &None), expected);
+            assert_eq!(render_markdown(input, true, &None), expected);
         }
     }
 

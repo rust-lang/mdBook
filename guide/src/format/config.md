@@ -217,6 +217,9 @@ The following configuration options are available:
   This string will be written to a file named CNAME in the root of your site, as
   required by GitHub Pages (see [*Managing a custom domain for your GitHub Pages
   site*][custom domain]).
+- **resolve-md-symlink** Resolve the symlink between markdown files. Enable this option
+  may lead to large cost since many syscalls are used. If your markdown source file does
+  not contain symlinks, do not enable this option. This option is disabled by default.
 
 [custom domain]: https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site
 
@@ -289,6 +292,7 @@ git-repository-icon = "fa-github"
 site-url = "/example-book/"
 cname = "myproject.rs"
 input-404 = "not-found.md"
+resolve-md-symlink = true
 
 [output.html.print]
 enable = true

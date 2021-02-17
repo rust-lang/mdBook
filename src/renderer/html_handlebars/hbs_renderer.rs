@@ -5,6 +5,7 @@ use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
 use crate::theme::{self, playground_editor, Theme};
 use crate::utils;
+use crate::utils::SymlinkResolveContext;
 
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -37,13 +38,25 @@ impl HtmlHandlebars {
             _ => return Ok(()),
         };
 
+        let symlink_resolve_ctx = if let Some(to_render_paths) = &ctx.to_render_paths {
+            Some(SymlinkResolveContext {
+                to_render_paths: &to_render_paths,
+                src_dir: &ctx.src_dir,
+                current_md_relative_path: &path,
+            })
+        } else {
+            None
+        };
+
         let content = ch.content.clone();
-        let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
+        let content =
+            utils::render_markdown(&content, ctx.html_config.curly_quotes, &symlink_resolve_ctx);
 
         let fixed_content = utils::render_markdown_with_path(
             &ch.content,
             ctx.html_config.curly_quotes,
             Some(&path),
+            &symlink_resolve_ctx,
         );
         print_content.push_str(&fixed_content);
 
@@ -132,7 +145,8 @@ impl HtmlHandlebars {
                     .to_string()
             }
         };
-        let html_content_404 = utils::render_markdown(&content_404, html_config.curly_quotes);
+        let html_content_404 =
+            utils::render_markdown(&content_404, html_config.curly_quotes, &None);
 
         let mut data_404 = data.clone();
         let base_url = if let Some(site_url) = &html_config.site_url {
@@ -493,6 +507,33 @@ impl Renderer for HtmlHandlebars {
             .with_context(|| "Unexpected error when constructing destination path")?;
 
         let mut is_index = true;
+        let to_render_paths = if html_config.resolve_md_symlink {
+            Some(
+                book.iter()
+                    .filter_map(|book_item| match book_item {
+                        BookItem::Chapter(ch) if !ch.is_draft_chapter() => {
+                            let md_path = ch.path.as_ref().unwrap();
+                            let md_location = if md_path.is_absolute() {
+                                md_path.clone()
+                            } else {
+                                src_dir.join(md_path)
+                            };
+                            let md_location = fs::canonicalize(md_location).ok();
+                            let html_path = md_path.with_extension("html");
+                            let html_location = Some(if html_path.is_absolute() {
+                                html_path.clone()
+                            } else {
+                                ctx.destination.join(&html_path)
+                            });
+                            md_location.zip(html_location)
+                        }
+                        _ => None,
+                    })
+                    .collect::<HashMap<_, _>>(),
+            )
+        } else {
+            None
+        };
         for item in book.iter() {
             let ctx = RenderItemContext {
                 handlebars: &handlebars,
@@ -501,6 +542,8 @@ impl Renderer for HtmlHandlebars {
                 is_index,
                 html_config: html_config.clone(),
                 edition: ctx.config.rust.edition,
+                src_dir: src_dir.clone(),
+                to_render_paths: &to_render_paths,
             };
             self.render_item(item, ctx, &mut print_content)?;
             is_index = false;
@@ -916,6 +959,8 @@ struct RenderItemContext<'a> {
     is_index: bool,
     html_config: HtmlConfig,
     edition: Option<RustEdition>,
+    src_dir: PathBuf,
+    to_render_paths: &'a Option<HashMap<PathBuf, PathBuf>>,
 }
 
 #[cfg(test)]

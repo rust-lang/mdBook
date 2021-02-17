@@ -115,6 +115,16 @@ pub fn copy_files_except_ext(
             .metadata()
             .with_context(|| format!("Failed to read {:?}", entry.path()))?;
 
+        // Doing this check to avoid error when symlinking current directory to subdir.
+        if let (Ok(entry_path), Ok(from)) = (
+            std::fs::canonicalize(&entry.path()),
+            std::fs::canonicalize(from),
+        ) {
+            if entry_path == from {
+                continue;
+            }
+        }
+
         // If the entry is a dir and the recursive option is enabled, call itself
         if metadata.is_dir() && recursive {
             if entry.path() == to.to_path_buf() {
@@ -133,7 +143,7 @@ pub fn copy_files_except_ext(
             }
 
             copy_files_except_ext(
-                &from.join(entry.file_name()),
+                &entry.path(),
                 &to.join(entry.file_name()),
                 true,
                 avoid_dir,

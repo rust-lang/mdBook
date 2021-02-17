@@ -533,6 +533,8 @@ pub struct HtmlConfig {
     /// The mapping from old pages to new pages/URLs to use when generating
     /// redirects.
     pub redirect: HashMap<String, String>,
+    /// Resolve symlink between markdown files.
+    pub resolve_md_symlink: bool,
 }
 
 impl Default for HtmlConfig {
@@ -559,6 +561,7 @@ impl Default for HtmlConfig {
             cname: None,
             livereload_url: None,
             redirect: HashMap::new(),
+            resolve_md_symlink: false,
         }
     }
 }
