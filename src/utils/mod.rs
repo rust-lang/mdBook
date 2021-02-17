@@ -85,7 +85,7 @@ pub struct SymlinkResolveContext<'a> {
 
 /// A hack to get original readme.md name, since in the preprocessing stage,
 /// all markdown files named readme.md (case insensitive) are renamed to index.md.
-fn find_readme_path(dir: &Path) -> Option<PathBuf> {
+pub fn find_readme_path(dir: &Path) -> Option<PathBuf> {
     std::fs::read_dir(dir).ok().and_then(|entries| {
         for entry in entries {
             if let Ok(entry) = entry {
@@ -169,33 +169,31 @@ fn adjust_links<'a>(
                     current_md_relative_path,
                 }) = symlink_resolve_ctx
                 {
-                    let mut current_md_relative_path = current_md_relative_path.to_path_buf();
-                    let mut target_md_relative_path =
-                        PathBuf::from(&format!("{}.md", &caps["link"]));
-                    if target_md_relative_path.ends_with("index.md") {
-                        if let Some(parent) = target_md_relative_path.parent() {
-                            if let Some(readme_path) = find_readme_path(parent) {
-                                target_md_relative_path = readme_path;
-                            }
-                        }
-                    }
-                    let target_md_path = if target_md_relative_path.is_absolute() {
+                    let target_md_relative_path = PathBuf::from(&format!("{}.md", &caps["link"]));
+                    let mut target_md_path = if target_md_relative_path.is_absolute() {
                         target_md_relative_path.clone()
                     } else {
                         src_dir.join(&target_md_relative_path)
                     };
-                    if current_md_relative_path.ends_with("index.md") {
-                        if let Some(parent) = current_md_relative_path.parent() {
+                    if target_md_path.ends_with("index.md") {
+                        if let Some(parent) = target_md_path.parent() {
                             if let Some(readme_path) = find_readme_path(parent) {
-                                current_md_relative_path = readme_path;
+                                target_md_path = readme_path;
                             }
                         }
                     }
-                    let current_md_path = if current_md_relative_path.is_absolute() {
-                        current_md_relative_path.clone()
+                    let mut current_md_path = if current_md_relative_path.is_absolute() {
+                        current_md_relative_path.to_path_buf()
                     } else {
                         src_dir.join(&current_md_relative_path)
                     };
+                    if current_md_path.ends_with("index.md") {
+                        if let Some(parent) = current_md_path.parent() {
+                            if let Some(readme_path) = find_readme_path(parent) {
+                                current_md_path = readme_path;
+                            }
+                        }
+                    }
                     if let (Ok(target_md_path), Ok(current_md_path)) = (
                         std::fs::canonicalize(&target_md_path),
                         std::fs::canonicalize(&current_md_path),

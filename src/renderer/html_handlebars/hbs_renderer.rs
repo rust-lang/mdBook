@@ -513,11 +513,18 @@ impl Renderer for HtmlHandlebars {
                     .filter_map(|book_item| match book_item {
                         BookItem::Chapter(ch) if !ch.is_draft_chapter() => {
                             let md_path = ch.path.as_ref().unwrap();
-                            let md_location = if md_path.is_absolute() {
+                            let mut md_location = if md_path.is_absolute() {
                                 md_path.clone()
                             } else {
                                 src_dir.join(md_path)
                             };
+                            if md_location.ends_with("index.md") {
+                                if let Some(parent) = md_location.parent() {
+                                    if let Some(readme_path) = utils::find_readme_path(&parent) {
+                                        md_location = readme_path;
+                                    }
+                                }
+                            }
                             let md_location = fs::canonicalize(md_location).ok();
                             let html_path = md_path.with_extension("html");
                             let html_location = if html_path.is_absolute() {
