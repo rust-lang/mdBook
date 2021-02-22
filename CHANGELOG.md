@@ -1,5 +1,19 @@
 # Changelog
 
+## mdBook 0.4.7
+[9a9eb01...c83bbd6](https://github.com/rust-lang/mdBook/compare/9a9eb01...c83bbd6)
+
+### Changed
+- Updated shlex parser to fix a minor parsing issue (used by the
+  preprocessor/backend custom command config).
+  [#1471](https://github.com/rust-lang/mdBook/pull/1471)
+- Enhanced text contrast of `light` theme to improve accessibility.
+  [#1470](https://github.com/rust-lang/mdBook/pull/1470)
+
+### Fixed
+- Fixed some issues with fragment scrolling and linking.
+  [#1463](https://github.com/rust-lang/mdBook/pull/1463)
+
 ## mdBook 0.4.6
 [eaa6914...1a0c296](https://github.com/rust-lang/mdBook/compare/eaa6914...1a0c296)
 
