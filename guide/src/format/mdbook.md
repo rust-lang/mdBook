@@ -156,7 +156,7 @@ To call the `add_one` function, we pass it an `i32` and bind the returned value 
 #
 # fn add_one(num: i32) -> i32 {
 #     num + 1
-#}
+# }
 ```
 ````
 
@@ -170,7 +170,7 @@ That is, it looks like this (click the "expand" icon to see the rest of the file
 #
 # fn add_one(num: i32) -> i32 {
 #     num + 1
-#}
+# }
 ```
 
 ## Inserting runnable Rust files

@@ -10,6 +10,7 @@ edition = "2018"
 [output.html]
 mathjax-support = true
 site-url = "/mdBook/"
+git-repository-url = "https://github.com/rust-lang/mdBook/tree/master/guide"
 
 [output.html.playground]
 editable = true
