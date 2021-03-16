@@ -224,7 +224,6 @@ Available configuration options for the `[output.html.print]` table:
 
 - **enable:** Enable print support. When `false`, all print support will not be
   rendered. Defaults to `true`.
-- **page-break** Insert page breaks between chapters. Defaults to `true`.
 
 Available configuration options for the `[output.html.fold]` table:
 
@@ -293,7 +292,6 @@ input-404 = "not-found.md"
 
 [output.html.print]
 enable = true
-page-break = true
 
 [output.html.fold]
 enable = false

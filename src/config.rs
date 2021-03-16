@@ -580,16 +580,11 @@ impl HtmlConfig {
 pub struct Print {
     /// Whether print support is enabled.
     pub enable: bool,
-    /// Insert page breaks between chapters. Default: `true`.
-    pub page_break: bool,
 }
 
 impl Default for Print {
     fn default() -> Self {
-        Self {
-            enable: true,
-            page_break: true,
-        }
+        Self { enable: true }
     }
 }
 
