@@ -173,15 +173,19 @@ a > .hljs {
     background-color: var(--sidebar-bg);
 }
 
-.previous {
-    /* Only Firefox supports flow-relative values */
-    float: left;
-}
+/* Only Firefox supports flow-relative values */
+.previous { float: left; }
+[dir=rtl] .previous { float: right; }
 
+/* Only Firefox supports flow-relative values */
 .next {
-    /* Only Firefox supports flow-relative values */
     float: right;
     right: var(--page-padding);
+}
+[dir=rtl] .next {
+    float: left;
+    right: unset;
+    left: var(--page-padding);
 }
 
 @media only screen and (max-width: 1080px) {
@@ -387,6 +391,7 @@ ul#searchresults span.teaser em {
     background-color: var(--sidebar-bg);
     color: var(--sidebar-fg);
 }
+[dir=rtl] .sidebar { left: unset; right: 0; }
 .sidebar-resizing {
     -moz-user-select: none;
     -webkit-user-select: none;
@@ -417,6 +422,7 @@ ul#searchresults span.teaser em {
     top: 0;
     bottom: 0;
 }
+[dir=rtl] .sidebar .sidebar-resize-handle { right:  unset; left: 0; }
 .js .sidebar .sidebar-resize-handle {
     cursor: col-resize;
     width: 5px;
@@ -425,6 +431,9 @@ ul#searchresults span.teaser em {
 #sidebar-toggle-anchor:not(:checked) ~ .sidebar {
     transform: translateX(calc(0px - var(--sidebar-width)));
     z-index: -1;
+}
+[dir=rtl] .sidebar-hidden .sidebar {
+    transform: translateX(var(--sidebar-width));
 }
 .sidebar::-webkit-scrollbar {
     background: var(--sidebar-bg);
@@ -539,6 +548,7 @@ ul#searchresults span.teaser em {
     /* Don't let the children's background extend past the rounded corners. */
     overflow: hidden;
 }
+[dir=rtl] .theme-popup { left: unset;  right: 10px; }
 .theme-popup .default {
     color: var(--icons);
 }
