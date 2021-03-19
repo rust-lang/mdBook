@@ -182,9 +182,18 @@ impl MDBook {
 
     /// Run the entire build process for a particular [`Renderer`].
     pub fn execute_build_process(&self, renderer: &dyn Renderer) -> Result<()> {
+        // The temporary preprocessor output directory
+        let preproc_out_dir = TempFileBuilder::new()
+            .prefix("mdbook-pre-")
+            .tempdir()
+            .expect("Failed to create temporary output dir for preprocessor");
+
         let mut preprocessed_book = self.book.clone();
         let preprocess_ctx = PreprocessorContext::new(
             self.root.clone(),
+            // TempDir::into_path disables the auto delete option, so we need to
+            // use the long way to get to the path.
+            preproc_out_dir.path().to_path_buf(),
             self.config.clone(),
             renderer.name().to_string(),
         );
@@ -197,12 +206,17 @@ impl MDBook {
         }
 
         info!("Running the {} backend", renderer.name());
-        self.render(&preprocessed_book, renderer)?;
+        self.render(&preprocessed_book, renderer, &preprocess_ctx.output_dir)?;
 
         Ok(())
     }
 
-    fn render(&self, preprocessed_book: &Book, renderer: &dyn Renderer) -> Result<()> {
+    fn render(
+        &self,
+        preprocessed_book: &Book,
+        renderer: &dyn Renderer,
+        preproc_out_dir: &PathBuf,
+    ) -> Result<()> {
         let name = renderer.name();
         let build_dir = self.build_dir_for(name);
 
@@ -211,6 +225,7 @@ impl MDBook {
             preprocessed_book.clone(),
             self.config.clone(),
             build_dir,
+            preproc_out_dir.clone(),
         );
 
         renderer
@@ -241,10 +256,15 @@ impl MDBook {
             .collect();
 
         let temp_dir = TempFileBuilder::new().prefix("mdbook-").tempdir()?;
+        let preproc_out_dir = TempFileBuilder::new().prefix("mdbook-pre-").tempdir()?;
 
         // FIXME: Is "test" the proper renderer name to use here?
-        let preprocess_context =
-            PreprocessorContext::new(self.root.clone(), self.config.clone(), "test".to_string());
+        let preprocess_context = PreprocessorContext::new(
+            self.root.clone(),
+            preproc_out_dir.path().to_path_buf(), //TempDir::into_path disables the auto delete option
+            self.config.clone(),
+            "test".to_string(),
+        );
 
         let book = LinkPreprocessor::new().run(&preprocess_context, self.book.clone())?;
         // Index Preprocessor is disabled so that chapter paths continue to point to the

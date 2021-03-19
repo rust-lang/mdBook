@@ -55,6 +55,8 @@ pub struct RenderContext {
     pub version: String,
     /// The book's root directory.
     pub root: PathBuf,
+    /// Location of preprocessor generated output files (e.g. images)
+    preproc_output_dir: PathBuf,
     /// A loaded representation of the book itself.
     pub book: Book,
     /// The loaded configuration file.
@@ -69,7 +71,13 @@ pub struct RenderContext {
 
 impl RenderContext {
     /// Create a new `RenderContext`.
-    pub fn new<P, Q>(root: P, book: Book, config: Config, destination: Q) -> RenderContext
+    pub fn new<P, Q>(
+        root: P,
+        book: Book,
+        config: Config,
+        destination: Q,
+        preproc_output_dir: P,
+    ) -> RenderContext
     where
         P: Into<PathBuf>,
         Q: Into<PathBuf>,
@@ -80,6 +88,7 @@ impl RenderContext {
             version: crate::MDBOOK_VERSION.to_string(),
             root: root.into(),
             destination: destination.into(),
+            preproc_output_dir: preproc_output_dir.into(),
             __non_exhaustive: (),
         }
     }

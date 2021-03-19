@@ -555,6 +555,7 @@ impl Renderer for HtmlHandlebars {
 
         // Copy all remaining files, avoid a recursive copy from/to the book build dir
         utils::fs::copy_files_except_ext(&src_dir, &destination, true, Some(&build_dir), &["md"])?;
+        utils::fs::copy_files_except_ext(&ctx.preproc_output_dir, &destination, true, None, &[])?;
 
         Ok(())
     }
