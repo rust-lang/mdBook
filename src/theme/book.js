@@ -144,23 +144,20 @@ function playground_text(playground) {
             .then(response => {
                 result_block.innerText = "";
                 var iframe = result_block.appendChild(document.createElement('iframe')),
-                    doc = iframe.contentWindow.document,
-                    options = {
-                        objid: 152,
-                        key: 316541321
-                    },
-                    //src = "host/widget.js",
-                    uri = encodeURIComponent(JSON.stringify(options));
-                doc.someVar = "Hello World!";
-                iframe.id = "iframewidget";
-                iframe.width = result_block.width;
-                iframe.height = result_block.height;
-
-                var html = '<body onload="var d=document;' +
-                    'var script=d.createElement(\'script\');script.type=\'module\';script.src=\'wasm-test.js\';' +
-                    'd.getElementsByTagName(\'head\')[0].appendChild(script);"><div id="button_click"></div></body>';
-                doc.open().write(html);
-                doc.close();
+                    doc = iframe.contentWindow.document;
+                iframe.id = "wasm-rendering";
+                iframe.style.width = "100%";
+                iframe.style.height = "100%";
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', 'iframe.html', true);
+                xhr.onreadystatechange = function () {
+                    if (this.readyState !== 4) return;
+                    if (this.status !== 200) return; // or whatever error handling you want
+                    var html = this.responseText;
+                    doc.open().write(html);
+                    doc.close();
+                };
+                xhr.send();
             })
             .catch(error => result_block.innerText = "Playground Communication: " + error.message);
 
