@@ -18,6 +18,7 @@ mod html_handlebars;
 mod markdown_renderer;
 
 use shlex::Shlex;
+use std::collections::HashMap;
 use std::fs;
 use std::io::{self, ErrorKind, Read};
 use std::path::{Path, PathBuf};
@@ -64,6 +65,8 @@ pub struct RenderContext {
     /// guaranteed to be empty or even exist.
     pub destination: PathBuf,
     #[serde(skip)]
+    pub(crate) chapter_titles: HashMap<PathBuf, String>,
+    #[serde(skip)]
     __non_exhaustive: (),
 }
 
@@ -80,6 +83,7 @@ impl RenderContext {
             version: crate::MDBOOK_VERSION.to_string(),
             root: root.into(),
             destination: destination.into(),
+            chapter_titles: HashMap::new(),
             __non_exhaustive: (),
         }
     }

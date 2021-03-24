@@ -192,3 +192,12 @@ Here is what a rendered code snippet looks like:
 {{#playground example.rs}}
 
 [Rust Playground]: https://play.rust-lang.org/
+
+## Controlling page \<title\>
+
+A chapter can set a \<title\> that is different from its entry in the table of
+contents (sidebar) by including a `\{{#title ...}}` near the top of the page.
+
+```hbs
+\{{#title My Title}}
+```

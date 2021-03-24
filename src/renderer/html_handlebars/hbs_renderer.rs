@@ -70,9 +70,12 @@ impl HtmlHandlebars {
             .and_then(serde_json::Value::as_str)
             .unwrap_or("");
 
-        let title = match book_title {
-            "" => ch.name.clone(),
-            _ => ch.name.clone() + " - " + book_title,
+        let title = if let Some(title) = ctx.chapter_titles.get(path) {
+            title.clone()
+        } else if book_title.is_empty() {
+            ch.name.clone()
+        } else {
+            ch.name.clone() + " - " + book_title
         };
 
         ctx.data.insert("path".to_owned(), json!(path));
@@ -507,6 +510,7 @@ impl Renderer for HtmlHandlebars {
                 is_index,
                 html_config: html_config.clone(),
                 edition: ctx.config.rust.edition,
+                chapter_titles: &ctx.chapter_titles,
             };
             self.render_item(item, ctx, &mut print_content)?;
             is_index = false;
@@ -922,6 +926,7 @@ struct RenderItemContext<'a> {
     is_index: bool,
     html_config: HtmlConfig,
     edition: Option<RustEdition>,
+    chapter_titles: &'a HashMap<PathBuf, String>,
 }
 
 #[cfg(test)]
