@@ -139,6 +139,7 @@ enum LinkType<'a> {
     RustdocInclude(PathBuf, RangeOrAnchor),
     Title(&'a str),
     Template(PathBuf, HashMap<String, String>),
+    Title(&'a str),
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -211,6 +212,7 @@ impl<'a> LinkType<'a> {
             LinkType::RustdocInclude(p, _) => Some(return_relative_path(base, &p)),
             LinkType::Title(_) => None,
             LinkType::Template(p, _) => Some(return_relative_path(base, &p)),
+            LinkType::Title(_) => None,
         }
     }
 }
@@ -401,6 +403,7 @@ impl<'a> Link<'a> {
             LinkType::Title(title) => {
                 *chapter_title = title.to_owned();
                 Ok(String::new())
+            }
             LinkType::Template(ref pat, ref dict) => {
                 let target = base.join(pat);
                 fs::read_to_string(&target)
@@ -422,6 +425,11 @@ impl<'a> Link<'a> {
                                 .as_str())
                         )
                     })
+            }
+
+            LinkType::Title(title) => {
+                *chapter_title = title.to_owned();
+                Ok(String::new())
             }
         }
     }
