@@ -124,6 +124,9 @@ function playground_text(playground) {
 
         result_block.innerText = "Running...";
 
+        params = {
+            code: text
+        }
         // fetch_with_timeout("https://play.rust-lang.org/evaluate.json", {
         //     headers: {
         //         'Content-Type': "application/json",
@@ -132,35 +135,79 @@ function playground_text(playground) {
         //     mode: 'cors',
         //     body: JSON.stringify(params)
         // })
-        new Promise((resolve, reject) => {
-            setTimeout(() => {
-                resolve("foo");
-            }, 200)
+        prepareSandbox(params).then(src => processHTML(src)).then(html => {
+            result_block.innerText = "";
+            var iframe = result_block.appendChild(document.createElement('iframe')),
+                doc = iframe.contentWindow.document;
+            iframe.id = "wasm-rendering";
+            iframe.style.width = "100%";
+            iframe.style.height = "100%";
+            iframe.border = 0;
+            iframe.scrolling = "no";
+            doc.open().write(html);
+            doc.close();
         })
-            // .then(response => response.json())
-            // .then(response => result_block.innerText = response.result)
-            // .then(response => result_block.innerHTML = "<div style=\"height: 300px;background-color: red;\"></div>")
-            // .then(response => result_block.innerHTML = "        <div id=\"button_click\"></div><script type=\"module\" src=\"wasm-test.js\"></script>")
-            .then(response => {
-                result_block.innerText = "";
-                var iframe = result_block.appendChild(document.createElement('iframe')),
-                    doc = iframe.contentWindow.document;
-                iframe.id = "wasm-rendering";
-                iframe.style.width = "100%";
-                iframe.style.height = "100%";
-                var xhr = new XMLHttpRequest();
-                xhr.open('GET', 'iframe.html', true);
-                xhr.onreadystatechange = function () {
-                    if (this.readyState !== 4) return;
-                    if (this.status !== 200) return; // or whatever error handling you want
-                    var html = this.responseText;
-                    doc.open().write(html);
-                    doc.close();
-                };
-                xhr.send();
+    }
+    async function prepareSandbox(params) {
+        var wasmResult = fetch_with_timeout("http://192.168.217.100:9999/wasm-pack", {
+            headers: {
+                'Content-Type': "application/json",
+            },
+            method: 'POST',
+            mode: 'cors',
+            body: JSON.stringify(params)
+        })
+            .then(response => response.json())
+            .then(({ wasm_js, wasm_bg }) => {
+                var wasm_bg_blob = base64ToByteArray(wasm_bg);
+                return {
+                    wasm_js: atob(wasm_js),
+                    wasm_bg: wasm_bg_blob
+                }
             })
             .catch(error => result_block.innerText = "Playground Communication: " + error.message);
 
+        var htmlSrc = fetch(new Request("iframe.html"))
+            .then(response => response.text());
+        var jsSrc = fetch(new Request("wasm-entry.mjs"))
+            .then(response => response.text());
+
+        return Promise.all([htmlSrc, jsSrc, wasmResult])
+            .catch(error => console.log(error));
+    }
+    function base64ToByteArray(src) {
+        var decode = atob(src);
+        const byteNumbers = new Array(decode.length);
+        for (let i = 0; i < decode.length; i++) {
+            byteNumbers[i] = decode.charCodeAt(i);
+        }
+        return new Uint8Array(byteNumbers);
+    }
+    async function processHTML([htmlSrc, jsSrc, { wasm_js, wasm_bg }]) {
+        var src = rewriteJS(jsSrc, wasm_js, wasm_bg);
+        var blob = new Blob([src], { type: "application/javascript" });
+        var jsBlob = URL.createObjectURL(blob);
+        return htmlSrc.replace(/\bsrc\s*=\s*['"](.+?)['"]/g, (all, path) => {
+            return `src="${jsBlob}"`;
+        });
+    }
+
+    function rewriteJS(src, wasmJS, bgWasm) {
+        var blob = new Blob([wasmJS], { type: "application/javascript" });
+        var wasmJSBlob = URL.createObjectURL(blob);
+
+        var blob = new Blob([bgWasm], { type: "application/wasm" });
+        var bgWasmBlob = URL.createObjectURL(blob);
+
+        // replace wasm.js
+        src = src.replace(/\bfrom\s+['"](.+?)['"](\s*[;\n])/g, (all, path, sep) => {
+            return `from "${wasmJSBlob}"${sep}`;
+        })
+        // replace `input` of init to object URL
+        src = src.replace(/\(['"](.+?)['"]\)/g, (all, url) => {
+            return `("${bgWasmBlob}")`;
+        })
+        return src
     }
 
     // Syntax highlighting Configuration
