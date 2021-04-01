@@ -59,7 +59,14 @@ function playground_text(playground) {
                         win: "Ctrl-Enter",
                         mac: "Ctrl-Enter"
                     },
-                    exec: _editor => run_rust_code(playground_block)
+                    exec: _editor => {
+                        console.log(code_block.classList.contains("wasm"));
+                        if (code_block.classList.contains("wasm")) {
+                            run_wasm_pack_code(playground_block);
+                        } else {
+                            run_rust_code(playground_block);
+                        }
+                    }
                 });
             }
         }
@@ -124,32 +131,51 @@ function playground_text(playground) {
 
         result_block.innerText = "Running...";
 
-        params = {
-            code: text
+        fetch_with_timeout("https://play.rust-lang.org/evaluate.json", {
+            headers: {
+                'Content-Type': "application/json",
+            },
+            method: 'POST',
+            mode: 'cors',
+            body: JSON.stringify(params)
+        })
+            .then(response => response.json())
+            .then(response => result_block.innerText = response.result)
+            .catch(error => result_block.innerText = "Playground Communication: " + error.message);
+    }
+
+    function run_wasm_pack_code(code_block) {
+        var result_block = code_block.querySelector(".result");
+        if (!result_block) {
+            result_block = document.createElement('code');
+            result_block.className = 'result hljs language-bash';
+
+            code_block.append(result_block);
         }
-        // fetch_with_timeout("https://play.rust-lang.org/evaluate.json", {
-        //     headers: {
-        //         'Content-Type': "application/json",
-        //     },
-        //     method: 'POST',
-        //     mode: 'cors',
-        //     body: JSON.stringify(params)
-        // })
+
+        let text = playground_text(code_block);
+
+        var params = {
+            code: text,
+        };
+
+        result_block.innerText = "Running...";
+
         prepareSandbox(params).then(src => processHTML(src)).then(html => {
             result_block.innerText = "";
-            var iframe = result_block.appendChild(document.createElement('iframe')),
-                doc = iframe.contentWindow.document;
-            iframe.id = "wasm-rendering";
-            iframe.style.width = "100%";
+            var iframe = document.createElement('iframe');
             iframe.style.height = "100%";
-            iframe.border = 0;
-            iframe.scrolling = "no";
-            doc.open().write(html);
-            doc.close();
-        })
+            iframe.style.width = "100%";
+            iframe.style.padding = 0;
+            iframe.style.margin = 0;
+            iframe.style.border = 0;
+            iframe.src = createObjectURL(html, "text/html");
+            result_block.appendChild(iframe);
+        });
     }
+    // Greatly inspired from WebAssemblyStudio
     async function prepareSandbox(params) {
-        var wasmResult = fetch_with_timeout("http://192.168.217.100:9999/wasm-pack", {
+        var wasmResult = fetch_with_timeout("http://127.0.0.1:9999/wasm-pack", {
             headers: {
                 'Content-Type': "application/json",
             },
@@ -159,10 +185,9 @@ function playground_text(playground) {
         })
             .then(response => response.json())
             .then(({ wasm_js, wasm_bg }) => {
-                var wasm_bg_blob = base64ToByteArray(wasm_bg);
                 return {
                     wasm_js: atob(wasm_js),
-                    wasm_bg: wasm_bg_blob
+                    wasm_bg: base64ToByteArray(wasm_bg)
                 }
             })
             .catch(error => result_block.innerText = "Playground Communication: " + error.message);
@@ -185,19 +210,15 @@ function playground_text(playground) {
     }
     async function processHTML([htmlSrc, jsSrc, { wasm_js, wasm_bg }]) {
         var src = rewriteJS(jsSrc, wasm_js, wasm_bg);
-        var blob = new Blob([src], { type: "application/javascript" });
-        var jsBlob = URL.createObjectURL(blob);
+        var jsBlob = createObjectURL(src, "application/javascript");
         return htmlSrc.replace(/\bsrc\s*=\s*['"](.+?)['"]/g, (all, path) => {
             return `src="${jsBlob}"`;
         });
     }
 
     function rewriteJS(src, wasmJS, bgWasm) {
-        var blob = new Blob([wasmJS], { type: "application/javascript" });
-        var wasmJSBlob = URL.createObjectURL(blob);
-
-        var blob = new Blob([bgWasm], { type: "application/wasm" });
-        var bgWasmBlob = URL.createObjectURL(blob);
+        var wasmJSBlob = createObjectURL(wasmJS, "application/javascript");
+        var bgWasmBlob = createObjectURL(bgWasm, "application/wasm");
 
         // replace wasm.js
         src = src.replace(/\bfrom\s+['"](.+?)['"](\s*[;\n])/g, (all, path, sep) => {
@@ -208,6 +229,10 @@ function playground_text(playground) {
             return `("${bgWasmBlob}")`;
         })
         return src
+    }
+    
+    function createObjectURL(src, mime) {
+        return URL.createObjectURL(new Blob([src], { type: mime }));
     }
 
     // Syntax highlighting Configuration
@@ -313,7 +338,11 @@ function playground_text(playground) {
 
         buttons.insertBefore(runCodeButton, buttons.firstChild);
         runCodeButton.addEventListener('click', function (e) {
-            run_rust_code(pre_block);
+            if (code_block.classList.contains("wasm")) {
+                run_wasm_pack_code(pre_block);
+            } else {
+                run_rust_code(pre_block);
+            }
         });
 
         if (window.playground_copyable) {
