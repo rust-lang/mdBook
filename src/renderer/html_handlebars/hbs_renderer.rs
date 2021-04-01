@@ -200,6 +200,8 @@ impl HtmlHandlebars {
             write_file(destination, "CNAME", format!("{}\n", cname).as_bytes())?;
         }
 
+        write_file(destination, "iframe.html", &theme.iframe_html)?;
+        write_file(destination, "wasm-entry.mjs", &theme.wasm_entry_mjs)?;
         write_file(destination, "book.js", &theme.js)?;
         write_file(destination, "css/general.css", &theme.general_css)?;
         write_file(destination, "css/chrome.css", &theme.chrome_css)?;
