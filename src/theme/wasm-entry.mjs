@@ -1,3 +1,3 @@
 import init from './wasm.js';
 
-init();
+await init("WASM_URL");

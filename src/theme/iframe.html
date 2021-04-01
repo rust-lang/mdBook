@@ -1,18 +1,18 @@
-<!-- Code injected from iframe.html -->
+<!DOCTYPE html>
+<html>
+
 <head>
-    <script>
-        // dynamically create script element and append to head
-        // call wasm-entry to load the built wasm.js
-        function body_onload() {
-            var d = document;
-            var script = d.createElement('script');
-            script.type = 'module';
-            script.src = 'wasm-entry.mjs';
-            d.getElementsByTagName('head')[0].appendChild(script);
+    <meta charset="utf-8">
+    <style>
+        body {
+            background-color: rgb(255, 255, 255);
         }
-    </script>
+    </style>
 </head>
 
-<body onload="body_onload();">
-    <div id="_start"></div>
+<body>
+    <span id="container"></span>
+    <script src="wasm-entry.mjs" type="module"></script>
 </body>
+
+</html>
