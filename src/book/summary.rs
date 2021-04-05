@@ -365,8 +365,6 @@ impl<'a> SummaryParser<'a> {
         let mut first = true;
 
         loop {
-            let mut html_node = false;
-
             match self.next_event() {
                 Some(ev @ Event::Start(Tag::Paragraph)) => {
                     if !first {
@@ -407,12 +405,6 @@ impl<'a> SummaryParser<'a> {
                     items.push(SummaryItem::Separator);
                 }
 
-                // A HTML node, such as a comment line... ignore, but set the html_node flag.
-                Some(Event::Html(html)) => {
-                    trace!("Skipping a HTML node of {:?}", html);
-                    html_node = true;
-                }
-
                 // something else... ignore
                 Some(_) => {}
 
@@ -422,10 +414,8 @@ impl<'a> SummaryParser<'a> {
                 }
             }
 
-            // If the event was not a HTML node, we no longer accept any new paragraph opening tags.
-            if !html_node {
-                first = false;
-            }
+            // From now on, we cannot accept any new paragraph opening tags.
+            first = false;
         }
 
         Ok(items)
