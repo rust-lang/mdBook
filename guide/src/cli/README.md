@@ -12,7 +12,7 @@ to download the appropriate version for your platform.
 
 ## Install From Source
 
-mdBook can also be installed from source
+mdBook can also be installed by compiling the source code on your local machine.
 
 ### Pre-requisite
 

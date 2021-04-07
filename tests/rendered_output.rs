@@ -104,12 +104,12 @@ fn check_correct_cross_links_in_nested_dir() {
 
     assert_contains_strings(
         first.join("index.html"),
-        &[r##"href="#some-section" id="some-section""##],
+        &[r##"<h2 id="some-section"><a class="header" href="#some-section">"##],
     );
 
     assert_contains_strings(
         first.join("nested.html"),
-        &[r##"href="#some-section" id="some-section""##],
+        &[r##"<h2 id="some-section"><a class="header" href="#some-section">"##],
     );
 }
 
@@ -373,7 +373,7 @@ fn able_to_include_files_in_chapters() {
     let includes = temp.path().join("book/first/includes.html");
 
     let summary_strings = &[
-        r##"<h1><a class="header" href="#summary" id="summary">Summary</a></h1>"##,
+        r##"<h1 id="summary"><a class="header" href="#summary">Summary</a></h1>"##,
         ">First Chapter</a>",
     ];
     assert_contains_strings(&includes, summary_strings);
@@ -595,7 +595,10 @@ mod search {
             docs[&summary]["body"],
             "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Markdown Unicode Second Chapter Nested Chapter Conclusion"
         );
-        assert_eq!(docs[&summary]["breadcrumbs"], "First Chapter » Summary");
+        assert_eq!(
+            docs[&summary]["breadcrumbs"],
+            "First Chapter » Includes » Summary"
+        );
         assert_eq!(docs[&conclusion]["body"], "I put &lt;HTML&gt; in here!");
     }
 
