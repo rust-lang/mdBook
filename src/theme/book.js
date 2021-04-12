@@ -60,7 +60,6 @@ function playground_text(playground) {
                         mac: "Ctrl-Enter"
                     },
                     exec: _editor => {
-                        console.log(code_block.classList.contains("wasm"));
                         if (code_block.classList.contains("wasm")) {
                             run_wasm_pack_code(playground_block);
                         } else {
@@ -161,18 +160,16 @@ function playground_text(playground) {
 
         result_block.innerText = "Running...";
 
-        prepareSandbox(params).then(src => processHTML(src)).then(html => {
-            result_block.innerText = "";
-            var iframe = document.createElement('iframe');
-            iframe.style.height = "100%";
-            iframe.style.width = "100%";
-            iframe.style.padding = 0;
-            iframe.style.margin = 0;
-            iframe.style.border = 0;
-            iframe.src = createObjectURL(html, "text/html");
-            result_block.appendChild(iframe);
-        });
+        prepareSandbox(params)
+            .then(src => processHTML(src))
+            .then(html => {
+                result_block.innerText = "";
+                var iframe = createIFrame(html);
+                result_block.appendChild(iframe);
+            })
+            .catch(error => result_block.innerText = "Playground Communication: " + error.message);
     }
+
     // Greatly inspired from WebAssemblyStudio
     async function prepareSandbox(params) {
         var wasmResult = fetch_with_timeout("http://127.0.0.1:9999/wasm-pack", {
@@ -184,13 +181,16 @@ function playground_text(playground) {
             body: JSON.stringify(params)
         })
             .then(response => response.json())
-            .then(({ wasm_js, wasm_bg }) => {
+            .then(({ wasm_js, wasm_bg, error }) => {
+                if (error) {
+                    throw new Error(error);
+                }
+
                 return {
                     wasm_js: atob(wasm_js),
                     wasm_bg: base64ToByteArray(wasm_bg)
                 }
             })
-            .catch(error => result_block.innerText = "Playground Communication: " + error.message);
 
         var htmlSrc = fetch(new Request("iframe.html"))
             .then(response => response.text());
@@ -198,8 +198,8 @@ function playground_text(playground) {
             .then(response => response.text());
 
         return Promise.all([htmlSrc, jsSrc, wasmResult])
-            .catch(error => console.log(error));
     }
+
     function base64ToByteArray(src) {
         var decode = atob(src);
         const byteNumbers = new Array(decode.length);
@@ -208,6 +208,7 @@ function playground_text(playground) {
         }
         return new Uint8Array(byteNumbers);
     }
+
     async function processHTML([htmlSrc, jsSrc, { wasm_js, wasm_bg }]) {
         var src = rewriteJS(jsSrc, wasm_js, wasm_bg);
         var jsBlob = createObjectURL(src, "application/javascript");
@@ -230,9 +231,20 @@ function playground_text(playground) {
         })
         return src
     }
-    
+
     function createObjectURL(src, mime) {
         return URL.createObjectURL(new Blob([src], { type: mime }));
+    }
+
+    function createIFrame(src) {
+        var iframe = document.createElement('iframe');
+        iframe.style.height = "100%";
+        iframe.style.width = "100%";
+        iframe.style.padding = 0;
+        iframe.style.margin = 0;
+        iframe.style.border = 0;
+        iframe.src = createObjectURL(src, "text/html");
+        return iframe
     }
 
     // Syntax highlighting Configuration
