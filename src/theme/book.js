@@ -181,9 +181,9 @@ function playground_text(playground) {
             body: JSON.stringify(params)
         })
             .then(response => response.json())
-            .then(({ wasm_js, wasm_bg, error }) => {
-                if (error) {
-                    throw new Error(error);
+            .then(({ wasm_js, wasm_bg, success, stderr }) => {
+                if (!success) {
+                    throw new Error(stderr);
                 }
 
                 return {
@@ -238,11 +238,13 @@ function playground_text(playground) {
 
     function createIFrame(src) {
         var iframe = document.createElement('iframe');
+        iframe.scrolling = 'no';
         iframe.style.height = "100%";
         iframe.style.width = "100%";
         iframe.style.padding = 0;
         iframe.style.margin = 0;
         iframe.style.border = 0;
+        iframe.style.overflow = "hidden";
         iframe.src = createObjectURL(src, "text/html");
         return iframe
     }
