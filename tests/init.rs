@@ -123,7 +123,9 @@ fn copy_theme() {
         "favicon.svg",
         "highlight.css",
         "highlight.js",
+        "iframe.html",
         "index.hbs",
+        "wasm-entry.mjs",
     ];
     let theme_dir = temp.path().join("theme");
     let mut actual: Vec<_> = walkdir::WalkDir::new(&theme_dir)

@@ -227,6 +227,8 @@ mod tests {
             "highlight.css",
             "ayu-highlight.css",
             "clipboard.min.js",
+            "iframe.html",
+            "wasm-entry.mjs",
         ];
 
         let temp = TempFileBuilder::new().prefix("mdbook-").tempdir().unwrap();
