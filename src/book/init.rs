@@ -156,13 +156,13 @@ impl BookBuilder {
 
         let mut highlight_js = File::create(themedir.join("highlight.js"))?;
         highlight_js.write_all(theme::HIGHLIGHT_JS)?;
-        
+
         let mut iframe = File::create(themedir.join("iframe.html"))?;
         iframe.write_all(theme::IFRAME)?;
 
         let mut wasm_entry_js = File::create(themedir.join("wasm-entry.mjs"))?;
         wasm_entry_js.write_all(theme::WASM_ENTRY_MJS)?;
-        
+
         Ok(())
     }
 
