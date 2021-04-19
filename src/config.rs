@@ -559,6 +559,7 @@ impl Default for HtmlConfig {
             search: None,
             git_repository_url: None,
             git_repository_icon: None,
+            git_repository_edit_url_template: None,
             input_404: None,
             site_url: None,
             cname: None,

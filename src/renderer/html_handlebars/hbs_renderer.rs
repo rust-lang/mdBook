@@ -40,7 +40,12 @@ impl HtmlHandlebars {
         if let Some(ref git_repository_edit_url_template) =
             ctx.html_config.git_repository_edit_url_template
         {
-            let full_path = "src/".to_owned() + path.to_str().unwrap();
+            let full_path = "src/".to_owned()
+                + ch.source_path
+                    .clone()
+                    .unwrap_or_default()
+                    .to_str()
+                    .unwrap_or_default();
             let edit_url = git_repository_edit_url_template.replace("{path}", &full_path);
             ctx.data
                 .insert("git_repository_edit_url".to_owned(), json!(edit_url));
