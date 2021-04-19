@@ -295,6 +295,7 @@ additional-js = ["custom.js"]
 no-section-label = false
 git-repository-url = "https://github.com/rust-lang/mdBook"
 git-repository-icon = "fa-github"
+git-repository-edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"
 site-url = "/example-book/"
 cname = "myproject.rs"
 input-404 = "not-found.md"
