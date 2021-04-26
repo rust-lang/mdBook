@@ -201,10 +201,9 @@ The following configuration options are available:
   an icon link will be output in the menu bar of the book.
 - **git-repository-icon:** The FontAwesome icon class to use for the git
   repository link. Defaults to `fa-github`.
-- **git-repository-edit-url-template:** Git repository file edit url
-  template, when provided shows an "Suggest an edit" button for
-  directly jumping to editing the currently viewed page in the git
-  repository. For e.g. GitHub projects set this to
+- **edit-url-template:** Edit url template, when provided shows a
+  "Suggest an edit" button for directly jumping to editing the currently
+  viewed page. For e.g. GitHub projects set this to
   `https://github.com/<owner>/<repo>/edit/master/{path}` or for
   Bitbucket projects set it to
   `https://bitbucket.org/<owner>/<repo>/src/master/{path}?mode=edit`
@@ -295,7 +294,7 @@ additional-js = ["custom.js"]
 no-section-label = false
 git-repository-url = "https://github.com/rust-lang/mdBook"
 git-repository-icon = "fa-github"
-git-repository-edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"
+edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"
 site-url = "/example-book/"
 cname = "myproject.rs"
 input-404 = "not-found.md"

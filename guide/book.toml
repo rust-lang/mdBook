@@ -11,7 +11,7 @@ edition = "2018"
 mathjax-support = true
 site-url = "/mdBook/"
 git-repository-url = "https://github.com/rust-lang/mdBook/tree/master/guide"
-git-repository-edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"
+edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"
 
 [output.html.playground]
 editable = true
