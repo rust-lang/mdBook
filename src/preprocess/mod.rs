@@ -12,6 +12,8 @@ use crate::book::{Book, Chapter};
 use crate::config::Config;
 use crate::errors::*;
 
+use std::cell::RefCell;
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::{
     fmt::{Debug},
@@ -30,6 +32,8 @@ pub struct PreprocessorContext {
     /// The calling `mdbook` version.
     pub mdbook_version: String,
     #[serde(skip)]
+    pub(crate) chapter_titles: RefCell<HashMap<PathBuf, String>>,
+    #[serde(skip)]
     __non_exhaustive: (),
 }
 
@@ -41,6 +45,7 @@ impl PreprocessorContext {
             config,
             renderer,
             mdbook_version: crate::MDBOOK_VERSION.to_string(),
+            chapter_titles: RefCell::new(HashMap::new()),
             __non_exhaustive: (),
         }
     }

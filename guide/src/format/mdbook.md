@@ -40,7 +40,7 @@ The path to the file has to be relative from the current source file.
 mdBook will interpret included files as Markdown. Since the include command
 is usually used for inserting code snippets and examples, you will often
 wrap the command with ```` ``` ```` to display the file contents without
-interpretting them.
+interpreting them.
 
 ````hbs
 ```
@@ -49,7 +49,7 @@ interpretting them.
 ````
 
 ## Including portions of a file
-Often you only need a specific part of the file e.g. relevant lines for an
+Often you only need a specific part of the file, e.g. relevant lines for an
 example. We support four different modes of partial includes:
 
 ```hbs
@@ -68,8 +68,8 @@ consisting of lines 2 to 10.
 To avoid breaking your book when modifying included files, you can also
 include a specific section using anchors instead of line numbers.
 An anchor is a pair of matching lines. The line beginning an anchor must
-match the regex "ANCHOR:\s*[\w_-]+" and similarly the ending line must match
-the regex "ANCHOR_END:\s*[\w_-]+". This allows you to put anchors in
+match the regex `ANCHOR:\s*[\w_-]+` and similarly the ending line must match
+the regex `ANCHOR_END:\s*[\w_-]+`. This allows you to put anchors in
 any kind of commented line.
 
 Consider the following file to include:
@@ -192,3 +192,12 @@ Here is what a rendered code snippet looks like:
 {{#playground example.rs}}
 
 [Rust Playground]: https://play.rust-lang.org/
+
+## Controlling page \<title\>
+
+A chapter can set a \<title\> that is different from its entry in the table of
+contents (sidebar) by including a `\{{#title ...}}` near the top of the page.
+
+```hbs
+\{{#title My Title}}
+```
