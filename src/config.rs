@@ -522,6 +522,10 @@ pub struct HtmlConfig {
     ///
     /// [custom domain]: https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site
     pub cname: Option<String>,
+    /// Edit url template, when set shows a "Suggest an edit" button for
+    /// directly jumping to editing the currently viewed page.
+    /// Contains {path} that is replaced with chapter source file path
+    pub edit_url_template: Option<String>,
     /// This is used as a bit of a workaround for the `mdbook serve` command.
     /// Basically, because you set the websocket port from the command line, the
     /// `mdbook serve` command needs a way to let the HTML renderer know where
@@ -554,6 +558,7 @@ impl Default for HtmlConfig {
             search: None,
             git_repository_url: None,
             git_repository_icon: None,
+            edit_url_template: None,
             input_404: None,
             site_url: None,
             cname: None,
