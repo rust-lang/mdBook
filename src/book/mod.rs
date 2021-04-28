@@ -78,6 +78,39 @@ impl MDBook {
         MDBook::load_with_config(book_root, config)
     }
 
+    /// Load a book from its root directory on disk, specifying a config file explicitly.
+    pub fn load_with_config_file<P: Into<PathBuf>>(book_root: P, config_file: P) -> Result<MDBook> {
+        let book_root = book_root.into();
+        let config_file = config_file.into();
+
+        // the book.json file is no longer used, so we should emit a warning to
+        // let people know to migrate to book.toml
+        if book_root.join("book.json").exists() {
+            warn!("It appears you are still using book.json for configuration.");
+            warn!("This format is no longer used, so you should migrate to the");
+            warn!("book.toml format.");
+            warn!("Check the user guide for migration information:");
+            warn!("\thttps://rust-lang.github.io/mdBook/format/config.html");
+        }
+
+        let mut config = if config_file.exists() {
+            debug!("Loading config from {}", config_file.display());
+            Config::from_disk(&config_file)?
+        } else {
+            bail!("Config file {} not found.", config_file.display());
+        };
+
+        config.update_from_env();
+
+        if log_enabled!(log::Level::Trace) {
+            for line in format!("Config: {:#?}", config).lines() {
+                trace!("{}", line);
+            }
+        }
+
+        MDBook::load_with_config(book_root, config)
+    }
+
     /// Load a book from its root directory using a custom `Config`.
     pub fn load_with_config<P: Into<PathBuf>>(book_root: P, config: Config) -> Result<MDBook> {
         let root = book_root.into();
