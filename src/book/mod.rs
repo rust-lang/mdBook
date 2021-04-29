@@ -97,7 +97,7 @@ impl MDBook {
             debug!("Loading config from {}", config_file.display());
             Config::from_disk(&config_file)?
         } else {
-            bail!("Config file {} not found.", config_file.display());
+            bail!("Config file {} not found", config_file.display());
         };
 
         config.update_from_env();
