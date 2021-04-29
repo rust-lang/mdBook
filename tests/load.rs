@@ -13,9 +13,9 @@ fn load_with_default_config() {
 
     md.build().unwrap();
 
-    let dest = temp.path().join("book");
+    let index_html = temp.path().join("book").join("index.html");
     assert_contains_strings(
-        dest.join("index.html"),
+        index_html,
         &vec![r#"<title>Dummy Book</title>"#],
     );
 }
@@ -27,8 +27,8 @@ fn load_with_book_toml_implicit() {
     let book_toml = r#"
 [book]
 title = "implicit"
-
     "#;
+
     write_file(&temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
 
     assert!(temp.path().join("book.toml").exists());
@@ -37,9 +37,9 @@ title = "implicit"
 
     md.build().unwrap();
 
-    let dest = temp.path().join("book");
+    let index_html = temp.path().join("book").join("index.html");
     assert_contains_strings(
-        dest.join("index.html"),
+        index_html,
         &vec![r#"<title>Dummy Book - implicit</title>"#],
     );
 }
@@ -51,8 +51,8 @@ fn load_with_book_toml_explicit() {
     let book_toml = r#"
 [book]
 title = "explicit"
-
     "#;
+
     write_file(&temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
 
     assert!(temp.path().join("book.toml").exists());
@@ -61,9 +61,9 @@ title = "explicit"
 
     md.build().unwrap();
 
-    let dest = temp.path().join("book");
+    let index_html = temp.path().join("book").join("index.html");
     assert_contains_strings(
-        dest.join("index.html"),
+        index_html,
         &vec![r#"<title>Dummy Book - explicit</title>"#],
     );
 }
@@ -75,8 +75,8 @@ fn load_with_alternate_toml() {
     let alternate_toml = r#"
 [book]
 title = "alternate"
-
     "#;
+
     write_file(&temp.path(), "not-book.toml", alternate_toml.as_bytes()).unwrap();
 
     assert!(!temp.path().join("book.toml").exists());
@@ -87,9 +87,9 @@ title = "alternate"
 
     md.build().unwrap();
 
-    let dest = temp.path().join("book");
+    let index_html = temp.path().join("book").join("index.html");
     assert_contains_strings(
-        dest.join("index.html"),
+        index_html,
         &vec![r#"<title>Dummy Book - alternate</title>"#],
     );
 }
@@ -101,15 +101,15 @@ fn load_with_alternate_toml_with_book_toml_present() {
     let book_toml = r#"
 [book]
 title = "book"
-
     "#;
+
     write_file(&temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
 
     let alternate_toml = r#"
 [book]
 title = "not book"
-
     "#;
+
     write_file(&temp.path(), "not-book.toml", alternate_toml.as_bytes()).unwrap();
 
     assert!(temp.path().join("book.toml").exists());
@@ -120,9 +120,9 @@ title = "not book"
 
     md.build().unwrap();
 
-    let dest = temp.path().join("book");
+    let index_html = temp.path().join("book").join("index.html");
     assert_contains_strings(
-        dest.join("index.html"),
+        index_html,
         &vec![r#"<title>Dummy Book - not book</title>"#],
     );
 }
