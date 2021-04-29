@@ -126,3 +126,12 @@ title = "not book"
         &vec![r#"<title>Dummy Book - not book</title>"#],
     );
 }
+
+#[test]
+#[should_panic]
+fn try_load_with_missing_file() {
+
+    let temp = DummyBook::new().build().unwrap();
+    let md =
+        MDBook::load_with_config_file(temp.path(), &temp.path().join("not-there.toml")).unwrap();
+}
