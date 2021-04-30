@@ -47,12 +47,32 @@ pub struct MDBook {
 }
 
 impl MDBook {
-    /// Load a book from its root directory on disk.
+    /// Load a book from its root directory on disk. If a `book.toml` file is present in the
+    /// root directory, the configuration is loaded from that. Otherwise, the
+    /// default `Config` is used.
+    ///
+    /// ```no_run
+    /// # use mdbook::MDBook;
+    /// let root_dir = "/path/to/book/root";
+    ///
+    /// let mut md = MDBook::load(root_dir)
+    ///   .expect("Unable to load the book");
+    /// ```
     pub fn load<P: Into<PathBuf>>(book_root: P) -> Result<MDBook> {
         MDBook::load_book(book_root, None)
     }
 
-    /// Load a book from its root directory on disk, specifying a config file explicitly.
+    /// Load a book from its root directory on disk, specifying a configuration file explicitly. If
+    /// the supplied configuration file is not found, an error is returned.
+    ///
+    /// ```no_run
+    /// # use mdbook::MDBook;
+    /// let root_dir = "/path/to/book/root";
+    /// let alternate_config_file = "/path/to/alternate-config.toml";
+    ///
+    /// let mut md = MDBook::load_with_config_file(root_dir, alternate_config_file)
+    ///   .expect("Unable to load the book");
+    /// ```
     pub fn load_with_config_file<P: Into<PathBuf>>(book_root: P, config_file: P) -> Result<MDBook> {
         MDBook::load_book(book_root, Some(config_file))
     }
