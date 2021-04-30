@@ -98,7 +98,7 @@ impl MDBook {
                     debug!("Loading config from {}", config_file.display());
                     Config::from_disk(&config_file)?
                 } else {
-                    bail!("Config file {} not found", config_file.display());
+                    bail!("Configuration file {} not found", config_file.display());
                 }
             }
             // no config file was supplied, look for a book.toml, or fall back to the default
