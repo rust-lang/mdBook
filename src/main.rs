@@ -4,7 +4,7 @@ extern crate clap;
 extern crate log;
 
 use chrono::Local;
-use clap::{App, AppSettings, ArgMatches};
+use clap::{App, AppSettings, Arg, ArgMatches};
 use env_logger::Builder;
 use log::LevelFilter;
 use mdbook::utils;
@@ -86,6 +86,15 @@ fn init_logger() {
     }
 
     builder.init();
+}
+
+fn config_file_arg() -> Arg<'static, 'static> {
+    Arg::with_name("config")
+        .help("Specify a configuration file")
+        .short("c")
+        .long("config-file")
+        .takes_value(true)
+        .value_name("config-file")
 }
 
 fn get_book_dir(args: &ArgMatches) -> PathBuf {
