@@ -7,7 +7,7 @@ use chrono::Local;
 use clap::{App, AppSettings, Arg, ArgMatches};
 use env_logger::Builder;
 use log::LevelFilter;
-use mdbook::utils;
+use mdbook::{errors::Result, utils, MDBook};
 use std::env;
 use std::ffi::OsStr;
 use std::io::Write;
@@ -108,6 +108,16 @@ fn get_book_dir(args: &ArgMatches) -> PathBuf {
         }
     } else {
         env::current_dir().expect("Unable to determine the current directory")
+    }
+}
+
+fn load_book(args: &ArgMatches) -> Result<MDBook> {
+    let book_dir = get_book_dir(args);
+    if let Some(config_file) = args.value_of("config") {
+        let config_file_path = Path::new(config_file);
+        MDBook::load_with_config_file(book_dir, config_file_path.to_path_buf())
+    } else {
+        MDBook::load(book_dir)
     }
 }
 
