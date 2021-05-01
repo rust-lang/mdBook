@@ -51,6 +51,7 @@ ammonia = { version = "3", optional = true }
 select = "0.5"
 pretty_assertions = "0.6"
 walkdir = "2.0"
+assert_cmd = "1.0"
 
 [features]
 default = ["watch", "serve", "search"]
