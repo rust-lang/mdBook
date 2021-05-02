@@ -34,11 +34,14 @@ allow for easy parsing. Let's see how you should format your `SUMMARY.md` file.
    ```markdown
    # Title of Part
 
-   - [Title of the Chapter](relative/path/to/markdown.md)
+   - [Title of thefirst  Chapter](relative/path/to/markdown.md)
+   - [Title of the second Chapter](relative/path/to/markdown2.md)
+      * [Title of a sub Chapter](relative/path/to/markdown3.md)
+
 
    # Title of Another Part
 
-   - [More Chapters](relative/path/to/markdown2.md)
+   - [More Chapters](relative/path/to/markdown4.md)
    ```
    You can either use `-` or `*` to indicate a numbered chapter.
 
