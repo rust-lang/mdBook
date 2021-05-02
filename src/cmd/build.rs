@@ -1,12 +1,12 @@
-use crate::{get_book_dir, open};
+use crate::{config_file_arg, load_book, open};
 use clap::{App, ArgMatches, SubCommand};
 use mdbook::errors::Result;
-use mdbook::MDBook;
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name("build")
         .about("Builds a book from its markdown files")
+        .arg(config_file_arg())
         .arg_from_usage(
             "-d, --dest-dir=[dest-dir] 'Output directory for the book{n}\
              Relative paths are interpreted relative to the book's root directory.{n}\
@@ -21,8 +21,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 
 // Build command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
-    let book_dir = get_book_dir(args);
-    let mut book = MDBook::load(&book_dir)?;
+    let mut book = load_book(args)?;
 
     if let Some(dest_dir) = args.value_of("dest-dir") {
         book.config.build.build_dir = dest_dir.into();
