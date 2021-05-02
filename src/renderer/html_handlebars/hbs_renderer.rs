@@ -37,6 +37,18 @@ impl HtmlHandlebars {
             _ => return Ok(()),
         };
 
+        if let Some(ref edit_url_template) = ctx.html_config.edit_url_template {
+            let full_path = "src/".to_owned()
+                + ch.source_path
+                    .clone()
+                    .unwrap_or_default()
+                    .to_str()
+                    .unwrap_or_default();
+            let edit_url = edit_url_template.replace("{path}", &full_path);
+            ctx.data
+                .insert("git_repository_edit_url".to_owned(), json!(edit_url));
+        }
+
         let content = ch.content.clone();
         let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
 
