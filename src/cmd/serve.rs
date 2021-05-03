@@ -1,6 +1,6 @@
 #[cfg(feature = "watch")]
 use super::watch;
-use crate::{get_book_dir, open};
+use crate::{config_file_arg, load_book, open};
 use clap::{App, Arg, ArgMatches, SubCommand};
 use futures_util::sink::SinkExt;
 use futures_util::StreamExt;
@@ -21,6 +21,7 @@ const LIVE_RELOAD_ENDPOINT: &str = "__livereload";
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name("serve")
         .about("Serves a book at http://localhost:3000, and rebuilds it on changes")
+        .arg(config_file_arg())
         .arg_from_usage(
             "-d, --dest-dir=[dest-dir] 'Output directory for the book{n}\
              Relative paths are interpreted relative to the book's root directory.{n}\
@@ -53,8 +54,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 
 // Serve command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
-    let book_dir = get_book_dir(args);
-    let mut book = MDBook::load(&book_dir)?;
+    let mut book = load_book(args)?;
 
     let port = args.value_of("port").unwrap();
     let hostname = args.value_of("hostname").unwrap();

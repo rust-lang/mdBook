@@ -1,4 +1,4 @@
-use crate::{get_book_dir, open};
+use crate::{config_file_arg, load_book, open};
 use clap::{App, ArgMatches, SubCommand};
 use mdbook::errors::Result;
 use mdbook::utils;
@@ -13,6 +13,7 @@ use std::time::Duration;
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name("watch")
         .about("Watches a book's files and rebuilds it on changes")
+        .arg(config_file_arg())
         .arg_from_usage(
             "-d, --dest-dir=[dest-dir] 'Output directory for the book{n}\
              Relative paths are interpreted relative to the book's root directory.{n}\
@@ -27,8 +28,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 
 // Watch command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
-    let book_dir = get_book_dir(args);
-    let mut book = MDBook::load(&book_dir)?;
+    let mut book = load_book(args)?;
 
     let update_config = |book: &mut MDBook| {
         if let Some(dest_dir) = args.value_of("dest-dir") {
