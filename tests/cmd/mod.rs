@@ -1,4 +1,8 @@
 mod build;
+mod clean;
+mod init;
+mod test;
+mod watch;
 
 use assert_cmd::assert::Assert;
 use assert_cmd::Command;
