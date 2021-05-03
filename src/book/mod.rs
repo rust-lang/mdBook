@@ -47,7 +47,7 @@ pub struct MDBook {
 }
 
 impl MDBook {
-  /// Load a book from its root directory on disk. If a `book.toml` file is present in the
+    /// Load a book from its root directory on disk. If a `book.toml` file is present in the
     /// root directory, the configuration is loaded from that. Otherwise, the
     /// default `Config` is used.
     ///
