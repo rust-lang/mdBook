@@ -1,13 +1,13 @@
-use crate::get_book_dir;
+use crate::{config_file_arg, load_book};
 use anyhow::Context;
 use clap::{App, ArgMatches, SubCommand};
-use mdbook::MDBook;
 use std::fs;
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name("clean")
         .about("Deletes a built book")
+        .arg(config_file_arg())
         .arg_from_usage(
             "-d, --dest-dir=[dest-dir] 'Output directory for the book{n}\
              Relative paths are interpreted relative to the book's root directory.{n}\
@@ -22,8 +22,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 
 // Clean command implementation
 pub fn execute(args: &ArgMatches) -> mdbook::errors::Result<()> {
-    let book_dir = get_book_dir(args);
-    let book = MDBook::load(&book_dir)?;
+    let book = load_book(args)?;
 
     let dir_to_remove = match args.value_of("dest-dir") {
         Some(dest_dir) => dest_dir.into(),
