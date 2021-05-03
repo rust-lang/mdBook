@@ -2,13 +2,10 @@ mod dummy_book;
 
 use crate::dummy_book::{assert_contains_strings, DummyBook};
 use mdbook::book::parse_summary;
-use mdbook::book::{Summary, SummaryItem};
 use mdbook::config::Config;
 use mdbook::utils::fs::write_file;
 use mdbook::MDBook;
 use std::fs;
-use std::fs::File;
-use std::io::Read;
 
 #[test]
 fn load_with_default_config() {
