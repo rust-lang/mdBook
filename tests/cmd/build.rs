@@ -93,6 +93,8 @@ fn cmd_build_with_explicit_config_file() {
     assert_contains_strings(index_html, &vec![r#"<title>Dummy Book - explicit</title>"#]);
 }
 
+// currently ignored. using set_current_dir changes global state which means other concurrently run tests
+// may fail.
 #[test]
 #[ignore]
 fn cmd_build_with_implicit_dir() {
