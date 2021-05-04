@@ -34,7 +34,7 @@ allow for easy parsing. Let's see how you should format your `SUMMARY.md` file.
    ```markdown
    # Title of Part
 
-   - [Title of the first  Chapter](relative/path/to/markdown.md)
+   - [Title of the first Chapter](relative/path/to/markdown.md)
    - [Title of the second Chapter](relative/path/to/markdown2.md)
       - [Title of a sub Chapter](relative/path/to/markdown3.md)
 
