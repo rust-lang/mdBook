@@ -8,7 +8,13 @@ Original by Dempfi (https://github.com/dempfi/ayu)
   overflow-x: auto;
   background: #191f26;
   color: #e6e1cf;
-  padding: 2em 0.5em;
+  padding: 0.5em;
+}
+
+@media (max-width: 640px) {
+  .hljs {
+    padding-top: 2em;
+  }
 }
 
 .hljs-comment,

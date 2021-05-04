@@ -61,7 +61,13 @@
   overflow-x: auto;
   background: #f6f7f6;
   color: #000;
-  padding: 2em 0.5em;
+  padding: 0.5em;
+}
+
+@media (max-width: 640px) {
+  .hljs {
+    padding-top: 2em;
+  }
 }
 
 .hljs-emphasis {
