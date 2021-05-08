@@ -23,9 +23,9 @@ root instead of the current working directory.
 mdbook serve path/to/book
 ```
 
-#### Server options
+### Server options
 
-The `serve` hostname defaults to `localhost`, and the port defaults to 3000. Either option can be specified on the command line:
+The `serve` hostname defaults to `localhost`, and the port defaults to `3000`. Either option can be specified on the command line:
 
 ```bash
 mdbook serve path/to/book -p 8000 -n 127.0.0.1 
