@@ -51,5 +51,5 @@ contain file patterns described in the [gitignore
 documentation](https://git-scm.com/docs/gitignore). This can be useful for
 ignoring temporary files created by some editors.
 
-_Note: Only `.gitignore` from book root directory is used. Global
-`$HOME/.gitignore` or `.gitignore` files in parent directories are not used._
+***Note:*** *Only the `.gitignore` from the book root directory is used. Global
+`$HOME/.gitignore` or `.gitignore` files in parent directories are not used.*
