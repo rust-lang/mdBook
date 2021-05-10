@@ -1,5 +1,23 @@
 # Changelog
 
+## mdBook 0.4.8
+[fcceee4...b592b10](https://github.com/rust-lang/mdBook/compare/fcceee4...b592b10)
+
+### Added
+- Added the option `output.html.edit-url-template` which can be a URL which is
+  linked on each page to direct the user to a site (such as GitHub) where the
+  user can directly suggest an edit for the page they are currently reading.
+  [#1506](https://github.com/rust-lang/mdBook/pull/1506)
+
+### Changed
+- Printed output now includes a page break between chapters.
+  [#1485](https://github.com/rust-lang/mdBook/pull/1485)
+
+### Fixed
+- HTML, such as HTML comments, is now ignored if it appears above the title line
+  in `SUMMARY.md`.
+  [#1437](https://github.com/rust-lang/mdBook/pull/1437)
+
 ## mdBook 0.4.7
 [9a9eb01...c83bbd6](https://github.com/rust-lang/mdBook/compare/9a9eb01...c83bbd6)
 
