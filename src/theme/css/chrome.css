@@ -20,6 +20,9 @@ a > .hljs {
 
 /* Menu Bar */
 
+html {
+  scroll-padding-top: var(--menu-bar-height);
+}
 #menu-bar,
 #menu-bar-hover-placeholder {
     z-index: 101;
