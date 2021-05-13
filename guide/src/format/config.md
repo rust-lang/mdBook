@@ -215,7 +215,7 @@ The following configuration options are available:
   `/appendices/bibliography.html`). The value can be any valid URI the
   browser should navigate to (e.g. `https://rust-lang.org/`,
   `/overview.html`, or `../bibliography.html`).
-- **input-404:** The name of the markdown file used for misssing files.
+- **input-404:** The name of the markdown file used for missing files.
   The corresponding output file will be the same, with the extension replaced with `html`.
   Defaults to `404.md`.
 - **site-url:** The url where the book will be hosted. This is required to ensure
