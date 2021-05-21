@@ -656,7 +656,7 @@ pub struct Search {
     pub boost_paragraph: u8,
     /// True if the searchword `micro` should match `microwave`. Default: `true`.
     pub expand: bool,
-    /// Documents are split into smaller parts, seperated by headings. This defines, until which
+    /// Documents are split into smaller parts, separated by headings. This defines, until which
     /// level of heading documents should be split. Default: `3`. (`### This is a level 3 heading`)
     pub heading_split_level: u8,
     /// Copy JavaScript files for the search functionality to the output directory?

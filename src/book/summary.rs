@@ -173,7 +173,7 @@ struct SummaryParser<'a> {
 /// `Event::End` is encountered which matches the `$delimiter` pattern.
 ///
 /// This is the equivalent of doing
-/// `$stream.take_while(|e| e != $delimeter).collect()` but it allows you to
+/// `$stream.take_while(|e| e != $delimiter).collect()` but it allows you to
 /// use pattern matching and you won't get errors because `take_while()`
 /// moves `$stream` out of self.
 macro_rules! collect_events {
