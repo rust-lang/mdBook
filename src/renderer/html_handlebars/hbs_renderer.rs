@@ -61,7 +61,8 @@ impl HtmlHandlebars {
             // Add page break between chapters
             // See https://developer.mozilla.org/en-US/docs/Web/CSS/break-before and https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-before
             // Add both two CSS properties because of the compatibility issue
-            print_content.push_str(r#"<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div>"#);
+            print_content
+                .push_str(r#"<div style="break-before: page; page-break-before: always;"></div>"#);
         }
         print_content.push_str(&fixed_content);
 
