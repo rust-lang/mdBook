@@ -327,27 +327,17 @@ impl<'de> Deserialize<'de> for Config {
             .transpose()?
             .unwrap_or_default();
 
-        let build = if let Some(build) = table.remove("build") {
-            match build.try_into() {
-                Ok(b) => b,
-                Err(e) => {
-                    return Err(D::Error::custom(e));
-                }
-            }
-        } else {
-            BuildConfig::default()
-        };
+        let build: BuildConfig = table
+            .remove("build")
+            .map(|build| build.try_into().map_err(D::Error::custom))
+            .transpose()?
+            .unwrap_or_default();
 
-        let rust = if let Some(rust) = table.remove("rust") {
-            match rust.try_into() {
-                Ok(b) => b,
-                Err(e) => {
-                    return Err(D::Error::custom(e));
-                }
-            }
-        } else {
-            RustConfig::default()
-        };
+        let rust: RustConfig = table
+            .remove("rust")
+            .map(|rust| rust.try_into().map_err(D::Error::custom))
+            .transpose()?
+            .unwrap_or_default();
 
         Ok(Config {
             book,
