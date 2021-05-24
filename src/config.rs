@@ -321,16 +321,11 @@ impl<'de> Deserialize<'de> for Config {
             }
         };
 
-        let book = if let Some(book) = table.remove("book") {
-            match book.try_into() {
-                Ok(b) => b,
-                Err(e) => {
-                    return Err(D::Error::custom(e));
-                }
-            }
-        } else {
-            BookConfig::default()
-        };
+        let book: BookConfig = table
+            .remove("book")
+            .map(|book| book.try_into().map_err(D::Error::custom))
+            .transpose()?
+            .unwrap_or_default();
 
         let build = if let Some(build) = table.remove("build") {
             match build.try_into() {
