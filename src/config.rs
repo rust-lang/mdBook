@@ -294,6 +294,7 @@ impl Default for Config {
         }
     }
 }
+
 impl<'de> Deserialize<'de> for Config {
     fn deserialize<D: Deserializer<'de>>(de: D) -> std::result::Result<Self, D::Error> {
         let raw = Value::deserialize(de)?;
@@ -310,10 +311,10 @@ impl<'de> Deserialize<'de> for Config {
             return Ok(Config::from_legacy(raw));
         }
 
+        use serde::de::Error;
         let mut table = match raw {
             Value::Table(t) => t,
             _ => {
-                use serde::de::Error;
                 return Err(D::Error::custom(
                     "A config file should always be a toml table",
                 ));
@@ -322,17 +323,20 @@ impl<'de> Deserialize<'de> for Config {
 
         let book: BookConfig = table
             .remove("book")
-            .and_then(|value| value.try_into().ok())
+            .map(|book| book.try_into().map_err(D::Error::custom))
+            .transpose()?
             .unwrap_or_default();
 
         let build: BuildConfig = table
             .remove("build")
-            .and_then(|value| value.try_into().ok())
+            .map(|build| build.try_into().map_err(D::Error::custom))
+            .transpose()?
             .unwrap_or_default();
 
         let rust: RustConfig = table
             .remove("rust")
-            .and_then(|value| value.try_into().ok())
+            .map(|rust| rust.try_into().map_err(D::Error::custom))
+            .transpose()?
             .unwrap_or_default();
 
         Ok(Config {
@@ -1069,5 +1073,58 @@ mod tests {
         let html_config = got.html_config().unwrap();
         assert_eq!(html_config.input_404, Some("missing.md".to_string()));
         assert_eq!(&get_404_output_file(&html_config.input_404), "missing.html");
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid configuration file")]
+    fn invalid_language_type_error() {
+        let src = r#"
+        [book]
+        title = "mdBook Documentation"
+        language = ["en", "pt-br"]
+        description = "Create book from markdown files. Like Gitbook but implemented in Rust"
+        authors = ["Mathieu David"]
+        src = "./source"
+        "#;
+
+        Config::from_str(src).unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid configuration file")]
+    fn invalid_title_type() {
+        let src = r#"
+        [book]
+        title = 20
+        language = "en"
+        description = "Create book from markdown files. Like Gitbook but implemented in Rust"
+        authors = ["Mathieu David"]
+        src = "./source"
+        "#;
+
+        Config::from_str(src).unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid configuration file")]
+    fn invalid_build_dir_type() {
+        let src = r#"
+        [build]
+        build-dir = 99
+        create-missing = false
+        "#;
+
+        Config::from_str(src).unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid configuration file")]
+    fn invalid_rust_edition() {
+        let src = r#"
+        [rust]
+        edition = "1999"
+        "#;
+
+        Config::from_str(src).unwrap();
     }
 }
