@@ -8,7 +8,8 @@ mdbook serve
 ```
 
 The `serve` command  watches the book's `src` directory for
-changes, rebuilding the book and refreshing clients for each change. A websocket
+changes, rebuilding the book and refreshing clients for each change; this includes
+re-creating deleted files still mentioned in `SUMMARY.md`! A websocket
 connection is used to trigger the client-side refresh.
 
 ***Note:*** *The `serve` command is for testing a book's HTML output, and is not
