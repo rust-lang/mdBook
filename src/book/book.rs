@@ -152,6 +152,8 @@ impl From<Chapter> for BookItem {
 pub struct Chapter {
     /// The chapter's name.
     pub name: String,
+    /// A collection of key, value pairs for handlebars.js templates.
+    pub chapter_config: serde_json::Map<String, serde_json::Value>,
     /// The chapter's contents.
     pub content: String,
     /// The chapter's section number, if it has one.
@@ -177,6 +179,7 @@ impl Chapter {
         let path: PathBuf = p.into();
         Chapter {
             name: name.to_string(),
+            chapter_config: serde_json::Map::with_capacity(0),
             content,
             path: Some(path.clone()),
             source_path: Some(path),
@@ -190,6 +193,7 @@ impl Chapter {
     pub fn new_draft(name: &str, parent_names: Vec<String>) -> Self {
         Chapter {
             name: name.to_string(),
+            chapter_config: serde_json::Map::with_capacity(0),
             content: String::new(),
             path: None,
             source_path: None,
@@ -440,6 +444,7 @@ And here is some \
 
         let nested = Chapter {
             name: String::from("Nested Chapter 1"),
+            chapter_config: serde_json::Map::with_capacity(0),
             content: String::from("Hello World!"),
             number: Some(SectionNumber(vec![1, 2])),
             path: Some(PathBuf::from("second.md")),
@@ -449,6 +454,7 @@ And here is some \
         };
         let should_be = BookItem::Chapter(Chapter {
             name: String::from("Chapter 1"),
+            chapter_config: serde_json::Map::with_capacity(0),
             content: String::from(DUMMY_SRC),
             number: None,
             path: Some(PathBuf::from("chapter_1.md")),
@@ -515,6 +521,7 @@ And here is some \
             sections: vec![
                 BookItem::Chapter(Chapter {
                     name: String::from("Chapter 1"),
+                    chapter_config: serde_json::Map::with_capacity(0),
                     content: String::from(DUMMY_SRC),
                     number: None,
                     path: Some(PathBuf::from("Chapter_1/index.md")),
@@ -568,6 +575,7 @@ And here is some \
             sections: vec![
                 BookItem::Chapter(Chapter {
                     name: String::from("Chapter 1"),
+                    chapter_config: serde_json::Map::with_capacity(0),
                     content: String::from(DUMMY_SRC),
                     number: None,
                     path: Some(PathBuf::from("Chapter_1/index.md")),

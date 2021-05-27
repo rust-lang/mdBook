@@ -93,7 +93,9 @@ impl HtmlHandlebars {
         ctx.data.insert("path".to_owned(), json!(path));
         ctx.data.insert("content".to_owned(), json!(content));
         ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
-        ctx.data.insert("title".to_owned(), json!(title));
+        if let Some(title) = ctx.data.insert("title".to_owned(), json!(title)) {
+            ctx.data.insert("title".to_string(), title);
+        }
         ctx.data.insert(
             "path_to_root".to_owned(),
             json!(utils::fs::path_to_root(&path)),
@@ -515,10 +517,19 @@ impl Renderer for HtmlHandlebars {
 
         let mut is_index = true;
         for item in book.iter() {
+            let item_data = if let BookItem::Chapter(ref ch) = item {
+                let mut chapter_data = data.clone();
+                for (key, value) in ch.chapter_config.iter() {
+                    let _ = chapter_data.insert(key.to_string(), json!(value));
+                }
+                chapter_data
+            } else {
+                data.clone()
+            };
             let ctx = RenderItemContext {
                 handlebars: &handlebars,
                 destination: destination.to_path_buf(),
-                data: data.clone(),
+                data: item_data,
                 is_index,
                 html_config: html_config.clone(),
                 edition: ctx.config.rust.edition,

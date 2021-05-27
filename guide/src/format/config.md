@@ -83,14 +83,14 @@ This controls the build process of your book.
   will be created when the book is built (i.e. `create-missing = true`). If this
   is `false` then the build process will instead exit with an error if any files
   do not exist.
-- **use-default-preprocessors:** Disable the default preprocessors of (`links` &
-  `index`) by setting this option to `false`.
+- **use-default-preprocessors:** Disable the default preprocessors of (`links`,
+  `index` & `metadata`) by setting this option to `false`.
 
   If you have the same, and/or other preprocessors declared via their table
   of configuration, they will run instead.
 
-  - For clarity, with no preprocessor configuration, the default `links` and
-    `index` will run.
+  - For clarity, with no preprocessor configuration, the default `links`,
+    `index` and `metadata` will run.
   - Setting `use-default-preprocessors = false` will disable these
     default preprocessors from running.
   - Adding `[preprocessor.links]`, for example, will ensure, regardless of
@@ -105,6 +105,24 @@ The following preprocessors are available and included by default:
 - `index`: Convert all chapter files named `README.md` into `index.md`. That is
   to say, all `README.md` would be rendered to an index file `index.html` in the
   rendered book.
+- `metadata`: Strips an optional TOML header from the markdown chapter sources
+  to provide chapter specific information. This data is then made available to
+  handlebars.js as a collection of properties.
+
+**Sample Chapter With Default "index.hbs"**
+```toml
+---
+author = "Jane Doe"     # this is written to the author meta tag
+title = "Blog Post #1"  # this overwrites the default title handlebar
+keywords = [
+  "Rust",
+  "Blog",
+]                       # this sets the keywords meta tag
+description = "A blog about rust-lang" # this sets the description meta tag
+date = "2021/02/14"     # this exposes date as a property for use in the handlebars template
+---
+This is my blog about rust. # only from this point on remains after preprocessing
+```
 
 
 **book.toml**
@@ -116,6 +134,8 @@ create-missing = false
 [preprocessor.links]
 
 [preprocessor.index]
+
+[preprocessor.metadata]
 ```
 
 ### Custom Preprocessor Configuration

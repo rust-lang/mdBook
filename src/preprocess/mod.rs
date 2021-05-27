@@ -3,10 +3,12 @@
 pub use self::cmd::CmdPreprocessor;
 pub use self::index::IndexPreprocessor;
 pub use self::links::LinkPreprocessor;
+pub use self::metadata::MetadataPreprocessor;
 
 mod cmd;
 mod index;
 mod links;
+mod metadata;
 
 use crate::book::Book;
 use crate::config::Config;
