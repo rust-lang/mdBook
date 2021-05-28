@@ -1,5 +1,5 @@
 use crate::book::{Book, BookItem};
-use crate::config::{Config, HtmlConfig, Playground, RustEdition};
+use crate::config::{BookConfig, Config, HtmlConfig, Playground, RustEdition};
 use crate::errors::*;
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
@@ -38,12 +38,14 @@ impl HtmlHandlebars {
         };
 
         if let Some(ref edit_url_template) = ctx.html_config.edit_url_template {
-            let full_path = "src/".to_owned()
+            let full_path = ctx.book_config.src.to_str().unwrap_or_default().to_owned()
+                + "/"
                 + ch.source_path
                     .clone()
                     .unwrap_or_default()
                     .to_str()
                     .unwrap_or_default();
+
             let edit_url = edit_url_template.replace("{path}", &full_path);
             ctx.data
                 .insert("git_repository_edit_url".to_owned(), json!(edit_url));
@@ -458,6 +460,7 @@ impl Renderer for HtmlHandlebars {
     }
 
     fn render(&self, ctx: &RenderContext) -> Result<()> {
+        let book_config = &ctx.config.book;
         let html_config = ctx.config.html_config().unwrap_or_default();
         let src_dir = ctx.root.join(&ctx.config.book.src);
         let destination = &ctx.destination;
@@ -520,6 +523,7 @@ impl Renderer for HtmlHandlebars {
                 destination: destination.to_path_buf(),
                 data: data.clone(),
                 is_index,
+                book_config: book_config.clone(),
                 html_config: html_config.clone(),
                 edition: ctx.config.rust.edition,
                 chapter_titles: &ctx.chapter_titles,
@@ -936,6 +940,7 @@ struct RenderItemContext<'a> {
     destination: PathBuf,
     data: serde_json::Map<String, serde_json::Value>,
     is_index: bool,
+    book_config: BookConfig,
     html_config: HtmlConfig,
     edition: Option<RustEdition>,
     chapter_titles: &'a HashMap<PathBuf, String>,
