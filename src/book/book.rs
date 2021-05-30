@@ -200,10 +200,7 @@ impl Chapter {
 
     /// Check if the chapter is a draft chapter, meaning it has no path to a source markdown file.
     pub fn is_draft_chapter(&self) -> bool {
-        match self.path {
-            Some(_) => false,
-            None => true,
-        }
+        self.path.is_none()
     }
 }
 
