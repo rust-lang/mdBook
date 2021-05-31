@@ -74,10 +74,10 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
 /// [`iter()`]: #method.iter
 /// [`for_each_mut()`]: #method.for_each_mut
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct Book {
     /// The sections in this book.
     pub sections: Vec<BookItem>,
-    __non_exhaustive: (),
 }
 
 impl Book {
@@ -200,10 +200,7 @@ impl Chapter {
 
     /// Check if the chapter is a draft chapter, meaning it has no path to a source markdown file.
     pub fn is_draft_chapter(&self) -> bool {
-        match self.path {
-            Some(_) => false,
-            None => true,
-        }
+        self.path.is_none()
     }
 }
 
@@ -228,10 +225,7 @@ pub(crate) fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P)
         chapters.push(chapter);
     }
 
-    Ok(Book {
-        sections: chapters,
-        __non_exhaustive: (),
-    })
+    Ok(Book { sections: chapters })
 }
 
 fn load_summary_item<P: AsRef<Path> + Clone>(
