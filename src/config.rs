@@ -578,7 +578,7 @@ impl Default for HtmlConfig {
 impl HtmlConfig {
     /// Returns the directory of theme from the provided root directory. If the
     /// directory is not present it will append the default directory of "theme"
-    pub fn theme_dir(&self, root: &PathBuf) -> PathBuf {
+    pub fn theme_dir(&self, root: &Path) -> PathBuf {
         match self.theme {
             Some(ref d) => root.join(d),
             None => root.join("theme"),
