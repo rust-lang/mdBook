@@ -1,5 +1,5 @@
 use crate::get_book_dir;
-use clap::{App, ArgMatches, SubCommand};
+use clap::{App, Arg, ArgMatches, SubCommand};
 use mdbook::config;
 use mdbook::errors::Result;
 use mdbook::MDBook;
@@ -18,6 +18,20 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
         )
         .arg_from_usage("--theme 'Copies the default theme into your source folder'")
         .arg_from_usage("--force 'Skips confirmation prompts'")
+        .arg(
+            Arg::with_name("title")
+                .short("t")
+                .long("title")
+                .takes_value(true)
+                .help("Sets the book title")
+                .required(false),
+        )
+        .arg(
+            Arg::with_name("gitignore")
+                .short("g")
+                .long("gitignore")
+                .help("Creates a .gitignore"),
+        )
 }
 
 // Init command implementation
@@ -25,7 +39,6 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
     let mut builder = MDBook::init(&book_dir);
     let mut config = config::Config::default();
-
     // If flag `--theme` is present, copy theme to src
     if args.is_present("theme") {
         let theme_dir = book_dir.join("theme");
@@ -45,13 +58,20 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         }
     }
 
-    println!("\nDo you want a .gitignore to be created? (y/n)");
-
-    if confirm() {
+    if args.is_present("gitignore") {
         builder.create_gitignore(true);
+    } else {
+        println!("\nDo you want a .gitignore to be created? (y/n)");
+        if confirm() {
+            builder.create_gitignore(true);
+        }
     }
 
-    config.book.title = request_book_title();
+    config.book.title = if args.is_present("title") {
+        args.value_of("title").map(String::from)
+    } else {
+        request_book_title()
+    };
 
     if let Some(author) = get_author_name() {
         debug!("Obtained user name from gitconfig: {:?}", author);
