@@ -131,7 +131,7 @@ impl HtmlHandlebars {
         &self,
         ctx: &RenderContext,
         html_config: &HtmlConfig,
-        src_dir: &PathBuf,
+        src_dir: &Path,
         handlebars: &mut Handlebars<'_>,
         data: &mut serde_json::Map<String, serde_json::Value>,
     ) -> Result<()> {
