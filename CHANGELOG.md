@@ -1,5 +1,25 @@
 # Changelog
 
+## mdBook 0.4.9
+[7e01cf9...d325c60](https://github.com/rust-lang/mdBook/compare/7e01cf9...d325c60)
+
+### Changed
+- Updated all dependencies and raised the minimum Rust version to 1.42.
+  [#1528](https://github.com/rust-lang/mdBook/pull/1528)
+- Added more detail to error message when a preprocessor fails.
+  [#1526](https://github.com/rust-lang/mdBook/pull/1526)
+- Set max-width of HTML video tags to 100% to match img tags.
+  [#1542](https://github.com/rust-lang/mdBook/pull/1542)
+
+### Fixed
+- Type errors when parsing `book.toml` are no longer ignored.
+  [#1539](https://github.com/rust-lang/mdBook/pull/1539)
+- Better handling if `mdbook serve` fails to start the http server.
+  [#1555](https://github.com/rust-lang/mdBook/pull/1555)
+- Fixed the path for `edit-url-template` if the book used a source directory
+  other than `src`.
+  [#1554](https://github.com/rust-lang/mdBook/pull/1554)
+
 ## mdBook 0.4.8
 [fcceee4...b592b10](https://github.com/rust-lang/mdBook/compare/fcceee4...b592b10)
 
