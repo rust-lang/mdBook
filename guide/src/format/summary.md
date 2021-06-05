@@ -54,8 +54,8 @@ to be ignored at best, or may cause an error when attempting to build the book.
 
    - [Another Chapter](relative/path/to/markdown4.md)
    ```
-   Numbered chapters can be denoted with either `-` or `*`.
-
+   Numbered chapters can be denoted with either `-` or `*` (do not mix delimiters). 
+   
 1. ***Suffix Chapter*** - Like prefix chapters, suffix chapters are unnumbered, but they come after 
    numbered chapters.
    ```markdown
