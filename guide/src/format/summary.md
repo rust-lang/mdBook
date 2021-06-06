@@ -13,7 +13,7 @@ to be ignored at best, or may cause an error when attempting to build the book.
 
 1. ***Title*** - While optional, it's common practice to begin with a title, generally <code
    class="language-markdown"># Summary</code>. This is ignored by the parser however, and
-   can be ommitted.
+   can be omitted.
    ```markdown
    # Summary
    ```
