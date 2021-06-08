@@ -103,9 +103,11 @@ where
                             .ok()
                             .map(|bol| (bol, mt.start(), mt.end()))
                     })
-                    .map(|(bol, st, ed)| bol.replace_all(new_content.as_str(), &s[st..ed]))
-                    .map(|cow| String::from(cow.trim()))
-                    .unwrap_or_else(|| new_content);
+                    .map(|(bol, st, ed)| {
+                        (bol.replace_all(new_content.as_str(), &s[st..ed]), ed - st)
+                    })
+                    .map(|(cow, skip)| String::from(&cow[skip..]))
+                    .unwrap_or(new_content);
 
                 if depth < MAX_LINK_NESTED_DEPTH {
                     if let Some(rel_path) = link.link_type.relative_path(path) {
