@@ -1,5 +1,17 @@
 # Changelog
 
+## mdBook 0.4.10
+[2f7293a...dc2062a](https://github.com/rust-lang/mdBook/compare/2f7293a...dc2062a)
+
+### Changed
+- Reverted breaking change in 0.4.9 that removed the `__non_exhaustive` marker
+  on the `Book` struct.
+  [#1572](https://github.com/rust-lang/mdBook/pull/1572)
+- Updated handlebars to 4.0.
+  [#1550](https://github.com/rust-lang/mdBook/pull/1550)
+- Removed the `chapter_begin` id on the print page's chapter separators.
+  [#1541](https://github.com/rust-lang/mdBook/pull/1541)
+
 ## mdBook 0.4.9
 [7e01cf9...d325c60](https://github.com/rust-lang/mdBook/compare/7e01cf9...d325c60)
 
