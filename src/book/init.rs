@@ -106,7 +106,9 @@ impl BookBuilder {
         Ok(())
     }
 
-    fn copy_across_theme(&self) -> Result<()> {
+    /// Copies the theme to the generated book (so users can tweak
+    /// it)?
+    pub fn copy_across_theme(&self) -> Result<()> {
         debug!("Copying theme");
 
         let html_config = self.config.html_config().unwrap_or_default();

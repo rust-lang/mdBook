@@ -52,3 +52,8 @@ directory called `theme` in your source directory so that you can modify it.
 
 The theme is selectively overwritten, this means that if you don't want to
 overwrite a specific file, just delete it and the default file will be used.
+
+#### --theme-only
+
+Optionally you can use `--theme-only` flag, only the default theme will be copied into a
+directory called `theme` in your source directory so that you can modify it.
