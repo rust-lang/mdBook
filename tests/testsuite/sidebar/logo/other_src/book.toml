@@ -1,0 +1,6 @@
+[book]
+title = "Other src"
+authors = ["Chocorean"]
+language = "en"
+src = "my-src"
+logo = "logo.svg"
