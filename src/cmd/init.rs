@@ -29,7 +29,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     // If flag `--theme` is present, copy theme to src
     if args.is_present("theme-only") {
-        builder.copy_across_theme();
+        builder.copy_across_theme()?;
         return Ok(());
     } else if args.is_present("theme") {
         let theme_dir = book_dir.join("theme");
