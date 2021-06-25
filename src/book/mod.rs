@@ -47,7 +47,10 @@ pub struct MDBook {
 
 impl MDBook {
     /// Load a book from its root directory on disk.
-    pub fn load<P: Into<PathBuf>>(book_root: P) -> Result<MDBook> {
+    ///
+    /// If `auto_summary` is set, the book's summary is automatically generated
+    /// from the root directory structure.
+    pub fn load<P: Into<PathBuf>>(book_root: P, auto_summary: bool) -> Result<MDBook> {
         let book_root = book_root.into();
         let config_location = book_root.join("book.toml");
 
@@ -67,6 +70,10 @@ impl MDBook {
         } else {
             Config::default()
         };
+
+        if auto_summary {
+            config.build.auto_summary = true;
+        }
 
         config.update_from_env();
 
@@ -128,7 +135,7 @@ impl MDBook {
     /// ```no_run
     /// # use mdbook::MDBook;
     /// # use mdbook::book::BookItem;
-    /// # let book = MDBook::load("mybook").unwrap();
+    /// # let book = MDBook::load("mybook", false).unwrap();
     /// for item in book.iter() {
     ///     match *item {
     ///         BookItem::Chapter(ref chapter) => {},

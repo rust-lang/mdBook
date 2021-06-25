@@ -52,7 +52,7 @@
 //!
 //! let root_dir = "/path/to/book/root";
 //!
-//! let mut md = MDBook::load(root_dir)
+//! let mut md = MDBook::load(root_dir, false)
 //!     .expect("Unable to load the book");
 //! md.build().expect("Building failed");
 //! ```
