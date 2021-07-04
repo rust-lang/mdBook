@@ -62,7 +62,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     if let Some(ignore) = args.value_of("ignore") {
         match ignore {
             "git" => builder.create_gitignore(true),
-            _ => builder.create_gitignore(false)
+            _ => builder.create_gitignore(false),
         };
     } else {
         println!("\nDo you want a .gitignore to be created? (y/n)");
