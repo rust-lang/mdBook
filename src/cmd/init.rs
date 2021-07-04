@@ -20,7 +20,6 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
         .arg_from_usage("--force 'Skips confirmation prompts'")
         .arg(
             Arg::with_name("title")
-                .short("t")
                 .long("title")
                 .takes_value(true)
                 .help("Sets the book title")
@@ -28,7 +27,6 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
         )
         .arg(
             Arg::with_name("gitignore")
-                .short("g")
                 .long("gitignore")
                 .help("Creates a .gitignore"),
         )
