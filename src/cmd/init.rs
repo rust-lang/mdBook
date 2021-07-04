@@ -26,9 +26,12 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
                 .required(false),
         )
         .arg(
-            Arg::with_name("gitignore")
-                .long("gitignore")
-                .help("Creates a .gitignore"),
+            Arg::with_name("ignore")
+                .long("ignore")
+                .takes_value(true)
+                .possible_values(&["none", "git"])
+                .help("Creates a VCS ignore file (i.e. .gitignore)")
+                .required(false),
         )
 }
 
@@ -56,8 +59,11 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         }
     }
 
-    if args.is_present("gitignore") {
-        builder.create_gitignore(true);
+    if let Some(ignore) = args.value_of("ignore") {
+        match ignore {
+            "git" => builder.create_gitignore(true),
+            _ => builder.create_gitignore(false)
+        };
     } else {
         println!("\nDo you want a .gitignore to be created? (y/n)");
         if confirm() {
