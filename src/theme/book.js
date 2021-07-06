@@ -108,9 +108,12 @@ function playground_text(playground) {
 
         let text = playground_text(code_block);
         let classes = code_block.querySelector('code').classList;
-        let has_2018 = classes.contains("edition2018");
-        let edition = has_2018 ? "2018" : "2015";
-
+        let edition = "2015";
+        if(classes.contains("edition2018")) {
+            edition = "2018";
+        } else if(classes.contains("edition2021")) {
+            edition = "2021";
+        }
         var params = {
             version: "stable",
             optimize: "0",
