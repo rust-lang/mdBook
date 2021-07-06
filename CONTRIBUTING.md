@@ -115,3 +115,16 @@ If possible, do your best to avoid breaking older browser releases.
 
 Any change to the HTML or styling is encouraged to manually check on as many browsers and platforms that you can.
 Unfortunately at this time we don't have any automated UI or browser testing, so your assistance in testing is appreciated.
+
+## Updating higlight.js
+
+The following are instructions for updating [highlight.js](https://highlightjs.org/).
+
+1. Clone the repository at <https://github.com/highlightjs/highlight.js>
+1. Check out a tagged release (like `11.0.0`).
+1. Run `npm install`
+1. Run `node tools/build.js :common apache armasm coffeescript d handlebars haskell http julia nginx properties r scala x86asm yaml`
+1. Compare the language list that it spits out to the one in [`syntax-highlighting.md`](https://github.com/camelid/mdBook/blob/master/guide/src/format/theme/syntax-highlighting.md). If any are missing, add them to the list and rebuild (and update these docs). If any are added to the common set, add them to `syntax-highlighting.md`.
+1. Copy `build/highlight.min.js` to mdbook's directory [`highlight.js`](https://github.com/rust-lang/mdBook/blob/master/src/theme/highlight.js).
+1. Be sure to check the highlight.js [CHANGES](https://github.com/highlightjs/highlight.js/blob/main/CHANGES.md) for any breaking changes. Breaking changes that would affect users will need to wait until the next major release.
+1. Build mdbook with the new file and build some books with the new version and compare the output with a variety of languages to see if anything changes. (TODO: It would be nice to have a demo file in the repo to help with this.)
