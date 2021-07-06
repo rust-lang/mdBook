@@ -32,12 +32,12 @@ function playground_text(playground) {
             method: 'POST',
             mode: 'cors',
         })
-        .then(response => response.json())
-        .then(response => {
-            // get list of crates available in the rust playground
-            let playground_crates = response.crates.map(item => item["id"]);
-            playgrounds.forEach(block => handle_crate_list_update(block, playground_crates));
-        });
+            .then(response => response.json())
+            .then(response => {
+                // get list of crates available in the rust playground
+                let playground_crates = response.crates.map(item => item["id"]);
+                playgrounds.forEach(block => handle_crate_list_update(block, playground_crates));
+            });
     }
 
     function handle_crate_list_update(playground_block, playground_crates) {
@@ -59,7 +59,13 @@ function playground_text(playground) {
                         win: "Ctrl-Enter",
                         mac: "Ctrl-Enter"
                     },
-                    exec: _editor => run_rust_code(playground_block)
+                    exec: _editor => {
+                        if (code_block.classList.contains("wasm")) {
+                            run_wasm_pack_code(playground_block);
+                        } else {
+                            run_rust_code(playground_block);
+                        }
+                    }
                 });
             }
         }
@@ -135,9 +141,115 @@ function playground_text(playground) {
             mode: 'cors',
             body: JSON.stringify(params)
         })
-        .then(response => response.json())
-        .then(response => result_block.innerText = response.result)
-        .catch(error => result_block.innerText = "Playground Communication: " + error.message);
+            .then(response => response.json())
+            .then(response => result_block.innerText = response.result)
+            .catch(error => result_block.innerText = "Playground Communication: " + error.message);
+    }
+
+    function run_wasm_pack_code(code_block) {
+        var result_block = code_block.querySelector(".result");
+        if (!result_block) {
+            result_block = document.createElement('code');
+            result_block.className = 'result hljs language-bash';
+
+            code_block.append(result_block);
+        }
+
+        let text = playground_text(code_block);
+
+        var params = {
+            code: text,
+        };
+
+        result_block.innerText = "Running...";
+
+        prepareSandbox(params)
+            .then(src => processHTML(src))
+            .then(html => {
+                result_block.innerText = "";
+                var iframe = createIFrame(html);
+                result_block.appendChild(iframe);
+            })
+            .catch(error => result_block.innerText = "Playground Communication: " + error.message);
+    }
+
+    // Greatly inspired from WebAssemblyStudio
+    async function prepareSandbox(params) {
+        var wasmResult = fetch_with_timeout("http://127.0.0.1:9999/wasm-pack", {
+            headers: {
+                'Content-Type': "application/json",
+            },
+            method: 'POST',
+            mode: 'cors',
+            body: JSON.stringify(params)
+        })
+            .then(response => response.json())
+            .then(({ wasm_js, wasm_bg, success, stderr }) => {
+                if (!success) {
+                    throw new Error(stderr);
+                }
+
+                return {
+                    wasm_js: atob(wasm_js),
+                    wasm_bg: base64ToByteArray(wasm_bg)
+                }
+            })
+
+        var htmlSrc = fetch(new Request("iframe.html"))
+            .then(response => response.text());
+        var jsSrc = fetch(new Request("wasm-entry.mjs"))
+            .then(response => response.text());
+
+        return Promise.all([htmlSrc, jsSrc, wasmResult])
+    }
+
+    function base64ToByteArray(src) {
+        var decode = atob(src);
+        const byteNumbers = new Array(decode.length);
+        for (let i = 0; i < decode.length; i++) {
+            byteNumbers[i] = decode.charCodeAt(i);
+        }
+        return new Uint8Array(byteNumbers);
+    }
+
+    async function processHTML([htmlSrc, jsSrc, { wasm_js, wasm_bg }]) {
+        var src = rewriteJS(jsSrc, wasm_js, wasm_bg);
+        var jsBlob = createObjectURL(src, "application/javascript");
+        return htmlSrc.replace(/\bsrc\s*=\s*['"](.+?)['"]/g, (all, path) => {
+            return `src="${jsBlob}"`;
+        });
+    }
+
+    function rewriteJS(src, wasmJS, bgWasm) {
+        var wasmJSBlob = createObjectURL(wasmJS, "application/javascript");
+        var bgWasmBlob = createObjectURL(bgWasm, "application/wasm");
+
+        // replace wasm.js
+        src = src.replace(/\bfrom\s+['"](.+?)['"](\s*[;\n])/g, (all, path, sep) => {
+            return `from "${wasmJSBlob}"${sep}`;
+        })
+        // replace `input` of init to object URL
+        src = src.replace(/\(['"](.+?)['"]\)/g, (all, url) => {
+            return `("${bgWasmBlob}")`;
+        })
+        return src
+    }
+
+    function createObjectURL(src, mime) {
+        return URL.createObjectURL(new Blob([src], { type: mime }));
+    }
+
+    function createIFrame(src) {
+        var iframe = document.createElement('iframe');
+        iframe.scrolling = 'no';
+        iframe.style.height = "100%";
+        iframe.style.width = "100%";
+        iframe.style.padding = 0;
+        iframe.style.margin = 0;
+        iframe.style.border = 0;
+        iframe.style.overflow = "hidden";
+        iframe.src = createObjectURL(src, "text/html");
+        return iframe
     }
 
     // Syntax highlighting Configuration
@@ -149,7 +261,7 @@ function playground_text(playground) {
     let code_nodes = Array
         .from(document.querySelectorAll('code'))
         // Don't highlight `inline code` blocks in headers.
-        .filter(function (node) {return !node.parentElement.classList.contains("header"); });
+        .filter(function (node) { return !node.parentElement.classList.contains("header"); });
 
     if (window.ace) {
         // language-rust class needs to be removed for editable
@@ -243,7 +355,11 @@ function playground_text(playground) {
 
         buttons.insertBefore(runCodeButton, buttons.firstChild);
         runCodeButton.addEventListener('click', function (e) {
-            run_rust_code(pre_block);
+            if (code_block.classList.contains("wasm")) {
+                run_wasm_pack_code(pre_block);
+            } else {
+                run_rust_code(pre_block);
+            }
         });
 
         if (window.playground_copyable) {
@@ -366,7 +482,7 @@ function playground_text(playground) {
         set_theme(theme);
     });
 
-    themePopup.addEventListener('focusout', function(e) {
+    themePopup.addEventListener('focusout', function (e) {
         // e.relatedTarget is null in Safari and Firefox on macOS (see workaround below)
         if (!!e.relatedTarget && !themeToggleButton.contains(e.relatedTarget) && !themePopup.contains(e.relatedTarget)) {
             hideThemes();
@@ -374,7 +490,7 @@ function playground_text(playground) {
     });
 
     // Should not be needed, but it works around an issue on macOS & iOS: https://github.com/rust-lang/mdBook/issues/628
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         if (themePopup.style.display === 'block' && !themeToggleButton.contains(e.target) && !themePopup.contains(e.target)) {
             hideThemes();
         }
@@ -596,7 +712,7 @@ function playground_text(playground) {
     });
 })();
 
-(function scrollToTop () {
+(function scrollToTop() {
     var menuTitle = document.querySelector('.menu-title');
 
     menuTitle.addEventListener('click', function () {

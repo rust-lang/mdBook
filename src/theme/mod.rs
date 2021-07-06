@@ -13,6 +13,8 @@ use std::path::Path;
 
 use crate::errors::*;
 
+pub static IFRAME: &[u8] = include_bytes!("iframe.html");
+pub static WASM_ENTRY_MJS: &[u8] = include_bytes!("wasm-entry.mjs");
 pub static INDEX: &[u8] = include_bytes!("index.hbs");
 pub static HEAD: &[u8] = include_bytes!("head.hbs");
 pub static REDIRECT: &[u8] = include_bytes!("redirect.hbs");
@@ -62,6 +64,8 @@ pub struct Theme {
     pub ayu_highlight_css: Vec<u8>,
     pub highlight_js: Vec<u8>,
     pub clipboard_js: Vec<u8>,
+    pub iframe_html: Vec<u8>,
+    pub wasm_entry_mjs: Vec<u8>,
 }
 
 impl Theme {
@@ -79,6 +83,8 @@ impl Theme {
         // Check for individual files, if they exist copy them across
         {
             let files = vec![
+                (theme_dir.join("iframe.html"), &mut theme.iframe_html),
+                (theme_dir.join("wasm-entry.mjs"), &mut theme.wasm_entry_mjs),
                 (theme_dir.join("index.hbs"), &mut theme.index),
                 (theme_dir.join("head.hbs"), &mut theme.head),
                 (theme_dir.join("redirect.hbs"), &mut theme.redirect),
@@ -161,6 +167,8 @@ impl Default for Theme {
             ayu_highlight_css: AYU_HIGHLIGHT_CSS.to_owned(),
             highlight_js: HIGHLIGHT_JS.to_owned(),
             clipboard_js: CLIPBOARD_JS.to_owned(),
+            iframe_html: IFRAME.to_owned(),
+            wasm_entry_mjs: WASM_ENTRY_MJS.to_owned(),
         }
     }
 }
@@ -219,6 +227,8 @@ mod tests {
             "highlight.css",
             "ayu-highlight.css",
             "clipboard.min.js",
+            "iframe.html",
+            "wasm-entry.mjs",
         ];
 
         let temp = TempFileBuilder::new().prefix("mdbook-").tempdir().unwrap();
@@ -248,6 +258,8 @@ mod tests {
             ayu_highlight_css: Vec::new(),
             highlight_js: Vec::new(),
             clipboard_js: Vec::new(),
+            iframe_html: Vec::new(),
+            wasm_entry_mjs: Vec::new(),
         };
 
         assert_eq!(got, empty);
