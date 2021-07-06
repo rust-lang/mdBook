@@ -17,6 +17,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
              (Defaults to the Current Directory when omitted)'",
         )
         .arg_from_usage("--theme 'Copies the default theme into your source folder'")
+        .arg_from_usage("--theme-only 'Copies only the default theme into your source folder'")
         .arg_from_usage("--force 'Skips confirmation prompts'")
 }
 
@@ -27,7 +28,10 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let mut config = config::Config::default();
 
     // If flag `--theme` is present, copy theme to src
-    if args.is_present("theme") {
+    if args.is_present("theme-only") {
+        builder.copy_across_theme()?;
+        return Ok(());
+    } else if args.is_present("theme") {
         let theme_dir = book_dir.join("theme");
         println!();
         println!("Copying the default theme to {}", theme_dir.display());
