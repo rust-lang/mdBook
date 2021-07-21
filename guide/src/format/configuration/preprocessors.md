@@ -56,3 +56,25 @@ be overridden by adding a `command` field.
 [preprocessor.random]
 command = "python random.py"
 ```
+
+### Require A Certain Order
+
+The order in which preprocessors are run is not guaranteed, but you can request some to run before or after others.
+For example, suppose you want your `linenos` preprocessor to process lines that may have been `{{#include}}`d; then you want it to run after the built-in `links` preprocessor, which you can require using the `before` and/or `after` fields.
+
+```toml
+[preprocessor.linenos]
+after = [ "links" ]
+```
+
+or
+
+```toml
+[preprocessor.links]
+before = [ "linenos" ]
+```
+
+It would be possible, though redundant, to specify both of the above in the same config file.
+
+`mdbook` will detect any infinite loops and error out.
+Note that order of preprocessors besides what is specified using `before` and `after` is not guaranteed, and may change within the same run of `mdbook`.

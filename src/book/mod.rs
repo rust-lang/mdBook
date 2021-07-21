@@ -20,6 +20,7 @@ use std::process::Command;
 use std::string::ToString;
 use tempfile::Builder as TempFileBuilder;
 use toml::Value;
+use topological_sort::TopologicalSort;
 
 use crate::errors::*;
 use crate::preprocess::{
@@ -372,12 +373,7 @@ fn determine_renderers(config: &Config) -> Vec<Box<dyn Renderer>> {
     renderers
 }
 
-fn default_preprocessors() -> Vec<Box<dyn Preprocessor>> {
-    vec![
-        Box::new(LinkPreprocessor::new()),
-        Box::new(IndexPreprocessor::new()),
-    ]
-}
+const DEFAULT_PREPROCESSORS: &[&'static str] = &["links", "index"];
 
 fn is_default_preprocessor(pre: &dyn Preprocessor) -> bool {
     let name = pre.name();
@@ -386,36 +382,87 @@ fn is_default_preprocessor(pre: &dyn Preprocessor) -> bool {
 
 /// Look at the `MDBook` and try to figure out what preprocessors to run.
 fn determine_preprocessors(config: &Config) -> Result<Vec<Box<dyn Preprocessor>>> {
-    let mut preprocessors = Vec::new();
+    // Collect the names of all preprocessors intended to be run, and the order
+    // in which they should be run.
+    let mut preprocessor_names = TopologicalSort::<String>::new();
 
     if config.build.use_default_preprocessors {
-        preprocessors.extend(default_preprocessors());
+        for name in DEFAULT_PREPROCESSORS {
+            preprocessor_names.insert(name.to_string());
+        }
     }
 
     if let Some(preprocessor_table) = config.get("preprocessor").and_then(Value::as_table) {
-        for key in preprocessor_table.keys() {
-            match key.as_ref() {
-                "links" => preprocessors.push(Box::new(LinkPreprocessor::new())),
-                "index" => preprocessors.push(Box::new(IndexPreprocessor::new())),
-                name => preprocessors.push(interpret_custom_preprocessor(
-                    name,
-                    &preprocessor_table[name],
-                )),
+        for (name, table) in preprocessor_table.iter() {
+            preprocessor_names.insert(name.to_string());
+
+            let exists = |name| {
+                (config.build.use_default_preprocessors && DEFAULT_PREPROCESSORS.contains(&name))
+                    || preprocessor_table.contains_key(name)
+            };
+
+            if let Some(before) = table.get("before").and_then(Value::as_array) {
+                for after in before {
+                    let after = after.as_str().ok_or_else(|| {
+                        Error::msg(format!(
+                            "Expected preprocessor.{}.before to contain strings",
+                            name
+                        ))
+                    })?;
+
+                    if exists(after) {
+                        preprocessor_names.add_dependency(name, after);
+                    }
+                }
+            }
+
+            if let Some(after) = table.get("after").and_then(Value::as_array) {
+                for before in after {
+                    let before = before.as_str().ok_or_else(|| {
+                        Error::msg(format!(
+                            "Expected preprocessor.{}.after to contain strings",
+                            name
+                        ))
+                    })?;
+
+                    if exists(before) {
+                        preprocessor_names.add_dependency(before, name);
+                    }
+                }
             }
         }
     }
 
-    Ok(preprocessors)
+    // Now that all links have been established, queue preprocessors in a suitable order
+    let mut preprocessors = Vec::with_capacity(preprocessor_names.len());
+    while let Some(name) = preprocessor_names.pop() {
+        let preprocessor: Box<dyn Preprocessor> = match name.as_str() {
+            "links" => Box::new(LinkPreprocessor::new()),
+            "index" => Box::new(IndexPreprocessor::new()),
+            _ => {
+                // The only way to request a custom preprocessor is through the `preprocessor`
+                // table, so it must exist, be a table, and contain the key.
+                let table = &config.get("preprocessor").unwrap().as_table().unwrap()[&name];
+                let command = get_custom_preprocessor_cmd(&name, table);
+                Box::new(CmdPreprocessor::new(name, command))
+            }
+        };
+        preprocessors.push(preprocessor);
+    }
+
+    if preprocessor_names.is_empty() {
+        Ok(preprocessors)
+    } else {
+        Err(Error::msg("Cyclic dependency detected in preprocessors"))
+    }
 }
 
-fn interpret_custom_preprocessor(key: &str, table: &Value) -> Box<CmdPreprocessor> {
-    let command = table
+fn get_custom_preprocessor_cmd(key: &str, table: &Value) -> String {
+    table
         .get("command")
         .and_then(Value::as_str)
         .map(ToString::to_string)
-        .unwrap_or_else(|| format!("mdbook-{}", key));
-
-    Box::new(CmdPreprocessor::new(key.to_string(), command))
+        .unwrap_or_else(|| format!("mdbook-{}", key))
 }
 
 fn interpret_custom_renderer(key: &str, table: &Value) -> Box<CmdRenderer> {
@@ -563,9 +610,99 @@ mod tests {
 
         // make sure the `preprocessor.random` table exists
         let random = cfg.get_preprocessor("random").unwrap();
-        let random = interpret_custom_preprocessor("random", &Value::Table(random.clone()));
+        let random = get_custom_preprocessor_cmd("random", &Value::Table(random.clone()));
 
-        assert_eq!(random.cmd(), "python random.py");
+        assert_eq!(random, "python random.py");
+    }
+
+    #[test]
+    fn preprocessor_order_is_honored() {
+        let cfg_str = r#"
+        [preprocessor.random]
+        before = [ "last" ]
+        after = [ "index" ]
+
+        [preprocessor.last]
+        after = [ "links", "index" ]
+        "#;
+
+        let cfg = Config::from_str(cfg_str).unwrap();
+
+        let preprocessors = determine_preprocessors(&cfg).unwrap();
+        let index = |name| {
+            preprocessors
+                .iter()
+                .enumerate()
+                .find(|(_, preprocessor)| preprocessor.name() == name)
+                .unwrap()
+                .0
+        };
+        let assert_before = |before, after| {
+            if index(before) >= index(after) {
+                eprintln!("Preprocessor order:");
+                for preprocessor in &preprocessors {
+                    eprintln!("  {}", preprocessor.name());
+                }
+                panic!("{} should come before {}", before, after);
+            }
+        };
+
+        assert_before("index", "random");
+        assert_before("index", "last");
+        assert_before("random", "last");
+        assert_before("links", "last");
+    }
+
+    #[test]
+    fn cyclic_dependencies_are_detected() {
+        let cfg_str = r#"
+        [preprocessor.links]
+        before = [ "index" ]
+
+        [preprocessor.index]
+        before = [ "links" ]
+        "#;
+
+        let cfg = Config::from_str(cfg_str).unwrap();
+
+        assert!(determine_preprocessors(&cfg).is_err());
+    }
+
+    #[test]
+    fn dependencies_dont_register_undefined_preprocessors() {
+        let cfg_str = r#"
+        [preprocessor.links]
+        before = [ "random" ]
+        "#;
+
+        let cfg = Config::from_str(cfg_str).unwrap();
+
+        let preprocessors = determine_preprocessors(&cfg).unwrap();
+
+        assert!(preprocessors
+            .iter()
+            .find(|preprocessor| preprocessor.name() == "random")
+            .is_none());
+    }
+
+    #[test]
+    fn dependencies_dont_register_builtin_preprocessors_if_disabled() {
+        let cfg_str = r#"
+        [preprocessor.random]
+        before = [ "links" ]
+
+        [build]
+        use-default-preprocessors = false
+        "#;
+
+        let cfg = Config::from_str(cfg_str).unwrap();
+
+        let preprocessors = determine_preprocessors(&cfg).unwrap();
+
+        assert!(preprocessors
+            .iter()
+            .find(|preprocessor| preprocessor.name() == "links")
+            .is_none());
     }
 
     #[test]
