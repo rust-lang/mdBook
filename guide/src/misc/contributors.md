@@ -15,8 +15,10 @@ shout-out to them!
 - [projektir](https://github.com/projektir)
 - [Phaiax](https://github.com/Phaiax)
 - Matt Ickstadt ([mattico](https://github.com/mattico))
-- Weihang Lo ([@weihanglo](https://github.com/weihanglo))
-- Avision Ho ([@avisionh](https://github.com/avisionh))
-- Vivek Akupatni ([@apatniv](https://github.com/apatniv))
+- Weihang Lo ([weihanglo](https://github.com/weihanglo))
+- Avision Ho ([avisionh](https://github.com/avisionh))
+- Vivek Akupatni ([apatniv](https://github.com/apatniv))
+- Eric Huss ([ehuss](https://github.com/ehuss))
+- Josh Rotenberg ([joshrotenberg](https://github.com/joshrotenberg))
 
 If you feel you're missing from this list, feel free to add yourself in a PR.
