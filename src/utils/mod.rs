@@ -258,6 +258,22 @@ mod tests {
         }
 
         #[test]
+        fn it_can_wrap_tables() {
+            let src = r#"
+| Original        | Punycode        | Punycode + Encoding |
+|-----------------|-----------------|---------------------|
+| føø             | f-5gaa          | f_5gaa              |
+"#;
+            let out = r#"
+<div class="table-wrapper"><table><thead><tr><th>Original</th><th>Punycode</th><th>Punycode + Encoding</th></tr></thead><tbody>
+<tr><td>føø</td><td>f-5gaa</td><td>f_5gaa</td></tr>
+</tbody></table>
+</div>
+"#.trim();
+            assert_eq!(render_markdown(src, false), out);
+        }
+
+        #[test]
         fn it_can_keep_quotes_straight() {
             assert_eq!(render_markdown("'one'", false), "<p>'one'</p>\n");
         }
