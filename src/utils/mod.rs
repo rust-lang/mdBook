@@ -177,10 +177,26 @@ pub fn render_markdown_with_path(text: &str, curly_quotes: bool, path: Option<&P
     let p = new_cmark_parser(text, curly_quotes);
     let events = p
         .map(clean_codeblock_headers)
-        .map(|event| adjust_links(event, path));
+        .map(|event| adjust_links(event, path))
+        .flat_map(|event| {
+            let (a, b) = wrap_tables(event);
+            a.into_iter().chain(b)
+        });
 
     html::push_html(&mut s, events);
     s
+}
+
+/// Wraps tables in a `.table-wrapper` class to apply overflow-x rules to.
+fn wrap_tables(event: Event<'_>) -> (Option<Event<'_>>, Option<Event<'_>>) {
+    match event {
+        Event::Start(Tag::Table(_)) => (
+            Some(Event::Html(r#"<div class="table-wrapper">"#.into())),
+            Some(event),
+        ),
+        Event::End(Tag::Table(_)) => (Some(event), Some(Event::Html(r#"</div>"#.into()))),
+        _ => (Some(event), None),
+    }
 }
 
 fn clean_codeblock_headers(event: Event<'_>) -> Event<'_> {
