@@ -109,6 +109,7 @@ edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path
 site-url = "/example-book/"
 cname = "myproject.rs"
 input-404 = "not-found.md"
+sitemap = true
 ```
 
 The following configuration options are available:
@@ -162,6 +163,8 @@ The following configuration options are available:
   This string will be written to a file named CNAME in the root of your site, as
   required by GitHub Pages (see [*Managing a custom domain for your GitHub Pages
   site*][custom domain]).
+- **sitemap:** True to enable sitemap generation. In this case, `site-url` must be set,
+  and be an absolute URL.
 
 [custom domain]: https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site
 
