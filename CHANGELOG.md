@@ -1,5 +1,12 @@
 # Changelog
 
+## mdBook 0.4.12
+[14add9c...8b4e488](https://github.com/rust-lang/mdBook/compare/14add9c...8b4e488)
+
+### Changed
+- Reverted the change to update to highlight.js 11, as it broke hidden code lines.
+  [#1597](https://github.com/rust-lang/mdBook/pull/1621)
+ 
 ## mdBook 0.4.11
 [e440094...2cf00d0](https://github.com/rust-lang/mdBook/compare/e440094...2cf00d0)
 
