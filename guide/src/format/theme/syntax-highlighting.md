@@ -47,11 +47,9 @@ your own `highlight.js` file:
 - objectivec
 - perl
 - php
-- php-template
 - plaintext
 - properties
 - python
-- python-repl
 - r
 - ruby
 - rust
@@ -61,7 +59,6 @@ your own `highlight.js` file:
 - sql
 - swift
 - typescript
-- vbnet
 - x86asm
 - xml
 - yaml
