@@ -1,12 +1,17 @@
 #![allow(missing_docs)] // FIXME: Document this
 
 pub mod fs;
+pub mod highlight;
 mod string;
 pub(crate) mod toml_ext;
 use crate::errors::Error;
 use regex::Regex;
 
 use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, Options, Parser, Tag};
+use syntect::html::ClassStyle;
+use syntect::parsing::SyntaxReference;
+use syntect::parsing::SyntaxSet;
+use syntect::util::LinesWithEndings;
 
 use std::borrow::Cow;
 use std::fmt::Write;
@@ -164,8 +169,8 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
 }
 
 /// Wrapper around the pulldown-cmark parser for rendering markdown to HTML.
-pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
-    render_markdown_with_path(text, curly_quotes, None)
+pub fn render_markdown(text: &str, curly_quotes: bool, syntaxes: &SyntaxSet) -> String {
+    render_markdown_with_path(text, curly_quotes, None, syntaxes)
 }
 
 pub fn new_cmark_parser(text: &str) -> Parser<'_> {
@@ -177,17 +182,90 @@ pub fn new_cmark_parser(text: &str) -> Parser<'_> {
     Parser::new_ext(text, opts)
 }
 
-pub fn render_markdown_with_path(text: &str, curly_quotes: bool, path: Option<&Path>) -> String {
+pub fn render_markdown_with_path(
+    text: &str,
+    curly_quotes: bool,
+    path: Option<&Path>,
+    syntaxes: &SyntaxSet,
+) -> String {
     let mut s = String::with_capacity(text.len() * 3 / 2);
     let p = new_cmark_parser(text);
     let mut converter = EventQuoteConverter::new(curly_quotes);
+    let mut highlighter = SyntaxHighlighter::default();
     let events = p
         .map(clean_codeblock_headers)
+        .map(|event| highlighter.highlight(syntaxes, event))
         .map(|event| adjust_links(event, path))
         .map(|event| converter.convert(event));
 
     html::push_html(&mut s, events);
     s
+}
+
+#[derive(Default)]
+struct SyntaxHighlighter<'a> {
+    highlight: bool,
+    is_rust: bool,
+    syntax: Option<&'a SyntaxReference>,
+}
+
+impl<'a> SyntaxHighlighter<'a> {
+    fn highlight<'b>(&mut self, syntaxes: &'a SyntaxSet, event: Event<'b>) -> Event<'b> {
+        match event {
+            Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(ref info))) => {
+                self.highlight = true;
+                let lang_name = info.split(',').next();
+                if let Some(name) = lang_name {
+                    // If we're given an empty name, or it is marked as
+                    // plaintext, we shouldn't highlight it.
+                    if name.is_empty()
+                        || name.eq_ignore_ascii_case("plaintext")
+                        || name.eq_ignore_ascii_case("text")
+                        || name.eq_ignore_ascii_case("plain")
+                        || name.eq_ignore_ascii_case("txt")
+                    {
+                        self.highlight = false;
+                        return event;
+                    }
+
+                    self.syntax = syntaxes.find_syntax_by_token(name);
+                    if self.syntax.is_none() {
+                        self.highlight = false;
+                        return event;
+                    }
+                    if let Some(syntax) = self.syntax {
+                        if syntax.name == "Rust" {
+                            self.is_rust = true;
+                        }
+                    }
+                    event
+                } else {
+                    // We also don't perform auto-detection of languages, so we
+                    // shouldn't highlight code blocks without lang tags.
+                    self.highlight = false;
+                    event
+                }
+            }
+            Event::End(Tag::CodeBlock(CodeBlockKind::Fenced(_))) => {
+                self.highlight = false;
+                self.is_rust = false;
+                self.syntax = None;
+                event
+            }
+            Event::Text(ref code) if self.highlight => {
+                let mut gen = highlight::HtmlGenerator::new(
+                    self.syntax.unwrap(),
+                    syntaxes,
+                    ClassStyle::SpacedPrefixed { prefix: "syn-" },
+                );
+                for line in LinesWithEndings::from(code) {
+                    gen.parse_line(line, self.is_rust);
+                }
+                Event::Html(CowStr::from(gen.finalize()))
+            }
+            _ => event,
+        }
+    }
 }
 
 struct EventQuoteConverter {
@@ -287,12 +365,21 @@ pub fn log_backtrace(e: &Error) {
 #[cfg(test)]
 mod tests {
     mod render_markdown {
+        use syntect::parsing::SyntaxSet;
+        fn default_syntaxes() -> SyntaxSet {
+            syntect::dumps::from_binary(crate::theme::SYNTAXES_BIN)
+        }
+
         use super::super::render_markdown;
 
         #[test]
         fn preserves_external_links() {
             assert_eq!(
-                render_markdown("[example](https://www.rust-lang.org/)", false),
+                render_markdown(
+                    "[example](https://www.rust-lang.org/)",
+                    false,
+                    &default_syntaxes()
+                ),
                 "<p><a href=\"https://www.rust-lang.org/\">example</a></p>\n"
             );
         }
@@ -300,24 +387,35 @@ mod tests {
         #[test]
         fn it_can_adjust_markdown_links() {
             assert_eq!(
-                render_markdown("[example](example.md)", false),
+                render_markdown("[example](example.md)", false, &default_syntaxes()),
                 "<p><a href=\"example.html\">example</a></p>\n"
             );
             assert_eq!(
-                render_markdown("[example_anchor](example.md#anchor)", false),
+                render_markdown(
+                    "[example_anchor](example.md#anchor)",
+                    false,
+                    &default_syntaxes()
+                ),
                 "<p><a href=\"example.html#anchor\">example_anchor</a></p>\n"
             );
 
             // this anchor contains 'md' inside of it
             assert_eq!(
-                render_markdown("[phantom data](foo.html#phantomdata)", false),
+                render_markdown(
+                    "[phantom data](foo.html#phantomdata)",
+                    false,
+                    &default_syntaxes()
+                ),
                 "<p><a href=\"foo.html#phantomdata\">phantom data</a></p>\n"
             );
         }
 
         #[test]
         fn it_can_keep_quotes_straight() {
-            assert_eq!(render_markdown("'one'", false), "<p>'one'</p>\n");
+            assert_eq!(
+                render_markdown("'one'", false, &default_syntaxes()),
+                "<p>'one'</p>\n"
+            );
         }
 
         #[test]
@@ -333,7 +431,7 @@ mod tests {
 </code></pre>
 <p><code>'three'</code> ‘four’</p>
 "#;
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, true, &default_syntaxes()), expected);
         }
 
         #[test]
@@ -349,14 +447,17 @@ more text with spaces
 "#;
 
             let expected = r#"<p>some text with spaces</p>
-<pre><code class="language-rust">fn main() {
-// code inside is unchanged
-}
-</code></pre>
+<pre><code class="language-rust"><span class="syn-source syn-rust"><span class="syn-meta syn-function syn-rust"><span class="syn-meta syn-function syn-rust"><span class="syn-storage syn-type syn-function syn-rust">fn</span> </span><span class="syn-entity syn-name syn-function syn-rust">main</span></span><span class="syn-meta syn-function syn-rust"><span class="syn-meta syn-function syn-parameters syn-rust"><span class="syn-punctuation syn-section syn-parameters syn-begin syn-rust">(</span></span><span class="syn-meta syn-function syn-rust"><span class="syn-meta syn-function syn-parameters syn-rust"><span class="syn-punctuation syn-section syn-parameters syn-end syn-rust">)</span></span></span></span><span class="syn-meta syn-function syn-rust"> </span><span class="syn-meta syn-function syn-rust"><span class="syn-meta syn-block syn-rust"><span class="syn-punctuation syn-section syn-block syn-begin syn-rust">{</span>
+
+<span class="syn-comment syn-line syn-double-slash syn-rust"><span class="syn-punctuation syn-definition syn-comment syn-rust">//</span> code inside is unchanged
+</span>
+</span><span class="syn-meta syn-block syn-rust"><span class="syn-punctuation syn-section syn-block syn-end syn-rust">}</span></span></span>
+
+</span></code></pre>
 <p>more text with spaces</p>
 "#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, false, &default_syntaxes()), expected);
+            assert_eq!(render_markdown(input, true, &default_syntaxes()), expected);
         }
 
         #[test]
@@ -368,8 +469,8 @@ more text with spaces
 
             let expected = r#"<pre><code class="language-rust,no_run,should_panic,property_3"></code></pre>
 "#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, false, &default_syntaxes()), expected);
+            assert_eq!(render_markdown(input, true, &default_syntaxes()), expected);
         }
 
         #[test]
@@ -381,8 +482,8 @@ more text with spaces
 
             let expected = r#"<pre><code class="language-rust,,,,,no_run,,,should_panic,,,,property_3"></code></pre>
 "#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, false, &default_syntaxes()), expected);
+            assert_eq!(render_markdown(input, true, &default_syntaxes()), expected);
         }
 
         #[test]
@@ -394,15 +495,17 @@ more text with spaces
 
             let expected = r#"<pre><code class="language-rust"></code></pre>
 "#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, false, &default_syntaxes()), expected);
+            assert_eq!(render_markdown(input, true, &default_syntaxes()), expected);
 
+            // FIXME: Why are we doing this twice? It seems to be the same
+            // input and assertions.
             let input = r#"
 ```rust
 ```
 "#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, false, &default_syntaxes()), expected);
+            assert_eq!(render_markdown(input, true, &default_syntaxes()), expected);
         }
     }
 

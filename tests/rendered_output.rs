@@ -171,8 +171,8 @@ fn rustdoc_include_hides_the_unspecified_part_of_the_file() {
 
     let nested = temp.path().join("book/first/nested.html");
     let text = vec![
-        "<span class=\"boring\">fn some_function() {",
-        "<span class=\"boring\">fn some_other_function() {",
+        r#"<span class="boring"><span class="syn-source syn-rust"><span class="syn-meta syn-function syn-rust"><span class="syn-meta syn-function syn-rust"><span class="syn-storage syn-type syn-function syn-rust">fn</span> </span><span class="syn-entity syn-name syn-function syn-rust">some_function"#,
+        r#"<span class="boring"><span class="syn-source syn-rust"><span class="syn-meta syn-function syn-rust"><span class="syn-meta syn-function syn-rust"><span class="syn-storage syn-type syn-function syn-rust">fn</span> </span><span class="syn-entity syn-name syn-function syn-rust">some_other_function"#,
     ];
 
     assert_contains_strings(nested, &text);
@@ -356,7 +356,7 @@ fn able_to_include_playground_files_in_chapters() {
 
     let playground_strings = &[
         r#"class="playground""#,
-        r#"println!(&quot;Hello World!&quot;);"#,
+        r#"<span class="syn-support syn-macro syn-rust">println!</span><span class="syn-meta syn-group syn-rust"><span class="syn-punctuation syn-section syn-group syn-begin syn-rust">(</span></span><span class="syn-meta syn-group syn-rust"><span class="syn-string syn-quoted syn-double syn-rust"><span class="syn-punctuation syn-definition syn-string syn-begin syn-rust">&quot;</span>Hello World!"#,
     ];
 
     assert_contains_strings(&second, playground_strings);
