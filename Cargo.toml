@@ -63,8 +63,3 @@ search = ["elasticlunr-rs", "ammonia"]
 [[bin]]
 doc = false
 name = "mdbook"
-
-# For profiling only.
-# If this ends up uncommented in a commit, let me know.
-[profile.release]
-debug = true
