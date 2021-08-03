@@ -7,6 +7,7 @@ use crate::theme::{self, playground_editor, Theme};
 use crate::utils;
 
 use std::borrow::Cow;
+use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::fs::{self, File};
@@ -15,13 +16,18 @@ use std::path::{Path, PathBuf};
 use crate::utils::fs::get_404_output_file;
 use handlebars::Handlebars;
 use regex::{Captures, Regex};
+use syntect::parsing::SyntaxSet;
 
 #[derive(Default)]
-pub struct HtmlHandlebars;
+pub struct HtmlHandlebars {
+    pub(crate) syntaxes: RefCell<Option<SyntaxSet>>,
+}
 
 impl HtmlHandlebars {
     pub fn new() -> Self {
-        HtmlHandlebars
+        HtmlHandlebars {
+            syntaxes: RefCell::new(None),
+        }
     }
 
     fn render_item(
@@ -52,11 +58,19 @@ impl HtmlHandlebars {
         }
 
         let content = ch.content.clone();
-        let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
+        let content = utils::render_markdown(
+            &content,
+            ctx.html_config.curly_quotes,
+            self.syntaxes.borrow().as_ref().unwrap(),
+        );
 
-        let fixed_content =
-            utils::render_markdown_with_path(&ch.content, ctx.html_config.curly_quotes, Some(path));
-        if !ctx.is_index && ctx.html_config.print.page_break {
+        let fixed_content = utils::render_markdown_with_path(
+            &ch.content,
+            ctx.html_config.curly_quotes,
+            Some(&path),
+            self.syntaxes.borrow().as_ref().unwrap(),
+        );
+        if !ctx.is_index && ctx.html_config.print.page_break  {
             // Add page break between chapters
             // See https://developer.mozilla.org/en-US/docs/Web/CSS/break-before and https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-before
             // Add both two CSS properties because of the compatibility issue
@@ -153,7 +167,11 @@ impl HtmlHandlebars {
                     .to_string()
             }
         };
-        let html_content_404 = utils::render_markdown(&content_404, html_config.curly_quotes);
+        let html_content_404 = utils::render_markdown(
+            &content_404,
+            html_config.curly_quotes,
+            self.syntaxes.borrow().as_ref().unwrap(),
+        );
 
         let mut data_404 = data.clone();
         let base_url = if let Some(site_url) = &html_config.site_url {
@@ -232,10 +250,9 @@ impl HtmlHandlebars {
         if let Some(contents) = &theme.favicon_svg {
             write_file(destination, "favicon.svg", contents)?;
         }
-        write_file(destination, "highlight.css", &theme.highlight_css)?;
-        write_file(destination, "tomorrow-night.css", &theme.tomorrow_night_css)?;
-        write_file(destination, "ayu-highlight.css", &theme.ayu_highlight_css)?;
-        write_file(destination, "highlight.js", &theme.highlight_js)?;
+        write_file(destination, "css/syntax/ayu.css", &theme.syntax_ayu_css)?;
+        write_file(destination, "css/syntax/dark.css", &theme.syntax_dark_css)?;
+        write_file(destination, "css/syntax/light.css", &theme.syntax_light_css)?;
         write_file(destination, "clipboard.min.js", &theme.clipboard_js)?;
         write_file(
             destination,
@@ -438,6 +455,21 @@ impl HtmlHandlebars {
 
         Ok(())
     }
+
+    fn build_syntaxset(&self, theme: &Theme, theme_dir: &Path) {
+        let base: SyntaxSet = syntect::dumps::from_binary(&theme.base_syntaxes);
+        let mut base_builder = base.into_builder();
+
+        let syntaxes_path = theme_dir.join("syntaxes");
+        if syntaxes_path.is_dir() {
+            if let Err(e) = base_builder.add_from_folder(&theme_dir.join("syntaxes"), true) {
+                warn!("Couldn't load custom syntax definitions: {}", e);
+            }
+        }
+
+        let syntaxes = base_builder.build();
+        self.syntaxes.replace(Some(syntaxes));
+    }
 }
 
 // TODO(mattico): Remove some time after the 0.1.8 release
@@ -501,7 +533,10 @@ impl Renderer for HtmlHandlebars {
             warn!("Please move your theme files to `./theme` for them to continue being used");
         }
 
-        let theme = theme::Theme::new(theme_dir);
+        let theme = theme::Theme::new(&theme_dir);
+
+        debug!("Collect syntaxes into a syntax set");
+        self.build_syntaxset(&theme, &theme_dir);
 
         debug!("Register the index handlebars template");
         handlebars.register_template_string("index", String::from_utf8(theme.index.clone())?)?;
@@ -873,6 +908,7 @@ fn add_playground_pre(
                         {
                             let content: Cow<'_, str> = if playground_config.editable
                                 && classes.contains("editable")
+                                || text.contains("fn</span> </span><span class=\"syn-entity syn-name syn-function syn-rust\">main")
                                 || text.contains("fn main")
                                 || text.contains("quick_main!")
                             {
@@ -881,8 +917,18 @@ fn add_playground_pre(
                                 // we need to inject our own main
                                 let (attrs, code) = partition_source(code);
 
-                                format!("# #![allow(unused)]\n{}#fn main() {{\n{}#}}", attrs, code)
-                                    .into()
+                                // FIXME: This doesn't highlight the added playground preamble, as it's added
+                                // *after* syntax highlighting.
+                                // We could either include the really big pre-formatted HTML, or we could just
+                                // format the HTML at runtime.
+                                // Maybe we can do this part before the highlighting step?
+                                // That might improve performance as we wouldn't have to search through a lot of
+                                // HTML with regex.
+                                format!(
+                                    "\n# #![allow(unused)]\n{}#fn main() {{\n{}#}}",
+                                    attrs, code
+                                )
+                                .into()
                             };
                             hide_lines(&content)
                         }

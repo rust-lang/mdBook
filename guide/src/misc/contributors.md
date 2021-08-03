@@ -20,5 +20,6 @@ shout-out to them!
 - Vivek Akupatni ([apatniv](https://github.com/apatniv))
 - Eric Huss ([ehuss](https://github.com/ehuss))
 - Josh Rotenberg ([joshrotenberg](https://github.com/joshrotenberg))
+- James ([ThePuzzlemaker](https://github.com/ThePuzzlemaker))
 
 If you feel you're missing from this list, feel free to add yourself in a PR.
