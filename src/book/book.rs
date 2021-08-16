@@ -13,19 +13,28 @@ pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> 
     let src_dir = src_dir.as_ref();
     let summary_md = src_dir.join("SUMMARY.md");
 
+    let summary = load_summary(summary_md, cfg)?;
+
+    load_book_from_disk(&summary, src_dir)
+}
+
+pub fn load_summary<P: AsRef<Path>>(summary_md: P, cfg: &BuildConfig) -> Result<Summary> {
+    let summary_md = summary_md.as_ref();
+
     let mut summary_content = String::new();
     File::open(&summary_md)
-        .with_context(|| format!("Couldn't open SUMMARY.md in {:?} directory", src_dir))?
+        .with_context(|| format!("Couldn't open summary file: {:?}", summary_md))?
         .read_to_string(&mut summary_content)?;
 
     let summary = parse_summary(&summary_content)
         .with_context(|| format!("Summary parsing failed for file={:?}", summary_md))?;
 
     if cfg.create_missing {
-        create_missing(&src_dir, &summary).with_context(|| "Unable to create missing chapters")?;
+        create_missing(&summary_md.parent().unwrap(), &summary)
+            .with_context(|| "Unable to create missing chapters")?;
     }
 
-    load_book_from_disk(&summary, src_dir)
+    Ok(summary)
 }
 
 fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {

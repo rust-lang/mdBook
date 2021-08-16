@@ -46,7 +46,14 @@ pub struct MDBook {
 
 impl MDBook {
     /// Load a book from its root directory on disk.
-    pub fn load<P: Into<PathBuf>>(book_root: P) -> Result<MDBook> {
+    pub fn load<P: Copy + Into<PathBuf>>(book_root: P) -> Result<MDBook> {
+        let config = MDBook::load_config(book_root)?;
+
+        MDBook::load_with_config(book_root, config)
+    }
+
+    /// Load a book's custom `Config`
+    pub fn load_config<P: Into<PathBuf>>(book_root: P) -> Result<Config> {
         let book_root = book_root.into();
         let config_location = book_root.join("book.toml");
 
@@ -75,7 +82,7 @@ impl MDBook {
             }
         }
 
-        MDBook::load_with_config(book_root, config)
+        Ok(config)
     }
 
     /// Load a book from its root directory using a custom `Config`.
@@ -84,6 +91,30 @@ impl MDBook {
 
         let src_dir = root.join(&config.book.src);
         let book = book::load_book(&src_dir, &config.build)?;
+
+        let renderers = determine_renderers(&config);
+        let preprocessors = determine_preprocessors(&config)?;
+
+        Ok(MDBook {
+            root,
+            config,
+            book,
+            renderers,
+            preprocessors,
+        })
+    }
+
+    /// Load a book from its root directory using a custom `Config` and a custom summary.
+    pub fn load_with_summary<P: Copy + Into<PathBuf>>(book_root: P, summary: &str) -> Result<MDBook> {
+        let config = MDBook::load_config(book_root)?;
+
+        let root = book_root.into();
+        let src_dir = root.join(&config.book.src);
+
+        let summary_md = src_dir.join(&summary);
+        let summary = book::load_summary(summary_md, &config.build)?;
+
+        let book = book::load_book_from_disk(&summary, &src_dir)?;
 
         let renderers = determine_renderers(&config);
         let preprocessors = determine_preprocessors(&config)?;
