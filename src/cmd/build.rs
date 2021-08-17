@@ -12,6 +12,11 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
              Relative paths are interpreted relative to the book's root directory.{n}\
              If omitted, mdBook uses build.build-dir from book.toml or defaults to `./book`.'",
         )
+        .args_from_usage(
+            "-s, --summary=[summary-file] 'Book's summary file{n}\
+             Relative paths are interpreted relative to the book's src root directory.{n}\
+             If omitted, use the default `SUMMARY.md` as summary file.",
+        )
         .arg_from_usage(
             "[dir] 'Root directory for the book{n}\
              (Defaults to the Current Directory when omitted)'",
@@ -22,7 +27,13 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 // Build command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::load(&book_dir)?;
+
+    let mut book: MDBook;
+    if let Some(summary) = args.value_of("summary") {
+        book = MDBook::load_with_summary(&book_dir, summary)?;
+    } else {
+        book = MDBook::load(&book_dir)?;
+    }
 
     if let Some(dest_dir) = args.value_of("dest-dir") {
         book.config.build.build_dir = dest_dir.into();
