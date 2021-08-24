@@ -264,7 +264,7 @@ fn root_index_html() -> Result<Document> {
 fn check_second_toc_level() {
     let doc = root_index_html().unwrap();
     let mut should_be = Vec::from(TOC_SECOND_LEVEL);
-    should_be.sort();
+    should_be.sort_unstable();
 
     let pred = descendants!(
         Class("chapter"),
@@ -288,7 +288,7 @@ fn check_first_toc_level() {
     let mut should_be = Vec::from(TOC_TOP_LEVEL);
 
     should_be.extend(TOC_SECOND_LEVEL);
-    should_be.sort();
+    should_be.sort_unstable();
 
     let pred = descendants!(
         Class("chapter"),
@@ -535,7 +535,7 @@ fn redirects_are_emitted_correctly() {
         let mut redirect_file = md.build_dir_for("html");
         // append everything except the bits that make it absolute
         // (e.g. "/" or "C:\")
-        redirect_file.extend(remove_absolute_components(&original));
+        redirect_file.extend(remove_absolute_components(original));
         let contents = fs::read_to_string(&redirect_file).unwrap();
         assert!(contents.contains(redirect));
     }
@@ -552,7 +552,7 @@ fn edit_url_has_default_src_dir_edit_url() {
         edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"    
         "#;
 
-    write_file(&temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
+    write_file(temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
 
     let md = MDBook::load(temp.path()).unwrap();
     md.build().unwrap();
@@ -560,9 +560,7 @@ fn edit_url_has_default_src_dir_edit_url() {
     let index_html = temp.path().join("book").join("index.html");
     assert_contains_strings(
         index_html,
-        &vec![
-            r#"href="https://github.com/rust-lang/mdBook/edit/master/guide/src/README.md" title="Suggest an edit""#,
-        ],
+        &[r#"href="https://github.com/rust-lang/mdBook/edit/master/guide/src/README.md" title="Suggest an edit""#],
     );
 }
 
@@ -578,7 +576,7 @@ fn edit_url_has_configured_src_dir_edit_url() {
         edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"    
         "#;
 
-    write_file(&temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
+    write_file(temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
 
     let md = MDBook::load(temp.path()).unwrap();
     md.build().unwrap();
@@ -586,9 +584,7 @@ fn edit_url_has_configured_src_dir_edit_url() {
     let index_html = temp.path().join("book").join("index.html");
     assert_contains_strings(
         index_html,
-        &vec![
-            r#"href="https://github.com/rust-lang/mdBook/edit/master/guide/src2/README.md" title="Suggest an edit""#,
-        ],
+        &[r#"href="https://github.com/rust-lang/mdBook/edit/master/guide/src2/README.md" title="Suggest an edit""#],
     );
 }
 
@@ -611,7 +607,7 @@ mod search {
         let index = fs::read_to_string(index).unwrap();
         let index = index.trim_start_matches("Object.assign(window.search, ");
         let index = index.trim_end_matches(");");
-        serde_json::from_str(&index).unwrap()
+        serde_json::from_str(index).unwrap()
     }
 
     #[test]
