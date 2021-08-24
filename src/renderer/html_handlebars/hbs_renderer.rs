@@ -49,9 +49,12 @@ impl HtmlHandlebars {
         let content = ch.content.clone();
         let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
 
-        let fixed_content =
-            utils::render_markdown_with_path(&ch.content, ctx.html_config.curly_quotes, Some(path));
-        if !ctx.is_index && ctx.html_config.print.page_break {
+        let fixed_content = utils::render_markdown_with_path(
+            &ch.content,
+            ctx.html_config.curly_quotes,
+            Some(path),
+        );
+        if !ctx.is_index {
             // Add page break between chapters
             // See https://developer.mozilla.org/en-US/docs/Web/CSS/break-before and https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-before
             // Add both two CSS properties because of the compatibility issue
@@ -613,7 +616,7 @@ impl Renderer for HtmlHandlebars {
             let rendered =
                 self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
 
-            utils::fs::write_file(&destination, "print.html", rendered.as_bytes())?;
+            utils::fs::write_file(destination, "print.html", rendered.as_bytes())?;
             debug!("Creating print.html ✓");
         }
 
