@@ -560,7 +560,9 @@ fn edit_url_has_default_src_dir_edit_url() {
     let index_html = temp.path().join("book").join("index.html");
     assert_contains_strings(
         index_html,
-        &[r#"href="https://github.com/rust-lang/mdBook/edit/master/guide/src/README.md" title="Suggest an edit""#],
+        &[
+            r#"href="https://github.com/rust-lang/mdBook/edit/master/guide/src/README.md" title="Suggest an edit""#,
+        ],
     );
 }
 
@@ -584,7 +586,9 @@ fn edit_url_has_configured_src_dir_edit_url() {
     let index_html = temp.path().join("book").join("index.html");
     assert_contains_strings(
         index_html,
-        &[r#"href="https://github.com/rust-lang/mdBook/edit/master/guide/src2/README.md" title="Suggest an edit""#],
+        &[
+            r#"href="https://github.com/rust-lang/mdBook/edit/master/guide/src2/README.md" title="Suggest an edit""#,
+        ],
     );
 }
 
