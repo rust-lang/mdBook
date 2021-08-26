@@ -13,6 +13,7 @@ rough example of how this is accomplished in practice.
 - [mdbook-epub] - an EPUB renderer
 - [mdbook-test] - a program to run the book's contents through [rust-skeptic] to
   verify everything compiles and runs correctly (similar to `rustdoc --test`)
+- [mdbook-man] - generate manual pages from the book
 
 This page will step you through creating your own alternative backend in the form
 of a simple word counting program. Although it will be written in Rust, there's
@@ -377,6 +378,7 @@ the source code or ask questions.
 [mdbook-linkcheck]: https://github.com/Michael-F-Bryan/mdbook-linkcheck
 [mdbook-epub]: https://github.com/Michael-F-Bryan/mdbook-epub
 [mdbook-test]: https://github.com/Michael-F-Bryan/mdbook-test
+[mdbook-man]: https://github.com/vv9k/mdbook-man
 [rust-skeptic]: https://github.com/budziq/rust-skeptic
 [`RenderContext`]: https://docs.rs/mdbook/*/mdbook/renderer/struct.RenderContext.html
 [`RenderContext::from_json()`]: https://docs.rs/mdbook/*/mdbook/renderer/struct.RenderContext.html#method.from_json
