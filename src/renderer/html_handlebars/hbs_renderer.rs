@@ -1,5 +1,5 @@
 use crate::book::{Book, BookItem};
-use crate::config::{Config, HtmlConfig, Playground, RustEdition};
+use crate::config::{BookConfig, Config, HtmlConfig, Playground, RustEdition};
 use crate::errors::*;
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
@@ -37,6 +37,20 @@ impl HtmlHandlebars {
             _ => return Ok(()),
         };
 
+        if let Some(ref edit_url_template) = ctx.html_config.edit_url_template {
+            let full_path = ctx.book_config.src.to_str().unwrap_or_default().to_owned()
+                + "/"
+                + ch.source_path
+                    .clone()
+                    .unwrap_or_default()
+                    .to_str()
+                    .unwrap_or_default();
+
+            let edit_url = edit_url_template.replace("{path}", &full_path);
+            ctx.data
+                .insert("git_repository_edit_url".to_owned(), json!(edit_url));
+        }
+
         let content = ch.content.clone();
         let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
 
@@ -45,6 +59,13 @@ impl HtmlHandlebars {
             ctx.html_config.curly_quotes,
             Some(&path),
         );
+        if !ctx.is_index {
+            // Add page break between chapters
+            // See https://developer.mozilla.org/en-US/docs/Web/CSS/break-before and https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-before
+            // Add both two CSS properties because of the compatibility issue
+            print_content
+                .push_str(r#"<div style="break-before: page; page-break-before: always;"></div>"#);
+        }
         print_content.push_str(&fixed_content);
 
         // Update the context with data for this file
@@ -64,9 +85,12 @@ impl HtmlHandlebars {
             .and_then(serde_json::Value::as_str)
             .unwrap_or("");
 
-        let title = match book_title {
-            "" => ch.name.clone(),
-            _ => ch.name.clone() + " - " + book_title,
+        let title = if let Some(title) = ctx.chapter_titles.get(path) {
+            title.clone()
+        } else if book_title.is_empty() {
+            ch.name.clone()
+        } else {
+            ch.name.clone() + " - " + book_title
         };
 
         ctx.data.insert("path".to_owned(), json!(path));
@@ -110,7 +134,7 @@ impl HtmlHandlebars {
         &self,
         ctx: &RenderContext,
         html_config: &HtmlConfig,
-        src_dir: &PathBuf,
+        src_dir: &Path,
         handlebars: &mut Handlebars<'_>,
         data: &mut serde_json::Map<String, serde_json::Value>,
     ) -> Result<()> {
@@ -437,6 +461,7 @@ impl Renderer for HtmlHandlebars {
     }
 
     fn render(&self, ctx: &RenderContext) -> Result<()> {
+        let book_config = &ctx.config.book;
         let html_config = ctx.config.html_config().unwrap_or_default();
         let src_dir = ctx.root.join(&ctx.config.book.src);
         let destination = &ctx.destination;
@@ -499,8 +524,10 @@ impl Renderer for HtmlHandlebars {
                 destination: destination.to_path_buf(),
                 data: data.clone(),
                 is_index,
+                book_config: book_config.clone(),
                 html_config: html_config.clone(),
                 edition: ctx.config.rust.edition,
+                chapter_titles: &ctx.chapter_titles,
             };
             self.render_item(item, ctx, &mut print_content)?;
             is_index = false;
@@ -756,7 +783,7 @@ fn insert_link_into_header(
     *id_count += 1;
 
     format!(
-        r##"<h{level}><a class="header" href="#{id}" id="{id}">{text}</a></h{level}>"##,
+        r##"<h{level} id="{id}"><a class="header" href="#{id}">{text}</a></h{level}>"##,
         level = level,
         id = id,
         text = content
@@ -809,13 +836,15 @@ fn add_playground_pre(
                 {
                     let contains_e2015 = classes.contains("edition2015");
                     let contains_e2018 = classes.contains("edition2018");
-                    let edition_class = if contains_e2015 || contains_e2018 {
+                    let contains_e2021 = classes.contains("edition2021");
+                    let edition_class = if contains_e2015 || contains_e2018 || contains_e2021 {
                         // the user forced edition, we should not overwrite it
                         ""
                     } else {
                         match edition {
                             Some(RustEdition::E2015) => " edition2015",
                             Some(RustEdition::E2018) => " edition2018",
+                            Some(RustEdition::E2021) => " edition2021",
                             None => "",
                         }
                     };
@@ -914,8 +943,10 @@ struct RenderItemContext<'a> {
     destination: PathBuf,
     data: serde_json::Map<String, serde_json::Value>,
     is_index: bool,
+    book_config: BookConfig,
     html_config: HtmlConfig,
     edition: Option<RustEdition>,
+    chapter_titles: &'a HashMap<PathBuf, String>,
 }
 
 #[cfg(test)]
@@ -927,27 +958,27 @@ mod tests {
         let inputs = vec![
             (
                 "blah blah <h1>Foo</h1>",
-                r##"blah blah <h1><a class="header" href="#foo" id="foo">Foo</a></h1>"##,
+                r##"blah blah <h1 id="foo"><a class="header" href="#foo">Foo</a></h1>"##,
             ),
             (
                 "<h1>Foo</h1>",
-                r##"<h1><a class="header" href="#foo" id="foo">Foo</a></h1>"##,
+                r##"<h1 id="foo"><a class="header" href="#foo">Foo</a></h1>"##,
             ),
             (
                 "<h3>Foo^bar</h3>",
-                r##"<h3><a class="header" href="#foobar" id="foobar">Foo^bar</a></h3>"##,
+                r##"<h3 id="foobar"><a class="header" href="#foobar">Foo^bar</a></h3>"##,
             ),
             (
                 "<h4></h4>",
-                r##"<h4><a class="header" href="#" id=""></a></h4>"##,
+                r##"<h4 id=""><a class="header" href="#"></a></h4>"##,
             ),
             (
                 "<h4><em>Hï</em></h4>",
-                r##"<h4><a class="header" href="#hï" id="hï"><em>Hï</em></a></h4>"##,
+                r##"<h4 id="hï"><a class="header" href="#hï"><em>Hï</em></a></h4>"##,
             ),
             (
                 "<h1>Foo</h1><h3>Foo</h3>",
-                r##"<h1><a class="header" href="#foo" id="foo">Foo</a></h1><h3><a class="header" href="#foo-1" id="foo-1">Foo</a></h3>"##,
+                r##"<h1 id="foo"><a class="header" href="#foo">Foo</a></h1><h3 id="foo-1"><a class="header" href="#foo-1">Foo</a></h3>"##,
             ),
         ];
 
@@ -1031,6 +1062,30 @@ mod tests {
                     ..Playground::default()
                 },
                 Some(RustEdition::E2018),
+            );
+            assert_eq!(&*got, *should_be);
+        }
+    }
+    #[test]
+    fn add_playground_edition2021() {
+        let inputs = [
+            ("<code class=\"language-rust\">x()</code>",
+             "<pre class=\"playground\"><code class=\"language-rust edition2021\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
+            ("<code class=\"language-rust\">fn main() {}</code>",
+             "<pre class=\"playground\"><code class=\"language-rust edition2021\">fn main() {}\n</code></pre>"),
+            ("<code class=\"language-rust edition2015\">fn main() {}</code>",
+             "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}\n</code></pre>"),
+            ("<code class=\"language-rust edition2018\">fn main() {}</code>",
+             "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}\n</code></pre>"),
+        ];
+        for (src, should_be) in &inputs {
+            let got = add_playground_pre(
+                src,
+                &Playground {
+                    editable: true,
+                    ..Playground::default()
+                },
+                Some(RustEdition::E2021),
             );
             assert_eq!(&*got, *should_be);
         }

@@ -104,12 +104,12 @@ fn check_correct_cross_links_in_nested_dir() {
 
     assert_contains_strings(
         first.join("index.html"),
-        &[r##"href="#some-section" id="some-section""##],
+        &[r##"<h2 id="some-section"><a class="header" href="#some-section">"##],
     );
 
     assert_contains_strings(
         first.join("nested.html"),
-        &[r##"href="#some-section" id="some-section""##],
+        &[r##"<h2 id="some-section"><a class="header" href="#some-section">"##],
     );
 }
 
@@ -373,7 +373,7 @@ fn able_to_include_files_in_chapters() {
     let includes = temp.path().join("book/first/includes.html");
 
     let summary_strings = &[
-        r##"<h1><a class="header" href="#summary" id="summary">Summary</a></h1>"##,
+        r##"<h1 id="summary"><a class="header" href="#summary">Summary</a></h1>"##,
         ">First Chapter</a>",
     ];
     assert_contains_strings(&includes, summary_strings);
@@ -539,6 +539,57 @@ fn redirects_are_emitted_correctly() {
         let contents = fs::read_to_string(&redirect_file).unwrap();
         assert!(contents.contains(redirect));
     }
+}
+
+#[test]
+fn edit_url_has_default_src_dir_edit_url() {
+    let temp = DummyBook::new().build().unwrap();
+    let book_toml = r#"
+        [book]
+        title = "implicit"
+
+        [output.html]
+        edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"    
+        "#;
+
+    write_file(&temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
+
+    let md = MDBook::load(temp.path()).unwrap();
+    md.build().unwrap();
+
+    let index_html = temp.path().join("book").join("index.html");
+    assert_contains_strings(
+        index_html,
+        &vec![
+            r#"href="https://github.com/rust-lang/mdBook/edit/master/guide/src/README.md" title="Suggest an edit""#,
+        ],
+    );
+}
+
+#[test]
+fn edit_url_has_configured_src_dir_edit_url() {
+    let temp = DummyBook::new().build().unwrap();
+    let book_toml = r#"
+        [book]
+        title = "implicit"
+        src = "src2"
+
+        [output.html]
+        edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"    
+        "#;
+
+    write_file(&temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
+
+    let md = MDBook::load(temp.path()).unwrap();
+    md.build().unwrap();
+
+    let index_html = temp.path().join("book").join("index.html");
+    assert_contains_strings(
+        index_html,
+        &vec![
+            r#"href="https://github.com/rust-lang/mdBook/edit/master/guide/src2/README.md" title="Suggest an edit""#,
+        ],
+    );
 }
 
 fn remove_absolute_components(path: &Path) -> impl Iterator<Item = Component> + '_ {

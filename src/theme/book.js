@@ -113,9 +113,12 @@ function cmd_text(trigger) {
 
         let text = playground_text(code_block);
         let classes = code_block.querySelector('code').classList;
-        let has_2018 = classes.contains("edition2018");
-        let edition = has_2018 ? "2018" : "2015";
-
+        let edition = "2015";
+        if(classes.contains("edition2018")) {
+            edition = "2018";
+        } else if(classes.contains("edition2021")) {
+            edition = "2021";
+        }
         var params = {
             version: "stable",
             optimize: "0",
@@ -138,7 +141,15 @@ function cmd_text(trigger) {
             body: JSON.stringify(params)
         })
         .then(response => response.json())
-        .then(response => result_block.innerText = response.result)
+        .then(response => {
+            if (response.result.trim() === '') {
+                result_block.innerText = "No output";
+                result_block.classList.add("result-no-output");
+            } else {
+                result_block.innerText = response.result;
+                result_block.classList.remove("result-no-output");
+            }
+        })
         .catch(error => result_block.innerText = "Playground Communication: " + error.message);
     }
 
@@ -156,12 +167,13 @@ function cmd_text(trigger) {
     if (window.ace) {
         // language-rust class needs to be removed for editable
         // blocks or highlightjs will capture events
-        Array
-            .from(document.querySelectorAll('code.editable'))
+        code_nodes
+            .filter(function (node) {return node.classList.contains("editable"); })
             .forEach(function (block) { block.classList.remove('language-rust'); });
 
         Array
-            .from(document.querySelectorAll('code:not(.editable)'))
+        code_nodes
+            .filter(function (node) {return !node.classList.contains("editable"); })
             .forEach(function (block) { hljs.highlightBlock(block); });
     } else {
         code_nodes.forEach(function (block) { hljs.highlightBlock(block); });

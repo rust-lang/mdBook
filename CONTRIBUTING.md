@@ -6,7 +6,6 @@ If you have come here to learn how to contribute to mdBook, we have some tips fo
 
 First of all, don't hesitate to ask questions!
 Use the [issue tracker](https://github.com/rust-lang/mdBook/issues), no question is too simple.
-If we don't respond in a couple of days, ping us @Michael-F-Bryan, @budziq, @steveklabnik, @frewsxcv it might just be that we forgot. :wink:
 
 ### Issues to work on
 
@@ -46,7 +45,7 @@ mdBook builds on stable Rust, if you want to build mdBook from source, here are 
 0. Navigate into the newly created `mdBook` directory
 0. Run `cargo build`
 
-The resulting binary can be found in `mdBook/target/debug/` under the name `mdBook` or `mdBook.exe`.
+The resulting binary can be found in `mdBook/target/debug/` under the name `mdbook` or `mdbook.exe`.
 
 ### Code Quality
 
@@ -79,7 +78,7 @@ For more information, such as running it from your favourite editor, please see 
 
 #### Finding Issues with Clippy
 
-Clippy is a code analyser/linter detecting mistakes, and therfore helps to improve your code.
+Clippy is a code analyser/linter detecting mistakes, and therefore helps to improve your code.
 Like formatting your code with `rustfmt`, running clippy regularly and before your Pull Request will
 help us maintain awesome code.
 
@@ -106,3 +105,26 @@ and [rustfmt](https://github.com/rust-lang/rustfmt) on the code first.
 This is not a requirement though and will never block a pull-request from being merged.
 
 That's it, happy contributions! :tada: :tada: :tada:
+
+## Browser compatibility and testing
+
+Currently we don't have a strict browser compatibility matrix due to our limited resources.
+We generally strive to keep mdBook compatible with a relatively recent browser on all of the most major platforms.
+That is, supporting Chrome, Safari, Firefox, Edge on Windows, macOS, Linux, iOS, and Android.
+If possible, do your best to avoid breaking older browser releases.
+
+Any change to the HTML or styling is encouraged to manually check on as many browsers and platforms that you can.
+Unfortunately at this time we don't have any automated UI or browser testing, so your assistance in testing is appreciated.
+
+## Updating higlight.js
+
+The following are instructions for updating [highlight.js](https://highlightjs.org/).
+
+1. Clone the repository at <https://github.com/highlightjs/highlight.js>
+1. Check out a tagged release (like `10.1.1`).
+1. Run `npm install`
+1. Run `node tools/build.js :common apache armasm coffeescript d handlebars haskell http julia nginx properties r scala x86asm yaml`
+1. Compare the language list that it spits out to the one in [`syntax-highlighting.md`](https://github.com/camelid/mdBook/blob/master/guide/src/format/theme/syntax-highlighting.md). If any are missing, add them to the list and rebuild (and update these docs). If any are added to the common set, add them to `syntax-highlighting.md`.
+1. Copy `build/highlight.min.js` to mdbook's directory [`highlight.js`](https://github.com/rust-lang/mdBook/blob/master/src/theme/highlight.js).
+1. Be sure to check the highlight.js [CHANGES](https://github.com/highlightjs/highlight.js/blob/main/CHANGES.md) for any breaking changes. Breaking changes that would affect users will need to wait until the next major release.
+1. Build mdbook with the new file and build some books with the new version and compare the output with a variety of languages to see if anything changes. (TODO: It would be nice to have a demo file in the repo to help with this.)

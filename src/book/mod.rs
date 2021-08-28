@@ -196,23 +196,20 @@ impl MDBook {
             }
         }
 
-        info!("Running the {} backend", renderer.name());
-        self.render(&preprocessed_book, renderer)?;
-
-        Ok(())
-    }
-
-    fn render(&self, preprocessed_book: &Book, renderer: &dyn Renderer) -> Result<()> {
         let name = renderer.name();
         let build_dir = self.build_dir_for(name);
 
-        let render_context = RenderContext::new(
+        let mut render_context = RenderContext::new(
             self.root.clone(),
-            preprocessed_book.clone(),
+            preprocessed_book,
             self.config.clone(),
             build_dir,
         );
+        render_context
+            .chapter_titles
+            .extend(preprocess_ctx.chapter_titles.borrow_mut().drain());
 
+        info!("Running the {} backend", renderer.name());
         renderer
             .render(&render_context)
             .with_context(|| "Rendering failed")
@@ -276,6 +273,10 @@ impl MDBook {
                         }
                         RustEdition::E2018 => {
                             cmd.args(&["--edition", "2018"]);
+                        }
+                        RustEdition::E2021 => {
+                            cmd.args(&["--edition", "2021"])
+                                .args(&["-Z", "unstable-options"]);
                         }
                     }
                 }
