@@ -230,6 +230,8 @@ pre > .result {
     margin-top: 10px;
 }
 
+
+/* Alta3 - Copy button */
 code + code + .buttons {
     z-index: 100;
     right: 5px;
@@ -255,7 +257,21 @@ code + code + .buttons i.tooltiptext{
     position: inherit;
 }
 
+/* Alta3 - Slides */
+.slide {
+    padding-bottom: 4em;
+}
 
+.slide-50 {
+    display: flex;
+    padding-bottom: 2em;
+    gap: 1%;
+    padding-bottom: 2em;
+}
+
+.slide-50 img {
+    width: 49.5%;
+}
 
 /* Search */
 
