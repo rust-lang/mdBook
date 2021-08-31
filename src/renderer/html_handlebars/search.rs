@@ -165,7 +165,12 @@ fn render_item(
         }
     }
 
-    if !heading.is_empty() {
+    if !body.is_empty() || !heading.is_empty() {
+        if heading.is_empty() {
+            if let Some(chapter) = breadcrumbs.first() {
+                heading = chapter.clone();
+            }
+        }
         // Make sure the last section is added to the index
         add_doc(
             index,

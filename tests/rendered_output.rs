@@ -34,6 +34,7 @@ const TOC_SECOND_LEVEL: &[&str] = &[
     "1.3. Recursive",
     "1.4. Markdown",
     "1.5. Unicode",
+    "1.6. No Headers",
     "2.1. Nested Chapter",
 ];
 
@@ -631,6 +632,7 @@ mod search {
         let introduction = get_doc_ref("intro.html#introduction");
         let some_section = get_doc_ref("first/index.html#some-section");
         let summary = get_doc_ref("first/includes.html#summary");
+        let no_headers = get_doc_ref("first/no-headers.html");
         let conclusion = get_doc_ref("conclusion.html#conclusion");
 
         let bodyidx = &index["index"]["index"]["body"]["root"];
@@ -644,13 +646,21 @@ mod search {
         assert_eq!(docs[&some_section]["body"], "");
         assert_eq!(
             docs[&summary]["body"],
-            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Markdown Unicode Second Chapter Nested Chapter Conclusion"
+            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Markdown Unicode No Headers Second Chapter Nested Chapter Conclusion"
         );
         assert_eq!(
             docs[&summary]["breadcrumbs"],
             "First Chapter » Includes » Summary"
         );
         assert_eq!(docs[&conclusion]["body"], "I put &lt;HTML&gt; in here!");
+        assert_eq!(
+            docs[&no_headers]["breadcrumbs"],
+            "First Chapter » No Headers"
+        );
+        assert_eq!(
+            docs[&no_headers]["body"],
+            "Capybara capybara capybara. Capybara capybara capybara."
+        );
     }
 
     // Setting this to `true` may cause issues with `cargo watch`,
