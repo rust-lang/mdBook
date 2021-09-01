@@ -37,10 +37,13 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     };
     update_config(&mut book);
 
-    if args.is_present("open") {
+    let open_thread = if args.is_present("open") {
         book.build()?;
-        open(book.build_dir_for("html").join("index.html"));
-    }
+        let path = book.build_dir_for("html").join("index.html");
+        Some(std::thread::spawn(|| open(path)))
+    } else {
+        None
+    };
 
     trigger_on_change(&book, |paths, book_dir| {
         info!("Files changed: {:?}\nBuilding book...\n", paths);
@@ -54,6 +57,10 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
             utils::log_backtrace(&e);
         }
     });
+
+    if let Some(h) = open_thread {
+        let _ = h.join();
+    }
 
     Ok(())
 }

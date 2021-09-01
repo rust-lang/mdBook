@@ -100,9 +100,11 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let serving_url = format!("http://{}", address);
     info!("Serving on: {}", serving_url);
 
-    if open_browser {
-        open(serving_url);
-    }
+    let open_thread = if open_browser {
+        Some(std::thread::spawn(|| open(serving_url)))
+    } else {
+        None
+    };
 
     #[cfg(feature = "watch")]
     watch::trigger_on_change(&book, move |paths, book_dir| {
@@ -122,6 +124,10 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
             let _ = tx.send(Message::text("reload"));
         }
     });
+
+    if let Some(h) = open_thread {
+        let _ = h.join();
+    }
 
     let _ = thread_handle.join();
 
