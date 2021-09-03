@@ -91,7 +91,7 @@ fn find_chapter(
         match item.get("path") {
             Some(path) if !path.is_empty() => {
                 if let Some(previous) = previous {
-                    if let Some(item) = target.find(&base_path, &path, &item, &previous)? {
+                    if let Some(item) = target.find(&base_path, path, &item, &previous)? {
                         return Ok(Some(item));
                     }
                 }
