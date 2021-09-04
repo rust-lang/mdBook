@@ -87,7 +87,7 @@ without accidentally breaking the document.
 ```rust
 fn remove_emphasis(
     num_removed_items: &mut usize,
-	    chapter: &mut Chapter,
+    chapter: &mut Chapter,
 ) -> Result<String> {
     let mut buf = String::with_capacity(chapter.content.len());
 
@@ -115,8 +115,8 @@ For everything else, have a look [at the complete example][example].
 
 ## implementing a preprocessor with a different language
 The fact that mdBook utilizes stdin and stdout to communicate with the preprocessors makes it easy to implement them in a language other than Rust.
-The following code shows how to implement a simple preprocessor in python, which will modify the content of the first chapter.
-The example will follow the configuration shown above with `preprocessor.foo.command` actually pointing to a  python script. The code of said script is below:
+The following code shows how to implement a simple preprocessor in Python, which will modify the content of the first chapter.
+The example below follows the configuration shown above with `preprocessor.foo.command` actually pointing to a Python script.
 
 ```python
 import json
@@ -129,9 +129,8 @@ if __name__ == '__main__':
             # then we are good to return an exit status code of 0, since the other argument will just be the renderer's name
             sys.exit(0)
 
-    # we will load both the context and the book representations from stdin
-    stdin = sys.stdin
-    context, book = json.load(stdin)
+    # load both the context and the book representations from stdin
+    context, book = json.load(sys.stdin)
     # and now, we can just modify the content of the first chapter
     book['sections'][0]['Chapter']['content'] = '# Hello'
     # we are done with the book's modification, we can just print it to stdout, 
