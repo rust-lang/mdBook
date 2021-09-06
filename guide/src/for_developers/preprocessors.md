@@ -113,7 +113,8 @@ fn remove_emphasis(
 
 For everything else, have a look [at the complete example][example].
 
-## implementing a preprocessor with a different language
+## Implementing a preprocessor with a different language
+
 The fact that mdBook utilizes stdin and stdout to communicate with the preprocessors makes it easy to implement them in a language other than Rust.
 The following code shows how to implement a simple preprocessor in Python, which will modify the content of the first chapter.
 The example below follows the configuration shown above with `preprocessor.foo.command` actually pointing to a Python script.
@@ -146,3 +147,5 @@ if __name__ == '__main__':
 [an example no-op preprocessor]: https://github.com/rust-lang/mdBook/blob/master/examples/nop-preprocessor.rs
 [`CmdPreprocessor::parse_input()`]: https://docs.rs/mdbook/latest/mdbook/preprocess/trait.Preprocessor.html#method.parse_input
 [`Book::for_each_mut()`]: https://docs.rs/mdbook/latest/mdbook/book/struct.Book.html#method.for_each_mut
+[`PreprocessorContext`]: https://docs.rs/mdbook/latest/mdbook/preprocess/struct.PreprocessorContext.html
+[`Book`]: https://docs.rs/mdbook/latest/mdbook/book/struct.Book.html
