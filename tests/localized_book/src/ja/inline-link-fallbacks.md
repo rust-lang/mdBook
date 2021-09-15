@@ -8,7 +8,7 @@ If inline link substitution works, then an image should appear below, sourced fr
 
 Here is an [inline link](translation-local-page.md) to an existing page in this translation.
 
-Here is an [inline link](missing-summary-chapter.md) to a page missing from this translation's SUMMARY.md. It should have been modified to point to the page in the English version of the book.
+Here is an [inline link](missing-summary-chapter.md) to a page missing from this translation's `SUMMARY.md`. It should have been modified to point to the page in the English version of the book.
 
 Also, here is an [inline link](blah.md) to a page missing from both translations. It should point to this language's 404 page.
 

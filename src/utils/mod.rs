@@ -10,7 +10,7 @@ use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, Options, Parser, Tag};
 
 use std::borrow::Cow;
 use std::fmt::Write;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub use self::string::{
     take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,
@@ -99,9 +99,9 @@ pub fn id_from_content(content: &str) -> String {
     normalize_id(trimmed)
 }
 
-fn rewrite_if_missing(
+fn rewrite_if_missing<P: AsRef<Path>>(
     fixed_link: &mut String,
-    path_to_dest: &PathBuf,
+    path_to_dest: P,
     dest: &str,
     src_dir: &PathBuf,
     language: &str,
@@ -114,7 +114,7 @@ fn rewrite_if_missing(
     // if the file exists.
     let mut path_on_disk = src_dir.clone();
     path_on_disk.push(language);
-    path_on_disk.push(path_to_dest);
+    path_on_disk.push(path_to_dest.as_ref());
     path_on_disk.push(dest);
 
     debug!("Checking if {} exists", path_on_disk.display());
@@ -122,7 +122,7 @@ fn rewrite_if_missing(
         // Now see if the file exists in the fallback language directory (like "src/en").
         let mut fallback_path = src_dir.clone();
         fallback_path.push(fallback_language);
-        fallback_path.push(path_to_dest);
+        fallback_path.push(path_to_dest.as_ref());
         fallback_path.push(dest);
 
         debug!(
@@ -133,7 +133,7 @@ fn rewrite_if_missing(
             // We can fall back to this link. Get enough parent directories to
             // reach the root source directory, append the fallback language
             // directory to it, the prepend the whole thing to the link.
-            let mut relative_path = PathBuf::from(path_to_dest);
+            let mut relative_path = PathBuf::from(path_to_dest.as_ref());
             relative_path.push(dest);
 
             let mut path_to_fallback_src = fs::path_to_root(&relative_path);
@@ -158,7 +158,6 @@ fn fix<'a>(dest: CowStr<'a>, ctx: Option<&RenderMarkdownContext>) -> CowStr<'a> 
                 if base.ends_with(".md") {
                     base.replace_range(base.len() - 3.., ".html");
                 }
-                info!("{:?} {:?}", base, dest);
                 return format!("{}{}", base, dest).into();
             } else {
                 return dest;
@@ -173,6 +172,8 @@ fn fix<'a>(dest: CowStr<'a>, ctx: Option<&RenderMarkdownContext>) -> CowStr<'a> 
         let mut fixed_link = String::new();
 
         if let Some(ctx) = ctx {
+            let base = ctx.path.parent().expect("path can't be empty");
+
             // If the book is multilingual, check if the file actually
             // exists, and if not rewrite the link to the fallback
             // language's page.
@@ -180,7 +181,7 @@ fn fix<'a>(dest: CowStr<'a>, ctx: Option<&RenderMarkdownContext>) -> CowStr<'a> 
                 if let Some(fallback_language) = &ctx.fallback_language {
                     rewrite_if_missing(
                         &mut fixed_link,
-                        &ctx.path,
+                        &base,
                         &dest,
                         &ctx.src_dir,
                         &language,
@@ -190,13 +191,7 @@ fn fix<'a>(dest: CowStr<'a>, ctx: Option<&RenderMarkdownContext>) -> CowStr<'a> 
             }
 
             if ctx.prepend_parent {
-                let base = ctx
-                    .path
-                    .parent()
-                    .expect("path can't be empty")
-                    .to_str()
-                    .expect("utf-8 paths only");
-
+                let base = base.to_str().expect("utf-8 paths only");
                 if !base.is_empty() {
                     write!(fixed_link, "{}/", base).unwrap();
                 }
@@ -562,27 +557,22 @@ more text with spaces
                 );
             };
 
-            test("../b/summary.md", "a", true, "../b/summary.html");
-            test("../b/summary.md", "a", false, "../../en/../b/summary.html");
-            test("../c/summary.md", "a/b", true, "../c/summary.html");
+            test("../b/summary.md", "a.md", true, "../b/summary.html");
+            test(
+                "../b/summary.md",
+                "a.md",
+                false,
+                "../../en/../b/summary.html",
+            );
+            test("../c/summary.md", "a/b.md", true, "../c/summary.html");
             test(
                 "../c/summary.md",
-                "a/b",
+                "a/b.md",
                 false,
                 "../../../en/../c/summary.html",
             );
-            test(
-                "#translations",
-                "config.md",
-                true,
-                "#translations",
-            );
-            test(
-                "#translations",
-                "config.md",
-                false,
-                "#translations",
-            );
+            test("#translations", "config.md", true, "#translations");
+            test("#translations", "config.md", false, "#translations");
         }
     }
 

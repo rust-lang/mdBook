@@ -1020,6 +1020,7 @@ mod tests {
         assert_eq!(got.rust, rust_should_be);
         assert_eq!(got.html_config().unwrap(), html_should_be);
         assert_eq!(got.language, language_should_be);
+        assert_eq!(got.default_language(), Some(String::from("ja")));
     }
 
     #[test]
@@ -1369,7 +1370,18 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "Invalid configuration file")]
-    fn validate_config_default_language_must_exist_in_languages_table() {
+    fn book_language_without_languages_table() {
+        let src = r#"
+        [book]
+        language = "en"
+        "#;
+
+        Config::from_str(src).unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid configuration file")]
+    fn default_language_must_exist_in_languages_table() {
         let src = r#"
         [language.ja]
         name = "日本語"
