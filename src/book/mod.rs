@@ -213,6 +213,25 @@ impl MDBook {
         Ok(())
     }
 
+    fn preprocess(
+        &self,
+        preprocess_ctx: &PreprocessorContext,
+        renderer: &dyn Renderer,
+        book: Book,
+    ) -> Result<Book> {
+        let mut preprocessed_book = book;
+        for preprocessor in &self.preprocessors {
+            if preprocessor_should_run(&**preprocessor, renderer, &self.config) {
+                debug!("Running the {} preprocessor.", preprocessor.name());
+                preprocessed_book = preprocessor.run(&preprocess_ctx, preprocessed_book)?;
+            }
+        }
+        preprocessed_book
+            .chapter_titles
+            .extend(preprocess_ctx.chapter_titles.borrow_mut().drain());
+        Ok(preprocessed_book)
+    }
+
     /// Run the entire build process for a particular [`Renderer`].
     pub fn execute_build_process(&self, renderer: &dyn Renderer) -> Result<()> {
         let preprocessed_books = match &self.book {
@@ -248,19 +267,20 @@ impl MDBook {
             }
         };
 
+        self.render(&preprocessed_books, renderer)
+    }
+
+    fn render(&self, preprocessed_books: &LoadedBook, renderer: &dyn Renderer) -> Result<()> {
         let name = renderer.name();
         let build_dir = self.build_dir_for(name);
 
-        let mut render_context = RenderContext::new(
+        let render_context = RenderContext::new(
             self.root.clone(),
             preprocessed_books.clone(),
             self.build_opts.clone(),
             self.config.clone(),
             build_dir,
         );
-        render_context
-            .chapter_titles
-            .extend(preprocess_ctx.chapter_titles.borrow_mut().drain());
 
         info!("Running the {} backend", renderer.name());
         renderer
@@ -297,6 +317,7 @@ impl MDBook {
             self.config.clone(),
             "test".to_string(),
         );
+
         let book = LinkPreprocessor::new().run(&preprocess_context, book.clone())?;
         // Index Preprocessor is disabled so that chapter paths continue to point to the
         // actual markdown files.
@@ -351,6 +372,30 @@ impl MDBook {
         if failed {
             bail!("One or more tests failed");
         }
+        Ok(())
+    }
+
+    /// Run `rustdoc` tests on the book, linking against the provided libraries.
+    pub fn test(&self, library_paths: Vec<&str>) -> Result<()> {
+        let library_args: Vec<&str> = (0..library_paths.len())
+            .map(|_| "-L")
+            .zip(library_paths.into_iter())
+            .flat_map(|x| vec![x.0, x.1])
+            .collect();
+
+        let temp_dir = TempFileBuilder::new().prefix("mdbook-").tempdir()?;
+
+        match self.book {
+            LoadedBook::Localized(ref books) => {
+                for (language_ident, book) in books.0.iter() {
+                    self.test_book(book, &temp_dir, &library_args, Some(language_ident.clone()))?;
+                }
+            }
+            LoadedBook::Single(ref book) => {
+                self.test_book(&book, &temp_dir, &library_args, None)?
+            }
+        }
+
         Ok(())
     }
 

@@ -80,6 +80,7 @@ impl HtmlHandlebars {
         handlebars: &mut Handlebars<'a>,
         theme: &Theme,
     ) -> Result<()> {
+        let book_config = &ctx.config.book;
         let build_dir = ctx.root.join(build_dir);
         let mut data = make_data(
             &ctx.root,
@@ -104,8 +105,10 @@ impl HtmlHandlebars {
                 destination: destination.to_path_buf(),
                 data: data.clone(),
                 is_index,
+                book_config: book_config.clone(),
                 html_config: html_config.clone(),
                 edition: ctx.config.rust.edition,
+                chapter_titles: &book.chapter_titles,
             };
             self.render_item(
                 item,
@@ -138,19 +141,21 @@ impl HtmlHandlebars {
         }
 
         // Render the handlebars template with the data
-        debug!("Render template");
-        let rendered = handlebars.render("index", &data)?;
+        if html_config.print.enable {
+            debug!("Render template");
+            let rendered = handlebars.render("index", &data)?;
 
-        let rendered =
-            self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
+            let rendered =
+                self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
 
-        utils::fs::write_file(&destination, "print.html", rendered.as_bytes())?;
-        debug!("Creating print.html ✓");
+            utils::fs::write_file(destination, "print.html", rendered.as_bytes())?;
+            debug!("Creating print.html ✓");
+        }
 
         debug!("Copy static files");
-        self.copy_static_files(&destination, &theme, &html_config)
+        self.copy_static_files(destination, &theme, &html_config)
             .with_context(|| "Unable to copy across static files")?;
-        self.copy_additional_css_and_js(&html_config, &ctx.root, &destination)
+        self.copy_additional_css_and_js(&html_config, &ctx.root, destination)
             .with_context(|| "Unable to copy across additional CSS and JS")?;
 
         // Render search index
@@ -158,11 +163,11 @@ impl HtmlHandlebars {
         {
             let search = html_config.search.clone().unwrap_or_default();
             if search.enable {
-                super::search::create_files(&search, &destination, &book)?;
+                super::search::create_files(&search, destination, book)?;
             }
         }
 
-        self.emit_redirects(&ctx.destination, handlebars, &html_config.redirect)
+        self.emit_redirects(&ctx.destination, &handlebars, &html_config.redirect)
             .context("Unable to emit redirects")?;
 
         // `src_dir` points to the root source directory. If this book
@@ -674,7 +679,6 @@ impl Renderer for HtmlHandlebars {
     }
 
     fn render(&self, ctx: &RenderContext) -> Result<()> {
-        let book_config = &ctx.config.book;
         let html_config = ctx.config.html_config().unwrap_or_default();
         let src_dir = ctx.source_dir();
         let destination = &ctx.destination;
@@ -720,75 +724,7 @@ impl Renderer for HtmlHandlebars {
         debug!("Register handlebars helpers");
         self.register_hbs_helpers(&mut handlebars, &html_config);
 
-        let mut data = make_data(&ctx.root, book, &ctx.config, &html_config, &theme)?;
-
-        // Print version
-        let mut print_content = String::new();
-
-        fs::create_dir_all(&destination)
-            .with_context(|| "Unexpected error when constructing destination path")?;
-
-        let mut is_index = true;
-        for item in book.iter() {
-            let ctx = RenderItemContext {
-                handlebars: &handlebars,
-                destination: destination.to_path_buf(),
-                data: data.clone(),
-                is_index,
-                book_config: book_config.clone(),
-                html_config: html_config.clone(),
-                edition: ctx.config.rust.edition,
-                chapter_titles: &ctx.chapter_titles,
-            };
-            self.render_item(item, ctx, &mut print_content)?;
-            is_index = false;
-        }
-
-        // Render 404 page
-        if html_config.input_404 != Some("".to_string()) {
-            self.render_404(ctx, &html_config, &src_dir, &mut handlebars, &mut data)?;
-        }
-
-        // Print version
-        self.configure_print_version(&mut data, &print_content);
-        if let Some(ref title) = ctx.config.book.title {
-            data.insert("title".to_owned(), json!(title));
-        }
-
-        // Render the handlebars template with the data
-        if html_config.print.enable {
-            debug!("Render template");
-            let rendered = handlebars.render("index", &data)?;
-
-            let rendered =
-                self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
-
-            utils::fs::write_file(destination, "print.html", rendered.as_bytes())?;
-            debug!("Creating print.html ✓");
-        }
-
-        debug!("Copy static files");
-        self.copy_static_files(destination, &theme, &html_config)
-            .with_context(|| "Unable to copy across static files")?;
-        self.copy_additional_css_and_js(&html_config, &ctx.root, destination)
-            .with_context(|| "Unable to copy across additional CSS and JS")?;
-
-        // Render search index
-        #[cfg(feature = "search")]
-        {
-            let search = html_config.search.unwrap_or_default();
-            if search.enable {
-                super::search::create_files(&search, destination, book)?;
-            }
-        }
-
-        self.emit_redirects(&ctx.destination, &handlebars, &html_config.redirect)
-            .context("Unable to emit redirects")?;
-
-        // Copy all remaining files, avoid a recursive copy from/to the book build dir
-        utils::fs::copy_files_except_ext(&src_dir, destination, true, Some(&build_dir), &["md"])?;
-
-        Ok(())
+        self.render_books(ctx, &src_dir, &html_config, &mut handlebars, &theme)
     }
 }
 

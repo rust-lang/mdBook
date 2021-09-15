@@ -479,15 +479,13 @@ impl<'de> Deserialize<'de> for Config {
             .unwrap_or_default();
 
         if !language.0.is_empty() {
-            let default_languages = language.0.iter().filter(|(_, lang)| lang.default).count();
-            if default_languages != 1 {
+            if book.language.is_none() {
                 return Err(D::Error::custom(
                     "If the [language] table is specified, then `book.language` must be declared",
                 ));
             }
             let language_ident = book.language.clone().unwrap();
             if language.0.get(&language_ident).is_none() {
-                use serde::de::Error;
                 return Err(D::Error::custom(format!(
                     "Expected [language.{}] to be declared in book.toml",
                     language_ident
@@ -495,7 +493,6 @@ impl<'de> Deserialize<'de> for Config {
             }
             for (ident, language) in language.0.iter() {
                 if language.name.is_empty() {
-                    use serde::de::Error;
                     return Err(D::Error::custom(format!(
                         "`name` property for [language.{}] must be non-empty",
                         ident
@@ -910,7 +907,6 @@ mod tests {
         title = "Some Book"
         authors = ["Michael-F-Bryan <michaelfbryan@gmail.com>"]
         description = "A completely useless book"
-        multilingual = true
         src = "source"
         language = "ja"
 
@@ -1369,14 +1365,14 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Invalid configuration file")]
     fn book_language_without_languages_table() {
         let src = r#"
         [book]
         language = "en"
         "#;
 
-        Config::from_str(src).unwrap();
+        let got = Config::from_str(src).unwrap();
+        assert_eq!(got.default_language(), None);
     }
 
     #[test]

@@ -327,9 +327,9 @@ impl<'a> Link<'a> {
         })
     }
 
-    fn render_with_path<P: AsRef<Path>>(
+    fn render_with_path<P1: AsRef<Path>, P2: AsRef<Path>>(
         &self,
-        base: P,
+        base: P1,
         fallback: Option<P2>,
         chapter_title: &mut String,
     ) -> Result<String> {

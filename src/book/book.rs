@@ -61,8 +61,8 @@ fn load_single_book_translation<P: AsRef<Path>>(
     let summary = parse_summary(&summary_content)
         .with_context(|| format!("Summary parsing failed for file={:?}", summary_md))?;
 
-    if cfg.create_missing {
-        create_missing(localized_src_dir, &summary).with_context(|| "Unable to create missing chapters")?;
+    if cfg.build.create_missing {
+        create_missing(&localized_src_dir, &summary).with_context(|| "Unable to create missing chapters")?;
     }
 
     load_book_from_disk(&summary, localized_src_dir, fallback_src_dir, cfg)
@@ -83,23 +83,27 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
             if let Some(ref location) = link.location {
                 let filename = src_dir.join(location);
                 if !filename.exists() {
-                    if let Some(parent) = filename.parent() {
-                        if !parent.exists() {
-                            fs::create_dir_all(parent)?;
-                        }
-                    }
-                    debug!("Creating missing file {}", filename.display());
-
-                    let mut f = File::create(&filename).with_context(|| {
-                        format!("Unable to create missing file: {}", filename.display())
-                    })?;
-                    writeln!(f, "# {}", link.name)?;
+                    create_missing_link(&filename, link)?;
                 }
             }
 
             items.extend(&link.nested_items);
         }
     }
+
+    Ok(())
+}
+
+fn create_missing_link(filename: &Path, link: &Link) -> Result<()> {
+    if let Some(parent) = filename.parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent)?;
+        }
+    }
+    debug!("Creating missing file {}", filename.display());
+
+    let mut f = File::create(&filename)?;
+    writeln!(f, "# {}", link.name)?;
 
     Ok(())
 }
@@ -117,6 +121,8 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
 pub struct Book {
     /// The sections in this book.
     pub sections: Vec<BookItem>,
+    /// Chapter title overrides for this book.
+    pub chapter_titles: HashMap<PathBuf, String>,
     __non_exhaustive: (),
 }
 
@@ -360,6 +366,7 @@ pub(crate) fn load_book_from_disk<P: AsRef<Path>>(
 
     Ok(Book {
         sections: chapters,
+        chapter_titles: HashMap::new(),
         __non_exhaustive: (),
     })
 }
@@ -410,8 +417,8 @@ fn load_chapter<P: AsRef<Path>>(
             );
         }
         if !location.exists() && cfg.build.create_missing {
-            create_missing(&location, &link)
-                .with_context(|| "Unable to create missing chapters")?;
+            create_missing_link(&location, &link)
+                .with_context(|| "Unable to create missing link reference")?;
         }
 
         let mut f = File::open(&location)
@@ -565,6 +572,7 @@ more text.
     #[test]
     fn load_a_single_chapter_with_utf8_bom_from_disk() {
         let temp_dir = TempFileBuilder::new().prefix("book").tempdir().unwrap();
+        let cfg = Config::default();
 
         let chapter_path = temp_dir.path().join("chapter_1.md");
         File::create(&chapter_path)
@@ -581,7 +589,7 @@ more text.
             Vec::new(),
         );
 
-        let got = load_chapter(&link, temp_dir.path(), Vec::new()).unwrap();
+        let got = load_chapter(&link, temp_dir.path(), temp_dir.path(), Vec::new(), &cfg).unwrap();
         assert_eq!(got, should_be);
     }
 
@@ -832,6 +840,7 @@ more text.
                 name: String::from("Chapter 1"),
                 content: String::from(DUMMY_SRC),
                 path: Some(PathBuf::from("chapter_1.md")),
+                source_path: Some(PathBuf::from("chapter_1.md")),
                 ..Default::default()
             })],
             ..Default::default()
