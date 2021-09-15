@@ -55,14 +55,20 @@ fn load_single_book_translation<P: AsRef<Path>>(
 
     let mut summary_content = String::new();
     File::open(&summary_md)
-        .with_context(|| format!("Couldn't open SUMMARY.md in {:?} directory", localized_src_dir))?
+        .with_context(|| {
+            format!(
+                "Couldn't open SUMMARY.md in {:?} directory",
+                localized_src_dir
+            )
+        })?
         .read_to_string(&mut summary_content)?;
 
     let summary = parse_summary(&summary_content)
         .with_context(|| format!("Summary parsing failed for file={:?}", summary_md))?;
 
     if cfg.build.create_missing {
-        create_missing(&localized_src_dir, &summary).with_context(|| "Unable to create missing chapters")?;
+        create_missing(&localized_src_dir, &summary)
+            .with_context(|| "Unable to create missing chapters")?;
     }
 
     load_book_from_disk(&summary, localized_src_dir, fallback_src_dir, cfg)

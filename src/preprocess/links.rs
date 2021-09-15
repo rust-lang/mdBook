@@ -62,7 +62,14 @@ impl Preprocessor for LinkPreprocessor {
                     let fallback = fallback_src_dir.join(parent);
 
                     let mut chapter_title = ch.name.clone();
-                    let content = replace_all(&ch.content, base, Some(fallback), chapter_path, 0, &mut chapter_title);
+                    let content = replace_all(
+                        &ch.content,
+                        base,
+                        Some(fallback),
+                        chapter_path,
+                        0,
+                        &mut chapter_title,
+                    );
                     ch.content = content;
                     if chapter_title != ch.name {
                         ctx.chapter_titles
@@ -83,7 +90,7 @@ fn replace_all<P1, P2>(
     fallback: Option<P1>,
     source: P2,
     depth: usize,
-    chapter_title: &mut String
+    chapter_title: &mut String,
 ) -> String
 where
     P1: AsRef<Path>,
