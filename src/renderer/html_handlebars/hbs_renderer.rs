@@ -62,6 +62,8 @@ impl HtmlHandlebars {
             &content,
             ctx.html_config.curly_quotes,
             self.syntaxes.borrow().as_ref().unwrap(),
+            &ctx.html_config.playground,
+            ctx.edition,
         );
 
         let fixed_content = utils::render_markdown_with_path(
@@ -69,6 +71,8 @@ impl HtmlHandlebars {
             ctx.html_config.curly_quotes,
             Some(&path),
             self.syntaxes.borrow().as_ref().unwrap(),
+            &ctx.html_config.playground,
+            ctx.edition,
         );
         if !ctx.is_index && ctx.html_config.print.page_break  {
             // Add page break between chapters
@@ -121,7 +125,7 @@ impl HtmlHandlebars {
         debug!("Render template");
         let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
-        let rendered = self.post_process(rendered, &ctx.html_config.playground, ctx.edition);
+        let rendered = self.post_process(rendered);
 
         // Write to file
         debug!("Creating {}", filepath.display());
@@ -132,8 +136,7 @@ impl HtmlHandlebars {
             ctx.data.insert("path_to_root".to_owned(), json!(""));
             ctx.data.insert("is_index".to_owned(), json!(true));
             let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
-            let rendered_index =
-                self.post_process(rendered_index, &ctx.html_config.playground, ctx.edition);
+            let rendered_index = self.post_process(rendered_index);
             debug!("Creating index.html from {}", ctx_path);
             utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
         }
@@ -171,6 +174,8 @@ impl HtmlHandlebars {
             &content_404,
             html_config.curly_quotes,
             self.syntaxes.borrow().as_ref().unwrap(),
+            &html_config.playground,
+            ctx.config.rust.edition,
         );
 
         let mut data_404 = data.clone();
@@ -197,8 +202,7 @@ impl HtmlHandlebars {
         data_404.insert("title".to_owned(), json!(title));
         let rendered = handlebars.render("index", &data_404)?;
 
-        let rendered =
-            self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
+        let rendered = self.post_process(rendered);
         let output_file = get_404_output_file(&html_config.input_404);
         utils::fs::write_file(destination, output_file, rendered.as_bytes())?;
         debug!("Creating 404.html ✓");
@@ -206,15 +210,8 @@ impl HtmlHandlebars {
     }
 
     #[cfg_attr(feature = "cargo-clippy", allow(clippy::let_and_return))]
-    fn post_process(
-        &self,
-        rendered: String,
-        playground_config: &Playground,
-        edition: Option<RustEdition>,
-    ) -> String {
+    fn post_process(&self, rendered: String) -> String {
         let rendered = build_header_links(&rendered);
-        let rendered = fix_code_blocks(&rendered);
-        let rendered = add_playground_pre(&rendered, playground_config, edition);
 
         rendered
     }
@@ -595,8 +592,7 @@ impl Renderer for HtmlHandlebars {
             debug!("Render template");
             let rendered = handlebars.render("index", &data)?;
 
-            let rendered =
-                self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
+            let rendered = self.post_process(rendered);
 
             utils::fs::write_file(destination, "print.html", rendered.as_bytes())?;
             debug!("Creating print.html ✓");
@@ -998,6 +994,10 @@ fn partition_source(s: &str) -> (String, String) {
     }
 
     (before, after)
+}
+
+lazy_static! {
+    static ref BORING_LINES_REGEX: Regex = Regex::new(r"^(\s*)#(.?)(.*)$").unwrap();
 }
 
 struct RenderItemContext<'a> {

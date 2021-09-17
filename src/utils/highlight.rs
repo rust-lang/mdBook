@@ -86,10 +86,8 @@ impl<'a> HtmlGenerator<'a> {
         if did_boringify {
             // Since the boring scope is preceded only by a Pop operation,
             // it must be the first match on the line for <span class="">
-            formatted_line = formatted_line.replace(
-                r#"<span class="">"#,
-                r#"<span class="boring">"#,
-                );
+            formatted_line =
+                formatted_line.replace(r#"<span class="">"#, r#"<span class="boring">"#);
         }
         self.open_spans += delta;
         self.html.push_str(&formatted_line);
