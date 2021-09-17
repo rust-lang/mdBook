@@ -7,7 +7,7 @@ use std::borrow::Cow;
 use regex::Regex;
 use syntect::{
     html::{self, ClassStyle},
-    parsing::{ParseState, ScopeStack, SyntaxReference, SyntaxSet},
+    parsing::{ParseState, Scope, ScopeStack, ScopeStackOp, SyntaxReference, SyntaxSet},
 };
 
 pub struct HtmlGenerator<'a> {
@@ -42,19 +42,57 @@ impl<'a> HtmlGenerator<'a> {
         } else {
             (Cow::from(line), false)
         };
-        let parsed_line = self.parse_state.parse_line(&line, self.syntaxes);
-        let (formatted_line, delta) = html::line_tokens_to_classed_spans(
+        let parsed_line = if did_boringify {
+            // The empty scope is a valid prefix of every other scope.
+            // If we tried to just use a scope called "boring", we'd need to modify
+            // the Rust syntax definition.
+            let boring = Scope::new("").expect("boring is a valid scope");
+            // Close all open spans, insert `boring`, then re-open all of them.
+            // `boring` must be at the very top, so that the parser doesn't touch it.
+            let mut final_parsed_line = Vec::new();
+            if self.scope_stack.len() != 0 {
+                final_parsed_line.push((0, ScopeStackOp::Pop(self.scope_stack.len())));
+            }
+            final_parsed_line.push((0, ScopeStackOp::Push(boring.clone())));
+            for item in &self.scope_stack.scopes {
+                final_parsed_line.push((0, ScopeStackOp::Push(item.clone())));
+            }
+            // Now run the parser.
+            // It should see basically the stack it expects, except the `boring` at the very top,
+            // which it shouldn't touch because it doesn't know it's there.
+            let inner_parsed_line = self.parse_state.parse_line(&line, self.syntaxes);
+            final_parsed_line.extend_from_slice(&inner_parsed_line);
+            // Figure out what the final stack is.
+            let mut stack_at_end = self.scope_stack.clone();
+            for (_, item) in inner_parsed_line {
+                stack_at_end.apply(&item);
+            }
+            // Pop everything, including `boring`.
+            final_parsed_line.push((line.len(), ScopeStackOp::Pop(stack_at_end.len() + 1)));
+            // Push all the state back on at the end.
+            for item in stack_at_end.scopes.into_iter() {
+                final_parsed_line.push((line.len(), ScopeStackOp::Push(item)));
+            }
+            final_parsed_line
+        } else {
+            self.parse_state.parse_line(&line, self.syntaxes)
+        };
+        let (mut formatted_line, delta) = html::line_tokens_to_classed_spans(
             &line,
             parsed_line.as_slice(),
             self.style,
             &mut self.scope_stack,
         );
+        if did_boringify {
+            // Since the boring scope is preceded only by a Pop operation,
+            // it must be the first match on the line for <span class="">
+            formatted_line = formatted_line.replace(
+                r#"<span class="">"#,
+                r#"<span class="boring">"#,
+                );
+        }
         self.open_spans += delta;
-        self.html.push_str(&if did_boringify {
-            format!("<span class=\"boring\">{}</span>", formatted_line)
-        } else {
-            formatted_line
-        });
+        self.html.push_str(&formatted_line);
     }
 
     pub fn finalize(mut self) -> String {

@@ -201,6 +201,21 @@ fn rustdoc_include_hides_the_unspecified_part_of_the_file() {
 }
 
 #[test]
+fn boringify_properly_splits_string() {
+    let temp = DummyBook::new().build().unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
+    md.build().unwrap();
+
+    let nested = temp.path().join("book/second.html");
+    let text = vec![
+        r#"<span class="syn-string syn-quoted syn-double syn-rust"><span class="syn-punctuation syn-definition syn-string syn-begin syn-rust">&quot;</span>interesting string"#,
+        r#"</span></span></span></span><span class="boring"><span class="syn-source syn-rust"><span class="syn-meta syn-function syn-rust"><span class="syn-meta syn-block syn-rust"><span class="syn-string syn-quoted syn-double syn-rust">boring string"#,
+    ];
+
+    assert_contains_strings(nested, &text);
+}
+
+#[test]
 fn chapter_content_appears_in_rendered_document() {
     let content = vec![
         ("index.html", "This file is just here to cause the"),
