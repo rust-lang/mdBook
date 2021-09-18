@@ -99,7 +99,9 @@ your own `.sublime-syntax` file:
  Textile | textile
  XML | xml xsd xslt tld dtml rss opml svg
  YAML | yaml yml sublime-syntax
- Handlebars | handlebars handlebars.html hbr hbrs hbs hdbs hjs mu mustache rac stache template tmpl]
+ Handlebars | handlebars handlebars.html hbr hbrs hbs hdbs hjs mu mustache rac stache template tmpl
+ Console | console
+ TOML | toml tml Cargo.lock Gopkg.lock Pipfile
 
 ## Custom theme
 
