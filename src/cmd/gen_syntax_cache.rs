@@ -1,4 +1,4 @@
-use clap::{App, ArgMatches, SubCommand};
+use clap::{arg, App, ArgMatches};
 use mdbook::errors::Result;
 use std::env;
 use std::io::Cursor;
@@ -9,29 +9,29 @@ use syntect::html::ClassStyle;
 use syntect::parsing::{SyntaxSet, SyntaxSetBuilder};
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
-    SubCommand::with_name("gen-syntax-cache")
+pub fn make_subcommand<'help>() -> App<'help> {
+    App::new("gen-syntax-cache")
         .about("Generate syntaxes.bin and css/syntax")
-        .arg_from_usage(
-            "-d, --dest-dir=[dir] 'Output directory for the syntax cache{n}\
-             Relative paths are interpreted relative to the current working directory.{n}\
-             If omitted, mdBook uses `.`.
-             This command outputs files [dir]/syntaxes.bin and [dir]/css/syntax/*.css'",
-        )
-        .arg_from_usage("--syntaxes-only 'Only generate syntaxes.bin, not css/syntax/*.css.'")
-        .arg_from_usage(
-            "--no-default-syntaxes 'Don't include Sublime Text's default open source syntaxes{n}\
-             If included, only syntaxes from [dir] are used.'",
-        )
-        .arg_from_usage("--themes-only 'Only generate themes, not syntaxes.bin.'")
-        .arg_from_usage(
-            "--no-default-themes 'Don't include mdbook's default light, dark, and ayu themes{n}\
-             If included, only themes from [dir] are used.'",
-        )
-        .arg_from_usage(
-            "[dir] 'Root directory for the syntax sources{n}\
-             (Defaults to the Current Directory when omitted)'",
-        )
+        .arg(arg!(-d --"dest-dir" <dir>
+            "Output directory for the syntax cache{n}\
+            Relative paths are interpreted relative to the current working directory.{n}\
+            If omitted, mdBook uses `.`.
+            This command outputs files [dir]/syntaxes.bin and [dir]/css/syntax/*.css"
+        ).required(false))
+        .arg(arg!(--syntaxes-only "Only generate syntaxes.bin, not css/syntax/*.css."))
+        .arg(arg!(--no-default-syntaxes
+            "Don't include Sublime Text's default open source syntaxes{n}\
+            If included, only syntaxes from [dir] are used."
+        ))
+        .arg(arg!(--themes-only "Only generate themes, not syntaxes.bin."))
+        .arg(arg!(--no-default-themes
+            "Don't include mdbook's default light, dark, and ayu themes{n}\
+            If included, only themes from [dir] are used.'"
+        ))
+        .arg(arg!([dir]
+            "Root directory for the syntax sources{n}\
+            (Defaults to the Current Directory when omitted)"
+        ))
 }
 
 // Generate Syntax Cache command implementation

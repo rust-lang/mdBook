@@ -34,10 +34,9 @@ fn main() {
         #[cfg(feature = "serve")]
         Some(("serve", sub_matches)) => cmd::serve::execute(sub_matches),
         Some(("test", sub_matches)) => cmd::test::execute(sub_matches),
+        #[cfg(feature = "gen-syntax-cache")]
+        Some(("gen-syntax-cache", sub_matches)) => cmd::gen_syntax_cache::execute(sub_matches),
         Some(("completions", sub_matches)) => (|| {
-        #[cfg(feature = "gen_syntax_cache")]
-        ("gen-syntax-cache", Some(sub_matches)) => cmd::gen_syntax_cache::execute(sub_matches),
-        ("completions", Some(sub_matches)) => (|| {
             let shell: Shell = sub_matches
                 .value_of("shell")
                 .ok_or_else(|| anyhow!("Shell name missing."))?
