@@ -35,6 +35,9 @@ fn main() {
         Some(("serve", sub_matches)) => cmd::serve::execute(sub_matches),
         Some(("test", sub_matches)) => cmd::test::execute(sub_matches),
         Some(("completions", sub_matches)) => (|| {
+        #[cfg(feature = "gen_syntax_cache")]
+        ("gen-syntax-cache", Some(sub_matches)) => cmd::gen_syntax_cache::execute(sub_matches),
+        ("completions", Some(sub_matches)) => (|| {
             let shell: Shell = sub_matches
                 .value_of("shell")
                 .ok_or_else(|| anyhow!("Shell name missing."))?
@@ -93,6 +96,8 @@ fn create_clap_app() -> App<'static> {
     let app = app.subcommand(cmd::watch::make_subcommand());
     #[cfg(feature = "serve")]
     let app = app.subcommand(cmd::serve::make_subcommand());
+    #[cfg(feature = "gen-syntax-cache")]
+    let app = app.subcommand(cmd::gen_syntax_cache::make_subcommand());
 
     app
 }

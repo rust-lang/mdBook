@@ -14,6 +14,10 @@ license = "MPL-2.0"
 readme = "README.md"
 repository = "https://github.com/rust-lang/mdBook"
 description = "Creates a book from markdown files"
+build = "build.rs"
+
+[build-dependencies]
+syntect = { version = "4.6.0", default-features = false, features = ["regex-onig", "parsing", "html", "dump-load", "yaml-load", "dump-create", "assets"] }
 
 [dependencies]
 anyhow = "1.0.28"
@@ -58,10 +62,11 @@ pretty_assertions = "1.2.1"
 walkdir = "2.0"
 
 [features]
-default = ["watch", "serve", "search"]
+default = ["watch", "serve", "search", "gen-syntax-cache"]
 watch = ["notify", "gitignore"]
 serve = ["futures-util", "tokio", "warp"]
 search = ["elasticlunr-rs", "ammonia"]
+gen-syntax-cache = ["syntect/dump-create"]
 
 [[bin]]
 doc = false

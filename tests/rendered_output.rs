@@ -516,6 +516,44 @@ fn theme_dir_overrides_work_correctly() {
 }
 
 #[test]
+fn theme_dir_syntaxesdotbin_prevents_default_highlighting() {
+    let book_dir = dummy_book::new_copy_of_example_book().unwrap();
+    let book_dir = book_dir.path();
+    let theme_dir = book_dir.join("theme");
+
+    let empty_syntaxset = syntect::parsing::SyntaxSet::new();
+    let empty_syntaxset_dump = syntect::dumps::dump_binary(&empty_syntaxset);
+    write_file(&theme_dir, "syntaxes.bin", &empty_syntaxset_dump).unwrap();
+
+    let md = MDBook::load(book_dir).unwrap();
+    md.build().unwrap();
+
+    let second = book_dir.join("book/format/mdbook.html");
+
+    assert_doesnt_contain_strings(&second, &["syn-rust", "rustmodifiedtestfixture"]);
+}
+
+#[test]
+fn theme_dir_syntaxesdotbin_reads_syntaxes() {
+    let book_dir = dummy_book::new_copy_of_example_book().unwrap();
+    let book_dir = book_dir.path();
+    let theme_dir = book_dir.join("theme");
+
+    let syntaxset_test_fixture =
+        syntect::parsing::SyntaxSet::load_from_folder("tests/syntax_test_fixtures").unwrap();
+    let syntaxset_test_fixture = syntect::dumps::dump_binary(&syntaxset_test_fixture);
+    write_file(&theme_dir, "syntaxes.bin", &syntaxset_test_fixture).unwrap();
+
+    let md = MDBook::load(book_dir).unwrap();
+    md.build().unwrap();
+
+    let second = book_dir.join("book/format/mdbook.html");
+
+    assert_contains_strings(&second, &["syn-rustmodifiedtestfixture"]);
+    assert_doesnt_contain_strings(&second, &["syn-rust\""]);
+}
+
+#[test]
 fn no_index_for_print_html() {
     let temp = DummyBook::new().build().unwrap();
     let md = MDBook::load(temp.path()).unwrap();

@@ -36,7 +36,10 @@ pub static FONT_AWESOME_WOFF: &[u8] = include_bytes!("FontAwesome/fonts/fontawes
 pub static FONT_AWESOME_WOFF2: &[u8] =
     include_bytes!("FontAwesome/fonts/fontawesome-webfont.woff2");
 pub static FONT_AWESOME_OTF: &[u8] = include_bytes!("FontAwesome/fonts/FontAwesome.otf");
-pub static SYNTAXES_BIN: &[u8] = include_bytes!("syntaxes.bin");
+pub static SYNTAXES_BIN: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/syntaxes.bin"));
+pub static SYNTAX_THEME_LIGHT: &[u8] = include_bytes!("syntax-themes/light.tmTheme");
+pub static SYNTAX_THEME_DARK: &[u8] = include_bytes!("syntax-themes/dark.tmTheme");
+pub static SYNTAX_THEME_AYU: &[u8] = include_bytes!("syntax-themes/ayu.tmTheme");
 
 /// The `Theme` struct should be used instead of the static variables because
 /// the `new()` method will look if the user has a theme directory in their
