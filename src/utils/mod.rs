@@ -338,7 +338,7 @@ impl<'a> SyntaxHighlighter<'a> {
                             }
                             self.is_playground = true;
                             return Event::Html(CowStr::from(format!(
-                                r#"<pre class="playground syntect"><code class="language-{}">"#,
+                                r#"<pre class="syntect playground"><code class="language-{}">"#,
                                 classes.join(" ")
                             )));
                         } else {
@@ -613,7 +613,7 @@ more text with spaces
 ```
 "#;
 
-            let expected = r#"<pre class="playground"><code class="language-rust no_run should_panic property_3"></code></pre>"#;
+            let expected = r#"<pre class="syntect playground"><code class="language-rust no_run should_panic property_3"></code></pre>"#;
             assert_eq!(
                 render_markdown(
                     input,
@@ -643,7 +643,7 @@ more text with spaces
 ```
 "#;
 
-            let expected = r#"<pre class="playground"><code class="language-rust no_run should_panic property_3"></code></pre>"#;
+            let expected = r#"<pre class="syntect playground"><code class="language-rust no_run should_panic property_3"></code></pre>"#;
             assert_eq!(
                 render_markdown(
                     input,
@@ -673,7 +673,7 @@ more text with spaces
 ```
 "#;
 
-            let expected = r#"<pre class="playground"><code class="language-rust"></code></pre>"#;
+            let expected = r#"<pre class="syntect playground"><code class="language-rust"></code></pre>"#;
             assert_eq!(
                 render_markdown(
                     input,
