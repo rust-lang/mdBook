@@ -194,4 +194,5 @@ pre.syntect {
     color: var(--syntect-fg);
     background: var(--syntect-bg);
     padding: 0.5em;
+    overflow-y: auto;
 }
