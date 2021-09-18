@@ -11,7 +11,7 @@
  color: #6e6b5e;
 }
 .syn-comment, .syn-punctuation.syn-definition.syn-comment {
- color: #999580;
+ color: #575757;
 }
 .syn-punctuation.syn-definition.syn-string, .syn-punctuation.syn-definition.syn-variable, .syn-punctuation.syn-definition.syn-string, .syn-punctuation.syn-definition.syn-parameters, .syn-punctuation.syn-definition.syn-string, .syn-punctuation.syn-definition.syn-array {
  color: #6e6b5e;
@@ -26,19 +26,19 @@
  color: #b854d4;
 }
 .syn-variable {
- color: #d73737;
+ color: #d70025;
 }
 .syn-entity.syn-name.syn-function, .syn-meta.syn-require, .syn-support.syn-function.syn-any-method {
- color: #6684e1;
+ color: #0030f2;
 }
 .syn-support.syn-class, .syn-entity.syn-name.syn-class, .syn-entity.syn-name.syn-type.syn-class {
- color: #b65611;
+ color: #b21e00;
 }
 .syn-meta.syn-class {
  color: #292824;
 }
 .syn-keyword.syn-other.syn-special-method {
- color: #6684e1;
+ color: #0030f2;
 }
 .syn-storage {
  color: #b854d4;
@@ -47,43 +47,43 @@
  color: #1fad83;
 }
 .syn-string, .syn-constant.syn-other.syn-symbol, .syn-entity.syn-other.syn-inherited-class {
- color: #60ac39;
+ color: #008200;
 }
 .syn-constant.syn-numeric {
- color: #b65611;
+ color: #b21e00;
 }
 .syn-none {
- color: #b65611;
+ color: #b21e00;
 }
 .syn-none {
- color: #b65611;
+ color: #b21e00;
 }
 .syn-constant {
- color: #b65611;
+ color: #b21e00;
 }
 .syn-entity.syn-name.syn-tag {
- color: #d73737;
+ color: #d70025;
 }
 .syn-entity.syn-other.syn-attribute-name {
- color: #b65611;
+ color: #b21e00;
 }
 .syn-entity.syn-other.syn-attribute-name.syn-id, .syn-punctuation.syn-definition.syn-entity {
- color: #6684e1;
+ color: #0030f2;
 }
 .syn-meta.syn-selector {
  color: #b854d4;
 }
 .syn-none {
- color: #b65611;
+ color: #b21e00;
 }
 .syn-markup.syn-heading .syn-punctuation.syn-definition.syn-heading, .syn-entity.syn-name.syn-section {
- color: #6684e1;
+ color: #0030f2;
 }
 .syn-keyword.syn-other.syn-unit {
- color: #b65611;
+ color: #b21e00;
 }
 .syn-markup.syn-bold, .syn-punctuation.syn-definition.syn-bold {
- color: #b65611;
+ color: #b21e00;
 font-weight: bold;
 }
 .syn-markup.syn-italic, .syn-punctuation.syn-definition.syn-italic {
@@ -91,29 +91,29 @@ font-weight: bold;
 font-style: italic;
 }
 .syn-markup.syn-raw.syn-inline {
- color: #60ac39;
+ color: #008200;
 }
 .syn-string.syn-other.syn-link {
- color: #d73737;
+ color: #d70025;
 }
 .syn-meta.syn-link {
- color: #b65611;
+ color: #b21e00;
 }
 .syn-markup.syn-list {
- color: #d73737;
+ color: #d70025;
 }
 .syn-markup.syn-quote {
- color: #b65611;
+ color: #b21e00;
 }
 .syn-meta.syn-separator {
  color: #6e6b5e;
  background-color: #e8e4cf;
 }
 .syn-markup.syn-inserted {
- color: #60ac39;
+ color: #008200;
 }
 .syn-markup.syn-deleted {
- color: #d73737;
+ color: #d70025;
 }
 .syn-markup.syn-changed {
  color: #b854d4;
@@ -132,11 +132,11 @@ font-style: italic;
 }
 .syn-invalid.syn-illegal {
  color: #fefbec;
- background-color: #d73737;
+ background-color: #d70025;
 }
 .syn-invalid.syn-broken {
  color: #20201d;
- background-color: #b65611;
+ background-color: #b21e00;
 }
 .syn-invalid.syn-deprecated {
  color: #fefbec;

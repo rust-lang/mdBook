@@ -2,8 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- based loosely on https://github.com/rust-lang/mdBook/blob/601ebc5499ac8758937585d3d0254852027ecab6/src/theme/tomorrow-night.css -->
 	<key>author</key>
-	<string>Template: Chris Kempson, Scheme: Chris Kempson (http://chriskempson.com)</string>
+	<string>Template: Chris Kempson, Scheme: Chris Kempson (http://chriskempson.com), Michael Howell</string>
 	<key>name</key>
 	<string>Base16 Tomorrow Night</string>
 	<key>semanticClass</key>

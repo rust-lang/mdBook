@@ -1,0 +1,23 @@
+%YAML 1.2
+---
+# http://www.sublimetext.com/docs/3/syntax.html
+name: Console
+file_extensions:
+  - console
+scope: console
+contexts:
+  main:
+    - include: comments
+  comments:
+    - match: "\\$"
+      scope: string.dollar-prompt.console
+      push:
+        - meta_scope: support.class.dollar-prompt.console
+        - match: $\n?
+          pop: true
+    - match: "#"
+      scope: string.hash-prompt.console
+      push:
+        - meta_scope: support.class.hash-prompt.console
+        - match: $\n?
+          pop: true
