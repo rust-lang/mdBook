@@ -189,3 +189,9 @@ blockquote {
 .result-no-output {
     font-style: italic;
 }
+
+pre.syntect {
+    color: var(--syntect-fg);
+    background: var(--syntect-bg);
+    padding: 0.5em;
+}

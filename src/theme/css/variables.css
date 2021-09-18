@@ -40,6 +40,9 @@
     --table-header-bg: hsl(210, 25%, 28%);
     --table-alternate-bg: hsl(210, 25%, 11%);
 
+    --syntect-bg: #191f26;
+    --syntect-fg: #e6e1cf;
+
     --searchbar-border-color: #848484;
     --searchbar-bg: #424242;
     --searchbar-fg: #fff;
@@ -79,6 +82,9 @@
     --table-border-color: hsl(200, 7%, 13%);
     --table-header-bg: hsl(200, 7%, 28%);
     --table-alternate-bg: hsl(200, 7%, 11%);
+
+    --syntect-bg: #1d1f21;
+    --syntect-fg: #c5c8c6;
 
     --searchbar-border-color: #aaa;
     --searchbar-bg: #b7b7b7;
@@ -120,6 +126,9 @@
     --table-header-bg: hsl(0, 0%, 80%);
     --table-alternate-bg: hsl(0, 0%, 97%);
 
+    --syntect-bg: #f6f7f6;
+    --syntect-fg: #000;
+
     --searchbar-border-color: #aaa;
     --searchbar-bg: #fafafa;
     --searchbar-fg: #000;
@@ -159,6 +168,9 @@
     --table-border-color: hsl(226, 23%, 16%);
     --table-header-bg: hsl(226, 23%, 31%);
     --table-alternate-bg: hsl(226, 23%, 14%);
+
+    --syntect-bg: #1d1f21;
+    --syntect-fg: #c5c8c6;
 
     --searchbar-border-color: #aaa;
     --searchbar-bg: #aeaec6;
@@ -200,6 +212,9 @@
     --table-header-bg: #b3a497;
     --table-alternate-bg: hsl(60, 9%, 84%);
 
+    --syntect-bg: #f6f7f6;
+    --syntect-fg: #000;
+
     --searchbar-border-color: #aaa;
     --searchbar-bg: #fafafa;
     --searchbar-fg: #000;
@@ -240,6 +255,9 @@
         --table-border-color: hsl(200, 7%, 13%);
         --table-header-bg: hsl(200, 7%, 28%);
         --table-alternate-bg: hsl(200, 7%, 11%);
+
+        --syntect-bg: #1d1f21;
+        --syntect-fg: #c5c8c6;
 
         --searchbar-border-color: #aaa;
         --searchbar-bg: #b7b7b7;
