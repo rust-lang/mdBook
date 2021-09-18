@@ -125,7 +125,6 @@ fn boringify(line: &str) -> (String, bool) {
         }
     }
     result += line;
-    result += "\n";
 
     (result, false)
 }
