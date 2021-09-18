@@ -673,7 +673,8 @@ more text with spaces
 ```
 "#;
 
-            let expected = r#"<pre class="syntect playground"><code class="language-rust"></code></pre>"#;
+            let expected =
+                r#"<pre class="syntect playground"><code class="language-rust"></code></pre>"#;
             assert_eq!(
                 render_markdown(
                     input,
