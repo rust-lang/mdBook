@@ -17,6 +17,7 @@ pub struct HtmlGenerator<'a> {
     scope_stack: ScopeStack,
     html: String,
     style: ClassStyle,
+    is_in_boring_chunk: bool,
 }
 
 impl<'a> HtmlGenerator<'a> {
@@ -25,6 +26,7 @@ impl<'a> HtmlGenerator<'a> {
         let open_spans = 0;
         let html = String::new();
         let scope_stack = ScopeStack::new();
+        let is_in_boring_chunk = false;
         Self {
             syntaxes,
             open_spans,
@@ -32,6 +34,7 @@ impl<'a> HtmlGenerator<'a> {
             scope_stack,
             html,
             style,
+            is_in_boring_chunk,
         }
     }
 
@@ -42,40 +45,52 @@ impl<'a> HtmlGenerator<'a> {
         } else {
             (Cow::from(line), false)
         };
-        let parsed_line = if did_boringify {
-            // The empty scope is a valid prefix of every other scope.
-            // If we tried to just use a scope called "boring", we'd need to modify
-            // the Rust syntax definition.
-            let boring = Scope::new("").expect("boring is a valid scope");
-            // Close all open spans, insert `boring`, then re-open all of them.
-            // `boring` must be at the very top, so that the parser doesn't touch it.
-            let mut final_parsed_line = Vec::new();
-            if self.scope_stack.len() != 0 {
+        let parsed_line = match (self.is_in_boring_chunk, did_boringify) {
+            (false, true) => {
+                let mut final_parsed_line = Vec::new();
+                let inner_parsed_line = self.parse_state.parse_line(&line, self.syntaxes);
+                // The empty scope is a valid prefix of every other scope.
+                // If we tried to just use a scope called "boring", we'd need to modify
+                // the Rust syntax definition.
+                let boring = Scope::new("").expect("boring is a valid scope");
+                // Close all open spans, insert `boring`, then re-open all of them.
+                // `boring` must be at the very top, so that the parser doesn't touch it.
+                if self.scope_stack.len() != 0 {
+                    final_parsed_line.push((0, ScopeStackOp::Pop(self.scope_stack.len())));
+                }
+                final_parsed_line.push((0, ScopeStackOp::Push(boring.clone())));
+                for item in &self.scope_stack.scopes {
+                    final_parsed_line.push((0, ScopeStackOp::Push(item.clone())));
+                }
+                // Now run the parser.
+                // It should see basically the stack it expects, except the `boring` at the very top,
+                // which it shouldn't touch because it doesn't know it's there.
+                final_parsed_line.extend(inner_parsed_line);
+                final_parsed_line
+            }
+            (true, false) => {
+                let mut final_parsed_line = Vec::new();
+                let inner_parsed_line = self.parse_state.parse_line(&line, self.syntaxes);
+                // Pop everything, including `boring`, which was passed to `line_tokens_to_classed_spans`,
+                // and therefore wound up on the scope stack.
                 final_parsed_line.push((0, ScopeStackOp::Pop(self.scope_stack.len())));
+                // Push all the state back on at the end.
+                for (i, item) in self.scope_stack.scopes.iter().enumerate() {
+                    if i == 0 {
+                        // The whole point of this elaborate work is to pop the boring scope off the stack,
+                        // which requires popping everything else since it's on top,
+                        // then to avoid pushing it back on again.
+                        assert!(item.is_empty());
+                    } else {
+                        final_parsed_line.push((0, ScopeStackOp::Push(item.clone())));
+                    }
+                }
+                // Since this line is not boringified, we need to first break out of the boring scope,
+                // then we actually put all of this line's tokens.
+                final_parsed_line.extend(inner_parsed_line);
+                final_parsed_line
             }
-            final_parsed_line.push((0, ScopeStackOp::Push(boring.clone())));
-            for item in &self.scope_stack.scopes {
-                final_parsed_line.push((0, ScopeStackOp::Push(item.clone())));
-            }
-            // Now run the parser.
-            // It should see basically the stack it expects, except the `boring` at the very top,
-            // which it shouldn't touch because it doesn't know it's there.
-            let inner_parsed_line = self.parse_state.parse_line(&line, self.syntaxes);
-            final_parsed_line.extend_from_slice(&inner_parsed_line);
-            // Figure out what the final stack is.
-            let mut stack_at_end = self.scope_stack.clone();
-            for (_, item) in inner_parsed_line {
-                stack_at_end.apply(&item);
-            }
-            // Pop everything, including `boring`.
-            final_parsed_line.push((line.len(), ScopeStackOp::Pop(stack_at_end.len() + 1)));
-            // Push all the state back on at the end.
-            for item in stack_at_end.scopes.into_iter() {
-                final_parsed_line.push((line.len(), ScopeStackOp::Push(item)));
-            }
-            final_parsed_line
-        } else {
-            self.parse_state.parse_line(&line, self.syntaxes)
+            _ => self.parse_state.parse_line(&line, self.syntaxes),
         };
         let (mut formatted_line, delta) = html::line_tokens_to_classed_spans(
             &line,
@@ -83,12 +98,32 @@ impl<'a> HtmlGenerator<'a> {
             self.style,
             &mut self.scope_stack,
         );
-        if did_boringify {
+        if did_boringify && !self.is_in_boring_chunk {
             // Since the boring scope is preceded only by a Pop operation,
             // it must be the first match on the line for <span class="">
             formatted_line =
                 formatted_line.replace(r#"<span class="">"#, r#"<span class="boring">"#);
         }
+        if did_boringify {
+            // If we're in a boringify-ed line, then we must have an empty scope,
+            // which I call "the boring scope", at the very top of the scope stack.
+            assert!(self
+                .scope_stack
+                .scopes
+                .first()
+                .map(Scope::is_empty)
+                .unwrap_or(false));
+        } else if is_rust {
+            // Otherwise, since the rust syntax definition doesn't use empty scopes,
+            // then it shall not be there.
+            assert!(!self
+                .scope_stack
+                .scopes
+                .first()
+                .map(Scope::is_empty)
+                .unwrap_or(false));
+        }
+        self.is_in_boring_chunk = did_boringify;
         self.open_spans += delta;
         self.html.push_str(&formatted_line);
     }
@@ -97,6 +132,10 @@ impl<'a> HtmlGenerator<'a> {
         for _ in 0..self.open_spans {
             self.html.push_str("</span>");
         }
+        // Since the boring scope is passed to `line_tokens_to_classed_spans`,
+        // which is responsible for computing the delta, it was accounted for
+        // in the `open_spans` count.
+        self.is_in_boring_chunk = false;
         self.html
     }
 }
