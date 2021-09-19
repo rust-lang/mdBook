@@ -144,7 +144,7 @@ fn rendered_code_has_playground_stuff() {
     md.build().unwrap();
 
     let nested = temp.path().join("book/first/nested.html");
-    let playground_class = vec![r#"class="syntect playground""#];
+    let playground_class = vec![r#"class="playground""#];
 
     assert_contains_strings(nested, &playground_class);
 
@@ -392,7 +392,7 @@ fn able_to_include_playground_files_in_chapters() {
     let second = temp.path().join("book/second.html");
 
     let playground_strings = &[
-        r#"class="syntect playground""#,
+        r#"class="playground""#,
         r#"<span class="syn-support syn-macro syn-rust">println!</span><span class="syn-meta syn-group syn-rust"><span class="syn-punctuation syn-section syn-group syn-begin syn-rust">(</span></span><span class="syn-meta syn-group syn-rust"><span class="syn-string syn-quoted syn-double syn-rust"><span class="syn-punctuation syn-definition syn-string syn-begin syn-rust">&quot;</span>Hello World!"#,
     ];
 
