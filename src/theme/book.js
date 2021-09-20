@@ -172,7 +172,7 @@ function playground_text(playground) {
 
     // Greatly inspired from WebAssemblyStudio
     async function prepareSandbox(params) {
-        var wasmResult = fetch_with_timeout("http://127.0.0.1:9999/wasm-pack", {
+        var wasmResult = fetch_with_timeout("https://playground.titaneric.com/wasm-pack", {
             headers: {
                 'Content-Type': "application/json",
             },
