@@ -435,21 +435,36 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<dyn Preprocessor>>
 
     // Now that all links have been established, queue preprocessors in a suitable order
     let mut preprocessors = Vec::with_capacity(preprocessor_names.len());
-    while let Some(name) = preprocessor_names.pop() {
-        let preprocessor: Box<dyn Preprocessor> = match name.as_str() {
-            "links" => Box::new(LinkPreprocessor::new()),
-            "index" => Box::new(IndexPreprocessor::new()),
-            _ => {
-                // The only way to request a custom preprocessor is through the `preprocessor`
-                // table, so it must exist, be a table, and contain the key.
-                let table = &config.get("preprocessor").unwrap().as_table().unwrap()[&name];
-                let command = get_custom_preprocessor_cmd(&name, table);
-                Box::new(CmdPreprocessor::new(name, command))
-            }
-        };
-        preprocessors.push(preprocessor);
+    // `pop_all()` returns an empty vector when no more items are not being depended upon
+    for mut names in std::iter::repeat_with(|| preprocessor_names.pop_all())
+        .take_while(|names| !names.is_empty())
+    {
+        // The `topological_sort` crate does not guarantee a stable order for ties, even across
+        // runs of the same program. Thus, we break ties manually by sorting.
+        // Careful: `str`'s default sorting, which we are implicitly invoking here, uses code point
+        // values ([1]), which may not be an alphabetical sort.
+        // As mentioned in [1], doing so depends on locale, which is not desirable for deciding
+        // preprocessor execution order.
+        // [1]: https://doc.rust-lang.org/stable/std/cmp/trait.Ord.html#impl-Ord-14
+        names.sort();
+        for name in names {
+            let preprocessor: Box<dyn Preprocessor> = match name.as_str() {
+                "links" => Box::new(LinkPreprocessor::new()),
+                "index" => Box::new(IndexPreprocessor::new()),
+                _ => {
+                    // The only way to request a custom preprocessor is through the `preprocessor`
+                    // table, so it must exist, be a table, and contain the key.
+                    let table = &config.get("preprocessor").unwrap().as_table().unwrap()[&name];
+                    let command = get_custom_preprocessor_cmd(&name, table);
+                    Box::new(CmdPreprocessor::new(name, command))
+                }
+            };
+            preprocessors.push(preprocessor);
+        }
     }
 
+    // "If `pop_all` returns an empty vector and `len` is not 0, there are cyclic dependencies."
+    // Normally, `len() == 0` is equivalent to `is_empty()`, so we'll use that.
     if preprocessor_names.is_empty() {
         Ok(preprocessors)
     } else {
@@ -562,8 +577,8 @@ mod tests {
 
         assert!(got.is_ok());
         assert_eq!(got.as_ref().unwrap().len(), 2);
-        assert_eq!(got.as_ref().unwrap()[0].name(), "links");
-        assert_eq!(got.as_ref().unwrap()[1].name(), "index");
+        assert_eq!(got.as_ref().unwrap()[0].name(), "index");
+        assert_eq!(got.as_ref().unwrap()[1].name(), "links");
     }
 
     #[test]
