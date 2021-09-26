@@ -162,12 +162,13 @@ function playground_text(playground) {
     if (window.ace) {
         // language-rust class needs to be removed for editable
         // blocks or highlightjs will capture events
-        Array
-            .from(document.querySelectorAll('code.editable'))
+        code_nodes
+            .filter(function (node) {return node.classList.contains("editable"); })
             .forEach(function (block) { block.classList.remove('language-rust'); });
 
         Array
-            .from(document.querySelectorAll('code:not(.editable)'))
+        code_nodes
+            .filter(function (node) {return !node.classList.contains("editable"); })
             .forEach(function (block) { hljs.highlightBlock(block); });
     } else {
         code_nodes.forEach(function (block) { hljs.highlightBlock(block); });
@@ -370,7 +371,14 @@ function playground_text(playground) {
     });
 
     themePopup.addEventListener('click', function (e) {
-        var theme = e.target.id || e.target.parentElement.id;
+        var theme;
+        if (e.target.className === "theme") {
+            theme = e.target.id;
+        } else if (e.target.parentElement.className === "theme") {
+            theme = e.target.parentElement.id;
+        } else {
+            return;
+        }
         set_theme(theme);
     });
 

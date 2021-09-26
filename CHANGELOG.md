@@ -1,5 +1,42 @@
 # Changelog
 
+## mdBook 0.4.12
+[14add9c...8b4e488](https://github.com/rust-lang/mdBook/compare/14add9c...8b4e488)
+
+### Changed
+- Reverted the change to update to highlight.js 11, as it broke hidden code lines.
+  [#1597](https://github.com/rust-lang/mdBook/pull/1621)
+ 
+## mdBook 0.4.11
+[e440094...2cf00d0](https://github.com/rust-lang/mdBook/compare/e440094...2cf00d0)
+
+### Added
+- Added support for Rust 2021 edition.
+  [#1596](https://github.com/rust-lang/mdBook/pull/1596)
+- Added `mdbook completions` subcommand which provides shell completions.
+  [#1425](https://github.com/rust-lang/mdBook/pull/1425)
+- Added `--title` and `--ignore` flags to `mdbook init` to avoid the
+  interactive input.
+  [#1559](https://github.com/rust-lang/mdBook/pull/1559)
+
+### Changed
+- If running a Rust example does not have any output, it now displays the text
+  "No output" instead of not showing anything.
+  [#1599](https://github.com/rust-lang/mdBook/pull/1599)
+- Code block language tags can now be separated by space or tab (along with
+  commas) to match the behavior of other sites like GitHub and rustdoc.
+  [#1469](https://github.com/rust-lang/mdBook/pull/1469)
+- Updated `warp` (the web server) to the latest version.
+  This also updates the minimum supported Rust version to 1.46.
+  [#1612](https://github.com/rust-lang/mdBook/pull/1612)
+- Updated to highlight.js 11. This has various highlighting improvements.
+  [#1597](https://github.com/rust-lang/mdBook/pull/1597)
+
+### Fixed
+- Inline code blocks inside a header are no longer highlighted when
+  `output.html.playground.editable` is `true`.
+  [#1613](https://github.com/rust-lang/mdBook/pull/1613)
+
 ## mdBook 0.4.10
 [2f7293a...dc2062a](https://github.com/rust-lang/mdBook/compare/2f7293a...dc2062a)
 

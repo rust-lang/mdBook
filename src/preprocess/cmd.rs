@@ -49,7 +49,7 @@ impl CmdPreprocessor {
     fn write_input_to_child(&self, child: &mut Child, book: &Book, ctx: &PreprocessorContext) {
         let stdin = child.stdin.take().expect("Child has stdin");
 
-        if let Err(e) = self.write_input(stdin, &book, &ctx) {
+        if let Err(e) = self.write_input(stdin, book, ctx) {
             // Looks like the backend hung up before we could finish
             // sending it the render context. Log the error and keep going
             warn!("Error writing the RenderContext to the backend, {}", e);
