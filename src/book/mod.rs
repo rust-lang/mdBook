@@ -401,7 +401,13 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<dyn Preprocessor>>
                     || preprocessor_table.contains_key(name)
             };
 
-            if let Some(before) = table.get("before").and_then(Value::as_array) {
+            if let Some(before) = table.get("before") {
+                let before = before.as_array().ok_or_else(|| {
+                    Error::msg(format!(
+                        "Expected preprocessor.{}.before to be an array",
+                        name
+                    ))
+                })?;
                 for after in before {
                     let after = after.as_str().ok_or_else(|| {
                         Error::msg(format!(
@@ -416,7 +422,13 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<dyn Preprocessor>>
                 }
             }
 
-            if let Some(after) = table.get("after").and_then(Value::as_array) {
+            if let Some(after) = table.get("after") {
+                let after = after.as_array().ok_or_else(|| {
+                    Error::msg(format!(
+                        "Expected preprocessor.{}.after to be an array",
+                        name
+                    ))
+                })?;
                 for before in after {
                     let before = before.as_str().ok_or_else(|| {
                         Error::msg(format!(
@@ -628,6 +640,30 @@ mod tests {
         let random = get_custom_preprocessor_cmd("random", &Value::Table(random.clone()));
 
         assert_eq!(random, "python random.py");
+    }
+
+    #[test]
+    fn preprocessor_before_must_be_array() {
+        let cfg_str = r#"
+        [preprocessor.random]
+        before = 0
+        "#;
+
+        let cfg = Config::from_str(cfg_str).unwrap();
+
+        assert!(determine_preprocessors(&cfg).is_err());
+    }
+
+    #[test]
+    fn preprocessor_after_must_be_array() {
+        let cfg_str = r#"
+        [preprocessor.random]
+        after = 0
+        "#;
+
+        let cfg = Config::from_str(cfg_str).unwrap();
+
+        assert!(determine_preprocessors(&cfg).is_err());
     }
 
     #[test]
