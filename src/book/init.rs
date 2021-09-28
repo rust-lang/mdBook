@@ -152,9 +152,7 @@ impl BookBuilder {
         js.write_all(theme::JS)?;
 
         let syntax_dir = cssdir.join("syntax");
-        if !syntax_dir.exists() {
-            fs::create_dir(&syntax_dir)?;
-        }
+        fs::create_dir_all(syntax_dir)?;
 
         let mut highlight_css = File::create(syntax_dir.join("light.css"))?;
         highlight_css.write_all(theme::SYNTAX_LIGHT_CSS)?;
