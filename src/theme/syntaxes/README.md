@@ -8,5 +8,5 @@ TOML.sublime-syntax is from https://github.com/jasonwilliams/sublime_toml_highli
 
 This folder is not copied over to the book directory when using `mdbook init`, nor is it indexed at runtime. All of the files in this folder are scraped by build.rs.
 
-To make build.rs run again without running `cargo clean`, touch the run `touch build.rs`.
+To make build.rs run again without running `cargo clean`, touch the file: `touch build.rs`.
 
