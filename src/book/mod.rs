@@ -416,7 +416,14 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<dyn Preprocessor>>
                         ))
                     })?;
 
-                    if exists(after) {
+                    if !exists(after) {
+                        // Only warn so that preprocessors can be toggled on and off (e.g. for
+                        // troubleshooting) without having to worry about order too much.
+                        warn!(
+                            "preprocessor.{}.after contains \"{}\", which was not found",
+                            name, after
+                        );
+                    } else {
                         preprocessor_names.add_dependency(name, after);
                     }
                 }
@@ -437,7 +444,13 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<dyn Preprocessor>>
                         ))
                     })?;
 
-                    if exists(before) {
+                    if !exists(before) {
+                        // See equivalent warning above for rationale
+                        warn!(
+                            "preprocessor.{}.before contains \"{}\", which was not found",
+                            name, before
+                        );
+                    } else {
                         preprocessor_names.add_dependency(before, name);
                     }
                 }
