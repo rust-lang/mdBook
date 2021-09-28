@@ -1,0 +1,66 @@
+## SPDX file metadata
+## Validate with https://tools.spdx.org/app/validate/
+DocumentNamespace: http://github.com/rust-lang/mdBook/blob/dcc043c/src/theme/syntax-themes/syntax-themes.spdx
+DocumentName: mdBook-syntax-themes
+SPDXID: SPDXRef-DOCUMENT
+SPDXVersion: SPDX-2.2
+DataLicense: CC0-1.0
+Creator: Organization: mdBook
+Created: 2021-09-28T18:10:00Z
+
+## ayu.tmTheme and dark.tmTheme are both derived from base16-textmate
+
+PackageName: base16-tomorrow-night
+SPDXID: SPDXRef-mdBook.base16-tomorrow-night
+PackageHomePage: https://github.com/chriskempson/base16-textmate/
+PackageLicenseDeclared: MIT
+PackageLicenseConcluded: MIT
+PackageLicenseInfoFromFiles: MIT
+PackageCopyrightText: <text>Copyright (C) 2012 [Chris Kempson](http://chriskempson.com)</text>
+PackageDownloadLocation: https://github.com/chriskempson/base16-textmate/blob/cab6692/Themes/base16-tomorrow-night.tmTheme
+PackageVersion: cab6692
+
+## To generate this hash, create a new folder, copy ayu.tmTheme
+## and dark.tmTheme into it, then run this script:
+## find "." -type f -print0 | xargs -0 sha1sum | cut -d' ' -f1 \
+##   | sort | tr -d '\r\n' | sha1sum - | cut -d' ' -f1
+PackageVerificationCode: 0bcc2334d5c348ec46803c5103d7d0a30b33b150
+
+FileName: ./ayu.tmTheme
+SPDXID: SPDXRef-mdBook.base16-tomorrow-night.ayu
+FileChecksum: SHA1: 72826e33efe6c8c1eae035307d8e6291db8c3655
+LicenseConcluded: MIT
+LicenseInfoInFile: NONE
+FileCopyrightText: NONE
+
+FileName: ./dark.tmTheme
+SPDXID: SPDXRef-mdBook.base16-tomorrow-night.dark
+FileChecksum: SHA1: 5df65845cd6ccad5ae401436e437a564845ac5c1
+LicenseConcluded: MIT
+LicenseInfoInFile: NONE
+FileCopyrightText: NONE
+
+## light.tmTheme is derived from Dune
+
+PackageName: atelier-dune
+SPDXID: SPDXRef-mdBook.atelier-dune
+PackageHomePage: https://atelierbram.github.io/syntax-highlighting/atelier-schemes/dune/
+PackageLicenseDeclared: MIT
+PackageLicenseConcluded: MIT
+PackageLicenseInfoFromFiles: MIT
+PackageCopyrightText: <text>Copyright (c) 2013 Bram de Haan http://atelierbramdehaan.nl</text>
+PackageDownloadLocation: https://github.com/atelierbram/syntax-highlighting/blob/577f7be/docs/archive/atelier-schemes/output/textmate/base16-atelierdune.light.tmTheme
+PackageVersion: 577f7be
+
+## To generate this hash, create a new folder, copy light.tmTheme
+## into it, then run this script:
+## find "." -type f -print0 | xargs -0 sha1sum | cut -d' ' -f1 \
+##   | sort | tr -d '\r\n' | sha1sum - | cut -d' ' -f1
+PackageVerificationCode: 43005dd05b0b478cdadb9a450f75af7db015c965
+
+FileName: ./light.tmTheme
+SPDXID: SPDXRef-mdBook.atelier-dune.light
+FileChecksum: SHA1: ffba6dbb45a96c7d6872a6b498e3b3a99c5af335
+LicenseConcluded: MIT
+LicenseInfoInFile: NONE
+FileCopyrightText: NONE
