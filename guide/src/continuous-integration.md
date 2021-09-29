@@ -140,15 +140,15 @@ pages:
     - export PATH="$PATH:$CARGO_HOME/bin"
     - mdbook --version || cargo install mdbook
   script:
-        - mdbook build -d public
-  only:
-      - master 
+    - mdbook build -d public
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "master"'
   artifacts:
-      paths:
-          - public
+    paths:
+      - public
   cache:
     paths:
-    - $CARGO_HOME/bin
+      - $CARGO_HOME/bin
 ```
 
 After you commit and push this new file, GitLab CI will run and your book will be available!
