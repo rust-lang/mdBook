@@ -85,12 +85,6 @@
   -webkit-text-size-adjust: none;
 }
 
-@media (max-width: 640px) {
-  .hljs {
-    padding-top: 2em;
-  }
-}
-
 .coffeescript .javascript,
 .javascript .xml,
 .tex .hljs-formula,

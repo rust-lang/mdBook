@@ -205,6 +205,11 @@ a:hover > .hljs {
 pre {
     position: relative;
 }
+@media (max-width: 640px) {
+    pre > .buttons ~ code {
+        padding-top: 2em;
+    }
+}
 pre > .buttons {
     position: absolute;
     z-index: 100;
