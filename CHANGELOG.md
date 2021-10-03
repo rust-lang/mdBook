@@ -1,5 +1,23 @@
 # Changelog
 
+## mdBook 0.4.13
+[e6629cd...f55028b](https://github.com/rust-lang/mdBook/compare/e6629cd...f55028b)
+
+### Added
+
+- Added the ability to specify the preprocessor order.
+  [#1607](https://github.com/rust-lang/mdBook/pull/1607)
+
+### Fixed
+
+- Include chapters with no headers in the search index
+  [#1637](https://github.com/rust-lang/mdBook/pull/1637)
+- Switched to the `opener` crate for opening a web browser, which should fix
+  some issues with blocking.
+  [#1656](https://github.com/rust-lang/mdBook/pull/1656)
+- Fixed clicking the border of the theme switcher breaking the theme selection.
+  [#1651](https://github.com/rust-lang/mdBook/pull/1651)
+
 ## mdBook 0.4.12
 [14add9c...8b4e488](https://github.com/rust-lang/mdBook/compare/14add9c...8b4e488)
 
