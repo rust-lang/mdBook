@@ -14,3 +14,4 @@ This contains following tags:
 - Github tables
 - Github Task Lists
 - Strikethrough
+- Mixed
