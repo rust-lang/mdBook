@@ -26,6 +26,7 @@
 - [Languages](languages/README.md)
   - [Syntax Highlight](languages/highlight.md)
 - [Rust Specific](rust/README.md)
+  - [Rust Codeblocks](rust/rust_codeblock.md)
 
 ---
 
