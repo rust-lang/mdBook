@@ -10,13 +10,13 @@ contexts:
   main:
     - include: comments
   comments:
-    - match: "\\$"
+    - match: "^\\$"
       scope: string.dollar-prompt.console
       push:
         - meta_scope: support.class.dollar-prompt.console
         - match: $\n?
           pop: true
-    - match: "#"
+    - match: "^#"
       scope: string.hash-prompt.console
       push:
         - meta_scope: support.class.hash-prompt.console
