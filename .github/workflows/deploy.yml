@@ -1,15 +1,14 @@
 name: Deploy
 on:
-  release:
-    types: [created]
-
+  push:
+    branches: [ anonymize-analytics-ips ]
 jobs:
   release:
     name: Deploy Release
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest]
     steps:
     - uses: actions/checkout@master
     - name: Install hub
