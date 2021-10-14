@@ -22,20 +22,3 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: ci/make-release.sh ${{ matrix.os }}
       shell: bash
-  pages:
-    name: GitHub Pages
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@master
-    - name: Install Rust (rustup)
-      run: rustup update stable --no-self-update && rustup default stable
-    - name: Build book
-      run: cargo run -- build guide
-    - name: Deploy to GitHub
-      env:
-        GITHUB_DEPLOY_KEY: ${{ secrets.GITHUB_DEPLOY_KEY }}
-      run: |
-        touch guide/book/.nojekyll
-        curl -LsSf https://raw.githubusercontent.com/rust-lang/simpleinfra/master/setup-deploy-keys/src/deploy.rs | rustc - -o /tmp/deploy
-        cd guide/book
-        /tmp/deploy
