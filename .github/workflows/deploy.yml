@@ -10,7 +10,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@anonymize-analytics-ips
     - name: Install hub
       run: ci/install-hub.sh ${{ matrix.os }}
       shell: bash
