@@ -497,6 +497,8 @@ pub struct HtmlConfig {
     pub copy_fonts: bool,
     /// An optional google analytics code.
     pub google_analytics: Option<String>,
+    /// If google analytics should anonymize IPs for improved privacy.
+    pub anonymize_ip: bool,
     /// Additional CSS stylesheets to include in the rendered page's `<head>`.
     pub additional_css: Vec<PathBuf>,
     /// Additional JS scripts to include at the bottom of the rendered page's
@@ -556,6 +558,7 @@ impl Default for HtmlConfig {
             mathjax_support: false,
             copy_fonts: true,
             google_analytics: None,
+            anonymize_ip: false,
             additional_css: Vec::new(),
             additional_js: Vec::new(),
             fold: Fold::default(),
@@ -736,6 +739,7 @@ mod tests {
         default-theme = "rust"
         curly-quotes = true
         google-analytics = "123456"
+        anonymize-ip = true
         additional-css = ["./foo/bar/baz.css"]
         git-repository-url = "https://foo.com/"
         git-repository-icon = "fa-code-fork"
@@ -780,6 +784,7 @@ mod tests {
         let html_should_be = HtmlConfig {
             curly_quotes: true,
             google_analytics: Some(String::from("123456")),
+            anonymize_ip: true,
             additional_css: vec![PathBuf::from("./foo/bar/baz.css")],
             theme: Some(PathBuf::from("./themedir")),
             default_theme: Some(String::from("rust")),
@@ -968,6 +973,7 @@ mod tests {
             theme: Some(PathBuf::from("my-theme")),
             curly_quotes: true,
             google_analytics: Some(String::from("123456")),
+            anonymize_ip: false,
             additional_css: vec![PathBuf::from("custom.css"), PathBuf::from("custom2.css")],
             additional_js: vec![PathBuf::from("custom.js")],
             ..Default::default()

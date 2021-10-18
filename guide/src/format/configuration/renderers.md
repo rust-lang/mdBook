@@ -23,6 +23,8 @@ The following configuration options are available:
 - **copy-fonts:** Copies fonts.css and respective font files to the output directory and use them in the default theme. Defaults to `true`.
 - **google-analytics:** If you use Google Analytics, this option lets you enable
   it by simply specifying your ID in the configuration file.
+- **anonymize-ip:** If you use Google Analytics, this option lets you
+  anonymize IPs for better privacy. Defaults to false.
 - **additional-css:** If you need to slightly change the appearance of your book
   without overwriting the whole style, you can specify a set of stylesheets that
   will be loaded after the default ones where you can surgically change the

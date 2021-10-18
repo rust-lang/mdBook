@@ -630,6 +630,10 @@ fn make_data(
         data.insert("google_analytics".to_owned(), json!(ga));
     }
 
+    if html_config.anonymize_ip {
+        data.insert("anonymize_ip".to_owned(), json!(true));
+    }
+
     if html_config.mathjax_support {
         data.insert("mathjax_support".to_owned(), json!(true));
     }
