@@ -76,6 +76,7 @@ impl Summary {
     /// The file/folder name is used to compose the chapter's link.
     ///
     /// Chapters are added to the book in alphabetical order, using the file/folder name.
+    /// If a `src_dir/README.md` file is present, it is included as a prefix chapter.
     pub fn from_sources<P: AsRef<Path>>(src_dir: P) -> std::io::Result<Summary> {
         let mut summary = Summary {
             title: None,
@@ -142,6 +143,13 @@ impl Summary {
                     link.number = Some(SectionNumber(entry_number))
                 }
             }
+        }
+
+        // Special case for the `src/README.md` file.
+        let root_readme_path = src_dir.as_ref().join("README.md");
+        if root_readme_path.is_file() {
+            let link = Link::new_unnamed(root_readme_path);
+            summary.prefix_chapters.push(SummaryItem::Link(link))
         }
 
         summary.numbered_chapters = read_dir(src_dir)?;
