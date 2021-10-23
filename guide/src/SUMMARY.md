@@ -1,6 +1,6 @@
 # Summary
 
-- [mdBook](README.md)
+- [Introduction](README.md)
 - [Command Line Tool](cli/README.md)
     - [init](cli/init.md)
     - [build](cli/build.md)

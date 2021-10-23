@@ -22,7 +22,7 @@ pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> 
         .with_context(|| format!("Summary parsing failed for file={:?}", summary_md))?;
 
     if cfg.create_missing {
-        create_missing(&src_dir, &summary).with_context(|| "Unable to create missing chapters")?;
+        create_missing(src_dir, &summary).with_context(|| "Unable to create missing chapters")?;
     }
 
     load_book_from_disk(&summary, src_dir)
@@ -74,10 +74,10 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
 /// [`iter()`]: #method.iter
 /// [`for_each_mut()`]: #method.for_each_mut
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-#[non_exhaustive]
 pub struct Book {
     /// The sections in this book.
     pub sections: Vec<BookItem>,
+    __non_exhaustive: (),
 }
 
 impl Book {
@@ -225,7 +225,10 @@ pub(crate) fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P)
         chapters.push(chapter);
     }
 
-    Ok(Book { sections: chapters })
+    Ok(Book {
+        sections: chapters,
+        __non_exhaustive: (),
+    })
 }
 
 fn load_summary_item<P: AsRef<Path> + Clone>(
@@ -378,7 +381,7 @@ And here is some \
 
         root.nested_items.push(second.clone().into());
         root.nested_items.push(SummaryItem::Separator);
-        root.nested_items.push(second.clone().into());
+        root.nested_items.push(second.into());
 
         (root, temp_dir)
     }
@@ -451,7 +454,7 @@ And here is some \
             sub_items: vec![
                 BookItem::Chapter(nested.clone()),
                 BookItem::Separator,
-                BookItem::Chapter(nested.clone()),
+                BookItem::Chapter(nested),
             ],
         });
 

@@ -228,7 +228,14 @@ impl EventQuoteConverter {
 fn clean_codeblock_headers(event: Event<'_>) -> Event<'_> {
     match event {
         Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(ref info))) => {
-            let info: String = info.chars().filter(|ch| !ch.is_whitespace()).collect();
+            let info: String = info
+                .chars()
+                .map(|x| match x {
+                    ' ' | '\t' => ',',
+                    _ => x,
+                })
+                .filter(|ch| !ch.is_whitespace())
+                .collect();
 
             Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(CowStr::from(info))))
         }
@@ -372,7 +379,7 @@ more text with spaces
 ```
 "#;
 
-            let expected = r#"<pre><code class="language-rust,no_run,,,should_panic,,property_3"></code></pre>
+            let expected = r#"<pre><code class="language-rust,,,,,no_run,,,should_panic,,,,property_3"></code></pre>
 "#;
             assert_eq!(render_markdown(input, false), expected);
             assert_eq!(render_markdown(input, true), expected);

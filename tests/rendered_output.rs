@@ -34,6 +34,7 @@ const TOC_SECOND_LEVEL: &[&str] = &[
     "1.3. Recursive",
     "1.4. Markdown",
     "1.5. Unicode",
+    "1.6. No Headers",
     "2.1. Nested Chapter",
 ];
 
@@ -264,7 +265,7 @@ fn root_index_html() -> Result<Document> {
 fn check_second_toc_level() {
     let doc = root_index_html().unwrap();
     let mut should_be = Vec::from(TOC_SECOND_LEVEL);
-    should_be.sort();
+    should_be.sort_unstable();
 
     let pred = descendants!(
         Class("chapter"),
@@ -288,7 +289,7 @@ fn check_first_toc_level() {
     let mut should_be = Vec::from(TOC_TOP_LEVEL);
 
     should_be.extend(TOC_SECOND_LEVEL);
-    should_be.sort();
+    should_be.sort_unstable();
 
     let pred = descendants!(
         Class("chapter"),
@@ -535,7 +536,7 @@ fn redirects_are_emitted_correctly() {
         let mut redirect_file = md.build_dir_for("html");
         // append everything except the bits that make it absolute
         // (e.g. "/" or "C:\")
-        redirect_file.extend(remove_absolute_components(&original));
+        redirect_file.extend(remove_absolute_components(original));
         let contents = fs::read_to_string(&redirect_file).unwrap();
         assert!(contents.contains(redirect));
     }
@@ -552,7 +553,7 @@ fn edit_url_has_default_src_dir_edit_url() {
         edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"    
         "#;
 
-    write_file(&temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
+    write_file(temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
 
     let md = MDBook::load(temp.path()).unwrap();
     md.build().unwrap();
@@ -560,7 +561,7 @@ fn edit_url_has_default_src_dir_edit_url() {
     let index_html = temp.path().join("book").join("index.html");
     assert_contains_strings(
         index_html,
-        &vec![
+        &[
             r#"href="https://github.com/rust-lang/mdBook/edit/master/guide/src/README.md" title="Suggest an edit""#,
         ],
     );
@@ -578,7 +579,7 @@ fn edit_url_has_configured_src_dir_edit_url() {
         edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"    
         "#;
 
-    write_file(&temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
+    write_file(temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
 
     let md = MDBook::load(temp.path()).unwrap();
     md.build().unwrap();
@@ -586,7 +587,7 @@ fn edit_url_has_configured_src_dir_edit_url() {
     let index_html = temp.path().join("book").join("index.html");
     assert_contains_strings(
         index_html,
-        &vec![
+        &[
             r#"href="https://github.com/rust-lang/mdBook/edit/master/guide/src2/README.md" title="Suggest an edit""#,
         ],
     );
@@ -611,7 +612,7 @@ mod search {
         let index = fs::read_to_string(index).unwrap();
         let index = index.trim_start_matches("Object.assign(window.search, ");
         let index = index.trim_end_matches(");");
-        serde_json::from_str(&index).unwrap()
+        serde_json::from_str(index).unwrap()
     }
 
     #[test]
@@ -631,6 +632,7 @@ mod search {
         let introduction = get_doc_ref("intro.html#introduction");
         let some_section = get_doc_ref("first/index.html#some-section");
         let summary = get_doc_ref("first/includes.html#summary");
+        let no_headers = get_doc_ref("first/no-headers.html");
         let conclusion = get_doc_ref("conclusion.html#conclusion");
 
         let bodyidx = &index["index"]["index"]["body"]["root"];
@@ -644,13 +646,21 @@ mod search {
         assert_eq!(docs[&some_section]["body"], "");
         assert_eq!(
             docs[&summary]["body"],
-            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Markdown Unicode Second Chapter Nested Chapter Conclusion"
+            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Markdown Unicode No Headers Second Chapter Nested Chapter Conclusion"
         );
         assert_eq!(
             docs[&summary]["breadcrumbs"],
             "First Chapter » Includes » Summary"
         );
         assert_eq!(docs[&conclusion]["body"], "I put &lt;HTML&gt; in here!");
+        assert_eq!(
+            docs[&no_headers]["breadcrumbs"],
+            "First Chapter » No Headers"
+        );
+        assert_eq!(
+            docs[&no_headers]["body"],
+            "Capybara capybara capybara. Capybara capybara capybara."
+        );
     }
 
     // Setting this to `true` may cause issues with `cargo watch`,

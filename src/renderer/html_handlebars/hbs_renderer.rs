@@ -54,16 +54,14 @@ impl HtmlHandlebars {
         let content = ch.content.clone();
         let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
 
-        let fixed_content = utils::render_markdown_with_path(
-            &ch.content,
-            ctx.html_config.curly_quotes,
-            Some(&path),
-        );
+        let fixed_content =
+            utils::render_markdown_with_path(&ch.content, ctx.html_config.curly_quotes, Some(path));
         if !ctx.is_index {
             // Add page break between chapters
             // See https://developer.mozilla.org/en-US/docs/Web/CSS/break-before and https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-before
             // Add both two CSS properties because of the compatibility issue
-            print_content.push_str(r#"<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div>"#);
+            print_content
+                .push_str(r#"<div style="break-before: page; page-break-before: always;"></div>"#);
         }
         print_content.push_str(&fixed_content);
 
@@ -177,7 +175,7 @@ impl HtmlHandlebars {
         let rendered =
             self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
         let output_file = get_404_output_file(&html_config.input_404);
-        utils::fs::write_file(&destination, output_file, rendered.as_bytes())?;
+        utils::fs::write_file(destination, output_file, rendered.as_bytes())?;
         debug!("Creating 404.html ✓");
         Ok(())
     }
@@ -222,10 +220,10 @@ impl HtmlHandlebars {
         }
         write_file(destination, "css/variables.css", &theme.variables_css)?;
         if let Some(contents) = &theme.favicon_png {
-            write_file(destination, "favicon.png", &contents)?;
+            write_file(destination, "favicon.png", contents)?;
         }
         if let Some(contents) = &theme.favicon_svg {
-            write_file(destination, "favicon.svg", &contents)?;
+            write_file(destination, "favicon.svg", contents)?;
         }
         write_file(destination, "highlight.css", &theme.highlight_css)?;
         write_file(destination, "tomorrow-night.css", &theme.tomorrow_night_css)?;
@@ -508,7 +506,7 @@ impl Renderer for HtmlHandlebars {
         debug!("Register handlebars helpers");
         self.register_hbs_helpers(&mut handlebars, &html_config);
 
-        let mut data = make_data(&ctx.root, &book, &ctx.config, &html_config, &theme)?;
+        let mut data = make_data(&ctx.root, book, &ctx.config, &html_config, &theme)?;
 
         // Print version
         let mut print_content = String::new();
@@ -551,14 +549,14 @@ impl Renderer for HtmlHandlebars {
             let rendered =
                 self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
 
-            utils::fs::write_file(&destination, "print.html", rendered.as_bytes())?;
+            utils::fs::write_file(destination, "print.html", rendered.as_bytes())?;
             debug!("Creating print.html ✓");
         }
 
         debug!("Copy static files");
-        self.copy_static_files(&destination, &theme, &html_config)
+        self.copy_static_files(destination, &theme, &html_config)
             .with_context(|| "Unable to copy across static files")?;
-        self.copy_additional_css_and_js(&html_config, &ctx.root, &destination)
+        self.copy_additional_css_and_js(&html_config, &ctx.root, destination)
             .with_context(|| "Unable to copy across additional CSS and JS")?;
 
         // Render search index
@@ -566,7 +564,7 @@ impl Renderer for HtmlHandlebars {
         {
             let search = html_config.search.unwrap_or_default();
             if search.enable {
-                super::search::create_files(&search, &destination, &book)?;
+                super::search::create_files(&search, destination, book)?;
             }
         }
 
@@ -574,7 +572,7 @@ impl Renderer for HtmlHandlebars {
             .context("Unable to emit redirects")?;
 
         // Copy all remaining files, avoid a recursive copy from/to the book build dir
-        utils::fs::copy_files_except_ext(&src_dir, &destination, true, Some(&build_dir), &["md"])?;
+        utils::fs::copy_files_except_ext(&src_dir, destination, true, Some(&build_dir), &["md"])?;
 
         Ok(())
     }
@@ -835,13 +833,15 @@ fn add_playground_pre(
                 {
                     let contains_e2015 = classes.contains("edition2015");
                     let contains_e2018 = classes.contains("edition2018");
-                    let edition_class = if contains_e2015 || contains_e2018 {
+                    let contains_e2021 = classes.contains("edition2021");
+                    let edition_class = if contains_e2015 || contains_e2018 || contains_e2021 {
                         // the user forced edition, we should not overwrite it
                         ""
                     } else {
                         match edition {
                             Some(RustEdition::E2015) => " edition2015",
                             Some(RustEdition::E2018) => " edition2018",
+                            Some(RustEdition::E2021) => " edition2021",
                             None => "",
                         }
                     };
@@ -980,7 +980,7 @@ mod tests {
         ];
 
         for (src, should_be) in inputs {
-            let got = build_header_links(&src);
+            let got = build_header_links(src);
             assert_eq!(got, should_be);
         }
     }
@@ -1059,6 +1059,30 @@ mod tests {
                     ..Playground::default()
                 },
                 Some(RustEdition::E2018),
+            );
+            assert_eq!(&*got, *should_be);
+        }
+    }
+    #[test]
+    fn add_playground_edition2021() {
+        let inputs = [
+            ("<code class=\"language-rust\">x()</code>",
+             "<pre class=\"playground\"><code class=\"language-rust edition2021\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
+            ("<code class=\"language-rust\">fn main() {}</code>",
+             "<pre class=\"playground\"><code class=\"language-rust edition2021\">fn main() {}\n</code></pre>"),
+            ("<code class=\"language-rust edition2015\">fn main() {}</code>",
+             "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}\n</code></pre>"),
+            ("<code class=\"language-rust edition2018\">fn main() {}</code>",
+             "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}\n</code></pre>"),
+        ];
+        for (src, should_be) in &inputs {
+            let got = add_playground_pre(
+                src,
+                &Playground {
+                    editable: true,
+                    ..Playground::default()
+                },
+                Some(RustEdition::E2021),
             );
             assert_eq!(&*got, *should_be);
         }

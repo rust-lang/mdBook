@@ -26,7 +26,7 @@ before_script:
   - cargo install-update -a
 
 script:
-  - mdbook build path/to/mybook && mdbook test path/to/mybook
+  - mdbook build && mdbook test # In case of custom book path: mdbook build path/to/mybook && mdbook test path/to/mybook
 ```
 
 ## Deploying Your Book to GitHub Pages
@@ -50,10 +50,10 @@ deploy:
   provider: pages
   skip-cleanup: true
   github-token: $GITHUB_TOKEN
-  local-dir: path/to/mybook/book
+  local-dir: book # In case of custom book path: path/to/mybook/book
   keep-history: false
   on:
-    branch: master
+    branch: main
 ```
 
 That's it!
@@ -77,7 +77,7 @@ before_script:
   - cargo install-update -a
 
 script:
-  - mdbook build path/to/mybook && mdbook test path/to/mybook
+  - mdbook build && mdbook test # In case of custom book path: mdbook build path/to/mybook && mdbook test path/to/mybook
   
 deploy:
   provider: pages
@@ -85,10 +85,10 @@ deploy:
   edge: true
   cleanup: false
   github-token: $GITHUB_TOKEN
-  local-dir: path/to/mybook/book
+  local-dir: book # In case of custom book path: path/to/mybook/book
   keep-history: false
   on:
-    branch: master
+    branch: main
   target_branch: gh-pages
 ```
 
@@ -140,15 +140,15 @@ pages:
     - export PATH="$PATH:$CARGO_HOME/bin"
     - mdbook --version || cargo install mdbook
   script:
-        - mdbook build -d public
-  only:
-      - master 
+    - mdbook build -d public
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "master"'
   artifacts:
-      paths:
-          - public
+    paths:
+      - public
   cache:
     paths:
-    - $CARGO_HOME/bin
+      - $CARGO_HOME/bin
 ```
 
 After you commit and push this new file, GitLab CI will run and your book will be available!
