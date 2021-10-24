@@ -58,7 +58,7 @@ authors = ["John Doe", "Jane Doe"]
 description = "The example book covers examples."
 src = "my-src"  # the source files will be found in `root/my-src` instead of `root/src`
 language = "en"
-logo = "static/logo.png"
+logo = "static/logo.svg"
 ```
 
 ### Rust options
