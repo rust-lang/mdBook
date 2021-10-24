@@ -47,7 +47,7 @@ This is general information about your book.
   key in the configuration file.
 - **language:** The main language of the book, which is used as a language attribute `<html lang="en">` for example.
 - **logo:** Path to a logo to shown at the top of the navigation bar. If this
-  is given as a relative path, it's base directory is the source directory.
+  is given as a relative path, its base directory is the source directory.
 
 **book.toml**
 
