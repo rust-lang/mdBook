@@ -276,8 +276,7 @@ impl MDBook {
                             cmd.args(&["--edition", "2018"]);
                         }
                         RustEdition::E2021 => {
-                            cmd.args(&["--edition", "2021"])
-                                .args(&["-Z", "unstable-options"]);
+                            cmd.args(&["--edition", "2021"]);
                         }
                     }
                 }
