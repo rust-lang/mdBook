@@ -171,18 +171,22 @@ impl MDBook {
     }
 
     /// Tells the renderer to build our book and put it in the build directory.
-    pub fn build(&self) -> Result<()> {
+    pub fn build(&mut self) -> Result<()> {
+        let mut additional_files = Vec::new();
+
         info!("Book building has started");
 
         for renderer in &self.renderers {
-            self.execute_build_process(&**renderer)?;
+            additional_files.append(&mut self.execute_build_process(&**renderer)?);
         }
+
+        self.book.additional_files.append(&mut additional_files);
 
         Ok(())
     }
 
     /// Run the entire build process for a particular [`Renderer`].
-    pub fn execute_build_process(&self, renderer: &dyn Renderer) -> Result<()> {
+    pub fn execute_build_process(&self, renderer: &dyn Renderer) -> Result<Vec<PathBuf>> {
         let mut preprocessed_book = self.book.clone();
         let preprocess_ctx = PreprocessorContext::new(
             self.root.clone(),
@@ -199,6 +203,17 @@ impl MDBook {
 
         let name = renderer.name();
         let build_dir = self.build_dir_for(name);
+        let additional_files = preprocessed_book
+            .additional_files
+            .iter()
+            .map(|path| {
+                if path.starts_with("/") {
+                    path.clone()
+                } else {
+                    self.root.join(self.config.book.src.join(path))
+                }
+            })
+            .collect();
 
         let mut render_context = RenderContext::new(
             self.root.clone(),
@@ -214,6 +229,7 @@ impl MDBook {
         renderer
             .render(&render_context)
             .with_context(|| "Rendering failed")
+            .map(|()| additional_files)
     }
 
     /// You can change the default renderer to another one by using this method.

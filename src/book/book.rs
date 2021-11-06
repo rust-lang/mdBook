@@ -77,6 +77,9 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
 pub struct Book {
     /// The sections in this book.
     pub sections: Vec<BookItem>,
+    /// Files outside of the src dir which also contribute to the
+    /// result.
+    pub additional_files: Vec<PathBuf>,
     __non_exhaustive: (),
 }
 
@@ -227,6 +230,7 @@ pub(crate) fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P)
 
     Ok(Book {
         sections: chapters,
+        additional_files: Vec::new(),
         __non_exhaustive: (),
     })
 }

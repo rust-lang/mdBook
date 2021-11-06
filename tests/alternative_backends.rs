@@ -8,33 +8,33 @@ use tempfile::{Builder as TempFileBuilder, TempDir};
 
 #[test]
 fn passing_alternate_backend() {
-    let (md, _temp) = dummy_book_with_backend("passing", success_cmd(), false);
+    let (mut md, _temp) = dummy_book_with_backend("passing", success_cmd(), false);
 
     md.build().unwrap();
 }
 
 #[test]
 fn failing_alternate_backend() {
-    let (md, _temp) = dummy_book_with_backend("failing", fail_cmd(), false);
+    let (mut md, _temp) = dummy_book_with_backend("failing", fail_cmd(), false);
 
     md.build().unwrap_err();
 }
 
 #[test]
 fn missing_backends_are_fatal() {
-    let (md, _temp) = dummy_book_with_backend("missing", "trduyvbhijnorgevfuhn", false);
+    let (mut md, _temp) = dummy_book_with_backend("missing", "trduyvbhijnorgevfuhn", false);
     assert!(md.build().is_err());
 }
 
 #[test]
 fn missing_optional_backends_are_not_fatal() {
-    let (md, _temp) = dummy_book_with_backend("missing", "trduyvbhijnorgevfuhn", true);
+    let (mut md, _temp) = dummy_book_with_backend("missing", "trduyvbhijnorgevfuhn", true);
     assert!(md.build().is_ok());
 }
 
 #[test]
 fn alternate_backend_with_arguments() {
-    let (md, _temp) = dummy_book_with_backend("arguments", "echo Hello World!", false);
+    let (mut md, _temp) = dummy_book_with_backend("arguments", "echo Hello World!", false);
 
     md.build().unwrap();
 }
@@ -61,7 +61,7 @@ fn backends_receive_render_context_via_stdin() {
     let out_file = temp.path().join("out.txt");
     let cmd = tee_command(&out_file);
 
-    let (md, _temp) = dummy_book_with_backend("cat-to-file", &cmd, false);
+    let (mut md, _temp) = dummy_book_with_backend("cat-to-file", &cmd, false);
 
     assert!(!out_file.exists());
     md.build().unwrap();
@@ -90,7 +90,7 @@ fn relative_command_path() {
             .set("output.html", toml::value::Table::new())
             .unwrap();
         config.set("output.myrenderer.command", cmd_path).unwrap();
-        let md = MDBook::init(&temp.path())
+        let mut md = MDBook::init(&temp.path())
             .with_config(config)
             .build()
             .unwrap();

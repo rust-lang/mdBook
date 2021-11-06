@@ -58,15 +58,17 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     Ok(())
 }
 
-fn remove_ignored_files(book_root: &Path, paths: &[PathBuf]) -> Vec<PathBuf> {
+fn remove_ignored_files(book: &MDBook, paths: &[PathBuf]) -> Vec<PathBuf> {
     if paths.is_empty() {
         return vec![];
     }
 
-    match find_gitignore(book_root) {
+    match find_gitignore(&book.root) {
         Some(gitignore_path) => {
             match gitignore::File::new(gitignore_path.as_path()) {
-                Ok(exclusion_checker) => filter_ignored_files(exclusion_checker, paths),
+                Ok(exclusion_checker) => {
+                    filter_ignored_files(exclusion_checker, paths, &book.book.additional_files)
+                }
                 Err(_) => {
                     // We're unable to read the .gitignore file, so we'll silently allow everything.
                     // Please see discussion: https://github.com/rust-lang/mdBook/pull/1051
@@ -88,11 +90,20 @@ fn find_gitignore(book_root: &Path) -> Option<PathBuf> {
         .find(|p| p.exists())
 }
 
-fn filter_ignored_files(exclusion_checker: gitignore::File, paths: &[PathBuf]) -> Vec<PathBuf> {
+fn filter_ignored_files(
+    exclusion_checker: gitignore::File,
+    paths: &[PathBuf],
+    additional_files: &[PathBuf],
+) -> Vec<PathBuf> {
     paths
         .iter()
         .filter(|path| match exclusion_checker.is_excluded(path) {
-            Ok(exclude) => !exclude,
+            Ok(exclude) => {
+                !exclude
+                    || additional_files
+                        .iter()
+                        .any(|additional_file| additional_file == *path)
+            }
             Err(error) => {
                 warn!(
                     "Unable to determine if {:?} is excluded: {:?}. Including it.",
@@ -135,6 +146,12 @@ where
     // Add the book.toml file to the watcher if it exists
     let _ = watcher.watch(book.root.join("book.toml"), NonRecursive);
 
+    book.book
+        .additional_files
+        .iter()
+        .map(|path| watcher.watch(path, NonRecursive))
+        .for_each(drop);
+
     info!("Listening for changes...");
 
     loop {
@@ -155,7 +172,7 @@ where
             })
             .collect::<Vec<_>>();
 
-        let paths = remove_ignored_files(&book.root, &paths[..]);
+        let paths = remove_ignored_files(book, &paths[..]);
 
         if !paths.is_empty() {
             closure(paths, &book.root);

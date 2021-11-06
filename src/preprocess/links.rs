@@ -43,6 +43,7 @@ impl Preprocessor for LinkPreprocessor {
 
     fn run(&self, ctx: &PreprocessorContext, mut book: Book) -> Result<Book> {
         let src_dir = ctx.root.join(&ctx.config.book.src);
+        let mut additional_files = Vec::new();
 
         book.for_each_mut(|section: &mut BookItem| {
             if let BookItem::Chapter(ref mut ch) = *section {
@@ -53,8 +54,10 @@ impl Preprocessor for LinkPreprocessor {
                         .expect("All book items have a parent");
 
                     let mut chapter_title = ch.name.clone();
-                    let content =
+                    let (content, mut additionals) =
                         replace_all(&ch.content, base, chapter_path, 0, &mut chapter_title);
+                    additional_files.append(&mut additionals);
+
                     ch.content = content;
                     if chapter_title != ch.name {
                         ctx.chapter_titles
@@ -64,6 +67,8 @@ impl Preprocessor for LinkPreprocessor {
                 }
             }
         });
+
+        book.additional_files.append(&mut additional_files);
 
         Ok(book)
     }
@@ -75,7 +80,7 @@ fn replace_all<P1, P2>(
     source: P2,
     depth: usize,
     chapter_title: &mut String,
-) -> String
+) -> (String, Vec<PathBuf>)
 where
     P1: AsRef<Path>,
     P2: AsRef<Path>,
@@ -87,21 +92,36 @@ where
     let source = source.as_ref();
     let mut previous_end_index = 0;
     let mut replaced = String::new();
+    let mut additional_files = Vec::new();
 
     for link in find_links(s) {
         replaced.push_str(&s[previous_end_index..link.start_index]);
+
+        if let LinkType::Include(additional_path, _)
+        | LinkType::Playground(additional_path, _)
+        | LinkType::RustdocInclude(additional_path, _) = &link.link_type
+        {
+            if additional_path.starts_with("/")
+                || additional_path
+                    .as_os_str()
+                    .to_str()
+                    // Overshoots, but only rarely and it shouldn't make
+                    // any problems when it does.
+                    .map(|path| path.contains(".."))
+                    .unwrap_or(true)
+            {
+                additional_files.push(additional_path.clone());
+            }
+        }
 
         match link.render_with_path(&path, chapter_title) {
             Ok(new_content) => {
                 if depth < MAX_LINK_NESTED_DEPTH {
                     if let Some(rel_path) = link.link_type.relative_path(path) {
-                        replaced.push_str(&replace_all(
-                            &new_content,
-                            rel_path,
-                            source,
-                            depth + 1,
-                            chapter_title,
-                        ));
+                        let (content, mut additionals) =
+                            replace_all(&new_content, rel_path, source, depth + 1, chapter_title);
+                        replaced.push_str(&content);
+                        additional_files.append(&mut additionals);
                     } else {
                         replaced.push_str(&new_content);
                     }
@@ -127,7 +147,8 @@ where
     }
 
     replaced.push_str(&s[previous_end_index..]);
-    replaced
+
+    (replaced, additional_files)
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -438,9 +459,13 @@ mod tests {
         Some text over here.
         ```hbs
         {{#include file.rs}} << an escaped link!
-        ```";
+        ```"
+        .to_string();
         let mut chapter_title = "test_replace_all_escaped".to_owned();
-        assert_eq!(replace_all(start, "", "", 0, &mut chapter_title), end);
+        assert_eq!(
+            replace_all(start, "", "", 0, &mut chapter_title),
+            (end, Vec::new())
+        );
     }
 
     #[test]
@@ -450,9 +475,13 @@ mod tests {
         ";
         let end = r"
         # My Chapter
-        ";
+        "
+        .to_string();
         let mut chapter_title = "test_set_chapter_title".to_owned();
-        assert_eq!(replace_all(start, "", "", 0, &mut chapter_title), end);
+        assert_eq!(
+            replace_all(start, "", "", 0, &mut chapter_title),
+            (end, Vec::new())
+        );
         assert_eq!(chapter_title, "My Title");
     }
 
