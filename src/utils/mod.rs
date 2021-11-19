@@ -174,6 +174,7 @@ pub fn new_cmark_parser(text: &str) -> Parser<'_> {
     opts.insert(Options::ENABLE_FOOTNOTES);
     opts.insert(Options::ENABLE_STRIKETHROUGH);
     opts.insert(Options::ENABLE_TASKLISTS);
+    opts.insert(Options::ENABLE_SMART_PUNCTUATION);
     Parser::new_ext(text, opts)
 }
 
