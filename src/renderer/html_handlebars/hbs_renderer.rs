@@ -170,6 +170,7 @@ impl HtmlHandlebars {
         // Set a dummy path to ensure other paths (e.g. in the TOC) are generated correctly
         data_404.insert("path".to_owned(), json!("404.md"));
         data_404.insert("content".to_owned(), json!(html_content_404));
+        data_404.insert("title".to_owned(), json!("Page not found"));
         let rendered = handlebars.render("index", &data_404)?;
 
         let rendered =
