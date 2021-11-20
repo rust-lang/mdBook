@@ -48,19 +48,11 @@ pub fn id_from_content(content: &str) -> String {
     let mut content = content.to_string();
 
     // Skip any tags or html-encoded stuff
-    const REPL_SUB: &[&str] = &[
-        "<em>",
-        "</em>",
-        "<code>",
-        "</code>",
-        "<strong>",
-        "</strong>",
-        "&lt;",
-        "&gt;",
-        "&amp;",
-        "&#39;",
-        "&quot;",
-    ];
+    lazy_static! {
+        static ref HTML: Regex = Regex::new(r"(<.*?>)").unwrap();
+    }
+    content = HTML.replace_all(&content, "").into();
+    const REPL_SUB: &[&str] = &["&lt;", "&gt;", "&amp;", "&#39;", "&quot;"];
     for sub in REPL_SUB {
         content = content.replace(sub, "");
     }
@@ -351,6 +343,10 @@ more text with spaces
             );
             assert_eq!(id_from_content("## **Bold** title"), "bold-title");
             assert_eq!(id_from_content("## `Code` title"), "code-title");
+            assert_eq!(
+                id_from_content("## title <span dir=rtl>foo</span>"),
+                "title-foo"
+            );
         }
 
         #[test]
