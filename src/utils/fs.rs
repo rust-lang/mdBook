@@ -247,7 +247,7 @@ mod tests {
         }
 
         if let Err(e) =
-            copy_files_except_ext(&tmp.path(), &tmp.path().join("output"), true, None, &["md"])
+            copy_files_except_ext(tmp.path(), &tmp.path().join("output"), true, None, &["md"])
         {
             panic!("Error while executing the function:\n{:?}", e);
         }

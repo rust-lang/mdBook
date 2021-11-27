@@ -48,19 +48,11 @@ pub fn id_from_content(content: &str) -> String {
     let mut content = content.to_string();
 
     // Skip any tags or html-encoded stuff
-    const REPL_SUB: &[&str] = &[
-        "<em>",
-        "</em>",
-        "<code>",
-        "</code>",
-        "<strong>",
-        "</strong>",
-        "&lt;",
-        "&gt;",
-        "&amp;",
-        "&#39;",
-        "&quot;",
-    ];
+    lazy_static! {
+        static ref HTML: Regex = Regex::new(r"(<.*?>)").unwrap();
+    }
+    content = HTML.replace_all(&content, "").into();
+    const REPL_SUB: &[&str] = &["&lt;", "&gt;", "&amp;", "&#39;", "&quot;"];
     for sub in REPL_SUB {
         content = content.replace(sub, "");
     }
@@ -168,61 +160,27 @@ pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
     render_markdown_with_path(text, curly_quotes, None)
 }
 
-pub fn new_cmark_parser(text: &str) -> Parser<'_> {
+pub fn new_cmark_parser(text: &str, curly_quotes: bool) -> Parser<'_> {
     let mut opts = Options::empty();
     opts.insert(Options::ENABLE_TABLES);
     opts.insert(Options::ENABLE_FOOTNOTES);
     opts.insert(Options::ENABLE_STRIKETHROUGH);
     opts.insert(Options::ENABLE_TASKLISTS);
+    if curly_quotes {
+        opts.insert(Options::ENABLE_SMART_PUNCTUATION);
+    }
     Parser::new_ext(text, opts)
 }
 
 pub fn render_markdown_with_path(text: &str, curly_quotes: bool, path: Option<&Path>) -> String {
     let mut s = String::with_capacity(text.len() * 3 / 2);
-    let p = new_cmark_parser(text);
-    let mut converter = EventQuoteConverter::new(curly_quotes);
+    let p = new_cmark_parser(text, curly_quotes);
     let events = p
         .map(clean_codeblock_headers)
-        .map(|event| adjust_links(event, path))
-        .map(|event| converter.convert(event));
+        .map(|event| adjust_links(event, path));
 
     html::push_html(&mut s, events);
     s
-}
-
-struct EventQuoteConverter {
-    enabled: bool,
-    convert_text: bool,
-}
-
-impl EventQuoteConverter {
-    fn new(enabled: bool) -> Self {
-        EventQuoteConverter {
-            enabled,
-            convert_text: true,
-        }
-    }
-
-    fn convert<'a>(&mut self, event: Event<'a>) -> Event<'a> {
-        if !self.enabled {
-            return event;
-        }
-
-        match event {
-            Event::Start(Tag::CodeBlock(_)) => {
-                self.convert_text = false;
-                event
-            }
-            Event::End(Tag::CodeBlock(_)) => {
-                self.convert_text = true;
-                event
-            }
-            Event::Text(ref text) if self.convert_text => {
-                Event::Text(CowStr::from(convert_quotes_to_curly(text)))
-            }
-            _ => event,
-        }
-    }
 }
 
 fn clean_codeblock_headers(event: Event<'_>) -> Event<'_> {
@@ -241,38 +199,6 @@ fn clean_codeblock_headers(event: Event<'_>) -> Event<'_> {
         }
         _ => event,
     }
-}
-
-fn convert_quotes_to_curly(original_text: &str) -> String {
-    // We'll consider the start to be "whitespace".
-    let mut preceded_by_whitespace = true;
-
-    original_text
-        .chars()
-        .map(|original_char| {
-            let converted_char = match original_char {
-                '\'' => {
-                    if preceded_by_whitespace {
-                        '‘'
-                    } else {
-                        '’'
-                    }
-                }
-                '"' => {
-                    if preceded_by_whitespace {
-                        '“'
-                    } else {
-                        '”'
-                    }
-                }
-                _ => original_char,
-            };
-
-            preceded_by_whitespace = original_char.is_whitespace();
-
-            converted_char
-        })
-        .collect()
 }
 
 /// Prints a "backtrace" of some `Error`.
@@ -417,6 +343,10 @@ more text with spaces
             );
             assert_eq!(id_from_content("## **Bold** title"), "bold-title");
             assert_eq!(id_from_content("## `Code` title"), "code-title");
+            assert_eq!(
+                id_from_content("## title <span dir=rtl>foo</span>"),
+                "title-foo"
+            );
         }
 
         #[test]
@@ -448,25 +378,6 @@ more text with spaces
             assert_eq!(normalize_id("にほんご"), "にほんご");
             assert_eq!(normalize_id("한국어"), "한국어");
             assert_eq!(normalize_id(""), "");
-        }
-    }
-
-    mod convert_quotes_to_curly {
-        use super::super::convert_quotes_to_curly;
-
-        #[test]
-        fn it_converts_single_quotes() {
-            assert_eq!(convert_quotes_to_curly("'one', 'two'"), "‘one’, ‘two’");
-        }
-
-        #[test]
-        fn it_converts_double_quotes() {
-            assert_eq!(convert_quotes_to_curly(r#""one", "two""#), "“one”, “two”");
-        }
-
-        #[test]
-        fn it_treats_tab_as_whitespace() {
-            assert_eq!(convert_quotes_to_curly("\t'one'"), "\t‘one’");
         }
     }
 }

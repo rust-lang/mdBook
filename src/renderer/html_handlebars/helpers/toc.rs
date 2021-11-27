@@ -142,7 +142,7 @@ impl HelperDef for RenderToc {
                 // Section does not necessarily exist
                 if let Some(section) = item.get("section") {
                     out.write("<strong aria-hidden=\"true\">")?;
-                    out.write(&section)?;
+                    out.write(section)?;
                     out.write("</strong> ")?;
                 }
             }

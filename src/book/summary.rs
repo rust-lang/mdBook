@@ -382,7 +382,7 @@ impl<'a> SummaryParser<'a> {
                 }
                 Some(ev @ Event::Start(Tag::List(..))) => {
                     self.back(ev);
-                    let mut bunch_of_items = self.parse_nested_numbered(&root_number)?;
+                    let mut bunch_of_items = self.parse_nested_numbered(root_number)?;
 
                     // if we've resumed after something like a rule the root sections
                     // will be numbered from 1. We need to manually go back and update

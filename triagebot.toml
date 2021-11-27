@@ -1,0 +1,12 @@
+# This will allow users to self assign, and/or drop assignment
+[assign]
+
+
+[relabel]
+allow-unauthenticated = [
+# For Issue areas
+    "A-*",
+    "E-Help-Wanted",
+    "Bug",
+    "Feature-Request"
+]
