@@ -21,8 +21,8 @@ The following configuration options are available:
 - **mathjax-support:** Adds support for [MathJax](../mathjax.md). Defaults to
   `false`.
 - **copy-fonts:** Copies fonts.css and respective font files to the output directory and use them in the default theme. Defaults to `true`.
-- **google-analytics:** If you use Google Analytics, this option lets you enable
-  it by simply specifying your ID in the configuration file.
+- **google-analytics:** This field has been deprecated and will be removed in a future release.
+  Use the `theme/head.hbs` file to add the appropriate Google Analytics code instead.
 - **additional-css:** If you need to slightly change the appearance of your book
   without overwriting the whole style, you can specify a set of stylesheets that
   will be loaded after the default ones where you can surgically change the
@@ -131,7 +131,6 @@ preferred-dark-theme = "navy"
 curly-quotes = true
 mathjax-support = false
 copy-fonts = true
-google-analytics = "UA-123456-7"
 additional-css = ["custom.css", "custom2.css"]
 additional-js = ["custom.js"]
 no-section-label = false
