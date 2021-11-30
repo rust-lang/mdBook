@@ -70,6 +70,20 @@ impl MDBook {
 
         config.update_from_env();
 
+        if config
+            .html_config()
+            .map_or(false, |html| html.google_analytics.is_some())
+        {
+            warn!(
+                "The output.html.google-analytics field has been deprecated; \
+                 it will be removed in a future release.\n\
+                 Consider placing the appropriate site tag code into the \
+                 theme/head.hbs file instead.\n\
+                 The tracking code may be found in the Google Analytics Admin page.\n\
+               "
+            );
+        }
+
         if log_enabled!(log::Level::Trace) {
             for line in format!("Config: {:#?}", config).lines() {
                 trace!("{}", line);
