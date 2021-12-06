@@ -35,7 +35,7 @@ built-in ones, they will not get updated with new fixes / features.
 **Note:** When you override a file, it is possible that you break some
 functionality. Therefore I recommend to use the file from the default theme as
 template and only add / modify what you need. You can copy the default theme
-into your source directory automatically by using `mdbook init --theme` just
+into your source directory automatically by using `mdbook init --theme` and just
 remove the files you don't want to override.
 
 If you completely replace all built-in themes, be sure to also set
