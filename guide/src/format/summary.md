@@ -35,7 +35,7 @@ to be ignored at best, or may cause an error when attempting to build the book.
    Titles are optional, and the numbered chapters can be broken into as many
    parts as desired.
    ```markdown
-   # My Part Tile
+   # My Part Title
 
    - [First Chapter](relative/path/to/markdown.md)
    ```
@@ -54,9 +54,9 @@ to be ignored at best, or may cause an error when attempting to build the book.
 
    - [Another Chapter](relative/path/to/markdown4.md)
    ```
-   Numbered chapters can be denoted with either `-` or `*` (do not mix delimiters). 
-   
-1. ***Suffix Chapter*** - Like prefix chapters, suffix chapters are unnumbered, but they come after 
+   Numbered chapters can be denoted with either `-` or `*` (do not mix delimiters).
+
+1. ***Suffix Chapter*** - Like prefix chapters, suffix chapters are unnumbered, but they come after
    numbered chapters.
    ```markdown
    - [Last Chapter](relative/path/to/markdown.md)
@@ -80,14 +80,14 @@ to be ignored at best, or may cause an error when attempting to build the book.
    a line containing exclusively dashes and at least three of them: `---`.
    ```markdown
    # My Part Title
-   
+
    [A Prefix Chapter](relative/path/to/markdown.md)
 
    ---
 
    - [First Chapter](relative/path/to/markdown2.md)
    ```
-  
+
 
 ### Example
 

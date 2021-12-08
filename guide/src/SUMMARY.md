@@ -22,7 +22,7 @@
         - [Editor](format/theme/editor.md)
     - [MathJax Support](format/mathjax.md)
     - [mdBook-specific features](format/mdbook.md)
-- [Continuous Integration](continuous-integration.md)
+- [Continuous Integration](ci/README.md)
 - [For Developers](for_developers/README.md)
     - [Preprocessors](for_developers/preprocessors.md)
     - [Alternative Backends](for_developers/backends.md)
