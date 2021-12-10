@@ -24,7 +24,7 @@ There are multiple ways to install mdBook.
 
 2. **From Crates.io**
 
-   This requires at least [Rust] 1.39 and Cargo to be installed. Once you have installed
+   This requires at least [Rust] 1.46 and Cargo to be installed. Once you have installed
    Rust, type the following in the terminal:
 
    ```
@@ -36,9 +36,9 @@ There are multiple ways to install mdBook.
 
    **Note for automatic deployment**
 
-   If you are using a script to do automatic deployments using Travis or
-   another CI server, we recommend that you specify a semver version range for
-   mdBook when you install it through your script!
+   If you are using a script to do automatic deployments, we recommend that
+   you specify a semver version range for mdBook when you install it through
+   your script!
 
    This will constrain the server to install the latest **non-breaking**
    version of mdBook and will prevent your books from failing to build because
@@ -49,7 +49,7 @@ There are multiple ways to install mdBook.
    Example:
 
    ```
-   cargo install mdbook --no-default-features --features output --vers "^0.1.0"
+   cargo install mdbook --no-default-features --vers "^0.4.0"
    ```
 
 3. **From Git**
