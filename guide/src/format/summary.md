@@ -21,7 +21,7 @@ to be ignored at best, or may cause an error when attempting to build the book.
 1. ***Prefix Chapter*** - Before the main numbered chapters, prefix chapters can be added
    that will not be numbered. This is useful for forewords,
    introductions, etc. There are, however, some constraints. Prefix chapters cannot be
-   nested; they should all be on the root level. And you can not add
+   nested; they should all be on the root level. And you cannot add
    prefix chapters once you have added numbered chapters.
    ```markdown
    [A Prefix Chapter](relative/path/to/markdown.md)
