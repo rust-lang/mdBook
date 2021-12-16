@@ -35,7 +35,7 @@ to be ignored at best, or may cause an error when attempting to build the book.
    Titles are optional, and the numbered chapters can be broken into as many
    parts as desired.
    ```markdown
-   # My Part Tile
+   # My Part Title
 
    - [First Chapter](relative/path/to/markdown.md)
    ```
