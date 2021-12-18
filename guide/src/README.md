@@ -18,13 +18,6 @@ In addition to the above features, mdBook also has a Rust [API](https://docs.rs/
 write your own preprocessor or renderer, as well as incorporate mdBook features into other applications.
 The [For Developers](for_developers) section of this guide contains more information and some examples.
 
-## Markdown
-
-mdBook's [parser](https://github.com/raphlinus/pulldown-cmark) adheres to the [CommonMark](https://commonmark.org/)
-specification. You can take a quick [tutorial](https://commonmark.org/help/tutorial/),
-or [try out](https://spec.commonmark.org/dingus/) CommonMark in real time. For a more in-depth experience, check out the
-[Markdown Guide](https://www.markdownguide.org).
-
 ## Contributing
 
 mdBook is free and open source. You can find the source code on
