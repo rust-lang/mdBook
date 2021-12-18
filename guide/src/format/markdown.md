@@ -8,7 +8,63 @@ this documentation, but below is a high level overview of some of the basics. Fo
 
 ## Text and Paragraphs
 
-## Titles
+Text is rendered relatively predictably: 
+
+```markdown
+Here is a line of text.
+
+This is a new line.
+```
+
+Will look like you might expect:
+
+Here is a line of text.
+
+This is a new line.
+
+## Headings
+
+Headings use the `#` marker and should be on a line by themselves. More `#` mean smaller headings:
+
+```markdown
+### A heading 
+
+Some text.
+
+#### A smaller heading 
+
+More text.
+```
+
+### A heading 
+
+Some text.
+
+#### A smaller heading 
+
+More text.
+
+## Lists
+
+Lists can be unordered or ordered. Ordered lists will order automatically:
+
+```markdown
+* milk
+* eggs
+* butter
+
+1. carrots
+1. celery
+1. radishes
+```
+
+* milk
+* eggs
+* butter
+
+1. carrots
+1. celery
+1. radishes
 
 ## Links
 
