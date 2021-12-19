@@ -68,6 +68,22 @@ Lists can be unordered or ordered. Ordered lists will order automatically:
 
 ## Links
 
+Linking to a URL or local file is easy:
+
+```markdown
+Use [mdBook](https://github.com/rust-lang/mdBook). 
+
+Read about [mdBook](mdBook.md).
+
+A bare url: <https://www.rust-lang.org>.
+```
+
+Use [mdBook](https://github.com/rust-lang/mdBook). 
+
+Read about [mdBook](mdBook.md).
+
+A bare url: <https://www.rust-lang.org>.
+
 ## Images
 
 Including images is simply a matter of including a link to them, much like in the _Links_ section above. The following markdown
@@ -87,4 +103,5 @@ Which, of course displays the image like so:
 
 ![The Rust Logo](images/rust-logo-blk.svg)
 
-## Lists
+
+See the [Markdown Guide Basic Syntax](https://www.markdownguide.org/basic-syntax/) document for more.
