@@ -4,6 +4,7 @@
 
 There is a feature in mdBook that lets you hide code lines by prepending them
 with a `#` [like you would with Rustdoc][rustdoc-hide].
+This currently only works with Rust language code blocks.
 
 [rustdoc-hide]: https://doc.rust-lang.org/stable/rustdoc/documentation-tests.html#hiding-portions-of-the-example
 
@@ -26,6 +27,60 @@ Will render as
     println!("{}", x + y);
 # }
 ```
+
+The code block has an eyeball icon (<i class="fa fa-eye"></i>) which will toggle the visibility of the hidden lines.
+
+## Rust Playground
+
+Rust language code blocks will automatically get a play button (<i class="fa fa-play"></i>) which will execute the code and display the output just below the code block.
+This works by sending the code to the [Rust Playground].
+
+```rust
+println!("Hello, World!");
+```
+
+If there is no `main` function, then the code is automatically wrapped inside one.
+
+If you wish to disable the play button, you can include the `noplayground` option on the code block like this:
+
+~~~markdown
+```rust,noplayground
+let mut name = String::new();
+std::io::stdin().read_line(&mut name).expect("failed to read line");
+println!("Hello {}!", name);
+```
+~~~
+
+## Rust code block attributes
+
+Additional attributes can be included in Rust code blocks with comma, space, or tab-separated terms just after the language term. For example:
+
+~~~markdown
+```rust,ignore
+# This example won't be tested.
+panic!("oops!");
+```
+~~~
+
+These are particularly important when using [`mdbook test`] to test Rust examples.
+These use the same attributes as [rustdoc attributes], with a few additions:
+
+* `editable` — Enables the [editor].
+* `noplayground` — Removes the play button, but will still be tested.
+* `mdbook-runnable` — Forces the play button to be displayed.
+  This is intended to be combined with the `ignore` attribute for examples that should not be tested, but you want to allow the reader to run.
+* `ignore` — Will not be tested and no play button is shown, but it is still highlighted as Rust syntax.
+* `should_panic` — When executed, it should produce a panic.
+* `no_run` — The code is compiled when tested, but it is not run.
+  The play button is also not shown.
+* `compile_fail` — The code should fail to compile.
+* `edition2015`, `edition2018`, `edition2021` — Forces the use of a specific Rust edition.
+  See [`rust.edition`] to set this globally.
+
+[`mdbook test`]: ../cli/test.md
+[rustdoc attributes]: https://doc.rust-lang.org/rustdoc/documentation-tests.html#attributes
+[editor]: theme/editor.md
+[`rust.edition`]: configuration/general.md#rust-options
 
 ## Including files
 
@@ -190,6 +245,17 @@ code.
 Here is what a rendered code snippet looks like:
 
 {{#playground example.rs}}
+
+Any additional values passed after the filename will be included as attributes of the code block.
+For example `\{{#playground example.rs editable}}` will create the code block like the following:
+
+~~~markdown
+```rust,editable
+# Contents of example.rs here.
+```
+~~~
+
+And the `editable` attribute will enable the [editor] as described at [Rust code block attributes](#rust-code-block-attributes).
 
 [Rust Playground]: https://play.rust-lang.org/
 
