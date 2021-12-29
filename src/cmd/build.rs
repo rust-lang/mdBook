@@ -2,6 +2,7 @@ use crate::{get_book_dir, open};
 use clap::{App, ArgMatches, SubCommand};
 use mdbook::errors::Result;
 use mdbook::MDBook;
+use std::path::Path;
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
@@ -32,6 +33,12 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     if args.is_present("open") {
         // FIXME: What's the right behaviour if we don't use the HTML renderer?
+        let path = book.build_dir_for("html").join("index.html");
+        if !Path::new(&path).exists() {
+            error!("Need a more descriptive error here: {:?}", path);
+            std::process::exit(1);
+        }
+
         open(book.build_dir_for("html").join("index.html"));
     }
 
