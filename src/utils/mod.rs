@@ -160,7 +160,7 @@ pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
     render_markdown_with_path(text, curly_quotes, None)
 }
 
-pub fn new_cmark_parser(text: &str, curly_quotes: bool) -> Parser<'_> {
+pub fn new_cmark_parser(text: &str, curly_quotes: bool) -> Parser<'_, '_> {
     let mut opts = Options::empty();
     opts.insert(Options::ENABLE_TABLES);
     opts.insert(Options::ENABLE_FOOTNOTES);
