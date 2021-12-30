@@ -24,8 +24,9 @@ The process of rendering a book project goes through several steps.
        exist
     - Load the book chapters into memory
     - Discover which preprocessors/backends should be used
-2. Run the preprocessors
-3. Call each backend in turn
+2. For each backend:
+   1. Run all the preprocessors.
+   2. Call the backend to render the processed result.
 
 
 ## Using `mdbook` as a Library

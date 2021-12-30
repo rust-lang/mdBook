@@ -1,9 +1,115 @@
 # Configuring Renderers
 
-### HTML renderer options
+Renderers (also called "backends") are responsible for creating the output of the book.
 
-The HTML renderer has a couple of options as well. All the options for the
-renderer need to be specified under the TOML table `[output.html]`.
+The following backends are built-in:
+
+* [`html`](#html-renderer-options) — This renders the book to HTML.
+  This is enabled by default if no other `[output]` tables are defined in `book.toml`.
+* [`markdown`](#markdown-renderer) — This outputs the book as markdown after running the preprocessors.
+  This is useful for debugging preprocessors.
+
+The community has developed several backends.
+See the [Third Party Plugins] wiki page for a list of available backends.
+
+For information on how to create a new backend, see the [Backends for Developers] chapter.
+
+[Third Party Plugins]: https://github.com/rust-lang/mdBook/wiki/Third-party-plugins
+[Backends for Developers]: ../../for_developers/backends.md
+
+## Output tables
+
+Backends can be added by including a `output` table in `book.toml` with the name of the backend.
+For example, if you have a backend called `mdbook-wordcount`, then you can include it with:
+
+```toml
+[output.wordcount]
+```
+
+With this table, mdBook will execute the `mdbook-wordcount` backend.
+
+This table can include additional key-value pairs that are specific to the backend.
+For example, if our example backend needed some extra configuration options:
+
+```toml
+[output.wordcount]
+ignores = ["Example Chapter"]
+```
+
+If you define any `[output]` tables, then the `html` backend is not enabled by default.
+If you want to keep the `html` backend running, then just include it in the `book.toml` file.
+For example:
+
+```toml
+[book]
+title = "My Awesome Book"
+
+[output.wordcount]
+
+[output.html]
+```
+
+If more than one `output` table is included, this changes the behavior for the layout of the output directory.
+If there is only one backend, then it places its output directly in the `book` directory (see [`build.build-dir`] to override this location).
+If there is more than one backend, then each backend is placed in a separate directory underneath `book`.
+For example, the above would have directories `book/html` and `book/wordcount`.
+
+[`build.build-dir`]: general.md#build-options
+
+### Custom backend commands
+
+By default when you add an `[output.foo]` table to your `book.toml` file,
+`mdbook` will try to invoke the `mdbook-foo` executable.
+If you want to use a different program name or pass in command-line arguments,
+this behaviour can be overridden by adding a `command` field.
+
+```toml
+[output.random]
+command = "python random.py"
+```
+
+### Optional backends
+
+If you enable a backend that isn't installed, the default behavior is to throw an error.
+This behavior can be changed by marking the backend as optional:
+
+```toml
+[output.wordcount]
+optional = true
+```
+
+This demotes the error to a warning.
+
+
+## HTML renderer options
+
+The HTML renderer has a variety of options detailed below.
+They should be specified in the `[output.html]` table of the `book.toml` file.
+
+```toml
+# Example book.toml file with all output options.
+[book]
+title = "Example book"
+authors = ["John Doe", "Jane Doe"]
+description = "The example book covers examples."
+
+[output.html]
+theme = "my-theme"
+default-theme = "light"
+preferred-dark-theme = "navy"
+curly-quotes = true
+mathjax-support = false
+copy-fonts = true
+additional-css = ["custom.css", "custom2.css"]
+additional-js = ["custom.js"]
+no-section-label = false
+git-repository-url = "https://github.com/rust-lang/mdBook"
+git-repository-icon = "fa-github"
+edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"
+site-url = "/example-book/"
+cname = "myproject.rs"
+input-404 = "not-found.md"
+```
 
 The following configuration options are available:
 
@@ -30,34 +136,22 @@ The following configuration options are available:
 - **additional-js:** If you need to add some behaviour to your book without
   removing the current behaviour, you can specify a set of JavaScript files that
   will be loaded alongside the default one.
-- **print:** A subtable for configuration print settings. mdBook by default adds
-  support for printing out the book as a single page. This is accessed using the
-  print icon on the top right of the book.
-- **no-section-label:** mdBook by defaults adds section label in table of
+- **no-section-label:** mdBook by defaults adds numeric section labels in the table of
   contents column. For example, "1.", "2.1". Set this option to true to disable
   those labels. Defaults to `false`.
-- **fold:** A subtable for configuring sidebar section-folding behavior.
-- **playground:** A subtable for configuring various playground settings.
-- **search:** A subtable for configuring the in-browser search functionality.
-  mdBook must be compiled with the `search` feature enabled (on by default).
 - **git-repository-url:**  A url to the git repository for the book. If provided
   an icon link will be output in the menu bar of the book.
 - **git-repository-icon:** The FontAwesome icon class to use for the git
-  repository link. Defaults to `fa-github`.
+  repository link. Defaults to `fa-github` which looks like <i class="fa fa-github"></i>.
+  If you are not using GitHub, another option to consider is `fa-code-fork` which looks like <i class="fa fa-code-fork"></i>.
 - **edit-url-template:** Edit url template, when provided shows a
-  "Suggest an edit" button for directly jumping to editing the currently
+  "Suggest an edit" button (which looks like <i class="fa fa-edit"></i>) for directly jumping to editing the currently
   viewed page. For e.g. GitHub projects set this to
   `https://github.com/<owner>/<repo>/edit/master/{path}` or for
   Bitbucket projects set it to
   `https://bitbucket.org/<owner>/<repo>/src/master/{path}?mode=edit`
   where {path} will be replaced with the full path of the file in the
   repository.
-- **redirect:** A subtable used for generating redirects when a page is moved.
-  The table contains key-value pairs where the key is where the redirect file
-  needs to be created, as an absolute path from the build directory, (e.g.
-  `/appendices/bibliography.html`). The value can be any valid URI the
-  browser should navigate to (e.g. `https://rust-lang.org/`,
-  `/overview.html`, or `../bibliography.html`).
 - **input-404:** The name of the markdown file used for missing files.
   The corresponding output file will be the same, with the extension replaced with `html`.
   Defaults to `404.md`.
@@ -71,19 +165,47 @@ The following configuration options are available:
 
 [custom domain]: https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site
 
-Available configuration options for the `[output.html.print]` table:
+### `[output.html.print]`
+
+The `[output.html.print]` table provides options for controlling the printable output.
+By default, mdBook will include an icon on the top right of the book (which looks like <i class="fa fa-print"></i>) that will print the book as a single page.
+
+```toml
+[output.html.print]
+enable = true    # include support for printable output
+```
 
 - **enable:** Enable print support. When `false`, all print support will not be
   rendered. Defaults to `true`.
 
-Available configuration options for the `[output.html.fold]` table:
+### `[output.html.fold]`
+
+The `[output.html.fold]` table provides options for controlling folding of the chapter listing in the navigation sidebar.
+
+```toml
+[output.html.fold]
+enable = false    # whether or not to enable section folding
+level = 0         # the depth to start folding
+```
 
 - **enable:** Enable section-folding. When off, all folds are open.
   Defaults to `false`.
 - **level:** The higher the more folded regions are open. When level is 0, all
   folds are closed. Defaults to `0`.
 
-Available configuration options for the `[output.html.playground]` table:
+### `[output.html.playground]`
+
+The `[output.html.playground]` table provides options for controlling Rust sample code blocks, and their integration with the [Rust Playground].
+
+[Rust Playground]: https://play.rust-lang.org/
+
+```toml
+[output.html.playground]
+editable = false         # allows editing the source code
+copyable = true          # include the copy button for copying code snippets
+copy-js = true           # includes the JavaScript for the code editor
+line-numbers = false     # displays line numbers for editable code
+```
 
 - **editable:** Allow editing the source code. Defaults to `false`.
 - **copyable:** Display the copy button on code snippets. Defaults to `true`.
@@ -93,7 +215,26 @@ Available configuration options for the `[output.html.playground]` table:
 
 [Ace]: https://ace.c9.io/
 
-Available configuration options for the `[output.html.search]` table:
+### `[output.html.search]`
+
+The `[output.html.search]` table provides options for controlling the built-in text [search].
+mdBook must be compiled with the `search` feature enabled (on by default).
+
+[search]: ../../guide/reading.md#search
+
+```toml
+[output.html.search]
+enable = true            # enables the search feature
+limit-results = 30       # maximum number of search results
+teaser-word-count = 30   # number of words used for a search result teaser
+use-boolean-and = true   # multiple search terms must all match
+boost-title = 2          # ranking boost factor for matches in headers
+boost-hierarchy = 1      # ranking boost factor for matches in page names
+boost-paragraph = 1      # ranking boost factor for matches in text
+expand = true            # partial words will match longer terms
+heading-split-level = 3  # link results to heading levels
+copy-js = true           # include Javascript code for search
+```
 
 - **enable:** Enables the search feature. Defaults to `true`.
 - **limit-results:** The maximum number of search results. Defaults to `30`.
@@ -116,61 +257,24 @@ Available configuration options for the `[output.html.search]` table:
 - **copy-js:** Copy JavaScript files for the search implementation to the output
   directory. Defaults to `true`.
 
-This shows all available HTML output options in the **book.toml**:
+### `[output.html.redirect]`
+
+The `[output.html.redirect]` table provides a way to add redirects.
+This is useful when you move, rename, or remove a page to ensure that links to the old URL will go to the new location.
 
 ```toml
-[book]
-title = "Example book"
-authors = ["John Doe", "Jane Doe"]
-description = "The example book covers examples."
-
-[output.html]
-theme = "my-theme"
-default-theme = "light"
-preferred-dark-theme = "navy"
-curly-quotes = true
-mathjax-support = false
-copy-fonts = true
-additional-css = ["custom.css", "custom2.css"]
-additional-js = ["custom.js"]
-no-section-label = false
-git-repository-url = "https://github.com/rust-lang/mdBook"
-git-repository-icon = "fa-github"
-edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"
-site-url = "/example-book/"
-cname = "myproject.rs"
-input-404 = "not-found.md"
-
-[output.html.print]
-enable = true
-
-[output.html.fold]
-enable = false
-level = 0
-
-[output.html.playground]
-editable = false
-copy-js = true
-line-numbers = false
-
-[output.html.search]
-enable = true
-limit-results = 30
-teaser-word-count = 30
-use-boolean-and = true
-boost-title = 2
-boost-hierarchy = 1
-boost-paragraph = 1
-expand = true
-heading-split-level = 3
-copy-js = true
-
 [output.html.redirect]
 "/appendices/bibliography.html" = "https://rustc-dev-guide.rust-lang.org/appendix/bibliography.html"
 "/other-installation-methods.html" = "../infra/other-installation-methods.html"
 ```
 
-### Markdown Renderer
+The table contains key-value pairs where the key is where the redirect file needs to be created, as an absolute path from the build directory, (e.g. `/appendices/bibliography.html`).
+The value can be any valid URI the browser should navigate to (e.g. `https://rust-lang.org/`, `/overview.html`, or `../bibliography.html`).
+
+This will generate an HTML page which will automatically redirect to the given location.
+Note that the source location does not support `#` anchor redirects.
+
+## Markdown Renderer
 
 The Markdown renderer will run preprocessors and then output the resulting
 Markdown. This is mostly useful for debugging preprocessors, especially in
@@ -189,20 +293,3 @@ only whether it is enabled or disabled.
 
 See [the preprocessors documentation](preprocessors.md) for how to
 specify which preprocessors should run before the Markdown renderer.
-
-### Custom Renderers
-
-A custom renderer can be enabled by adding a `[output.foo]` table to your
-`book.toml`. Similar to [preprocessors](preprocessors.md) this will
-instruct `mdbook` to pass a representation of the book to `mdbook-foo` for
-rendering. See the [alternative backends] chapter for more detail.
-
-The custom renderer has access to all the fields within its table (i.e.
-anything under `[output.foo]`). mdBook checks for two common fields:
-
-- **command:** The command to execute for this custom renderer. Defaults to
-  the name of the renderer with the `mdbook-` prefix (such as `mdbook-foo`).
-- **optional:** If `true`, then the command will be ignored if it is not
-  installed, otherwise mdBook will fail with an error. Defaults to `false`.
-
-[alternative backends]: ../../for_developers/backends.md
