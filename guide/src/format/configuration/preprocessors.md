@@ -1,51 +1,58 @@
 # Configuring Preprocessors
 
-The following preprocessors are available and included by default:
+Preprocessors are extensions that can modify the raw Markdown source before it gets sent to the renderer.
 
-- `links`: Expand the `{{ #playground }}`, `{{ #include }}`, and `{{ #rustdoc_include }}` handlebars
+The following preprocessors are built-in and included by default:
+
+- `links`: Expands the `{{ #playground }}`, `{{ #include }}`, and `{{ #rustdoc_include }}` handlebars
   helpers in a chapter to include the contents of a file.
+  See [Including files] for more.
 - `index`: Convert all chapter files named `README.md` into `index.md`. That is
   to say, all `README.md` would be rendered to an index file `index.html` in the
   rendered book.
 
+The built-in preprocessors can be disabled with the [`build.use-default-preprocessors`] config option.
 
-**book.toml**
-```toml
-[build]
-build-dir = "build"
-create-missing = false
+The community has developed several preprocessors.
+See the [Third Party Plugins] wiki page for a list of available preprocessors.
 
-[preprocessor.links]
+For information on how to create a new preprocessor, see the [Preprocessors for Developers] chapter.
 
-[preprocessor.index]
-```
+[Including files]: ../mdbook.md#including-files
+[`build.use-default-preprocessors`]: general.md#build-options
+[Third Party Plugins]: https://github.com/rust-lang/mdBook/wiki/Third-party-plugins
+[Preprocessors for Developers]: ../../for_developers/preprocessors.md
 
-### Custom Preprocessor Configuration
+## Custom Preprocessor Configuration
 
-Like renderers, preprocessor will need to be given its own table (e.g.
-`[preprocessor.mathjax]`). In the section, you may then pass extra
-configuration to the preprocessor by adding key-value pairs to the table.
-
-For example
+Preprocessors can be added by including a `preprocessor` table in `book.toml` with the name of the preprocessor.
+For example, if you have a preprocessor called `mdbook-example`, then you can include it with:
 
 ```toml
-[preprocessor.links]
-# set the renderers this preprocessor will run for
-renderers = ["html"]
-some_extra_feature = true
+[preprocessor.example]
 ```
 
-#### Locking a Preprocessor dependency to a renderer
+With this table, mdBook will execute the `mdbook-example` preprocessor.
+
+This table can include additional key-value pairs that are specific to the preprocessor.
+For example, if our example prepocessor needed some extra configuration options:
+
+```toml
+[preprocessor.example]
+some-extra-feature = true
+```
+
+## Locking a Preprocessor dependency to a renderer
 
 You can explicitly specify that a preprocessor should run for a renderer by
 binding the two together.
 
 ```toml
-[preprocessor.mathjax]
-renderers = ["html"]  # mathjax only makes sense with the HTML renderer
+[preprocessor.example]
+renderers = ["html"]  # example preprocessor only runs with the HTML renderer
 ```
 
-### Provide Your Own Command
+## Provide Your Own Command
 
 By default when you add a `[preprocessor.foo]` table to your `book.toml` file,
 `mdbook` will try to invoke the `mdbook-foo` executable. If you want to use a
@@ -57,7 +64,7 @@ be overridden by adding a `command` field.
 command = "python random.py"
 ```
 
-### Require A Certain Order
+## Require A Certain Order
 
 The order in which preprocessors are run can be controlled with the `before` and `after` fields.
 For example, suppose you want your `linenos` preprocessor to process lines that may have been `{{#include}}`d; then you want it to run after the built-in `links` preprocessor, which you can require using either the `before` or `after` field:

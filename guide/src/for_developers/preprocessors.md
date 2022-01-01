@@ -5,34 +5,17 @@ book is loaded and before it gets rendered, allowing you to update and mutate
 the book. Possible use cases are:
 
 - Creating custom helpers like `\{{#include /path/to/file.md}}`
-- Updating links so `[some chapter](some_chapter.md)` is automatically changed
-  to `[some chapter](some_chapter.html)` for the HTML renderer
 - Substituting in latex-style expressions (`$$ \frac{1}{3} $$`) with their
   mathjax equivalents
 
+See [Configuring Preprocessors](../format/configuration/preprocessors.md) for more information about using preprocessors.
 
 ## Hooking Into MDBook
 
 MDBook uses a fairly simple mechanism for discovering third party plugins.
-A new table is added to `book.toml` (e.g. `preprocessor.foo` for the `foo`
+A new table is added to `book.toml` (e.g. `[preprocessor.foo]` for the `foo`
 preprocessor) and then `mdbook` will try to invoke the `mdbook-foo` program as
 part of the build process.
-
-A preprocessor can be hard-coded to specify which backend(s) it should be run
-for with the `preprocessor.foo.renderer` key. For example, it doesn't make sense for 
-[MathJax](../format/mathjax.md) to be used for non-HTML renderers.
-
-```toml
-[book]
-title = "My Book"
-authors = ["Michael-F-Bryan"]
-
-[preprocessor.foo]
-# The command can also be specified manually
-command = "python3 /path/to/foo.py"
-# Only run the `foo` preprocessor for the HTML and EPUB renderer
-renderer = ["html", "epub"]
-```
 
 Once the preprocessor has been defined and the build process starts, mdBook executes the command defined in the `preprocessor.foo.command` key twice.
 The first time it runs the preprocessor to determine if it supports the given renderer.

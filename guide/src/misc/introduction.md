@@ -1,3 +1,0 @@
-# Introduction
-
-A frontmatter chapter.
