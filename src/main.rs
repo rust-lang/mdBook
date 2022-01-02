@@ -4,7 +4,6 @@ extern crate clap;
 extern crate log;
 
 use anyhow::anyhow;
-use chrono::Local;
 use clap::{App, AppSettings, Arg, ArgMatches, Shell, SubCommand};
 use env_logger::Builder;
 use log::LevelFilter;
@@ -94,11 +93,17 @@ fn create_clap_app<'a, 'b>() -> App<'a, 'b> {
 fn init_logger() {
     let mut builder = Builder::new();
 
-    builder.format(|formatter, record| {
+    let time_format =
+        time::format_description::parse("[year]-[month]-[day] [hour]:[minute]:[second]").unwrap();
+
+    builder.format(move |formatter, record| {
         writeln!(
             formatter,
             "{} [{}] ({}): {}",
-            Local::now().format("%Y-%m-%d %H:%M:%S"),
+            time::OffsetDateTime::now_local()
+                .unwrap()
+                .format(&time_format)
+                .unwrap(),
             record.level(),
             record.target(),
             record.args()
