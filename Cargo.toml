@@ -18,7 +18,7 @@ description = "Creates a book from markdown files"
 [dependencies]
 anyhow = "1.0.28"
 clap = "2.24"
-env_logger = "0.7.1"
+env_logger = "0.8"
 handlebars = "4.0"
 lazy_static = "1.0"
 log = "0.4"
@@ -53,7 +53,7 @@ assert_cmd = "1"
 predicates = "2"
 select = "0.5"
 semver = "0.11.0"
-pretty_assertions = "0.6"
+pretty_assertions = "0.7"
 walkdir = "2.0"
 
 [features]
