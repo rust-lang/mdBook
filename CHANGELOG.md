@@ -1,5 +1,15 @@
 # Changelog
 
+## mdBook 0.4.15
+[5eb7d46...68a5c09](https://github.com/rust-lang/mdBook/compare/5eb7d46...68a5c09)
+
+### Changed
+- Major update to expand the documentation located at <https://rust-lang.github.io/mdBook/>.
+  [#1709](https://github.com/rust-lang/mdBook/pull/1709)
+  [#1710](https://github.com/rust-lang/mdBook/pull/1710)
+- Updated the markdown parser with various fixes for common-mark compliance.
+  [#1712](https://github.com/rust-lang/mdBook/pull/1712)
+
 ## mdBook 0.4.14
 [ffa8284...c9b6be8](https://github.com/rust-lang/mdBook/compare/ffa8284...c9b6be8)
 
