@@ -62,6 +62,11 @@ language = "en"
 Options for the Rust language, relevant to running tests and playground
 integration.
 
+```toml
+[rust]
+edition = "2015"   # the default edition for code blocks
+```
+
 - **edition**: Rust edition to use by default for the code snippets. Default
   is "2015". Individual code blocks can be controlled with the `edition2015`, 
   `edition2018` or `edition2021` annotations, such as:
@@ -77,8 +82,16 @@ integration.
 
 This controls the build process of your book.
 
+```toml
+[build]
+build-dir = "book"                # the directory where the output is placed
+create-missing = true             # whether or not to create missing pages
+use-default-preprocessors = true  # use the default preprocessors
+```
+
 - **build-dir:** The directory to put the rendered book in. By default this is
   `book/` in the book's root directory.
+  This can overridden with the `--dest-dir` CLI option.
 - **create-missing:** By default, any missing files specified in `SUMMARY.md`
   will be created when the book is built (i.e. `create-missing = true`). If this
   is `false` then the build process will instead exit with an error if any files
