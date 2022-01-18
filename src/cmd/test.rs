@@ -16,7 +16,7 @@ pub fn make_subcommand<'help>() -> App<'help> {
             "[dir] 'Root directory for the book{n}\
              (Defaults to the Current Directory when omitted)'",
         )
-        .arg(Arg::with_name("library-path")
+        .arg(Arg::new("library-path")
             .short('L')
             .long("library-path")
             .value_name("dir")

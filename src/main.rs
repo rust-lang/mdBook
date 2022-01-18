@@ -81,7 +81,7 @@ fn create_clap_app() -> App<'static> {
             SubCommand::with_name("completions")
                 .about("Generate shell completions for your shell to stdout")
                 .arg(
-                    Arg::with_name("shell")
+                    Arg::new("shell")
                         .takes_value(true)
                         .possible_values(Shell::possible_values())
                         .help("the shell to generate completions for")

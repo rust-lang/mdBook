@@ -31,7 +31,7 @@ pub fn make_subcommand<'help>() -> App<'help> {
              (Defaults to the Current Directory when omitted)'",
         )
         .arg(
-            Arg::with_name("hostname")
+            Arg::new("hostname")
                 .short('n')
                 .long("hostname")
                 .takes_value(true)
@@ -40,7 +40,7 @@ pub fn make_subcommand<'help>() -> App<'help> {
                 .help("Hostname to listen on for HTTP connections"),
         )
         .arg(
-            Arg::with_name("port")
+            Arg::new("port")
                 .short('p')
                 .long("port")
                 .takes_value(true)

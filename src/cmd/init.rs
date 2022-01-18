@@ -19,14 +19,14 @@ pub fn make_subcommand<'help>() -> App<'help> {
         .arg_from_usage("--theme 'Copies the default theme into your source folder'")
         .arg_from_usage("--force 'Skips confirmation prompts'")
         .arg(
-            Arg::with_name("title")
+            Arg::new("title")
                 .long("title")
                 .takes_value(true)
                 .help("Sets the book title")
                 .required(false),
         )
         .arg(
-            Arg::with_name("ignore")
+            Arg::new("ignore")
                 .long("ignore")
                 .takes_value(true)
                 .possible_values(&["none", "git"])

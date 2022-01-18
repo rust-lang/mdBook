@@ -12,7 +12,7 @@ pub fn make_app() -> App<'static> {
         .about("A mdbook preprocessor which does precisely nothing")
         .subcommand(
             SubCommand::with_name("supports")
-                .arg(Arg::with_name("renderer").required(true))
+                .arg(Arg::new("renderer").required(true))
                 .about("Check whether a renderer is supported by this preprocessor"),
         )
 }
