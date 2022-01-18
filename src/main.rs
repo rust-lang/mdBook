@@ -68,7 +68,6 @@ fn create_clap_app() -> App<'static> {
         .version(VERSION)
         .setting(AppSettings::GlobalVersion)
         .setting(AppSettings::ArgRequiredElseHelp)
-        .setting(AppSettings::ColoredHelp)
         .after_help(
             "For more information about a specific command, try `mdbook <command> --help`\n\
              The source code for mdBook is available at: https://github.com/rust-lang/mdBook",
