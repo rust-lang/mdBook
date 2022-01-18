@@ -23,7 +23,8 @@ pub fn make_subcommand<'help>() -> App<'help> {
             .takes_value(true)
             .use_delimiter(true)
             .require_delimiter(true)
-            .multiple(true)
+            .multiple_values(true)
+            .multiple_occurrences(true)
             .forbid_empty_values(true)
             .help("A comma-separated list of directories to add to {n}the crate search path when building tests"))
 }
