@@ -4,7 +4,7 @@ use mdbook::errors::Result;
 use mdbook::MDBook;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
+pub fn make_subcommand<'help>() -> App<'help> {
     SubCommand::with_name("build")
         .about("Builds a book from its markdown files")
         .arg_from_usage(

@@ -10,7 +10,7 @@ use std::thread::sleep;
 use std::time::Duration;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
+pub fn make_subcommand<'help>() -> App<'help> {
     SubCommand::with_name("watch")
         .about("Watches a book's files and rebuilds it on changes")
         .arg_from_usage(

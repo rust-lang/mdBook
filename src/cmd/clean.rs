@@ -5,7 +5,7 @@ use mdbook::MDBook;
 use std::fs;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
+pub fn make_subcommand<'help>() -> App<'help> {
     SubCommand::with_name("clean")
         .about("Deletes a built book")
         .arg_from_usage(

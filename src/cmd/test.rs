@@ -4,7 +4,7 @@ use mdbook::errors::Result;
 use mdbook::MDBook;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
+pub fn make_subcommand<'help>() -> App<'help> {
     SubCommand::with_name("test")
         .about("Tests that a book's Rust code samples compile")
         .arg_from_usage(
@@ -17,10 +17,11 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
              (Defaults to the Current Directory when omitted)'",
         )
         .arg(Arg::with_name("library-path")
-            .short("L")
+            .short('L')
             .long("library-path")
             .value_name("dir")
             .takes_value(true)
+            .use_delimiter(true)
             .require_delimiter(true)
             .multiple(true)
             .empty_values(false)

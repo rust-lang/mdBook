@@ -18,7 +18,7 @@ use warp::Filter;
 const LIVE_RELOAD_ENDPOINT: &str = "__livereload";
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
+pub fn make_subcommand<'help>() -> App<'help> {
     SubCommand::with_name("serve")
         .about("Serves a book at http://localhost:3000, and rebuilds it on changes")
         .arg_from_usage(
@@ -32,7 +32,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
         )
         .arg(
             Arg::with_name("hostname")
-                .short("n")
+                .short('n')
                 .long("hostname")
                 .takes_value(true)
                 .default_value("localhost")
@@ -41,7 +41,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
         )
         .arg(
             Arg::with_name("port")
-                .short("p")
+                .short('p')
                 .long("port")
                 .takes_value(true)
                 .default_value("3000")

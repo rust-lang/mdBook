@@ -5,7 +5,8 @@ extern crate log;
 
 use anyhow::anyhow;
 use chrono::Local;
-use clap::{App, AppSettings, Arg, ArgMatches, Shell, SubCommand};
+use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
+use clap_complete::Shell;
 use env_logger::Builder;
 use log::LevelFilter;
 use mdbook::utils;
@@ -25,25 +26,31 @@ fn main() {
 
     // Check which subcomamnd the user ran...
     let res = match app.get_matches().subcommand() {
-        ("init", Some(sub_matches)) => cmd::init::execute(sub_matches),
-        ("build", Some(sub_matches)) => cmd::build::execute(sub_matches),
-        ("clean", Some(sub_matches)) => cmd::clean::execute(sub_matches),
+        Some(("init", sub_matches)) => cmd::init::execute(sub_matches),
+        Some(("build", sub_matches)) => cmd::build::execute(sub_matches),
+        Some(("clean", sub_matches)) => cmd::clean::execute(sub_matches),
         #[cfg(feature = "watch")]
-        ("watch", Some(sub_matches)) => cmd::watch::execute(sub_matches),
+        Some(("watch", sub_matches)) => cmd::watch::execute(sub_matches),
         #[cfg(feature = "serve")]
-        ("serve", Some(sub_matches)) => cmd::serve::execute(sub_matches),
-        ("test", Some(sub_matches)) => cmd::test::execute(sub_matches),
-        ("completions", Some(sub_matches)) => (|| {
+        Some(("serve", sub_matches)) => cmd::serve::execute(sub_matches),
+        Some(("test", sub_matches)) => cmd::test::execute(sub_matches),
+        Some(("completions", sub_matches)) => (|| {
             let shell: Shell = sub_matches
                 .value_of("shell")
                 .ok_or_else(|| anyhow!("Shell name missing."))?
                 .parse()
                 .map_err(|s| anyhow!("Invalid shell: {}", s))?;
 
-            create_clap_app().gen_completions_to("mdbook", shell, &mut std::io::stdout().lock());
+            let mut complete_app = create_clap_app();
+            clap_complete::generate(
+                shell,
+                &mut complete_app,
+                "mdbook",
+                &mut std::io::stdout().lock(),
+            );
             Ok(())
         })(),
-        (_, _) => unreachable!(),
+        _ => unreachable!(),
     };
 
     if let Err(e) = res {
@@ -54,7 +61,7 @@ fn main() {
 }
 
 /// Create a list of valid arguments and sub-commands
-fn create_clap_app<'a, 'b>() -> App<'a, 'b> {
+fn create_clap_app() -> App<'static> {
     let app = App::new(crate_name!())
         .about(crate_description!())
         .author("Mathieu David <mathieudavid@mathieudavid.org>")
@@ -76,7 +83,7 @@ fn create_clap_app<'a, 'b>() -> App<'a, 'b> {
                 .arg(
                     Arg::with_name("shell")
                         .takes_value(true)
-                        .possible_values(&Shell::variants())
+                        .possible_values(Shell::possible_values())
                         .help("the shell to generate completions for")
                         .value_name("SHELL")
                         .required(true),
@@ -136,4 +143,9 @@ fn open<P: AsRef<OsStr>>(path: P) {
     if let Err(e) = opener::open(path) {
         error!("Error opening web browser: {}", e);
     }
+}
+
+#[test]
+fn verify_app() {
+    create_clap_app().debug_assert();
 }
