@@ -66,7 +66,7 @@ fn create_clap_app() -> App<'static> {
         .about(crate_description!())
         .author("Mathieu David <mathieudavid@mathieudavid.org>")
         .version(VERSION)
-        .setting(AppSettings::GlobalVersion)
+        .setting(AppSettings::PropagateVersion)
         .setting(AppSettings::ArgRequiredElseHelp)
         .after_help(
             "For more information about a specific command, try `mdbook <command> --help`\n\
