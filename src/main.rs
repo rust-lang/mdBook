@@ -5,7 +5,7 @@ extern crate log;
 
 use anyhow::anyhow;
 use chrono::Local;
-use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
+use clap::{App, AppSettings, Arg, ArgMatches};
 use clap_complete::Shell;
 use env_logger::Builder;
 use log::LevelFilter;
@@ -78,7 +78,7 @@ fn create_clap_app() -> App<'static> {
         .subcommand(cmd::test::make_subcommand())
         .subcommand(cmd::clean::make_subcommand())
         .subcommand(
-            SubCommand::with_name("completions")
+            App::new("completions")
                 .about("Generate shell completions for your shell to stdout")
                 .arg(
                     Arg::new("shell")

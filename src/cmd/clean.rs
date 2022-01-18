@@ -1,12 +1,12 @@
 use crate::get_book_dir;
 use anyhow::Context;
-use clap::{App, ArgMatches, SubCommand};
+use clap::{App, ArgMatches};
 use mdbook::MDBook;
 use std::fs;
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'help>() -> App<'help> {
-    SubCommand::with_name("clean")
+    App::new("clean")
         .about("Deletes a built book")
         .arg_from_usage(
             "-d, --dest-dir=[dest-dir] 'Output directory for the book{n}\

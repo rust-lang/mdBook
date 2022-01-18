@@ -1,11 +1,11 @@
 use crate::get_book_dir;
-use clap::{App, Arg, ArgMatches, SubCommand};
+use clap::{App, Arg, ArgMatches};
 use mdbook::errors::Result;
 use mdbook::MDBook;
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'help>() -> App<'help> {
-    SubCommand::with_name("test")
+    App::new("test")
         .about("Tests that a book's Rust code samples compile")
         .arg_from_usage(
             "-d, --dest-dir=[dest-dir] 'Output directory for the book{n}\
