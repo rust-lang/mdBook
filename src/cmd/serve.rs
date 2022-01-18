@@ -36,7 +36,7 @@ pub fn make_subcommand<'help>() -> App<'help> {
                 .long("hostname")
                 .takes_value(true)
                 .default_value("localhost")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("Hostname to listen on for HTTP connections"),
         )
         .arg(
@@ -45,7 +45,7 @@ pub fn make_subcommand<'help>() -> App<'help> {
                 .long("port")
                 .takes_value(true)
                 .default_value("3000")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("Port to use for HTTP connections"),
         )
         .arg_from_usage("-o, --open 'Opens the book server in a web browser'")
