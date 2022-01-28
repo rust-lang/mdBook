@@ -28,7 +28,7 @@ code {
 
 /* make long words/inline code not x overflow */
 main {
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
 }
 
 /* make wide tables scroll if they overflow */
