@@ -173,10 +173,12 @@ By default, mdBook will include an icon on the top right of the book (which look
 ```toml
 [output.html.print]
 enable = true    # include support for printable output
+page-break = true # insert page-break after each chapter
 ```
 
 - **enable:** Enable print support. When `false`, all print support will not be
   rendered. Defaults to `true`.
+- **page-break** Insert page breaks between chapters. Defaults to `true`.
 
 ### `[output.html.fold]`
 
