@@ -11,7 +11,11 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
             "-d, --dest-dir=[dest-dir] 'Output directory for the book{n}\
              Relative paths are interpreted relative to the book's root directory.{n}\
              If omitted, mdBook uses build.build-dir from book.toml or defaults to `./book`.'",
+        ).arg_from_usage(
+            "-c, --chapter=[name] 'Only test the specified chapter{n}\
+            Where the name of the chapter is defined in the SUMMARY.md file.'"
         )
+
         .arg_from_usage(
             "[dir] 'Root directory for the book{n}\
              (Defaults to the Current Directory when omitted)'",
@@ -39,8 +43,13 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     if let Some(dest_dir) = args.value_of("dest-dir") {
         book.config.build.build_dir = dest_dir.into();
     }
+    let chapter: &str = if args.is_present("chapter") {
+        args.value_of("chapter").unwrap_or_default()
+    } else {
+        ""
+    };
 
-    book.test(library_paths)?;
+    book.test(library_paths, chapter)?;
 
     Ok(())
 }

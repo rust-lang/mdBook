@@ -244,8 +244,9 @@ impl MDBook {
         self
     }
 
-    /// Run `rustdoc` tests on the book, linking against the provided libraries.
-    pub fn test(&mut self, library_paths: Vec<&str>) -> Result<()> {
+    /// Run `rustdoc` tests on the book, linking against the provided libraries
+    /// and optionally testing only a signal named chapter while skipping the others.
+    pub fn test(&mut self, library_paths: Vec<&str>, chapter: &str) -> Result<()> {
         let library_args: Vec<&str> = (0..library_paths.len())
             .map(|_| "-L")
             .zip(library_paths.into_iter())
@@ -270,8 +271,13 @@ impl MDBook {
                     _ => continue,
                 };
 
+                if !chapter.is_empty() && ch.name != chapter {
+                    info!("Skipping chapter '{}'...", ch.name);
+                    continue;
+                };
+
                 let path = self.source_dir().join(&chapter_path);
-                info!("Testing file: {:?}", path);
+                info!("Testing chapter '{}': {:?}", ch.name, path);
 
                 // write preprocessed file to tempdir
                 let path = temp_dir.path().join(&chapter_path);
