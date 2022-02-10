@@ -37,18 +37,18 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         .values_of("library-path")
         .map(std::iter::Iterator::collect)
         .unwrap_or_default();
-    let book_dir = get_book_dir(args);
-    let mut book = MDBook::load(&book_dir)?;
-
-    if let Some(dest_dir) = args.value_of("dest-dir") {
-        book.config.build.build_dir = dest_dir.into();
-    }
     let chapter: &str = if args.is_present("chapter") {
         args.value_of("chapter").unwrap_or_default()
     } else {
         ""
     };
 
+    let book_dir = get_book_dir(args);
+    let mut book = MDBook::load(&book_dir)?;
+
+    if let Some(dest_dir) = args.value_of("dest-dir") {
+        book.config.build.build_dir = dest_dir.into();
+    }
     book.test(library_paths, chapter)?;
 
     Ok(())

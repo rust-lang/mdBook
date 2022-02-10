@@ -14,7 +14,7 @@ fn mdbook_cli_can_correctly_test_a_passing_book() {
       .stderr(predicates::str::is_match(r##"Testing chapter [^:]*: "([^"]+)[\\/]intro.md""##).unwrap())
       .stderr(predicates::str::is_match(r##"Testing chapter [^:]*: "([^"]+)[\\/]first[\\/]index.md""##).unwrap())
       .stderr(predicates::str::is_match(r##"Testing chapter [^:]*: "([^"]+)[\\/]first[\\/]nested.md""##).unwrap())
-      .stderr(predicates::str::is_match(r##"rustdoc returned an error:\n\n"##).unwrap().not())
+      .stderr(predicates::str::is_match(r##"returned an error:\n\n"##).unwrap().not())
       .stderr(predicates::str::is_match(r##"Nested_Chapter::Rustdoc_include_works_with_anchors_too \(line \d+\) ... FAILED"##).unwrap().not());
 }
 
@@ -29,6 +29,6 @@ fn mdbook_cli_detects_book_with_failing_tests() {
       .stderr(predicates::str::is_match(r##"Testing chapter [^:]*: "([^"]+)[\\/]intro.md""##).unwrap())
       .stderr(predicates::str::is_match(r##"Testing chapter [^:]*: "([^"]+)[\\/]first[\\/]index.md""##).unwrap())
       .stderr(predicates::str::is_match(r##"Testing chapter [^:]*: "([^"]+)[\\/]first[\\/]nested.md""##).unwrap())
-      .stderr(predicates::str::is_match(r##"rustdoc returned an error:\n\n"##).unwrap())
+      .stderr(predicates::str::is_match(r##"returned an error:\n\n"##).unwrap())
       .stderr(predicates::str::is_match(r##"Nested_Chapter::Rustdoc_include_works_with_anchors_too \(line \d+\) ... FAILED"##).unwrap());
 }
