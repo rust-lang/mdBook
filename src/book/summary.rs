@@ -659,7 +659,7 @@ mod tests {
         assert!(parser.parse_title().is_none());
         assert!(matches!(
             parser.next_event(),
-            Some(Event::Start(Tag::Paragraph)),
+            Some(Event::Start(Tag::Paragraph))
         ));
     }
 
