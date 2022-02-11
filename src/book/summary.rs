@@ -657,7 +657,10 @@ mod tests {
         let mut parser = SummaryParser::new(src);
 
         assert!(parser.parse_title().is_none());
-        assert!(matches!(parser.next_event(), Some(Event::Start(Tag::Paragraph))));
+        assert!(matches!(
+            parser.next_event(),
+            Some(Event::Start(Tag::Paragraph)),
+        ));
     }
 
     #[test]
