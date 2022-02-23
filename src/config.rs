@@ -507,6 +507,8 @@ pub struct HtmlConfig {
     /// Playground settings.
     #[serde(alias = "playpen")]
     pub playground: Playground,
+    /// Code settings.
+    pub code: Code,
     /// Print settings.
     pub print: Print,
     /// Don't render section labels.
@@ -560,6 +562,7 @@ impl Default for HtmlConfig {
             additional_js: Vec::new(),
             fold: Fold::default(),
             playground: Playground::default(),
+            code: Code::default(),
             print: Print::default(),
             no_section_label: false,
             search: None,
@@ -639,6 +642,22 @@ impl Default for Playground {
             copyable: true,
             copy_js: true,
             line_numbers: false,
+        }
+    }
+}
+
+/// Configuration for tweaking how the the HTML renderer handles code blocks.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct Code {
+    /// A prefix string to hide lines per language (one or more chars).
+    pub hidelines: HashMap<String, String>,
+}
+
+impl Default for Code {
+    fn default() -> Code {
+        Code {
+            hidelines: HashMap::new(),
         }
     }
 }
