@@ -223,6 +223,17 @@ runnable = true          # displays a run button for rust code
 
 [Ace]: https://ace.c9.io/
 
+### `[output.html.code]`
+
+The `[output.html.code]` table provides options for controlling code blocks.
+
+```toml
+[output.html.code]
+# A prefix string per language (one or more chars).
+# Any line starting with whitespace+prefix is hidden.
+hidelines = { python = "~" }
+```
+
 ### `[output.html.search]`
 
 The `[output.html.search]` table provides options for controlling the built-in text [search].
