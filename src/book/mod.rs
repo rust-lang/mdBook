@@ -245,7 +245,12 @@ impl MDBook {
     }
 
     /// Run `rustdoc` tests on the book, linking against the provided libraries.
-    pub fn test(&mut self, library_paths: Vec<&str>, externs: Vec<&str>, verbose: bool) -> Result<()> {
+    pub fn test(
+        &mut self,
+        library_paths: Vec<&str>,
+        externs: Vec<&str>,
+        verbose: bool,
+    ) -> Result<()> {
         let library_args: Vec<&str> = (0..library_paths.len())
             .map(|_| "-L")
             .zip(library_paths.into_iter())
@@ -287,8 +292,7 @@ impl MDBook {
                 tmpf.write_all(ch.content.as_bytes())?;
 
                 let mut cmd = Command::new("rustdoc");
-                cmd
-                    .arg(&path)
+                cmd.arg(&path)
                     .arg("--test")
                     .args(&library_args)
                     .args(&extern_args)
@@ -306,6 +310,8 @@ impl MDBook {
                             cmd.args(&["--edition", "2021"]);
                         }
                     }
+                } else {
+                    warn!("Edition not set in book.toml [rust] section. Rustdoc will default to 2015, which probably not what you want.");
                 }
 
                 let command = cmd

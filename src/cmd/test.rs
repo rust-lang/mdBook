@@ -51,7 +51,7 @@ pub fn make_subcommand<'help>() -> App<'help> {
         .arg(Arg::with_name("verbose")
             .long("verbose")
             .short("v")
-            .takes_value(false)    
+            .takes_value(false)
             .multiple(false)
             .help("Enables verbose logging with the test command."))
 }
