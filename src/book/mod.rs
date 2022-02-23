@@ -245,12 +245,20 @@ impl MDBook {
     }
 
     /// Run `rustdoc` tests on the book, linking against the provided libraries.
-    pub fn test(&mut self, library_paths: Vec<&str>) -> Result<()> {
+    pub fn test(&mut self, library_paths: Vec<&str>, externs: Vec<&str>, verbose: bool) -> Result<()> {
         let library_args: Vec<&str> = (0..library_paths.len())
             .map(|_| "-L")
             .zip(library_paths.into_iter())
             .flat_map(|x| vec![x.0, x.1])
             .collect();
+
+        let extern_args: Vec<&str> = (0..externs.len())
+            .map(|_| "--extern")
+            .zip(externs.into_iter())
+            .flat_map(|x| vec![x.0, x.1])
+            .collect();
+
+        let verbose_arg = if verbose { vec!["-v"] } else { vec![] };
 
         let temp_dir = TempFileBuilder::new().prefix("mdbook-").tempdir()?;
 
@@ -279,7 +287,12 @@ impl MDBook {
                 tmpf.write_all(ch.content.as_bytes())?;
 
                 let mut cmd = Command::new("rustdoc");
-                cmd.arg(&path).arg("--test").args(&library_args);
+                cmd
+                    .arg(&path)
+                    .arg("--test")
+                    .args(&library_args)
+                    .args(&extern_args)
+                    .args(&verbose_arg);
 
                 if let Some(edition) = self.config.rust.edition {
                     match edition {
@@ -294,6 +307,14 @@ impl MDBook {
                         }
                     }
                 }
+
+                let command = cmd
+                    .get_args()
+                    .map(|x| x.to_string_lossy().into_owned())
+                    .collect::<Vec<String>>()
+                    .join(" ");
+
+                info!("Running `rustdoc {}`", command);
 
                 let output = cmd.output()?;
 
