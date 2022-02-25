@@ -1,55 +1,14 @@
 # Command Line Tool
 
-mdBook can be used either as a command line tool or a [Rust
-crate](https://crates.io/crates/mdbook). Let's focus on the command line tool
-capabilities first.
+The `mdbook` command-line tool is used to create and build books.
+After you have [installed](../guide/installation.md) `mdbook`, you can run the `mdbook help` command in your terminal to view the available commands.
 
-## Install From Binaries
+This following sections provide in-depth information on the different commands available.
 
-Precompiled binaries are provided for major platforms on a best-effort basis.
-Visit [the releases page](https://github.com/rust-lang/mdBook/releases)
-to download the appropriate version for your platform.
-
-## Install From Source
-
-mdBook can also be installed by compiling the source code on your local machine.
-
-### Pre-requisite
-
-mdBook is written in **[Rust](https://www.rust-lang.org/)** and therefore needs
-to be compiled with **Cargo**. If you haven't already installed Rust, please go
-ahead and [install it](https://www.rust-lang.org/tools/install) now.
-
-### Install Crates.io version
-
-Installing mdBook is relatively easy if you already have Rust and Cargo
-installed. You just have to type this snippet in your terminal:
-
-```bash
-cargo install mdbook
-```
-
-This will fetch the source code for the latest release from
-[Crates.io](https://crates.io/) and compile it. You will have to add Cargo's
-`bin` directory to your `PATH`.
-
-Run `mdbook help` in your terminal to verify if it works. Congratulations, you
-have installed mdBook!
-
-
-### Install Git version
-
-The **[git version](https://github.com/rust-lang/mdBook)** contains all
-the latest bug-fixes and features, that will be released in the next version on
-**Crates.io**, if you can't wait until the next release. You can build the git
-version yourself. Open your terminal and navigate to the directory of you
-choice. We need to clone the git repository and then build it with Cargo.
-
-```bash
-git clone --depth=1 https://github.com/rust-lang/mdBook.git
-cd mdBook
-cargo build --release
-```
-
-The executable `mdbook` will be in the `./target/release` folder, this should be
-added to the path.
+* [`mdbook init <directory>`](init.md) — Creates a new book with minimal boilerplate to start with.
+* [`mdbook build`](build.md) — Renders the book.
+* [`mdbook watch`](watch.md) — Rebuilds the book any time a source file changes.
+* [`mdbook serve`](serve.md) — Runs a web server to view the book, and rebuilds on changes.
+* [`mdbook test`](test.md) — Tests Rust code samples.
+* [`mdbook clean`](clean.md) — Deletes the rendered output.
+* [`mdbook completions`](completions.md) — Support for shell auto-completion.

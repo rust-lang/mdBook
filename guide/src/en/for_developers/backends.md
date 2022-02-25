@@ -5,22 +5,16 @@ rendering process. This program is passed a JSON representation of the book and
 configuration information via `stdin`. Once the backend receives this
 information it is free to do whatever it wants.
 
-There are already several alternative backends on GitHub which can be used as a
-rough example of how this is accomplished in practice.
+See [Configuring Renderers](../format/configuration/renderers.md) for more information about using backends.
 
-- [mdbook-linkcheck] - a simple program for verifying the book doesn't contain
-  any broken links
-- [mdbook-epub] - an EPUB renderer
-- [mdbook-test] - a program to run the book's contents through [rust-skeptic] to
-  verify everything compiles and runs correctly (similar to `rustdoc --test`)
-- [mdbook-man] - generate manual pages from the book
+The community has developed several backends.
+See the [Third Party Plugins] wiki page for a list of available backends.
+
+## Setting Up
 
 This page will step you through creating your own alternative backend in the form
 of a simple word counting program. Although it will be written in Rust, there's
 no reason why it couldn't be accomplished using something like Python or Ruby.
-
-
-## Setting Up
 
 First you'll want to create a new binary program and add `mdbook` as a
 dependency.
@@ -330,39 +324,6 @@ generation or a warning).
 All environment variables are passed through to the backend, allowing you to use
 the usual `RUST_LOG` to control logging verbosity.
 
-## Handling missing backends
-
-If you enable a backend that isn't installed, the default behavior is to throw an error:
-
-```text
-The command `mdbook-wordcount` wasn't found, is the "wordcount" backend installed?
-If you want to ignore this error when the "wordcount" backend is not installed,
-set `optional = true` in the `[output.wordcount]` section of the book.toml configuration file.
-```
-
-This behavior can be changed by marking the backend as optional.
-
-```diff
-  [book]
-  title = "mdBook Documentation"
-  description = "Create book from markdown files. Like Gitbook but implemented in Rust"
-  authors = ["Mathieu David", "Michael-F-Bryan"]
-
-  [output.html]
-
-  [output.wordcount]
-  command = "python /path/to/wordcount.py"
-+ optional = true
-```
-
-This demotes the error to a warning, and it will instead look like this:
-
-```text
-The command was not found, but was marked as optional.
-    Command: wordcount
-```
-
-
 ## Wrapping Up
 
 Although contrived, hopefully this example was enough to show how you'd create
@@ -375,11 +336,7 @@ as a good example of how it's done in real life, so feel free to skim through
 the source code or ask questions.
 
 
-[mdbook-linkcheck]: https://github.com/Michael-F-Bryan/mdbook-linkcheck
-[mdbook-epub]: https://github.com/Michael-F-Bryan/mdbook-epub
-[mdbook-test]: https://github.com/Michael-F-Bryan/mdbook-test
-[mdbook-man]: https://github.com/vv9k/mdbook-man
-[rust-skeptic]: https://github.com/budziq/rust-skeptic
+[Third Party Plugins]: https://github.com/rust-lang/mdBook/wiki/Third-party-plugins
 [`RenderContext`]: https://docs.rs/mdbook/*/mdbook/renderer/struct.RenderContext.html
 [`RenderContext::from_json()`]: https://docs.rs/mdbook/*/mdbook/renderer/struct.RenderContext.html#method.from_json
 [`semver`]: https://crates.io/crates/semver

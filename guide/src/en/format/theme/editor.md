@@ -12,12 +12,14 @@ editable = true
 To make a specific block available for editing, the attribute `editable` needs
 to be added to it:
 
-<pre><code class="language-markdown">```rust,editable
+~~~markdown
+```rust,editable
 fn main() {
     let number = 5;
     print!("{}", number);
 }
-```</code></pre>
+```
+~~~
 
 The above will result in this editable playground:
 

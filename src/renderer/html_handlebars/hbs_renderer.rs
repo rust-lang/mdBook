@@ -261,7 +261,7 @@ impl HtmlHandlebars {
             ctx.html_config.curly_quotes,
             Some(&md_ctx),
         );
-        if !ctx.is_index {
+        if !ctx.is_index && ctx.html_config.print.page_break {
             // Add page break between chapters
             // See https://developer.mozilla.org/en-US/docs/Web/CSS/break-before and https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-before
             // Add both two CSS properties because of the compatibility issue

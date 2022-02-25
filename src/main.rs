@@ -142,7 +142,7 @@ fn get_build_opts(args: &ArgMatches) -> BuildOpts {
 
 fn open<P: AsRef<OsStr>>(path: P) {
     info!("Opening web browser");
-    if let Err(e) = open::that(path) {
+    if let Err(e) = opener::open(path) {
         error!("Error opening web browser: {}", e);
     }
 }
