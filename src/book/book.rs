@@ -128,6 +128,7 @@ pub struct Book {
     /// The sections in this book.
     pub sections: Vec<BookItem>,
     /// Chapter title overrides for this book.
+    #[serde(default)]
     pub chapter_titles: HashMap<PathBuf, String>,
     __non_exhaustive: (),
 }
