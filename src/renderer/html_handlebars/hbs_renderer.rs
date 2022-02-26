@@ -824,62 +824,76 @@ fn add_playground_pre(
             let text = &caps[1];
             let classes = &caps[2];
             let code = &caps[3];
+            let lang_class = format!("language-{}", playground_config.language);
 
-            if classes.contains("language-rust") {
-                if (!classes.contains("ignore")
-                    && !classes.contains("noplayground")
-                    && !classes.contains("noplaypen"))
-                    || classes.contains("mdbook-runnable")
-                {
-                    let contains_e2015 = classes.contains("edition2015");
-                    let contains_e2018 = classes.contains("edition2018");
-                    let contains_e2021 = classes.contains("edition2021");
-                    let edition_class = if contains_e2015 || contains_e2018 || contains_e2021 {
-                        // the user forced edition, we should not overwrite it
-                        ""
-                    } else {
-                        match edition {
-                            Some(RustEdition::E2015) => " edition2015",
-                            Some(RustEdition::E2018) => " edition2018",
-                            Some(RustEdition::E2021) => " edition2021",
-                            None => "",
-                        }
-                    };
-
-                    // wrap the contents in an external pre block
-                    format!(
-                        "<pre class=\"playground\"><code class=\"{}{}\">{}</code></pre>",
-                        classes,
-                        edition_class,
-                        {
-                            let content: Cow<'_, str> = if playground_config.editable
-                                && classes.contains("editable")
-                                || text.contains("fn main")
-                                || text.contains("quick_main!")
-                            {
-                                code.into()
-                            } else {
-                                // we need to inject our own main
-                                let (attrs, code) = partition_source(code);
-
-                                format!(
-                                    "\n# #![allow(unused)]\n{}#fn main() {{\n{}#}}",
-                                    attrs, code
-                                )
-                                .into()
-                            };
-                            hide_lines(&content)
-                        }
-                    )
+            if classes.contains(lang_class.as_str()) {
+                if playground_config.language == "rust" {
+                    add_playground_pre_rust(playground_config, edition, classes, text, code)
                 } else {
-                    format!("<code class=\"{}\">{}</code>", classes, hide_lines(code))
+                    format!(
+                        "<pre class=\"playground\"><code class=\"{}\">{}</code></pre>",
+                        classes, code
+                    )
                 }
             } else {
-                // not language-rust, so no-op
+                // Language doens't match playground config, so no-op
                 text.to_owned()
             }
         })
         .into_owned()
+}
+
+fn add_playground_pre_rust(
+    playground_config: &Playground,
+    edition: Option<RustEdition>,
+    classes: &str,
+    text: &str,
+    code: &str,
+) -> String {
+    if (!classes.contains("ignore")
+        && !classes.contains("noplayground")
+        && !classes.contains("noplaypen"))
+        || classes.contains("mdbook-runnable")
+    {
+        let contains_e2015 = classes.contains("edition2015");
+        let contains_e2018 = classes.contains("edition2018");
+        let contains_e2021 = classes.contains("edition2021");
+        let edition_class = if contains_e2015 || contains_e2018 || contains_e2021 {
+            // the user forced edition, we should not overwrite it
+            ""
+        } else {
+            match edition {
+                Some(RustEdition::E2015) => " edition2015",
+                Some(RustEdition::E2018) => " edition2018",
+                Some(RustEdition::E2021) => " edition2021",
+                None => "",
+            }
+        };
+        let all_classes = format!("{}{}", classes, edition_class);
+
+        // wrap the contents in an external pre block
+        format!(
+            "<pre class=\"playground\"><code class=\"{}\">{}</code></pre>",
+            all_classes,
+            {
+                let content: Cow<'_, str> = if playground_config.editable
+                    && classes.contains("editable")
+                    || text.contains("fn main")
+                    || text.contains("quick_main!")
+                {
+                    code.into()
+                } else {
+                    // we need to inject our own main
+                    let (attrs, code) = partition_source(code);
+
+                    format!("\n# #![allow(unused)]\n{}#fn main() {{\n{}#}}", attrs, code).into()
+                };
+                hide_lines(&content)
+            }
+        )
+    } else {
+        format!("<code class=\"{}\">{}</code>", classes, hide_lines(code))
+    }
 }
 
 lazy_static! {
