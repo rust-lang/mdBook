@@ -631,7 +631,7 @@ pub struct Playground {
     /// Display line numbers on playground snippets. Default: `false`.
     pub line_numbers: bool,
     /// Set's the language the playground will work with
-    /// TODO: Turn this into an array when there's support for multiple languages
+    /// TODO: Use an array when there's support for multiple languages simultaneously
     pub language: String,
 }
 

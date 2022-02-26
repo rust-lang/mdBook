@@ -843,6 +843,7 @@ fn add_playground_pre(
         .into_owned()
 }
 
+/// Ensures proper formatting specifically for rust code
 fn add_playground_pre_rust(
     playground_config: &Playground,
     edition: Option<RustEdition>,
