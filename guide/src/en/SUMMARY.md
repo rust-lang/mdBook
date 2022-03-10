@@ -25,6 +25,7 @@
         - [General](format/configuration/general.md)
         - [Preprocessors](format/configuration/preprocessors.md)
         - [Renderers](format/configuration/renderers.md)
+        - [Localization](format/configuration/localization.md)
         - [Environment Variables](format/configuration/environment-variables.md)
     - [Theme](format/theme/README.md)
         - [index.hbs](format/theme/index-hbs.md)

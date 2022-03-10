@@ -18,13 +18,13 @@ mod html_handlebars;
 mod markdown_renderer;
 
 use shlex::Shlex;
-use std::collections::HashMap;
 use std::fs;
 use std::io::{self, ErrorKind, Read};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
-use crate::book::Book;
+use crate::book::LoadedBook;
+use crate::build_opts::BuildOpts;
 use crate::config::Config;
 use crate::errors::*;
 use toml::Value;
@@ -56,8 +56,12 @@ pub struct RenderContext {
     pub version: String,
     /// The book's root directory.
     pub root: PathBuf,
-    /// A loaded representation of the book itself.
-    pub book: Book,
+    /// A loaded representation of the book itself. This can either be a single
+    /// book or a set of localized books, to allow for the renderer to insert
+    /// its own logic for handling switching between the localizations.
+    pub book: LoadedBook,
+    /// The build options passed from the frontend.
+    pub build_opts: BuildOpts,
     /// The loaded configuration file.
     pub config: Config,
     /// Where the renderer *must* put any build artefacts generated. To allow
@@ -65,25 +69,29 @@ pub struct RenderContext {
     /// guaranteed to be empty or even exist.
     pub destination: PathBuf,
     #[serde(skip)]
-    pub(crate) chapter_titles: HashMap<PathBuf, String>,
-    #[serde(skip)]
     __non_exhaustive: (),
 }
 
 impl RenderContext {
     /// Create a new `RenderContext`.
-    pub fn new<P, Q>(root: P, book: Book, config: Config, destination: Q) -> RenderContext
+    pub fn new<P, Q>(
+        root: P,
+        book: LoadedBook,
+        build_opts: BuildOpts,
+        config: Config,
+        destination: Q,
+    ) -> RenderContext
     where
         P: Into<PathBuf>,
         Q: Into<PathBuf>,
     {
         RenderContext {
             book,
+            build_opts,
             config,
             version: crate::MDBOOK_VERSION.to_string(),
             root: root.into(),
             destination: destination.into(),
-            chapter_titles: HashMap::new(),
             __non_exhaustive: (),
         }
     }

@@ -84,7 +84,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     }
 
     builder.build()?;
-    println!("\nAll done, no errors...");
+    println!("\nCreated new book at {}", builder.source_dir().display());
 
     Ok(())
 }

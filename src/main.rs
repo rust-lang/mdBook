@@ -8,6 +8,7 @@ use chrono::Local;
 use clap::{App, AppSettings, Arg, ArgMatches, Shell, SubCommand};
 use env_logger::Builder;
 use log::LevelFilter;
+use mdbook::build_opts::BuildOpts;
 use mdbook::utils;
 use std::env;
 use std::ffi::OsStr;
@@ -128,6 +129,14 @@ fn get_book_dir(args: &ArgMatches) -> PathBuf {
         }
     } else {
         env::current_dir().expect("Unable to determine the current directory")
+    }
+}
+
+fn get_build_opts(args: &ArgMatches) -> BuildOpts {
+    let language = args.value_of("language");
+
+    BuildOpts {
+        language_ident: language.map(String::from),
     }
 }
 

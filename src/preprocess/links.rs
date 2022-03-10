@@ -42,19 +42,34 @@ impl Preprocessor for LinkPreprocessor {
     }
 
     fn run(&self, ctx: &PreprocessorContext, mut book: Book) -> Result<Book> {
-        let src_dir = ctx.root.join(&ctx.config.book.src);
+        let src_dir = ctx
+            .config
+            .get_localized_src_path(ctx.language_ident.as_ref())
+            .unwrap();
+        let src_dir = ctx.root.join(src_dir);
+
+        let fallback_src_dir = ctx
+            .config
+            .get_localized_src_path(ctx.config.default_language().as_ref())
+            .unwrap();
+        let fallback_src_dir = ctx.root.join(fallback_src_dir);
 
         book.for_each_mut(|section: &mut BookItem| {
             if let BookItem::Chapter(ref mut ch) = *section {
                 if let Some(ref chapter_path) = ch.path {
-                    let base = chapter_path
-                        .parent()
-                        .map(|dir| src_dir.join(dir))
-                        .expect("All book items have a parent");
+                    let parent = chapter_path.parent().expect("All book items have a parent");
+                    let base = src_dir.join(parent);
+                    let fallback = fallback_src_dir.join(parent);
 
                     let mut chapter_title = ch.name.clone();
-                    let content =
-                        replace_all(&ch.content, base, chapter_path, 0, &mut chapter_title);
+                    let content = replace_all(
+                        &ch.content,
+                        base,
+                        Some(fallback),
+                        chapter_path,
+                        0,
+                        &mut chapter_title,
+                    );
                     ch.content = content;
                     if chapter_title != ch.name {
                         ctx.chapter_titles
@@ -72,6 +87,7 @@ impl Preprocessor for LinkPreprocessor {
 fn replace_all<P1, P2>(
     s: &str,
     path: P1,
+    fallback: Option<P1>,
     source: P2,
     depth: usize,
     chapter_title: &mut String,
@@ -84,6 +100,7 @@ where
     // the indices after that will not correspond,
     // we therefore have to store the difference to correct this
     let path = path.as_ref();
+    let fallback = fallback.as_ref();
     let source = source.as_ref();
     let mut previous_end_index = 0;
     let mut replaced = String::new();
@@ -91,13 +108,14 @@ where
     for link in find_links(s) {
         replaced.push_str(&s[previous_end_index..link.start_index]);
 
-        match link.render_with_path(&path, chapter_title) {
+        match link.render_with_path(&path, fallback, chapter_title) {
             Ok(new_content) => {
                 if depth < MAX_LINK_NESTED_DEPTH {
                     if let Some(rel_path) = link.link_type.relative_path(path) {
                         replaced.push_str(&replace_all(
                             &new_content,
                             rel_path,
+                            None,
                             source,
                             depth + 1,
                             chapter_title,
@@ -316,9 +334,10 @@ impl<'a> Link<'a> {
         })
     }
 
-    fn render_with_path<P: AsRef<Path>>(
+    fn render_with_path<P1: AsRef<Path>, P2: AsRef<Path>>(
         &self,
-        base: P,
+        base: P1,
+        fallback: Option<P2>,
         chapter_title: &mut String,
     ) -> Result<String> {
         let base = base.as_ref();
@@ -326,7 +345,20 @@ impl<'a> Link<'a> {
             // omit the escape char
             LinkType::Escaped => Ok((&self.link_text[1..]).to_owned()),
             LinkType::Include(ref pat, ref range_or_anchor) => {
-                let target = base.join(pat);
+                let mut target = base.join(pat);
+
+                if !target.exists() {
+                    if let Some(fallback) = fallback {
+                        let fallback_target = fallback.as_ref().join(pat);
+                        if fallback_target.exists() {
+                            debug!(
+                                "Included file fallback: {:?} => {:?}",
+                                target, fallback_target
+                            );
+                            target = fallback_target;
+                        }
+                    }
+                }
 
                 fs::read_to_string(&target)
                     .map(|s| match range_or_anchor {
@@ -342,7 +374,20 @@ impl<'a> Link<'a> {
                     })
             }
             LinkType::RustdocInclude(ref pat, ref range_or_anchor) => {
-                let target = base.join(pat);
+                let mut target = base.join(pat);
+
+                if !target.exists() {
+                    if let Some(fallback) = fallback {
+                        let fallback_target = fallback.as_ref().join(pat);
+                        if fallback_target.exists() {
+                            debug!(
+                                "Included file fallback: {:?} => {:?}",
+                                target, fallback_target
+                            );
+                            target = fallback_target;
+                        }
+                    }
+                }
 
                 fs::read_to_string(&target)
                     .map(|s| match range_or_anchor {
@@ -362,7 +407,20 @@ impl<'a> Link<'a> {
                     })
             }
             LinkType::Playground(ref pat, ref attrs) => {
-                let target = base.join(pat);
+                let mut target = base.join(pat);
+
+                if !target.exists() {
+                    if let Some(fallback) = fallback {
+                        let fallback_target = fallback.as_ref().join(pat);
+                        if fallback_target.exists() {
+                            debug!(
+                                "Included file fallback: {:?} => {:?}",
+                                target, fallback_target
+                            );
+                            target = fallback_target;
+                        }
+                    }
+                }
 
                 let mut contents = fs::read_to_string(&target).with_context(|| {
                     format!(
@@ -440,7 +498,7 @@ mod tests {
         {{#include file.rs}} << an escaped link!
         ```";
         let mut chapter_title = "test_replace_all_escaped".to_owned();
-        assert_eq!(replace_all(start, "", "", 0, &mut chapter_title), end);
+        assert_eq!(replace_all(start, "", None, "", 0, &mut chapter_title), end);
     }
 
     #[test]
@@ -452,7 +510,7 @@ mod tests {
         # My Chapter
         ";
         let mut chapter_title = "test_set_chapter_title".to_owned();
-        assert_eq!(replace_all(start, "", "", 0, &mut chapter_title), end);
+        assert_eq!(replace_all(start, "", None, "", 0, &mut chapter_title), end);
         assert_eq!(chapter_title, "My Title");
     }
 
