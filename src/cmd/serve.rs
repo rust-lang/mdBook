@@ -62,11 +62,10 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     let address = format!("{}:{}", hostname, port);
 
-    let livereload_url = format!("ws://{}/{}", address, LIVE_RELOAD_ENDPOINT);
     let update_config = |book: &mut MDBook| {
         book.config
-            .set("output.html.livereload-url", &livereload_url)
-            .expect("livereload-url update failed");
+            .set("output.html.live-reload-endpoint", &LIVE_RELOAD_ENDPOINT)
+            .expect("live-reload-endpoint update failed");
         if let Some(dest_dir) = args.value_of("dest-dir") {
             book.config.build.build_dir = dest_dir.into();
         }

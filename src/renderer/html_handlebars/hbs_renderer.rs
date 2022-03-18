@@ -606,8 +606,8 @@ fn make_data(
     if theme.favicon_svg.is_some() {
         data.insert("favicon_svg".to_owned(), json!("favicon.svg"));
     }
-    if let Some(ref livereload) = html_config.livereload_url {
-        data.insert("livereload".to_owned(), json!(livereload));
+    if let Some(ref live_reload_endpoint) = html_config.live_reload_endpoint {
+        data.insert("live_reload_endpoint".to_owned(), json!(live_reload_endpoint));
     }
 
     let default_theme = match html_config.default_theme {
