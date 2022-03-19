@@ -493,6 +493,8 @@ pub struct HtmlConfig {
     pub curly_quotes: bool,
     /// Should mathjax be enabled?
     pub mathjax_support: bool,
+    /// Should mathjax enable `$…$` inline math? This option has no effect if mathjax is not enabled.
+    pub inline_math_dollar_sign: bool,
     /// Whether to fonts.css and respective font files to the output directory.
     pub copy_fonts: bool,
     /// An optional google analytics code.
@@ -554,6 +556,7 @@ impl Default for HtmlConfig {
             preferred_dark_theme: None,
             curly_quotes: false,
             mathjax_support: false,
+            inline_math_dollar_sign: false,
             copy_fonts: true,
             google_analytics: None,
             additional_css: Vec::new(),

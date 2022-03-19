@@ -634,6 +634,10 @@ fn make_data(
         data.insert("mathjax_support".to_owned(), json!(true));
     }
 
+    if html_config.inline_math_dollar_sign {
+        data.insert("inline_math_dollar_sign".to_owned(), json!(true));
+    }
+
     if html_config.copy_fonts {
         data.insert("copy_fonts".to_owned(), json!(true));
     }

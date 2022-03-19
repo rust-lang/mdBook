@@ -52,6 +52,12 @@
         {{#if mathjax_support}}
         <!-- MathJax -->
         <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+            {{#if inline_math_dollar_sign}}
+            <!-- use $...$ for inline math -->
+            <script type="text/x-mathjax-config">
+                MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"]]} })
+            </script>
+            {{/if}}
         {{/if}}
     </head>
     <body>
