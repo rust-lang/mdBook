@@ -1,154 +1,121 @@
 # Running `mdbook` in Continuous Integration
 
-While the following examples use Travis CI, their principles should
-straightforwardly transfer to other continuous integration providers as well.
+There are a variety of services such as [GitHub Actions] or [GitLab CI/CD] which can be used to test and deploy your book automatically.
 
-## Ensuring Your Book Builds and Tests Pass
+The following provides some general guidelines on how to configure your service to run mdBook.
+Specific recipes can be found at the [Automated Deployment] wiki page.
 
-Here is a sample Travis CI `.travis.yml` configuration that ensures `mdbook
-build` and `mdbook test` run successfully. The key to fast CI turnaround times
-is caching `mdbook` installs, so that you aren't compiling `mdbook` on every CI
-run.
+[GitHub Actions]: https://docs.github.com/en/actions
+[GitLab CI/CD]: https://docs.gitlab.com/ee/ci/
+[Automated Deployment]: https://github.com/rust-lang/mdBook/wiki/Automated-Deployment
 
-```yaml
-language: rust
-sudo: false
+## Installing mdBook
 
-cache:
-  - cargo
+There are several different strategies for installing mdBook.
+The particular method depends on your needs and preferences.
 
-rust:
-  - stable
+### Pre-compiled binaries
 
-before_script:
-  - (test -x $HOME/.cargo/bin/cargo-install-update || cargo install cargo-update)
-  - (test -x $HOME/.cargo/bin/mdbook || cargo install --vers "^0.3" mdbook)
-  - cargo install-update -a
+Perhaps the easiest method is to use the pre-compiled binaries found on the [GitHub Releases page][releases].
+A simple approach would be to use the popular `curl` CLI tool to download the executable:
 
-script:
-  - mdbook build && mdbook test # In case of custom book path: mdbook build path/to/mybook && mdbook test path/to/mybook
+```sh
+mkdir bin
+curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.15/mdbook-v0.4.15-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=bin
+bin/mdbook build
 ```
 
-## Deploying Your Book to GitHub Pages
+Some considerations for this approach:
 
-Following these instructions will result in your book being published to GitHub
-pages after a successful CI run on your repository's `master` branch.
+* This is relatively fast, and does not necessarily require dealing with caching.
+* This does not require installing Rust.
+* Specifying a specific URL means you have to manually update your script to get a new version.
+  This may be a benefit if you want to lock to a specific version.
+  However, some users prefer to automatically get a newer version when they are published.
+* You are reliant on the GitHub CDN being available.
 
-First, create a new GitHub "Personal Access Token" with the "public_repo"
-permissions (or "repo" for private repositories). Go to your repository's Travis
-CI settings page and add an environment variable named `GITHUB_TOKEN` that is
-marked secure and *not* shown in the logs.
+[releases]: https://github.com/rust-lang/mdBook/releases
 
-Whilst still in your repository's settings page, navigate to Options and change the 
-Source on GitHub pages to `gh-pages`.
+### Building from source
 
-Then, append this snippet to your `.travis.yml` and update the path to the
-`book` directory:
+Building from source will require having Rust installed.
+Some services have Rust pre-installed, but if your service does not, you will need to add a step to install it.
 
-```yaml
-deploy:
-  provider: pages
-  skip-cleanup: true
-  github-token: $GITHUB_TOKEN
-  local-dir: book # In case of custom book path: path/to/mybook/book
-  keep-history: false
-  on:
-    branch: main
+After Rust is installed, `cargo install` can be used to build and install mdBook.
+We recommend using a SemVer version specifier so that you get the latest **non-breaking** version of mdBook.
+For example:
+
+```sh
+cargo install mdbook --no-default-features --features search --vers "^0.4" --locked
 ```
 
-That's it!
+This includes several recommended options:
 
-Note: Travis has a new [dplv2](https://blog.travis-ci.com/2019-08-27-deployment-tooling-dpl-v2-preview-release) configuration that is currently in beta. To use this new format, update your `.travis.yml` file to:
+* `--no-default-features` — Disables features like the HTTP server used by `mdbook serve` that is likely not needed on CI.
+  This will speed up the build time significantly.
+* `--features search` — Disabling default features means you should then manually enable features that you want, such as the built-in [search] capability.
+* `--vers "^0.4"` — This will install the most recent version of the `0.4` series.
+  However, versions after like `0.5.0` won't be installed, as they may break your build.
+  Cargo will automatically upgrade mdBook if you have an older version already installed.
+* `--locked` — This will use the dependencies that were used when mdBook was released.
+  Without `--locked`, it will use the latest version of all dependencies, which may include some fixes since the last release, but may also (rarely) cause build problems.
 
-```yaml
-language: rust
-os: linux
-dist: xenial
+You will likely want to investigate caching options, as building mdBook can be somewhat slow.
 
-cache:
-  - cargo
+[search]: guide/reading.md#search
 
-rust:
-  - stable
+## Running tests
 
-before_script:
-  - (test -x $HOME/.cargo/bin/cargo-install-update || cargo install cargo-update)
-  - (test -x $HOME/.cargo/bin/mdbook || cargo install --vers "^0.3" mdbook)
-  - cargo install-update -a
+You may want to run tests using [`mdbook test`] every time you push a change or create a pull request.
+This can be used to validate Rust code examples in the book.
 
-script:
-  - mdbook build && mdbook test # In case of custom book path: mdbook build path/to/mybook && mdbook test path/to/mybook
-  
-deploy:
-  provider: pages
-  strategy: git
-  edge: true
-  cleanup: false
-  github-token: $GITHUB_TOKEN
-  local-dir: book # In case of custom book path: path/to/mybook/book
-  keep-history: false
-  on:
-    branch: main
-  target_branch: gh-pages
+This will require having Rust installed.
+Some services have Rust pre-installed, but if your service does not, you will need to add a step to install it.
+
+Other than making sure the appropriate version of Rust is installed, there's not much more than just running `mdbook test` from the book directory.
+
+You may also want to consider running other kinds of tests, like [mdbook-linkcheck] which will check for broken links.
+Or if you have your own style checks, spell checker, or any other tests it might be good to run them in CI.
+
+[`mdbook test`]: cli/test.md
+[mdbook-linkcheck]: https://github.com/Michael-F-Bryan/mdbook-linkcheck#continuous-integration
+
+## Deploying
+
+You may want to automatically deploy your book.
+Some may want to do this with every time a change is pushed, and others may want to only deploy when a specific release is tagged.
+
+You'll also need to understand the specifics on how to push a change to your web service.
+For example, [GitHub Pages] just requires committing the output onto a specific git branch.
+Other services may require using something like SSH to connect to a remote server.
+
+The basic outline is that you need to run `mdbook build` to generate the output, and then transfer the files (which are in the `book` directory) to the correct location.
+
+You may then want to consider if you need to invalidate any caches on your web service.
+
+See the [Automated Deployment] wiki page for examples of various different services.
+
+[GitHub Pages]: https://docs.github.com/en/pages
+
+### 404 handling
+
+mdBook automatically generates a 404 page to be used for broken links.
+The default output is a file named `404.html` at the root of the book.
+Some services like [GitHub Pages] will automatically use this page for broken links.
+For other services, you may want to consider configuring the web server to use this page as it will provide the reader navigation to get back to the book.
+
+If your book is not deployed at the root of the domain, then you should set the [`output.html.site-url`] setting so that the 404 page works correctly.
+It needs to know where the book is deployed in order to load the static files (like CSS) correctly.
+For example, this guide is deployed at <https://rust-lang.github.io/mdBook/>, and the `site-url` setting is configured like this:
+
+```toml
+# book.toml
+[output.html]
+site-url = "/mdBook/"
 ```
 
-### Deploying to GitHub Pages manually
+You can customize the look of the 404 page by creating a file named `src/404.md` in your book.
+If you want to use a different filename, you can set [`output.html.input-404`] to a different filename.
 
-If your CI doesn't support GitHub pages, or you're deploying somewhere else
-with integrations such as Github Pages:
- *note: you may want to use different tmp dirs*:
-
-```console
-$> git worktree add /tmp/book gh-pages
-$> mdbook build
-$> rm -rf /tmp/book/* # this won't delete the .git directory
-$> cp -rp book/* /tmp/book/
-$> cd /tmp/book
-$> git add -A
-$> git commit 'new book message'
-$> git push origin gh-pages
-$> cd -
-```
-
-Or put this into a Makefile rule:
-
-```makefile
-.PHONY: deploy
-deploy: book
-	@echo "====> deploying to github"
-	git worktree add /tmp/book gh-pages
-	rm -rf /tmp/book/*
-	cp -rp book/* /tmp/book/
-	cd /tmp/book && \
-		git add -A && \
-		git commit -m "deployed on $(shell date) by ${USER}" && \
-		git push origin gh-pages
-```
-
-## Deploying Your Book to GitLab Pages
-Inside your repository's project root, create a file named `.gitlab-ci.yml` with the following contents:
-```yml
-stages:
-    - deploy
-
-pages:
-  stage: deploy
-  image: rust
-  variables:
-    CARGO_HOME: $CI_PROJECT_DIR/cargo
-  before_script:
-    - export PATH="$PATH:$CARGO_HOME/bin"
-    - mdbook --version || cargo install mdbook
-  script:
-    - mdbook build -d public
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == "master"'
-  artifacts:
-    paths:
-      - public
-  cache:
-    paths:
-      - $CARGO_HOME/bin
-```
-
-After you commit and push this new file, GitLab CI will run and your book will be available!
+[`output.html.site-url`]: format/configuration/renderers.md#html-renderer-options
+[`output.html.input-404`]: format/configuration/renderers.md#html-renderer-options

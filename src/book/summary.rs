@@ -1,6 +1,6 @@
 use crate::errors::*;
 use memchr::{self, Memchr};
-use pulldown_cmark::{self, Event, Tag};
+use pulldown_cmark::{self, Event, HeadingLevel, Tag};
 use std::fmt::{self, Display, Formatter};
 use std::iter::FromIterator;
 use std::ops::{Deref, DerefMut};
@@ -161,7 +161,7 @@ impl From<Link> for SummaryItem {
 /// > match the following regex: "[^<>\n[]]+".
 struct SummaryParser<'a> {
     src: &'a str,
-    stream: pulldown_cmark::OffsetIter<'a>,
+    stream: pulldown_cmark::OffsetIter<'a, 'a>,
     offset: usize,
 
     /// We can't actually put an event back into the `OffsetIter` stream, so instead we store it
@@ -263,7 +263,7 @@ impl<'a> SummaryParser<'a> {
         loop {
             match self.next_event() {
                 Some(ev @ Event::Start(Tag::List(..)))
-                | Some(ev @ Event::Start(Tag::Heading(1))) => {
+                | Some(ev @ Event::Start(Tag::Heading(HeadingLevel::H1, ..))) => {
                     if is_prefix {
                         // we've finished prefix chapters and are at the start
                         // of the numbered section.
@@ -302,10 +302,10 @@ impl<'a> SummaryParser<'a> {
                     break;
                 }
 
-                Some(Event::Start(Tag::Heading(1))) => {
+                Some(Event::Start(Tag::Heading(HeadingLevel::H1, ..))) => {
                     debug!("Found a h1 in the SUMMARY");
 
-                    let tags = collect_events!(self.stream, end Tag::Heading(1));
+                    let tags = collect_events!(self.stream, end Tag::Heading(HeadingLevel::H1, ..));
                     Some(stringify_events(tags))
                 }
 
@@ -375,7 +375,7 @@ impl<'a> SummaryParser<'a> {
                 }
                 // The expectation is that pulldown cmark will terminate a paragraph before a new
                 // heading, so we can always count on this to return without skipping headings.
-                Some(ev @ Event::Start(Tag::Heading(1))) => {
+                Some(ev @ Event::Start(Tag::Heading(HeadingLevel::H1, ..))) => {
                     // we're starting a new part
                     self.back(ev);
                     break;
@@ -527,10 +527,10 @@ impl<'a> SummaryParser<'a> {
     fn parse_title(&mut self) -> Option<String> {
         loop {
             match self.next_event() {
-                Some(Event::Start(Tag::Heading(1))) => {
+                Some(Event::Start(Tag::Heading(HeadingLevel::H1, ..))) => {
                     debug!("Found a h1 in the SUMMARY");
 
-                    let tags = collect_events!(self.stream, end Tag::Heading(1));
+                    let tags = collect_events!(self.stream, end Tag::Heading(HeadingLevel::H1, ..));
                     return Some(stringify_events(tags));
                 }
                 // Skip a HTML element such as a comment line.

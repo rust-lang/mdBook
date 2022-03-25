@@ -1,5 +1,37 @@
 # Changelog
 
+## mdBook 0.4.15
+[5eb7d46...68a5c09](https://github.com/rust-lang/mdBook/compare/5eb7d46...68a5c09)
+
+### Changed
+- Major update to expand the documentation located at <https://rust-lang.github.io/mdBook/>.
+  [#1709](https://github.com/rust-lang/mdBook/pull/1709)
+  [#1710](https://github.com/rust-lang/mdBook/pull/1710)
+- Updated the markdown parser with various fixes for common-mark compliance.
+  [#1712](https://github.com/rust-lang/mdBook/pull/1712)
+
+## mdBook 0.4.14
+[ffa8284...c9b6be8](https://github.com/rust-lang/mdBook/compare/ffa8284...c9b6be8)
+
+### Added
+- The 2021 Rust edition option has been stabilized.
+  [#1642](https://github.com/rust-lang/mdBook/pull/1642)
+
+### Changed
+- Header anchors no longer include any HTML tags. Previously only a small
+  subset were excluded.
+  [#1683](https://github.com/rust-lang/mdBook/pull/1683)
+- Deprecated the google-analytics option. Books using this option should place
+  the appropriate code in the `theme/head.hbs` file instead.
+  [#1675](https://github.com/rust-lang/mdBook/pull/1675)
+
+### Fixed
+- Updated the markdown parser which brings in a few small fixes and removes
+  the custom smart quote handling.
+  [#1668](https://github.com/rust-lang/mdBook/pull/1668)
+- Fixed iOS Safari enlarging text when going into landscape mode.
+  [#1685](https://github.com/rust-lang/mdBook/pull/1685)
+
 ## mdBook 0.4.13
 [e6629cd...f55028b](https://github.com/rust-lang/mdBook/compare/e6629cd...f55028b)
 

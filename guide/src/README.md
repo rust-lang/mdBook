@@ -1,29 +1,30 @@
 # Introduction
 
-**mdBook** is a command line tool and Rust crate to create books with Markdown. The output resembles tools like Gitbook,
-and is ideal for creating product or API documentation, tutorials, course materials or anything that requires a clean,
-easily navigable and customizable presentation. mdBook is written in [Rust](https://www.rust-lang.org); its performance
-and simplicity made it ideal for use as a tool to publish directly to hosted websites such
-as [GitHub Pages](https://pages.github.com) via automation. This guide, in fact, serves as both the mdBook documentation
-and a fine example of what mdBook produces.
+**mdBook** is a command line tool to create books with Markdown.
+It is ideal for creating product or API documentation, tutorials, course materials or anything that requires a clean,
+easily navigable and customizable presentation.
 
-mdBook includes built in support for both preprocessing your Markdown and alternative renderers for producing formats
-other than HTML. These facilities also enable other functionality such as
-validation. [Searching](https://crates.io/search?q=mdbook&sort=relevance) Rust's [crates.io](https://crates.io) is a
-great way to discover more extensions.
+* Lightweight [Markdown] syntax helps you focus more on your content
+* Integrated [search] support
+* Color [syntax highlighting] for code blocks for many different languages
+* [Theme] files allow customizing the formatting of the output
+* [Preprocessors] can provide extensions for custom syntax and modifying content
+* [Backends] can render the output to multiple formats
+* Written in [Rust] for speed, safety, and simplicity
+* Automated testing of [Rust code samples]
 
-## API Documentation
+This guide is an example of what mdBook produces.
+mdBook is used by the Rust programming language project, and [The Rust Programming Language][trpl] book is another fine example of mdBook in action.
 
-In addition to the above features, mdBook also has a Rust [API](https://docs.rs/mdbook/*/mdbook/). This allows you to
-write your own preprocessor or renderer, as well as incorporate mdBook features into other applications.
-The [For Developers](for_developers) section of this guide contains more information and some examples.
-
-## Markdown
-
-mdBook's [parser](https://github.com/raphlinus/pulldown-cmark) adheres to the [CommonMark](https://commonmark.org/)
-specification. You can take a quick [tutorial](https://commonmark.org/help/tutorial/),
-or [try out](https://spec.commonmark.org/dingus/) CommonMark in real time. For a more in-depth experience, check out the
-[Markdown Guide](https://www.markdownguide.org).
+[Markdown]: format/markdown.md
+[search]: guide/reading.md#search
+[syntax highlighting]: format/theme/syntax-highlighting.md
+[theme]: format/theme/index.html
+[preprocessors]: format/configuration/preprocessors.md
+[backends]: format/configuration/renderers.md
+[Rust]: https://www.rust-lang.org/
+[trpl]: https://doc.rust-lang.org/book/
+[Rust code samples]: cli/test.md
 
 ## Contributing
 

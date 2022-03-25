@@ -1,6 +1,15 @@
 # Summary
 
-- [Introduction](README.md)
+[Introduction](README.md)
+
+# User Guide
+
+- [Installation](guide/installation.md)
+- [Reading Books](guide/reading.md)
+- [Creating a Book](guide/creating.md)
+
+# Reference Guide
+
 - [Command Line Tool](cli/README.md)
     - [init](cli/init.md)
     - [build](cli/build.md)
@@ -8,6 +17,7 @@
     - [serve](cli/serve.md)
     - [test](cli/test.md)
     - [clean](cli/clean.md)
+    - [completions](cli/completions.md)
 - [Format](format/README.md)
     - [SUMMARY.md](format/summary.md)
         - [Draft chapter]()
@@ -22,6 +32,7 @@
         - [Editor](format/theme/editor.md)
     - [MathJax Support](format/mathjax.md)
     - [mdBook-specific features](format/mdbook.md)
+    - [Markdown](format/markdown.md)
 - [Continuous Integration](continuous-integration.md)
 - [For Developers](for_developers/README.md)
     - [Preprocessors](for_developers/preprocessors.md)

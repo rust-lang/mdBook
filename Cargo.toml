@@ -1,6 +1,6 @@
 [package]
 name = "mdbook"
-version = "0.4.13"
+version = "0.4.15"
 authors = [
     "Mathieu David <mathieudavid@mathieudavid.org>",
     "Michael-F-Bryan <michaelfbryan@gmail.com>",
@@ -25,8 +25,8 @@ lazy_static = "1.0"
 log = "0.4"
 memchr = "2.0"
 opener = "0.5"
-pulldown-cmark = "0.7.0"
-regex = "1.0.0"
+pulldown-cmark = { version = "0.9.1", default-features = false }
+regex = "1.5.5"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
@@ -52,7 +52,7 @@ ammonia = { version = "3", optional = true }
 assert_cmd = "1"
 predicates = "2"
 select = "0.5"
-semver = "0.11.0"
+semver = "1.0"
 pretty_assertions = "0.6"
 walkdir = "2.0"
 
