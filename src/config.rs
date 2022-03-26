@@ -816,6 +816,22 @@ mod tests {
     }
 
     #[test]
+    fn disable_runnable() {
+        let src = r#"
+        [book]
+        title = "Some Book"
+        description = "book book book"
+        authors = ["Shogo Takata"]
+
+        [output.html.playground]
+        runnable = false
+        "#;
+
+        let got = Config::from_str(src).unwrap();
+        assert_eq!(got.html_config().unwrap().playground.runnable, false);
+    }
+
+    #[test]
     fn edition_2015() {
         let src = r#"
         [book]
