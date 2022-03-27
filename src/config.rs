@@ -630,6 +630,8 @@ pub struct Playground {
     pub copy_js: bool,
     /// Display line numbers on playground snippets. Default: `false`.
     pub line_numbers: bool,
+    /// Display the run button. Default: `true`
+    pub runnable: bool,
 }
 
 impl Default for Playground {
@@ -639,6 +641,7 @@ impl Default for Playground {
             copyable: true,
             copy_js: true,
             line_numbers: false,
+            runnable: true,
         }
     }
 }
@@ -781,6 +784,7 @@ mod tests {
             copyable: true,
             copy_js: true,
             line_numbers: false,
+            runnable: true,
         };
         let html_should_be = HtmlConfig {
             curly_quotes: true,
@@ -809,6 +813,22 @@ mod tests {
         assert_eq!(got.build, build_should_be);
         assert_eq!(got.rust, rust_should_be);
         assert_eq!(got.html_config().unwrap(), html_should_be);
+    }
+
+    #[test]
+    fn disable_runnable() {
+        let src = r#"
+        [book]
+        title = "Some Book"
+        description = "book book book"
+        authors = ["Shogo Takata"]
+
+        [output.html.playground]
+        runnable = false
+        "#;
+
+        let got = Config::from_str(src).unwrap();
+        assert_eq!(got.html_config().unwrap().playground.runnable, false);
     }
 
     #[test]

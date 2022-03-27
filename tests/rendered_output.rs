@@ -17,6 +17,7 @@ use std::ffi::OsStr;
 use std::fs;
 use std::io::Write;
 use std::path::{Component, Path, PathBuf};
+use std::str::FromStr;
 use tempfile::Builder as TempFileBuilder;
 use walkdir::{DirEntry, WalkDir};
 
@@ -148,6 +149,25 @@ fn rendered_code_has_playground_stuff() {
 
     let book_js = temp.path().join("book/book.js");
     assert_contains_strings(book_js, &[".playground"]);
+}
+
+#[test]
+fn rendered_code_does_not_have_playground_stuff_in_html_when_disabled_in_config() {
+    let temp = DummyBook::new().build().unwrap();
+    let config = Config::from_str(
+        "
+    [output.html.playground]
+    runnable = false
+    ",
+    )
+    .unwrap();
+    let md = MDBook::load_with_config(temp.path(), config).unwrap();
+    md.build().unwrap();
+
+    let nested = temp.path().join("book/first/nested.html");
+    let playground_class = vec![r#"class="playground""#];
+
+    assert_doesnt_contain_strings(nested, &playground_class);
 }
 
 #[test]
