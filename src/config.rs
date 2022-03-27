@@ -531,7 +531,7 @@ pub struct HtmlConfig {
     pub cname: Option<String>,
     /// Edit url template, when set shows a "Suggest an edit" button for
     /// directly jumping to editing the currently viewed page.
-    /// Contains {path} that is replaced with chapter source file path[[[[
+    /// Contains {path} that is replaced with chapter source file path
     pub edit_url_template: Option<String>,
     /// Endpoint of websocket, for livereload usage. Value loaded from .toml file
     /// is ignored, because our code overrides this field with the value [`LIVE_RELOAD_ENDPOINT`]
