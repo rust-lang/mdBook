@@ -531,16 +531,16 @@ pub struct HtmlConfig {
     pub cname: Option<String>,
     /// Edit url template, when set shows a "Suggest an edit" button for
     /// directly jumping to editing the currently viewed page.
-    /// Contains {path} that is replaced with chapter source file path
+    /// Contains {path} that is replaced with chapter source file path[[[[
     pub edit_url_template: Option<String>,
-    /// This is used as a bit of a workaround for the `mdbook serve` command.
-    /// Basically, because you set the websocket port from the command line, the
-    /// `mdbook serve` command needs a way to let the HTML renderer know where
-    /// to point livereloading at, if it has been enabled.
+    /// Endpoint of websocket, for livereload usage. Value loaded from .toml file
+    /// is ignored, because our code overrides this field with the value [`LIVE_RELOAD_ENDPOINT`]
+    ///
+    /// [`LIVE_RELOAD_ENDPOINT`]: cmd::serve::LIVE_RELOAD_ENDPOINT
     ///
     /// This config item *should not be edited* by the end user.
     #[doc(hidden)]
-    pub livereload_url: Option<String>,
+    pub live_reload_endpoint: Option<String>,
     /// The mapping from old pages to new pages/URLs to use when generating
     /// redirects.
     pub redirect: HashMap<String, String>,
@@ -569,7 +569,7 @@ impl Default for HtmlConfig {
             input_404: None,
             site_url: None,
             cname: None,
-            livereload_url: None,
+            live_reload_endpoint: None,
             redirect: HashMap::new(),
         }
     }
