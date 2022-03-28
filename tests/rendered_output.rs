@@ -36,6 +36,7 @@ const TOC_SECOND_LEVEL: &[&str] = &[
     "1.4. Markdown",
     "1.5. Unicode",
     "1.6. No Headers",
+    "1.7. Duplicate Headers",
     "2.1. Nested Chapter",
 ];
 
@@ -653,11 +654,12 @@ mod search {
         let some_section = get_doc_ref("first/index.html#some-section");
         let summary = get_doc_ref("first/includes.html#summary");
         let no_headers = get_doc_ref("first/no-headers.html");
+        let duplicate_headers_1 = get_doc_ref("first/duplicate-headers.html#header-text-1");
         let conclusion = get_doc_ref("conclusion.html#conclusion");
 
         let bodyidx = &index["index"]["index"]["body"]["root"];
         let textidx = &bodyidx["t"]["e"]["x"]["t"];
-        assert_eq!(textidx["df"], 2);
+        assert_eq!(textidx["df"], 5);
         assert_eq!(textidx["docs"][&first_chapter]["tf"], 1.0);
         assert_eq!(textidx["docs"][&introduction]["tf"], 1.0);
 
@@ -666,7 +668,7 @@ mod search {
         assert_eq!(docs[&some_section]["body"], "");
         assert_eq!(
             docs[&summary]["body"],
-            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Markdown Unicode No Headers Second Chapter Nested Chapter Conclusion"
+            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Markdown Unicode No Headers Duplicate Headers Second Chapter Nested Chapter Conclusion"
         );
         assert_eq!(
             docs[&summary]["breadcrumbs"],
@@ -676,6 +678,10 @@ mod search {
         assert_eq!(
             docs[&no_headers]["breadcrumbs"],
             "First Chapter » No Headers"
+        );
+        assert_eq!(
+            docs[&duplicate_headers_1]["breadcrumbs"],
+            "First Chapter » Duplicate Headers » Header Text"
         );
         assert_eq!(
             docs[&no_headers]["body"],

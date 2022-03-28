@@ -778,16 +778,7 @@ fn insert_link_into_header(
     content: &str,
     id_counter: &mut HashMap<String, usize>,
 ) -> String {
-    let raw_id = utils::id_from_content(content);
-
-    let id_count = id_counter.entry(raw_id.clone()).or_insert(0);
-
-    let id = match *id_count {
-        0 => raw_id,
-        other => format!("{}-{}", raw_id, other),
-    };
-
-    *id_count += 1;
+    let id = utils::unique_id_from_content(content, id_counter);
 
     format!(
         r##"<h{level} id="{id}"><a class="header" href="#{id}">{text}</a></h{level}>"##,
