@@ -170,7 +170,13 @@ impl HtmlHandlebars {
         // Set a dummy path to ensure other paths (e.g. in the TOC) are generated correctly
         data_404.insert("path".to_owned(), json!("404.md"));
         data_404.insert("content".to_owned(), json!(html_content_404));
-        data_404.insert("title".to_owned(), json!("Page not found"));
+
+        let mut title = String::from("Page not found");
+        if let Some(book_title) = &ctx.config.book.title {
+            title.push_str(" - ");
+            title.push_str(book_title);
+        }
+        data_404.insert("title".to_owned(), json!(title));
         let rendered = handlebars.render("index", &data_404)?;
 
         let rendered =
