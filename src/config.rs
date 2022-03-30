@@ -588,7 +588,7 @@ impl HtmlConfig {
 
 /// Configuration for how to render the print icon, print.html, and print.css.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(default, rename_all = "kebab-case")]
 pub struct Print {
     /// Whether print support is enabled.
     pub enable: bool,
@@ -1174,5 +1174,25 @@ mod tests {
         "#;
 
         Config::from_str(src).unwrap();
+    }
+
+    #[test]
+    fn print_config() {
+        let src = r#"
+        [output.html.print]
+        enable = false
+        "#;
+        let got = Config::from_str(src).unwrap();
+        let html_config = got.html_config().unwrap();
+        assert_eq!(html_config.print.enable, false);
+        assert_eq!(html_config.print.page_break, true);
+        let src = r#"
+        [output.html.print]
+        page-break = false
+        "#;
+        let got = Config::from_str(src).unwrap();
+        let html_config = got.html_config().unwrap();
+        assert_eq!(html_config.print.enable, true);
+        assert_eq!(html_config.print.page_break, false);
     }
 }
