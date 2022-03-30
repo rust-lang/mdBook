@@ -1,5 +1,12 @@
 # Changelog
 
+## mdBook 0.4.17
+[a5fddfa...981b79b](https://github.com/rust-lang/mdBook/compare/a5fddfa...981b79b)
+
+### Fixed
+- Fixed parsing of `output.html.print` configuration table.
+  [#1775](https://github.com/rust-lang/mdBook/pull/1775)
+
 ## mdBook 0.4.16
 [68a5c09...a5fddfa](https://github.com/rust-lang/mdBook/compare/68a5c09...a5fddfa)
 
