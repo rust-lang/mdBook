@@ -17,12 +17,16 @@
   [#1771](https://github.com/rust-lang/mdBook/pull/1771)
 - The 404 not-found page now includes the books title in the HTML title tag.
   [#1693](https://github.com/rust-lang/mdBook/pull/1693)
+- Migrated to clap 3.0 which which handles CLI option parsing.
+  [#1731](https://github.com/rust-lang/mdBook/pull/1731)
 
 ### Fixed
 - Minor fixes to the markdown parser.
   [#1729](https://github.com/rust-lang/mdBook/pull/1729)
 - Fixed incorrect parsing in `SUMMARY.md` when it didn't start with a title.
   [#1744](https://github.com/rust-lang/mdBook/pull/1744)
+- Fixed duplicate anchor IDs for links in search results.
+  [#1749](https://github.com/rust-lang/mdBook/pull/1749)
 
 ## mdBook 0.4.15
 [5eb7d46...68a5c09](https://github.com/rust-lang/mdBook/compare/5eb7d46...68a5c09)
