@@ -1,7 +1,7 @@
 #[cfg(feature = "watch")]
 use super::watch;
 use crate::{get_book_dir, open};
-use clap::{App, Arg, ArgMatches, SubCommand};
+use clap::{arg, App, Arg, ArgMatches};
 use futures_util::sink::SinkExt;
 use futures_util::StreamExt;
 use mdbook::errors::*;
@@ -18,37 +18,43 @@ use warp::Filter;
 const LIVE_RELOAD_ENDPOINT: &str = "__livereload";
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
-    SubCommand::with_name("serve")
+pub fn make_subcommand<'help>() -> App<'help> {
+    App::new("serve")
         .about("Serves a book at http://localhost:3000, and rebuilds it on changes")
-        .arg_from_usage(
-            "-d, --dest-dir=[dest-dir] 'Output directory for the book{n}\
-             Relative paths are interpreted relative to the book's root directory.{n}\
-             If omitted, mdBook uses build.build-dir from book.toml or defaults to `./book`.'",
-        )
-        .arg_from_usage(
-            "[dir] 'Root directory for the book{n}\
-             (Defaults to the Current Directory when omitted)'",
-        )
         .arg(
-            Arg::with_name("hostname")
-                .short("n")
+            Arg::new("dest-dir")
+                .short('d')
+                .long("dest-dir")
+                .value_name("dest-dir")
+                .help(
+                    "Output directory for the book{n}\
+                    Relative paths are interpreted relative to the book's root directory.{n}\
+                    If omitted, mdBook uses build.build-dir from book.toml or defaults to `./book`.",
+                ),
+        )
+        .arg(arg!([dir]
+            "Root directory for the book{n}\
+            (Defaults to the Current Directory when omitted)"
+        ))
+        .arg(
+            Arg::new("hostname")
+                .short('n')
                 .long("hostname")
                 .takes_value(true)
                 .default_value("localhost")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("Hostname to listen on for HTTP connections"),
         )
         .arg(
-            Arg::with_name("port")
-                .short("p")
+            Arg::new("port")
+                .short('p')
                 .long("port")
                 .takes_value(true)
                 .default_value("3000")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("Port to use for HTTP connections"),
         )
-        .arg_from_usage("-o, --open 'Opens the book server in a web browser'")
+        .arg(arg!(-o --open "Opens the compiled book in a web browser"))
 }
 
 // Serve command implementation
@@ -62,11 +68,10 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     let address = format!("{}:{}", hostname, port);
 
-    let livereload_url = format!("ws://{}/{}", address, LIVE_RELOAD_ENDPOINT);
     let update_config = |book: &mut MDBook| {
         book.config
-            .set("output.html.livereload-url", &livereload_url)
-            .expect("livereload-url update failed");
+            .set("output.html.live-reload-endpoint", &LIVE_RELOAD_ENDPOINT)
+            .expect("live-reload-endpoint update failed");
         if let Some(dest_dir) = args.value_of("dest-dir") {
             book.config.build.build_dir = dest_dir.into();
         }

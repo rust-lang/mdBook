@@ -97,7 +97,7 @@ So if you have images or other static files, just include them somewhere in the 
 
 Once you've written your book, you may want to host it somewhere for others to view.
 The first step is to build the output of the book.
-This can be done with the `mbdook build` command in the same directory where the `book.toml` file is located:
+This can be done with the `mdbook build` command in the same directory where the `book.toml` file is located:
 
 ```sh
 mdbook build

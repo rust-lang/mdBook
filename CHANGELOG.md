@@ -1,5 +1,40 @@
 # Changelog
 
+## mdBook 0.4.17
+[a5fddfa...981b79b](https://github.com/rust-lang/mdBook/compare/a5fddfa...981b79b)
+
+### Fixed
+- Fixed parsing of `output.html.print` configuration table.
+  [#1775](https://github.com/rust-lang/mdBook/pull/1775)
+
+## mdBook 0.4.16
+[68a5c09...a5fddfa](https://github.com/rust-lang/mdBook/compare/68a5c09...a5fddfa)
+
+### Added
+- Added `output.html.print.page-break` config option to control whether or not
+  there is a page break between chapters in the print output.
+  [#1728](https://github.com/rust-lang/mdBook/pull/1728)
+- Added `output.html.playground.runnable` config option to globally disable
+  the run button in code blocks.
+  [#1546](https://github.com/rust-lang/mdBook/pull/1546)
+
+### Changed
+- The `cargo serve` live reload websocket now uses the protocol, host, and
+  port of the current page, allowing access through a proxy.
+  [#1771](https://github.com/rust-lang/mdBook/pull/1771)
+- The 404 not-found page now includes the books title in the HTML title tag.
+  [#1693](https://github.com/rust-lang/mdBook/pull/1693)
+- Migrated to clap 3.0 which which handles CLI option parsing.
+  [#1731](https://github.com/rust-lang/mdBook/pull/1731)
+
+### Fixed
+- Minor fixes to the markdown parser.
+  [#1729](https://github.com/rust-lang/mdBook/pull/1729)
+- Fixed incorrect parsing in `SUMMARY.md` when it didn't start with a title.
+  [#1744](https://github.com/rust-lang/mdBook/pull/1744)
+- Fixed duplicate anchor IDs for links in search results.
+  [#1749](https://github.com/rust-lang/mdBook/pull/1749)
+
 ## mdBook 0.4.15
 [5eb7d46...68a5c09](https://github.com/rust-lang/mdBook/compare/5eb7d46...68a5c09)
 

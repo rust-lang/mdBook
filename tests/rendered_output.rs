@@ -17,6 +17,7 @@ use std::ffi::OsStr;
 use std::fs;
 use std::io::Write;
 use std::path::{Component, Path, PathBuf};
+use std::str::FromStr;
 use tempfile::Builder as TempFileBuilder;
 use walkdir::{DirEntry, WalkDir};
 
@@ -35,6 +36,7 @@ const TOC_SECOND_LEVEL: &[&str] = &[
     "1.4. Markdown",
     "1.5. Unicode",
     "1.6. No Headers",
+    "1.7. Duplicate Headers",
     "2.1. Nested Chapter",
 ];
 
@@ -148,6 +150,25 @@ fn rendered_code_has_playground_stuff() {
 
     let book_js = temp.path().join("book/book.js");
     assert_contains_strings(book_js, &[".playground"]);
+}
+
+#[test]
+fn rendered_code_does_not_have_playground_stuff_in_html_when_disabled_in_config() {
+    let temp = DummyBook::new().build().unwrap();
+    let config = Config::from_str(
+        "
+    [output.html.playground]
+    runnable = false
+    ",
+    )
+    .unwrap();
+    let md = MDBook::load_with_config(temp.path(), config).unwrap();
+    md.build().unwrap();
+
+    let nested = temp.path().join("book/first/nested.html");
+    let playground_class = vec![r#"class="playground""#];
+
+    assert_doesnt_contain_strings(nested, &playground_class);
 }
 
 #[test]
@@ -633,11 +654,12 @@ mod search {
         let some_section = get_doc_ref("first/index.html#some-section");
         let summary = get_doc_ref("first/includes.html#summary");
         let no_headers = get_doc_ref("first/no-headers.html");
+        let duplicate_headers_1 = get_doc_ref("first/duplicate-headers.html#header-text-1");
         let conclusion = get_doc_ref("conclusion.html#conclusion");
 
         let bodyidx = &index["index"]["index"]["body"]["root"];
         let textidx = &bodyidx["t"]["e"]["x"]["t"];
-        assert_eq!(textidx["df"], 2);
+        assert_eq!(textidx["df"], 5);
         assert_eq!(textidx["docs"][&first_chapter]["tf"], 1.0);
         assert_eq!(textidx["docs"][&introduction]["tf"], 1.0);
 
@@ -646,7 +668,7 @@ mod search {
         assert_eq!(docs[&some_section]["body"], "");
         assert_eq!(
             docs[&summary]["body"],
-            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Markdown Unicode No Headers Second Chapter Nested Chapter Conclusion"
+            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Markdown Unicode No Headers Duplicate Headers Second Chapter Nested Chapter Conclusion"
         );
         assert_eq!(
             docs[&summary]["breadcrumbs"],
@@ -656,6 +678,10 @@ mod search {
         assert_eq!(
             docs[&no_headers]["breadcrumbs"],
             "First Chapter » No Headers"
+        );
+        assert_eq!(
+            docs[&duplicate_headers_1]["breadcrumbs"],
+            "First Chapter » Duplicate Headers » Header Text"
         );
         assert_eq!(
             docs[&no_headers]["body"],

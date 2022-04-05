@@ -61,7 +61,7 @@ The `chapter.content` is just a string which happens to be markdown. While it's
 entirely possible to use regular expressions or do a manual find & replace,
 you'll probably want to process the input into something more computer-friendly.
 The [`pulldown-cmark`][pc] crate implements a production-quality event-based
-Markdown parser, with the [`pulldown-cmark-to-cmark`][pctc] allowing you to
+Markdown parser, with the [`pulldown-cmark-to-cmark`][pctc] crate allowing you to
 translate events back into markdown text.
 
 The following code block shows how to remove all emphasis from markdown,
