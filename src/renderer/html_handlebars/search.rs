@@ -97,9 +97,10 @@ fn render_item(
 
     breadcrumbs.push(chapter.name.clone());
 
+    let mut id_counter = HashMap::new();
     while let Some(event) = p.next() {
         match event {
-            Event::Start(Tag::Heading(i)) if i <= max_section_depth => {
+            Event::Start(Tag::Heading(i, ..)) if i as u32 <= max_section_depth => {
                 if !heading.is_empty() {
                     // Section finished, the next heading is following now
                     // Write the data to the index, and clear it for the next section
@@ -118,9 +119,9 @@ fn render_item(
 
                 in_heading = true;
             }
-            Event::End(Tag::Heading(i)) if i <= max_section_depth => {
+            Event::End(Tag::Heading(i, ..)) if i as u32 <= max_section_depth => {
                 in_heading = false;
-                section_id = Some(utils::id_from_content(&heading));
+                section_id = Some(utils::unique_id_from_content(&heading, &mut id_counter));
                 breadcrumbs.push(heading.clone());
             }
             Event::Start(Tag::FootnoteDefinition(name)) => {

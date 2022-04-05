@@ -56,7 +56,7 @@ impl HtmlHandlebars {
 
         let fixed_content =
             utils::render_markdown_with_path(&ch.content, ctx.html_config.curly_quotes, Some(path));
-        if !ctx.is_index {
+        if !ctx.is_index && ctx.html_config.print.page_break {
             // Add page break between chapters
             // See https://developer.mozilla.org/en-US/docs/Web/CSS/break-before and https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-before
             // Add both two CSS properties because of the compatibility issue
@@ -170,6 +170,13 @@ impl HtmlHandlebars {
         // Set a dummy path to ensure other paths (e.g. in the TOC) are generated correctly
         data_404.insert("path".to_owned(), json!("404.md"));
         data_404.insert("content".to_owned(), json!(html_content_404));
+
+        let mut title = String::from("Page not found");
+        if let Some(book_title) = &ctx.config.book.title {
+            title.push_str(" - ");
+            title.push_str(book_title);
+        }
+        data_404.insert("title".to_owned(), json!(title));
         let rendered = handlebars.render("index", &data_404)?;
 
         let rendered =
@@ -606,8 +613,11 @@ fn make_data(
     if theme.favicon_svg.is_some() {
         data.insert("favicon_svg".to_owned(), json!("favicon.svg"));
     }
-    if let Some(ref livereload) = html_config.livereload_url {
-        data.insert("livereload".to_owned(), json!(livereload));
+    if let Some(ref live_reload_endpoint) = html_config.live_reload_endpoint {
+        data.insert(
+            "live_reload_endpoint".to_owned(),
+            json!(live_reload_endpoint),
+        );
     }
 
     let default_theme = match html_config.default_theme {
@@ -768,16 +778,7 @@ fn insert_link_into_header(
     content: &str,
     id_counter: &mut HashMap<String, usize>,
 ) -> String {
-    let raw_id = utils::id_from_content(content);
-
-    let id_count = id_counter.entry(raw_id.clone()).or_insert(0);
-
-    let id = match *id_count {
-        0 => raw_id,
-        other => format!("{}-{}", raw_id, other),
-    };
-
-    *id_count += 1;
+    let id = utils::unique_id_from_content(content, id_counter);
 
     format!(
         r##"<h{level} id="{id}"><a class="header" href="#{id}">{text}</a></h{level}>"##,
@@ -828,7 +829,8 @@ fn add_playground_pre(
             if classes.contains("language-rust") {
                 if (!classes.contains("ignore")
                     && !classes.contains("noplayground")
-                    && !classes.contains("noplaypen"))
+                    && !classes.contains("noplaypen")
+                    && playground_config.runnable)
                     || classes.contains("mdbook-runnable")
                 {
                     let contains_e2015 = classes.contains("edition2015");
