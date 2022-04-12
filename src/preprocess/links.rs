@@ -134,6 +134,7 @@ where
 enum LinkType<'a> {
     Escaped,
     Include(PathBuf, RangeOrAnchor),
+    DocCommentInclude(PathBuf, RangeOrAnchor),
     Playground(PathBuf, Vec<&'a str>),
     RustdocInclude(PathBuf, RangeOrAnchor),
     Title(&'a str),
@@ -204,6 +205,7 @@ impl<'a> LinkType<'a> {
         match self {
             LinkType::Escaped => None,
             LinkType::Include(p, _) => Some(return_relative_path(base, &p)),
+            LinkType::DocCommentInclude(p, _) => Some(return_relative_path(base, &p)),
             LinkType::Playground(p, _) => Some(return_relative_path(base, &p)),
             LinkType::RustdocInclude(p, _) => Some(return_relative_path(base, &p)),
             LinkType::Title(_) => None,
@@ -257,6 +259,15 @@ fn parse_include_path(path: &str) -> LinkType<'static> {
     LinkType::Include(path, range_or_anchor)
 }
 
+fn parse_doc_comment_include_path(path: &str) -> LinkType<'static> {
+    let mut parts = path.splitn(2, ':');
+
+    let path = parts.next().unwrap().into();
+    let range_or_anchor = parse_range_or_anchor(parts.next());
+
+    LinkType::DocCommentInclude(path, range_or_anchor)
+}
+
 fn parse_rustdoc_include_path(path: &str) -> LinkType<'static> {
     let mut parts = path.splitn(2, ':');
 
@@ -287,6 +298,7 @@ impl<'a> Link<'a> {
 
                 match (typ.as_str(), file_arg) {
                     ("include", Some(pth)) => Some(parse_include_path(pth)),
+                    ("doc_comment_include", Some(pth)) => Some(parse_doc_comment_include_path(pth)),
                     ("playground", Some(pth)) => Some(LinkType::Playground(pth.into(), props)),
                     ("playpen", Some(pth)) => {
                         warn!(
@@ -332,6 +344,28 @@ impl<'a> Link<'a> {
                     .map(|s| match range_or_anchor {
                         RangeOrAnchor::Range(range) => take_lines(&s, range.clone()),
                         RangeOrAnchor::Anchor(anchor) => take_anchored_lines(&s, anchor),
+                    })
+                    .with_context(|| {
+                        format!(
+                            "Could not read file for link {} ({})",
+                            self.link_text,
+                            target.display(),
+                        )
+                    })
+            }
+            LinkType::DocCommentInclude(ref pat, ref range_or_anchor) => {
+                let target = base.join(pat);
+
+                fs::read_to_string(&target)
+                    .map(|s| match range_or_anchor {
+                        RangeOrAnchor::Range(range) => take_lines(&s, range.clone()),
+                        RangeOrAnchor::Anchor(anchor) => take_anchored_lines(&s, anchor),
+                    })
+                    .map(|s| {
+                        s.lines()
+                            .map(|l| l.trim().trim_start_matches("///").trim())
+                            .collect::<Vec<_>>()
+                            .join("\n")
                     })
                     .with_context(|| {
                         format!(
