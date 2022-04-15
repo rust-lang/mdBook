@@ -1,15 +1,15 @@
-<h1 id="first-chapter"><a class="header" href="#first-chapter">First Chapter</a></h1>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="first-nested"><a class="header" href="#first-nested">First Nested</a></h1>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="testing-relative-links-for-the-print-page"><a class="header" href="#testing-relative-links-for-the-print-page">Testing relative links for the print page</a></h1>
-<p>When we link to <a href="second/../first/nested.html">the first section</a>, it should work on
+<div id="first-index"></div><h1 id="first-index-first-chapter"><a class="header" href="#first-index-first-chapter">First Chapter</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><div id="first-nested"></div><h1 id="first-nested-first-nested"><a class="header" href="#first-nested-first-nested">First Nested</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><div id="second-nested"></div><h1 id="second-nested-testing-relative-links-for-the-print-page"><a class="header" href="#second-nested-testing-relative-links-for-the-print-page">Testing relative links for the print page</a></h1>
+<p>When we link to <a href="#first-nested">the first section</a>, it should work on
 both the print page and the non-print page.</p>
-<p>The same link should work <a href="second/../first/nested.html">with an html extension</a>.</p>
-<p>A <a href="second/nested.html#some-section">fragment link</a> should work.</p>
+<p>The same link should work <a href="#first-nested">with an html extension</a>.</p>
+<p>A <a href="#second-nested-some-section">fragment link</a> should work.</p>
 <p>Link <a href="second/../../std/foo/bar.html">outside</a>.</p>
 <p>Link <a href="second/../../std/foo/bar.html#panic">outside with anchor</a>.</p>
 <p><img src="second/../images/picture.png" alt="Some image" /></p>
-<p><a href="second/../first/nested.html">HTML Link</a></p>
+<p><a href="#first-nested">HTML Link</a></p>
 <img src="second/../images/picture.png" alt="raw html">
-<h2 id="some-section"><a class="header" href="#some-section">Some section</a></h2>
+<h2 id="second-nested-some-section"><a class="header" href="#second-nested-some-section">Some section</a></h2>
 <p><a href="https://example.com/foo.html#bar">Links with scheme shouldn’t be touched.</a></p>
-<p><a href="second/../images/not-html?arg1&arg2#with-anchor">Non-html link</a></p>
+<p><a href="#images-not-html?arg1&arg2-with-anchor">Non-html link</a></p>

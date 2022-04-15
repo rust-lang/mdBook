@@ -129,7 +129,8 @@ fn render_item(
         .with_extension("html")
         .to_url_path();
 
-    let options = HtmlRenderOptions::new(&chapter_path);
+    let redirect = HashMap::new();
+    let options = HtmlRenderOptions::new(&chapter_path, &redirect);
     let mut p = new_cmark_parser(&chapter.content, &options.markdown_options).peekable();
 
     let mut in_heading = false;

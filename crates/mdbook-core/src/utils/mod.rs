@@ -55,7 +55,7 @@ pub fn normalize_id(content: &str) -> String {
 
 /// Generate an ID for use with anchors which is derived from a "normalised"
 /// string.
-fn id_from_content(content: &str) -> String {
+pub fn id_from_content(content: &str) -> String {
     let mut content = content.to_string();
 
     // Skip any tags or html-encoded stuff

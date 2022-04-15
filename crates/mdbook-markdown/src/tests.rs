@@ -16,7 +16,8 @@ fn escaped_special() {
 
 #[test]
 fn preserves_external_links() {
-    let options = HtmlRenderOptions::new(&Path::new(""));
+    let redirect = HashMap::new();
+    let options = HtmlRenderOptions::new(&Path::new(""), &redirect);
     assert_eq!(
         render_markdown("[example](https://www.rust-lang.org/)", &options),
         "<p><a href=\"https://www.rust-lang.org/\">example</a></p>\n"
@@ -25,7 +26,8 @@ fn preserves_external_links() {
 
 #[test]
 fn it_can_adjust_markdown_links() {
-    let options = HtmlRenderOptions::new(&Path::new(""));
+    let redirect = HashMap::new();
+    let options = HtmlRenderOptions::new(&Path::new(""), &redirect);
     assert_eq!(
         render_markdown("[example](example.md)", &options),
         "<p><a href=\"example.html\">example</a></p>\n"
@@ -55,13 +57,15 @@ fn it_can_wrap_tables() {
 </tbody></table>
 </div>
 "#.trim();
-    let options = HtmlRenderOptions::new(&Path::new(""));
+    let redirect = HashMap::new();
+    let options = HtmlRenderOptions::new(&Path::new(""), &redirect);
     assert_eq!(render_markdown(src, &options), out);
 }
 
 #[test]
 fn it_can_keep_quotes_straight() {
-    let mut options = HtmlRenderOptions::new(&Path::new(""));
+    let redirect = HashMap::new();
+    let mut options = HtmlRenderOptions::new(&Path::new(""), &redirect);
     options.markdown_options.smart_punctuation = false;
     assert_eq!(render_markdown("'one'", &options), "<p>'one'</p>\n");
 }
@@ -79,7 +83,8 @@ fn it_can_make_quotes_curly_except_when_they_are_in_code() {
 </code></pre>
 <p><code>'three'</code> ‘four’</p>
 "#;
-    let options = HtmlRenderOptions::new(&Path::new(""));
+    let redirect = HashMap::new();
+    let options = HtmlRenderOptions::new(&Path::new(""), &redirect);
     assert_eq!(render_markdown(input, &options), expected);
 }
 
@@ -102,7 +107,8 @@ more text with spaces
 </code></pre>
 <p>more text with spaces</p>
 "#;
-    let options = HtmlRenderOptions::new(&Path::new(""));
+    let redirect = HashMap::new();
+    let options = HtmlRenderOptions::new(&Path::new(""), &redirect);
     assert_eq!(render_markdown(input, &options), expected);
 }
 
@@ -115,7 +121,8 @@ fn rust_code_block_properties_are_passed_as_space_delimited_class() {
 
     let expected = r#"<pre><code class="language-rust,no_run,should_panic,property_3"></code></pre>
 "#;
-    let options = HtmlRenderOptions::new(&Path::new(""));
+    let redirect = HashMap::new();
+    let options = HtmlRenderOptions::new(&Path::new(""), &redirect);
     assert_eq!(render_markdown(input, &options), expected);
 }
 
@@ -128,7 +135,8 @@ fn rust_code_block_properties_with_whitespace_are_passed_as_space_delimited_clas
 
     let expected = r#"<pre><code class="language-rust,,,,,no_run,,,should_panic,,,,property_3"></code></pre>
 "#;
-    let options = HtmlRenderOptions::new(&Path::new(""));
+    let redirect = HashMap::new();
+    let options = HtmlRenderOptions::new(&Path::new(""), &redirect);
     assert_eq!(render_markdown(input, &options), expected);
 }
 
@@ -141,13 +149,15 @@ fn rust_code_block_without_properties_has_proper_html_class() {
 
     let expected = r#"<pre><code class="language-rust"></code></pre>
 "#;
-    let options = HtmlRenderOptions::new(&Path::new(""));
+    let redirect = HashMap::new();
+    let options = HtmlRenderOptions::new(&Path::new(""), &redirect);
     assert_eq!(render_markdown(input, &options), expected);
 
     let input = r#"
 ```rust
 ```
 "#;
-    let options = HtmlRenderOptions::new(&Path::new(""));
+    let redirect = HashMap::new();
+    let options = HtmlRenderOptions::new(&Path::new(""), &redirect);
     assert_eq!(render_markdown(input, &options), expected);
 }

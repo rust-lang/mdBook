@@ -12,9 +12,9 @@ use std::path::Path;
 /// Creates an [`HtmlRenderOptions`] from the given config.
 pub fn html_render_options_from_config<'a>(
     path: &'a Path,
-    config: &HtmlConfig,
+    config: &'a HtmlConfig,
 ) -> HtmlRenderOptions<'a> {
-    let mut options = HtmlRenderOptions::new(path);
+    let mut options = HtmlRenderOptions::new(path, &config.redirect);
     options.markdown_options.smart_punctuation = config.smart_punctuation;
     options
 }
