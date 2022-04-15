@@ -6,13 +6,13 @@ pub(crate) mod toml_ext;
 use crate::errors::Error;
 use log::error;
 use once_cell::sync::Lazy;
-use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, Options, Parser, Tag, TagEnd};
+use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, LinkType, Options, Parser, Tag, TagEnd};
 use regex::Regex;
 
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt::Write;
-use std::path::Path;
+use std::path::{Component, Path, PathBuf};
 
 pub use self::string::{
     take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,
@@ -83,63 +83,232 @@ pub fn unique_id_from_content(content: &str, id_counter: &mut HashMap<String, us
     unique_id
 }
 
+/// Improve the path to try remove and solve .. token,
+/// This assumes that `a/b/../c` is `a/c`.
+///
+/// This function ensures a given path ending with '/' will also
+/// end with '/' after normalization.
+/// https://stackoverflow.com/a/68233480
+fn normalize_path<P: AsRef<Path>>(path: P) -> String {
+    let ends_with_slash = path.as_ref().to_str().map_or(false, |s| s.ends_with('/'));
+    let mut normalized = PathBuf::new();
+    for component in path.as_ref().components() {
+        match &component {
+            Component::ParentDir => {
+                if !normalized.pop() {
+                    normalized.push(component);
+                }
+            }
+            Component::CurDir => {}
+            _ => {
+                normalized.push(component);
+            }
+        }
+    }
+    if ends_with_slash {
+        normalized.push("");
+    }
+    normalized.to_str().unwrap().replace("\\", "/").to_string()
+}
+
+/// Converts a relative URL path to a reference ID for the print page.
+fn normalize_print_page_id(mut path: String) -> String {
+    path = path
+        .replace("/", "-")
+        .replace(".html#", "-")
+        .replace("#", "-")
+        .to_ascii_lowercase();
+    if path.ends_with(".html") {
+        path.truncate(path.len() - 5);
+    }
+    path
+}
+
 /// Fix links to the correct location.
 ///
 /// This adjusts links, such as turning `.md` extensions to `.html`.
 ///
-/// `path` is the path to the page being rendered relative to the root of the
-/// book. This is used for the `print.html` page so that links on the print
-/// page go to the original location. Normal page rendering sets `path` to
-/// None. Ideally, print page links would link to anchors on the print page,
-/// but that is very difficult.
-fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
+/// See [`render_markdown_with_path_and_redirects`] for a description of
+/// `path` and `redirects`.
+fn adjust_links<'a>(
+    event: Event<'a>,
+    path: Option<&Path>,
+    redirects: &HashMap<String, String>,
+) -> Event<'a> {
     static SCHEME_LINK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-z][a-z0-9+.-]*:").unwrap());
-    static MD_LINK: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r"(?P<link>.*)\.md(?P<anchor>#.*)?").unwrap());
+    static HTML_MD_LINK: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"(?P<link>.*)\.(html|md)(?P<anchor>#.*)?").unwrap());
 
-    fn fix<'a>(dest: CowStr<'a>, path: Option<&Path>) -> CowStr<'a> {
-        if dest.starts_with('#') {
-            // Fragment-only link.
-            if let Some(path) = path {
-                let mut base = path.display().to_string();
-                if base.ends_with(".md") {
-                    base.replace_range(base.len() - 3.., ".html");
-                }
-                return format!("{}{}", base, dest).into();
-            } else {
-                return dest;
+    fn add_base(path: Option<&Path>) -> String {
+        let mut fixed_link = String::new();
+        if let Some(path) = path {
+            let base = path
+                .parent()
+                .expect("path can't be empty")
+                .to_str()
+                .expect("utf-8 paths only");
+            if !base.is_empty() {
+                write!(fixed_link, "{}/", base).unwrap();
             }
         }
-        // Don't modify links with schemes like `https`.
-        if !SCHEME_LINK.is_match(&dest) {
-            // This is a relative link, adjust it as necessary.
-            let mut fixed_link = String::new();
-            if let Some(path) = path {
-                let base = path
+        fixed_link.to_string()
+    }
+
+    fn fix_print_page_link<'a>(
+        mut normalized_path: String,
+        redirects: &HashMap<String, String>,
+    ) -> CowStr<'a> {
+        // Fix redirect links
+        let (path_no_fragment, fragment) = match normalized_path.split_once('#') {
+            Some((a, b)) => (a, Some(b)),
+            None => (normalized_path.as_str(), None),
+        };
+        for (original, redirect) in redirects {
+            if !normalize_path(original.trim_start_matches('/'))
+                .eq_ignore_ascii_case(&normalized_path)
+                && !normalize_path(original.trim_start_matches('/'))
+                    .eq_ignore_ascii_case(&path_no_fragment)
+            {
+                continue;
+            }
+
+            let mut unnormalized_path = String::new();
+            if SCHEME_LINK.is_match(&redirect) {
+                unnormalized_path = redirect.to_string();
+            } else {
+                let base = PathBuf::from(path_no_fragment)
                     .parent()
                     .expect("path can't be empty")
                     .to_str()
-                    .expect("utf-8 paths only");
-                if !base.is_empty() {
-                    write!(fixed_link, "{}/", base).unwrap();
+                    .expect("utf-8 paths only")
+                    .to_owned();
+
+                let normalized_base = normalize_path(base).trim_matches('/').to_owned();
+                if !normalized_base.is_empty() {
+                    write!(unnormalized_path, "{}/{}", normalized_base, redirect).unwrap();
+                } else {
+                    unnormalized_path = redirect.to_string().trim_start_matches('/').to_string();
                 }
             }
 
-            if let Some(caps) = MD_LINK.captures(&dest) {
-                fixed_link.push_str(&caps["link"]);
-                fixed_link.push_str(".html");
-                if let Some(anchor) = caps.name("anchor") {
-                    fixed_link.push_str(anchor.as_str());
+            // original without anchors, need to append link anchors
+            if !original.contains("#") {
+                if let Some(fragment) = fragment {
+                    if !unnormalized_path.contains("#") {
+                        unnormalized_path.push('#');
+                    } else {
+                        unnormalized_path.push('-');
+                    }
+                    unnormalized_path.push_str(fragment);
                 }
+            }
+
+            if SCHEME_LINK.is_match(&redirect) {
+                return CowStr::from(unnormalized_path);
             } else {
-                fixed_link.push_str(&dest);
-            };
-            return CowStr::from(fixed_link);
+                normalized_path = normalize_path(unnormalized_path);
+            }
+            break;
         }
-        dest
+
+        // Check again to make sure anchors are the html links inside the book.
+        if normalized_path.starts_with("../") || normalized_path.contains("/../") {
+            return CowStr::from(normalized_path);
+        }
+
+        let mut fixed_anchor_for_print = String::new();
+        fixed_anchor_for_print.push_str("#");
+        fixed_anchor_for_print.push_str(&normalize_print_page_id(normalized_path));
+        CowStr::from(fixed_anchor_for_print)
     }
 
-    fn fix_html<'a>(html: CowStr<'a>, path: Option<&Path>) -> CowStr<'a> {
+    /// Fix resource links like img to the correct location.
+    fn fix_resource_links<'a>(dest: CowStr<'a>, path: Option<&Path>) -> CowStr<'a> {
+        // Don't modify links with schemes like `https`.
+        if SCHEME_LINK.is_match(&dest) {
+            return dest;
+        }
+
+        // This is a relative link, adjust it as necessary.
+        let mut fixed_link = add_base(path);
+        fixed_link.push_str(&dest);
+        CowStr::from(fixed_link)
+    }
+
+    fn fix_a_links_with_type<'a>(
+        dest: CowStr<'a>,
+        path: Option<&Path>,
+        redirects: &HashMap<String, String>,
+        link_type: LinkType,
+    ) -> CowStr<'a> {
+        if link_type == LinkType::Email {
+            return dest;
+        }
+        fix_a_links(dest, path, redirects)
+    }
+
+    /// Adjust markdown file to correct point in the html file.
+    fn fix_a_links<'a>(
+        dest: CowStr<'a>,
+        path: Option<&Path>,
+        redirects: &HashMap<String, String>,
+    ) -> CowStr<'a> {
+        if dest.starts_with('#') {
+            // Fragment-only link.
+            return match path {
+                Some(path) => {
+                    let mut base = path.display().to_string();
+                    if base.ends_with(".md") {
+                        base.truncate(base.len() - 3);
+                    }
+                    format!(
+                        "#{}{}",
+                        normalize_print_page_id(normalize_path(base)),
+                        dest.replace("#", "-")
+                    )
+                    .into()
+                }
+                None => dest,
+            };
+        }
+
+        // Don't modify links with schemes like `https`.
+        if SCHEME_LINK.is_match(&dest) {
+            return dest;
+        }
+
+        // This is a relative link, adjust it as necessary.
+        let mut fixed_link = add_base(path);
+
+        if let Some(caps) = HTML_MD_LINK.captures(&dest) {
+            fixed_link.push_str(&caps["link"]);
+            fixed_link.push_str(".html");
+            if let Some(anchor) = caps.name("anchor") {
+                fixed_link.push_str(anchor.as_str());
+            }
+        } else {
+            fixed_link.push_str(&dest);
+        };
+
+        let normalized_path = normalize_path(&fixed_link);
+
+        // Judge if the html link is inside the book.
+        if !normalized_path.starts_with("../") && !normalized_path.contains("/../") {
+            // In `print.html`, print page links would all link to anchors on the print page.
+            return match path {
+                Some(_) => fix_print_page_link(normalized_path, redirects),
+                None => CowStr::from(fixed_link),
+            };
+        }
+        // In normal page rendering, links to anchors on another page.
+        CowStr::from(fixed_link)
+    }
+
+    fn fix_html<'a>(
+        html: CowStr<'a>,
+        path: Option<&Path>,
+        redirects: &HashMap<String, String>,
+    ) -> CowStr<'a> {
         // This is a terrible hack, but should be reasonably reliable. Nobody
         // should ever parse a tag with a regex. However, there isn't anything
         // in Rust that I know of that is suitable for handling partial html
@@ -148,12 +317,45 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
         // There are dozens of HTML tags/attributes that contain paths, so
         // feel free to add more tags if desired; these are the only ones I
         // care about right now.
-        static HTML_LINK: Lazy<Regex> =
-            Lazy::new(|| Regex::new(r#"(<(?:a|img) [^>]*?(?:src|href)=")([^"]+?)""#).unwrap());
+        static A_LINK: Lazy<Regex> =
+            Lazy::new(|| Regex::new(r#"(<a [^>]*?href=")([^"]+?)""#).unwrap());
+        static A_NAME: Lazy<Regex> =
+            Lazy::new(|| Regex::new(r#"(<a [^>]*?name=")([^"]+?)""#).unwrap());
+        static IMG_LINK: Lazy<Regex> =
+            Lazy::new(|| Regex::new(r#"(<img [^>]*?src=")([^"]+?)""#).unwrap());
 
-        HTML_LINK
-            .replace_all(&html, |caps: &regex::Captures<'_>| {
-                let fixed = fix(caps[2].into(), path);
+        let img_link_fixed_html = IMG_LINK.replace_all(&html, |caps: &regex::Captures<'_>| {
+            let fixed = fix_resource_links(caps[2].into(), path);
+            format!("{}{}\"", &caps[1], fixed)
+        });
+
+        let a_name_fixed_html =
+            A_NAME.replace_all(&img_link_fixed_html, |caps: &regex::Captures<'_>| {
+                // This is a relative link, adjust it as necessary.
+                let origin_name = &caps[2].to_string();
+                format!(
+                    "{}{}\"",
+                    &caps[1],
+                    CowStr::from(match path {
+                        Some(path) => {
+                            let mut base = path.display().to_string();
+                            if base.ends_with(".md") {
+                                base.truncate(base.len() - 3);
+                            }
+                            format!(
+                                "{}-{}",
+                                normalize_print_page_id(normalize_path(base)),
+                                origin_name.to_string()
+                            )
+                        }
+                        None => origin_name.to_string(),
+                    })
+                )
+            });
+
+        A_LINK
+            .replace_all(&a_name_fixed_html, |caps: &regex::Captures<'_>| {
+                let fixed = fix_a_links(caps[2].into(), path, &redirects);
                 format!("{}{}\"", &caps[1], fixed)
             })
             .into_owned()
@@ -168,7 +370,7 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
             id,
         }) => Event::Start(Tag::Link {
             link_type,
-            dest_url: fix(dest_url, path),
+            dest_url: fix_a_links_with_type(dest_url, path, redirects, link_type),
             title,
             id,
         }),
@@ -179,12 +381,12 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
             id,
         }) => Event::Start(Tag::Image {
             link_type,
-            dest_url: fix(dest_url, path),
+            dest_url: fix_resource_links(dest_url, path),
             title,
             id,
         }),
-        Event::Html(html) => Event::Html(fix_html(html, path)),
-        Event::InlineHtml(html) => Event::InlineHtml(fix_html(html, path)),
+        Event::Html(html) => Event::Html(fix_html(html, path, redirects)),
+        Event::InlineHtml(html) => Event::InlineHtml(fix_html(html, path, redirects)),
         _ => event,
     }
 }
@@ -192,6 +394,15 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
 /// Wrapper around the pulldown-cmark parser for rendering markdown to HTML.
 pub fn render_markdown(text: &str, smart_punctuation: bool) -> String {
     render_markdown_with_path(text, smart_punctuation, None)
+}
+
+/// Wrapper around for API compatibility.
+pub fn render_markdown_with_path(
+    text: &str,
+    smart_punctuation: bool,
+    path: Option<&Path>,
+) -> String {
+    render_markdown_with_path_and_redirects(text, smart_punctuation, path, &HashMap::new())
 }
 
 pub fn new_cmark_parser(text: &str, smart_punctuation: bool) -> Parser<'_> {
@@ -207,16 +418,26 @@ pub fn new_cmark_parser(text: &str, smart_punctuation: bool) -> Parser<'_> {
     Parser::new_ext(text, opts)
 }
 
-pub fn render_markdown_with_path(
+/// Renders markdown to HTML.
+///
+/// `path` is the path to the page being rendered relative to the root of the
+/// book. This is used for the `print.html` page so that links on the print
+/// page go to the anchors that has a path id prefix. Normal page rendering
+/// sets `path` to None.
+///
+/// `redirects` is also only for the print page. It's for adjusting links to
+/// a redirected location to go to the correct spot on the `print.html` page.
+pub(crate) fn render_markdown_with_path_and_redirects(
     text: &str,
     smart_punctuation: bool,
     path: Option<&Path>,
+    redirects: &HashMap<String, String>,
 ) -> String {
     let mut s = String::with_capacity(text.len() * 3 / 2);
     let p = new_cmark_parser(text, smart_punctuation);
     let events = p
         .map(clean_codeblock_headers)
-        .map(|event| adjust_links(event, path))
+        .map(|event| adjust_links(event, path, &redirects))
         .flat_map(|event| {
             let (a, b) = wrap_tables(event);
             a.into_iter().chain(b)
