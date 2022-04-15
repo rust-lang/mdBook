@@ -134,7 +134,8 @@ fn render_item(
         .with_context(|| "Could not convert HTML path to str")?;
     let anchor_base = utils::fs::normalize_path(filepath);
 
-    let options = HtmlRenderOptions::new(&chapter_path);
+    let redirect = HashMap::new();
+    let options = HtmlRenderOptions::new(&chapter_path, &redirect);
     let mut p = new_cmark_parser(&chapter.content, &options.markdown_options).peekable();
 
     let mut in_heading = false;
