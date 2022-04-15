@@ -27,7 +27,7 @@
   [#1546](https://github.com/rust-lang/mdBook/pull/1546)
 
 ### Changed
-- The `cargo serve` live reload websocket now uses the protocol, host, and
+- The `mdbook serve` live reload websocket now uses the protocol, host, and
   port of the current page, allowing access through a proxy.
   [#1771](https://github.com/rust-lang/mdBook/pull/1771)
 - The 404 not-found page now includes the books title in the HTML title tag.
