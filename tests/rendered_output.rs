@@ -126,12 +126,14 @@ fn check_correct_relative_links_in_print_page() {
     assert_contains_strings(
         first.join("print.html"),
         &[
-            r##"<a href="second/../first/nested.html">the first section</a>,"##,
+            r##"<a href="#first-nested">the first section</a>,"##,
             r##"<a href="second/../../std/foo/bar.html">outside</a>"##,
             r##"<img src="second/../images/picture.png" alt="Some image" />"##,
-            r##"<a href="second/nested.html#some-section">fragment link</a>"##,
-            r##"<a href="second/../first/markdown.html">HTML Link</a>"##,
+            r##"<a href="#second-nested-some-section">fragment link</a>"##,
+            r##"<a href="#first-markdown">HTML Link</a>"##,
             r##"<img src="second/../images/picture.png" alt="raw html">"##,
+            r##"<sup class="footnote-reference"><a href="#first-markdown-1">1</a></sup>"##,
+            r##"<sup class="footnote-reference"><a href="#first-markdown-word">2</a></sup>"##,
         ],
     );
 }
