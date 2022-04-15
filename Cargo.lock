@@ -840,7 +840,7 @@ checksum = "a3e378b66a060d48947b590737b30a1be76706c8dd7b8ba0f2fe3989c68a853f"
 
 [[package]]
 name = "mdbook"
-version = "0.4.17"
+version = "0.4.18"
 dependencies = [
  "ammonia",
  "anyhow",
