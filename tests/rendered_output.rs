@@ -621,6 +621,42 @@ fn remove_absolute_components(path: &Path) -> impl Iterator<Item = Component> + 
     })
 }
 
+/// Checks formatting of summary names with inline elements.
+#[test]
+fn summary_with_markdown_formatting() {
+    let temp = DummyBook::new().build().unwrap();
+    let mut cfg = Config::default();
+    cfg.set("book.src", "summary-formatting").unwrap();
+    let md = MDBook::load_with_config(temp.path(), cfg).unwrap();
+    md.build().unwrap();
+
+    let rendered_path = temp.path().join("book/formatted-summary.html");
+    assert_contains_strings(
+        rendered_path,
+        &[
+            r#"<a href="formatted-summary.html" class="active"><strong aria-hidden="true">1.</strong> Italic code *escape* `escape2`</a>"#,
+            r#"<a href="soft.html"><strong aria-hidden="true">2.</strong> Soft line break</a>"#,
+            r#"<a href="escaped-tag.html"><strong aria-hidden="true">3.</strong> &lt;escaped tag&gt;</a>"#,
+        ],
+    );
+
+    let generated_md = temp.path().join("summary-formatting/formatted-summary.md");
+    assert_eq!(
+        fs::read_to_string(generated_md).unwrap(),
+        "# Italic code *escape* `escape2`\n"
+    );
+    let generated_md = temp.path().join("summary-formatting/soft.md");
+    assert_eq!(
+        fs::read_to_string(generated_md).unwrap(),
+        "# Soft line break\n"
+    );
+    let generated_md = temp.path().join("summary-formatting/escaped-tag.md");
+    assert_eq!(
+        fs::read_to_string(generated_md).unwrap(),
+        "# &lt;escaped tag&gt;\n"
+    );
+}
+
 #[cfg(feature = "search")]
 mod search {
     use crate::dummy_book::DummyBook;
