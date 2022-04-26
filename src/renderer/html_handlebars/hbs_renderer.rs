@@ -481,7 +481,13 @@ impl Renderer for HtmlHandlebars {
         let mut handlebars = Handlebars::new();
 
         let theme_dir = match html_config.theme {
-            Some(ref theme) => ctx.root.join(theme),
+            Some(ref theme) => {
+                let dir = ctx.root.join(theme);
+                if !dir.is_dir() {
+                    bail!("theme dir {} does not exist", dir.display());
+                }
+                dir
+            }
             None => ctx.root.join("theme"),
         };
 
