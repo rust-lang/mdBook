@@ -14,6 +14,7 @@ Here are the files you can override:
 - **_index.hbs_** is the handlebars template.
 - **_head.hbs_** is appended to the HTML `<head>` section.
 - **_header.hbs_** content is appended on top of every book page.
+- **_footer.hbs_** content is appended at the bottom of every book page.
 - **_css/_** contains the CSS files for styling the book.
     - **_css/chrome.css_** is for UI elements.
     - **_css/general.css_** is the base styles.

@@ -510,6 +510,9 @@ impl Renderer for HtmlHandlebars {
         debug!("Register the header handlebars template");
         handlebars.register_partial("header", String::from_utf8(theme.header.clone())?)?;
 
+        debug!("Register the footer handlebars template");
+        handlebars.register_partial("footer", String::from_utf8(theme.footer.clone())?)?;
+
         debug!("Register handlebars helpers");
         self.register_hbs_helpers(&mut handlebars, &html_config);
 
