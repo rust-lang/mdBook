@@ -657,6 +657,57 @@ fn summary_with_markdown_formatting() {
     );
 }
 
+/// Ensure building fails if `[output.html].theme` points to a non-existent directory
+#[test]
+fn failure_on_missing_theme_directory() {
+    // 1. Using default theme should work
+    let temp = DummyBook::new().build().unwrap();
+    let book_toml = r#"
+        [book]
+        title = "implicit"
+        src = "src"
+        "#;
+
+    write_file(temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
+    let got = md.build();
+    assert!(got.is_ok());
+
+    // 2. Pointing to a normal directory should work
+    let temp = DummyBook::new().build().unwrap();
+    let created = fs::create_dir(temp.path().join("theme-directory"));
+    assert!(created.is_ok());
+    let book_toml = r#"
+        [book]
+        title = "implicit"
+        src = "src"
+
+        [output.html]
+        theme = "./theme-directory"
+        "#;
+
+    write_file(temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
+    let got = md.build();
+    assert!(got.is_ok());
+
+    // 3. Pointing to a non-existent directory should fail
+    let temp = DummyBook::new().build().unwrap();
+    let book_toml = r#"
+        [book]
+        title = "implicit"
+        src = "src"
+
+        [output.html]
+        theme = "./non-existent-directory"
+        "#;
+
+    write_file(temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
+    let got = md.build();
+    assert!(got.is_err());
+}
+
 #[cfg(feature = "search")]
 mod search {
     use crate::dummy_book::DummyBook;
