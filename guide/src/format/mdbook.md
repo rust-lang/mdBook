@@ -41,7 +41,7 @@ println!("Hello, World!");
 
 If there is no `main` function, then the code is automatically wrapped inside one.
 
-If you wish to disable the play button, you can include the `noplayground` option on the code block like this:
+If you wish to disable the play button for a code block, you can include the `noplayground` option on the code block like this:
 
 ~~~markdown
 ```rust,noplayground
@@ -50,6 +50,13 @@ std::io::stdin().read_line(&mut name).expect("failed to read line");
 println!("Hello {}!", name);
 ```
 ~~~
+
+Or, if you wish to disable the play button for all code blocks in your book, you can write the config to the `book.toml` like this.
+
+```toml
+[output.html.playground]
+runnable = false
+```
 
 ## Rust code block attributes
 

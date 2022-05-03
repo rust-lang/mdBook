@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 use super::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
 use crate::config::BuildConfig;
 use crate::errors::*;
+use crate::utils::bracket_escape;
 
 /// Load a book into memory from its `src/` directory.
 pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> {
@@ -53,7 +54,7 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
                     let mut f = File::create(&filename).with_context(|| {
                         format!("Unable to create missing file: {}", filename.display())
                     })?;
-                    writeln!(f, "# {}", link.name)?;
+                    writeln!(f, "# {}", bracket_escape(&link.name))?;
                 }
             }
 
