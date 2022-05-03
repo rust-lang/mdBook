@@ -9,7 +9,7 @@ fn mdbook_can_correctly_test_a_passing_book() {
     let temp = DummyBook::new().with_passing_test(true).build().unwrap();
     let mut md = MDBook::load(temp.path()).unwrap();
 
-    let result = md.test(vec![], "");
+    let result = md.test(vec![], None);
     assert!(
         result.is_ok(),
         "Tests failed with {}",
@@ -22,5 +22,5 @@ fn mdbook_detects_book_with_failing_tests() {
     let temp = DummyBook::new().with_passing_test(false).build().unwrap();
     let mut md = MDBook::load(temp.path()).unwrap();
 
-    assert!(md.test(vec![], "").is_err());
+    assert!(md.test(vec![], None).is_err());
 }
