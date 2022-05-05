@@ -865,7 +865,6 @@ dependencies = [
  "select",
  "semver",
  "serde",
- "serde_derive",
  "serde_json",
  "shlex",
  "tempfile",
@@ -1483,6 +1482,9 @@ name = "serde"
 version = "1.0.129"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d1f72836d2aa753853178eda473a3b9d8e4eefdaf20523b919677e6de489f8f1"
+dependencies = [
+ "serde_derive",
+]
 
 [[package]]
 name = "serde_derive"

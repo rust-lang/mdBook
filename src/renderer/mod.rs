@@ -29,6 +29,8 @@ use crate::config::Config;
 use crate::errors::*;
 use toml::Value;
 
+use serde::{Deserialize, Serialize};
+
 /// An arbitrary `mdbook` backend.
 ///
 /// Although it's quite possible for you to import `mdbook` as a library and
