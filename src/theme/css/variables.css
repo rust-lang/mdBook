@@ -48,6 +48,8 @@
     --searchresults-border-color: #888;
     --searchresults-li-bg: #252932;
     --search-mark-bg: #e3b171;
+
+    --is-dark-theme: 1;
 }
 
 .coal {
@@ -88,6 +90,8 @@
     --searchresults-border-color: #98a3ad;
     --searchresults-li-bg: #2b2b2f;
     --search-mark-bg: #355c7d;
+
+    --is-dark-theme: 1;
 }
 
 .light {
@@ -128,6 +132,8 @@
     --searchresults-border-color: #888;
     --searchresults-li-bg: #e4f2fe;
     --search-mark-bg: #a2cff5;
+
+    --is-dark-theme: 0;
 }
 
 .navy {
@@ -168,6 +174,8 @@
     --searchresults-border-color: #5c5c68;
     --searchresults-li-bg: #242430;
     --search-mark-bg: #a2cff5;
+
+    --is-dark-theme: 1;
 }
 
 .rust {
@@ -208,6 +216,8 @@
     --searchresults-border-color: #888;
     --searchresults-li-bg: #dec2a2;
     --search-mark-bg: #e69f67;
+
+    --is-dark-theme: 0;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -249,5 +259,7 @@
         --searchresults-border-color: #98a3ad;
         --searchresults-li-bg: #2b2b2f;
         --search-mark-bg: #355c7d;
+
+        --is-dark-theme: 1;
     }
 }
