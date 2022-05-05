@@ -32,7 +32,7 @@ jobs:
           - build: msrv
             os: ubuntu-latest
             # sync MSRV with docs: guide/src/guide/installation.md
-            rust: 1.54.0
+            rust: 1.56.0
     steps:
     - uses: actions/checkout@master
     - name: Install Rust
