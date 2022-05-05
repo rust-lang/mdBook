@@ -495,6 +495,11 @@ pub struct HtmlConfig {
     pub mathjax_support: bool,
     /// Whether to fonts.css and respective font files to the output directory.
     pub copy_fonts: bool,
+    /// If true, find custom font files by parsing the fonts/fonts.css and copy
+    /// them to the output directory.
+    ///
+    /// ***Is only applied when [copy_fonts] equals to `true`.***
+    pub copy_custom_fonts: bool,
     /// An optional google analytics code.
     pub google_analytics: Option<String>,
     /// Additional CSS stylesheets to include in the rendered page's `<head>`.
@@ -555,6 +560,7 @@ impl Default for HtmlConfig {
             curly_quotes: false,
             mathjax_support: false,
             copy_fonts: true,
+            copy_custom_fonts: false,
             google_analytics: None,
             additional_css: Vec::new(),
             additional_js: Vec::new(),

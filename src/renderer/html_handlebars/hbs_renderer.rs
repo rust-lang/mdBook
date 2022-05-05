@@ -286,6 +286,17 @@ impl HtmlHandlebars {
                 theme::fonts::SOURCE_CODE_PRO.1,
             )?;
         }
+        if html_config.copy_custom_fonts && html_config.copy_fonts {
+            let custom_font_file_names =
+                helpers::custom_fonts::find_custom_font_files(Path::new("fonts/fonts.css"))?;
+            for font_file in custom_font_file_names {
+                write_file(
+                    &Path::new(destination).join("fonts"),
+                    &font_file,
+                    &std::fs::read(&Path::new("fonts").join(&font_file))?,
+                )?;
+            }
+        }
 
         let playground_config = &html_config.playground;
 
