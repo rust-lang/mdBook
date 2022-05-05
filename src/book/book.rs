@@ -9,6 +9,8 @@ use crate::config::BuildConfig;
 use crate::errors::*;
 use crate::utils::bracket_escape;
 
+use serde::{Deserialize, Serialize};
+
 /// Load a book into memory from its `src/` directory.
 pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> {
     let src_dir = src_dir.as_ref();

@@ -11,6 +11,8 @@ use crate::errors::*;
 use crate::theme::searcher;
 use crate::utils;
 
+use serde::Serialize;
+
 /// Creates all files required for search.
 pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> Result<()> {
     let mut index = Index::new(&["title", "body", "breadcrumbs"]);
