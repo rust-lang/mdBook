@@ -497,8 +497,6 @@ pub struct HtmlConfig {
     pub copy_fonts: bool,
     /// If true, find custom font files by parsing the fonts/fonts.css and copy
     /// them to the output directory.
-    ///
-    /// ***Is only applied when [copy_fonts] equals to `true`.***
     pub copy_custom_fonts: bool,
     /// An optional google analytics code.
     pub google_analytics: Option<String>,

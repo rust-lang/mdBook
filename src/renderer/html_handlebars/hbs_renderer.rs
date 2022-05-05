@@ -286,7 +286,14 @@ impl HtmlHandlebars {
                 theme::fonts::SOURCE_CODE_PRO.1,
             )?;
         }
-        if html_config.copy_custom_fonts && html_config.copy_fonts {
+        if html_config.copy_custom_fonts {
+            let mut custom_fonts_css = std::fs::read(&Path::new("fonts/fonts.css"))?;
+            if html_config.copy_fonts {
+                // we need to extend the custom fonts file by the build in one
+                // to have the build in ones still available
+                custom_fonts_css.extend(theme::fonts::CSS);
+            }
+            write_file(destination, "fonts/fonts.css", &custom_fonts_css)?;
             let custom_font_file_names =
                 helpers::custom_fonts::find_custom_font_files(Path::new("fonts/fonts.css"))?;
             for font_file in custom_font_file_names {
@@ -663,6 +670,10 @@ fn make_data(
 
     if html_config.copy_fonts {
         data.insert("copy_fonts".to_owned(), json!(true));
+    }
+
+    if html_config.copy_custom_fonts {
+        data.insert("copy_custom_fonts".to_owned(), json!(true));
     }
 
     // Add check to see if there is an additional style
