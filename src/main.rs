@@ -5,7 +5,7 @@ extern crate log;
 
 use anyhow::anyhow;
 use chrono::Local;
-use clap::{App, AppSettings, Arg, ArgMatches};
+use clap::{Arg, ArgMatches, Command};
 use clap_complete::Shell;
 use env_logger::Builder;
 use log::LevelFilter;
@@ -61,13 +61,13 @@ fn main() {
 }
 
 /// Create a list of valid arguments and sub-commands
-fn create_clap_app() -> App<'static> {
-    let app = App::new(crate_name!())
+fn create_clap_app() -> Command<'static> {
+    let app = Command::new(crate_name!())
         .about(crate_description!())
         .author("Mathieu David <mathieudavid@mathieudavid.org>")
         .version(VERSION)
-        .setting(AppSettings::PropagateVersion)
-        .setting(AppSettings::ArgRequiredElseHelp)
+        .propagate_version(true)
+        .arg_required_else_help(true)
         .after_help(
             "For more information about a specific command, try `mdbook <command> --help`\n\
              The source code for mdBook is available at: https://github.com/rust-lang/mdBook",
@@ -77,7 +77,7 @@ fn create_clap_app() -> App<'static> {
         .subcommand(cmd::test::make_subcommand())
         .subcommand(cmd::clean::make_subcommand())
         .subcommand(
-            App::new("completions")
+            Command::new("completions")
                 .about("Generate shell completions for your shell to stdout")
                 .arg(
                     Arg::new("shell")

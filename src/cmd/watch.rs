@@ -1,5 +1,5 @@
 use crate::{get_book_dir, open};
-use clap::{arg, App, Arg, ArgMatches};
+use clap::{arg, Arg, ArgMatches, Command};
 use mdbook::errors::Result;
 use mdbook::utils;
 use mdbook::MDBook;
@@ -10,8 +10,8 @@ use std::thread::sleep;
 use std::time::Duration;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'help>() -> App<'help> {
-    App::new("watch")
+pub fn make_subcommand<'help>() -> Command<'help> {
+    Command::new("watch")
         .about("Watches a book's files and rebuilds it on changes")
         .arg(
             Arg::new("dest-dir")

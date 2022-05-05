@@ -1,7 +1,7 @@
 #[cfg(feature = "watch")]
 use super::watch;
 use crate::{get_book_dir, open};
-use clap::{arg, App, Arg, ArgMatches};
+use clap::{arg, Arg, ArgMatches, Command};
 use futures_util::sink::SinkExt;
 use futures_util::StreamExt;
 use mdbook::errors::*;
@@ -18,8 +18,8 @@ use warp::Filter;
 const LIVE_RELOAD_ENDPOINT: &str = "__livereload";
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'help>() -> App<'help> {
-    App::new("serve")
+pub fn make_subcommand<'help>() -> Command<'help> {
+    Command::new("serve")
         .about("Serves a book at http://localhost:3000, and rebuilds it on changes")
         .arg(
             Arg::new("dest-dir")

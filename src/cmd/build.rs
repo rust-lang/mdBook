@@ -1,11 +1,11 @@
 use crate::{get_book_dir, open};
-use clap::{arg, App, Arg, ArgMatches};
+use clap::{arg, Arg, ArgMatches, Command};
 use mdbook::errors::Result;
 use mdbook::MDBook;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'help>() -> App<'help> {
-    App::new("build")
+pub fn make_subcommand<'help>() -> Command<'help> {
+    Command::new("build")
         .about("Builds a book from its markdown files")
         .arg(
             Arg::new("dest-dir")

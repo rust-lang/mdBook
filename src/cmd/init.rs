@@ -1,5 +1,5 @@
 use crate::get_book_dir;
-use clap::{arg, App, Arg, ArgMatches};
+use clap::{arg, Arg, ArgMatches, Command as ClapCommand};
 use mdbook::config;
 use mdbook::errors::Result;
 use mdbook::MDBook;
@@ -8,8 +8,8 @@ use std::io::Write;
 use std::process::Command;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'help>() -> App<'help> {
-    App::new("init")
+pub fn make_subcommand<'help>() -> ClapCommand<'help> {
+    ClapCommand::new("init")
         .about("Creates the boilerplate structure and files for a new book")
         // the {n} denotes a newline which will properly aligned in all help messages
         .arg(arg!([dir]
