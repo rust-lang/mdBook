@@ -28,8 +28,7 @@ memchr = "2.0"
 opener = "0.5"
 pulldown-cmark = { version = "0.9.1", default-features = false }
 regex = "1.5.5"
-serde = "1.0"
-serde_derive = "1.0"
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 shlex = "1"
 tempfile = "3.0"
