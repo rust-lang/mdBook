@@ -30,6 +30,7 @@
         - [index.hbs](format/theme/index-hbs.md)
         - [Syntax highlighting](format/theme/syntax-highlighting.md)
         - [Editor](format/theme/editor.md)
+    - [Custom fonts](format/custom-fonts.md)
     - [MathJax Support](format/mathjax.md)
     - [mdBook-specific features](format/mdbook.md)
     - [Markdown](format/markdown.md)
