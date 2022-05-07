@@ -57,12 +57,22 @@ impl HtmlHandlebars {
                 .insert("git_repository_edit_url".to_owned(), json!(edit_url));
         }
 
-        let content = utils::render_markdown(&ch.content, ctx.html_config.smart_punctuation());
+        let content = if ctx.html_config.use_site_url_as_root {
+            utils::render_markdown_with_path(
+                &ch.content,
+                ctx.html_config.smart_punctuation(),
+                None,
+                ctx.html_config.site_url.as_ref(),
+            )
+        } else {
+            utils::render_markdown(&ch.content, ctx.html_config.smart_punctuation())
+        };
 
         let fixed_content = utils::render_markdown_with_path(
             &ch.content,
             ctx.html_config.smart_punctuation(),
             Some(path),
+            None,
         );
         if !ctx.is_index && ctx.html_config.print.page_break {
             // Add page break between chapters
