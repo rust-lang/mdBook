@@ -1,4 +1,4 @@
-use crate::{get_book_dir, open};
+use crate::{first_chapter, get_book_dir, open};
 use clap::{arg, App, Arg, ArgMatches};
 use mdbook::errors::Result;
 use mdbook::MDBook;
@@ -39,13 +39,15 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     if args.is_present("open") {
         // FIXME: What's the right behaviour if we don't use the HTML renderer?
-        let path = book.build_dir_for("html").join("index.html");
-        if !Path::new(&path).exists() {
-            error!("Need a more descriptive error here: {:?}", path);
-            std::process::exit(1);
+        match first_chapter(&book)
+            .map(|path| book.build_dir_for("html").join(path).with_extension("html"))
+        {
+            Some(path) if Path::new(&path).exists() => open(path),
+            _ => {
+                error!("No chapter available to open");
+                std::process::exit(1)
+            }
         }
-
-        open(book.build_dir_for("html").join("index.html"));
     }
 
     Ok(())
