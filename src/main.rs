@@ -9,7 +9,10 @@ use clap::{App, AppSettings, Arg, ArgMatches};
 use clap_complete::Shell;
 use env_logger::Builder;
 use log::LevelFilter;
+use mdbook::book::Chapter;
 use mdbook::utils;
+use mdbook::BookItem;
+use mdbook::MDBook;
 use std::env;
 use std::ffi::OsStr;
 use std::io::Write;
@@ -135,6 +138,17 @@ fn get_book_dir(args: &ArgMatches) -> PathBuf {
     } else {
         env::current_dir().expect("Unable to determine the current directory")
     }
+}
+
+// Return the first displayable chapter of the given book, or None if no displayable
+// chapter is found (i.e. only drafts).
+fn first_chapter(book: &MDBook) -> Option<&PathBuf> {
+    book.iter().find_map(|item| match item {
+        BookItem::Chapter(Chapter {
+            path: Some(path), ..
+        }) => Some(path),
+        _ => None,
+    })
 }
 
 fn open<P: AsRef<OsStr>>(path: P) {
