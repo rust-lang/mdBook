@@ -208,8 +208,10 @@ pre {
 pre > .buttons {
     position: absolute;
     z-index: 100;
-    right: 5px;
-    top: 5px;
+    right: 0px;
+    top: 2px;
+    margin: 0px;
+    padding: 2px 0px;
 
     color: var(--sidebar-fg);
     cursor: pointer;
@@ -225,7 +227,29 @@ pre > .buttons button {
     background: transparent;
     border: none;
     cursor: inherit;
+    margin: 0px;
+    padding: 0px 0.5rem;
+    font-size: 14px;
 }
+@media (pointer: coarse) {
+    pre > .buttons button {
+        /* On mobile, make it easier to tap buttons. */
+        padding: 0 1rem;
+    }
+}
+code {
+    padding: 1.6rem 1rem;
+}
+
+/* FIXME: ACE editors overlap their buttons because ACE does absolute
+   positioning within the code block which breaks padding. The only solution I
+   can think of is to move the padding to the outer pre tag (or insert a div
+   wrapper), but that would require fixing a whole bunch of CSS rules.
+*/
+.hljs.ace_editor {
+  padding: 0rem 0rem;
+}
+
 pre > .result {
     margin-top: 10px;
 }
