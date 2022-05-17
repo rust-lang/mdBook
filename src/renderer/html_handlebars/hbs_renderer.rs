@@ -785,10 +785,13 @@ fn make_data(
 /// Goes through the rendered HTML, making sure all header tags have
 /// an anchor respectively so people can link to sections directly.
 fn build_header_links(html: &str) -> String {
-    let regex = Regex::new(r"<h(\d)>(.*?)</h\d>").unwrap();
+    lazy_static! {
+        static ref BUILD_HEADER_LINKS: Regex = Regex::new(r"<h(\d)>(.*?)</h\d>").unwrap();
+    }
+
     let mut id_counter = HashMap::new();
 
-    regex
+    BUILD_HEADER_LINKS
         .replace_all(html, |caps: &Captures<'_>| {
             let level = caps[1]
                 .parse()
@@ -825,8 +828,12 @@ fn insert_link_into_header(
 // ```
 // This function replaces all commas by spaces in the code block classes
 fn fix_code_blocks(html: &str) -> String {
-    let regex = Regex::new(r##"<code([^>]+)class="([^"]+)"([^>]*)>"##).unwrap();
-    regex
+    lazy_static! {
+        static ref FIX_CODE_BLOCKS: Regex =
+            Regex::new(r##"<code([^>]+)class="([^"]+)"([^>]*)>"##).unwrap();
+    }
+
+    FIX_CODE_BLOCKS
         .replace_all(html, |caps: &Captures<'_>| {
             let before = &caps[1];
             let classes = &caps[2].replace(",", " ");
@@ -847,8 +854,11 @@ fn add_playground_pre(
     playground_config: &Playground,
     edition: Option<RustEdition>,
 ) -> String {
-    let regex = Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap();
-    regex
+    lazy_static! {
+        static ref ADD_PLAYGROUND_PRE: Regex =
+            Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap();
+    }
+    ADD_PLAYGROUND_PRE
         .replace_all(html, |caps: &Captures<'_>| {
             let text = &caps[1];
             let classes = &caps[2];
@@ -912,11 +922,11 @@ fn add_playground_pre(
         .into_owned()
 }
 
-lazy_static! {
-    static ref BORING_LINES_REGEX: Regex = Regex::new(r"^(\s*)#(.?)(.*)$").unwrap();
-}
-
 fn hide_lines(content: &str) -> String {
+    lazy_static! {
+        static ref BORING_LINES_REGEX: Regex = Regex::new(r"^(\s*)#(.?)(.*)$").unwrap();
+    }
+
     let mut result = String::with_capacity(content.len());
     for line in content.lines() {
         if let Some(caps) = BORING_LINES_REGEX.captures(line) {
