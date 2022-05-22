@@ -772,7 +772,7 @@ mod search {
         );
         assert_eq!(
             docs[&no_headers]["body"],
-            "Capybara capybara capybara. Capybara capybara capybara."
+            "Capybara capybara capybara. Capybara capybara capybara. ThisLongWordIsIncludedSoWeCanCheckThatSufficientlyLongWordsAreOmittedFromTheSearchIndex."
         );
     }
 
