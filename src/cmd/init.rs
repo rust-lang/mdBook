@@ -1,5 +1,5 @@
 use crate::get_book_dir;
-use clap::{App, Arg, ArgMatches, SubCommand};
+use clap::{arg, App, Arg, ArgMatches};
 use mdbook::config;
 use mdbook::errors::Result;
 use mdbook::MDBook;
@@ -8,25 +8,25 @@ use std::io::Write;
 use std::process::Command;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
-    SubCommand::with_name("init")
+pub fn make_subcommand<'help>() -> App<'help> {
+    App::new("init")
         .about("Creates the boilerplate structure and files for a new book")
         // the {n} denotes a newline which will properly aligned in all help messages
-        .arg_from_usage(
-            "[dir] 'Directory to create the book in{n}\
-             (Defaults to the Current Directory when omitted)'",
-        )
-        .arg_from_usage("--theme 'Copies the default theme into your source folder'")
-        .arg_from_usage("--force 'Skips confirmation prompts'")
+        .arg(arg!([dir]
+            "Directory to create the book in{n}\
+            (Defaults to the Current Directory when omitted)"
+        ))
+        .arg(arg!(--theme "Copies the default theme into your source folder"))
+        .arg(arg!(--force "Skips confirmation prompts"))
         .arg(
-            Arg::with_name("title")
+            Arg::new("title")
                 .long("title")
                 .takes_value(true)
                 .help("Sets the book title")
                 .required(false),
         )
         .arg(
-            Arg::with_name("ignore")
+            Arg::new("ignore")
                 .long("ignore")
                 .takes_value(true)
                 .possible_values(&["none", "git"])

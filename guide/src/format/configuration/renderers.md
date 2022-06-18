@@ -173,10 +173,12 @@ By default, mdBook will include an icon on the top right of the book (which look
 ```toml
 [output.html.print]
 enable = true    # include support for printable output
+page-break = true # insert page-break after each chapter
 ```
 
 - **enable:** Enable print support. When `false`, all print support will not be
   rendered. Defaults to `true`.
+- **page-break** Insert page breaks between chapters. Defaults to `true`.
 
 ### `[output.html.fold]`
 
@@ -205,6 +207,7 @@ editable = false         # allows editing the source code
 copyable = true          # include the copy button for copying code snippets
 copy-js = true           # includes the JavaScript for the code editor
 line-numbers = false     # displays line numbers for editable code
+runnable = true          # displays a run button for rust code
 ```
 
 - **editable:** Allow editing the source code. Defaults to `false`.
@@ -212,6 +215,7 @@ line-numbers = false     # displays line numbers for editable code
 - **copy-js:** Copy JavaScript files for the editor to the output directory.
   Defaults to `true`.
 - **line-numbers** Display line numbers on editable sections of code. Requires both `editable` and `copy-js` to be `true`. Defaults to `false`.
+- **runnable** Displays a run button for rust code snippets. Changing this to `false` will disable the run in playground feature globally. Defaults to `true`.
 
 [Ace]: https://ace.c9.io/
 

@@ -31,7 +31,8 @@ jobs:
             rust: stable
           - build: msrv
             os: ubuntu-latest
-            rust: 1.46.0
+            # sync MSRV with docs: guide/src/guide/installation.md
+            rust: 1.54.0
     steps:
     - uses: actions/checkout@master
     - name: Install Rust
@@ -48,4 +49,4 @@ jobs:
     - uses: actions/checkout@master
     - name: Install Rust
       run: rustup update stable && rustup default stable && rustup component add rustfmt
-    - run: cargo fmt -- --check
+    - run: cargo fmt --check

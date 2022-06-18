@@ -1,6 +1,5 @@
+use crate::cli::cmd::mdbook_cmd;
 use crate::dummy_book::DummyBook;
-
-use assert_cmd::Command;
 
 #[test]
 fn mdbook_cli_dummy_book_generates_index_html() {
@@ -9,7 +8,7 @@ fn mdbook_cli_dummy_book_generates_index_html() {
     // doesn't exist before
     assert!(!temp.path().join("book").exists());
 
-    let mut cmd = Command::cargo_bin("mdbook").unwrap();
+    let mut cmd = mdbook_cmd();
     cmd.arg("build").current_dir(temp.path());
     cmd.assert()
         .success()
