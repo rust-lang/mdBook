@@ -446,15 +446,18 @@ ul#searchresults span.teaser em {
 
 .chapter li > a.toggle {
     cursor: pointer;
+}
+
+.chapter li > a.toggle:not(:first-child) {
     display: block;
     margin-left: auto;
     padding: 0 10px;
-    user-select: none;
-    opacity: 0.68;
 }
 
 .chapter li > a.toggle div {
     transition: transform 0.5s;
+    user-select: none;
+    opacity: 0.68;
 }
 
 /* collapse the section */

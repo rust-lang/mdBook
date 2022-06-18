@@ -116,8 +116,12 @@ impl HelperDef for RenderToc {
                 continue;
             }
 
+            let is_foldable = item.get("has_sub_items").map_or(false, |flag| {
+                fold_enable && flag.parse::<bool>().unwrap_or_default()
+            });
+
             // Link
-            let path_exists: bool;
+            let has_link: bool;
             match item.get("path") {
                 Some(path) if !path.is_empty() => {
                     out.write("<a href=\"")?;
@@ -139,11 +143,15 @@ impl HelperDef for RenderToc {
                     }
 
                     out.write(">")?;
-                    path_exists = true;
+                    has_link = true;
+                }
+                _ if is_foldable => {
+                    out.write("<a class=\"toggle\">")?;
+                    has_link = true;
                 }
                 _ => {
                     out.write("<div>")?;
-                    path_exists = false;
+                    has_link = false;
                 }
             }
 
@@ -160,18 +168,15 @@ impl HelperDef for RenderToc {
                 out.write(&bracket_escape(name))?
             }
 
-            if path_exists {
+            if has_link {
                 out.write("</a>")?;
             } else {
                 out.write("</div>")?;
             }
 
             // Render expand/collapse toggle
-            if let Some(flag) = item.get("has_sub_items") {
-                let has_sub_items = flag.parse::<bool>().unwrap_or_default();
-                if fold_enable && has_sub_items {
-                    out.write("<a class=\"toggle\"><div>❱</div></a>")?;
-                }
+            if is_foldable {
+                out.write("<a class=\"toggle\"><div>❱</div></a>")?;
             }
             out.write("</li>")?;
         }
