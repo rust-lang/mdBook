@@ -1,3 +1,5 @@
+cargo-features = ["edition2021"]
+
 [package]
 name = "mdbook"
 version = "0.4.18"
@@ -14,7 +16,6 @@ license = "MPL-2.0"
 readme = "README.md"
 repository = "https://github.com/rust-lang/mdBook"
 description = "Creates a book from markdown files"
-features = ["edition2021"]
 
 [dependencies]
 anyhow = "1.0.28"
