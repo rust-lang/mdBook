@@ -5,7 +5,7 @@ extern crate log;
 
 use anyhow::anyhow;
 use chrono::Local;
-use clap::{App, AppSettings, Arg, ArgMatches};
+use clap::{App, AppSettings, Arg, ArgMatches, ArgEnum};
 use clap_complete::Shell;
 use env_logger::Builder;
 use log::LevelFilter;
@@ -85,9 +85,18 @@ fn create_clap_app() -> App<'static> {
                 .arg(
                     Arg::new("shell")
                         .takes_value(true)
-                        .possible_values(Shell::possible_values())
+                        .possible_values(
+                            Shell::value_variants()
+                            .iter()
+                            .filter_map(ArgEnum::to_possible_value)
+                        )
+                        // .possible_values(Shell::possible_values())
                         .help("the shell to generate completions for")
                         .value_name("SHELL")
+                        // .value_parser([Shell::possible_values()])
+                        // .value_parser([PossibleValue::new("fast")])
+                        //.value_parser(clap::builder::PossibleValuesParser::new(["always", "auto", "never"]))
+                        // .value_parser(clap::builder::PossibleValuesParser::new([Shell::possible_values()]))
                         .required(true),
                 ),
         );
