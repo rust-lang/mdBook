@@ -90,13 +90,8 @@ fn create_clap_app() -> App<'static> {
                             .iter()
                             .filter_map(ArgEnum::to_possible_value)
                         )
-                        // .possible_values(Shell::possible_values())
                         .help("the shell to generate completions for")
                         .value_name("SHELL")
-                        // .value_parser([Shell::possible_values()])
-                        // .value_parser([PossibleValue::new("fast")])
-                        //.value_parser(clap::builder::PossibleValuesParser::new(["always", "auto", "never"]))
-                        // .value_parser(clap::builder::PossibleValuesParser::new([Shell::possible_values()]))
                         .required(true),
                 ),
         );
