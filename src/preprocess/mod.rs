@@ -19,6 +19,8 @@ use std::{
     fmt::{Debug},
 };
 
+use serde::{Deserialize, Serialize};
+
 /// Extra information for a `Preprocessor` to give them more context when
 /// processing a book.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

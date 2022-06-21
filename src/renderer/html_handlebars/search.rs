@@ -11,6 +11,8 @@ use crate::errors::*;
 use crate::theme::searcher;
 use crate::utils;
 
+use serde::Serialize;
+
 /// Creates all files required for search.
 pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> Result<()> {
     let mut index = Index::new(&["title", "body", "breadcrumbs"]);
@@ -97,6 +99,7 @@ fn render_item(
 
     breadcrumbs.push(chapter.name.clone());
 
+    let mut id_counter = HashMap::new();
     while let Some(event) = p.next() {
         match event {
             Event::Start(Tag::Heading(i, ..)) if i as u32 <= max_section_depth => {
@@ -120,7 +123,7 @@ fn render_item(
             }
             Event::End(Tag::Heading(i, ..)) if i as u32 <= max_section_depth => {
                 in_heading = false;
-                section_id = Some(utils::id_from_content(&heading));
+                section_id = Some(utils::unique_id_from_content(&heading, &mut id_counter));
                 breadcrumbs.push(heading.clone());
             }
             Event::Start(Tag::FootnoteDefinition(name)) => {

@@ -536,14 +536,14 @@ pub struct HtmlConfig {
     /// directly jumping to editing the currently viewed page.
     /// Contains {path} that is replaced with chapter source file path
     pub edit_url_template: Option<String>,
-    /// This is used as a bit of a workaround for the `mdbook serve` command.
-    /// Basically, because you set the websocket port from the command line, the
-    /// `mdbook serve` command needs a way to let the HTML renderer know where
-    /// to point livereloading at, if it has been enabled.
+    /// Endpoint of websocket, for livereload usage. Value loaded from .toml file
+    /// is ignored, because our code overrides this field with the value [`LIVE_RELOAD_ENDPOINT`]
+    ///
+    /// [`LIVE_RELOAD_ENDPOINT`]: cmd::serve::LIVE_RELOAD_ENDPOINT
     ///
     /// This config item *should not be edited* by the end user.
     #[doc(hidden)]
-    pub livereload_url: Option<String>,
+    pub live_reload_endpoint: Option<String>,
     /// The mapping from old pages to new pages/URLs to use when generating
     /// redirects.
     pub redirect: HashMap<String, String>,
@@ -572,7 +572,7 @@ impl Default for HtmlConfig {
             input_404: None,
             site_url: None,
             cname: None,
-            livereload_url: None,
+            live_reload_endpoint: None,
             redirect: HashMap::new(),
         }
     }
@@ -591,7 +591,7 @@ impl HtmlConfig {
 
 /// Configuration for how to render the print icon, print.html, and print.css.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(default, rename_all = "kebab-case")]
 pub struct Print {
     /// Whether print support is enabled.
     pub enable: bool,
@@ -633,6 +633,8 @@ pub struct Playground {
     pub copy_js: bool,
     /// Display line numbers on playground snippets. Default: `false`.
     pub line_numbers: bool,
+    /// Display the run button. Default: `true`
+    pub runnable: bool,
 }
 
 impl Default for Playground {
@@ -642,6 +644,7 @@ impl Default for Playground {
             copyable: true,
             copy_js: true,
             line_numbers: false,
+            runnable: true,
         }
     }
 }
@@ -786,6 +789,7 @@ mod tests {
             copyable: true,
             copy_js: true,
             line_numbers: false,
+            runnable: true,
         };
         let html_should_be = HtmlConfig {
             curly_quotes: true,
@@ -814,6 +818,22 @@ mod tests {
         assert_eq!(got.build, build_should_be);
         assert_eq!(got.rust, rust_should_be);
         assert_eq!(got.html_config().unwrap(), html_should_be);
+    }
+
+    #[test]
+    fn disable_runnable() {
+        let src = r#"
+        [book]
+        title = "Some Book"
+        description = "book book book"
+        authors = ["Shogo Takata"]
+
+        [output.html.playground]
+        runnable = false
+        "#;
+
+        let got = Config::from_str(src).unwrap();
+        assert_eq!(got.html_config().unwrap().playground.runnable, false);
     }
 
     #[test]
@@ -1159,5 +1179,25 @@ mod tests {
         "#;
 
         Config::from_str(src).unwrap();
+    }
+
+    #[test]
+    fn print_config() {
+        let src = r#"
+        [output.html.print]
+        enable = false
+        "#;
+        let got = Config::from_str(src).unwrap();
+        let html_config = got.html_config().unwrap();
+        assert_eq!(html_config.print.enable, false);
+        assert_eq!(html_config.print.page_break, true);
+        let src = r#"
+        [output.html.print]
+        page-break = false
+        "#;
+        let got = Config::from_str(src).unwrap();
+        let html_config = got.html_config().unwrap();
+        assert_eq!(html_config.print.enable, true);
+        assert_eq!(html_config.print.page_break, false);
     }
 }
