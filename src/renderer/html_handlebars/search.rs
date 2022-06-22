@@ -13,6 +13,8 @@ use crate::utils;
 
 use serde::Serialize;
 
+const MAX_WORD_LENGTH_TO_INDEX: usize = 80;
+
 /// Creates all files required for search.
 pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> Result<()> {
     let mut index = Index::new(&["title", "body", "breadcrumbs"]);
@@ -44,6 +46,15 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
     Ok(())
 }
 
+/// Tokenizes in the same way as elasticlunr-rs (for English), but also drops long tokens.
+fn tokenize(text: &str) -> Vec<String> {
+    text.split(|c: char| c.is_whitespace() || c == '-')
+        .filter(|s| !s.is_empty())
+        .map(|s| s.trim().to_lowercase())
+        .filter(|s| s.len() <= MAX_WORD_LENGTH_TO_INDEX)
+        .collect()
+}
+
 /// Uses the given arguments to construct a search document, then inserts it to the given index.
 fn add_doc(
     index: &mut Index,
@@ -62,7 +73,7 @@ fn add_doc(
     doc_urls.push(url.into());
 
     let items = items.iter().map(|&x| utils::collapse_whitespace(x.trim()));
-    index.add_doc(&doc_ref, items);
+    index.add_doc_with_tokenizer(&doc_ref, items, tokenize);
 }
 
 /// Renders markdown into flat unformatted text and adds it to the search index.
