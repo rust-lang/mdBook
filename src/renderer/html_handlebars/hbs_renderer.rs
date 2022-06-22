@@ -540,7 +540,8 @@ impl Renderer for HtmlHandlebars {
                 chapter_titles: &ctx.chapter_titles,
             };
             self.render_item(item, ctx, &mut print_content)?;
-            is_index = false;
+            // Only the first non-draft chapter item should be treated as the "index"
+            is_index &= !matches!(item, BookItem::Chapter(ch) if !ch.is_draft_chapter());
         }
 
         // Render 404 page
