@@ -15,7 +15,7 @@ use select::predicate::{Class, Name, Predicate};
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
 use tempfile::Builder as TempFileBuilder;
@@ -465,6 +465,34 @@ fn by_default_mdbook_use_index_preprocessor_to_convert_readme_to_index() {
     let second_index = temp.path().join("book").join("second").join("index.html");
     let unexpected_strings = vec!["Second README"];
     assert_doesnt_contain_strings(&second_index, &unexpected_strings);
+}
+
+#[test]
+fn first_chapter_is_copied_as_index_even_if_not_first_elem() {
+    let temp = DummyBook::new().build().unwrap();
+    let mut cfg = Config::default();
+    cfg.set("book.src", "index_html_test")
+        .expect("Couldn't set config.book.src to \"index_html_test\"");
+    let md = MDBook::load_with_config(temp.path(), cfg).unwrap();
+    md.build().unwrap();
+
+    // In theory, just reading the entire files into memory and comparing is sufficient for *testing*,
+    // but since the files are temporary and get deleted when the test completes, we'll want to print
+    // the differences on failure.
+    // We could invoke `diff` on the files on failure, but that may not be portable (hi, Windows...)
+    // so we'll do the job ourselves—potentially a bit sloppily, but that can always be piped into
+    // `diff` manually afterwards.
+    let book_path = temp.path().join("book");
+    let read_file = |path: &str| {
+        let mut buf = String::new();
+        fs::File::open(book_path.join(path))
+            .with_context(|| format!("Failed to read {}", path))
+            .unwrap()
+            .read_to_string(&mut buf)
+            .unwrap();
+        buf
+    };
+    pretty_assertions::assert_eq!(read_file("chapter_1.html"), read_file("index.html"));
 }
 
 #[test]
