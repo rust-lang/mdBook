@@ -49,6 +49,7 @@
 
 #![deny(missing_docs)]
 
+use log::{debug, trace, warn};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
 use std::env;
@@ -295,7 +296,7 @@ impl Default for Config {
     }
 }
 
-impl<'de> Deserialize<'de> for Config {
+impl<'de> serde::Deserialize<'de> for Config {
     fn deserialize<D: Deserializer<'de>>(de: D) -> std::result::Result<Self, D::Error> {
         let raw = Value::deserialize(de)?;
 
@@ -717,6 +718,7 @@ impl<'de, T> Updateable<'de> for T where T: Serialize + Deserialize<'de> {}
 mod tests {
     use super::*;
     use crate::utils::fs::get_404_output_file;
+    use serde_json::json;
 
     const COMPLEX_CONFIG: &str = r#"
         [book]

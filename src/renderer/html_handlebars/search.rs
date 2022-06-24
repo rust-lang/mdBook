@@ -10,7 +10,8 @@ use crate::config::Search;
 use crate::errors::*;
 use crate::theme::searcher;
 use crate::utils;
-
+use lazy_static::lazy_static;
+use log::{debug, warn};
 use serde::Serialize;
 
 const MAX_WORD_LENGTH_TO_INDEX: usize = 80;

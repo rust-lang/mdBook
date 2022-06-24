@@ -14,7 +14,10 @@ use std::path::{Path, PathBuf};
 
 use crate::utils::fs::get_404_output_file;
 use handlebars::Handlebars;
+use lazy_static::lazy_static;
+use log::{debug, trace, warn};
 use regex::{Captures, Regex};
+use serde_json::json;
 
 #[derive(Default)]
 pub struct HtmlHandlebars;
