@@ -25,6 +25,7 @@ body {
 code {
     font-family: var(--mono-font) !important;
     font-size: var(--code-font-size);
+    direction: ltr !important;
 }
 
 /* make long words/inline code not x overflow */

@@ -22,6 +22,10 @@
     overflow-y: initial;
 }
 
+code {
+    direction: ltr !important;
+}
+
 pre > .buttons {
     z-index: 2;
 }
