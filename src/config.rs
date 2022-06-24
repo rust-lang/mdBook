@@ -49,6 +49,7 @@
 
 #![deny(missing_docs)]
 
+use log::{debug, trace, warn};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
 use std::env;
@@ -295,7 +296,7 @@ impl Default for Config {
     }
 }
 
-impl<'de> Deserialize<'de> for Config {
+impl<'de> serde::Deserialize<'de> for Config {
     fn deserialize<D: Deserializer<'de>>(de: D) -> std::result::Result<Self, D::Error> {
         let raw = Value::deserialize(de)?;
 
@@ -588,7 +589,7 @@ impl HtmlConfig {
 
 /// Configuration for how to render the print icon, print.html, and print.css.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(default, rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case")]
 pub struct Print {
     /// Whether print support is enabled.
     pub enable: bool,
@@ -724,6 +725,7 @@ impl<'de, T> Updateable<'de> for T where T: Serialize + Deserialize<'de> {}
 mod tests {
     use super::*;
     use crate::utils::fs::get_404_output_file;
+    use serde_json::json;
 
     const COMPLEX_CONFIG: &str = r#"
         [book]
@@ -890,8 +892,6 @@ mod tests {
         title = "mdBook Documentation"
         description = "Create book from markdown files. Like Gitbook but implemented in Rust"
         authors = ["Mathieu David"]
-        src = "./source"
-        [rust]
         edition = "2021"
         "#;
 

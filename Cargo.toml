@@ -7,7 +7,7 @@ authors = [
     "Matt Ickstadt <mattico8@gmail.com>"
 ]
 documentation = "http://rust-lang.github.io/mdBook/index.html"
-edition = "2018"
+edition = "2021"
 exclude = ["/guide/*"]
 keywords = ["book", "gitbook", "rustbook", "markdown"]
 license = "MPL-2.0"

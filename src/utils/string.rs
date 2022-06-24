@@ -1,3 +1,4 @@
+use lazy_static::lazy_static;
 use regex::Regex;
 use std::ops::Bound::{Excluded, Included, Unbounded};
 use std::ops::RangeBounds;

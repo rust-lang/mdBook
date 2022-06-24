@@ -4,9 +4,10 @@ pub mod fs;
 mod string;
 pub(crate) mod toml_ext;
 use crate::errors::Error;
-use regex::Regex;
-
+use lazy_static::lazy_static;
+use log::error;
 use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, Options, Parser, Tag};
+use regex::Regex;
 
 use std::borrow::Cow;
 use std::collections::HashMap;

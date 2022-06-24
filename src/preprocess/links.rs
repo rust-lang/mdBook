@@ -10,6 +10,8 @@ use std::path::{Path, PathBuf};
 
 use super::{Preprocessor, PreprocessorContext};
 use crate::book::{Book, BookItem};
+use lazy_static::lazy_static;
+use log::{error, warn};
 
 const ESCAPE_CHAR: char = '\\';
 const MAX_LINK_NESTED_DEPTH: usize = 10;

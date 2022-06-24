@@ -4,6 +4,8 @@ use std::path::Path;
 use handlebars::{Context, Handlebars, Helper, Output, RenderContext, RenderError, Renderable};
 
 use crate::utils;
+use log::{debug, trace};
+use serde_json::json;
 
 type StringMap = BTreeMap<String, String>;
 
