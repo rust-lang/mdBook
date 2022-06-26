@@ -146,6 +146,7 @@ enum RangeOrAnchor {
 }
 
 // A range of lines specified with some include directive.
+#[allow(clippy::enum_variant_names)] // The prefix can't be removed, and is meant to mirror the contained type
 #[derive(PartialEq, Debug, Clone)]
 enum LineRange {
     Range(Range<usize>),

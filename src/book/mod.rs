@@ -386,7 +386,7 @@ fn determine_renderers(config: &Config) -> Vec<Box<dyn Renderer>> {
     renderers
 }
 
-const DEFAULT_PREPROCESSORS: &[&'static str] = &["links", "index"];
+const DEFAULT_PREPROCESSORS: &[&str] = &["links", "index"];
 
 fn is_default_preprocessor(pre: &dyn Preprocessor) -> bool {
     let name = pre.name();
@@ -756,10 +756,9 @@ mod tests {
 
         let preprocessors = determine_preprocessors(&cfg).unwrap();
 
-        assert!(preprocessors
+        assert!(!preprocessors
             .iter()
-            .find(|preprocessor| preprocessor.name() == "random")
-            .is_none());
+            .any(|preprocessor| preprocessor.name() == "random"));
     }
 
     #[test]
@@ -776,10 +775,9 @@ mod tests {
 
         let preprocessors = determine_preprocessors(&cfg).unwrap();
 
-        assert!(preprocessors
+        assert!(!preprocessors
             .iter()
-            .find(|preprocessor| preprocessor.name() == "links")
-            .is_none());
+            .any(|preprocessor| preprocessor.name() == "links"));
     }
 
     #[test]

@@ -211,12 +211,13 @@ fn write_to_json(index: Index, search_config: &Search, doc_urls: Vec<String>) ->
 
     let mut fields = BTreeMap::new();
     let mut opt = SearchOptionsField::default();
-    opt.boost = Some(search_config.boost_title);
-    fields.insert("title".into(), opt);
-    opt.boost = Some(search_config.boost_paragraph);
-    fields.insert("body".into(), opt);
-    opt.boost = Some(search_config.boost_hierarchy);
-    fields.insert("breadcrumbs".into(), opt);
+    let mut insert_boost = |key: &str, boost| {
+        opt.boost = Some(boost);
+        fields.insert(key.into(), opt);
+    };
+    insert_boost("title", search_config.boost_title);
+    insert_boost("body", search_config.boost_paragraph);
+    insert_boost("breadcrumbs", search_config.boost_hierarchy);
 
     let search_options = SearchOptions {
         bool: if search_config.use_boolean_and {
