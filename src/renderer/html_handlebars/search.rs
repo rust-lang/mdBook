@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
-use elasticlunr::Index;
+use elasticlunr::{Index, IndexBuilder};
 use pulldown_cmark::*;
 
 use crate::book::{Book, BookItem};
@@ -13,9 +13,25 @@ use crate::utils;
 
 use serde::Serialize;
 
+const MAX_WORD_LENGTH_TO_INDEX: usize = 80;
+
+/// Tokenizes in the same way as elasticlunr-rs (for English), but also drops long tokens.
+fn tokenize(text: &str) -> Vec<String> {
+    text.split(|c: char| c.is_whitespace() || c == '-')
+        .filter(|s| !s.is_empty())
+        .map(|s| s.trim().to_lowercase())
+        .filter(|s| s.len() <= MAX_WORD_LENGTH_TO_INDEX)
+        .collect()
+}
+
 /// Creates all files required for search.
 pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> Result<()> {
-    let mut index = Index::new(&["title", "body", "breadcrumbs"]);
+    let mut index = IndexBuilder::new()
+        .add_field_with_tokenizer("title", Box::new(&tokenize))
+        .add_field_with_tokenizer("body", Box::new(&tokenize))
+        .add_field_with_tokenizer("breadcrumbs", Box::new(&tokenize))
+        .build();
+
     let mut doc_urls = Vec::with_capacity(book.sections.len());
 
     for item in book.iter() {
