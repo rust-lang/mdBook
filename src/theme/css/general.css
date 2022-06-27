@@ -26,6 +26,16 @@ code {
     font-size: 0.875em; /* please adjust the ace font size accordingly in editor.js */
 }
 
+/* make long words/inline code not x overflow */
+main {
+    overflow-wrap: break-word;
+}
+
+/* make wide tables scroll if they overflow */
+.table-wrapper {
+    overflow-x: auto;
+}
+
 /* Don't change font size in headers. */
 h1 code, h2 code, h3 code, h4 code, h5 code, h6 code {
     font-size: unset;
