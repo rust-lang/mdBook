@@ -227,10 +227,10 @@ impl Config {
         let value = Value::try_from(value)
             .with_context(|| "Unable to represent the item as a JSON Value")?;
 
-        if index.starts_with("book.") {
-            self.book.update_value(&index[5..], value);
-        } else if index.starts_with("build.") {
-            self.build.update_value(&index[6..], value);
+        if let Some(key) = index.strip_prefix("book.") {
+            self.book.update_value(key, value);
+        } else if let Some(key) = index.strip_prefix("build.") {
+            self.build.update_value(key, value);
         } else {
             self.rest.insert(index, value);
         }
@@ -371,15 +371,8 @@ impl Serialize for Config {
 }
 
 fn parse_env(key: &str) -> Option<String> {
-    const PREFIX: &str = "MDBOOK_";
-
-    if key.starts_with(PREFIX) {
-        let key = &key[PREFIX.len()..];
-
-        Some(key.to_lowercase().replace("__", ".").replace("_", "-"))
-    } else {
-        None
-    }
+    key.strip_prefix("MDBOOK_")
+        .map(|key| key.to_lowercase().replace("__", ".").replace('_', "-"))
 }
 
 fn is_legacy_format(table: &Value) -> bool {
@@ -828,7 +821,7 @@ mod tests {
         "#;
 
         let got = Config::from_str(src).unwrap();
-        assert_eq!(got.html_config().unwrap().playground.runnable, false);
+        assert!(!got.html_config().unwrap().playground.runnable);
     }
 
     #[test]
@@ -1037,7 +1030,7 @@ mod tests {
     fn encode_env_var(key: &str) -> String {
         format!(
             "MDBOOK_{}",
-            key.to_uppercase().replace('.', "__").replace("-", "_")
+            key.to_uppercase().replace('.', "__").replace('-', "_")
         )
     }
 
@@ -1061,11 +1054,10 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::approx_constant)]
     fn update_config_using_env_var_and_complex_value() {
         let mut cfg = Config::default();
         let key = "foo-bar.baz";
-        let value = json!({"array": [1, 2, 3], "number": 3.14});
+        let value = json!({"array": [1, 2, 3], "number": 13.37});
         let value_str = serde_json::to_string(&value).unwrap();
 
         assert!(cfg.get(key).is_none());
@@ -1184,15 +1176,15 @@ mod tests {
         "#;
         let got = Config::from_str(src).unwrap();
         let html_config = got.html_config().unwrap();
-        assert_eq!(html_config.print.enable, false);
-        assert_eq!(html_config.print.page_break, true);
+        assert!(!html_config.print.enable);
+        assert!(html_config.print.page_break);
         let src = r#"
         [output.html.print]
         page-break = false
         "#;
         let got = Config::from_str(src).unwrap();
         let html_config = got.html_config().unwrap();
-        assert_eq!(html_config.print.enable, true);
-        assert_eq!(html_config.print.page_break, false);
+        assert!(html_config.print.enable);
+        assert!(!html_config.print.page_break);
     }
 }

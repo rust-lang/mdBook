@@ -814,7 +814,7 @@ fn fix_code_blocks(html: &str) -> String {
     FIX_CODE_BLOCKS
         .replace_all(html, |caps: &Captures<'_>| {
             let before = &caps[1];
-            let classes = &caps[2].replace(",", " ");
+            let classes = &caps[2].replace(',', " ");
             let after = &caps[3];
 
             format!(
