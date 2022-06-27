@@ -53,7 +53,7 @@ assert_cmd = "1"
 predicates = "2"
 select = "0.5"
 semver = "1.0"
-pretty_assertions = "0.6"
+pretty_assertions = "1.2.1"
 walkdir = "2.0"
 
 [features]
