@@ -1,5 +1,33 @@
 # Changelog
 
+## mdBook 0.4.19
+[ae275ad...eb82ddc](https://github.com/rust-lang/mdBook/compare/ae275ad...eb82ddc)
+
+### Added
+- The `serve` command now supports HEAD requests.
+  [#1825](https://github.com/rust-lang/mdBook/pull/1825)
+
+### Changed
+- An error is now generated when a custom theme directory does not exist.
+  [#1791](https://github.com/rust-lang/mdBook/pull/1791)
+- Very wide tables now have independent horizontal scrolling so that scrolling
+  to see the rest of the table will not scroll the entire page.
+  [#1617](https://github.com/rust-lang/mdBook/pull/1617)
+- The buttons on code blocks are now only shown when the mouse cursor hovers
+  over them (or tapped on mobile). There is also some extra spacing to reduce
+  the overlap with the code.
+  [#1806](https://github.com/rust-lang/mdBook/pull/1806)
+- The first chapter always generates an `index.html` file. Previously it would
+  only generate the index file for prefix chapters.
+  [#1829](https://github.com/rust-lang/mdBook/pull/1829)
+
+### Fixed
+- `mdbook serve --open` now properly handles the case if the first chapter is a draft.
+  [#1714](https://github.com/rust-lang/mdBook/pull/1714)
+  [#1830](https://github.com/rust-lang/mdBook/pull/1830)
+- Very long words (over 80 characters) are no longer indexed to avoid a stack overflow.
+  [#1833](https://github.com/rust-lang/mdBook/pull/1833)
+
 ## mdBook 0.4.18
 [981b79b...ae275ad](https://github.com/rust-lang/mdBook/compare/981b79b...ae275ad)
 
