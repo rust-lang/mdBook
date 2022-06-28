@@ -12,19 +12,22 @@ use syntect::parsing::{SyntaxSet, SyntaxSetBuilder};
 pub fn make_subcommand<'help>() -> App<'help> {
     App::new("gen-syntax-cache")
         .about("Generate syntaxes.bin and css/syntax")
-        .arg(arg!(-d --"dest-dir" <dir>
-            "Output directory for the syntax cache{n}\
-            Relative paths are interpreted relative to the current working directory.{n}\
+        .arg(
+            arg!(-d --"dest-dir" <dir>
+                "Output directory for the syntax cache{n}\
+                Relative paths are interpreted relative to the current working directory.{n}\
             If omitted, mdBook uses `.`.
             This command outputs files [dir]/syntaxes.bin and [dir]/css/syntax/*.css"
-        ).required(false))
-        .arg(arg!(--syntaxes-only "Only generate syntaxes.bin, not css/syntax/*.css."))
-        .arg(arg!(--no-default-syntaxes
+            )
+            .required(false),
+        )
+        .arg(arg!(--"syntaxes-only" "Only generate syntaxes.bin, not css/syntax/*.css."))
+        .arg(arg!(--"no-default-syntaxes"
             "Don't include Sublime Text's default open source syntaxes{n}\
             If included, only syntaxes from [dir] are used."
         ))
-        .arg(arg!(--themes-only "Only generate themes, not syntaxes.bin."))
-        .arg(arg!(--no-default-themes
+        .arg(arg!(--"themes-only" "Only generate themes, not syntaxes.bin."))
+        .arg(arg!(--"no-default-themes"
             "Don't include mdbook's default light, dark, and ayu themes{n}\
             If included, only themes from [dir] are used.'"
         ))

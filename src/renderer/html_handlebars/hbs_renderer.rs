@@ -1,12 +1,11 @@
 use crate::book::{Book, BookItem};
-use crate::config::{BookConfig, Config, HtmlConfig, Playground, RustEdition};
+use crate::config::{BookConfig, Config, HtmlConfig, RustEdition};
 use crate::errors::*;
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
 use crate::theme::{self, playground_editor, Theme};
 use crate::utils;
 
-use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
@@ -74,7 +73,7 @@ impl HtmlHandlebars {
             &ctx.html_config.playground,
             ctx.edition,
         );
-        if !ctx.is_index && ctx.html_config.print.page_break  {
+        if !ctx.is_index && ctx.html_config.print.page_break {
             // Add page break between chapters
             // See https://developer.mozilla.org/en-US/docs/Web/CSS/break-before and https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-before
             // Add both two CSS properties because of the compatibility issue
@@ -829,173 +828,6 @@ fn insert_link_into_header(
     )
 }
 
-// The rust book uses annotations for rustdoc to test code snippets,
-// like the following:
-// ```rust,should_panic
-// fn main() {
-//     // Code here
-// }
-// ```
-// This function replaces all commas by spaces in the code block classes
-fn fix_code_blocks(html: &str) -> String {
-    lazy_static! {
-        static ref FIX_CODE_BLOCKS: Regex =
-            Regex::new(r##"<code([^>]+)class="([^"]+)"([^>]*)>"##).unwrap();
-    }
-
-    FIX_CODE_BLOCKS
-        .replace_all(html, |caps: &Captures<'_>| {
-            let before = &caps[1];
-            let classes = &caps[2].replace(',', " ");
-            let after = &caps[3];
-
-            format!(
-                r#"<code{before}class="{classes}"{after}>"#,
-                before = before,
-                classes = classes,
-                after = after
-            )
-        })
-        .into_owned()
-}
-
-fn add_playground_pre(
-    html: &str,
-    playground_config: &Playground,
-    edition: Option<RustEdition>,
-) -> String {
-    lazy_static! {
-        static ref ADD_PLAYGROUND_PRE: Regex =
-            Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap();
-    }
-    ADD_PLAYGROUND_PRE
-        .replace_all(html, |caps: &Captures<'_>| {
-            let text = &caps[1];
-            let classes = &caps[2];
-            let code = &caps[3];
-
-            if classes.contains("language-rust") {
-                if (!classes.contains("ignore")
-                    && !classes.contains("noplayground")
-                    && !classes.contains("noplaypen")
-                    && playground_config.runnable)
-                    || classes.contains("mdbook-runnable")
-                {
-                    let contains_e2015 = classes.contains("edition2015");
-                    let contains_e2018 = classes.contains("edition2018");
-                    let contains_e2021 = classes.contains("edition2021");
-                    let edition_class = if contains_e2015 || contains_e2018 || contains_e2021 {
-                        // the user forced edition, we should not overwrite it
-                        ""
-                    } else {
-                        match edition {
-                            Some(RustEdition::E2015) => " edition2015",
-                            Some(RustEdition::E2018) => " edition2018",
-                            Some(RustEdition::E2021) => " edition2021",
-                            None => "",
-                        }
-                    };
-
-                    // wrap the contents in an external pre block
-                    format!(
-                        "<pre class=\"playground\"><code class=\"{}{}\">{}</code></pre>",
-                        classes,
-                        edition_class,
-                        {
-                            let content: Cow<'_, str> = if playground_config.editable
-                                && classes.contains("editable")
-                                || text.contains("fn</span> </span><span class=\"syn-entity syn-name syn-function syn-rust\">main")
-                                || text.contains("fn main")
-                                || text.contains("quick_main!")
-                            {
-                                code.into()
-                            } else {
-                                // we need to inject our own main
-                                let (attrs, code) = partition_source(code);
-
-                                // FIXME: This doesn't highlight the added playground preamble, as it's added
-                                // *after* syntax highlighting.
-                                // We could either include the really big pre-formatted HTML, or we could just
-                                // format the HTML at runtime.
-                                // Maybe we can do this part before the highlighting step?
-                                // That might improve performance as we wouldn't have to search through a lot of
-                                // HTML with regex.
-                                format!(
-                                    "\n# #![allow(unused)]\n{}#fn main() {{\n{}#}}",
-                                    attrs, code
-                                )
-                                .into()
-                            };
-                            hide_lines(&content)
-                        }
-                    )
-                } else {
-                    format!("<code class=\"{}\">{}</code>", classes, hide_lines(code))
-                }
-            } else {
-                // not language-rust, so no-op
-                text.to_owned()
-            }
-        })
-        .into_owned()
-}
-
-fn hide_lines(content: &str) -> String {
-    lazy_static! {
-        static ref BORING_LINES_REGEX: Regex = Regex::new(r"^(\s*)#(.?)(.*)$").unwrap();
-    }
-
-    let mut result = String::with_capacity(content.len());
-    let mut lines = content.lines().peekable();
-    while let Some(line) = lines.next() {
-        // Don't include newline on the last line.
-        let newline = if lines.peek().is_none() { "" } else { "\n" };
-        if let Some(caps) = BORING_LINES_REGEX.captures(line) {
-            if &caps[2] == "#" {
-                result += &caps[1];
-                result += &caps[2];
-                result += &caps[3];
-                result += newline;
-                continue;
-            } else if &caps[2] != "!" && &caps[2] != "[" {
-                result += "<span class=\"boring\">";
-                result += &caps[1];
-                if &caps[2] != " " {
-                    result += &caps[2];
-                }
-                result += &caps[3];
-                result += newline;
-                result += "</span>";
-                continue;
-            }
-        }
-        result += line;
-        result += newline;
-    }
-    result
-}
-
-fn partition_source(s: &str) -> (String, String) {
-    let mut after_header = false;
-    let mut before = String::new();
-    let mut after = String::new();
-
-    for line in s.lines() {
-        let trimline = line.trim();
-        let header = trimline.chars().all(char::is_whitespace) || trimline.starts_with("#![");
-        if !header || after_header {
-            after_header = true;
-            after.push_str(line);
-            after.push('\n');
-        } else {
-            before.push_str(line);
-            before.push('\n');
-        }
-    }
-
-    (before, after)
-}
-
 lazy_static! {
     static ref BORING_LINES_REGEX: Regex = Regex::new(r"^(\s*)#(.?)(.*)$").unwrap();
 }
@@ -1047,109 +879,6 @@ mod tests {
         for (src, should_be) in inputs {
             let got = build_header_links(src);
             assert_eq!(got, should_be);
-        }
-    }
-
-    #[test]
-    fn add_playground() {
-        let inputs = [
-          ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust\"><span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}</span></code></pre>"),
-          ("<code class=\"language-rust\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust\">fn main() {}</code></pre>"),
-          ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";</code></pre>"),
-          ("<code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code></pre>"),
-          ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span><span class=\"boring\">\n</span>\";</code></pre>"),
-          ("<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>",
-           "<code class=\"language-rust ignore\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";</code>"),
-          ("<code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code></pre>"),
-        ];
-        for (src, should_be) in &inputs {
-            let got = add_playground_pre(
-                src,
-                &Playground {
-                    editable: true,
-                    ..Playground::default()
-                },
-                None,
-            );
-            assert_eq!(&*got, *should_be);
-        }
-    }
-    #[test]
-    fn add_playground_edition2015() {
-        let inputs = [
-          ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2015\"><span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}</span></code></pre>"),
-          ("<code class=\"language-rust\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}</code></pre>"),
-          ("<code class=\"language-rust edition2015\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}</code></pre>"),
-          ("<code class=\"language-rust edition2018\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}</code></pre>"),
-        ];
-        for (src, should_be) in &inputs {
-            let got = add_playground_pre(
-                src,
-                &Playground {
-                    editable: true,
-                    ..Playground::default()
-                },
-                Some(RustEdition::E2015),
-            );
-            assert_eq!(&*got, *should_be);
-        }
-    }
-    #[test]
-    fn add_playground_edition2018() {
-        let inputs = [
-          ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2018\"><span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}</span></code></pre>"),
-          ("<code class=\"language-rust\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}</code></pre>"),
-          ("<code class=\"language-rust edition2015\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}</code></pre>"),
-          ("<code class=\"language-rust edition2018\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}</code></pre>"),
-        ];
-        for (src, should_be) in &inputs {
-            let got = add_playground_pre(
-                src,
-                &Playground {
-                    editable: true,
-                    ..Playground::default()
-                },
-                Some(RustEdition::E2018),
-            );
-            assert_eq!(&*got, *should_be);
-        }
-    }
-    #[test]
-    fn add_playground_edition2021() {
-        let inputs = [
-            ("<code class=\"language-rust\">x()</code>",
-             "<pre class=\"playground\"><code class=\"language-rust edition2021\"><span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}</span></code></pre>"),
-            ("<code class=\"language-rust\">fn main() {}</code>",
-             "<pre class=\"playground\"><code class=\"language-rust edition2021\">fn main() {}</code></pre>"),
-            ("<code class=\"language-rust edition2015\">fn main() {}</code>",
-             "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}</code></pre>"),
-            ("<code class=\"language-rust edition2018\">fn main() {}</code>",
-             "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}</code></pre>"),
-        ];
-        for (src, should_be) in &inputs {
-            let got = add_playground_pre(
-                src,
-                &Playground {
-                    editable: true,
-                    ..Playground::default()
-                },
-                Some(RustEdition::E2021),
-            );
-            assert_eq!(&*got, *should_be);
         }
     }
 }

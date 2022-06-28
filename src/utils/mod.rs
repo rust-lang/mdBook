@@ -312,8 +312,11 @@ impl<'a> SyntaxHighlighter<'a> {
                         let noplaypen = classes.iter().find(|&x| x == "noplaypen").is_some();
                         let mdbook_runnable =
                             classes.iter().find(|&x| x == "mdbook-runnable").is_some();
+                        let playground_runnable = self.playground_config.runnable;
                         // Enable playground
-                        if (!ignore && !noplayground && !noplaypen) || mdbook_runnable {
+                        if playground_runnable
+                            && ((!ignore && !noplayground && !noplaypen) || mdbook_runnable)
+                        {
                             self.is_editable = classes.iter().find(|&x| x == "editable").is_some();
                             let contains_e2015 =
                                 classes.iter().find(|&x| x == "edition2015").is_some();
