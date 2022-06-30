@@ -57,6 +57,11 @@ impl HelperDef for RenderToc {
         out.write("<ol class=\"chapter\">")?;
 
         let mut current_level = 1;
+        // The "index" page, which has this attribute set, is supposed to alias the first chapter in
+        // the book, i.e. the first link. There seems to be no easy way to determine which chapter
+        // the "index" is aliasing from within the renderer, so this is used instead to force the
+        // first link to be active. See further below.
+        let mut is_first_chapter = ctx.data().get("is_index").is_some();
 
         for item in chapters {
             // Spacer
@@ -130,7 +135,8 @@ impl HelperDef for RenderToc {
                 out.write(&tmp)?;
                 out.write("\"")?;
 
-                if path == &current_path {
+                if path == &current_path || is_first_chapter {
+                    is_first_chapter = false;
                     out.write(" class=\"active\"")?;
                 }
 

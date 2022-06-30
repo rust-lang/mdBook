@@ -468,6 +468,21 @@ fn by_default_mdbook_use_index_preprocessor_to_convert_readme_to_index() {
 }
 
 #[test]
+fn first_chapter_is_copied_as_index_even_if_not_first_elem() {
+    let temp = DummyBook::new().build().unwrap();
+    let mut cfg = Config::default();
+    cfg.set("book.src", "index_html_test")
+        .expect("Couldn't set config.book.src to \"index_html_test\"");
+    let md = MDBook::load_with_config(temp.path(), cfg).unwrap();
+    md.build().unwrap();
+
+    let root = temp.path().join("book");
+    let chapter = fs::read_to_string(root.join("chapter_1.html")).expect("read chapter 1");
+    let index = fs::read_to_string(root.join("index.html")).expect("read index");
+    pretty_assertions::assert_eq!(chapter, index);
+}
+
+#[test]
 fn theme_dir_overrides_work_correctly() {
     let book_dir = dummy_book::new_copy_of_example_book().unwrap();
     let book_dir = book_dir.path();
