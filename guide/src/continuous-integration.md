@@ -21,7 +21,7 @@ A simple approach would be to use the popular `curl` CLI tool to download the ex
 
 ```sh
 mkdir bin
-curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.18/mdbook-v0.4.18-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=bin
+curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.19/mdbook-v0.4.19-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=bin
 bin/mdbook build
 ```
 
