@@ -102,9 +102,10 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         serve(build_dir, sockaddr, reload_tx, &file_404);
     });
 
+    let serving_url = format!("http://{}", address);
+    info!("Serving on: {}", serving_url);
+
     if open_browser {
-        let serving_url = format!("http://{}", address);
-        info!("Serving on: {}", serving_url);
         open(serving_url);
     }
 
