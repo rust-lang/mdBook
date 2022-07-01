@@ -116,7 +116,7 @@ impl HtmlHandlebars {
         if ctx.is_index {
             ctx.data.insert("path".to_owned(), json!("index.md"));
             ctx.data.insert("path_to_root".to_owned(), json!(""));
-            ctx.data.insert("is_index".to_owned(), json!("true"));
+            ctx.data.insert("is_index".to_owned(), json!(true));
             let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
             let rendered_index =
                 self.post_process(rendered_index, &ctx.html_config.playground, ctx.edition);
@@ -540,7 +540,8 @@ impl Renderer for HtmlHandlebars {
                 chapter_titles: &ctx.chapter_titles,
             };
             self.render_item(item, ctx, &mut print_content)?;
-            is_index = false;
+            // Only the first non-draft chapter item should be treated as the "index"
+            is_index &= !matches!(item, BookItem::Chapter(ch) if !ch.is_draft_chapter());
         }
 
         // Render 404 page
@@ -814,7 +815,7 @@ fn fix_code_blocks(html: &str) -> String {
     FIX_CODE_BLOCKS
         .replace_all(html, |caps: &Captures<'_>| {
             let before = &caps[1];
-            let classes = &caps[2].replace(",", " ");
+            let classes = &caps[2].replace(',', " ");
             let after = &caps[3];
 
             format!(
@@ -880,11 +881,8 @@ fn add_playground_pre(
                                 // we need to inject our own main
                                 let (attrs, code) = partition_source(code);
 
-                                format!(
-                                    "\n# #![allow(unused)]\n{}#fn main() {{\n{}#}}",
-                                    attrs, code
-                                )
-                                .into()
+                                format!("# #![allow(unused)]\n{}#fn main() {{\n{}#}}", attrs, code)
+                                    .into()
                             };
                             hide_lines(&content)
                         }
@@ -1007,7 +1005,7 @@ mod tests {
     fn add_playground() {
         let inputs = [
           ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust\"><span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
           ("<code class=\"language-rust\">fn main() {}</code>",
            "<pre class=\"playground\"><code class=\"language-rust\">fn main() {}\n</code></pre>"),
           ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code>",
@@ -1037,7 +1035,7 @@ mod tests {
     fn add_playground_edition2015() {
         let inputs = [
           ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2015\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust edition2015\"><span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
           ("<code class=\"language-rust\">fn main() {}</code>",
            "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}\n</code></pre>"),
           ("<code class=\"language-rust edition2015\">fn main() {}</code>",
@@ -1061,7 +1059,7 @@ mod tests {
     fn add_playground_edition2018() {
         let inputs = [
           ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2018\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust edition2018\"><span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
           ("<code class=\"language-rust\">fn main() {}</code>",
            "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}\n</code></pre>"),
           ("<code class=\"language-rust edition2015\">fn main() {}</code>",
@@ -1085,7 +1083,7 @@ mod tests {
     fn add_playground_edition2021() {
         let inputs = [
             ("<code class=\"language-rust\">x()</code>",
-             "<pre class=\"playground\"><code class=\"language-rust edition2021\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
+             "<pre class=\"playground\"><code class=\"language-rust edition2021\"><span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}\n</span></code></pre>"),
             ("<code class=\"language-rust\">fn main() {}</code>",
              "<pre class=\"playground\"><code class=\"language-rust edition2021\">fn main() {}\n</code></pre>"),
             ("<code class=\"language-rust edition2015\">fn main() {}</code>",

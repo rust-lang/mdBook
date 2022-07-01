@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
-use elasticlunr::Index;
+use elasticlunr::{Index, IndexBuilder};
 use pulldown_cmark::*;
 
 use crate::book::{Book, BookItem};
@@ -13,9 +13,25 @@ use crate::utils;
 
 use serde::Serialize;
 
+const MAX_WORD_LENGTH_TO_INDEX: usize = 80;
+
+/// Tokenizes in the same way as elasticlunr-rs (for English), but also drops long tokens.
+fn tokenize(text: &str) -> Vec<String> {
+    text.split(|c: char| c.is_whitespace() || c == '-')
+        .filter(|s| !s.is_empty())
+        .map(|s| s.trim().to_lowercase())
+        .filter(|s| s.len() <= MAX_WORD_LENGTH_TO_INDEX)
+        .collect()
+}
+
 /// Creates all files required for search.
 pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> Result<()> {
-    let mut index = Index::new(&["title", "body", "breadcrumbs"]);
+    let mut index = IndexBuilder::new()
+        .add_field_with_tokenizer("title", Box::new(&tokenize))
+        .add_field_with_tokenizer("body", Box::new(&tokenize))
+        .add_field_with_tokenizer("breadcrumbs", Box::new(&tokenize))
+        .build();
+
     let mut doc_urls = Vec::with_capacity(book.sections.len());
 
     for item in book.iter() {
@@ -211,12 +227,13 @@ fn write_to_json(index: Index, search_config: &Search, doc_urls: Vec<String>) ->
 
     let mut fields = BTreeMap::new();
     let mut opt = SearchOptionsField::default();
-    opt.boost = Some(search_config.boost_title);
-    fields.insert("title".into(), opt);
-    opt.boost = Some(search_config.boost_paragraph);
-    fields.insert("body".into(), opt);
-    opt.boost = Some(search_config.boost_hierarchy);
-    fields.insert("breadcrumbs".into(), opt);
+    let mut insert_boost = |key: &str, boost| {
+        opt.boost = Some(boost);
+        fields.insert(key.into(), opt);
+    };
+    insert_boost("title", search_config.boost_title);
+    insert_boost("body", search_config.boost_paragraph);
+    insert_boost("breadcrumbs", search_config.boost_hierarchy);
 
     let search_options = SearchOptions {
         bool: if search_config.use_boolean_and {

@@ -1,5 +1,5 @@
-use std::collections::BTreeMap;
 use std::path::Path;
+use std::{cmp::Ordering, collections::BTreeMap};
 
 use crate::utils;
 use crate::utils::bracket_escape;
@@ -33,7 +33,7 @@ impl HelperDef for RenderToc {
             .as_json()
             .as_str()
             .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
-            .replace("\"", "");
+            .replace('\"', "");
 
         let current_section = rc
             .evaluate(ctx, "@root/section")?
@@ -57,6 +57,11 @@ impl HelperDef for RenderToc {
         out.write("<ol class=\"chapter\">")?;
 
         let mut current_level = 1;
+        // The "index" page, which has this attribute set, is supposed to alias the first chapter in
+        // the book, i.e. the first link. There seems to be no easy way to determine which chapter
+        // the "index" is aliasing from within the renderer, so this is used instead to force the
+        // first link to be active. See further below.
+        let mut is_first_chapter = ctx.data().get("is_index").is_some();
 
         for item in chapters {
             // Spacer
@@ -81,22 +86,26 @@ impl HelperDef for RenderToc {
                     level - 1 < fold_level as usize
                 };
 
-            if level > current_level {
-                while level > current_level {
-                    out.write("<li>")?;
-                    out.write("<ol class=\"section\">")?;
-                    current_level += 1;
+            match level.cmp(&current_level) {
+                Ordering::Greater => {
+                    while level > current_level {
+                        out.write("<li>")?;
+                        out.write("<ol class=\"section\">")?;
+                        current_level += 1;
+                    }
+                    write_li_open_tag(out, is_expanded, false)?;
                 }
-                write_li_open_tag(out, is_expanded, false)?;
-            } else if level < current_level {
-                while level < current_level {
-                    out.write("</ol>")?;
-                    out.write("</li>")?;
-                    current_level -= 1;
+                Ordering::Less => {
+                    while level < current_level {
+                        out.write("</ol>")?;
+                        out.write("</li>")?;
+                        current_level -= 1;
+                    }
+                    write_li_open_tag(out, is_expanded, false)?;
                 }
-                write_li_open_tag(out, is_expanded, false)?;
-            } else {
-                write_li_open_tag(out, is_expanded, item.get("section").is_none())?;
+                Ordering::Equal => {
+                    write_li_open_tag(out, is_expanded, item.get("section").is_none())?;
+                }
             }
 
             // Part title
@@ -119,14 +128,15 @@ impl HelperDef for RenderToc {
                     .to_str()
                     .unwrap()
                     // Hack for windows who tends to use `\` as separator instead of `/`
-                    .replace("\\", "/");
+                    .replace('\\', "/");
 
                 // Add link
                 out.write(&utils::fs::path_to_root(&current_path))?;
                 out.write(&tmp)?;
                 out.write("\"")?;
 
-                if path == &current_path {
+                if path == &current_path || is_first_chapter {
+                    is_first_chapter = false;
                     out.write(" class=\"active\"")?;
                 }
 

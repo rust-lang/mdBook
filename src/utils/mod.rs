@@ -200,10 +200,26 @@ pub fn render_markdown_with_path(text: &str, curly_quotes: bool, path: Option<&P
     let p = new_cmark_parser(text, curly_quotes);
     let events = p
         .map(clean_codeblock_headers)
-        .map(|event| adjust_links(event, path));
+        .map(|event| adjust_links(event, path))
+        .flat_map(|event| {
+            let (a, b) = wrap_tables(event);
+            a.into_iter().chain(b)
+        });
 
     html::push_html(&mut s, events);
     s
+}
+
+/// Wraps tables in a `.table-wrapper` class to apply overflow-x rules to.
+fn wrap_tables(event: Event<'_>) -> (Option<Event<'_>>, Option<Event<'_>>) {
+    match event {
+        Event::Start(Tag::Table(_)) => (
+            Some(Event::Html(r#"<div class="table-wrapper">"#.into())),
+            Some(event),
+        ),
+        Event::End(Tag::Table(_)) => (Some(event), Some(Event::Html(r#"</div>"#.into()))),
+        _ => (Some(event), None),
+    }
 }
 
 fn clean_codeblock_headers(event: Event<'_>) -> Event<'_> {
@@ -280,6 +296,22 @@ mod tests {
                 render_markdown("[phantom data](foo.html#phantomdata)", false),
                 "<p><a href=\"foo.html#phantomdata\">phantom data</a></p>\n"
             );
+        }
+
+        #[test]
+        fn it_can_wrap_tables() {
+            let src = r#"
+| Original        | Punycode        | Punycode + Encoding |
+|-----------------|-----------------|---------------------|
+| føø             | f-5gaa          | f_5gaa              |
+"#;
+            let out = r#"
+<div class="table-wrapper"><table><thead><tr><th>Original</th><th>Punycode</th><th>Punycode + Encoding</th></tr></thead><tbody>
+<tr><td>føø</td><td>f-5gaa</td><td>f_5gaa</td></tr>
+</tbody></table>
+</div>
+"#.trim();
+            assert_eq!(render_markdown(src, false), out);
         }
 
         #[test]

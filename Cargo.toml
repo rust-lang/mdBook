@@ -20,7 +20,7 @@ anyhow = "1.0.28"
 chrono = "0.4"
 clap = { version = "3.0", features = ["cargo"] }
 clap_complete = "3.0"
-env_logger = "0.7.1"
+env_logger = "0.9.0"
 handlebars = "4.0"
 lazy_static = "1.0"
 log = "0.4"
@@ -42,7 +42,7 @@ gitignore = { version = "1.0", optional = true }
 # Serve feature
 futures-util = { version = "0.3.4", optional = true }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"], optional = true }
-warp = { version = "0.3.1", default-features = false, features = ["websocket"], optional = true }
+warp = { version = "0.3.2", default-features = false, features = ["websocket"], optional = true }
 
 # Search feature
 elasticlunr-rs = { version = "3.0.0", optional = true }
@@ -53,7 +53,7 @@ assert_cmd = "1"
 predicates = "2"
 select = "0.5"
 semver = "1.0"
-pretty_assertions = "0.6"
+pretty_assertions = "1.2.1"
 walkdir = "2.0"
 
 [features]
