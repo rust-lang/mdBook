@@ -1,5 +1,5 @@
+use super::command_prelude::*;
 use crate::{get_book_dir, open};
-use clap::{arg, App, Arg, ArgMatches};
 use mdbook::errors::Result;
 use mdbook::utils;
 use mdbook::MDBook;
@@ -9,25 +9,12 @@ use std::thread::sleep;
 use std::time::Duration;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'help>() -> App<'help> {
-    App::new("watch")
+pub fn make_subcommand() -> Command {
+    Command::new("watch")
         .about("Watches a book's files and rebuilds it on changes")
-        .arg(
-            Arg::new("dest-dir")
-                .short('d')
-                .long("dest-dir")
-                .value_name("dest-dir")
-                .help(
-                    "Output directory for the book{n}\
-                    Relative paths are interpreted relative to the book's root directory.{n}\
-                    If omitted, mdBook uses build.build-dir from book.toml or defaults to `./book`.",
-                ),
-        )
-        .arg(arg!([dir]
-            "Root directory for the book{n}\
-            (Defaults to the Current Directory when omitted)"
-        ))
-        .arg(arg!(-o --open "Opens the compiled book in a web browser"))
+        .arg_dest_dir()
+        .arg_root_dir()
+        .arg_open()
 }
 
 // Watch command implementation
@@ -36,13 +23,13 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let mut book = MDBook::load(&book_dir)?;
 
     let update_config = |book: &mut MDBook| {
-        if let Some(dest_dir) = args.value_of("dest-dir") {
+        if let Some(dest_dir) = args.get_one::<PathBuf>("dest-dir") {
             book.config.build.build_dir = dest_dir.into();
         }
     };
     update_config(&mut book);
 
-    if args.is_present("open") {
+    if args.get_flag("open") {
         book.build()?;
         let path = book.build_dir_for("html").join("index.html");
         if !path.exists() {
