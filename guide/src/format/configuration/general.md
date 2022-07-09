@@ -7,7 +7,7 @@ Here is an example of what a ***book.toml*** file might look like:
 ```toml
 [book]
 title = "Example book"
-author = "John Doe"
+authors = ["John Doe"]
 description = "The example book covers examples."
 
 [rust]
