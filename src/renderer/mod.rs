@@ -51,7 +51,6 @@ pub trait Renderer {
 
 /// The context provided to all renderers.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[non_exhaustive]
 pub struct RenderContext {
     /// Which version of `mdbook` did this come from (as written in `mdbook`'s
     /// `Cargo.toml`). Useful if you know the renderer is only compatible with
@@ -69,6 +68,8 @@ pub struct RenderContext {
     pub destination: PathBuf,
     #[serde(skip)]
     pub(crate) chapter_titles: HashMap<PathBuf, String>,
+    #[serde(skip)]
+    __non_exhaustive: (),
 }
 
 impl RenderContext {
@@ -85,6 +86,7 @@ impl RenderContext {
             root: root.into(),
             destination: destination.into(),
             chapter_titles: HashMap::new(),
+            __non_exhaustive: (),
         }
     }
 
