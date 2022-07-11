@@ -19,7 +19,7 @@ description = "Creates a book from markdown files"
 anyhow = "1.0.28"
 chrono = "0.4"
 clap = { version = "3.0", features = ["cargo"] }
-clap_complete = "3.0"
+clap_complete_command = "0.3"
 env_logger = "0.9.0"
 handlebars = "4.0"
 lazy_static = "1.0"

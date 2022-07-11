@@ -6,7 +6,7 @@ extern crate log;
 use anyhow::anyhow;
 use chrono::Local;
 use clap::{App, AppSettings, Arg, ArgMatches};
-use clap_complete::Shell;
+use clap_complete_command::Shell;
 use env_logger::Builder;
 use log::LevelFilter;
 use mdbook::utils;
@@ -42,12 +42,7 @@ fn main() {
                 .map_err(|s| anyhow!("Invalid shell: {}", s))?;
 
             let mut complete_app = create_clap_app();
-            clap_complete::generate(
-                shell,
-                &mut complete_app,
-                "mdbook",
-                &mut std::io::stdout().lock(),
-            );
+            shell.generate(&mut complete_app, &mut std::io::stdout().lock());
             Ok(())
         })(),
         _ => unreachable!(),
