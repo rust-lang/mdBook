@@ -152,6 +152,7 @@ impl From<Chapter> for BookItem {
 /// The representation of a "chapter", usually mapping to a single file on
 /// disk however it may contain multiple sub-chapters.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct Chapter {
     /// The chapter's name.
     pub name: String,
