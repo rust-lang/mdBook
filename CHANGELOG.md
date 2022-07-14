@@ -1,7 +1,15 @@
 # Changelog
 
+## mdBook 0.4.20
+[53055e0...da166e0](https://github.com/rust-lang/mdBook/compare/53055e0...da166e0)
+
+### Fixed
+- Fixed a regression in 0.4.19 where inline code would have excessive padding
+  in some situations such as headings.
+  [#1855](https://github.com/rust-lang/mdBook/pull/1855)
+
 ## mdBook 0.4.19
-[ae275ad...eb82ddc](https://github.com/rust-lang/mdBook/compare/ae275ad...eb82ddc)
+[ae275ad...53055e0](https://github.com/rust-lang/mdBook/compare/ae275ad...53055e0)
 
 ### Added
 - The `serve` command now supports HEAD requests.
