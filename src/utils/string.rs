@@ -1,3 +1,4 @@
+use anyhow::Error;
 use regex::Regex;
 use std::ops::Bound::{Excluded, Included, Unbounded};
 use std::ops::RangeBounds;
@@ -112,6 +113,39 @@ pub fn take_rustdoc_include_anchored_lines(s: &str, anchor: &str) -> String {
 
     output.pop();
     output
+}
+
+pub fn take_remove_indent(s: Result<String, Error>) -> Result<String, Error> {
+    match s {
+        Err(_) => s,
+        Ok(_str) => Ok(take_format_remove_indent(_str.as_str())),
+    }
+}
+
+fn take_format_remove_indent(str: &str) -> String {
+    let mut output = Vec::<String>::new();
+    let mut min_indent = usize::MAX;
+
+    for line in str.lines() {
+        for (index, c) in line.chars().enumerate() {
+            if !c.is_whitespace() && min_indent > index {
+                min_indent = index;
+                break;
+            }
+        }
+    }
+
+    for line in str.lines() {
+        let formatted: String = line
+            .chars()
+            .take(0)
+            .chain(line.chars().skip(min_indent))
+            .collect();
+
+        output.push(formatted);
+    }
+
+    output.join("\n")
 }
 
 #[cfg(test)]

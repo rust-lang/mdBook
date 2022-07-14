@@ -14,7 +14,7 @@ use std::fmt::Write;
 use std::path::Path;
 
 pub use self::string::{
-    take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,
+    take_anchored_lines, take_lines, take_remove_indent, take_rustdoc_include_anchored_lines,
     take_rustdoc_include_lines,
 };
 

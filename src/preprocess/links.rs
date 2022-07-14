@@ -1,6 +1,6 @@
 use crate::errors::*;
 use crate::utils::{
-    take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,
+    take_anchored_lines, take_lines, take_remove_indent, take_rustdoc_include_anchored_lines,
     take_rustdoc_include_lines,
 };
 use regex::{CaptureMatches, Captures, Regex};
@@ -134,6 +134,7 @@ where
 enum LinkType<'a> {
     Escaped,
     Include(PathBuf, RangeOrAnchor),
+    IncludeNoIndent(PathBuf, RangeOrAnchor),
     Playground(PathBuf, Vec<&'a str>),
     RustdocInclude(PathBuf, RangeOrAnchor),
     Title(&'a str),
@@ -205,6 +206,7 @@ impl<'a> LinkType<'a> {
         match self {
             LinkType::Escaped => None,
             LinkType::Include(p, _) => Some(return_relative_path(base, &p)),
+            LinkType::IncludeNoIndent(p, _) => Some(return_relative_path(base, &p)),
             LinkType::Playground(p, _) => Some(return_relative_path(base, &p)),
             LinkType::RustdocInclude(p, _) => Some(return_relative_path(base, &p)),
             LinkType::Title(_) => None,
@@ -250,12 +252,15 @@ fn parse_range_or_anchor(parts: Option<&str>) -> RangeOrAnchor {
 }
 
 fn parse_include_path(path: &str) -> LinkType<'static> {
-    let mut parts = path.splitn(2, ':');
+    let mut parts = path.splitn(3, ':');
 
     let path = parts.next().unwrap().into();
     let range_or_anchor = parse_range_or_anchor(parts.next());
 
-    LinkType::Include(path, range_or_anchor)
+    match parts.next() {
+        Some(_some) => LinkType::IncludeNoIndent(path, range_or_anchor),
+        None => LinkType::Include(path, range_or_anchor),
+    }
 }
 
 fn parse_rustdoc_include_path(path: &str) -> LinkType<'static> {
@@ -341,6 +346,22 @@ impl<'a> Link<'a> {
                             target.display(),
                         )
                     })
+            }
+            LinkType::IncludeNoIndent(ref pat, ref range_or_anchor) => {
+                let target = base.join(pat);
+                let s = fs::read_to_string(&target)
+                    .map(|s| match range_or_anchor {
+                        RangeOrAnchor::Range(range) => take_lines(&s, range.clone()),
+                        RangeOrAnchor::Anchor(anchor) => take_anchored_lines(&s, anchor),
+                    })
+                    .with_context(|| {
+                        format!(
+                            "Could not read file for link {} ({})",
+                            self.link_text,
+                            target.display(),
+                        )
+                    });
+                take_remove_indent(s)
             }
             LinkType::RustdocInclude(ref pat, ref range_or_anchor) => {
                 let target = base.join(pat);
