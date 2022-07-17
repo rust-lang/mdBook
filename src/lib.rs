@@ -1,3 +1,4 @@
+#![feature(str_split_as_str)]
 //! # mdBook
 //!
 //! **mdBook** is a tool for rendering a collection of markdown documents into

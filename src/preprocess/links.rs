@@ -242,6 +242,8 @@ fn parse_range_or_anchor(parts: Option<&str>) -> RangeOrAnchor {
     // the single line specified by `start`.
     let end = end.map(|s| s.parse::<usize>());
 
+    println!("Start: {:?} End: {:?}", start, end);
+
     match (start, end) {
         (Some(start), Some(Ok(end))) => RangeOrAnchor::Range(LineRange::from(start..end)),
         (Some(start), Some(Err(_))) => RangeOrAnchor::Range(LineRange::from(start..)),
@@ -252,14 +254,15 @@ fn parse_range_or_anchor(parts: Option<&str>) -> RangeOrAnchor {
 }
 
 fn parse_include_path(path: &str) -> LinkType<'static> {
-    let mut parts = path.splitn(3, ':');
+    let mut parts = path.splitn(2, ':');
 
     let path = parts.next().unwrap().into();
+    let is_indented = parts.clone().next().unwrap_or("").rsplit(":").next();
     let range_or_anchor = parse_range_or_anchor(parts.next());
 
-    match parts.next() {
-        Some(_some) => LinkType::IncludeNoIndent(path, range_or_anchor),
-        None => LinkType::Include(path, range_or_anchor),
+    match is_indented {
+        Some(_some) if _some.eq("-no-indent") => LinkType::IncludeNoIndent(path, range_or_anchor),
+        _ => LinkType::Include(path, range_or_anchor),
     }
 }
 
@@ -311,6 +314,8 @@ impl<'a> Link<'a> {
             }
             _ => None,
         };
+
+        println!("Ovo je : {:?}", link_type);
 
         link_type.and_then(|lnk_type| {
             cap.get(0).map(|mat| Link {
@@ -679,6 +684,25 @@ mod tests {
                     RangeOrAnchor::Anchor(String::from("anchor"))
                 ),
                 link_text: "{{#include file.rs:anchor}}",
+            }]
+        );
+    }
+
+    #[test]
+    fn test_find_links_with_anchor_no_indent() {
+        let s = "Some random text with {{#include file.rs:anchor:-no-indent}}...";
+        let res = find_links(s).collect::<Vec<_>>();
+        println!("\nOUTPUT: {:?}\n", res);
+        assert_eq!(
+            res,
+            vec![Link {
+                start_index: 22,
+                end_index: 60,
+                link_type: LinkType::IncludeNoIndent(
+                    PathBuf::from("file.rs"),
+                    RangeOrAnchor::Anchor(String::from("anchor"))
+                ),
+                link_text: "{{#include file.rs:anchor:-no-indent}}",
             }]
         );
     }
