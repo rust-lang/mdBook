@@ -1,5 +1,12 @@
 # Changelog
 
+## mdBook 0.4.21
+[92afe9b...8f01d02](https://github.com/rust-lang/mdBook/compare/92afe9b...8f01d02)
+
+### Fixed
+- Fixed an issue where mdBook would fail to compile with Rust nightly-2022-07-22.
+  [#1861](https://github.com/rust-lang/mdBook/pull/1861)
+
 ## mdBook 0.4.20
 [53055e0...da166e0](https://github.com/rust-lang/mdBook/compare/53055e0...da166e0)
 
