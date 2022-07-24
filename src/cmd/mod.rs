@@ -8,3 +8,4 @@ pub mod serve;
 pub mod test;
 #[cfg(feature = "watch")]
 pub mod watch;
+pub mod xgettext;
