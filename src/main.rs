@@ -35,6 +35,7 @@ fn main() {
         Some(("serve", sub_matches)) => cmd::serve::execute(sub_matches),
         Some(("test", sub_matches)) => cmd::test::execute(sub_matches),
         Some(("xgettext", sub_matches)) => cmd::xgettext::execute(sub_matches),
+        Some(("gettext", sub_matches)) => cmd::gettext::execute(sub_matches),
         Some(("completions", sub_matches)) => (|| {
             let shell: Shell = sub_matches
                 .value_of("shell")
@@ -78,6 +79,7 @@ fn create_clap_app() -> App<'static> {
         .subcommand(cmd::test::make_subcommand())
         .subcommand(cmd::clean::make_subcommand())
         .subcommand(cmd::xgettext::make_subcommand())
+        .subcommand(cmd::gettext::make_subcommand())
         .subcommand(
             App::new("completions")
                 .about("Generate shell completions for your shell to stdout")
