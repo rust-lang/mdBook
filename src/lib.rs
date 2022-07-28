@@ -82,14 +82,11 @@
 
 #![deny(missing_docs)]
 #![deny(rust_2018_idioms)]
-#![allow(clippy::comparison_chain)]
 
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
-#[macro_use]
-extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
 

@@ -61,7 +61,7 @@ fn find_chapter(
         .as_json()
         .as_str()
         .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
-        .replace("\"", "");
+        .replace('\"', "");
 
     if !rc.evaluate(ctx, "@root/is_index")?.is_missing() {
         // Special case for index.md which may be a synthetic page.
@@ -121,7 +121,7 @@ fn render(
         .as_json()
         .as_str()
         .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
-        .replace("\"", "");
+        .replace('\"', "");
 
     context.insert(
         "path_to_root".to_owned(),
@@ -141,7 +141,7 @@ fn render(
                 .with_extension("html")
                 .to_str()
                 .ok_or_else(|| RenderError::new("Link could not be converted to str"))
-                .map(|p| context.insert("link".to_owned(), json!(p.replace("\\", "/"))))
+                .map(|p| context.insert("link".to_owned(), json!(p.replace('\\', "/"))))
         })?;
 
     trace!("Render template");
@@ -149,8 +149,8 @@ fn render(
     _h.template()
         .ok_or_else(|| RenderError::new("Error with the handlebars template"))
         .and_then(|t| {
-            let mut local_rc = rc.clone();
             let local_ctx = Context::wraps(&context)?;
+            let mut local_rc = rc.clone();
             t.render(r, &local_ctx, &mut local_rc, out)
         })?;
 

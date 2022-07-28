@@ -45,7 +45,12 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     if args.is_present("open") {
         book.build()?;
-        open(book.build_dir_for("html").join("index.html"));
+        let path = book.build_dir_for("html").join("index.html");
+        if !path.exists() {
+            error!("No chapter available to open");
+            std::process::exit(1)
+        }
+        open(path);
     }
 
     trigger_on_change(&book, |paths, book_dir| {

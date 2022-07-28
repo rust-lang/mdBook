@@ -38,7 +38,12 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     if args.is_present("open") {
         // FIXME: What's the right behaviour if we don't use the HTML renderer?
-        open(book.build_dir_for("html").join("index.html"));
+        let path = book.build_dir_for("html").join("index.html");
+        if !path.exists() {
+            error!("No chapter available to open");
+            std::process::exit(1)
+        }
+        open(path);
     }
 
     Ok(())

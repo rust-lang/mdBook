@@ -1,6 +1,7 @@
 use crate::errors::*;
 use memchr::{self, Memchr};
 use pulldown_cmark::{self, Event, HeadingLevel, Tag};
+use serde::{Deserialize, Serialize};
 use std::fmt::{self, Display, Formatter};
 use std::iter::FromIterator;
 use std::ops::{Deref, DerefMut};
