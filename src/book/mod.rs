@@ -276,7 +276,6 @@ impl MDBook {
                     continue;
                 };
 
-                let path = self.source_dir().join(&chapter_path);
                 info!("Testing chapter '{}': {:?}", ch.name, chapter_path);
 
                 // write preprocessed file to tempdir
