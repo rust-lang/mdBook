@@ -271,7 +271,10 @@ impl MDBook {
                     _ => continue,
                 };
 
-                if chapter.is_some() && ch.name != chapter.unwrap() && chapter_path.to_str().unwrap() != chapter.unwrap() {
+                if chapter.is_some()
+                    && ch.name != chapter.unwrap()
+                    && chapter_path.to_str().unwrap() != chapter.unwrap()
+                {
                     debug!("Skipping chapter '{}'...", ch.name);
                     continue;
                 };
