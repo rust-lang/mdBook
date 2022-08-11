@@ -64,5 +64,5 @@ not specified it will default to the value of the `build.build-dir` key in
 
 #### --chapter
 
-The `--chapter` (`-d`) option allows you to test a specific chapter of the
+The `--chapter` (`-c`) option allows you to test a specific chapter of the
 book using the chapter name or the relative path to the chapter.
