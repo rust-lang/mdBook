@@ -287,7 +287,7 @@ impl MDBook {
                     None => "",
                 };
 
-                if chapter_name != "" && cp != "" && ch.name != chapter_name && cp != chapter_name {
+                if chapter_name != "" && ch.name != chapter_name && cp != chapter_name {
                     info!("Skipping chapter '{}'...", ch.name);
                     continue;
                 };
