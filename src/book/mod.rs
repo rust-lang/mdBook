@@ -244,9 +244,13 @@ impl MDBook {
         self
     }
 
-    /// Run `rustdoc` tests on the book, linking against the provided libraries
-    /// and optionally testing only a signal named chapter while skipping the others.
-    pub fn test(&mut self, library_paths: Vec<&str>, chapter: Option<&str>) -> Result<()> {
+    /// Run `rustdoc` tests on the book, linking against the provided libraries.
+    pub fn test(&mut self, library_paths: Vec<&str>) -> Result<()> {
+        self.test_chapter(library_paths, None)
+    }
+
+    /// Run `rustdoc` tests on a specific chapter of the book, linking against the provided libraries.
+    pub fn test_chapter(&mut self, library_paths: Vec<&str>, chapter: Option<&str>) -> Result<()> {
         let library_args: Vec<&str> = (0..library_paths.len())
             .map(|_| "-L")
             .zip(library_paths.into_iter())
@@ -254,6 +258,13 @@ impl MDBook {
             .collect();
 
         let temp_dir = TempFileBuilder::new().prefix("mdbook-").tempdir()?;
+
+        let chapter_name: &str = match chapter {
+            Some(p) => p,
+            None => "",
+        };
+
+        let mut chapter_found = false;
 
         // FIXME: Is "test" the proper renderer name to use here?
         let preprocess_context =
@@ -271,14 +282,17 @@ impl MDBook {
                     _ => continue,
                 };
 
-                if chapter.is_some()
-                    && ch.name != chapter.unwrap()
-                    && chapter_path.to_str().unwrap() != chapter.unwrap()
-                {
-                    debug!("Skipping chapter '{}'...", ch.name);
+                let cp = match chapter_path.to_str() {
+                    Some(s) => s,
+                    None => "",
+                };
+
+                if chapter_name != "" && cp != "" && ch.name != chapter_name && cp != chapter_name {
+                    info!("Skipping chapter '{}'...", ch.name);
                     continue;
                 };
 
+                chapter_found = true;
                 info!("Testing chapter '{}': {:?}", ch.name, chapter_path);
 
                 // write preprocessed file to tempdir
@@ -318,6 +332,9 @@ impl MDBook {
         }
         if failed {
             bail!("One or more tests failed");
+        }
+        if chapter_name != "" && !chapter_found {
+            bail!(format!("Chapter not found: {}", chapter_name));
         }
         Ok(())
     }

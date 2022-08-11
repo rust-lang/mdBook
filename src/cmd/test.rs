@@ -58,7 +58,10 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     if let Some(dest_dir) = args.value_of("dest-dir") {
         book.config.build.build_dir = dest_dir.into();
     }
-    book.test(library_paths, chapter)?;
+    match chapter {
+        Some(_) => book.test_chapter(library_paths, chapter),
+        None => book.test(library_paths),
+    }?;
 
     Ok(())
 }
