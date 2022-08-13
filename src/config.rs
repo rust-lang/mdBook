@@ -466,7 +466,7 @@ pub struct ServeConfig {
     /// Default hostname
     pub hostname: Option<String>,
     /// Default port
-    pub port: Option<String>,
+    pub port: Option<u16>,
 }
 
 /// Configuration for the Rust compiler(e.g., for playground)

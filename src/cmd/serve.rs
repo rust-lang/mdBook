@@ -63,13 +63,13 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let hostname: String = match (args.value_of("hostname"), &book.config.serve.hostname) {
         (Some(h), _) => h.to_owned(),
         (_, Some(h)) => h.to_owned(),
-        (_, _) => "localhost".to_owned(),
+        (_, _) => String::from("localhost"),
     };
 
     let port: String = match (args.value_of("port"), &book.config.serve.port) {
         (Some(p), _) => p.to_owned(),
-        (_, Some(p)) => p.to_owned(),
-        (_, _) => "3000".to_owned(),
+        (_, Some(p)) => p.to_string(),
+        (_, _) => 3000.to_string(),
     };
 
     let open_browser = args.is_present("open");
