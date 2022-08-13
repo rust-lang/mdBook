@@ -41,7 +41,6 @@ pub fn make_subcommand<'help>() -> App<'help> {
                 .short('n')
                 .long("hostname")
                 .takes_value(true)
-                .default_value("localhost")
                 .forbid_empty_values(true)
                 .help("Hostname to listen on for HTTP connections"),
         )
@@ -50,7 +49,6 @@ pub fn make_subcommand<'help>() -> App<'help> {
                 .short('p')
                 .long("port")
                 .takes_value(true)
-                .default_value("3000")
                 .forbid_empty_values(true)
                 .help("Port to use for HTTP connections"),
         )
@@ -62,8 +60,18 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
     let mut book = MDBook::load(&book_dir)?;
 
-    let port = args.value_of("port").unwrap();
-    let hostname = args.value_of("hostname").unwrap();
+    let hostname: String = match (args.value_of("hostname"), &book.config.serve.hostname) {
+        (Some(h), _) => h.to_owned(),
+        (_, Some(h)) => h.to_owned(),
+        (_, _) => "localhost".to_owned(),
+    };
+
+    let port: String = match (args.value_of("port"), &book.config.serve.port) {
+        (Some(p), _) => p.to_owned(),
+        (_, Some(p)) => p.to_owned(),
+        (_, _) => "3000".to_owned(),
+    };
+
     let open_browser = args.is_present("open");
 
     let address = format!("{}:{}", hostname, port);
