@@ -19,7 +19,7 @@ create-missing = false
 
 [serve]
 hostname = "localhost"
-port = "3000"
+port = 3000
 
 [preprocessor.index]
 
@@ -120,7 +120,7 @@ This controls the serve process of your book.
 ```toml
 [serve]
 hostname = "localhost"
-port = "3000"
+port = 3000
 ```
 
 - **hostname:** The hostname to serve the book, by default it will be `localhost`.
