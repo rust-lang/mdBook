@@ -246,10 +246,12 @@ impl MDBook {
 
     /// Run `rustdoc` tests on the book, linking against the provided libraries.
     pub fn test(&mut self, library_paths: Vec<&str>) -> Result<()> {
+        // test_chapter with chapter:None will run all tests.
         self.test_chapter(library_paths, None)
     }
 
     /// Run `rustdoc` tests on a specific chapter of the book, linking against the provided libraries.
+    /// If `chapter` is `None`, all tests will be run.
     pub fn test_chapter(&mut self, library_paths: Vec<&str>, chapter: Option<&str>) -> Result<()> {
         let library_args: Vec<&str> = (0..library_paths.len())
             .map(|_| "-L")
