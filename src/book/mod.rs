@@ -259,11 +259,6 @@ impl MDBook {
 
         let temp_dir = TempFileBuilder::new().prefix("mdbook-").tempdir()?;
 
-        let chapter_name: &str = match chapter {
-            Some(p) => p,
-            None => "",
-        };
-
         let mut chapter_found = false;
 
         // FIXME: Is "test" the proper renderer name to use here?
@@ -282,12 +277,10 @@ impl MDBook {
                     _ => continue,
                 };
 
-                let cp = match chapter_path.to_str() {
-                    Some(s) => s,
-                    None => "",
-                };
+                let cp = chapter_path.to_str();
+                let cn: Option<&str> = Some(&ch.name);
 
-                if chapter_name != "" && ch.name != chapter_name && cp != chapter_name {
+                if chapter.is_some() && cn != chapter && cp != chapter {
                     info!("Skipping chapter '{}'...", ch.name);
                     continue;
                 };
@@ -333,8 +326,9 @@ impl MDBook {
         if failed {
             bail!("One or more tests failed");
         }
-        if chapter_name != "" && !chapter_found {
-            bail!(format!("Chapter not found: {}", chapter_name));
+
+        if chapter.is_some() && !chapter_found {
+            bail!(format!("Chapter not found: {:?}", chapter));
         }
         Ok(())
     }
