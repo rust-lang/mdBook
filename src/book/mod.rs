@@ -279,16 +279,14 @@ impl MDBook {
                     _ => continue,
                 };
 
-                let cp = chapter_path.to_str();
-                let cn: Option<&str> = Some(&ch.name);
-
-                if chapter.is_some() && cn != chapter && cp != chapter {
-                    if chapter == Some("?") {
-                        info!("Skipping chapter '{}'...", ch.name);
+                if let Some(chapter) = chapter {
+                    if ch.name != chapter && chapter_path.to_str() != Some(chapter) {
+                        if chapter == "?" {
+                            info!("Skipping chapter '{}'...", ch.name);
+                        }
+                        continue;
                     }
-                    continue;
-                };
-
+                }
                 chapter_found = true;
                 info!("Testing chapter '{}': {:?}", ch.name, chapter_path);
 
