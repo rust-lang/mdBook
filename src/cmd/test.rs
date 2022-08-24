@@ -24,7 +24,8 @@ pub fn make_subcommand<'help>() -> App<'help> {
                 .value_name("chapter")
                 .help(
                     "Only test the specified chapter{n}\
-                    Where the name of the chapter is defined in the SUMMARY.md file."
+                    Where the name of the chapter is defined in the SUMMARY.md file.{n}\
+                    Use the special name \"?\" to the list of chapter names."
                 )
         )
         .arg(arg!([dir]

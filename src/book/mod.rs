@@ -283,7 +283,9 @@ impl MDBook {
                 let cn: Option<&str> = Some(&ch.name);
 
                 if chapter.is_some() && cn != chapter && cp != chapter {
-                    info!("Skipping chapter '{}'...", ch.name);
+                    if chapter == Some("?") {
+                        info!("Skipping chapter '{}'...", ch.name);
+                    }
                     continue;
                 };
 
@@ -328,9 +330,10 @@ impl MDBook {
         if failed {
             bail!("One or more tests failed");
         }
-
-        if chapter.is_some() && !chapter_found {
-            bail!(format!("Chapter not found: {:?}", chapter));
+        if let Some(chapter) = chapter {
+            if !chapter_found {
+                bail!("Chapter not found: {}", chapter);
+            }
         }
         Ok(())
     }
