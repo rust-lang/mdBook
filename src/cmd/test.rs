@@ -17,6 +17,16 @@ pub fn make_subcommand<'help>() -> App<'help> {
                     Relative paths are interpreted relative to the book's root directory.{n}\
                     If omitted, mdBook uses build.build-dir from book.toml or defaults to `./book`.",
                 ),
+        ).arg(
+            Arg::new("chapter")
+                .short('c')
+                .long("chapter")
+                .value_name("chapter")
+                .help(
+                    "Only test the specified chapter{n}\
+                    Where the name of the chapter is defined in the SUMMARY.md file.{n}\
+                    Use the special name \"?\" to the list of chapter names."
+                )
         )
         .arg(arg!([dir]
             "Root directory for the book{n}\
@@ -41,14 +51,18 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         .values_of("library-path")
         .map(std::iter::Iterator::collect)
         .unwrap_or_default();
+    let chapter: Option<&str> = args.value_of("chapter");
+
     let book_dir = get_book_dir(args);
     let mut book = MDBook::load(&book_dir)?;
 
     if let Some(dest_dir) = args.value_of("dest-dir") {
         book.config.build.build_dir = dest_dir.into();
     }
-
-    book.test(library_paths)?;
+    match chapter {
+        Some(_) => book.test_chapter(library_paths, chapter),
+        None => book.test(library_paths),
+    }?;
 
     Ok(())
 }

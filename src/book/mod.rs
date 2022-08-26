@@ -246,6 +246,13 @@ impl MDBook {
 
     /// Run `rustdoc` tests on the book, linking against the provided libraries.
     pub fn test(&mut self, library_paths: Vec<&str>) -> Result<()> {
+        // test_chapter with chapter:None will run all tests.
+        self.test_chapter(library_paths, None)
+    }
+
+    /// Run `rustdoc` tests on a specific chapter of the book, linking against the provided libraries.
+    /// If `chapter` is `None`, all tests will be run.
+    pub fn test_chapter(&mut self, library_paths: Vec<&str>, chapter: Option<&str>) -> Result<()> {
         let library_args: Vec<&str> = (0..library_paths.len())
             .map(|_| "-L")
             .zip(library_paths.into_iter())
@@ -253,6 +260,8 @@ impl MDBook {
             .collect();
 
         let temp_dir = TempFileBuilder::new().prefix("mdbook-").tempdir()?;
+
+        let mut chapter_found = false;
 
         // FIXME: Is "test" the proper renderer name to use here?
         let preprocess_context =
@@ -270,8 +279,16 @@ impl MDBook {
                     _ => continue,
                 };
 
-                let path = self.source_dir().join(&chapter_path);
-                info!("Testing file: {:?}", path);
+                if let Some(chapter) = chapter {
+                    if ch.name != chapter && chapter_path.to_str() != Some(chapter) {
+                        if chapter == "?" {
+                            info!("Skipping chapter '{}'...", ch.name);
+                        }
+                        continue;
+                    }
+                }
+                chapter_found = true;
+                info!("Testing chapter '{}': {:?}", ch.name, chapter_path);
 
                 // write preprocessed file to tempdir
                 let path = temp_dir.path().join(&chapter_path);
@@ -310,6 +327,11 @@ impl MDBook {
         }
         if failed {
             bail!("One or more tests failed");
+        }
+        if let Some(chapter) = chapter {
+            if !chapter_found {
+                bail!("Chapter not found: {}", chapter);
+            }
         }
         Ok(())
     }
