@@ -14,8 +14,8 @@ use std::path::{Path, PathBuf};
 
 use crate::utils::fs::get_404_output_file;
 use handlebars::Handlebars;
-use lazy_static::lazy_static;
 use log::{debug, trace, warn};
+use once_cell::sync::Lazy;
 use regex::{Captures, Regex};
 use serde_json::json;
 
@@ -767,9 +767,8 @@ fn make_data(
 /// Goes through the rendered HTML, making sure all header tags have
 /// an anchor respectively so people can link to sections directly.
 fn build_header_links(html: &str) -> String {
-    lazy_static! {
-        static ref BUILD_HEADER_LINKS: Regex = Regex::new(r"<h(\d)>(.*?)</h\d>").unwrap();
-    }
+    static BUILD_HEADER_LINKS: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"<h(\d)>(.*?)</h\d>").unwrap());
 
     let mut id_counter = HashMap::new();
 
@@ -810,10 +809,8 @@ fn insert_link_into_header(
 // ```
 // This function replaces all commas by spaces in the code block classes
 fn fix_code_blocks(html: &str) -> String {
-    lazy_static! {
-        static ref FIX_CODE_BLOCKS: Regex =
-            Regex::new(r##"<code([^>]+)class="([^"]+)"([^>]*)>"##).unwrap();
-    }
+    static FIX_CODE_BLOCKS: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r##"<code([^>]+)class="([^"]+)"([^>]*)>"##).unwrap());
 
     FIX_CODE_BLOCKS
         .replace_all(html, |caps: &Captures<'_>| {
@@ -836,10 +833,9 @@ fn add_playground_pre(
     playground_config: &Playground,
     edition: Option<RustEdition>,
 ) -> String {
-    lazy_static! {
-        static ref ADD_PLAYGROUND_PRE: Regex =
-            Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap();
-    }
+    static ADD_PLAYGROUND_PRE: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap());
+
     ADD_PLAYGROUND_PRE
         .replace_all(html, |caps: &Captures<'_>| {
             let text = &caps[1];
@@ -902,9 +898,7 @@ fn add_playground_pre(
 }
 
 fn hide_lines(content: &str) -> String {
-    lazy_static! {
-        static ref BORING_LINES_REGEX: Regex = Regex::new(r"^(\s*)#(.?)(.*)$").unwrap();
-    }
+    static BORING_LINES_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\s*)#(.?)(.*)$").unwrap());
 
     let mut result = String::with_capacity(content.len());
     let mut lines = content.lines().peekable();
