@@ -1,3 +1,4 @@
+use lazy_static::lazy_static;
 use regex::Regex;
 use std::ops::Bound::{Excluded, Included, Unbounded};
 use std::ops::RangeBounds;
@@ -122,6 +123,7 @@ mod tests {
     };
 
     #[test]
+    #[allow(clippy::reversed_empty_ranges)] // Intentionally checking that those are correctly handled
     fn take_lines_test() {
         let s = "Lorem\nipsum\ndolor\nsit\namet";
         assert_eq!(take_lines(s, 1..3), "ipsum\ndolor");
@@ -163,6 +165,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::reversed_empty_ranges)] // Intentionally checking that those are correctly handled
     fn take_rustdoc_include_lines_test() {
         let s = "Lorem\nipsum\ndolor\nsit\namet";
         assert_eq!(

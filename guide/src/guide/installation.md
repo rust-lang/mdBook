@@ -30,6 +30,8 @@ cargo install mdbook
 
 This will automatically download mdBook from [crates.io], build it, and install it in Cargo's global binary directory (`~/.cargo/bin/` by default).
 
+To uninstall, run the command `cargo uninstall mdbook`.
+
 [Rust installation page]: https://www.rust-lang.org/tools/install
 [crates.io]: https://crates.io/
 

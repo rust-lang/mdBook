@@ -12,7 +12,7 @@ use std::io::Read;
 use std::path::Path;
 
 use crate::errors::*;
-
+use log::warn;
 pub static INDEX: &[u8] = include_bytes!("index.hbs");
 pub static HEAD: &[u8] = include_bytes!("head.hbs");
 pub static REDIRECT: &[u8] = include_bytes!("redirect.hbs");

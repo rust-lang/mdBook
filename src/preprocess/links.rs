@@ -10,6 +10,8 @@ use std::path::{Path, PathBuf};
 
 use super::{Preprocessor, PreprocessorContext};
 use crate::book::{Book, BookItem};
+use lazy_static::lazy_static;
+use log::{error, warn};
 
 const ESCAPE_CHAR: char = '\\';
 const MAX_LINK_NESTED_DEPTH: usize = 10;
@@ -146,6 +148,7 @@ enum RangeOrAnchor {
 }
 
 // A range of lines specified with some include directive.
+#[allow(clippy::enum_variant_names)] // The prefix can't be removed, and is meant to mirror the contained type
 #[derive(PartialEq, Debug, Clone)]
 enum LineRange {
     Range(Range<usize>),

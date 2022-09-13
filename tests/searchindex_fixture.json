@@ -229,7 +229,7 @@
           "title": "Unicode stress tests"
         },
         "18": {
-          "body": "Capybara capybara capybara. Capybara capybara capybara.",
+          "body": "Capybara capybara capybara. Capybara capybara capybara. ThisLongWordIsIncludedSoWeCanCheckThatSufficientlyLongWordsAreOmittedFromTheSearchIndex.",
           "breadcrumbs": "First Chapter » No Headers",
           "id": "18",
           "title": "First Chapter"

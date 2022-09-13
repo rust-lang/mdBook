@@ -14,6 +14,7 @@ pub use self::book::{load_book, Book, BookItem, BookItems, Chapter};
 pub use self::init::BookBuilder;
 pub use self::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
 
+use log::{debug, error, info, log_enabled, trace, warn};
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
@@ -246,6 +247,13 @@ impl MDBook {
 
     /// Run `rustdoc` tests on the book, linking against the provided libraries.
     pub fn test(&mut self, library_paths: Vec<&str>) -> Result<()> {
+        // test_chapter with chapter:None will run all tests.
+        self.test_chapter(library_paths, None)
+    }
+
+    /// Run `rustdoc` tests on a specific chapter of the book, linking against the provided libraries.
+    /// If `chapter` is `None`, all tests will be run.
+    pub fn test_chapter(&mut self, library_paths: Vec<&str>, chapter: Option<&str>) -> Result<()> {
         let library_args: Vec<&str> = (0..library_paths.len())
             .map(|_| "-L")
             .zip(library_paths.into_iter())
@@ -253,6 +261,8 @@ impl MDBook {
             .collect();
 
         let temp_dir = TempFileBuilder::new().prefix("mdbook-").tempdir()?;
+
+        let mut chapter_found = false;
 
         // FIXME: Is "test" the proper renderer name to use here?
         let preprocess_context =
@@ -270,8 +280,16 @@ impl MDBook {
                     _ => continue,
                 };
 
-                let path = self.source_dir().join(&chapter_path);
-                info!("Testing file: {:?}", path);
+                if let Some(chapter) = chapter {
+                    if ch.name != chapter && chapter_path.to_str() != Some(chapter) {
+                        if chapter == "?" {
+                            info!("Skipping chapter '{}'...", ch.name);
+                        }
+                        continue;
+                    }
+                }
+                chapter_found = true;
+                info!("Testing chapter '{}': {:?}", ch.name, chapter_path);
 
                 // write preprocessed file to tempdir
                 let path = temp_dir.path().join(&chapter_path);
@@ -310,6 +328,11 @@ impl MDBook {
         }
         if failed {
             bail!("One or more tests failed");
+        }
+        if let Some(chapter) = chapter {
+            if !chapter_found {
+                bail!("Chapter not found: {}", chapter);
+            }
         }
         Ok(())
     }
@@ -386,7 +409,7 @@ fn determine_renderers(config: &Config) -> Vec<Box<dyn Renderer>> {
     renderers
 }
 
-const DEFAULT_PREPROCESSORS: &[&'static str] = &["links", "index"];
+const DEFAULT_PREPROCESSORS: &[&str] = &["links", "index"];
 
 fn is_default_preprocessor(pre: &dyn Preprocessor) -> bool {
     let name = pre.name();
@@ -756,10 +779,9 @@ mod tests {
 
         let preprocessors = determine_preprocessors(&cfg).unwrap();
 
-        assert!(preprocessors
+        assert!(!preprocessors
             .iter()
-            .find(|preprocessor| preprocessor.name() == "random")
-            .is_none());
+            .any(|preprocessor| preprocessor.name() == "random"));
     }
 
     #[test]
@@ -776,10 +798,9 @@ mod tests {
 
         let preprocessors = determine_preprocessors(&cfg).unwrap();
 
-        assert!(preprocessors
+        assert!(!preprocessors
             .iter()
-            .find(|preprocessor| preprocessor.name() == "links")
-            .is_none());
+            .any(|preprocessor| preprocessor.name() == "links"));
     }
 
     #[test]

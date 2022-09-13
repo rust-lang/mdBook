@@ -1,6 +1,6 @@
 #[cfg(feature = "watch")]
 use super::watch;
-use crate::{first_chapter, get_book_dir, open};
+use crate::{get_book_dir, open};
 use clap::{arg, Arg, ArgMatches, Command};
 use futures_util::sink::SinkExt;
 use futures_util::StreamExt;
@@ -89,8 +89,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let input_404 = book
         .config
         .get("output.html.input-404")
-        .map(toml::Value::as_str)
-        .and_then(std::convert::identity) // flatten
+        .and_then(toml::Value::as_str)
         .map(ToString::to_string);
     let file_404 = get_404_output_file(&input_404);
 
@@ -102,12 +101,10 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         serve(build_dir, sockaddr, reload_tx, &file_404);
     });
 
+    let serving_url = format!("http://{}", address);
+    info!("Serving on: {}", serving_url);
+
     if open_browser {
-        let serving_url = match first_chapter(&book).map(|path| path.with_extension("html")) {
-            Some(path) => format!("http://{}/{}", address, path.display()),
-            _ => format!("http://{}", address),
-        };
-        info!("Serving on: {}", serving_url);
         open(serving_url);
     }
 

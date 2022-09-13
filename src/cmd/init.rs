@@ -122,8 +122,5 @@ fn confirm() -> bool {
     io::stdout().flush().unwrap();
     let mut s = String::new();
     io::stdin().read_line(&mut s).ok();
-    match &*s.trim() {
-        "Y" | "y" | "yes" | "Yes" => true,
-        _ => false,
-    }
+    matches!(&*s.trim(), "Y" | "y" | "yes" | "Yes")
 }
