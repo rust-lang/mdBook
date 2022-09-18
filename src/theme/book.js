@@ -274,7 +274,7 @@ function playground_text(playground) {
             undoChangesButton.className = 'reset-button';
             undoChangesButton.title = 'Undo changes';
             undoChangesButton.setAttribute('aria-label', undoChangesButton.title);
-            undoChangesButton.innerHTML += document.getElementById('fa-history').innerHTML;
+            undoChangesButton.innerHTML += document.getElementById('fa-clock-rotate-left').innerHTML;
 
             buttons.insertBefore(undoChangesButton, buttons.firstChild);
 

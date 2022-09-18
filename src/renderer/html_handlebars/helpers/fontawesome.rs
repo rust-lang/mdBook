@@ -1,5 +1,6 @@
 use font_awesome_as_a_crate as fa;
 use handlebars::{Context, Handlebars, Helper, Output, RenderContext, RenderError};
+use log::trace;
 use std::str::FromStr;
 
 pub fn fa_helper(
