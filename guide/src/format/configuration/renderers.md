@@ -157,7 +157,8 @@ The following configuration options are available:
   Defaults to `404.md`.
 - **site-url:** The url where the book will be hosted. This is required to ensure
   navigation links and script/css imports in the 404 file work correctly, even when accessing
-  urls in subdirectories. Defaults to `/`.
+  urls in subdirectories. Defaults to `/`. If `site-url` is set,
+  make sure to use document relative links for your assets, meaning they should not start with `/`.
 - **cname:** The DNS subdomain or apex domain at which your book will be hosted.
   This string will be written to a file named CNAME in the root of your site, as
   required by GitHub Pages (see [*Managing a custom domain for your GitHub Pages
@@ -207,6 +208,7 @@ editable = false         # allows editing the source code
 copyable = true          # include the copy button for copying code snippets
 copy-js = true           # includes the JavaScript for the code editor
 line-numbers = false     # displays line numbers for editable code
+runnable = true          # displays a run button for rust code
 ```
 
 - **editable:** Allow editing the source code. Defaults to `false`.
@@ -214,6 +216,7 @@ line-numbers = false     # displays line numbers for editable code
 - **copy-js:** Copy JavaScript files for the editor to the output directory.
   Defaults to `true`.
 - **line-numbers** Display line numbers on editable sections of code. Requires both `editable` and `copy-js` to be `true`. Defaults to `false`.
+- **runnable** Displays a run button for rust code snippets. Changing this to `false` will disable the run in playground feature globally. Defaults to `true`.
 
 [Ace]: https://ace.c9.io/
 

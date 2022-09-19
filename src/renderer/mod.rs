@@ -27,7 +27,10 @@ use std::process::{Command, Stdio};
 use crate::book::Book;
 use crate::config::Config;
 use crate::errors::*;
+use log::{error, info, trace, warn};
 use toml::Value;
+
+use serde::{Deserialize, Serialize};
 
 /// An arbitrary `mdbook` backend.
 ///

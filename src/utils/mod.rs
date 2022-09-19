@@ -4,11 +4,13 @@ pub mod fs;
 mod string;
 pub(crate) mod toml_ext;
 use crate::errors::Error;
+use lazy_static::lazy_static;
+use log::error;
+use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, Options, Parser, Tag};
 use regex::Regex;
 
-use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, Options, Parser, Tag};
-
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::fmt::Write;
 use std::path::Path;
 
@@ -44,6 +46,8 @@ pub fn normalize_id(content: &str) -> String {
 
 /// Generate an ID for use with anchors which is derived from a "normalised"
 /// string.
+// This function should be made private when the deprecation expires.
+#[deprecated(since = "0.4.16", note = "use unique_id_from_content instead")]
 pub fn id_from_content(content: &str) -> String {
     let mut content = content.to_string();
 
@@ -59,8 +63,28 @@ pub fn id_from_content(content: &str) -> String {
 
     // Remove spaces and hashes indicating a header
     let trimmed = content.trim().trim_start_matches('#').trim();
-
     normalize_id(trimmed)
+}
+
+/// Generate an ID for use with anchors which is derived from a "normalised"
+/// string.
+///
+/// Each ID returned will be unique, if the same `id_counter` is provided on
+/// each call.
+pub fn unique_id_from_content(content: &str, id_counter: &mut HashMap<String, usize>) -> String {
+    let id = {
+        #[allow(deprecated)]
+        id_from_content(content)
+    };
+
+    // If we have headers with the same normalized id, append an incrementing counter
+    let id_count = id_counter.entry(id.clone()).or_insert(0);
+    let unique_id = match *id_count {
+        0 => id,
+        id_count => format!("{}-{}", id, id_count),
+    };
+    *id_count += 1;
+    unique_id
 }
 
 /// Fix links to the correct location.
@@ -177,10 +201,26 @@ pub fn render_markdown_with_path(text: &str, curly_quotes: bool, path: Option<&P
     let p = new_cmark_parser(text, curly_quotes);
     let events = p
         .map(clean_codeblock_headers)
-        .map(|event| adjust_links(event, path));
+        .map(|event| adjust_links(event, path))
+        .flat_map(|event| {
+            let (a, b) = wrap_tables(event);
+            a.into_iter().chain(b)
+        });
 
     html::push_html(&mut s, events);
     s
+}
+
+/// Wraps tables in a `.table-wrapper` class to apply overflow-x rules to.
+fn wrap_tables(event: Event<'_>) -> (Option<Event<'_>>, Option<Event<'_>>) {
+    match event {
+        Event::Start(Tag::Table(_)) => (
+            Some(Event::Html(r#"<div class="table-wrapper">"#.into())),
+            Some(event),
+        ),
+        Event::End(Tag::Table(_)) => (Some(event), Some(Event::Html(r#"</div>"#.into()))),
+        _ => (Some(event), None),
+    }
 }
 
 fn clean_codeblock_headers(event: Event<'_>) -> Event<'_> {
@@ -210,8 +250,26 @@ pub fn log_backtrace(e: &Error) {
     }
 }
 
+pub(crate) fn bracket_escape(mut s: &str) -> String {
+    let mut escaped = String::with_capacity(s.len());
+    let needs_escape: &[char] = &['<', '>'];
+    while let Some(next) = s.find(needs_escape) {
+        escaped.push_str(&s[..next]);
+        match s.as_bytes()[next] {
+            b'<' => escaped.push_str("&lt;"),
+            b'>' => escaped.push_str("&gt;"),
+            _ => unreachable!(),
+        }
+        s = &s[next + 1..];
+    }
+    escaped.push_str(s);
+    escaped
+}
+
 #[cfg(test)]
 mod tests {
+    use super::bracket_escape;
+
     mod render_markdown {
         use super::super::render_markdown;
 
@@ -239,6 +297,22 @@ mod tests {
                 render_markdown("[phantom data](foo.html#phantomdata)", false),
                 "<p><a href=\"foo.html#phantomdata\">phantom data</a></p>\n"
             );
+        }
+
+        #[test]
+        fn it_can_wrap_tables() {
+            let src = r#"
+| Original        | Punycode        | Punycode + Encoding |
+|-----------------|-----------------|---------------------|
+| føø             | f-5gaa          | f_5gaa              |
+"#;
+            let out = r#"
+<div class="table-wrapper"><table><thead><tr><th>Original</th><th>Punycode</th><th>Punycode + Encoding</th></tr></thead><tbody>
+<tr><td>føø</td><td>f-5gaa</td><td>f_5gaa</td></tr>
+</tbody></table>
+</div>
+"#.trim();
+            assert_eq!(render_markdown(src, false), out);
         }
 
         #[test]
@@ -332,8 +406,9 @@ more text with spaces
         }
     }
 
-    mod html_munging {
-        use super::super::{id_from_content, normalize_id};
+    #[allow(deprecated)]
+    mod id_from_content {
+        use super::super::id_from_content;
 
         #[test]
         fn it_generates_anchors() {
@@ -361,6 +436,10 @@ more text with spaces
             );
             assert_eq!(id_from_content("## Über"), "Über");
         }
+    }
+
+    mod html_munging {
+        use super::super::{normalize_id, unique_id_from_content};
 
         #[test]
         fn it_normalizes_ids() {
@@ -379,5 +458,38 @@ more text with spaces
             assert_eq!(normalize_id("한국어"), "한국어");
             assert_eq!(normalize_id(""), "");
         }
+
+        #[test]
+        fn it_generates_unique_ids_from_content() {
+            // Same id if not given shared state
+            assert_eq!(
+                unique_id_from_content("## 中文標題 CJK title", &mut Default::default()),
+                "中文標題-cjk-title"
+            );
+            assert_eq!(
+                unique_id_from_content("## 中文標題 CJK title", &mut Default::default()),
+                "中文標題-cjk-title"
+            );
+
+            // Different id if given shared state
+            let mut id_counter = Default::default();
+            assert_eq!(unique_id_from_content("## Über", &mut id_counter), "Über");
+            assert_eq!(
+                unique_id_from_content("## 中文標題 CJK title", &mut id_counter),
+                "中文標題-cjk-title"
+            );
+            assert_eq!(unique_id_from_content("## Über", &mut id_counter), "Über-1");
+            assert_eq!(unique_id_from_content("## Über", &mut id_counter), "Über-2");
+        }
+    }
+
+    #[test]
+    fn escaped_brackets() {
+        assert_eq!(bracket_escape(""), "");
+        assert_eq!(bracket_escape("<"), "&lt;");
+        assert_eq!(bracket_escape(">"), "&gt;");
+        assert_eq!(bracket_escape("<>"), "&lt;&gt;");
+        assert_eq!(bracket_escape("<test>"), "&lt;test&gt;");
+        assert_eq!(bracket_escape("a<test>b"), "a&lt;test&gt;b");
     }
 }

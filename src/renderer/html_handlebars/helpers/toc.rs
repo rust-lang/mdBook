@@ -1,11 +1,10 @@
-use std::collections::BTreeMap;
-use std::io;
 use std::path::Path;
+use std::{cmp::Ordering, collections::BTreeMap};
 
 use crate::utils;
+use crate::utils::bracket_escape;
 
 use handlebars::{Context, Handlebars, Helper, HelperDef, Output, RenderContext, RenderError};
-use pulldown_cmark::{html, Event, Parser};
 
 // Handlebars helper to construct TOC
 #[derive(Clone, Copy)]
@@ -34,7 +33,7 @@ impl HelperDef for RenderToc {
             .as_json()
             .as_str()
             .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
-            .replace("\"", "");
+            .replace('\"', "");
 
         let current_section = rc
             .evaluate(ctx, "@root/section")?
@@ -58,6 +57,11 @@ impl HelperDef for RenderToc {
         out.write("<ol class=\"chapter\">")?;
 
         let mut current_level = 1;
+        // The "index" page, which has this attribute set, is supposed to alias the first chapter in
+        // the book, i.e. the first link. There seems to be no easy way to determine which chapter
+        // the "index" is aliasing from within the renderer, so this is used instead to force the
+        // first link to be active. See further below.
+        let mut is_first_chapter = ctx.data().get("is_index").is_some();
 
         for item in chapters {
             // Spacer
@@ -82,61 +86,66 @@ impl HelperDef for RenderToc {
                     level - 1 < fold_level as usize
                 };
 
-            if level > current_level {
-                while level > current_level {
-                    out.write("<li>")?;
-                    out.write("<ol class=\"section\">")?;
-                    current_level += 1;
+            match level.cmp(&current_level) {
+                Ordering::Greater => {
+                    while level > current_level {
+                        out.write("<li>")?;
+                        out.write("<ol class=\"section\">")?;
+                        current_level += 1;
+                    }
+                    write_li_open_tag(out, is_expanded, false)?;
                 }
-                write_li_open_tag(out, is_expanded, false)?;
-            } else if level < current_level {
-                while level < current_level {
-                    out.write("</ol>")?;
-                    out.write("</li>")?;
-                    current_level -= 1;
+                Ordering::Less => {
+                    while level < current_level {
+                        out.write("</ol>")?;
+                        out.write("</li>")?;
+                        current_level -= 1;
+                    }
+                    write_li_open_tag(out, is_expanded, false)?;
                 }
-                write_li_open_tag(out, is_expanded, false)?;
-            } else {
-                write_li_open_tag(out, is_expanded, item.get("section").is_none())?;
+                Ordering::Equal => {
+                    write_li_open_tag(out, is_expanded, item.get("section").is_none())?;
+                }
             }
 
             // Part title
             if let Some(title) = item.get("part") {
                 out.write("<li class=\"part-title\">")?;
-                write_escaped(out, title)?;
+                out.write(&bracket_escape(title))?;
                 out.write("</li>")?;
                 continue;
             }
 
             // Link
-            let path_exists = if let Some(path) =
-                item.get("path")
-                    .and_then(|p| if p.is_empty() { None } else { Some(p) })
-            {
-                out.write("<a href=\"")?;
+            let path_exists: bool;
+            match item.get("path") {
+                Some(path) if !path.is_empty() => {
+                    out.write("<a href=\"")?;
+                    let tmp = Path::new(path)
+                        .with_extension("html")
+                        .to_str()
+                        .unwrap()
+                        // Hack for windows who tends to use `\` as separator instead of `/`
+                        .replace('\\', "/");
 
-                let tmp = Path::new(item.get("path").expect("Error: path should be Some(_)"))
-                    .with_extension("html")
-                    .to_str()
-                    .unwrap()
-                    // Hack for windows who tends to use `\` as separator instead of `/`
-                    .replace("\\", "/");
+                    // Add link
+                    out.write(&utils::fs::path_to_root(&current_path))?;
+                    out.write(&tmp)?;
+                    out.write("\"")?;
 
-                // Add link
-                out.write(&utils::fs::path_to_root(&current_path))?;
-                out.write(&tmp)?;
-                out.write("\"")?;
+                    if path == &current_path || is_first_chapter {
+                        is_first_chapter = false;
+                        out.write(" class=\"active\"")?;
+                    }
 
-                if path == &current_path {
-                    out.write(" class=\"active\"")?;
+                    out.write(">")?;
+                    path_exists = true;
                 }
-
-                out.write(">")?;
-                true
-            } else {
-                out.write("<div>")?;
-                false
-            };
+                _ => {
+                    out.write("<div>")?;
+                    path_exists = false;
+                }
+            }
 
             if !self.no_section_label {
                 // Section does not necessarily exist
@@ -148,20 +157,7 @@ impl HelperDef for RenderToc {
             }
 
             if let Some(name) = item.get("name") {
-                // Render only inline code blocks
-
-                // filter all events that are not inline code blocks
-                let parser = Parser::new(name).filter(|event| match *event {
-                    Event::Code(_) | Event::Html(_) | Event::Text(_) => true,
-                    _ => false,
-                });
-
-                // render markdown to html
-                let mut markdown_parsed_name = String::with_capacity(name.len() * 3 / 2);
-                html::push_html(&mut markdown_parsed_name, parser);
-
-                // write to the handlebars template
-                write_escaped(out, &markdown_parsed_name)?;
+                out.write(&bracket_escape(name))?
             }
 
             if path_exists {
@@ -204,19 +200,4 @@ fn write_li_open_tag(
     }
     li.push_str("\">");
     out.write(&li)
-}
-
-fn write_escaped(out: &mut dyn Output, mut title: &str) -> io::Result<()> {
-    let needs_escape: &[char] = &['<', '>'];
-    while let Some(next) = title.find(needs_escape) {
-        out.write(&title[..next])?;
-        match title.as_bytes()[next] {
-            b'<' => out.write("&lt;")?,
-            b'>' => out.write("&gt;")?,
-            _ => unreachable!(),
-        }
-        title = &title[next + 1..];
-    }
-    out.write(title)?;
-    Ok(())
 }

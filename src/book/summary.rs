@@ -1,6 +1,8 @@
 use crate::errors::*;
+use log::{debug, trace, warn};
 use memchr::{self, Memchr};
 use pulldown_cmark::{self, Event, HeadingLevel, Tag};
+use serde::{Deserialize, Serialize};
 use std::fmt::{self, Display, Formatter};
 use std::iter::FromIterator;
 use std::ops::{Deref, DerefMut};
@@ -536,6 +538,10 @@ impl<'a> SummaryParser<'a> {
                 // Skip a HTML element such as a comment line.
                 Some(Event::Html(_)) => {}
                 // Otherwise, no title.
+                Some(ev) => {
+                    self.back(ev);
+                    return None;
+                }
                 _ => return None,
             }
         }
@@ -645,6 +651,18 @@ mod tests {
         let got = parser.parse_title().unwrap();
 
         assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn no_initial_title() {
+        let src = "[Link]()";
+        let mut parser = SummaryParser::new(src);
+
+        assert!(parser.parse_title().is_none());
+        assert!(matches!(
+            parser.next_event(),
+            Some(Event::Start(Tag::Paragraph))
+        ));
     }
 
     #[test]

@@ -49,6 +49,7 @@
 
 #![deny(missing_docs)]
 
+use log::{debug, trace, warn};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
 use std::env;
@@ -227,10 +228,10 @@ impl Config {
         let value = Value::try_from(value)
             .with_context(|| "Unable to represent the item as a JSON Value")?;
 
-        if index.starts_with("book.") {
-            self.book.update_value(&index[5..], value);
-        } else if index.starts_with("build.") {
-            self.build.update_value(&index[6..], value);
+        if let Some(key) = index.strip_prefix("book.") {
+            self.book.update_value(key, value);
+        } else if let Some(key) = index.strip_prefix("build.") {
+            self.build.update_value(key, value);
         } else {
             self.rest.insert(index, value);
         }
@@ -295,7 +296,7 @@ impl Default for Config {
     }
 }
 
-impl<'de> Deserialize<'de> for Config {
+impl<'de> serde::Deserialize<'de> for Config {
     fn deserialize<D: Deserializer<'de>>(de: D) -> std::result::Result<Self, D::Error> {
         let raw = Value::deserialize(de)?;
 
@@ -371,15 +372,8 @@ impl Serialize for Config {
 }
 
 fn parse_env(key: &str) -> Option<String> {
-    const PREFIX: &str = "MDBOOK_";
-
-    if key.starts_with(PREFIX) {
-        let key = &key[PREFIX.len()..];
-
-        Some(key.to_lowercase().replace("__", ".").replace("_", "-"))
-    } else {
-        None
-    }
+    key.strip_prefix("MDBOOK_")
+        .map(|key| key.to_lowercase().replace("__", ".").replace('_', "-"))
 }
 
 fn is_legacy_format(table: &Value) -> bool {
@@ -533,14 +527,14 @@ pub struct HtmlConfig {
     /// directly jumping to editing the currently viewed page.
     /// Contains {path} that is replaced with chapter source file path
     pub edit_url_template: Option<String>,
-    /// This is used as a bit of a workaround for the `mdbook serve` command.
-    /// Basically, because you set the websocket port from the command line, the
-    /// `mdbook serve` command needs a way to let the HTML renderer know where
-    /// to point livereloading at, if it has been enabled.
+    /// Endpoint of websocket, for livereload usage. Value loaded from .toml file
+    /// is ignored, because our code overrides this field with the value [`LIVE_RELOAD_ENDPOINT`]
+    ///
+    /// [`LIVE_RELOAD_ENDPOINT`]: cmd::serve::LIVE_RELOAD_ENDPOINT
     ///
     /// This config item *should not be edited* by the end user.
     #[doc(hidden)]
-    pub livereload_url: Option<String>,
+    pub live_reload_endpoint: Option<String>,
     /// The mapping from old pages to new pages/URLs to use when generating
     /// redirects.
     pub redirect: HashMap<String, String>,
@@ -569,7 +563,7 @@ impl Default for HtmlConfig {
             input_404: None,
             site_url: None,
             cname: None,
-            livereload_url: None,
+            live_reload_endpoint: None,
             redirect: HashMap::new(),
         }
     }
@@ -588,7 +582,7 @@ impl HtmlConfig {
 
 /// Configuration for how to render the print icon, print.html, and print.css.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(default, rename_all = "kebab-case")]
 pub struct Print {
     /// Whether print support is enabled.
     pub enable: bool,
@@ -633,6 +627,8 @@ pub struct Playground {
     /// Set's the language the playground will work with
     /// TODO: Use an array when there's support for multiple languages simultaneously
     pub language: String,
+    /// Display the run button. Default: `true`
+    pub runnable: bool,
 }
 
 impl Default for Playground {
@@ -643,6 +639,7 @@ impl Default for Playground {
             copy_js: true,
             line_numbers: false,
             language: "rust".to_string(),
+            runnable: true,
         }
     }
 }
@@ -725,6 +722,7 @@ impl<'de, T> Updateable<'de> for T where T: Serialize + Deserialize<'de> {}
 mod tests {
     use super::*;
     use crate::utils::fs::get_404_output_file;
+    use serde_json::json;
 
     const COMPLEX_CONFIG: &str = r#"
         [book]
@@ -787,6 +785,7 @@ mod tests {
             copy_js: true,
             line_numbers: false,
             language: "rust".to_string(),
+            runnable: true,
         };
         let html_should_be = HtmlConfig {
             curly_quotes: true,
@@ -815,6 +814,22 @@ mod tests {
         assert_eq!(got.build, build_should_be);
         assert_eq!(got.rust, rust_should_be);
         assert_eq!(got.html_config().unwrap(), html_should_be);
+    }
+
+    #[test]
+    fn disable_runnable() {
+        let src = r#"
+        [book]
+        title = "Some Book"
+        description = "book book book"
+        authors = ["Shogo Takata"]
+
+        [output.html.playground]
+        runnable = false
+        "#;
+
+        let got = Config::from_str(src).unwrap();
+        assert!(!got.html_config().unwrap().playground.runnable);
     }
 
     #[test]
@@ -1023,7 +1038,7 @@ mod tests {
     fn encode_env_var(key: &str) -> String {
         format!(
             "MDBOOK_{}",
-            key.to_uppercase().replace('.', "__").replace("-", "_")
+            key.to_uppercase().replace('.', "__").replace('-', "_")
         )
     }
 
@@ -1047,11 +1062,10 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::approx_constant)]
     fn update_config_using_env_var_and_complex_value() {
         let mut cfg = Config::default();
         let key = "foo-bar.baz";
-        let value = json!({"array": [1, 2, 3], "number": 3.14});
+        let value = json!({"array": [1, 2, 3], "number": 13.37});
         let value_str = serde_json::to_string(&value).unwrap();
 
         assert!(cfg.get(key).is_none());
@@ -1160,5 +1174,25 @@ mod tests {
         "#;
 
         Config::from_str(src).unwrap();
+    }
+
+    #[test]
+    fn print_config() {
+        let src = r#"
+        [output.html.print]
+        enable = false
+        "#;
+        let got = Config::from_str(src).unwrap();
+        let html_config = got.html_config().unwrap();
+        assert!(!html_config.print.enable);
+        assert!(html_config.print.page_break);
+        let src = r#"
+        [output.html.print]
+        page-break = false
+        "#;
+        let got = Config::from_str(src).unwrap();
+        let html_config = got.html_config().unwrap();
+        assert!(html_config.print.enable);
+        assert!(!html_config.print.page_break);
     }
 }

@@ -1,5 +1,91 @@
 # Changelog
 
+## mdBook 0.4.21
+[92afe9b...8f01d02](https://github.com/rust-lang/mdBook/compare/92afe9b...8f01d02)
+
+### Fixed
+- Fixed an issue where mdBook would fail to compile with Rust nightly-2022-07-22.
+  [#1861](https://github.com/rust-lang/mdBook/pull/1861)
+
+## mdBook 0.4.20
+[53055e0...da166e0](https://github.com/rust-lang/mdBook/compare/53055e0...da166e0)
+
+### Fixed
+- Fixed a regression in 0.4.19 where inline code would have excessive padding
+  in some situations such as headings.
+  [#1855](https://github.com/rust-lang/mdBook/pull/1855)
+
+## mdBook 0.4.19
+[ae275ad...53055e0](https://github.com/rust-lang/mdBook/compare/ae275ad...53055e0)
+
+### Added
+- The `serve` command now supports HEAD requests.
+  [#1825](https://github.com/rust-lang/mdBook/pull/1825)
+
+### Changed
+- An error is now generated when a custom theme directory does not exist.
+  [#1791](https://github.com/rust-lang/mdBook/pull/1791)
+- Very wide tables now have independent horizontal scrolling so that scrolling
+  to see the rest of the table will not scroll the entire page.
+  [#1617](https://github.com/rust-lang/mdBook/pull/1617)
+- The buttons on code blocks are now only shown when the mouse cursor hovers
+  over them (or tapped on mobile). There is also some extra spacing to reduce
+  the overlap with the code.
+  [#1806](https://github.com/rust-lang/mdBook/pull/1806)
+- The first chapter always generates an `index.html` file. Previously it would
+  only generate the index file for prefix chapters.
+  [#1829](https://github.com/rust-lang/mdBook/pull/1829)
+
+### Fixed
+- `mdbook serve --open` now properly handles the case if the first chapter is a draft.
+  [#1714](https://github.com/rust-lang/mdBook/pull/1714)
+  [#1830](https://github.com/rust-lang/mdBook/pull/1830)
+- Very long words (over 80 characters) are no longer indexed to avoid a stack overflow.
+  [#1833](https://github.com/rust-lang/mdBook/pull/1833)
+
+## mdBook 0.4.18
+[981b79b...ae275ad](https://github.com/rust-lang/mdBook/compare/981b79b...ae275ad)
+
+### Fixed
+- Fixed rendering of SUMMARY links that contain markdown escapes or other
+  markdown elements.
+  [#1785](https://github.com/rust-lang/mdBook/pull/1785)
+
+## mdBook 0.4.17
+[a5fddfa...981b79b](https://github.com/rust-lang/mdBook/compare/a5fddfa...981b79b)
+
+### Fixed
+- Fixed parsing of `output.html.print` configuration table.
+  [#1775](https://github.com/rust-lang/mdBook/pull/1775)
+
+## mdBook 0.4.16
+[68a5c09...a5fddfa](https://github.com/rust-lang/mdBook/compare/68a5c09...a5fddfa)
+
+### Added
+- Added `output.html.print.page-break` config option to control whether or not
+  there is a page break between chapters in the print output.
+  [#1728](https://github.com/rust-lang/mdBook/pull/1728)
+- Added `output.html.playground.runnable` config option to globally disable
+  the run button in code blocks.
+  [#1546](https://github.com/rust-lang/mdBook/pull/1546)
+
+### Changed
+- The `mdbook serve` live reload websocket now uses the protocol, host, and
+  port of the current page, allowing access through a proxy.
+  [#1771](https://github.com/rust-lang/mdBook/pull/1771)
+- The 404 not-found page now includes the books title in the HTML title tag.
+  [#1693](https://github.com/rust-lang/mdBook/pull/1693)
+- Migrated to clap 3.0 which which handles CLI option parsing.
+  [#1731](https://github.com/rust-lang/mdBook/pull/1731)
+
+### Fixed
+- Minor fixes to the markdown parser.
+  [#1729](https://github.com/rust-lang/mdBook/pull/1729)
+- Fixed incorrect parsing in `SUMMARY.md` when it didn't start with a title.
+  [#1744](https://github.com/rust-lang/mdBook/pull/1744)
+- Fixed duplicate anchor IDs for links in search results.
+  [#1749](https://github.com/rust-lang/mdBook/pull/1749)
+
 ## mdBook 0.4.15
 [5eb7d46...68a5c09](https://github.com/rust-lang/mdBook/compare/5eb7d46...68a5c09)
 
