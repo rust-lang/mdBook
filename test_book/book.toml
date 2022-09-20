@@ -9,6 +9,7 @@ edition = "2018"
 
 [output.html]
 mathjax-support = true
+fold = { enable = true, level = 1 }
 
 [output.html.playground]
 editable = true

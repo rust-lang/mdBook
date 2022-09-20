@@ -5,7 +5,9 @@
 ---
 
 - [Introduction](README.md)
-- [Draft Chapter]()
+- [Draft Chapter with children]()
+  - [Collapsed draft chapter with children]()
+    - [The parent chapters can be collapsed by interacting with their titles in addition to the arrow]()
 
 # Actual Markdown Tag Examples
 
