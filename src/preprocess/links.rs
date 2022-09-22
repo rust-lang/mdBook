@@ -10,8 +10,8 @@ use std::path::{Path, PathBuf};
 
 use super::{Preprocessor, PreprocessorContext};
 use crate::book::{Book, BookItem};
-use lazy_static::lazy_static;
 use log::{error, warn};
+use once_cell::sync::Lazy;
 
 const ESCAPE_CHAR: char = '\\';
 const MAX_LINK_NESTED_DEPTH: usize = 10;
@@ -410,19 +410,20 @@ impl<'a> Iterator for LinkIter<'a> {
 fn find_links(contents: &str) -> LinkIter<'_> {
     // lazily compute following regex
     // r"\\\{\{#.*\}\}|\{\{#([a-zA-Z0-9]+)\s*([^}]+)\}\}")?;
-    lazy_static! {
-        static ref RE: Regex = Regex::new(
+    static RE: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(
             r"(?x)              # insignificant whitespace mode
-            \\\{\{\#.*\}\}      # match escaped link
-            |                   # or
-            \{\{\s*             # link opening parens and whitespace
-            \#([a-zA-Z0-9_]+)   # link type
-            \s+                 # separating whitespace
-            ([^}]+)             # link target path and space separated properties
-            \}\}                # link closing parens"
+        \\\{\{\#.*\}\}      # match escaped link
+        |                   # or
+        \{\{\s*             # link opening parens and whitespace
+        \#([a-zA-Z0-9_]+)   # link type
+        \s+                 # separating whitespace
+        ([^}]+)             # link target path and space separated properties
+        \}\}                # link closing parens",
         )
-        .unwrap();
-    }
+        .unwrap()
+    });
+
     LinkIter(RE.captures_iter(contents))
 }
 

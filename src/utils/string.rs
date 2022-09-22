@@ -1,4 +1,4 @@
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use regex::Regex;
 use std::ops::Bound::{Excluded, Included, Unbounded};
 use std::ops::RangeBounds;
@@ -24,10 +24,10 @@ pub fn take_lines<R: RangeBounds<usize>>(s: &str, range: R) -> String {
     }
 }
 
-lazy_static! {
-    static ref ANCHOR_START: Regex = Regex::new(r"ANCHOR:\s*(?P<anchor_name>[\w_-]+)").unwrap();
-    static ref ANCHOR_END: Regex = Regex::new(r"ANCHOR_END:\s*(?P<anchor_name>[\w_-]+)").unwrap();
-}
+static ANCHOR_START: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"ANCHOR:\s*(?P<anchor_name>[\w_-]+)").unwrap());
+static ANCHOR_END: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"ANCHOR_END:\s*(?P<anchor_name>[\w_-]+)").unwrap());
 
 /// Take anchored lines from a string.
 /// Lines containing anchor are ignored.
