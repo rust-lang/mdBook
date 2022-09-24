@@ -65,3 +65,7 @@ search = ["elasticlunr-rs", "ammonia"]
 [[bin]]
 doc = false
 name = "mdbook"
+
+[[example]]
+name = "nop-preprocessor"
+test = true

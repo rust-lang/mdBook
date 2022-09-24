@@ -39,8 +39,6 @@ jobs:
       run: bash ci/install-rust.sh ${{ matrix.rust }}
     - name: Build and run tests
       run: cargo test
-    - name: Test examples
-      run: cargo test --examples
     - name: Test no default
       run: cargo test --no-default-features
 
