@@ -1,4 +1,5 @@
 use crate::errors::*;
+use log::{debug, trace, warn};
 use memchr::{self, Memchr};
 use pulldown_cmark::{self, Event, HeadingLevel, Tag};
 use serde::{Deserialize, Serialize};

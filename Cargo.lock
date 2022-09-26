@@ -796,7 +796,7 @@ checksum = "a3e378b66a060d48947b590737b30a1be76706c8dd7b8ba0f2fe3989c68a853f"
 
 [[package]]
 name = "mdbook"
-version = "0.4.20"
+version = "0.4.21"
 dependencies = [
  "ammonia",
  "anyhow",
@@ -809,10 +809,10 @@ dependencies = [
  "futures-util",
  "gitignore",
  "handlebars",
- "lazy_static",
  "log",
  "memchr",
  "notify",
+ "once_cell",
  "opener",
  "predicates",
  "pretty_assertions",
@@ -996,6 +996,12 @@ dependencies = [
  "hermit-abi",
  "libc",
 ]
+
+[[package]]
+name = "once_cell"
+version = "1.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e82dad04139b71a90c080c8463fe0dc7902db5192d939bd0950f074d014339e1"
 
 [[package]]
 name = "opaque-debug"

@@ -83,17 +83,6 @@
 #![deny(missing_docs)]
 #![deny(rust_2018_idioms)]
 
-#[macro_use]
-extern crate lazy_static;
-#[macro_use]
-extern crate log;
-#[macro_use]
-extern crate serde_json;
-
-#[cfg(test)]
-#[macro_use]
-extern crate pretty_assertions;
-
 pub mod book;
 pub mod config;
 pub mod preprocess;

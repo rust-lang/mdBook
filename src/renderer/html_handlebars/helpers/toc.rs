@@ -117,35 +117,35 @@ impl HelperDef for RenderToc {
             }
 
             // Link
-            let path_exists = if let Some(path) =
-                item.get("path")
-                    .and_then(|p| if p.is_empty() { None } else { Some(p) })
-            {
-                out.write("<a href=\"")?;
+            let path_exists: bool;
+            match item.get("path") {
+                Some(path) if !path.is_empty() => {
+                    out.write("<a href=\"")?;
+                    let tmp = Path::new(path)
+                        .with_extension("html")
+                        .to_str()
+                        .unwrap()
+                        // Hack for windows who tends to use `\` as separator instead of `/`
+                        .replace('\\', "/");
 
-                let tmp = Path::new(item.get("path").expect("Error: path should be Some(_)"))
-                    .with_extension("html")
-                    .to_str()
-                    .unwrap()
-                    // Hack for windows who tends to use `\` as separator instead of `/`
-                    .replace('\\', "/");
+                    // Add link
+                    out.write(&utils::fs::path_to_root(&current_path))?;
+                    out.write(&tmp)?;
+                    out.write("\"")?;
 
-                // Add link
-                out.write(&utils::fs::path_to_root(&current_path))?;
-                out.write(&tmp)?;
-                out.write("\"")?;
+                    if path == &current_path || is_first_chapter {
+                        is_first_chapter = false;
+                        out.write(" class=\"active\"")?;
+                    }
 
-                if path == &current_path || is_first_chapter {
-                    is_first_chapter = false;
-                    out.write(" class=\"active\"")?;
+                    out.write(">")?;
+                    path_exists = true;
                 }
-
-                out.write(">")?;
-                true
-            } else {
-                out.write("<div>")?;
-                false
-            };
+                _ => {
+                    out.write("<div>")?;
+                    path_exists = false;
+                }
+            }
 
             if !self.no_section_label {
                 // Section does not necessarily exist

@@ -4,6 +4,8 @@ use std::path::Path;
 use handlebars::{Context, Handlebars, Helper, Output, RenderContext, RenderError, Renderable};
 
 use crate::utils;
+use log::{debug, trace};
+use serde_json::json;
 
 type StringMap = BTreeMap<String, String>;
 
@@ -146,15 +148,12 @@ fn render(
 
     trace!("Render template");
 
-    _h.template()
-        .ok_or_else(|| RenderError::new("Error with the handlebars template"))
-        .and_then(|t| {
-            let mut local_rc = rc.clone();
-            let local_ctx = Context::wraps(&context)?;
-            t.render(r, &local_ctx, &mut local_rc, out)
-        })?;
-
-    Ok(())
+    let t = _h
+        .template()
+        .ok_or_else(|| RenderError::new("Error with the handlebars template"))?;
+    let local_ctx = Context::wraps(&context)?;
+    let mut local_rc = rc.clone();
+    t.render(r, &local_ctx, &mut local_rc, out)
 }
 
 pub fn previous(

@@ -1,4 +1,5 @@
 use crate::errors::*;
+use log::{debug, trace};
 use std::convert::Into;
 use std::fs::{self, File};
 use std::io::Write;
