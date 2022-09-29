@@ -454,7 +454,7 @@ impl<'a> SummaryParser<'a> {
                     items.push(item);
                 }
                 Some(Event::Start(Tag::List(..))) => {
-                    // Skip this tag after comment bacause it is not nested.
+                    // Skip this tag after comment because it is not nested.
                     if items.is_empty() {
                         continue;
                     }
