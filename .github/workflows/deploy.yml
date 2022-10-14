@@ -9,19 +9,35 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        target:
+          - aarch64-unknown-linux-musl
+          - x86_64-unknown-linux-gnu
+          - x86_64-unknown-linux-musl
+          - x86_64-apple-darwin
+          - x86_64-pc-windows-msvc
+        include:
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-latest
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
     steps:
     - uses: actions/checkout@master
     - name: Install hub
       run: ci/install-hub.sh ${{ matrix.os }}
       shell: bash
     - name: Install Rust
-      run: ci/install-rust.sh stable
+      run: ci/install-rust.sh stable ${{ matrix.target }}
       shell: bash
     - name: Build and deploy artifacts
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: ci/make-release.sh ${{ matrix.os }}
+      run: ci/make-release.sh ${{ matrix.os }} ${{ matrix.target }}
       shell: bash
   pages:
     name: GitHub Pages
