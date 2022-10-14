@@ -1,5 +1,6 @@
 use crate::{get_book_dir, open};
 use clap::{arg, App, Arg, ArgMatches};
+use ignore::gitignore::Gitignore;
 use mdbook::errors::Result;
 use mdbook::utils;
 use mdbook::MDBook;
@@ -75,16 +76,7 @@ fn remove_ignored_files(book_root: &Path, paths: &[PathBuf]) -> Vec<PathBuf> {
     }
 
     match find_gitignore(book_root) {
-        Some(gitignore_path) => {
-            match gitignore::File::new(gitignore_path.as_path()) {
-                Ok(exclusion_checker) => filter_ignored_files(exclusion_checker, paths),
-                Err(_) => {
-                    // We're unable to read the .gitignore file, so we'll silently allow everything.
-                    // Please see discussion: https://github.com/rust-lang/mdBook/pull/1051
-                    paths.iter().map(|path| path.to_path_buf()).collect()
-                }
-            }
-        }
+        Some(gitignore_path) => filter_ignored_files(&Gitignore::new(gitignore_path).0, paths),
         None => {
             // There is no .gitignore file.
             paths.iter().map(|path| path.to_path_buf()).collect()
@@ -99,18 +91,16 @@ fn find_gitignore(book_root: &Path) -> Option<PathBuf> {
         .find(|p| p.exists())
 }
 
-fn filter_ignored_files(exclusion_checker: gitignore::File, paths: &[PathBuf]) -> Vec<PathBuf> {
+fn filter_ignored_files(ignore: &Gitignore, paths: &[PathBuf]) -> Vec<PathBuf> {
     paths
         .iter()
-        .filter(|path| match exclusion_checker.is_excluded(path) {
-            Ok(exclude) => !exclude,
-            Err(error) => {
-                warn!(
-                    "Unable to determine if {:?} is excluded: {:?}. Including it.",
-                    &path, error
-                );
-                true
-            }
+        .filter(|path| {
+            let canonicalized = path.canonicalize();
+            let p = canonicalized.as_ref().unwrap_or(path);
+
+            !ignore
+                .matched_path_or_any_parents(p, p.is_dir())
+                .is_ignore()
         })
         .map(|path| path.to_path_buf())
         .collect()
