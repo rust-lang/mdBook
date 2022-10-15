@@ -17,6 +17,10 @@ edition = "2018"
 build-dir = "my-example-book"
 create-missing = false
 
+[serve]
+hostname = "localhost"
+port = 3000
+
 [preprocessor.index]
 
 [preprocessor.links]
@@ -108,3 +112,16 @@ use-default-preprocessors = true  # use the default preprocessors
     default preprocessors from running.
   - Adding `[preprocessor.links]`, for example, will ensure, regardless of
     `use-default-preprocessors` that `links` it will run.
+
+### Serve options
+
+This controls the serve process of your book.
+
+```toml
+[serve]
+hostname = "localhost"
+port = 3000
+```
+
+- **hostname:** The hostname to serve the book, by default it will be `localhost`.
+- **port:** The port to serve the book, by default it will be `3000`.

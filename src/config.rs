@@ -71,6 +71,8 @@ pub struct Config {
     pub book: BookConfig,
     /// Information about the build environment.
     pub build: BuildConfig,
+    /// Information about the serve environment
+    pub serve: ServeConfig,
     /// Information about Rust language support.
     pub rust: RustConfig,
     rest: Value,
@@ -290,6 +292,7 @@ impl Default for Config {
         Config {
             book: BookConfig::default(),
             build: BuildConfig::default(),
+            serve: ServeConfig::default(),
             rust: RustConfig::default(),
             rest: Value::Table(Table::default()),
         }
@@ -334,6 +337,12 @@ impl<'de> serde::Deserialize<'de> for Config {
             .transpose()?
             .unwrap_or_default();
 
+        let serve: ServeConfig = table
+            .remove("serve")
+            .map(|serve| serve.try_into().map_err(D::Error::custom))
+            .transpose()?
+            .unwrap_or_default();
+
         let rust: RustConfig = table
             .remove("rust")
             .map(|rust| rust.try_into().map_err(D::Error::custom))
@@ -343,6 +352,7 @@ impl<'de> serde::Deserialize<'de> for Config {
         Ok(Config {
             book,
             build,
+            serve,
             rust,
             rest: Value::Table(table),
         })
@@ -448,6 +458,16 @@ impl Default for BuildConfig {
             use_default_preprocessors: true,
         }
     }
+}
+
+/// Configuration for the serve procedure
+#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct ServeConfig {
+    /// Default hostname
+    pub hostname: Option<String>,
+    /// Default port
+    pub port: Option<u16>,
 }
 
 /// Configuration for the Rust compiler(e.g., for playground)
