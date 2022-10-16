@@ -1,6 +1,7 @@
 #![allow(missing_docs)] // FIXME: Document this
 
 pub mod fs;
+pub mod ignore;
 mod string;
 pub(crate) mod toml_ext;
 use crate::errors::Error;
