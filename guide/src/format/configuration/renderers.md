@@ -279,6 +279,16 @@ The value can be any valid URI the browser should navigate to (e.g. `https://rus
 This will generate an HTML page which will automatically redirect to the given location.
 Note that the source location does not support `#` anchor redirects.
 
+### `[.mdbookignore]`
+
+You can use a `.mdbookignore` file to exclude files from the build process. The file is places in the `src` directory of your book and has the format known from [`.gitignore`](https://git-scm.com/docs/gitignore) files.
+
+For example:
+```
+*.rs
+/target/
+```
+
 ## Markdown Renderer
 
 The Markdown renderer will run preprocessors and then output the resulting
