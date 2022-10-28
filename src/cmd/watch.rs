@@ -146,6 +146,10 @@ where
     // Add the book.toml file to the watcher if it exists
     let _ = watcher.watch(book.root.join("book.toml"), NonRecursive);
 
+    for dir in &book.config.build.extra_watch_dirs {
+        let _ = watcher.watch(dir, Recursive);
+    }
+
     info!("Listening for changes...");
 
     loop {
