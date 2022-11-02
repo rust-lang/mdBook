@@ -679,6 +679,16 @@ fn make_data(
 
     if html_config.mathjax_support {
         data.insert("mathjax_support".to_owned(), json!(true));
+    } else if html_config.mathjax.enable {
+        data.insert("mathjax_enable".to_owned(), json!(true));
+        data.insert(
+            "mathjax_source".to_owned(),
+            json!(html_config.mathjax.source),
+        );
+        data.insert(
+            "mathjax_config".to_owned(),
+            json!(html_config.mathjax.config),
+        );
     }
 
     // This `matches!` checks for a non-empty file.

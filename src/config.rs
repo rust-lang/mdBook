@@ -490,6 +490,8 @@ pub struct HtmlConfig {
     pub curly_quotes: bool,
     /// Should mathjax be enabled?
     pub mathjax_support: bool,
+    /// MathJax settings.
+    pub mathjax: MathJax,
     /// Whether to fonts.css and respective font files to the output directory.
     pub copy_fonts: bool,
     /// An optional google analytics code.
@@ -550,6 +552,7 @@ impl Default for HtmlConfig {
             preferred_dark_theme: None,
             curly_quotes: false,
             mathjax_support: false,
+            mathjax: MathJax::default(),
             copy_fonts: true,
             google_analytics: None,
             additional_css: Vec::new(),
@@ -578,6 +581,28 @@ impl HtmlConfig {
         match self.theme {
             Some(ref d) => root.join(d),
             None => root.join("theme"),
+        }
+    }
+}
+
+/// Configuration for how to use MathJax.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct MathJax {
+    /// Whether MathJax support is enabled.
+    pub enable: bool,
+    /// Source. Default: "https://cdn.jsdelivr.net/npm/mathjax@3/es5".
+    pub source: Option<String>,
+    /// Configuration. Default: "tex-mml-chtml".
+    pub config: Option<String>,
+}
+
+impl Default for MathJax {
+    fn default() -> Self {
+        Self {
+            enable: false,
+            source: Some(String::from("https://cdn.jsdelivr.net/npm/mathjax@3/es5")),
+            config: Some(String::from("tex-mml-chtml")),
         }
     }
 }
