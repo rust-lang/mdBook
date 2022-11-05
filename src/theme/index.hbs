@@ -67,7 +67,11 @@
         };
         </script>
         {{/if}}
+        {{#if mathjax_root}}
+        <script id="MathJax-script" async src="{{ path_to_root }}{{ mathjax_source }}/{{ mathjax_config }}.js"></script>
+        {{else}}
         <script id="MathJax-script" async src="{{ mathjax_source }}/{{ mathjax_config }}.js"></script>
+        {{/if}}
         {{/if}}
         {{/if}}
     </head>

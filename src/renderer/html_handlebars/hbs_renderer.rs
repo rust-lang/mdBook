@@ -681,10 +681,15 @@ fn make_data(
         data.insert("mathjax_support".to_owned(), json!(true));
     } else if html_config.mathjax.enable {
         data.insert("mathjax_enable".to_owned(), json!(true));
-        data.insert(
-            "mathjax_source".to_owned(),
-            json!(html_config.mathjax.source),
-        );
+        if let Some(ref source) = html_config.mathjax.source {
+            if source.starts_with("/") {
+                data.insert("mathjax_root".to_owned(), json!(true));
+                let (_, relative_source) = source.split_at(1);
+                data.insert("mathjax_source".to_owned(), json!(relative_source));
+            } else {
+                data.insert("mathjax_source".to_owned(), json!(source));
+            }
+        }
         data.insert(
             "mathjax_config".to_owned(),
             json!(html_config.mathjax.config),
