@@ -147,7 +147,11 @@ where
     let _ = watcher.watch(book.root.join("book.toml"), NonRecursive);
 
     for dir in &book.config.build.extra_watch_dirs {
-        let _ = watcher.watch(dir, Recursive);
+        let path = dir.canonicalize().unwrap();
+        if let Err(e) = watcher.watch(&path, Recursive) {
+            error!("Error while watching extra directory {path:?}:\n    {e:?}");
+            std::process::exit(1);
+        }
     }
 
     info!("Listening for changes...");
@@ -170,7 +174,11 @@ where
             })
             .collect::<Vec<_>>();
 
-        let paths = remove_ignored_files(&book.root, &paths[..]);
+        // If we are watching files outside the current repository (via extra-watch-dirs), then they are definitionally
+        // ignored by gitignore. So we handle this case by including such files into the watched paths list.
+        let any_external_paths = paths.iter().filter(|p| !p.starts_with(&book.root)).cloned();
+        let mut paths = remove_ignored_files(&book.root, &paths[..]);
+        paths.extend(any_external_paths);
 
         if !paths.is_empty() {
             closure(paths, &book.root);
