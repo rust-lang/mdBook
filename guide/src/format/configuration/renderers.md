@@ -109,6 +109,7 @@ edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path
 site-url = "/example-book/"
 cname = "myproject.rs"
 input-404 = "not-found.md"
+use-site-url-as-root = false
 ```
 
 The following configuration options are available:

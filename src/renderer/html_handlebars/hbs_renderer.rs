@@ -58,7 +58,7 @@ impl HtmlHandlebars {
         }
 
         let content = if ctx.html_config.use_site_url_as_root {
-            utils::render_markdown_with_path(
+            utils::render_markdown_with_abs_path(
                 &ch.content,
                 ctx.html_config.smart_punctuation(),
                 None,

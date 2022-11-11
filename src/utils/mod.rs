@@ -127,20 +127,25 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>, abs_url: Option<&Stri
             }
 
             if let Some(caps) = MD_LINK.captures(&dest) {
-                fixed_link.push_str(&caps["link"]);
+                fixed_link.push_str(&caps["link"].trim_start_matches('/'));
                 fixed_link.push_str(".html");
                 if let Some(anchor) = caps.name("anchor") {
                     fixed_link.push_str(anchor.as_str());
                 }
+            } else if !fixed_link.is_empty() {
+                // prevent links with double slashes
+                fixed_link.push_str(&dest.trim_start_matches('/'));
             } else {
                 fixed_link.push_str(&dest);
             };
-            if fixed_link.starts_with('/') {
-                fixed_link = match abs_url {
-                    Some(abs_url) => format!("{}{}", abs_url.trim_end_matches('/'), &fixed_link),
-                    None => fixed_link,
+            if dest.starts_with('/') || path.is_some() {
+                if let Some(abs_url) = abs_url {
+                    fixed_link = format!(
+                        "{}/{}",
+                        abs_url.trim_end_matches('/'),
+                        &fixed_link.trim_start_matches('/')
+                    );
                 }
-                .into();
             }
             return CowStr::from(format!("{}", fixed_link));
         }
