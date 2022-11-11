@@ -613,6 +613,88 @@ more text with spaces
         }
     }
 
+    mod render_markdown_with_abs_path {
+        use super::super::render_markdown_with_abs_path;
+        use std::path::Path;
+
+        #[test]
+        fn preserves_external_links() {
+            assert_eq!(
+                render_markdown_with_abs_path(
+                    "[example](https://www.rust-lang.org/)",
+                    false,
+                    None,
+                    Some(&"ABS_PATH".to_string())
+                ),
+                "<p><a href=\"https://www.rust-lang.org/\">example</a></p>\n"
+            );
+        }
+
+        #[test]
+        fn replace_root_links() {
+            assert_eq!(
+                render_markdown_with_abs_path(
+                    "[example](/testing)",
+                    false,
+                    None,
+                    Some(&"ABS_PATH".to_string())
+                ),
+                "<p><a href=\"ABS_PATH/testing\">example</a></p>\n"
+            );
+        }
+
+        #[test]
+        fn replace_root_links_using_path() {
+            assert_eq!(
+                render_markdown_with_abs_path(
+                    "[example](bar.md)",
+                    false,
+                    Some(Path::new("foo/chapter.md")),
+                    Some(&"ABS_PATH".to_string())
+                ),
+                "<p><a href=\"ABS_PATH/foo/bar.html\">example</a></p>\n"
+            );
+            assert_eq!(
+                render_markdown_with_abs_path(
+                    "[example](/bar.md)",
+                    false,
+                    Some(Path::new("foo/chapter.md")),
+                    Some(&"ABS_PATH".to_string())
+                ),
+                "<p><a href=\"ABS_PATH/foo/bar.html\">example</a></p>\n"
+            );
+            assert_eq!(
+                render_markdown_with_abs_path(
+                    "[example](/bar.html)",
+                    false,
+                    Some(Path::new("foo/chapter.md")),
+                    None
+                ),
+                "<p><a href=\"foo/bar.html\">example</a></p>\n"
+            );
+        }
+
+        #[test]
+        fn preserves_relative_links() {
+            assert_eq!(
+                render_markdown_with_abs_path(
+                    "[example](../testing)",
+                    false,
+                    None,
+                    Some(&"ABS_PATH".to_string())
+                ),
+                "<p><a href=\"../testing\">example</a></p>\n"
+            );
+        }
+
+        #[test]
+        fn preserves_root_links() {
+            assert_eq!(
+                render_markdown_with_abs_path("[example](/testing)", false, None, None),
+                "<p><a href=\"/testing\">example</a></p>\n"
+            );
+        }
+    }
     #[allow(deprecated)]
     mod id_from_content {
         use super::super::id_from_content;
