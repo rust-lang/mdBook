@@ -149,7 +149,10 @@ where
     for dir in &book.config.build.extra_watch_dirs {
         let path = dir.canonicalize().unwrap();
         if let Err(e) = watcher.watch(&path, Recursive) {
-            error!("Error while watching extra directory {path:?}:\n    {e:?}");
+            error!(
+                "Error while watching extra directory {:?}:\n    {:?}",
+                path, e
+            );
             std::process::exit(1);
         }
     }
