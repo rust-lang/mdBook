@@ -87,6 +87,7 @@ This controls the build process of your book.
 build-dir = "book"                # the directory where the output is placed
 create-missing = true             # whether or not to create missing pages
 use-default-preprocessors = true  # use the default preprocessors
+extra-watch-dirs = []             # directories to watch for triggering builds
 ```
 
 - **build-dir:** The directory to put the rendered book in. By default this is
@@ -108,3 +109,6 @@ use-default-preprocessors = true  # use the default preprocessors
     default preprocessors from running.
   - Adding `[preprocessor.links]`, for example, will ensure, regardless of
     `use-default-preprocessors` that `links` it will run.
+- **extra-watch-dirs**: A list of paths to directories that will be watched in
+  the `watch` and `serve` commands. Changes to files under these directories will
+  trigger rebuilds. Useful if your book depends on files outside its `src` directory.

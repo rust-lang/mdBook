@@ -438,6 +438,8 @@ pub struct BuildConfig {
     /// Should the default preprocessors always be used when they are
     /// compatible with the renderer?
     pub use_default_preprocessors: bool,
+    /// Extra directories to trigger rebuild when watching/serving
+    pub extra_watch_dirs: Vec<PathBuf>,
 }
 
 impl Default for BuildConfig {
@@ -446,6 +448,7 @@ impl Default for BuildConfig {
             build_dir: PathBuf::from("book"),
             create_missing: true,
             use_default_preprocessors: true,
+            extra_watch_dirs: Vec::new(),
         }
     }
 }
@@ -772,6 +775,7 @@ mod tests {
             build_dir: PathBuf::from("outputs"),
             create_missing: false,
             use_default_preprocessors: true,
+            extra_watch_dirs: Vec::new(),
         };
         let rust_should_be = RustConfig { edition: None };
         let playground_should_be = Playground {
@@ -982,6 +986,7 @@ mod tests {
             build_dir: PathBuf::from("my-book"),
             create_missing: true,
             use_default_preprocessors: true,
+            extra_watch_dirs: Vec::new(),
         };
 
         let html_should_be = HtmlConfig {
