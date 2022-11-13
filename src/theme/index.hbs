@@ -15,7 +15,6 @@
         <!-- Custom HTML head -->
         {{> head}}
 
-        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="{{ description }}">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
@@ -270,22 +269,22 @@
         {{/if}}
 
         {{#if playground_js}}
-        <script src="{{ path_to_root }}ace.js" charset="utf-8"></script>
-        <script src="{{ path_to_root }}editor.js" charset="utf-8"></script>
-        <script src="{{ path_to_root }}mode-rust.js" charset="utf-8"></script>
-        <script src="{{ path_to_root }}theme-dawn.js" charset="utf-8"></script>
-        <script src="{{ path_to_root }}theme-tomorrow_night.js" charset="utf-8"></script>
+        <script src="{{ path_to_root }}ace.js"></script>
+        <script src="{{ path_to_root }}editor.js"></script>
+        <script src="{{ path_to_root }}mode-rust.js"></script>
+        <script src="{{ path_to_root }}theme-dawn.js"></script>
+        <script src="{{ path_to_root }}theme-tomorrow_night.js"></script>
         {{/if}}
 
         {{#if search_js}}
-        <script src="{{ path_to_root }}elasticlunr.min.js" charset="utf-8"></script>
-        <script src="{{ path_to_root }}mark.min.js" charset="utf-8"></script>
-        <script src="{{ path_to_root }}searcher.js" charset="utf-8"></script>
+        <script src="{{ path_to_root }}elasticlunr.min.js"></script>
+        <script src="{{ path_to_root }}mark.min.js"></script>
+        <script src="{{ path_to_root }}searcher.js"></script>
         {{/if}}
 
-        <script src="{{ path_to_root }}clipboard.min.js" charset="utf-8"></script>
-        <script src="{{ path_to_root }}highlight.js" charset="utf-8"></script>
-        <script src="{{ path_to_root }}book.js" charset="utf-8"></script>
+        <script src="{{ path_to_root }}clipboard.min.js"></script>
+        <script src="{{ path_to_root }}highlight.js"></script>
+        <script src="{{ path_to_root }}book.js"></script>
 
         <!-- Custom JS scripts -->
         {{#each additional_js}}
