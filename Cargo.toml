@@ -6,7 +6,7 @@ authors = [
     "Michael-F-Bryan <michaelfbryan@gmail.com>",
     "Matt Ickstadt <mattico8@gmail.com>"
 ]
-documentation = "http://rust-lang.github.io/mdBook/index.html"
+documentation = "https://rust-lang.github.io/mdBook/index.html"
 edition = "2021"
 exclude = ["/guide/*"]
 keywords = ["book", "gitbook", "rustbook", "markdown"]
