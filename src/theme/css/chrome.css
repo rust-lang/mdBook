@@ -507,6 +507,8 @@ ul#searchresults span.teaser em {
     padding: 0;
     list-style: none;
     display: none;
+    /* Don't let the children's background extend past the rounded corners. */
+    overflow: hidden;
 }
 .theme-popup .default {
     color: var(--icons);
@@ -526,9 +528,4 @@ ul#searchresults span.teaser em {
 }
 .theme-popup .theme:hover {
     background-color: var(--theme-hover);
-}
-.theme-popup .theme:hover:first-child,
-.theme-popup .theme:hover:last-child {
-    border-top-left-radius: inherit;
-    border-top-right-radius: inherit;
 }
