@@ -517,7 +517,7 @@ ul#searchresults span.teaser em {
     width: 100%;
     border: 0;
     margin: 0;
-    padding: 2px 10px;
+    padding: 2px 20px;
     line-height: 25px;
     white-space: nowrap;
     text-align: left;
@@ -528,4 +528,11 @@ ul#searchresults span.teaser em {
 }
 .theme-popup .theme:hover {
     background-color: var(--theme-hover);
+}
+
+.theme-selected::before {
+    display: inline-block;
+    content: "✓";
+    margin-left: -14px;
+    width: 14px;
 }
