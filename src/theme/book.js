@@ -300,6 +300,13 @@ function playground_text(playground) {
         themePopup.querySelector("button#" + get_theme()).focus();
     }
 
+    function updateThemeSelected() {
+        themePopup.querySelectorAll('.theme-selected').forEach(function (el) {
+            el.classList.remove('theme-selected');
+        });
+        themePopup.querySelector("button#" + get_theme()).classList.add('theme-selected');
+    }
+
     function hideThemes() {
         themePopup.style.display = 'none';
         themeToggleButton.setAttribute('aria-expanded', false);
@@ -355,6 +362,7 @@ function playground_text(playground) {
 
         html.classList.remove(previousTheme);
         html.classList.add(theme);
+        updateThemeSelected();
     }
 
     // Set theme
