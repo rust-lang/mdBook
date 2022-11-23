@@ -526,14 +526,15 @@ pub struct HtmlConfig {
     ///
     /// [custom domain]: https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site
     pub cname: Option<String>,
-    /// Edit url template, when set shows a "Suggest an edit" button for
-    /// directly jumping to editing the currently viewed page.
-    /// Contains {path} that is replaced with chapter source file path
-    pub edit_url_template: Option<String>,
-    /// Endpoint of websocket, for livereload usage. Value loaded from .toml file
-    /// is ignored, because our code overrides this field with the value [`LIVE_RELOAD_ENDPOINT`]
-    ///
-    /// [`LIVE_RELOAD_ENDPOINT`]: cmd::serve::LIVE_RELOAD_ENDPOINT
+    /// Git repository file edit url template, when set shows an
+    /// "Suggest an edit" button for directly jumping to editing the
+    /// currently viewed page in the git repository. Contains {path}
+    /// that is replaced with chapter source file path
+    pub git_repository_edit_url_template: Option<String>,
+    /// This is used as a bit of a workaround for the `mdbook serve` command.
+    /// Basically, because you set the websocket port from the command line, the
+    /// `mdbook serve` command needs a way to let the HTML renderer know where
+    /// to point livereloading at, if it has been enabled.
     ///
     /// This config item *should not be edited* by the end user.
     #[doc(hidden)]
@@ -585,20 +586,15 @@ impl HtmlConfig {
 
 /// Configuration for how to render the print icon, print.html, and print.css.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(default, rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case")]
 pub struct Print {
     /// Whether print support is enabled.
     pub enable: bool,
-    /// Insert page breaks between chapters. Default: `true`.
-    pub page_break: bool,
 }
 
 impl Default for Print {
     fn default() -> Self {
-        Self {
-            enable: true,
-            page_break: true,
-        }
+        Self { enable: true }
     }
 }
 

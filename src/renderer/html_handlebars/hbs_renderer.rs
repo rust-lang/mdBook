@@ -40,16 +40,11 @@ impl HtmlHandlebars {
             _ => return Ok(()),
         };
 
-        if let Some(ref edit_url_template) = ctx.html_config.edit_url_template {
-            let full_path = ctx.book_config.src.to_str().unwrap_or_default().to_owned()
-                + "/"
-                + ch.source_path
-                    .clone()
-                    .unwrap_or_default()
-                    .to_str()
-                    .unwrap_or_default();
-
-            let edit_url = edit_url_template.replace("{path}", &full_path);
+        if let Some(ref git_repository_edit_url_template) =
+            ctx.html_config.git_repository_edit_url_template
+        {
+            let full_path = "src/".to_owned() + path.to_str().unwrap();
+            let edit_url = git_repository_edit_url_template.replace("{path}", &full_path);
             ctx.data
                 .insert("git_repository_edit_url".to_owned(), json!(edit_url));
         }
@@ -57,9 +52,12 @@ impl HtmlHandlebars {
         let content = ch.content.clone();
         let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
 
-        let fixed_content =
-            utils::render_markdown_with_path(&ch.content, ctx.html_config.curly_quotes, Some(path));
-        if !ctx.is_index && ctx.html_config.print.page_break {
+        let fixed_content = utils::render_markdown_with_path(
+            &ch.content,
+            ctx.html_config.curly_quotes,
+            Some(path),
+        );
+        if !ctx.is_index {
             // Add page break between chapters
             // See https://developer.mozilla.org/en-US/docs/Web/CSS/break-before and https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-before
             // Add both two CSS properties because of the compatibility issue
@@ -242,38 +240,93 @@ impl HtmlHandlebars {
         write_file(destination, "clipboard.min.js", &theme.clipboard_js)?;
         write_file(
             destination,
-            "FontAwesome/css/font-awesome.css",
-            theme::FONT_AWESOME,
+            "FontAwesome/css/fontawesome.css",
+            theme::FONT_AWESOME_REGULAR,
         )?;
         write_file(
             destination,
-            "FontAwesome/fonts/fontawesome-webfont.eot",
-            theme::FONT_AWESOME_EOT,
+            "FontAwesome/css/brands.css",
+            theme::FONT_AWESOME_BRANDS,
         )?;
         write_file(
             destination,
-            "FontAwesome/fonts/fontawesome-webfont.svg",
-            theme::FONT_AWESOME_SVG,
+            "FontAwesome/css/solid.css",
+            theme::FONT_AWESOME_SOLID,
         )?;
         write_file(
             destination,
-            "FontAwesome/fonts/fontawesome-webfont.ttf",
-            theme::FONT_AWESOME_TTF,
+            "FontAwesome/webfonts/fa-regular-400.eot",
+            theme::FONT_AWESOME_REGULAR_EOT,
         )?;
         write_file(
             destination,
-            "FontAwesome/fonts/fontawesome-webfont.woff",
-            theme::FONT_AWESOME_WOFF,
+            "FontAwesome/webfonts/fa-regular-400.svg",
+            theme::FONT_AWESOME_REGULAR_SVG,
         )?;
         write_file(
             destination,
-            "FontAwesome/fonts/fontawesome-webfont.woff2",
-            theme::FONT_AWESOME_WOFF2,
+            "FontAwesome/webfonts/fa-regular-400.ttf",
+            theme::FONT_AWESOME_REGULAR_TTF,
         )?;
         write_file(
             destination,
-            "FontAwesome/fonts/FontAwesome.ttf",
-            theme::FONT_AWESOME_TTF,
+            "FontAwesome/webfonts/fa-regular-400.woff",
+            theme::FONT_AWESOME_REGULAR_WOFF,
+        )?;
+        write_file(
+            destination,
+            "FontAwesome/webfonts/fa-regular-400.woff2",
+            theme::FONT_AWESOME_REGULAR_WOFF2,
+        )?;
+        write_file(
+            destination,
+            "FontAwesome/webfonts/fa-brands-400.eot",
+            theme::FONT_AWESOME_BRANDS_EOT,
+        )?;
+        write_file(
+            destination,
+            "FontAwesome/webfonts/fa-brands-400.svg",
+            theme::FONT_AWESOME_BRANDS_SVG,
+        )?;
+        write_file(
+            destination,
+            "FontAwesome/webfonts/fa-brands-400.ttf",
+            theme::FONT_AWESOME_BRANDS_TTF,
+        )?;
+        write_file(
+            destination,
+            "FontAwesome/webfonts/fa-brands-400.woff",
+            theme::FONT_AWESOME_BRANDS_WOFF,
+        )?;
+        write_file(
+            destination,
+            "FontAwesome/webfonts/fa-brands-400.woff2",
+            theme::FONT_AWESOME_BRANDS_WOFF2,
+        )?;
+        write_file(
+            destination,
+            "FontAwesome/webfonts/fa-solid-900.eot",
+            theme::FONT_AWESOME_SOLID_EOT,
+        )?;
+        write_file(
+            destination,
+            "FontAwesome/webfonts/fa-solid-900.svg",
+            theme::FONT_AWESOME_SOLID_SVG,
+        )?;
+        write_file(
+            destination,
+            "FontAwesome/webfonts/fa-solid-900.ttf",
+            theme::FONT_AWESOME_SOLID_TTF,
+        )?;
+        write_file(
+            destination,
+            "FontAwesome/webfonts/fa-solid-900.woff",
+            theme::FONT_AWESOME_SOLID_WOFF,
+        )?;
+        write_file(
+            destination,
+            "FontAwesome/webfonts/fa-solid-900.woff2",
+            theme::FONT_AWESOME_SOLID_WOFF2,
         )?;
         if html_config.copy_fonts {
             write_file(destination, "fonts/fonts.css", theme::fonts::CSS)?;
@@ -694,9 +747,9 @@ fn make_data(
         data.insert("playground_copyable".to_owned(), json!(true));
     }
 
-    data.insert("print_enable".to_owned(), json!(html_config.print.enable));
-    data.insert("fold_enable".to_owned(), json!(html_config.fold.enable));
-    data.insert("fold_level".to_owned(), json!(html_config.fold.level));
+    data.insert("print_enable".to_owned(), json!(!html_config.print.enable));
+    data.insert("fold_enable".to_owned(), json!((html_config.fold.enable)));
+    data.insert("fold_level".to_owned(), json!((html_config.fold.level)));
 
     let search = html_config.search.clone();
     if cfg!(feature = "search") {

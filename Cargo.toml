@@ -52,8 +52,8 @@ ammonia = { version = "3", optional = true }
 assert_cmd = "1"
 predicates = "2"
 select = "0.5"
-semver = "1.0"
-pretty_assertions = "1.2.1"
+semver = "0.11.0"
+pretty_assertions = "0.6"
 walkdir = "2.0"
 
 [features]

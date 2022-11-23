@@ -4,6 +4,7 @@ use crate::utils::{
     take_rustdoc_include_lines,
 };
 use regex::{CaptureMatches, Captures, Regex};
+use std::collections::HashMap;
 use std::fs;
 use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeTo};
 use std::path::{Path, PathBuf};
@@ -139,6 +140,9 @@ enum LinkType<'a> {
     Playground(PathBuf, Vec<&'a str>),
     RustdocInclude(PathBuf, RangeOrAnchor),
     Title(&'a str),
+    Template(PathBuf, HashMap<String, String>),
+    Title(&'a str),
+    Template(PathBuf, HashMap<String, String>),
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -210,6 +214,9 @@ impl<'a> LinkType<'a> {
             LinkType::Playground(p, _) => Some(return_relative_path(base, &p)),
             LinkType::RustdocInclude(p, _) => Some(return_relative_path(base, &p)),
             LinkType::Title(_) => None,
+            LinkType::Template(p, _) => Some(return_relative_path(base, &p)),
+            LinkType::Title(_) => None,
+            LinkType::Template(p, _) => Some(return_relative_path(base, &p)),
         }
     }
 }
@@ -249,6 +256,17 @@ fn parse_range_or_anchor(parts: Option<&str>) -> RangeOrAnchor {
         (None, Some(Ok(end))) => RangeOrAnchor::Range(LineRange::from(..end)),
         (None, None) | (None, Some(Err(_))) => RangeOrAnchor::Range(LineRange::from(RangeFull)),
     }
+}
+
+fn parse_template_path(filepath: &str, params: Vec<&str>) -> LinkType<'static> {
+    let mut dict = HashMap::new();
+    params.iter().for_each(|p| {
+        let mut pair = p.splitn(2, ':');
+        let key = pair.next().unwrap().to_owned();
+        let value = pair.next().unwrap().to_owned();
+        dict.insert(key, value);
+    });
+    LinkType::Template(filepath.into(), dict)
 }
 
 fn parse_include_path(path: &str) -> LinkType<'static> {
@@ -300,6 +318,7 @@ impl<'a> Link<'a> {
                         Some(LinkType::Playground(pth.into(), props))
                     }
                     ("rustdoc_include", Some(pth)) => Some(parse_rustdoc_include_path(pth)),
+                    ("template", Some(pth)) => Some(parse_template_path(pth, props)),
                     _ => None,
                 }
             }
@@ -388,6 +407,50 @@ impl<'a> Link<'a> {
             LinkType::Title(title) => {
                 *chapter_title = title.to_owned();
                 Ok(String::new())
+            }
+            LinkType::Template(ref pat, ref dict) => {
+                let target = base.join(pat);
+                fs::read_to_string(&target)
+                    .map(|s| {
+                        dict.iter().fold(s, |r, (key, value)| {
+                            r.replace(format!("{{{{ {} }}}}", key).as_str(), value)
+                        })
+                    })
+                    .with_context(|| {
+                        format!(
+                            "Could not read file for template {} ({}), dict:{}",
+                            self.link_text,
+                            target.display(),
+                            dict.iter()
+                                .fold("".to_owned(), |s, (key, value)| s + format!(
+                                    " {} => {},",
+                                    key, value
+                                )
+                                .as_str())
+                        )
+                    })
+            }
+
+            LinkType::Title(title) => {
+                *chapter_title = title.to_owned();
+                Ok(String::new())
+            }
+
+            LinkType::Template(ref pat, ref dict) => {
+                let target = base.join(pat);
+                fs::read_to_string(&target)
+                    .map(|s| {
+                        dict.iter().fold(s, |r, (key, value)| {
+                            r.replace(format!("{{ {} }}", key).as_str(), value)
+                        })
+                    })
+                    .with_context(|| {
+                        format!(
+                            "Could not read file for template {} ({})",
+                            self.link_text,
+                            target.display(),
+                        )
+                    })
             }
         }
     }
