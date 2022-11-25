@@ -17,7 +17,7 @@ fn mdbook_cli_dummy_book_generates_index_html() {
                 .unwrap(),
         )
         .stderr(predicates::str::contains(
-            r##"[INFO] (mdbook::book): Running the html backend"##,
+            r##"[INFO] (mdbook::manage): Running the html backend"##,
         ));
 
     // exists afterward

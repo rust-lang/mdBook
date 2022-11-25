@@ -1,859 +1,647 @@
-//! The internal representation of a book and infrastructure for loading it from
-//! disk and building it.
-//!
-//! For examples on using `MDBook`, consult the [top-level documentation][1].
-//!
-//! [1]: ../index.html
+//! TODO: module documentation
 
-#[allow(clippy::module_inception)]
-mod book;
-mod init;
-mod summary;
+use std::collections::VecDeque;
+use std::fmt::{self, Display, Formatter};
+use std::fs::{self, File};
+use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
 
-pub use self::book::{load_book, Book, BookItem, BookItems, Chapter};
-pub use self::init::BookBuilder;
-pub use self::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
-
-use log::{debug, error, info, log_enabled, trace, warn};
-use std::io::Write;
-use std::path::PathBuf;
-use std::process::Command;
-use std::string::ToString;
-use tempfile::Builder as TempFileBuilder;
-use toml::Value;
-use topological_sort::TopologicalSort;
-
+use self::summary::{Link, SectionNumber, Summary, SummaryItem};
+use crate::config::BuildConfig;
 use crate::errors::*;
-use crate::preprocess::{
-    CmdPreprocessor, IndexPreprocessor, LinkPreprocessor, Preprocessor, PreprocessorContext,
-};
-use crate::renderer::{CmdRenderer, HtmlHandlebars, MarkdownRenderer, RenderContext, Renderer};
-use crate::utils;
+use crate::utils::bracket_escape;
+use log::debug;
+use serde::{Deserialize, Serialize};
 
-use crate::config::{Config, RustEdition};
+pub use summary::parse_summary;
 
-/// The object used to manage and build a book.
-pub struct MDBook {
-    /// The book's root directory.
-    pub root: PathBuf,
-    /// The configuration used to tweak now a book is built.
-    pub config: Config,
-    /// A representation of the book's contents in memory.
-    pub book: Book,
-    renderers: Vec<Box<dyn Renderer>>,
+pub mod summary;
 
-    /// List of pre-processors to be run on the book.
-    preprocessors: Vec<Box<dyn Preprocessor>>,
+/// Load a book into memory from its `src/` directory.
+pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> {
+    let src_dir = src_dir.as_ref();
+    let summary_md = src_dir.join("SUMMARY.md");
+
+    let mut summary_content = String::new();
+    File::open(&summary_md)
+        .with_context(|| format!("Couldn't open SUMMARY.md in {:?} directory", src_dir))?
+        .read_to_string(&mut summary_content)?;
+
+    let summary = parse_summary(&summary_content)
+        .with_context(|| format!("Summary parsing failed for file={:?}", summary_md))?;
+
+    if cfg.create_missing {
+        create_missing(src_dir, &summary).with_context(|| "Unable to create missing chapters")?;
+    }
+
+    load_book_from_disk(&summary, src_dir)
 }
 
-impl MDBook {
-    /// Load a book from its root directory on disk.
-    pub fn load<P: Into<PathBuf>>(book_root: P) -> Result<MDBook> {
-        let book_root = book_root.into();
-        let config_location = book_root.join("book.toml");
+fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
+    let mut items: Vec<_> = summary
+        .prefix_chapters
+        .iter()
+        .chain(summary.numbered_chapters.iter())
+        .chain(summary.suffix_chapters.iter())
+        .collect();
 
-        // the book.json file is no longer used, so we should emit a warning to
-        // let people know to migrate to book.toml
-        if book_root.join("book.json").exists() {
-            warn!("It appears you are still using book.json for configuration.");
-            warn!("This format is no longer used, so you should migrate to the");
-            warn!("book.toml format.");
-            warn!("Check the user guide for migration information:");
-            warn!("\thttps://rust-lang.github.io/mdBook/format/config.html");
+    while !items.is_empty() {
+        let next = items.pop().expect("already checked");
+
+        if let SummaryItem::Link(ref link) = *next {
+            if let Some(ref location) = link.location {
+                let filename = src_dir.join(location);
+                if !filename.exists() {
+                    if let Some(parent) = filename.parent() {
+                        if !parent.exists() {
+                            fs::create_dir_all(parent)?;
+                        }
+                    }
+                    debug!("Creating missing file {}", filename.display());
+
+                    let mut f = File::create(&filename).with_context(|| {
+                        format!("Unable to create missing file: {}", filename.display())
+                    })?;
+                    writeln!(f, "# {}", bracket_escape(&link.name))?;
+                }
+            }
+
+            items.extend(&link.nested_items);
+        }
+    }
+
+    Ok(())
+}
+
+/// A dumb tree structure representing a book.
+///
+/// For the moment a book is just a collection of [`BookItems`] which are
+/// accessible by either iterating (immutably) over the book with [`iter()`], or
+/// recursively applying a closure to each section to mutate the chapters, using
+/// [`for_each_mut()`].
+///
+/// [`iter()`]: #method.iter
+/// [`for_each_mut()`]: #method.for_each_mut
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct Book {
+    /// The sections in this book.
+    pub sections: Vec<BookItem>,
+    __non_exhaustive: (),
+}
+
+impl Book {
+    /// Create an empty book.
+    pub fn new() -> Self {
+        Default::default()
+    }
+
+    /// Get a depth-first iterator over the items in the book.
+    pub fn iter(&self) -> BookItems<'_> {
+        BookItems {
+            items: self.sections.iter().collect(),
+        }
+    }
+
+    /// Recursively apply a closure to each item in the book, allowing you to
+    /// mutate them.
+    ///
+    /// # Note
+    ///
+    /// Unlike the `iter()` method, this requires a closure instead of returning
+    /// an iterator. This is because using iterators can possibly allow you
+    /// to have iterator invalidation errors.
+    pub fn for_each_mut<F>(&mut self, mut func: F)
+    where
+        F: FnMut(&mut BookItem),
+    {
+        for_each_mut(&mut func, &mut self.sections);
+    }
+
+    /// Append a `BookItem` to the `Book`.
+    pub fn push_item<I: Into<BookItem>>(&mut self, item: I) -> &mut Self {
+        self.sections.push(item.into());
+        self
+    }
+}
+
+/// TODO: documentation
+pub fn for_each_mut<'a, F, I>(func: &mut F, items: I)
+where
+    F: FnMut(&mut BookItem),
+    I: IntoIterator<Item = &'a mut BookItem>,
+{
+    for item in items {
+        if let BookItem::Chapter(ch) = item {
+            for_each_mut(func, &mut ch.sub_items);
         }
 
-        let mut config = if config_location.exists() {
-            debug!("Loading config from {}", config_location.display());
-            Config::from_disk(&config_location)?
+        func(item);
+    }
+}
+
+/// Enum representing any type of item which can be added to a book.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum BookItem {
+    /// A nested chapter.
+    Chapter(Chapter),
+    /// A section separator.
+    Separator,
+    /// A part title.
+    PartTitle(String),
+}
+
+impl From<Chapter> for BookItem {
+    fn from(other: Chapter) -> BookItem {
+        BookItem::Chapter(other)
+    }
+}
+
+/// The representation of a "chapter", usually mapping to a single file on
+/// disk however it may contain multiple sub-chapters.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct Chapter {
+    /// The chapter's name.
+    pub name: String,
+    /// The chapter's contents.
+    pub content: String,
+    /// The chapter's section number, if it has one.
+    pub number: Option<SectionNumber>,
+    /// Nested items.
+    pub sub_items: Vec<BookItem>,
+    /// The chapter's location, relative to the `SUMMARY.md` file.
+    pub path: Option<PathBuf>,
+    /// The chapter's source file, relative to the `SUMMARY.md` file.
+    pub source_path: Option<PathBuf>,
+    /// An ordered list of the names of each chapter above this one in the hierarchy.
+    pub parent_names: Vec<String>,
+}
+
+impl Chapter {
+    /// Create a new chapter with the provided content.
+    pub fn new<P: Into<PathBuf>>(
+        name: &str,
+        content: String,
+        p: P,
+        parent_names: Vec<String>,
+    ) -> Chapter {
+        let path: PathBuf = p.into();
+        Chapter {
+            name: name.to_string(),
+            content,
+            path: Some(path.clone()),
+            source_path: Some(path),
+            parent_names,
+            ..Default::default()
+        }
+    }
+
+    /// Create a new draft chapter that is not attached to a source markdown file (and thus
+    /// has no content).
+    pub fn new_draft(name: &str, parent_names: Vec<String>) -> Self {
+        Chapter {
+            name: name.to_string(),
+            content: String::new(),
+            path: None,
+            source_path: None,
+            parent_names,
+            ..Default::default()
+        }
+    }
+
+    /// Check if the chapter is a draft chapter, meaning it has no path to a source markdown file.
+    pub fn is_draft_chapter(&self) -> bool {
+        self.path.is_none()
+    }
+}
+
+/// Use the provided `Summary` to load a `Book` from disk.
+///
+/// You need to pass in the book's source directory because all the links in
+/// `SUMMARY.md` give the chapter locations relative to it.
+pub(crate) fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P) -> Result<Book> {
+    debug!("Loading the book from disk");
+    let src_dir = src_dir.as_ref();
+
+    let prefix = summary.prefix_chapters.iter();
+    let numbered = summary.numbered_chapters.iter();
+    let suffix = summary.suffix_chapters.iter();
+
+    let summary_items = prefix.chain(numbered).chain(suffix);
+
+    let mut chapters = Vec::new();
+
+    for summary_item in summary_items {
+        let chapter = load_summary_item(summary_item, src_dir, Vec::new())?;
+        chapters.push(chapter);
+    }
+
+    Ok(Book {
+        sections: chapters,
+        __non_exhaustive: (),
+    })
+}
+
+fn load_summary_item<P: AsRef<Path> + Clone>(
+    item: &SummaryItem,
+    src_dir: P,
+    parent_names: Vec<String>,
+) -> Result<BookItem> {
+    match item {
+        SummaryItem::Separator => Ok(BookItem::Separator),
+        SummaryItem::Link(ref link) => {
+            load_chapter(link, src_dir, parent_names).map(BookItem::Chapter)
+        }
+        SummaryItem::PartTitle(title) => Ok(BookItem::PartTitle(title.clone())),
+    }
+}
+
+fn load_chapter<P: AsRef<Path>>(
+    link: &Link,
+    src_dir: P,
+    parent_names: Vec<String>,
+) -> Result<Chapter> {
+    let src_dir = src_dir.as_ref();
+
+    let mut ch = if let Some(ref link_location) = link.location {
+        debug!("Loading {} ({})", link.name, link_location.display());
+
+        let location = if link_location.is_absolute() {
+            link_location.clone()
         } else {
-            Config::default()
+            src_dir.join(link_location)
         };
 
-        config.update_from_env();
+        let mut f = File::open(&location)
+            .with_context(|| format!("Chapter file not found, {}", link_location.display()))?;
 
-        if config
-            .html_config()
-            .map_or(false, |html| html.google_analytics.is_some())
-        {
-            warn!(
-                "The output.html.google-analytics field has been deprecated; \
-                 it will be removed in a future release.\n\
-                 Consider placing the appropriate site tag code into the \
-                 theme/head.hbs file instead.\n\
-                 The tracking code may be found in the Google Analytics Admin page.\n\
-               "
-            );
+        let mut content = String::new();
+        f.read_to_string(&mut content).with_context(|| {
+            format!("Unable to read \"{}\" ({})", link.name, location.display())
+        })?;
+
+        if content.as_bytes().starts_with(b"\xef\xbb\xbf") {
+            content.replace_range(..3, "");
         }
 
-        if log_enabled!(log::Level::Trace) {
-            for line in format!("Config: {:#?}", config).lines() {
-                trace!("{}", line);
-            }
-        }
+        let stripped = location
+            .strip_prefix(&src_dir)
+            .expect("Chapters are always inside a book");
 
-        MDBook::load_with_config(book_root, config)
-    }
-
-    /// Load a book from its root directory using a custom `Config`.
-    pub fn load_with_config<P: Into<PathBuf>>(book_root: P, config: Config) -> Result<MDBook> {
-        let root = book_root.into();
-
-        let src_dir = root.join(&config.book.src);
-        let book = book::load_book(&src_dir, &config.build)?;
-
-        let renderers = determine_renderers(&config);
-        let preprocessors = determine_preprocessors(&config)?;
-
-        Ok(MDBook {
-            root,
-            config,
-            book,
-            renderers,
-            preprocessors,
-        })
-    }
-
-    /// Load a book from its root directory using a custom `Config` and a custom summary.
-    pub fn load_with_config_and_summary<P: Into<PathBuf>>(
-        book_root: P,
-        config: Config,
-        summary: Summary,
-    ) -> Result<MDBook> {
-        let root = book_root.into();
-
-        let src_dir = root.join(&config.book.src);
-        let book = book::load_book_from_disk(&summary, &src_dir)?;
-
-        let renderers = determine_renderers(&config);
-        let preprocessors = determine_preprocessors(&config)?;
-
-        Ok(MDBook {
-            root,
-            config,
-            book,
-            renderers,
-            preprocessors,
-        })
-    }
-
-    /// Returns a flat depth-first iterator over the elements of the book,
-    /// it returns a [`BookItem`] enum:
-    /// `(section: String, bookitem: &BookItem)`
-    ///
-    /// ```no_run
-    /// # use mdbook::MDBook;
-    /// # use mdbook::book::BookItem;
-    /// # let book = MDBook::load("mybook").unwrap();
-    /// for item in book.iter() {
-    ///     match *item {
-    ///         BookItem::Chapter(ref chapter) => {},
-    ///         BookItem::Separator => {},
-    ///         BookItem::PartTitle(ref title) => {}
-    ///     }
-    /// }
-    ///
-    /// // would print something like this:
-    /// // 1. Chapter 1
-    /// // 1.1 Sub Chapter
-    /// // 1.2 Sub Chapter
-    /// // 2. Chapter 2
-    /// //
-    /// // etc.
-    /// ```
-    pub fn iter(&self) -> BookItems<'_> {
-        self.book.iter()
-    }
-
-    /// `init()` gives you a `BookBuilder` which you can use to setup a new book
-    /// and its accompanying directory structure.
-    ///
-    /// The `BookBuilder` creates some boilerplate files and directories to get
-    /// you started with your book.
-    ///
-    /// ```text
-    /// book-test/
-    /// ├── book
-    /// └── src
-    ///     ├── chapter_1.md
-    ///     └── SUMMARY.md
-    /// ```
-    ///
-    /// It uses the path provided as the root directory for your book, then adds
-    /// in a `src/` directory containing a `SUMMARY.md` and `chapter_1.md` file
-    /// to get you started.
-    pub fn init<P: Into<PathBuf>>(book_root: P) -> BookBuilder {
-        BookBuilder::new(book_root)
-    }
-
-    /// Tells the renderer to build our book and put it in the build directory.
-    pub fn build(&self) -> Result<()> {
-        info!("Book building has started");
-
-        for renderer in &self.renderers {
-            self.execute_build_process(&**renderer)?;
-        }
-
-        Ok(())
-    }
-
-    /// Run the entire build process for a particular [`Renderer`].
-    pub fn execute_build_process(&self, renderer: &dyn Renderer) -> Result<()> {
-        let mut preprocessed_book = self.book.clone();
-        let preprocess_ctx = PreprocessorContext::new(
-            self.root.clone(),
-            self.config.clone(),
-            renderer.name().to_string(),
-        );
-
-        for preprocessor in &self.preprocessors {
-            if preprocessor_should_run(&**preprocessor, renderer, &self.config) {
-                debug!("Running the {} preprocessor.", preprocessor.name());
-                preprocessed_book = preprocessor.run(&preprocess_ctx, preprocessed_book)?;
-            }
-        }
-
-        let name = renderer.name();
-        let build_dir = self.build_dir_for(name);
-
-        let mut render_context = RenderContext::new(
-            self.root.clone(),
-            preprocessed_book,
-            self.config.clone(),
-            build_dir,
-        );
-        render_context
-            .chapter_titles
-            .extend(preprocess_ctx.chapter_titles.borrow_mut().drain());
-
-        info!("Running the {} backend", renderer.name());
-        renderer
-            .render(&render_context)
-            .with_context(|| "Rendering failed")
-    }
-
-    /// You can change the default renderer to another one by using this method.
-    /// The only requirement is that your renderer implement the [`Renderer`]
-    /// trait.
-    pub fn with_renderer<R: Renderer + 'static>(&mut self, renderer: R) -> &mut Self {
-        self.renderers.push(Box::new(renderer));
-        self
-    }
-
-    /// Register a [`Preprocessor`] to be used when rendering the book.
-    pub fn with_preprocessor<P: Preprocessor + 'static>(&mut self, preprocessor: P) -> &mut Self {
-        self.preprocessors.push(Box::new(preprocessor));
-        self
-    }
-
-    /// Run `rustdoc` tests on the book, linking against the provided libraries.
-    pub fn test(&mut self, library_paths: Vec<&str>) -> Result<()> {
-        // test_chapter with chapter:None will run all tests.
-        self.test_chapter(library_paths, None)
-    }
-
-    /// Run `rustdoc` tests on a specific chapter of the book, linking against the provided libraries.
-    /// If `chapter` is `None`, all tests will be run.
-    pub fn test_chapter(&mut self, library_paths: Vec<&str>, chapter: Option<&str>) -> Result<()> {
-        let library_args: Vec<&str> = (0..library_paths.len())
-            .map(|_| "-L")
-            .zip(library_paths.into_iter())
-            .flat_map(|x| vec![x.0, x.1])
-            .collect();
-
-        let temp_dir = TempFileBuilder::new().prefix("mdbook-").tempdir()?;
-
-        let mut chapter_found = false;
-
-        // FIXME: Is "test" the proper renderer name to use here?
-        let preprocess_context =
-            PreprocessorContext::new(self.root.clone(), self.config.clone(), "test".to_string());
-
-        let book = LinkPreprocessor::new().run(&preprocess_context, self.book.clone())?;
-        // Index Preprocessor is disabled so that chapter paths continue to point to the
-        // actual markdown files.
-
-        let mut failed = false;
-        for item in book.iter() {
-            if let BookItem::Chapter(ref ch) = *item {
-                let chapter_path = match ch.path {
-                    Some(ref path) if !path.as_os_str().is_empty() => path,
-                    _ => continue,
-                };
-
-                if let Some(chapter) = chapter {
-                    if ch.name != chapter && chapter_path.to_str() != Some(chapter) {
-                        if chapter == "?" {
-                            info!("Skipping chapter '{}'...", ch.name);
-                        }
-                        continue;
-                    }
-                }
-                chapter_found = true;
-                info!("Testing chapter '{}': {:?}", ch.name, chapter_path);
-
-                // write preprocessed file to tempdir
-                let path = temp_dir.path().join(&chapter_path);
-                let mut tmpf = utils::fs::create_file(&path)?;
-                tmpf.write_all(ch.content.as_bytes())?;
-
-                let mut cmd = Command::new("rustdoc");
-                cmd.arg(&path).arg("--test").args(&library_args);
-
-                if let Some(edition) = self.config.rust.edition {
-                    match edition {
-                        RustEdition::E2015 => {
-                            cmd.args(&["--edition", "2015"]);
-                        }
-                        RustEdition::E2018 => {
-                            cmd.args(&["--edition", "2018"]);
-                        }
-                        RustEdition::E2021 => {
-                            cmd.args(&["--edition", "2021"]);
-                        }
-                    }
-                }
-
-                let output = cmd.output()?;
-
-                if !output.status.success() {
-                    failed = true;
-                    error!(
-                        "rustdoc returned an error:\n\
-                        \n--- stdout\n{}\n--- stderr\n{}",
-                        String::from_utf8_lossy(&output.stdout),
-                        String::from_utf8_lossy(&output.stderr)
-                    );
-                }
-            }
-        }
-        if failed {
-            bail!("One or more tests failed");
-        }
-        if let Some(chapter) = chapter {
-            if !chapter_found {
-                bail!("Chapter not found: {}", chapter);
-            }
-        }
-        Ok(())
-    }
-
-    /// The logic for determining where a backend should put its build
-    /// artefacts.
-    ///
-    /// If there is only 1 renderer, put it in the directory pointed to by the
-    /// `build.build_dir` key in [`Config`]. If there is more than one then the
-    /// renderer gets its own directory within the main build dir.
-    ///
-    /// i.e. If there were only one renderer (in this case, the HTML renderer):
-    ///
-    /// - build/
-    ///   - index.html
-    ///   - ...
-    ///
-    /// Otherwise if there are multiple:
-    ///
-    /// - build/
-    ///   - epub/
-    ///     - my_awesome_book.epub
-    ///   - html/
-    ///     - index.html
-    ///     - ...
-    ///   - latex/
-    ///     - my_awesome_book.tex
-    ///
-    pub fn build_dir_for(&self, backend_name: &str) -> PathBuf {
-        let build_dir = self.root.join(&self.config.build.build_dir);
-
-        if self.renderers.len() <= 1 {
-            build_dir
-        } else {
-            build_dir.join(backend_name)
-        }
-    }
-
-    /// Get the directory containing this book's source files.
-    pub fn source_dir(&self) -> PathBuf {
-        self.root.join(&self.config.book.src)
-    }
-
-    /// Get the directory containing the theme resources for the book.
-    pub fn theme_dir(&self) -> PathBuf {
-        self.config
-            .html_config()
-            .unwrap_or_default()
-            .theme_dir(&self.root)
-    }
-}
-
-/// Look at the `Config` and try to figure out what renderers to use.
-fn determine_renderers(config: &Config) -> Vec<Box<dyn Renderer>> {
-    let mut renderers = Vec::new();
-
-    if let Some(output_table) = config.get("output").and_then(Value::as_table) {
-        renderers.extend(output_table.iter().map(|(key, table)| {
-            if key == "html" {
-                Box::new(HtmlHandlebars::new()) as Box<dyn Renderer>
-            } else if key == "markdown" {
-                Box::new(MarkdownRenderer::new()) as Box<dyn Renderer>
-            } else {
-                interpret_custom_renderer(key, table)
-            }
-        }));
-    }
-
-    // if we couldn't find anything, add the HTML renderer as a default
-    if renderers.is_empty() {
-        renderers.push(Box::new(HtmlHandlebars::new()));
-    }
-
-    renderers
-}
-
-const DEFAULT_PREPROCESSORS: &[&str] = &["links", "index"];
-
-fn is_default_preprocessor(pre: &dyn Preprocessor) -> bool {
-    let name = pre.name();
-    name == LinkPreprocessor::NAME || name == IndexPreprocessor::NAME
-}
-
-/// Look at the `MDBook` and try to figure out what preprocessors to run.
-fn determine_preprocessors(config: &Config) -> Result<Vec<Box<dyn Preprocessor>>> {
-    // Collect the names of all preprocessors intended to be run, and the order
-    // in which they should be run.
-    let mut preprocessor_names = TopologicalSort::<String>::new();
-
-    if config.build.use_default_preprocessors {
-        for name in DEFAULT_PREPROCESSORS {
-            preprocessor_names.insert(name.to_string());
-        }
-    }
-
-    if let Some(preprocessor_table) = config.get("preprocessor").and_then(Value::as_table) {
-        for (name, table) in preprocessor_table.iter() {
-            preprocessor_names.insert(name.to_string());
-
-            let exists = |name| {
-                (config.build.use_default_preprocessors && DEFAULT_PREPROCESSORS.contains(&name))
-                    || preprocessor_table.contains_key(name)
-            };
-
-            if let Some(before) = table.get("before") {
-                let before = before.as_array().ok_or_else(|| {
-                    Error::msg(format!(
-                        "Expected preprocessor.{}.before to be an array",
-                        name
-                    ))
-                })?;
-                for after in before {
-                    let after = after.as_str().ok_or_else(|| {
-                        Error::msg(format!(
-                            "Expected preprocessor.{}.before to contain strings",
-                            name
-                        ))
-                    })?;
-
-                    if !exists(after) {
-                        // Only warn so that preprocessors can be toggled on and off (e.g. for
-                        // troubleshooting) without having to worry about order too much.
-                        warn!(
-                            "preprocessor.{}.after contains \"{}\", which was not found",
-                            name, after
-                        );
-                    } else {
-                        preprocessor_names.add_dependency(name, after);
-                    }
-                }
-            }
-
-            if let Some(after) = table.get("after") {
-                let after = after.as_array().ok_or_else(|| {
-                    Error::msg(format!(
-                        "Expected preprocessor.{}.after to be an array",
-                        name
-                    ))
-                })?;
-                for before in after {
-                    let before = before.as_str().ok_or_else(|| {
-                        Error::msg(format!(
-                            "Expected preprocessor.{}.after to contain strings",
-                            name
-                        ))
-                    })?;
-
-                    if !exists(before) {
-                        // See equivalent warning above for rationale
-                        warn!(
-                            "preprocessor.{}.before contains \"{}\", which was not found",
-                            name, before
-                        );
-                    } else {
-                        preprocessor_names.add_dependency(before, name);
-                    }
-                }
-            }
-        }
-    }
-
-    // Now that all links have been established, queue preprocessors in a suitable order
-    let mut preprocessors = Vec::with_capacity(preprocessor_names.len());
-    // `pop_all()` returns an empty vector when no more items are not being depended upon
-    for mut names in std::iter::repeat_with(|| preprocessor_names.pop_all())
-        .take_while(|names| !names.is_empty())
-    {
-        // The `topological_sort` crate does not guarantee a stable order for ties, even across
-        // runs of the same program. Thus, we break ties manually by sorting.
-        // Careful: `str`'s default sorting, which we are implicitly invoking here, uses code point
-        // values ([1]), which may not be an alphabetical sort.
-        // As mentioned in [1], doing so depends on locale, which is not desirable for deciding
-        // preprocessor execution order.
-        // [1]: https://doc.rust-lang.org/stable/std/cmp/trait.Ord.html#impl-Ord-14
-        names.sort();
-        for name in names {
-            let preprocessor: Box<dyn Preprocessor> = match name.as_str() {
-                "links" => Box::new(LinkPreprocessor::new()),
-                "index" => Box::new(IndexPreprocessor::new()),
-                _ => {
-                    // The only way to request a custom preprocessor is through the `preprocessor`
-                    // table, so it must exist, be a table, and contain the key.
-                    let table = &config.get("preprocessor").unwrap().as_table().unwrap()[&name];
-                    let command = get_custom_preprocessor_cmd(&name, table);
-                    Box::new(CmdPreprocessor::new(name, command))
-                }
-            };
-            preprocessors.push(preprocessor);
-        }
-    }
-
-    // "If `pop_all` returns an empty vector and `len` is not 0, there are cyclic dependencies."
-    // Normally, `len() == 0` is equivalent to `is_empty()`, so we'll use that.
-    if preprocessor_names.is_empty() {
-        Ok(preprocessors)
+        Chapter::new(&link.name, content, stripped, parent_names.clone())
     } else {
-        Err(Error::msg("Cyclic dependency detected in preprocessors"))
-    }
+        Chapter::new_draft(&link.name, parent_names.clone())
+    };
+
+    let mut sub_item_parents = parent_names;
+
+    ch.number = link.number.clone();
+
+    sub_item_parents.push(link.name.clone());
+    let sub_items = link
+        .nested_items
+        .iter()
+        .map(|i| load_summary_item(i, src_dir, sub_item_parents.clone()))
+        .collect::<Result<Vec<_>>>()?;
+
+    ch.sub_items = sub_items;
+
+    Ok(ch)
 }
 
-fn get_custom_preprocessor_cmd(key: &str, table: &Value) -> String {
-    table
-        .get("command")
-        .and_then(Value::as_str)
-        .map(ToString::to_string)
-        .unwrap_or_else(|| format!("mdbook-{}", key))
-}
-
-fn interpret_custom_renderer(key: &str, table: &Value) -> Box<CmdRenderer> {
-    // look for the `command` field, falling back to using the key
-    // prepended by "mdbook-"
-    let table_dot_command = table
-        .get("command")
-        .and_then(Value::as_str)
-        .map(ToString::to_string);
-
-    let command = table_dot_command.unwrap_or_else(|| format!("mdbook-{}", key));
-
-    Box::new(CmdRenderer::new(key.to_string(), command))
-}
-
-/// Check whether we should run a particular `Preprocessor` in combination
-/// with the renderer, falling back to `Preprocessor::supports_renderer()`
-/// method if the user doesn't say anything.
+/// A depth-first iterator over the items in a book.
 ///
-/// The `build.use-default-preprocessors` config option can be used to ensure
-/// default preprocessors always run if they support the renderer.
-fn preprocessor_should_run(
-    preprocessor: &dyn Preprocessor,
-    renderer: &dyn Renderer,
-    cfg: &Config,
-) -> bool {
-    // default preprocessors should be run by default (if supported)
-    if cfg.build.use_default_preprocessors && is_default_preprocessor(preprocessor) {
-        return preprocessor.supports_renderer(renderer.name());
+/// # Note
+///
+/// This struct shouldn't be created directly, instead prefer the
+/// [`Book::iter()`] method.
+pub struct BookItems<'a> {
+    items: VecDeque<&'a BookItem>,
+}
+
+impl<'a> Iterator for BookItems<'a> {
+    type Item = &'a BookItem;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let item = self.items.pop_front();
+
+        if let Some(&BookItem::Chapter(ref ch)) = item {
+            // if we wanted a breadth-first iterator we'd `extend()` here
+            for sub_item in ch.sub_items.iter().rev() {
+                self.items.push_front(sub_item);
+            }
+        }
+
+        item
     }
+}
 
-    let key = format!("preprocessor.{}.renderers", preprocessor.name());
-    let renderer_name = renderer.name();
+impl Display for Chapter {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        if let Some(ref section_number) = self.number {
+            write!(f, "{} ", section_number)?;
+        }
 
-    if let Some(Value::Array(ref explicit_renderers)) = cfg.get(&key) {
-        return explicit_renderers
-            .iter()
-            .filter_map(Value::as_str)
-            .any(|name| name == renderer_name);
+        write!(f, "{}", self.name)
     }
-
-    preprocessor.supports_renderer(renderer_name)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::str::FromStr;
-    use toml::value::{Table, Value};
+    use std::io::Write;
+    use tempfile::{Builder as TempFileBuilder, TempDir};
 
-    #[test]
-    fn config_defaults_to_html_renderer_if_empty() {
-        let cfg = Config::default();
+    const DUMMY_SRC: &str = "
+# Dummy Chapter
 
-        // make sure we haven't got anything in the `output` table
-        assert!(cfg.get("output").is_none());
+this is some dummy text.
 
-        let got = determine_renderers(&cfg);
+And here is some \
+                                     more text.
+";
 
-        assert_eq!(got.len(), 1);
-        assert_eq!(got[0].name(), "html");
-    }
+    /// Create a dummy `Link` in a temporary directory.
+    fn dummy_link() -> (Link, TempDir) {
+        let temp = TempFileBuilder::new().prefix("book").tempdir().unwrap();
 
-    #[test]
-    fn add_a_random_renderer_to_the_config() {
-        let mut cfg = Config::default();
-        cfg.set("output.random", Table::new()).unwrap();
-
-        let got = determine_renderers(&cfg);
-
-        assert_eq!(got.len(), 1);
-        assert_eq!(got[0].name(), "random");
-    }
-
-    #[test]
-    fn add_a_random_renderer_with_custom_command_to_the_config() {
-        let mut cfg = Config::default();
-
-        let mut table = Table::new();
-        table.insert("command".to_string(), Value::String("false".to_string()));
-        cfg.set("output.random", table).unwrap();
-
-        let got = determine_renderers(&cfg);
-
-        assert_eq!(got.len(), 1);
-        assert_eq!(got[0].name(), "random");
-    }
-
-    #[test]
-    fn config_defaults_to_link_and_index_preprocessor_if_not_set() {
-        let cfg = Config::default();
-
-        // make sure we haven't got anything in the `preprocessor` table
-        assert!(cfg.get("preprocessor").is_none());
-
-        let got = determine_preprocessors(&cfg);
-
-        assert!(got.is_ok());
-        assert_eq!(got.as_ref().unwrap().len(), 2);
-        assert_eq!(got.as_ref().unwrap()[0].name(), "index");
-        assert_eq!(got.as_ref().unwrap()[1].name(), "links");
-    }
-
-    #[test]
-    fn use_default_preprocessors_works() {
-        let mut cfg = Config::default();
-        cfg.build.use_default_preprocessors = false;
-
-        let got = determine_preprocessors(&cfg).unwrap();
-
-        assert_eq!(got.len(), 0);
-    }
-
-    #[test]
-    fn can_determine_third_party_preprocessors() {
-        let cfg_str = r#"
-        [book]
-        title = "Some Book"
-
-        [preprocessor.random]
-
-        [build]
-        build-dir = "outputs"
-        create-missing = false
-        "#;
-
-        let cfg = Config::from_str(cfg_str).unwrap();
-
-        // make sure the `preprocessor.random` table exists
-        assert!(cfg.get_preprocessor("random").is_some());
-
-        let got = determine_preprocessors(&cfg).unwrap();
-
-        assert!(got.into_iter().any(|p| p.name() == "random"));
-    }
-
-    #[test]
-    fn preprocessors_can_provide_their_own_commands() {
-        let cfg_str = r#"
-        [preprocessor.random]
-        command = "python random.py"
-        "#;
-
-        let cfg = Config::from_str(cfg_str).unwrap();
-
-        // make sure the `preprocessor.random` table exists
-        let random = cfg.get_preprocessor("random").unwrap();
-        let random = get_custom_preprocessor_cmd("random", &Value::Table(random.clone()));
-
-        assert_eq!(random, "python random.py");
-    }
-
-    #[test]
-    fn preprocessor_before_must_be_array() {
-        let cfg_str = r#"
-        [preprocessor.random]
-        before = 0
-        "#;
-
-        let cfg = Config::from_str(cfg_str).unwrap();
-
-        assert!(determine_preprocessors(&cfg).is_err());
-    }
-
-    #[test]
-    fn preprocessor_after_must_be_array() {
-        let cfg_str = r#"
-        [preprocessor.random]
-        after = 0
-        "#;
-
-        let cfg = Config::from_str(cfg_str).unwrap();
-
-        assert!(determine_preprocessors(&cfg).is_err());
-    }
-
-    #[test]
-    fn preprocessor_order_is_honored() {
-        let cfg_str = r#"
-        [preprocessor.random]
-        before = [ "last" ]
-        after = [ "index" ]
-
-        [preprocessor.last]
-        after = [ "links", "index" ]
-        "#;
-
-        let cfg = Config::from_str(cfg_str).unwrap();
-
-        let preprocessors = determine_preprocessors(&cfg).unwrap();
-        let index = |name| {
-            preprocessors
-                .iter()
-                .enumerate()
-                .find(|(_, preprocessor)| preprocessor.name() == name)
-                .unwrap()
-                .0
-        };
-        let assert_before = |before, after| {
-            if index(before) >= index(after) {
-                eprintln!("Preprocessor order:");
-                for preprocessor in &preprocessors {
-                    eprintln!("  {}", preprocessor.name());
-                }
-                panic!("{} should come before {}", before, after);
-            }
-        };
-
-        assert_before("index", "random");
-        assert_before("index", "last");
-        assert_before("random", "last");
-        assert_before("links", "last");
-    }
-
-    #[test]
-    fn cyclic_dependencies_are_detected() {
-        let cfg_str = r#"
-        [preprocessor.links]
-        before = [ "index" ]
-
-        [preprocessor.index]
-        before = [ "links" ]
-        "#;
-
-        let cfg = Config::from_str(cfg_str).unwrap();
-
-        assert!(determine_preprocessors(&cfg).is_err());
-    }
-
-    #[test]
-    fn dependencies_dont_register_undefined_preprocessors() {
-        let cfg_str = r#"
-        [preprocessor.links]
-        before = [ "random" ]
-        "#;
-
-        let cfg = Config::from_str(cfg_str).unwrap();
-
-        let preprocessors = determine_preprocessors(&cfg).unwrap();
-
-        assert!(!preprocessors
-            .iter()
-            .any(|preprocessor| preprocessor.name() == "random"));
-    }
-
-    #[test]
-    fn dependencies_dont_register_builtin_preprocessors_if_disabled() {
-        let cfg_str = r#"
-        [preprocessor.random]
-        before = [ "links" ]
-
-        [build]
-        use-default-preprocessors = false
-        "#;
-
-        let cfg = Config::from_str(cfg_str).unwrap();
-
-        let preprocessors = determine_preprocessors(&cfg).unwrap();
-
-        assert!(!preprocessors
-            .iter()
-            .any(|preprocessor| preprocessor.name() == "links"));
-    }
-
-    #[test]
-    fn config_respects_preprocessor_selection() {
-        let cfg_str = r#"
-        [preprocessor.links]
-        renderers = ["html"]
-        "#;
-
-        let cfg = Config::from_str(cfg_str).unwrap();
-
-        // double-check that we can access preprocessor.links.renderers[0]
-        let html = cfg
-            .get_preprocessor("links")
-            .and_then(|links| links.get("renderers"))
-            .and_then(Value::as_array)
-            .and_then(|renderers| renderers.get(0))
-            .and_then(Value::as_str)
+        let chapter_path = temp.path().join("chapter_1.md");
+        File::create(&chapter_path)
+            .unwrap()
+            .write_all(DUMMY_SRC.as_bytes())
             .unwrap();
-        assert_eq!(html, "html");
-        let html_renderer = HtmlHandlebars::default();
-        let pre = LinkPreprocessor::new();
 
-        let should_run = preprocessor_should_run(&pre, &html_renderer, &cfg);
-        assert!(should_run);
+        let link = Link::new("Chapter 1", chapter_path);
+
+        (link, temp)
     }
 
-    struct BoolPreprocessor(bool);
-    impl Preprocessor for BoolPreprocessor {
-        fn name(&self) -> &str {
-            "bool-preprocessor"
-        }
+    /// Create a nested `Link` written to a temporary directory.
+    fn nested_links() -> (Link, TempDir) {
+        let (mut root, temp_dir) = dummy_link();
 
-        fn run(&self, _ctx: &PreprocessorContext, _book: Book) -> Result<Book> {
-            unimplemented!()
-        }
+        let second_path = temp_dir.path().join("second.md");
 
-        fn supports_renderer(&self, _renderer: &str) -> bool {
-            self.0
-        }
+        File::create(&second_path)
+            .unwrap()
+            .write_all(b"Hello World!")
+            .unwrap();
+
+        let mut second = Link::new("Nested Chapter 1", &second_path);
+        second.number = Some(SectionNumber(vec![1, 2]));
+
+        root.nested_items.push(second.clone().into());
+        root.nested_items.push(SummaryItem::Separator);
+        root.nested_items.push(second.into());
+
+        (root, temp_dir)
     }
 
     #[test]
-    fn preprocessor_should_run_falls_back_to_supports_renderer_method() {
-        let cfg = Config::default();
-        let html = HtmlHandlebars::new();
+    fn load_a_single_chapter_from_disk() {
+        let (link, temp_dir) = dummy_link();
+        let should_be = Chapter::new(
+            "Chapter 1",
+            DUMMY_SRC.to_string(),
+            "chapter_1.md",
+            Vec::new(),
+        );
 
-        let should_be = true;
-        let got = preprocessor_should_run(&BoolPreprocessor(should_be), &html, &cfg);
+        let got = load_chapter(&link, temp_dir.path(), Vec::new()).unwrap();
         assert_eq!(got, should_be);
+    }
 
-        let should_be = false;
-        let got = preprocessor_should_run(&BoolPreprocessor(should_be), &html, &cfg);
+    #[test]
+    fn load_a_single_chapter_with_utf8_bom_from_disk() {
+        let temp_dir = TempFileBuilder::new().prefix("book").tempdir().unwrap();
+
+        let chapter_path = temp_dir.path().join("chapter_1.md");
+        File::create(&chapter_path)
+            .unwrap()
+            .write_all(("\u{feff}".to_owned() + DUMMY_SRC).as_bytes())
+            .unwrap();
+
+        let link = Link::new("Chapter 1", chapter_path);
+
+        let should_be = Chapter::new(
+            "Chapter 1",
+            DUMMY_SRC.to_string(),
+            "chapter_1.md",
+            Vec::new(),
+        );
+
+        let got = load_chapter(&link, temp_dir.path(), Vec::new()).unwrap();
         assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn cant_load_a_nonexistent_chapter() {
+        let link = Link::new("Chapter 1", "/foo/bar/baz.md");
+
+        let got = load_chapter(&link, "", Vec::new());
+        assert!(got.is_err());
+    }
+
+    #[test]
+    fn load_recursive_link_with_separators() {
+        let (root, temp) = nested_links();
+
+        let nested = Chapter {
+            name: String::from("Nested Chapter 1"),
+            content: String::from("Hello World!"),
+            number: Some(SectionNumber(vec![1, 2])),
+            path: Some(PathBuf::from("second.md")),
+            source_path: Some(PathBuf::from("second.md")),
+            parent_names: vec![String::from("Chapter 1")],
+            sub_items: Vec::new(),
+        };
+        let should_be = BookItem::Chapter(Chapter {
+            name: String::from("Chapter 1"),
+            content: String::from(DUMMY_SRC),
+            number: None,
+            path: Some(PathBuf::from("chapter_1.md")),
+            source_path: Some(PathBuf::from("chapter_1.md")),
+            parent_names: Vec::new(),
+            sub_items: vec![
+                BookItem::Chapter(nested.clone()),
+                BookItem::Separator,
+                BookItem::Chapter(nested),
+            ],
+        });
+
+        let got = load_summary_item(&SummaryItem::Link(root), temp.path(), Vec::new()).unwrap();
+        assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn load_a_book_with_a_single_chapter() {
+        let (link, temp) = dummy_link();
+        let summary = Summary {
+            numbered_chapters: vec![SummaryItem::Link(link)],
+            ..Default::default()
+        };
+        let should_be = Book {
+            sections: vec![BookItem::Chapter(Chapter {
+                name: String::from("Chapter 1"),
+                content: String::from(DUMMY_SRC),
+                path: Some(PathBuf::from("chapter_1.md")),
+                source_path: Some(PathBuf::from("chapter_1.md")),
+                ..Default::default()
+            })],
+            ..Default::default()
+        };
+
+        let got = load_book_from_disk(&summary, temp.path()).unwrap();
+
+        assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn book_iter_iterates_over_sequential_items() {
+        let book = Book {
+            sections: vec![
+                BookItem::Chapter(Chapter {
+                    name: String::from("Chapter 1"),
+                    content: String::from(DUMMY_SRC),
+                    ..Default::default()
+                }),
+                BookItem::Separator,
+            ],
+            ..Default::default()
+        };
+
+        let should_be: Vec<_> = book.sections.iter().collect();
+
+        let got: Vec<_> = book.iter().collect();
+
+        assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn iterate_over_nested_book_items() {
+        let book = Book {
+            sections: vec![
+                BookItem::Chapter(Chapter {
+                    name: String::from("Chapter 1"),
+                    content: String::from(DUMMY_SRC),
+                    number: None,
+                    path: Some(PathBuf::from("Chapter_1/index.md")),
+                    source_path: Some(PathBuf::from("Chapter_1/index.md")),
+                    parent_names: Vec::new(),
+                    sub_items: vec![
+                        BookItem::Chapter(Chapter::new(
+                            "Hello World",
+                            String::new(),
+                            "Chapter_1/hello.md",
+                            Vec::new(),
+                        )),
+                        BookItem::Separator,
+                        BookItem::Chapter(Chapter::new(
+                            "Goodbye World",
+                            String::new(),
+                            "Chapter_1/goodbye.md",
+                            Vec::new(),
+                        )),
+                    ],
+                }),
+                BookItem::Separator,
+            ],
+            ..Default::default()
+        };
+
+        let got: Vec<_> = book.iter().collect();
+
+        assert_eq!(got.len(), 5);
+
+        // checking the chapter names are in the order should be sufficient here...
+        let chapter_names: Vec<String> = got
+            .into_iter()
+            .filter_map(|i| match *i {
+                BookItem::Chapter(ref ch) => Some(ch.name.clone()),
+                _ => None,
+            })
+            .collect();
+        let should_be: Vec<_> = vec![
+            String::from("Chapter 1"),
+            String::from("Hello World"),
+            String::from("Goodbye World"),
+        ];
+
+        assert_eq!(chapter_names, should_be);
+    }
+
+    #[test]
+    fn for_each_mut_visits_all_items() {
+        let mut book = Book {
+            sections: vec![
+                BookItem::Chapter(Chapter {
+                    name: String::from("Chapter 1"),
+                    content: String::from(DUMMY_SRC),
+                    number: None,
+                    path: Some(PathBuf::from("Chapter_1/index.md")),
+                    source_path: Some(PathBuf::from("Chapter_1/index.md")),
+                    parent_names: Vec::new(),
+                    sub_items: vec![
+                        BookItem::Chapter(Chapter::new(
+                            "Hello World",
+                            String::new(),
+                            "Chapter_1/hello.md",
+                            Vec::new(),
+                        )),
+                        BookItem::Separator,
+                        BookItem::Chapter(Chapter::new(
+                            "Goodbye World",
+                            String::new(),
+                            "Chapter_1/goodbye.md",
+                            Vec::new(),
+                        )),
+                    ],
+                }),
+                BookItem::Separator,
+            ],
+            ..Default::default()
+        };
+
+        let num_items = book.iter().count();
+        let mut visited = 0;
+
+        book.for_each_mut(|_| visited += 1);
+
+        assert_eq!(visited, num_items);
+    }
+
+    #[test]
+    fn cant_load_chapters_with_an_empty_path() {
+        let (_, temp) = dummy_link();
+        let summary = Summary {
+            numbered_chapters: vec![SummaryItem::Link(Link {
+                name: String::from("Empty"),
+                location: Some(PathBuf::from("")),
+                ..Default::default()
+            })],
+
+            ..Default::default()
+        };
+
+        let got = load_book_from_disk(&summary, temp.path());
+        assert!(got.is_err());
+    }
+
+    #[test]
+    fn cant_load_chapters_when_the_link_is_a_directory() {
+        let (_, temp) = dummy_link();
+        let dir = temp.path().join("nested");
+        fs::create_dir(&dir).unwrap();
+
+        let summary = Summary {
+            numbered_chapters: vec![SummaryItem::Link(Link {
+                name: String::from("nested"),
+                location: Some(dir),
+                ..Default::default()
+            })],
+            ..Default::default()
+        };
+
+        let got = load_book_from_disk(&summary, temp.path());
+        assert!(got.is_err());
     }
 }

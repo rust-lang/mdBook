@@ -1,3 +1,5 @@
+//! TODO: module documentation
+
 use crate::errors::*;
 use log::{debug, trace, warn};
 use memchr::{self, Memchr};
