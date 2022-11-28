@@ -530,10 +530,9 @@ pub struct HtmlConfig {
     /// directly jumping to editing the currently viewed page.
     /// Contains {path} that is replaced with chapter source file path
     pub edit_url_template: Option<String>,
-    /// Endpoint of websocket, for livereload usage. Value loaded from .toml file
-    /// is ignored, because our code overrides this field with the value [`LIVE_RELOAD_ENDPOINT`]
-    ///
-    /// [`LIVE_RELOAD_ENDPOINT`]: cmd::serve::LIVE_RELOAD_ENDPOINT
+    /// Endpoint of websocket, for livereload usage. Value loaded from .toml
+    /// file is ignored, because our code overrides this field with an
+    /// internal value (`LIVE_RELOAD_ENDPOINT)
     ///
     /// This config item *should not be edited* by the end user.
     #[doc(hidden)]
