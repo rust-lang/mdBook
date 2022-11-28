@@ -1,5 +1,36 @@
 # Changelog
 
+## mdBook 0.4.22
+[40c06f5...4844f72](https://github.com/rust-lang/mdBook/compare/40c06f5...4844f72)
+
+### Added
+- Added a `--chapter` option to `mdbook test` to specify a specific chapter to test.
+  [#1741](https://github.com/rust-lang/mdBook/pull/1741)
+- Added CSS styling for `<kbd>` tags.
+  [#1906](https://github.com/rust-lang/mdBook/pull/1906)
+- Added pre-compiled binaries for `x86_64-unknown-linux-musl` and `aarch64-unknown-linux-musl` (see [Releases](https://github.com/rust-lang/mdBook/releases)).
+  [#1862](https://github.com/rust-lang/mdBook/pull/1862)
+- Added `build.extra-watch-dirs` which is an array of additional directories to watch for changes when running `mdbook serve`.
+  [#1884](https://github.com/rust-lang/mdBook/pull/1884)
+
+### Changed
+- Removed the `type="text/javascript"` attribute from `<script>` tags.
+  [#1881](https://github.com/rust-lang/mdBook/pull/1881)
+- Switched to building with Rust Edition 2021.
+  This raises the minimum supported Rust version to 1.56.
+  [#1887](https://github.com/rust-lang/mdBook/pull/1887)
+- When hidden code is hidden, the hidden parts are no longer copied to the clipboard via the copy button.
+  [#1911](https://github.com/rust-lang/mdBook/pull/1911)
+- Various HTML changes and fixes to be more compliant with HTML5.
+  [#1924](https://github.com/rust-lang/mdBook/pull/1924)
+- The theme picker now shows which theme is currently selected.
+  [#1935](https://github.com/rust-lang/mdBook/pull/1935)
+
+### Fixed
+- Avoid blank line at the end of an ACE code block
+  [#1836](https://github.com/rust-lang/mdBook/pull/1836)
+
+
 ## mdBook 0.4.21
 [92afe9b...8f01d02](https://github.com/rust-lang/mdBook/compare/92afe9b...8f01d02)
 
