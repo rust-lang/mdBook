@@ -1,5 +1,5 @@
 use crate::errors::*;
-use log::{debug, trace};
+use log::{debug, info, trace};
 use std::convert::Into;
 use std::fs::{self, File};
 use std::io::Write;
@@ -113,7 +113,13 @@ pub fn copy_files_except_ext(
         let entry = entry?;
         let metadata = entry
             .path()
+            // Attempt to read metadata of symlink target
             .metadata()
+            // Handle broken symlinks by reading the symlink metadata directly (not the symlink target metadata)
+            .or_else(|_| {
+                info!("Failed to read file metadata of {:?}. Attempting to read metadata without traversing symlinks.", entry.path());
+                entry.path().symlink_metadata()
+            })
             .with_context(|| format!("Failed to read {:?}", entry.path()))?;
 
         // If the entry is a dir and the recursive option is enabled, call itself
@@ -237,6 +243,12 @@ mod tests {
             &tmp.path().join("symlink.png"),
         ) {
             panic!("Could not symlink file.png: {}", err);
+        }
+        if let Err(err) = symlink(
+            &tmp.path().join("missing_file.txt"),
+            &tmp.path().join("missing_symlink.txt"),
+        ) {
+            panic!("Could not symlink missing_file.txt: {}", err);
         }
 
         // Create output dir
