@@ -1,4 +1,5 @@
 use crate::errors::*;
+use crate::utils::ignore::remove_ignored_files;
 use log::{debug, trace};
 use std::convert::Into;
 use std::fs::{self, File};
@@ -111,6 +112,14 @@ pub fn copy_files_except_ext(
 
     for entry in fs::read_dir(from)? {
         let entry = entry?;
+
+        // Check if entry is ignored
+        let paths = vec![entry.path()];
+        let paths = remove_ignored_files(from, &paths[..]);
+        if paths.is_empty() {
+            continue;
+        }
+
         let metadata = entry
             .path()
             .metadata()
