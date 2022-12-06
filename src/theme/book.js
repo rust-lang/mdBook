@@ -166,7 +166,6 @@ function playground_text(playground) {
             .filter(function (node) {return node.classList.contains("editable"); })
             .forEach(function (block) { block.classList.remove('language-rust'); });
 
-        Array
         code_nodes
             .filter(function (node) {return !node.classList.contains("editable"); })
             .forEach(function (block) { hljs.highlightBlock(block); });
