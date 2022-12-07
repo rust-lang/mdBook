@@ -22,6 +22,7 @@ clap = { version = "3.0", features = ["cargo"] }
 clap_complete = "3.0"
 once_cell = "1"
 env_logger = "0.9.0"
+font-awesome-as-a-crate = "0.3.0"
 handlebars = "4.0"
 log = "0.4"
 memchr = "2.0"
