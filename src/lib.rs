@@ -85,7 +85,10 @@
 
 pub mod book;
 pub mod config;
+#[cfg(feature = "full")]
+pub mod manage;
 pub mod preprocess;
+#[cfg(feature = "full")]
 pub mod renderer;
 pub mod theme;
 pub mod utils;
@@ -97,8 +100,10 @@ pub mod utils;
 pub const MDBOOK_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub use crate::book::BookItem;
-pub use crate::book::MDBook;
 pub use crate::config::Config;
+#[cfg(feature = "full")]
+pub use crate::manage::MDBook;
+#[cfg(feature = "full")]
 pub use crate::renderer::Renderer;
 
 /// The error types used through out this crate.
