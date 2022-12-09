@@ -5,11 +5,13 @@ use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
 use crate::theme::{self, playground_editor, Theme};
 use crate::utils;
+use url::Url;
 
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::fs::{self, File};
+use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
 
 use crate::utils::fs::get_404_output_file;
@@ -442,6 +444,119 @@ impl HtmlHandlebars {
 
         Ok(())
     }
+
+    fn generate_sitemap<'a>(
+        &self,
+        destination: &Path,
+        site_url: &str,
+        items: impl Iterator<Item = &'a BookItem>,
+    ) -> Result<()> {
+        if destination.exists() {
+            // sanity check to avoid accidentally overwriting a real file.
+            let msg = format!(
+                "Not generating \"{}\" because it already exists. Are you sure you want to generate a sitemap?",
+                destination.display(),
+            );
+            return Err(Error::msg(msg));
+        }
+
+        let mut site_url = Url::parse(site_url).with_context(|| {
+            format!(
+                "output.html.site-url (\"{}\") is not a valid absolute URL",
+                site_url
+            )
+        })?;
+        // The URL must end with a slash if it doesn't already, otherwise it isn't considered a
+        // directory for the purpose of joining!
+        if !site_url.path().ends_with('/') {
+            site_url.set_path(&format!("{}/", site_url.path()));
+        }
+
+        let sitemap = BufWriter::new(
+            File::create(&destination).with_context(|| "Failed to create sitemap file")?,
+        );
+        self.write_sitemap(sitemap, &site_url, items)
+            .with_context(|| "Error writing to sitemap file")
+    }
+
+    fn write_sitemap<'a>(
+        &self,
+        mut sitemap: impl Write,
+        site_url: &Url,
+        items: impl Iterator<Item = &'a BookItem>,
+    ) -> Result<()> {
+        writeln!(sitemap, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>")?;
+        writeln!(
+            sitemap,
+            "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">",
+        )?;
+
+        for (i, path) in items
+            .filter_map(|item| match item {
+                BookItem::Chapter(ch) if !ch.is_draft_chapter() => Some(ch.path.as_ref().unwrap()),
+                _ => None,
+            })
+            .enumerate()
+        {
+            // No joke, this is in the spec
+            if i == 50_000 {
+                warn!("Sitemaps must not provide more than 50,000 URLs; consider using an sitemap index instead");
+            }
+
+            let path = path.with_extension("html");
+            let path = path
+                .to_str()
+                .expect("Path should be valid UTF-8 from prior processing");
+            let url = site_url
+                .join(path)
+                .with_context(|| format!("Failed to join {} with site_url", path))?;
+
+            writeln!(sitemap, "\t<url>")?;
+            writeln!(sitemap, "\t\t<loc>{}</loc>", xml_escapes(&url.to_string()))?;
+            // TODO: lastmod from src file modification time?
+            writeln!(sitemap, "\t</url>")?;
+        }
+
+        writeln!(sitemap, "</urlset>")?;
+
+        // TODO: check that the fils isn't moer than 50 MiB (that's what the spec says)
+
+        sitemap.flush()?;
+        Ok(())
+    }
+}
+
+fn xml_escapes(s: &str) -> Cow<'_, str> {
+    let mut to_escape = s
+        .match_indices(|ref c| ['&', '\'', '"', '>', '<'].contains(c))
+        .peekable();
+    if to_escape.peek().is_none() {
+        return Cow::Borrowed(s);
+    }
+
+    // This is under-shooting it, but better than a wild guess
+    let mut escaped = String::with_capacity(s.len());
+    let mut n = 0;
+    for (i, c) in to_escape {
+        // Push everything before this match...
+        escaped.push_str(&s[n..i]);
+        // ...and start next "as-is push" from the character after this one.
+        // (`+ 1` OK because they are all ASCII chars)
+        n = i + 1;
+
+        escaped.push_str(match c {
+            "&" => "&amp;",
+            "'" => "&apos;",
+            "\"" => "&quot;",
+            ">" => "&gt;",
+            "<" => "&lt;",
+            _ => unreachable!(),
+        });
+    }
+    // Push the rest, too
+    escaped.push_str(&s[n..]);
+
+    Cow::Owned(escaped)
 }
 
 // TODO(mattico): Remove some time after the 0.1.8 release
@@ -588,6 +703,14 @@ impl Renderer for HtmlHandlebars {
 
         self.emit_redirects(&ctx.destination, &handlebars, &html_config.redirect)
             .context("Unable to emit redirects")?;
+
+        if html_config.sitemap {
+            let site_url = html_config
+                .site_url
+                .as_ref()
+                .ok_or_else(|| Error::msg("site-url must be set to generate a tilemap"))?;
+            self.generate_sitemap(&destination.join("sitemap.xml"), site_url, book.iter())?;
+        }
 
         // Copy all remaining files, avoid a recursive copy from/to the book build dir
         utils::fs::copy_files_except_ext(&src_dir, destination, true, Some(&build_dir), &["md"])?;

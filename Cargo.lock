@@ -827,6 +827,7 @@ dependencies = [
  "tokio",
  "toml",
  "topological-sort",
+ "url",
  "walkdir",
  "warp",
 ]
