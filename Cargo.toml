@@ -52,7 +52,7 @@ ammonia = { version = "3", optional = true }
 [dev-dependencies]
 assert_cmd = "2.0.7"
 predicates = "2"
-select = "0.5"
+select = "0.6.0"
 semver = "1.0"
 pretty_assertions = "1.2.1"
 walkdir = "2.0"
