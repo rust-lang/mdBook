@@ -20,7 +20,7 @@ To make it easier to run, put the path to the binary into your `PATH`.
 
 To build the `mdbook` executable from source, you will first need to install Rust and Cargo.
 Follow the instructions on the [Rust installation page].
-mdBook currently requires at least Rust version 1.56.
+mdBook currently requires at least Rust version 1.60.
 
 Once you have installed Rust, the following command can be used to build and install mdBook:
 
