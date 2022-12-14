@@ -3,7 +3,6 @@ use clap::{arg, App, Arg, ArgMatches};
 use mdbook::errors::Result;
 use mdbook::utils;
 use mdbook::MDBook;
-use notify::Watcher;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::channel;
 use std::thread::sleep;
@@ -121,30 +120,31 @@ pub fn trigger_on_change<F>(book: &MDBook, closure: F)
 where
     F: Fn(Vec<PathBuf>, &Path),
 {
-    use notify::DebouncedEvent::*;
     use notify::RecursiveMode::*;
 
     // Create a channel to receive the events.
     let (tx, rx) = channel();
 
-    let mut watcher = match notify::watcher(tx, Duration::from_secs(1)) {
-        Ok(w) => w,
+    let mut debouncer = match notify_debouncer_mini::new_debouncer(Duration::from_secs(1), None, tx)
+    {
+        Ok(d) => d,
         Err(e) => {
             error!("Error while trying to watch the files:\n\n\t{:?}", e);
             std::process::exit(1)
         }
     };
+    let watcher = debouncer.watcher();
 
     // Add the source directory to the watcher
-    if let Err(e) = watcher.watch(book.source_dir(), Recursive) {
+    if let Err(e) = watcher.watch(&book.source_dir(), Recursive) {
         error!("Error while watching {:?}:\n    {:?}", book.source_dir(), e);
         std::process::exit(1);
     };
 
-    let _ = watcher.watch(book.theme_dir(), Recursive);
+    let _ = watcher.watch(&book.theme_dir(), Recursive);
 
     // Add the book.toml file to the watcher if it exists
-    let _ = watcher.watch(book.root.join("book.toml"), NonRecursive);
+    let _ = watcher.watch(&book.root.join("book.toml"), NonRecursive);
 
     for dir in &book.config.build.extra_watch_dirs {
         let path = dir.canonicalize().unwrap();
@@ -166,16 +166,19 @@ where
 
         let all_events = std::iter::once(first_event).chain(other_events);
 
-        let paths = all_events
-            .filter_map(|event| {
-                debug!("Received filesystem event: {:?}", event);
-
-                match event {
-                    Create(path) | Write(path) | Remove(path) | Rename(_, path) => Some(path),
-                    _ => None,
+        let paths: Vec<_> = all_events
+            .filter_map(|event| match event {
+                Ok(events) => Some(events),
+                Err(errors) => {
+                    for error in errors {
+                        log::warn!("error while watching for changes: {error}");
+                    }
+                    None
                 }
             })
-            .collect::<Vec<_>>();
+            .flatten()
+            .map(|event| event.path)
+            .collect();
 
         // If we are watching files outside the current repository (via extra-watch-dirs), then they are definitionally
         // ignored by gitignore. So we handle this case by including such files into the watched paths list.
