@@ -31,8 +31,8 @@ jobs:
             rust: stable
           - build: msrv
             os: ubuntu-latest
-            # sync MSRV with docs: guide/src/guide/installation.md
-            rust: 1.56.0
+            # sync MSRV with docs: guide/src/guide/installation.md and Cargo.toml
+            rust: 1.60.0
     steps:
     - uses: actions/checkout@master
     - name: Install Rust
