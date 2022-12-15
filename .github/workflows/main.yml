@@ -30,7 +30,7 @@ jobs:
             os: windows-latest
             rust: stable
           - build: msrv
-            os: ubuntu-latest
+            os: ubuntu-20.04
             # sync MSRV with docs: guide/src/guide/installation.md and Cargo.toml
             rust: 1.60.0
     steps:
