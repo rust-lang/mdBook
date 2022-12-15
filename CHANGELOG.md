@@ -1,5 +1,12 @@
 # Changelog
 
+## mdBook 0.4.24
+[eb77083...8767ebf](https://github.com/rust-lang/mdBook/compare/eb77083...8767ebf)
+
+### Fixed
+- The precompiled linux-gnu mdbook binary available on [GitHub Releases](https://github.com/rust-lang/mdBook/releases) inadvertently switched to a newer version of glibc. This release goes back to an older version that should be more compatible on older versions of Linux.
+  [#1955](https://github.com/rust-lang/mdBook/pull/1955)
+
 ## mdBook 0.4.23
 [678b469...68a75da](https://github.com/rust-lang/mdBook/compare/678b469...68a75da)
 
