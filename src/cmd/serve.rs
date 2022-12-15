@@ -1,7 +1,8 @@
+use super::command_prelude::*;
 #[cfg(feature = "watch")]
 use super::watch;
 use crate::{get_book_dir, open};
-use clap::{arg, App, Arg, ArgMatches};
+use clap::builder::NonEmptyStringValueParser;
 use futures_util::sink::SinkExt;
 use futures_util::StreamExt;
 use mdbook::errors::*;
@@ -18,43 +19,30 @@ use warp::Filter;
 const LIVE_RELOAD_ENDPOINT: &str = "__livereload";
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'help>() -> App<'help> {
-    App::new("serve")
+pub fn make_subcommand() -> Command {
+    Command::new("serve")
         .about("Serves a book at http://localhost:3000, and rebuilds it on changes")
-        .arg(
-            Arg::new("dest-dir")
-                .short('d')
-                .long("dest-dir")
-                .value_name("dest-dir")
-                .help(
-                    "Output directory for the book{n}\
-                    Relative paths are interpreted relative to the book's root directory.{n}\
-                    If omitted, mdBook uses build.build-dir from book.toml or defaults to `./book`.",
-                ),
-        )
-        .arg(arg!([dir]
-            "Root directory for the book{n}\
-            (Defaults to the Current Directory when omitted)"
-        ))
+        .arg_dest_dir()
+        .arg_root_dir()
         .arg(
             Arg::new("hostname")
                 .short('n')
                 .long("hostname")
-                .takes_value(true)
+                .num_args(1)
                 .default_value("localhost")
-                .forbid_empty_values(true)
+                .value_parser(NonEmptyStringValueParser::new())
                 .help("Hostname to listen on for HTTP connections"),
         )
         .arg(
             Arg::new("port")
                 .short('p')
                 .long("port")
-                .takes_value(true)
+                .num_args(1)
                 .default_value("3000")
-                .forbid_empty_values(true)
+                .value_parser(NonEmptyStringValueParser::new())
                 .help("Port to use for HTTP connections"),
         )
-        .arg(arg!(-o --open "Opens the compiled book in a web browser"))
+        .arg_open()
 }
 
 // Serve command implementation
@@ -62,17 +50,17 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
     let mut book = MDBook::load(&book_dir)?;
 
-    let port = args.value_of("port").unwrap();
-    let hostname = args.value_of("hostname").unwrap();
-    let open_browser = args.is_present("open");
+    let port = args.get_one::<String>("port").unwrap();
+    let hostname = args.get_one::<String>("hostname").unwrap();
+    let open_browser = args.get_flag("open");
 
     let address = format!("{}:{}", hostname, port);
 
     let update_config = |book: &mut MDBook| {
         book.config
-            .set("output.html.live-reload-endpoint", &LIVE_RELOAD_ENDPOINT)
+            .set("output.html.live-reload-endpoint", LIVE_RELOAD_ENDPOINT)
             .expect("live-reload-endpoint update failed");
-        if let Some(dest_dir) = args.value_of("dest-dir") {
+        if let Some(dest_dir) = args.get_one::<PathBuf>("dest-dir") {
             book.config.build.build_dir = dest_dir.into();
         }
         // Override site-url for local serving of the 404 file

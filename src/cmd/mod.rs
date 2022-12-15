@@ -2,6 +2,7 @@
 
 pub mod build;
 pub mod clean;
+pub mod command_prelude;
 pub mod init;
 #[cfg(feature = "serve")]
 pub mod serve;

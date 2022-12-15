@@ -313,6 +313,7 @@ impl MDBook {
                     }
                 }
 
+                debug!("running {:?}", cmd);
                 let output = cmd.output()?;
 
                 if !output.status.success() {
