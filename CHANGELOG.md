@@ -1,5 +1,20 @@
 # Changelog
 
+## mdBook 0.4.23
+[678b469...68a75da](https://github.com/rust-lang/mdBook/compare/678b469...68a75da)
+
+### Changed
+- Updated all dependencies
+  [#1951](https://github.com/rust-lang/mdBook/pull/1951)
+  [#1952](https://github.com/rust-lang/mdBook/pull/1952)
+  [#1844](https://github.com/rust-lang/mdBook/pull/1844)
+- Updated minimum Rust version to 1.60.
+  [#1951](https://github.com/rust-lang/mdBook/pull/1951)
+
+### Fixed
+- Fixed a regression where playground code was missing hidden lines, preventing it from compiling correctly.
+  [#1950](https://github.com/rust-lang/mdBook/pull/1950)
+
 ## mdBook 0.4.22
 [40c06f5...4844f72](https://github.com/rust-lang/mdBook/compare/40c06f5...4844f72)
 
