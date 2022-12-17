@@ -25,7 +25,6 @@ pub fn make_subcommand() -> Command {
                 .long("library-path")
                 .value_name("dir")
                 .value_delimiter(',')
-                .num_args(1..)
                 .value_parser(NonEmptyStringValueParser::new())
                 .action(ArgAction::Append)
                 .help(
