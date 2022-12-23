@@ -49,6 +49,7 @@
 
 #![deny(missing_docs)]
 
+use log::{debug, trace, warn};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
 use std::env;
@@ -227,10 +228,10 @@ impl Config {
         let value = Value::try_from(value)
             .with_context(|| "Unable to represent the item as a JSON Value")?;
 
-        if index.starts_with("book.") {
-            self.book.update_value(&index[5..], value);
-        } else if index.starts_with("build.") {
-            self.build.update_value(&index[6..], value);
+        if let Some(key) = index.strip_prefix("book.") {
+            self.book.update_value(key, value);
+        } else if let Some(key) = index.strip_prefix("build.") {
+            self.build.update_value(key, value);
         } else {
             self.rest.insert(index, value);
         }
@@ -295,7 +296,7 @@ impl Default for Config {
     }
 }
 
-impl<'de> Deserialize<'de> for Config {
+impl<'de> serde::Deserialize<'de> for Config {
     fn deserialize<D: Deserializer<'de>>(de: D) -> std::result::Result<Self, D::Error> {
         let raw = Value::deserialize(de)?;
 
@@ -371,15 +372,8 @@ impl Serialize for Config {
 }
 
 fn parse_env(key: &str) -> Option<String> {
-    const PREFIX: &str = "MDBOOK_";
-
-    if key.starts_with(PREFIX) {
-        let key = &key[PREFIX.len()..];
-
-        Some(key.to_lowercase().replace("__", ".").replace("_", "-"))
-    } else {
-        None
-    }
+    key.strip_prefix("MDBOOK_")
+        .map(|key| key.to_lowercase().replace("__", ".").replace('_', "-"))
 }
 
 fn is_legacy_format(table: &Value) -> bool {
@@ -447,6 +441,8 @@ pub struct BuildConfig {
     /// Should the default preprocessors always be used when they are
     /// compatible with the renderer?
     pub use_default_preprocessors: bool,
+    /// Extra directories to trigger rebuild when watching/serving
+    pub extra_watch_dirs: Vec<PathBuf>,
 }
 
 impl Default for BuildConfig {
@@ -455,6 +451,7 @@ impl Default for BuildConfig {
             build_dir: PathBuf::from("book"),
             create_missing: true,
             use_default_preprocessors: true,
+            extra_watch_dirs: Vec::new(),
         }
     }
 }
@@ -536,10 +533,9 @@ pub struct HtmlConfig {
     /// directly jumping to editing the currently viewed page.
     /// Contains {path} that is replaced with chapter source file path
     pub edit_url_template: Option<String>,
-    /// Endpoint of websocket, for livereload usage. Value loaded from .toml file
-    /// is ignored, because our code overrides this field with the value [`LIVE_RELOAD_ENDPOINT`]
-    ///
-    /// [`LIVE_RELOAD_ENDPOINT`]: cmd::serve::LIVE_RELOAD_ENDPOINT
+    /// Endpoint of websocket, for livereload usage. Value loaded from .toml
+    /// file is ignored, because our code overrides this field with an
+    /// internal value (`LIVE_RELOAD_ENDPOINT)
     ///
     /// This config item *should not be edited* by the end user.
     #[doc(hidden)]
@@ -727,6 +723,7 @@ impl<'de, T> Updateable<'de> for T where T: Serialize + Deserialize<'de> {}
 mod tests {
     use super::*;
     use crate::utils::fs::get_404_output_file;
+    use serde_json::json;
 
     const COMPLEX_CONFIG: &str = r#"
         [book]
@@ -782,6 +779,7 @@ mod tests {
             build_dir: PathBuf::from("outputs"),
             create_missing: false,
             use_default_preprocessors: true,
+            extra_watch_dirs: Vec::new(),
         };
         let rust_should_be = RustConfig { edition: None };
         let playground_should_be = Playground {
@@ -833,7 +831,7 @@ mod tests {
         "#;
 
         let got = Config::from_str(src).unwrap();
-        assert_eq!(got.html_config().unwrap().playground.runnable, false);
+        assert!(!got.html_config().unwrap().playground.runnable);
     }
 
     #[test]
@@ -992,6 +990,7 @@ mod tests {
             build_dir: PathBuf::from("my-book"),
             create_missing: true,
             use_default_preprocessors: true,
+            extra_watch_dirs: Vec::new(),
         };
 
         let html_should_be = HtmlConfig {
@@ -1042,7 +1041,7 @@ mod tests {
     fn encode_env_var(key: &str) -> String {
         format!(
             "MDBOOK_{}",
-            key.to_uppercase().replace('.', "__").replace("-", "_")
+            key.to_uppercase().replace('.', "__").replace('-', "_")
         )
     }
 
@@ -1066,11 +1065,10 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::approx_constant)]
     fn update_config_using_env_var_and_complex_value() {
         let mut cfg = Config::default();
         let key = "foo-bar.baz";
-        let value = json!({"array": [1, 2, 3], "number": 3.14});
+        let value = json!({"array": [1, 2, 3], "number": 13.37});
         let value_str = serde_json::to_string(&value).unwrap();
 
         assert!(cfg.get(key).is_none());
@@ -1189,15 +1187,15 @@ mod tests {
         "#;
         let got = Config::from_str(src).unwrap();
         let html_config = got.html_config().unwrap();
-        assert_eq!(html_config.print.enable, false);
-        assert_eq!(html_config.print.page_break, true);
+        assert!(!html_config.print.enable);
+        assert!(html_config.print.page_break);
         let src = r#"
         [output.html.print]
         page-break = false
         "#;
         let got = Config::from_str(src).unwrap();
         let html_config = got.html_config().unwrap();
-        assert_eq!(html_config.print.enable, true);
-        assert_eq!(html_config.print.page_break, false);
+        assert!(html_config.print.enable);
+        assert!(!html_config.print.page_break);
     }
 }

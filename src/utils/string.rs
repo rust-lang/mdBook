@@ -1,6 +1,8 @@
+use once_cell::sync::Lazy;
 use regex::Regex;
 use std::ops::Bound::{Excluded, Included, Unbounded};
 use std::ops::RangeBounds;
+use log::trace;
 
 /// Take a range of lines from a string.
 pub fn take_lines<R: RangeBounds<usize>>(s: &str, range: R) -> String {
@@ -23,10 +25,10 @@ pub fn take_lines<R: RangeBounds<usize>>(s: &str, range: R) -> String {
     }
 }
 
-lazy_static! {
-    static ref ANCHOR_START: Regex = Regex::new(r"ANCHOR:\s*(?P<anchor_name>[\w_-]+)").unwrap();
-    static ref ANCHOR_END: Regex = Regex::new(r"ANCHOR_END:\s*(?P<anchor_name>[\w_-]+)").unwrap();
-}
+static ANCHOR_START: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"ANCHOR:\s*(?P<anchor_name>[\w_-]+)").unwrap());
+static ANCHOR_END: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"ANCHOR_END:\s*(?P<anchor_name>[\w_-]+)").unwrap());
 
 /// Take anchored lines from a string.
 /// Lines containing anchor are ignored.
@@ -128,6 +130,7 @@ mod tests {
     };
 
     #[test]
+    #[allow(clippy::reversed_empty_ranges)] // Intentionally checking that those are correctly handled
     fn take_lines_test() {
         let s = "Lorem\nipsum\ndolor\nsit\namet";
         assert_eq!(take_lines(s, 1..3), "ipsum\ndolor");
@@ -169,6 +172,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::reversed_empty_ranges)] // Intentionally checking that those are correctly handled
     fn take_rustdoc_include_lines_test() {
         let s = "Lorem\nipsum\ndolor\nsit\namet";
         assert_eq!(

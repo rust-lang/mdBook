@@ -10,6 +10,8 @@ use std::path::{Path, PathBuf};
 
 use super::{Preprocessor, PreprocessorContext};
 use crate::book::{Book, BookItem, Chapter};
+use log::{error, warn, debug, trace};
+use once_cell::sync::Lazy;
 use ammonia::url::form_urlencoded::Target;
 
 const ESCAPE_CHAR: char = '\\';
@@ -177,6 +179,7 @@ enum RangeOrAnchor {
 }
 
 // A range of lines specified with some include directive.
+#[allow(clippy::enum_variant_names)] // The prefix can't be removed, and is meant to mirror the contained type
 #[derive(PartialEq, Debug, Clone)]
 enum LineRange {
     Range(Range<usize>),
@@ -438,19 +441,20 @@ impl<'a> Iterator for LinkIter<'a> {
 fn find_links(contents: &str) -> LinkIter<'_> {
     // lazily compute following regex
     // r"\\\{\{#.*\}\}|\{\{#([a-zA-Z0-9]+)\s*([^}]+)\}\}")?;
-    lazy_static! {
-        static ref RE: Regex = Regex::new(
+    static RE: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(
             r"(?x)              # insignificant whitespace mode
-            \\\{\{\#.*\}\}      # match escaped link
-            |                   # or
-            \{\{\s*             # link opening parens and whitespace
-            \#([a-zA-Z0-9_]+)   # link type
-            \s+                 # separating whitespace
-            ([^}]+)             # link target path and space separated properties
-            \}\}                # link closing parens"
+        \\\{\{\#.*\}\}      # match escaped link
+        |                   # or
+        \{\{\s*             # link opening parens and whitespace
+        \#([a-zA-Z0-9_]+)   # link type
+        \s+                 # separating whitespace
+        ([^}]+)             # link target path and space separated properties
+        \}\}                # link closing parens",
         )
-        .unwrap();
-    }
+        .unwrap()
+    });
+
     LinkIter(RE.captures_iter(contents))
 }
 

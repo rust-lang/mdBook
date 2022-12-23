@@ -116,7 +116,7 @@ If possible, do your best to avoid breaking older browser releases.
 Any change to the HTML or styling is encouraged to manually check on as many browsers and platforms that you can.
 Unfortunately at this time we don't have any automated UI or browser testing, so your assistance in testing is appreciated.
 
-## Updating higlight.js
+## Updating highlight.js
 
 The following are instructions for updating [highlight.js](https://highlightjs.org/).
 

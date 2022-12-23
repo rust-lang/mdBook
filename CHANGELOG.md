@@ -1,5 +1,108 @@
 # Changelog
 
+## mdBook 0.4.25
+[e14d381...1ba74a3](https://github.com/rust-lang/mdBook/compare/e14d381...1ba74a3)
+
+### Fixed
+- Fixed a regression where `mdbook test -L deps path-to-book` would not work.
+  [#1959](https://github.com/rust-lang/mdBook/pull/1959)
+
+## mdBook 0.4.24
+[eb77083...8767ebf](https://github.com/rust-lang/mdBook/compare/eb77083...8767ebf)
+
+### Fixed
+- The precompiled linux-gnu mdbook binary available on [GitHub Releases](https://github.com/rust-lang/mdBook/releases) inadvertently switched to a newer version of glibc. This release goes back to an older version that should be more compatible on older versions of Linux.
+  [#1955](https://github.com/rust-lang/mdBook/pull/1955)
+
+## mdBook 0.4.23
+[678b469...68a75da](https://github.com/rust-lang/mdBook/compare/678b469...68a75da)
+
+### Changed
+- Updated all dependencies
+  [#1951](https://github.com/rust-lang/mdBook/pull/1951)
+  [#1952](https://github.com/rust-lang/mdBook/pull/1952)
+  [#1844](https://github.com/rust-lang/mdBook/pull/1844)
+- Updated minimum Rust version to 1.60.
+  [#1951](https://github.com/rust-lang/mdBook/pull/1951)
+
+### Fixed
+- Fixed a regression where playground code was missing hidden lines, preventing it from compiling correctly.
+  [#1950](https://github.com/rust-lang/mdBook/pull/1950)
+
+## mdBook 0.4.22
+[40c06f5...4844f72](https://github.com/rust-lang/mdBook/compare/40c06f5...4844f72)
+
+### Added
+- Added a `--chapter` option to `mdbook test` to specify a specific chapter to test.
+  [#1741](https://github.com/rust-lang/mdBook/pull/1741)
+- Added CSS styling for `<kbd>` tags.
+  [#1906](https://github.com/rust-lang/mdBook/pull/1906)
+- Added pre-compiled binaries for `x86_64-unknown-linux-musl` and `aarch64-unknown-linux-musl` (see [Releases](https://github.com/rust-lang/mdBook/releases)).
+  [#1862](https://github.com/rust-lang/mdBook/pull/1862)
+- Added `build.extra-watch-dirs` which is an array of additional directories to watch for changes when running `mdbook serve`.
+  [#1884](https://github.com/rust-lang/mdBook/pull/1884)
+
+### Changed
+- Removed the `type="text/javascript"` attribute from `<script>` tags.
+  [#1881](https://github.com/rust-lang/mdBook/pull/1881)
+- Switched to building with Rust Edition 2021.
+  This raises the minimum supported Rust version to 1.56.
+  [#1887](https://github.com/rust-lang/mdBook/pull/1887)
+- When hidden code is hidden, the hidden parts are no longer copied to the clipboard via the copy button.
+  [#1911](https://github.com/rust-lang/mdBook/pull/1911)
+- Various HTML changes and fixes to be more compliant with HTML5.
+  [#1924](https://github.com/rust-lang/mdBook/pull/1924)
+- The theme picker now shows which theme is currently selected.
+  [#1935](https://github.com/rust-lang/mdBook/pull/1935)
+
+### Fixed
+- Avoid blank line at the end of an ACE code block
+  [#1836](https://github.com/rust-lang/mdBook/pull/1836)
+
+
+## mdBook 0.4.21
+[92afe9b...8f01d02](https://github.com/rust-lang/mdBook/compare/92afe9b...8f01d02)
+
+### Fixed
+- Fixed an issue where mdBook would fail to compile with Rust nightly-2022-07-22.
+  [#1861](https://github.com/rust-lang/mdBook/pull/1861)
+
+## mdBook 0.4.20
+[53055e0...da166e0](https://github.com/rust-lang/mdBook/compare/53055e0...da166e0)
+
+### Fixed
+- Fixed a regression in 0.4.19 where inline code would have excessive padding
+  in some situations such as headings.
+  [#1855](https://github.com/rust-lang/mdBook/pull/1855)
+
+## mdBook 0.4.19
+[ae275ad...53055e0](https://github.com/rust-lang/mdBook/compare/ae275ad...53055e0)
+
+### Added
+- The `serve` command now supports HEAD requests.
+  [#1825](https://github.com/rust-lang/mdBook/pull/1825)
+
+### Changed
+- An error is now generated when a custom theme directory does not exist.
+  [#1791](https://github.com/rust-lang/mdBook/pull/1791)
+- Very wide tables now have independent horizontal scrolling so that scrolling
+  to see the rest of the table will not scroll the entire page.
+  [#1617](https://github.com/rust-lang/mdBook/pull/1617)
+- The buttons on code blocks are now only shown when the mouse cursor hovers
+  over them (or tapped on mobile). There is also some extra spacing to reduce
+  the overlap with the code.
+  [#1806](https://github.com/rust-lang/mdBook/pull/1806)
+- The first chapter always generates an `index.html` file. Previously it would
+  only generate the index file for prefix chapters.
+  [#1829](https://github.com/rust-lang/mdBook/pull/1829)
+
+### Fixed
+- `mdbook serve --open` now properly handles the case if the first chapter is a draft.
+  [#1714](https://github.com/rust-lang/mdBook/pull/1714)
+  [#1830](https://github.com/rust-lang/mdBook/pull/1830)
+- Very long words (over 80 characters) are no longer indexed to avoid a stack overflow.
+  [#1833](https://github.com/rust-lang/mdBook/pull/1833)
+
 ## mdBook 0.4.18
 [981b79b...ae275ad](https://github.com/rust-lang/mdBook/compare/981b79b...ae275ad)
 
