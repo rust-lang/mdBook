@@ -1,9 +1,9 @@
 use crate::errors::*;
+use log::{debug, trace};
 use std::convert::Into;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::{Component, Path, PathBuf};
-use log::{debug, trace};
 
 /// Naively replaces any path separator with a forward-slash '/'
 pub fn normalize_path(path: &str) -> String {

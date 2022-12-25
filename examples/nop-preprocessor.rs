@@ -73,7 +73,6 @@ mod nop_lib {
     use super::*;
 
     /// A no-op preprocessor.
-    #[derive(Clone)]
     pub struct Nop;
 
     impl Nop {

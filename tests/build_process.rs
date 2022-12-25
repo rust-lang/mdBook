@@ -9,7 +9,6 @@ use mdbook::renderer::{RenderContext, Renderer};
 use mdbook::MDBook;
 use std::sync::{Arc, Mutex};
 
-#[derive(Clone)]
 struct Spy(Arc<Mutex<Inner>>);
 
 #[derive(Debug, Default)]

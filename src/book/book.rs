@@ -3,13 +3,12 @@ use std::fmt::{self, Display, Formatter};
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
-use log::debug;
 
 use super::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
 use crate::config::BuildConfig;
 use crate::errors::*;
 use crate::utils::bracket_escape;
-
+use log::debug;
 use serde::{Deserialize, Serialize};
 
 /// Load a book into memory from its `src/` directory.

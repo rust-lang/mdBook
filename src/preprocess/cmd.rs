@@ -1,10 +1,10 @@
 use super::{Preprocessor, PreprocessorContext};
 use crate::book::Book;
 use crate::errors::*;
+use log::{debug, trace, warn};
 use shlex::Shlex;
 use std::io::{self, Read, Write};
 use std::process::{Child, Command, Stdio};
-use log::{debug, trace, warn};
 
 /// A custom preprocessor which will shell out to a 3rd-party program.
 ///
