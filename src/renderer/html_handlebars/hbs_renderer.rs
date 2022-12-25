@@ -614,6 +614,9 @@ fn make_data(
         "book_title".to_owned(),
         json!(config.book.title.clone().unwrap_or_default()),
     );
+    if let Some(site_url) = &html_config.site_url {
+        data.insert("base_url".to_owned(), json!(site_url));
+    }
     data.insert(
         "description".to_owned(),
         json!(config.book.description.clone().unwrap_or_default()),
