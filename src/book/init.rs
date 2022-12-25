@@ -1,6 +1,7 @@
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::PathBuf;
+use log::{debug, error, info, trace};
 
 use super::MDBook;
 use crate::config::Config;
