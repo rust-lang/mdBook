@@ -1,4 +1,5 @@
 use crate::errors::*;
+use log::{debug, trace, warn};
 use memchr::{self, Memchr};
 use pulldown_cmark::{self, Event, HeadingLevel, Tag};
 use serde::{Deserialize, Serialize};
@@ -453,7 +454,7 @@ impl<'a> SummaryParser<'a> {
                     items.push(item);
                 }
                 Some(Event::Start(Tag::List(..))) => {
-                    // Skip this tag after comment bacause it is not nested.
+                    // Skip this tag after comment because it is not nested.
                     if items.is_empty() {
                         continue;
                     }

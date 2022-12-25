@@ -1,4 +1,5 @@
 use handlebars::{Context, Handlebars, Helper, Output, RenderContext, RenderError};
+use log::trace;
 
 pub fn theme_option(
     h: &Helper<'_, '_>,

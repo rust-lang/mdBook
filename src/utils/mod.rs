@@ -4,9 +4,10 @@ pub mod fs;
 mod string;
 pub(crate) mod toml_ext;
 use crate::errors::Error;
-use regex::Regex;
-
+use log::error;
+use once_cell::sync::Lazy;
 use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, Options, Parser, Tag};
+use regex::Regex;
 
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -20,9 +21,7 @@ pub use self::string::{
 
 /// Replaces multiple consecutive whitespace characters with a single space character.
 pub fn collapse_whitespace(text: &str) -> Cow<'_, str> {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"\s\s+").unwrap();
-    }
+    static RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\s\s+").unwrap());
     RE.replace_all(text, " ")
 }
 
@@ -51,9 +50,7 @@ pub fn id_from_content(content: &str) -> String {
     let mut content = content.to_string();
 
     // Skip any tags or html-encoded stuff
-    lazy_static! {
-        static ref HTML: Regex = Regex::new(r"(<.*?>)").unwrap();
-    }
+    static HTML: Lazy<Regex> = Lazy::new(|| Regex::new(r"(<.*?>)").unwrap());
     content = HTML.replace_all(&content, "").into();
     const REPL_SUB: &[&str] = &["&lt;", "&gt;", "&amp;", "&#39;", "&quot;"];
     for sub in REPL_SUB {
@@ -96,10 +93,9 @@ pub fn unique_id_from_content(content: &str, id_counter: &mut HashMap<String, us
 /// None. Ideally, print page links would link to anchors on the print page,
 /// but that is very difficult.
 fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
-    lazy_static! {
-        static ref SCHEME_LINK: Regex = Regex::new(r"^[a-z][a-z0-9+.-]*:").unwrap();
-        static ref MD_LINK: Regex = Regex::new(r"(?P<link>.*)\.md(?P<anchor>#.*)?").unwrap();
-    }
+    static SCHEME_LINK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-z][a-z0-9+.-]*:").unwrap());
+    static MD_LINK: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"(?P<link>.*)\.md(?P<anchor>#.*)?").unwrap());
 
     fn fix<'a>(dest: CowStr<'a>, path: Option<&Path>) -> CowStr<'a> {
         if dest.starts_with('#') {
@@ -152,10 +148,8 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
         // There are dozens of HTML tags/attributes that contain paths, so
         // feel free to add more tags if desired; these are the only ones I
         // care about right now.
-        lazy_static! {
-            static ref HTML_LINK: Regex =
-                Regex::new(r#"(<(?:a|img) [^>]*?(?:src|href)=")([^"]+?)""#).unwrap();
-        }
+        static HTML_LINK: Lazy<Regex> =
+            Lazy::new(|| Regex::new(r#"(<(?:a|img) [^>]*?(?:src|href)=")([^"]+?)""#).unwrap());
 
         HTML_LINK
             .replace_all(&html, |caps: &regex::Captures<'_>| {
@@ -200,10 +194,26 @@ pub fn render_markdown_with_path(text: &str, curly_quotes: bool, path: Option<&P
     let p = new_cmark_parser(text, curly_quotes);
     let events = p
         .map(clean_codeblock_headers)
-        .map(|event| adjust_links(event, path));
+        .map(|event| adjust_links(event, path))
+        .flat_map(|event| {
+            let (a, b) = wrap_tables(event);
+            a.into_iter().chain(b)
+        });
 
     html::push_html(&mut s, events);
     s
+}
+
+/// Wraps tables in a `.table-wrapper` class to apply overflow-x rules to.
+fn wrap_tables(event: Event<'_>) -> (Option<Event<'_>>, Option<Event<'_>>) {
+    match event {
+        Event::Start(Tag::Table(_)) => (
+            Some(Event::Html(r#"<div class="table-wrapper">"#.into())),
+            Some(event),
+        ),
+        Event::End(Tag::Table(_)) => (Some(event), Some(Event::Html(r#"</div>"#.into()))),
+        _ => (Some(event), None),
+    }
 }
 
 fn clean_codeblock_headers(event: Event<'_>) -> Event<'_> {
@@ -280,6 +290,22 @@ mod tests {
                 render_markdown("[phantom data](foo.html#phantomdata)", false),
                 "<p><a href=\"foo.html#phantomdata\">phantom data</a></p>\n"
             );
+        }
+
+        #[test]
+        fn it_can_wrap_tables() {
+            let src = r#"
+| Original        | Punycode        | Punycode + Encoding |
+|-----------------|-----------------|---------------------|
+| føø             | f-5gaa          | f_5gaa              |
+"#;
+            let out = r#"
+<div class="table-wrapper"><table><thead><tr><th>Original</th><th>Punycode</th><th>Punycode + Encoding</th></tr></thead><tbody>
+<tr><td>føø</td><td>f-5gaa</td><td>f_5gaa</td></tr>
+</tbody></table>
+</div>
+"#.trim();
+            assert_eq!(render_markdown(src, false), out);
         }
 
         #[test]
