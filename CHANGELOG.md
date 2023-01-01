@@ -1,12 +1,5 @@
 # Changelog
 
-## mdBook 0.4.25
-[e14d381...1ba74a3](https://github.com/rust-lang/mdBook/compare/e14d381...1ba74a3)
-
-### Fixed
-- Fixed a regression where `mdbook test -L deps path-to-book` would not work.
-  [#1959](https://github.com/rust-lang/mdBook/pull/1959)
-
 ## mdBook 0.4.24
 [eb77083...8767ebf](https://github.com/rust-lang/mdBook/compare/eb77083...8767ebf)
 
