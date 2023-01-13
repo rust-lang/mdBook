@@ -1,0 +1,15 @@
+{
+  "name": "c-playground",
+  "version": "1.0.0",
+  "description": "A simple server that takes a post request and executes the C code locally.",
+  "main": "webserv.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "W2Wizard",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  }
+}
