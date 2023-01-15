@@ -9,7 +9,7 @@ pub mod searcher;
 
 use std::fs::File;
 use std::io::Read;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::errors::*;
 use log::warn;
@@ -54,6 +54,8 @@ pub struct Theme {
     pub general_css: Vec<u8>,
     pub print_css: Vec<u8>,
     pub variables_css: Vec<u8>,
+    pub fonts_css: Option<Vec<u8>>,
+    pub font_files: Vec<PathBuf>,
     pub favicon_png: Option<Vec<u8>>,
     pub favicon_svg: Option<Vec<u8>>,
     pub js: Vec<u8>,
@@ -104,7 +106,7 @@ impl Theme {
                 ),
             ];
 
-            let load_with_warn = |filename: &Path, dest| {
+            let load_with_warn = |filename: &Path, dest: &mut Vec<u8>| {
                 if !filename.exists() {
                     // Don't warn if the file doesn't exist.
                     return false;
@@ -119,6 +121,29 @@ impl Theme {
 
             for (filename, dest) in files {
                 load_with_warn(&filename, dest);
+            }
+
+            let fonts_dir = theme_dir.join("fonts");
+            if fonts_dir.exists() {
+                let mut fonts_css = Vec::new();
+                if load_with_warn(&fonts_dir.join("fonts.css"), &mut fonts_css) {
+                    theme.fonts_css.replace(fonts_css);
+                }
+                if let Ok(entries) = fonts_dir.read_dir() {
+                    theme.font_files = entries
+                        .filter_map(|entry| {
+                            let entry = entry.ok()?;
+                            if entry.file_name() == "fonts.css" {
+                                None
+                            } else if entry.file_type().ok()?.is_dir() {
+                                log::info!("skipping font directory {:?}", entry.path());
+                                None
+                            } else {
+                                Some(entry.path())
+                            }
+                        })
+                        .collect();
+                }
             }
 
             // If the user overrides one favicon, but not the other, do not
@@ -153,6 +178,8 @@ impl Default for Theme {
             general_css: GENERAL_CSS.to_owned(),
             print_css: PRINT_CSS.to_owned(),
             variables_css: VARIABLES_CSS.to_owned(),
+            fonts_css: None,
+            font_files: Vec::new(),
             favicon_png: Some(FAVICON_PNG.to_owned()),
             favicon_svg: Some(FAVICON_SVG.to_owned()),
             js: JS.to_owned(),
@@ -209,10 +236,10 @@ mod tests {
             "favicon.png",
             "favicon.svg",
             "css/chrome.css",
-            "css/fonts.css",
             "css/general.css",
             "css/print.css",
             "css/variables.css",
+            "fonts/fonts.css",
             "book.js",
             "highlight.js",
             "tomorrow-night.css",
@@ -223,6 +250,7 @@ mod tests {
 
         let temp = TempFileBuilder::new().prefix("mdbook-").tempdir().unwrap();
         fs::create_dir(temp.path().join("css")).unwrap();
+        fs::create_dir(temp.path().join("fonts")).unwrap();
 
         // "touch" all of the special files so we have empty copies
         for file in &files {
@@ -240,6 +268,8 @@ mod tests {
             general_css: Vec::new(),
             print_css: Vec::new(),
             variables_css: Vec::new(),
+            fonts_css: Some(Vec::new()),
+            font_files: Vec::new(),
             favicon_png: Some(Vec::new()),
             favicon_svg: Some(Vec::new()),
             js: Vec::new(),

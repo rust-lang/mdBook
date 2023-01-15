@@ -1,5 +1,6 @@
 use mdbook::config::Config;
 use mdbook::MDBook;
+use pretty_assertions::assert_eq;
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
@@ -121,6 +122,20 @@ fn copy_theme() {
         "css/variables.css",
         "favicon.png",
         "favicon.svg",
+        "fonts/OPEN-SANS-LICENSE.txt",
+        "fonts/SOURCE-CODE-PRO-LICENSE.txt",
+        "fonts/fonts.css",
+        "fonts/open-sans-v17-all-charsets-300.woff2",
+        "fonts/open-sans-v17-all-charsets-300italic.woff2",
+        "fonts/open-sans-v17-all-charsets-600.woff2",
+        "fonts/open-sans-v17-all-charsets-600italic.woff2",
+        "fonts/open-sans-v17-all-charsets-700.woff2",
+        "fonts/open-sans-v17-all-charsets-700italic.woff2",
+        "fonts/open-sans-v17-all-charsets-800.woff2",
+        "fonts/open-sans-v17-all-charsets-800italic.woff2",
+        "fonts/open-sans-v17-all-charsets-italic.woff2",
+        "fonts/open-sans-v17-all-charsets-regular.woff2",
+        "fonts/source-code-pro-v11-all-charsets-500.woff2",
         "highlight.css",
         "highlight.js",
         "index.hbs",

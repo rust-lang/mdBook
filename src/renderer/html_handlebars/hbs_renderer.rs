@@ -289,6 +289,31 @@ impl HtmlHandlebars {
                 theme::fonts::SOURCE_CODE_PRO.1,
             )?;
         }
+        if let Some(fonts_css) = &theme.fonts_css {
+            if !fonts_css.is_empty() {
+                if html_config.copy_fonts {
+                    warn!(
+                        "output.html.copy_fonts is deprecated.\n\
+                        Set copy_fonts=false and ensure the fonts you want are in \
+                        the `theme/fonts/` directory."
+                    );
+                }
+                write_file(destination, "fonts/fonts.css", &fonts_css)?;
+            }
+        }
+        if !html_config.copy_fonts && theme.fonts_css.is_none() {
+            warn!(
+                "output.html.copy_fonts is deprecated.\n\
+                This book appears to have copy_fonts=false without a fonts.css file.\n\
+                Add an empty `theme/fonts/fonts.css` file to squelch this warning."
+            );
+        }
+        for font_file in &theme.font_files {
+            let contents = fs::read(font_file)?;
+            let filename = font_file.file_name().unwrap();
+            let filename = Path::new("fonts").join(filename);
+            write_file(destination, filename, &contents)?;
+        }
 
         let playground_config = &html_config.playground;
 
@@ -656,7 +681,8 @@ fn make_data(
         data.insert("mathjax_support".to_owned(), json!(true));
     }
 
-    if html_config.copy_fonts {
+    // This `matches!` checks for a non-empty file.
+    if html_config.copy_fonts || matches!(theme.fonts_css.as_deref(), Some([_, ..])) {
         data.insert("copy_fonts".to_owned(), json!(true));
     }
 
