@@ -12,7 +12,7 @@ window.onunload = function () { };
  * @param {boolean} hidden Is the playground hidden.
  * @returns The code within the playground.
  */
-function get_get_playground_text(playground, hidden = true) {
+function get_playground_text(playground, hidden = true) {
     let code_block = playground.querySelector("code");
 
     if (window.ace && code_block.classList.contains("editable"))
@@ -48,32 +48,31 @@ function get_get_playground_text(playground, hidden = true) {
         languages: [],      // Languages used for auto-detection
     });
 
-    let code_nodes = Array
-        .from(document.querySelectorAll('code'))
-        // Don't highlight `inline code` blocks in headers.
-        .filter(function (node) {return !node.parentElement.classList.contains("header"); });
+    // Don't highlight `inline code` blocks in headers.
+    const code_nodes = Array.from(document.querySelectorAll('code')).filter((node) => {
+        return !node.parentElement.classList.contains("header");
+    });
 
+    // Languange class needs to be removed for editable or highlightjs will capture events.
     if (window.ace) {
-        // language-rust class needs to be removed for editable
-        // blocks or highlightjs will capture events
         code_nodes
-            .filter(function (node) {return node.classList.contains("editable"); })
-            .forEach(function (block) { block.classList.remove('language-rust'); });
+        .filter((node) => node.classList.contains("editable"))
+        .forEach((block) => block.classList.remove("languange-rust"));
 
         code_nodes
-            .filter(function (node) {return !node.classList.contains("editable"); })
-            .forEach(function (block) { hljs.highlightBlock(block); });
-    } else {
+        .filter((node) => !node.classList.contains("editable"))
+        .forEach((block) => hljs.highlightBlock(block));
+    }
+    else {
         code_nodes.forEach(function (block) { hljs.highlightBlock(block); });
     }
 
-    // Adding the hljs class gives code blocks the color css
-    // even if highlighting doesn't apply
+    // Adding the hljs class gives code blocks the color css even if highlighting doesn't apply
     code_nodes.forEach(function (block) { block.classList.add('hljs'); });
 
-    Array.from(document.querySelectorAll("code.language-rust")).forEach(function (block) {
+    Array.from(document.querySelectorAll("code.language-rust")).forEach((block) => {
+        const lines = Array.from(block.querySelectorAll('.boring'));
 
-        var lines = Array.from(block.querySelectorAll('.boring'));
         // If no lines were hidden, return
         if (!lines.length) { return; }
         block.classList.add("hide-boring");
@@ -194,14 +193,10 @@ function get_get_playground_text(playground, hidden = true) {
     const playgrounds = Array.from(document.querySelectorAll(".playground"));
     playgrounds.forEach(playground_block => {
         update_play(playground_block);
-        if (!window.ace) {
-            return;
-        }
+        if (!window.ace) { return; }
 
         const code_block = playground_block.querySelector("code");
-        if (!code_block.classList.contains("editable")) {
-            return;
-        }
+        if (!code_block.classList.contains("editable")) { return; }
 
         // NOTE: Re-apply for rust later, since the code change might introduce new crates.
         // const editor = window.ace.edit(code_block);
@@ -240,7 +235,7 @@ function get_get_playground_text(playground, hidden = true) {
         }
 
         // TODO: Somehow fetch the configured URL from the TOML.
-        fetch_with_timeout("http://localhost:4242/evaluate", {
+        fetch_with_timeout("http://localhost:4242/playground", {
             headers: { 'Content-Type': "application/json" },
             method: 'POST',
             mode: 'cors',
