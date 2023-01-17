@@ -20,7 +20,6 @@ app.use((err, req, res, next) => {
 
 app.post('/playground', (req, res) => {
 	console.log("[Playground] body:", req.body);
-	console.log(req.headers);
 
 	res.json({ result: "Request received!\n", error: null });
 })
