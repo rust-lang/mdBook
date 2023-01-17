@@ -16,7 +16,7 @@ use crate::utils::fs::get_404_output_file;
 use handlebars::Handlebars;
 use log::{debug, trace, warn};
 use once_cell::sync::Lazy;
-use regex::{Captures, Regex};
+use regex::{Captures, Regex, escape};
 use serde_json::json;
 
 #[derive(Default)]
@@ -856,11 +856,11 @@ fn add_playground_pre(html: &str, playground_config: &Playground) -> String {
                             } else {
                                 format!("{}", code).into()
                             };
-                            hide_lines(&content)
+                            hide_lines(&content, &playground_config.hidden_str)
                         }
                     )
                 } else {
-                    format!("<code class=\"{}\">{}</code>", classes, hide_lines(code))
+                    format!("<code class=\"{}\">{}</code>", classes, hide_lines(code, &playground_config.hidden_str))
                 }
             } else {
                 text.to_owned()
@@ -869,16 +869,17 @@ fn add_playground_pre(html: &str, playground_config: &Playground) -> String {
         .into_owned()
 }
 
-fn hide_lines(content: &str) -> String {
-    static BORING_LINES_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\s*)#(.?)(.*)$").unwrap());
+fn hide_lines(content: &str, hidden: &str) -> String {
+    let hidden_regex = format!(r"^(\s*){}(.?)(.*)$", escape(hidden));
+    let boring_lines_regex: Regex = Regex::new(&hidden_regex).unwrap();
 
     let mut result = String::with_capacity(content.len());
     let mut lines = content.lines().peekable();
     while let Some(line) = lines.next() {
         // Don't include newline on the last line.
         let newline = if lines.peek().is_none() { "" } else { "\n" };
-        if let Some(caps) = BORING_LINES_REGEX.captures(line) {
-            if &caps[2] == "#" {
+        if let Some(caps) = boring_lines_regex.captures(line) {
+            if &caps[2] == hidden {
                 result += &caps[1];
                 result += &caps[2];
                 result += &caps[3];

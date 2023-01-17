@@ -70,6 +70,40 @@ function get_playground_text(playground, hidden = true) {
     // Adding the hljs class gives code blocks the color css even if highlighting doesn't apply
     code_nodes.forEach(function (block) { block.classList.add('hljs'); });
 
+    Array.from(document.querySelectorAll("code")).forEach((block) => {
+        const lines = Array.from(block.querySelectorAll('.boring'));
+
+        // If no lines were hidden, return
+        if (!lines.length) { return; }
+        block.classList.add("hide-boring");
+
+        var buttons = document.createElement('div');
+        buttons.className = 'buttons';
+        buttons.innerHTML = "<button class=\"fa fa-eye\" title=\"Show hidden lines\" aria-label=\"Show hidden lines\"></button>";
+
+        // add expand button
+        var pre_block = block.parentNode;
+        pre_block.insertBefore(buttons, pre_block.firstChild);
+
+        pre_block.querySelector('.buttons').addEventListener('click', function (e) {
+            if (e.target.classList.contains('fa-eye')) {
+                e.target.classList.remove('fa-eye');
+                e.target.classList.add('fa-eye-slash');
+                e.target.title = 'Hide lines';
+                e.target.setAttribute('aria-label', e.target.title);
+
+                block.classList.remove('hide-boring');
+            } else if (e.target.classList.contains('fa-eye-slash')) {
+                e.target.classList.remove('fa-eye-slash');
+                e.target.classList.add('fa-eye');
+                e.target.title = 'Show hidden lines';
+                e.target.setAttribute('aria-label', e.target.title);
+
+                block.classList.add('hide-boring');
+            }
+        });
+    });
+
     if (window.playground_copyable) {
         Array.from(document.querySelectorAll('pre code')).forEach(function (block) {
             let pre_block = block.parentNode;

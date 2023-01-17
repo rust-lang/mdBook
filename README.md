@@ -25,6 +25,7 @@ copy-js = true                                 # includes the JavaScript for the
 line-numbers = true                            # displays line numbers for editable code
 runnable = true                                # displays a run button for rust code
 endpoint = "http://localhost:4242/playground/" # send the code to this url for execution
+hidden-str = "#"                               # since different languange use certain chars
 ```
 
 A clients incoming request looks as follows:
@@ -34,8 +35,6 @@ A clients incoming request looks as follows:
 	"code": "..."
 }
 ```
-
-> **Note**: The hidden code lines feature has been entirely ripped out. Because I deemed it useless.
 
 [See supported languanges](/guide/src/format/theme/syntax-highlighting.md) for syntax highlighting. As well as the `lang` options for incoming client requests.
 
