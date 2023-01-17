@@ -19,3 +19,4 @@ test_book/book/
 
 node_modules
 *-lock.json
+build

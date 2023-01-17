@@ -4,12 +4,18 @@
   "description": "A simple server that takes a post request and executes the C code locally.",
   "main": "webserv.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+	"start": "node build/app.js",
+    "build": "./node_modules/typescript/bin/tsc"
   },
   "author": "W2Wizard",
   "license": "MIT",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.15",
+    "@types/node-fetch": "^2.6.2",
+    "typescript": "^4.9.4"
   }
 }
