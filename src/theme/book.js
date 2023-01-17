@@ -72,16 +72,16 @@ function get_playground_text(playground, hidden = true) {
 
     if (window.playground_copyable) {
         Array.from(document.querySelectorAll('pre code')).forEach(function (block) {
-            var pre_block = block.parentNode;
+            let pre_block = block.parentNode;
             if (!pre_block.classList.contains('playground')) {
-                var buttons = pre_block.querySelector(".buttons");
+                let buttons = pre_block.querySelector(".buttons");
                 if (!buttons) {
                     buttons = document.createElement('div');
                     buttons.className = 'buttons';
                     pre_block.insertBefore(buttons, pre_block.firstChild);
                 }
 
-                var clipButton = document.createElement('button');
+                let clipButton = document.createElement('button');
                 clipButton.className = 'fa fa-copy clip-button';
                 clipButton.title = 'Copy to clipboard';
                 clipButton.setAttribute('aria-label', clipButton.title);
@@ -95,49 +95,46 @@ function get_playground_text(playground, hidden = true) {
     // Process playground code blocks
     Array.from(document.querySelectorAll(".playground")).forEach(function (pre_block) {
         // Add play button
-        var buttons = pre_block.querySelector(".buttons");
+        let buttons = pre_block.querySelector(".buttons");
         if (!buttons) {
             buttons = document.createElement('div');
             buttons.className = 'buttons';
             pre_block.insertBefore(buttons, pre_block.firstChild);
         }
 
-        var runCodeButton = document.createElement('button');
+        let runCodeButton = document.createElement('button');
         runCodeButton.className = 'fa fa-play play-button';
         runCodeButton.hidden = true;
         runCodeButton.title = 'Run this code';
         runCodeButton.setAttribute('aria-label', runCodeButton.title);
-
+        runCodeButton.addEventListener('click', (e) => run_code(pre_block));
         buttons.insertBefore(runCodeButton, buttons.firstChild);
-        runCodeButton.addEventListener('click', function (e) {
-            run_code(pre_block);
-        });
 
         if (window.playground_copyable) {
-            var copyCodeClipboardButton = document.createElement('button');
+            let copyCodeClipboardButton = document.createElement('button');
             copyCodeClipboardButton.className = 'fa fa-copy clip-button';
             copyCodeClipboardButton.innerHTML = '<i class="tooltiptext"></i>';
             copyCodeClipboardButton.title = 'Copy to clipboard';
             copyCodeClipboardButton.setAttribute('aria-label', copyCodeClipboardButton.title);
-
             buttons.insertBefore(copyCodeClipboardButton, buttons.firstChild);
         }
 
         let code_block = pre_block.querySelector("code");
-        if (window.ace && code_block.classList.contains("editable")) {
-            var undoChangesButton = document.createElement('button');
-            undoChangesButton.className = 'fa fa-history reset-button';
-            undoChangesButton.title = 'Undo changes';
-            undoChangesButton.setAttribute('aria-label', undoChangesButton.title);
+        if (!(window.ace && code_block.classList.contains("editable")))
+            return;
 
-            buttons.insertBefore(undoChangesButton, buttons.firstChild);
+        let undoChangesButton = document.createElement('button');
+        undoChangesButton.className = 'fa fa-history reset-button';
+        undoChangesButton.title = 'Undo changes';
+        undoChangesButton.setAttribute('aria-label', undoChangesButton.title);
+        undoChangesButton.addEventListener('click', () => {
+            let editor = window.ace.edit(code_block);
 
-            undoChangesButton.addEventListener('click', function () {
-                let editor = window.ace.edit(code_block);
-                editor.setValue(editor.originalCode);
-                editor.clearSelection();
-            });
-        }
+            editor.setValue(editor.originalCode);
+            editor.clearSelection();
+        });
+
+        buttons.insertBefore(undoChangesButton, buttons.firstChild);
     });
 
     /**
@@ -205,7 +202,7 @@ function get_playground_text(playground, hidden = true) {
 
         const params = {
             lang: lang,
-            code: get_playground_text(code_block)
+            code: get_playground_text(code_block).trim()
         }
 
         const endpoint = code_block.dataset.endpoint;
@@ -234,11 +231,11 @@ function get_playground_text(playground, hidden = true) {
 /*===========================================================================*/
 
 (function themes() {
-    var html = document.querySelector('html');
-    var themeToggleButton = document.getElementById('theme-toggle');
-    var themePopup = document.getElementById('theme-list');
-    var themeColorMetaTag = document.querySelector('meta[name="theme-color"]');
-    var stylesheets = {
+    let html = document.querySelector('html');
+    let themeToggleButton = document.getElementById('theme-toggle');
+    let themePopup = document.getElementById('theme-list');
+    let themeColorMetaTag = document.querySelector('meta[name="theme-color"]');
+    let stylesheets = {
         ayuHighlight: document.querySelector("[href$='ayu-highlight.css']"),
         tomorrowNight: document.querySelector("[href$='tomorrow-night.css']"),
         highlight: document.querySelector("[href$='highlight.css']"),
@@ -264,7 +261,7 @@ function get_playground_text(playground, hidden = true) {
     }
 
     function get_theme() {
-        var theme;
+        let theme;
         try { theme = localStorage.getItem('mdbook-theme'); } catch (e) { }
         if (theme === null || theme === undefined) {
             return default_theme;
@@ -304,7 +301,7 @@ function get_playground_text(playground, hidden = true) {
             });
         }
 
-        var previousTheme = get_theme();
+        let previousTheme = get_theme();
 
         if (store) {
             try { localStorage.setItem('mdbook-theme', theme); } catch (e) { }
@@ -316,7 +313,7 @@ function get_playground_text(playground, hidden = true) {
     }
 
     // Set theme
-    var theme = get_theme();
+    let theme = get_theme();
 
     set_theme(theme, false);
 
@@ -329,7 +326,7 @@ function get_playground_text(playground, hidden = true) {
     });
 
     themePopup.addEventListener('click', function (e) {
-        var theme;
+        let theme;
         if (e.target.className === "theme") {
             theme = e.target.id;
         } else if (e.target.parentElement.className === "theme") {
@@ -392,12 +389,12 @@ function get_playground_text(playground, hidden = true) {
 /*===========================================================================*/
 
 (function sidebar() {
-    var html = document.querySelector("html");
-    var sidebar = document.getElementById("sidebar");
-    var sidebarLinks = document.querySelectorAll('#sidebar a');
-    var sidebarToggleButton = document.getElementById("sidebar-toggle");
-    var sidebarResizeHandle = document.getElementById("sidebar-resize-handle");
-    var firstContact = null;
+    let html = document.querySelector("html");
+    let sidebar = document.getElementById("sidebar");
+    let sidebarLinks = document.querySelectorAll('#sidebar a');
+    let sidebarToggleButton = document.getElementById("sidebar-toggle");
+    let sidebarResizeHandle = document.getElementById("sidebar-resize-handle");
+    let firstContact = null;
 
     function showSidebar() {
         html.classList.remove('sidebar-hidden')
@@ -411,22 +408,20 @@ function get_playground_text(playground, hidden = true) {
     }
 
 
-    var sidebarAnchorToggles = document.querySelectorAll('#sidebar a.toggle');
+    let sidebarAnchorToggles = document.querySelectorAll('#sidebar a.toggle');
 
     function toggleSection(ev) {
         ev.currentTarget.parentElement.classList.toggle('expanded');
     }
 
-    Array.from(sidebarAnchorToggles).forEach(function (el) {
-        el.addEventListener('click', toggleSection);
-    });
+    Array.from(sidebarAnchorToggles).forEach((el) => el.addEventListener('click', toggleSection));
 
     function hideSidebar() {
         html.classList.remove('sidebar-visible')
         html.classList.add('sidebar-hidden');
-        Array.from(sidebarLinks).forEach(function (link) {
-            link.setAttribute('tabIndex', -1);
-        });
+
+        Array.from(sidebarLinks).forEach((link) => link.setAttribute('tabIndex', -1));
+
         sidebarToggleButton.setAttribute('aria-expanded', false);
         sidebar.setAttribute('aria-hidden', true);
         try { localStorage.setItem('mdbook-sidebar', 'hidden'); } catch (e) { }
@@ -435,7 +430,7 @@ function get_playground_text(playground, hidden = true) {
     // Toggle sidebar
     sidebarToggleButton.addEventListener('click', function sidebarToggle() {
         if (html.classList.contains("sidebar-hidden")) {
-            var current_width = parseInt(
+            let current_width = parseInt(
                 document.documentElement.style.getPropertyValue('--sidebar-width'), 10);
             if (current_width < 150) {
                 document.documentElement.style.setProperty('--sidebar-width', '150px');
@@ -460,7 +455,7 @@ function get_playground_text(playground, hidden = true) {
         html.classList.add('sidebar-resizing');
     }
     function resize(e) {
-        var pos = (e.clientX - sidebar.offsetLeft);
+        let pos = (e.clientX - sidebar.offsetLeft);
         if (pos < 20) {
             hideSidebar();
         } else {
@@ -478,19 +473,19 @@ function get_playground_text(playground, hidden = true) {
         window.removeEventListener('mouseup', stopResize, false);
     }
 
-    document.addEventListener('touchstart', function (e) {
+    document.addEventListener('touchstart', (e) => {
         firstContact = {
             x: e.touches[0].clientX,
             time: Date.now()
         };
     }, { passive: true });
 
-    document.addEventListener('touchmove', function (e) {
+    document.addEventListener('touchmove', (e) => {
         if (!firstContact)
             return;
 
-        var curX = e.touches[0].clientX;
-        var xDiff = curX - firstContact.x,
+        let curX = e.touches[0].clientX;
+        let xDiff = curX - firstContact.x,
             tDiff = Date.now() - firstContact.time;
 
         if (tDiff < 250 && Math.abs(xDiff) >= 150) {
@@ -504,7 +499,7 @@ function get_playground_text(playground, hidden = true) {
     }, { passive: true });
 
     // Scroll sidebar to current active section
-    var activeSection = document.getElementById("sidebar").querySelector(".active");
+    let activeSection = document.getElementById("sidebar").querySelector(".active");
     if (activeSection) {
         // https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
         activeSection.scrollIntoView({ block: 'center' });
@@ -514,33 +509,33 @@ function get_playground_text(playground, hidden = true) {
 /*===========================================================================*/
 
 (function chapterNavigation() {
-    document.addEventListener('keydown', function (e) {
-        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
-        if (window.search && window.search.hasFocus()) { return; }
+    document.addEventListener('keydown', (e) => {
+        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+        if (window.search && window.search.hasFocus()) return;
 
         switch (e.key) {
             case 'ArrowRight':
                 e.preventDefault();
-                var nextButton = document.querySelector('.nav-chapters.next');
-                if (nextButton) {
+                let nextButton = document.querySelector('.nav-chapters.next');
+                if (nextButton)
                     window.location.href = nextButton.href;
-                }
                 break;
+
             case 'ArrowLeft':
                 e.preventDefault();
-                var previousButton = document.querySelector('.nav-chapters.previous');
-                if (previousButton) {
+                let previousButton = document.querySelector('.nav-chapters.previous');
+                if (previousButton)
                     window.location.href = previousButton.href;
-                }
                 break;
         }
     });
+
 })();
 
 /*===========================================================================*/
 
 (function clipboard() {
-    var clipButtons = document.querySelectorAll('.clip-button');
+    let clipButtons = document.querySelectorAll('.clip-button');
 
     function hideTooltip(elem) {
         elem.firstChild.innerText = "";
@@ -552,62 +547,58 @@ function get_playground_text(playground, hidden = true) {
         elem.className = 'fa fa-copy tooltipped';
     }
 
-    var clipboardSnippets = new ClipboardJS('.clip-button', {
-        text: function (trigger) {
+    let clipboardSnippets = new ClipboardJS('.clip-button', {
+        text: (trigger) => {
             hideTooltip(trigger);
-            let playground = trigger.closest("pre");
-            return get_playground_text(playground, false);
+            return get_playground_text(trigger.closest("pre"), false);
         }
     });
 
-    Array.from(clipButtons).forEach(function (clipButton) {
-        clipButton.addEventListener('mouseout', function (e) {
-            hideTooltip(e.currentTarget);
-        });
-    });
+    Array.from(clipButtons).forEach((clipButton) =>
+        clipButton.addEventListener('mouseout', hideTooltip(e.currentTarget))
+    );
 
-    clipboardSnippets.on('success', function (e) {
+    clipboardSnippets.on('success', (e) => {
         e.clearSelection();
         showTooltip(e.trigger, "Copied!");
     });
 
-    clipboardSnippets.on('error', function (e) {
-        showTooltip(e.trigger, "Clipboard error!");
-    });
+    clipboardSnippets.on('error', (e) => showTooltip(e.trigger, "Clipboard error!"));
 })();
 
 /*===========================================================================*/
 
 (function scrollToTop () {
-    var menuTitle = document.querySelector('.menu-title');
+    let menuTitle = document.querySelector('.menu-title');
 
-    menuTitle.addEventListener('click', function () {
+    menuTitle.addEventListener('click', () => {
         document.scrollingElement.scrollTo({ top: 0, behavior: 'smooth' });
     });
 })();
 
 /*===========================================================================*/
 
+// wtf is this...
 (function controllMenu() {
-    var menu = document.getElementById('menu-bar');
+    let menu = document.getElementById('menu-bar');
 
     (function controllPosition() {
-        var scrollTop = document.scrollingElement.scrollTop;
-        var prevScrollTop = scrollTop;
-        var minMenuY = -menu.clientHeight - 50;
-        // When the script loads, the page can be at any scroll (e.g. if you reforesh it).
+        let scrollTop = document.scrollingElement.scrollTop;
+        let prevScrollTop = scrollTop;
+        let minMenuY = -menu.clientHeight - 50;
+        // When the script loads, the page can be at any scroll (e.g. if you refresh it).
         menu.style.top = scrollTop + 'px';
         // Same as parseInt(menu.style.top.slice(0, -2), but faster
-        var topCache = menu.style.top.slice(0, -2);
+        let topCache = menu.style.top.slice(0, -2);
         menu.classList.remove('sticky');
-        var stickyCache = false; // Same as menu.classList.contains('sticky'), but faster
+        let stickyCache = false; // Same as menu.classList.contains('sticky'), but faster
         document.addEventListener('scroll', function () {
             scrollTop = Math.max(document.scrollingElement.scrollTop, 0);
             // `null` means that it doesn't need to be updated
-            var nextSticky = null;
-            var nextTop = null;
-            var scrollDown = scrollTop > prevScrollTop;
-            var menuPosAbsoluteY = topCache - scrollTop;
+            let nextSticky = null;
+            let nextTop = null;
+            let scrollDown = scrollTop > prevScrollTop;
+            let menuPosAbsoluteY = topCache - scrollTop;
             if (scrollDown) {
                 nextSticky = false;
                 if (menuPosAbsoluteY > 0) {
@@ -634,14 +625,16 @@ function get_playground_text(playground, hidden = true) {
             prevScrollTop = scrollTop;
         }, { passive: true });
     })();
+
     (function controllBorder() {
         menu.classList.remove('bordered');
-        document.addEventListener('scroll', function () {
-            if (menu.offsetTop === 0) {
+
+        document.addEventListener('scroll', () => {
+            if (menu.offsetTop === 0)
                 menu.classList.remove('bordered');
-            } else {
+            else
                 menu.classList.add('bordered');
-            }
         }, { passive: true });
     })();
+
 })();
