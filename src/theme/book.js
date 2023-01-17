@@ -164,12 +164,6 @@ function get_playground_text(playground, hidden = true) {
         const code_block = playground_block.querySelector("code");
         if (!code_block.classList.contains("editable")) { return; }
 
-        // NOTE: Re-apply for rust later, since the code change might introduce new crates.
-        // const editor = window.ace.edit(code_block);
-        // editor.addEventListener("change", function (e) {
-        //     update_play_button(playground_block);
-        // });
-
         editor.commands.addCommand({
             name: "run",
             bindKey: {
@@ -194,9 +188,23 @@ function get_playground_text(playground, hidden = true) {
 
         result_block.innerText = "Running...";
 
-        // TODO: Pass markdown params as classes or use a data tag to cary over information.
-        // let classes = code_block.querySelector('code').classList;
+        let lang = "";
+        const classes = code_block.querySelector('code').classList;
+        for (const value of classes) {
+            if (value.startsWith("language-")) {
+                lang = value.split("-")[1];
+                break;
+            }
+        }
+
+        // TODO: Not quite sure what to do here ?
+        if (lang == "") {
+            result_block.innerText = "Not supported!";
+            return;
+        }
+
         const params = {
+            lang: lang,
             code: get_playground_text(code_block)
         }
 
