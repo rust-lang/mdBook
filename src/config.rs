@@ -628,6 +628,8 @@ pub struct Playground {
     pub line_numbers: bool,
     /// Display the run button. Default: `true`
     pub runnable: bool,
+	/// Submits the code to the following endpoint for running.
+	pub endpoint: String
 }
 
 impl Default for Playground {
@@ -638,6 +640,7 @@ impl Default for Playground {
             copy_js: true,
             line_numbers: false,
             runnable: true,
+			endpoint: "https://play.rust-lang.org/evaluate.json".to_string()
         }
     }
 }

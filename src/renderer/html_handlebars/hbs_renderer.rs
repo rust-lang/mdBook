@@ -846,7 +846,8 @@ fn add_playground_pre(html: &str, playground_config: &Playground) -> String {
                     || classes.contains("mdbook-runnable")
                 {
                     format!(
-                        "<pre class=\"playground\"><code class=\"{}\">{}</code></pre>",
+                        "<pre data-endpoint={} class=\"playground\"><code class=\"{}\">{}</code></pre>",
+                        playground_config.endpoint,
                         classes,
                         {
                             // I have no idea what im doing, this syntax is god awful, but it works :)
@@ -899,27 +900,6 @@ fn hide_lines(content: &str) -> String {
         result += newline;
     }
     result
-}
-
-fn partition_source(s: &str) -> (String, String) {
-    let mut after_header = false;
-    let mut before = String::new();
-    let mut after = String::new();
-
-    for line in s.lines() {
-        let trimline = line.trim();
-        let header = trimline.chars().all(char::is_whitespace) || trimline.starts_with("#![");
-        if !header || after_header {
-            after_header = true;
-            after.push_str(line);
-            after.push('\n');
-        } else {
-            before.push_str(line);
-            before.push('\n');
-        }
-    }
-
-    (before, after)
 }
 
 struct RenderItemContext<'a> {

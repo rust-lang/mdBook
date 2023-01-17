@@ -195,13 +195,15 @@ function get_playground_text(playground, hidden = true) {
         result_block.innerText = "Running...";
 
         // TODO: Pass markdown params as classes or use a data tag to cary over information.
-        let classes = code_block.querySelector('code').classList;
+        // let classes = code_block.querySelector('code').classList;
         const params = {
             code: get_playground_text(code_block)
         }
 
-        // TODO: Somehow fetch the configured URL from the TOML.
-        fetch_with_timeout("http://localhost:4242/playground", {
+        const endpoint = code_block.dataset.endpoint;
+        console.log("Sending code to:", endpoint);
+        
+        fetch_with_timeout(endpoint, {
             headers: { 'Content-Type': "application/json" },
             method: 'POST',
             mode: 'cors',
