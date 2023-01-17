@@ -786,6 +786,7 @@ mod tests {
             copy_js: true,
             line_numbers: false,
             runnable: true,
+			endpoint: "".to_string()
         };
         let html_should_be = HtmlConfig {
             curly_quotes: true,
