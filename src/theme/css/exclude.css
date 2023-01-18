@@ -1,23 +1,30 @@
 .light .no-light {
-    visibility: hidden;
+    display: none;
 }
 
 .rust .no-rust {
-    visibility: hidden;
+    display: none;
+}
+
+.light .no-light-themes,
+.rust .no-light-themes {
+    display: none;
 }
 
 .navy .no-navy {
-    visibility: hidden;
+    display: none;
 }
 
 .ayu .no-ayu {
-    visibility: hidden;
+    display: none;
 }
 
 .coal .no-coal {
-    visibility: hidden;
+    display: none;
 }
 
-.navy, .ayu, .coal  .no-dark {
-    visibility: hidden;
+.navy .no-dark-themes,
+.ayu .no-dark-themes,
+.coal .no-dark-themes {
+    display: none;
 }
