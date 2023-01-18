@@ -2,14 +2,6 @@
 
 @import 'variables.css';
 
-::-webkit-scrollbar {
-    background: var(--bg);
-    width: 8px;
-}
-::-webkit-scrollbar-thumb {
-    background: var(--scrollbar);
-    border-radius: 4px;
-}
 html {
     scrollbar-color: var(--scrollbar) var(--bg);
 }
