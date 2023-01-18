@@ -7,13 +7,22 @@ If you have come here to learn how to contribute to mdBook, we have some tips fo
 First of all, don't hesitate to ask questions!
 Use the [issue tracker](https://github.com/rust-lang/mdBook/issues), no question is too simple.
 
+### Issue assignment
+
+**:warning: Important :warning:**
+
+Before working on pull request, please ping us on the corresponding issue.
+The current PR backlog is beyond what we can process at this time.
+Only issues that have an [`E-Help-wanted`](https://github.com/rust-lang/mdBook/labels/E-Help-wanted) or [`Feature accepted`](https://github.com/rust-lang/mdBook/labels/Feature%20accepted) label will likely receive reviews.
+If there isn't already an open issue for what you want to work on, please open one first to see if it is something we would be available to review.
+
 ### Issues to work on
 
-Any issue is up for the grabbing, but if you are starting out, you might be interested in the
+If you are starting out, you might be interested in the
 [E-Easy issues](https://github.com/rust-lang/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AE-Easy).
 Those are issues that are considered more straightforward for beginners to Rust or the codebase itself.
-These issues can be a good launching pad for more involved issues. Easy tasks for a first time contribution
-include documentation improvements, new tests, examples, updating dependencies, etc.
+These issues can be a good launching pad for more involved issues.
+Easy tasks for a first time contribution include documentation improvements, new tests, examples, updating dependencies, etc.
 
 If you come from a web development background, you might be interested in issues related to web technologies tagged
 [A-JavaScript](https://github.com/rust-lang/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AA-JavaScript),
@@ -21,16 +30,16 @@ If you come from a web development background, you might be interested in issues
 [A-HTML](https://github.com/rust-lang/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AA-HTML) or
 [A-Mobile](https://github.com/rust-lang/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AA-Mobile).
 
-When you decide you want to work on a specific issue, ping us on that issue so that we can assign it to you.
+When you decide you want to work on a specific issue, and it isn't already assigned to someone else, assign the issue to yourself by leaving a comment with the text `@rustbot claim`.
 Again, do not hesitate to ask questions. We will gladly mentor anyone that want to tackle an issue.
 
 Issues on the issue tracker are categorized with the following labels:
 
 - **A**-prefixed labels state which area of the project an issue relates to.
 - **E**-prefixed labels show an estimate of the experience necessary to fix the issue.
-- **M**-prefixed labels are meta-issues used for questions, discussions, or tracking issues
+- **M**-prefixed labels are meta-issues regarding the management of the mdBook project itself
 - **S**-prefixed labels show the status of the issue
-- **T**-prefixed labels show the type of issue
+- **C**-prefixed labels show the category of issue
 
 ### Building mdBook
 
@@ -59,7 +68,7 @@ This will ensure we have good quality source code that is better for us all to m
 [rustfmt](https://github.com/rust-lang/rustfmt) has a lot more information on the project.
 The quick guide is
 
-1. Install it
+1. Install it (`rustfmt` is usually installed by default via [rustup](https://rustup.rs/)):
     ```
     rustup component add rustfmt
     ```
@@ -71,18 +80,15 @@ The quick guide is
    ```
    cargo fmt
    ```
-   When run through `cargo` it will format all bin and lib files in the current crate.
+   When run through `cargo` it will format all bin and lib files in the current package.
 
 For more information, such as running it from your favourite editor, please see the `rustfmt` project. [rustfmt](https://github.com/rust-lang/rustfmt)
 
 
 #### Finding Issues with Clippy
 
-Clippy is a code analyser/linter detecting mistakes, and therefore helps to improve your code.
-Like formatting your code with `rustfmt`, running clippy regularly and before your Pull Request will
-help us maintain awesome code.
-
-The best documentation can be found over at [rust-clippy](https://github.com/rust-lang/rust-clippy)
+[Clippy](https://doc.rust-lang.org/clippy/) is a code analyser/linter detecting mistakes, and therefore helps to improve your code.
+Like formatting your code with `rustfmt`, running clippy regularly and before your Pull Request will help us maintain awesome code.
 
 1. To install
     ```
@@ -93,16 +99,35 @@ The best documentation can be found over at [rust-clippy](https://github.com/rus
     cargo clippy
     ```
 
-Clippy has an ever growing list of checks, that are managed in [lint files](https://rust-lang.github.io/rust-clippy/master/index.html).
+### Change requirements
+
+Please consider the following when making a change:
+
+* Almost all changes that modify the Rust code must be accompanied with a test.
+
+* Almost all features and changes must update the documentation.
+  mdBook has the [mdBook Guide](https://rust-lang.github.io/mdBook/) whose source is at <https://github.com/rust-lang/mdBook/tree/master/guide>.
+
+* Almost all Rust items should be documented with doc comments.
+  See the [Rustdoc Book](https://doc.rust-lang.org/rustdoc/) for more information on writing doc comments.
+
+* Breaking the API can only be done in major SemVer releases.
+  These are done very infrequently, so it is preferred to avoid these when possible.
+  See [SemVer Compatibility](https://doc.rust-lang.org/cargo/reference/semver.html) for more information on what a SemVer breaking change is.
+
+  (Note: At this time, some SemVer breaking changes are inevitable due to the current code structure.
+  An example is adding new fields to the config structures.
+  These are intended to be fixed in the next major release.)
+
+* Similarly, the CLI interface is considered to be stable.
+  Care should be taken to avoid breaking existing workflows.
+
+* Check out the [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/) for guidelines on designing the API.
 
 ### Making a pull-request
 
 When you feel comfortable that your changes could be integrated into mdBook, you can create a pull-request on GitHub.
 One of the core maintainers will then approve the changes or request some changes before it gets merged.
-
-If you want to make your pull-request even better, you might want to run [Clippy](https://github.com/Manishearth/rust-clippy)
-and [rustfmt](https://github.com/rust-lang/rustfmt) on the code first.
-This is not a requirement though and will never block a pull-request from being merged.
 
 That's it, happy contributions! :tada: :tada: :tada:
 

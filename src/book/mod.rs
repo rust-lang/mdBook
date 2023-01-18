@@ -63,8 +63,7 @@ impl MDBook {
         }
 
         let mut config = if config_location.exists() {
-            debug!("Loading config from: {}", config_location.display());
-            println!("Loading config from: {}", config_location.display());
+            debug!("Loading config from {}", config_location.display());
             Config::from_disk(&config_location)?
         } else {
             Config::default()
@@ -385,12 +384,7 @@ impl MDBook {
             .unwrap_or_default()
             .theme_dir(&self.root)
     }
-
-    /// Clone registered boxed preprocessors Vec
-    pub fn clone_preprocessors(&self) -> Vec<Box<dyn Preprocessor>> {
-        self.preprocessors.clone()
-    }
-   }
+}
 
 /// Look at the `Config` and try to figure out what renderers to use.
 fn determine_renderers(config: &Config) -> Vec<Box<dyn Renderer>> {
@@ -835,9 +829,7 @@ mod tests {
         assert!(should_run);
     }
 
-    #[derive(Clone)]
     struct BoolPreprocessor(bool);
-
     impl Preprocessor for BoolPreprocessor {
         fn name(&self) -> &str {
             "bool-preprocessor"

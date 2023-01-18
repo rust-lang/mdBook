@@ -64,28 +64,25 @@ pub fn take_anchored_lines(s: &str, anchor: &str) -> String {
 /// For any lines not in the range, include them but use `#` at the beginning. This will hide the
 /// lines from initial display but include them when expanding the code snippet or testing with
 /// rustdoc.
-pub fn take_rustdoc_include_lines<R: RangeBounds<usize>>(s: &str, range: R, cutoff_commented_lines: bool) -> String {
+pub fn take_rustdoc_include_lines<R: RangeBounds<usize>>(s: &str, range: R) -> String {
     let mut output = String::with_capacity(s.len());
 
     for (index, line) in s.lines().enumerate() {
         if !range.contains(&index) {
-            if !cutoff_commented_lines { // do not include 'dashed' lines (for epub format)
-                output.push_str("# ");
-            }
+            output.push_str("# ");
         }
         output.push_str(line);
         output.push('\n');
     }
     output.pop();
-    trace!("take_rustdoc_include_lines = {:?}", output.to_string());
     output
 }
 
 /// Keep lines between the anchor comments specified as-is.
 /// For any lines not between the anchors, include them but use `#` at the beginning. This will
 /// hide the lines from initial display but include them when expanding the code snippet or testing
-/// with rustdoc. The cutoff_commented_lines = true, means do not include code lines started with #...
-pub fn take_rustdoc_include_anchored_lines(s: &str, anchor: &str, cutoff_commented_lines: bool) -> String {
+/// with rustdoc.
+pub fn take_rustdoc_include_anchored_lines(s: &str, anchor: &str) -> String {
     let mut output = String::with_capacity(s.len());
     let mut within_anchored_section = false;
 
@@ -109,16 +106,13 @@ pub fn take_rustdoc_include_anchored_lines(s: &str, anchor: &str, cutoff_comment
                 within_anchored_section = true;
             }
         } else if !ANCHOR_END.is_match(l) {
-            if !cutoff_commented_lines { // do not include 'dashed' lines (for epub format)
-                output.push_str("# ");
-                output.push_str(l);
-                output.push('\n');
-            }
+            output.push_str("# ");
+            output.push_str(l);
+            output.push('\n');
         }
     }
 
     output.pop();
-    trace!("take_rustdoc_include_anchored_lines = {:?}", output.to_string());
     output
 }
 
@@ -176,87 +170,87 @@ mod tests {
     fn take_rustdoc_include_lines_test() {
         let s = "Lorem\nipsum\ndolor\nsit\namet";
         assert_eq!(
-            take_rustdoc_include_lines(s, 1..3, false),
+            take_rustdoc_include_lines(s, 1..3),
             "# Lorem\nipsum\ndolor\n# sit\n# amet"
         );
         assert_eq!(
-            take_rustdoc_include_lines(s, 3.., false),
+            take_rustdoc_include_lines(s, 3..),
             "# Lorem\n# ipsum\n# dolor\nsit\namet"
         );
         assert_eq!(
-            take_rustdoc_include_lines(s, ..3, false),
+            take_rustdoc_include_lines(s, ..3),
             "Lorem\nipsum\ndolor\n# sit\n# amet"
         );
-        assert_eq!(take_rustdoc_include_lines(s, .., false), s);
+        assert_eq!(take_rustdoc_include_lines(s, ..), s);
         // corner cases
         assert_eq!(
-            take_rustdoc_include_lines(s, 4..3, false),
+            take_rustdoc_include_lines(s, 4..3),
             "# Lorem\n# ipsum\n# dolor\n# sit\n# amet"
         );
-        assert_eq!(take_rustdoc_include_lines(s, ..100, false), s);
+        assert_eq!(take_rustdoc_include_lines(s, ..100), s);
     }
 
     #[test]
     fn take_rustdoc_include_anchored_lines_test() {
         let s = "Lorem\nipsum\ndolor\nsit\namet";
         assert_eq!(
-            take_rustdoc_include_anchored_lines(s, "test", false),
+            take_rustdoc_include_anchored_lines(s, "test"),
             "# Lorem\n# ipsum\n# dolor\n# sit\n# amet"
         );
 
         let s = "Lorem\nipsum\ndolor\nANCHOR_END: test\nsit\namet";
         assert_eq!(
-            take_rustdoc_include_anchored_lines(s, "test", false),
+            take_rustdoc_include_anchored_lines(s, "test"),
             "# Lorem\n# ipsum\n# dolor\n# sit\n# amet"
         );
 
         let s = "Lorem\nipsum\nANCHOR: test\ndolor\nsit\namet";
         assert_eq!(
-            take_rustdoc_include_anchored_lines(s, "test", false),
+            take_rustdoc_include_anchored_lines(s, "test"),
             "# Lorem\n# ipsum\ndolor\nsit\namet"
         );
         assert_eq!(
-            take_rustdoc_include_anchored_lines(s, "something", false),
+            take_rustdoc_include_anchored_lines(s, "something"),
             "# Lorem\n# ipsum\n# dolor\n# sit\n# amet"
         );
 
         let s = "Lorem\nipsum\nANCHOR: test\ndolor\nsit\namet\nANCHOR_END: test\nlorem\nipsum";
         assert_eq!(
-            take_rustdoc_include_anchored_lines(s, "test", false),
+            take_rustdoc_include_anchored_lines(s, "test"),
             "# Lorem\n# ipsum\ndolor\nsit\namet\n# lorem\n# ipsum"
         );
         assert_eq!(
-            take_rustdoc_include_anchored_lines(s, "something", false),
+            take_rustdoc_include_anchored_lines(s, "something"),
             "# Lorem\n# ipsum\n# dolor\n# sit\n# amet\n# lorem\n# ipsum"
         );
 
         let s = "Lorem\nANCHOR: test\nipsum\nANCHOR: test\ndolor\nsit\namet\nANCHOR_END: test\nlorem\nipsum";
         assert_eq!(
-            take_rustdoc_include_anchored_lines(s, "test", false),
+            take_rustdoc_include_anchored_lines(s, "test"),
             "# Lorem\nipsum\ndolor\nsit\namet\n# lorem\n# ipsum"
         );
         assert_eq!(
-            take_rustdoc_include_anchored_lines(s, "something", false),
+            take_rustdoc_include_anchored_lines(s, "something"),
             "# Lorem\n# ipsum\n# dolor\n# sit\n# amet\n# lorem\n# ipsum"
         );
 
         let s = "Lorem\nANCHOR:    test2\nipsum\nANCHOR: test\ndolor\nsit\namet\nANCHOR_END: test\nlorem\nANCHOR_END:test2\nipsum";
         assert_eq!(
-            take_rustdoc_include_anchored_lines(s, "test2", false),
+            take_rustdoc_include_anchored_lines(s, "test2"),
             "# Lorem\nipsum\ndolor\nsit\namet\nlorem\n# ipsum"
         );
         assert_eq!(
-            take_rustdoc_include_anchored_lines(s, "test", false),
+            take_rustdoc_include_anchored_lines(s, "test"),
             "# Lorem\n# ipsum\ndolor\nsit\namet\n# lorem\n# ipsum"
         );
         assert_eq!(
-            take_rustdoc_include_anchored_lines(s, "something", false),
+            take_rustdoc_include_anchored_lines(s, "something"),
             "# Lorem\n# ipsum\n# dolor\n# sit\n# amet\n# lorem\n# ipsum"
         );
 
         let s = "Lorem\nANCHOR: test\nipsum\nANCHOR_END: test\ndolor\nANCHOR: test\nsit\nANCHOR_END: test\namet";
         assert_eq!(
-            take_rustdoc_include_anchored_lines(s, "test", false),
+            take_rustdoc_include_anchored_lines(s, "test"),
             "# Lorem\nipsum\n# dolor\nsit\n# amet"
         );
     }
