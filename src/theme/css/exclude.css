@@ -1,0 +1,23 @@
+.light .no-light {
+    visibility: hidden;
+}
+
+.rust .no-rust {
+    visibility: hidden;
+}
+
+.navy .no-navy {
+    visibility: hidden;
+}
+
+.ayu .no-ayu {
+    visibility: hidden;
+}
+
+.coal .no-coal {
+    visibility: hidden;
+}
+
+.navy, .ayu, .coal  .no-dark {
+    visibility: hidden;
+}

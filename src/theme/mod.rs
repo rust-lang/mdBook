@@ -21,6 +21,7 @@ pub static CHROME_CSS: &[u8] = include_bytes!("css/chrome.css");
 pub static GENERAL_CSS: &[u8] = include_bytes!("css/general.css");
 pub static PRINT_CSS: &[u8] = include_bytes!("css/print.css");
 pub static VARIABLES_CSS: &[u8] = include_bytes!("css/variables.css");
+pub static EXCLUDES_CSS: &[u8] = include_bytes!("css/exclude.css");
 pub static FAVICON_PNG: &[u8] = include_bytes!("favicon.png");
 pub static FAVICON_SVG: &[u8] = include_bytes!("favicon.svg");
 pub static JS: &[u8] = include_bytes!("book.js");
@@ -54,6 +55,7 @@ pub struct Theme {
     pub general_css: Vec<u8>,
     pub print_css: Vec<u8>,
     pub variables_css: Vec<u8>,
+    pub excludes_css: Vec<u8>,
     pub favicon_png: Option<Vec<u8>>,
     pub favicon_svg: Option<Vec<u8>>,
     pub js: Vec<u8>,
@@ -91,6 +93,7 @@ impl Theme {
                     theme_dir.join("css/variables.css"),
                     &mut theme.variables_css,
                 ),
+                (theme_dir.join("css/exclude.css"), &mut theme.excludes_css),
                 (theme_dir.join("highlight.js"), &mut theme.highlight_js),
                 (theme_dir.join("clipboard.min.js"), &mut theme.clipboard_js),
                 (theme_dir.join("highlight.css"), &mut theme.highlight_css),
@@ -153,6 +156,7 @@ impl Default for Theme {
             general_css: GENERAL_CSS.to_owned(),
             print_css: PRINT_CSS.to_owned(),
             variables_css: VARIABLES_CSS.to_owned(),
+            excludes_css: EXCLUDES_CSS.to_owned(),
             favicon_png: Some(FAVICON_PNG.to_owned()),
             favicon_svg: Some(FAVICON_SVG.to_owned()),
             js: JS.to_owned(),
@@ -213,6 +217,7 @@ mod tests {
             "css/general.css",
             "css/print.css",
             "css/variables.css",
+            "css/exclude.css",
             "book.js",
             "highlight.js",
             "tomorrow-night.css",
@@ -240,6 +245,7 @@ mod tests {
             general_css: Vec::new(),
             print_css: Vec::new(),
             variables_css: Vec::new(),
+            excludes_css: Vec::new(),
             favicon_png: Some(Vec::new()),
             favicon_svg: Some(Vec::new()),
             js: Vec::new(),

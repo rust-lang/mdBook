@@ -119,6 +119,7 @@ fn copy_theme() {
         "css/general.css",
         "css/print.css",
         "css/variables.css",
+        "css/exclude.css",
         "favicon.png",
         "favicon.svg",
         "highlight.css",
