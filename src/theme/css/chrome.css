@@ -12,6 +12,10 @@ a > .hljs {
     color: var(--links);
 }
 
+#body-container {
+    overflow-x: hidden;
+}
+
 /* Menu Bar */
 
 #menu-bar,
