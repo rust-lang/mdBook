@@ -1,4 +1,3 @@
-use anyhow::Error;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::ops::Bound::{Excluded, Included, Unbounded};
@@ -116,14 +115,7 @@ pub fn take_rustdoc_include_anchored_lines(s: &str, anchor: &str) -> String {
     output
 }
 
-pub fn take_remove_indent(s: Result<String, Error>) -> Result<String, Error> {
-    match s {
-        Err(_) => s,
-        Ok(_str) => Ok(take_format_remove_indent(_str.as_str())),
-    }
-}
-
-fn take_format_remove_indent(str: &str) -> String {
+pub fn take_format_remove_indent(str: &str) -> String {
     let mut output = Vec::<String>::new();
     let mut min_indent = usize::MAX;
 

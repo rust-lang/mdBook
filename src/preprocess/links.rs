@@ -1,7 +1,7 @@
 use crate::errors::*;
 use crate::utils::{
-    take_anchored_lines, take_lines, take_remove_indent, take_rustdoc_include_anchored_lines,
-    take_rustdoc_include_lines,
+    take_anchored_lines, take_format_remove_indent, take_lines,
+    take_rustdoc_include_anchored_lines, take_rustdoc_include_lines,
 };
 use regex::{CaptureMatches, Captures, Regex};
 use std::fs;
@@ -244,8 +244,6 @@ fn parse_range_or_anchor(parts: Option<&str>) -> RangeOrAnchor {
     // the single line specified by `start`.
     let end = end.map(|s| s.parse::<usize>());
 
-    println!("Start: {:?} End: {:?}", start, end);
-
     match (start, end) {
         (Some(start), Some(Ok(end))) => RangeOrAnchor::Range(LineRange::from(start..end)),
         (Some(start), Some(Err(_))) => RangeOrAnchor::Range(LineRange::from(start..)),
@@ -317,8 +315,6 @@ impl<'a> Link<'a> {
             _ => None,
         };
 
-        println!("Ovo je : {:?}", link_type);
-
         link_type.and_then(|lnk_type| {
             cap.get(0).map(|mat| Link {
                 start_index: mat.start(),
@@ -356,7 +352,8 @@ impl<'a> Link<'a> {
             }
             LinkType::IncludeNoIndent(ref pat, ref range_or_anchor) => {
                 let target = base.join(pat);
-                let s = fs::read_to_string(&target)
+
+                fs::read_to_string(&target)
                     .map(|s| match range_or_anchor {
                         RangeOrAnchor::Range(range) => take_lines(&s, range.clone()),
                         RangeOrAnchor::Anchor(anchor) => take_anchored_lines(&s, anchor),
@@ -367,8 +364,8 @@ impl<'a> Link<'a> {
                             self.link_text,
                             target.display(),
                         )
-                    });
-                take_remove_indent(s)
+                    })
+                    .map(|s| take_format_remove_indent(s.as_str()))
             }
             LinkType::RustdocInclude(ref pat, ref range_or_anchor) => {
                 let target = base.join(pat);
