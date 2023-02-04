@@ -18,6 +18,7 @@ Here are the files you can override:
     - **_css/chrome.css_** is for UI elements.
     - **_css/general.css_** is the base styles.
     - **_css/print.css_** is the style for printer output.
+    - **_css/exclude.css_** is for [theme-dependent images](../markdown.md#theme-dependent-images).
     - **_css/variables.css_** contains variables used in other CSS files.
 - **_book.js_** is mostly used to add client side functionality, like hiding /
   un-hiding the sidebar, changing the theme, ...
