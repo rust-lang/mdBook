@@ -98,7 +98,9 @@ impl BookBuilder {
     fn write_book_toml(&self) -> Result<()> {
         debug!("Writing book.toml");
         let book_toml = self.root.join("book.toml");
-        let cfg = toml::to_vec(&self.config).with_context(|| "Unable to serialize the config")?;
+        let cfg = toml::to_string(&self.config)
+            .with_context(|| "Unable to serialize the config")?
+            .into_bytes();
 
         File::create(book_toml)
             .with_context(|| "Couldn't create book.toml")?
