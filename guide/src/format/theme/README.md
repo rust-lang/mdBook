@@ -26,6 +26,8 @@ Here are the files you can override:
 - **_highlight.css_** is the theme used for the code highlighting.
 - **_favicon.svg_** and **_favicon.png_** the favicon that will be used. The SVG
   version is used by [newer browsers].
+- **fonts/fonts.css** contains the definition of which fonts to load.
+  Custom fonts can be included in the `fonts` directory.
 
 Generally, when you want to tweak the theme, you don't need to override all the
 files. If you only need changes in the stylesheet, there is no point in
