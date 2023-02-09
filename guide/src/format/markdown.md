@@ -220,3 +220,14 @@ To enable it, see the [`output.html.curly-quotes`] config option.
 [tables]: https://github.github.com/gfm/#tables-extension-
 [task list extension]: https://github.github.com/gfm/#task-list-items-extension-
 [`output.html.curly-quotes`]: configuration/renderers.md#html-renderer-options
+
+### Heading attributes { #headingattributes .class1 .class2 }
+
+Headings can have a custom ID and classes. This let's you maintain the same ID even if you change the heading's text, it also let's you add multiple classes in the heading.
+
+Example:
+```md
+# Example heading { #first .class1 .class2 }
+```
+
+This makes the level 1 heading with the content `Example heading`, ID `first`, and classes `class1` and `class2`. Note that the attributes should be space-separated.

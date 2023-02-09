@@ -789,8 +789,10 @@ fn make_data(
 /// Goes through the rendered HTML, making sure all header tags have
 /// an anchor respectively so people can link to sections directly.
 fn build_header_links(html: &str) -> String {
-    static BUILD_HEADER_LINKS: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r"<h(\d)>(.*?)</h\d>").unwrap());
+    static BUILD_HEADER_LINKS: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(r#"<h(\d)(?: id="([^"]+)")?(?: class="([^"]+)")?>(.*?)</h\d>"#).unwrap()
+    });
+    static IGNORE_CLASS: &'static [&str] = &["menu-title"];
 
     let mut id_counter = HashMap::new();
 
@@ -800,7 +802,20 @@ fn build_header_links(html: &str) -> String {
                 .parse()
                 .expect("Regex should ensure we only ever get numbers here");
 
-            insert_link_into_header(level, &caps[2], &mut id_counter)
+            // Ignore .menu-title because now it's getting detected by the regex.
+            if let Some(classes) = caps.get(3) {
+                for class in classes.as_str().split(" ") {
+                    if IGNORE_CLASS.contains(&class) {
+                        return caps[0].to_string();
+                    }
+                }
+            }
+
+            insert_link_into_header(
+                level,
+                caps.get(2).map(|x| x.as_str()).unwrap_or(&caps[4]),
+                &mut id_counter,
+            )
         })
         .into_owned()
 }
