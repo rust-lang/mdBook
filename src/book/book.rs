@@ -277,7 +277,7 @@ fn load_chapter<P: AsRef<Path>>(
         }
 
         let stripped = location
-            .strip_prefix(&src_dir)
+            .strip_prefix(src_dir)
             .expect("Chapters are always inside a book");
 
         Chapter::new(&link.name, content, stripped, parent_names.clone())

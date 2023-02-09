@@ -36,15 +36,15 @@ impl Renderer for MarkdownRenderer {
             if let BookItem::Chapter(ref ch) = *item {
                 if !ch.is_draft_chapter() {
                     utils::fs::write_file(
-                        &ctx.destination,
-                        &ch.path.as_ref().expect("Checked path exists before"),
+                        destination,
+                        ch.path.as_ref().expect("Checked path exists before"),
                         ch.content.as_bytes(),
                     )?;
                 }
             }
         }
 
-        fs::create_dir_all(&destination)
+        fs::create_dir_all(destination)
             .with_context(|| "Unexpected error when constructing destination path")?;
 
         Ok(())

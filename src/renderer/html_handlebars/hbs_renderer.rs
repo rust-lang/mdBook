@@ -99,7 +99,7 @@ impl HtmlHandlebars {
         ctx.data.insert("title".to_owned(), json!(title));
         ctx.data.insert(
             "path_to_root".to_owned(),
-            json!(utils::fs::path_to_root(&path)),
+            json!(utils::fs::path_to_root(path)),
         );
         if let Some(ref section) = ch.number {
             ctx.data
@@ -298,7 +298,7 @@ impl HtmlHandlebars {
                         the `theme/fonts/` directory."
                     );
                 }
-                write_file(destination, "fonts/fonts.css", &fonts_css)?;
+                write_file(destination, "fonts/fonts.css", fonts_css)?;
             }
         }
         if !html_config.copy_fonts && theme.fonts_css.is_none() {
@@ -552,7 +552,7 @@ impl Renderer for HtmlHandlebars {
         // Print version
         let mut print_content = String::new();
 
-        fs::create_dir_all(&destination)
+        fs::create_dir_all(destination)
             .with_context(|| "Unexpected error when constructing destination path")?;
 
         let mut is_index = true;
