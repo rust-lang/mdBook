@@ -70,7 +70,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     };
 
     if let Some(author) = get_author_name() {
-        debug!("Obtained user name from gitconfig: {:?}", author);
+        debug!("Obtained user name from gitconfig: {author:?}");
         config.book.authors.push(author);
         builder.with_config(config);
     }

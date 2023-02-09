@@ -244,7 +244,7 @@ impl Renderer for CmdRenderer {
         if let Err(e) = serde_json::to_writer(&mut stdin, &ctx) {
             // Looks like the backend hung up before we could finish
             // sending it the render context. Log the error and keep going
-            warn!("Error writing the RenderContext to the backend, {}", e);
+            warn!("Error writing the RenderContext to the backend, {e}");
         }
 
         // explicitly close the `stdin` file handle
@@ -254,7 +254,7 @@ impl Renderer for CmdRenderer {
             .wait()
             .with_context(|| "Error waiting for the backend to complete")?;
 
-        trace!("{} exited with output: {:?}", self.cmd, status);
+        trace!("{} exited with output: {status:?}", self.cmd);
 
         if !status.success() {
             error!("Renderer exited with non-zero return code.");

@@ -54,8 +54,7 @@ fn warn_readme_name_conflict<P: AsRef<Path>>(readme_path: P, index_path: P) {
         .parent()
         .unwrap_or_else(|| index_path.as_ref());
     warn!(
-        "It seems that there are both {:?} and index.md under \"{}\".",
-        file_name,
+        "It seems that there are both {file_name:?} and index.md under \"{}\".",
         parent_dir.display()
     );
     warn!(

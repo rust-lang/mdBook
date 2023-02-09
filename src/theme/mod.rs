@@ -112,7 +112,7 @@ impl Theme {
                     return false;
                 }
                 if let Err(e) = load_file_contents(filename, dest) {
-                    warn!("Couldn't load custom file, {}: {}", filename.display(), e);
+                    warn!("Couldn't load custom file, {}: {e}", filename.display());
                     false
                 } else {
                     true

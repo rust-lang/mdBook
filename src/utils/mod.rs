@@ -77,7 +77,7 @@ pub fn unique_id_from_content(content: &str, id_counter: &mut HashMap<String, us
     let id_count = id_counter.entry(id.clone()).or_insert(0);
     let unique_id = match *id_count {
         0 => id,
-        id_count => format!("{}-{}", id, id_count),
+        id_count => format!("{id}-{id_count}"),
     };
     *id_count += 1;
     unique_id
@@ -105,7 +105,7 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
                 if base.ends_with(".md") {
                     base.replace_range(base.len() - 3.., ".html");
                 }
-                return format!("{}{}", base, dest).into();
+                return format!("{base}{dest}").into();
             } else {
                 return dest;
             }
@@ -121,7 +121,7 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
                     .to_str()
                     .expect("utf-8 paths only");
                 if !base.is_empty() {
-                    write!(fixed_link, "{}/", base).unwrap();
+                    write!(fixed_link, "{base}/").unwrap();
                 }
             }
 
@@ -154,7 +154,7 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
         HTML_LINK
             .replace_all(&html, |caps: &regex::Captures<'_>| {
                 let fixed = fix(caps[2].into(), path);
-                format!("{}{}\"", &caps[1], fixed)
+                format!("{}{fixed}\"", &caps[1])
             })
             .into_owned()
             .into()
@@ -236,10 +236,10 @@ fn clean_codeblock_headers(event: Event<'_>) -> Event<'_> {
 
 /// Prints a "backtrace" of some `Error`.
 pub fn log_backtrace(e: &Error) {
-    error!("Error: {}", e);
+    error!("Error: {e}");
 
     for cause in e.chain().skip(1) {
-        error!("\tCaused By: {}", cause);
+        error!("\tCaused By: {cause}");
     }
 }
 

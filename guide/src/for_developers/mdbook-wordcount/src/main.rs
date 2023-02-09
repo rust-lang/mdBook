@@ -26,8 +26,8 @@ fn main() {
             }
 
             let num_words = count_words(ch);
-            println!("{}: {}", ch.name, num_words);
-            writeln!(f, "{}: {}", ch.name, num_words).unwrap();
+            println!("{}: {num_words}", ch.name);
+            writeln!(f, "{}: {num_words}", ch.name).unwrap();
 
             if cfg.deny_odds && num_words % 2 == 1 {
                 eprintln!("{} has an odd number of words!", ch.name);

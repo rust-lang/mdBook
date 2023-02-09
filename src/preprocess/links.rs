@@ -116,9 +116,9 @@ where
                 previous_end_index = link.end_index;
             }
             Err(e) => {
-                error!("Error updating \"{}\", {}", link.link_text, e);
+                error!("Error updating \"{}\", {e}", link.link_text);
                 for cause in e.chain().skip(1) {
-                    warn!("Caused By: {}", cause);
+                    warn!("Caused By: {cause}");
                 }
 
                 // This should make sure we include the raw `{{# ... }}` snippet
@@ -378,12 +378,7 @@ impl<'a> Link<'a> {
                 if !contents.ends_with('\n') {
                     contents.push('\n');
                 }
-                Ok(format!(
-                    "```{}{}\n{}```\n",
-                    ftype,
-                    attrs.join(","),
-                    contents
-                ))
+                Ok(format!("```{ftype}{}\n{contents}```\n", attrs.join(",")))
             }
             LinkType::Title(title) => {
                 *chapter_title = title.to_owned();
@@ -493,7 +488,7 @@ mod tests {
         let s = "Some random text with {{#playground file.rs}} and {{#playground test.rs }}...";
 
         let res = find_links(s).collect::<Vec<_>>();
-        println!("\nOUTPUT: {:?}\n", res);
+        println!("\nOUTPUT: {res:?}\n");
 
         assert_eq!(
             res,
@@ -519,7 +514,7 @@ mod tests {
         let s = "Some random text with {{#playground foo-bar\\baz/_c++.rs}}...";
 
         let res = find_links(s).collect::<Vec<_>>();
-        println!("\nOUTPUT: {:?}\n", res);
+        println!("\nOUTPUT: {res:?}\n");
 
         assert_eq!(
             res,
@@ -536,7 +531,7 @@ mod tests {
     fn test_find_links_with_range() {
         let s = "Some random text with {{#include file.rs:10:20}}...";
         let res = find_links(s).collect::<Vec<_>>();
-        println!("\nOUTPUT: {:?}\n", res);
+        println!("\nOUTPUT: {res:?}\n");
         assert_eq!(
             res,
             vec![Link {
@@ -555,7 +550,7 @@ mod tests {
     fn test_find_links_with_line_number() {
         let s = "Some random text with {{#include file.rs:10}}...";
         let res = find_links(s).collect::<Vec<_>>();
-        println!("\nOUTPUT: {:?}\n", res);
+        println!("\nOUTPUT: {res:?}\n");
         assert_eq!(
             res,
             vec![Link {
@@ -574,7 +569,7 @@ mod tests {
     fn test_find_links_with_from_range() {
         let s = "Some random text with {{#include file.rs:10:}}...";
         let res = find_links(s).collect::<Vec<_>>();
-        println!("\nOUTPUT: {:?}\n", res);
+        println!("\nOUTPUT: {res:?}\n");
         assert_eq!(
             res,
             vec![Link {
@@ -593,7 +588,7 @@ mod tests {
     fn test_find_links_with_to_range() {
         let s = "Some random text with {{#include file.rs::20}}...";
         let res = find_links(s).collect::<Vec<_>>();
-        println!("\nOUTPUT: {:?}\n", res);
+        println!("\nOUTPUT: {res:?}\n");
         assert_eq!(
             res,
             vec![Link {
@@ -612,7 +607,7 @@ mod tests {
     fn test_find_links_with_full_range() {
         let s = "Some random text with {{#include file.rs::}}...";
         let res = find_links(s).collect::<Vec<_>>();
-        println!("\nOUTPUT: {:?}\n", res);
+        println!("\nOUTPUT: {res:?}\n");
         assert_eq!(
             res,
             vec![Link {
@@ -631,7 +626,7 @@ mod tests {
     fn test_find_links_with_no_range_specified() {
         let s = "Some random text with {{#include file.rs}}...";
         let res = find_links(s).collect::<Vec<_>>();
-        println!("\nOUTPUT: {:?}\n", res);
+        println!("\nOUTPUT: {res:?}\n");
         assert_eq!(
             res,
             vec![Link {
@@ -650,7 +645,7 @@ mod tests {
     fn test_find_links_with_anchor() {
         let s = "Some random text with {{#include file.rs:anchor}}...";
         let res = find_links(s).collect::<Vec<_>>();
-        println!("\nOUTPUT: {:?}\n", res);
+        println!("\nOUTPUT: {res:?}\n");
         assert_eq!(
             res,
             vec![Link {
@@ -670,7 +665,7 @@ mod tests {
         let s = "Some random text with escaped playground \\{{#playground file.rs editable}} ...";
 
         let res = find_links(s).collect::<Vec<_>>();
-        println!("\nOUTPUT: {:?}\n", res);
+        println!("\nOUTPUT: {res:?}\n");
 
         assert_eq!(
             res,
@@ -690,7 +685,7 @@ mod tests {
                  more\n text {{#playground my.rs editable no_run should_panic}} ...";
 
         let res = find_links(s).collect::<Vec<_>>();
-        println!("\nOUTPUT: {:?}\n", res);
+        println!("\nOUTPUT: {res:?}\n");
         assert_eq!(
             res,
             vec![
@@ -721,7 +716,7 @@ mod tests {
                  no_run should_panic}} ...";
 
         let res = find_links(s).collect::<Vec<_>>();
-        println!("\nOUTPUT: {:?}\n", res);
+        println!("\nOUTPUT: {res:?}\n");
         assert_eq!(res.len(), 3);
         assert_eq!(
             res[0],

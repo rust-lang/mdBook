@@ -89,7 +89,7 @@ fn remove_emphasis(
     });
 
     cmark(events, &mut buf, None).map(|_| buf).map_err(|err| {
-        Error::from(format!("Markdown serialization failed: {}", err))
+        Error::from(format!("Markdown serialization failed: {err}"))
     })
 }
 ```

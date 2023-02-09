@@ -91,10 +91,7 @@ fn filter_ignored_files(exclusion_checker: gitignore::File, paths: &[PathBuf]) -
         .filter(|path| match exclusion_checker.is_excluded(path) {
             Ok(exclude) => !exclude,
             Err(error) => {
-                warn!(
-                    "Unable to determine if {:?} is excluded: {:?}. Including it.",
-                    &path, error
-                );
+                warn!("Unable to determine if {path:?} is excluded: {error:?}. Including it.");
                 true
             }
         })
@@ -116,7 +113,7 @@ where
     {
         Ok(d) => d,
         Err(e) => {
-            error!("Error while trying to watch the files:\n\n\t{:?}", e);
+            error!("Error while trying to watch the files:\n\n\t{e:?}");
             std::process::exit(1)
         }
     };
@@ -124,7 +121,7 @@ where
 
     // Add the source directory to the watcher
     if let Err(e) = watcher.watch(&book.source_dir(), Recursive) {
-        error!("Error while watching {:?}:\n    {:?}", book.source_dir(), e);
+        error!("Error while watching {:?}:\n    {e:?}", book.source_dir());
         std::process::exit(1);
     };
 
@@ -136,10 +133,7 @@ where
     for dir in &book.config.build.extra_watch_dirs {
         let path = dir.canonicalize().unwrap();
         if let Err(e) = watcher.watch(&path, Recursive) {
-            error!(
-                "Error while watching extra directory {:?}:\n    {:?}",
-                path, e
-            );
+            error!("Error while watching extra directory {path:?}:\n    {e:?}");
             std::process::exit(1);
         }
     }

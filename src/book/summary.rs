@@ -190,7 +190,7 @@ macro_rules! collect_events {
 
         loop {
             let event = $stream.next().map(|(ev, _range)| ev);
-            trace!("Next event: {:?}", event);
+            trace!("Next event: {event:?}");
 
             match event {
                 Some($delimiter) => break,
@@ -394,7 +394,7 @@ impl<'a> SummaryParser<'a> {
                     items.extend(bunch_of_items);
                 }
                 Some(Event::Start(other_tag)) => {
-                    trace!("Skipping contents of {:?}", other_tag);
+                    trace!("Skipping contents of {other_tag:?}");
 
                     // Skip over the contents of this tag
                     while let Some(event) = self.next_event() {
@@ -426,7 +426,7 @@ impl<'a> SummaryParser<'a> {
     /// Push an event back to the tail of the stream.
     fn back(&mut self, ev: Event<'a>) {
         assert!(self.back.is_none());
-        trace!("Back: {:?}", ev);
+        trace!("Back: {ev:?}");
         self.back = Some(ev);
     }
 
@@ -438,13 +438,13 @@ impl<'a> SummaryParser<'a> {
             })
         });
 
-        trace!("Next event: {:?}", next);
+        trace!("Next event: {next:?}");
 
         next
     }
 
     fn parse_nested_numbered(&mut self, parent: &SectionNumber) -> Result<Vec<SummaryItem>> {
-        debug!("Parsing numbered chapters at level {}", parent);
+        debug!("Parsing numbered chapters at level {parent}");
         let mut items = Vec::new();
 
         loop {
@@ -492,8 +492,7 @@ impl<'a> SummaryParser<'a> {
                     let mut number = parent.clone();
                     number.0.push(num_existing_items as u32 + 1);
                     trace!(
-                        "Found chapter: {} {} ({})",
-                        number,
+                        "Found chapter: {number} {} ({})",
                         link.name,
                         link.location
                             .as_ref()
@@ -506,7 +505,7 @@ impl<'a> SummaryParser<'a> {
                     return Ok(SummaryItem::Link(link));
                 }
                 other => {
-                    warn!("Expected a start of a link, actually got {:?}", other);
+                    warn!("Expected a start of a link, actually got {other:?}");
                     bail!(self.parse_error(
                         "The link items for nested chapters must only contain a hyperlink"
                     ));
@@ -517,12 +516,7 @@ impl<'a> SummaryParser<'a> {
 
     fn parse_error<D: Display>(&self, msg: D) -> Error {
         let (line, col) = self.current_location();
-        anyhow::anyhow!(
-            "failed to parse SUMMARY.md line {}, column {}: {}",
-            line,
-            col,
-            msg
-        )
+        anyhow::anyhow!("failed to parse SUMMARY.md line {line}, column {col}: {msg}")
     }
 
     /// Try to parse the title line.
@@ -598,7 +592,7 @@ impl Display for SectionNumber {
             write!(f, "0")
         } else {
             for item in &self.0 {
-                write!(f, "{}.", item)?;
+                write!(f, "{item}.")?;
             }
             Ok(())
         }
@@ -745,7 +739,7 @@ mod tests {
 
         let href = match parser.stream.next() {
             Some((Event::Start(Tag::Link(_type, href, _title)), _range)) => href.to_string(),
-            other => panic!("Unreachable, {:?}", other),
+            other => panic!("Unreachable, {other:?}"),
         };
 
         let got = parser.parse_link(href);

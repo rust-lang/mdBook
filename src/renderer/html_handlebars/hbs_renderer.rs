@@ -123,7 +123,7 @@ impl HtmlHandlebars {
             let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
             let rendered_index =
                 self.post_process(rendered_index, &ctx.html_config.playground, ctx.edition);
-            debug!("Creating index.html from {}", ctx_path);
+            debug!("Creating index.html from {ctx_path}");
             utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
         }
 
@@ -142,13 +142,13 @@ impl HtmlHandlebars {
         let content_404 = if let Some(ref filename) = html_config.input_404 {
             let path = src_dir.join(filename);
             std::fs::read_to_string(&path)
-                .with_context(|| format!("unable to open 404 input file {:?}", path))?
+                .with_context(|| format!("unable to open 404 input file {path:?}"))?
         } else {
             // 404 input not explicitly configured try the default file 404.md
             let default_404_location = src_dir.join("404.md");
             if default_404_location.exists() {
                 std::fs::read_to_string(&default_404_location).with_context(|| {
-                    format!("unable to open 404 input file {:?}", default_404_location)
+                    format!("unable to open 404 input file {default_404_location:?}")
                 })?
             } else {
                 "# Document not found (404)\n\nThis URL is invalid, sorry. Please use the \
@@ -219,7 +219,7 @@ impl HtmlHandlebars {
         )?;
 
         if let Some(cname) = &html_config.cname {
-            write_file(destination, "CNAME", format!("{}\n", cname).as_bytes())?;
+            write_file(destination, "CNAME", format!("{cname}\n").as_bytes())?;
         }
 
         write_file(destination, "book.js", &theme.js)?;
@@ -419,7 +419,7 @@ impl HtmlHandlebars {
         log::debug!("Emitting redirects");
 
         for (original, new) in redirects {
-            log::debug!("Redirecting \"{}\" → \"{}\"", original, new);
+            log::debug!(r#"Redirecting "{original}" → "{new}""#);
             // Note: all paths are relative to the build directory, so the
             // leading slash in an absolute path means nothing (and would mess
             // up `root.join(original)`).
@@ -440,9 +440,8 @@ impl HtmlHandlebars {
         if original.exists() {
             // sanity check to avoid accidentally overwriting a real file.
             let msg = format!(
-                "Not redirecting \"{}\" to \"{}\" because it already exists. Are you sure it needs to be redirected?",
+                "Not redirecting \"{}\" to \"{destination}\" because it already exists. Are you sure it needs to be redirected?",
                 original.display(),
-                destination,
             );
             return Err(Error::msg(msg));
         }
@@ -820,12 +819,7 @@ fn insert_link_into_header(
 ) -> String {
     let id = utils::unique_id_from_content(content, id_counter);
 
-    format!(
-        r##"<h{level} id="{id}"><a class="header" href="#{id}">{text}</a></h{level}>"##,
-        level = level,
-        id = id,
-        text = content
-    )
+    format!(r##"<h{level} id="{id}"><a class="header" href="#{id}">{content}</a></h{level}>"##)
 }
 
 // The rust book uses annotations for rustdoc to test code snippets,
@@ -846,12 +840,7 @@ fn fix_code_blocks(html: &str) -> String {
             let classes = &caps[2].replace(',', " ");
             let after = &caps[3];
 
-            format!(
-                r#"<code{before}class="{classes}"{after}>"#,
-                before = before,
-                classes = classes,
-                after = after
-            )
+            format!(r#"<code{before}class="{classes}"{after}>"#)
         })
         .into_owned()
 }
@@ -894,9 +883,7 @@ fn add_playground_pre(
 
                     // wrap the contents in an external pre block
                     format!(
-                        "<pre class=\"playground\"><code class=\"{}{}\">{}</code></pre>",
-                        classes,
-                        edition_class,
+                        "<pre class=\"playground\"><code class=\"{classes}{edition_class}\">{}</code></pre>",
                         {
                             let content: Cow<'_, str> = if playground_config.editable
                                 && classes.contains("editable")
@@ -908,14 +895,14 @@ fn add_playground_pre(
                                 // we need to inject our own main
                                 let (attrs, code) = partition_source(code);
 
-                                format!("# #![allow(unused)]\n{}#fn main() {{\n{}#}}", attrs, code)
+                                format!("# #![allow(unused)]\n{attrs}#fn main() {{\n{code}#}}")
                                     .into()
                             };
                             hide_lines(&content)
                         }
                     )
                 } else {
-                    format!("<code class=\"{}\">{}</code>", classes, hide_lines(code))
+                    format!("<code class=\"{classes}\">{}</code>", hide_lines(code))
                 }
             } else {
                 // not language-rust, so no-op

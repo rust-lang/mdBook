@@ -86,7 +86,7 @@ impl BookBuilder {
         match MDBook::load(&self.root) {
             Ok(book) => Ok(book),
             Err(e) => {
-                error!("{}", e);
+                error!("{e}");
 
                 panic!(
                     "The BookBuilder should always create a valid book. If you are seeing this it \

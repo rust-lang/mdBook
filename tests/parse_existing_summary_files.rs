@@ -30,7 +30,7 @@ macro_rules! summary_md_test {
             if let Err(e) = book::parse_summary(&content) {
                 eprintln!("Error parsing {}", filename.display());
                 eprintln!();
-                eprintln!("{:?}", e);
+                eprintln!("{e:?}");
                 panic!();
             }
         }

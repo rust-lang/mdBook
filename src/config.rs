@@ -137,7 +137,7 @@ impl Config {
             env::vars().filter_map(|(key, value)| parse_env(&key).map(|index| (index, value)));
 
         for (key, value) in overrides {
-            trace!("{} => {}", key, value);
+            trace!("{key} => {value}");
             let parsed_value = serde_json::from_str(&value)
                 .unwrap_or_else(|_| serde_json::Value::String(value.to_string()));
 
@@ -145,7 +145,7 @@ impl Config {
                 if let serde_json::Value::Object(ref map) = parsed_value {
                     // To `set` each `key`, we wrap them as `prefix.key`
                     for (k, v) in map {
-                        let full_key = format!("{}.{}", key, k);
+                        let full_key = format!("{key}.{k}");
                         self.set(&full_key, v).expect("unreachable");
                     }
                     return;
@@ -197,7 +197,7 @@ impl Config {
         let name = name.as_ref();
         match self.get_deserialized_opt(name)? {
             Some(value) => Ok(value),
-            None => bail!("Key not found, {:?}", name),
+            None => bail!("Key not found, {name:?}"),
         }
     }
 

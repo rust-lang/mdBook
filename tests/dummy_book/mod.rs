@@ -84,10 +84,8 @@ pub fn assert_contains_strings<P: AsRef<Path>>(filename: P, strings: &[&str]) {
     for s in strings {
         assert!(
             content.contains(s),
-            "Searching for {:?} in {}\n\n{}",
-            s,
+            "Searching for {s:?} in {}\n\n{content}",
             filename.display(),
-            content
         );
     }
 }
@@ -99,10 +97,8 @@ pub fn assert_doesnt_contain_strings<P: AsRef<Path>>(filename: P, strings: &[&st
     for s in strings {
         assert!(
             !content.contains(s),
-            "Found {:?} in {}\n\n{}",
-            s,
+            "Found {s:?} in {}\n\n{content}",
             filename.display(),
-            content
         );
     }
 }

@@ -136,7 +136,7 @@ fn get_book_dir(args: &ArgMatches) -> PathBuf {
 fn open<P: AsRef<OsStr>>(path: P) {
     info!("Opening web browser");
     if let Err(e) = opener::open(path) {
-        error!("Error opening web browser: {}", e);
+        error!("Error opening web browser: {e}");
     }
 }
 

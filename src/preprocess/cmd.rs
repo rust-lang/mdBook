@@ -53,7 +53,7 @@ impl CmdPreprocessor {
         if let Err(e) = self.write_input(stdin, book, ctx) {
             // Looks like the backend hung up before we could finish
             // sending it the render context. Log the error and keep going
-            warn!("Error writing the RenderContext to the backend, {}", e);
+            warn!("Error writing the RenderContext to the backend, {e}");
         }
     }
 
@@ -117,7 +117,7 @@ impl Preprocessor for CmdPreprocessor {
             )
         })?;
 
-        trace!("{} exited with output: {:?}", self.cmd, output);
+        trace!("{} exited with output: {output:?}", self.cmd);
         ensure!(
             output.status.success(),
             format!(
@@ -136,18 +136,16 @@ impl Preprocessor for CmdPreprocessor {
 
     fn supports_renderer(&self, renderer: &str) -> bool {
         debug!(
-            "Checking if the \"{}\" preprocessor supports \"{}\"",
+            "Checking if the \"{}\" preprocessor supports \"{renderer}\"",
             self.name(),
-            renderer
         );
 
         let mut cmd = match self.command() {
             Ok(c) => c,
             Err(e) => {
                 warn!(
-                    "Unable to create the command for the \"{}\" preprocessor, {}",
+                    "Unable to create the command for the \"{}\" preprocessor, {e}",
                     self.name(),
-                    e
                 );
                 return false;
             }
