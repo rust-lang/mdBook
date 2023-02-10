@@ -1,0 +1,8 @@
+root: doc-api
+structure:
+  summary: summary.md
+  assets: assets
+headerIncludes:  |
+  <script>
+  document.getElementById("demo").innerHTML = "Hello JavaScript!";
+  </script> 
