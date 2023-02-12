@@ -813,7 +813,9 @@ fn build_header_links(html: &str) -> String {
 
             insert_link_into_header(
                 level,
-                caps.get(2).map(|x| x.as_str()).unwrap_or(&caps[4]),
+                &caps[4],
+                caps.get(2).map(|x| x.as_str().to_string()),
+                caps.get(3).map(|x| x.as_str().to_string()),
                 &mut id_counter,
             )
         })
@@ -825,15 +827,19 @@ fn build_header_links(html: &str) -> String {
 fn insert_link_into_header(
     level: usize,
     content: &str,
+    id: Option<String>,
+    classes: Option<String>,
     id_counter: &mut HashMap<String, usize>,
 ) -> String {
-    let id = utils::unique_id_from_content(content, id_counter);
+    let id = id.unwrap_or_else(|| utils::unique_id_from_content(content, id_counter));
+    let classes = classes.unwrap_or("".to_string());
 
     format!(
-        r##"<h{level} id="{id}"><a class="header" href="#{id}">{text}</a></h{level}>"##,
+        r##"<h{level} id="{id}" classes="{classes}"><a class="header" href="#{id}">{text}</a></h{level}>"##,
         level = level,
         id = id,
-        text = content
+        text = content,
+        classes = classes
     )
 }
 
