@@ -792,7 +792,7 @@ fn build_header_links(html: &str) -> String {
     static BUILD_HEADER_LINKS: Lazy<Regex> = Lazy::new(|| {
         Regex::new(r#"<h(\d)(?: id="([^"]+)")?(?: class="([^"]+)")?>(.*?)</h\d>"#).unwrap()
     });
-    static IGNORE_CLASS: &'static [&str] = &["menu-title"];
+    static IGNORE_CLASS: &[&str] = &["menu-title"];
 
     let mut id_counter = HashMap::new();
 
@@ -835,7 +835,7 @@ fn insert_link_into_header(
     let classes = classes.unwrap_or("".to_string());
 
     format!(
-        r##"<h{level} id="{id}" classes="{classes}"><a class="header" href="#{id}">{text}</a></h{level}>"##,
+        r##"<h{level} id="{id}" class="{classes}"><a class="header" href="#{id}">{text}</a></h{level}>"##,
         level = level,
         id = id,
         text = content,
@@ -1014,27 +1014,31 @@ mod tests {
         let inputs = vec![
             (
                 "blah blah <h1>Foo</h1>",
-                r##"blah blah <h1 id="foo"><a class="header" href="#foo">Foo</a></h1>"##,
+                r##"blah blah <h1 id="foo" class=""><a class="header" href="#foo">Foo</a></h1>"##,
             ),
             (
                 "<h1>Foo</h1>",
-                r##"<h1 id="foo"><a class="header" href="#foo">Foo</a></h1>"##,
+                r##"<h1 id="foo" class=""><a class="header" href="#foo">Foo</a></h1>"##,
             ),
             (
                 "<h3>Foo^bar</h3>",
-                r##"<h3 id="foobar"><a class="header" href="#foobar">Foo^bar</a></h3>"##,
+                r##"<h3 id="foobar" class=""><a class="header" href="#foobar">Foo^bar</a></h3>"##,
             ),
             (
                 "<h4></h4>",
-                r##"<h4 id=""><a class="header" href="#"></a></h4>"##,
+                r##"<h4 id="" class=""><a class="header" href="#"></a></h4>"##,
             ),
             (
                 "<h4><em>Hï</em></h4>",
-                r##"<h4 id="hï"><a class="header" href="#hï"><em>Hï</em></a></h4>"##,
+                r##"<h4 id="hï" class=""><a class="header" href="#hï"><em>Hï</em></a></h4>"##,
             ),
             (
                 "<h1>Foo</h1><h3>Foo</h3>",
-                r##"<h1 id="foo"><a class="header" href="#foo">Foo</a></h1><h3 id="foo-1"><a class="header" href="#foo-1">Foo</a></h3>"##,
+                r##"<h1 id="foo" class=""><a class="header" href="#foo">Foo</a></h1><h3 id="foo-1" class=""><a class="header" href="#foo-1">Foo</a></h3>"##,
+            ),
+            (
+                r##"<h1 id="foobar" class="class1 class2">Foo</h1>"##,
+                r##"<h1 id="foobar" class="class1 class2"><a class="header" href="#foobar">Foo</a></h1>"##,
             ),
         ];
 
