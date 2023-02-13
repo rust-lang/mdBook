@@ -1,7 +1,16 @@
 # Changelog
 
+## mdBook 0.4.27
+[v0.4.26...v0.4.27](https://github.com/rust-lang/mdBook/compare/v0.4.26...v0.4.27)
+
+### Changed
+- Reverted the dependency update to the `toml` crate. This was an unintentional breaking change in 0.4.26.
+  [#2021](https://github.com/rust-lang/mdBook/pull/2021)
+
 ## mdBook 0.4.26
 [v0.4.25...v0.4.26](https://github.com/rust-lang/mdBook/compare/v0.4.25...v0.4.26)
+
+**The 0.4.26 release has been yanked due to an unintentional breaking change.**
 
 ### Changed
 - Removed custom scrollbars for webkit browsers
