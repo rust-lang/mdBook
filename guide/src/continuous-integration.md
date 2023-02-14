@@ -83,7 +83,7 @@ Or if you have your own style checks, spell checker, or any other tests it might
 ## Deploying
 
 You may want to automatically deploy your book.
-Some may want to do this with every time a change is pushed, and others may want to only deploy when a specific release is tagged.
+Some may want to do this every time a change is pushed, and others may want to only deploy when a specific release is tagged.
 
 You'll also need to understand the specifics on how to push a change to your web service.
 For example, [GitHub Pages] just requires committing the output onto a specific git branch.
