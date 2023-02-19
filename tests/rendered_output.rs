@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate pretty_assertions;
-
 mod dummy_book;
 
 use crate::dummy_book::{assert_contains_strings, assert_doesnt_contain_strings, DummyBook};
@@ -10,6 +7,7 @@ use mdbook::config::Config;
 use mdbook::errors::*;
 use mdbook::utils::fs::write_file;
 use mdbook::MDBook;
+use pretty_assertions::assert_eq;
 use select::document::Document;
 use select::predicate::{Class, Name, Predicate};
 use std::collections::HashMap;
@@ -841,4 +839,112 @@ mod search {
             panic!("The search index has changed from the fixture");
         }
     }
+}
+
+#[test]
+fn custom_fonts() {
+    // Tests to ensure custom fonts are copied as expected.
+    let builtin_fonts = [
+        "OPEN-SANS-LICENSE.txt",
+        "SOURCE-CODE-PRO-LICENSE.txt",
+        "fonts.css",
+        "open-sans-v17-all-charsets-300.woff2",
+        "open-sans-v17-all-charsets-300italic.woff2",
+        "open-sans-v17-all-charsets-600.woff2",
+        "open-sans-v17-all-charsets-600italic.woff2",
+        "open-sans-v17-all-charsets-700.woff2",
+        "open-sans-v17-all-charsets-700italic.woff2",
+        "open-sans-v17-all-charsets-800.woff2",
+        "open-sans-v17-all-charsets-800italic.woff2",
+        "open-sans-v17-all-charsets-italic.woff2",
+        "open-sans-v17-all-charsets-regular.woff2",
+        "source-code-pro-v11-all-charsets-500.woff2",
+    ];
+    let actual_files = |path: &Path| -> Vec<String> {
+        let mut actual: Vec<_> = path
+            .read_dir()
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name().into_string().unwrap())
+            .collect();
+        actual.sort();
+        actual
+    };
+    let has_fonts_css = |path: &Path| -> bool {
+        let contents = fs::read_to_string(path.join("book/index.html")).unwrap();
+        contents.contains("fonts/fonts.css")
+    };
+
+    // No theme:
+    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
+    let p = temp.path();
+    MDBook::init(p).build().unwrap();
+    MDBook::load(p).unwrap().build().unwrap();
+    assert_eq!(actual_files(&p.join("book/fonts")), &builtin_fonts);
+    assert!(has_fonts_css(p));
+
+    // Full theme.
+    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
+    let p = temp.path();
+    MDBook::init(p).copy_theme(true).build().unwrap();
+    assert_eq!(actual_files(&p.join("theme/fonts")), &builtin_fonts);
+    MDBook::load(p).unwrap().build().unwrap();
+    assert_eq!(actual_files(&p.join("book/fonts")), &builtin_fonts);
+    assert!(has_fonts_css(p));
+
+    // Mixed with copy_fonts=true
+    // This should generate a deprecation warning.
+    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
+    let p = temp.path();
+    MDBook::init(p).build().unwrap();
+    write_file(&p.join("theme/fonts"), "fonts.css", b"/*custom*/").unwrap();
+    write_file(&p.join("theme/fonts"), "myfont.woff", b"").unwrap();
+    MDBook::load(p).unwrap().build().unwrap();
+    assert!(has_fonts_css(p));
+    let mut expected = Vec::from(builtin_fonts);
+    expected.push("myfont.woff");
+    expected.sort();
+    assert_eq!(actual_files(&p.join("book/fonts")), expected.as_slice());
+
+    // copy-fonts=false, no theme
+    // This should generate a deprecation warning.
+    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
+    let p = temp.path();
+    MDBook::init(p).build().unwrap();
+    let config = Config::from_str("output.html.copy-fonts = false").unwrap();
+    MDBook::load_with_config(p, config)
+        .unwrap()
+        .build()
+        .unwrap();
+    assert!(!has_fonts_css(p));
+    assert!(!p.join("book/fonts").exists());
+
+    // copy-fonts=false with empty fonts.css
+    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
+    let p = temp.path();
+    MDBook::init(p).build().unwrap();
+    write_file(&p.join("theme/fonts"), "fonts.css", b"").unwrap();
+    let config = Config::from_str("output.html.copy-fonts = false").unwrap();
+    MDBook::load_with_config(p, config)
+        .unwrap()
+        .build()
+        .unwrap();
+    assert!(!has_fonts_css(p));
+    assert!(!p.join("book/fonts").exists());
+
+    // copy-fonts=false with fonts theme
+    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
+    let p = temp.path();
+    MDBook::init(p).build().unwrap();
+    write_file(&p.join("theme/fonts"), "fonts.css", b"/*custom*/").unwrap();
+    write_file(&p.join("theme/fonts"), "myfont.woff", b"").unwrap();
+    let config = Config::from_str("output.html.copy-fonts = false").unwrap();
+    MDBook::load_with_config(p, config)
+        .unwrap()
+        .build()
+        .unwrap();
+    assert!(has_fonts_css(p));
+    assert_eq!(
+        actual_files(&p.join("book/fonts")),
+        &["fonts.css", "myfont.woff"]
+    );
 }

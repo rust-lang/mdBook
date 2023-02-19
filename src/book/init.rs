@@ -6,6 +6,7 @@ use super::MDBook;
 use crate::config::Config;
 use crate::errors::*;
 use crate::theme;
+use crate::utils::fs::write_file;
 use log::{debug, error, info, trace};
 
 /// A helper for setting up a new book and its directory structure.
@@ -157,6 +158,19 @@ impl BookBuilder {
 
         let mut highlight_js = File::create(themedir.join("highlight.js"))?;
         highlight_js.write_all(theme::HIGHLIGHT_JS)?;
+
+        write_file(&themedir.join("fonts"), "fonts.css", theme::fonts::CSS)?;
+        for (file_name, contents) in theme::fonts::LICENSES {
+            write_file(&themedir, file_name, contents)?;
+        }
+        for (file_name, contents) in theme::fonts::OPEN_SANS.iter() {
+            write_file(&themedir, file_name, contents)?;
+        }
+        write_file(
+            &themedir,
+            theme::fonts::SOURCE_CODE_PRO.0,
+            theme::fonts::SOURCE_CODE_PRO.1,
+        )?;
 
         Ok(())
     }

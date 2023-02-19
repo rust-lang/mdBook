@@ -40,6 +40,6 @@ body:
     attributes:
       label: Version
       description: >
-        Please paste the output of running `mdbook version` or which version
+        Please paste the output of running `mdbook --version` or which version
         of the library you are using.
       render: text

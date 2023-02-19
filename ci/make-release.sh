@@ -17,7 +17,7 @@ then
   export "CARGO_TARGET_$(echo $target | tr a-z- A-Z_)_LINKER"=rust-lld
 fi
 export CARGO_PROFILE_RELEASE_LTO=true
-cargo build --bin mdbook --release --target $target
+cargo build --locked --bin mdbook --release --target $target
 cd target/$target/release
 case $1 in
   ubuntu*)

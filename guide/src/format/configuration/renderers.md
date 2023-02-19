@@ -126,7 +126,10 @@ The following configuration options are available:
   that occur in code blocks and code spans. Defaults to `false`.
 - **mathjax-support:** Adds support for [MathJax](../mathjax.md). Defaults to
   `false`.
-- **copy-fonts:** Copies fonts.css and respective font files to the output directory and use them in the default theme. Defaults to `true`.
+- **copy-fonts:** (**Deprecated**) If `true` (the default), mdBook uses its built-in fonts which are copied to the output directory.
+  If `false`, the built-in fonts will not be used.
+  This option is deprecated. If you want to define your own custom fonts,
+  create a `theme/fonts/fonts.css` file and store the fonts in the `theme/fonts/` directory.
 - **google-analytics:** This field has been deprecated and will be removed in a future release.
   Use the `theme/head.hbs` file to add the appropriate Google Analytics code instead.
 - **additional-css:** If you need to slightly change the appearance of your book

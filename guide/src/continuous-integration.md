@@ -21,7 +21,7 @@ A simple approach would be to use the popular `curl` CLI tool to download the ex
 
 ```sh
 mkdir bin
-curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.25/mdbook-v0.4.25-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=bin
+curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.27/mdbook-v0.4.27-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=bin
 bin/mdbook build
 ```
 
@@ -83,7 +83,7 @@ Or if you have your own style checks, spell checker, or any other tests it might
 ## Deploying
 
 You may want to automatically deploy your book.
-Some may want to do this with every time a change is pushed, and others may want to only deploy when a specific release is tagged.
+Some may want to do this every time a change is pushed, and others may want to only deploy when a specific release is tagged.
 
 You'll also need to understand the specifics on how to push a change to your web service.
 For example, [GitHub Pages] just requires committing the output onto a specific git branch.
