@@ -210,7 +210,7 @@ impl MDBook {
         }
         let preprocess_ctx = PreprocessorContext::new(
             self.root.clone(),
-            config,
+            config.clone(),
             renderer.name().to_string(),
         );
 
@@ -231,7 +231,7 @@ impl MDBook {
         let mut render_context = RenderContext::new(
             self.root.clone(),
             preprocessed_book,
-            self.config.clone(),
+            config,
             build_dir,
         );
         render_context
