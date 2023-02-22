@@ -94,6 +94,7 @@ impl HtmlHandlebars {
         };
 
         ctx.data.insert("path".to_owned(), json!(path));
+        ctx.data.insert("path_html".to_owned(), json!(filepath));
         ctx.data.insert("content".to_owned(), json!(content));
         ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
         ctx.data.insert("title".to_owned(), json!(title));
@@ -635,6 +636,9 @@ fn make_data(
         "language".to_owned(),
         json!(config.book.language.clone().unwrap_or_default()),
     );
+    if !config.book.translations.is_empty() {
+        data.insert("translations".to_owned(), json!(config.book.translations));
+    }
     data.insert(
         "book_title".to_owned(),
         json!(config.book.title.clone().unwrap_or_default()),

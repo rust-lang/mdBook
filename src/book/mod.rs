@@ -190,18 +190,31 @@ impl MDBook {
         info!("Book building has started");
 
         for renderer in &self.renderers {
-            self.execute_build_process(&**renderer)?;
+            // build for the default language
+            self.execute_build_process(&**renderer, None)?;
+            // build for each translation language
+            for translation in &self.config.book.translations {
+                self.execute_build_process(&**renderer, Some(translation))?;
+            }
         }
 
         Ok(())
     }
 
     /// Run the entire build process for a particular [`Renderer`].
-    pub fn execute_build_process(&self, renderer: &dyn Renderer) -> Result<()> {
+    pub fn execute_build_process(
+        &self,
+        renderer: &dyn Renderer,
+        translation: Option<&str>,
+    ) -> Result<()> {
         let mut preprocessed_book = self.book.clone();
+        let mut config = self.config.clone();
+        if let Some(translation) = translation {
+            config.book.language = Some(translation.to_string());
+        }
         let preprocess_ctx = PreprocessorContext::new(
             self.root.clone(),
-            self.config.clone(),
+            config.clone(),
             renderer.name().to_string(),
         );
 
@@ -213,19 +226,27 @@ impl MDBook {
         }
 
         let name = renderer.name();
-        let build_dir = self.build_dir_for(name);
+        let mut build_dir = self.build_dir_for(name);
+        // Use sub-dir for each translation
+        if let Some(translation) = translation {
+            build_dir = build_dir.join(translation);
+        }
 
-        let mut render_context = RenderContext::new(
-            self.root.clone(),
-            preprocessed_book,
-            self.config.clone(),
-            build_dir,
-        );
+        let mut render_context =
+            RenderContext::new(self.root.clone(), preprocessed_book, config, build_dir);
         render_context
             .chapter_titles
             .extend(preprocess_ctx.chapter_titles.borrow_mut().drain());
 
-        info!("Running the {} backend", renderer.name());
+        info!(
+            "Running the {}{} backend",
+            renderer.name(),
+            if let Some(translation) = translation {
+                format!("[{}]", translation)
+            } else {
+                "".to_string()
+            }
+        );
         renderer
             .render(&render_context)
             .with_context(|| "Rendering failed")
