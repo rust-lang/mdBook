@@ -637,10 +637,7 @@ fn make_data(
         json!(config.book.language.clone().unwrap_or_default()),
     );
     if !config.book.translations.is_empty() {
-        data.insert(
-            "translations".to_owned(),
-            json!(config.book.translations),
-        );
+        data.insert("translations".to_owned(), json!(config.book.translations));
     }
     data.insert(
         "book_title".to_owned(),

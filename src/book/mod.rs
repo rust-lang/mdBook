@@ -202,7 +202,11 @@ impl MDBook {
     }
 
     /// Run the entire build process for a particular [`Renderer`].
-    pub fn execute_build_process(&self, renderer: &dyn Renderer, translation: Option<&str>) -> Result<()> {
+    pub fn execute_build_process(
+        &self,
+        renderer: &dyn Renderer,
+        translation: Option<&str>,
+    ) -> Result<()> {
         let mut preprocessed_book = self.book.clone();
         let mut config = self.config.clone();
         if let Some(translation) = translation {
@@ -228,21 +232,21 @@ impl MDBook {
             build_dir = build_dir.join(translation);
         }
 
-        let mut render_context = RenderContext::new(
-            self.root.clone(),
-            preprocessed_book,
-            config,
-            build_dir,
-        );
+        let mut render_context =
+            RenderContext::new(self.root.clone(), preprocessed_book, config, build_dir);
         render_context
             .chapter_titles
             .extend(preprocess_ctx.chapter_titles.borrow_mut().drain());
 
-        info!("Running the {}{} backend", renderer.name(), if let Some(translation) = translation {
-            format!("[{}]", translation)
-        } else {
-            "".to_string()
-        });
+        info!(
+            "Running the {}{} backend",
+            renderer.name(),
+            if let Some(translation) = translation {
+                format!("[{}]", translation)
+            } else {
+                "".to_string()
+            }
+        );
         renderer
             .render(&render_context)
             .with_context(|| "Rendering failed")
