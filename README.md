@@ -11,6 +11,18 @@ The User Guide also serves as a demonstration to showcase what a book looks like
 
 If you are interested in contributing to the development of mdBook, check out the [Contribution Guide].
 
+## Container
+
+> **NOTE**: You need to have docker installed
+> https://docs.docker.com/language/golang/run-containers/
+
+1. Locate a local directory with md files
+2. Quickly run a docker container with the current version:
+
+```console
+docker run -ti -v $(pwd)/src:/src -p 3000:3000 rust-lang/mdbook
+```
+
 ## License
 
 All the code in this repository is released under the ***Mozilla Public License v2.0***, for more information take a look at the [LICENSE] file.
