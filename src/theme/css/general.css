@@ -148,7 +148,7 @@ blockquote {
     border-bottom: .1em solid var(--quote-border);
 }
 
-kbd {
+kbd > kbd {
     background-color: var(--table-border-color);
     border-radius: 4px;
     border: solid 1px var(--theme-popup-border);
