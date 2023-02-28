@@ -591,7 +591,7 @@ impl HtmlConfig {
 pub struct MathJax {
     /// Whether MathJax support is enabled.
     pub enable: bool,
-    /// Source. Default: "https://cdn.jsdelivr.net/npm/mathjax@3/es5".
+    /// Source. Default: "/mathjax/es5".
     pub source: Option<String>,
     /// Configuration. Default: "tex-mml-chtml".
     pub config: Option<String>,
@@ -601,8 +601,8 @@ impl Default for MathJax {
     fn default() -> Self {
         Self {
             enable: false,
-            source: Some(String::from("https://cdn.jsdelivr.net/npm/mathjax@3/es5")),
-            config: Some(String::from("tex-mml-chtml")),
+            source: None,
+            config: None,
         }
     }
 }

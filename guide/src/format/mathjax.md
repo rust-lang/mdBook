@@ -71,9 +71,11 @@ You can select one of:
 | mml-svg | mml | svg |
 
 Use the `source` key to set used MathJax distribution.
-By default the `https://cdn.jsdelivr.net/npm/mathjax@3/es5` value is used.
 If value starts with `/` symbol it will be interpreted relative
 to [source/build](configuration/general.md) directory.
+By default the builtin copy of MathJax with `/mathjax/es5` value is used.
+But you can set some value like the `https://cdn.jsdelivr.net/npm/mathjax@3/es5`
+to use MathJax from CDN.
 
 For example to use local MathJax copy for tex input and svg output you can
 do something like:

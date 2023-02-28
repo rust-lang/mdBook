@@ -3,7 +3,7 @@ use crate::config::{BookConfig, Config, HtmlConfig, Playground, RustEdition};
 use crate::errors::*;
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
-use crate::theme::{self, playground_editor, Theme};
+use crate::theme::{self, mathjax, playground_editor, Theme};
 use crate::utils;
 
 use std::borrow::Cow;
@@ -333,6 +333,13 @@ impl HtmlHandlebars {
                 "theme-tomorrow_night.js",
                 playground_editor::THEME_TOMORROW_NIGHT_JS,
             )?;
+        }
+
+        if html_config.mathjax.enable && html_config.mathjax.source.is_none() {
+            let mathjax_destination = destination.join("mathjax");
+            for (file_name, contents) in mathjax::FILES.iter() {
+                write_file(&mathjax_destination, file_name, contents)?;
+            }
         }
 
         Ok(())
@@ -689,10 +696,16 @@ fn make_data(
             } else {
                 data.insert("mathjax_source".to_owned(), json!(source));
             }
+        } else {
+            data.insert("mathjax_root".to_owned(), json!(true));
+            data.insert("mathjax_source".to_owned(), json!("mathjax/es5"));
         }
         data.insert(
             "mathjax_config".to_owned(),
-            json!(html_config.mathjax.config),
+            match html_config.mathjax.config {
+                Some(ref config) => json!(config),
+                None => json!("tex-mml-chtml"),
+            },
         );
     }
 
