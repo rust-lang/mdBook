@@ -196,21 +196,26 @@ impl MDBook {
         Ok(())
     }
 
-    /// Run the entire build process for a particular [`Renderer`].
-    pub fn execute_build_process(&self, renderer: &dyn Renderer) -> Result<()> {
-        let mut preprocessed_book = self.book.clone();
+    /// Run preprocessors and return the final book.
+    pub fn preprocess_book(&self, renderer: &dyn Renderer) -> Result<(Book, PreprocessorContext)> {
         let preprocess_ctx = PreprocessorContext::new(
             self.root.clone(),
             self.config.clone(),
             renderer.name().to_string(),
         );
-
+        let mut preprocessed_book = self.book.clone();
         for preprocessor in &self.preprocessors {
             if preprocessor_should_run(&**preprocessor, renderer, &self.config) {
                 debug!("Running the {} preprocessor.", preprocessor.name());
                 preprocessed_book = preprocessor.run(&preprocess_ctx, preprocessed_book)?;
             }
         }
+        Ok((preprocessed_book, preprocess_ctx))
+    }
+
+    /// Run the entire build process for a particular [`Renderer`].
+    pub fn execute_build_process(&self, renderer: &dyn Renderer) -> Result<()> {
+        let (preprocessed_book, preprocess_ctx) = self.preprocess_book(renderer)?;
 
         let name = renderer.name();
         let build_dir = self.build_dir_for(name);
@@ -264,13 +269,25 @@ impl MDBook {
 
         let mut chapter_found = false;
 
-        // FIXME: Is "test" the proper renderer name to use here?
-        let preprocess_context =
-            PreprocessorContext::new(self.root.clone(), self.config.clone(), "test".to_string());
+        struct TestRenderer;
+        impl Renderer for TestRenderer {
+            // FIXME: Is "test" the proper renderer name to use here?
+            fn name(&self) -> &str {
+                "test"
+            }
 
-        let book = LinkPreprocessor::new().run(&preprocess_context, self.book.clone())?;
-        // Index Preprocessor is disabled so that chapter paths continue to point to the
-        // actual markdown files.
+            fn render(&self, _: &RenderContext) -> Result<()> {
+                Ok(())
+            }
+        }
+
+        // Index Preprocessor is disabled so that chapter paths
+        // continue to point to the actual markdown files.
+        self.preprocessors = determine_preprocessors(&self.config)?
+            .into_iter()
+            .filter(|pre| pre.name() != IndexPreprocessor::NAME)
+            .collect();
+        let (book, _) = self.preprocess_book(&TestRenderer)?;
 
         let mut failed = false;
         for item in book.iter() {
