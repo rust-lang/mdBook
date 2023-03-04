@@ -22,7 +22,7 @@ a > .hljs {
         the screen on small screens. Without it, dragging on mobile Safari
         will want to reposition the viewport in a weird way.
     */
-    overflow-x: hidden;
+    overflow-x: clip;
 }
 
 /* Menu Bar */
