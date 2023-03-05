@@ -561,9 +561,25 @@ function playground_text(playground, hidden = true) {
 })();
 
 (function chapterNavigation() {
+    const modifiers = Object.fromEntries(['ctrl', 'alt', 'shift', 'meta']
+        .map((k) => [k, `${k}Key`]));
+    const matches = (event) => (matcher) => Object.values(modifiers)
+        .every((v) => matcher.includes(v) === event[v]);
+
     document.addEventListener('keydown', function (e) {
-        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
-        if (window.search && window.search.hasFocus()) { return; }
+        const { ctrl, meta } = modifiers;
+
+        // Rejected modifier key combos when combined with left/right arrow keys:
+        // * [] is used for normal scrolling
+        // * [shift] and [ctrl, shift] are used for text selection
+        // * [alt] is used for browser history navigation
+        const combo = [ctrl];
+        const macCombo = [meta]; // mac command key
+        if (![combo, macCombo].some(matches(e))) return;
+
+        // * [ctrl] is used for hopping words if a text-input element is selected
+        const isTextInputMode = ['INPUT', 'TEXTAREA'].includes(document.activeElement.nodeName)
+        if (isTextInputMode) return;
 
         switch (e.key) {
             case 'ArrowRight':
