@@ -1,5 +1,18 @@
 # Changelog
 
+## mdBook 0.4.28
+[v0.4.27...v0.4.28](https://github.com/rust-lang/mdBook/compare/v0.4.27...v0.4.28)
+
+### Changed
+- The sidebar is now shown on wide screens when localstorage is disabled.
+  [#2017](https://github.com/rust-lang/mdBook/pull/2017)
+- Preprocessors are now run with `mdbook test`.
+  [#1986](https://github.com/rust-lang/mdBook/pull/1986)
+
+### Fixed
+- Fixed regression in 0.4.26 that prevented the title bar from scrolling properly on smaller screens.
+  [#2039](https://github.com/rust-lang/mdBook/pull/2039)
+
 ## mdBook 0.4.27
 [v0.4.26...v0.4.27](https://github.com/rust-lang/mdBook/compare/v0.4.26...v0.4.27)
 
