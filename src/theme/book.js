@@ -561,12 +561,45 @@ function playground_text(playground, hidden = true) {
 })();
 
 (function chapterNavigation() {
+    const scrollStorageKey = `scroll::${window.location.pathname}`;
+    const storedScrollPosition = sessionStorage.getItem(scrollStorageKey);
+
+    const restoreScrollPosition = (x, y) => {
+        // If the browser has already scrolled to a non-[0, 0] scroll position, e.g. if the
+        // current page was navigated to using native back/forward history buttons, we defer to
+        // that instead.
+        if ([window.scrollX, window.scrollY].some(Boolean)) return;
+
+        window.scrollTo(x, y);
+    }
+
+    if (storedScrollPosition) {
+        const [x, y] = JSON.parse(storedScrollPosition);
+
+        if (document.readyState === 'loading') {
+            window.addEventListener('DOMContentLoaded', () => {
+                restoreScrollPosition(x, y);
+            });
+        } else {
+            restoreScrollPosition(x, y);
+        }
+    }
+
+    window.addEventListener('beforeunload', () => {
+        sessionStorage.setItem(scrollStorageKey, JSON.stringify([window.scrollX, window.scrollY]));
+    });
+
+    const kbdToClassNameMap = new Map(Object.entries({
+        ArrowRight: 'next',
+        ArrowLeft: 'previous',
+    }));
+
     const modifiers = Object.fromEntries(['ctrl', 'alt', 'shift', 'meta']
         .map((k) => [k, `${k}Key`]));
     const matches = (event) => (matcher) => Object.values(modifiers)
         .every((v) => matcher.includes(v) === event[v]);
 
-    document.addEventListener('keydown', function (e) {
+    document.addEventListener('keydown', (e) => {
         const { ctrl, meta } = modifiers;
 
         // Rejected modifier key combos when combined with left/right arrow keys:
@@ -577,25 +610,20 @@ function playground_text(playground, hidden = true) {
         const macCombo = [meta]; // mac command key
         if (![combo, macCombo].some(matches(e))) return;
 
+        const selector = selectors[siteGeneratorName];
+
         // * [ctrl] is used for hopping words if a text-input element is selected
-        const isTextInputMode = ['INPUT', 'TEXTAREA'].includes(document.activeElement.nodeName)
+        const isTextInputMode = ['INPUT', 'TEXTAREA'].includes(document.activeElement.nodeName);
         if (isTextInputMode) return;
 
-        switch (e.key) {
-            case 'ArrowRight':
-                e.preventDefault();
-                var nextButton = document.querySelector('.nav-chapters.next');
-                if (nextButton) {
-                    window.location.href = nextButton.href;
-                }
-                break;
-            case 'ArrowLeft':
-                e.preventDefault();
-                var previousButton = document.querySelector('.nav-chapters.previous');
-                if (previousButton) {
-                    window.location.href = previousButton.href;
-                }
-                break;
+        const buttonClassName = kbdToClassNameMap.get(e.key);
+
+        if (buttonClassName) {
+            e.preventDefault();
+            const button = document.querySelector(`.nav-chapters.${buttonClassName}`);
+            if (button) {
+                window.location.href = button.href;
+            }
         }
     });
 })();
