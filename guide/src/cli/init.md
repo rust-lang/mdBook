@@ -68,3 +68,7 @@ Create a `.gitignore` file configured to ignore the `book` directory created whe
 If not supplied, an interactive prompt will ask whether it should be created.
 
 [building]: build.md
+
+#### --force
+
+Skip the prompts to create a `.gitignore` and for the title for the book.
