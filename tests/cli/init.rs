@@ -12,7 +12,7 @@ fn base_mdbook_init_can_skip_confirmation_prompts() {
     assert!(!temp.path().join("book").exists());
 
     let mut cmd = mdbook_cmd();
-    cmd.args(&["init", "--force"]).current_dir(temp.path());
+    cmd.args(["init", "--force"]).current_dir(temp.path());
     cmd.assert()
         .success()
         .stdout(predicates::str::contains("\nAll done, no errors...\n"));
