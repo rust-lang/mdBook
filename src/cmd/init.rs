@@ -56,7 +56,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
             "git" => builder.create_gitignore(true),
             _ => builder.create_gitignore(false),
         };
-    } else {
+    } else if !args.get_flag("force") {
         println!("\nDo you want a .gitignore to be created? (y/n)");
         if confirm() {
             builder.create_gitignore(true);
@@ -65,6 +65,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     config.book.title = if args.contains_id("title") {
         args.get_one::<String>("title").map(String::from)
+    } else if args.get_flag("force") {
+        None
     } else {
         request_book_title()
     };
