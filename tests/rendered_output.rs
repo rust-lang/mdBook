@@ -467,7 +467,7 @@ fn by_default_mdbook_use_index_preprocessor_to_convert_readme_to_index() {
 }
 
 #[test]
-fn first_chapter_is_copied_as_index_even_if_not_first_elem() {
+fn redirect_to_first_chapter_if_no_index() {
     let temp = DummyBook::new().build().unwrap();
     let mut cfg = Config::default();
     cfg.set("book.src", "index_html_test")
@@ -476,9 +476,9 @@ fn first_chapter_is_copied_as_index_even_if_not_first_elem() {
     md.build().unwrap();
 
     let root = temp.path().join("book");
-    let chapter = fs::read_to_string(root.join("chapter_1.html")).expect("read chapter 1");
     let index = fs::read_to_string(root.join("index.html")).expect("read index");
-    pretty_assertions::assert_eq!(chapter, index);
+
+    assert!(index.contains(r#"<meta http-equiv="refresh" content="0; URL=chapter_1.html">"#))
 }
 
 #[test]
@@ -874,7 +874,7 @@ fn custom_fonts() {
         actual
     };
     let has_fonts_css = |path: &Path| -> bool {
-        let contents = fs::read_to_string(path.join("book/index.html")).unwrap();
+        let contents = fs::read_to_string(path.join("book/chapter_1.html")).unwrap();
         contents.contains("fonts/fonts.css")
     };
 

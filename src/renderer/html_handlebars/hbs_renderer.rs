@@ -32,12 +32,12 @@ impl HtmlHandlebars {
         item: &BookItem,
         mut ctx: RenderItemContext<'_>,
         print_content: &mut String,
-    ) -> Result<()> {
+    ) -> Result<Option<PathBuf>> {
         // FIXME: This should be made DRY-er and rely less on mutable state
 
         let (ch, path) = match item {
             BookItem::Chapter(ch) if !ch.is_draft_chapter() => (ch, ch.path.as_ref().unwrap()),
-            _ => return Ok(()),
+            _ => return Ok(None),
         };
 
         if let Some(ref edit_url_template) = ctx.html_config.edit_url_template {
@@ -58,7 +58,7 @@ impl HtmlHandlebars {
 
         let fixed_content =
             utils::render_markdown_with_path(&ch.content, ctx.html_config.curly_quotes, Some(path));
-        if !ctx.is_index && ctx.html_config.print.page_break {
+        if !ctx.is_first_chapter && ctx.html_config.print.page_break {
             // Add page break between chapters
             // See https://developer.mozilla.org/en-US/docs/Web/CSS/break-before and https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-before
             // Add both two CSS properties because of the compatibility issue
@@ -120,22 +120,7 @@ impl HtmlHandlebars {
         debug!("Creating {}", filepath.display());
         utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
 
-        if ctx.is_index {
-            ctx.data.insert("path".to_owned(), json!("index.md"));
-            ctx.data.insert("path_to_root".to_owned(), json!(""));
-            ctx.data.insert("is_index".to_owned(), json!(true));
-            let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
-            let rendered_index = self.post_process(
-                rendered_index,
-                &ctx.html_config.playground,
-                &ctx.html_config.code,
-                ctx.edition,
-            );
-            debug!("Creating index.html from {}", ctx_path);
-            utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
-        }
-
-        Ok(())
+        Ok(Some(filepath))
     }
 
     fn render_404(
@@ -484,7 +469,7 @@ impl Renderer for HtmlHandlebars {
 
     fn render(&self, ctx: &RenderContext) -> Result<()> {
         let book_config = &ctx.config.book;
-        let html_config = ctx.config.html_config().unwrap_or_default();
+        let mut html_config = ctx.config.html_config().unwrap_or_default();
         let src_dir = ctx.root.join(&ctx.config.book.src);
         let destination = &ctx.destination;
         let book = &ctx.book;
@@ -535,21 +520,36 @@ impl Renderer for HtmlHandlebars {
         fs::create_dir_all(destination)
             .with_context(|| "Unexpected error when constructing destination path")?;
 
-        let mut is_index = true;
+        let mut seen_index = false;
+        let mut first_non_draft = None;
         for item in book.iter() {
             let ctx = RenderItemContext {
                 handlebars: &handlebars,
                 destination: destination.to_path_buf(),
                 data: data.clone(),
-                is_index,
+                is_first_chapter: first_non_draft.is_none(),
                 book_config: book_config.clone(),
                 html_config: html_config.clone(),
                 edition: ctx.config.rust.edition,
                 chapter_titles: &ctx.chapter_titles,
             };
-            self.render_item(item, ctx, &mut print_content)?;
-            // Only the first non-draft chapter item should be treated as the "index"
-            is_index &= !matches!(item, BookItem::Chapter(ch) if !ch.is_draft_chapter());
+            if let Some(rendered_file) = self.render_item(item, ctx, &mut print_content)? {
+                seen_index |= rendered_file == Path::new("index.html");
+                if first_non_draft.is_none() {
+                    first_non_draft = Some(rendered_file);
+                }
+            }
+        }
+        if !seen_index {
+            if let Some(first_file) = first_non_draft {
+                let redirect_to = first_file
+                    .to_str()
+                    .with_context(|| "Could not convert path to str")?
+                    .to_string();
+                html_config
+                    .redirect
+                    .insert(String::from("/index.html"), redirect_to);
+            }
         }
 
         // Render 404 page
@@ -1053,7 +1053,7 @@ struct RenderItemContext<'a> {
     handlebars: &'a Handlebars<'a>,
     destination: PathBuf,
     data: serde_json::Map<String, serde_json::Value>,
-    is_index: bool,
+    is_first_chapter: bool,
     book_config: BookConfig,
     html_config: HtmlConfig,
     edition: Option<RustEdition>,
