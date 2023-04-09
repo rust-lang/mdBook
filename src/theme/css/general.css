@@ -148,6 +148,12 @@ blockquote, details {
     border-bottom: .1em solid var(--quote-border);
 }
 
+details {
+    border-left: .1em solid var(--quote-border);
+    border-right: .1em solid var(--quote-border);
+    border-radius: 4px;
+}
+
 kbd {
     background-color: var(--table-border-color);
     border-radius: 4px;
