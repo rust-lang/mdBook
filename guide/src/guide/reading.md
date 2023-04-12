@@ -21,7 +21,7 @@ In that situation, the menu icon (three horizontal bars) at the top-left of the 
 
 The **arrow buttons** at the bottom of the page can be used to navigate to the previous or the next chapter.
 
-The **left and right arrow keys** on the keyboard can be used to navigate to the previous or the next chapter.
+Pressing <kbd>Ctrl</kbd>+<kbd>←</kbd> and <kbd>Ctrl</kbd>+<kbd>→</kbd> (<kbd>⌘</kbd>+<kbd>←</kbd> and <kbd>⌘</kbd>+<kbd>→</kbd> on Mac) on the keyboard can be used to navigate to the previous or the next chapter.
 
 ## Top menu bar
 
@@ -31,7 +31,7 @@ The icons displayed will depend on the settings of how the book was generated.
 | Icon | Description |
 |------|-------------|
 | <i class="fa fa-bars"></i> | Opens and closes the chapter listing sidebar. |
-| <i class="fa fa-paint-brush"></i> | Opens a picker to choose a different color theme. |
+| <i class="fa fa-cog"></i> | Opens a settings menu for setting a different color theme or shortcut keys. |
 | <i class="fa fa-search"></i> | Opens a search bar for searching within the book. |
 | <i class="fa fa-print"></i> | Instructs the web browser to print the entire book. |
 | <i class="fa fa-github"></i> | Opens a link to the website that hosts the source code of the book. |
