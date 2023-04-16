@@ -44,7 +44,7 @@ you would write:
 
 ### AsciiMath syntax
 
-AsciiMath is a less verbose equation syntax than LaTeX, delimited by <kbd>\\\`...\\\`</kbd>.
+[AsciiMath](http://asciimath.org/) is a less verbose equation syntax than LaTeX, delimited by <kbd>\\\`...\\\`</kbd>.
 
 To enable AsciiMath, you need to add the `asciimath-support` key to your `book.toml`
 under the `output.html` section, in addition to enabling `mathjax-support`:
