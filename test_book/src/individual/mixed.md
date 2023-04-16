@@ -29,9 +29,16 @@ fn main(){
 
 <kbd>Ctrl</kbd> + <kbd>S</kbd> saves a file.
 
-A random image sprinkled in between
+---
 
-![16x16 rust-lang logo](https://rust-lang.org/logos/rust-logo-16x16.png)
+Although markdown does not have a native figure caption syntax, one can use block quote as a general-purpose "environment" to emulate it, and max-level heading inside the quote as caption:
+
+> ![](https://rust-lang.org/logos/rust-logo-256x256-blk.png)
+> ###### Figure 1: Our belived logo in glorious 256x256 resolution
+
+Since the heading is inside the block quote, it will not pollute the document heading structure.
+
+This is a lot more concise to write (and easier to read in plaintext!!) than the html `<figure>` environment, where the need for separate `<img/>` and `<figcaption>` tags adds significant visual noise.
 
 ---
 
