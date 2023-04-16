@@ -1,6 +1,6 @@
 # Theme
 
-The default renderer uses a [handlebars](http://handlebarsjs.com/) template to
+The default renderer uses a [handlebars](https://handlebarsjs.com) template to
 render your markdown files and comes with a default theme included in the mdBook
 binary.
 
