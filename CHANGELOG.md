@@ -1,5 +1,46 @@
 # Changelog
 
+## mdBook 0.4.28
+[v0.4.27...v0.4.28](https://github.com/rust-lang/mdBook/compare/v0.4.27...v0.4.28)
+
+### Changed
+- The sidebar is now shown on wide screens when localstorage is disabled.
+  [#2017](https://github.com/rust-lang/mdBook/pull/2017)
+- Preprocessors are now run with `mdbook test`.
+  [#1986](https://github.com/rust-lang/mdBook/pull/1986)
+
+### Fixed
+- Fixed regression in 0.4.26 that prevented the title bar from scrolling properly on smaller screens.
+  [#2039](https://github.com/rust-lang/mdBook/pull/2039)
+
+## mdBook 0.4.27
+[v0.4.26...v0.4.27](https://github.com/rust-lang/mdBook/compare/v0.4.26...v0.4.27)
+
+### Changed
+- Reverted the dependency update to the `toml` crate. This was an unintentional breaking change in 0.4.26.
+  [#2021](https://github.com/rust-lang/mdBook/pull/2021)
+
+## mdBook 0.4.26
+[v0.4.25...v0.4.26](https://github.com/rust-lang/mdBook/compare/v0.4.25...v0.4.26)
+
+**The 0.4.26 release has been yanked due to an unintentional breaking change.**
+
+### Changed
+- Removed custom scrollbars for webkit browsers
+  [#1961](https://github.com/rust-lang/mdBook/pull/1961)
+- Updated some dependencies
+  [#1998](https://github.com/rust-lang/mdBook/pull/1998)
+  [#2009](https://github.com/rust-lang/mdBook/pull/2009)
+  [#2011](https://github.com/rust-lang/mdBook/pull/2011)
+- Fonts are now part of the theme.
+  The `output.html.copy-fonts` option has been deprecated.
+  To define custom fonts, be sure to define `theme/fonts.css`.
+  [#1987](https://github.com/rust-lang/mdBook/pull/1987)
+
+### Fixed
+- Fixed overflow viewport issue with mobile Safari
+  [#1994](https://github.com/rust-lang/mdBook/pull/1994)
+
 ## mdBook 0.4.25
 [e14d381...1ba74a3](https://github.com/rust-lang/mdBook/compare/e14d381...1ba74a3)
 

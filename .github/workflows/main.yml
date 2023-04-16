@@ -34,11 +34,11 @@ jobs:
             # sync MSRV with docs: guide/src/guide/installation.md and Cargo.toml
             rust: 1.60.0
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v3
     - name: Install Rust
       run: bash ci/install-rust.sh ${{ matrix.rust }}
     - name: Build and run tests
-      run: cargo test
+      run: cargo test --locked
     - name: Test no default
       run: cargo test --no-default-features
 
@@ -46,7 +46,7 @@ jobs:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v3
     - name: Install Rust
       run: rustup update stable && rustup default stable && rustup component add rustfmt
     - run: cargo fmt --check
