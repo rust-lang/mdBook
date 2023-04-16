@@ -41,3 +41,16 @@ you would write:
 ```bash
 \\[ \mu = \frac{1}{N} \sum_{i=0} x_i \\]
 ```
+
+### AsciiMath syntax
+
+AsciiMath is a less verbose equation syntax than LaTeX, delimited by <kbd>\\\`...\\\`</kbd>.
+
+To enable AsciiMath, you need to add the `asciimath-support` key to your `book.toml`
+under the `output.html` section, in addition to enabling `mathjax-support`:
+
+```toml
+[output.html]
+mathjax-support = true
+asciimath-support = true
+```
