@@ -9,7 +9,7 @@ use once_cell::sync::Lazy;
 
 /// A preprocessor for converting file name `README.md` to `index.md` since
 /// `README.md` is the de facto index file in markdown-based documentation.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct IndexPreprocessor;
 
 impl IndexPreprocessor {
