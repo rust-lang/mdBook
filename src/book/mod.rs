@@ -851,6 +851,7 @@ mod tests {
         assert!(should_run);
     }
 
+    #[derive(Default, Clone)]
     struct BoolPreprocessor(bool);
     impl Preprocessor for BoolPreprocessor {
         fn name(&self) -> &str {
