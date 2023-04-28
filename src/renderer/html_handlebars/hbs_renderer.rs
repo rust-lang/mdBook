@@ -294,7 +294,7 @@ impl HtmlHandlebars {
                 if html_config.copy_fonts {
                     warn!(
                         "output.html.copy_fonts is deprecated.\n\
-                        Set copy_fonts=false and ensure the fonts you want are in \
+                        Set copy-fonts=false in book.toml and ensure the fonts you want are in \
                         the `theme/fonts/` directory."
                     );
                 }
@@ -304,7 +304,7 @@ impl HtmlHandlebars {
         if !html_config.copy_fonts && theme.fonts_css.is_none() {
             warn!(
                 "output.html.copy_fonts is deprecated.\n\
-                This book appears to have copy_fonts=false without a fonts.css file.\n\
+                This book appears to have copy-fonts=false in book.toml without a fonts.css file.\n\
                 Add an empty `theme/fonts/fonts.css` file to squelch this warning."
             );
         }
