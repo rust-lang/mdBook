@@ -76,3 +76,7 @@ mdbook init --ignore=git
 ```
 
 [building]: build.md
+
+#### --force
+
+Skip the prompts to create a `.gitignore` and for the title for the book.
