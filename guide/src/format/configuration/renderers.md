@@ -182,7 +182,7 @@ page-break = true # insert page-break after each chapter
 
 - **enable:** Enable print support. When `false`, all print support will not be
   rendered. Defaults to `true`.
-- **page-break** Insert page breaks between chapters. Defaults to `true`.
+- **page-break:** Insert page breaks between chapters. Defaults to `true`.
 
 ### `[output.html.fold]`
 
@@ -218,8 +218,8 @@ runnable = true          # displays a run button for rust code
 - **copyable:** Display the copy button on code snippets. Defaults to `true`.
 - **copy-js:** Copy JavaScript files for the editor to the output directory.
   Defaults to `true`.
-- **line-numbers** Display line numbers on editable sections of code. Requires both `editable` and `copy-js` to be `true`. Defaults to `false`.
-- **runnable** Displays a run button for rust code snippets. Changing this to `false` will disable the run in playground feature globally. Defaults to `true`.
+- **line-numbers:** Display line numbers on editable sections of code. Requires both `editable` and `copy-js` to be `true`. Defaults to `false`.
+- **runnable:** Displays a run button for rust code snippets. Changing this to `false` will disable the run in playground feature globally. Defaults to `true`.
 
 [Ace]: https://ace.c9.io/
 
