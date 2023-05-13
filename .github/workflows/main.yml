@@ -32,7 +32,7 @@ jobs:
           - build: msrv
             os: ubuntu-20.04
             # sync MSRV with docs: guide/src/guide/installation.md and Cargo.toml
-            rust: 1.63.0
+            rust: 1.65.0
     steps:
     - uses: actions/checkout@v3
     - name: Install Rust
