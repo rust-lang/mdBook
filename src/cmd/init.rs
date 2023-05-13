@@ -86,7 +86,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 /// Obtains author name from git config file by running the `git config` command.
 fn get_author_name() -> Option<String> {
     let output = Command::new("git")
-        .args(&["config", "--get", "user.name"])
+        .args(["config", "--get", "user.name"])
         .output()
         .ok()?;
 
@@ -116,5 +116,5 @@ fn confirm() -> bool {
     io::stdout().flush().unwrap();
     let mut s = String::new();
     io::stdin().read_line(&mut s).ok();
-    matches!(&*s.trim(), "Y" | "y" | "yes" | "Yes")
+    matches!(s.trim(), "Y" | "y" | "yes" | "Yes")
 }

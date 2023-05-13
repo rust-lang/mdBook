@@ -44,7 +44,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let chapter: Option<&str> = args.get_one::<String>("chapter").map(|s| s.as_str());
 
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::load(&book_dir)?;
+    let mut book = MDBook::load(book_dir)?;
 
     if let Some(dest_dir) = args.get_one::<PathBuf>("dest-dir") {
         book.config.build.build_dir = dest_dir.to_path_buf();
