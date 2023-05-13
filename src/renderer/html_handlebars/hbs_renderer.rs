@@ -291,19 +291,12 @@ impl HtmlHandlebars {
         }
         if let Some(fonts_css) = &theme.fonts_css {
             if !fonts_css.is_empty() {
-                if html_config.copy_fonts {
-                    warn!(
-                        "output.html.copy_fonts is deprecated.\n\
-                        Set copy-fonts=false in book.toml and ensure the fonts you want are in \
-                        the `theme/fonts/` directory."
-                    );
-                }
                 write_file(destination, "fonts/fonts.css", &fonts_css)?;
             }
         }
         if !html_config.copy_fonts && theme.fonts_css.is_none() {
             warn!(
-                "output.html.copy_fonts is deprecated.\n\
+                "output.html.copy-fonts is deprecated.\n\
                 This book appears to have copy-fonts=false in book.toml without a fonts.css file.\n\
                 Add an empty `theme/fonts/fonts.css` file to squelch this warning."
             );
