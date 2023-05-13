@@ -628,10 +628,8 @@ fn edit_url_has_configured_src_dir_edit_url() {
 }
 
 fn remove_absolute_components(path: &Path) -> impl Iterator<Item = Component> + '_ {
-    path.components().skip_while(|c| match c {
-        Component::Prefix(_) | Component::RootDir => true,
-        _ => false,
-    })
+    path.components()
+        .skip_while(|c| matches!(c, Component::Prefix(_) | Component::RootDir))
 }
 
 /// Checks formatting of summary names with inline elements.
