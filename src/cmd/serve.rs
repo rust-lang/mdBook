@@ -48,7 +48,7 @@ pub fn make_subcommand() -> Command {
 // Serve command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::load(&book_dir)?;
+    let mut book = MDBook::load(book_dir)?;
 
     let port = args.get_one::<String>("port").unwrap();
     let hostname = args.get_one::<String>("hostname").unwrap();
@@ -102,7 +102,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         info!("Building book...");
 
         // FIXME: This area is really ugly because we need to re-set livereload :(
-        let result = MDBook::load(&book_dir).and_then(|mut b| {
+        let result = MDBook::load(book_dir).and_then(|mut b| {
             update_config(&mut b);
             b.build()
         });

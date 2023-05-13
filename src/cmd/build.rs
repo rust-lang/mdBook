@@ -16,7 +16,7 @@ pub fn make_subcommand() -> Command {
 // Build command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::load(&book_dir)?;
+    let mut book = MDBook::load(book_dir)?;
 
     if let Some(dest_dir) = args.get_one::<PathBuf>("dest-dir") {
         book.config.build.build_dir = dest_dir.into();

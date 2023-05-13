@@ -86,7 +86,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 /// Obtains author name from git config file by running the `git config` command.
 fn get_author_name() -> Option<String> {
     let output = Command::new("git")
-        .args(&["config", "--get", "user.name"])
+        .args(["config", "--get", "user.name"])
         .output()
         .ok()?;
 

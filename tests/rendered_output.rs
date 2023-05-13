@@ -275,7 +275,7 @@ fn root_index_html() -> Result<Document> {
         .with_context(|| "Book building failed")?;
 
     let index_page = temp.path().join("book").join("index.html");
-    let html = fs::read_to_string(&index_page).with_context(|| "Unable to read index.html")?;
+    let html = fs::read_to_string(index_page).with_context(|| "Unable to read index.html")?;
 
     Ok(Document::from(html.as_str()))
 }
@@ -412,7 +412,7 @@ fn recursive_includes_are_capped() {
     let content = &["Around the world, around the world
 Around the world, around the world
 Around the world, around the world"];
-    assert_contains_strings(&recursive, content);
+    assert_contains_strings(recursive, content);
 }
 
 #[test]
@@ -462,7 +462,7 @@ fn by_default_mdbook_use_index_preprocessor_to_convert_readme_to_index() {
 
     let second_index = temp.path().join("book").join("second").join("index.html");
     let unexpected_strings = vec!["Second README"];
-    assert_doesnt_contain_strings(&second_index, &unexpected_strings);
+    assert_doesnt_contain_strings(second_index, &unexpected_strings);
 }
 
 #[test]
@@ -803,7 +803,7 @@ mod search {
             let src = read_book_index(temp.path());
 
             let dest = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/searchindex_fixture.json");
-            let dest = File::create(&dest).unwrap();
+            let dest = File::create(dest).unwrap();
             serde_json::to_writer_pretty(dest, &src).unwrap();
 
             src

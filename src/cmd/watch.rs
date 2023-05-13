@@ -21,7 +21,7 @@ pub fn make_subcommand() -> Command {
 // Watch command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::load(&book_dir)?;
+    let mut book = MDBook::load(book_dir)?;
 
     let update_config = |book: &mut MDBook| {
         if let Some(dest_dir) = args.get_one::<PathBuf>("dest-dir") {
@@ -42,7 +42,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     trigger_on_change(&book, |paths, book_dir| {
         info!("Files changed: {:?}\nBuilding book...\n", paths);
-        let result = MDBook::load(&book_dir).and_then(|mut b| {
+        let result = MDBook::load(book_dir).and_then(|mut b| {
             update_config(&mut b);
             b.build()
         });

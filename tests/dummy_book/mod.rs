@@ -112,12 +112,12 @@ fn recursive_copy<A: AsRef<Path>, B: AsRef<Path>>(from: A, to: B) -> Result<()> 
     let from = from.as_ref();
     let to = to.as_ref();
 
-    for entry in WalkDir::new(&from) {
+    for entry in WalkDir::new(from) {
         let entry = entry.with_context(|| "Unable to inspect directory entry")?;
 
         let original_location = entry.path();
         let relative = original_location
-            .strip_prefix(&from)
+            .strip_prefix(from)
             .expect("`original_location` is inside the `from` directory");
         let new_location = to.join(relative);
 
@@ -126,7 +126,7 @@ fn recursive_copy<A: AsRef<Path>, B: AsRef<Path>>(from: A, to: B) -> Result<()> 
                 fs::create_dir_all(parent).with_context(|| "Couldn't create directory")?;
             }
 
-            fs::copy(&original_location, &new_location)
+            fs::copy(original_location, &new_location)
                 .with_context(|| "Unable to copy file contents")?;
         }
     }

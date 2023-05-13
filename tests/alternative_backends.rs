@@ -90,7 +90,7 @@ fn relative_command_path() {
             .set("output.html", toml::value::Table::new())
             .unwrap();
         config.set("output.myrenderer.command", cmd_path).unwrap();
-        let md = MDBook::init(&temp.path())
+        let md = MDBook::init(temp.path())
             .with_config(config)
             .build()
             .unwrap();
