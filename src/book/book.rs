@@ -39,9 +39,7 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
         .chain(summary.suffix_chapters.iter())
         .collect();
 
-    while !items.is_empty() {
-        let next = items.pop().expect("already checked");
-
+    while let Some(next) = items.pop() {
         if let SummaryItem::Link(ref link) = *next {
             if let Some(ref location) = link.location {
                 let filename = src_dir.join(location);
