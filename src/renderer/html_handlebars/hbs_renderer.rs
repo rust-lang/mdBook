@@ -275,7 +275,8 @@ impl HtmlHandlebars {
             "FontAwesome/fonts/FontAwesome.ttf",
             theme::FONT_AWESOME_TTF,
         )?;
-        if html_config.copy_fonts {
+        // Don't copy the stock fonts if the user has specified their own fonts to use.
+        if html_config.copy_fonts && theme.fonts_css.is_none() {
             write_file(destination, "fonts/fonts.css", theme::fonts::CSS)?;
             for (file_name, contents) in theme::fonts::LICENSES.iter() {
                 write_file(destination, file_name, contents)?;
