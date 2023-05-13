@@ -4,7 +4,7 @@
 [v0.4.28...v0.4.29](https://github.com/rust-lang/mdBook/compare/v0.4.28...v0.4.29)
 
 ### Changed
-- Built-in fonts are no longer copied when `fonts/fonts.css` is overridded in the theme directory.
+- Built-in fonts are no longer copied when `fonts/fonts.css` is overridden in the theme directory.
   Additionally, the warning about `copy-fonts` has been removed if `fonts/fonts.css` is specified.
   [#2080](https://github.com/rust-lang/mdBook/pull/2080)
 - `mdbook init --force` now skips all interactive prompts as intended.
