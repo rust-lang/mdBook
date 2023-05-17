@@ -626,6 +626,9 @@ pub struct Playground {
     pub copy_js: bool,
     /// Display line numbers on playground snippets. Default: `false`.
     pub line_numbers: bool,
+    /// Set's the language the playground will work with
+    /// TODO: Use an array when there's support for multiple languages simultaneously
+    pub language: String,
     /// Display the run button. Default: `true`
     pub runnable: bool,
 }
@@ -637,6 +640,7 @@ impl Default for Playground {
             copyable: true,
             copy_js: true,
             line_numbers: false,
+            language: "rust".to_string(),
             runnable: true,
         }
     }
@@ -748,6 +752,7 @@ mod tests {
         [output.html.playground]
         editable = true
         editor = "ace"
+        language = "rust"
 
         [output.html.redirect]
         "index.html" = "overview.html"
@@ -782,6 +787,7 @@ mod tests {
             copyable: true,
             copy_js: true,
             line_numbers: false,
+            language: "rust".to_string(),
             runnable: true,
         };
         let html_should_be = HtmlConfig {
