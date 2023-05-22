@@ -198,8 +198,7 @@ impl BookBuilder {
             writeln!(f, "- [Chapter 1](./chapter_1.md)")?;
 
             let chapter_1 = src_dir.join("chapter_1.md");
-            let mut f =
-                File::create(&chapter_1).with_context(|| "Unable to create chapter_1.md")?;
+            let mut f = File::create(chapter_1).with_context(|| "Unable to create chapter_1.md")?;
             writeln!(f, "# Chapter 1")?;
         } else {
             trace!("Existing summary found, no need to create stub files.");
@@ -212,10 +211,10 @@ impl BookBuilder {
         fs::create_dir_all(&self.root)?;
 
         let src = self.root.join(&self.config.book.src);
-        fs::create_dir_all(&src)?;
+        fs::create_dir_all(src)?;
 
         let build = self.root.join(&self.config.build.build_dir);
-        fs::create_dir_all(&build)?;
+        fs::create_dir_all(build)?;
 
         Ok(())
     }

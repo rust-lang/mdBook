@@ -703,7 +703,7 @@ trait Updateable<'de>: Serialize + Deserialize<'de> {
         let mut raw = Value::try_from(&self).expect("unreachable");
 
         if let Ok(value) = Value::try_from(value) {
-            let _ = raw.insert(key, value);
+            raw.insert(key, value);
         } else {
             return;
         }

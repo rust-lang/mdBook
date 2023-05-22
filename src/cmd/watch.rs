@@ -1,5 +1,6 @@
 use super::command_prelude::*;
 use crate::{get_book_dir, open};
+use ignore::gitignore::Gitignore;
 use mdbook::errors::Result;
 use mdbook::utils;
 use mdbook::MDBook;
@@ -20,7 +21,7 @@ pub fn make_subcommand() -> Command {
 // Watch command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::load(&book_dir)?;
+    let mut book = MDBook::load(book_dir)?;
 
     let update_config = |book: &mut MDBook| {
         if let Some(dest_dir) = args.get_one::<PathBuf>("dest-dir") {
@@ -41,7 +42,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     trigger_on_change(&book, |paths, book_dir| {
         info!("Files changed: {:?}\nBuilding book...\n", paths);
-        let result = MDBook::load(&book_dir).and_then(|mut b| {
+        let result = MDBook::load(book_dir).and_then(|mut b| {
             update_config(&mut b);
             b.build()
         });
@@ -62,14 +63,14 @@ fn remove_ignored_files(book_root: &Path, paths: &[PathBuf]) -> Vec<PathBuf> {
 
     match find_gitignore(book_root) {
         Some(gitignore_path) => {
-            match gitignore::File::new(gitignore_path.as_path()) {
-                Ok(exclusion_checker) => filter_ignored_files(exclusion_checker, paths),
-                Err(_) => {
-                    // We're unable to read the .gitignore file, so we'll silently allow everything.
-                    // Please see discussion: https://github.com/rust-lang/mdBook/pull/1051
-                    paths.iter().map(|path| path.to_path_buf()).collect()
-                }
+            let (ignore, err) = Gitignore::new(&gitignore_path);
+            if let Some(err) = err {
+                warn!(
+                    "error reading gitignore `{}`: {err}",
+                    gitignore_path.display()
+                );
             }
+            filter_ignored_files(ignore, paths)
         }
         None => {
             // There is no .gitignore file.
@@ -85,18 +86,13 @@ fn find_gitignore(book_root: &Path) -> Option<PathBuf> {
         .find(|p| p.exists())
 }
 
-fn filter_ignored_files(exclusion_checker: gitignore::File, paths: &[PathBuf]) -> Vec<PathBuf> {
+fn filter_ignored_files(ignore: Gitignore, paths: &[PathBuf]) -> Vec<PathBuf> {
     paths
         .iter()
-        .filter(|path| match exclusion_checker.is_excluded(path) {
-            Ok(exclude) => !exclude,
-            Err(error) => {
-                warn!(
-                    "Unable to determine if {:?} is excluded: {:?}. Including it.",
-                    &path, error
-                );
-                true
-            }
+        .filter(|path| {
+            !ignore
+                .matched_path_or_any_parents(path, path.is_dir())
+                .is_ignore()
         })
         .map(|path| path.to_path_buf())
         .collect()
