@@ -1,6 +1,6 @@
 [package]
 name = "mdbook"
-version = "0.4.28"
+version = "0.4.29"
 authors = [
     "Mathieu David <mathieudavid@mathieudavid.org>",
     "Michael-F-Bryan <michaelfbryan@gmail.com>",
@@ -14,58 +14,58 @@ license = "MPL-2.0"
 readme = "README.md"
 repository = "https://github.com/rust-lang/mdBook"
 description = "Creates a book from markdown files"
-rust-version = "1.60"
+rust-version = "1.65"
 
 [registries.crates-io]
 protocol = "sparse"
 
 [dependencies]
-anyhow = "1.0.28"
-chrono = { version = "0.4", default-features = false, features = ["clock"] }
-clap = { version = "4.0.29", features = ["cargo", "wrap_help"] }
-clap_complete = "4.0.6"
-once_cell = "1"
+anyhow = "1.0.71"
+chrono = { version = "0.4.24", default-features = false, features = ["clock"] }
+clap = { version = "4.2.7", features = ["cargo", "wrap_help"] }
+clap_complete = "4.2.3"
+once_cell = "1.17.1"
 env_logger = "0.10.0"
-handlebars = "4.0"
-log = "0.4"
-memchr = "2.0"
-opener = "0.5"
-pulldown-cmark = { version = "0.9.1", default-features = false }
-regex = "1.5.5"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-shlex = "1"
-tempfile = "3.0"
-toml = "0.5.1"
+handlebars = "4.3.7"
+log = "0.4.17"
+memchr = "2.5.0"
+opener = "0.5.2"
+pulldown-cmark = { version = "0.9.2", default-features = false }
+regex = "1.8.1"
+serde = { version = "1.0.163", features = ["derive"] }
+serde_json = "1.0.96"
+shlex = "1.1.0"
+tempfile = "3.4.0"
+toml = "0.5.11"
 topological-sort = "0.2.2"
 
 # Watch feature
-notify = { version = "5.0.0", optional = true }
+notify = { version = "5.1.0", optional = true }
 notify-debouncer-mini = { version = "0.2.1", optional = true }
-gitignore = { version = "1.0", optional = true }
+ignore = { version = "0.4.20", optional = true }
 
 # Serve feature
-futures-util = { version = "0.3.4", optional = true }
-tokio = { version = "1", features = ["macros", "rt-multi-thread"], optional = true }
-warp = { version = "0.3.2", default-features = false, features = ["websocket"], optional = true }
+futures-util = { version = "0.3.28", optional = true }
+tokio = { version = "1.28.1", features = ["macros", "rt-multi-thread"], optional = true }
+warp = { version = "0.3.5", default-features = false, features = ["websocket"], optional = true }
 
 # Search feature
-elasticlunr-rs = { version = "3.0.0", optional = true }
-ammonia = { version = "3", optional = true }
+elasticlunr-rs = { version = "3.0.2", optional = true }
+ammonia = { version = "3.3.0", optional = true }
 
 [dev-dependencies]
-assert_cmd = "2.0.7"
-predicates = "2"
+assert_cmd = "2.0.11"
+predicates = "2.1.5"
 select = "0.6.0"
-semver = "1.0"
-pretty_assertions = "1.2.1"
-walkdir = "2.0"
+semver = "1.0.17"
+pretty_assertions = "1.3.0"
+walkdir = "2.3.3"
 
 [features]
 default = ["watch", "serve", "search"]
-watch = ["notify", "notify-debouncer-mini", "gitignore"]
-serve = ["futures-util", "tokio", "warp"]
-search = ["elasticlunr-rs", "ammonia"]
+watch = ["dep:notify", "dep:notify-debouncer-mini", "dep:ignore"]
+serve = ["dep:futures-util", "dep:tokio", "dep:warp"]
+search = ["dep:elasticlunr-rs", "dep:ammonia"]
 
 [[bin]]
 doc = false

@@ -16,7 +16,7 @@ pub fn make_subcommand() -> Command {
 // Clean command implementation
 pub fn execute(args: &ArgMatches) -> mdbook::errors::Result<()> {
     let book_dir = get_book_dir(args);
-    let book = MDBook::load(&book_dir)?;
+    let book = MDBook::load(book_dir)?;
 
     let dir_to_remove = match args.get_one::<PathBuf>("dest-dir") {
         Some(dest_dir) => dest_dir.into(),

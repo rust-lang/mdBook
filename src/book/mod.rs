@@ -99,7 +99,7 @@ impl MDBook {
         let root = book_root.into();
 
         let src_dir = root.join(&config.book.src);
-        let book = book::load_book(&src_dir, &config.build)?;
+        let book = book::load_book(src_dir, &config.build)?;
 
         let renderers = determine_renderers(&config);
         let preprocessors = determine_preprocessors(&config)?;
@@ -122,7 +122,7 @@ impl MDBook {
         let root = book_root.into();
 
         let src_dir = root.join(&config.book.src);
-        let book = book::load_book_from_disk(&summary, &src_dir)?;
+        let book = book::load_book_from_disk(&summary, src_dir)?;
 
         let renderers = determine_renderers(&config);
         let preprocessors = determine_preprocessors(&config)?;
@@ -309,7 +309,7 @@ impl MDBook {
                 info!("Testing chapter '{}': {:?}", ch.name, chapter_path);
 
                 // write preprocessed file to tempdir
-                let path = temp_dir.path().join(&chapter_path);
+                let path = temp_dir.path().join(chapter_path);
                 let mut tmpf = utils::fs::create_file(&path)?;
                 tmpf.write_all(ch.content.as_bytes())?;
 
@@ -319,13 +319,13 @@ impl MDBook {
                 if let Some(edition) = self.config.rust.edition {
                     match edition {
                         RustEdition::E2015 => {
-                            cmd.args(&["--edition", "2015"]);
+                            cmd.args(["--edition", "2015"]);
                         }
                         RustEdition::E2018 => {
-                            cmd.args(&["--edition", "2018"]);
+                            cmd.args(["--edition", "2018"]);
                         }
                         RustEdition::E2021 => {
-                            cmd.args(&["--edition", "2021"]);
+                            cmd.args(["--edition", "2021"]);
                         }
                     }
                 }

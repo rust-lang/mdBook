@@ -99,7 +99,7 @@ impl HtmlHandlebars {
         ctx.data.insert("title".to_owned(), json!(title));
         ctx.data.insert(
             "path_to_root".to_owned(),
-            json!(utils::fs::path_to_root(&path)),
+            json!(utils::fs::path_to_root(path)),
         );
         if let Some(ref section) = ch.number {
             ctx.data
@@ -275,7 +275,8 @@ impl HtmlHandlebars {
             "FontAwesome/fonts/FontAwesome.ttf",
             theme::FONT_AWESOME_TTF,
         )?;
-        if html_config.copy_fonts {
+        // Don't copy the stock fonts if the user has specified their own fonts to use.
+        if html_config.copy_fonts && theme.fonts_css.is_none() {
             write_file(destination, "fonts/fonts.css", theme::fonts::CSS)?;
             for (file_name, contents) in theme::fonts::LICENSES.iter() {
                 write_file(destination, file_name, contents)?;
@@ -291,20 +292,13 @@ impl HtmlHandlebars {
         }
         if let Some(fonts_css) = &theme.fonts_css {
             if !fonts_css.is_empty() {
-                if html_config.copy_fonts {
-                    warn!(
-                        "output.html.copy_fonts is deprecated.\n\
-                        Set copy_fonts=false and ensure the fonts you want are in \
-                        the `theme/fonts/` directory."
-                    );
-                }
-                write_file(destination, "fonts/fonts.css", &fonts_css)?;
+                write_file(destination, "fonts/fonts.css", fonts_css)?;
             }
         }
         if !html_config.copy_fonts && theme.fonts_css.is_none() {
             warn!(
-                "output.html.copy_fonts is deprecated.\n\
-                This book appears to have copy_fonts=false without a fonts.css file.\n\
+                "output.html.copy-fonts is deprecated.\n\
+                This book appears to have copy-fonts=false in book.toml without a fonts.css file.\n\
                 Add an empty `theme/fonts/fonts.css` file to squelch this warning."
             );
         }
@@ -553,7 +547,7 @@ impl Renderer for HtmlHandlebars {
         // Print version
         let mut print_content = String::new();
 
-        fs::create_dir_all(&destination)
+        fs::create_dir_all(destination)
             .with_context(|| "Unexpected error when constructing destination path")?;
 
         let mut is_index = true;

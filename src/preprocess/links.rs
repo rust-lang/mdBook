@@ -118,7 +118,7 @@ where
     for link in find_links(s) {
         replaced.push_str(&s[previous_end_index..link.start_index]);
 
-        match link.render_with_path(&path, chapter_title, cutoff_commented_lines) {
+        match link.render_with_path(path, chapter_title, cutoff_commented_lines) {
             Ok(new_content) => {
                 if depth < MAX_LINK_NESTED_DEPTH {
                     if let Some(rel_path) = link.link_type.relative_path(path) {
@@ -354,7 +354,7 @@ impl<'a> Link<'a> {
         let base = base.as_ref();
         match self.link_type {
             // omit the escape char
-            LinkType::Escaped => Ok((&self.link_text[1..]).to_owned()),
+            LinkType::Escaped => Ok(self.link_text[1..].to_owned()),
             LinkType::Include(ref pat, ref range_or_anchor) => {
                 let target = base.join(pat);
 

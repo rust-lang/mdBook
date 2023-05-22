@@ -1,5 +1,25 @@
 # Changelog
 
+## mdBook 0.4.29
+[v0.4.28...v0.4.29](https://github.com/rust-lang/mdBook/compare/v0.4.28...v0.4.29)
+
+### Changed
+- Built-in fonts are no longer copied when `fonts/fonts.css` is overridden in the theme directory.
+  Additionally, the warning about `copy-fonts` has been removed if `fonts/fonts.css` is specified.
+  [#2080](https://github.com/rust-lang/mdBook/pull/2080)
+- `mdbook init --force` now skips all interactive prompts as intended.
+  [#2057](https://github.com/rust-lang/mdBook/pull/2057)
+- Updated dependencies
+  [#2063](https://github.com/rust-lang/mdBook/pull/2063)
+  [#2086](https://github.com/rust-lang/mdBook/pull/2086)
+  [#2082](https://github.com/rust-lang/mdBook/pull/2082)
+  [#2084](https://github.com/rust-lang/mdBook/pull/2084)
+  [#2085](https://github.com/rust-lang/mdBook/pull/2085)
+
+### Fixed
+- Switched from the `gitignore` library to `ignore`. This should bring some improvements with gitignore handling.
+  [#2076](https://github.com/rust-lang/mdBook/pull/2076)
+
 ## mdBook 0.4.28
 [v0.4.27...v0.4.28](https://github.com/rust-lang/mdBook/compare/v0.4.27...v0.4.28)
 

@@ -67,4 +67,16 @@ mdbook init --title="my amazing book"
 Create a `.gitignore` file configured to ignore the `book` directory created when [building] a book. 
 If not supplied, an interactive prompt will ask whether it should be created.
 
+```bash
+mdbook init --ignore=none
+```
+
+```bash
+mdbook init --ignore=git
+```
+
 [building]: build.md
+
+#### --force
+
+Skip the prompts to create a `.gitignore` and for the title for the book.

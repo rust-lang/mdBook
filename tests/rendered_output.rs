@@ -275,7 +275,7 @@ fn root_index_html() -> Result<Document> {
         .with_context(|| "Book building failed")?;
 
     let index_page = temp.path().join("book").join("index.html");
-    let html = fs::read_to_string(&index_page).with_context(|| "Unable to read index.html")?;
+    let html = fs::read_to_string(index_page).with_context(|| "Unable to read index.html")?;
 
     Ok(Document::from(html.as_str()))
 }
@@ -412,7 +412,7 @@ fn recursive_includes_are_capped() {
     let content = &["Around the world, around the world
 Around the world, around the world
 Around the world, around the world"];
-    assert_contains_strings(&recursive, content);
+    assert_contains_strings(recursive, content);
 }
 
 #[test]
@@ -462,7 +462,7 @@ fn by_default_mdbook_use_index_preprocessor_to_convert_readme_to_index() {
 
     let second_index = temp.path().join("book").join("second").join("index.html");
     let unexpected_strings = vec!["Second README"];
-    assert_doesnt_contain_strings(&second_index, &unexpected_strings);
+    assert_doesnt_contain_strings(second_index, &unexpected_strings);
 }
 
 #[test]
@@ -628,10 +628,8 @@ fn edit_url_has_configured_src_dir_edit_url() {
 }
 
 fn remove_absolute_components(path: &Path) -> impl Iterator<Item = Component> + '_ {
-    path.components().skip_while(|c| match c {
-        Component::Prefix(_) | Component::RootDir => true,
-        _ => false,
-    })
+    path.components()
+        .skip_while(|c| matches!(c, Component::Prefix(_) | Component::RootDir))
 }
 
 /// Checks formatting of summary names with inline elements.
@@ -803,7 +801,7 @@ mod search {
             let src = read_book_index(temp.path());
 
             let dest = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/searchindex_fixture.json");
-            let dest = File::create(&dest).unwrap();
+            let dest = File::create(dest).unwrap();
             serde_json::to_writer_pretty(dest, &src).unwrap();
 
             src
@@ -891,8 +889,8 @@ fn custom_fonts() {
     assert_eq!(actual_files(&p.join("book/fonts")), &builtin_fonts);
     assert!(has_fonts_css(p));
 
-    // Mixed with copy_fonts=true
-    // This should generate a deprecation warning.
+    // Mixed with copy-fonts=true
+    // Should ignore the copy-fonts setting since the user has provided their own fonts.css.
     let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
     let p = temp.path();
     MDBook::init(p).build().unwrap();
@@ -900,10 +898,10 @@ fn custom_fonts() {
     write_file(&p.join("theme/fonts"), "myfont.woff", b"").unwrap();
     MDBook::load(p).unwrap().build().unwrap();
     assert!(has_fonts_css(p));
-    let mut expected = Vec::from(builtin_fonts);
-    expected.push("myfont.woff");
-    expected.sort();
-    assert_eq!(actual_files(&p.join("book/fonts")), expected.as_slice());
+    assert_eq!(
+        actual_files(&p.join("book/fonts")),
+        ["fonts.css", "myfont.woff"]
+    );
 
     // copy-fonts=false, no theme
     // This should generate a deprecation warning.
