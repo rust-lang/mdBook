@@ -91,19 +91,26 @@ where
     let mut replaced = String::new();
 
     for link in find_links(s) {
-        replaced.push_str(&s[previous_end_index..link.start_index]);
+        let before_link = &s[previous_end_index..link.start_index];
+        let offset = if let Some(i) = before_link.rfind('\n') {
+            &before_link[i + 1..]
+        } else {
+            ""
+        };
+        replaced.push_str(before_link);
 
         match link.render_with_path(path, chapter_title) {
             Ok(new_content) => {
                 if depth < MAX_LINK_NESTED_DEPTH {
                     if let Some(rel_path) = link.link_type.relative_path(path) {
-                        replaced.push_str(&replace_all(
-                            &new_content,
-                            rel_path,
-                            source,
-                            depth + 1,
-                            chapter_title,
-                        ));
+                        let v =
+                            replace_all(&new_content, rel_path, source, depth + 1, chapter_title);
+                        let lines = v.split('\n').into_iter().collect::<Vec<&str>>();
+                        // no need to add offset for the first line
+                        replaced.push_str(lines[0]);
+                        for line in lines.iter().skip(1) {
+                            replaced.push_str(&format!("\n{}{}", &offset, &line));
+                        }
                     } else {
                         replaced.push_str(&new_content);
                     }

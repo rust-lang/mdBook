@@ -29,3 +29,17 @@ assert!($TEST_STATUS);
 ```rust
 {{#rustdoc_include partially-included-test-with-anchors.rs:rustdoc-include-anchor}}
 ```
+
+## Keep Indent
+
+1. The following code remains indent:
+    ```haskell
+    {{#include ./eqNonEmpty.hs}}
+    ```
+    we ...
+
+    1. The following code also remains indent:
+        ```haskell
+        {{#include ./eqNonEmpty.hs}}
+        ```
+        we ...
