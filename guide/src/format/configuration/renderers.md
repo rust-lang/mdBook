@@ -210,7 +210,7 @@ The `[output.html.playground]` table provides options for controlling Rust sampl
 editable = false         # allows editing the source code
 copyable = true          # include the copy button for copying code snippets
 copy-js = true           # includes the JavaScript for the code editor
-line-numbers = false     # displays line numbers for editable code
+line-numbers = true      # displays line numbers for editable code
 runnable = true          # displays a run button for rust code
 ```
 
