@@ -755,6 +755,7 @@ mod search {
         let no_headers = get_doc_ref("first/no-headers.html");
         let duplicate_headers_1 = get_doc_ref("first/duplicate-headers.html#header-text-1");
         let conclusion = get_doc_ref("conclusion.html#conclusion");
+        let heading_attrs = get_doc_ref("first/heading-attributes.html#both");
 
         let bodyidx = &index["index"]["index"]["body"]["root"];
         let textidx = &bodyidx["t"]["e"]["x"]["t"];
@@ -785,6 +786,10 @@ mod search {
         assert_eq!(
             docs[&no_headers]["body"],
             "Capybara capybara capybara. Capybara capybara capybara. ThisLongWordIsIncludedSoWeCanCheckThatSufficientlyLongWordsAreOmittedFromTheSearchIndex."
+        );
+        assert_eq!(
+            docs[&heading_attrs]["breadcrumbs"],
+            "First Chapter » Heading Attributes » Heading with id and classes"
         );
     }
 
