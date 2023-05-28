@@ -35,6 +35,7 @@ const TOC_SECOND_LEVEL: &[&str] = &[
     "1.5. Unicode",
     "1.6. No Headers",
     "1.7. Duplicate Headers",
+    "1.8. Heading Attributes",
     "2.1. Nested Chapter",
 ];
 
@@ -754,6 +755,7 @@ mod search {
         let no_headers = get_doc_ref("first/no-headers.html");
         let duplicate_headers_1 = get_doc_ref("first/duplicate-headers.html#header-text-1");
         let conclusion = get_doc_ref("conclusion.html#conclusion");
+        let heading_attrs = get_doc_ref("first/heading-attributes.html#both");
 
         let bodyidx = &index["index"]["index"]["body"]["root"];
         let textidx = &bodyidx["t"]["e"]["x"]["t"];
@@ -766,7 +768,7 @@ mod search {
         assert_eq!(docs[&some_section]["body"], "");
         assert_eq!(
             docs[&summary]["body"],
-            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Markdown Unicode No Headers Duplicate Headers Second Chapter Nested Chapter Conclusion"
+            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Markdown Unicode No Headers Duplicate Headers Heading Attributes Second Chapter Nested Chapter Conclusion"
         );
         assert_eq!(
             docs[&summary]["breadcrumbs"],
@@ -784,6 +786,10 @@ mod search {
         assert_eq!(
             docs[&no_headers]["body"],
             "Capybara capybara capybara. Capybara capybara capybara. ThisLongWordIsIncludedSoWeCanCheckThatSufficientlyLongWordsAreOmittedFromTheSearchIndex."
+        );
+        assert_eq!(
+            docs[&heading_attrs]["breadcrumbs"],
+            "First Chapter » Heading Attributes » Heading with id and classes"
         );
     }
 
@@ -945,4 +951,20 @@ fn custom_fonts() {
         actual_files(&p.join("book/fonts")),
         &["fonts.css", "myfont.woff"]
     );
+}
+
+#[test]
+fn custom_header_attributes() {
+    let temp = DummyBook::new().build().unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
+    md.build().unwrap();
+
+    let contents = temp.path().join("book/first/heading-attributes.html");
+
+    let summary_strings = &[
+        r##"<h1 id="attrs"><a class="header" href="#attrs">Heading Attributes</a></h1>"##,
+        r##"<h2 id="heading-with-classes" class="class1 class2"><a class="header" href="#heading-with-classes">Heading with classes</a></h2>"##,
+        r##"<h2 id="both" class="class1 class2"><a class="header" href="#both">Heading with id and classes</a></h2>"##,
+    ];
+    assert_contains_strings(&contents, summary_strings);
 }

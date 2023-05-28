@@ -183,6 +183,7 @@ pub fn new_cmark_parser(text: &str, curly_quotes: bool) -> Parser<'_, '_> {
     opts.insert(Options::ENABLE_FOOTNOTES);
     opts.insert(Options::ENABLE_STRIKETHROUGH);
     opts.insert(Options::ENABLE_TASKLISTS);
+    opts.insert(Options::ENABLE_HEADING_ATTRIBUTES);
     if curly_quotes {
         opts.insert(Options::ENABLE_SMART_PUNCTUATION);
     }
