@@ -832,10 +832,12 @@ fn insert_link_into_header(
     id_counter: &mut HashMap<String, usize>,
 ) -> String {
     let id = id.unwrap_or_else(|| utils::unique_id_from_content(content, id_counter));
-    let classes = classes.unwrap_or("".to_string());
+    let classes = classes
+        .map(|s| format!(" class=\"{s}\""))
+        .unwrap_or_default();
 
     format!(
-        r##"<h{level} id="{id}" class="{classes}"><a class="header" href="#{id}">{text}</a></h{level}>"##,
+        r##"<h{level} id="{id}"{classes}><a class="header" href="#{id}">{text}</a></h{level}>"##,
         level = level,
         id = id,
         text = content,
@@ -1014,28 +1016,39 @@ mod tests {
         let inputs = vec![
             (
                 "blah blah <h1>Foo</h1>",
-                r##"blah blah <h1 id="foo" class=""><a class="header" href="#foo">Foo</a></h1>"##,
+                r##"blah blah <h1 id="foo"><a class="header" href="#foo">Foo</a></h1>"##,
             ),
             (
                 "<h1>Foo</h1>",
-                r##"<h1 id="foo" class=""><a class="header" href="#foo">Foo</a></h1>"##,
+                r##"<h1 id="foo"><a class="header" href="#foo">Foo</a></h1>"##,
             ),
             (
                 "<h3>Foo^bar</h3>",
-                r##"<h3 id="foobar" class=""><a class="header" href="#foobar">Foo^bar</a></h3>"##,
+                r##"<h3 id="foobar"><a class="header" href="#foobar">Foo^bar</a></h3>"##,
             ),
             (
                 "<h4></h4>",
-                r##"<h4 id="" class=""><a class="header" href="#"></a></h4>"##,
+                r##"<h4 id=""><a class="header" href="#"></a></h4>"##,
             ),
             (
                 "<h4><em>Hï</em></h4>",
-                r##"<h4 id="hï" class=""><a class="header" href="#hï"><em>Hï</em></a></h4>"##,
+                r##"<h4 id="hï"><a class="header" href="#hï"><em>Hï</em></a></h4>"##,
             ),
             (
                 "<h1>Foo</h1><h3>Foo</h3>",
-                r##"<h1 id="foo" class=""><a class="header" href="#foo">Foo</a></h1><h3 id="foo-1" class=""><a class="header" href="#foo-1">Foo</a></h3>"##,
+                r##"<h1 id="foo"><a class="header" href="#foo">Foo</a></h1><h3 id="foo-1"><a class="header" href="#foo-1">Foo</a></h3>"##,
             ),
+            // id only
+            (
+                r##"<h1 id="foobar">Foo</h1>"##,
+                r##"<h1 id="foobar"><a class="header" href="#foobar">Foo</a></h1>"##,
+            ),
+            // class only
+            (
+                r##"<h1 class="class1 class2">Foo</h1>"##,
+                r##"<h1 id="foo" class="class1 class2"><a class="header" href="#foo">Foo</a></h1>"##,
+            ),
+            // both id and class
             (
                 r##"<h1 id="foobar" class="class1 class2">Foo</h1>"##,
                 r##"<h1 id="foobar" class="class1 class2"><a class="header" href="#foobar">Foo</a></h1>"##,

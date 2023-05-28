@@ -105,12 +105,12 @@ fn check_correct_cross_links_in_nested_dir() {
 
     assert_contains_strings(
         first.join("index.html"),
-        &[r##"<h2 id="some-section" class=""><a class="header" href="#some-section">"##],
+        &[r##"<h2 id="some-section"><a class="header" href="#some-section">"##],
     );
 
     assert_contains_strings(
         first.join("nested.html"),
-        &[r##"<h2 id="some-section" class=""><a class="header" href="#some-section">"##],
+        &[r##"<h2 id="some-section"><a class="header" href="#some-section">"##],
     );
 }
 
@@ -393,7 +393,7 @@ fn able_to_include_files_in_chapters() {
     let includes = temp.path().join("book/first/includes.html");
 
     let summary_strings = &[
-        r##"<h1 id="summary" class=""><a class="header" href="#summary">Summary</a></h1>"##,
+        r##"<h1 id="summary"><a class="header" href="#summary">Summary</a></h1>"##,
         ">First Chapter</a>",
     ];
     assert_contains_strings(&includes, summary_strings);
