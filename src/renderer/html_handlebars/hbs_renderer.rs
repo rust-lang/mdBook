@@ -892,15 +892,15 @@ fn fix_code_blocks(html: &str) -> String {
         .into_owned()
 }
 
+static CODE_BLOCK_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap());
+
 fn add_playground_pre(
     html: &str,
     playground_config: &Playground,
     edition: Option<RustEdition>,
 ) -> String {
-    static ADD_PLAYGROUND_PRE: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap());
-
-    ADD_PLAYGROUND_PRE
+    CODE_BLOCK_RE
         .replace_all(html, |caps: &Captures<'_>| {
             let text = &caps[1];
             let classes = &caps[2];
@@ -958,11 +958,12 @@ fn add_playground_pre(
         .into_owned()
 }
 
+/// Modifies all `<code>` blocks to convert "hidden" lines and to wrap them in
+/// a `<span class="boring">`.
 fn hide_lines(html: &str, code_config: &Code) -> String {
-    let regex = Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap();
     let language_regex = Regex::new(r"\blanguage-(\w+)\b").unwrap();
     let hidelines_regex = Regex::new(r"\bhidelines=(\S+)").unwrap();
-    regex
+    CODE_BLOCK_RE
         .replace_all(html, |caps: &Captures<'_>| {
             let text = &caps[1];
             let classes = &caps[2];
@@ -981,13 +982,9 @@ fn hide_lines(html: &str, code_config: &Code) -> String {
                     Some(capture) => Some(&capture[1]),
                     None => {
                         // Then look up the prefix by language
-                        let language_capture = language_regex.captures(classes);
-                        match &language_capture {
-                            Some(capture) => {
-                                code_config.hidelines.get(&capture[1]).map(|p| p.as_str())
-                            }
-                            None => None,
-                        }
+                        language_regex.captures(classes).and_then(|capture| {
+                            code_config.hidelines.get(&capture[1]).map(|p| p.as_str())
+                        })
                     }
                 };
 
