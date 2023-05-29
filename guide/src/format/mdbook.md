@@ -2,11 +2,11 @@
 
 ## Hiding code lines
 
-There is a feature in mdBook that lets you hide code lines by prepending them
-with a `#` [like you would with Rustdoc][rustdoc-hide].
-This currently only works with Rust language code blocks.
+There is a feature in mdBook that lets you hide code lines by prepending them with a specific prefix.
 
-[rustdoc-hide]: https://doc.rust-lang.org/stable/rustdoc/documentation-tests.html#hiding-portions-of-the-example
+For the Rust language, you can use the `#` character as a prefix which will hide lines [like you would with Rustdoc][rustdoc-hide].
+
+[rustdoc-hide]: https://doc.rust-lang.org/stable/rustdoc/write-documentation/documentation-tests.html#hiding-portions-of-the-example
 
 ```bash
 # fn main() {
@@ -28,7 +28,47 @@ Will render as
 # }
 ```
 
-The code block has an eyeball icon (<i class="fa fa-eye"></i>) which will toggle the visibility of the hidden lines.
+When you tap or hover the mouse over the code block, there will be an eyeball icon (<i class="fa fa-eye"></i>) which will toggle the visibility of the hidden lines.
+
+By default, this only works for code examples that are annotated with `rust`.
+However, you can define custom prefixes for other languages by adding a new line-hiding prefix in your `book.toml` with the language name and prefix character(s):
+
+```toml
+[output.html.code.hidelines]
+python = "~"
+```
+
+The prefix will hide any lines that begin with the given prefix. With the python prefix shown above, this:
+
+```bash
+~hidden()
+nothidden():
+~    hidden()
+    ~hidden()
+    nothidden()
+```
+
+will render as
+
+```python
+~hidden()
+nothidden():
+~    hidden()
+    ~hidden()
+    nothidden()
+```
+
+This behavior can be overridden locally with a different prefix. This has the same effect as above:
+
+~~~markdown
+```python,hidelines=!!!
+!!!hidden()
+nothidden():
+!!!    hidden()
+    !!!hidden()
+    nothidden()
+```
+~~~
 
 ## Rust Playground
 

@@ -1,5 +1,22 @@
 # Changelog
 
+## mdBook 0.4.30
+[v0.4.29...v0.4.30](https://github.com/rust-lang/mdBook/compare/v0.4.29...v0.4.30)
+
+### Added
+- Added support for heading attributes.
+  Attributes are specified in curly braces just after the heading text.
+  An HTML ID can be specified with `#` and classes with `.`.
+  For example: `## My heading {#custom-id .class1 .class2}`
+  [#2013](https://github.com/rust-lang/mdBook/pull/2013)
+- Added support for hidden code lines for languages other than Rust.
+  The `output.html.code.hidelines` table allows you to define the prefix character that will be used to hide code lines based on the language.
+  [#2093](https://github.com/rust-lang/mdBook/pull/2093)
+
+### Fixed
+- Fixed a few minor markdown rendering issues.
+  [#2092](https://github.com/rust-lang/mdBook/pull/2092)
+
 ## mdBook 0.4.29
 [v0.4.28...v0.4.29](https://github.com/rust-lang/mdBook/compare/v0.4.28...v0.4.29)
 
