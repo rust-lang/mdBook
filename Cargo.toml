@@ -1,6 +1,6 @@
 [package]
 name = "mdbook"
-version = "0.4.29"
+version = "0.4.30"
 authors = [
     "Mathieu David <mathieudavid@mathieudavid.org>",
     "Michael-F-Bryan <michaelfbryan@gmail.com>",
@@ -27,7 +27,7 @@ handlebars = "4.3.7"
 log = "0.4.17"
 memchr = "2.5.0"
 opener = "0.5.2"
-pulldown-cmark = { version = "0.9.2", default-features = false }
+pulldown-cmark = { version = "0.9.3", default-features = false }
 regex = "1.8.1"
 serde = { version = "1.0.163", features = ["derive"] }
 serde_json = "1.0.96"

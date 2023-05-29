@@ -138,9 +138,11 @@ fn render_item(
 
                 in_heading = true;
             }
-            Event::End(Tag::Heading(i, ..)) if i as u32 <= max_section_depth => {
+            Event::End(Tag::Heading(i, id, _classes)) if i as u32 <= max_section_depth => {
                 in_heading = false;
-                section_id = Some(utils::unique_id_from_content(&heading, &mut id_counter));
+                section_id = id
+                    .map(|id| id.to_string())
+                    .or_else(|| Some(utils::unique_id_from_content(&heading, &mut id_counter)));
                 breadcrumbs.push(heading.clone());
             }
             Event::Start(Tag::FootnoteDefinition(name)) => {
