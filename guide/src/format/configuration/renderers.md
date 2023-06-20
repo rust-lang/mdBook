@@ -150,9 +150,9 @@ The following configuration options are available:
 - **edit-url-template:** Edit url template, when provided shows a
   "Suggest an edit" button (which looks like <i class="fa fa-edit"></i>) for directly jumping to editing the currently
   viewed page. For e.g. GitHub projects set this to
-  `https://github.com/<owner>/<repo>/edit/master/{path}` or for
+  `https://github.com/<owner>/<repo>/edit/<branch>/{path}` or for
   Bitbucket projects set it to
-  `https://bitbucket.org/<owner>/<repo>/src/master/{path}?mode=edit`
+  `https://bitbucket.org/<owner>/<repo>/src/<branch>/{path}?mode=edit`
   where {path} will be replaced with the full path of the file in the
   repository.
 - **input-404:** The name of the markdown file used for missing files.

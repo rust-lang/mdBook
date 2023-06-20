@@ -676,13 +676,14 @@ function playground_text(playground, hidden = true) {
         }, { passive: true });
     })();
     (function controllBorder() {
-        menu.classList.remove('bordered');
-        document.addEventListener('scroll', function () {
+        function updateBorder() {
             if (menu.offsetTop === 0) {
                 menu.classList.remove('bordered');
             } else {
                 menu.classList.add('bordered');
             }
-        }, { passive: true });
+        }
+        updateBorder();
+        document.addEventListener('scroll', updateBorder, { passive: true });
     })();
 })();
