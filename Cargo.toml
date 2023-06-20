@@ -16,9 +16,6 @@ repository = "https://github.com/rust-lang/mdBook"
 description = "Creates a book from markdown files"
 rust-version = "1.70"
 
-[registries.crates-io]
-protocol = "sparse"
-
 [dependencies]
 anyhow = "1.0.71"
 chrono = { version = "0.4.24", default-features = false, features = ["clock"] }
