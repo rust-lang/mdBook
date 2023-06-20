@@ -14,7 +14,7 @@ license = "MPL-2.0"
 readme = "README.md"
 repository = "https://github.com/rust-lang/mdBook"
 description = "Creates a book from markdown files"
-rust-version = "1.65"
+rust-version = "1.70"
 
 [registries.crates-io]
 protocol = "sparse"
