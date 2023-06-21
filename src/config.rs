@@ -424,7 +424,7 @@ impl Default for BookConfig {
             src: PathBuf::from("src"),
             multilingual: false,
             language: Some(String::from("en")),
-            version: Some(String::from("0.0.1"))
+            version: Some(String::from("0.0.1")),
         }
     }
 }

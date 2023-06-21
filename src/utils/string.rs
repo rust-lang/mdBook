@@ -63,12 +63,17 @@ pub fn take_anchored_lines(s: &str, anchor: &str) -> String {
 /// For any lines not in the range, include them but use `#` at the beginning. This will hide the
 /// lines from initial display but include them when expanding the code snippet or testing with
 /// rustdoc.
-pub fn take_rustdoc_include_lines<R: RangeBounds<usize>>(s: &str, range: R, cutoff_commented_lines: bool) -> String {
+pub fn take_rustdoc_include_lines<R: RangeBounds<usize>>(
+    s: &str,
+    range: R,
+    cutoff_commented_lines: bool,
+) -> String {
     let mut output = String::with_capacity(s.len());
 
     for (index, line) in s.lines().enumerate() {
         if !range.contains(&index) {
-            if !cutoff_commented_lines { // do not include 'dashed' lines (for epub format)
+            if !cutoff_commented_lines {
+                // do not include 'dashed' lines (for epub format)
                 output.push_str("# ");
             }
         }
@@ -83,7 +88,11 @@ pub fn take_rustdoc_include_lines<R: RangeBounds<usize>>(s: &str, range: R, cuto
 /// For any lines not between the anchors, include them but use `#` at the beginning. This will
 /// hide the lines from initial display but include them when expanding the code snippet or testing
 /// with rustdoc.
-pub fn take_rustdoc_include_anchored_lines(s: &str, anchor: &str, cutoff_commented_lines: bool) -> String {
+pub fn take_rustdoc_include_anchored_lines(
+    s: &str,
+    anchor: &str,
+    cutoff_commented_lines: bool,
+) -> String {
     let mut output = String::with_capacity(s.len());
     let mut within_anchored_section = false;
 
@@ -107,7 +116,8 @@ pub fn take_rustdoc_include_anchored_lines(s: &str, anchor: &str, cutoff_comment
                 within_anchored_section = true;
             }
         } else if !ANCHOR_END.is_match(l) {
-            if !cutoff_commented_lines { // do not include 'dashed' lines (for epub format)
+            if !cutoff_commented_lines {
+                // do not include 'dashed' lines (for epub format)
                 output.push_str("# ");
                 output.push_str(l);
                 output.push('\n');
