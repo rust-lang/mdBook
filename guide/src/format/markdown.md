@@ -223,7 +223,7 @@ To enable it, see the [`output.html.curly-quotes`] config option.
 
 ### Heading attributes
 
-Headings can have a custom HTML ID and classes. This let's you maintain the same ID even if you change the heading's text, it also let's you add multiple classes in the heading.
+Headings can have a custom HTML ID and classes. This lets you maintain the same ID even if you change the heading's text, it also let's you add multiple classes in the heading.
 
 Example:
 ```md
