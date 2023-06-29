@@ -1,5 +1,16 @@
 # Changelog
 
+## mdBook 0.4.31
+[v0.4.30...v0.4.31](https://github.com/rust-lang/mdBook/compare/v0.4.30...v0.4.31)
+
+### Fixed
+- Fixed menu border render flash during page navigation.
+  [#2101](https://github.com/rust-lang/mdBook/pull/2101)
+- Fixed flicker setting sidebar scroll position.
+  [#2104](https://github.com/rust-lang/mdBook/pull/2104)
+- Fixed compile error with proc-macro2 on latest Rust nightly.
+  [#2109](https://github.com/rust-lang/mdBook/pull/2109)
+
 ## mdBook 0.4.30
 [v0.4.29...v0.4.30](https://github.com/rust-lang/mdBook/compare/v0.4.29...v0.4.30)
 
