@@ -124,7 +124,7 @@ mdBook has several extensions beyond the standard CommonMark specification.
 ### Strikethrough
 
 Text may be rendered with a horizontal line through the center by wrapping the
-text with two tilde characters on each side:
+text with one or two tilde characters on each side:
 
 ```text
 An example of ~~strikethrough text~~.
