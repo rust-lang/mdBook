@@ -35,7 +35,7 @@ For example, if you have a preprocessor called `mdbook-example`, then you can in
 With this table, mdBook will execute the `mdbook-example` preprocessor.
 
 This table can include additional key-value pairs that are specific to the preprocessor.
-For example, if our example prepocessor needed some extra configuration options:
+For example, if our example preprocessor needed some extra configuration options:
 
 ```toml
 [preprocessor.example]
