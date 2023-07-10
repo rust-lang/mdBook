@@ -127,7 +127,7 @@ fn render(
 
     context.insert(
         "path_to_root".to_owned(),
-        json!(utils::fs::path_to_root(&base_path)),
+        json!(utils::fs::path_to_root(base_path)),
     );
 
     chapter

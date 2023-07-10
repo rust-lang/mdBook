@@ -31,7 +31,7 @@ fn main(){
 
 A random image sprinkled in between
 
-![16x16 rust-lang logo](http://rust-lang.org/logos/rust-logo-16x16.png)
+![16x16 rust-lang logo](https://rust-lang.org/logos/rust-logo-16x16.png)
 
 ---
 

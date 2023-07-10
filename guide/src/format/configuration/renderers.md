@@ -150,9 +150,9 @@ The following configuration options are available:
 - **edit-url-template:** Edit url template, when provided shows a
   "Suggest an edit" button (which looks like <i class="fa fa-edit"></i>) for directly jumping to editing the currently
   viewed page. For e.g. GitHub projects set this to
-  `https://github.com/<owner>/<repo>/edit/master/{path}` or for
+  `https://github.com/<owner>/<repo>/edit/<branch>/{path}` or for
   Bitbucket projects set it to
-  `https://bitbucket.org/<owner>/<repo>/src/master/{path}?mode=edit`
+  `https://bitbucket.org/<owner>/<repo>/src/<branch>/{path}?mode=edit`
   where {path} will be replaced with the full path of the file in the
   repository.
 - **input-404:** The name of the markdown file used for missing files.
@@ -182,7 +182,7 @@ page-break = true # insert page-break after each chapter
 
 - **enable:** Enable print support. When `false`, all print support will not be
   rendered. Defaults to `true`.
-- **page-break** Insert page breaks between chapters. Defaults to `true`.
+- **page-break:** Insert page breaks between chapters. Defaults to `true`.
 
 ### `[output.html.fold]`
 
@@ -218,10 +218,24 @@ runnable = true          # displays a run button for rust code
 - **copyable:** Display the copy button on code snippets. Defaults to `true`.
 - **copy-js:** Copy JavaScript files for the editor to the output directory.
   Defaults to `true`.
-- **line-numbers** Display line numbers on editable sections of code. Requires both `editable` and `copy-js` to be `true`. Defaults to `false`.
-- **runnable** Displays a run button for rust code snippets. Changing this to `false` will disable the run in playground feature globally. Defaults to `true`.
+- **line-numbers:** Display line numbers on editable sections of code. Requires both `editable` and `copy-js` to be `true`. Defaults to `false`.
+- **runnable:** Displays a run button for rust code snippets. Changing this to `false` will disable the run in playground feature globally. Defaults to `true`.
 
 [Ace]: https://ace.c9.io/
+
+### `[output.html.code]`
+
+The `[output.html.code]` table provides options for controlling code blocks.
+
+```toml
+[output.html.code]
+# A prefix string per language (one or more chars).
+# Any line starting with whitespace+prefix is hidden.
+hidelines = { python = "~" }
+```
+
+- **hidelines:** A table that defines how [hidden code lines](../mdbook.md#hiding-code-lines) work for each language.
+  The key is the language and the value is a string that will cause code lines starting with that prefix to be hidden.
 
 ### `[output.html.search]`
 

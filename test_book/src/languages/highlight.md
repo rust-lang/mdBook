@@ -57,7 +57,7 @@ _start:
 
 ## bash
 
-```
+```bash
 #!/bin/bash
 
 ###### CONFIG

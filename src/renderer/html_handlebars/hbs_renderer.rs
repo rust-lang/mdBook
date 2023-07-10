@@ -1,5 +1,5 @@
 use crate::book::{Book, BookItem};
-use crate::config::{BookConfig, Config, HtmlConfig, Playground, RustEdition};
+use crate::config::{BookConfig, Code, Config, HtmlConfig, Playground, RustEdition};
 use crate::errors::*;
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
@@ -99,7 +99,7 @@ impl HtmlHandlebars {
         ctx.data.insert("title".to_owned(), json!(title));
         ctx.data.insert(
             "path_to_root".to_owned(),
-            json!(utils::fs::path_to_root(&path)),
+            json!(utils::fs::path_to_root(path)),
         );
         if let Some(ref section) = ch.number {
             ctx.data
@@ -110,7 +110,12 @@ impl HtmlHandlebars {
         debug!("Render template");
         let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
-        let rendered = self.post_process(rendered, &ctx.html_config.playground, ctx.edition);
+        let rendered = self.post_process(
+            rendered,
+            &ctx.html_config.playground,
+            &ctx.html_config.code,
+            ctx.edition,
+        );
 
         // Write to file
         debug!("Creating {}", filepath.display());
@@ -121,8 +126,12 @@ impl HtmlHandlebars {
             ctx.data.insert("path_to_root".to_owned(), json!(""));
             ctx.data.insert("is_index".to_owned(), json!(true));
             let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
-            let rendered_index =
-                self.post_process(rendered_index, &ctx.html_config.playground, ctx.edition);
+            let rendered_index = self.post_process(
+                rendered_index,
+                &ctx.html_config.playground,
+                &ctx.html_config.code,
+                ctx.edition,
+            );
             debug!("Creating index.html from {}", ctx_path);
             utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
         }
@@ -182,8 +191,12 @@ impl HtmlHandlebars {
         data_404.insert("title".to_owned(), json!(title));
         let rendered = handlebars.render("index", &data_404)?;
 
-        let rendered =
-            self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
+        let rendered = self.post_process(
+            rendered,
+            &html_config.playground,
+            &html_config.code,
+            ctx.config.rust.edition,
+        );
         let output_file = get_404_output_file(&html_config.input_404);
         utils::fs::write_file(destination, output_file, rendered.as_bytes())?;
         debug!("Creating 404.html ✓");
@@ -195,11 +208,13 @@ impl HtmlHandlebars {
         &self,
         rendered: String,
         playground_config: &Playground,
+        code_config: &Code,
         edition: Option<RustEdition>,
     ) -> String {
         let rendered = build_header_links(&rendered);
         let rendered = fix_code_blocks(&rendered);
         let rendered = add_playground_pre(&rendered, playground_config, edition);
+        let rendered = hide_lines(&rendered, code_config);
 
         rendered
     }
@@ -275,7 +290,8 @@ impl HtmlHandlebars {
             "FontAwesome/fonts/FontAwesome.ttf",
             theme::FONT_AWESOME_TTF,
         )?;
-        if html_config.copy_fonts {
+        // Don't copy the stock fonts if the user has specified their own fonts to use.
+        if html_config.copy_fonts && theme.fonts_css.is_none() {
             write_file(destination, "fonts/fonts.css", theme::fonts::CSS)?;
             for (file_name, contents) in theme::fonts::LICENSES.iter() {
                 write_file(destination, file_name, contents)?;
@@ -291,20 +307,13 @@ impl HtmlHandlebars {
         }
         if let Some(fonts_css) = &theme.fonts_css {
             if !fonts_css.is_empty() {
-                if html_config.copy_fonts {
-                    warn!(
-                        "output.html.copy_fonts is deprecated.\n\
-                        Set copy_fonts=false and ensure the fonts you want are in \
-                        the `theme/fonts/` directory."
-                    );
-                }
-                write_file(destination, "fonts/fonts.css", &fonts_css)?;
+                write_file(destination, "fonts/fonts.css", fonts_css)?;
             }
         }
         if !html_config.copy_fonts && theme.fonts_css.is_none() {
             warn!(
-                "output.html.copy_fonts is deprecated.\n\
-                This book appears to have copy_fonts=false without a fonts.css file.\n\
+                "output.html.copy-fonts is deprecated.\n\
+                This book appears to have copy-fonts=false in book.toml without a fonts.css file.\n\
                 Add an empty `theme/fonts/fonts.css` file to squelch this warning."
             );
         }
@@ -553,7 +562,7 @@ impl Renderer for HtmlHandlebars {
         // Print version
         let mut print_content = String::new();
 
-        fs::create_dir_all(&destination)
+        fs::create_dir_all(destination)
             .with_context(|| "Unexpected error when constructing destination path")?;
 
         let mut is_index = true;
@@ -589,8 +598,12 @@ impl Renderer for HtmlHandlebars {
             debug!("Render template");
             let rendered = handlebars.render("index", &data)?;
 
-            let rendered =
-                self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
+            let rendered = self.post_process(
+                rendered,
+                &html_config.playground,
+                &html_config.code,
+                ctx.config.rust.edition,
+            );
 
             utils::fs::write_file(destination, "print.html", rendered.as_bytes())?;
             debug!("Creating print.html ✓");
@@ -795,8 +808,10 @@ fn make_data(
 /// Goes through the rendered HTML, making sure all header tags have
 /// an anchor respectively so people can link to sections directly.
 fn build_header_links(html: &str) -> String {
-    static BUILD_HEADER_LINKS: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r"<h(\d)>(.*?)</h\d>").unwrap());
+    static BUILD_HEADER_LINKS: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(r#"<h(\d)(?: id="([^"]+)")?(?: class="([^"]+)")?>(.*?)</h\d>"#).unwrap()
+    });
+    static IGNORE_CLASS: &[&str] = &["menu-title"];
 
     let mut id_counter = HashMap::new();
 
@@ -806,7 +821,22 @@ fn build_header_links(html: &str) -> String {
                 .parse()
                 .expect("Regex should ensure we only ever get numbers here");
 
-            insert_link_into_header(level, &caps[2], &mut id_counter)
+            // Ignore .menu-title because now it's getting detected by the regex.
+            if let Some(classes) = caps.get(3) {
+                for class in classes.as_str().split(" ") {
+                    if IGNORE_CLASS.contains(&class) {
+                        return caps[0].to_string();
+                    }
+                }
+            }
+
+            insert_link_into_header(
+                level,
+                &caps[4],
+                caps.get(2).map(|x| x.as_str().to_string()),
+                caps.get(3).map(|x| x.as_str().to_string()),
+                &mut id_counter,
+            )
         })
         .into_owned()
 }
@@ -816,15 +846,21 @@ fn build_header_links(html: &str) -> String {
 fn insert_link_into_header(
     level: usize,
     content: &str,
+    id: Option<String>,
+    classes: Option<String>,
     id_counter: &mut HashMap<String, usize>,
 ) -> String {
-    let id = utils::unique_id_from_content(content, id_counter);
+    let id = id.unwrap_or_else(|| utils::unique_id_from_content(content, id_counter));
+    let classes = classes
+        .map(|s| format!(" class=\"{s}\""))
+        .unwrap_or_default();
 
     format!(
-        r##"<h{level} id="{id}"><a class="header" href="#{id}">{text}</a></h{level}>"##,
+        r##"<h{level} id="{id}"{classes}><a class="header" href="#{id}">{text}</a></h{level}>"##,
         level = level,
         id = id,
-        text = content
+        text = content,
+        classes = classes
     )
 }
 
@@ -856,67 +892,64 @@ fn fix_code_blocks(html: &str) -> String {
         .into_owned()
 }
 
+static CODE_BLOCK_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap());
+
 fn add_playground_pre(
     html: &str,
     playground_config: &Playground,
     edition: Option<RustEdition>,
 ) -> String {
-    static ADD_PLAYGROUND_PRE: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap());
-
-    ADD_PLAYGROUND_PRE
+    CODE_BLOCK_RE
         .replace_all(html, |caps: &Captures<'_>| {
             let text = &caps[1];
             let classes = &caps[2];
             let code = &caps[3];
 
-            if classes.contains("language-rust") {
-                if (!classes.contains("ignore")
+            if classes.contains("language-rust")
+                && ((!classes.contains("ignore")
                     && !classes.contains("noplayground")
                     && !classes.contains("noplaypen")
                     && playground_config.runnable)
-                    || classes.contains("mdbook-runnable")
-                {
-                    let contains_e2015 = classes.contains("edition2015");
-                    let contains_e2018 = classes.contains("edition2018");
-                    let contains_e2021 = classes.contains("edition2021");
-                    let edition_class = if contains_e2015 || contains_e2018 || contains_e2021 {
-                        // the user forced edition, we should not overwrite it
-                        ""
-                    } else {
-                        match edition {
-                            Some(RustEdition::E2015) => " edition2015",
-                            Some(RustEdition::E2018) => " edition2018",
-                            Some(RustEdition::E2021) => " edition2021",
-                            None => "",
-                        }
-                    };
-
-                    // wrap the contents in an external pre block
-                    format!(
-                        "<pre class=\"playground\"><code class=\"{}{}\">{}</code></pre>",
-                        classes,
-                        edition_class,
-                        {
-                            let content: Cow<'_, str> = if playground_config.editable
-                                && classes.contains("editable")
-                                || text.contains("fn main")
-                                || text.contains("quick_main!")
-                            {
-                                code.into()
-                            } else {
-                                // we need to inject our own main
-                                let (attrs, code) = partition_source(code);
-
-                                format!("# #![allow(unused)]\n{}#fn main() {{\n{}#}}", attrs, code)
-                                    .into()
-                            };
-                            hide_lines(&content)
-                        }
-                    )
+                    || classes.contains("mdbook-runnable"))
+            {
+                let contains_e2015 = classes.contains("edition2015");
+                let contains_e2018 = classes.contains("edition2018");
+                let contains_e2021 = classes.contains("edition2021");
+                let edition_class = if contains_e2015 || contains_e2018 || contains_e2021 {
+                    // the user forced edition, we should not overwrite it
+                    ""
                 } else {
-                    format!("<code class=\"{}\">{}</code>", classes, hide_lines(code))
-                }
+                    match edition {
+                        Some(RustEdition::E2015) => " edition2015",
+                        Some(RustEdition::E2018) => " edition2018",
+                        Some(RustEdition::E2021) => " edition2021",
+                        None => "",
+                    }
+                };
+
+                // wrap the contents in an external pre block
+                format!(
+                    "<pre class=\"playground\"><code class=\"{}{}\">{}</code></pre>",
+                    classes,
+                    edition_class,
+                    {
+                        let content: Cow<'_, str> = if playground_config.editable
+                            && classes.contains("editable")
+                            || text.contains("fn main")
+                            || text.contains("quick_main!")
+                        {
+                            code.into()
+                        } else {
+                            // we need to inject our own main
+                            let (attrs, code) = partition_source(code);
+
+                            format!("# #![allow(unused)]\n{}#fn main() {{\n{}#}}", attrs, code)
+                                .into()
+                        };
+                        content
+                    }
+                )
             } else {
                 // not language-rust, so no-op
                 text.to_owned()
@@ -925,7 +958,50 @@ fn add_playground_pre(
         .into_owned()
 }
 
-fn hide_lines(content: &str) -> String {
+/// Modifies all `<code>` blocks to convert "hidden" lines and to wrap them in
+/// a `<span class="boring">`.
+fn hide_lines(html: &str, code_config: &Code) -> String {
+    let language_regex = Regex::new(r"\blanguage-(\w+)\b").unwrap();
+    let hidelines_regex = Regex::new(r"\bhidelines=(\S+)").unwrap();
+    CODE_BLOCK_RE
+        .replace_all(html, |caps: &Captures<'_>| {
+            let text = &caps[1];
+            let classes = &caps[2];
+            let code = &caps[3];
+
+            if classes.contains("language-rust") {
+                format!(
+                    "<code class=\"{}\">{}</code>",
+                    classes,
+                    hide_lines_rust(code)
+                )
+            } else {
+                // First try to get the prefix from the code block
+                let hidelines_capture = hidelines_regex.captures(classes);
+                let hidelines_prefix = match &hidelines_capture {
+                    Some(capture) => Some(&capture[1]),
+                    None => {
+                        // Then look up the prefix by language
+                        language_regex.captures(classes).and_then(|capture| {
+                            code_config.hidelines.get(&capture[1]).map(|p| p.as_str())
+                        })
+                    }
+                };
+
+                match hidelines_prefix {
+                    Some(prefix) => format!(
+                        "<code class=\"{}\">{}</code>",
+                        classes,
+                        hide_lines_with_prefix(code, prefix)
+                    ),
+                    None => text.to_owned(),
+                }
+            }
+        })
+        .into_owned()
+}
+
+fn hide_lines_rust(content: &str) -> String {
     static BORING_LINES_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\s*)#(.?)(.*)$").unwrap());
 
     let mut result = String::with_capacity(content.len());
@@ -954,6 +1030,26 @@ fn hide_lines(content: &str) -> String {
         }
         result += line;
         result += newline;
+    }
+    result
+}
+
+fn hide_lines_with_prefix(content: &str, prefix: &str) -> String {
+    let mut result = String::with_capacity(content.len());
+    for line in content.lines() {
+        if line.trim_start().starts_with(prefix) {
+            let pos = line.find(prefix).unwrap();
+            let (ws, rest) = (&line[..pos], &line[pos + prefix.len()..]);
+
+            result += "<span class=\"boring\">";
+            result += ws;
+            result += rest;
+            result += "\n";
+            result += "</span>";
+            continue;
+        }
+        result += line;
+        result += "\n";
     }
     result
 }
@@ -993,6 +1089,7 @@ struct RenderItemContext<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn original_build_header_links() {
@@ -1021,6 +1118,21 @@ mod tests {
                 "<h1>Foo</h1><h3>Foo</h3>",
                 r##"<h1 id="foo"><a class="header" href="#foo">Foo</a></h1><h3 id="foo-1"><a class="header" href="#foo-1">Foo</a></h3>"##,
             ),
+            // id only
+            (
+                r##"<h1 id="foobar">Foo</h1>"##,
+                r##"<h1 id="foobar"><a class="header" href="#foobar">Foo</a></h1>"##,
+            ),
+            // class only
+            (
+                r##"<h1 class="class1 class2">Foo</h1>"##,
+                r##"<h1 id="foo" class="class1 class2"><a class="header" href="#foo">Foo</a></h1>"##,
+            ),
+            // both id and class
+            (
+                r##"<h1 id="foobar" class="class1 class2">Foo</h1>"##,
+                r##"<h1 id="foobar" class="class1 class2"><a class="header" href="#foobar">Foo</a></h1>"##,
+            ),
         ];
 
         for (src, should_be) in inputs {
@@ -1033,17 +1145,17 @@ mod tests {
     fn add_playground() {
         let inputs = [
           ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust\"><span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}</span></code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust\"># #![allow(unused)]\n#fn main() {\nx()\n#}</code></pre>"),
           ("<code class=\"language-rust\">fn main() {}</code>",
            "<pre class=\"playground\"><code class=\"language-rust\">fn main() {}</code></pre>"),
           ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";</code></pre>"),
-          ("<code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code>",
            "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code></pre>"),
+          ("<code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code>",
+           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code></pre>"),
           ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span><span class=\"boring\">\n</span>\";</code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code></pre>"),
           ("<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>",
-           "<code class=\"language-rust ignore\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";</code>"),
+           "<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>"),
           ("<code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code>",
            "<pre class=\"playground\"><code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code></pre>"),
         ];
@@ -1063,7 +1175,7 @@ mod tests {
     fn add_playground_edition2015() {
         let inputs = [
           ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2015\"><span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}</span></code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust edition2015\"># #![allow(unused)]\n#fn main() {\nx()\n#}</code></pre>"),
           ("<code class=\"language-rust\">fn main() {}</code>",
            "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}</code></pre>"),
           ("<code class=\"language-rust edition2015\">fn main() {}</code>",
@@ -1087,7 +1199,7 @@ mod tests {
     fn add_playground_edition2018() {
         let inputs = [
           ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2018\"><span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}</span></code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust edition2018\"># #![allow(unused)]\n#fn main() {\nx()\n#}</code></pre>"),
           ("<code class=\"language-rust\">fn main() {}</code>",
            "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}</code></pre>"),
           ("<code class=\"language-rust edition2015\">fn main() {}</code>",
@@ -1111,7 +1223,7 @@ mod tests {
     fn add_playground_edition2021() {
         let inputs = [
             ("<code class=\"language-rust\">x()</code>",
-             "<pre class=\"playground\"><code class=\"language-rust edition2021\"><span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}</span></code></pre>"),
+             "<pre class=\"playground\"><code class=\"language-rust edition2021\"># #![allow(unused)]\n#fn main() {\nx()\n#}</code></pre>"),
             ("<code class=\"language-rust\">fn main() {}</code>",
              "<pre class=\"playground\"><code class=\"language-rust edition2021\">fn main() {}</code></pre>"),
             ("<code class=\"language-rust edition2015\">fn main() {}</code>",
@@ -1127,6 +1239,62 @@ mod tests {
                     ..Playground::default()
                 },
                 Some(RustEdition::E2021),
+            );
+            assert_eq!(&*got, *should_be);
+        }
+    }
+
+    #[test]
+    fn hide_lines_language_rust() {
+        let inputs = [
+          (
+           "<pre class=\"playground\"><code class=\"language-rust\">\n# #![allow(unused)]\n#fn main() {\nx()\n#}</code></pre>",
+           "<pre class=\"playground\"><code class=\"language-rust\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}</span></code></pre>",),
+          (
+           "<pre class=\"playground\"><code class=\"language-rust\">fn main() {}</code></pre>",
+           "<pre class=\"playground\"><code class=\"language-rust\">fn main() {}</code></pre>",),
+          (
+           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code></pre>",
+           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";</code></pre>",),
+          (
+           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code></pre>",
+           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code></pre>",),
+          (
+           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code></pre>",
+           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span><span class=\"boring\">\n</span>\";</code></pre>",),
+          (
+           "<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>",
+           "<code class=\"language-rust ignore\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";</code>",),
+          (
+           "<pre class=\"playground\"><code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code></pre>",
+           "<pre class=\"playground\"><code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code></pre>",),
+        ];
+        for (src, should_be) in &inputs {
+            let got = hide_lines(src, &Code::default());
+            assert_eq!(&*got, *should_be);
+        }
+    }
+
+    #[test]
+    fn hide_lines_language_other() {
+        let inputs = [
+          (
+           "<code class=\"language-python\">~hidden()\nnothidden():\n~    hidden()\n    ~hidden()\n    nothidden()</code>",
+           "<code class=\"language-python\"><span class=\"boring\">hidden()\n</span>nothidden():\n<span class=\"boring\">    hidden()\n</span><span class=\"boring\">    hidden()\n</span>    nothidden()\n</code>",),
+           (
+            "<code class=\"language-python hidelines=!!!\">!!!hidden()\nnothidden():\n!!!    hidden()\n    !!!hidden()\n    nothidden()</code>",
+            "<code class=\"language-python hidelines=!!!\"><span class=\"boring\">hidden()\n</span>nothidden():\n<span class=\"boring\">    hidden()\n</span><span class=\"boring\">    hidden()\n</span>    nothidden()\n</code>",),
+        ];
+        for (src, should_be) in &inputs {
+            let got = hide_lines(
+                src,
+                &Code {
+                    hidelines: {
+                        let mut map = HashMap::new();
+                        map.insert("python".to_string(), "~".to_string());
+                        map
+                    },
+                },
             );
             assert_eq!(&*got, *should_be);
         }

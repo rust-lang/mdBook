@@ -1,5 +1,53 @@
 # Changelog
 
+## mdBook 0.4.31
+[v0.4.30...v0.4.31](https://github.com/rust-lang/mdBook/compare/v0.4.30...v0.4.31)
+
+### Fixed
+- Fixed menu border render flash during page navigation.
+  [#2101](https://github.com/rust-lang/mdBook/pull/2101)
+- Fixed flicker setting sidebar scroll position.
+  [#2104](https://github.com/rust-lang/mdBook/pull/2104)
+- Fixed compile error with proc-macro2 on latest Rust nightly.
+  [#2109](https://github.com/rust-lang/mdBook/pull/2109)
+
+## mdBook 0.4.30
+[v0.4.29...v0.4.30](https://github.com/rust-lang/mdBook/compare/v0.4.29...v0.4.30)
+
+### Added
+- Added support for heading attributes.
+  Attributes are specified in curly braces just after the heading text.
+  An HTML ID can be specified with `#` and classes with `.`.
+  For example: `## My heading {#custom-id .class1 .class2}`
+  [#2013](https://github.com/rust-lang/mdBook/pull/2013)
+- Added support for hidden code lines for languages other than Rust.
+  The `output.html.code.hidelines` table allows you to define the prefix character that will be used to hide code lines based on the language.
+  [#2093](https://github.com/rust-lang/mdBook/pull/2093)
+
+### Fixed
+- Fixed a few minor markdown rendering issues.
+  [#2092](https://github.com/rust-lang/mdBook/pull/2092)
+
+## mdBook 0.4.29
+[v0.4.28...v0.4.29](https://github.com/rust-lang/mdBook/compare/v0.4.28...v0.4.29)
+
+### Changed
+- Built-in fonts are no longer copied when `fonts/fonts.css` is overridden in the theme directory.
+  Additionally, the warning about `copy-fonts` has been removed if `fonts/fonts.css` is specified.
+  [#2080](https://github.com/rust-lang/mdBook/pull/2080)
+- `mdbook init --force` now skips all interactive prompts as intended.
+  [#2057](https://github.com/rust-lang/mdBook/pull/2057)
+- Updated dependencies
+  [#2063](https://github.com/rust-lang/mdBook/pull/2063)
+  [#2086](https://github.com/rust-lang/mdBook/pull/2086)
+  [#2082](https://github.com/rust-lang/mdBook/pull/2082)
+  [#2084](https://github.com/rust-lang/mdBook/pull/2084)
+  [#2085](https://github.com/rust-lang/mdBook/pull/2085)
+
+### Fixed
+- Switched from the `gitignore` library to `ignore`. This should bring some improvements with gitignore handling.
+  [#2076](https://github.com/rust-lang/mdBook/pull/2076)
+
 ## mdBook 0.4.28
 [v0.4.27...v0.4.28](https://github.com/rust-lang/mdBook/compare/v0.4.27...v0.4.28)
 

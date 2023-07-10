@@ -35,6 +35,7 @@ const TOC_SECOND_LEVEL: &[&str] = &[
     "1.5. Unicode",
     "1.6. No Headers",
     "1.7. Duplicate Headers",
+    "1.8. Heading Attributes",
     "2.1. Nested Chapter",
 ];
 
@@ -275,7 +276,7 @@ fn root_index_html() -> Result<Document> {
         .with_context(|| "Book building failed")?;
 
     let index_page = temp.path().join("book").join("index.html");
-    let html = fs::read_to_string(&index_page).with_context(|| "Unable to read index.html")?;
+    let html = fs::read_to_string(index_page).with_context(|| "Unable to read index.html")?;
 
     Ok(Document::from(html.as_str()))
 }
@@ -412,7 +413,7 @@ fn recursive_includes_are_capped() {
     let content = &["Around the world, around the world
 Around the world, around the world
 Around the world, around the world"];
-    assert_contains_strings(&recursive, content);
+    assert_contains_strings(recursive, content);
 }
 
 #[test]
@@ -462,7 +463,7 @@ fn by_default_mdbook_use_index_preprocessor_to_convert_readme_to_index() {
 
     let second_index = temp.path().join("book").join("second").join("index.html");
     let unexpected_strings = vec!["Second README"];
-    assert_doesnt_contain_strings(&second_index, &unexpected_strings);
+    assert_doesnt_contain_strings(second_index, &unexpected_strings);
 }
 
 #[test]
@@ -628,10 +629,8 @@ fn edit_url_has_configured_src_dir_edit_url() {
 }
 
 fn remove_absolute_components(path: &Path) -> impl Iterator<Item = Component> + '_ {
-    path.components().skip_while(|c| match c {
-        Component::Prefix(_) | Component::RootDir => true,
-        _ => false,
-    })
+    path.components()
+        .skip_while(|c| matches!(c, Component::Prefix(_) | Component::RootDir))
 }
 
 /// Checks formatting of summary names with inline elements.
@@ -756,6 +755,7 @@ mod search {
         let no_headers = get_doc_ref("first/no-headers.html");
         let duplicate_headers_1 = get_doc_ref("first/duplicate-headers.html#header-text-1");
         let conclusion = get_doc_ref("conclusion.html#conclusion");
+        let heading_attrs = get_doc_ref("first/heading-attributes.html#both");
 
         let bodyidx = &index["index"]["index"]["body"]["root"];
         let textidx = &bodyidx["t"]["e"]["x"]["t"];
@@ -768,7 +768,7 @@ mod search {
         assert_eq!(docs[&some_section]["body"], "");
         assert_eq!(
             docs[&summary]["body"],
-            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Markdown Unicode No Headers Duplicate Headers Second Chapter Nested Chapter Conclusion"
+            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Markdown Unicode No Headers Duplicate Headers Heading Attributes Second Chapter Nested Chapter Conclusion"
         );
         assert_eq!(
             docs[&summary]["breadcrumbs"],
@@ -787,6 +787,10 @@ mod search {
             docs[&no_headers]["body"],
             "Capybara capybara capybara. Capybara capybara capybara. ThisLongWordIsIncludedSoWeCanCheckThatSufficientlyLongWordsAreOmittedFromTheSearchIndex."
         );
+        assert_eq!(
+            docs[&heading_attrs]["breadcrumbs"],
+            "First Chapter » Heading Attributes » Heading with id and classes"
+        );
     }
 
     // Setting this to `true` may cause issues with `cargo watch`,
@@ -803,7 +807,7 @@ mod search {
             let src = read_book_index(temp.path());
 
             let dest = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/searchindex_fixture.json");
-            let dest = File::create(&dest).unwrap();
+            let dest = File::create(dest).unwrap();
             serde_json::to_writer_pretty(dest, &src).unwrap();
 
             src
@@ -891,8 +895,8 @@ fn custom_fonts() {
     assert_eq!(actual_files(&p.join("book/fonts")), &builtin_fonts);
     assert!(has_fonts_css(p));
 
-    // Mixed with copy_fonts=true
-    // This should generate a deprecation warning.
+    // Mixed with copy-fonts=true
+    // Should ignore the copy-fonts setting since the user has provided their own fonts.css.
     let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
     let p = temp.path();
     MDBook::init(p).build().unwrap();
@@ -900,10 +904,10 @@ fn custom_fonts() {
     write_file(&p.join("theme/fonts"), "myfont.woff", b"").unwrap();
     MDBook::load(p).unwrap().build().unwrap();
     assert!(has_fonts_css(p));
-    let mut expected = Vec::from(builtin_fonts);
-    expected.push("myfont.woff");
-    expected.sort();
-    assert_eq!(actual_files(&p.join("book/fonts")), expected.as_slice());
+    assert_eq!(
+        actual_files(&p.join("book/fonts")),
+        ["fonts.css", "myfont.woff"]
+    );
 
     // copy-fonts=false, no theme
     // This should generate a deprecation warning.
@@ -947,4 +951,20 @@ fn custom_fonts() {
         actual_files(&p.join("book/fonts")),
         &["fonts.css", "myfont.woff"]
     );
+}
+
+#[test]
+fn custom_header_attributes() {
+    let temp = DummyBook::new().build().unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
+    md.build().unwrap();
+
+    let contents = temp.path().join("book/first/heading-attributes.html");
+
+    let summary_strings = &[
+        r##"<h1 id="attrs"><a class="header" href="#attrs">Heading Attributes</a></h1>"##,
+        r##"<h2 id="heading-with-classes" class="class1 class2"><a class="header" href="#heading-with-classes">Heading with classes</a></h2>"##,
+        r##"<h2 id="both" class="class1 class2"><a class="header" href="#both">Heading with id and classes</a></h2>"##,
+    ];
+    assert_contains_strings(&contents, summary_strings);
 }

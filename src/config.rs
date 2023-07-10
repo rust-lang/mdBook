@@ -308,7 +308,7 @@ impl<'de> serde::Deserialize<'de> for Config {
             warn!("`description` under a table called `[book]`, move the `destination` entry");
             warn!("from `[output.html]`, renamed to `build-dir`, under a table called");
             warn!("`[build]`, and it should all work.");
-            warn!("Documentation: http://rust-lang.github.io/mdBook/format/config.html");
+            warn!("Documentation: https://rust-lang.github.io/mdBook/format/config.html");
             return Ok(Config::from_legacy(raw));
         }
 
@@ -504,6 +504,8 @@ pub struct HtmlConfig {
     /// Playground settings.
     #[serde(alias = "playpen")]
     pub playground: Playground,
+    /// Code settings.
+    pub code: Code,
     /// Print settings.
     pub print: Print,
     /// Don't render section labels.
@@ -556,6 +558,7 @@ impl Default for HtmlConfig {
             additional_js: Vec::new(),
             fold: Fold::default(),
             playground: Playground::default(),
+            code: Code::default(),
             print: Print::default(),
             no_section_label: false,
             search: None,
@@ -642,6 +645,22 @@ impl Default for Playground {
     }
 }
 
+/// Configuration for tweaking how the the HTML renderer handles code blocks.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct Code {
+    /// A prefix string to hide lines per language (one or more chars).
+    pub hidelines: HashMap<String, String>,
+}
+
+impl Default for Code {
+    fn default() -> Code {
+        Code {
+            hidelines: HashMap::new(),
+        }
+    }
+}
+
 /// Configuration of the search functionality of the HTML renderer.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
@@ -703,7 +722,7 @@ trait Updateable<'de>: Serialize + Deserialize<'de> {
         let mut raw = Value::try_from(&self).expect("unreachable");
 
         if let Ok(value) = Value::try_from(value) {
-            let _ = raw.insert(key, value);
+            raw.insert(key, value);
         } else {
             return;
         }
