@@ -19,8 +19,8 @@ rust-version = "1.65"
 [dependencies]
 anyhow = "1.0.71"
 chrono = { version = "0.4.24", default-features = false, features = ["clock"] }
-clap = { version = "4.2.7", features = ["cargo", "wrap_help"] }
-clap_complete = "4.2.3"
+clap = { version = "4.3.12", features = ["cargo", "wrap_help"] }
+clap_complete = "4.3.2"
 once_cell = "1.17.1"
 env_logger = "0.10.0"
 handlebars = "4.3.7"
