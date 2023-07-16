@@ -26,7 +26,7 @@ env_logger = "0.10.0"
 handlebars = "4.3.7"
 log = "0.4.17"
 memchr = "2.5.0"
-opener = "0.5.2"
+opener = "0.6.1"
 pulldown-cmark = { version = "0.9.3", default-features = false }
 regex = "1.8.1"
 serde = { version = "1.0.163", features = ["derive"] }
