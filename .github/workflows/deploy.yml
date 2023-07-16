@@ -37,7 +37,7 @@ jobs:
     - name: Build and deploy artifacts
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: ci/make-release.sh ${{ matrix.os }} ${{ matrix.target }}
+      run: ci/make-release-asset.sh ${{ matrix.os }} ${{ matrix.target }}
       shell: bash
   pages:
     name: GitHub Pages
