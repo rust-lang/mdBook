@@ -3,6 +3,10 @@ on:
   release:
     types: [created]
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   release:
     name: Deploy Release
@@ -30,15 +34,12 @@ jobs:
     - uses: actions/checkout@master
     - name: Install hub
       run: ci/install-hub.sh ${{ matrix.os }}
-      shell: bash
     - name: Install Rust
       run: ci/install-rust.sh stable ${{ matrix.target }}
-      shell: bash
     - name: Build and deploy artifacts
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: ci/make-release-asset.sh ${{ matrix.os }} ${{ matrix.target }}
-      shell: bash
   pages:
     name: GitHub Pages
     runs-on: ubuntu-latest
