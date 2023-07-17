@@ -44,9 +44,10 @@ case $1 in
 esac
 cd ../..
 
-if [[ -z "$GITHUB_TOKEN" ]]
+if [[ -z "$GITHUB_ENV" ]]
 then
-  echo "$GITHUB_TOKEN not set, skipping deploy."
+  echo "GITHUB_ENV not set, run: gh release upload $TAG target/$asset"
 else
-  hub release edit -m "" --attach $asset $TAG
+  echo "MDBOOK_TAG=$TAG" >> $GITHUB_ENV
+  echo "MDBOOK_ASSET=target/$asset" >> $GITHUB_ENV
 fi
