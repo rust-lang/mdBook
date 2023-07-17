@@ -7,6 +7,9 @@ defaults:
   run:
     shell: bash
 
+permissions:
+  contents: write
+
 jobs:
   release:
     name: Deploy Release
@@ -32,14 +35,14 @@ jobs:
             os: windows-latest
     steps:
     - uses: actions/checkout@master
-    - name: Install hub
-      run: ci/install-hub.sh ${{ matrix.os }}
     - name: Install Rust
       run: ci/install-rust.sh stable ${{ matrix.target }}
-    - name: Build and deploy artifacts
+    - name: Build asset
+      run: ci/make-release-asset.sh ${{ matrix.os }} ${{ matrix.target }}
+    - name: Update release with new asset
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: ci/make-release-asset.sh ${{ matrix.os }} ${{ matrix.target }}
+      run: gh release upload $MDBOOK_TAG $MDBOOK_ASSET
   pages:
     name: GitHub Pages
     runs-on: ubuntu-latest
