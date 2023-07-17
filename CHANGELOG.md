@@ -1,5 +1,21 @@
 # Changelog
 
+## mdBook 0.4.32
+[v0.4.31...v0.4.32](https://github.com/rust-lang/mdBook/compare/v0.4.31...v0.4.32)
+
+### Fixed
+- Fixed theme-color meta tag not syncing with the theme.
+  [#2118](https://github.com/rust-lang/mdBook/pull/2118)
+
+### Changed
+- Updated all dependencies.
+  [#2121](https://github.com/rust-lang/mdBook/pull/2121)
+  [#2122](https://github.com/rust-lang/mdBook/pull/2122)
+  [#2123](https://github.com/rust-lang/mdBook/pull/2123)
+  [#2124](https://github.com/rust-lang/mdBook/pull/2124)
+  [#2125](https://github.com/rust-lang/mdBook/pull/2125)
+  [#2126](https://github.com/rust-lang/mdBook/pull/2126)
+
 ## mdBook 0.4.31
 [v0.4.30...v0.4.31](https://github.com/rust-lang/mdBook/compare/v0.4.30...v0.4.31)
 

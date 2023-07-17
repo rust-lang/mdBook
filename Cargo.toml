@@ -1,6 +1,6 @@
 [package]
 name = "mdbook"
-version = "0.4.31"
+version = "0.4.32"
 authors = [
     "Mathieu David <mathieudavid@mathieudavid.org>",
     "Michael-F-Bryan <michaelfbryan@gmail.com>",
