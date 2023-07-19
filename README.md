@@ -18,3 +18,15 @@ All the code in this repository is released under the ***Mozilla Public License 
 [User Guide]: https://rust-lang.github.io/mdBook/
 [contribution guide]: https://github.com/rust-lang/mdBook/blob/master/CONTRIBUTING.md
 [LICENSE]: https://github.com/rust-lang/mdBook/blob/master/LICENSE
+
+
+mdBook是一个从Markdown文件创建现代在线书籍的实用程序。
+
+
+有关功能列表以及安装和使用信息，请查看**[用户指南]**。
+
+《用户指南》还可以作为一个示范，展示一本书的样子。
+
+
+
+如果您有兴趣为mdBook的开发做出贡献，请查看[贡献指南]。
