@@ -97,7 +97,7 @@ extra-watch-dirs = []             # directories to watch for triggering builds
   will be created when the book is built (i.e. `create-missing = true`). If this
   is `false` then the build process will instead exit with an error if any files
   do not exist.
-- **use-default-preprocessors:** Disable the default preprocessors of (`links` &
+- **use-default-preprocessors:** Disable the default preprocessors (of `links` &
   `index`) by setting this option to `false`.
 
   If you have the same, and/or other preprocessors declared via their table
