@@ -3,6 +3,13 @@ on:
   release:
     types: [created]
 
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: write
+
 jobs:
   release:
     name: Deploy Release
@@ -28,17 +35,14 @@ jobs:
             os: windows-latest
     steps:
     - uses: actions/checkout@master
-    - name: Install hub
-      run: ci/install-hub.sh ${{ matrix.os }}
-      shell: bash
     - name: Install Rust
       run: ci/install-rust.sh stable ${{ matrix.target }}
-      shell: bash
-    - name: Build and deploy artifacts
+    - name: Build asset
+      run: ci/make-release-asset.sh ${{ matrix.os }} ${{ matrix.target }}
+    - name: Update release with new asset
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: ci/make-release.sh ${{ matrix.os }} ${{ matrix.target }}
-      shell: bash
+      run: gh release upload $MDBOOK_TAG $MDBOOK_ASSET
   pages:
     name: GitHub Pages
     runs-on: ubuntu-latest
@@ -56,3 +60,14 @@ jobs:
         curl -LsSf https://raw.githubusercontent.com/rust-lang/simpleinfra/master/setup-deploy-keys/src/deploy.rs | rustc - -o /tmp/deploy
         cd guide/book
         /tmp/deploy
+  publish:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Install Rust (rustup)
+        run: rustup update stable --no-self-update && rustup default stable
+      - name: Publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish --no-verify

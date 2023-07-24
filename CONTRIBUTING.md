@@ -153,3 +153,23 @@ The following are instructions for updating [highlight.js](https://highlightjs.o
 1. Copy `build/highlight.min.js` to mdbook's directory [`highlight.js`](https://github.com/rust-lang/mdBook/blob/master/src/theme/highlight.js).
 1. Be sure to check the highlight.js [CHANGES](https://github.com/highlightjs/highlight.js/blob/main/CHANGES.md) for any breaking changes. Breaking changes that would affect users will need to wait until the next major release.
 1. Build mdbook with the new file and build some books with the new version and compare the output with a variety of languages to see if anything changes. The [test_book](https://github.com/rust-lang/mdBook/tree/master/test_book) contains a chapter with many languages to examine.
+
+## Publishing new releases
+
+Instructions for mdBook maintainers to publish a new release:
+
+1. Create a PR to update the version and update the CHANGELOG:
+    1. Update the version in `Cargo.toml`
+    2. Run `cargo test` to verify that everything is passing, and to update `Cargo.lock`.
+    3. Double-check for any SemVer breaking changes.
+       Try [`cargo-semver-checks`](https://crates.io/crates/cargo-semver-checks), though beware that the current version of mdBook isn't properly adhering to SemVer due to the lack of `#[non_exhaustive]` and other issues. See https://github.com/rust-lang/mdBook/issues/1835.
+    4. Update `CHANGELOG.md` with any changes that users may be interested in.
+    5. Update `continuous-integration.md` to update the version number for the installation instructions.
+    6. Commit the changes, and open a PR.
+2. After the PR has been merged, create a release in GitHub. This can either be done in the GitHub web UI, or on the command-line:
+   ```bash
+   MDBOOK_VERS="`cargo read-manifest | jq -r .version`" ; \
+    gh release create -R rust-lang/mdbook v$MDBOOK_VERS \
+        --title v$MDBOOK_VERS \
+        --notes "See https://github.com/rust-lang/mdBook/blob/master/CHANGELOG.md#mdbook-${MDBOOK_VERS//.} for a complete list of changes."
+   ```

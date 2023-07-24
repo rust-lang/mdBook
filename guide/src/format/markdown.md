@@ -73,14 +73,14 @@ Linking to a URL or local file is easy:
 ```markdown
 Use [mdBook](https://github.com/rust-lang/mdBook). 
 
-Read about [mdBook](mdBook.md).
+Read about [mdBook](mdbook.md).
 
 A bare url: <https://www.rust-lang.org>.
 ```
 
 Use [mdBook](https://github.com/rust-lang/mdBook). 
 
-Read about [mdBook](mdBook.md).
+Read about [mdBook](mdbook.md).
 
 A bare url: <https://www.rust-lang.org>.
 
