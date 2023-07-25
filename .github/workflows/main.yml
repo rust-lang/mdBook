@@ -1,7 +1,5 @@
 name: CI
 on:
-  push:
-    branches-ignore: [master]
   pull_request:
   merge_group:
 
@@ -49,3 +47,43 @@ jobs:
     - name: Install Rust
       run: rustup update stable && rustup default stable && rustup component add rustfmt
     - run: cargo fmt --check
+
+  # These success/failure jobs are here to consolidate the total
+  # success/failure state of all other jobs. These jobs are then included in
+  # the GitHub branch protection rule which prevents merges unless all other
+  # jobs are passing. This makes it easier to manage the list of jobs via this
+  # yml file and to prevent accidentally adding new jobs without also updating
+  # the branch protections.
+  #
+  # Unfortunately this requires two jobs because the branch protection
+  # considers skipped jobs as successful. The status check functions like
+  # success() can only be in an `if` condition.
+  #
+  # Beware that success() is false if any dependent job is skipped. See
+  # https://github.com/orgs/community/discussions/45058. This means there
+  # cannot be optional jobs. One workaround is to check for all other
+  # statuses:
+  #     (contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') || contains(needs.*.result, 'failure'))
+  # but that is a mess.
+  success:
+    name: Success gate
+    runs-on: ubuntu-latest
+    needs:
+      - test
+      - rustfmt
+    if: "success()"
+    steps:
+      - name: mark the job as a success
+        run: echo success
+  failure:
+    name: Failure gate
+    runs-on: ubuntu-latest
+    needs:
+      - test
+      - rustfmt
+    if: "!success()"
+    steps:
+      - name: mark the job as a failure
+        run: |
+          echo One or more jobs failed
+          exit 1
