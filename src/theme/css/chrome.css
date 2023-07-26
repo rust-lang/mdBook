@@ -550,6 +550,8 @@ a.bypass-block {
     left: 2rem;
     clip-path: inset(50%);
     font-size: 1.2em;
+    text-decoration: none;
+    color: var(--sidebar-active);
     background-color: var(--theme-popup-bg);
     border-radius: 4px;
     border: solid 1px var(--theme-popup-border);
