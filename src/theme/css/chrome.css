@@ -87,6 +87,7 @@ a > .hljs {
 }
 .right-buttons a {
     text-decoration: none;
+    display: inline-block;
 }
 
 .left-buttons {
@@ -139,8 +140,6 @@ a > .hljs {
     text-decoration: none;
 
     position: fixed;
-    top: 0;
-    bottom: 0;
     margin: 0;
     max-width: 150px;
     min-width: 90px;
@@ -151,6 +150,10 @@ a > .hljs {
     flex-direction: column;
 
     transition: color 0.5s, background-color 0.5s;
+
+    height: 10rem;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .nav-chapters:hover {
@@ -498,48 +501,127 @@ ul#searchresults span.teaser em {
     line-height: 1.9em;
 }
 
-/* Theme Menu Popup */
+/* Settings menu */
 
-.theme-popup {
+#settings-menu {
     position: absolute;
-    left: 10px;
-    top: var(--menu-bar-height);
+    inset-inline-start: 10px;
+    inset-block-start: var(--menu-bar-height);
     z-index: 1000;
     border-radius: 4px;
     font-size: 0.7em;
     color: var(--fg);
     background: var(--theme-popup-bg);
     border: 1px solid var(--theme-popup-border);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    display: none;
-    /* Don't let the children's background extend past the rounded corners. */
-    overflow: hidden;
+    width: 32rem;
 }
-.theme-popup .default {
-    color: var(--icons);
+
+#settings-menu * {
+    box-sizing: border-box;
 }
-.theme-popup .theme {
+
+#settings-menu h2 {
+    margin: 1rem;
+}
+
+#settings-menu fieldset {
+    margin: 1rem;
+    border: 1px solid var(--theme-popup-border);
+    border-radius: 4px;
+}
+
+#settings-menu select {
+    display: block;
+    padding: 0.6rem;
     width: 100%;
-    border: 0;
-    margin: 0;
-    padding: 2px 20px;
-    line-height: 25px;
-    white-space: nowrap;
-    text-align: left;
-    cursor: pointer;
-    color: inherit;
-    background: inherit;
-    font-size: inherit;
 }
-.theme-popup .theme:hover {
+
+#settings-menu :is(select, input) {
+    border: 1px solid var(--searchbar-border-color);
+    border-radius: 3px;
+    background-color: var(--searchbar-bg);
+    transition: box-shadow 300ms ease-in-out;
+    color: var(--searchbar-fg);
+}
+
+.shortkey__control {
+    position: relative;
+    display: flex;
+}
+
+#settings-menu .shortkey__input {
+    flex: 0 1 100%;
+}
+
+#settings-menu .shortkey__control input {
+    height: 3.2rem;
+    color: #00000001;
+    width: 100%;
+}
+
+#settings-menu .shortkey__control input:disabled {
+      background: transparent;
+      border: none;
+}
+
+#settings-menu .shortkey__control input::selection {
+    color: transparent;
+    background: transparent;
+}
+
+.shortkey__control.shortkey__control--touched .shortkey__change {
+    display: none;
+}
+
+.shortkey__control .shortkey__display {
+    position: absolute;
+    inset-inline-start: 0.8rem;
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+}
+
+.shortkey__control.shortkey__control--touched .shortkey__display span {
+    color: var(--searchbar-fg);
+}
+
+.shortkey__control button {
+    height: 3rem;
+    color: var(--fg);
+    background: none;
+    border: none;
+}
+
+.shortkey__control :is(button:hover, button i:hover) {
+    cursor: pointer;
+    color: var(--links);
+}
+
+#menu-bar .shortkey__control button i {
+    line-height: initial;
+}
+
+#settings-menu .shortkeys__reset-all {
+    cursor: pointer;
+    padding: 0.5rem 0.8rem;
+    font-size: 14px;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 4px;
+    border-color: var(--icons);
+    background-color: var(--theme-popup-bg);
+    transition: 100ms;
+    transition-property: color,border-color,background-color;
+    color: var(--icons);
+    margin-block-start: 1rem;
+}
+
+#settings-menu .shortkeys__reset-all:hover {
+    color: var(--fg);
+    border-color: var(--icons-hover);
     background-color: var(--theme-hover);
 }
 
-.theme-selected::before {
-    display: inline-block;
-    content: "✓";
-    margin-left: -14px;
-    width: 14px;
+.shortkeys > * {
+    margin-block: 0.3rem;
 }

@@ -285,9 +285,7 @@ function playground_text(playground, hidden = true) {
 })();
 
 (function themes() {
-    var html = document.querySelector('html');
-    var themeToggleButton = document.getElementById('theme-toggle');
-    var themePopup = document.getElementById('theme-list');
+    var html = document.documentElement;
     var themeColorMetaTag = document.querySelector('meta[name="theme-color"]');
     var stylesheets = {
         ayuHighlight: document.querySelector("[href$='ayu-highlight.css']"),
@@ -295,30 +293,11 @@ function playground_text(playground, hidden = true) {
         highlight: document.querySelector("[href$='highlight.css']"),
     };
 
-    function showThemes() {
-        themePopup.style.display = 'block';
-        themeToggleButton.setAttribute('aria-expanded', true);
-        themePopup.querySelector("button#" + get_theme()).focus();
-    }
-
-    function updateThemeSelected() {
-        themePopup.querySelectorAll('.theme-selected').forEach(function (el) {
-            el.classList.remove('theme-selected');
-        });
-        themePopup.querySelector("button#" + get_theme()).classList.add('theme-selected');
-    }
-
-    function hideThemes() {
-        themePopup.style.display = 'none';
-        themeToggleButton.setAttribute('aria-expanded', false);
-        themeToggleButton.focus();
-    }
-
     function get_theme() {
         var theme;
         try { theme = localStorage.getItem('mdbook-theme'); } catch (e) { }
         if (theme === null || theme === undefined) {
-            return default_theme;
+            return window.default_theme;
         } else {
             return theme;
         }
@@ -363,81 +342,11 @@ function playground_text(playground, hidden = true) {
 
         html.classList.remove(previousTheme);
         html.classList.add(theme);
-        updateThemeSelected();
     }
 
-    // Set theme
-    var theme = get_theme();
+    set_theme(get_theme(), false);
 
-    set_theme(theme, false);
-
-    themeToggleButton.addEventListener('click', function () {
-        if (themePopup.style.display === 'block') {
-            hideThemes();
-        } else {
-            showThemes();
-        }
-    });
-
-    themePopup.addEventListener('click', function (e) {
-        var theme;
-        if (e.target.className === "theme") {
-            theme = e.target.id;
-        } else if (e.target.parentElement.className === "theme") {
-            theme = e.target.parentElement.id;
-        } else {
-            return;
-        }
-        set_theme(theme);
-    });
-
-    themePopup.addEventListener('focusout', function(e) {
-        // e.relatedTarget is null in Safari and Firefox on macOS (see workaround below)
-        if (!!e.relatedTarget && !themeToggleButton.contains(e.relatedTarget) && !themePopup.contains(e.relatedTarget)) {
-            hideThemes();
-        }
-    });
-
-    // Should not be needed, but it works around an issue on macOS & iOS: https://github.com/rust-lang/mdBook/issues/628
-    document.addEventListener('click', function(e) {
-        if (themePopup.style.display === 'block' && !themeToggleButton.contains(e.target) && !themePopup.contains(e.target)) {
-            hideThemes();
-        }
-    });
-
-    document.addEventListener('keydown', function (e) {
-        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
-        if (!themePopup.contains(e.target)) { return; }
-
-        switch (e.key) {
-            case 'Escape':
-                e.preventDefault();
-                hideThemes();
-                break;
-            case 'ArrowUp':
-                e.preventDefault();
-                var li = document.activeElement.parentElement;
-                if (li && li.previousElementSibling) {
-                    li.previousElementSibling.querySelector('button').focus();
-                }
-                break;
-            case 'ArrowDown':
-                e.preventDefault();
-                var li = document.activeElement.parentElement;
-                if (li && li.nextElementSibling) {
-                    li.nextElementSibling.querySelector('button').focus();
-                }
-                break;
-            case 'Home':
-                e.preventDefault();
-                themePopup.querySelector('li:first-child button').focus();
-                break;
-            case 'End':
-                e.preventDefault();
-                themePopup.querySelector('li:last-child button').focus();
-                break;
-        }
-    });
+    window.set_theme = set_theme;
 })();
 
 (function sidebar() {
@@ -553,30 +462,6 @@ function playground_text(playground, hidden = true) {
     }, { passive: true });
 })();
 
-(function chapterNavigation() {
-    document.addEventListener('keydown', function (e) {
-        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
-        if (window.search && window.search.hasFocus()) { return; }
-
-        switch (e.key) {
-            case 'ArrowRight':
-                e.preventDefault();
-                var nextButton = document.querySelector('.nav-chapters.next');
-                if (nextButton) {
-                    window.location.href = nextButton.href;
-                }
-                break;
-            case 'ArrowLeft':
-                e.preventDefault();
-                var previousButton = document.querySelector('.nav-chapters.previous');
-                if (previousButton) {
-                    window.location.href = previousButton.href;
-                }
-                break;
-        }
-    });
-})();
-
 (function clipboard() {
     var clipButtons = document.querySelectorAll('.clip-button');
 
@@ -679,4 +564,312 @@ function playground_text(playground, hidden = true) {
         updateBorder();
         document.addEventListener('scroll', updateBorder, { passive: true });
     })();
+})();
+
+(function settings() {
+    const toggle = document.querySelector("#settings-toggle");
+    const menu = document.querySelector("#settings-menu");
+
+    const isMac = /^Mac/i.test(navigator.userAgentData?.platform ?? navigator.platform);
+    const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
+
+    const eventModifiers = Object.fromEntries(["ctrl", "alt", "shift", "meta"]
+        .map((k) => [k, `${k}Key`]));
+
+    const defaultComboModifier = isMac ? "Meta" : "Control";
+
+    const defaultShortkeys = [
+        {
+            id: "toc",
+            name: "Toggle Table of Contents",
+            combo: "t",
+            selector: "#sidebar-toggle",
+        },
+        {
+            id: "settings",
+            name: "Open settings",
+            combo: "/",
+            selector: "#settings-toggle",
+        },
+        {
+            id: "search",
+            name: "Search",
+            combo: "s",
+            selector: "#search-toggle",
+        },
+        {
+            id: "previous",
+            name: "Previous chapter",
+            combo: `${defaultComboModifier}+ArrowLeft`,
+            selector: ".nav-chapters.previous",
+            altSelectors: [".mobile-nav-chapters.previous"],
+        },
+        {
+            id: "next",
+            name: "Next chapter",
+            combo: `${defaultComboModifier}+ArrowRight`,
+            selector: ".nav-chapters.next",
+            altSelectors: [".mobile-nav-chapters.next"],
+        },
+    ];
+
+    function getCombo(storageKey) {
+        const shortkey = localStorage.getItem(`mdbook-shortkeys::${storageKey}`);
+        return shortkey ?? defaultShortkeys.find((x) => x.id === storageKey).combo;
+    }
+
+    function setCombo(storageKey, combo) {
+        localStorage.setItem(`mdbook-shortkeys::${storageKey}`, combo);
+    }
+
+    function checkIsTextInputMode() {
+        return document.activeElement.isContentEditable ||
+            ["INPUT", "TEXTAREA"].includes(document.activeElement.nodeName);
+    }
+
+    function eventToCombo(e) {
+        const normalized = new Map([
+            [" ", "Space"],
+            ["+", "Plus"],
+            ["Ctrl", "Control"],
+        ]);
+
+        const modifierKeys = Object.keys(eventModifiers)
+            .filter((k) => e[eventModifiers[k]])
+            .map((x) => x.charAt(0).toUpperCase() + x.slice(1));
+
+        if (["Control", "Alt", "Shift", "Meta"].includes(e.key)) return null;
+
+        return [...modifierKeys, e.key]
+            .map((x) => normalized.has(x) ? normalized.get(x) : x).join("+");
+    }
+
+    function eventMatchesCombo(e, combo) {
+        const eventCombo = eventToCombo(e);
+        return eventCombo && (eventCombo === combo);
+    }
+
+    function keyToPretty(key) {
+        const fmtMap = new Map([
+            ["ArrowRight", "→"],
+            ["ArrowLeft", "←"],
+            ["ArrowUp", "↑"],
+            ["ArrowDown", "↓"],
+            ["Plus", "+"],
+            ["Control", isMac ? "Control" : "Ctrl"],
+            ["Alt", isMac ? "⌥" : "Alt"],
+            ["Meta", isMac ? "⌘" : "Meta"],
+        ]);
+
+        return fmtMap.has(key) ? fmtMap.get(key) : key;
+    }
+
+    function comboToPretty(combo) {
+        return combo.split("+").map(keyToPretty).join("+");
+    }
+
+    function comboToPrettyHtml(combo) {
+        const html = (text) =>
+            Object.assign(document.createElement("span"), { textContent: text })
+                .innerHTML;
+
+        return combo.split("+").map((x) => `<kbd>${html(keyToPretty(x))}</kbd>`).join(
+            "<span>+</span>",
+        );
+    }
+
+    function renderShortkeyField(shortkey) {
+        const div = document.createElement("div");
+
+        const combo = getCombo(shortkey.id);
+        const touched = combo !== shortkey.combo;
+        const changeLabel = `Change shortcut key for ${shortkey.name}`;
+        const buttonAttrs = (label) =>
+            `aria-label="${label}" title="${label}" aria-controls="shortkey-${shortkey.id}"`;
+
+        div.classList.add("shortkey");
+        div.innerHTML = `<label for="shortkey-${shortkey.id}">${shortkey.name}</label>
+            <div class="shortkey__control${
+                touched ? " shortkey__control--touched" : ""
+            }" data-shortkey-item="${shortkey.id}">
+                <span class="shortkey__input">
+                    <input${
+                        touched ? "" : " disabled"
+                    } id="shortkey-${shortkey.id}" autocomplete="off" value="Control+ArrowLeft">
+                    <span aria-hidden="true" class="shortkey__display">${
+                        comboToPrettyHtml(combo)
+                    }</span>
+                </span>
+                <button class="shortkey__change" type="button" ${buttonAttrs(changeLabel)}>
+                    <i class="fa fa-pencil" aria-hidden="true"></i>
+                </button>
+            </div>`;
+
+        return div;
+    }
+
+    menu.innerHTML = `
+        <h2>Settings</h2>
+        <fieldset>
+        <legend>
+            <span>Appearance</span>
+        </legend>
+        <div>
+            <label for="theme">Theme</label>
+            <select id="theme">
+                ${["light", "rust", "coal", "navy", "ayu"].map((theme) =>
+                    `<option${(localStorage.getItem("mdbook-theme") ?? window.default_theme) ===
+                        theme
+                            ? " selected"
+                            : ""
+                    } value="${theme}">${theme.charAt(0).toUpperCase() + theme.slice(1)}</option>`
+                ).join("")
+                }
+            </select>
+        </div>
+        </fieldset>
+        ${isTouchDevice ? "" : `<fieldset id="shortkeys" class="shortkeys">
+            <legend>
+                <span>Keyboard shortcuts</span>
+            </legend>
+            ${defaultShortkeys.map((x) => renderShortkeyField(x).outerHTML).join("")}
+            <div>
+                <button class="shortkeys__reset-all" type="reset">
+                    Reset all keyboard shortcuts
+                </button>
+            </div>
+        </fieldset>`}
+    `;
+
+    function updateButtons() {
+        for (const shortkey of defaultShortkeys) {
+            for (
+                const button of document.querySelectorAll(
+                    [shortkey.selector, ...(shortkey.altSelectors ?? [])].join(", "),
+                )
+            ) {
+                const combo = getCombo(shortkey.id);
+                button.setAttribute("aria-keyshortcuts", combo);
+                button.title = button.title.replace(
+                    /(?: \(.+\))?$/,
+                    ` (${comboToPretty(combo)})`,
+                );
+            }
+        }
+    }
+
+    updateButtons();
+
+    function toggleSettingsPopup(open = toggle.getAttribute("aria-expanded") !== "true") {
+        toggle.setAttribute("aria-expanded", String(open));
+        menu.hidden = !open;
+
+        if (open) {
+            menu.querySelector("input, button, textarea, select").focus();
+        }
+    }
+
+    toggle.addEventListener("click", () => toggleSettingsPopup());
+    menu.addEventListener("submit", (e) => e.preventDefault());
+    menu.addEventListener("change", updateButtons);
+
+    menu.querySelector("#theme").addEventListener("change", (e) => {
+        window.set_theme(e.target.value);
+    });
+
+    menu.addEventListener("keydown", (e) => {
+        if (!e.target.matches(".shortkey__control input")) return;
+        if (["Escape", "Tab", "Enter", " "].includes(e.key)) return;
+
+        const parent = e.target.closest(".shortkey__control");
+
+        e.preventDefault();
+        const combo = eventToCombo(e);
+
+        if (!combo) return;
+
+        const html = comboToPrettyHtml(combo);
+
+        setCombo(parent.dataset.shortkeyItem, combo);
+        e.target.value = combo;
+        e.currentTarget.dispatchEvent(new Event("change"));
+
+        parent.querySelector(".shortkey__display").innerHTML = html;
+    });
+
+    menu.addEventListener("click", (e) => {
+        if (e.target.closest(".shortkey__control .shortkey__change")) {
+            e.preventDefault();
+
+            const input = e.target.closest(".shortkey__control").querySelector(
+                "input",
+            );
+            input.disabled = false;
+            e.target.closest(".shortkey__control").classList.add(
+                "shortkey__control--touched",
+            );
+            input.focus();
+        } else if (e.target.closest("#shortkeys .shortkeys__reset-all")) {
+            e.preventDefault();
+
+            for (const el of e.currentTarget.querySelectorAll(".shortkey__control")) {
+                const shortkey = defaultShortkeys.find((x) =>
+                    x.id === el.dataset.shortkeyItem
+                );
+
+                setCombo(el.dataset.shortkeyItem, shortkey.combo);
+                el.closest(".shortkey").replaceWith(renderShortkeyField(shortkey));
+            }
+            e.currentTarget.dispatchEvent(new Event("change"));
+        }
+    });
+
+    menu.addEventListener("focusout", (e) => {
+        if (e.target.matches(".shortkey__control input")) {
+            e.target.closest(".shortkey").replaceWith(
+                renderShortkeyField(
+                    defaultShortkeys.find((x) =>
+                        x.id === e.target.closest(".shortkey__control").dataset.shortkeyItem
+                    ),
+                ),
+            );
+        }
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (checkIsTextInputMode()) return;
+
+        for (const shortkey of defaultShortkeys) {
+            if (eventMatchesCombo(e, getCombo(shortkey.id))) {
+                e.preventDefault();
+                const button = document.querySelector(shortkey.selector);
+                if (button) {
+                    button.focus();
+                    button.click();
+                }
+
+                return;
+            }
+        }
+    });
+
+    window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            if (e.target.closest("#settings-menu")) {
+                toggleSettingsPopup(false);
+                toggle.focus();
+            } else if (!checkIsTextInputMode()) {
+                toggleSettingsPopup(false);
+            }
+        }
+    });
+
+    window.addEventListener("click", (e) => {
+        if (
+            e.isTrusted && !e.target.closest("#settings-menu") &&
+            !e.target.closest("#settings-toggle")
+        ) {
+            toggleSettingsPopup(false);
+        }
+    });
 })();

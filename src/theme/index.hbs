@@ -142,18 +142,12 @@
                         <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
                             <i class="fa fa-bars"></i>
                         </button>
-                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
-                            <i class="fa fa-paint-brush"></i>
+                        <button id="settings-toggle" class="icon-button" type="button" title="Settings" aria-label="Settings" aria-haspopup="true" aria-expanded="false" aria-controls="settings-menu">
+                            <i class="fa fa-cog"></i>
                         </button>
-                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
-                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
-                        </ul>
+                        <form hidden id="settings-menu" aria-label="Settings" role="menu"></form>
                         {{#if search_enabled}}
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                        <button id="search-toggle" class="icon-button" type="button" title="Search" aria-label="Toggle Searchbar" aria-expanded="false" aria-controls="searchbar">
                             <i class="fa fa-search"></i>
                         </button>
                         {{/if}}
@@ -211,13 +205,13 @@
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         {{#previous}}
-                            <a rel="prev" href="{{ path_to_root }}{{link}}" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="{{ path_to_root }}{{link}}" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         {{/previous}}
 
                         {{#next}}
-                            <a rel="next" href="{{ path_to_root }}{{link}}" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="{{ path_to_root }}{{link}}" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         {{/next}}
@@ -229,13 +223,13 @@
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 {{#previous}}
-                    <a rel="prev" href="{{ path_to_root }}{{link}}" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="{{ path_to_root }}{{link}}" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 {{/previous}}
 
                 {{#next}}
-                    <a rel="next" href="{{ path_to_root }}{{link}}" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="{{ path_to_root }}{{link}}" class="nav-chapters next" title="Next chapter" aria-label="Next chapter">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 {{/next}}
