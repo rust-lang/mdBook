@@ -130,11 +130,16 @@ where
     let _ = watcher.watch(&book.root.join("book.toml"), NonRecursive);
 
     for dir in &book.config.build.extra_watch_dirs {
-        let path = dir.canonicalize().unwrap();
-        if let Err(e) = watcher.watch(&path, Recursive) {
+        let path = book.root.join(dir);
+        let canonical_path = path.canonicalize().unwrap_or_else(|e| {
+            error!("Error while watching extra directory {path:?}:\n    {e}");
+            std::process::exit(1);
+        });
+
+        if let Err(e) = watcher.watch(&canonical_path, Recursive) {
             error!(
                 "Error while watching extra directory {:?}:\n    {:?}",
-                path, e
+                canonical_path, e
             );
             std::process::exit(1);
         }
