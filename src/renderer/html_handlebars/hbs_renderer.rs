@@ -105,6 +105,7 @@ impl HtmlHandlebars {
             ctx.data
                 .insert("section".to_owned(), json!(section.to_string()));
         }
+        ctx.data.insert("data".to_owned(), json!(ch.data));
 
         // Render the handlebars template with the data
         debug!("Render template");
