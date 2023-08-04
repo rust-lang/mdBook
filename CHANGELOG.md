@@ -1,5 +1,22 @@
 # Changelog
 
+## mdBook 0.4.33
+[v0.4.32...v0.4.33](https://github.com/rust-lang/mdBook/compare/v0.4.32...v0.4.33)
+
+### Added
+- The `color-scheme` CSS property is now set based on the light/dark theme, which applies some slight color differences in browser elements like scroll bars on some browsers.
+  [#2134](https://github.com/rust-lang/mdBook/pull/2134)
+
+### Fixed
+- Fixed watching of extra-watch-dirs when not running in the book root directory.
+  [#2146](https://github.com/rust-lang/mdBook/pull/2146)
+- Reverted the dependency update to the `toml` crate (again!). This was an unintentional breaking change in 0.4.32.
+  [#2021](https://github.com/rust-lang/mdBook/pull/2021)
+- Changed macOS change notifications to use the kqueue implementation which should fix some issues with repeated rebuilds when a file changed.
+  [#2152](https://github.com/rust-lang/mdBook/pull/2152)
+- Don't set a background color in the print page for code blocks in a header.
+  [#2150](https://github.com/rust-lang/mdBook/pull/2150)
+
 ## mdBook 0.4.32
 [v0.4.31...v0.4.32](https://github.com/rust-lang/mdBook/compare/v0.4.31...v0.4.32)
 

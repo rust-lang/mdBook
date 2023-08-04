@@ -1,7 +1,5 @@
 name: CI
 on:
-  push:
-    branches-ignore: [master]
   pull_request:
   merge_group:
 
@@ -49,3 +47,20 @@ jobs:
     - name: Install Rust
       run: rustup update stable && rustup default stable && rustup component add rustfmt
     - run: cargo fmt --check
+
+  # The success job is here to consolidate the total success/failure state of
+  # all other jobs. This job is then included in the GitHub branch protection
+  # rule which prevents merges unless all other jobs are passing. This makes
+  # it easier to manage the list of jobs via this yml file and to prevent
+  # accidentally adding new jobs without also updating the branch protections.
+  success:
+    name: Success gate
+    if: always()
+    needs:
+      - test
+      - rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - run: jq --exit-status 'all(.result == "success")' <<< '${{ toJson(needs) }}'
+      - name: Done
+        run: exit 0
