@@ -499,6 +499,8 @@ pub struct HtmlConfig {
     /// Additional JS scripts to include at the bottom of the rendered page's
     /// `<body>`.
     pub additional_js: Vec<PathBuf>,
+    /// Additional 3rd party language packages for highlight.js.
+    pub additional_hljs_packages: Vec<PathBuf>,
     /// Fold settings.
     pub fold: Fold,
     /// Playground settings.
@@ -556,6 +558,7 @@ impl Default for HtmlConfig {
             google_analytics: None,
             additional_css: Vec::new(),
             additional_js: Vec::new(),
+            additional_hljs_packages: Vec::new(),
             fold: Fold::default(),
             playground: Playground::default(),
             code: Code::default(),
@@ -988,6 +991,7 @@ mod tests {
         google-analytics = "123456"
         additional-css = ["custom.css", "custom2.css"]
         additional-js = ["custom.js"]
+        additional-hljs-packages = ["custom.min.js"]
         "#;
 
         let book_should_be = BookConfig {
@@ -1013,6 +1017,7 @@ mod tests {
             google_analytics: Some(String::from("123456")),
             additional_css: vec![PathBuf::from("custom.css"), PathBuf::from("custom2.css")],
             additional_js: vec![PathBuf::from("custom.js")],
+            additional_hljs_packages: vec![PathBuf::from("custom.min.js")],
             ..Default::default()
         };
 

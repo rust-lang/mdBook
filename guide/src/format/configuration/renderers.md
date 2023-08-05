@@ -102,6 +102,7 @@ mathjax-support = false
 copy-fonts = true
 additional-css = ["custom.css", "custom2.css"]
 additional-js = ["custom.js"]
+additional-hljs-packages = ["custom.min.js"]
 no-section-label = false
 git-repository-url = "https://github.com/rust-lang/mdBook"
 git-repository-icon = "fa-github"
@@ -139,6 +140,7 @@ The following configuration options are available:
 - **additional-js:** If you need to add some behaviour to your book without
   removing the current behaviour, you can specify a set of JavaScript files that
   will be loaded alongside the default one.
+- **additional-hljs-packages:** If you need to add 3rd party highlight.js language packages, you can specify a set of JavaScript files that will be loaded.
 - **no-section-label:** mdBook by defaults adds numeric section labels in the table of
   contents column. For example, "1.", "2.1". Set this option to true to disable
   those labels. Defaults to `false`.

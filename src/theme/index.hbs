@@ -309,6 +309,10 @@
 
         <script src="{{ path_to_root }}clipboard.min.js"></script>
         <script src="{{ path_to_root }}highlight.js"></script>
+        <!-- Custom 3rd highlight.js language packages -->
+        {{#each additional_hljs_packages}}
+        <script src="{{ ../path_to_root }}{{this}}"></script>
+        {{/each}}
         <script src="{{ path_to_root }}book.js"></script>
 
         <!-- Custom JS scripts -->

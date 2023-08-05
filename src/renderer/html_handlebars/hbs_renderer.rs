@@ -378,7 +378,7 @@ impl HtmlHandlebars {
         handlebars.register_helper("theme_option", Box::new(helpers::theme::theme_option));
     }
 
-    /// Copy across any additional CSS and JavaScript files which the book
+    /// Copy across any additional CSS, JavaScript and hljs package files which the book
     /// has been configured to use.
     fn copy_additional_css_and_js(
         &self,
@@ -386,7 +386,11 @@ impl HtmlHandlebars {
         root: &Path,
         destination: &Path,
     ) -> Result<()> {
-        let custom_files = html.additional_css.iter().chain(html.additional_js.iter());
+        let custom_files = html
+            .additional_css
+            .iter()
+            .chain(html.additional_js.iter())
+            .chain(html.additional_hljs_packages.iter());
 
         debug!("Copying additional CSS and JS");
 
@@ -721,6 +725,17 @@ fn make_data(
             }
         }
         data.insert("additional_js".to_owned(), json!(js));
+    }
+
+    if !html_config.additional_hljs_packages.is_empty() {
+        let mut hljs_package = Vec::new();
+        for package in &html_config.additional_hljs_packages {
+            match package.strip_prefix(root) {
+                Ok(p) => hljs_package.push(p.to_str().expect("Could not convert to str")),
+                Err(_) => hljs_package.push(package.to_str().expect("Could not convert to str")),
+            }
+        }
+        data.insert("additional_hljs_packages".to_owned(), json!(hljs_package));
     }
 
     if html_config.playground.editable && html_config.playground.copy_js {
