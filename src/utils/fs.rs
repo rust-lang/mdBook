@@ -166,7 +166,7 @@ pub fn copy_files_except_ext(
                         .expect("a file should have a file name...")
                 )
             );
-            fs::copy(
+            copy(
                 entry.path(),
                 &to.join(
                     entry
@@ -178,6 +178,62 @@ pub fn copy_files_except_ext(
         }
     }
     Ok(())
+}
+
+/// Copies a file.
+fn copy<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> Result<()> {
+    let from = from.as_ref();
+    let to = to.as_ref();
+    return copy_inner(from, to)
+        .with_context(|| format!("failed to copy `{}` to `{}`", from.display(), to.display()));
+
+    // This is a workaround for an issue with the macOS file watcher.
+    // Rust's `std::fs::copy` function uses `fclonefileat`, which creates
+    // clones on APFS. Unfortunately fs events seem to trigger on both
+    // sides of the clone, and there doesn't seem to be a way to differentiate
+    // which side it is.
+    // https://github.com/notify-rs/notify/issues/465#issuecomment-1657261035
+    // contains more information.
+    //
+    // This is essentially a copy of the simple copy code path in Rust's
+    // standard library.
+    #[cfg(target_os = "macos")]
+    fn copy_inner(from: &Path, to: &Path) -> Result<()> {
+        use std::fs::OpenOptions;
+        use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
+
+        let mut reader = File::open(from)?;
+        let metadata = reader.metadata()?;
+        if !metadata.is_file() {
+            anyhow::bail!(
+                "expected a file, `{}` appears to be {:?}",
+                from.display(),
+                metadata.file_type()
+            );
+        }
+        let perm = metadata.permissions();
+        let mut writer = OpenOptions::new()
+            .mode(perm.mode())
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(to)?;
+        let writer_metadata = writer.metadata()?;
+        if writer_metadata.is_file() {
+            // Set the correct file permissions, in case the file already existed.
+            // Don't set the permissions on already existing non-files like
+            // pipes/FIFOs or device nodes.
+            writer.set_permissions(perm)?;
+        }
+        std::io::copy(&mut reader, &mut writer)?;
+        Ok(())
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    fn copy_inner(from: &Path, to: &Path) -> Result<()> {
+        fs::copy(from, to)?;
+        Ok(())
+    }
 }
 
 pub fn get_404_output_file(input_404: &Option<String>) -> String {
