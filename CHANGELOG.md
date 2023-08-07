@@ -1,5 +1,12 @@
 # Changelog
 
+## mdBook 0.4.34
+[v0.4.33...v0.4.34](https://github.com/rust-lang/mdBook/compare/v0.4.33...v0.4.34)
+
+### Fixed
+- Fixed file change watcher failing on macOS with a large number of files.
+  [#2157](https://github.com/rust-lang/mdBook/pull/2157)
+
 ## mdBook 0.4.33
 [v0.4.32...v0.4.33](https://github.com/rust-lang/mdBook/compare/v0.4.32...v0.4.33)
 
