@@ -260,6 +260,7 @@ pre > .buttons button {
     }
 }
 pre > code {
+    display: block;
     padding: 1rem;
 }
 
