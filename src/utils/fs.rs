@@ -73,14 +73,12 @@ pub fn create_file(path: &Path) -> Result<File> {
 
 /// Removes all the content of a directory but not the directory itself
 pub fn remove_dir_content(dir: &Path) -> Result<()> {
-    for item in fs::read_dir(dir)? {
-        if let Ok(item) = item {
-            let item = item.path();
-            if item.is_dir() {
-                fs::remove_dir_all(item)?;
-            } else {
-                fs::remove_file(item)?;
-            }
+    for item in (fs::read_dir(dir)?).flatten() {
+        let item = item.path();
+        if item.is_dir() {
+            fs::remove_dir_all(item)?;
+        } else {
+            fs::remove_file(item)?;
         }
     }
     Ok(())

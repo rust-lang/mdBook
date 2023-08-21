@@ -566,9 +566,7 @@ fn get_last_link(links: &mut [SummaryItem]) -> Result<(usize, &mut Link)> {
     links
         .iter_mut()
         .enumerate()
-        .filter_map(|(i, item)| item.maybe_link_mut().map(|l| (i, l)))
-        .rev()
-        .next()
+        .filter_map(|(i, item)| item.maybe_link_mut().map(|l| (i, l))).next_back()
         .ok_or_else(||
             anyhow::anyhow!("Unable to get last link because the list of SummaryItems doesn't contain any Links")
             )

@@ -62,7 +62,7 @@ fn main() {
 fn create_clap_command() -> Command {
     let app = Command::new(crate_name!())
         .about(crate_description!())
-        .author("Mathieu David <mathieudavid@mathieudavid.org>")
+        .author("Mathieu David <mathieudavid@mathieudavid.org> and edited by Mauro Gentile <gents83@gmail.com>")
         .version(VERSION)
         .propagate_version(true)
         .arg_required_else_help(true)
