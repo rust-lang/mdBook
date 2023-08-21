@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 use super::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
 use crate::config::BuildConfig;
 use crate::errors::*;
+use crate::preprocess::SummaryPreprocessor;
 use crate::utils::bracket_escape;
 use log::debug;
 use serde::{Deserialize, Serialize};
@@ -21,7 +22,9 @@ pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> 
         .with_context(|| format!("Couldn't open SUMMARY.md in {:?} directory", src_dir))?
         .read_to_string(&mut summary_content)?;
 
-    let summary = parse_summary(&summary_content)
+    let preprocessed_summary_content = SummaryPreprocessor::resolve(src_dir, &summary_content);
+
+    let summary = parse_summary(&preprocessed_summary_content)
         .with_context(|| format!("Summary parsing failed for file={:?}", summary_md))?;
 
     if cfg.create_missing {

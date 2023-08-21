@@ -71,7 +71,7 @@ impl Preprocessor for LinkPreprocessor {
     }
 }
 
-fn replace_all<P1, P2>(
+pub(crate) fn replace_all<P1, P2>(
     s: &str,
     path: P1,
     source: P2,
