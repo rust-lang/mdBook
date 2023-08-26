@@ -411,6 +411,9 @@ pub struct BookConfig {
     pub multilingual: bool,
     /// The main language of the book.
     pub language: Option<String>,
+    /// A logo to be displayed on top of the navigation bar. The path is relative to the source
+    /// path
+    pub logo: Option<PathBuf>,
 }
 
 impl Default for BookConfig {
@@ -422,6 +425,7 @@ impl Default for BookConfig {
             src: PathBuf::from("src"),
             multilingual: false,
             language: Some(String::from("en")),
+            logo: None,
         }
     }
 }
@@ -788,6 +792,8 @@ mod tests {
             multilingual: true,
             src: PathBuf::from("source"),
             language: Some(String::from("ja")),
+            // TODO: add a test logo
+            logo: None,
         };
         let build_should_be = BuildConfig {
             build_dir: PathBuf::from("outputs"),
