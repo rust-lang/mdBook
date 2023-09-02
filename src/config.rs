@@ -411,6 +411,9 @@ pub struct BookConfig {
     pub multilingual: bool,
     /// The main language of the book.
     pub language: Option<String>,
+    /// The direction of text in the book: Left-to-right (LTR) or Right-to-left (RTL).
+    /// When not specified, the text direction is derived from [`BookConfig::language`].
+    pub text_direction: Option<TextDirection>,
 }
 
 impl Default for BookConfig {
@@ -422,6 +425,43 @@ impl Default for BookConfig {
             src: PathBuf::from("src"),
             multilingual: false,
             language: Some(String::from("en")),
+            text_direction: None,
+        }
+    }
+}
+
+impl BookConfig {
+    /// Gets the realized text direction, either from [`BookConfig::text_direction`]
+    /// or derived from [`BookConfig::language`], to be used by templating engines.
+    pub fn realized_text_direction(&self) -> TextDirection {
+        if let Some(direction) = self.text_direction {
+            direction
+        } else {
+            TextDirection::from_lang_code(self.language.as_deref().unwrap_or_default())
+        }
+    }
+}
+
+/// Text direction to use for HTML output
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+pub enum TextDirection {
+    /// Left to right.
+    #[serde(rename = "ltr")]
+    LeftToRight,
+    /// Right to left
+    #[serde(rename = "rtl")]
+    RightToLeft,
+}
+
+impl TextDirection {
+    /// Gets the text direction from language code
+    pub fn from_lang_code(code: &str) -> Self {
+        match code {
+            // list sourced from here: https://github.com/abarrak/rtl/blob/master/lib/rtl/core.rb#L16
+            "ar" | "ara" | "arc" | "ae" | "ave" | "egy" | "he" | "heb" | "nqo" | "pal" | "phn"
+            | "sam" | "syc" | "syr" | "fa" | "per" | "fas" | "ku" | "kur" | "ur" | "urd"
+            | "pus" | "ps" | "yi" | "yid" => TextDirection::RightToLeft,
+            _ => TextDirection::LeftToRight,
         }
     }
 }
@@ -788,6 +828,7 @@ mod tests {
             multilingual: true,
             src: PathBuf::from("source"),
             language: Some(String::from("ja")),
+            text_direction: None,
         };
         let build_should_be = BuildConfig {
             build_dir: PathBuf::from("outputs"),
@@ -1138,6 +1179,73 @@ mod tests {
         let html_config = got.html_config().unwrap();
         assert_eq!(html_config.input_404, Some("missing.md".to_string()));
         assert_eq!(&get_404_output_file(&html_config.input_404), "missing.html");
+    }
+
+    #[test]
+    fn text_direction_ltr() {
+        let src = r#"
+        [book]
+        text-direction = "ltr"
+        "#;
+
+        let got = Config::from_str(src).unwrap();
+        assert_eq!(got.book.text_direction, Some(TextDirection::LeftToRight));
+    }
+
+    #[test]
+    fn text_direction_rtl() {
+        let src = r#"
+        [book]
+        text-direction = "rtl"
+        "#;
+
+        let got = Config::from_str(src).unwrap();
+        assert_eq!(got.book.text_direction, Some(TextDirection::RightToLeft));
+    }
+
+    #[test]
+    fn text_direction_none() {
+        let src = r#"
+        [book]
+        "#;
+
+        let got = Config::from_str(src).unwrap();
+        assert_eq!(got.book.text_direction, None);
+    }
+
+    #[test]
+    fn test_text_direction() {
+        let mut cfg = BookConfig::default();
+
+        // test deriving the text direction from language codes
+        cfg.language = Some("ar".into());
+        assert_eq!(cfg.realized_text_direction(), TextDirection::RightToLeft);
+
+        cfg.language = Some("he".into());
+        assert_eq!(cfg.realized_text_direction(), TextDirection::RightToLeft);
+
+        cfg.language = Some("en".into());
+        assert_eq!(cfg.realized_text_direction(), TextDirection::LeftToRight);
+
+        cfg.language = Some("ja".into());
+        assert_eq!(cfg.realized_text_direction(), TextDirection::LeftToRight);
+
+        // test forced direction
+        cfg.language = Some("ar".into());
+        cfg.text_direction = Some(TextDirection::LeftToRight);
+        assert_eq!(cfg.realized_text_direction(), TextDirection::LeftToRight);
+
+        cfg.language = Some("ar".into());
+        cfg.text_direction = Some(TextDirection::RightToLeft);
+        assert_eq!(cfg.realized_text_direction(), TextDirection::RightToLeft);
+
+        cfg.language = Some("en".into());
+        cfg.text_direction = Some(TextDirection::LeftToRight);
+        assert_eq!(cfg.realized_text_direction(), TextDirection::LeftToRight);
+
+        cfg.language = Some("en".into());
+        cfg.text_direction = Some(TextDirection::RightToLeft);
+        assert_eq!(cfg.realized_text_direction(), TextDirection::RightToLeft);
     }
 
     #[test]
