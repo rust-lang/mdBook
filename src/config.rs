@@ -412,7 +412,7 @@ pub struct BookConfig {
     /// The main language of the book.
     pub language: Option<String>,
     /// The direction of text in the book: Left-to-right (LTR) or Right-to-left (RTL).
-    /// When not specified, the correct text direction is derived from [BookConfig::language].
+    /// When not specified, the text direction is derived from [`BookConfig::language`].
     pub text_direction: Option<TextDirection>,
 }
 
@@ -431,13 +431,13 @@ impl Default for BookConfig {
 }
 
 impl BookConfig {
-    /// Gets the realized text direction, either from [BookConfig::text_direction]
-    /// or derived from [BookConfig::language], to be used by templating engines.
+    /// Gets the realized text direction, either from [`BookConfig::text_direction`]
+    /// or derived from [`BookConfig::language`], to be used by templating engines.
     pub fn realized_text_direction(&self) -> TextDirection {
         if let Some(direction) = self.text_direction {
             direction
         } else {
-            TextDirection::from_lang_code(&self.language.clone().unwrap_or_default())
+            TextDirection::from_lang_code(self.language.as_deref().unwrap_or_default())
         }
     }
 }

@@ -48,7 +48,7 @@ This is general information about your book.
 - **language:** The main language of the book, which is used as a language attribute `<html lang="en">` for example.
   This is also used to derive the direction of text (RTL, LTR) within the book.
 - **text_direction**: The direction of text in the book: Left-to-right (LTR) or Right-to-left (RTL). Possible values: `ltr`, `rtl`.
-  When not specified, the correct text direction is derived from the book's `language` attribute.
+  When not specified, the text direction is derived from the book's `language` attribute.
 
 **book.toml**
 ```toml
