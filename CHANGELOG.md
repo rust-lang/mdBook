@@ -264,7 +264,7 @@
   [#1771](https://github.com/rust-lang/mdBook/pull/1771)
 - The 404 not-found page now includes the books title in the HTML title tag.
   [#1693](https://github.com/rust-lang/mdBook/pull/1693)
-- Migrated to clap 3.0 which which handles CLI option parsing.
+- Migrated to clap 3.0 which handles CLI option parsing.
   [#1731](https://github.com/rust-lang/mdBook/pull/1731)
 
 ### Fixed
