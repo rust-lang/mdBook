@@ -459,9 +459,8 @@ impl TextDirection {
         match code {
             // list sourced from here: https://github.com/abarrak/rtl/blob/master/lib/rtl/core.rb#L16
             "ar" | "ara" | "arc" | "ae" | "ave" | "egy" | "he" | "heb" | "nqo" | "pal" | "phn"
-            | "sam" | "syc" | "syr" | "fa" | "per" | "fas" | "ku" | "kur" | "ur" | "urd" => {
-                TextDirection::RightToLeft
-            }
+            | "sam" | "syc" | "syr" | "fa" | "per" | "fas" | "ku" | "kur" | "ur" | "urd"
+            | "pus" | "ps" | "yi" | "yid" => TextDirection::RightToLeft,
             _ => TextDirection::LeftToRight,
         }
     }
