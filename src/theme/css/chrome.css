@@ -436,7 +436,7 @@ ul#searchresults span.teaser em {
     transform: translateX(calc(0px - var(--sidebar-width)));
     z-index: -1;
 }
-[dir=rtl] .sidebar-hidden .sidebar {
+[dir=rtl] #sidebar-toggle-anchor:not(:checked) ~ .sidebar {
     transform: translateX(var(--sidebar-width));
 }
 .sidebar::-webkit-scrollbar {
@@ -450,10 +450,16 @@ ul#searchresults span.teaser em {
 #sidebar-toggle-anchor:checked ~ .page-wrapper {
     transform: translateX(var(--sidebar-width));
 }
+[dir=rtl] #sidebar-toggle-anchor:checked ~ .page-wrapper {
+    transform: translateX(calc(0px - var(--sidebar-width)));
+}
 @media only screen and (min-width: 620px) {
     #sidebar-toggle-anchor:checked ~ .page-wrapper {
         transform: none;
         margin-inline-start: var(--sidebar-width);
+    }
+    [dir=rtl] #sidebar-toggle-anchor:checked ~ .page-wrapper {
+        transform: none;
     }
 }
 
