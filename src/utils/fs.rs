@@ -117,6 +117,14 @@ pub fn copy_files_except_ext(
         let entry_file_name = entry.file_name().unwrap();
         let target_file_path = to.join(entry_file_name);
 
+        // Check if it is in the blacklist
+        if let Some(ignore) = ignore {
+            let path = entry.as_path();
+            if ignore.matched(&path, path.is_dir()).is_ignore() {
+                continue;
+            }
+        }
+
         // If the entry is a dir and the recursive option is enabled, call itself
         if metadata.is_dir() && recursive {
             if entry == to.as_os_str() {
