@@ -897,7 +897,7 @@ mod tests {
     }
 
     #[test]
-    fn build_test_book() {
+    fn mdbookignore_ignores_file() {
         let temp_dir = TempFileBuilder::new().prefix("mdbook-").tempdir().unwrap();
         let test_book_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("test_book");
 
