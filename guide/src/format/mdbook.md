@@ -317,7 +317,29 @@ contents (sidebar) by including a `\{{#title ...}}` near the top of the page.
 
 ## HTML classes provided by mdBook
 
-The `class="warning"` can be applied to make a warning, or similar note, stand out.
+<img class="right" src="images/rust-logo-blk.svg" alt="The Rust logo">
+
+### `class="left"` and `"right"`
+
+These classes are provided by default, for inline HTML to float images.
+
+```html
+<img class="right" src="images/rust-logo-blk.svg" alt="The Rust logo">
+```
+
+### `class="hidden"`
+
+HTML tags with class `hidden` will not be shown.
+
+```html
+<div class="hidden">This will not be seen.</div>
+```
+
+<div class="hidden">This will not be seen.</div>
+
+### `class="warning"`
+
+To make a warning or similar note stand out, wrap it in a warning div.
 
 ```html
 <div class="warning">
