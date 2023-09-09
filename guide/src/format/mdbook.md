@@ -314,3 +314,51 @@ contents (sidebar) by including a `\{{#title ...}}` near the top of the page.
 ```hbs
 \{{#title My Title}}
 ```
+
+## HTML classes provided by mdBook
+
+<img class="right" src="images/rust-logo-blk.svg" alt="The Rust logo">
+
+### `class="left"` and `"right"`
+
+These classes are provided by default, for inline HTML to float images.
+
+```html
+<img class="right" src="images/rust-logo-blk.svg" alt="The Rust logo">
+```
+
+### `class="hidden"`
+
+HTML tags with class `hidden` will not be shown.
+
+```html
+<div class="hidden">This will not be seen.</div>
+```
+
+<div class="hidden">This will not be seen.</div>
+
+### `class="warning"`
+
+To make a warning or similar note stand out, wrap it in a warning div.
+
+```html
+<div class="warning">
+
+This is a bad thing that you should pay attention to.
+
+Warning blocks should be used sparingly in documentation, to avoid "warning
+fatique," where people are trained to ignore them because they usually don't
+matter for what they're doing.
+
+</div>
+```
+
+<div class="warning">
+
+This is a bad thing that you should pay attention to.
+
+Warning blocks should be used sparingly in documentation, to avoid "warning
+fatique," where people are trained to ignore them because they usually don't
+matter for what they're doing.
+
+</div>
