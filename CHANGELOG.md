@@ -1,5 +1,20 @@
 # Changelog
 
+## mdBook 0.4.35
+[v0.4.34...v0.4.35](https://github.com/rust-lang/mdBook/compare/v0.4.34...v0.4.35)
+
+### Added
+- Added the `book.text-direction` setting for explicit support for right-to-left languages.
+  [#1641](https://github.com/rust-lang/mdBook/pull/1641)
+- Added `rel=prefetch` to the "next" links to potentially improve browser performance.
+  [#2168](https://github.com/rust-lang/mdBook/pull/2168)
+- Added a `.warning` CSS class which is styled for displaying warning blocks.
+  [#2187](https://github.com/rust-lang/mdBook/pull/2187)
+
+### Changed
+- Better support of the sidebar when JavaScript is disabled.
+  [#2175](https://github.com/rust-lang/mdBook/pull/2175)
+
 ## mdBook 0.4.34
 [v0.4.33...v0.4.34](https://github.com/rust-lang/mdBook/compare/v0.4.33...v0.4.34)
 
