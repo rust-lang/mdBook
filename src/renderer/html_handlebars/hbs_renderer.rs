@@ -649,6 +649,10 @@ fn make_data(
         json!(config.book.language.clone().unwrap_or_default()),
     );
     data.insert(
+        "text_direction".to_owned(),
+        json!(config.book.realized_text_direction()),
+    );
+    data.insert(
         "book_title".to_owned(),
         json!(config.book.title.clone().unwrap_or_default()),
     );
@@ -1088,6 +1092,8 @@ struct RenderItemContext<'a> {
 
 #[cfg(test)]
 mod tests {
+    use crate::config::TextDirection;
+
     use super::*;
     use pretty_assertions::assert_eq;
 
@@ -1298,5 +1304,11 @@ mod tests {
             );
             assert_eq!(&*got, *should_be);
         }
+    }
+
+    #[test]
+    fn test_json_direction() {
+        assert_eq!(json!(TextDirection::RightToLeft), json!("rtl"));
+        assert_eq!(json!(TextDirection::LeftToRight), json!("ltr"));
     }
 }
