@@ -269,6 +269,11 @@ pre > .buttons button {
         /* On mobile, make it easier to tap buttons. */
         padding: 0.3rem 1rem;
     }
+
+    .sidebar-resize-indicator {
+        /* Hide resize indicator on devices with limited accuracy */
+        display: none;
+    }
 }
 pre > code {
     padding: 1rem;
