@@ -6,8 +6,7 @@ of code examples that could get outdated. Therefore it is very important for
 them to be able to automatically test these code examples.
 
 mdBook supports a `test` command that will run all available tests in a book. At
-the moment, only rustdoc tests are supported, but this may be expanded upon in
-the future.
+the moment, only Rust tests are supported.
 
 #### Disable tests on a code block
 
