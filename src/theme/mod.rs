@@ -21,6 +21,7 @@ pub static CHROME_CSS: &[u8] = include_bytes!("css/chrome.css");
 pub static GENERAL_CSS: &[u8] = include_bytes!("css/general.css");
 pub static PRINT_CSS: &[u8] = include_bytes!("css/print.css");
 pub static VARIABLES_CSS: &[u8] = include_bytes!("css/variables.css");
+pub static EXCLUDES_CSS: &[u8] = include_bytes!("css/exclude.css");
 pub static FAVICON_PNG: &[u8] = include_bytes!("favicon.png");
 pub static FAVICON_SVG: &[u8] = include_bytes!("favicon.svg");
 pub static JS: &[u8] = include_bytes!("book.js");
@@ -93,6 +94,7 @@ impl Theme {
                     theme_dir.join("css/variables.css"),
                     &mut theme.variables_css,
                 ),
+                (theme_dir.join("css/exclude.css"), &mut theme.excludes_css),
                 (theme_dir.join("highlight.js"), &mut theme.highlight_js),
                 (theme_dir.join("clipboard.min.js"), &mut theme.clipboard_js),
                 (theme_dir.join("highlight.css"), &mut theme.highlight_css),

@@ -117,6 +117,7 @@ fn copy_theme() {
     let expected = vec![
         "book.js",
         "css/chrome.css",
+        "css/exclude.css",
         "css/general.css",
         "css/print.css",
         "css/variables.css",
