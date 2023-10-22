@@ -2,13 +2,13 @@
 
 mdBook's [parser](https://github.com/raphlinus/pulldown-cmark) adheres to the [CommonMark](https://commonmark.org/) specification with some extensions described below.
 You can take a quick [tutorial](https://commonmark.org/help/tutorial/),
-or [try out](https://spec.commonmark.org/dingus/) CommonMark in real time. A complete Markdown overview is out of scope for 
+or [try out](https://spec.commonmark.org/dingus/) CommonMark in real time. A complete Markdown overview is out of scope for
 this documentation, but below is a high level overview of some of the basics. For a more in-depth experience, check out the
 [Markdown Guide](https://www.markdownguide.org).
 
 ## Text and Paragraphs
 
-Text is rendered relatively predictably: 
+Text is rendered relatively predictably:
 
 ```markdown
 Here is a line of text.
@@ -27,20 +27,20 @@ This is a new line.
 Headings use the `#` marker and should be on a line by themselves. More `#` mean smaller headings:
 
 ```markdown
-### A heading 
+### A heading
 
 Some text.
 
-#### A smaller heading 
+#### A smaller heading
 
 More text.
 ```
 
-### A heading 
+### A heading
 
 Some text.
 
-#### A smaller heading 
+#### A smaller heading
 
 More text.
 
@@ -71,14 +71,14 @@ Lists can be unordered or ordered. Ordered lists will order automatically:
 Linking to a URL or local file is easy:
 
 ```markdown
-Use [mdBook](https://github.com/rust-lang/mdBook). 
+Use [mdBook](https://github.com/rust-lang/mdBook).
 
 Read about [mdBook](mdbook.md).
 
 A bare url: <https://www.rust-lang.org>.
 ```
 
-Use [mdBook](https://github.com/rust-lang/mdBook). 
+Use [mdBook](https://github.com/rust-lang/mdBook).
 
 Read about [mdBook](mdbook.md).
 
@@ -124,14 +124,14 @@ Image variants for different themes can be used via CSS classes.
 Here is an example for different images for light vs. dark themes:
 
 ```markdown
-<img src="images/rust-logo-blk.svg" class="no-dark-themes" />
-<img src="images/rust-logo-blk-dark.svg" class="no-light-themes" />
+![rust logo standard edition](images/rust-logo-blk.svg#only-light)
+![rust logo dark mode](images/rust-logo-blk-dark.svg#only-dark)
 ```
 
 Try switching the theme to see the effect below (brush icon at the top left of the page):
 
-<img src="images/rust-logo-blk.svg" class="no-dark-themes" />
-<img src="images/rust-logo-blk-dark.svg" class="no-light-themes" />
+![rust logo standard edition](images/rust-logo-blk.svg#only-light)
+![rust logo dark mode](images/rust-logo-blk-dark.svg#only-dark)
 
 To exclude an image (or any HTML element) for all dark or all light themes
 (incl. the Rust theme), use the classes `no-dark-themes` and `no-light-themes`.
