@@ -117,6 +117,28 @@ Which, of course displays the image like so:
 
 ![The Rust Logo](images/rust-logo-blk.svg)
 
+## Theme-dependent images
+
+Image variants for different themes can be used via CSS classes.
+
+Here is an example for different images for light vs. dark themes:
+
+```markdown
+<img src="images/rust-logo-blk.svg" class="no-dark-themes" />
+<img src="images/rust-logo-blk-dark.svg" class="no-light-themes" />
+```
+
+Try switching the theme to see the effect below (brush icon at the top left of the page):
+
+<img src="images/rust-logo-blk.svg" class="no-dark-themes" />
+<img src="images/rust-logo-blk-dark.svg" class="no-light-themes" />
+
+To exclude an image (or any HTML element) for all dark or all light themes
+(incl. the Rust theme), use the classes `no-dark-themes` and `no-light-themes`.
+
+For even more control, elements can be hidden on an individual theme basis using the classes
+`no-light`, `no-rust`, `no-coal`, `no-navy` and `no-ayu`.
+
 ## Extensions
 
 mdBook has several extensions beyond the standard CommonMark specification.

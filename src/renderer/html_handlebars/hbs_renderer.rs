@@ -244,6 +244,7 @@ impl HtmlHandlebars {
             write_file(destination, "css/print.css", &theme.print_css)?;
         }
         write_file(destination, "css/variables.css", &theme.variables_css)?;
+        write_file(destination, "css/exclude.css", &theme.excludes_css)?;
         if let Some(contents) = &theme.favicon_png {
             write_file(destination, "favicon.png", contents)?;
         }
