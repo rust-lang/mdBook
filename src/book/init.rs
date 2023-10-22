@@ -144,9 +144,6 @@ impl BookBuilder {
         let mut variables_css = File::create(cssdir.join("variables.css"))?;
         variables_css.write_all(theme::VARIABLES_CSS)?;
 
-        let mut excludes_css = File::create(cssdir.join("exclude.css"))?;
-        excludes_css.write_all(theme::EXCLUDES_CSS)?;
-
         let mut favicon = File::create(themedir.join("favicon.png"))?;
         favicon.write_all(theme::FAVICON_PNG)?;
 
