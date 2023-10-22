@@ -117,19 +117,20 @@ Which, of course displays the image like so:
 
 ![The Rust Logo](images/rust-logo-blk.svg)
 
+
 ## Light and Dark Image Variants
 
 Separate light mode and dark mode images may be presented to the viewer by adding `#light-only` or `#dark-only` to an image path:
 
 ```markdown
-<img src="images/rust-logo-blk.svg" class="no-dark-themes" />
-<img src="images/rust-logo-blk-dark.svg" class="no-light-themes" />
+![rust logo standard edition](images/rust-logo-blk.svg#only-light)
+![rust logo dark mode](images/rust-logo-blk-dark.svg#only-dark)
 ```
 
 Try switching the theme to see the effect below (brush icon at the top left of the page):
 
-<img src="images/rust-logo-blk.svg" class="no-dark-themes" />
-<img src="images/rust-logo-blk-dark.svg" class="no-light-themes" />
+![rust logo standard edition](images/rust-logo-blk.svg#only-light)
+![rust logo dark mode](images/rust-logo-blk-dark.svg#only-dark)
 
 ## Extensions
 
