@@ -117,11 +117,9 @@ Which, of course displays the image like so:
 
 ![The Rust Logo](images/rust-logo-blk.svg)
 
-## Theme-dependent images
+## Light and Dark Image Variants
 
-Image variants for different themes can be used via CSS classes.
-
-Here is an example for different images for light vs. dark themes:
+Separate light mode and dark mode images may be presented to the viewer by adding `#light-only` or `#dark-only` to an image path:
 
 ```markdown
 ![rust logo standard edition](images/rust-logo-blk.svg#only-light)
@@ -132,12 +130,6 @@ Try switching the theme to see the effect below (brush icon at the top left of t
 
 ![rust logo standard edition](images/rust-logo-blk.svg#only-light)
 ![rust logo dark mode](images/rust-logo-blk-dark.svg#only-dark)
-
-To exclude an image (or any HTML element) for all dark or all light themes
-(incl. the Rust theme), use the classes `no-dark-themes` and `no-light-themes`.
-
-For even more control, elements can be hidden on an individual theme basis using the classes
-`no-light`, `no-rust`, `no-coal`, `no-navy` and `no-ayu`.
 
 ## Extensions
 
