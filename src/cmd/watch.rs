@@ -4,6 +4,7 @@ use ignore::gitignore::Gitignore;
 use mdbook::errors::Result;
 use mdbook::utils;
 use mdbook::MDBook;
+use std::env;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::channel;
 use std::thread::sleep;
@@ -87,11 +88,16 @@ fn find_gitignore(book_root: &Path) -> Option<PathBuf> {
 }
 
 fn filter_ignored_files(ignore: Gitignore, paths: &[PathBuf]) -> Vec<PathBuf> {
+    let current_dir = env::current_dir().expect("Unable to determine the current directory");
+
     paths
         .iter()
         .filter(|path| {
+            let normalized_path = path
+                .strip_prefix(&current_dir)
+                .expect("Could not normalize path");
             !ignore
-                .matched_path_or_any_parents(path, path.is_dir())
+                .matched_path_or_any_parents(normalized_path, normalized_path.is_dir())
                 .is_ignore()
         })
         .map(|path| path.to_path_buf())
