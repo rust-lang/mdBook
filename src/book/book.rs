@@ -22,7 +22,7 @@ pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> 
         .with_context(|| format!("Summary parsing failed for file={:?}", summary_md))?;
 
     if cfg.create_missing {
-        create_missing(src_dir, &summary).with_context(|| "Unable to create missing chapters")?;
+        create_missing(src_dir, &summary).with_context(|| "Unable to create missing chapters in {:?}")?;
     }
 
     load_book_from_disk(&summary, src_dir)
