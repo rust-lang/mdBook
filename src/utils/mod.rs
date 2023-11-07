@@ -206,7 +206,7 @@ pub fn log_backtrace(e: &Error) {
     error!("Error: {}", e);
 
     for cause in e.chain().skip(1) {
-        error!("\tCaused By: {}", cause);
+        error!("\t was caused By: {}", cause);
     }
 }
 
