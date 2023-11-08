@@ -148,7 +148,7 @@ The following are instructions for updating [highlight.js](https://highlightjs.o
 1. Clone the repository at <https://github.com/highlightjs/highlight.js>
 1. Check out a tagged release (like `10.1.1`).
 1. Run `npm install`
-1. Run `node tools/build.js :common apache armasm coffeescript d handlebars haskell http julia nginx properties r scala x86asm yaml`
+1. Run `node tools/build.js :common apache armasm coffeescript d handlebars haskell http julia nginx nim properties r scala x86asm yaml`
 1. Compare the language list that it spits out to the one in [`syntax-highlighting.md`](https://github.com/camelid/mdBook/blob/master/guide/src/format/theme/syntax-highlighting.md). If any are missing, add them to the list and rebuild (and update these docs). If any are added to the common set, add them to `syntax-highlighting.md`.
 1. Copy `build/highlight.min.js` to mdbook's directory [`highlight.js`](https://github.com/rust-lang/mdBook/blob/master/src/theme/highlight.js).
 1. Be sure to check the highlight.js [CHANGES](https://github.com/highlightjs/highlight.js/blob/main/CHANGES.md) for any breaking changes. Breaking changes that would affect users will need to wait until the next major release.
