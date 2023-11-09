@@ -44,6 +44,7 @@ your own `highlight.js` file:
 - makefile
 - markdown
 - nginx
+- nim
 - objectivec
 - perl
 - php
