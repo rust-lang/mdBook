@@ -4,6 +4,7 @@ use ignore::gitignore::Gitignore;
 use mdbook::errors::Result;
 use mdbook::utils;
 use mdbook::MDBook;
+use notify_debouncer_mini::Config;
 use pathdiff::diff_paths;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::channel;
@@ -117,8 +118,17 @@ where
 
     // Create a channel to receive the events.
     let (tx, rx) = channel();
+    // Notify backend configuration
+    let backend_config = notify::Config::default().with_poll_interval(Duration::from_secs(1));
+    // Debouncer configuration
+    let debouncer_config = Config::default()
+        .with_timeout(Duration::from_secs(1))
+        .with_notify_config(backend_config);
 
-    let mut debouncer = match notify_debouncer_mini::new_debouncer(Duration::from_secs(1), tx) {
+    let mut debouncer = match notify_debouncer_mini::new_debouncer_opt::<_, notify::PollWatcher>(
+        debouncer_config,
+        tx,
+    ) {
         Ok(d) => d,
         Err(e) => {
             error!("Error while trying to watch the files:\n\n\t{:?}", e);
