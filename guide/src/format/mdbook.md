@@ -347,7 +347,7 @@ To make a warning or similar note stand out, wrap it in a warning div.
 This is a bad thing that you should pay attention to.
 
 Warning blocks should be used sparingly in documentation, to avoid "warning
-fatique," where people are trained to ignore them because they usually don't
+fatigue," where people are trained to ignore them because they usually don't
 matter for what they're doing.
 
 </div>
