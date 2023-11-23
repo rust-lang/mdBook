@@ -15,22 +15,29 @@ WORKDIR /usr/src/github.com/rust-lang
 # Create blank project
 RUN USER=root cargo new mdBook
 
+WORKDIR /usr/src/github.com/rust-lang/mdBook
+
+## Install target platform (Cross-Compilation) --> Needed for Alpine
+# Use stable rather than nightly for the build target
+# Got errors while building after 6 months
+# https://substrate.stackexchange.com/questions/5379/how-do-i-fix-a-failed-build-error-e0635-unknown-feature-proc-macro-span-shri/9312#9312
+RUN rustup default stable
+
+# note: the `x86_64-unknown-linux-musl` target may not be installed  
+RUN rustup target add x86_64-unknown-linux-musl
+
 # We want dependencies cached, so copy those first.
 COPY Cargo.toml Cargo.lock /usr/src/github.com/rust-lang/mdBook
 # examples is referenced in Cargo.toml
 COPY examples /usr/src/github.com/rust-lang/mdBook/examples
 
-WORKDIR /usr/src/github.com/rust-lang/mdBook
-
-## Install target platform (Cross-Compilation) --> Needed for Alpine
-#RUN rustup install nightly  
-RUN rustup target add x86_64-unknown-linux-musl
-
-# This is a dummy build to get the dependencies cached.
+# This is a dummy build to pull dependencies and have them cached
 # https://github.com/rust-lang/cargo/issues/8172#issuecomment-659056517
 # Very slow builds: https://github.com/rust-lang/cargo/issues/9167#issuecomment-1219251978
 # Logs verbose: https://github.com/rust-lang/cargo/issues/1106#issuecomment-141555744
 RUN cargo build -vv --config "net.git-fetch-with-cli=true" --target x86_64-unknown-linux-musl --release
+
+WORKDIR /usr/src/github.com/rust-lang/mdBook
 
 # Now copy in the rest of the sources
 COPY src /usr/src/github.com/rust-lang/mdBook/src
