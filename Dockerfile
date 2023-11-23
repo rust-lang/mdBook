@@ -47,14 +47,14 @@ RUN cargo build --locked --bin mdbook --release --target x86_64-unknown-linux-mu
 
 ################
 ##### Runtime
-FROM --platform=$BUILDPLATFORM alpine:3.16.0 AS runtime 
+FROM alpine:3.18.4 AS runtime 
 
 # Copy application binary from builder image
 COPY --from=builder /usr/src/github.com/rust-lang/mdBook/target/x86_64-unknown-linux-musl/release/mdbook /usr/local/bin/mdbook
 
-ARG TARGETPLATFORM
-ARG BUILDPLATFORM
-RUN echo "I am running on $BUILDPLATFORM, building for $TARGETPLATFORM" > /etc/build.log
-
+# Just to document which port a container from this image exposes
 EXPOSE 3000
+
+# The command to serve the books
 ENTRYPOINT ["mdbook", "serve", "--hostname", "0.0.0.0"]
+
