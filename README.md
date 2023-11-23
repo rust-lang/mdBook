@@ -14,13 +14,13 @@ If you are interested in contributing to the development of mdBook, check out th
 ## Container
 
 > **NOTE**: You need to have docker installed
-> https://docs.docker.com/language/golang/run-containers/
+> https://docs.docker.com/engine/install/
 
 1. Locate a local directory with md files
 2. Quickly run a docker container with the current version:
 
 ```console
-docker run -ti -v $(pwd)/src:/src -p 3000:3000 rust-lang/mdbook
+docker run -ti -v $(pwd):/mdbook -p 3000:3000 rust-lang/mdbook
 ```
 
 ## License
