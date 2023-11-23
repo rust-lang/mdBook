@@ -490,6 +490,8 @@ pub struct HtmlConfig {
     pub curly_quotes: bool,
     /// Should mathjax be enabled?
     pub mathjax_support: bool,
+    /// Should asciimath be enabled?
+    pub asciimath_support: bool,
     /// Whether to fonts.css and respective font files to the output directory.
     pub copy_fonts: bool,
     /// An optional google analytics code.
@@ -550,6 +552,7 @@ impl Default for HtmlConfig {
             preferred_dark_theme: None,
             curly_quotes: false,
             mathjax_support: false,
+            asciimath_support: false,
             copy_fonts: true,
             google_analytics: None,
             additional_css: Vec::new(),
