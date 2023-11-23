@@ -39,6 +39,34 @@ rustlang-mdbook  | 2023-11-23 16:53:00 [INFO] (warp::server): listening on http:
 rustlang-mdbook  | 2023-11-23 16:53:00 [INFO] (mdbook::cmd::watch): Listening for changes...
 ```
 
+* Test it in a container as well
+
+> **NOTE**: docker compose creates a default network with the name of the `dir_default` 
+
+```console
+docker run -ti --network mdbook_default alpine/lynx mdbook:3000
+                                                                                                                                                                                  
+Introduction (p1 of 3)
+    1. Prefix Chapter
+    2.
+    3. 1. Introduction
+    4. 2. Draft Chapter
+    5.
+    6. Actual Markdown Tag Examples
+    7. 3. Markdown Individual tags
+    8.
+         1. 3.1. Heading
+         2. 3.2. Paragraphs
+         3. 3.3. Line Break
+         4. 3.4. Emphasis
+         5. 3.5. Blockquote
+         6. 3.6. List
+         7. 3.7. Code
+         8. 3.8. Image
+         9. 3.9. Links and Horizontal Rule
+        10. 3.10. Tables
+```
+
 ## License
 
 All the code in this repository is released under the ***Mozilla Public License v2.0***, for more information take a look at the [LICENSE] file.
