@@ -3,7 +3,8 @@
 ##### docker buildx create --use --name multi-builder --platform linux/arm64,linux/amd64
 # https://github.com/docker/buildx/issues/318#issuecomment-1023226339
 #FROM --platform=$BUILDPLATFORM rustlang/rust:nightly-buster-slim as builder
-FROM rustlang/rust:nightly-buster-slim as builder
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE} AS builder
 
 # Installing git because of the workaround for the config
 # https://github.com/rust-lang/cargo/issues/10781#issuecomment-1441071052
