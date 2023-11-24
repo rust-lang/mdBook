@@ -108,8 +108,7 @@ where
     // Create a channel to receive the events.
     let (tx, rx) = channel();
 
-    let mut debouncer = match notify_debouncer_mini::new_debouncer(Duration::from_secs(1), None, tx)
-    {
+    let mut debouncer = match notify_debouncer_mini::new_debouncer(Duration::from_secs(1), tx) {
         Ok(d) => d,
         Err(e) => {
             error!("Error while trying to watch the files:\n\n\t{:?}", e);
@@ -157,10 +156,8 @@ where
         let paths: Vec<_> = all_events
             .filter_map(|event| match event {
                 Ok(events) => Some(events),
-                Err(errors) => {
-                    for error in errors {
-                        log::warn!("error while watching for changes: {error}");
-                    }
+                Err(error) => {
+                    log::warn!("error while watching for changes: {error}");
                     None
                 }
             })
