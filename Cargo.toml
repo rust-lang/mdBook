@@ -44,7 +44,7 @@ ignore = { version = "0.4.20", optional = true }
 # Serve feature
 futures-util = { version = "0.3.28", optional = true }
 tokio = { version = "1.28.1", features = ["macros", "rt-multi-thread"], optional = true }
-warp = { version = "0.3.5", default-features = false, features = ["websocket"], optional = true }
+warp = { version = "0.3.6", default-features = false, features = ["websocket"], optional = true }
 
 # Search feature
 elasticlunr-rs = { version = "3.0.2", optional = true }
