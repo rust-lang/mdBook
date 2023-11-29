@@ -4,6 +4,7 @@ use ignore::gitignore::Gitignore;
 use mdbook::errors::Result;
 use mdbook::utils;
 use mdbook::MDBook;
+use pathdiff::diff_paths;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::channel;
 use std::thread::sleep;
@@ -86,12 +87,21 @@ fn find_gitignore(book_root: &Path) -> Option<PathBuf> {
         .find(|p| p.exists())
 }
 
+// Note: The usage of `canonicalize` may encounter occasional failures on the Windows platform, presenting a potential risk.
+// For more details, refer to [Pull Request #2229](https://github.com/rust-lang/mdBook/pull/2229#discussion_r1408665981).
 fn filter_ignored_files(ignore: Gitignore, paths: &[PathBuf]) -> Vec<PathBuf> {
+    let ignore_root = ignore
+        .path()
+        .canonicalize()
+        .expect("ignore root canonicalize error");
+
     paths
         .iter()
         .filter(|path| {
+            let relative_path =
+                diff_paths(&path, &ignore_root).expect("One of the paths should be an absolute");
             !ignore
-                .matched_path_or_any_parents(path, path.is_dir())
+                .matched_path_or_any_parents(&relative_path, relative_path.is_dir())
                 .is_ignore()
         })
         .map(|path| path.to_path_buf())
@@ -174,5 +184,46 @@ where
         if !paths.is_empty() {
             closure(paths, &book.root);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ignore::gitignore::GitignoreBuilder;
+    use std::env;
+
+    #[test]
+    fn test_filter_ignored_files() {
+        let current_dir = env::current_dir().unwrap();
+
+        let ignore = GitignoreBuilder::new(&current_dir)
+            .add_line(None, "*.html")
+            .unwrap()
+            .build()
+            .unwrap();
+        let should_remain = current_dir.join("record.text");
+        let should_filter = current_dir.join("index.html");
+
+        let remain = filter_ignored_files(ignore, &[should_remain.clone(), should_filter]);
+        assert_eq!(remain, vec![should_remain])
+    }
+
+    #[test]
+    fn filter_ignored_files_should_handle_parent_dir() {
+        let current_dir = env::current_dir().unwrap();
+
+        let ignore = GitignoreBuilder::new(&current_dir)
+            .add_line(None, "*.html")
+            .unwrap()
+            .build()
+            .unwrap();
+
+        let parent_dir = current_dir.join("..");
+        let should_remain = parent_dir.join("record.text");
+        let should_filter = parent_dir.join("index.html");
+
+        let remain = filter_ignored_files(ignore, &[should_remain.clone(), should_filter]);
+        assert_eq!(remain, vec![should_remain])
     }
 }
