@@ -1,5 +1,28 @@
 # Changelog
 
+## mdBook 0.4.36
+[v0.4.35...v0.4.36](https://github.com/rust-lang/mdBook/compare/v0.4.35...v0.4.36)
+
+### Added
+- Added Nim to the default highlighted languages.
+  [#2232](https://github.com/rust-lang/mdBook/pull/2232)
+- Added a small indicator for the sidebar resize handle.
+  [#2209](https://github.com/rust-lang/mdBook/pull/2209)
+
+### Changed
+- Updated dependencies. MSRV raised to 1.70.0.
+  [#2173](https://github.com/rust-lang/mdBook/pull/2173)
+  [#2250](https://github.com/rust-lang/mdBook/pull/2250)
+  [#2252](https://github.com/rust-lang/mdBook/pull/2252)
+
+### Fixed
+- Fixed blank column in print page when the sidebar was visible.
+  [#2235](https://github.com/rust-lang/mdBook/pull/2235)
+- Fixed indentation of code blocks when Javascript is disabled.
+  [#2162](https://github.com/rust-lang/mdBook/pull/2162)
+- Fixed a panic when `mdbook serve` or `mdbook watch` were given certain kinds of paths.
+  [#2229](https://github.com/rust-lang/mdBook/pull/2229)
+
 ## mdBook 0.4.35
 [v0.4.34...v0.4.35](https://github.com/rust-lang/mdBook/compare/v0.4.34...v0.4.35)
 
