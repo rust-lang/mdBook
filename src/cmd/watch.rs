@@ -194,12 +194,6 @@ mod tests {
     use ignore::gitignore::GitignoreBuilder;
     use std::env;
 
-    fn path_to_buf(root: &str, file_name: &str) -> PathBuf {
-        let mut path = PathBuf::from(root);
-        path.push(file_name);
-        path
-    }
-
     #[test]
     fn test_filter_ignored_files() {
         let current_dir = env::current_dir().unwrap();
@@ -209,8 +203,8 @@ mod tests {
             .unwrap()
             .build()
             .unwrap();
-        let should_remain = path_to_buf(current_dir.to_str().unwrap(), "record.text");
-        let should_filter = path_to_buf(current_dir.to_str().unwrap(), "index.html");
+        let should_remain = current_dir.join("record.text");
+        let should_filter = current_dir.join("index.html");
 
         let remain = filter_ignored_files(ignore, &[should_remain.clone(), should_filter]);
         assert_eq!(remain, vec![should_remain])
@@ -226,9 +220,9 @@ mod tests {
             .build()
             .unwrap();
 
-        let parent_dir = format!("{}/../", current_dir.to_str().unwrap());
-        let should_remain = path_to_buf(&parent_dir, "record.text");
-        let should_filter = path_to_buf(&parent_dir, "index.html");
+        let parent_dir = current_dir.join("..");
+        let should_remain = parent_dir.join("record.text");
+        let should_filter = parent_dir.join("index.html");
 
         let remain = filter_ignored_files(ignore, &[should_remain.clone(), should_filter]);
         assert_eq!(remain, vec![should_remain])
