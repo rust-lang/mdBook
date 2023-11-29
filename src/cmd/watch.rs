@@ -87,8 +87,8 @@ fn find_gitignore(book_root: &Path) -> Option<PathBuf> {
         .find(|p| p.exists())
 }
 
-// Using `canonicalize` can fail on Windows sometimes, might be a potential risk.
-// see ([https://github.com/rust-lang/mdBook/pull/2229#discussion_r1408665981).
+// Note: The usage of `canonicalize` may encounter occasional failures on the Windows platform, presenting a potential risk.
+// For more details, refer to [Pull Request #2229](https://github.com/rust-lang/mdBook/pull/2229#discussion_r1408665981).
 fn filter_ignored_files(ignore: Gitignore, paths: &[PathBuf]) -> Vec<PathBuf> {
     let ignore_root = ignore
         .path()
