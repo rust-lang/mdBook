@@ -1,4 +1,5 @@
 use crate::errors::*;
+use log::{debug, trace};
 use std::convert::Into;
 use std::fs::{self, File};
 use std::io::Write;
@@ -37,7 +38,6 @@ pub fn write_file<P: AsRef<Path>>(build_dir: &Path, filename: P, content: &[u8])
 /// Consider [submitting a new issue](https://github.com/rust-lang/mdBook/issues)
 /// or a [pull-request](https://github.com/rust-lang/mdBook/pulls) to improve it.
 pub fn path_to_root<P: Into<PathBuf>>(path: P) -> String {
-    debug!("path_to_root");
     // Remove filename and add "../" for every directory
 
     path.into()
@@ -166,7 +166,7 @@ pub fn copy_files_except_ext(
                         .expect("a file should have a file name...")
                 )
             );
-            fs::copy(
+            copy(
                 entry.path(),
                 &to.join(
                     entry
@@ -178,6 +178,62 @@ pub fn copy_files_except_ext(
         }
     }
     Ok(())
+}
+
+/// Copies a file.
+fn copy<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> Result<()> {
+    let from = from.as_ref();
+    let to = to.as_ref();
+    return copy_inner(from, to)
+        .with_context(|| format!("failed to copy `{}` to `{}`", from.display(), to.display()));
+
+    // This is a workaround for an issue with the macOS file watcher.
+    // Rust's `std::fs::copy` function uses `fclonefileat`, which creates
+    // clones on APFS. Unfortunately fs events seem to trigger on both
+    // sides of the clone, and there doesn't seem to be a way to differentiate
+    // which side it is.
+    // https://github.com/notify-rs/notify/issues/465#issuecomment-1657261035
+    // contains more information.
+    //
+    // This is essentially a copy of the simple copy code path in Rust's
+    // standard library.
+    #[cfg(target_os = "macos")]
+    fn copy_inner(from: &Path, to: &Path) -> Result<()> {
+        use std::fs::OpenOptions;
+        use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
+
+        let mut reader = File::open(from)?;
+        let metadata = reader.metadata()?;
+        if !metadata.is_file() {
+            anyhow::bail!(
+                "expected a file, `{}` appears to be {:?}",
+                from.display(),
+                metadata.file_type()
+            );
+        }
+        let perm = metadata.permissions();
+        let mut writer = OpenOptions::new()
+            .mode(perm.mode())
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(to)?;
+        let writer_metadata = writer.metadata()?;
+        if writer_metadata.is_file() {
+            // Set the correct file permissions, in case the file already existed.
+            // Don't set the permissions on already existing non-files like
+            // pipes/FIFOs or device nodes.
+            writer.set_permissions(perm)?;
+        }
+        std::io::copy(&mut reader, &mut writer)?;
+        Ok(())
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    fn copy_inner(from: &Path, to: &Path) -> Result<()> {
+        fs::copy(from, to)?;
+        Ok(())
+    }
 }
 
 pub fn get_404_output_file(input_404: &Option<String>) -> String {
@@ -210,39 +266,36 @@ mod tests {
         };
 
         // Create a couple of files
-        if let Err(err) = fs::File::create(&tmp.path().join("file.txt")) {
+        if let Err(err) = fs::File::create(tmp.path().join("file.txt")) {
             panic!("Could not create file.txt: {}", err);
         }
-        if let Err(err) = fs::File::create(&tmp.path().join("file.md")) {
+        if let Err(err) = fs::File::create(tmp.path().join("file.md")) {
             panic!("Could not create file.md: {}", err);
         }
-        if let Err(err) = fs::File::create(&tmp.path().join("file.png")) {
+        if let Err(err) = fs::File::create(tmp.path().join("file.png")) {
             panic!("Could not create file.png: {}", err);
         }
-        if let Err(err) = fs::create_dir(&tmp.path().join("sub_dir")) {
+        if let Err(err) = fs::create_dir(tmp.path().join("sub_dir")) {
             panic!("Could not create sub_dir: {}", err);
         }
-        if let Err(err) = fs::File::create(&tmp.path().join("sub_dir/file.png")) {
+        if let Err(err) = fs::File::create(tmp.path().join("sub_dir/file.png")) {
             panic!("Could not create sub_dir/file.png: {}", err);
         }
-        if let Err(err) = fs::create_dir(&tmp.path().join("sub_dir_exists")) {
+        if let Err(err) = fs::create_dir(tmp.path().join("sub_dir_exists")) {
             panic!("Could not create sub_dir_exists: {}", err);
         }
-        if let Err(err) = fs::File::create(&tmp.path().join("sub_dir_exists/file.txt")) {
+        if let Err(err) = fs::File::create(tmp.path().join("sub_dir_exists/file.txt")) {
             panic!("Could not create sub_dir_exists/file.txt: {}", err);
         }
-        if let Err(err) = symlink(
-            &tmp.path().join("file.png"),
-            &tmp.path().join("symlink.png"),
-        ) {
+        if let Err(err) = symlink(tmp.path().join("file.png"), tmp.path().join("symlink.png")) {
             panic!("Could not symlink file.png: {}", err);
         }
 
         // Create output dir
-        if let Err(err) = fs::create_dir(&tmp.path().join("output")) {
+        if let Err(err) = fs::create_dir(tmp.path().join("output")) {
             panic!("Could not create output: {}", err);
         }
-        if let Err(err) = fs::create_dir(&tmp.path().join("output/sub_dir_exists")) {
+        if let Err(err) = fs::create_dir(tmp.path().join("output/sub_dir_exists")) {
             panic!("Could not create output/sub_dir_exists: {}", err);
         }
 
@@ -253,22 +306,22 @@ mod tests {
         }
 
         // Check if the correct files where created
-        if !(&tmp.path().join("output/file.txt")).exists() {
+        if !tmp.path().join("output/file.txt").exists() {
             panic!("output/file.txt should exist")
         }
-        if (&tmp.path().join("output/file.md")).exists() {
+        if tmp.path().join("output/file.md").exists() {
             panic!("output/file.md should not exist")
         }
-        if !(&tmp.path().join("output/file.png")).exists() {
+        if !tmp.path().join("output/file.png").exists() {
             panic!("output/file.png should exist")
         }
-        if !(&tmp.path().join("output/sub_dir/file.png")).exists() {
+        if !tmp.path().join("output/sub_dir/file.png").exists() {
             panic!("output/sub_dir/file.png should exist")
         }
-        if !(&tmp.path().join("output/sub_dir_exists/file.txt")).exists() {
+        if !tmp.path().join("output/sub_dir_exists/file.txt").exists() {
             panic!("output/sub_dir/file.png should exist")
         }
-        if !(&tmp.path().join("output/symlink.png")).exists() {
+        if !tmp.path().join("output/symlink.png").exists() {
             panic!("output/symlink.png should exist")
         }
     }

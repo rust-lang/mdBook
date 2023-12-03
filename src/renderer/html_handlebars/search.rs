@@ -3,6 +3,7 @@ use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 use elasticlunr::{Index, IndexBuilder};
+use once_cell::sync::Lazy;
 use pulldown_cmark::*;
 
 use crate::book::{Book, BookItem};
@@ -10,7 +11,7 @@ use crate::config::Search;
 use crate::errors::*;
 use crate::theme::searcher;
 use crate::utils;
-
+use log::{debug, warn};
 use serde::Serialize;
 
 const MAX_WORD_LENGTH_TO_INDEX: usize = 80;
@@ -137,9 +138,11 @@ fn render_item(
 
                 in_heading = true;
             }
-            Event::End(Tag::Heading(i, ..)) if i as u32 <= max_section_depth => {
+            Event::End(Tag::Heading(i, id, _classes)) if i as u32 <= max_section_depth => {
                 in_heading = false;
-                section_id = Some(utils::unique_id_from_content(&heading, &mut id_counter));
+                section_id = id
+                    .map(|id| id.to_string())
+                    .or_else(|| Some(utils::unique_id_from_content(&heading, &mut id_counter)));
                 breadcrumbs.push(heading.clone());
             }
             Event::Start(Tag::FootnoteDefinition(name)) => {
@@ -266,21 +269,19 @@ fn write_to_json(index: Index, search_config: &Search, doc_urls: Vec<String>) ->
 }
 
 fn clean_html(html: &str) -> String {
-    lazy_static! {
-        static ref AMMONIA: ammonia::Builder<'static> = {
-            let mut clean_content = HashSet::new();
-            clean_content.insert("script");
-            clean_content.insert("style");
-            let mut builder = ammonia::Builder::new();
-            builder
-                .tags(HashSet::new())
-                .tag_attributes(HashMap::new())
-                .generic_attributes(HashSet::new())
-                .link_rel(None)
-                .allowed_classes(HashMap::new())
-                .clean_content_tags(clean_content);
-            builder
-        };
-    }
+    static AMMONIA: Lazy<ammonia::Builder<'static>> = Lazy::new(|| {
+        let mut clean_content = HashSet::new();
+        clean_content.insert("script");
+        clean_content.insert("style");
+        let mut builder = ammonia::Builder::new();
+        builder
+            .tags(HashSet::new())
+            .tag_attributes(HashMap::new())
+            .generic_attributes(HashSet::new())
+            .link_rel(None)
+            .allowed_classes(HashMap::new())
+            .clean_content_tags(clean_content);
+        builder
+    });
     AMMONIA.clean(html).to_string()
 }

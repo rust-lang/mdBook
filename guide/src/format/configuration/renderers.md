@@ -126,7 +126,10 @@ The following configuration options are available:
   that occur in code blocks and code spans. Defaults to `false`.
 - **mathjax-support:** Adds support for [MathJax](../mathjax.md). Defaults to
   `false`.
-- **copy-fonts:** Copies fonts.css and respective font files to the output directory and use them in the default theme. Defaults to `true`.
+- **copy-fonts:** (**Deprecated**) If `true` (the default), mdBook uses its built-in fonts which are copied to the output directory.
+  If `false`, the built-in fonts will not be used.
+  This option is deprecated. If you want to define your own custom fonts,
+  create a `theme/fonts/fonts.css` file and store the fonts in the `theme/fonts/` directory.
 - **google-analytics:** This field has been deprecated and will be removed in a future release.
   Use the `theme/head.hbs` file to add the appropriate Google Analytics code instead.
 - **additional-css:** If you need to slightly change the appearance of your book
@@ -147,9 +150,9 @@ The following configuration options are available:
 - **edit-url-template:** Edit url template, when provided shows a
   "Suggest an edit" button (which looks like <i class="fa fa-edit"></i>) for directly jumping to editing the currently
   viewed page. For e.g. GitHub projects set this to
-  `https://github.com/<owner>/<repo>/edit/master/{path}` or for
+  `https://github.com/<owner>/<repo>/edit/<branch>/{path}` or for
   Bitbucket projects set it to
-  `https://bitbucket.org/<owner>/<repo>/src/master/{path}?mode=edit`
+  `https://bitbucket.org/<owner>/<repo>/src/<branch>/{path}?mode=edit`
   where {path} will be replaced with the full path of the file in the
   repository.
 - **input-404:** The name of the markdown file used for missing files.
@@ -157,7 +160,8 @@ The following configuration options are available:
   Defaults to `404.md`.
 - **site-url:** The url where the book will be hosted. This is required to ensure
   navigation links and script/css imports in the 404 file work correctly, even when accessing
-  urls in subdirectories. Defaults to `/`.
+  urls in subdirectories. Defaults to `/`. If `site-url` is set,
+  make sure to use document relative links for your assets, meaning they should not start with `/`.
 - **cname:** The DNS subdomain or apex domain at which your book will be hosted.
   This string will be written to a file named CNAME in the root of your site, as
   required by GitHub Pages (see [*Managing a custom domain for your GitHub Pages
@@ -178,7 +182,7 @@ page-break = true # insert page-break after each chapter
 
 - **enable:** Enable print support. When `false`, all print support will not be
   rendered. Defaults to `true`.
-- **page-break** Insert page breaks between chapters. Defaults to `true`.
+- **page-break:** Insert page breaks between chapters. Defaults to `true`.
 
 ### `[output.html.fold]`
 
@@ -214,10 +218,24 @@ runnable = true          # displays a run button for rust code
 - **copyable:** Display the copy button on code snippets. Defaults to `true`.
 - **copy-js:** Copy JavaScript files for the editor to the output directory.
   Defaults to `true`.
-- **line-numbers** Display line numbers on editable sections of code. Requires both `editable` and `copy-js` to be `true`. Defaults to `false`.
-- **runnable** Displays a run button for rust code snippets. Changing this to `false` will disable the run in playground feature globally. Defaults to `true`.
+- **line-numbers:** Display line numbers on editable sections of code. Requires both `editable` and `copy-js` to be `true`. Defaults to `false`.
+- **runnable:** Displays a run button for rust code snippets. Changing this to `false` will disable the run in playground feature globally. Defaults to `true`.
 
 [Ace]: https://ace.c9.io/
+
+### `[output.html.code]`
+
+The `[output.html.code]` table provides options for controlling code blocks.
+
+```toml
+[output.html.code]
+# A prefix string per language (one or more chars).
+# Any line starting with whitespace+prefix is hidden.
+hidelines = { python = "~" }
+```
+
+- **hidelines:** A table that defines how [hidden code lines](../mdbook.md#hiding-code-lines) work for each language.
+  The key is the language and the value is a string that will cause code lines starting with that prefix to be hidden.
 
 ### `[output.html.search]`
 

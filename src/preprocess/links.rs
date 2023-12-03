@@ -10,6 +10,8 @@ use std::path::{Path, PathBuf};
 
 use super::{Preprocessor, PreprocessorContext};
 use crate::book::{Book, BookItem};
+use log::{error, warn};
+use once_cell::sync::Lazy;
 
 const ESCAPE_CHAR: char = '\\';
 const MAX_LINK_NESTED_DEPTH: usize = 10;
@@ -91,7 +93,7 @@ where
     for link in find_links(s) {
         replaced.push_str(&s[previous_end_index..link.start_index]);
 
-        match link.render_with_path(&path, chapter_title) {
+        match link.render_with_path(path, chapter_title) {
             Ok(new_content) => {
                 if depth < MAX_LINK_NESTED_DEPTH {
                     if let Some(rel_path) = link.link_type.relative_path(path) {
@@ -325,7 +327,7 @@ impl<'a> Link<'a> {
         let base = base.as_ref();
         match self.link_type {
             // omit the escape char
-            LinkType::Escaped => Ok((&self.link_text[1..]).to_owned()),
+            LinkType::Escaped => Ok(self.link_text[1..].to_owned()),
             LinkType::Include(ref pat, ref range_or_anchor) => {
                 let target = base.join(pat);
 
@@ -408,19 +410,20 @@ impl<'a> Iterator for LinkIter<'a> {
 fn find_links(contents: &str) -> LinkIter<'_> {
     // lazily compute following regex
     // r"\\\{\{#.*\}\}|\{\{#([a-zA-Z0-9]+)\s*([^}]+)\}\}")?;
-    lazy_static! {
-        static ref RE: Regex = Regex::new(
+    static RE: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(
             r"(?x)              # insignificant whitespace mode
-            \\\{\{\#.*\}\}      # match escaped link
-            |                   # or
-            \{\{\s*             # link opening parens and whitespace
-            \#([a-zA-Z0-9_]+)   # link type
-            \s+                 # separating whitespace
-            ([^}]+)             # link target path and space separated properties
-            \}\}                # link closing parens"
+        \\\{\{\#.*\}\}      # match escaped link
+        |                   # or
+        \{\{\s*             # link opening parens and whitespace
+        \#([a-zA-Z0-9_]+)   # link type
+        \s+                 # separating whitespace
+        ([^}]+)             # link target path and space separated properties
+        \}\}                # link closing parens",
         )
-        .unwrap();
-    }
+        .unwrap()
+    });
+
     LinkIter(RE.captures_iter(contents))
 }
 

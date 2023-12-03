@@ -1,10 +1,7 @@
 name: CI
 on:
-  # Only run when merging to master, or open/synchronize/reopen a PR.
-  push:
-    branches:
-      - master
   pull_request:
+  merge_group:
 
 jobs:
   test:
@@ -30,15 +27,15 @@ jobs:
             os: windows-latest
             rust: stable
           - build: msrv
-            os: ubuntu-latest
-            # sync MSRV with docs: guide/src/guide/installation.md
-            rust: 1.54.0
+            os: ubuntu-20.04
+            # sync MSRV with docs: guide/src/guide/installation.md and Cargo.toml
+            rust: 1.70.0
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v3
     - name: Install Rust
       run: bash ci/install-rust.sh ${{ matrix.rust }}
     - name: Build and run tests
-      run: cargo test
+      run: cargo test --locked
     - name: Test no default
       run: cargo test --no-default-features
 
@@ -46,7 +43,24 @@ jobs:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v3
     - name: Install Rust
       run: rustup update stable && rustup default stable && rustup component add rustfmt
     - run: cargo fmt --check
+
+  # The success job is here to consolidate the total success/failure state of
+  # all other jobs. This job is then included in the GitHub branch protection
+  # rule which prevents merges unless all other jobs are passing. This makes
+  # it easier to manage the list of jobs via this yml file and to prevent
+  # accidentally adding new jobs without also updating the branch protections.
+  success:
+    name: Success gate
+    if: always()
+    needs:
+      - test
+      - rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - run: jq --exit-status 'all(.result == "success")' <<< '${{ toJson(needs) }}'
+      - name: Done
+        run: exit 0

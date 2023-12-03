@@ -6,7 +6,11 @@ This means when you type `mdbook` in your shell, you can then press your shell's
 The completions first need to be installed for your shell:
 
 ```bash
+# bash
 mdbook completions bash > ~/.local/share/bash-completion/completions/mdbook
+# oh-my-zsh
+mdbook completions zsh > ~/.oh-my-zsh/completions/_mdbook
+autoload -U compinit && compinit
 ```
 
 The command prints a completion script for the given shell.

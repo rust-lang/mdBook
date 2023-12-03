@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate pretty_assertions;
-
 mod dummy_book;
 
 use crate::dummy_book::{assert_contains_strings, assert_doesnt_contain_strings, DummyBook};
@@ -10,6 +7,7 @@ use mdbook::config::Config;
 use mdbook::errors::*;
 use mdbook::utils::fs::write_file;
 use mdbook::MDBook;
+use pretty_assertions::assert_eq;
 use select::document::Document;
 use select::predicate::{Class, Name, Predicate};
 use std::collections::HashMap;
@@ -37,6 +35,7 @@ const TOC_SECOND_LEVEL: &[&str] = &[
     "1.5. Unicode",
     "1.6. No Headers",
     "1.7. Duplicate Headers",
+    "1.8. Heading Attributes",
     "2.1. Nested Chapter",
 ];
 
@@ -292,7 +291,7 @@ fn root_index_html() -> Result<Document> {
         .with_context(|| "Book building failed")?;
 
     let index_page = temp.path().join("book").join("index.html");
-    let html = fs::read_to_string(&index_page).with_context(|| "Unable to read index.html")?;
+    let html = fs::read_to_string(index_page).with_context(|| "Unable to read index.html")?;
 
     Ok(Document::from(html.as_str()))
 }
@@ -429,7 +428,7 @@ fn recursive_includes_are_capped() {
     let content = &["Around the world, around the world
 Around the world, around the world
 Around the world, around the world"];
-    assert_contains_strings(&recursive, content);
+    assert_contains_strings(recursive, content);
 }
 
 #[test]
@@ -479,7 +478,7 @@ fn by_default_mdbook_use_index_preprocessor_to_convert_readme_to_index() {
 
     let second_index = temp.path().join("book").join("second").join("index.html");
     let unexpected_strings = vec!["Second README"];
-    assert_doesnt_contain_strings(&second_index, &unexpected_strings);
+    assert_doesnt_contain_strings(second_index, &unexpected_strings);
 }
 
 #[test]
@@ -683,10 +682,8 @@ fn edit_url_has_configured_src_dir_edit_url() {
 }
 
 fn remove_absolute_components(path: &Path) -> impl Iterator<Item = Component> + '_ {
-    path.components().skip_while(|c| match c {
-        Component::Prefix(_) | Component::RootDir => true,
-        _ => false,
-    })
+    path.components()
+        .skip_while(|c| matches!(c, Component::Prefix(_) | Component::RootDir))
 }
 
 /// Checks formatting of summary names with inline elements.
@@ -811,6 +808,7 @@ mod search {
         let no_headers = get_doc_ref("first/no-headers.html");
         let duplicate_headers_1 = get_doc_ref("first/duplicate-headers.html#header-text-1");
         let conclusion = get_doc_ref("conclusion.html#conclusion");
+        let heading_attrs = get_doc_ref("first/heading-attributes.html#both");
 
         let bodyidx = &index["index"]["index"]["body"]["root"];
         let textidx = &bodyidx["t"]["e"]["x"]["t"];
@@ -823,7 +821,7 @@ mod search {
         assert_eq!(docs[&some_section]["body"], "");
         assert_eq!(
             docs[&summary]["body"],
-            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Markdown Unicode No Headers Duplicate Headers Second Chapter Nested Chapter Conclusion"
+            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Markdown Unicode No Headers Duplicate Headers Heading Attributes Second Chapter Nested Chapter Conclusion"
         );
         assert_eq!(
             docs[&summary]["breadcrumbs"],
@@ -842,6 +840,10 @@ mod search {
             docs[&no_headers]["body"],
             "Capybara capybara capybara. Capybara capybara capybara. ThisLongWordIsIncludedSoWeCanCheckThatSufficientlyLongWordsAreOmittedFromTheSearchIndex."
         );
+        assert_eq!(
+            docs[&heading_attrs]["breadcrumbs"],
+            "First Chapter » Heading Attributes » Heading with id and classes"
+        );
     }
 
     // Setting this to `true` may cause issues with `cargo watch`,
@@ -858,7 +860,7 @@ mod search {
             let src = read_book_index(temp.path());
 
             let dest = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/searchindex_fixture.json");
-            let dest = File::create(&dest).unwrap();
+            let dest = File::create(dest).unwrap();
             serde_json::to_writer_pretty(dest, &src).unwrap();
 
             src
@@ -894,4 +896,128 @@ mod search {
             panic!("The search index has changed from the fixture");
         }
     }
+}
+
+#[test]
+fn custom_fonts() {
+    // Tests to ensure custom fonts are copied as expected.
+    let builtin_fonts = [
+        "OPEN-SANS-LICENSE.txt",
+        "SOURCE-CODE-PRO-LICENSE.txt",
+        "fonts.css",
+        "open-sans-v17-all-charsets-300.woff2",
+        "open-sans-v17-all-charsets-300italic.woff2",
+        "open-sans-v17-all-charsets-600.woff2",
+        "open-sans-v17-all-charsets-600italic.woff2",
+        "open-sans-v17-all-charsets-700.woff2",
+        "open-sans-v17-all-charsets-700italic.woff2",
+        "open-sans-v17-all-charsets-800.woff2",
+        "open-sans-v17-all-charsets-800italic.woff2",
+        "open-sans-v17-all-charsets-italic.woff2",
+        "open-sans-v17-all-charsets-regular.woff2",
+        "source-code-pro-v11-all-charsets-500.woff2",
+    ];
+    let actual_files = |path: &Path| -> Vec<String> {
+        let mut actual: Vec<_> = path
+            .read_dir()
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name().into_string().unwrap())
+            .collect();
+        actual.sort();
+        actual
+    };
+    let has_fonts_css = |path: &Path| -> bool {
+        let contents = fs::read_to_string(path.join("book/index.html")).unwrap();
+        contents.contains("fonts/fonts.css")
+    };
+
+    // No theme:
+    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
+    let p = temp.path();
+    MDBook::init(p).build().unwrap();
+    MDBook::load(p).unwrap().build().unwrap();
+    assert_eq!(actual_files(&p.join("book/fonts")), &builtin_fonts);
+    assert!(has_fonts_css(p));
+
+    // Full theme.
+    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
+    let p = temp.path();
+    MDBook::init(p).copy_theme(true).build().unwrap();
+    assert_eq!(actual_files(&p.join("theme/fonts")), &builtin_fonts);
+    MDBook::load(p).unwrap().build().unwrap();
+    assert_eq!(actual_files(&p.join("book/fonts")), &builtin_fonts);
+    assert!(has_fonts_css(p));
+
+    // Mixed with copy-fonts=true
+    // Should ignore the copy-fonts setting since the user has provided their own fonts.css.
+    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
+    let p = temp.path();
+    MDBook::init(p).build().unwrap();
+    write_file(&p.join("theme/fonts"), "fonts.css", b"/*custom*/").unwrap();
+    write_file(&p.join("theme/fonts"), "myfont.woff", b"").unwrap();
+    MDBook::load(p).unwrap().build().unwrap();
+    assert!(has_fonts_css(p));
+    assert_eq!(
+        actual_files(&p.join("book/fonts")),
+        ["fonts.css", "myfont.woff"]
+    );
+
+    // copy-fonts=false, no theme
+    // This should generate a deprecation warning.
+    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
+    let p = temp.path();
+    MDBook::init(p).build().unwrap();
+    let config = Config::from_str("output.html.copy-fonts = false").unwrap();
+    MDBook::load_with_config(p, config)
+        .unwrap()
+        .build()
+        .unwrap();
+    assert!(!has_fonts_css(p));
+    assert!(!p.join("book/fonts").exists());
+
+    // copy-fonts=false with empty fonts.css
+    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
+    let p = temp.path();
+    MDBook::init(p).build().unwrap();
+    write_file(&p.join("theme/fonts"), "fonts.css", b"").unwrap();
+    let config = Config::from_str("output.html.copy-fonts = false").unwrap();
+    MDBook::load_with_config(p, config)
+        .unwrap()
+        .build()
+        .unwrap();
+    assert!(!has_fonts_css(p));
+    assert!(!p.join("book/fonts").exists());
+
+    // copy-fonts=false with fonts theme
+    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
+    let p = temp.path();
+    MDBook::init(p).build().unwrap();
+    write_file(&p.join("theme/fonts"), "fonts.css", b"/*custom*/").unwrap();
+    write_file(&p.join("theme/fonts"), "myfont.woff", b"").unwrap();
+    let config = Config::from_str("output.html.copy-fonts = false").unwrap();
+    MDBook::load_with_config(p, config)
+        .unwrap()
+        .build()
+        .unwrap();
+    assert!(has_fonts_css(p));
+    assert_eq!(
+        actual_files(&p.join("book/fonts")),
+        &["fonts.css", "myfont.woff"]
+    );
+}
+
+#[test]
+fn custom_header_attributes() {
+    let temp = DummyBook::new().build().unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
+    md.build().unwrap();
+
+    let contents = temp.path().join("book/first/heading-attributes.html");
+
+    let summary_strings = &[
+        r##"<h1 id="attrs"><a class="header" href="#attrs">Heading Attributes</a></h1>"##,
+        r##"<h2 id="heading-with-classes" class="class1 class2"><a class="header" href="#heading-with-classes">Heading with classes</a></h2>"##,
+        r##"<h2 id="both" class="class1 class2"><a class="header" href="#both">Heading with id and classes</a></h2>"##,
+    ];
+    assert_contains_strings(&contents, summary_strings);
 }

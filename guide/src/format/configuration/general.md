@@ -46,6 +46,9 @@ This is general information about your book.
   `src` directly under the root folder. But this is configurable with the `src`
   key in the configuration file.
 - **language:** The main language of the book, which is used as a language attribute `<html lang="en">` for example.
+  This is also used to derive the direction of text (RTL, LTR) within the book.
+- **text-direction**: The direction of text in the book: Left-to-right (LTR) or Right-to-left (RTL). Possible values: `ltr`, `rtl`.
+  When not specified, the text direction is derived from the book's `language` attribute.
 
 **book.toml**
 ```toml
@@ -55,6 +58,7 @@ authors = ["John Doe", "Jane Doe"]
 description = "The example book covers examples."
 src = "my-src"  # the source files will be found in `root/my-src` instead of `root/src`
 language = "en"
+text-direction = "ltr"
 ```
 
 ### Rust options
@@ -87,6 +91,7 @@ This controls the build process of your book.
 build-dir = "book"                # the directory where the output is placed
 create-missing = true             # whether or not to create missing pages
 use-default-preprocessors = true  # use the default preprocessors
+extra-watch-dirs = []             # directories to watch for triggering builds
 ```
 
 - **build-dir:** The directory to put the rendered book in. By default this is
@@ -96,7 +101,7 @@ use-default-preprocessors = true  # use the default preprocessors
   will be created when the book is built (i.e. `create-missing = true`). If this
   is `false` then the build process will instead exit with an error if any files
   do not exist.
-- **use-default-preprocessors:** Disable the default preprocessors of (`links` &
+- **use-default-preprocessors:** Disable the default preprocessors (of `links` &
   `index`) by setting this option to `false`.
 
   If you have the same, and/or other preprocessors declared via their table
@@ -108,3 +113,6 @@ use-default-preprocessors = true  # use the default preprocessors
     default preprocessors from running.
   - Adding `[preprocessor.links]`, for example, will ensure, regardless of
     `use-default-preprocessors` that `links` it will run.
+- **extra-watch-dirs**: A list of paths to directories that will be watched in
+  the `watch` and `serve` commands. Changes to files under these directories will
+  trigger rebuilds. Useful if your book depends on files outside its `src` directory.

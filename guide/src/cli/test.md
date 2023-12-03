@@ -6,8 +6,7 @@ of code examples that could get outdated. Therefore it is very important for
 them to be able to automatically test these code examples.
 
 mdBook supports a `test` command that will run all available tests in a book. At
-the moment, only rustdoc tests are supported, but this may be expanded upon in
-the future.
+the moment, only Rust tests are supported.
 
 #### Disable tests on a code block
 
@@ -43,7 +42,7 @@ mdbook test path/to/book
 The `--library-path` (`-L`) option allows you to add directories to the library
 search path used by `rustdoc` when it builds and tests the examples. Multiple
 directories can be specified with multiple options (`-L foo -L bar`) or with a
-comma-delimited list (`-L foo,bar`). The path should point to the Cargo 
+comma-delimited list (`-L foo,bar`). The path should point to the Cargo
 [build cache](https://doc.rust-lang.org/cargo/guide/build-cache.html) `deps` directory that
 contains the build output of your project. For example, if your Rust project's book is in a directory
 named `my-book`, the following command would include the crate's dependencies when running `test`:
@@ -61,3 +60,8 @@ The `--dest-dir` (`-d`) option allows you to change the output directory for the
 book. Relative paths are interpreted relative to the book's root directory. If
 not specified it will default to the value of the `build.build-dir` key in
 `book.toml`, or to `./book`.
+
+#### --chapter
+
+The `--chapter` (`-c`) option allows you to test a specific chapter of the
+book using the chapter name or the relative path to the chapter.

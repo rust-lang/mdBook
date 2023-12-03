@@ -27,6 +27,7 @@ This Currently contains following languages
 - makefile
 - markdown
 - nginx
+- nim
 - objectivec
 - perl
 - php

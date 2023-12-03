@@ -2,7 +2,7 @@ use crate::book::BookItem;
 use crate::errors::*;
 use crate::renderer::{RenderContext, Renderer};
 use crate::utils;
-
+use log::trace;
 use std::fs;
 
 #[derive(Default)]
@@ -37,14 +37,14 @@ impl Renderer for MarkdownRenderer {
                 if !ch.is_draft_chapter() {
                     utils::fs::write_file(
                         &ctx.destination,
-                        &ch.path.as_ref().expect("Checked path exists before"),
+                        ch.path.as_ref().expect("Checked path exists before"),
                         ch.content.as_bytes(),
                     )?;
                 }
             }
         }
 
-        fs::create_dir_all(&destination)
+        fs::create_dir_all(destination)
             .with_context(|| "Unexpected error when constructing destination path")?;
 
         Ok(())

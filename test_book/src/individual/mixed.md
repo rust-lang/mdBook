@@ -27,9 +27,11 @@ fn main(){
 }
 ```
 
+<kbd>Ctrl</kbd> + <kbd>S</kbd> saves a file.
+
 A random image sprinkled in between
 
-![16x16 rust-lang logo](http://rust-lang.org/logos/rust-logo-16x16.png)
+![16x16 rust-lang logo](https://rust-lang.org/logos/rust-logo-16x16.png)
 
 ---
 
@@ -41,6 +43,7 @@ A random image sprinkled in between
   2. be
   3. `put`
   4. here?
+  5. **<kbd>Ctrl</kbd> + <kbd>S</kbd> saves a file.**
 
 | col1 | col2 | col 3 | col 4 | col 5 | col 6 |
 | ---- | ---- | ----- | ----- | ----- | ----- |

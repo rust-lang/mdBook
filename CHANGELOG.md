@@ -1,5 +1,232 @@
 # Changelog
 
+## mdBook 0.4.36
+[v0.4.35...v0.4.36](https://github.com/rust-lang/mdBook/compare/v0.4.35...v0.4.36)
+
+### Added
+- Added Nim to the default highlighted languages.
+  [#2232](https://github.com/rust-lang/mdBook/pull/2232)
+- Added a small indicator for the sidebar resize handle.
+  [#2209](https://github.com/rust-lang/mdBook/pull/2209)
+
+### Changed
+- Updated dependencies. MSRV raised to 1.70.0.
+  [#2173](https://github.com/rust-lang/mdBook/pull/2173)
+  [#2250](https://github.com/rust-lang/mdBook/pull/2250)
+  [#2252](https://github.com/rust-lang/mdBook/pull/2252)
+
+### Fixed
+- Fixed blank column in print page when the sidebar was visible.
+  [#2235](https://github.com/rust-lang/mdBook/pull/2235)
+- Fixed indentation of code blocks when Javascript is disabled.
+  [#2162](https://github.com/rust-lang/mdBook/pull/2162)
+- Fixed a panic when `mdbook serve` or `mdbook watch` were given certain kinds of paths.
+  [#2229](https://github.com/rust-lang/mdBook/pull/2229)
+
+## mdBook 0.4.35
+[v0.4.34...v0.4.35](https://github.com/rust-lang/mdBook/compare/v0.4.34...v0.4.35)
+
+### Added
+- Added the `book.text-direction` setting for explicit support for right-to-left languages.
+  [#1641](https://github.com/rust-lang/mdBook/pull/1641)
+- Added `rel=prefetch` to the "next" links to potentially improve browser performance.
+  [#2168](https://github.com/rust-lang/mdBook/pull/2168)
+- Added a `.warning` CSS class which is styled for displaying warning blocks.
+  [#2187](https://github.com/rust-lang/mdBook/pull/2187)
+
+### Changed
+- Better support of the sidebar when JavaScript is disabled.
+  [#2175](https://github.com/rust-lang/mdBook/pull/2175)
+
+## mdBook 0.4.34
+[v0.4.33...v0.4.34](https://github.com/rust-lang/mdBook/compare/v0.4.33...v0.4.34)
+
+### Fixed
+- Fixed file change watcher failing on macOS with a large number of files.
+  [#2157](https://github.com/rust-lang/mdBook/pull/2157)
+
+## mdBook 0.4.33
+[v0.4.32...v0.4.33](https://github.com/rust-lang/mdBook/compare/v0.4.32...v0.4.33)
+
+### Added
+- The `color-scheme` CSS property is now set based on the light/dark theme, which applies some slight color differences in browser elements like scroll bars on some browsers.
+  [#2134](https://github.com/rust-lang/mdBook/pull/2134)
+
+### Fixed
+- Fixed watching of extra-watch-dirs when not running in the book root directory.
+  [#2146](https://github.com/rust-lang/mdBook/pull/2146)
+- Reverted the dependency update to the `toml` crate (again!). This was an unintentional breaking change in 0.4.32.
+  [#2021](https://github.com/rust-lang/mdBook/pull/2021)
+- Changed macOS change notifications to use the kqueue implementation which should fix some issues with repeated rebuilds when a file changed.
+  [#2152](https://github.com/rust-lang/mdBook/pull/2152)
+- Don't set a background color in the print page for code blocks in a header.
+  [#2150](https://github.com/rust-lang/mdBook/pull/2150)
+
+## mdBook 0.4.32
+[v0.4.31...v0.4.32](https://github.com/rust-lang/mdBook/compare/v0.4.31...v0.4.32)
+
+### Fixed
+- Fixed theme-color meta tag not syncing with the theme.
+  [#2118](https://github.com/rust-lang/mdBook/pull/2118)
+
+### Changed
+- Updated all dependencies.
+  [#2121](https://github.com/rust-lang/mdBook/pull/2121)
+  [#2122](https://github.com/rust-lang/mdBook/pull/2122)
+  [#2123](https://github.com/rust-lang/mdBook/pull/2123)
+  [#2124](https://github.com/rust-lang/mdBook/pull/2124)
+  [#2125](https://github.com/rust-lang/mdBook/pull/2125)
+  [#2126](https://github.com/rust-lang/mdBook/pull/2126)
+
+## mdBook 0.4.31
+[v0.4.30...v0.4.31](https://github.com/rust-lang/mdBook/compare/v0.4.30...v0.4.31)
+
+### Fixed
+- Fixed menu border render flash during page navigation.
+  [#2101](https://github.com/rust-lang/mdBook/pull/2101)
+- Fixed flicker setting sidebar scroll position.
+  [#2104](https://github.com/rust-lang/mdBook/pull/2104)
+- Fixed compile error with proc-macro2 on latest Rust nightly.
+  [#2109](https://github.com/rust-lang/mdBook/pull/2109)
+
+## mdBook 0.4.30
+[v0.4.29...v0.4.30](https://github.com/rust-lang/mdBook/compare/v0.4.29...v0.4.30)
+
+### Added
+- Added support for heading attributes.
+  Attributes are specified in curly braces just after the heading text.
+  An HTML ID can be specified with `#` and classes with `.`.
+  For example: `## My heading {#custom-id .class1 .class2}`
+  [#2013](https://github.com/rust-lang/mdBook/pull/2013)
+- Added support for hidden code lines for languages other than Rust.
+  The `output.html.code.hidelines` table allows you to define the prefix character that will be used to hide code lines based on the language.
+  [#2093](https://github.com/rust-lang/mdBook/pull/2093)
+
+### Fixed
+- Fixed a few minor markdown rendering issues.
+  [#2092](https://github.com/rust-lang/mdBook/pull/2092)
+
+## mdBook 0.4.29
+[v0.4.28...v0.4.29](https://github.com/rust-lang/mdBook/compare/v0.4.28...v0.4.29)
+
+### Changed
+- Built-in fonts are no longer copied when `fonts/fonts.css` is overridden in the theme directory.
+  Additionally, the warning about `copy-fonts` has been removed if `fonts/fonts.css` is specified.
+  [#2080](https://github.com/rust-lang/mdBook/pull/2080)
+- `mdbook init --force` now skips all interactive prompts as intended.
+  [#2057](https://github.com/rust-lang/mdBook/pull/2057)
+- Updated dependencies
+  [#2063](https://github.com/rust-lang/mdBook/pull/2063)
+  [#2086](https://github.com/rust-lang/mdBook/pull/2086)
+  [#2082](https://github.com/rust-lang/mdBook/pull/2082)
+  [#2084](https://github.com/rust-lang/mdBook/pull/2084)
+  [#2085](https://github.com/rust-lang/mdBook/pull/2085)
+
+### Fixed
+- Switched from the `gitignore` library to `ignore`. This should bring some improvements with gitignore handling.
+  [#2076](https://github.com/rust-lang/mdBook/pull/2076)
+
+## mdBook 0.4.28
+[v0.4.27...v0.4.28](https://github.com/rust-lang/mdBook/compare/v0.4.27...v0.4.28)
+
+### Changed
+- The sidebar is now shown on wide screens when localstorage is disabled.
+  [#2017](https://github.com/rust-lang/mdBook/pull/2017)
+- Preprocessors are now run with `mdbook test`.
+  [#1986](https://github.com/rust-lang/mdBook/pull/1986)
+
+### Fixed
+- Fixed regression in 0.4.26 that prevented the title bar from scrolling properly on smaller screens.
+  [#2039](https://github.com/rust-lang/mdBook/pull/2039)
+
+## mdBook 0.4.27
+[v0.4.26...v0.4.27](https://github.com/rust-lang/mdBook/compare/v0.4.26...v0.4.27)
+
+### Changed
+- Reverted the dependency update to the `toml` crate. This was an unintentional breaking change in 0.4.26.
+  [#2021](https://github.com/rust-lang/mdBook/pull/2021)
+
+## mdBook 0.4.26
+[v0.4.25...v0.4.26](https://github.com/rust-lang/mdBook/compare/v0.4.25...v0.4.26)
+
+**The 0.4.26 release has been yanked due to an unintentional breaking change.**
+
+### Changed
+- Removed custom scrollbars for webkit browsers
+  [#1961](https://github.com/rust-lang/mdBook/pull/1961)
+- Updated some dependencies
+  [#1998](https://github.com/rust-lang/mdBook/pull/1998)
+  [#2009](https://github.com/rust-lang/mdBook/pull/2009)
+  [#2011](https://github.com/rust-lang/mdBook/pull/2011)
+- Fonts are now part of the theme.
+  The `output.html.copy-fonts` option has been deprecated.
+  To define custom fonts, be sure to define `theme/fonts.css`.
+  [#1987](https://github.com/rust-lang/mdBook/pull/1987)
+
+### Fixed
+- Fixed overflow viewport issue with mobile Safari
+  [#1994](https://github.com/rust-lang/mdBook/pull/1994)
+
+## mdBook 0.4.25
+[e14d381...1ba74a3](https://github.com/rust-lang/mdBook/compare/e14d381...1ba74a3)
+
+### Fixed
+- Fixed a regression where `mdbook test -L deps path-to-book` would not work.
+  [#1959](https://github.com/rust-lang/mdBook/pull/1959)
+
+## mdBook 0.4.24
+[eb77083...8767ebf](https://github.com/rust-lang/mdBook/compare/eb77083...8767ebf)
+
+### Fixed
+- The precompiled linux-gnu mdbook binary available on [GitHub Releases](https://github.com/rust-lang/mdBook/releases) inadvertently switched to a newer version of glibc. This release goes back to an older version that should be more compatible on older versions of Linux.
+  [#1955](https://github.com/rust-lang/mdBook/pull/1955)
+
+## mdBook 0.4.23
+[678b469...68a75da](https://github.com/rust-lang/mdBook/compare/678b469...68a75da)
+
+### Changed
+- Updated all dependencies
+  [#1951](https://github.com/rust-lang/mdBook/pull/1951)
+  [#1952](https://github.com/rust-lang/mdBook/pull/1952)
+  [#1844](https://github.com/rust-lang/mdBook/pull/1844)
+- Updated minimum Rust version to 1.60.
+  [#1951](https://github.com/rust-lang/mdBook/pull/1951)
+
+### Fixed
+- Fixed a regression where playground code was missing hidden lines, preventing it from compiling correctly.
+  [#1950](https://github.com/rust-lang/mdBook/pull/1950)
+
+## mdBook 0.4.22
+[40c06f5...4844f72](https://github.com/rust-lang/mdBook/compare/40c06f5...4844f72)
+
+### Added
+- Added a `--chapter` option to `mdbook test` to specify a specific chapter to test.
+  [#1741](https://github.com/rust-lang/mdBook/pull/1741)
+- Added CSS styling for `<kbd>` tags.
+  [#1906](https://github.com/rust-lang/mdBook/pull/1906)
+- Added pre-compiled binaries for `x86_64-unknown-linux-musl` and `aarch64-unknown-linux-musl` (see [Releases](https://github.com/rust-lang/mdBook/releases)).
+  [#1862](https://github.com/rust-lang/mdBook/pull/1862)
+- Added `build.extra-watch-dirs` which is an array of additional directories to watch for changes when running `mdbook serve`.
+  [#1884](https://github.com/rust-lang/mdBook/pull/1884)
+
+### Changed
+- Removed the `type="text/javascript"` attribute from `<script>` tags.
+  [#1881](https://github.com/rust-lang/mdBook/pull/1881)
+- Switched to building with Rust Edition 2021.
+  This raises the minimum supported Rust version to 1.56.
+  [#1887](https://github.com/rust-lang/mdBook/pull/1887)
+- When hidden code is hidden, the hidden parts are no longer copied to the clipboard via the copy button.
+  [#1911](https://github.com/rust-lang/mdBook/pull/1911)
+- Various HTML changes and fixes to be more compliant with HTML5.
+  [#1924](https://github.com/rust-lang/mdBook/pull/1924)
+- The theme picker now shows which theme is currently selected.
+  [#1935](https://github.com/rust-lang/mdBook/pull/1935)
+
+### Fixed
+- Avoid blank line at the end of an ACE code block
+  [#1836](https://github.com/rust-lang/mdBook/pull/1836)
+
+
 ## mdBook 0.4.21
 [92afe9b...8f01d02](https://github.com/rust-lang/mdBook/compare/92afe9b...8f01d02)
 
@@ -75,7 +302,7 @@
   [#1771](https://github.com/rust-lang/mdBook/pull/1771)
 - The 404 not-found page now includes the books title in the HTML title tag.
   [#1693](https://github.com/rust-lang/mdBook/pull/1693)
-- Migrated to clap 3.0 which which handles CLI option parsing.
+- Migrated to clap 3.0 which handles CLI option parsing.
   [#1731](https://github.com/rust-lang/mdBook/pull/1731)
 
 ### Fixed

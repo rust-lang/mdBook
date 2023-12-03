@@ -55,12 +55,12 @@ impl<'a> HtmlGenerator<'a> {
                 let boring = Scope::new("").expect("boring is a valid scope");
                 // Close all open spans, insert `boring`, then re-open all of them.
                 // `boring` must be at the very top, so that the parser doesn't touch it.
-                if self.scope_stack.len() != 0 {
+                if !self.scope_stack.is_empty() {
                     final_parsed_line.push((0, ScopeStackOp::Pop(self.scope_stack.len())));
                 }
-                final_parsed_line.push((0, ScopeStackOp::Push(boring.clone())));
+                final_parsed_line.push((0, ScopeStackOp::Push(boring)));
                 for item in &self.scope_stack.scopes {
-                    final_parsed_line.push((0, ScopeStackOp::Push(item.clone())));
+                    final_parsed_line.push((0, ScopeStackOp::Push(*item)));
                 }
                 // Now run the parser.
                 // It should see basically the stack it expects, except the `boring` at the very top,
@@ -82,7 +82,7 @@ impl<'a> HtmlGenerator<'a> {
                         // then to avoid pushing it back on again.
                         assert!(item.is_empty());
                     } else {
-                        final_parsed_line.push((0, ScopeStackOp::Push(item.clone())));
+                        final_parsed_line.push((0, ScopeStackOp::Push(*item)));
                     }
                 }
                 // Since this line is not boringified, we need to first break out of the boring scope,
@@ -140,13 +140,10 @@ impl<'a> HtmlGenerator<'a> {
     }
 }
 
-lazy_static! {
-    static ref BORING_LINE_REGEX: Regex = Regex::new(r"^(\s*)#(.?)(.*)\n$").unwrap();
-}
-
 fn boringify(line: &str) -> (String, bool) {
     let mut result = String::with_capacity(line.len());
-    if let Some(caps) = BORING_LINE_REGEX.captures(line) {
+    let boring_line_regex: Regex = Regex::new(r"^(\s*)#(.?)(.*)\n$").unwrap();
+    if let Some(caps) = boring_line_regex.captures(line) {
         if &caps[2] == "#" {
             result += &caps[1];
             result += &caps[2];

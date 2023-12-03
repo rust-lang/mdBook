@@ -29,7 +29,7 @@ book's title without needing to touch your `book.toml`.
 > building the book with something like
 >
 > ```shell
-> $ export MDBOOK_BOOK="{'title': 'My Awesome Book', authors: ['Michael-F-Bryan']}"
+> $ export MDBOOK_BOOK='{"title": "My Awesome Book", "authors": ["Michael-F-Bryan"]}'
 > $ mdbook build
 > ```
 

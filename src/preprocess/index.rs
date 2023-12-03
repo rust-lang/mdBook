@@ -1,10 +1,11 @@
 use regex::Regex;
 use std::path::Path;
 
-use crate::errors::*;
-
 use super::{Preprocessor, PreprocessorContext};
 use crate::book::{Book, BookItem};
+use crate::errors::*;
+use log::warn;
+use once_cell::sync::Lazy;
 
 /// A preprocessor for converting file name `README.md` to `index.md` since
 /// `README.md` is the de facto index file in markdown-based documentation.
@@ -67,9 +68,8 @@ fn warn_readme_name_conflict<P: AsRef<Path>>(readme_path: P, index_path: P) {
 }
 
 fn is_readme_file<P: AsRef<Path>>(path: P) -> bool {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?i)^readme$").unwrap();
-    }
+    static RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"(?i)^readme$").unwrap());
+
     RE.is_match(
         path.as_ref()
             .file_stem()

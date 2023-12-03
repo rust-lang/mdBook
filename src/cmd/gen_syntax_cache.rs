@@ -1,4 +1,5 @@
-use clap::{arg, App, ArgMatches};
+use super::command_prelude::*;
+use clap::builder::NonEmptyStringValueParser;
 use mdbook::errors::Result;
 use std::env;
 use std::io::Cursor;
@@ -9,17 +10,34 @@ use syntect::html::ClassStyle;
 use syntect::parsing::{SyntaxSet, SyntaxSetBuilder};
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'help>() -> App<'help> {
-    App::new("gen-syntax-cache")
+pub fn make_subcommand() -> Command {
+    Command::new("gen-syntax-cache")
         .about("Generate syntaxes.bin and css/syntax")
         .arg(
-            arg!(-d --"dest-dir" <dir>
-                "Output directory for the syntax cache{n}\
-                Relative paths are interpreted relative to the current working directory.{n}\
-            If omitted, mdBook uses `.`.
-            This command outputs files [dir]/syntaxes.bin and [dir]/css/syntax/*.css"
-            )
-            .required(false),
+            Arg::new("dest-dir")
+                .short('d')
+                .long("dest-dir")
+                .num_args(1)
+                .default_value(".")
+                .value_parser(NonEmptyStringValueParser::new())
+                .help(
+                    "Output directory for the syntax cache{n}\
+                    Relative paths are interpreted relative to the current working directory.{n}\
+                    If omitted, mdBook uses `.`.
+
+                    This command outputs files [dir]/syntaxes.bin and [dir]/css/syntax/*.css",
+                ),
+        )
+        .arg(
+            Arg::new("dir")
+                .long("dir")
+                .num_args(1)
+                .default_value(".")
+                .value_parser(NonEmptyStringValueParser::new())
+                .help(
+                    "Root directory for the syntax sources{n}\
+                    (Defaults to the Current Directory when omitted)",
+                ),
         )
         .arg(arg!(--"syntaxes-only" "Only generate syntaxes.bin, not css/syntax/*.css."))
         .arg(arg!(--"no-default-syntaxes"
@@ -31,23 +49,19 @@ pub fn make_subcommand<'help>() -> App<'help> {
             "Don't include mdbook's default light, dark, and ayu themes{n}\
             If included, only themes from [dir] are used.'"
         ))
-        .arg(arg!([dir]
-            "Root directory for the syntax sources{n}\
-            (Defaults to the Current Directory when omitted)"
-        ))
 }
 
 // Generate Syntax Cache command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let src_dir = env::current_dir()
         .unwrap()
-        .join(&format!("{}/", args.value_of("dir").unwrap_or(".")));
+        .join(format!("{}/", args.get_one::<String>("dir").unwrap()));
     let dest_dir = env::current_dir()
         .unwrap()
-        .join(&format!("{}/", args.value_of("dest-dir").unwrap_or(".")));
+        .join(format!("{}/", args.get_one::<String>("dest-dir").unwrap()));
 
-    if !args.is_present("themes-only") {
-        let mut builder = if args.is_present("no-default-syntaxes") {
+    if !args.get_flag("themes-only") {
+        let mut builder = if args.get_flag("no-default-syntaxes") {
             SyntaxSetBuilder::new()
         } else {
             syntect::dumps::from_binary::<SyntaxSet>(mdbook::theme::SYNTAXES_BIN).into_builder()
@@ -64,9 +78,9 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         dump_to_file(&set, dest_dir.join("syntaxes.bin"))?;
     }
 
-    if !args.is_present("syntaxes-only") {
+    if !args.get_flag("syntaxes-only") {
         let mut builder = ThemeSet::load_from_folder(&src_dir)?;
-        if !args.is_present("no-default-themes") {
+        if !args.get_flag("no-default-themes") {
             if !builder.themes.contains_key("light") {
                 let light = ThemeSet::load_from_reader(&mut Cursor::new(
                     mdbook::theme::SYNTAX_THEME_LIGHT,

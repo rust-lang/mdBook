@@ -117,38 +117,6 @@ CSS files.
 mdBook includes, by default, the above standard syntax definitions when generating the `syntaxes.bin` cache. If you want to
 override all of the syntax definitions, pass the `--no-default-syntaxes` option.
 
-## Hiding code lines
-
-There is a feature in mdBook that lets you hide code lines by prepending them
-with a `#`.
-
-
-```bash
-# fn main() {
-    let x = 5;
-    let y = 6;
-
-    println!("{}", x + y);
-# }
-```
-
-Will render as
-
-```rust
-# fn main() {
-    let x = 5;
-    let y = 7;
-
-    println!("{}", x + y);
-# }
-```
-
-**At the moment, this only works for code examples that are annotated with
-`rust`. Because it would collide with semantics of some programming languages.
-In the future, we want to make this configurable through the `book.toml` so that
-everyone can benefit from it.**
-
-
 ## Improve default theme
 
 If you think the default theme doesn't look quite right for a specific language,

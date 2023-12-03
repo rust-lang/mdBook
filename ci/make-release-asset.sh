@@ -11,16 +11,21 @@ fi
 TAG=${GITHUB_REF#*/tags/}
 
 host=$(rustc -Vv | grep ^host: | sed -e "s/host: //g")
+target=$2
+if [ "$host" != "$target" ]
+then
+  export "CARGO_TARGET_$(echo $target | tr a-z- A-Z_)_LINKER"=rust-lld
+fi
 export CARGO_PROFILE_RELEASE_LTO=true
-cargo build --bin mdbook --release
-cd target/release
+cargo build --locked --bin mdbook --release --target $target
+cd target/$target/release
 case $1 in
   ubuntu*)
-    asset="mdbook-$TAG-$host.tar.gz"
+    asset="mdbook-$TAG-$target.tar.gz"
     tar czf ../../$asset mdbook
     ;;
   macos*)
-    asset="mdbook-$TAG-$host.tar.gz"
+    asset="mdbook-$TAG-$target.tar.gz"
     # There is a bug with BSD tar on macOS where the first 8MB of the file are
     # sometimes all NUL bytes. See https://github.com/actions/cache/issues/403
     # and https://github.com/rust-lang/cargo/issues/8603 for some more
@@ -30,7 +35,7 @@ case $1 in
     tar czf ../../$asset mdbook
     ;;
   windows*)
-    asset="mdbook-$TAG-$host.zip"
+    asset="mdbook-$TAG-$target.zip"
     7z a ../../$asset mdbook.exe
     ;;
   *)
@@ -39,9 +44,10 @@ case $1 in
 esac
 cd ../..
 
-if [[ -z "$GITHUB_TOKEN" ]]
+if [[ -z "$GITHUB_ENV" ]]
 then
-  echo "$GITHUB_TOKEN not set, skipping deploy."
+  echo "GITHUB_ENV not set, run: gh release upload $TAG target/$asset"
 else
-  hub release edit -m "" --attach $asset $TAG
+  echo "MDBOOK_TAG=$TAG" >> $GITHUB_ENV
+  echo "MDBOOK_ASSET=target/$asset" >> $GITHUB_ENV
 fi
