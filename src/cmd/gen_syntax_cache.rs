@@ -105,7 +105,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
                 css_for_theme_with_class_style(
                     theme,
                     ClassStyle::SpacedPrefixed { prefix: "syn-" },
-                ),
+                )?,
             )?;
         }
     }

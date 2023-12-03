@@ -48,7 +48,7 @@ impl<'a> HtmlGenerator<'a> {
         let parsed_line = match (self.is_in_boring_chunk, did_boringify) {
             (false, true) => {
                 let mut final_parsed_line = Vec::new();
-                let inner_parsed_line = self.parse_state.parse_line(&line, self.syntaxes);
+                let inner_parsed_line = self.parse_state.parse_line(&line, self.syntaxes).unwrap();
                 // The empty scope is a valid prefix of every other scope.
                 // If we tried to just use a scope called "boring", we'd need to modify
                 // the Rust syntax definition.
@@ -70,7 +70,7 @@ impl<'a> HtmlGenerator<'a> {
             }
             (true, false) => {
                 let mut final_parsed_line = Vec::new();
-                let inner_parsed_line = self.parse_state.parse_line(&line, self.syntaxes);
+                let inner_parsed_line = self.parse_state.parse_line(&line, self.syntaxes).unwrap();
                 // Pop everything, including `boring`, which was passed to `line_tokens_to_classed_spans`,
                 // and therefore wound up on the scope stack.
                 final_parsed_line.push((0, ScopeStackOp::Pop(self.scope_stack.len())));
@@ -90,14 +90,15 @@ impl<'a> HtmlGenerator<'a> {
                 final_parsed_line.extend(inner_parsed_line);
                 final_parsed_line
             }
-            _ => self.parse_state.parse_line(&line, self.syntaxes),
+            _ => self.parse_state.parse_line(&line, self.syntaxes).unwrap(),
         };
         let (mut formatted_line, delta) = html::line_tokens_to_classed_spans(
             &line,
             parsed_line.as_slice(),
             self.style,
             &mut self.scope_stack,
-        );
+        )
+        .unwrap();
         if did_boringify && !self.is_in_boring_chunk {
             // Since the boring scope is preceded only by a Pop operation,
             // it must be the first match on the line for <span class="">
@@ -111,7 +112,7 @@ impl<'a> HtmlGenerator<'a> {
                 .scope_stack
                 .scopes
                 .first()
-                .map(Scope::is_empty)
+                .map(|x| x.is_empty())
                 .unwrap_or(false));
         } else if is_rust {
             // Otherwise, since the rust syntax definition doesn't use empty scopes,
@@ -120,7 +121,7 @@ impl<'a> HtmlGenerator<'a> {
                 .scope_stack
                 .scopes
                 .first()
-                .map(Scope::is_empty)
+                .map(|x| x.is_empty())
                 .unwrap_or(false));
         }
         self.is_in_boring_chunk = did_boringify;

@@ -18,7 +18,7 @@ rust-version = "1.70"
 build = "build.rs"
 
 [build-dependencies]
-syntect = { version = "4.6.0", default-features = false, features = ["regex-onig", "parsing", "html", "dump-load", "yaml-load", "dump-create", "assets"] }
+syntect = { version = "5.1.0" }
 
 [dependencies]
 anyhow = "1.0.71"
@@ -40,7 +40,7 @@ shlex = "1.1.0"
 tempfile = "3.4.0"
 toml = "0.5.11" # Do not update, see https://github.com/rust-lang/mdBook/issues/2037
 topological-sort = "0.2.2"
-syntect = { version = "4.6.0", default-features = false, features = ["regex-onig", "parsing", "html", "dump-load", "yaml-load"] }
+syntect = { version = "5.1.0" }
 
 # Watch feature
 notify = { version = "6.1.1", optional = true }
