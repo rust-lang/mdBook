@@ -1,6 +1,6 @@
 # Syntax Highlighting
 
-mdBook uses [syntect](https://docs.rs/syntect/4.6.0/syntect/) with a custom theme
+mdBook uses [syntect](https://docs.rs/syntect/5.1.0/syntect/) with a custom theme
 for syntax highlighting.
 
 Automatic language detection has been turned off, so you will probably want to
