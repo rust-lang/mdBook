@@ -4,6 +4,9 @@ use ignore::gitignore::Gitignore;
 use mdbook::errors::Result;
 use mdbook::utils;
 use mdbook::MDBook;
+use notify::PollWatcher;
+use notify::RecommendedWatcher;
+use notify::Watcher;
 use notify_debouncer_mini::Config;
 use pathdiff::diff_paths;
 use std::path::{Path, PathBuf};
@@ -18,6 +21,9 @@ pub fn make_subcommand() -> Command {
         .arg_dest_dir()
         .arg_root_dir()
         .arg_open()
+        .arg(arg!(--compat "Watch files in compatibility mode.\n\
+                            Use this if your environment doesn't support filesystem events (Windows, Docker, NFS),
+                            or if you encounter issues otherwise"))
 }
 
 // Watch command implementation
@@ -42,18 +48,37 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         open(path);
     }
 
-    trigger_on_change(&book, |paths, book_dir| {
-        info!("Files changed: {:?}\nBuilding book...\n", paths);
-        let result = MDBook::load(book_dir).and_then(|mut b| {
-            update_config(&mut b);
-            b.build()
-        });
+    let polling = args.get_flag("compat");
 
-        if let Err(e) = result {
-            error!("Unable to build the book");
-            utils::log_backtrace(&e);
-        }
-    });
+    if polling {
+        debug!("Using PollWatcher backend");
+        trigger_on_change::<_, PollWatcher>(&book, |paths, book_dir| {
+            info!("Files changed: {:?}\nBuilding book...\n", paths);
+            let result = MDBook::load(book_dir).and_then(|mut b| {
+                update_config(&mut b);
+                b.build()
+            });
+
+            if let Err(e) = result {
+                error!("Unable to build the book");
+                utils::log_backtrace(&e);
+            }
+        });
+    } else {
+        debug!("Using RecommendWatcher backend");
+        trigger_on_change::<_, RecommendedWatcher>(&book, |paths, book_dir| {
+            info!("Files changed: {:?}\nBuilding book...\n", paths);
+            let result = MDBook::load(book_dir).and_then(|mut b| {
+                update_config(&mut b);
+                b.build()
+            });
+
+            if let Err(e) = result {
+                error!("Unable to build the book");
+                utils::log_backtrace(&e);
+            }
+        });
+    };
 
     Ok(())
 }
@@ -110,9 +135,10 @@ fn filter_ignored_files(ignore: Gitignore, paths: &[PathBuf]) -> Vec<PathBuf> {
 }
 
 /// Calls the closure when a book source file is changed, blocking indefinitely.
-pub fn trigger_on_change<F>(book: &MDBook, closure: F)
+pub fn trigger_on_change<F, W>(book: &MDBook, closure: F)
 where
     F: Fn(Vec<PathBuf>, &Path),
+    W: 'static + Watcher + Send,
 {
     use notify::RecursiveMode::*;
 
@@ -125,10 +151,8 @@ where
         .with_timeout(Duration::from_secs(1))
         .with_notify_config(backend_config);
 
-    let mut debouncer = match notify_debouncer_mini::new_debouncer_opt::<_, notify::PollWatcher>(
-        debouncer_config,
-        tx,
-    ) {
+    let mut debouncer = match notify_debouncer_mini::new_debouncer_opt::<_, W>(debouncer_config, tx)
+    {
         Ok(d) => d,
         Err(e) => {
             error!("Error while trying to watch the files:\n\n\t{:?}", e);

@@ -9,6 +9,8 @@ use mdbook::errors::*;
 use mdbook::utils;
 use mdbook::utils::fs::get_404_output_file;
 use mdbook::MDBook;
+use notify::PollWatcher;
+use notify::RecommendedWatcher;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::path::PathBuf;
 use tokio::sync::broadcast;
@@ -43,6 +45,9 @@ pub fn make_subcommand() -> Command {
                 .help("Port to use for HTTP connections"),
         )
         .arg_open()
+        .arg(arg!(--compat "Watch files in compatibility mode.\n\
+                            Use this if your environment doesn't support filesystem events (Windows, Docker, NFS),
+                            or if you encounter issues otherwise"))
 }
 
 // Serve command implementation
@@ -97,23 +102,48 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     }
 
     #[cfg(feature = "watch")]
-    watch::trigger_on_change(&book, move |paths, book_dir| {
-        info!("Files changed: {:?}", paths);
-        info!("Building book...");
+    let polling = args.get_flag("compat");
 
-        // FIXME: This area is really ugly because we need to re-set livereload :(
-        let result = MDBook::load(book_dir).and_then(|mut b| {
-            update_config(&mut b);
-            b.build()
+    #[cfg(feature = "watch")]
+    if polling {
+        debug!("Using PollWatcher backend");
+        watch::trigger_on_change::<_, PollWatcher>(&book, move |paths, book_dir| {
+            info!("Files changed: {:?}", paths);
+            info!("Building book...");
+
+            // FIXME: This area is really ugly because we need to re-set livereload :(
+            let result = MDBook::load(book_dir).and_then(|mut b| {
+                update_config(&mut b);
+                b.build()
+            });
+
+            if let Err(e) = result {
+                error!("Unable to load the book");
+                utils::log_backtrace(&e);
+            } else {
+                let _ = tx.send(Message::text("reload"));
+            }
         });
+    } else {
+        debug!("Using RecommendWatcher backend");
+        watch::trigger_on_change::<_, RecommendedWatcher>(&book, move |paths, book_dir| {
+            info!("Files changed: {:?}", paths);
+            info!("Building book...");
 
-        if let Err(e) = result {
-            error!("Unable to load the book");
-            utils::log_backtrace(&e);
-        } else {
-            let _ = tx.send(Message::text("reload"));
-        }
-    });
+            // FIXME: This area is really ugly because we need to re-set livereload :(
+            let result = MDBook::load(book_dir).and_then(|mut b| {
+                update_config(&mut b);
+                b.build()
+            });
+
+            if let Err(e) = result {
+                error!("Unable to load the book");
+                utils::log_backtrace(&e);
+            } else {
+                let _ = tx.send(Message::text("reload"));
+            }
+        });
+    }
 
     let _ = thread_handle.join();
 
