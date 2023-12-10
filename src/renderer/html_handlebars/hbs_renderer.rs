@@ -55,7 +55,16 @@ impl HtmlHandlebars {
         }
 
         let content = ch.content.clone();
-        let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
+        let content = if ctx.html_config.use_site_url_as_root {
+            utils::render_markdown_with_abs_path(
+                &content,
+                ctx.html_config.curly_quotes,
+                None,
+                ctx.html_config.site_url.as_ref(),
+            )
+        } else {
+            utils::render_markdown(&content, ctx.html_config.curly_quotes)
+        };
 
         let fixed_content =
             utils::render_markdown_with_path(&ch.content, ctx.html_config.curly_quotes, Some(path));
