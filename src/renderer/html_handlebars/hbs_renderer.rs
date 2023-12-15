@@ -32,6 +32,7 @@ impl HtmlHandlebars {
         item: &BookItem,
         mut ctx: RenderItemContext<'_>,
         print_content: &mut String,
+        html_config: &HtmlConfig,
     ) -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
 
@@ -115,6 +116,7 @@ impl HtmlHandlebars {
             &ctx.html_config.playground,
             &ctx.html_config.code,
             ctx.edition,
+            &html_config,
         );
 
         // Write to file
@@ -131,6 +133,7 @@ impl HtmlHandlebars {
                 &ctx.html_config.playground,
                 &ctx.html_config.code,
                 ctx.edition,
+                &html_config,
             );
             debug!("Creating index.html from {}", ctx_path);
             utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
@@ -196,6 +199,7 @@ impl HtmlHandlebars {
             &html_config.playground,
             &html_config.code,
             ctx.config.rust.edition,
+            &html_config,
         );
         let output_file = get_404_output_file(&html_config.input_404);
         utils::fs::write_file(destination, output_file, rendered.as_bytes())?;
@@ -210,8 +214,9 @@ impl HtmlHandlebars {
         playground_config: &Playground,
         code_config: &Code,
         edition: Option<RustEdition>,
+        html_config: &HtmlConfig,
     ) -> String {
-        let rendered = build_header_links(&rendered);
+        let rendered = build_header_links(&rendered, &html_config);
         let rendered = fix_code_blocks(&rendered);
         let rendered = add_playground_pre(&rendered, playground_config, edition);
         let rendered = hide_lines(&rendered, code_config);
@@ -548,7 +553,7 @@ impl Renderer for HtmlHandlebars {
                 edition: ctx.config.rust.edition,
                 chapter_titles: &ctx.chapter_titles,
             };
-            self.render_item(item, ctx, &mut print_content)?;
+            self.render_item(item, ctx, &mut print_content, &html_config)?;
             // Only the first non-draft chapter item should be treated as the "index"
             is_index &= !matches!(item, BookItem::Chapter(ch) if !ch.is_draft_chapter());
         }
@@ -574,6 +579,7 @@ impl Renderer for HtmlHandlebars {
                 &html_config.playground,
                 &html_config.code,
                 ctx.config.rust.edition,
+                &html_config,
             );
 
             utils::fs::write_file(destination, "print.html", rendered.as_bytes())?;
@@ -782,7 +788,7 @@ fn make_data(
 
 /// Goes through the rendered HTML, making sure all header tags have
 /// an anchor respectively so people can link to sections directly.
-fn build_header_links(html: &str) -> String {
+fn build_header_links(html: &str, html_config: &HtmlConfig) -> String {
     static BUILD_HEADER_LINKS: Lazy<Regex> = Lazy::new(|| {
         Regex::new(r#"<h(\d)(?: id="([^"]+)")?(?: class="([^"]+)")?>(.*?)</h\d>"#).unwrap()
     });
@@ -811,6 +817,7 @@ fn build_header_links(html: &str) -> String {
                 caps.get(2).map(|x| x.as_str().to_string()),
                 caps.get(3).map(|x| x.as_str().to_string()),
                 &mut id_counter,
+                &html_config
             )
         })
         .into_owned()
@@ -824,19 +831,31 @@ fn insert_link_into_header(
     id: Option<String>,
     classes: Option<String>,
     id_counter: &mut HashMap<String, usize>,
+    html_config: &HtmlConfig,
 ) -> String {
     let id = id.unwrap_or_else(|| utils::unique_id_from_content(content, id_counter));
     let classes = classes
         .map(|s| format!(" class=\"{s}\""))
         .unwrap_or_default();
 
-    format!(
-        r##"<h{level} id="{id}"{classes}><a class="header" href="#{id}">{text}</a></h{level}>"##,
-        level = level,
-        id = id,
-        text = content,
-        classes = classes
-    )
+    if html_config.header_link {
+        format!(
+            r##"<h{level} id="{id}"{classes}><a class="header" href="#{id}">
+        {text}</a></h{level}>"##,
+            level = level,
+            id = id,
+            text = content,
+            classes = classes
+        )
+    } else {
+        format!(
+            r##"<h{level} id="{id}"{classes}>{text}</h{level}>"##,
+            level = level,
+            id = id,
+            text = content,
+            classes = classes
+        )
+    }
 }
 
 // The rust book uses annotations for rustdoc to test code snippets,
