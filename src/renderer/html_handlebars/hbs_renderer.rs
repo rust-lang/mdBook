@@ -840,8 +840,7 @@ fn insert_link_into_header(
 
     if html_config.header_link {
         format!(
-            r##"<h{level} id="{id}"{classes}><a class="header" href="#{id}">
-        {text}</a></h{level}>"##,
+            r##"<h{level} id="{id}"{classes}><a class="header" href="#{id}">{text}</a></h{level}>"##,
             level = level,
             id = id,
             text = content,
@@ -1089,6 +1088,7 @@ mod tests {
 
     #[test]
     fn original_build_header_links() {
+        let html_config = HtmlConfig::default();
         let inputs = vec![
             (
                 "blah blah <h1>Foo</h1>",
@@ -1132,7 +1132,7 @@ mod tests {
         ];
 
         for (src, should_be) in inputs {
-            let got = build_header_links(src);
+            let got = build_header_links(src, &html_config);
             assert_eq!(got, should_be);
         }
     }
