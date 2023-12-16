@@ -817,7 +817,7 @@ fn build_header_links(html: &str, html_config: &HtmlConfig) -> String {
                 caps.get(2).map(|x| x.as_str().to_string()),
                 caps.get(3).map(|x| x.as_str().to_string()),
                 &mut id_counter,
-                &html_config
+                &html_config,
             )
         })
         .into_owned()
