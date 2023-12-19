@@ -27,7 +27,7 @@ RUN rustup default stable
 RUN rustup target add x86_64-unknown-linux-musl
 
 # We want dependencies cached, so copy those first.
-COPY Cargo.toml Cargo.lock /usr/src/github.com/rust-lang/mdBook
+COPY Cargo.toml Cargo.lock /usr/src/github.com/rust-lang/mdBook/
 # examples is referenced in Cargo.toml
 COPY examples /usr/src/github.com/rust-lang/mdBook/examples
 
