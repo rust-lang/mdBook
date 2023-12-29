@@ -56,7 +56,7 @@ impl Preprocessor for LinkPreprocessor {
 
                     let mut chapter_title = ch.name.clone();
                     let content =
-                        replace_all(&ch.content, base, chapter_path, 0, &mut chapter_title);
+                        replace_all(&ch.content, base, chapter_path, 0, &mut chapter_title)?;
                     ch.content = content;
                     if chapter_title != ch.name {
                         ctx.chapter_titles
@@ -65,7 +65,8 @@ impl Preprocessor for LinkPreprocessor {
                     }
                 }
             }
-        });
+            Ok(())
+        })?;
 
         Ok(book)
     }
@@ -77,7 +78,7 @@ fn replace_all<P1, P2>(
     source: P2,
     depth: usize,
     chapter_title: &mut String,
-) -> String
+) -> Result<String>
 where
     P1: AsRef<Path>,
     P2: AsRef<Path>,
@@ -93,43 +94,32 @@ where
     for link in find_links(s) {
         replaced.push_str(&s[previous_end_index..link.start_index]);
 
-        match link.render_with_path(path, chapter_title) {
-            Ok(new_content) => {
-                if depth < MAX_LINK_NESTED_DEPTH {
-                    if let Some(rel_path) = link.link_type.relative_path(path) {
-                        replaced.push_str(&replace_all(
-                            &new_content,
-                            rel_path,
-                            source,
-                            depth + 1,
-                            chapter_title,
-                        ));
-                    } else {
-                        replaced.push_str(&new_content);
-                    }
-                } else {
-                    error!(
-                        "Stack depth exceeded in {}. Check for cyclic includes",
-                        source.display()
-                    );
-                }
-                previous_end_index = link.end_index;
+        let new_content = link
+            .render_with_path(path, chapter_title)
+            .context(format!("Error updating \"{}\"", link.link_text))?;
+        if depth < MAX_LINK_NESTED_DEPTH {
+            if let Some(rel_path) = link.link_type.relative_path(path) {
+                replaced.push_str(&replace_all(
+                    &new_content,
+                    rel_path,
+                    source,
+                    depth + 1,
+                    chapter_title,
+                )?);
+            } else {
+                replaced.push_str(&new_content);
             }
-            Err(e) => {
-                error!("Error updating \"{}\", {}", link.link_text, e);
-                for cause in e.chain().skip(1) {
-                    warn!("Caused By: {}", cause);
-                }
-
-                // This should make sure we include the raw `{{# ... }}` snippet
-                // in the page content if there are any errors.
-                previous_end_index = link.start_index;
-            }
+        } else {
+            error!(
+                "Stack depth exceeded in {}. Check for cyclic includes",
+                source.display()
+            );
         }
+        previous_end_index = link.end_index;
     }
 
     replaced.push_str(&s[previous_end_index..]);
-    replaced
+    Ok(replaced)
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -444,7 +434,10 @@ mod tests {
         {{#include file.rs}} << an escaped link!
         ```";
         let mut chapter_title = "test_replace_all_escaped".to_owned();
-        assert_eq!(replace_all(start, "", "", 0, &mut chapter_title), end);
+        assert_eq!(
+            replace_all(start, "", "", 0, &mut chapter_title).unwrap(),
+            end
+        );
     }
 
     #[test]
@@ -456,7 +449,10 @@ mod tests {
         # My Chapter
         ";
         let mut chapter_title = "test_set_chapter_title".to_owned();
-        assert_eq!(replace_all(start, "", "", 0, &mut chapter_title), end);
+        assert_eq!(
+            replace_all(start, "", "", 0, &mut chapter_title).unwrap(),
+            end
+        );
         assert_eq!(chapter_title, "My Title");
     }
 

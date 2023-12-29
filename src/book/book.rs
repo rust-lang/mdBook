@@ -102,11 +102,11 @@ impl Book {
     /// Unlike the `iter()` method, this requires a closure instead of returning
     /// an iterator. This is because using iterators can possibly allow you
     /// to have iterator invalidation errors.
-    pub fn for_each_mut<F>(&mut self, mut func: F)
+    pub fn for_each_mut<F>(&mut self, mut func: F) -> Result<()>
     where
-        F: FnMut(&mut BookItem),
+        F: FnMut(&mut BookItem) -> Result<()>,
     {
-        for_each_mut(&mut func, &mut self.sections);
+        for_each_mut(&mut func, &mut self.sections)
     }
 
     /// Append a `BookItem` to the `Book`.
@@ -116,18 +116,19 @@ impl Book {
     }
 }
 
-pub fn for_each_mut<'a, F, I>(func: &mut F, items: I)
+pub fn for_each_mut<'a, F, I>(func: &mut F, items: I) -> Result<()>
 where
-    F: FnMut(&mut BookItem),
+    F: FnMut(&mut BookItem) -> Result<()>,
     I: IntoIterator<Item = &'a mut BookItem>,
 {
     for item in items {
         if let BookItem::Chapter(ch) = item {
-            for_each_mut(func, &mut ch.sub_items);
+            for_each_mut(func, &mut ch.sub_items)?;
         }
 
-        func(item);
+        func(item)?;
     }
+    Ok(())
 }
 
 /// Enum representing any type of item which can be added to a book.
@@ -595,7 +596,7 @@ And here is some \
         let num_items = book.iter().count();
         let mut visited = 0;
 
-        book.for_each_mut(|_| visited += 1);
+        book.for_each_mut(|_| Ok(visited += 1)).unwrap();
 
         assert_eq!(visited, num_items);
     }
