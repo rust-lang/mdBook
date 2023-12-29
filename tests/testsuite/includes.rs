@@ -138,17 +138,121 @@ fn rustdoc_include() {
 "##]]);
 }
 
-// Checks that an unclosed quote in an include directive emits an error.
+// Checks that an unclosed quote in an include directive fails the build.
 #[test]
 fn unclosed_quote() {
     BookTest::init(|_| {})
         .change_file("src/chapter_1.md", "{{#include \"unclosed.md}}")
         .run("build", |cmd| {
+            cmd.expect_failure().expect_stderr(str![[r#"
+ INFO Book building has started
+ERROR Error updating "{{#include "unclosed.md}}" in "chapter_1.md": unclosed quote in path
+ERROR One or more include links could not be resolved, see earlier log entries for details (set `preprocessor.links.warn-on-link-error = true` to only warn)
+
+"#]]);
+        });
+}
+
+// Checks that an include of a missing file fails the build.
+#[test]
+fn missing_include() {
+    BookTest::init(|_| {})
+        .change_file("src/chapter_1.md", "{{#include missing.md}}")
+        .run("build", |cmd| {
+            cmd.expect_failure().expect_stderr(str![[r#"
+ INFO Book building has started
+ERROR Error updating "{{#include missing.md}}" in "chapter_1.md": could not read file for link "{{#include missing.md}}" ("[ROOT]/src/missing.md"): [NOT_FOUND]
+ERROR One or more include links could not be resolved, see earlier log entries for details (set `preprocessor.links.warn-on-link-error = true` to only warn)
+
+"#]]);
+        });
+}
+
+// Checks that `warn-on-link-error` only warns about a missing include and
+// keeps the raw link in the output.
+#[test]
+fn missing_include_warn_on_link_error() {
+    BookTest::init(|_| {})
+        .change_file(
+            "book.toml",
+            "[preprocessor.links]\nwarn-on-link-error = true",
+        )
+        .change_file("src/chapter_1.md", "{{#include missing.md}}")
+        .run("build", |cmd| {
             cmd.expect_stderr(str![[r#"
  INFO Book building has started
-ERROR Error updating "{{#include "unclosed.md}}", unclosed quote in path
+ WARN Error updating "{{#include missing.md}}" in "chapter_1.md": could not read file for link "{{#include missing.md}}" ("[ROOT]/src/missing.md"): [NOT_FOUND]
+ WARN One or more include links could not be resolved, see earlier log entries for details
  INFO Running the html backend
  INFO HTML book written to `[ROOT]/book`
+
+"#]]);
+        })
+        .check_file_contains("book/chapter_1.html", "{{#include missing.md}}");
+}
+
+// Checks that a missing file in a nested include fails the build.
+#[test]
+fn missing_nested_include() {
+    BookTest::init(|_| {})
+        .change_file("src/chapter_1.md", "{{#include nested.md}}")
+        .change_file("src/nested.md", "{{#include missing.md}}")
+        .run("build", |cmd| {
+            cmd.expect_failure().expect_stderr(str![[r#"
+ INFO Book building has started
+ERROR Error updating "{{#include missing.md}}" in "nested.md": could not read file for link "{{#include missing.md}}" ("[ROOT]/src/missing.md"): [NOT_FOUND]
+ WARN Included from "{{#include nested.md}}" in "chapter_1.md"
+ERROR One or more include links could not be resolved, see earlier log entries for details (set `preprocessor.links.warn-on-link-error = true` to only warn)
+
+"#]]);
+        });
+}
+
+// Checks that a missing file two includes deep logs the full include chain
+// back to the chapter, without duplicating the error's cause.
+#[test]
+fn missing_double_nested_include() {
+    BookTest::init(|_| {})
+        .change_file("src/chapter_1.md", "{{#include nested.md}}")
+        .change_file("src/nested.md", "{{#include nested2.md}}")
+        .change_file("src/nested2.md", "{{#include missing.md}}")
+        .run("build", |cmd| {
+            cmd.expect_failure().expect_stderr(str![[r#"
+ INFO Book building has started
+ERROR Error updating "{{#include missing.md}}" in "nested2.md": could not read file for link "{{#include missing.md}}" ("[ROOT]/src/missing.md"): [NOT_FOUND]
+ WARN Included from "{{#include nested2.md}}" in "nested.md"
+ WARN Included from "{{#include nested.md}}" in "chapter_1.md"
+ERROR One or more include links could not be resolved, see earlier log entries for details (set `preprocessor.links.warn-on-link-error = true` to only warn)
+
+"#]]);
+        });
+}
+
+// Checks that a `{{#rustdoc_include}}` of a missing file fails the build.
+#[test]
+fn missing_rustdoc_include() {
+    BookTest::init(|_| {})
+        .change_file("src/chapter_1.md", "{{#rustdoc_include missing.rs}}")
+        .run("build", |cmd| {
+            cmd.expect_failure().expect_stderr(str![[r#"
+ INFO Book building has started
+ERROR Error updating "{{#rustdoc_include missing.rs}}" in "chapter_1.md": could not read file for link "{{#rustdoc_include missing.rs}}" ("[ROOT]/src/missing.rs"): [NOT_FOUND]
+ERROR One or more include links could not be resolved, see earlier log entries for details (set `preprocessor.links.warn-on-link-error = true` to only warn)
+
+"#]]);
+        });
+}
+
+// Checks that a `{{#playground}}` of a missing file fails the build.
+#[test]
+fn missing_playground() {
+    BookTest::init(|_| {})
+        .change_file("src/chapter_1.md", "{{#playground missing.rs}}")
+        .run("build", |cmd| {
+            cmd.expect_failure().expect_stderr(str![[r#"
+ INFO Book building has started
+ERROR Error updating "{{#playground missing.rs}}" in "chapter_1.md": could not read file for link "{{#playground missing.rs}}" ("[ROOT]/src/missing.rs"): [NOT_FOUND]
+ERROR One or more include links could not be resolved, see earlier log entries for details (set `preprocessor.links.warn-on-link-error = true` to only warn)
 
 "#]]);
         });

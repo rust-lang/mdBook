@@ -47,8 +47,16 @@ impl Preprocessor for LinkPreprocessor {
     }
 
     fn run(&self, ctx: &PreprocessorContext, mut book: Book) -> Result<Book> {
+        let config_key = format!("preprocessor.{}.warn-on-link-error", Self::NAME);
+        let warn_on_link_error = ctx
+            .config
+            .get(&config_key)
+            .with_context(|| format!("expected bool for `{config_key}`"))?
+            .unwrap_or(false);
+
         let src_dir = ctx.root.join(&ctx.config.book.src);
 
+        let mut failed = false;
         book.for_each_mut(|section: &mut BookItem| {
             if let BookItem::Chapter(ref mut ch) = *section {
                 if let Some(ref chapter_path) = ch.path {
@@ -58,9 +66,18 @@ impl Preprocessor for LinkPreprocessor {
                         .expect("All book items have a parent");
 
                     let mut chapter_title = ch.name.clone();
-                    let content =
-                        replace_all(&ch.content, base, chapter_path, 0, &mut chapter_title);
-                    ch.content = content;
+                    ch.content = replace_all(
+                        &ch.content,
+                        base,
+                        chapter_path,
+                        0,
+                        &mut chapter_title,
+                        warn_on_link_error,
+                    )
+                    .unwrap_or_else(|err| {
+                        failed = true;
+                        err.content
+                    });
                     if chapter_title != ch.name {
                         ctx.chapter_titles
                             .borrow_mut()
@@ -70,8 +87,22 @@ impl Preprocessor for LinkPreprocessor {
             }
         });
 
+        if failed {
+            let msg = "One or more include links could not be resolved, see earlier log entries for details";
+            if !warn_on_link_error {
+                anyhow::bail!("{msg} (set `{config_key} = true` to only warn)");
+            }
+            warn!("{msg}");
+        }
+
         Ok(book)
     }
+}
+
+/// Indicates an error resolving a link, contains the partially resolved content.
+#[derive(Debug)]
+struct ReplaceError {
+    content: String,
 }
 
 fn replace_all<P1, P2>(
@@ -80,7 +111,8 @@ fn replace_all<P1, P2>(
     source: P2,
     depth: usize,
     chapter_title: &mut String,
-) -> String
+    warn_on_link_error: bool,
+) -> std::result::Result<String, ReplaceError>
 where
     P1: AsRef<Path>,
     P2: AsRef<Path>,
@@ -92,6 +124,7 @@ where
     let source = source.as_ref();
     let mut previous_end_index = 0;
     let mut replaced = String::new();
+    let mut failed = false;
 
     for link in find_links(s) {
         replaced.push_str(&s[previous_end_index..link.start_index]);
@@ -104,9 +137,25 @@ where
                     // Otherwise includes starting a new line would be prefixed
                     // by the preceding line
                     let prefix = replaced.split('\n').last().unwrap_or("");
-                    let raw_new_content = if let Some(rel_path) = link.link_type.relative_path(path)
-                    {
-                        replace_all(&new_content, rel_path, source, depth + 1, chapter_title)
+                    let raw_new_content = if let Some(file) = link.link_type.included_file() {
+                        // use the included file as the source
+                        replace_all(
+                            &new_content,
+                            return_relative_path(path, file),
+                            source.with_file_name(file), // with_file_name to stay relative to source dir
+                            depth + 1,
+                            chapter_title,
+                            warn_on_link_error,
+                        )
+                        .unwrap_or_else(|err| {
+                            warn!(
+                                "Included from \"{}\" in \"{}\"",
+                                link.link_text,
+                                source.display()
+                            );
+                            failed = true;
+                            err.content
+                        })
                     } else {
                         new_content
                     };
@@ -127,10 +176,21 @@ where
                 previous_end_index = link.end_index;
             }
             Err(e) => {
-                error!("Error updating \"{}\", {}", link.link_text, e);
-                for cause in e.chain().skip(1) {
-                    warn!("Caused By: {}", cause);
+                let mut msg = format!(
+                    "Error updating \"{}\" in \"{}\": {}",
+                    link.link_text,
+                    source.display(),
+                    e
+                );
+                if e.chain().count() > 1 {
+                    msg = format!("{msg}: {}", e.root_cause());
                 }
+                if warn_on_link_error {
+                    warn!("{msg}")
+                } else {
+                    error!("{msg}")
+                }
+                failed = true;
 
                 // This should make sure we include the raw `{{# ... }}` snippet
                 // in the page content if there are any errors.
@@ -140,7 +200,11 @@ where
     }
 
     replaced.push_str(&s[previous_end_index..]);
-    replaced
+    if failed {
+        Err(ReplaceError { content: replaced })
+    } else {
+        Ok(replaced)
+    }
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -213,13 +277,12 @@ impl From<RangeFull> for LineRange {
 }
 
 impl<'a> LinkType<'a> {
-    fn relative_path<P: AsRef<Path>>(self, base: P) -> Option<PathBuf> {
-        let base = base.as_ref();
+    fn included_file(&self) -> Option<&Path> {
         match self {
             LinkType::Escaped | LinkType::Invalid(_) => None,
-            LinkType::Include(p, _) => Some(return_relative_path(base, &p)),
-            LinkType::Playground(p, _) => Some(return_relative_path(base, &p)),
-            LinkType::RustdocInclude(p, _) => Some(return_relative_path(base, &p)),
+            LinkType::Include(p, _) => Some(p),
+            LinkType::Playground(p, _) => Some(p),
+            LinkType::RustdocInclude(p, _) => Some(p),
             LinkType::Title(_) => None,
         }
     }
@@ -419,7 +482,7 @@ impl<'a> Link<'a> {
                     })
                     .with_context(|| {
                         format!(
-                            "Could not read file for link {} ({})",
+                            "could not read file for link \"{}\" (\"{}\")",
                             self.link_text,
                             target.display(),
                         )
@@ -439,7 +502,7 @@ impl<'a> Link<'a> {
                     })
                     .with_context(|| {
                         format!(
-                            "Could not read file for link {} ({})",
+                            "could not read file for link \"{}\" (\"{}\")",
                             self.link_text,
                             target.display(),
                         )
@@ -450,7 +513,7 @@ impl<'a> Link<'a> {
 
                 let mut contents = fs::read_to_string(&target).with_context(|| {
                     format!(
-                        "Could not read file for link {} ({})",
+                        "could not read file for link \"{}\" (\"{}\")",
                         self.link_text,
                         target.display()
                     )
@@ -521,7 +584,10 @@ mod tests {
         {{#include file.rs}} << an escaped link!
         ```";
         let mut chapter_title = "test_replace_all_escaped".to_owned();
-        assert_eq!(replace_all(start, "", "", 0, &mut chapter_title), end);
+        assert_eq!(
+            replace_all(start, "", "", 0, &mut chapter_title, false).unwrap(),
+            end
+        );
     }
 
     #[test]
@@ -533,7 +599,10 @@ mod tests {
         # My Chapter
         ";
         let mut chapter_title = "test_set_chapter_title".to_owned();
-        assert_eq!(replace_all(start, "", "", 0, &mut chapter_title), end);
+        assert_eq!(
+            replace_all(start, "", "", 0, &mut chapter_title, false).unwrap(),
+            end
+        );
         assert_eq!(chapter_title, "My Title");
     }
 
@@ -1236,8 +1305,8 @@ mod tests {
     fn test_replace_all_unclosed_quote() {
         let start = "Some text with {{#include \"unclosed.md}} here.";
         let mut chapter_title = "test".to_owned();
-        let res = replace_all(start, "", "", 0, &mut chapter_title);
-        assert_eq!(res, start);
+        let err = replace_all(start, "", "", 0, &mut chapter_title, false).unwrap_err();
+        assert_eq!(err.content, start);
     }
 
     #[test]
