@@ -138,17 +138,16 @@ fn rustdoc_include() {
 "##]]);
 }
 
-// Checks that an unclosed quote in an include directive emits an error.
+// Checks that an unclosed quote in an include directive fails the build.
 #[test]
 fn unclosed_quote() {
     BookTest::init(|_| {})
         .change_file("src/chapter_1.md", "{{#include \"unclosed.md}}")
         .run("build", |cmd| {
-            cmd.expect_stderr(str![[r#"
+            cmd.expect_failure().expect_stderr(str![[r#"
  INFO Book building has started
-ERROR Error updating "{{#include "unclosed.md}}", unclosed quote in path
- INFO Running the html backend
- INFO HTML book written to `[ROOT]/book`
+ERROR Error updating "{{#include "unclosed.md}}"
+[TAB]Caused by: unclosed quote in path
 
 "#]]);
         });
