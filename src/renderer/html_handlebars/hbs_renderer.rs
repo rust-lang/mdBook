@@ -113,6 +113,7 @@ impl HtmlHandlebars {
             rendered,
             &ctx.html_config.playground,
             &ctx.html_config.code,
+            &ctx.html_config.no_header_link,
             ctx.edition,
         );
 
@@ -129,6 +130,7 @@ impl HtmlHandlebars {
                 rendered_index,
                 &ctx.html_config.playground,
                 &ctx.html_config.code,
+                &ctx.html_config.no_header_link,
                 ctx.edition,
             );
             debug!("Creating index.html from {}", ctx_path);
@@ -194,6 +196,7 @@ impl HtmlHandlebars {
             rendered,
             &html_config.playground,
             &html_config.code,
+            &html_config.no_header_link,
             ctx.config.rust.edition,
         );
         let output_file = get_404_output_file(&html_config.input_404);
@@ -208,9 +211,10 @@ impl HtmlHandlebars {
         rendered: String,
         playground_config: &Playground,
         code_config: &Code,
+        no_header_link: &bool,
         edition: Option<RustEdition>,
     ) -> String {
-        let rendered = build_header_links(&rendered);
+        let rendered = build_header_links(&rendered, no_header_link);
         let rendered = fix_code_blocks(&rendered);
         let rendered = add_playground_pre(&rendered, playground_config, edition);
         let rendered = hide_lines(&rendered, code_config);
@@ -572,6 +576,7 @@ impl Renderer for HtmlHandlebars {
                 rendered,
                 &html_config.playground,
                 &html_config.code,
+                &html_config.no_header_link,
                 ctx.config.rust.edition,
             );
 
@@ -781,7 +786,7 @@ fn make_data(
 
 /// Goes through the rendered HTML, making sure all header tags have
 /// an anchor respectively so people can link to sections directly.
-fn build_header_links(html: &str) -> String {
+fn build_header_links(html: &str, no_header_link: &bool) -> String {
     static BUILD_HEADER_LINKS: Lazy<Regex> = Lazy::new(|| {
         Regex::new(r#"<h(\d)(?: id="([^"]+)")?(?: class="([^"]+)")?>(.*?)</h\d>"#).unwrap()
     });
@@ -810,6 +815,7 @@ fn build_header_links(html: &str) -> String {
                 caps.get(2).map(|x| x.as_str().to_string()),
                 caps.get(3).map(|x| x.as_str().to_string()),
                 &mut id_counter,
+                &no_header_link,
             )
         })
         .into_owned()
@@ -823,19 +829,30 @@ fn insert_link_into_header(
     id: Option<String>,
     classes: Option<String>,
     id_counter: &mut HashMap<String, usize>,
+    no_header_link: &bool,
 ) -> String {
     let id = id.unwrap_or_else(|| utils::unique_id_from_content(content, id_counter));
     let classes = classes
         .map(|s| format!(" class=\"{s}\""))
         .unwrap_or_default();
 
-    format!(
-        r##"<h{level} id="{id}"{classes}><a class="header" href="#{id}">{text}</a></h{level}>"##,
-        level = level,
-        id = id,
-        text = content,
-        classes = classes
-    )
+    if *no_header_link {
+        format!(
+            r##"<h{level} id="{id}"{classes}>{text}</h{level}>"##,
+            level = level,
+            id = id,
+            text = content,
+            classes = classes
+        )
+    } else {
+        format!(
+            r##"<h{level} id="{id}"{classes}><a class="header" href="#{id}">{text}</a></h{level}>"##,
+            level = level,
+            id = id,
+            text = content,
+            classes = classes
+        )
+    }
 }
 
 // The rust book uses annotations for rustdoc to test code snippets,
@@ -1112,7 +1129,7 @@ mod tests {
         ];
 
         for (src, should_be) in inputs {
-            let got = build_header_links(src);
+            let got = build_header_links(src, &HtmlConfig::default().no_header_link);
             assert_eq!(got, should_be);
         }
     }
