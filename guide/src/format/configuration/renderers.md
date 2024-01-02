@@ -1,26 +1,30 @@
 # Configuring Renderers
 
-Renderers (also called "backends") are responsible for creating the output of the book.
+Renderers (also called "backends") are responsible for creating the output of
+the book.
 
 The following backends are built-in:
 
 * [`html`](#html-renderer-options) — This renders the book to HTML.
-  This is enabled by default if no other `[output]` tables are defined in `book.toml`.
-* [`markdown`](#markdown-renderer) — This outputs the book as markdown after running the preprocessors.
-  This is useful for debugging preprocessors.
+  This is enabled by default if no other `[output]` tables are defined in
+  `book.toml`.
+* [`markdown`](#markdown-renderer) — This outputs the book as markdown after
+  running the preprocessors. This is useful for debugging preprocessors.
 
 The community has developed several backends.
 See the [Third Party Plugins] wiki page for a list of available backends.
 
-For information on how to create a new backend, see the [Backends for Developers] chapter.
+For information on how to create a new backend, see the
+[Backends for Developers] chapter.
 
 [Third Party Plugins]: https://github.com/rust-lang/mdBook/wiki/Third-party-plugins
 [Backends for Developers]: ../../for_developers/backends.md
 
 ## Output tables
 
-Backends can be added by including a `output` table in `book.toml` with the name of the backend.
-For example, if you have a backend called `mdbook-wordcount`, then you can include it with:
+Backends can be added by including a `output` table in `book.toml` with the name
+of the backend. For example, if you have a backend called `mdbook-wordcount`,
+then you can include it with:
 
 ```toml
 [output.wordcount]
@@ -28,17 +32,18 @@ For example, if you have a backend called `mdbook-wordcount`, then you can inclu
 
 With this table, mdBook will execute the `mdbook-wordcount` backend.
 
-This table can include additional key-value pairs that are specific to the backend.
-For example, if our example backend needed some extra configuration options:
+This table can include additional key-value pairs that are specific to the
+backend. For example, if our example backend needed some extra configuration
+options:
 
 ```toml
 [output.wordcount]
 ignores = ["Example Chapter"]
 ```
 
-If you define any `[output]` tables, then the `html` backend is not enabled by default.
-If you want to keep the `html` backend running, then just include it in the `book.toml` file.
-For example:
+If you define any `[output]` tables, then the `html` backend is not enabled by
+default. If you want to keep the `html` backend running, then just include it in
+the `book.toml` file. For example:
 
 ```toml
 [book]
@@ -49,10 +54,12 @@ title = "My Awesome Book"
 [output.html]
 ```
 
-If more than one `output` table is included, this changes the behavior for the layout of the output directory.
-If there is only one backend, then it places its output directly in the `book` directory (see [`build.build-dir`] to override this location).
-If there is more than one backend, then each backend is placed in a separate directory underneath `book`.
-For example, the above would have directories `book/html` and `book/wordcount`.
+If more than one `output` table is included, this changes the behavior for the
+layout of the output directory. If there is only one backend, then it places its
+output directly in the `book` directory (see [`build.build-dir`] to override
+this location). If there is more than one backend, then each backend is placed
+in a separate directory underneath `book`. For example, the above would have
+directories `book/html` and `book/wordcount`.
 
 [`build.build-dir`]: general.md#build-options
 
@@ -70,8 +77,8 @@ command = "python random.py"
 
 ### Optional backends
 
-If you enable a backend that isn't installed, the default behavior is to throw an error.
-This behavior can be changed by marking the backend as optional:
+If you enable a backend that isn't installed, the default behavior is to throw
+an error. This behavior can be changed by marking the backend as optional:
 
 ```toml
 [output.wordcount]
@@ -79,7 +86,6 @@ optional = true
 ```
 
 This demotes the error to a warning.
-
 
 ## HTML renderer options
 
@@ -122,16 +128,21 @@ The following configuration options are available:
   the browser requests the dark version of the site via the
   ['prefers-color-scheme'](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)
   CSS media query. Defaults to `navy`.
-- **smart-punctuation:** Convert ellipses (`...`), dashes (`--`, `---`) and quotes (`'`, `"`) to their resp. typographic equivalents, except for those
+- **smart-punctuation:** Convert ellipses (`...`), dashes (`--`, `---`) and
+  quotes (`'`, `"`) to their resp. typographic equivalents, except for those
   that occur in code blocks and code spans. Defaults to `false`.
 - **mathjax-support:** Adds support for [MathJax](../mathjax.md). Defaults to
   `false`.
-- **copy-fonts:** (**Deprecated**) If `true` (the default), mdBook uses its built-in fonts which are copied to the output directory.
+- **copy-fonts:** (**Deprecated**) If `true` (the default), mdBook uses its
+  built-in fonts which are copied to the output directory.
   If `false`, the built-in fonts will not be used.
   This option is deprecated. If you want to define your own custom fonts,
-  create a `theme/fonts/fonts.css` file and store the fonts in the `theme/fonts/` directory.
-- **google-analytics:** This field has been deprecated and will be removed in a future release.
-  Use the `theme/head.hbs` file to add the appropriate Google Analytics code instead.
+  create a `theme/fonts/fonts.css` file and store the fonts in the
+  `theme/fonts/` directory.
+- **google-analytics:** This field has been deprecated and will be removed in a
+  future release.
+  Use the `theme/head.hbs` file to add the appropriate Google Analytics code
+  instead.
 - **additional-css:** If you need to slightly change the appearance of your book
   without overwriting the whole style, you can specify a set of stylesheets that
   will be loaded after the default ones where you can surgically change the
@@ -139,29 +150,33 @@ The following configuration options are available:
 - **additional-js:** If you need to add some behaviour to your book without
   removing the current behaviour, you can specify a set of JavaScript files that
   will be loaded alongside the default one.
-- **no-section-label:** mdBook by defaults adds numeric section labels in the table of
-  contents column. For example, "1.", "2.1". Set this option to true to disable
-  those labels. Defaults to `false`.
+- **no-section-label:** mdBook by defaults adds numeric section labels in the
+- table of contents column. For example, "1.", "2.1". Set this option to true to
+  disable those labels. Defaults to `false`.
 - **git-repository-url:**  A url to the git repository for the book. If provided
   an icon link will be output in the menu bar of the book.
 - **git-repository-icon:** The FontAwesome icon class to use for the git
-  repository link. Defaults to `fa-github` which looks like <i class="fa fa-github"></i>.
-  If you are not using GitHub, another option to consider is `fa-code-fork` which looks like <i class="fa fa-code-fork"></i>.
+  repository link. Defaults to `fa-github` which looks like
+  <i class="fa fa-github"></i>.
+  If you are not using GitHub, another option to consider is `fa-code-fork`
+  which looks like <i class="fa fa-code-fork"></i>.
 - **edit-url-template:** Edit url template, when provided shows a
-  "Suggest an edit" button (which looks like <i class="fa fa-edit"></i>) for directly jumping to editing the currently
-  viewed page. For e.g. GitHub projects set this to
-  `https://github.com/<owner>/<repo>/edit/<branch>/{path}` or for
-  Bitbucket projects set it to
+  "Suggest an edit" button (which looks like <i class="fa fa-edit"></i>) for
+  directly jumping to editing the currently viewed page. For e.g. GitHub
+  projects set this to `https://github.com/<owner>/<repo>/edit/<branch>/{path}`
+  or for Bitbucket projects set it to
   `https://bitbucket.org/<owner>/<repo>/src/<branch>/{path}?mode=edit`
   where {path} will be replaced with the full path of the file in the
   repository.
 - **input-404:** The name of the markdown file used for missing files.
-  The corresponding output file will be the same, with the extension replaced with `html`.
+  The corresponding output file will be the same, with the extension replaced
+  with `html`.
   Defaults to `404.md`.
-- **site-url:** The url where the book will be hosted. This is required to ensure
-  navigation links and script/css imports in the 404 file work correctly, even when accessing
-  urls in subdirectories. Defaults to `/`. If `site-url` is set,
-  make sure to use document relative links for your assets, meaning they should not start with `/`.
+- **site-url:** The url where the book will be hosted. This is required to
+  ensurenavigation links and script/css imports in the 404 file work correctly,
+  even when accessing URLs in subdirectories. Defaults to `/`. If `site-url` is
+  set, make sure to use document relative links for your assets, meaning they
+  should not start with `/`.
 - **cname:** The DNS subdomain or apex domain at which your book will be hosted.
   This string will be written to a file named CNAME in the root of your site, as
   required by GitHub Pages (see [*Managing a custom domain for your GitHub Pages
@@ -171,8 +186,10 @@ The following configuration options are available:
 
 ### `[output.html.print]`
 
-The `[output.html.print]` table provides options for controlling the printable output.
-By default, mdBook will include an icon on the top right of the book (which looks like <i class="fa fa-print"></i>) that will print the book as a single page.
+The `[output.html.print]` table provides options for controlling the printable
+output. By default, mdBook will include an icon on the top right of the book
+(which looks like <i class="fa fa-print"></i>) that will print the book as a
+single page.
 
 ```toml
 [output.html.print]
@@ -186,7 +203,8 @@ page-break = true # insert page-break after each chapter
 
 ### `[output.html.fold]`
 
-The `[output.html.fold]` table provides options for controlling folding of the chapter listing in the navigation sidebar.
+The `[output.html.fold]` table provides options for controlling folding of the
+chapter listing in the navigation sidebar.
 
 ```toml
 [output.html.fold]
@@ -201,7 +219,8 @@ level = 0         # the depth to start folding
 
 ### `[output.html.playground]`
 
-The `[output.html.playground]` table provides options for controlling Rust sample code blocks, and their integration with the [Rust Playground].
+The `[output.html.playground]` table provides options for controlling Rust
+sample code blocks, and their integration with the [Rust Playground].
 
 [Rust Playground]: https://play.rust-lang.org/
 
@@ -218,8 +237,10 @@ runnable = true          # displays a run button for rust code
 - **copyable:** Display the copy button on code snippets. Defaults to `true`.
 - **copy-js:** Copy JavaScript files for the editor to the output directory.
   Defaults to `true`.
-- **line-numbers:** Display line numbers on editable sections of code. Requires both `editable` and `copy-js` to be `true`. Defaults to `false`.
-- **runnable:** Displays a run button for rust code snippets. Changing this to `false` will disable the run in playground feature globally. Defaults to `true`.
+- **line-numbers:** Display line numbers on editable sections of code. Requires
+  both `editable` and `copy-js` to be `true`. Defaults to `false`.
+- **runnable:** Displays a run button for rust code snippets. Changing this to
+  `false` will disable the run in playground feature globally. Defaults to `true`.
 
 [Ace]: https://ace.c9.io/
 
@@ -234,13 +255,16 @@ The `[output.html.code]` table provides options for controlling code blocks.
 hidelines = { python = "~" }
 ```
 
-- **hidelines:** A table that defines how [hidden code lines](../mdbook.md#hiding-code-lines) work for each language.
-  The key is the language and the value is a string that will cause code lines starting with that prefix to be hidden.
+- **hidelines:** A table that defines how
+  [hidden code lines](../mdbook.md#hiding-code-lines) work for each language.
+  The key is the language and the value is a string that will cause code lines
+  starting with that prefix to be hidden.
 
 ### `[output.html.search]`
 
-The `[output.html.search]` table provides options for controlling the built-in text [search].
-mdBook must be compiled with the `search` feature enabled (on by default).
+The `[output.html.search]` table provides options for controlling the built-in
+text [search]. mdBook must be compiled with the `search` feature enabled (on by
+default).
 
 [search]: ../../guide/reading.md#search
 
@@ -282,7 +306,8 @@ copy-js = true           # include Javascript code for search
 ### `[output.html.redirect]`
 
 The `[output.html.redirect]` table provides a way to add redirects.
-This is useful when you move, rename, or remove a page to ensure that links to the old URL will go to the new location.
+This is useful when you move, rename, or remove a page to ensure that links to
+the old URL will go to the new location.
 
 ```toml
 [output.html.redirect]
@@ -290,10 +315,14 @@ This is useful when you move, rename, or remove a page to ensure that links to t
 "/other-installation-methods.html" = "../infra/other-installation-methods.html"
 ```
 
-The table contains key-value pairs where the key is where the redirect file needs to be created, as an absolute path from the build directory, (e.g. `/appendices/bibliography.html`).
-The value can be any valid URI the browser should navigate to (e.g. `https://rust-lang.org/`, `/overview.html`, or `../bibliography.html`).
+The table contains key-value pairs where the key is where the redirect file
+needs to be created, as an absolute path from the build directory,
+(e.g. `/appendices/bibliography.html`).
+The value can be any valid URI the browser should navigate to (e.g.
+`https://rust-lang.org/`, `/overview.html`, or `../bibliography.html`).
 
-This will generate an HTML page which will automatically redirect to the given location.
+This will generate an HTML page which will automatically redirect to the given
+location.
 Note that the source location does not support `#` anchor redirects.
 
 ## Markdown Renderer
