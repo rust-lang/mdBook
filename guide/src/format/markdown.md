@@ -2,13 +2,13 @@
 
 mdBook's [parser](https://github.com/raphlinus/pulldown-cmark) adheres to the [CommonMark](https://commonmark.org/) specification with some extensions described below.
 You can take a quick [tutorial](https://commonmark.org/help/tutorial/),
-or [try out](https://spec.commonmark.org/dingus/) CommonMark in real time. A complete Markdown overview is out of scope for 
+or [try out](https://spec.commonmark.org/dingus/) CommonMark in real time. A complete Markdown overview is out of scope for
 this documentation, but below is a high level overview of some of the basics. For a more in-depth experience, check out the
 [Markdown Guide](https://www.markdownguide.org).
 
 ## Text and Paragraphs
 
-Text is rendered relatively predictably: 
+Text is rendered relatively predictably:
 
 ```markdown
 Here is a line of text.
@@ -27,20 +27,20 @@ This is a new line.
 Headings use the `#` marker and should be on a line by themselves. More `#` mean smaller headings:
 
 ```markdown
-### A heading 
+### A heading
 
 Some text.
 
-#### A smaller heading 
+#### A smaller heading
 
 More text.
 ```
 
-### A heading 
+### A heading
 
 Some text.
 
-#### A smaller heading 
+#### A smaller heading
 
 More text.
 
@@ -71,14 +71,14 @@ Lists can be unordered or ordered. Ordered lists will order automatically:
 Linking to a URL or local file is easy:
 
 ```markdown
-Use [mdBook](https://github.com/rust-lang/mdBook). 
+Use [mdBook](https://github.com/rust-lang/mdBook).
 
 Read about [mdBook](mdbook.md).
 
 A bare url: <https://www.rust-lang.org>.
 ```
 
-Use [mdBook](https://github.com/rust-lang/mdBook). 
+Use [mdBook](https://github.com/rust-lang/mdBook).
 
 Read about [mdBook](mdbook.md).
 
@@ -214,12 +214,12 @@ characters:
 So, no need to manually enter those Unicode characters!
 
 This feature is disabled by default.
-To enable it, see the [`output.html.curly-quotes`] config option.
+To enable it, see the [`output.html.smart-punctuation`] config option.
 
 [strikethrough]: https://github.github.com/gfm/#strikethrough-extension-
 [tables]: https://github.github.com/gfm/#tables-extension-
 [task list extension]: https://github.github.com/gfm/#task-list-items-extension-
-[`output.html.curly-quotes`]: configuration/renderers.md#html-renderer-options
+[`output.html.smart-punctuation`]: configuration/renderers.md#html-renderer-options
 
 ### Heading attributes
 

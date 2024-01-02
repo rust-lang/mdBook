@@ -97,7 +97,7 @@ description = "The example book covers examples."
 theme = "my-theme"
 default-theme = "light"
 preferred-dark-theme = "navy"
-curly-quotes = true
+smart-punctuation = true
 mathjax-support = false
 copy-fonts = true
 additional-css = ["custom.css", "custom2.css"]
@@ -122,7 +122,7 @@ The following configuration options are available:
   the browser requests the dark version of the site via the
   ['prefers-color-scheme'](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)
   CSS media query. Defaults to `navy`.
-- **curly-quotes:** Convert straight quotes to curly quotes, except for those
+- **smart-punctuation:** Convert ellipses (`...`), dashes (`--`, `---`) and quotes (`'`, `"`) to their resp. typographic equivalents, except for those
   that occur in code blocks and code spans. Defaults to `false`.
 - **mathjax-support:** Adds support for [MathJax](../mathjax.md). Defaults to
   `false`.

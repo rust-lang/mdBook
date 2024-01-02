@@ -526,11 +526,11 @@ pub struct HtmlConfig {
     /// The theme to use if the browser requests the dark version of the site.
     /// Defaults to 'navy'.
     pub preferred_dark_theme: Option<String>,
-    /// Use "smart quotes" instead of the usual `"` character.
-    pub curly_quotes: bool,
+    /// Use "smart punctuation" instead for `...`, `--`, `---`, `'` and `"` characters.
+    pub smart_punctuation: bool,
     /// Should mathjax be enabled?
     pub mathjax_support: bool,
-    /// Whether to fonts.css and respective font files to the output directory.
+    /// Whether to `fonts.css` and respective font files to the output directory.
     pub copy_fonts: bool,
     /// An optional google analytics code.
     pub google_analytics: Option<String>,
@@ -590,7 +590,7 @@ impl Default for HtmlConfig {
             theme: None,
             default_theme: None,
             preferred_dark_theme: None,
-            curly_quotes: false,
+            smart_punctuation: false,
             mathjax_support: false,
             copy_fonts: true,
             google_analytics: None,
@@ -798,7 +798,7 @@ mod tests {
         [output.html]
         theme = "./themedir"
         default-theme = "rust"
-        curly-quotes = true
+        smart-punctuation = true
         google-analytics = "123456"
         additional-css = ["./foo/bar/baz.css"]
         git-repository-url = "https://foo.com/"
@@ -845,7 +845,7 @@ mod tests {
             runnable: true,
         };
         let html_should_be = HtmlConfig {
-            curly_quotes: true,
+            smart_punctuation: true,
             google_analytics: Some(String::from("123456")),
             additional_css: vec![PathBuf::from("./foo/bar/baz.css")],
             theme: Some(PathBuf::from("./themedir")),
@@ -1025,7 +1025,7 @@ mod tests {
         [output.html]
         destination = "my-book" # the output files will be generated in `root/my-book` instead of `root/book`
         theme = "my-theme"
-        curly-quotes = true
+        smart-punctuation = true
         google-analytics = "123456"
         additional-css = ["custom.css", "custom2.css"]
         additional-js = ["custom.js"]
@@ -1050,7 +1050,7 @@ mod tests {
 
         let html_should_be = HtmlConfig {
             theme: Some(PathBuf::from("my-theme")),
-            curly_quotes: true,
+            smart_punctuation: true,
             google_analytics: Some(String::from("123456")),
             additional_css: vec![PathBuf::from("custom.css"), PathBuf::from("custom2.css")],
             additional_js: vec![PathBuf::from("custom.js")],
