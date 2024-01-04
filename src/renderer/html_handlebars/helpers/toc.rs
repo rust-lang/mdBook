@@ -4,7 +4,9 @@ use std::{cmp::Ordering, collections::BTreeMap};
 use crate::utils;
 use crate::utils::bracket_escape;
 
-use handlebars::{Context, Handlebars, Helper, HelperDef, Output, RenderContext, RenderError};
+use handlebars::{
+    Context, Handlebars, Helper, HelperDef, Output, RenderContext, RenderError, RenderErrorReason,
+};
 
 // Handlebars helper to construct TOC
 #[derive(Clone, Copy)]
@@ -15,7 +17,7 @@ pub struct RenderToc {
 impl HelperDef for RenderToc {
     fn call<'reg: 'rc, 'rc>(
         &self,
-        _h: &Helper<'reg, 'rc>,
+        _h: &Helper<'rc>,
         _r: &'reg Handlebars<'_>,
         ctx: &'rc Context,
         rc: &mut RenderContext<'reg, 'rc>,
@@ -26,13 +28,17 @@ impl HelperDef for RenderToc {
         // param is the key of value you want to display
         let chapters = rc.evaluate(ctx, "@root/chapters").and_then(|c| {
             serde_json::value::from_value::<Vec<BTreeMap<String, String>>>(c.as_json().clone())
-                .map_err(|_| RenderError::new("Could not decode the JSON data"))
+                .map_err(|_| {
+                    RenderErrorReason::Other("Could not decode the JSON data".to_owned()).into()
+                })
         })?;
         let current_path = rc
             .evaluate(ctx, "@root/path")?
             .as_json()
             .as_str()
-            .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
+            .ok_or_else(|| {
+                RenderErrorReason::Other("Type error for `path`, string expected".to_owned())
+            })?
             .replace('\"', "");
 
         let current_section = rc
@@ -46,13 +52,17 @@ impl HelperDef for RenderToc {
             .evaluate(ctx, "@root/fold_enable")?
             .as_json()
             .as_bool()
-            .ok_or_else(|| RenderError::new("Type error for `fold_enable`, bool expected"))?;
+            .ok_or_else(|| {
+                RenderErrorReason::Other("Type error for `fold_enable`, bool expected".to_owned())
+            })?;
 
         let fold_level = rc
             .evaluate(ctx, "@root/fold_level")?
             .as_json()
             .as_u64()
-            .ok_or_else(|| RenderError::new("Type error for `fold_level`, u64 expected"))?;
+            .ok_or_else(|| {
+                RenderErrorReason::Other("Type error for `fold_level`, u64 expected".to_owned())
+            })?;
 
         out.write("<ol class=\"chapter\">")?;
 
