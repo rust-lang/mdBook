@@ -33,6 +33,7 @@
     - [MathJax Support](format/mathjax.md)
     - [mdBook-specific features](format/mdbook.md)
     - [Markdown](format/markdown.md)
+    - [Custom Playground](format/custom-playground.md)
 - [Continuous Integration](continuous-integration.md)
 - [For Developers](for_developers/README.md)
     - [Preprocessors](for_developers/preprocessors.md)
