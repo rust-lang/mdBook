@@ -667,6 +667,10 @@ fn make_data(
     if html_config.mathjax_support {
         data.insert("mathjax_support".to_owned(), json!(true));
     }
+    data.insert(
+        "mathjax_config".to_owned(),
+        json!(html_config.mathjax_config.clone().unwrap_or_default()),
+    );
 
     // This `matches!` checks for a non-empty file.
     if html_config.copy_fonts || matches!(theme.fonts_css.as_deref(), Some([_, ..])) {
