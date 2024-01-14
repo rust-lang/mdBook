@@ -935,8 +935,9 @@ fn add_playground_pre(
 /// Modifies all `<code>` blocks to convert "hidden" lines and to wrap them in
 /// a `<span class="boring">`.
 fn hide_lines(html: &str, code_config: &Code) -> String {
-    let language_regex = Regex::new(r"\blanguage-(\w+)\b").unwrap();
-    let hidelines_regex = Regex::new(r"\bhidelines=(\S+)").unwrap();
+    static LANGUAGE_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\blanguage-(\w+)\b").unwrap());
+    static HIDELINES_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\bhidelines=(\S+)").unwrap());
+
     CODE_BLOCK_RE
         .replace_all(html, |caps: &Captures<'_>| {
             let text = &caps[1];
@@ -951,12 +952,12 @@ fn hide_lines(html: &str, code_config: &Code) -> String {
                 )
             } else {
                 // First try to get the prefix from the code block
-                let hidelines_capture = hidelines_regex.captures(classes);
+                let hidelines_capture = HIDELINES_REGEX.captures(classes);
                 let hidelines_prefix = match &hidelines_capture {
                     Some(capture) => Some(&capture[1]),
                     None => {
                         // Then look up the prefix by language
-                        language_regex.captures(classes).and_then(|capture| {
+                        LANGUAGE_REGEX.captures(classes).and_then(|capture| {
                             code_config.hidelines.get(&capture[1]).map(|p| p.as_str())
                         })
                     }
