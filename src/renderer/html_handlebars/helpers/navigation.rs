@@ -103,7 +103,7 @@ fn find_chapter(
                     }
                 }
 
-                previous = Some(item.clone());
+                previous = Some(item);
             }
             _ => continue,
         }
