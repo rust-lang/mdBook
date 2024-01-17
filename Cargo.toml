@@ -28,7 +28,6 @@ log = "0.4.17"
 memchr = "2.5.0"
 opener = "0.6.1"
 pulldown-cmark = { version = "0.9.3", default-features = false }
-pathdiff = "0.2.1"
 regex = "1.8.1"
 serde = { version = "1.0.163", features = ["derive"] }
 serde_json = "1.0.96"
@@ -41,6 +40,7 @@ topological-sort = "0.2.2"
 notify = { version = "6.1.1", optional = true }
 notify-debouncer-mini = { version = "0.4.1", optional = true }
 ignore = { version = "0.4.20", optional = true }
+pathdiff = { version = "0.2.1", optional = true }
 
 # Serve feature
 futures-util = { version = "0.3.28", optional = true }
@@ -61,7 +61,7 @@ walkdir = "2.3.3"
 
 [features]
 default = ["watch", "serve", "search"]
-watch = ["dep:notify", "dep:notify-debouncer-mini", "dep:ignore"]
+watch = ["dep:notify", "dep:notify-debouncer-mini", "dep:ignore", "dep:pathdiff"]
 serve = ["dep:futures-util", "dep:tokio", "dep:warp"]
 search = ["dep:elasticlunr-rs", "dep:ammonia"]
 
