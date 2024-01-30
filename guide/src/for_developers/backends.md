@@ -287,7 +287,7 @@ like this:
 +             if cfg.deny_odds && num_words % 2 == 1 {
 +               eprintln!("{} has an odd number of words!", ch.name);
 +               process::exit(1);
-              }
++             }
           }
       }
   }
