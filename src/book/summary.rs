@@ -4,6 +4,8 @@ use memchr::{self, Memchr};
 use pulldown_cmark::{self, Event, HeadingLevel, Tag};
 use serde::{Deserialize, Serialize};
 use std::fmt::{self, Display, Formatter};
+use std::fs::File;
+use std::io::Read;
 use std::iter::FromIterator;
 use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
@@ -502,6 +504,29 @@ impl<'a> SummaryParser<'a> {
                     );
 
                     link.number = Some(number);
+                    if link.name == "" {
+                        let mut chapter_content = String::new();
+                        let fname = format!("./src/{}", href.to_string());
+                        File::open(&fname)
+                            .with_context(|| {
+                                format!("Couldn't open {:?} file while title is blank", fname)
+                            })?
+                            .read_to_string(&mut chapter_content)?;
+                        let parser = pulldown_cmark::Parser::new(&chapter_content);
+                        let mut found_h1 = false;
+                        for event in parser {
+                            match event {
+                                Event::Start(Tag::Heading(HeadingLevel::H1, ..)) => found_h1 = true,
+                                Event::Text(text) => {
+                                    if found_h1 {
+                                        link.name = text.into_string();
+                                        break;
+                                    }
+                                }
+                                _ => (),
+                            }
+                        }
+                    }
 
                     return Ok(SummaryItem::Link(link));
                 }

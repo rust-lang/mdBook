@@ -22,7 +22,7 @@
   - [Tables](individual/table.md)
   - [Tasks](individual/task.md)
   - [Strikethrough](individual/strikethrough.md)
-  - [Mixed](individual/mixed.md)
+  - [](individual/mixed.md)
 - [Languages](languages/README.md)
   - [Syntax Highlight](languages/highlight.md)
 - [Rust Specific](rust/README.md)
