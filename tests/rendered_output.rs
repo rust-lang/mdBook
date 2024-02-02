@@ -966,5 +966,5 @@ fn custom_header_attributes() {
         r##"<h2 id="heading-with-classes" class="class1 class2"><a class="header" href="#heading-with-classes">Heading with classes</a></h2>"##,
         r##"<h2 id="both" class="class1 class2"><a class="header" href="#both">Heading with id and classes</a></h2>"##,
     ];
-    assert_contains_strings(&contents, summary_strings);
+    assert_contains_strings(contents, summary_strings);
 }

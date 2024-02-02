@@ -797,7 +797,7 @@ fn build_header_links(html: &str) -> String {
 
             // Ignore .menu-title because now it's getting detected by the regex.
             if let Some(classes) = caps.get(3) {
-                for class in classes.as_str().split(" ") {
+                for class in classes.as_str().split(' ') {
                     if IGNORE_CLASS.contains(&class) {
                         return caps[0].to_string();
                     }
