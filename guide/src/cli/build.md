@@ -7,8 +7,8 @@ mdbook build
 ```
 
 It will try to parse your `SUMMARY.md` file to understand the structure of your
-book and fetch the corresponding files. Note that files mentioned in `SUMMARY.md`
-but not present will be created.
+book and fetch the corresponding files. Note that this will also create files
+mentioned in `SUMMARY.md` which are not yet present.
 
 The rendered output will maintain the same directory structure as the source for
 convenience. Large books will therefore remain structured when rendered.
