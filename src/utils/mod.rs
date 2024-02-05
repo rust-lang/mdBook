@@ -6,7 +6,7 @@ pub(crate) mod toml_ext;
 use crate::errors::Error;
 use log::error;
 use once_cell::sync::Lazy;
-use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, Options, Parser, Tag};
+use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, Options, Parser, Tag, TagEnd};
 use regex::Regex;
 
 use std::borrow::Cow;
@@ -161,13 +161,30 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
     }
 
     match event {
-        Event::Start(Tag::Link(link_type, dest, title)) => {
-            Event::Start(Tag::Link(link_type, fix(dest, path), title))
-        }
-        Event::Start(Tag::Image(link_type, dest, title)) => {
-            Event::Start(Tag::Image(link_type, fix(dest, path), title))
-        }
+        Event::Start(Tag::Link {
+            link_type,
+            dest_url,
+            title,
+            id,
+        }) => Event::Start(Tag::Link {
+            link_type,
+            dest_url: fix(dest_url, path),
+            title,
+            id,
+        }),
+        Event::Start(Tag::Image {
+            link_type,
+            dest_url,
+            title,
+            id,
+        }) => Event::Start(Tag::Image {
+            link_type,
+            dest_url: fix(dest_url, path),
+            title,
+            id,
+        }),
         Event::Html(html) => Event::Html(fix_html(html, path)),
+        Event::InlineHtml(html) => Event::InlineHtml(fix_html(html, path)),
         _ => event,
     }
 }
@@ -177,7 +194,7 @@ pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
     render_markdown_with_path(text, curly_quotes, None)
 }
 
-pub fn new_cmark_parser(text: &str, curly_quotes: bool) -> Parser<'_, '_> {
+pub fn new_cmark_parser(text: &str, curly_quotes: bool) -> Parser<'_> {
     let mut opts = Options::empty();
     opts.insert(Options::ENABLE_TABLES);
     opts.insert(Options::ENABLE_FOOTNOTES);
@@ -212,7 +229,7 @@ fn wrap_tables(event: Event<'_>) -> (Option<Event<'_>>, Option<Event<'_>>) {
             Some(Event::Html(r#"<div class="table-wrapper">"#.into())),
             Some(event),
         ),
-        Event::End(Tag::Table(_)) => (Some(event), Some(Event::Html(r#"</div>"#.into()))),
+        Event::End(TagEnd::Table) => (Some(event), Some(Event::Html(r#"</div>"#.into()))),
         _ => (Some(event), None),
     }
 }

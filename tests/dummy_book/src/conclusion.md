@@ -18,3 +18,7 @@ css looks, like this {
 }
 */
 </style>
+
+Sneaky inline event <script>alert("inline");</script>.
+
+But regular <b>inline</b> is indexed.

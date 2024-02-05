@@ -66,10 +66,23 @@ fn add_doc(
     index: &mut Index,
     doc_urls: &mut Vec<String>,
     anchor_base: &str,
-    section_id: &Option<String>,
+    heading: &str,
+    id_counter: &mut HashMap<String, usize>,
+    section_id: &Option<CowStr<'_>>,
     items: &[&str],
 ) {
-    let url = if let Some(ref id) = *section_id {
+    // Either use the explicit section id the user specified, or generate one
+    // from the heading content.
+    let section_id = section_id.as_ref().map(|id| id.to_string()).or_else(|| {
+        if heading.is_empty() {
+            // In the case where a chapter has no heading, don't set a section id.
+            None
+        } else {
+            Some(utils::unique_id_from_content(heading, id_counter))
+        }
+    });
+
+    let url = if let Some(id) = section_id {
         Cow::Owned(format!("{}#{}", anchor_base, id))
     } else {
         Cow::Borrowed(anchor_base)
@@ -119,7 +132,7 @@ fn render_item(
     let mut id_counter = HashMap::new();
     while let Some(event) = p.next() {
         match event {
-            Event::Start(Tag::Heading(i, ..)) if i as u32 <= max_section_depth => {
+            Event::Start(Tag::Heading { level, id, .. }) if level as u32 <= max_section_depth => {
                 if !heading.is_empty() {
                     // Section finished, the next heading is following now
                     // Write the data to the index, and clear it for the next section
@@ -127,22 +140,21 @@ fn render_item(
                         index,
                         doc_urls,
                         &anchor_base,
+                        &heading,
+                        &mut id_counter,
                         &section_id,
                         &[&heading, &body, &breadcrumbs.join(" » ")],
                     );
-                    section_id = None;
                     heading.clear();
                     body.clear();
                     breadcrumbs.pop();
                 }
 
+                section_id = id;
                 in_heading = true;
             }
-            Event::End(Tag::Heading(i, id, _classes)) if i as u32 <= max_section_depth => {
+            Event::End(TagEnd::Heading(level)) if level as u32 <= max_section_depth => {
                 in_heading = false;
-                section_id = id
-                    .map(|id| id.to_string())
-                    .or_else(|| Some(utils::unique_id_from_content(&heading, &mut id_counter)));
                 breadcrumbs.push(heading.clone());
             }
             Event::Start(Tag::FootnoteDefinition(name)) => {
@@ -159,8 +171,18 @@ fn render_item(
                     html_block.push_str(html);
                     p.next();
                 }
-
                 body.push_str(&clean_html(&html_block));
+            }
+            Event::InlineHtml(html) => {
+                // This is not capable of cleaning inline tags like
+                // `foo <script>…</script>`. The `<script>` tags show up as
+                // individual InlineHtml events, and the content inside is
+                // just a regular Text event. There isn't a very good way to
+                // know how to collect all the content in-between. I'm not
+                // sure if this is easily fixable. It should be extremely
+                // rare, since script and style tags should almost always be
+                // blocks, and worse case you have some noise in the index.
+                body.push_str(&clean_html(&html));
             }
             Event::Start(_) | Event::End(_) | Event::Rule | Event::SoftBreak | Event::HardBreak => {
                 // Insert spaces where HTML output would usually separate text
@@ -188,18 +210,24 @@ fn render_item(
     }
 
     if !body.is_empty() || !heading.is_empty() {
-        if heading.is_empty() {
+        let title = if heading.is_empty() {
             if let Some(chapter) = breadcrumbs.first() {
-                heading = chapter.clone();
+                chapter
+            } else {
+                ""
             }
-        }
+        } else {
+            &heading
+        };
         // Make sure the last section is added to the index
         add_doc(
             index,
             doc_urls,
             &anchor_base,
+            &heading,
+            &mut id_counter,
             &section_id,
-            &[&heading, &body, &breadcrumbs.join(" » ")],
+            &[title, &body, &breadcrumbs.join(" » ")],
         );
     }
 
