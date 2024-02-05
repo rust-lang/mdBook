@@ -14,7 +14,7 @@ license = "MPL-2.0"
 readme = "README.md"
 repository = "https://github.com/rust-lang/mdBook"
 description = "Creates a book from markdown files"
-rust-version = "1.70"
+rust-version = "1.71"
 
 [dependencies]
 anyhow = "1.0.71"
@@ -22,7 +22,7 @@ chrono = { version = "0.4.24", default-features = false, features = ["clock"] }
 clap = { version = "4.3.12", features = ["cargo", "wrap_help"] }
 clap_complete = "4.3.2"
 once_cell = "1.17.1"
-env_logger = "0.10.0"
+env_logger = "0.11.1"
 handlebars = "5.0"
 log = "0.4.17"
 memchr = "2.5.0"
