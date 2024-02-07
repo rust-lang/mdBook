@@ -1,5 +1,29 @@
 # Changelog
 
+## mdBook 0.4.37
+[v0.4.36...v0.4.37](https://github.com/rust-lang/mdBook/compare/v0.4.36...v0.4.37)
+
+### Changed
+- ❗️ Updated the markdown parser. This brings in many changes to more closely follow the CommonMark spec. This may cause some small rendering changes. It is recommended to compare the output of the old and new version to check for changes. See <https://github.com/raphlinus/pulldown-cmark/releases/tag/v0.10.0> for more information.
+  [#2308](https://github.com/rust-lang/mdBook/pull/2308)
+- The warning about the legacy `src/theme` directory has been removed.
+  [#2263](https://github.com/rust-lang/mdBook/pull/2263)
+- Updated dependencies. MSRV raised to 1.71.0.
+  [#2283](https://github.com/rust-lang/mdBook/pull/2283)
+  [#2293](https://github.com/rust-lang/mdBook/pull/2293)
+  [#2297](https://github.com/rust-lang/mdBook/pull/2297)
+  [#2310](https://github.com/rust-lang/mdBook/pull/2310)
+  [#2309](https://github.com/rust-lang/mdBook/pull/2309)
+- Some internal performance/memory improvements.
+  [#2273](https://github.com/rust-lang/mdBook/pull/2273)
+  [#2290](https://github.com/rust-lang/mdBook/pull/2290)
+- Made the `pathdiff` dependency optional based on the `watch` feature.
+  [#2291](https://github.com/rust-lang/mdBook/pull/2291)
+
+### Fixed
+- The `s` shortcut key handler should not trigger when focus is in an HTML form.
+  [#2311](https://github.com/rust-lang/mdBook/pull/2311)
+
 ## mdBook 0.4.36
 [v0.4.35...v0.4.36](https://github.com/rust-lang/mdBook/compare/v0.4.35...v0.4.36)
 
