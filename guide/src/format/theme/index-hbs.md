@@ -79,7 +79,7 @@ var chapters = {{chapters}};
 
 ### 2. previous / next
 
-The previous and next helpers expose a `link` and `name` property to the
+The previous and next helpers expose a `link` and `title` property to the
 previous and next chapters.
 
 They are used like this
@@ -87,7 +87,7 @@ They are used like this
 ```handlebars
 {{#previous}}
     <a href="{{link}}" class="nav-chapters previous">
-        <i class="fa fa-angle-left"></i>
+        <i class="fa fa-angle-left"></i> {{title}}
     </a>
 {{/previous}}
 ```
