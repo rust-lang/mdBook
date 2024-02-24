@@ -18,7 +18,6 @@ use log::{debug, error, info, log_enabled, trace, warn};
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
-use std::string::ToString;
 use tempfile::Builder as TempFileBuilder;
 use toml::Value;
 use topological_sort::TopologicalSort;
@@ -605,7 +604,7 @@ fn preprocessor_should_run(
 mod tests {
     use super::*;
     use std::str::FromStr;
-    use toml::value::{Table, Value};
+    use toml::value::Table;
 
     #[test]
     fn config_defaults_to_html_renderer_if_empty() {

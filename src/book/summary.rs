@@ -4,7 +4,6 @@ use memchr::Memchr;
 use pulldown_cmark::{DefaultBrokenLinkCallback, Event, HeadingLevel, Tag, TagEnd};
 use serde::{Deserialize, Serialize};
 use std::fmt::{self, Display, Formatter};
-use std::iter::FromIterator;
 use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 

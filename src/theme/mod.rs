@@ -212,7 +212,6 @@ fn load_file_contents<P: AsRef<Path>>(filename: P, dest: &mut Vec<u8>) -> Result
 mod tests {
     use super::*;
     use std::fs;
-    use std::path::PathBuf;
     use tempfile::Builder as TempFileBuilder;
 
     #[test]

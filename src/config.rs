@@ -58,7 +58,7 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use toml::value::Table;
-use toml::{self, Value};
+use toml::Value;
 
 use crate::errors::*;
 use crate::utils::{self, toml_ext::TomlExt};
