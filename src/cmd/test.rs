@@ -1,7 +1,7 @@
 use super::command_prelude::*;
 use crate::get_book_dir;
 use clap::builder::NonEmptyStringValueParser;
-use clap::{Arg, ArgAction, ArgMatches, Command};
+use clap::ArgAction;
 use mdbook::errors::Result;
 use mdbook::MDBook;
 use std::path::PathBuf;

@@ -339,7 +339,6 @@ impl Display for Chapter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Write;
     use tempfile::{Builder as TempFileBuilder, TempDir};
 
     const DUMMY_SRC: &str = "
