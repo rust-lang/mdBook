@@ -41,6 +41,7 @@ notify = { version = "6.1.1", optional = true }
 notify-debouncer-mini = { version = "0.4.1", optional = true }
 ignore = { version = "0.4.20", optional = true }
 pathdiff = { version = "0.2.1", optional = true }
+walkdir = { version = "2.3.3", optional = true }
 
 # Serve feature
 futures-util = { version = "0.3.28", optional = true }
@@ -61,7 +62,7 @@ walkdir = "2.3.3"
 
 [features]
 default = ["watch", "serve", "search"]
-watch = ["dep:notify", "dep:notify-debouncer-mini", "dep:ignore", "dep:pathdiff"]
+watch = ["dep:notify", "dep:notify-debouncer-mini", "dep:ignore", "dep:pathdiff", "dep:walkdir"]
 serve = ["dep:futures-util", "dep:tokio", "dep:warp"]
 search = ["dep:elasticlunr-rs", "dep:ammonia"]
 
