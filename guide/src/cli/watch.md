@@ -27,6 +27,7 @@ book. Relative paths are interpreted relative to the book's root directory. If
 not specified it will default to the value of the `build.build-dir` key in
 `book.toml`, or to `./book`.
 
+{{#include arg-watcher.md}}
 
 #### Specify exclude patterns
 
