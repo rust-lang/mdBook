@@ -54,10 +54,13 @@ impl HtmlHandlebars {
                 .insert("git_repository_edit_url".to_owned(), json!(edit_url));
         }
 
-        let content = utils::render_markdown(&ch.content, ctx.html_config.curly_quotes);
+        let content = utils::render_markdown(&ch.content, ctx.html_config.smart_punctuation());
 
-        let fixed_content =
-            utils::render_markdown_with_path(&ch.content, ctx.html_config.curly_quotes, Some(path));
+        let fixed_content = utils::render_markdown_with_path(
+            &ch.content,
+            ctx.html_config.smart_punctuation(),
+            Some(path),
+        );
         if !ctx.is_index && ctx.html_config.print.page_break {
             // Add page break between chapters
             // See https://developer.mozilla.org/en-US/docs/Web/CSS/break-before and https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-before
@@ -164,7 +167,8 @@ impl HtmlHandlebars {
                     .to_string()
             }
         };
-        let html_content_404 = utils::render_markdown(&content_404, html_config.curly_quotes);
+        let html_content_404 =
+            utils::render_markdown(&content_404, html_config.smart_punctuation());
 
         let mut data_404 = data.clone();
         let base_url = if let Some(site_url) = &html_config.site_url {

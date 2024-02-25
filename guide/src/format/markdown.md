@@ -214,12 +214,12 @@ characters:
 So, no need to manually enter those Unicode characters!
 
 This feature is disabled by default.
-To enable it, see the [`output.html.curly-quotes`] config option.
+To enable it, see the [`output.html.smart-punctuation`] config option.
 
 [strikethrough]: https://github.github.com/gfm/#strikethrough-extension-
 [tables]: https://github.github.com/gfm/#tables-extension-
 [task list extension]: https://github.github.com/gfm/#task-list-items-extension-
-[`output.html.curly-quotes`]: configuration/renderers.md#html-renderer-options
+[`output.html.smart-punctuation`]: configuration/renderers.md#html-renderer-options
 
 ### Heading attributes
 
