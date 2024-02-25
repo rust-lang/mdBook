@@ -19,6 +19,23 @@ use once_cell::sync::Lazy;
 use regex::{Captures, Regex};
 use serde_json::json;
 
+use gray_matter::engine::YAML;
+use gray_matter::Matter;
+use serde::Deserialize;
+
+fn extract_frontmatter(content: &str) -> Option<&str> {
+    let start = content.find("---")? + 3; // Find the end of the first `---` + 3 to move past it
+    let end = content[start..].find("---")? + start; // Find the start of the closing `---`
+    Some(&content[start..end].trim())
+}
+
+#[derive(Deserialize, Debug)]
+struct FrontMatter {
+    title: String,
+    description: String,
+    featured_image_url: String,
+}
+
 #[derive(Default)]
 pub struct HtmlHandlebars;
 
@@ -54,7 +71,45 @@ impl HtmlHandlebars {
                 .insert("git_repository_edit_url".to_owned(), json!(edit_url));
         }
 
-        let content = utils::render_markdown(&ch.content, ctx.html_config.curly_quotes);
+        // Parse frontmatter and prepare content
+        let matter = Matter::<YAML>::new();
+        let parsed = matter.parse(&ch.content);
+        let (content, new_content) = if let Some(data) = parsed.data {
+            debug!("Parsed frontmatter: {:?}", &data);
+            let yaml_str = extract_frontmatter(&ch.content).unwrap_or_default();
+            let front_matter_result: Result<FrontMatter, serde_yaml::Error> =
+                serde_yaml::from_str(yaml_str);
+            // let front_matter_result: Result<FrontMatter, serde_yaml::Error> = serde_yaml::from_str(&ch.content);
+            match front_matter_result {
+                Ok(front_matter) => {
+                    ctx.data.insert("is_frontmatter".to_owned(), json!("true"));
+                    ctx.data
+                        .insert("og_title".to_owned(), json!(front_matter.title));
+                    ctx.data
+                        .insert("og_description".to_owned(), json!(front_matter.description));
+                    ctx.data.insert(
+                        "og_image_url".to_owned(),
+                        json!(front_matter.featured_image_url),
+                    );
+                }
+                Err(e) => {
+                    eprintln!("Frontmatter: Deserialization error: {:?}", e);
+                }
+            }
+
+            // Prepare new content without frontmatter for rendering
+            let new_content = parsed.content.trim_start();
+            (
+                utils::render_markdown(&new_content, ctx.html_config.curly_quotes),
+                Some(new_content),
+            )
+        } else {
+            // No frontmatter, use original content
+            (
+                utils::render_markdown(&ch.content, ctx.html_config.curly_quotes),
+                None,
+            )
+        };
 
         let fixed_content =
             utils::render_markdown_with_path(&ch.content, ctx.html_config.curly_quotes, Some(path));

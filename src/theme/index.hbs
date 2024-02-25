@@ -43,6 +43,33 @@
         <link rel="stylesheet" href="{{ path_to_root }}tomorrow-night.css">
         <link rel="stylesheet" href="{{ path_to_root }}ayu-highlight.css">
 
+        <!-- Open Graph Meta Tags for Social Media Exposure -->
+        {{#if is_frontmatter}}
+        <meta name="title" property="og:title" content="{{ og_title }}">
+        <meta name="description" property="og:description" content="{{ og_description }}">
+        <meta name="twitter:title" content="{{ og_title }}"/>
+        <meta name="twitter:description" content="{{ og_description }}"/>
+        <!-- <meta property="og:url" content="{{ base_url}}"> -->
+        {{else}}
+        <meta name="title" property="og:title" content="mdBook Documentation">
+        <meta name="description" property="og:description" content="Create book from markdown files. Like Gitbook but implemented in Rust">
+        <!-- <meta property="og:url" content="https://www.dedp.online"> -->
+        <meta name="twitter:title" content="mdBook Documentation"/>
+        <meta name="twitter:description" content="Create book from markdown files. Like Gitbook but implemented in Rust"/>
+        {{/if}}
+        {{#if og_image_url}}
+        <meta property="og:image" content="{{ og_image_url }}">
+        <meta name="twitter:image" content="{{ og_image_url }}"/>
+        {{else}}
+        <meta property="og:image" content="https://rust-lang.github.io/mdBook/favicon.png">
+        <meta name="twitter:image" content="https://rust-lang.github.io/mdBook/favicon.png"/>
+        {{/if}}
+
+        <meta name="author" content="mdBook">
+        <meta property="og:type" content="book">
+        <meta name="twitter:card" content="summary_large_image"/>
+        <meta name="twitter:creator" content="@rustlang"/>
+
         <!-- Custom theme stylesheets -->
         {{#each additional_css}}
         <link rel="stylesheet" href="{{ ../path_to_root }}{{ this }}">
