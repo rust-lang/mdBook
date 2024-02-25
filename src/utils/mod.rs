@@ -190,26 +190,30 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
 }
 
 /// Wrapper around the pulldown-cmark parser for rendering markdown to HTML.
-pub fn render_markdown(text: &str, curly_quotes: bool) -> String {
-    render_markdown_with_path(text, curly_quotes, None)
+pub fn render_markdown(text: &str, smart_punctuation: bool) -> String {
+    render_markdown_with_path(text, smart_punctuation, None)
 }
 
-pub fn new_cmark_parser(text: &str, curly_quotes: bool) -> Parser<'_> {
+pub fn new_cmark_parser(text: &str, smart_punctuation: bool) -> Parser<'_> {
     let mut opts = Options::empty();
     opts.insert(Options::ENABLE_TABLES);
     opts.insert(Options::ENABLE_FOOTNOTES);
     opts.insert(Options::ENABLE_STRIKETHROUGH);
     opts.insert(Options::ENABLE_TASKLISTS);
     opts.insert(Options::ENABLE_HEADING_ATTRIBUTES);
-    if curly_quotes {
+    if smart_punctuation {
         opts.insert(Options::ENABLE_SMART_PUNCTUATION);
     }
     Parser::new_ext(text, opts)
 }
 
-pub fn render_markdown_with_path(text: &str, curly_quotes: bool, path: Option<&Path>) -> String {
+pub fn render_markdown_with_path(
+    text: &str,
+    smart_punctuation: bool,
+    path: Option<&Path>,
+) -> String {
     let mut s = String::with_capacity(text.len() * 3 / 2);
-    let p = new_cmark_parser(text, curly_quotes);
+    let p = new_cmark_parser(text, smart_punctuation);
     let events = p
         .map(clean_codeblock_headers)
         .map(|event| adjust_links(event, path))
