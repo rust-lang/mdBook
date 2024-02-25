@@ -42,6 +42,15 @@ pub fn make_subcommand() -> Command {
                 .value_parser(NonEmptyStringValueParser::new())
                 .help("Port to use for HTTP connections"),
         )
+        .arg(
+            Arg::new("renderer")
+                .short('r')
+                .long("renderer")
+                .num_args(1)
+                .default_value("html")
+                .value_parser(NonEmptyStringValueParser::new())
+                .help("Renderer to serve the output of"),
+        )
         .arg_open()
 }
 
@@ -52,6 +61,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     let port = args.get_one::<String>("port").unwrap();
     let hostname = args.get_one::<String>("hostname").unwrap();
+    let renderer = args.get_one::<String>("renderer").unwrap();
     let open_browser = args.get_flag("open");
 
     let address = format!("{}:{}", hostname, port);
@@ -73,7 +83,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         .to_socket_addrs()?
         .next()
         .ok_or_else(|| anyhow::anyhow!("no address found for {}", address))?;
-    let build_dir = book.build_dir_for("html");
+    let build_dir = book.build_dir_for(renderer);
     let input_404 = book
         .config
         .get("output.html.input-404")
