@@ -24,7 +24,8 @@ use topological_sort::TopologicalSort;
 
 use crate::errors::*;
 use crate::preprocess::{
-    CmdPreprocessor, DrinkPreprocessor, IndexPreprocessor, LinkPreprocessor, Preprocessor, PreprocessorContext,
+    CmdPreprocessor, DrinkPreprocessor, IndexPreprocessor, LinkPreprocessor, Preprocessor,
+    PreprocessorContext,
 };
 use crate::renderer::{CmdRenderer, HtmlHandlebars, MarkdownRenderer, RenderContext, Renderer};
 use crate::utils;
