@@ -118,7 +118,7 @@ impl BookBuilder {
         File::create(drinks_txt)
             .with_context(|| "Couldn't create drinks.txt")?
             .write_all(&entry.as_bytes())
-            .with_context(|| "Unable to write config to drinks.txt")?;
+            .with_context(|| "Unable to write entry to drinks.txt")?;
         Ok(())
     }
 
