@@ -1,10 +1,12 @@
 //! Book preprocessing.
 
 pub use self::cmd::CmdPreprocessor;
+pub use self::drinks::DrinkPreprocessor;
 pub use self::index::IndexPreprocessor;
 pub use self::links::LinkPreprocessor;
 
 mod cmd;
+mod drinks;
 mod index;
 mod links;
 

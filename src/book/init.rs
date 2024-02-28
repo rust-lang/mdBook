@@ -83,6 +83,8 @@ impl BookBuilder {
 
         self.write_book_toml()?;
 
+        self.write_drinks_txt()?;
+
         match MDBook::load(&self.root) {
             Ok(book) => Ok(book),
             Err(e) => {
@@ -105,6 +107,18 @@ impl BookBuilder {
             .with_context(|| "Couldn't create book.toml")?
             .write_all(&cfg)
             .with_context(|| "Unable to write config to book.toml")?;
+        Ok(())
+    }
+
+    fn write_drinks_txt(&self) -> Result<()> {
+        debug!("Writing drinks.txt");
+        let drinks_txt = self.root.join("drinks.txt");
+        let entry = "hello: https://world.org";
+
+        File::create(drinks_txt)
+            .with_context(|| "Couldn't create drinks.txt")?
+            .write_all(&entry.as_bytes())
+            .with_context(|| "Unable to write config to drinks.txt")?;
         Ok(())
     }
 
