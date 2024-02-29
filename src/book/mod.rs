@@ -662,9 +662,10 @@ mod tests {
         let got = determine_preprocessors(&cfg);
 
         assert!(got.is_ok());
-        assert_eq!(got.as_ref().unwrap().len(), 2);
-        assert_eq!(got.as_ref().unwrap()[0].name(), "index");
-        assert_eq!(got.as_ref().unwrap()[1].name(), "links");
+        assert_eq!(got.as_ref().unwrap().len(), 3);
+        assert_eq!(got.as_ref().unwrap()[0].name(), "drinks");
+        assert_eq!(got.as_ref().unwrap()[1].name(), "index");
+        assert_eq!(got.as_ref().unwrap()[2].name(), "links");
     }
 
     #[test]

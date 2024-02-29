@@ -56,17 +56,19 @@ impl Preprocessor for DrinkPreprocessor {
     fn run(&self, ctx: &PreprocessorContext, mut book: Book) -> Result<Book> {
         let path = ctx.root.join("drinks.txt");
 
-        let drinks: Dict = {
-            let reader = BufReader::new(File::open(path).expect("Cannot open drinks dictionary"));
-            reader
-                .lines()
-                .filter_map(|l| {
-                    l.expect("Cannot read line in drinks dictionary")
-                        .split_once(SPLITTER)
-                        .map(|(name, value)| (name.trim().to_owned(), value.trim().to_owned()))
-                })
-                .collect::<HashMap<_, _>>()
-        };
+        if !path.exists() {
+            return Ok(book);
+        }
+
+        let reader = BufReader::new(File::open(path).expect("Cannot open drinks dictionary"));
+        let drinks: Dict = reader
+            .lines()
+            .filter_map(|l| {
+                l.expect("Cannot read line in drinks dictionary")
+                    .split_once(SPLITTER)
+                    .map(|(name, value)| (name.trim().to_owned(), value.trim().to_owned()))
+            })
+            .collect::<HashMap<_, _>>();
 
         book.for_each_mut(|section: &mut BookItem| {
             if let BookItem::Chapter(ref mut ch) = *section {
