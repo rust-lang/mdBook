@@ -18,6 +18,12 @@ assert!($TEST_STATUS);
 {{#include nested-test-with-anchors.rs:myanchor}}
 ```
 
+## Includes can be shifted
+
+```rust
+{{#shiftinclude +2:nested-test-with-anchors.rs:myanchor}}
+```
+
 ## Rustdoc include adds the rest of the file as hidden
 
 ```rust

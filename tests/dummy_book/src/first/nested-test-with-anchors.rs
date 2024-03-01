@@ -9,3 +9,11 @@ assert!(!$TEST_STATUS);
 // unique-string-for-anchor-test
 assert!($TEST_STATUS);
 // ANCHOR_END: myanchor
+
+pub mod indent {
+    // ANCHOR: indentedanchor
+    pub fn indented_function() {
+        // This extra indent remains
+    }
+    // ANCHOR_END: indentedanchor
+}

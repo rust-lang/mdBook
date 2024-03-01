@@ -211,6 +211,18 @@ This is the full file.
 
 Lines containing anchor patterns inside the included anchor are ignored.
 
+## Including a file but changing its indentation
+
+Sometimes it is useful to include a file or part of a file but with the indentation shifted,
+using the following syntax:
+
+```hbs
+\{{#shiftinclude -2:file.rs}}
+```
+
+A positive number for the shift will prepend spaces to all lines; a negative number will remove
+the corresponding number of characters from the beginning of each line.
+
 ## Including a file but initially hiding all except specified lines
 
 The `rustdoc_include` helper is for including code from external Rust files that contain complete
