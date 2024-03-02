@@ -10,16 +10,58 @@ pub enum Shift {
     None,
     Left(usize),
     Right(usize),
+    /// Strip leftmost whitespace that is common to all lines.
+    Auto,
 }
 
-fn shift_line(l: &str, shift: Shift) -> Cow<'_, str> {
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
+enum ExplicitShift {
+    None,
+    Left(usize),
+    Right(usize),
+}
+
+fn common_leading_ws(lines: &[String]) -> String {
+    let mut common_ws: Option<String> = None;
+    for line in lines {
+        if line.is_empty() {
+            // Don't include empty lines in the calculation.
+            continue;
+        }
+        let ws = line.chars().take_while(|c| c.is_whitespace());
+        if let Some(common) = common_ws {
+            common_ws = Some(
+                common
+                    .chars()
+                    .zip(ws)
+                    .take_while(|(a, b)| a == b)
+                    .map(|(a, _b)| a)
+                    .collect(),
+            );
+        } else {
+            common_ws = Some(ws.collect())
+        }
+    }
+    common_ws.unwrap_or_else(String::new)
+}
+
+fn calculate_shift(lines: &[String], shift: Shift) -> ExplicitShift {
     match shift {
-        Shift::None => Cow::Borrowed(l),
-        Shift::Right(shift) => {
+        Shift::None => ExplicitShift::None,
+        Shift::Left(l) => ExplicitShift::Left(l),
+        Shift::Right(r) => ExplicitShift::Right(r),
+        Shift::Auto => ExplicitShift::Left(common_leading_ws(lines).len()),
+    }
+}
+
+fn shift_line(l: &str, shift: ExplicitShift) -> Cow<'_, str> {
+    match shift {
+        ExplicitShift::None => Cow::Borrowed(l),
+        ExplicitShift::Right(shift) => {
             let indent = " ".repeat(shift);
             Cow::Owned(format!("{indent}{l}"))
         }
-        Shift::Left(skip) => {
+        ExplicitShift::Left(skip) => {
             if l.chars().take(skip).any(|c| !c.is_whitespace()) {
                 log::error!("left-shifting away non-whitespace");
             }
@@ -30,6 +72,7 @@ fn shift_line(l: &str, shift: Shift) -> Cow<'_, str> {
 }
 
 fn shift_lines(lines: &[String], shift: Shift) -> Vec<Cow<'_, str>> {
+    let shift = calculate_shift(lines, shift);
     lines.iter().map(|l| shift_line(l, shift)).collect()
 }
 
@@ -160,20 +203,44 @@ pub fn take_rustdoc_include_anchored_lines(s: &str, anchor: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        shift_line, take_anchored_lines, take_anchored_lines_with_shift, take_lines,
-        take_lines_with_shift, take_rustdoc_include_anchored_lines, take_rustdoc_include_lines,
-        Shift,
+        common_leading_ws, shift_line, take_anchored_lines, take_anchored_lines_with_shift,
+        take_lines, take_lines_with_shift, take_rustdoc_include_anchored_lines,
+        take_rustdoc_include_lines, ExplicitShift, Shift,
     };
+
+    #[test]
+    fn common_leading_ws_test() {
+        let tests = [
+            (["  line1", "    line2", "  line3"], "  "),
+            (["  line1", "    line2", "line3"], ""),
+            (["\t\tline1", "\t\t  line2", "\t\tline3"], "\t\t"),
+            (["\t line1", " \tline2", "  \t\tline3"], ""),
+        ];
+        for (lines, want) in tests {
+            let lines = lines.into_iter().map(|l| l.to_string()).collect::<Vec<_>>();
+            let got = common_leading_ws(&lines);
+            assert_eq!(got, want, "for input {lines:?}");
+        }
+    }
 
     #[test]
     fn shift_line_test() {
         let s = "    Line with 4 space intro";
-        assert_eq!(shift_line(s, Shift::None), s);
-        assert_eq!(shift_line(s, Shift::Left(4)), "Line with 4 space intro");
-        assert_eq!(shift_line(s, Shift::Left(2)), "  Line with 4 space intro");
-        assert_eq!(shift_line(s, Shift::Left(6)), "ne with 4 space intro");
+        assert_eq!(shift_line(s, ExplicitShift::None), s);
         assert_eq!(
-            shift_line(s, Shift::Right(2)),
+            shift_line(s, ExplicitShift::Left(4)),
+            "Line with 4 space intro"
+        );
+        assert_eq!(
+            shift_line(s, ExplicitShift::Left(2)),
+            "  Line with 4 space intro"
+        );
+        assert_eq!(
+            shift_line(s, ExplicitShift::Left(6)),
+            "ne with 4 space intro"
+        );
+        assert_eq!(
+            shift_line(s, ExplicitShift::Right(2)),
             "      Line with 4 space intro"
         );
     }
@@ -207,6 +274,10 @@ mod tests {
             take_lines_with_shift(s, 1..3, Shift::Right(2)),
             "    ipsum\n      dolor"
         );
+        assert_eq!(
+            take_lines_with_shift(s, 1..3, Shift::Auto),
+            "ipsum\n  dolor"
+        );
         assert_eq!(take_lines_with_shift(s, 3.., Shift::None), "  sit\n  amet");
         assert_eq!(
             take_lines_with_shift(s, 3.., Shift::Right(1)),
@@ -218,6 +289,10 @@ mod tests {
             "  Lorem\n  ipsum\n    dolor"
         );
         assert_eq!(
+            take_lines_with_shift(s, ..3, Shift::Auto),
+            "Lorem\nipsum\n  dolor"
+        );
+        assert_eq!(
             take_lines_with_shift(s, ..3, Shift::Right(4)),
             "      Lorem\n      ipsum\n        dolor"
         );
@@ -226,6 +301,10 @@ mod tests {
             "rem\nsum\ndolor"
         );
         assert_eq!(take_lines_with_shift(s, .., Shift::None), s);
+        assert_eq!(
+            take_lines_with_shift(s, .., Shift::Auto),
+            "Lorem\nipsum\n  dolor\nsit\namet"
+        );
         // corner cases
         assert_eq!(take_lines_with_shift(s, 4..3, Shift::None), "");
         assert_eq!(take_lines_with_shift(s, 4..3, Shift::Left(2)), "");
@@ -308,6 +387,10 @@ mod tests {
             "dolor\nsit\namet"
         );
         assert_eq!(
+            take_anchored_lines_with_shift(s, "test", Shift::Auto),
+            "dolor\nsit\namet"
+        );
+        assert_eq!(
             take_anchored_lines_with_shift(s, "something", Shift::None),
             ""
         );
@@ -334,6 +417,10 @@ mod tests {
             "dolor\nsit\namet"
         );
         assert_eq!(
+            take_anchored_lines_with_shift(s, "test", Shift::Auto),
+            "dolor\nsit\namet"
+        );
+        assert_eq!(
             take_anchored_lines_with_shift(s, "test", Shift::Left(4)),
             "lor\nt\net"
         );
@@ -346,18 +433,22 @@ mod tests {
             ""
         );
 
-        let s = "  Lorem\n  ANCHOR: test\n  ipsum\n  ANCHOR: test\n  dolor\n  sit\n  amet\n  ANCHOR_END: test\n  lorem\n  ipsum";
+        let s = "  Lorem\n  ANCHOR: test\n  ipsum\n  ANCHOR: test\n  dolor\n\n\n  sit\n  amet\n  ANCHOR_END: test\n  lorem\n  ipsum";
         assert_eq!(
             take_anchored_lines_with_shift(s, "test", Shift::None),
-            "  ipsum\n  dolor\n  sit\n  amet"
+            "  ipsum\n  dolor\n\n\n  sit\n  amet"
         );
         assert_eq!(
             take_anchored_lines_with_shift(s, "test", Shift::Right(2)),
-            "    ipsum\n    dolor\n    sit\n    amet"
+            "    ipsum\n    dolor\n  \n  \n    sit\n    amet"
         );
         assert_eq!(
             take_anchored_lines_with_shift(s, "test", Shift::Left(2)),
-            "ipsum\ndolor\nsit\namet"
+            "ipsum\ndolor\n\n\nsit\namet"
+        );
+        assert_eq!(
+            take_anchored_lines_with_shift(s, "test", Shift::Auto),
+            "ipsum\ndolor\n\n\nsit\namet"
         );
         assert_eq!(
             take_anchored_lines_with_shift(s, "something", Shift::None),
@@ -369,6 +460,10 @@ mod tests {
         );
         assert_eq!(
             take_anchored_lines_with_shift(s, "something", Shift::Left(2)),
+            ""
+        );
+        assert_eq!(
+            take_anchored_lines_with_shift(s, "something", Shift::Auto),
             ""
         );
 

@@ -176,7 +176,7 @@
           "title": 7
         },
         "7": {
-          "body": 21,
+          "body": 27,
           "breadcrumbs": 6,
           "title": 2
         },
@@ -361,7 +361,7 @@
           "title": "Anchors include the part of a file between special comments"
         },
         "7": {
-          "body": "// The next line will cause a `rendered_output` test to fail if the anchor feature is broken in // such a way that the content between anchors isn't included. // unique-string-for-anchor-test assert!(true);",
+          "body": "// The next line will cause a `rendered_output` test to fail if the anchor feature is broken in // such a way that the content between anchors isn't included. // unique-string-for-anchor-test assert!(true); pub fn indented_function() { // This extra indent remains\n}",
           "breadcrumbs": "First Chapter » Nested Chapter » Includes can be shifted",
           "id": "7",
           "title": "Includes can be shifted"
@@ -1347,6 +1347,22 @@
                 },
                 "df": 0,
                 "docs": {}
+              },
+              "t": {
+                "df": 0,
+                "docs": {},
+                "r": {
+                  "a": {
+                    "df": 1,
+                    "docs": {
+                      "7": {
+                        "tf": 1.0
+                      }
+                    }
+                  },
+                  "df": 0,
+                  "docs": {}
+                }
               }
             }
           },
@@ -1456,9 +1472,12 @@
               }
             },
             "n": {
-              "df": 3,
+              "df": 4,
               "docs": {
                 "27": {
+                  "tf": 1.0
+                },
+                "7": {
                   "tf": 1.0
                 },
                 "8": {
@@ -1778,6 +1797,54 @@
                 "e": {
                   "df": 0,
                   "docs": {},
+                  "n": {
+                    "df": 0,
+                    "docs": {},
+                    "t": {
+                      "df": 1,
+                      "docs": {
+                        "7": {
+                          "tf": 1.0
+                        }
+                      },
+                      "e": {
+                        "d": {
+                          "_": {
+                            "df": 0,
+                            "docs": {},
+                            "f": {
+                              "df": 0,
+                              "docs": {},
+                              "u": {
+                                "df": 0,
+                                "docs": {},
+                                "n": {
+                                  "c": {
+                                    "df": 0,
+                                    "docs": {},
+                                    "t": {
+                                      "df": 1,
+                                      "docs": {
+                                        "7": {
+                                          "tf": 1.0
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "df": 0,
+                                  "docs": {}
+                                }
+                              }
+                            }
+                          },
+                          "df": 0,
+                          "docs": {}
+                        },
+                        "df": 0,
+                        "docs": {}
+                      }
+                    }
+                  },
                   "x": {
                     "df": 2,
                     "docs": {
@@ -2444,6 +2511,14 @@
               }
             },
             "u": {
+              "b": {
+                "df": 1,
+                "docs": {
+                  "7": {
+                    "tf": 1.0
+                  }
+                }
+              },
               "df": 0,
               "docs": {},
               "t": {
@@ -2513,6 +2588,26 @@
                     "tf": 1.0
                   }
                 }
+              },
+              "m": {
+                "a": {
+                  "df": 0,
+                  "docs": {},
+                  "i": {
+                    "df": 0,
+                    "docs": {},
+                    "n": {
+                      "df": 1,
+                      "docs": {
+                        "7": {
+                          "tf": 1.0
+                        }
+                      }
+                    }
+                  }
+                },
+                "df": 0,
+                "docs": {}
               },
               "n": {
                 "d": {
@@ -4461,6 +4556,22 @@
                 },
                 "df": 0,
                 "docs": {}
+              },
+              "t": {
+                "df": 0,
+                "docs": {},
+                "r": {
+                  "a": {
+                    "df": 1,
+                    "docs": {
+                      "7": {
+                        "tf": 1.0
+                      }
+                    }
+                  },
+                  "df": 0,
+                  "docs": {}
+                }
               }
             }
           },
@@ -4633,9 +4744,12 @@
               }
             },
             "n": {
-              "df": 3,
+              "df": 4,
               "docs": {
                 "27": {
+                  "tf": 1.0
+                },
+                "7": {
                   "tf": 1.0
                 },
                 "8": {
@@ -4958,6 +5072,54 @@
                 "e": {
                   "df": 0,
                   "docs": {},
+                  "n": {
+                    "df": 0,
+                    "docs": {},
+                    "t": {
+                      "df": 1,
+                      "docs": {
+                        "7": {
+                          "tf": 1.0
+                        }
+                      },
+                      "e": {
+                        "d": {
+                          "_": {
+                            "df": 0,
+                            "docs": {},
+                            "f": {
+                              "df": 0,
+                              "docs": {},
+                              "u": {
+                                "df": 0,
+                                "docs": {},
+                                "n": {
+                                  "c": {
+                                    "df": 0,
+                                    "docs": {},
+                                    "t": {
+                                      "df": 1,
+                                      "docs": {
+                                        "7": {
+                                          "tf": 1.0
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "df": 0,
+                                  "docs": {}
+                                }
+                              }
+                            }
+                          },
+                          "df": 0,
+                          "docs": {}
+                        },
+                        "df": 0,
+                        "docs": {}
+                      }
+                    }
+                  },
                   "x": {
                     "df": 2,
                     "docs": {
@@ -5657,6 +5819,14 @@
               }
             },
             "u": {
+              "b": {
+                "df": 1,
+                "docs": {
+                  "7": {
+                    "tf": 1.0
+                  }
+                }
+              },
               "df": 0,
               "docs": {},
               "t": {
@@ -5729,6 +5899,26 @@
                     "tf": 1.4142135623730951
                   }
                 }
+              },
+              "m": {
+                "a": {
+                  "df": 0,
+                  "docs": {},
+                  "i": {
+                    "df": 0,
+                    "docs": {},
+                    "n": {
+                      "df": 1,
+                      "docs": {
+                        "7": {
+                          "tf": 1.0
+                        }
+                      }
+                    }
+                  }
+                },
+                "df": 0,
+                "docs": {}
               },
               "n": {
                 "d": {

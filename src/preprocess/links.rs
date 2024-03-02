@@ -266,14 +266,18 @@ fn parse_include_path(path: &str) -> LinkType<'static> {
 fn parse_shift_include_path(params: &str) -> LinkType<'static> {
     let mut params = params.splitn(2, ':');
     let param0 = params.next().unwrap();
-    let shift: isize = param0.parse().unwrap_or_else(|e| {
-        log::error!("failed to parse shift amount: {e:?}");
-        0
-    });
-    let shift = match shift.cmp(&0) {
-        Ordering::Greater => Shift::Right(shift as usize),
-        Ordering::Equal => Shift::None,
-        Ordering::Less => Shift::Left(-shift as usize),
+    let shift = if param0 == "auto" {
+        Shift::Auto
+    } else {
+        let shift: isize = param0.parse().unwrap_or_else(|e| {
+            log::error!("failed to parse shift amount: {e:?}");
+            0
+        });
+        match shift.cmp(&0) {
+            Ordering::Greater => Shift::Right(shift as usize),
+            Ordering::Equal => Shift::None,
+            Ordering::Less => Shift::Left(-shift as usize),
+        }
     };
     let mut parts = params.next().unwrap().splitn(2, ':');
 
@@ -1003,6 +1007,19 @@ mod tests {
     }
 
     #[test]
+    fn parse_with_auto_shifted_anchor() {
+        let link_type = parse_shift_include_path("auto:arbitrary:some-anchor");
+        assert_eq!(
+            link_type,
+            LinkType::Include(
+                PathBuf::from("arbitrary"),
+                RangeOrAnchor::Anchor("some-anchor".to_string()),
+                Shift::Auto
+            )
+        );
+    }
+
+    #[test]
     fn parse_with_more_than_three_colons_ignores_everything_after_third_colon() {
         let link_type = parse_include_path("arbitrary:5:10:17:anything:");
         assert_eq!(
@@ -1050,6 +1067,19 @@ mod tests {
                 PathBuf::from("arbitrary"),
                 RangeOrAnchor::Range(LineRange::from(4..10)),
                 Shift::Right(2)
+            )
+        );
+    }
+
+    #[test]
+    fn parse_start_and_end_auto_shifted_range() {
+        let link_type = parse_shift_include_path("auto:arbitrary:5:10");
+        assert_eq!(
+            link_type,
+            LinkType::Include(
+                PathBuf::from("arbitrary"),
+                RangeOrAnchor::Range(LineRange::from(4..10)),
+                Shift::Auto
             )
         );
     }

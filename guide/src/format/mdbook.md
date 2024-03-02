@@ -223,6 +223,12 @@ using the following syntax:
 A positive number for the shift will prepend spaces to all lines; a negative number will remove
 the corresponding number of characters from the beginning of each line.
 
+The special `auto` value will remove common initial whitespace from all lines.
+
+```hbs
+\{{#shiftinclude auto:file.rs:indentedanchor}}
+```
+
 ## Including a file but initially hiding all except specified lines
 
 The `rustdoc_include` helper is for including code from external Rust files that contain complete
