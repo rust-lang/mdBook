@@ -414,6 +414,9 @@ pub struct BookConfig {
     /// The direction of text in the book: Left-to-right (LTR) or Right-to-left (RTL).
     /// When not specified, the text direction is derived from [`BookConfig::language`].
     pub text_direction: Option<TextDirection>,
+    /// Indicates if the book is part of a bookshelf
+    /// and how to return to the index of the shelf if so
+    pub shelf_url: Option<String>,
 }
 
 impl Default for BookConfig {
@@ -426,6 +429,7 @@ impl Default for BookConfig {
             multilingual: false,
             language: Some(String::from("en")),
             text_direction: None,
+            shelf_url: None,
         }
     }
 }
@@ -633,6 +637,43 @@ impl HtmlConfig {
     }
 }
 
+#[derive(Deserialize, Debug)]
+/// Represents a book in a shelf
+pub struct ShelfBook {
+    /// Path to filesystem local book
+    /// or if git_url is specified, the path inside the git
+    /// where the book is located
+    pub path: Option<String>,
+    /// git url
+    pub git_url: Option<String>,
+    /// reference to checkout in git
+    /// This can be a branch, commit or tag
+    pub git_ref: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+/// Represents a shelf that contains a lot of books
+pub struct ShelfConfig {
+    /// The books in the shelf
+    #[serde(alias = "book")]
+    pub books: Vec<ShelfBook>,
+    /// this will be prepeneded to the backreference url
+    /// Say you want to publish to www.example.com/mydocs
+    /// you would set this to "mydocs" and then find your bookshelf at
+    /// www.example.com/mydocs/bookshelf/shelf/book/index.html
+    #[serde(default = "default_shelf_root_url")]
+    pub root_url_prefix: String,
+    /// Name of the shelf
+    #[serde(default = "default_shelf_title")]
+    pub title: String,
+}
+fn default_shelf_root_url() -> String {
+    "".to_owned()
+}
+fn default_shelf_title() -> String {
+    "Bookshelf".to_owned()
+}
+
 /// Configuration for how to render the print icon, print.html, and print.css.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
@@ -837,6 +878,7 @@ mod tests {
             src: PathBuf::from("source"),
             language: Some(String::from("ja")),
             text_direction: None,
+            shelf_url: None,
         };
         let build_should_be = BuildConfig {
             build_dir: PathBuf::from("outputs"),

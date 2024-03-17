@@ -34,6 +34,7 @@ fn main() {
         #[cfg(feature = "serve")]
         Some(("serve", sub_matches)) => cmd::serve::execute(sub_matches),
         Some(("test", sub_matches)) => cmd::test::execute(sub_matches),
+        Some(("shelf", sub_matches)) => cmd::shelf::execute(sub_matches),
         Some(("completions", sub_matches)) => (|| {
             let shell = sub_matches
                 .get_one::<Shell>("shell")
@@ -84,7 +85,8 @@ fn create_clap_command() -> Command {
                         .value_name("SHELL")
                         .required(true),
                 ),
-        );
+        )
+        .subcommand(cmd::shelf::make_subcommand());
 
     #[cfg(feature = "watch")]
     let app = app.subcommand(cmd::watch::make_subcommand());

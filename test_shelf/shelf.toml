@@ -1,0 +1,10 @@
+[[book]]
+git_url = "https://github.com/Coi-l/mdBook.git"
+git_ref = "shelf"
+path = "guide"
+
+[[book]]
+git_url = "https://github.com/rust-lang/book.git"
+
+[[book]]
+path = "../test_book"

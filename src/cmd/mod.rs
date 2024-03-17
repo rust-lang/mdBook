@@ -6,6 +6,7 @@ pub mod command_prelude;
 pub mod init;
 #[cfg(feature = "serve")]
 pub mod serve;
+pub mod shelf;
 pub mod test;
 #[cfg(feature = "watch")]
 pub mod watch;
