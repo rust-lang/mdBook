@@ -664,7 +664,7 @@ pub struct Fold {
     pub level: u8,
 }
 
-/// Configuration for tweaking how the the HTML renderer handles the playground.
+/// Configuration for tweaking how the HTML renderer handles the playground.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Playground {
