@@ -56,10 +56,11 @@ impl HtmlHandlebars {
 
         let content = utils::render_markdown(&ch.content, ctx.html_config.smart_punctuation());
 
-        let fixed_content = utils::render_markdown_with_path(
+        let printed_item = utils::render_markdown_with_path_and_redirects(
             &ch.content,
             ctx.html_config.smart_punctuation(),
             Some(path),
+            &ctx.html_config.redirect,
         );
         if !ctx.is_index && ctx.html_config.print.page_break {
             // Add page break between chapters
@@ -68,7 +69,25 @@ impl HtmlHandlebars {
             print_content
                 .push_str(r#"<div style="break-before: page; page-break-before: always;"></div>"#);
         }
-        print_content.push_str(&fixed_content);
+        let print_page_id = {
+            let mut base = path.display().to_string();
+            if base.ends_with(".md") {
+                base.truncate(base.len() - 3);
+            }
+            &base
+                .replace("/", "-")
+                .replace("\\", "-")
+                .to_ascii_lowercase()
+        };
+
+        // We have to build header links in advance so that we can know the ranges
+        // for the headers in one page.
+        // Insert a dummy div to make sure that we can locate the specific page.
+        print_content.push_str(&(format!(r#"<div id="{print_page_id}"></div>"#)));
+        print_content.push_str(&build_header_links(
+            &build_print_element_id(&printed_item, &print_page_id),
+            Some(print_page_id),
+        ));
 
         // Update the context with data for this file
         let ctx_path = path
@@ -214,7 +233,23 @@ impl HtmlHandlebars {
         code_config: &Code,
         edition: Option<RustEdition>,
     ) -> String {
-        let rendered = build_header_links(&rendered);
+        let rendered = build_header_links(&rendered, None);
+        let rendered = self.post_process_common(rendered, &playground_config, code_config, edition);
+
+        rendered
+    }
+
+    /// Applies some post-processing to the HTML to apply some adjustments.
+    ///
+    /// This common function is used for both normal chapters (via
+    /// `post_process`) and the combined print page.
+    fn post_process_common(
+        &self,
+        rendered: String,
+        playground_config: &Playground,
+        code_config: &Code,
+        edition: Option<RustEdition>,
+    ) -> String {
         let rendered = fix_code_blocks(&rendered);
         let rendered = add_playground_pre(&rendered, playground_config, edition);
         let rendered = hide_lines(&rendered, code_config);
@@ -572,7 +607,7 @@ impl Renderer for HtmlHandlebars {
             debug!("Render template");
             let rendered = handlebars.render("index", &data)?;
 
-            let rendered = self.post_process(
+            let rendered = self.post_process_common(
                 rendered,
                 &html_config.playground,
                 &html_config.code,
@@ -783,9 +818,34 @@ fn make_data(
     Ok(data)
 }
 
+/// Go through the rendered print page HTML,
+/// add path id prefix to all the elements id as well as footnote links.
+fn build_print_element_id(html: &str, print_page_id: &str) -> String {
+    static ALL_ID: Lazy<Regex> = Lazy::new(|| Regex::new(r#"(<[^>]*?id=")([^"]+?)""#).unwrap());
+    static FOOTNOTE_ID: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(
+            r##"(<sup [^>]*?class="footnote-reference"[^>]*?>[^<]*?<a [^>]*?href="#)([^"]+?)""##,
+        )
+        .unwrap()
+    });
+
+    let temp_html = ALL_ID.replace_all(html, |caps: &Captures<'_>| {
+        format!("{}{}-{}\"", &caps[1], print_page_id, &caps[2])
+    });
+
+    FOOTNOTE_ID
+        .replace_all(&temp_html, |caps: &Captures<'_>| {
+            format!("{}{}-{}\"", &caps[1], print_page_id, &caps[2])
+        })
+        .into_owned()
+}
+
 /// Goes through the rendered HTML, making sure all header tags have
 /// an anchor respectively so people can link to sections directly.
-fn build_header_links(html: &str) -> String {
+///
+/// `print_page_id` should be set to the print page ID prefix when adjusting the
+/// print page.
+fn build_header_links(html: &str, print_page_id: Option<&str>) -> String {
     static BUILD_HEADER_LINKS: Lazy<Regex> = Lazy::new(|| {
         Regex::new(r#"<h(\d)(?: id="([^"]+)")?(?: class="([^"]+)")?>(.*?)</h\d>"#).unwrap()
     });
@@ -814,6 +874,7 @@ fn build_header_links(html: &str) -> String {
                 caps.get(2).map(|x| x.as_str().to_string()),
                 caps.get(3).map(|x| x.as_str().to_string()),
                 &mut id_counter,
+                print_page_id,
             )
         })
         .into_owned()
@@ -821,14 +882,26 @@ fn build_header_links(html: &str) -> String {
 
 /// Insert a sinle link into a header, making sure each link gets its own
 /// unique ID by appending an auto-incremented number (if necessary).
+///
+/// For `print.html`, we will add a path id prefix.
 fn insert_link_into_header(
     level: usize,
     content: &str,
     id: Option<String>,
     classes: Option<String>,
     id_counter: &mut HashMap<String, usize>,
+    print_page_id: Option<&str>,
 ) -> String {
-    let id = id.unwrap_or_else(|| utils::unique_id_from_content(content, id_counter));
+    let id = if let Some(print_page_id) = print_page_id {
+        let content_id = {
+            #[allow(deprecated)]
+            utils::id_from_content(content)
+        };
+        let with_prefix = format!("{} {}", print_page_id, content_id);
+        id.unwrap_or_else(|| utils::unique_id_from_content(&with_prefix, id_counter))
+    } else {
+        id.unwrap_or_else(|| utils::unique_id_from_content(content, id_counter))
+    };
     let classes = classes
         .map(|s| format!(" class=\"{s}\""))
         .unwrap_or_default();
@@ -1117,7 +1190,7 @@ mod tests {
         ];
 
         for (src, should_be) in inputs {
-            let got = build_header_links(src);
+            let got = build_header_links(src, None);
             assert_eq!(got, should_be);
         }
     }
