@@ -693,7 +693,7 @@ impl Default for Playground {
     }
 }
 
-/// Configuration for tweaking how the the HTML renderer handles code blocks.
+/// Configuration for tweaking how the HTML renderer handles code blocks.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Code {
