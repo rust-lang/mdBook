@@ -538,6 +538,8 @@ pub struct HtmlConfig {
     pub google_analytics: Option<String>,
     /// Additional CSS stylesheets to include in the rendered page's `<head>`.
     pub additional_css: Vec<PathBuf>,
+    /// Additional theme.
+    pub additional_theme: Vec<PathBuf>,
     /// Additional JS scripts to include at the bottom of the rendered page's
     /// `<body>`.
     pub additional_js: Vec<PathBuf>,
@@ -598,6 +600,7 @@ impl Default for HtmlConfig {
             copy_fonts: true,
             google_analytics: None,
             additional_css: Vec::new(),
+            additional_theme: Vec::new(),
             additional_js: Vec::new(),
             fold: Fold::default(),
             playground: Playground::default(),
@@ -809,6 +812,7 @@ mod tests {
         smart-punctuation = true
         google-analytics = "123456"
         additional-css = ["./foo/bar/baz.css"]
+        additional-theme = ["foobar"]
         git-repository-url = "https://foo.com/"
         git-repository-icon = "fa-code-fork"
 
@@ -856,6 +860,7 @@ mod tests {
             smart_punctuation: true,
             google_analytics: Some(String::from("123456")),
             additional_css: vec![PathBuf::from("./foo/bar/baz.css")],
+            additional_theme: vec![PathBuf::from("foobar")],
             theme: Some(PathBuf::from("./themedir")),
             default_theme: Some(String::from("rust")),
             playground: playground_should_be,
@@ -1036,6 +1041,7 @@ mod tests {
         smart-punctuation = true
         google-analytics = "123456"
         additional-css = ["custom.css", "custom2.css"]
+        additional-theme = ["barfoo"]
         additional-js = ["custom.js"]
         "#;
 
@@ -1061,6 +1067,7 @@ mod tests {
             smart_punctuation: true,
             google_analytics: Some(String::from("123456")),
             additional_css: vec![PathBuf::from("custom.css"), PathBuf::from("custom2.css")],
+            additional_theme: vec![PathBuf::from("barfoo")],
             additional_js: vec![PathBuf::from("custom.js")],
             ..Default::default()
         };
