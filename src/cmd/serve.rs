@@ -6,7 +6,6 @@ use clap::builder::NonEmptyStringValueParser;
 use futures_util::sink::SinkExt;
 use futures_util::StreamExt;
 use mdbook::errors::*;
-use mdbook::utils;
 use mdbook::utils::fs::get_404_output_file;
 use mdbook::MDBook;
 use std::net::{SocketAddr, ToSocketAddrs};
@@ -43,12 +42,13 @@ pub fn make_subcommand() -> Command {
                 .help("Port to use for HTTP connections"),
         )
         .arg_open()
+        .arg_watcher()
 }
 
 // Serve command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
-    let mut book = MDBook::load(book_dir)?;
+    let mut book = MDBook::load(&book_dir)?;
 
     let port = args.get_one::<String>("port").unwrap();
     let hostname = args.get_one::<String>("hostname").unwrap();
@@ -97,23 +97,12 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     }
 
     #[cfg(feature = "watch")]
-    watch::trigger_on_change(&book, move |paths, book_dir| {
-        info!("Files changed: {:?}", paths);
-        info!("Building book...");
-
-        // FIXME: This area is really ugly because we need to re-set livereload :(
-        let result = MDBook::load(book_dir).and_then(|mut b| {
-            update_config(&mut b);
-            b.build()
-        });
-
-        if let Err(e) = result {
-            error!("Unable to load the book");
-            utils::log_backtrace(&e);
-        } else {
+    {
+        let watcher = watch::WatcherKind::from_str(args.get_one::<String>("watcher").unwrap());
+        watch::rebuild_on_change(watcher, &book_dir, &update_config, &move || {
             let _ = tx.send(Message::text("reload"));
-        }
-    });
+        });
+    }
 
     let _ = thread_handle.join();
 
