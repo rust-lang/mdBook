@@ -99,6 +99,7 @@ default-theme = "light"
 preferred-dark-theme = "navy"
 smart-punctuation = true
 mathjax-support = false
+mathjax-config = "tex-mml-chtml"
 copy-fonts = true
 additional-css = ["custom.css", "custom2.css"]
 additional-js = ["custom.js"]
@@ -128,6 +129,8 @@ The following configuration options are available:
 - **curly-quotes:** Deprecated alias for `smart-punctuation`.
 - **mathjax-support:** Adds support for [MathJax](../mathjax.md). Defaults to
   `false`.
+- **mathjax-config:** The [configuration file](https://docs.mathjax.org/en/latest/web/components/combined.html)
+  used by MathJax. Defaults to `tex-mml-chtml`.
 - **copy-fonts:** (**Deprecated**) If `true` (the default), mdBook uses its built-in fonts which are copied to the output directory.
   If `false`, the built-in fonts will not be used.
   This option is deprecated. If you want to define your own custom fonts,
