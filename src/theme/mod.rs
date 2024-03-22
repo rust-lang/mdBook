@@ -1,5 +1,7 @@
 #![allow(missing_docs)]
 
+pub mod mathjax;
+
 pub mod playground_editor;
 
 pub mod fonts;

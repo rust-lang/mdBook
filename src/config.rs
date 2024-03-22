@@ -532,6 +532,8 @@ pub struct HtmlConfig {
     pub curly_quotes: bool,
     /// Should mathjax be enabled?
     pub mathjax_support: bool,
+    /// MathJax settings.
+    pub mathjax: MathJax,
     /// Whether to fonts.css and respective font files to the output directory.
     pub copy_fonts: bool,
     /// An optional google analytics code.
@@ -595,6 +597,7 @@ impl Default for HtmlConfig {
             smart_punctuation: false,
             curly_quotes: false,
             mathjax_support: false,
+            mathjax: MathJax::default(),
             copy_fonts: true,
             google_analytics: None,
             additional_css: Vec::new(),
@@ -630,6 +633,28 @@ impl HtmlConfig {
     /// Returns `true` if smart punctuation is enabled.
     pub fn smart_punctuation(&self) -> bool {
         self.smart_punctuation || self.curly_quotes
+    }
+}
+
+/// Configuration for how to use MathJax.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct MathJax {
+    /// Whether MathJax support is enabled.
+    pub enable: bool,
+    /// Source. Default: "/mathjax/es5".
+    pub source: Option<String>,
+    /// Configuration. Default: "tex-mml-chtml".
+    pub config: Option<String>,
+}
+
+impl Default for MathJax {
+    fn default() -> Self {
+        Self {
+            enable: false,
+            source: None,
+            config: None,
+        }
     }
 }
 

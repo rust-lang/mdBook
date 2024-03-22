@@ -51,6 +51,28 @@
         {{#if mathjax_support}}
         <!-- MathJax -->
         <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        {{else}}
+        {{#if mathjax_enable}}
+        <!-- MathJax -->
+        {{#if is_print}}
+        <script>
+        MathJax = {
+            startup: {
+                pageReady: () => {
+                    return MathJax.startup.defaultPageReady().then(() => {
+                        window.setTimeout(window.print, 100);
+                    });
+                }
+            }
+        };
+        </script>
+        {{/if}}
+        {{#if mathjax_root}}
+        <script id="MathJax-script" async src="{{ path_to_root }}{{ mathjax_source }}/{{ mathjax_config }}.js"></script>
+        {{else}}
+        <script id="MathJax-script" async src="{{ mathjax_source }}/{{ mathjax_config }}.js"></script>
+        {{/if}}
+        {{/if}}
         {{/if}}
     </head>
     <body class="sidebar-visible no-js">
@@ -333,11 +355,14 @@
         });
         </script>
         {{else}}
+        {{#if mathjax_enable}}
+        {{else}}
         <script>
         window.addEventListener('load', function() {
             window.setTimeout(window.print, 100);
         });
         </script>
+        {{/if}}
         {{/if}}
         {{/if}}
 
