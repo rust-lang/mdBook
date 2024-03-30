@@ -3,14 +3,14 @@ use std::io::Read;
 use std::io::Write;
 use std::path::PathBuf;
 
+use mdbook::config::BookshelfConfig;
 use resolve_path::PathResolveExt;
 
 use super::command_prelude::*;
-use mdbook::config::ShelfConfig;
 use mdbook::errors::Result;
 use mdbook::MDBook;
 
-const SHELF_DIR: &str = "shelf";
+const INDEX_BOOK_DIR: &str = "index";
 const REPOS_DIR: &str = "repositories";
 const INDEX_MD_FILE: &str = "index.md";
 const INDEX_HTML_FILE: &str = "index.html";
@@ -28,7 +28,7 @@ struct BookContext {
     authors: String,
 }
 
-struct ShelfContext {
+struct BookshelfContext {
     book_dir: PathBuf,
     source_dir: PathBuf,
     url_prefix: String,
@@ -37,7 +37,7 @@ struct ShelfContext {
     summary_file_name: PathBuf,
 }
 
-fn update_index(
+fn update_index_with_book(
     index_file: &mut File,
     summary_file: &mut File,
     shelf_source: &PathBuf,
@@ -46,7 +46,7 @@ fn update_index(
 ) -> Result<()> {
     // Create post in index file
     let book_link = format!(
-        "## [{title}](<{prefix}/{BOOKSHELF_DIR}/{BOOKS_DIR}/{title}/{INDEX_HTML_FILE}>)",
+        "### [{title}](<{prefix}/{BOOKSHELF_DIR}/{BOOKS_DIR}/{title}/{INDEX_HTML_FILE}>)",
         title = context.title,
         prefix = root_prefix
     );
@@ -73,7 +73,6 @@ fn update_index(
         "- [{title}](./{file_name})",
         title = context.title
     )?;
-    writeln!(summary_file)?;
 
     Ok(())
 }
@@ -101,8 +100,8 @@ fn process_book(path: &str, books_dir: &PathBuf, shelf_url: &str) -> Result<Book
     Ok(book_context)
 }
 
-fn setup_shelf_book(config: &ShelfConfig) -> Result<ShelfContext> {
-    let book_dir = format!("{BOOKSHELF_DIR}/{SHELF_DIR}");
+fn setup_bookshelf_book(config: &BookshelfConfig) -> Result<BookshelfContext> {
+    let book_dir = format!("{BOOKSHELF_DIR}/{INDEX_BOOK_DIR}");
     let book = MDBook::init(&book_dir).build()?;
     let build_dir = book.config.build.build_dir.to_str().unwrap_or_default();
     let url_prefix = if !config.root_url_prefix.is_empty() {
@@ -120,7 +119,7 @@ fn setup_shelf_book(config: &ShelfConfig) -> Result<ShelfContext> {
     let mut summary_file_name = book.source_dir();
     summary_file_name.push(SUMMARY_MD_FILE);
 
-    Ok(ShelfContext {
+    Ok(BookshelfContext {
         book_dir: book_dir.into(),
         source_dir: book.source_dir(),
         url_prefix,
@@ -131,57 +130,78 @@ fn setup_shelf_book(config: &ShelfConfig) -> Result<ShelfContext> {
 }
 
 pub fn execute(_args: &ArgMatches) -> Result<()> {
-    let mut file = File::open("shelf.toml")?;
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)?;
-    let shelf_config: ShelfConfig = toml::from_str(&contents)?;
-
+    // Make sure everything is clean
     let _ = std::fs::remove_dir_all(BOOKSHELF_DIR);
     let _ = std::fs::remove_dir_all(REPOS_DIR);
 
-    let shelf_context = setup_shelf_book(&shelf_config)?;
+    let mut file = File::open("shelf.toml")?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)?;
+    let bookshelf_config: BookshelfConfig = toml::from_str(&contents)?;
+    let shelf_context = setup_bookshelf_book(&bookshelf_config)?;
 
     let mut index_file = File::create(shelf_context.index_file_name).unwrap();
-    writeln!(index_file, "# {title}", title = shelf_config.title)?;
+    writeln!(index_file, "# {title}", title = bookshelf_config.title)?;
     writeln!(index_file)?;
 
     let mut summary_file = File::create(shelf_context.summary_file_name).unwrap();
     writeln!(summary_file, "# Summary")?;
     writeln!(
         summary_file,
-        "- [{title}](./{INDEX_MD_FILE})",
-        title = shelf_config.title
+        "[{title}](./{INDEX_MD_FILE})",
+        title = bookshelf_config.title
     )?;
 
     let mut books_build_dir = std::env::current_dir()?;
     books_build_dir.push(BOOKSHELF_DIR);
     books_build_dir.push(BOOKS_DIR);
+    let books_build_dir = books_build_dir;
 
-    for sb in &shelf_config.books {
-        let book_path = if let Some(url) = &sb.git_url {
-            prepare_git(sb, url)
-        } else if let Some(path) = &sb.path {
-            Some(path.to_owned())
-        } else {
-            warn!("Neither path or git specified. Invalid book");
-            None
-        };
+    let shelves = if let Some(shelves) = bookshelf_config.shelves {
+        shelves
+    } else if let Some(shelf) = bookshelf_config.shelf_config {
+        vec![shelf]
+    } else {
+        error!("No shelves or default shelf found in config");
+        Vec::new()
+    };
 
-        if let Some(path) = book_path {
-            let update_context = process_book(&path, &books_build_dir, &shelf_context.url)?;
-            let _ = update_index(
-                &mut index_file,
-                &mut summary_file,
-                &shelf_context.source_dir,
-                &shelf_context.url_prefix,
-                update_context,
-            )?;
+    for shelf_config in shelves {
+        let _ = start_shelf(&mut index_file, &mut summary_file, &shelf_config.title);
+        for sb in &shelf_config.books {
+            let book_path = if let Some(url) = &sb.git_url {
+                prepare_git(sb, url)
+            } else if let Some(path) = &sb.path {
+                Some(path.to_owned())
+            } else {
+                warn!("Neither path or git specified. Invalid book");
+                None
+            };
+
+            if let Some(path) = book_path {
+                let update_context = process_book(&path, &books_build_dir, &shelf_context.url)?;
+                let _ = update_index_with_book(
+                    &mut index_file,
+                    &mut summary_file,
+                    &shelf_context.source_dir,
+                    &shelf_context.url_prefix,
+                    update_context,
+                )?;
+            }
         }
     }
 
     let shelf = MDBook::load(&shelf_context.book_dir)?;
     shelf.build()?;
 
+    Ok(())
+}
+
+fn start_shelf(index_file: &mut File, summary_file: &mut File, title: &str) -> Result<()> {
+    writeln!(summary_file, "# {title}")?;
+    writeln!(summary_file)?;
+
+    writeln!(index_file, "## {title}")?;
     Ok(())
 }
 
@@ -252,20 +272,20 @@ git_url = "secondurl"
 [[book]]
 path = "../test_book"
 "#;
-    let cfg: ShelfConfig = toml::from_str(&toml).unwrap();
+    let cfg: BookshelfConfig = toml::from_str(&toml).unwrap();
     assert_eq!(cfg.root_url_prefix, "myprefix");
 
-    let book = &cfg.books[0];
+    let book = &cfg.shelf_config.clone().unwrap().books[0];
     assert_eq!(book.git_url.clone().unwrap(), "firsturl");
     assert_eq!(book.git_ref.clone().unwrap(), "shelf");
     assert_eq!(book.path.clone().unwrap(), "guide");
 
-    let book = &cfg.books[1];
+    let book = &cfg.shelf_config.clone().unwrap().books[1];
     assert_eq!(book.git_url.clone().unwrap(), "secondurl");
     assert!(book.git_ref.is_none());
     assert!(book.path.is_none());
 
-    let book = &cfg.books[2];
+    let book = &cfg.shelf_config.clone().unwrap().books[2];
     assert_eq!(book.path.clone().unwrap(), "../test_book");
 }
 
@@ -275,7 +295,7 @@ fn test_config_defaults() {
 [[book]]
 path = "../test_book"
     "#;
-    let cfg: ShelfConfig = toml::from_str(&toml).unwrap();
+    let cfg: BookshelfConfig = toml::from_str(&toml).unwrap();
     assert_eq!(cfg.root_url_prefix, "".to_owned());
-    assert_eq!(cfg.title, "Bookshelf".to_owned());
+    assert_eq!(cfg.title, "Overview".to_owned());
 }

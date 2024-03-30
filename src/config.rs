@@ -637,7 +637,7 @@ impl HtmlConfig {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 /// Represents a book in a shelf
 pub struct ShelfBook {
     /// Path to filesystem local book
@@ -651,27 +651,44 @@ pub struct ShelfBook {
     pub git_ref: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 /// Represents a shelf that contains a lot of books
 pub struct ShelfConfig {
     /// The books in the shelf
     #[serde(alias = "book")]
     pub books: Vec<ShelfBook>,
+    /// Name of the shelf
+    #[serde(default = "default_shelf_title")]
+    pub title: String,
+}
+fn default_shelf_title() -> String {
+    "Bookshelf".to_owned()
+}
+
+#[derive(Deserialize, Debug)]
+///
+pub struct BookshelfConfig {
+    ///
+    #[serde(alias = "shelf")]
+    pub shelves: Option<Vec<ShelfConfig>>,
+    ///
+    #[serde(flatten)]
+    pub shelf_config: Option<ShelfConfig>,
     /// this will be prepeneded to the backreference url
     /// Say you want to publish to www.example.com/mydocs
     /// you would set this to "mydocs" and then find your bookshelf at
     /// www.example.com/mydocs/bookshelf/shelf/book/index.html
     #[serde(default = "default_shelf_root_url")]
     pub root_url_prefix: String,
-    /// Name of the shelf
-    #[serde(default = "default_shelf_title")]
+    ///
+    #[serde(default = "default_bookshelf_title")]
     pub title: String,
 }
 fn default_shelf_root_url() -> String {
     "".to_owned()
 }
-fn default_shelf_title() -> String {
-    "Bookshelf".to_owned()
+fn default_bookshelf_title() -> String {
+    "Overview".to_owned()
 }
 
 /// Configuration for how to render the print icon, print.html, and print.css.
