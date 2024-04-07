@@ -127,7 +127,7 @@ async fn serve(
             "/",
             ServeDir::new(build_dir.clone())
                 // The fallback route for 404 errors:
-                .fallback(ServeFile::new(build_dir.join(file_404))),
+                .not_found_service(ServeFile::new(build_dir.join(file_404))),
         )
         .with_state(reload_tx);
 
