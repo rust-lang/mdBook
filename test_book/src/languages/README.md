@@ -28,6 +28,7 @@ This Currently contains following languages
 - markdown
 - nginx
 - nim
+- nix
 - objectivec
 - perl
 - php
