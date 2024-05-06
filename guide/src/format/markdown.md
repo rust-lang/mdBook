@@ -54,8 +54,8 @@ Lists can be unordered or ordered. Ordered lists will order automatically:
 * butter
 
 1. carrots
-1. celery
-1. radishes
+2. celery
+3. radishes
 ```
 
 * milk
@@ -63,8 +63,8 @@ Lists can be unordered or ordered. Ordered lists will order automatically:
 * butter
 
 1. carrots
-1. celery
-1. radishes
+2. celery
+3. radishes
 
 ## Links
 
