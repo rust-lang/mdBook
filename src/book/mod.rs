@@ -15,8 +15,9 @@ pub use self::init::BookBuilder;
 pub use self::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
 
 use log::{debug, error, info, log_enabled, trace, warn};
-use std::io::Write;
-use std::path::PathBuf;
+use std::ffi::OsString;
+use std::io::{IsTerminal, Write};
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::Builder as TempFileBuilder;
 use toml::Value;
@@ -264,10 +265,18 @@ impl MDBook {
     /// Run `rustdoc` tests on a specific chapter of the book, linking against the provided libraries.
     /// If `chapter` is `None`, all tests will be run.
     pub fn test_chapter(&mut self, library_paths: Vec<&str>, chapter: Option<&str>) -> Result<()> {
-        let library_args: Vec<&str> = (0..library_paths.len())
-            .map(|_| "-L")
-            .zip(library_paths.into_iter())
-            .flat_map(|x| vec![x.0, x.1])
+        let cwd = std::env::current_dir()?;
+        let library_args: Vec<OsString> = library_paths
+            .into_iter()
+            .flat_map(|path| {
+                let path = Path::new(path);
+                let path = if path.is_relative() {
+                    cwd.join(path).into_os_string()
+                } else {
+                    path.to_path_buf().into_os_string()
+                };
+                [OsString::from("-L"), path]
+            })
             .collect();
 
         let temp_dir = TempFileBuilder::new().prefix("mdbook-").tempdir()?;
@@ -294,6 +303,7 @@ impl MDBook {
             .collect();
         let (book, _) = self.preprocess_book(&TestRenderer)?;
 
+        let color_output = std::io::stderr().is_terminal();
         let mut failed = false;
         for item in book.iter() {
             if let BookItem::Chapter(ref ch) = *item {
@@ -319,7 +329,10 @@ impl MDBook {
                 tmpf.write_all(ch.content.as_bytes())?;
 
                 let mut cmd = Command::new("rustdoc");
-                cmd.arg(&path).arg("--test").args(&library_args);
+                cmd.current_dir(temp_dir.path())
+                    .arg(&chapter_path)
+                    .arg("--test")
+                    .args(&library_args);
 
                 if let Some(edition) = self.config.rust.edition {
                     match edition {
@@ -333,6 +346,10 @@ impl MDBook {
                             cmd.args(["--edition", "2021"]);
                         }
                     }
+                }
+
+                if color_output {
+                    cmd.args(&["--color", "always"]);
                 }
 
                 debug!("running {:?}", cmd);
