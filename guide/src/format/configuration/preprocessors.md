@@ -26,13 +26,13 @@ For information on how to create a new preprocessor, see the [Preprocessors for 
 ## Custom Preprocessor Configuration
 
 Preprocessors can be added by including a `preprocessor` table in `book.toml` with the name of the preprocessor.
-For example, if you have a preprocessor called `mdbook-example`, then you can include it with:
+For example, if you have a preprocessor called `preprocessor-example`, then you can include it with:
 
 ```toml
 [preprocessor.example]
 ```
 
-With this table, mdBook will execute the `mdbook-example` preprocessor.
+With this table, mdBook will execute the `preprocessor-example` preprocessor.
 
 This table can include additional key-value pairs that are specific to the preprocessor.
 For example, if our example preprocessor needed some extra configuration options:
