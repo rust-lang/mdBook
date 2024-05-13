@@ -3,7 +3,7 @@ use crate::config::{BookConfig, Code, Config, HtmlConfig, Playground, RustEditio
 use crate::errors::*;
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
-use crate::theme::{self, playground_editor, Theme};
+use crate::theme::{self, mathjax, playground_editor, Theme};
 use crate::utils;
 
 use std::borrow::Cow;
@@ -347,6 +347,13 @@ impl HtmlHandlebars {
             )?;
         }
 
+        if html_config.mathjax.enable && html_config.mathjax.source.is_none() {
+            let mathjax_destination = destination.join("mathjax");
+            for (file_name, contents) in mathjax::FILES.iter() {
+                write_file(&mathjax_destination, file_name, contents)?;
+            }
+        }
+
         Ok(())
     }
 
@@ -670,6 +677,27 @@ fn make_data(
 
     if html_config.mathjax_support {
         data.insert("mathjax_support".to_owned(), json!(true));
+    } else if html_config.mathjax.enable {
+        data.insert("mathjax_enable".to_owned(), json!(true));
+        if let Some(ref source) = html_config.mathjax.source {
+            if source.starts_with("/") {
+                data.insert("mathjax_root".to_owned(), json!(true));
+                let (_, relative_source) = source.split_at(1);
+                data.insert("mathjax_source".to_owned(), json!(relative_source));
+            } else {
+                data.insert("mathjax_source".to_owned(), json!(source));
+            }
+        } else {
+            data.insert("mathjax_root".to_owned(), json!(true));
+            data.insert("mathjax_source".to_owned(), json!("mathjax/es5"));
+        }
+        data.insert(
+            "mathjax_config".to_owned(),
+            match html_config.mathjax.config {
+                Some(ref config) => json!(config),
+                None => json!("tex-mml-chtml"),
+            },
+        );
     }
 
     // This `matches!` checks for a non-empty file.
