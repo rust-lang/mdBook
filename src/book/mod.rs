@@ -330,7 +330,7 @@ impl MDBook {
 
                 let mut cmd = Command::new("rustdoc");
                 cmd.current_dir(temp_dir.path())
-                    .arg(&chapter_path)
+                    .arg(chapter_path)
                     .arg("--test")
                     .args(&library_args);
 
@@ -349,7 +349,7 @@ impl MDBook {
                 }
 
                 if color_output {
-                    cmd.args(&["--color", "always"]);
+                    cmd.args(["--color", "always"]);
                 }
 
                 debug!("running {:?}", cmd);
