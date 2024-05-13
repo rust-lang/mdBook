@@ -112,16 +112,16 @@ panic!("oops!");
 These are particularly important when using [`mdbook test`] to test Rust examples.
 These use the same attributes as [rustdoc attributes], with a few additions:
 
-* `editable` — Enables the [editor].
-* `noplayground` — Removes the play button, but will still be tested.
-* `mdbook-runnable` — Forces the play button to be displayed.
+* `editable` --- Enables the [editor].
+* `noplayground` --- Removes the play button, but will still be tested.
+* `mdbook-runnable` --- Forces the play button to be displayed.
   This is intended to be combined with the `ignore` attribute for examples that should not be tested, but you want to allow the reader to run.
-* `ignore` — Will not be tested and no play button is shown, but it is still highlighted as Rust syntax.
-* `should_panic` — When executed, it should produce a panic.
-* `no_run` — The code is compiled when tested, but it is not run.
+* `ignore` --- Will not be tested and no play button is shown, but it is still highlighted as Rust syntax.
+* `should_panic` --- When executed, it should produce a panic.
+* `no_run` --- The code is compiled when tested, but it is not run.
   The play button is also not shown.
-* `compile_fail` — The code should fail to compile.
-* `edition2015`, `edition2018`, `edition2021` — Forces the use of a specific Rust edition.
+* `compile_fail` --- The code should fail to compile.
+* `edition2015`, `edition2018`, `edition2021` --- Forces the use of a specific Rust edition.
   See [`rust.edition`] to set this globally.
 
 [`mdbook test`]: ../cli/test.md

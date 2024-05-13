@@ -32,12 +32,12 @@ The `serve` hostname defaults to `localhost`, and the port defaults to `3000`. E
 mdbook serve path/to/book -p 8000 -n 127.0.0.1 
 ```
 
-#### --open
+#### `--open`
 
 When you use the `--open` (`-o`) flag, mdbook will open the book in your
 default web browser after starting the server.
 
-#### --dest-dir
+#### `--dest-dir`
 
 The `--dest-dir` (`-d`) option allows you to change the output directory for the
 book. Relative paths are interpreted relative to the book's root directory. If

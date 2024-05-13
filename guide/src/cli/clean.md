@@ -16,7 +16,7 @@ root instead of the current working directory.
 mdbook clean path/to/book
 ```
 
-#### --dest-dir
+#### `--dest-dir`
 
 The `--dest-dir` (`-d`) option allows you to override the book's output
 directory, which will be deleted by this command. Relative paths are interpreted

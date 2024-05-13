@@ -51,13 +51,13 @@ cargo install mdbook --no-default-features --features search --vers "^0.4" --loc
 
 This includes several recommended options:
 
-* `--no-default-features` — Disables features like the HTTP server used by `mdbook serve` that is likely not needed on CI.
+* `--no-default-features` --- Disables features like the HTTP server used by `mdbook serve` that is likely not needed on CI.
   This will speed up the build time significantly.
-* `--features search` — Disabling default features means you should then manually enable features that you want, such as the built-in [search] capability.
-* `--vers "^0.4"` — This will install the most recent version of the `0.4` series.
+* `--features search` --- Disabling default features means you should then manually enable features that you want, such as the built-in [search] capability.
+* `--vers "^0.4"` --- This will install the most recent version of the `0.4` series.
   However, versions after like `0.5.0` won't be installed, as they may break your build.
   Cargo will automatically upgrade mdBook if you have an older version already installed.
-* `--locked` — This will use the dependencies that were used when mdBook was released.
+* `--locked` --- This will use the dependencies that were used when mdBook was released.
   Without `--locked`, it will use the latest version of all dependencies, which may include some fixes since the last release, but may also (rarely) cause build problems.
 
 You will likely want to investigate caching options, as building mdBook can be somewhat slow.
