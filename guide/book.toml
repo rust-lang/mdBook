@@ -8,6 +8,7 @@ language = "en"
 edition = "2018"
 
 [output.html]
+smart-punctuation = true
 mathjax-support = true
 site-url = "/mdBook/"
 git-repository-url = "https://github.com/rust-lang/mdBook/tree/master/guide"

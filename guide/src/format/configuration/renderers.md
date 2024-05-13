@@ -4,9 +4,9 @@ Renderers (also called "backends") are responsible for creating the output of th
 
 The following backends are built-in:
 
-* [`html`](#html-renderer-options) — This renders the book to HTML.
+* [`html`](#html-renderer-options) --- This renders the book to HTML.
   This is enabled by default if no other `[output]` tables are defined in `book.toml`.
-* [`markdown`](#markdown-renderer) — This outputs the book as markdown after running the preprocessors.
+* [`markdown`](#markdown-renderer) --- This outputs the book as markdown after running the preprocessors.
   This is useful for debugging preprocessors.
 
 The community has developed several backends.
@@ -120,7 +120,7 @@ The following configuration options are available:
   'Change Theme' dropdown. Defaults to `light`.
 - **preferred-dark-theme:** The default dark theme. This theme will be used if
   the browser requests the dark version of the site via the
-  ['prefers-color-scheme'](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)
+  [`prefers-color-scheme`](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)
   CSS media query. Defaults to `navy`.
 - **smart-punctuation:** Converts quotes to curly quotes, `...` to `…`, `--` to en-dash, and `---` to em-dash.
   See [Smart Punctuation].

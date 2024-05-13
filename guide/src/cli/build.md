@@ -22,12 +22,12 @@ root instead of the current working directory.
 mdbook build path/to/book
 ```
 
-#### --open
+#### `--open`
 
 When you use the `--open` (`-o`) flag, mdbook will open the rendered book in
 your default web browser after building it.
 
-#### --dest-dir
+#### `--dest-dir`
 
 The `--dest-dir` (`-d`) option allows you to change the output directory for the
 book. Relative paths are interpreted relative to the book's root directory. If
