@@ -694,19 +694,11 @@ impl Default for Playground {
 }
 
 /// Configuration for tweaking how the HTML renderer handles code blocks.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Code {
     /// A prefix string to hide lines per language (one or more chars).
     pub hidelines: HashMap<String, String>,
-}
-
-impl Default for Code {
-    fn default() -> Code {
-        Code {
-            hidelines: HashMap::new(),
-        }
-    }
 }
 
 /// Configuration of the search functionality of the HTML renderer.

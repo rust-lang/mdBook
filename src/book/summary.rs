@@ -583,11 +583,13 @@ fn get_last_link(links: &mut [SummaryItem]) -> Result<(usize, &mut Link)> {
         .iter_mut()
         .enumerate()
         .filter_map(|(i, item)| item.maybe_link_mut().map(|l| (i, l)))
-        .rev()
-        .next()
-        .ok_or_else(||
-            anyhow::anyhow!("Unable to get last link because the list of SummaryItems doesn't contain any Links")
+        .next_back()
+        .ok_or_else(|| {
+            anyhow::anyhow!(
+                "Unable to get last link because the list of SummaryItems \
+                 doesn't contain any Links"
             )
+        })
 }
 
 /// Removes the styling from a list of Markdown events and returns just the

@@ -99,7 +99,7 @@ fn filter_ignored_files(ignore: Gitignore, paths: &[PathBuf]) -> Vec<PathBuf> {
         .iter()
         .filter(|path| {
             let relative_path =
-                diff_paths(&path, &ignore_root).expect("One of the paths should be an absolute");
+                diff_paths(path, &ignore_root).expect("One of the paths should be an absolute");
             !ignore
                 .matched_path_or_any_parents(&relative_path, relative_path.is_dir())
                 .is_ignore()
