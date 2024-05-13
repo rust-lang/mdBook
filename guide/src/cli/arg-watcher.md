@@ -1,4 +1,4 @@
-#### --watcher
+#### `--watcher`
 
 There are different backends used to determine when a file has changed.
 
