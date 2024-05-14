@@ -1,0 +1,40 @@
+# Set this to your full path /<full_path>/test_shelf to be able to browse locally
+# or any kind of prefix that you need for when you publish online
+root_url_prefix = ""
+
+# Use the first setup here for the simple one shelf structure
+
+[[book]]
+git_url = "https://github.com/Coi-l/mdBook.git"
+git_ref = "shelf"
+path = "guide"
+
+[[book]]
+git_url = "https://github.com/rust-lang/book.git"
+
+[[book]]
+path = "../test_book"
+
+##########################
+##########################
+##########################
+# Uncomment the setup below to test the multishelf/category structure
+
+
+# title = "Documentation"
+
+# [[shelf]]
+# title = "MdBook"
+
+# [[shelf.book]]
+# git_url = "https://github.com/Coi-l/mdBook.git"
+# git_ref = "shelf"
+# path = "guide"
+
+# [[shelf.book]]
+# path = "../test_book"
+
+# [[shelf]]
+# title = "Rust"
+# [[shelf.book]]
+# git_url = "https://github.com/rust-lang/book.git"

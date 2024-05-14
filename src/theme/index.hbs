@@ -184,6 +184,11 @@
                             <i id="git-edit-button" class="fa fa-edit"></i>
                         </a>
                         {{/if}}
+                        {{#if book_shelf_url}}
+                        <a href="{{ book_shelf_url }}" title="Return to bookshelf" aria-label="Return to bookshelf">
+                            <i id="shelf-button" class="fa fa-book"></i>
+                        </a>
+                        {{/if}}
 
                     </div>
                 </div>

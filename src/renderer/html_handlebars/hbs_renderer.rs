@@ -715,6 +715,10 @@ fn make_data(
     data.insert("fold_enable".to_owned(), json!(html_config.fold.enable));
     data.insert("fold_level".to_owned(), json!(html_config.fold.level));
 
+    if let Some(shelf_url) = &config.book.shelf_url {
+        data.insert("book_shelf_url".to_owned(), json!(shelf_url));
+    }
+
     let search = html_config.search.clone();
     if cfg!(feature = "search") {
         let search = search.unwrap_or_default();
