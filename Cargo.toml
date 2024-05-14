@@ -14,7 +14,7 @@ license = "MPL-2.0"
 readme = "README.md"
 repository = "https://github.com/rust-lang/mdBook"
 description = "Creates a book from markdown files"
-rust-version = "1.71"
+rust-version = "1.74"
 
 [dependencies]
 anyhow = "1.0.71"
@@ -26,7 +26,7 @@ env_logger = "0.11.1"
 handlebars = "5.0"
 log = "0.4.17"
 memchr = "2.5.0"
-opener = "0.6.1"
+opener = "0.7.0"
 pulldown-cmark = { version = "0.10.0", default-features = false, features = ["html"] }
 regex = "1.8.1"
 serde = { version = "1.0.163", features = ["derive"] }
@@ -50,7 +50,7 @@ warp = { version = "0.3.6", default-features = false, features = ["websocket"], 
 
 # Search feature
 elasticlunr-rs = { version = "3.0.2", optional = true }
-ammonia = { version = "3.3.0", optional = true }
+ammonia = { version = "4.0.0", optional = true }
 
 [dev-dependencies]
 assert_cmd = "2.0.11"
