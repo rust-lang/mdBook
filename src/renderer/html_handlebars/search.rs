@@ -193,7 +193,10 @@ fn render_item(
                     body.push(' ');
                 }
             }
-            Event::Text(text) | Event::Code(text) => {
+            Event::Text(text)
+            | Event::Code(text)
+            | Event::InlineMath(text)
+            | Event::DisplayMath(text) => {
                 if in_heading {
                     heading.push_str(&text);
                 } else {
