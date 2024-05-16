@@ -12,10 +12,6 @@ TAG=${GITHUB_REF#*/tags/}
 
 host=$(rustc -Vv | grep ^host: | sed -e "s/host: //g")
 target=$2
-if [ "$host" != "$target" ]
-then
-  export "CARGO_TARGET_$(echo $target | tr a-z- A-Z_)_LINKER"=rust-lld
-fi
 export CARGO_PROFILE_RELEASE_LTO=true
 cargo build --locked --bin mdbook --release --target $target
 cd target/$target/release
