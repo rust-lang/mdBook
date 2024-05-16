@@ -1,5 +1,36 @@
 # Changelog
 
+## mdBook 0.4.38
+[v0.4.37...v0.4.38](https://github.com/rust-lang/mdBook/compare/v0.4.37...v0.4.38)
+
+### Added
+
+- Added `nix` to the default set of languages supported for syntax highlighting.
+  [#2262](https://github.com/rust-lang/mdBook/pull/2262)
+
+### Changed
+
+- The `output.html.curly-quotes` option has been renamed to `output.html.smart-punctuation` to better reflect what it does. The old option `curly-quotes` is kept for compatibility, but may be removed in the future.
+  [#2327](https://github.com/rust-lang/mdBook/pull/2327)
+- The file-watcher used in `mdbook serve` and `mdbook watch` now uses a poll-based watcher instead of the native operating system notifications. This should fix issues on various systems and environments, and more accurately detect when files change. The native watcher can still be used with the `--watcher native` CLI option.
+  [#2325](https://github.com/rust-lang/mdBook/pull/2325)
+- `mdbook test` output now includes color, and shows relative paths to the source.
+  [#2259](https://github.com/rust-lang/mdBook/pull/2259)
+- Updated dependencies, MSRV raised to 1.74
+  [#2350](https://github.com/rust-lang/mdBook/pull/2350)
+  [#2351](https://github.com/rust-lang/mdBook/pull/2351)
+  [#2378](https://github.com/rust-lang/mdBook/pull/2378)
+  [#2381](https://github.com/rust-lang/mdBook/pull/2381)
+
+### Fixed
+
+- Reduced memory allocation when copying files.
+  [#2355](https://github.com/rust-lang/mdBook/pull/2355)
+- Fixed the horizontal divider in `SUMMARY.md` from being indented into the previous nested section.
+  [#2364](https://github.com/rust-lang/mdBook/pull/2364)
+- Removed unnecessary `@import` in the CSS.
+  [#2260](https://github.com/rust-lang/mdBook/pull/2260)
+
 ## mdBook 0.4.37
 [v0.4.36...v0.4.37](https://github.com/rust-lang/mdBook/compare/v0.4.36...v0.4.37)
 
