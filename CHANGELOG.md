@@ -1,7 +1,15 @@
 # Changelog
 
+## mdBook 0.4.40
+[v0.4.39...v0.4.40](https://github.com/rust-lang/mdBook/compare/v0.4.39...v0.4.40)
+
+### Fixed
+
+- Reverted the update to pulldown-cmark which broke the semver API.
+  [#2388](https://github.com/rust-lang/mdBook/pull/2388)
+
 ## mdBook 0.4.39
-[v0.4.37...v0.4.39](https://github.com/rust-lang/mdBook/compare/v0.4.38...v0.4.39)
+[v0.4.38...v0.4.39](https://github.com/rust-lang/mdBook/compare/v0.4.38...v0.4.39)
 
 ### Fixed
 
