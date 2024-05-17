@@ -27,7 +27,7 @@ handlebars = "5.0"
 log = "0.4.17"
 memchr = "2.5.0"
 opener = "0.7.0"
-pulldown-cmark = { version = "0.11.0", default-features = false, features = ["html"] }
+pulldown-cmark = { version = "0.10.0", default-features = false, features = ["html"] }
 regex = "1.8.1"
 serde = { version = "1.0.163", features = ["derive"] }
 serde_json = "1.0.96"
