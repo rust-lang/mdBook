@@ -5,45 +5,67 @@ on:
 
 jobs:
   test:
-    name: Test
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        build: [stable, beta, nightly, macos, windows, msrv]
         include:
-          - build: stable
+          - name: stable linux
             os: ubuntu-latest
             rust: stable
-          - build: beta
+            target: x86_64-unknown-linux-gnu
+          - name: beta linux
             os: ubuntu-latest
             rust: beta
-          - build: nightly
+            target: x86_64-unknown-linux-gnu
+          - name: nightly linux
             os: ubuntu-latest
             rust: nightly
-          - build: macos
+            target: x86_64-unknown-linux-gnu
+          - name: stable x86_64-unknown-linux-musl
+            os: ubuntu-20.04
+            rust: stable
+            target: x86_64-unknown-linux-musl
+          - name: stable x86_64 macos
             os: macos-latest
             rust: stable
-          - build: windows
+            target: x86_64-apple-darwin
+          - name: stable aarch64 macos
+            os: macos-latest
+            rust: stable
+            target: aarch64-apple-darwin
+          - name: stable windows-msvc
             os: windows-latest
             rust: stable
-          - build: msrv
+            target: x86_64-pc-windows-msvc
+          - name: msrv
             os: ubuntu-20.04
             # sync MSRV with docs: guide/src/guide/installation.md and Cargo.toml
             rust: 1.74.0
+            target: x86_64-unknown-linux-gnu
+    name: ${{ matrix.name }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Install Rust
-      run: bash ci/install-rust.sh ${{ matrix.rust }}
+      run: bash ci/install-rust.sh ${{ matrix.rust }} ${{ matrix.target }}
     - name: Build and run tests
-      run: cargo test --locked
+      run: cargo test --locked --target ${{ matrix.target }}
     - name: Test no default
-      run: cargo test --no-default-features
+      run: cargo test --no-default-features --target ${{ matrix.target }}
+
+  aarch64-cross-builds:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install Rust
+      run: bash ci/install-rust.sh stable aarch64-unknown-linux-musl
+    - name: Build
+      run: cargo build --locked --target aarch64-unknown-linux-musl
 
   rustfmt:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Install Rust
       run: rustup update stable && rustup default stable && rustup component add rustfmt
     - run: cargo fmt --check

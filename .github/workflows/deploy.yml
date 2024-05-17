@@ -12,16 +12,9 @@ permissions:
 
 jobs:
   release:
-    name: Deploy Release
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        target:
-          - aarch64-unknown-linux-musl
-          - x86_64-unknown-linux-gnu
-          - x86_64-unknown-linux-musl
-          - x86_64-apple-darwin
-          - x86_64-pc-windows-msvc
         include:
           - target: aarch64-unknown-linux-musl
             os: ubuntu-20.04
@@ -33,8 +26,9 @@ jobs:
             os: macos-latest
           - target: x86_64-pc-windows-msvc
             os: windows-latest
+    name: Deploy ${{ matrix.target }}
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v4
     - name: Install Rust
       run: ci/install-rust.sh stable ${{ matrix.target }}
     - name: Build asset
@@ -47,7 +41,7 @@ jobs:
     name: GitHub Pages
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v4
     - name: Install Rust (rustup)
       run: rustup update stable --no-self-update && rustup default stable
     - name: Build book
@@ -64,7 +58,7 @@ jobs:
     name: Publish to crates.io
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
       - name: Install Rust (rustup)
         run: rustup update stable --no-self-update && rustup default stable
       - name: Publish
