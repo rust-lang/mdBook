@@ -1,5 +1,13 @@
 # Changelog
 
+## mdBook 0.4.39
+[v0.4.37...v0.4.39](https://github.com/rust-lang/mdBook/compare/v0.4.38...v0.4.39)
+
+### Fixed
+
+- Fixed the automatic deploy broken in the previous release.
+  [#2383](https://github.com/rust-lang/mdBook/pull/2383)
+
 ## mdBook 0.4.38
 [v0.4.37...v0.4.38](https://github.com/rust-lang/mdBook/compare/v0.4.37...v0.4.38)
 
