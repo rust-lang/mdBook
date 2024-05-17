@@ -37,6 +37,7 @@ pub trait CommandExt: Sized {
         self._arg(arg!(-o --open "Opens the compiled book in a web browser"))
     }
 
+    #[cfg(any(feature = "watch", feature = "serve"))]
     fn arg_watcher(self) -> Self {
         #[cfg(feature = "watch")]
         return self._arg(
