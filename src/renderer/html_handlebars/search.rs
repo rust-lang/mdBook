@@ -1,6 +1,8 @@
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
+use std::fmt::Display;
 use std::path::Path;
+use std::str::FromStr;
 
 use elasticlunr::{Index, IndexBuilder};
 use once_cell::sync::Lazy;
@@ -25,13 +27,199 @@ fn tokenize(text: &str) -> Vec<String> {
         .collect()
 }
 
+/// Enum representing a language that is supported by elasticlunr,
+/// but requires extra work to get full search support.
+/// Languages that wouldn't work with the current feature flag config are included.
+#[derive(Debug, Copy, Clone)]
+#[non_exhaustive]
+pub enum SupportedNonEnglishLanguage {
+    Arabic,
+    Chinese,
+    Danish,
+    Dutch,
+    Finnish,
+    French,
+    German,
+    Hungarian,
+    Italian,
+    Japanese,
+    Korean,
+    Norwegian,
+    Portuguese,
+    Romanian,
+    Russian,
+    Spanish,
+    Swedish,
+    Turkish,
+}
+
+impl FromStr for SupportedNonEnglishLanguage {
+    type Err = ();
+
+    /// A language tag can be like "zh" / "zh-CN" / "zh-Hans" / "zh-Hans-CN")
+    /// See: https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang#language_tag_syntax
+    fn from_str(language_tag: &str) -> Result<Self, Self::Err> {
+        use SupportedNonEnglishLanguage::*;
+        match language_tag
+            .split('-')
+            .next()
+            .expect("splitting a string always returns at least 1 fragment")
+            .to_ascii_lowercase()
+            .as_str()
+        {
+            "ar" => Ok(Arabic),
+            "zh" => Ok(Chinese),
+            "da" => Ok(Danish),
+            "nl" => Ok(Dutch),
+            "fi" => Ok(Finnish),
+            "fr" => Ok(French),
+            "de" => Ok(German),
+            "hu" => Ok(Hungarian),
+            "it" => Ok(Italian),
+            "ja" => Ok(Japanese),
+            "ko" => Ok(Korean),
+            "no" => Ok(Norwegian),
+            "pt" => Ok(Portuguese),
+            "ro" => Ok(Romanian),
+            "ru" => Ok(Russian),
+            "es" => Ok(Spanish),
+            "sv" => Ok(Swedish),
+            "tr" => Ok(Turkish),
+            _ => Err(()),
+        }
+    }
+}
+
+impl TryFrom<SupportedNonEnglishLanguage> for Box<dyn elasticlunr::Language> {
+    type Error = ();
+
+    #[cfg(feature = "search-non-english")]
+    /// Returns `Ok` if and only if `language.lunr_js_content()` returns `Some`.
+    fn try_from(language: SupportedNonEnglishLanguage) -> std::result::Result<Self, Self::Error> {
+        use elasticlunr::lang as el;
+        use SupportedNonEnglishLanguage::*;
+        match language {
+            Arabic => Ok(Box::new(el::Arabic::new())),
+            Chinese => Ok(Box::new(el::Chinese::new())),
+            Danish => Ok(Box::new(el::Danish::new())),
+            Dutch => Ok(Box::new(el::Dutch::new())),
+            Finnish => Ok(Box::new(el::Finnish::new())),
+            French => Ok(Box::new(el::French::new())),
+            German => Ok(Box::new(el::German::new())),
+            Hungarian => Ok(Box::new(el::Hungarian::new())),
+            Italian => Ok(Box::new(el::Italian::new())),
+            Japanese => Ok(Box::new(el::Japanese::new())),
+            Korean => Ok(Box::new(el::Korean::new())),
+            Norwegian => Ok(Box::new(el::Norwegian::new())),
+            Portuguese => Ok(Box::new(el::Portuguese::new())),
+            Romanian => Ok(Box::new(el::Romanian::new())),
+            Russian => Ok(Box::new(el::Russian::new())),
+            Spanish => Ok(Box::new(el::Spanish::new())),
+            Swedish => Ok(Box::new(el::Swedish::new())),
+            Turkish => Ok(Box::new(el::Turkish::new())),
+        }
+    }
+
+    #[cfg(not(feature = "search-non-english"))]
+    fn try_from(_: SupportedNonEnglishLanguage) -> std::result::Result<Self, Self::Error> {
+        Err(())
+    }
+}
+
+impl Display for SupportedNonEnglishLanguage {
+    /// Displays as language subtag (e.g. "zh" for Chinese).
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use SupportedNonEnglishLanguage::*;
+        f.write_str(match self {
+            Arabic => "ar",
+            Chinese => "zh",
+            Danish => "da",
+            Dutch => "nl",
+            Finnish => "fi",
+            French => "fr",
+            German => "de",
+            Hungarian => "hu",
+            Italian => "it",
+            Japanese => "ja",
+            Korean => "ko",
+            Norwegian => "no",
+            Portuguese => "pt",
+            Romanian => "ro",
+            Russian => "ru",
+            Spanish => "es",
+            Swedish => "sv",
+            Turkish => "tr",
+        })
+    }
+}
+
+#[cfg(feature = "search-non-english")]
+impl SupportedNonEnglishLanguage {
+    /// Returns `Some` if and only if `self.try_into::<Box<dyn elasticlunr::Language>>()` returns `Ok`.
+    pub(crate) fn lunr_js_content(self) -> Option<&'static [u8]> {
+        use searcher::lang::*;
+        use SupportedNonEnglishLanguage::*;
+        match self {
+            Arabic => Some(ARABIC_JS),
+            Chinese => Some(CHINESE_JS),
+            Danish => Some(DANISH_JS),
+            Dutch => Some(DUTCH_JS),
+            Finnish => Some(FINNISH_JS),
+            French => Some(FRENCH_JS),
+            German => Some(GERMAN_JS),
+            Hungarian => Some(HUNGARIAN_JS),
+            Italian => Some(ITALIAN_JS),
+            Japanese => Some(JAPANESE_JS),
+            Korean => Some(KOREAN_JS),
+            Norwegian => Some(NORWEGIAN_JS),
+            Portuguese => Some(PORTUGUESE_JS),
+            Romanian => Some(ROMANIAN_JS),
+            Russian => Some(RUSSIAN_JS),
+            Spanish => Some(SPANISH_JS),
+            Swedish => Some(SWEDISH_JS),
+            Turkish => Some(TURKISH_JS),
+        }
+    }
+}
+
 /// Creates all files required for search.
-pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> Result<()> {
-    let mut index = IndexBuilder::new()
-        .add_field_with_tokenizer("title", Box::new(&tokenize))
-        .add_field_with_tokenizer("body", Box::new(&tokenize))
-        .add_field_with_tokenizer("breadcrumbs", Box::new(&tokenize))
-        .build();
+/// Returns the language subtag if extra `lunr.stemmer.support.js` &
+/// `lunr.*.js` files should be imported.
+/// E.g., returns "zh" when `lunr.stemmer.support.js` & `lunr.zh.js` should be imported.
+pub fn create_files(
+    search_config: &Search,
+    language: Option<SupportedNonEnglishLanguage>,
+    destination: &Path,
+    book: &Book,
+) -> Result<Option<String>> {
+    #[allow(unused_variables)]
+    let (mut index, extra_language_subtag) = match language.and_then(|l| l.try_into().ok()) {
+        None => {
+            if let Some(non_english_language) = language {
+                warn!(
+                    "mdBook compiled without {non_english_language:?}(`{non_english_language}`) \
+                    search support though it's available"
+                );
+                warn!(
+                    "please reinstall with `cargo install mdbook --force --features \
+                     search-non-english`"
+                );
+                warn!("to enable {non_english_language:?} search support")
+            }
+            (
+                IndexBuilder::new()
+                    .add_field_with_tokenizer("title", Box::new(&tokenize))
+                    .add_field_with_tokenizer("body", Box::new(&tokenize))
+                    .add_field_with_tokenizer("breadcrumbs", Box::new(&tokenize))
+                    .build(),
+                None,
+            )
+        }
+        Some(elasticlunr_language) => (
+            Index::with_language(elasticlunr_language, &["title", "body", "breadcrumbs"]),
+            language.map(|l| l.to_string()),
+        ),
+    };
 
     let mut doc_urls = Vec::with_capacity(book.sections.len());
 
@@ -55,10 +243,27 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
         utils::fs::write_file(destination, "searcher.js", searcher::JS)?;
         utils::fs::write_file(destination, "mark.min.js", searcher::MARK_JS)?;
         utils::fs::write_file(destination, "elasticlunr.min.js", searcher::ELASTICLUNR_JS)?;
+        #[cfg(feature = "search-non-english")]
+        if extra_language_subtag.is_some() {
+            let language = language.expect("non-English index is only built when specified");
+            utils::fs::write_file(
+                destination,
+                "lunr.stemmer.support.js",
+                searcher::lang::STEMMER_SUPPORT_JS,
+            )?;
+            utils::fs::write_file(
+                destination,
+                format!("lunr.{language}.js"),
+                language.lunr_js_content().expect(
+                    "if language.try_into::<Box<dyn elasticlunr::Language>>() returns Ok, \
+                    then language.lunr_js_content() should return Some",
+                ),
+            )?;
+        }
         debug!("Copying search files ✓");
     }
 
-    Ok(())
+    Ok(extra_language_subtag)
 }
 
 /// Uses the given arguments to construct a search document, then inserts it to the given index.

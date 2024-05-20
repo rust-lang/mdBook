@@ -47,6 +47,7 @@ This is general information about your book.
   key in the configuration file.
 - **language:** The main language of the book, which is used as a language attribute `<html lang="en">` for example.
   This is also used to derive the direction of text (RTL, LTR) within the book.
+  When `search-non-english` feature is enabled, this may change the behavior of the search functionality provided by the HTML renderer.
 - **text-direction**: The direction of text in the book: Left-to-right (LTR) or Right-to-left (RTL). Possible values: `ltr`, `rtl`.
   When not specified, the text direction is derived from the book's `language` attribute.
 

@@ -539,6 +539,25 @@ impl Renderer for HtmlHandlebars {
         fs::create_dir_all(destination)
             .with_context(|| "Unexpected error when constructing destination path")?;
 
+        // Render search index
+        #[cfg(feature = "search")]
+        {
+            let search = html_config.search.clone().unwrap_or_default();
+            if search.enable {
+                let language = book_config
+                    .language
+                    .as_deref()
+                    .and_then(|lang| lang.parse().ok());
+                #[allow(unused_variables)]
+                let extra_language_subtag =
+                    super::search::create_files(&search, language, destination, book)?;
+                #[cfg(feature = "search-non-english")]
+                if let Some(subtag) = extra_language_subtag {
+                    data.insert("lunr_language_subtag".to_owned(), json!(subtag));
+                }
+            }
+        }
+
         let mut is_index = true;
         for item in book.iter() {
             let ctx = RenderItemContext {
@@ -588,15 +607,6 @@ impl Renderer for HtmlHandlebars {
             .with_context(|| "Unable to copy across static files")?;
         self.copy_additional_css_and_js(&html_config, &ctx.root, destination)
             .with_context(|| "Unable to copy across additional CSS and JS")?;
-
-        // Render search index
-        #[cfg(feature = "search")]
-        {
-            let search = html_config.search.unwrap_or_default();
-            if search.enable {
-                super::search::create_files(&search, destination, book)?;
-            }
-        }
 
         self.emit_redirects(&ctx.destination, &handlebars, &html_config.redirect)
             .context("Unable to emit redirects")?;
