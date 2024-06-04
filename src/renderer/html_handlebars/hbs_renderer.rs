@@ -544,10 +544,10 @@ impl Renderer for HtmlHandlebars {
         {
             let search = html_config.search.clone().unwrap_or_default();
             if search.enable {
-                let language = book_config
-                    .language
-                    .as_deref()
-                    .and_then(|lang| lang.parse().ok());
+                let language = match book_config.language.as_deref() {
+                    None => Err("en".to_string()),
+                    Some(language) => language.parse(),
+                };
                 #[allow(unused_variables)]
                 let extra_language_subtag =
                     super::search::create_files(&search, language, destination, book)?;

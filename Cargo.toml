@@ -65,7 +65,10 @@ default = ["watch", "serve", "search"]
 watch = ["dep:notify", "dep:notify-debouncer-mini", "dep:ignore", "dep:pathdiff", "dep:walkdir"]
 serve = ["dep:futures-util", "dep:tokio", "dep:warp"]
 search = ["dep:elasticlunr-rs", "dep:ammonia"]
-search-non-english = ["search", "elasticlunr-rs/languages"]
+search-non-english = ["search", "elasticlunr-rs/ar", "elasticlunr-rs/da", "elasticlunr-rs/de", "elasticlunr-rs/du",
+    "elasticlunr-rs/es", "elasticlunr-rs/fi", "elasticlunr-rs/fr", "elasticlunr-rs/hu", "elasticlunr-rs/it",
+    "elasticlunr-rs/ja", "elasticlunr-rs/ko", "elasticlunr-rs/no", "elasticlunr-rs/pt", "elasticlunr-rs/ro",
+    "elasticlunr-rs/ru", "elasticlunr-rs/sv", "elasticlunr-rs/tr"]
 
 [[bin]]
 doc = false

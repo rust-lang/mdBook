@@ -1,3 +1,5 @@
+mod lang;
+
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
@@ -32,9 +34,8 @@ fn tokenize(text: &str) -> Vec<String> {
 /// Languages that wouldn't work with the current feature flag config are included.
 #[derive(Debug, Copy, Clone)]
 #[non_exhaustive]
-pub enum SupportedNonEnglishLanguage {
+pub(crate) enum ExtraSupportedLanguage {
     Arabic,
-    Chinese,
     Danish,
     Dutch,
     Finnish,
@@ -53,22 +54,21 @@ pub enum SupportedNonEnglishLanguage {
     Turkish,
 }
 
-impl FromStr for SupportedNonEnglishLanguage {
-    type Err = ();
+impl FromStr for ExtraSupportedLanguage {
+    type Err = String;
 
     /// A language tag can be like "zh" / "zh-CN" / "zh-Hans" / "zh-Hans-CN")
     /// See: https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang#language_tag_syntax
+    /// if the language doesn't have extra support, `Err` is returned with the language subtag.
     fn from_str(language_tag: &str) -> Result<Self, Self::Err> {
-        use SupportedNonEnglishLanguage::*;
-        match language_tag
+        use ExtraSupportedLanguage::*;
+        let language_subtag = language_tag
             .split('-')
             .next()
             .expect("splitting a string always returns at least 1 fragment")
-            .to_ascii_lowercase()
-            .as_str()
-        {
+            .to_ascii_lowercase();
+        match language_subtag.as_str() {
             "ar" => Ok(Arabic),
-            "zh" => Ok(Chinese),
             "da" => Ok(Danish),
             "nl" => Ok(Dutch),
             "fi" => Ok(Finnish),
@@ -85,22 +85,21 @@ impl FromStr for SupportedNonEnglishLanguage {
             "es" => Ok(Spanish),
             "sv" => Ok(Swedish),
             "tr" => Ok(Turkish),
-            _ => Err(()),
+            _ => Err(language_subtag),
         }
     }
 }
 
-impl TryFrom<SupportedNonEnglishLanguage> for Box<dyn elasticlunr::Language> {
+impl TryFrom<ExtraSupportedLanguage> for Box<dyn elasticlunr::Language> {
     type Error = ();
 
     #[cfg(feature = "search-non-english")]
     /// Returns `Ok` if and only if `language.lunr_js_content()` returns `Some`.
-    fn try_from(language: SupportedNonEnglishLanguage) -> std::result::Result<Self, Self::Error> {
+    fn try_from(language: ExtraSupportedLanguage) -> std::result::Result<Self, Self::Error> {
         use elasticlunr::lang as el;
-        use SupportedNonEnglishLanguage::*;
+        use ExtraSupportedLanguage::*;
         match language {
             Arabic => Ok(Box::new(el::Arabic::new())),
-            Chinese => Ok(Box::new(el::Chinese::new())),
             Danish => Ok(Box::new(el::Danish::new())),
             Dutch => Ok(Box::new(el::Dutch::new())),
             Finnish => Ok(Box::new(el::Finnish::new())),
@@ -121,18 +120,17 @@ impl TryFrom<SupportedNonEnglishLanguage> for Box<dyn elasticlunr::Language> {
     }
 
     #[cfg(not(feature = "search-non-english"))]
-    fn try_from(_: SupportedNonEnglishLanguage) -> std::result::Result<Self, Self::Error> {
+    fn try_from(_: ExtraSupportedLanguage) -> std::result::Result<Self, Self::Error> {
         Err(())
     }
 }
 
-impl Display for SupportedNonEnglishLanguage {
-    /// Displays as language subtag (e.g. "zh" for Chinese).
+impl Display for ExtraSupportedLanguage {
+    /// Displays as language subtag (e.g. "de" for German).
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use SupportedNonEnglishLanguage::*;
+        use ExtraSupportedLanguage::*;
         f.write_str(match self {
             Arabic => "ar",
-            Chinese => "zh",
             Danish => "da",
             Dutch => "nl",
             Finnish => "fi",
@@ -154,14 +152,13 @@ impl Display for SupportedNonEnglishLanguage {
 }
 
 #[cfg(feature = "search-non-english")]
-impl SupportedNonEnglishLanguage {
+impl ExtraSupportedLanguage {
     /// Returns `Some` if and only if `self.try_into::<Box<dyn elasticlunr::Language>>()` returns `Ok`.
-    pub(crate) fn lunr_js_content(self) -> Option<&'static [u8]> {
+    pub fn lunr_js_content(self) -> Option<&'static [u8]> {
         use searcher::lang::*;
-        use SupportedNonEnglishLanguage::*;
+        use ExtraSupportedLanguage::*;
         match self {
             Arabic => Some(ARABIC_JS),
-            Chinese => Some(CHINESE_JS),
             Danish => Some(DANISH_JS),
             Dutch => Some(DUTCH_JS),
             Finnish => Some(FINNISH_JS),
@@ -185,40 +182,53 @@ impl SupportedNonEnglishLanguage {
 /// Creates all files required for search.
 /// Returns the language subtag if extra `lunr.stemmer.support.js` &
 /// `lunr.*.js` files should be imported.
-/// E.g., returns "zh" when `lunr.stemmer.support.js` & `lunr.zh.js` should be imported.
+/// E.g., returns "ja" when `lunr.stemmer.support.js` & `lunr.ja.js` should be imported.
 pub fn create_files(
     search_config: &Search,
-    language: Option<SupportedNonEnglishLanguage>,
+    language: Result<ExtraSupportedLanguage, String>,
     destination: &Path,
     book: &Book,
 ) -> Result<Option<String>> {
-    #[allow(unused_variables)]
-    let (mut index, extra_language_subtag) = match language.and_then(|l| l.try_into().ok()) {
-        None => {
-            if let Some(non_english_language) = language {
+    let potentially_supported_language = language.as_ref().ok().copied();
+    let (mut index, extra_language_subtag, use_fallback);
+
+    match language.and_then(|l| l.try_into().map_err(|_| l.to_string())) {
+        Err(subtag) => {
+            if let Some(language) = potentially_supported_language {
                 warn!(
-                    "mdBook compiled without {non_english_language:?}(`{non_english_language}`) \
-                    search support though it's available"
+                    "mdBook compiled without {language:?}(`{language}`) \
+                        search support though it's available"
                 );
                 warn!(
                     "please reinstall with `cargo install mdbook --force --features \
-                     search-non-english`"
+                        search-non-english`"
                 );
-                warn!("to enable {non_english_language:?} search support")
+                warn!("to enable {language:?} search support")
             }
-            (
-                IndexBuilder::new()
-                    .add_field_with_tokenizer("title", Box::new(&tokenize))
-                    .add_field_with_tokenizer("body", Box::new(&tokenize))
-                    .add_field_with_tokenizer("breadcrumbs", Box::new(&tokenize))
-                    .build(),
-                None,
-            )
+            match subtag.as_str() {
+                "en" => {
+                    index = IndexBuilder::new()
+                        .add_field_with_tokenizer("title", Box::new(&tokenize))
+                        .add_field_with_tokenizer("body", Box::new(&tokenize))
+                        .add_field_with_tokenizer("breadcrumbs", Box::new(&tokenize))
+                        .build();
+                    use_fallback = false;
+                }
+                _ => {
+                    index = Index::with_language(
+                        Box::new(lang::Fallback::new()),
+                        &["title", "body", "breadcrumbs"],
+                    );
+                    use_fallback = true;
+                }
+            };
+            extra_language_subtag = None;
         }
-        Some(elasticlunr_language) => (
-            Index::with_language(elasticlunr_language, &["title", "body", "breadcrumbs"]),
-            language.map(|l| l.to_string()),
-        ),
+        Ok(elasticlunr_language) => {
+            index = Index::with_language(elasticlunr_language, &["title", "body", "breadcrumbs"]);
+            extra_language_subtag = potentially_supported_language.map(|l| l.to_string());
+            use_fallback = false;
+        }
     };
 
     let mut doc_urls = Vec::with_capacity(book.sections.len());
@@ -240,7 +250,15 @@ pub fn create_files(
             "searchindex.js",
             format!("Object.assign(window.search, {});", index).as_bytes(),
         )?;
-        utils::fs::write_file(destination, "searcher.js", searcher::JS)?;
+        utils::fs::write_file(
+            destination,
+            "searcher.js",
+            if use_fallback {
+                searcher::FALLBACK_JS
+            } else {
+                searcher::JS
+            },
+        )?;
         utils::fs::write_file(destination, "mark.min.js", searcher::MARK_JS)?;
         utils::fs::write_file(destination, "elasticlunr.min.js", searcher::ELASTICLUNR_JS)?;
         #[cfg(feature = "search-non-english")]
@@ -363,8 +381,9 @@ fn render_item(
                 breadcrumbs.push(heading.clone());
             }
             Event::Start(Tag::FootnoteDefinition(name)) => {
-                let number = footnote_numbers.len() + 1;
-                footnote_numbers.entry(name).or_insert(number);
+                let len = footnote_numbers.len() + 1;
+                let number = footnote_numbers.entry(name).or_insert(len);
+                body.push_str(&format!("[^{}]: ", number))
             }
             Event::Html(html) => {
                 let mut html_block = html.into_string();
@@ -389,15 +408,57 @@ fn render_item(
                 // blocks, and worse case you have some noise in the index.
                 body.push_str(&clean_html(&html));
             }
-            Event::Start(_) | Event::End(_) | Event::Rule | Event::SoftBreak | Event::HardBreak => {
-                // Insert spaces where HTML output would usually separate text
-                // to ensure words don't get merged together
-                if in_heading {
-                    heading.push(' ');
-                } else {
-                    body.push(' ');
+            // Insert spaces where HTML output would usually separate text
+            // to ensure words don't get merged together
+            Event::Start(tag) => {
+                let target = if in_heading { &mut heading } else { &mut body };
+                match tag {
+                    Tag::Paragraph
+                    | Tag::Heading { .. }
+                    | Tag::BlockQuote
+                    | Tag::CodeBlock(_)
+                    | Tag::HtmlBlock
+                    | Tag::List(_)
+                    | Tag::Table(_)
+                    | Tag::TableHead
+                    | Tag::TableRow
+                    | Tag::TableCell
+                    | Tag::Emphasis
+                    | Tag::Strong
+                    | Tag::Link { .. }
+                    | Tag::MetadataBlock(_) => {}
+                    Tag::Item => target.push_str("* "),
+                    Tag::Strikethrough => target.push_str("~~"),
+                    Tag::Image { .. } => target.push_str("[image: "),
+                    Tag::FootnoteDefinition(_) => unreachable!(),
                 }
             }
+            Event::End(tag_end) => {
+                let target = if in_heading { &mut heading } else { &mut body };
+                match tag_end {
+                    TagEnd::Paragraph
+                    | TagEnd::Heading(_)
+                    | TagEnd::BlockQuote
+                    | TagEnd::CodeBlock
+                    | TagEnd::Item
+                    | TagEnd::TableHead
+                    | TagEnd::TableRow => target.push_str("\n"),
+                    TagEnd::HtmlBlock
+                    | TagEnd::List(_)
+                    | TagEnd::FootnoteDefinition
+                    | TagEnd::Table
+                    | TagEnd::Emphasis
+                    | TagEnd::Strong
+                    | TagEnd::Link
+                    | TagEnd::MetadataBlock(_) => {}
+                    TagEnd::TableCell => target.push('\t'),
+                    TagEnd::Strikethrough => target.push_str("~~"),
+                    TagEnd::Image => target.push(']'),
+                }
+            }
+            Event::Rule => {}
+            Event::SoftBreak => body.push(' '),
+            Event::HardBreak => body.push('\n'),
             Event::Text(text) | Event::Code(text) => {
                 if in_heading {
                     heading.push_str(&text);

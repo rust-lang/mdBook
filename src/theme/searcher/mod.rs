@@ -2,6 +2,7 @@
 //! the "search" cargo feature is disabled.
 
 pub static JS: &[u8] = include_bytes!("searcher.js");
+pub static FALLBACK_JS: &[u8] = include_bytes!("searcher.fallback.js");
 pub static MARK_JS: &[u8] = include_bytes!("mark.min.js");
 pub static ELASTICLUNR_JS: &[u8] = include_bytes!("elasticlunr.min.js");
 
@@ -9,7 +10,6 @@ pub static ELASTICLUNR_JS: &[u8] = include_bytes!("elasticlunr.min.js");
 pub mod lang {
     pub static STEMMER_SUPPORT_JS: &[u8] = include_bytes!("lunr.stemmer.support.js");
     pub static ARABIC_JS: &[u8] = include_bytes!("languages/lunr.ar.js");
-    pub static CHINESE_JS: &[u8] = include_bytes!("languages/lunr.zh.js");
     pub static DANISH_JS: &[u8] = include_bytes!("languages/lunr.da.js");
     pub static DUTCH_JS: &[u8] = include_bytes!("languages/lunr.nl.js");
     pub static FINNISH_JS: &[u8] = include_bytes!("languages/lunr.fi.js");
