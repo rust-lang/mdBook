@@ -263,7 +263,8 @@ pub fn create_files(
         utils::fs::write_file(destination, "elasticlunr.min.js", searcher::ELASTICLUNR_JS)?;
         #[cfg(feature = "search-non-english")]
         if extra_language_subtag.is_some() {
-            let language = potentially_supported_language.expect("non-English index is only built when specified");
+            let language = potentially_supported_language
+                .expect("non-English index is only built when specified");
             utils::fs::write_file(
                 destination,
                 "lunr.stemmer.support.js",
