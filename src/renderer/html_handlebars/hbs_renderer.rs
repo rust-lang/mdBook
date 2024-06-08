@@ -62,7 +62,7 @@ impl HtmlHandlebars {
         let content = ch.content.clone();
         let content = utils::render_markdown(
             &content,
-            ctx.html_config.curly_quotes,
+            ctx.html_config.smart_punctuation(),
             self.syntaxes.borrow().as_ref().unwrap(),
             &ctx.html_config.playground,
             ctx.edition,
@@ -70,7 +70,7 @@ impl HtmlHandlebars {
 
         let fixed_content = utils::render_markdown_with_path(
             &ch.content,
-            ctx.html_config.curly_quotes,
+            ctx.html_config.smart_punctuation(),
             Some(path),
             self.syntaxes.borrow().as_ref().unwrap(),
             &ctx.html_config.playground,
@@ -184,7 +184,7 @@ impl HtmlHandlebars {
         };
         let html_content_404 = utils::render_markdown(
             &content_404,
-            html_config.curly_quotes,
+            html_config.smart_punctuation(),
             self.syntaxes.borrow().as_ref().unwrap(),
             &html_config.playground,
             ctx.config.rust.edition,
@@ -226,7 +226,7 @@ impl HtmlHandlebars {
         Ok(())
     }
 
-    #[cfg_attr(feature = "cargo-clippy", allow(clippy::let_and_return))]
+    #[allow(clippy::let_and_return)]
     fn post_process(
         &self,
         rendered: String,
@@ -515,25 +515,6 @@ impl HtmlHandlebars {
     }
 }
 
-// TODO(mattico): Remove some time after the 0.1.8 release
-fn maybe_wrong_theme_dir(dir: &Path) -> Result<bool> {
-    fn entry_is_maybe_book_file(entry: fs::DirEntry) -> Result<bool> {
-        Ok(entry.file_type()?.is_file()
-            && entry.path().extension().map_or(false, |ext| ext == "md"))
-    }
-
-    if dir.is_dir() {
-        for entry in fs::read_dir(dir)? {
-            if entry_is_maybe_book_file(entry?).unwrap_or(false) {
-                return Ok(false);
-            }
-        }
-        Ok(true)
-    } else {
-        Ok(false)
-    }
-}
-
 impl Renderer for HtmlHandlebars {
     fn name(&self) -> &str {
         "html"
@@ -566,17 +547,7 @@ impl Renderer for HtmlHandlebars {
             None => ctx.root.join("theme"),
         };
 
-        if html_config.theme.is_none()
-            && maybe_wrong_theme_dir(&src_dir.join("theme")).unwrap_or(false)
-        {
-            warn!(
-                "Previous versions of mdBook erroneously accepted `./src/theme` as an automatic \
-                 theme directory"
-            );
-            warn!("Please move your theme files to `./theme` for them to continue being used");
-        }
-
-        let theme = theme::Theme::new(&theme_dir);
+        let theme = theme::Theme::new(theme_dir);
 
         debug!("Collect syntaxes into a syntax set");
         self.build_syntaxset(&theme, &theme_dir);
@@ -1005,8 +976,9 @@ fn add_playground_pre(
 /// Modifies all `<code>` blocks to convert "hidden" lines and to wrap them in
 /// a `<span class="boring">`.
 fn hide_lines(html: &str, code_config: &Code) -> String {
-    let language_regex = Regex::new(r"\blanguage-(\w+)\b").unwrap();
-    let hidelines_regex = Regex::new(r"\bhidelines=(\S+)").unwrap();
+    static LANGUAGE_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\blanguage-(\w+)\b").unwrap());
+    static HIDELINES_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\bhidelines=(\S+)").unwrap());
+
     CODE_BLOCK_RE
         .replace_all(html, |caps: &Captures<'_>| {
             let text = &caps[1];
@@ -1021,12 +993,12 @@ fn hide_lines(html: &str, code_config: &Code) -> String {
                 )
             } else {
                 // First try to get the prefix from the code block
-                let hidelines_capture = hidelines_regex.captures(classes);
+                let hidelines_capture = HIDELINES_REGEX.captures(classes);
                 let hidelines_prefix = match &hidelines_capture {
                     Some(capture) => Some(&capture[1]),
                     None => {
                         // Then look up the prefix by language
-                        language_regex.captures(classes).and_then(|capture| {
+                        LANGUAGE_REGEX.captures(classes).and_then(|capture| {
                             code_config.hidelines.get(&capture[1]).map(|p| p.as_str())
                         })
                     }

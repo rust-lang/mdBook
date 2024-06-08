@@ -7,8 +7,8 @@ mdbook build
 ```
 
 It will try to parse your `SUMMARY.md` file to understand the structure of your
-book and fetch the corresponding files. Note that files mentioned in `SUMMARY.md`
-but not present will be created.
+book and fetch the corresponding files. Note that this will also create files
+mentioned in `SUMMARY.md` which are not yet present.
 
 The rendered output will maintain the same directory structure as the source for
 convenience. Large books will therefore remain structured when rendered.
@@ -22,12 +22,12 @@ root instead of the current working directory.
 mdbook build path/to/book
 ```
 
-#### --open
+#### `--open`
 
 When you use the `--open` (`-o`) flag, mdbook will open the rendered book in
 your default web browser after building it.
 
-#### --dest-dir
+#### `--dest-dir`
 
 The `--dest-dir` (`-d`) option allows you to change the output directory for the
 book. Relative paths are interpreted relative to the book's root directory. If

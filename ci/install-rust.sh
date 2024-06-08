@@ -22,6 +22,19 @@ then
         rustup component add llvm-tools-preview --toolchain=$TOOLCHAIN
         rustup component add rust-std-$TARGET --toolchain=$TOOLCHAIN
     fi
+    if [[ $TARGET == *"musl" ]]
+    then
+        # This is needed by libdbus-sys.
+        sudo apt update -y && sudo apt install musl-dev musl-tools -y
+    fi
+    if [[ $TARGET == "aarch64-unknown-linux-musl" ]]
+    then
+        echo CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=rust-lld >> $GITHUB_ENV
+        # This `CC` is some nonsense needed for libdbus-sys (via opener).
+        # I don't know if this is really the right thing to do, but it seems to work.
+        sudo apt install gcc-aarch64-linux-gnu -y
+        echo CC=aarch64-linux-gnu-gcc >> $GITHUB_ENV
+    fi
 fi
 
 rustup default $TOOLCHAIN

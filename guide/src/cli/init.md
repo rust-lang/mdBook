@@ -45,7 +45,7 @@ instead of the current working directory.
 mdbook init path/to/book
 ```
 
-#### --theme
+#### `--theme`
 
 When you use the `--theme` flag, the default theme will be copied into a
 directory called `theme` in your source directory so that you can modify it.
@@ -53,7 +53,7 @@ directory called `theme` in your source directory so that you can modify it.
 The theme is selectively overwritten, this means that if you don't want to
 overwrite a specific file, just delete it and the default file will be used.
 
-#### --title
+#### `--title`
 
 Specify a title for the book. If not supplied, an interactive prompt will ask for 
 a title. 
@@ -62,7 +62,7 @@ a title.
 mdbook init --title="my amazing book"
 ```
 
-#### --ignore
+#### `--ignore`
 
 Create a `.gitignore` file configured to ignore the `book` directory created when [building] a book. 
 If not supplied, an interactive prompt will ask whether it should be created.
@@ -77,6 +77,6 @@ mdbook init --ignore=git
 
 [building]: build.md
 
-#### --force
+#### `--force`
 
 Skip the prompts to create a `.gitignore` and for the title for the book.

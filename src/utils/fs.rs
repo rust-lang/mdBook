@@ -1,6 +1,5 @@
 use crate::errors::*;
 use log::{debug, trace};
-use std::convert::Into;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::{Component, Path, PathBuf};
@@ -73,14 +72,12 @@ pub fn create_file(path: &Path) -> Result<File> {
 
 /// Removes all the content of a directory but not the directory itself
 pub fn remove_dir_content(dir: &Path) -> Result<()> {
-    for item in fs::read_dir(dir)? {
-        if let Ok(item) = item {
-            let item = item.path();
-            if item.is_dir() {
-                fs::remove_dir_all(item)?;
-            } else {
-                fs::remove_file(item)?;
-            }
+    for item in fs::read_dir(dir)?.flatten() {
+        let item = item.path();
+        if item.is_dir() {
+            fs::remove_dir_all(item)?;
+        } else {
+            fs::remove_file(item)?;
         }
     }
     Ok(())
@@ -109,72 +106,41 @@ pub fn copy_files_except_ext(
     }
 
     for entry in fs::read_dir(from)? {
-        let entry = entry?;
+        let entry = entry?.path();
         let metadata = entry
-            .path()
             .metadata()
-            .with_context(|| format!("Failed to read {:?}", entry.path()))?;
+            .with_context(|| format!("Failed to read {entry:?}"))?;
+
+        let entry_file_name = entry.file_name().unwrap();
+        let target_file_path = to.join(entry_file_name);
 
         // If the entry is a dir and the recursive option is enabled, call itself
         if metadata.is_dir() && recursive {
-            if entry.path() == to.to_path_buf() {
+            if entry == to.as_os_str() {
                 continue;
             }
 
             if let Some(avoid) = avoid_dir {
-                if entry.path() == *avoid {
+                if entry == *avoid {
                     continue;
                 }
             }
 
             // check if output dir already exists
-            if !to.join(entry.file_name()).exists() {
-                fs::create_dir(&to.join(entry.file_name()))?;
+            if !target_file_path.exists() {
+                fs::create_dir(&target_file_path)?;
             }
 
-            copy_files_except_ext(
-                &from.join(entry.file_name()),
-                &to.join(entry.file_name()),
-                true,
-                avoid_dir,
-                ext_blacklist,
-            )?;
+            copy_files_except_ext(&entry, &target_file_path, true, avoid_dir, ext_blacklist)?;
         } else if metadata.is_file() {
             // Check if it is in the blacklist
-            if let Some(ext) = entry.path().extension() {
+            if let Some(ext) = entry.extension() {
                 if ext_blacklist.contains(&ext.to_str().unwrap()) {
                     continue;
                 }
             }
-            debug!(
-                "creating path for file: {:?}",
-                &to.join(
-                    entry
-                        .path()
-                        .file_name()
-                        .expect("a file should have a file name...")
-                )
-            );
-
-            debug!(
-                "Copying {:?} to {:?}",
-                entry.path(),
-                &to.join(
-                    entry
-                        .path()
-                        .file_name()
-                        .expect("a file should have a file name...")
-                )
-            );
-            copy(
-                entry.path(),
-                &to.join(
-                    entry
-                        .path()
-                        .file_name()
-                        .expect("a file should have a file name..."),
-                ),
-            )?;
+            debug!("Copying {entry:?} to {target_file_path:?}");
+            copy(&entry, &target_file_path)?;
         }
     }
     Ok(())

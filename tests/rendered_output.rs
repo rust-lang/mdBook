@@ -798,6 +798,7 @@ mod search {
         let index = read_book_index(temp.path());
 
         let doc_urls = index["doc_urls"].as_array().unwrap();
+        eprintln!("doc_urls={doc_urls:#?}",);
         let get_doc_ref =
             |url: &str| -> String { doc_urls.iter().position(|s| s == url).unwrap().to_string() };
 
@@ -827,7 +828,10 @@ mod search {
             docs[&summary]["breadcrumbs"],
             "First Chapter » Includes » Summary"
         );
-        assert_eq!(docs[&conclusion]["body"], "I put &lt;HTML&gt; in here!");
+        // See note about InlineHtml in search.rs. Ideally the `alert()` part
+        // should not be in the index, but we don't have a way to scrub inline
+        // html.
+        assert_eq!(docs[&conclusion]["body"], "I put &lt;HTML&gt; in here! Sneaky inline event alert(\"inline\");. But regular inline is indexed.");
         assert_eq!(
             docs[&no_headers]["breadcrumbs"],
             "First Chapter » No Headers"

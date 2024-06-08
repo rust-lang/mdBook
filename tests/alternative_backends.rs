@@ -39,29 +39,27 @@ fn alternate_backend_with_arguments() {
     md.build().unwrap();
 }
 
-/// Get a command which will pipe `stdin` to the provided file.
-#[cfg(not(windows))]
-fn tee_command<P: AsRef<Path>>(out_file: P) -> String {
-    let out_file = out_file.as_ref();
-
-    if cfg!(windows) {
-        format!("cmd.exe /c \"type > {}\"", out_file.display())
-    } else {
-        format!("tee {}", out_file.display())
-    }
-}
-
 #[test]
-#[cfg(not(windows))]
 fn backends_receive_render_context_via_stdin() {
     use mdbook::renderer::RenderContext;
     use std::fs::File;
 
-    let temp = TempFileBuilder::new().prefix("output").tempdir().unwrap();
-    let out_file = temp.path().join("out.txt");
-    let cmd = tee_command(&out_file);
+    let (md, temp) = dummy_book_with_backend("cat-to-file", "renderers/myrenderer", false);
 
-    let (md, _temp) = dummy_book_with_backend("cat-to-file", &cmd, false);
+    let renderers = temp.path().join("renderers");
+    fs::create_dir(&renderers).unwrap();
+    rust_exe(
+        &renderers,
+        "myrenderer",
+        r#"fn main() {
+            use std::io::Read;
+            let mut s = String::new();
+            std::io::stdin().read_to_string(&mut s).unwrap();
+            std::fs::write("out.txt", s).unwrap();
+        }"#,
+    );
+
+    let out_file = temp.path().join("book/out.txt");
 
     assert!(!out_file.exists());
     md.build().unwrap();

@@ -36,6 +36,20 @@ pub trait CommandExt: Sized {
     fn arg_open(self) -> Self {
         self._arg(arg!(-o --open "Opens the compiled book in a web browser"))
     }
+
+    #[cfg(any(feature = "watch", feature = "serve"))]
+    fn arg_watcher(self) -> Self {
+        #[cfg(feature = "watch")]
+        return self._arg(
+            Arg::new("watcher")
+                .long("watcher")
+                .value_parser(["poll", "native"])
+                .default_value("poll")
+                .help("The filesystem watching technique"),
+        );
+        #[cfg(not(feature = "watch"))]
+        return self;
+    }
 }
 
 impl CommandExt for Command {

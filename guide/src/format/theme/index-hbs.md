@@ -18,7 +18,7 @@ handlebars template you can access this information by using
 Here is a list of the properties that are exposed:
 
 - ***language*** Language of the book in the form `en`, as specified in `book.toml` (if not specified, defaults to `en`). To use in <code
-  class="language-html">\<html lang="{{ language }}"></code> for example.
+  class="language-html">\<html lang=\"{{ language }}\"></code> for example.
 - ***title*** Title used for the current page. This is identical to `{{ chapter_title }} - {{ book_title }}` unless `book_title` is not set in which case it just defaults to the `chapter_title`.
 - ***book_title*** Title of the book, as specified in `book.toml`
 - ***chapter_title*** Title of the current chapter, as listed in `SUMMARY.md`
@@ -79,7 +79,7 @@ var chapters = {{chapters}};
 
 ### 2. previous / next
 
-The previous and next helpers expose a `link` and `name` property to the
+The previous and next helpers expose a `link` and `title` property to the
 previous and next chapters.
 
 They are used like this
@@ -87,7 +87,7 @@ They are used like this
 ```handlebars
 {{#previous}}
     <a href="{{link}}" class="nav-chapters previous">
-        <i class="fa fa-angle-left"></i>
+        <i class="fa fa-angle-left"></i> {{title}}
     </a>
 {{/previous}}
 ```

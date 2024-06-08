@@ -160,8 +160,20 @@ pub struct Chapter {
     /// Nested items.
     pub sub_items: Vec<BookItem>,
     /// The chapter's location, relative to the `SUMMARY.md` file.
+    ///
+    /// **Note**: After the index preprocessor runs, any README files will be
+    /// modified to be `index.md`. If you need access to the actual filename
+    /// on disk, use [`Chapter::source_path`] instead.
+    ///
+    /// This is `None` for a draft chapter.
     pub path: Option<PathBuf>,
     /// The chapter's source file, relative to the `SUMMARY.md` file.
+    ///
+    /// **Note**: Beware that README files will internally be treated as
+    /// `index.md` via the [`Chapter::path`] field. The `source_path` field
+    /// exists if you need access to the true file path.
+    ///
+    /// This is `None` for a draft chapter.
     pub source_path: Option<PathBuf>,
     /// An ordered list of the names of each chapter above this one in the hierarchy.
     pub parent_names: Vec<String>,
@@ -339,7 +351,6 @@ impl Display for Chapter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Write;
     use tempfile::{Builder as TempFileBuilder, TempDir};
 
     const DUMMY_SRC: &str = "

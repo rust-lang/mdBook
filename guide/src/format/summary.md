@@ -29,11 +29,12 @@ to be ignored at best, or may cause an error when attempting to build the book.
    - [First Chapter](relative/path/to/markdown2.md)
    ```
 
-1. ***Part Title*** - Headers can be used as a title for the following numbered
-   chapters. This can be used to logically separate different sections
-   of the book. The title is rendered as unclickable text.
-   Titles are optional, and the numbered chapters can be broken into as many
-   parts as desired.
+1. ***Part Title*** -
+   Level 1 headers can be used as a title for the following numbered chapters.
+   This can be used to logically separate different sections of the book.
+   The title is rendered as unclickable text.
+   Titles are optional, and the numbered chapters can be broken into as many parts as desired.
+   Part titles must be h1 headers (one `#`), other heading levels are ignored.
    ```markdown
    # My Part Title
 

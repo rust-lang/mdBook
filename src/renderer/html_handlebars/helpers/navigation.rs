@@ -1,7 +1,9 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use handlebars::{Context, Handlebars, Helper, Output, RenderContext, RenderError, Renderable};
+use handlebars::{
+    Context, Handlebars, Helper, Output, RenderContext, RenderError, RenderErrorReason, Renderable,
+};
 
 use crate::utils;
 use log::{debug, trace};
@@ -26,9 +28,9 @@ impl Target {
     ) -> Result<Option<StringMap>, RenderError> {
         match *self {
             Target::Next => {
-                let previous_path = previous_item
-                    .get("path")
-                    .ok_or_else(|| RenderError::new("No path found for chapter in JSON data"))?;
+                let previous_path = previous_item.get("path").ok_or_else(|| {
+                    RenderErrorReason::Other("No path found for chapter in JSON data".to_owned())
+                })?;
 
                 if previous_path == base_path {
                     return Ok(Some(current_item.clone()));
@@ -54,15 +56,18 @@ fn find_chapter(
     debug!("Get data from context");
 
     let chapters = rc.evaluate(ctx, "@root/chapters").and_then(|c| {
-        serde_json::value::from_value::<Vec<StringMap>>(c.as_json().clone())
-            .map_err(|_| RenderError::new("Could not decode the JSON data"))
+        serde_json::value::from_value::<Vec<StringMap>>(c.as_json().clone()).map_err(|_| {
+            RenderErrorReason::Other("Could not decode the JSON data".to_owned()).into()
+        })
     })?;
 
     let base_path = rc
         .evaluate(ctx, "@root/path")?
         .as_json()
         .as_str()
-        .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
+        .ok_or_else(|| {
+            RenderErrorReason::Other("Type error for `path`, string expected".to_owned())
+        })?
         .replace('\"', "");
 
     if !rc.evaluate(ctx, "@root/is_index")?.is_missing() {
@@ -98,7 +103,7 @@ fn find_chapter(
                     }
                 }
 
-                previous = Some(item.clone());
+                previous = Some(item);
             }
             _ => continue,
         }
@@ -108,7 +113,7 @@ fn find_chapter(
 }
 
 fn render(
-    _h: &Helper<'_, '_>,
+    _h: &Helper<'_>,
     r: &Handlebars<'_>,
     ctx: &Context,
     rc: &mut RenderContext<'_, '_>,
@@ -122,7 +127,9 @@ fn render(
         .evaluate(ctx, "@root/path")?
         .as_json()
         .as_str()
-        .ok_or_else(|| RenderError::new("Type error for `path`, string expected"))?
+        .ok_or_else(|| {
+            RenderErrorReason::Other("Type error for `path`, string expected".to_owned())
+        })?
         .replace('\"', "");
 
     context.insert(
@@ -132,17 +139,23 @@ fn render(
 
     chapter
         .get("name")
-        .ok_or_else(|| RenderError::new("No title found for chapter in JSON data"))
+        .ok_or_else(|| {
+            RenderErrorReason::Other("No title found for chapter in JSON data".to_owned())
+        })
         .map(|name| context.insert("title".to_owned(), json!(name)))?;
 
     chapter
         .get("path")
-        .ok_or_else(|| RenderError::new("No path found for chapter in JSON data"))
+        .ok_or_else(|| {
+            RenderErrorReason::Other("No path found for chapter in JSON data".to_owned())
+        })
         .and_then(|p| {
             Path::new(p)
                 .with_extension("html")
                 .to_str()
-                .ok_or_else(|| RenderError::new("Link could not be converted to str"))
+                .ok_or_else(|| {
+                    RenderErrorReason::Other("Link could not be converted to str".to_owned())
+                })
                 .map(|p| context.insert("link".to_owned(), json!(p.replace('\\', "/"))))
         })?;
 
@@ -150,14 +163,14 @@ fn render(
 
     let t = _h
         .template()
-        .ok_or_else(|| RenderError::new("Error with the handlebars template"))?;
+        .ok_or_else(|| RenderErrorReason::Other("Error with the handlebars template".to_owned()))?;
     let local_ctx = Context::wraps(&context)?;
     let mut local_rc = rc.clone();
     t.render(r, &local_ctx, &mut local_rc, out)
 }
 
 pub fn previous(
-    _h: &Helper<'_, '_>,
+    _h: &Helper<'_>,
     r: &Handlebars<'_>,
     ctx: &Context,
     rc: &mut RenderContext<'_, '_>,
@@ -173,7 +186,7 @@ pub fn previous(
 }
 
 pub fn next(
-    _h: &Helper<'_, '_>,
+    _h: &Helper<'_>,
     r: &Handlebars<'_>,
     ctx: &Context,
     rc: &mut RenderContext<'_, '_>,
