@@ -56,7 +56,7 @@ html.sidebar-visible #menu-bar {
 #menu-bar.bordered {
     border-block-end-color: var(--table-border-color);
 }
-#menu-bar i, #menu-bar .icon-button {
+#menu-bar .fa-svg, #menu-bar .icon-button {
     position: relative;
     padding: 0 8px;
     z-index: 10;
@@ -65,7 +65,7 @@ html.sidebar-visible #menu-bar {
     transition: color 0.5s;
 }
 @media only screen and (max-width: 420px) {
-    #menu-bar i, #menu-bar .icon-button {
+    #menu-bar .fa-svg, #menu-bar .icon-button {
         padding: 0 5px;
     }
 }
@@ -76,7 +76,7 @@ html.sidebar-visible #menu-bar {
     padding: 0;
     color: inherit;
 }
-.icon-button i {
+.icon-button .fa-svg {
     margin: 0;
 }
 
@@ -118,14 +118,14 @@ html:not(.js) .left-buttons button {
 .mobile-nav-chapters,
 .mobile-nav-chapters:visited,
 .menu-bar .icon-button,
-.menu-bar a i {
+.menu-bar a .fa-svg {
     color: var(--icons);
 }
 
-.menu-bar i:hover,
+.menu-bar .fa-svg:hover,
 .menu-bar .icon-button:hover,
 .nav-chapters:hover,
-.mobile-nav-chapters i:hover {
+.mobile-nav-chapters .fa-svg:hover {
     color: var(--icons-hover);
 }
 
@@ -240,13 +240,10 @@ pre > .buttons :hover {
     border-color: var(--icons-hover);
     background-color: var(--theme-hover);
 }
-pre > .buttons i {
-    margin-inline-start: 8px;
-}
 pre > .buttons button {
     cursor: inherit;
     margin: 0px 5px;
-    padding: 4px 4px 3px 5px;
+    padding: 2px 3px 0px 4px;
     font-size: 23px;
 
     border-style: solid;
@@ -363,6 +360,20 @@ mark.fade-out {
     bottom: var(--spinner-margin);
     padding: 6px;
     background-color: var(--bg);
+}
+
+#fa-spin {
+    animation: rotating 2s linear infinite;
+    display: inline-block;
+}
+
+@keyframes rotating {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 #searchbar {
