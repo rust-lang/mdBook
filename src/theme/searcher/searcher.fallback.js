@@ -212,7 +212,7 @@ window.search = window.search || {};
             this.stemmedPos = 0; // `this` is passed to the constructors, and the `pos` fields will be updated there.
             const matches = text.match(REGEX_SENTENCE);
             this.sentences = matches ? matches.map(match => new Sentence(match, this)) : [];
-            this.stemmed = "".concat(...this.segments.values().map(segment => segment.stemmed.text));
+            this.stemmed = "".concat(...Array.from(this.segments.values(), segment => segment.stemmed.text));
             delete this.pos;
             delete this.stemmedPos;
         }
