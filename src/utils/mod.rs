@@ -372,7 +372,7 @@ impl<'a> SyntaxHighlighter<'a> {
                     )))
                 }
             }
-            Event::End(Tag::CodeBlock(CodeBlockKind::Fenced(_))) => {
+            Event::End(TagEnd::CodeBlock) => {
                 self.highlight = false;
                 self.is_rust = false;
                 self.syntax = None;

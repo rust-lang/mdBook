@@ -547,7 +547,7 @@ impl Renderer for HtmlHandlebars {
             None => ctx.root.join("theme"),
         };
 
-        let theme = theme::Theme::new(theme_dir);
+        let theme = theme::Theme::new(theme_dir.clone());
 
         debug!("Collect syntaxes into a syntax set");
         self.build_syntaxset(&theme, &theme_dir);

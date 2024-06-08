@@ -130,7 +130,7 @@
           "title": 3
         },
         "26": {
-          "body": 20,
+          "body": 30,
           "breadcrumbs": 4,
           "title": 2
         },
@@ -301,7 +301,7 @@
           "title": "Heading with id and classes"
         },
         "26": {
-          "body": "This makes sure you can insert runnable Rust files. fn main() { println!(\"Hello World!\");\n#\n# // You can even hide lines! :D\n# println!(\"I am hidden! Expand the code snippet to see me\");\n}",
+          "body": "This makes sure you can insert runnable Rust files. fn main() { println!(\"Hello World!\");\n#\n# // You can even hide lines! :D\n# println!(\"I am hidden! Expand the code snippet to see me\"); // You can hide lines within string literals. let _t = \"interesting string\n# boring string \";\n}",
           "breadcrumbs": "Second Chapter » Second Chapter",
           "id": "26",
           "title": "Second Chapter"
@@ -1672,7 +1672,7 @@
                   "df": 1,
                   "docs": {
                     "26": {
-                      "tf": 1.0
+                      "tf": 1.4142135623730951
                     }
                   }
                 }
@@ -1946,7 +1946,7 @@
                       "tf": 1.4142135623730951
                     },
                     "26": {
-                      "tf": 1.0
+                      "tf": 1.4142135623730951
                     },
                     "6": {
                       "tf": 1.0
@@ -4842,7 +4842,7 @@
                   "df": 1,
                   "docs": {
                     "26": {
-                      "tf": 1.0
+                      "tf": 1.4142135623730951
                     }
                   }
                 }
@@ -5116,7 +5116,7 @@
                       "tf": 1.4142135623730951
                     },
                     "26": {
-                      "tf": 1.0
+                      "tf": 1.4142135623730951
                     },
                     "6": {
                       "tf": 1.0

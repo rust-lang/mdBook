@@ -853,7 +853,7 @@ mod search {
     // Setting this to `true` may cause issues with `cargo watch`,
     // since it may not finish writing the fixture before the tests
     // are run again.
-    const GENERATE_FIXTURE: bool = true;
+    const GENERATE_FIXTURE: bool = false;
 
     fn get_fixture() -> serde_json::Value {
         if GENERATE_FIXTURE {
