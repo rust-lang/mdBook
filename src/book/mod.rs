@@ -345,6 +345,9 @@ impl MDBook {
                         RustEdition::E2021 => {
                             cmd.args(["--edition", "2021"]);
                         }
+                        RustEdition::E2024 => {
+                            cmd.args(["--edition", "2024", "-Zunstable-options"]);
+                        }
                     }
                 }
 

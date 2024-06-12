@@ -902,6 +902,7 @@ fn add_playground_pre(
                         Some(RustEdition::E2015) => " edition2015",
                         Some(RustEdition::E2018) => " edition2018",
                         Some(RustEdition::E2021) => " edition2021",
+                        Some(RustEdition::E2024) => " edition2024",
                         None => "",
                     }
                 };
