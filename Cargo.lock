@@ -1359,7 +1359,7 @@ dependencies = [
  "mdbook-markdown",
  "mdbook-renderer",
  "pretty_assertions",
- "pulldown-cmark 0.10.3",
+ "pulldown-cmark",
  "regex",
  "serde",
  "serde_json",
@@ -1373,7 +1373,7 @@ name = "mdbook-markdown"
 version = "0.5.0-alpha.1"
 dependencies = [
  "log",
- "pulldown-cmark 0.10.3",
+ "pulldown-cmark",
  "regex",
 ]
 
@@ -1392,7 +1392,7 @@ name = "mdbook-remove-emphasis"
 version = "0.1.0"
 dependencies = [
  "mdbook-preprocessor",
- "pulldown-cmark 0.12.2",
+ "pulldown-cmark",
  "pulldown-cmark-to-cmark",
  "serde_json",
 ]
@@ -1415,7 +1415,7 @@ dependencies = [
  "log",
  "mdbook-core",
  "memchr",
- "pulldown-cmark 0.10.3",
+ "pulldown-cmark",
  "serde",
 ]
 
@@ -1816,9 +1816,9 @@ dependencies = [
 
 [[package]]
 name = "pulldown-cmark"
-version = "0.10.3"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "76979bea66e7875e7509c4ec5300112b316af87fa7a252ca91c448b32dfe3993"
+checksum = "1e8bbe1a966bd2f362681a44f6edce3c2310ac21e4d5067a6e7ec396297a6ea0"
 dependencies = [
  "bitflags 2.9.1",
  "memchr",
@@ -1827,29 +1827,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "pulldown-cmark"
-version = "0.12.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f86ba2052aebccc42cbbb3ed234b8b13ce76f75c3551a303cb2bcffcff12bb14"
-dependencies = [
- "bitflags 2.9.1",
- "memchr",
- "unicase",
-]
-
-[[package]]
 name = "pulldown-cmark-escape"
-version = "0.10.1"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd348ff538bc9caeda7ee8cad2d1d48236a1f443c1fa3913c6a02fe0043b1dd3"
+checksum = "007d8adb5ddab6f8e3f491ac63566a7d5002cc7ed73901f72057943fa71ae1ae"
 
 [[package]]
 name = "pulldown-cmark-to-cmark"
-version = "18.0.0"
+version = "21.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e02b63adcb49f2eb675b1694b413b3e9fedbf549dfe2cc98727ad97a0c30650"
+checksum = "e5b6a0769a491a08b31ea5c62494a8f144ee0987d86d670a8af4df1e1b7cde75"
 dependencies = [
- "pulldown-cmark 0.12.2",
+ "pulldown-cmark",
 ]
 
 [[package]]
