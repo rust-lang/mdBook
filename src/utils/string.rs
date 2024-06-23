@@ -14,10 +14,17 @@ pub enum Shift {
     Auto,
 }
 
+/// Indication of how much to shift included text.
 #[derive(PartialEq, Eq, Debug, Clone, Copy)]
 enum ExplicitShift {
+    /// Don't shift.
     None,
+    /// Shift left by removing the given number of leading whitespace chars.
+    ///
+    /// Does not remove leading non-whitespace chars, i.e. lines with fewer leading whitespace
+    /// chars get a smaller shift.
     Left(usize),
+    /// Shift right by the given amount, inserting spaces on the left.
     Right(usize),
 }
 
@@ -62,10 +69,14 @@ fn shift_line(l: &str, shift: ExplicitShift) -> Cow<'_, str> {
             Cow::Owned(format!("{indent}{l}"))
         }
         ExplicitShift::Left(skip) => {
-            if l.chars().take(skip).any(|c| !c.is_whitespace()) {
-                log::error!("left-shifting away non-whitespace");
-            }
-            let rest = l.chars().skip(skip).collect::<String>();
+            let mut count = 0;
+            let rest = l
+                .chars()
+                .skip_while(|c| {
+                    count += 1;
+                    c.is_whitespace() && count <= skip
+                })
+                .collect::<String>();
             Cow::Owned(rest)
         }
     }
@@ -237,7 +248,7 @@ mod tests {
         );
         assert_eq!(
             shift_line(s, ExplicitShift::Left(6)),
-            "ne with 4 space intro"
+            "Line with 4 space intro"
         );
         assert_eq!(
             shift_line(s, ExplicitShift::Right(2)),
@@ -298,7 +309,7 @@ mod tests {
         );
         assert_eq!(
             take_lines_with_shift(s, ..3, Shift::Left(4)),
-            "rem\nsum\ndolor"
+            "Lorem\nipsum\ndolor"
         );
         assert_eq!(take_lines_with_shift(s, .., Shift::None), s);
         assert_eq!(
@@ -422,11 +433,11 @@ mod tests {
         );
         assert_eq!(
             take_anchored_lines_with_shift(s, "test", Shift::Left(4)),
-            "lor\nt\net"
+            "dolor\nsit\namet"
         );
         assert_eq!(
             take_anchored_lines_with_shift(s, "test", Shift::Left(44)),
-            "\n\n"
+            "dolor\nsit\namet"
         );
         assert_eq!(
             take_anchored_lines_with_shift(s, "something", Shift::None),
@@ -483,7 +494,7 @@ mod tests {
         );
         assert_eq!(
             take_anchored_lines_with_shift(s, "test2", Shift::Left(4)),
-            "sum\nlor\nt\net\nrem"
+            "ípsum\ndôlor\nsit\namet\nlorem"
         );
         assert_eq!(
             take_anchored_lines_with_shift(s, "test", Shift::None),

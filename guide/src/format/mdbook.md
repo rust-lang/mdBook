@@ -221,7 +221,8 @@ using the following syntax:
 ```
 
 A positive number for the shift will prepend spaces to all lines; a negative number will remove
-the corresponding number of characters from the beginning of each line.
+the corresponding number of whitespace characters from the beginning of each line (leaving
+intact any non-whitespace).
 
 The special `auto` value will remove common initial whitespace from all lines.
 
