@@ -263,16 +263,19 @@ fn parse_include_path(path: &str) -> LinkType<'static> {
     LinkType::Include(path, range_or_anchor, Shift::None)
 }
 
-fn parse_shift_include_path(params: &str) -> LinkType<'static> {
+fn parse_shift_include_path(params: &str) -> Option<LinkType<'static>> {
     let mut params = params.splitn(2, ':');
     let param0 = params.next().unwrap();
     let shift = if param0 == "auto" {
         Shift::Auto
     } else {
-        let shift: isize = param0.parse().unwrap_or_else(|e| {
-            log::error!("failed to parse shift amount: {e:?}");
-            0
-        });
+        let shift: isize = match param0.parse() {
+            Ok(v) => v,
+            Err(e) => {
+                log::error!("failed to parse shift amount: {e:?}");
+                return None;
+            }
+        };
         match shift.cmp(&0) {
             Ordering::Greater => Shift::Right(shift as usize),
             Ordering::Equal => Shift::None,
@@ -284,7 +287,7 @@ fn parse_shift_include_path(params: &str) -> LinkType<'static> {
     let path = parts.next().unwrap().into();
     let range_or_anchor = parse_range_or_anchor(parts.next());
 
-    LinkType::Include(path, range_or_anchor, shift)
+    Some(LinkType::Include(path, range_or_anchor, shift))
 }
 
 fn parse_rustdoc_include_path(path: &str) -> LinkType<'static> {
@@ -316,7 +319,7 @@ impl<'a> Link<'a> {
                 let props: Vec<&str> = path_props.collect();
 
                 match (typ.as_str(), file_arg) {
-                    ("shiftinclude", Some(pth)) => Some(parse_shift_include_path(pth)),
+                    ("shiftinclude", Some(pth)) => parse_shift_include_path(pth),
                     ("include", Some(pth)) => Some(parse_include_path(pth)),
                     ("playground", Some(pth)) => Some(LinkType::Playground(pth.into(), props)),
                     ("playpen", Some(pth)) => {
@@ -998,11 +1001,11 @@ mod tests {
         let link_type = parse_shift_include_path("17:arbitrary:some-anchor");
         assert_eq!(
             link_type,
-            LinkType::Include(
+            Some(LinkType::Include(
                 PathBuf::from("arbitrary"),
                 RangeOrAnchor::Anchor("some-anchor".to_string()),
                 Shift::Right(17)
-            )
+            ))
         );
     }
 
@@ -1011,11 +1014,11 @@ mod tests {
         let link_type = parse_shift_include_path("auto:arbitrary:some-anchor");
         assert_eq!(
             link_type,
-            LinkType::Include(
+            Some(LinkType::Include(
                 PathBuf::from("arbitrary"),
                 RangeOrAnchor::Anchor("some-anchor".to_string()),
                 Shift::Auto
-            )
+            ))
         );
     }
 
@@ -1037,11 +1040,11 @@ mod tests {
         let link_type = parse_shift_include_path("-2:arbitrary:5:10");
         assert_eq!(
             link_type,
-            LinkType::Include(
+            Some(LinkType::Include(
                 PathBuf::from("arbitrary"),
                 RangeOrAnchor::Range(LineRange::from(4..10)),
                 Shift::Left(2)
-            )
+            ))
         );
     }
 
@@ -1050,11 +1053,11 @@ mod tests {
         let link_type = parse_shift_include_path("2:arbitrary:5:10");
         assert_eq!(
             link_type,
-            LinkType::Include(
+            Some(LinkType::Include(
                 PathBuf::from("arbitrary"),
                 RangeOrAnchor::Range(LineRange::from(4..10)),
                 Shift::Right(2)
-            )
+            ))
         );
     }
 
@@ -1063,11 +1066,11 @@ mod tests {
         let link_type = parse_shift_include_path("+2:arbitrary:5:10");
         assert_eq!(
             link_type,
-            LinkType::Include(
+            Some(LinkType::Include(
                 PathBuf::from("arbitrary"),
                 RangeOrAnchor::Range(LineRange::from(4..10)),
                 Shift::Right(2)
-            )
+            ))
         );
     }
 
@@ -1076,11 +1079,17 @@ mod tests {
         let link_type = parse_shift_include_path("auto:arbitrary:5:10");
         assert_eq!(
             link_type,
-            LinkType::Include(
+            Some(LinkType::Include(
                 PathBuf::from("arbitrary"),
                 RangeOrAnchor::Range(LineRange::from(4..10)),
                 Shift::Auto
-            )
+            ))
         );
+    }
+
+    #[test]
+    fn parse_invalid_shifted_anchor() {
+        let link_type = parse_shift_include_path("bogus:arbitrary:5:10");
+        assert_eq!(link_type, None);
     }
 }
