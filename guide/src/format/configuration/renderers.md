@@ -123,7 +123,7 @@ The following configuration options are available:
   [`prefers-color-scheme`](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)
   CSS media query. Defaults to `navy`.
 - **smart-punctuation:** Converts quotes to curly quotes, `...` to `…`, `--` to en-dash, and `---` to em-dash.
-  See [Smart Punctuation].
+  See [Smart Punctuation](../markdown.md#smart-punctuation).
   Defaults to `false`.
 - **curly-quotes:** Deprecated alias for `smart-punctuation`.
 - **mathjax-support:** Adds support for [MathJax](../mathjax.md). Defaults to
