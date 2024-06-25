@@ -103,7 +103,7 @@ function playground_text(playground, hidden = true) {
         var result_block = code_block.querySelector(".result");
         if (!result_block) {
             result_block = document.createElement('code');
-            result_block.className = 'result hljs language-bash';
+            result_block.className = 'result syn-source syn-bash';
 
             code_block.append(result_block);
         }
@@ -150,36 +150,16 @@ function playground_text(playground, hidden = true) {
         .catch(error => result_block.innerText = "Playground Communication: " + error.message);
     }
 
-    // Syntax highlighting Configuration
-    hljs.configure({
-        tabReplace: '    ', // 4 spaces
-        languages: [],      // Languages used for auto-detection
-    });
-
     let code_nodes = Array
         .from(document.querySelectorAll('code'))
         // Don't highlight `inline code` blocks in headers.
         .filter(function (node) {return !node.parentElement.classList.contains("header"); });
 
-    if (window.ace) {
-        // language-rust class needs to be removed for editable
-        // blocks or highlightjs will capture events
-        code_nodes
-            .filter(function (node) {return node.classList.contains("editable"); })
-            .forEach(function (block) { block.classList.remove('language-rust'); });
-
-        code_nodes
-            .filter(function (node) {return !node.classList.contains("editable"); })
-            .forEach(function (block) { hljs.highlightBlock(block); });
-    } else {
-        code_nodes.forEach(function (block) { hljs.highlightBlock(block); });
-    }
-
-    // Adding the hljs class gives code blocks the color css
+    // Adding the scode class gives code blocks the color css
     // even if highlighting doesn't apply
-    code_nodes.forEach(function (block) { block.classList.add('hljs'); });
+    code_nodes.forEach(function (block) { block.classList.add('scode'); });
 
-    Array.from(document.querySelectorAll("code.hljs")).forEach(function (block) {
+    Array.from(document.querySelectorAll("code.scode")).forEach(function (block) {
 
         var lines = Array.from(block.querySelectorAll('.boring'));
         // If no lines were hidden, return
@@ -290,9 +270,9 @@ function playground_text(playground, hidden = true) {
     var themePopup = document.getElementById('theme-list');
     var themeColorMetaTag = document.querySelector('meta[name="theme-color"]');
     var stylesheets = {
-        ayuHighlight: document.querySelector("[href$='ayu-highlight.css']"),
-        tomorrowNight: document.querySelector("[href$='tomorrow-night.css']"),
-        highlight: document.querySelector("[href$='highlight.css']"),
+        ayuHighlight: document.querySelector("[href$='css/syntax/ayu.css']"),
+        tomorrowNight: document.querySelector("[href$='css/syntax/dark.css']"),
+        highlight: document.querySelector("[href$='css/syntax/light.css']"),
     };
 
     function showThemes() {

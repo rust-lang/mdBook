@@ -13,6 +13,8 @@ test_book/book/
 # Ignore Jetbrains specific files.
 .idea/
 
+src/theme/syntaxes.bin
+
 # Ignore Vim temporary and swap files.
 *.sw?
 *~

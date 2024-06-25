@@ -119,6 +119,7 @@ fn copy_theme() {
         "css/chrome.css",
         "css/general.css",
         "css/print.css",
+        "css/syntax/light.css",
         "css/variables.css",
         "favicon.png",
         "favicon.svg",
@@ -136,8 +137,6 @@ fn copy_theme() {
         "fonts/open-sans-v17-all-charsets-italic.woff2",
         "fonts/open-sans-v17-all-charsets-regular.woff2",
         "fonts/source-code-pro-v11-all-charsets-500.woff2",
-        "highlight.css",
-        "highlight.js",
         "index.hbs",
     ];
     let theme_dir = temp.path().join("theme");
