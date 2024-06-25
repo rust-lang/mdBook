@@ -370,6 +370,10 @@ ul#searchresults li {
 ul#searchresults li.focus {
     background-color: var(--searchresults-li-bg);
 }
+ul#searchresults li a em {
+    font-weight: bold;
+    font-style: normal;
+}
 ul#searchresults span.teaser {
     display: block;
     clear: both;

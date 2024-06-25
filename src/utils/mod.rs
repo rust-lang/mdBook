@@ -7,7 +7,7 @@ use crate::errors::Error;
 use log::error;
 use once_cell::sync::Lazy;
 use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, Options, Parser, Tag, TagEnd};
-use regex::Regex;
+use regex::{Captures, Regex};
 
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -19,10 +19,17 @@ pub use self::string::{
     take_rustdoc_include_lines,
 };
 
-/// Replaces multiple consecutive whitespace characters with a single space character.
+/// Replaces multiple consecutive whitespace characters with a single space character
+/// if there's no line break, otherwise replaces with a single "\n".
 pub fn collapse_whitespace(text: &str) -> Cow<'_, str> {
     static RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\s\s+").unwrap());
-    RE.replace_all(text, " ")
+    RE.replace_all(text, |caps: &Captures<'_>| {
+        if caps[0].contains(['\r', '\n']) {
+            "\n"
+        } else {
+            " "
+        }
+    })
 }
 
 /// Convert the given string to a valid HTML element ID.
