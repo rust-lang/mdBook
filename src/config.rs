@@ -240,15 +240,37 @@ impl Config {
     }
 
     /// Get the table associated with a particular renderer.
+    #[deprecated = "prefer get_renderer_deserialized over get_renderer"]
     pub fn get_renderer<I: AsRef<str>>(&self, index: I) -> Option<&Table> {
         let key = format!("output.{}", index.as_ref());
         self.get(&key).and_then(Value::as_table)
     }
 
+    /// Convenience function to fetch the renderer section from the config and deserialize it
+    /// into some arbitrary type.
+    pub fn get_renderer_deserialized<'de, T: Deserialize<'de>, I: AsRef<str>>(
+        &self,
+        index: I,
+    ) -> Result<Option<T>> {
+        let key = format!("output.{}", index.as_ref());
+        self.get_deserialized_opt(key)
+    }
+
     /// Get the table associated with a particular preprocessor.
+    #[deprecated = "prefer get_preprocessor_deserialized over get_preprocessor"]
     pub fn get_preprocessor<I: AsRef<str>>(&self, index: I) -> Option<&Table> {
         let key = format!("preprocessor.{}", index.as_ref());
         self.get(&key).and_then(Value::as_table)
+    }
+
+    /// Convenience function to fetch the preprocessor section from the config and deserialize it
+    /// into some arbitrary type.
+    pub fn get_preprocessor_deserialized<'de, T: Deserialize<'de>, I: AsRef<str>>(
+        &self,
+        index: I,
+    ) -> Result<Option<T>> {
+        let key = format!("preprocessor.{}", index.as_ref());
+        self.get_deserialized_opt(key)
     }
 
     fn from_legacy(mut table: Value) -> Config {
