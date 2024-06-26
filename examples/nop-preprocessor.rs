@@ -71,6 +71,7 @@ fn handle_supports(pre: &dyn Preprocessor, sub_args: &ArgMatches) -> ! {
 /// in your main `lib.rs` file.
 mod nop_lib {
     use super::*;
+    use serde::Deserialize;
 
     /// A no-op preprocessor.
     pub struct Nop;
@@ -87,10 +88,21 @@ mod nop_lib {
         }
 
         fn run(&self, ctx: &PreprocessorContext, book: Book) -> Result<Book, Error> {
-            // In testing we want to tell the preprocessor to blow up by setting a
+            // The config options our preprocessor uses, deserialized from the book.toml that
+            // mdbook uses
+            #[derive(Deserialize)]
+            struct Config {
+                /// Indicate whether or not the preprocessor should return an error.
+                #[serde(default)]
+                // tell serde to use std::default::Default (false) as the default
+                blow_up: bool,
+            }
+
+            // In testing we can tell the preprocessor to blow up by setting a
             // particular config value
-            if let Some(nop_cfg) = ctx.config.get_preprocessor(self.name()) {
-                if nop_cfg.contains_key("blow-up") {
+            let nop_cfg: Option<Config> = ctx.config.get_preprocessor_deserialized(self.name())?;
+            if let Some(nop_cfg) = nop_cfg {
+                if nop_cfg.blow_up {
                     anyhow::bail!("Boom!!1!");
                 }
             }

@@ -706,7 +706,11 @@ mod tests {
         let cfg = Config::from_str(cfg_str).unwrap();
 
         // make sure the `preprocessor.random` table exists
-        assert!(cfg.get_preprocessor("random").is_some());
+        #[derive(serde::Deserialize)]
+        struct Random {}
+        let random: Result<Option<Random>> = cfg.get_preprocessor_deserialized("random");
+        assert!(random.is_ok());
+        assert!(random.unwrap().is_some());
 
         let got = determine_preprocessors(&cfg).unwrap();
 
@@ -722,11 +726,17 @@ mod tests {
 
         let cfg = Config::from_str(cfg_str).unwrap();
 
-        // make sure the `preprocessor.random` table exists
-        let random = cfg.get_preprocessor("random").unwrap();
-        let random = get_custom_preprocessor_cmd("random", &Value::Table(random.clone()));
+        // Deserialize the preproessor.random config section into a struct
+        #[derive(serde::Deserialize)]
+        struct Random {
+            command: String,
+        }
+        let random: Random = cfg
+            .get_preprocessor_deserialized("random")
+            .unwrap()
+            .unwrap();
 
-        assert_eq!(random, "python random.py");
+        assert_eq!(random.command, "python random.py");
     }
 
     #[test]
@@ -851,13 +861,16 @@ mod tests {
         let cfg = Config::from_str(cfg_str).unwrap();
 
         // double-check that we can access preprocessor.links.renderers[0]
+        #[derive(serde::Deserialize)]
+        struct Links {
+            renderers: Vec<String>,
+        }
         let html = cfg
-            .get_preprocessor("links")
-            .and_then(|links| links.get("renderers"))
-            .and_then(Value::as_array)
-            .and_then(|renderers| renderers.get(0))
-            .and_then(Value::as_str)
-            .unwrap();
+            .get_preprocessor_deserialized::<Links, _>("links")
+            .unwrap()
+            .unwrap()
+            .renderers
+            .remove(0);
         assert_eq!(html, "html");
         let html_renderer = HtmlHandlebars;
         let pre = LinkPreprocessor::new();
