@@ -529,7 +529,9 @@ impl Renderer for HtmlHandlebars {
         handlebars.register_partial("header", String::from_utf8(theme.header.clone())?)?;
 
         debug!("Register the toc handlebars template");
-        handlebars.register_template_string("toc", String::from_utf8(theme.toc.clone())?)?;
+        handlebars.register_template_string("toc_js", String::from_utf8(theme.toc_js.clone())?)?;
+        handlebars
+            .register_template_string("toc_html", String::from_utf8(theme.toc_html.clone())?)?;
 
         debug!("Register handlebars helpers");
         self.register_hbs_helpers(&mut handlebars, &html_config);
@@ -586,11 +588,16 @@ impl Renderer for HtmlHandlebars {
             debug!("Creating print.html ✓");
         }
 
-        debug!("Render toc.js");
+        debug!("Render toc");
         {
-            let rendered_toc = handlebars.render("toc", &data)?;
+            let rendered_toc = handlebars.render("toc_js", &data)?;
             utils::fs::write_file(destination, "toc.js", rendered_toc.as_bytes())?;
             debug!("Creating toc.js ✓");
+            data.insert("is_toc_html".to_owned(), json!(true));
+            let rendered_toc = handlebars.render("toc_html", &data)?;
+            utils::fs::write_file(destination, "toc.html", rendered_toc.as_bytes())?;
+            debug!("Creating toc.html ✓");
+            data.remove("is_toc_html");
         }
 
         debug!("Copy static files");

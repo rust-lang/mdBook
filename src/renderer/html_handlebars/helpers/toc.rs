@@ -48,6 +48,13 @@ impl HelperDef for RenderToc {
                 RenderErrorReason::Other("Type error for `fold_level`, u64 expected".to_owned())
             })?;
 
+        // If true, then this is the iframe and we need target="_parent"
+        let is_toc_html = rc
+            .evaluate(ctx, "@root/is_toc_html")?
+            .as_json()
+            .as_bool()
+            .unwrap_or(false);
+
         out.write("<ol class=\"chapter\">")?;
 
         let mut current_level = 1;
@@ -113,7 +120,11 @@ impl HelperDef for RenderToc {
 
                     // Add link
                     out.write(&tmp)?;
-                    out.write("\">")?;
+                    out.write(if is_toc_html {
+                        "\" target=\"_parent\">"
+                    } else {
+                        "\">"
+                    })?;
                     path_exists = true;
                 }
                 _ => {

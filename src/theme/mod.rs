@@ -17,7 +17,8 @@ pub static INDEX: &[u8] = include_bytes!("index.hbs");
 pub static HEAD: &[u8] = include_bytes!("head.hbs");
 pub static REDIRECT: &[u8] = include_bytes!("redirect.hbs");
 pub static HEADER: &[u8] = include_bytes!("header.hbs");
-pub static TOC: &[u8] = include_bytes!("toc.js.hbs");
+pub static TOC_JS: &[u8] = include_bytes!("toc.js.hbs");
+pub static TOC_HTML: &[u8] = include_bytes!("toc.html.hbs");
 pub static CHROME_CSS: &[u8] = include_bytes!("css/chrome.css");
 pub static GENERAL_CSS: &[u8] = include_bytes!("css/general.css");
 pub static PRINT_CSS: &[u8] = include_bytes!("css/print.css");
@@ -51,7 +52,8 @@ pub struct Theme {
     pub head: Vec<u8>,
     pub redirect: Vec<u8>,
     pub header: Vec<u8>,
-    pub toc: Vec<u8>,
+    pub toc_js: Vec<u8>,
+    pub toc_html: Vec<u8>,
     pub chrome_css: Vec<u8>,
     pub general_css: Vec<u8>,
     pub print_css: Vec<u8>,
@@ -87,7 +89,8 @@ impl Theme {
                 (theme_dir.join("head.hbs"), &mut theme.head),
                 (theme_dir.join("redirect.hbs"), &mut theme.redirect),
                 (theme_dir.join("header.hbs"), &mut theme.header),
-                (theme_dir.join("toc.js.hbs"), &mut theme.toc),
+                (theme_dir.join("toc.js.hbs"), &mut theme.toc_js),
+                (theme_dir.join("toc.html.hbs"), &mut theme.toc_html),
                 (theme_dir.join("book.js"), &mut theme.js),
                 (theme_dir.join("css/chrome.css"), &mut theme.chrome_css),
                 (theme_dir.join("css/general.css"), &mut theme.general_css),
@@ -177,7 +180,8 @@ impl Default for Theme {
             head: HEAD.to_owned(),
             redirect: REDIRECT.to_owned(),
             header: HEADER.to_owned(),
-            toc: TOC.to_owned(),
+            toc_js: TOC_JS.to_owned(),
+            toc_html: TOC_HTML.to_owned(),
             chrome_css: CHROME_CSS.to_owned(),
             general_css: GENERAL_CSS.to_owned(),
             print_css: PRINT_CSS.to_owned(),
@@ -237,6 +241,7 @@ mod tests {
             "redirect.hbs",
             "header.hbs",
             "toc.js.hbs",
+            "toc.html.hbs",
             "favicon.png",
             "favicon.svg",
             "css/chrome.css",
@@ -268,7 +273,8 @@ mod tests {
             head: Vec::new(),
             redirect: Vec::new(),
             header: Vec::new(),
-            toc: Vec::new(),
+            toc_js: Vec::new(),
+            toc_html: Vec::new(),
             chrome_css: Vec::new(),
             general_css: Vec::new(),
             print_css: Vec::new(),
