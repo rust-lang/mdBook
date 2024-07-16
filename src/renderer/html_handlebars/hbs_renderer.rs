@@ -528,6 +528,9 @@ impl Renderer for HtmlHandlebars {
         debug!("Register the header handlebars template");
         handlebars.register_partial("header", String::from_utf8(theme.header.clone())?)?;
 
+        debug!("Register the toc handlebars template");
+        handlebars.register_template_string("toc", String::from_utf8(theme.toc.clone())?)?;
+
         debug!("Register handlebars helpers");
         self.register_hbs_helpers(&mut handlebars, &html_config);
 
@@ -581,6 +584,13 @@ impl Renderer for HtmlHandlebars {
 
             utils::fs::write_file(destination, "print.html", rendered.as_bytes())?;
             debug!("Creating print.html ✓");
+        }
+
+        debug!("Render toc.js");
+        {
+            let rendered_toc = handlebars.render("toc", &data)?;
+            utils::fs::write_file(destination, "toc.js", rendered_toc.as_bytes())?;
+            debug!("Creating toc.js ✓");
         }
 
         debug!("Copy static files");
