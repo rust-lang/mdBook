@@ -901,7 +901,7 @@ mod tests {
         let temp_dir = TempFileBuilder::new().prefix("mdbook-").tempdir().unwrap();
         let test_book_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("test_book");
 
-        utils::fs::copy_files_except_ext(&test_book_dir, temp_dir.path(), true, None, None)
+        utils::fs::copy_files_except_ignored(&test_book_dir, temp_dir.path(), true, None, None)
             .expect("Error while copying test book to temp dir");
 
         let book = MDBook::load(temp_dir.path()).expect("Unable to load book");

@@ -1,7 +1,7 @@
 //! Filesystem utilities and helpers.
 
 use crate::errors::*;
-use ignore::gitignore::Gitignore;
+use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use log::{debug, trace};
 use std::fs::{self, File};
 use std::io::Write;
@@ -93,6 +93,24 @@ pub fn copy_files_except_ext(
     to: &Path,
     recursive: bool,
     avoid_dir: Option<&PathBuf>,
+    ext_blacklist: &[&str],
+) -> Result<()> {
+    let mut builder = GitignoreBuilder::new(from);
+    for ext in ext_blacklist {
+        builder.add_line(None, &format!("*.{ext}"))?;
+    }
+    let ignore = builder.build()?;
+
+    copy_files_except_ignored(from, to, recursive, avoid_dir, Some(&ignore))
+}
+
+/// Copies all files of a directory to another one except the files that are
+/// ignored by the passed [`Gitignore`]
+pub fn copy_files_except_ignored(
+    from: &Path,
+    to: &Path,
+    recursive: bool,
+    avoid_dir: Option<&PathBuf>,
     ignore: Option<&Gitignore>,
 ) -> Result<()> {
     debug!(
@@ -120,7 +138,7 @@ pub fn copy_files_except_ext(
         // Check if it is in the blacklist
         if let Some(ignore) = ignore {
             let path = entry.as_path();
-            if ignore.matched(&path, path.is_dir()).is_ignore() {
+            if ignore.matched(path, path.is_dir()).is_ignore() {
                 continue;
             }
         }
@@ -149,7 +167,7 @@ pub fn copy_files_except_ext(
                 fs::create_dir(&target_file_path)?;
             }
 
-            copy_files_except_ext(&entry, &target_file_path, true, avoid_dir, ignore)?;
+            copy_files_except_ignored(&entry, &target_file_path, true, avoid_dir, ignore)?;
         } else if metadata.is_file() {
             debug!("Copying {entry:?} to {target_file_path:?}");
             copy(&entry, &target_file_path)?;
@@ -225,7 +243,6 @@ pub fn get_404_output_file(input_404: &Option<String>) -> String {
 #[cfg(test)]
 mod tests {
     use super::copy_files_except_ext;
-    use ignore::gitignore::GitignoreBuilder;
     use std::{fs, io::Result, path::Path};
 
     #[cfg(target_os = "windows")]
@@ -279,19 +296,9 @@ mod tests {
             panic!("Could not create output/sub_dir_exists: {err}");
         }
 
-        let ignore = GitignoreBuilder::new(tmp.path())
-            .add_line(None, "*.md")
-            .expect("Unable to add '*.md' to gitignore builder")
-            .build()
-            .expect("Unable to build gitignore");
-
-        if let Err(e) = copy_files_except_ext(
-            tmp.path(),
-            &tmp.path().join("output"),
-            true,
-            None,
-            Some(&ignore),
-        ) {
+        if let Err(e) =
+            copy_files_except_ext(tmp.path(), &tmp.path().join("output"), true, None, &["md"])
+        {
             panic!("Error while executing the function:\n{:?}", e);
         }
 

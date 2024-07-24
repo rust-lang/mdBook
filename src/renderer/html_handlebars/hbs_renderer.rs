@@ -505,7 +505,7 @@ impl Renderer for HtmlHandlebars {
         builder.add_line(None, "*.md")?;
         let ignore = builder.build()?;
 
-        utils::fs::copy_files_except_ext(
+        utils::fs::copy_files_except_ignored(
             &src_dir,
             destination,
             true,
