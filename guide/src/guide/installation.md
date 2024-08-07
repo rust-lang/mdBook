@@ -47,6 +47,18 @@ cargo install --git https://github.com/rust-lang/mdBook.git mdbook
 
 Again, make sure to add the Cargo bin directory to your `PATH`.
 
+
+### Updating mdbook from source
+
+```sh
+cargo install mdbook
+```
+
+This will automatically download mdBook from [crates.io], build it, and re-install it in Cargo's global binary directory (`~/.cargo/bin/` by default).
+
+
+## Own modifications and contributing
+
 If you are interested in making modifications to mdBook itself, check out the [Contributing Guide] for more information.
 
 [Contributing Guide]: https://github.com/rust-lang/mdBook/blob/master/CONTRIBUTING.md
