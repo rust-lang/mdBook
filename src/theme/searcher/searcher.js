@@ -468,9 +468,17 @@ window.search = window.search || {};
         showResults(true);
     }
 
-    fetch(path_to_root + 'searchindex.json')
-        .then(response => response.json())
-        .then(json => init(json))        
+    fetch(path_to_root + 'searchindex.js')
+        .then(response => response.text())
+        .then(text => {
+            const jsonMatch = text.match(/Object\.assign\(window\.search,\s*(\{[\s\S]*\})\s*\)/);
+            if (jsonMatch && jsonMatch[1]) {
+                return JSON.parse(jsonMatch[1]);
+            } else {
+                throw new Error('Unable to extract JSON from the script');
+            }
+        })
+        .then(json => init(json))
         .catch(error => { // Try to load searchindex.js if fetch failed
             var script = document.createElement('script');
             script.src = path_to_root + 'searchindex.js';
