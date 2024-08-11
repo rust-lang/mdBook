@@ -50,7 +50,7 @@ cargo install --git https://github.com/rust-lang/mdBook.git mdbook
 
 Again, make sure to add the Cargo bin directory to your `PATH`.
 
-## Own modifications and contributing
+## Modifying and contributing
 
 If you are interested in making modifications to mdBook itself, check out the [Contributing Guide] for more information.
 
