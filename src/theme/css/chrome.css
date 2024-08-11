@@ -267,7 +267,8 @@ pre > .buttons button.clip-button {
     padding: 2px 4px 0px 6px;
 }
 pre > .buttons button.clip-button::before {
-    /* clipboard <https://github.com/rust-lang/crates.io/commits/main/public/assets/copy.svg> */
+    /* clipboard image from octicons (https://github.com/primer/octicons/tree/v2.0.0) MIT license
+     */
     content: url('data:image/svg+xml,<svg width="21" height="20" viewBox="0 0 24 25" \
 xmlns="http://www.w3.org/2000/svg" aria-label="Copy to clipboard">\
 <path d="M18 20h2v3c0 1-1 2-2 2H2c-.998 0-2-1-2-2V5c0-.911.755-1.667 1.667-1.667h5A3.323 3.323 0 \
