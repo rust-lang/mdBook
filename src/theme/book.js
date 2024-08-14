@@ -225,7 +225,7 @@ function playground_text(playground, hidden = true) {
                 }
 
                 var clipButton = document.createElement('button');
-                clipButton.className = 'fa fa-copy clip-button';
+                clipButton.className = 'clip-button';
                 clipButton.title = 'Copy to clipboard';
                 clipButton.setAttribute('aria-label', clipButton.title);
                 clipButton.innerHTML = '<i class=\"tooltiptext\"></i>';
@@ -258,7 +258,7 @@ function playground_text(playground, hidden = true) {
 
         if (window.playground_copyable) {
             var copyCodeClipboardButton = document.createElement('button');
-            copyCodeClipboardButton.className = 'fa fa-copy clip-button';
+            copyCodeClipboardButton.className = 'clip-button';
             copyCodeClipboardButton.innerHTML = '<i class="tooltiptext"></i>';
             copyCodeClipboardButton.title = 'Copy to clipboard';
             copyCodeClipboardButton.setAttribute('aria-label', copyCodeClipboardButton.title);
@@ -597,12 +597,12 @@ function playground_text(playground, hidden = true) {
 
     function hideTooltip(elem) {
         elem.firstChild.innerText = "";
-        elem.className = 'fa fa-copy clip-button';
+        elem.className = 'clip-button';
     }
 
     function showTooltip(elem, msg) {
         elem.firstChild.innerText = msg;
-        elem.className = 'fa fa-copy tooltipped';
+        elem.className = 'clip-button tooltipped';
     }
 
     var clipboardSnippets = new ClipboardJS('.clip-button', {
