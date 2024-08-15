@@ -1,4 +1,5 @@
 use crate::errors::*;
+use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use log::{debug, trace};
 use std::fs::{self, File};
 use std::io::Write;
@@ -92,11 +93,29 @@ pub fn copy_files_except_ext(
     avoid_dir: Option<&PathBuf>,
     ext_blacklist: &[&str],
 ) -> Result<()> {
+    let mut builder = GitignoreBuilder::new(from);
+    for ext in ext_blacklist {
+        builder.add_line(None, &format!("*.{ext}"))?;
+    }
+    let ignore = builder.build()?;
+
+    copy_files_except_ignored(from, to, recursive, avoid_dir, Some(&ignore))
+}
+
+/// Copies all files of a directory to another one except the files that are
+/// ignored by the passed [`Gitignore`]
+pub fn copy_files_except_ignored(
+    from: &Path,
+    to: &Path,
+    recursive: bool,
+    avoid_dir: Option<&PathBuf>,
+    ignore: Option<&Gitignore>,
+) -> Result<()> {
     debug!(
         "Copying all files from {} to {} (blacklist: {:?}), avoiding {:?}",
         from.display(),
         to.display(),
-        ext_blacklist,
+        ignore,
         avoid_dir
     );
 
@@ -114,6 +133,14 @@ pub fn copy_files_except_ext(
         let entry_file_name = entry.file_name().unwrap();
         let target_file_path = to.join(entry_file_name);
 
+        // Check if it is in the blacklist
+        if let Some(ignore) = ignore {
+            let path = entry.as_path();
+            if ignore.matched(path, path.is_dir()).is_ignore() {
+                continue;
+            }
+        }
+
         // If the entry is a dir and the recursive option is enabled, call itself
         if metadata.is_dir() && recursive {
             if entry == to.as_os_str() {
@@ -126,19 +153,20 @@ pub fn copy_files_except_ext(
                 }
             }
 
+            if let Some(ignore) = ignore {
+                let path = entry.as_path();
+                if ignore.matched(path, path.is_dir()).is_ignore() {
+                    continue;
+                }
+            }
+
             // check if output dir already exists
             if !target_file_path.exists() {
                 fs::create_dir(&target_file_path)?;
             }
 
-            copy_files_except_ext(&entry, &target_file_path, true, avoid_dir, ext_blacklist)?;
+            copy_files_except_ignored(&entry, &target_file_path, true, avoid_dir, ignore)?;
         } else if metadata.is_file() {
-            // Check if it is in the blacklist
-            if let Some(ext) = entry.extension() {
-                if ext_blacklist.contains(&ext.to_str().unwrap()) {
-                    continue;
-                }
-            }
             debug!("Copying {entry:?} to {target_file_path:?}");
             copy(&entry, &target_file_path)?;
         }
