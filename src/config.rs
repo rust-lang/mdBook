@@ -555,6 +555,8 @@ pub struct HtmlConfig {
     pub print: Print,
     /// Don't render section labels.
     pub no_section_label: bool,
+    /// Don't render header links.
+    pub no_header_link: bool,
     /// Search settings. If `None`, the default will be used.
     pub search: Option<Search>,
     /// Git repository url. If `None`, the git button will not be shown.
@@ -607,6 +609,7 @@ impl Default for HtmlConfig {
             code: Code::default(),
             print: Print::default(),
             no_section_label: false,
+            no_header_link: false,
             search: None,
             git_repository_url: None,
             git_repository_icon: None,
