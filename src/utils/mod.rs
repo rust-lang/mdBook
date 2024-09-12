@@ -15,8 +15,8 @@ use std::fmt::Write;
 use std::path::Path;
 
 pub use self::string::{
-    take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,
-    take_rustdoc_include_lines,
+    take_anchored_lines, take_anchored_lines_with_shift, take_lines, take_lines_with_shift,
+    take_rustdoc_include_anchored_lines, take_rustdoc_include_lines, Shift,
 };
 
 /// Replaces multiple consecutive whitespace characters with a single space character.
