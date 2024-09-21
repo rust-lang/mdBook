@@ -18,11 +18,11 @@ pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> 
 
     let mut summary_content = String::new();
     File::open(&summary_md)
-        .with_context(|| format!("Couldn't open SUMMARY.md in {:?} directory", src_dir))?
+        .with_context(|| format!("Couldn't open SUMMARY.md in {src_dir:?} directory"))?
         .read_to_string(&mut summary_content)?;
 
     let summary = parse_summary(&summary_content)
-        .with_context(|| format!("Summary parsing failed for file={:?}", summary_md))?;
+        .with_context(|| format!("Summary parsing failed for file={summary_md:?}"))?;
 
     if cfg.create_missing {
         create_missing(src_dir, &summary).with_context(|| "Unable to create missing chapters")?;
@@ -341,7 +341,7 @@ impl<'a> Iterator for BookItems<'a> {
 impl Display for Chapter {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         if let Some(ref section_number) = self.number {
-            write!(f, "{} ", section_number)?;
+            write!(f, "{section_number} ")?;
         }
 
         write!(f, "{}", self.name)

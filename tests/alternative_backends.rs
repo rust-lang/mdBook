@@ -117,12 +117,12 @@ fn dummy_book_with_backend(
 
     let mut config = Config::default();
     config
-        .set(format!("output.{}.command", name), command)
+        .set(format!("output.{name}.command"), command)
         .unwrap();
 
     if backend_is_optional {
         config
-            .set(format!("output.{}.optional", name), true)
+            .set(format!("output.{name}.optional"), true)
             .unwrap();
     }
 

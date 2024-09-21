@@ -145,7 +145,7 @@ impl Config {
                 if let serde_json::Value::Object(ref map) = parsed_value {
                     // To `set` each `key`, we wrap them as `prefix.key`
                     for (k, v) in map {
-                        let full_key = format!("{}.{}", key, k);
+                        let full_key = format!("{key}.{k}");
                         self.set(&full_key, v).expect("unreachable");
                     }
                     return;

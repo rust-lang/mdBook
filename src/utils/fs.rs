@@ -228,47 +228,47 @@ mod tests {
     fn copy_files_except_ext_test() {
         let tmp = match tempfile::TempDir::new() {
             Ok(t) => t,
-            Err(e) => panic!("Could not create a temp dir: {}", e),
+            Err(e) => panic!("Could not create a temp dir: {e}"),
         };
 
         // Create a couple of files
         if let Err(err) = fs::File::create(tmp.path().join("file.txt")) {
-            panic!("Could not create file.txt: {}", err);
+            panic!("Could not create file.txt: {err}");
         }
         if let Err(err) = fs::File::create(tmp.path().join("file.md")) {
-            panic!("Could not create file.md: {}", err);
+            panic!("Could not create file.md: {err}");
         }
         if let Err(err) = fs::File::create(tmp.path().join("file.png")) {
-            panic!("Could not create file.png: {}", err);
+            panic!("Could not create file.png: {err}");
         }
         if let Err(err) = fs::create_dir(tmp.path().join("sub_dir")) {
-            panic!("Could not create sub_dir: {}", err);
+            panic!("Could not create sub_dir: {err}");
         }
         if let Err(err) = fs::File::create(tmp.path().join("sub_dir/file.png")) {
-            panic!("Could not create sub_dir/file.png: {}", err);
+            panic!("Could not create sub_dir/file.png: {err}");
         }
         if let Err(err) = fs::create_dir(tmp.path().join("sub_dir_exists")) {
-            panic!("Could not create sub_dir_exists: {}", err);
+            panic!("Could not create sub_dir_exists: {err}");
         }
         if let Err(err) = fs::File::create(tmp.path().join("sub_dir_exists/file.txt")) {
-            panic!("Could not create sub_dir_exists/file.txt: {}", err);
+            panic!("Could not create sub_dir_exists/file.txt: {err}");
         }
         if let Err(err) = symlink(tmp.path().join("file.png"), tmp.path().join("symlink.png")) {
-            panic!("Could not symlink file.png: {}", err);
+            panic!("Could not symlink file.png: {err}");
         }
 
         // Create output dir
         if let Err(err) = fs::create_dir(tmp.path().join("output")) {
-            panic!("Could not create output: {}", err);
+            panic!("Could not create output: {err}");
         }
         if let Err(err) = fs::create_dir(tmp.path().join("output/sub_dir_exists")) {
-            panic!("Could not create output/sub_dir_exists: {}", err);
+            panic!("Could not create output/sub_dir_exists: {err}");
         }
 
         if let Err(e) =
             copy_files_except_ext(tmp.path(), &tmp.path().join("output"), true, None, &["md"])
         {
-            panic!("Error while executing the function:\n{:?}", e);
+            panic!("Error while executing the function:\n{e:?}");
         }
 
         // Check if the correct files where created
