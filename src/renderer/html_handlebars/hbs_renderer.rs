@@ -856,9 +856,7 @@ fn fix_code_blocks(html: &str) -> String {
             let classes = &caps[2].replace(',', " ");
             let after = &caps[3];
 
-            format!(
-                r#"<code{before}class="{classes}"{after}>"#
-            )
+            format!(r#"<code{before}class="{classes}"{after}>"#)
         })
         .into_owned()
 }
@@ -916,8 +914,7 @@ fn add_playground_pre(
                             // we need to inject our own main
                             let (attrs, code) = partition_source(code);
 
-                            format!("# #![allow(unused)]\n{attrs}#fn main() {{\n{code}#}}")
-                                .into()
+                            format!("# #![allow(unused)]\n{attrs}#fn main() {{\n{code}#}}").into()
                         };
                         content
                     }

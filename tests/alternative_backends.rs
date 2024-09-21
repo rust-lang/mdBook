@@ -121,9 +121,7 @@ fn dummy_book_with_backend(
         .unwrap();
 
     if backend_is_optional {
-        config
-            .set(format!("output.{name}.optional"), true)
-            .unwrap();
+        config.set(format!("output.{name}.optional"), true).unwrap();
     }
 
     let md = MDBook::init(temp.path())

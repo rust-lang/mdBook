@@ -508,9 +508,7 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<dyn Preprocessor>>
 
             if let Some(after) = table.get("after") {
                 let after = after.as_array().ok_or_else(|| {
-                    Error::msg(format!(
-                        "Expected preprocessor.{name}.after to be an array"
-                    ))
+                    Error::msg(format!("Expected preprocessor.{name}.after to be an array"))
                 })?;
                 for before in after {
                     let before = before.as_str().ok_or_else(|| {
