@@ -153,13 +153,13 @@ impl HtmlHandlebars {
         let content_404 = if let Some(ref filename) = html_config.input_404 {
             let path = src_dir.join(filename);
             std::fs::read_to_string(&path)
-                .with_context(|| format!("unable to open 404 input file {:?}", path))?
+                .with_context(|| format!("unable to open 404 input file {path:?}"))?
         } else {
             // 404 input not explicitly configured try the default file 404.md
             let default_404_location = src_dir.join("404.md");
             if default_404_location.exists() {
                 std::fs::read_to_string(&default_404_location).with_context(|| {
-                    format!("unable to open 404 input file {:?}", default_404_location)
+                    format!("unable to open 404 input file {default_404_location:?}")
                 })?
             } else {
                 "# Document not found (404)\n\nThis URL is invalid, sorry. Please use the \
@@ -237,7 +237,7 @@ impl HtmlHandlebars {
         )?;
 
         if let Some(cname) = &html_config.cname {
-            write_file(destination, "CNAME", format!("{}\n", cname).as_bytes())?;
+            write_file(destination, "CNAME", format!("{cname}\n").as_bytes())?;
         }
 
         write_file(destination, "book.js", &theme.js)?;
@@ -834,11 +834,7 @@ fn insert_link_into_header(
         .unwrap_or_default();
 
     format!(
-        r##"<h{level} id="{id}"{classes}><a class="header" href="#{id}">{text}</a></h{level}>"##,
-        level = level,
-        id = id,
-        text = content,
-        classes = classes
+        r##"<h{level} id="{id}"{classes}><a class="header" href="#{id}">{content}</a></h{level}>"##
     )
 }
 
@@ -860,12 +856,7 @@ fn fix_code_blocks(html: &str) -> String {
             let classes = &caps[2].replace(',', " ");
             let after = &caps[3];
 
-            format!(
-                r#"<code{before}class="{classes}"{after}>"#,
-                before = before,
-                classes = classes,
-                after = after
-            )
+            format!(r#"<code{before}class="{classes}"{after}>"#)
         })
         .into_owned()
 }
@@ -923,8 +914,7 @@ fn add_playground_pre(
                             // we need to inject our own main
                             let (attrs, code) = partition_source(code);
 
-                            format!("# #![allow(unused)]\n{}#fn main() {{\n{}#}}", attrs, code)
-                                .into()
+                            format!("# #![allow(unused)]\n{attrs}#fn main() {{\n{code}#}}").into()
                         };
                         content
                     }

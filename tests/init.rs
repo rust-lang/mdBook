@@ -23,7 +23,7 @@ fn base_mdbook_init_should_create_default_content() {
     for file in &created_files {
         let target = temp.path().join(file);
         println!("{}", target.display());
-        assert!(target.exists(), "{} doesn't exist", file);
+        assert!(target.exists(), "{file} doesn't exist");
     }
 
     let contents = fs::read_to_string(temp.path().join("book.toml")).unwrap();
@@ -59,7 +59,7 @@ fn run_mdbook_init_should_create_content_from_summary() {
     for file in &created_files {
         let target = src_dir.join(file);
         println!("{}", target.display());
-        assert!(target.exists(), "{} doesn't exist", file);
+        assert!(target.exists(), "{file} doesn't exist");
     }
 }
 
@@ -73,8 +73,7 @@ fn run_mdbook_init_with_custom_book_and_src_locations() {
     for file in &created_files {
         assert!(
             !temp.path().join(file).exists(),
-            "{} shouldn't exist yet!",
-            file
+            "{file} shouldn't exist yet!"
         );
     }
 
@@ -88,8 +87,7 @@ fn run_mdbook_init_with_custom_book_and_src_locations() {
         let target = temp.path().join(file);
         assert!(
             target.exists(),
-            "{} should have been created by `mdbook init`",
-            file
+            "{file} should have been created by `mdbook init`"
         );
     }
 

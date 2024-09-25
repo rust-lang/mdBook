@@ -92,7 +92,7 @@ impl MDBook {
         }
 
         if log_enabled!(log::Level::Trace) {
-            for line in format!("Config: {:#?}", config).lines() {
+            for line in format!("Config: {config:#?}").lines() {
                 trace!("{}", line);
             }
         }
@@ -483,15 +483,13 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<dyn Preprocessor>>
             if let Some(before) = table.get("before") {
                 let before = before.as_array().ok_or_else(|| {
                     Error::msg(format!(
-                        "Expected preprocessor.{}.before to be an array",
-                        name
+                        "Expected preprocessor.{name}.before to be an array"
                     ))
                 })?;
                 for after in before {
                     let after = after.as_str().ok_or_else(|| {
                         Error::msg(format!(
-                            "Expected preprocessor.{}.before to contain strings",
-                            name
+                            "Expected preprocessor.{name}.before to contain strings"
                         ))
                     })?;
 
@@ -510,16 +508,12 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<dyn Preprocessor>>
 
             if let Some(after) = table.get("after") {
                 let after = after.as_array().ok_or_else(|| {
-                    Error::msg(format!(
-                        "Expected preprocessor.{}.after to be an array",
-                        name
-                    ))
+                    Error::msg(format!("Expected preprocessor.{name}.after to be an array"))
                 })?;
                 for before in after {
                     let before = before.as_str().ok_or_else(|| {
                         Error::msg(format!(
-                            "Expected preprocessor.{}.after to contain strings",
-                            name
+                            "Expected preprocessor.{name}.after to contain strings"
                         ))
                     })?;
 
@@ -581,7 +575,7 @@ fn get_custom_preprocessor_cmd(key: &str, table: &Value) -> String {
         .get("command")
         .and_then(Value::as_str)
         .map(ToString::to_string)
-        .unwrap_or_else(|| format!("mdbook-{}", key))
+        .unwrap_or_else(|| format!("mdbook-{key}"))
 }
 
 fn interpret_custom_renderer(key: &str, table: &Value) -> Box<CmdRenderer> {
@@ -592,7 +586,7 @@ fn interpret_custom_renderer(key: &str, table: &Value) -> Box<CmdRenderer> {
         .and_then(Value::as_str)
         .map(ToString::to_string);
 
-    let command = table_dot_command.unwrap_or_else(|| format!("mdbook-{}", key));
+    let command = table_dot_command.unwrap_or_else(|| format!("mdbook-{key}"));
 
     Box::new(CmdRenderer::new(key.to_string(), command))
 }
@@ -786,7 +780,7 @@ mod tests {
                 for preprocessor in &preprocessors {
                     eprintln!("  {}", preprocessor.name());
                 }
-                panic!("{} should come before {}", before, after);
+                panic!("{before} should come before {after}");
             }
         };
 

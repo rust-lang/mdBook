@@ -50,7 +50,7 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
         utils::fs::write_file(
             destination,
             "searchindex.js",
-            format!("Object.assign(window.search, {});", index).as_bytes(),
+            format!("Object.assign(window.search, {index});").as_bytes(),
         )?;
         utils::fs::write_file(destination, "searcher.js", searcher::JS)?;
         utils::fs::write_file(destination, "mark.min.js", searcher::MARK_JS)?;
@@ -83,7 +83,7 @@ fn add_doc(
     });
 
     let url = if let Some(id) = section_id {
-        Cow::Owned(format!("{}#{}", anchor_base, id))
+        Cow::Owned(format!("{anchor_base}#{id}"))
     } else {
         Cow::Borrowed(anchor_base)
     };
@@ -203,7 +203,7 @@ fn render_item(
             Event::FootnoteReference(name) => {
                 let len = footnote_numbers.len() + 1;
                 let number = footnote_numbers.entry(name).or_insert(len);
-                body.push_str(&format!(" [{}] ", number));
+                body.push_str(&format!(" [{number}] "));
             }
             Event::TaskListMarker(_checked) => {}
         }

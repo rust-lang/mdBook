@@ -616,7 +616,7 @@ impl Display for SectionNumber {
             write!(f, "0")
         } else {
             for item in &self.0 {
-                write!(f, "{}.", item)?;
+                write!(f, "{item}.")?;
             }
             Ok(())
         }
@@ -763,7 +763,7 @@ mod tests {
 
         let href = match parser.stream.next() {
             Some((Event::Start(Tag::Link { dest_url, .. }), _range)) => dest_url.to_string(),
-            other => panic!("Unreachable, {:?}", other),
+            other => panic!("Unreachable, {other:?}"),
         };
 
         let got = parser.parse_link(href);

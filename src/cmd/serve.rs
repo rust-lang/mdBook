@@ -54,7 +54,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let hostname = args.get_one::<String>("hostname").unwrap();
     let open_browser = args.get_flag("open");
 
-    let address = format!("{}:{}", hostname, port);
+    let address = format!("{hostname}:{port}");
 
     let update_config = |book: &mut MDBook| {
         book.config
@@ -89,7 +89,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         serve(build_dir, sockaddr, reload_tx, &file_404);
     });
 
-    let serving_url = format!("http://{}", address);
+    let serving_url = format!("http://{address}");
     info!("Serving on: {}", serving_url);
 
     if open_browser {
