@@ -265,6 +265,25 @@ pub fn log_backtrace(e: &Error) {
     }
 }
 
+pub(crate) fn special_escape(mut s: &str) -> String {
+    let mut escaped = String::with_capacity(s.len());
+    let needs_escape: &[char] = &['<', '>', '\'', '\\', '&'];
+    while let Some(next) = s.find(needs_escape) {
+        escaped.push_str(&s[..next]);
+        match s.as_bytes()[next] {
+            b'<' => escaped.push_str("&lt;"),
+            b'>' => escaped.push_str("&gt;"),
+            b'\'' => escaped.push_str("&#39;"),
+            b'\\' => escaped.push_str("&#92;"),
+            b'&' => escaped.push_str("&amp;"),
+            _ => unreachable!(),
+        }
+        s = &s[next + 1..];
+    }
+    escaped.push_str(s);
+    escaped
+}
+
 pub(crate) fn bracket_escape(mut s: &str) -> String {
     let mut escaped = String::with_capacity(s.len());
     let needs_escape: &[char] = &['<', '>'];
@@ -283,7 +302,7 @@ pub(crate) fn bracket_escape(mut s: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::bracket_escape;
+    use super::{bracket_escape, special_escape};
 
     mod render_markdown {
         use super::super::render_markdown;
@@ -506,5 +525,20 @@ more text with spaces
         assert_eq!(bracket_escape("<>"), "&lt;&gt;");
         assert_eq!(bracket_escape("<test>"), "&lt;test&gt;");
         assert_eq!(bracket_escape("a<test>b"), "a&lt;test&gt;b");
+        assert_eq!(bracket_escape("'"), "'");
+        assert_eq!(bracket_escape("\\"), "\\");
+    }
+
+    #[test]
+    fn escaped_special() {
+        assert_eq!(special_escape(""), "");
+        assert_eq!(special_escape("<"), "&lt;");
+        assert_eq!(special_escape(">"), "&gt;");
+        assert_eq!(special_escape("<>"), "&lt;&gt;");
+        assert_eq!(special_escape("<test>"), "&lt;test&gt;");
+        assert_eq!(special_escape("a<test>b"), "a&lt;test&gt;b");
+        assert_eq!(special_escape("'"), "&#39;");
+        assert_eq!(special_escape("\\"), "&#92;");
+        assert_eq!(special_escape("&"), "&amp;");
     }
 }

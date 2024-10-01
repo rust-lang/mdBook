@@ -1,8 +1,7 @@
 use std::path::Path;
 use std::{cmp::Ordering, collections::BTreeMap};
 
-use crate::utils;
-use crate::utils::bracket_escape;
+use crate::utils::special_escape;
 
 use handlebars::{
     Context, Handlebars, Helper, HelperDef, Output, RenderContext, RenderError, RenderErrorReason,
@@ -32,21 +31,6 @@ impl HelperDef for RenderToc {
                     RenderErrorReason::Other("Could not decode the JSON data".to_owned()).into()
                 })
         })?;
-        let current_path = rc
-            .evaluate(ctx, "@root/path")?
-            .as_json()
-            .as_str()
-            .ok_or_else(|| {
-                RenderErrorReason::Other("Type error for `path`, string expected".to_owned())
-            })?
-            .replace('\"', "");
-
-        let current_section = rc
-            .evaluate(ctx, "@root/section")?
-            .as_json()
-            .as_str()
-            .map(str::to_owned)
-            .unwrap_or_default();
 
         let fold_enable = rc
             .evaluate(ctx, "@root/fold_enable")?
@@ -64,31 +48,27 @@ impl HelperDef for RenderToc {
                 RenderErrorReason::Other("Type error for `fold_level`, u64 expected".to_owned())
             })?;
 
+        // If true, then this is the iframe and we need target="_parent"
+        let is_toc_html = rc
+            .evaluate(ctx, "@root/is_toc_html")?
+            .as_json()
+            .as_bool()
+            .unwrap_or(false);
+
         out.write("<ol class=\"chapter\">")?;
 
         let mut current_level = 1;
-        // The "index" page, which has this attribute set, is supposed to alias the first chapter in
-        // the book, i.e. the first link. There seems to be no easy way to determine which chapter
-        // the "index" is aliasing from within the renderer, so this is used instead to force the
-        // first link to be active. See further below.
-        let mut is_first_chapter = ctx.data().get("is_index").is_some();
 
         for item in chapters {
-            let (section, level) = if let Some(s) = item.get("section") {
+            let (_section, level) = if let Some(s) = item.get("section") {
                 (s.as_str(), s.matches('.').count())
             } else {
                 ("", 1)
             };
 
-            let is_expanded =
-                if !fold_enable || (!section.is_empty() && current_section.starts_with(section)) {
-                    // Expand if folding is disabled, or if the section is an
-                    // ancestor or the current section itself.
-                    true
-                } else {
-                    // Levels that are larger than this would be folded.
-                    level - 1 < fold_level as usize
-                };
+            // Expand if folding is disabled, or if levels that are larger than this would not
+            // be folded.
+            let is_expanded = !fold_enable || level - 1 < (fold_level as usize);
 
             match level.cmp(&current_level) {
                 Ordering::Greater => {
@@ -121,7 +101,7 @@ impl HelperDef for RenderToc {
             // Part title
             if let Some(title) = item.get("part") {
                 out.write("<li class=\"part-title\">")?;
-                out.write(&bracket_escape(title))?;
+                out.write(&special_escape(title))?;
                 out.write("</li>")?;
                 continue;
             }
@@ -139,16 +119,12 @@ impl HelperDef for RenderToc {
                         .replace('\\', "/");
 
                     // Add link
-                    out.write(&utils::fs::path_to_root(&current_path))?;
                     out.write(&tmp)?;
-                    out.write("\"")?;
-
-                    if path == &current_path || is_first_chapter {
-                        is_first_chapter = false;
-                        out.write(" class=\"active\"")?;
-                    }
-
-                    out.write(">")?;
+                    out.write(if is_toc_html {
+                        "\" target=\"_parent\">"
+                    } else {
+                        "\">"
+                    })?;
                     path_exists = true;
                 }
                 _ => {
@@ -167,7 +143,7 @@ impl HelperDef for RenderToc {
             }
 
             if let Some(name) = item.get("name") {
-                out.write(&bracket_escape(name))?
+                out.write(&special_escape(name))?
             }
 
             if path_exists {
