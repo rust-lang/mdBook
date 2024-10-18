@@ -153,11 +153,11 @@ impl BookBuilder {
         let mut js = File::create(themedir.join("book.js"))?;
         js.write_all(theme::JS)?;
 
-        let mut highlight_css = File::create(themedir.join("highlight.css"))?;
-        highlight_css.write_all(theme::HIGHLIGHT_CSS)?;
+        let syntax_dir = cssdir.join("syntax");
+        fs::create_dir_all(&syntax_dir)?;
 
-        let mut highlight_js = File::create(themedir.join("highlight.js"))?;
-        highlight_js.write_all(theme::HIGHLIGHT_JS)?;
+        let mut highlight_css = File::create(syntax_dir.join("light.css"))?;
+        highlight_css.write_all(theme::SYNTAX_LIGHT_CSS)?;
 
         write_file(&themedir.join("fonts"), "fonts.css", theme::fonts::CSS)?;
         for (file_name, contents) in theme::fonts::LICENSES {

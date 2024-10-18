@@ -1,6 +1,7 @@
 #![allow(missing_docs)] // FIXME: Document this
 
 pub mod fs;
+pub mod highlight;
 mod string;
 pub(crate) mod toml_ext;
 use crate::errors::Error;
@@ -8,6 +9,12 @@ use log::error;
 use once_cell::sync::Lazy;
 use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, Options, Parser, Tag, TagEnd};
 use regex::Regex;
+
+use crate::config::{Playground, RustEdition};
+use syntect::html::ClassStyle;
+use syntect::parsing::SyntaxReference;
+use syntect::parsing::SyntaxSet;
+use syntect::util::LinesWithEndings;
 
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -190,8 +197,21 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
 }
 
 /// Wrapper around the pulldown-cmark parser for rendering markdown to HTML.
-pub fn render_markdown(text: &str, smart_punctuation: bool) -> String {
-    render_markdown_with_path(text, smart_punctuation, None)
+pub fn render_markdown(
+    text: &str,
+    smart_punctuation: bool,
+    syntaxes: &SyntaxSet,
+    playground_config: &Playground,
+    default_edition: Option<RustEdition>,
+) -> String {
+    render_markdown_with_path(
+        text,
+        smart_punctuation,
+        None,
+        syntaxes,
+        playground_config,
+        default_edition,
+    )
 }
 
 pub fn new_cmark_parser(text: &str, smart_punctuation: bool) -> Parser<'_> {
@@ -211,16 +231,21 @@ pub fn render_markdown_with_path(
     text: &str,
     smart_punctuation: bool,
     path: Option<&Path>,
+    syntaxes: &SyntaxSet,
+    playground_config: &Playground,
+    default_edition: Option<RustEdition>,
 ) -> String {
     let mut s = String::with_capacity(text.len() * 3 / 2);
     let p = new_cmark_parser(text, smart_punctuation);
+    let mut highlighter = SyntaxHighlighter::new(playground_config, default_edition);
     let events = p
         .map(clean_codeblock_headers)
         .map(|event| adjust_links(event, path))
         .flat_map(|event| {
             let (a, b) = wrap_tables(event);
             a.into_iter().chain(b)
-        });
+        })
+        .map(|event| highlighter.highlight(syntaxes, event));
 
     html::push_html(&mut s, events);
     s
@@ -235,6 +260,150 @@ fn wrap_tables(event: Event<'_>) -> (Option<Event<'_>>, Option<Event<'_>>) {
         ),
         Event::End(TagEnd::Table) => (Some(event), Some(Event::Html(r#"</div>"#.into()))),
         _ => (Some(event), None),
+    }
+}
+
+struct SyntaxHighlighter<'a> {
+    highlight: bool,
+    is_rust: bool,
+    is_playground: bool,
+    is_editable: bool,
+    syntax: Option<&'a SyntaxReference>,
+    playground_config: &'a Playground,
+    default_edition: Option<RustEdition>,
+}
+
+impl<'a> SyntaxHighlighter<'a> {
+    fn new(playground_config: &'a Playground, default_edition: Option<RustEdition>) -> Self {
+        SyntaxHighlighter {
+            highlight: false,
+            is_rust: false,
+            is_playground: false,
+            is_editable: false,
+            syntax: None,
+            playground_config,
+            default_edition,
+        }
+    }
+
+    fn highlight<'b>(&mut self, syntaxes: &'a SyntaxSet, event: Event<'b>) -> Event<'b> {
+        match event {
+            Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(ref info))) => {
+                self.highlight = true;
+                let mut classes: Vec<_> = info
+                    .replace(',', " ")
+                    .split(' ')
+                    .map(String::from)
+                    .filter(|x| !x.is_empty())
+                    .collect();
+                if let Some(name) = classes.first() {
+                    // If we're given an empty name, or it is marked as
+                    // plaintext, we shouldn't highlight it.
+                    if name.is_empty()
+                        || name.eq_ignore_ascii_case("plaintext")
+                        || name.eq_ignore_ascii_case("text")
+                        || name.eq_ignore_ascii_case("plain")
+                        || name.eq_ignore_ascii_case("txt")
+                    {
+                        self.highlight = false;
+                        return event;
+                    }
+
+                    self.syntax = syntaxes.find_syntax_by_token(name);
+                    if self.syntax.is_none() {
+                        self.highlight = false;
+                        return event;
+                    }
+                    if let Some(syntax) = self.syntax {
+                        if syntax.name == "Rust" {
+                            self.is_rust = true;
+                        }
+                    }
+                    if self.is_rust {
+                        let ignore = classes.iter().any(|x| x == "ignore");
+                        let noplayground = classes.iter().any(|x| x == "noplayground");
+                        let noplaypen = classes.iter().any(|x| x == "noplaypen");
+                        let mdbook_runnable = classes.iter().any(|x| x == "mdbook-runnable");
+                        let playground_runnable = self.playground_config.runnable;
+                        // Enable playground
+                        if playground_runnable
+                            && ((!ignore && !noplayground && !noplaypen) || mdbook_runnable)
+                        {
+                            self.is_editable = classes.iter().any(|x| x == "editable");
+                            let contains_e2015 = classes.iter().any(|x| x == "edition2015");
+                            let contains_e2018 = classes.iter().any(|x| x == "edition2018");
+                            let contains_e2021 = classes.iter().any(|x| x == "edition2021");
+                            // if the user forced edition, we should not overwrite it
+                            if !contains_e2015 && !contains_e2018 && !contains_e2021 {
+                                match self.default_edition {
+                                    Some(RustEdition::E2015) => {
+                                        classes.push("edition2015".to_owned())
+                                    }
+                                    Some(RustEdition::E2018) => {
+                                        classes.push("edition2018".to_owned())
+                                    }
+                                    Some(RustEdition::E2021) => {
+                                        classes.push("edition2021".to_owned())
+                                    }
+                                    None => {}
+                                }
+                            }
+                            self.is_playground = true;
+                            return Event::Html(CowStr::from(format!(
+                                r#"<pre class="playground"><code class="syntect language-{}">"#,
+                                classes.join(" ")
+                            )));
+                        } else {
+                            self.is_editable = false;
+                            self.is_playground = false;
+                        }
+                    }
+                } else {
+                    // We also don't perform auto-detection of languages, so we
+                    // shouldn't highlight code blocks without lang tags.
+                    self.highlight = false;
+                }
+                if classes.is_empty() {
+                    Event::Html(CowStr::from("<pre><code>"))
+                } else {
+                    Event::Html(CowStr::from(format!(
+                        r#"<pre><code class="syntect language-{}">"#,
+                        classes.join(" ")
+                    )))
+                }
+            }
+            Event::End(TagEnd::CodeBlock) => {
+                self.highlight = false;
+                self.is_rust = false;
+                self.syntax = None;
+                self.is_playground = false;
+                self.is_editable = false;
+                Event::Html(CowStr::from("</code></pre>"))
+            }
+            Event::Text(ref code) if self.highlight => {
+                let mut gen = highlight::HtmlGenerator::new(
+                    self.syntax.unwrap(),
+                    syntaxes,
+                    ClassStyle::SpacedPrefixed { prefix: "syn-" },
+                );
+                let needs_wrapped = self.is_rust
+                    && !(self.playground_config.editable && self.is_editable)
+                    && self.is_playground
+                    && !code.contains("fn main")
+                    && !code.contains("quick_main!");
+                if needs_wrapped {
+                    gen.parse_line("# fn main() {\n", self.is_rust);
+                }
+                for line in LinesWithEndings::from(code) {
+                    gen.parse_line(line, self.is_rust);
+                }
+                if needs_wrapped {
+                    gen.parse_line("# }\n", self.is_rust);
+                }
+                Event::Html(CowStr::from(gen.finalize()))
+            }
+            _ => event,
+        }
     }
 }
 
@@ -286,12 +455,24 @@ mod tests {
     use super::bracket_escape;
 
     mod render_markdown {
+        use syntect::parsing::SyntaxSet;
+        fn default_syntaxes() -> SyntaxSet {
+            syntect::dumps::from_binary(crate::theme::SYNTAXES_BIN)
+        }
+
         use super::super::render_markdown;
+        use crate::config::{Playground, RustEdition};
 
         #[test]
         fn preserves_external_links() {
             assert_eq!(
-                render_markdown("[example](https://www.rust-lang.org/)", false),
+                render_markdown(
+                    "[example](https://www.rust-lang.org/)",
+                    false,
+                    &default_syntaxes(),
+                    &Playground::default(),
+                    None,
+                ),
                 "<p><a href=\"https://www.rust-lang.org/\">example</a></p>\n"
             );
         }
@@ -299,17 +480,35 @@ mod tests {
         #[test]
         fn it_can_adjust_markdown_links() {
             assert_eq!(
-                render_markdown("[example](example.md)", false),
+                render_markdown(
+                    "[example](example.md)",
+                    false,
+                    &default_syntaxes(),
+                    &Playground::default(),
+                    None,
+                ),
                 "<p><a href=\"example.html\">example</a></p>\n"
             );
             assert_eq!(
-                render_markdown("[example_anchor](example.md#anchor)", false),
+                render_markdown(
+                    "[example_anchor](example.md#anchor)",
+                    false,
+                    &default_syntaxes(),
+                    &Playground::default(),
+                    None,
+                ),
                 "<p><a href=\"example.html#anchor\">example_anchor</a></p>\n"
             );
 
             // this anchor contains 'md' inside of it
             assert_eq!(
-                render_markdown("[phantom data](foo.html#phantomdata)", false),
+                render_markdown(
+                    "[phantom data](foo.html#phantomdata)",
+                    false,
+                    &default_syntaxes(),
+                    &Playground::default(),
+                    None,
+                ),
                 "<p><a href=\"foo.html#phantomdata\">phantom data</a></p>\n"
             );
         }
@@ -327,12 +526,30 @@ mod tests {
 </tbody></table>
 </div>
 "#.trim();
-            assert_eq!(render_markdown(src, false), out);
+            assert_eq!(
+                render_markdown(
+                    src,
+                    false,
+                    &default_syntaxes(),
+                    &Playground::default(),
+                    None,
+                ),
+                out
+            );
         }
 
         #[test]
         fn it_can_keep_quotes_straight() {
-            assert_eq!(render_markdown("'one'", false), "<p>'one'</p>\n");
+            assert_eq!(
+                render_markdown(
+                    "'one'",
+                    false,
+                    &default_syntaxes(),
+                    &Playground::default(),
+                    None,
+                ),
+                "<p>'one'</p>\n"
+            );
         }
 
         #[test]
@@ -348,7 +565,16 @@ mod tests {
 </code></pre>
 <p><code>'three'</code> ‘four’</p>
 "#;
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(
+                render_markdown(
+                    input,
+                    true,
+                    &default_syntaxes(),
+                    &Playground::default(),
+                    None,
+                ),
+                expected
+            );
         }
 
         #[test]
@@ -364,14 +590,32 @@ more text with spaces
 "#;
 
             let expected = r#"<p>some text with spaces</p>
-<pre><code class="language-rust">fn main() {
-// code inside is unchanged
-}
-</code></pre>
+<pre class="playground"><code class="syntect language-rust"><span class="syn-source syn-rust"><span class="syn-meta syn-function syn-rust"><span class="syn-meta syn-function syn-rust"><span class="syn-storage syn-type syn-function syn-rust">fn</span> </span><span class="syn-entity syn-name syn-function syn-rust">main</span></span><span class="syn-meta syn-function syn-rust"><span class="syn-meta syn-function syn-parameters syn-rust"><span class="syn-punctuation syn-section syn-parameters syn-begin syn-rust">(</span></span><span class="syn-meta syn-function syn-rust"><span class="syn-meta syn-function syn-parameters syn-rust"><span class="syn-punctuation syn-section syn-parameters syn-end syn-rust">)</span></span></span></span><span class="syn-meta syn-function syn-rust"> </span><span class="syn-meta syn-function syn-rust"><span class="syn-meta syn-block syn-rust"><span class="syn-punctuation syn-section syn-block syn-begin syn-rust">{</span>
+<span class="syn-comment syn-line syn-double-slash syn-rust"><span class="syn-punctuation syn-definition syn-comment syn-rust">//</span> code inside is unchanged
+</span></span><span class="syn-meta syn-block syn-rust"><span class="syn-punctuation syn-section syn-block syn-end syn-rust">}</span></span></span>
+</span></code></pre>
 <p>more text with spaces</p>
 "#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(
+                render_markdown(
+                    input,
+                    false,
+                    &default_syntaxes(),
+                    &Playground::default(),
+                    None,
+                ),
+                expected
+            );
+            assert_eq!(
+                render_markdown(
+                    input,
+                    true,
+                    &default_syntaxes(),
+                    &Playground::default(),
+                    None,
+                ),
+                expected
+            );
         }
 
         #[test]
@@ -381,10 +625,27 @@ more text with spaces
 ```
 "#;
 
-            let expected = r#"<pre><code class="language-rust,no_run,should_panic,property_3"></code></pre>
-"#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            let expected = r#"<pre class="playground"><code class="syntect language-rust no_run should_panic property_3"></code></pre>"#;
+            assert_eq!(
+                render_markdown(
+                    input,
+                    false,
+                    &default_syntaxes(),
+                    &Playground::default(),
+                    None,
+                ),
+                expected
+            );
+            assert_eq!(
+                render_markdown(
+                    input,
+                    true,
+                    &default_syntaxes(),
+                    &Playground::default(),
+                    None,
+                ),
+                expected
+            );
         }
 
         #[test]
@@ -394,10 +655,27 @@ more text with spaces
 ```
 "#;
 
-            let expected = r#"<pre><code class="language-rust,,,,,no_run,,,should_panic,,,,property_3"></code></pre>
-"#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            let expected = r#"<pre class="playground"><code class="syntect language-rust no_run should_panic property_3"></code></pre>"#;
+            assert_eq!(
+                render_markdown(
+                    input,
+                    false,
+                    &default_syntaxes(),
+                    &Playground::default(),
+                    None,
+                ),
+                expected
+            );
+            assert_eq!(
+                render_markdown(
+                    input,
+                    true,
+                    &default_syntaxes(),
+                    &Playground::default(),
+                    None,
+                ),
+                expected
+            );
         }
 
         #[test]
@@ -407,17 +685,165 @@ more text with spaces
 ```
 "#;
 
-            let expected = r#"<pre><code class="language-rust"></code></pre>
-"#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            let expected =
+                r#"<pre class="playground"><code class="syntect language-rust"></code></pre>"#;
+            assert_eq!(
+                render_markdown(
+                    input,
+                    false,
+                    &default_syntaxes(),
+                    &Playground::default(),
+                    None,
+                ),
+                expected
+            );
+            assert_eq!(
+                render_markdown(
+                    input,
+                    true,
+                    &default_syntaxes(),
+                    &Playground::default(),
+                    None,
+                ),
+                expected
+            );
+        }
 
-            let input = r#"
-```rust
-```
-"#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+        // These HTML strings get very, very long.
+        // What I do is copy them out of here,
+        // paste them into a document.write() call in the JavaScript console,
+        // and then I can read the HTML in the DOM inspector to see if it looks right.
+        #[test]
+        fn add_playground() {
+            let inputs = [
+              ("```rust\nx()\n```",
+               "<pre class=\"playground\"><code class=\"syntect language-rust\"><span class=\"boring\"><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-storage syn-type syn-function syn-rust\">fn</span> </span><span class=\"syn-entity syn-name syn-function syn-rust\">main</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-begin syn-rust\">(</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-end syn-rust\">)</span></span></span></span><span class=\"syn-meta syn-function syn-rust\"> </span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-begin syn-rust\">{</span>\n</span></span></span></span><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-support syn-function syn-rust\">x</span><span class=\"syn-meta syn-group syn-rust\"><span class=\"syn-punctuation syn-section syn-group syn-begin syn-rust\">(</span></span><span class=\"syn-meta syn-group syn-rust\"><span class=\"syn-punctuation syn-section syn-group syn-end syn-rust\">)</span></span>\n</span></span></span><span class=\"boring\"><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-end syn-rust\">}</span></span></span>\n</span></span></code></pre>"),
+              ("```rust\nfn main() {}\n```",
+               "<pre class=\"playground\"><code class=\"syntect language-rust\"><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-storage syn-type syn-function syn-rust\">fn</span> </span><span class=\"syn-entity syn-name syn-function syn-rust\">main</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-begin syn-rust\">(</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-end syn-rust\">)</span></span></span></span><span class=\"syn-meta syn-function syn-rust\"> </span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-begin syn-rust\">{</span></span><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-end syn-rust\">}</span></span></span>\n</span></code></pre>"),
+              ("```rust editable\nlet s = \"foo\n # bar\n\";\n```",
+               "<pre class=\"playground\"><code class=\"syntect language-rust editable\"><span class=\"syn-source syn-rust\"><span class=\"syn-storage syn-type syn-rust\">let</span> s <span class=\"syn-keyword syn-operator syn-rust\">=</span> <span class=\"syn-string syn-quoted syn-double syn-rust\"><span class=\"syn-punctuation syn-definition syn-string syn-begin syn-rust\">&quot;</span>foo\n</span></span><span class=\"boring\"><span class=\"syn-source syn-rust\"><span class=\"syn-string syn-quoted syn-double syn-rust\"> bar\n</span></span></span><span class=\"syn-source syn-rust\"><span class=\"syn-string syn-quoted syn-double syn-rust\"><span class=\"syn-punctuation syn-definition syn-string syn-end syn-rust\">&quot;</span></span><span class=\"syn-punctuation syn-terminator syn-rust\">;</span>\n</span></code></pre>"),
+              ("```rust editable\nlet s = \"foo\n ## bar\n\";\n```",
+                "<pre class=\"playground\"><code class=\"syntect language-rust editable\"><span class=\"syn-source syn-rust\"><span class=\"syn-storage syn-type syn-rust\">let</span> s <span class=\"syn-keyword syn-operator syn-rust\">=</span> <span class=\"syn-string syn-quoted syn-double syn-rust\"><span class=\"syn-punctuation syn-definition syn-string syn-begin syn-rust\">&quot;</span>foo\n</span></span><span class=\"boring\"><span class=\"syn-source syn-rust\"><span class=\"syn-string syn-quoted syn-double syn-rust\"> # bar\n</span></span></span><span class=\"syn-source syn-rust\"><span class=\"syn-string syn-quoted syn-double syn-rust\"><span class=\"syn-punctuation syn-definition syn-string syn-end syn-rust\">&quot;</span></span><span class=\"syn-punctuation syn-terminator syn-rust\">;</span>\n</span></code></pre>"),
+              ("```rust editable\nlet s = \"foo\n # bar\n#\n\";\n```",
+                "<pre class=\"playground\"><code class=\"syntect language-rust editable\"><span class=\"syn-source syn-rust\"><span class=\"syn-storage syn-type syn-rust\">let</span> s <span class=\"syn-keyword syn-operator syn-rust\">=</span> <span class=\"syn-string syn-quoted syn-double syn-rust\"><span class=\"syn-punctuation syn-definition syn-string syn-begin syn-rust\">&quot;</span>foo\n</span></span><span class=\"boring\"><span class=\"syn-source syn-rust\"><span class=\"syn-string syn-quoted syn-double syn-rust\"> bar\n\n</span></span></span><span class=\"syn-source syn-rust\"><span class=\"syn-string syn-quoted syn-double syn-rust\"><span class=\"syn-punctuation syn-definition syn-string syn-end syn-rust\">&quot;</span></span><span class=\"syn-punctuation syn-terminator syn-rust\">;</span>\n</span></code></pre>"),
+              ("```rust ignore\nlet s = \"foo\n # bar\n\";\n```",
+                "<pre><code class=\"syntect language-rust ignore\"><span class=\"syn-source syn-rust\"><span class=\"syn-storage syn-type syn-rust\">let</span> s <span class=\"syn-keyword syn-operator syn-rust\">=</span> <span class=\"syn-string syn-quoted syn-double syn-rust\"><span class=\"syn-punctuation syn-definition syn-string syn-begin syn-rust\">&quot;</span>foo\n</span></span><span class=\"boring\"><span class=\"syn-source syn-rust\"><span class=\"syn-string syn-quoted syn-double syn-rust\"> bar\n</span></span></span><span class=\"syn-source syn-rust\"><span class=\"syn-string syn-quoted syn-double syn-rust\"><span class=\"syn-punctuation syn-definition syn-string syn-end syn-rust\">&quot;</span></span><span class=\"syn-punctuation syn-terminator syn-rust\">;</span>\n</span></code></pre>"),
+              ("```rust editable\n#![no_std]\nlet s = \"foo\";\n #[some_attr]\n```",
+                "<pre class=\"playground\"><code class=\"syntect language-rust editable\"><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-annotation syn-rust\"><span class=\"syn-punctuation syn-definition syn-annotation syn-rust\">#!</span><span class=\"syn-punctuation syn-section syn-group syn-begin syn-rust\">[</span><span class=\"syn-variable syn-annotation syn-rust\">no_std</span><span class=\"syn-punctuation syn-section syn-group syn-end syn-rust\">]</span></span>\n<span class=\"syn-storage syn-type syn-rust\">let</span> s <span class=\"syn-keyword syn-operator syn-rust\">=</span> <span class=\"syn-string syn-quoted syn-double syn-rust\"><span class=\"syn-punctuation syn-definition syn-string syn-begin syn-rust\">&quot;</span>foo<span class=\"syn-punctuation syn-definition syn-string syn-end syn-rust\">&quot;</span></span><span class=\"syn-punctuation syn-terminator syn-rust\">;</span>\n <span class=\"syn-meta syn-annotation syn-rust\"><span class=\"syn-punctuation syn-definition syn-annotation syn-rust\">#</span><span class=\"syn-punctuation syn-section syn-group syn-begin syn-rust\">[</span><span class=\"syn-variable syn-annotation syn-rust\">some_attr</span><span class=\"syn-punctuation syn-section syn-group syn-end syn-rust\">]</span></span>\n</span></code></pre>"),
+            ];
+            for (src, should_be) in &inputs {
+                let got = render_markdown(
+                    src,
+                    false,
+                    &default_syntaxes(),
+                    &Playground {
+                        editable: true,
+                        ..Playground::default()
+                    },
+                    None,
+                );
+                assert_eq!(&*got, *should_be);
+            }
+        }
+        #[test]
+        fn add_playground_edition2015() {
+            let inputs = [
+              ("```rust\nx()\n```",
+               "<pre class=\"playground\"><code class=\"syntect language-rust edition2015\"><span class=\"boring\"><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-storage syn-type syn-function syn-rust\">fn</span> </span><span class=\"syn-entity syn-name syn-function syn-rust\">main</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-begin syn-rust\">(</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-end syn-rust\">)</span></span></span></span><span class=\"syn-meta syn-function syn-rust\"> </span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-begin syn-rust\">{</span>\n</span></span></span></span><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-support syn-function syn-rust\">x</span><span class=\"syn-meta syn-group syn-rust\"><span class=\"syn-punctuation syn-section syn-group syn-begin syn-rust\">(</span></span><span class=\"syn-meta syn-group syn-rust\"><span class=\"syn-punctuation syn-section syn-group syn-end syn-rust\">)</span></span>\n</span></span></span><span class=\"boring\"><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-end syn-rust\">}</span></span></span>\n</span></span></code></pre>"),
+              ("```rust\nfn main() {}\n```",
+               "<pre class=\"playground\"><code class=\"syntect language-rust edition2015\"><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-storage syn-type syn-function syn-rust\">fn</span> </span><span class=\"syn-entity syn-name syn-function syn-rust\">main</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-begin syn-rust\">(</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-end syn-rust\">)</span></span></span></span><span class=\"syn-meta syn-function syn-rust\"> </span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-begin syn-rust\">{</span></span><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-end syn-rust\">}</span></span></span>\n</span></code></pre>"),
+              ("```rust edition2015\nfn main() {}\n```",
+               "<pre class=\"playground\"><code class=\"syntect language-rust edition2015\"><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-storage syn-type syn-function syn-rust\">fn</span> </span><span class=\"syn-entity syn-name syn-function syn-rust\">main</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-begin syn-rust\">(</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-end syn-rust\">)</span></span></span></span><span class=\"syn-meta syn-function syn-rust\"> </span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-begin syn-rust\">{</span></span><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-end syn-rust\">}</span></span></span>\n</span></code></pre>"),
+              ("```rust edition2018\nfn main() {}\n```",
+               "<pre class=\"playground\"><code class=\"syntect language-rust edition2018\"><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-storage syn-type syn-function syn-rust\">fn</span> </span><span class=\"syn-entity syn-name syn-function syn-rust\">main</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-begin syn-rust\">(</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-end syn-rust\">)</span></span></span></span><span class=\"syn-meta syn-function syn-rust\"> </span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-begin syn-rust\">{</span></span><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-end syn-rust\">}</span></span></span>\n</span></code></pre>"),
+            ];
+            for (src, should_be) in &inputs {
+                let got = render_markdown(
+                    src,
+                    false,
+                    &default_syntaxes(),
+                    &Playground {
+                        editable: true,
+                        ..Playground::default()
+                    },
+                    Some(RustEdition::E2015),
+                );
+                assert_eq!(&*got, *should_be);
+            }
+        }
+        #[test]
+        fn add_playground_edition2018() {
+            let inputs = [
+              ("```rust\nx()\n```",
+               "<pre class=\"playground\"><code class=\"syntect language-rust edition2018\"><span class=\"boring\"><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-storage syn-type syn-function syn-rust\">fn</span> </span><span class=\"syn-entity syn-name syn-function syn-rust\">main</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-begin syn-rust\">(</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-end syn-rust\">)</span></span></span></span><span class=\"syn-meta syn-function syn-rust\"> </span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-begin syn-rust\">{</span>\n</span></span></span></span><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-support syn-function syn-rust\">x</span><span class=\"syn-meta syn-group syn-rust\"><span class=\"syn-punctuation syn-section syn-group syn-begin syn-rust\">(</span></span><span class=\"syn-meta syn-group syn-rust\"><span class=\"syn-punctuation syn-section syn-group syn-end syn-rust\">)</span></span>\n</span></span></span><span class=\"boring\"><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-end syn-rust\">}</span></span></span>\n</span></span></code></pre>"),
+              ("```rust\nfn main() {}\n```",
+               "<pre class=\"playground\"><code class=\"syntect language-rust edition2018\"><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-storage syn-type syn-function syn-rust\">fn</span> </span><span class=\"syn-entity syn-name syn-function syn-rust\">main</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-begin syn-rust\">(</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-end syn-rust\">)</span></span></span></span><span class=\"syn-meta syn-function syn-rust\"> </span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-begin syn-rust\">{</span></span><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-end syn-rust\">}</span></span></span>\n</span></code></pre>"),
+              ("```rust edition2015\nfn main() {}\n```",
+               "<pre class=\"playground\"><code class=\"syntect language-rust edition2015\"><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-storage syn-type syn-function syn-rust\">fn</span> </span><span class=\"syn-entity syn-name syn-function syn-rust\">main</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-begin syn-rust\">(</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-end syn-rust\">)</span></span></span></span><span class=\"syn-meta syn-function syn-rust\"> </span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-begin syn-rust\">{</span></span><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-end syn-rust\">}</span></span></span>\n</span></code></pre>"),
+              ("```rust edition2018\nfn main() {}\n```",
+               "<pre class=\"playground\"><code class=\"syntect language-rust edition2018\"><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-storage syn-type syn-function syn-rust\">fn</span> </span><span class=\"syn-entity syn-name syn-function syn-rust\">main</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-begin syn-rust\">(</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-end syn-rust\">)</span></span></span></span><span class=\"syn-meta syn-function syn-rust\"> </span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-begin syn-rust\">{</span></span><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-end syn-rust\">}</span></span></span>\n</span></code></pre>"),
+            ];
+            for (src, should_be) in &inputs {
+                let got = render_markdown(
+                    src,
+                    false,
+                    &default_syntaxes(),
+                    &Playground {
+                        editable: true,
+                        ..Playground::default()
+                    },
+                    Some(RustEdition::E2018),
+                );
+                assert_eq!(&*got, *should_be);
+            }
+        }
+        #[test]
+        fn add_playground_edition2021() {
+            let inputs = [
+              ("```rust\nx()\n```",
+               "<pre class=\"playground\"><code class=\"syntect language-rust edition2021\"><span class=\"boring\"><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-storage syn-type syn-function syn-rust\">fn</span> </span><span class=\"syn-entity syn-name syn-function syn-rust\">main</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-begin syn-rust\">(</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-end syn-rust\">)</span></span></span></span><span class=\"syn-meta syn-function syn-rust\"> </span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-begin syn-rust\">{</span>\n</span></span></span></span><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-support syn-function syn-rust\">x</span><span class=\"syn-meta syn-group syn-rust\"><span class=\"syn-punctuation syn-section syn-group syn-begin syn-rust\">(</span></span><span class=\"syn-meta syn-group syn-rust\"><span class=\"syn-punctuation syn-section syn-group syn-end syn-rust\">)</span></span>\n</span></span></span><span class=\"boring\"><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-end syn-rust\">}</span></span></span>\n</span></span></code></pre>"),
+              ("```rust\nfn main() {}\n```",
+               "<pre class=\"playground\"><code class=\"syntect language-rust edition2021\"><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-storage syn-type syn-function syn-rust\">fn</span> </span><span class=\"syn-entity syn-name syn-function syn-rust\">main</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-begin syn-rust\">(</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-end syn-rust\">)</span></span></span></span><span class=\"syn-meta syn-function syn-rust\"> </span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-begin syn-rust\">{</span></span><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-end syn-rust\">}</span></span></span>\n</span></code></pre>"),
+              ("```rust edition2015\nfn main() {}\n```",
+               "<pre class=\"playground\"><code class=\"syntect language-rust edition2015\"><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-storage syn-type syn-function syn-rust\">fn</span> </span><span class=\"syn-entity syn-name syn-function syn-rust\">main</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-begin syn-rust\">(</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-end syn-rust\">)</span></span></span></span><span class=\"syn-meta syn-function syn-rust\"> </span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-begin syn-rust\">{</span></span><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-end syn-rust\">}</span></span></span>\n</span></code></pre>"),
+              ("```rust edition2018\nfn main() {}\n```",
+               "<pre class=\"playground\"><code class=\"syntect language-rust edition2018\"><span class=\"syn-source syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-storage syn-type syn-function syn-rust\">fn</span> </span><span class=\"syn-entity syn-name syn-function syn-rust\">main</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-begin syn-rust\">(</span></span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-function syn-parameters syn-rust\"><span class=\"syn-punctuation syn-section syn-parameters syn-end syn-rust\">)</span></span></span></span><span class=\"syn-meta syn-function syn-rust\"> </span><span class=\"syn-meta syn-function syn-rust\"><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-begin syn-rust\">{</span></span><span class=\"syn-meta syn-block syn-rust\"><span class=\"syn-punctuation syn-section syn-block syn-end syn-rust\">}</span></span></span>\n</span></code></pre>"),
+            ];
+            for (src, should_be) in &inputs {
+                let got = render_markdown(
+                    src,
+                    false,
+                    &default_syntaxes(),
+                    &Playground {
+                        editable: true,
+                        ..Playground::default()
+                    },
+                    Some(RustEdition::E2021),
+                );
+                assert_eq!(&*got, *should_be);
+            }
+        }
+        #[test]
+        fn no_add_playground_to_other_languages() {
+            let inputs = [
+              ("```html,testhtml\n<p>\n```",
+               "<pre><code class=\"syntect language-html testhtml\"><span class=\"syn-text syn-html syn-basic\"><span class=\"syn-meta syn-tag syn-block syn-any syn-html\"><span class=\"syn-punctuation syn-definition syn-tag syn-begin syn-html\">&lt;</span><span class=\"syn-entity syn-name syn-tag syn-block syn-any syn-html\">p</span><span class=\"syn-punctuation syn-definition syn-tag syn-end syn-html\">&gt;</span></span>\n</span></code></pre>"),
+              ("```js es7\nf()\n```",
+               "<pre><code class=\"syntect language-js es7\"><span class=\"syn-source syn-js\"><span class=\"syn-meta syn-function-call syn-js\"><span class=\"syn-variable syn-function syn-js\">f</span><span class=\"syn-meta syn-group syn-js\"><span class=\"syn-punctuation syn-section syn-group syn-js\">(</span></span><span class=\"syn-meta syn-group syn-js\"><span class=\"syn-punctuation syn-section syn-group syn-js\">)</span></span></span>\n</span></code></pre>"),
+            ];
+            for (src, should_be) in &inputs {
+                let got = render_markdown(
+                    src,
+                    false,
+                    &default_syntaxes(),
+                    &Playground {
+                        editable: true,
+                        ..Playground::default()
+                    },
+                    Some(RustEdition::E2021),
+                );
+                assert_eq!(&*got, *should_be);
+            }
         }
     }
 

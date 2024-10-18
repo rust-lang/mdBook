@@ -192,8 +192,23 @@ fn rustdoc_include_hides_the_unspecified_part_of_the_file() {
 
     let nested = temp.path().join("book/first/nested.html");
     let text = vec![
-        "<span class=\"boring\">fn some_function() {",
-        "<span class=\"boring\">fn some_other_function() {",
+        r#"<span class="boring"><span class="syn-source syn-rust"><span class="syn-meta syn-function syn-rust"><span class="syn-meta syn-function syn-rust"><span class="syn-storage syn-type syn-function syn-rust">fn</span> </span><span class="syn-entity syn-name syn-function syn-rust">some_function"#,
+        r#"<span class="boring"><span class="syn-source syn-rust"><span class="syn-meta syn-function syn-rust"><span class="syn-meta syn-function syn-rust"><span class="syn-storage syn-type syn-function syn-rust">fn</span> </span><span class="syn-entity syn-name syn-function syn-rust">some_other_function"#,
+    ];
+
+    assert_contains_strings(nested, &text);
+}
+
+#[test]
+fn boringify_properly_splits_string() {
+    let temp = DummyBook::new().build().unwrap();
+    let md = MDBook::load(temp.path()).unwrap();
+    md.build().unwrap();
+
+    let nested = temp.path().join("book/second.html");
+    let text = vec![
+        r#"<span class="syn-string syn-quoted syn-double syn-rust"><span class="syn-punctuation syn-definition syn-string syn-begin syn-rust">&quot;</span>interesting string"#,
+        r#"</span></span></span></span><span class="boring"><span class="syn-source syn-rust"><span class="syn-meta syn-function syn-rust"><span class="syn-meta syn-block syn-rust"><span class="syn-string syn-quoted syn-double syn-rust">boring string"#,
     ];
 
     assert_contains_strings(nested, &text);
@@ -375,7 +390,10 @@ fn able_to_include_playground_files_in_chapters() {
 
     let second = temp.path().join("book/second.html");
 
-    let playground_strings = &[r#"class="playground""#, r#"println!("Hello World!");"#];
+    let playground_strings = &[
+        r#"class="playground""#,
+        r#"<span class="syn-support syn-macro syn-rust">println!</span><span class="syn-meta syn-group syn-rust"><span class="syn-punctuation syn-section syn-group syn-begin syn-rust">(</span></span><span class="syn-meta syn-group syn-rust"><span class="syn-string syn-quoted syn-double syn-rust"><span class="syn-punctuation syn-definition syn-string syn-begin syn-rust">&quot;</span>Hello World!"#,
+    ];
 
     assert_contains_strings(&second, playground_strings);
     assert_doesnt_contain_strings(&second, &["{{#playground example.rs}}"]);
@@ -494,6 +512,44 @@ fn theme_dir_overrides_work_correctly() {
 
     let built_index = book_dir.join("book").join("index.html");
     dummy_book::assert_contains_strings(built_index, &["This is a modified index.hbs!"]);
+}
+
+#[test]
+fn theme_dir_syntaxesdotbin_prevents_default_highlighting() {
+    let book_dir = dummy_book::new_copy_of_example_book().unwrap();
+    let book_dir = book_dir.path();
+    let theme_dir = book_dir.join("theme");
+
+    let empty_syntaxset = syntect::parsing::SyntaxSet::new();
+    let empty_syntaxset_dump = syntect::dumps::dump_binary(&empty_syntaxset);
+    write_file(&theme_dir, "syntaxes.bin", &empty_syntaxset_dump).unwrap();
+
+    let md = MDBook::load(book_dir).unwrap();
+    md.build().unwrap();
+
+    let second = book_dir.join("book/format/mdbook.html");
+
+    assert_doesnt_contain_strings(&second, &["syn-rust", "rustmodifiedtestfixture"]);
+}
+
+#[test]
+fn theme_dir_syntaxesdotbin_reads_syntaxes() {
+    let book_dir = dummy_book::new_copy_of_example_book().unwrap();
+    let book_dir = book_dir.path();
+    let theme_dir = book_dir.join("theme");
+
+    let syntaxset_test_fixture =
+        syntect::parsing::SyntaxSet::load_from_folder("tests/syntax_test_fixtures").unwrap();
+    let syntaxset_test_fixture = syntect::dumps::dump_binary(&syntaxset_test_fixture);
+    write_file(&theme_dir, "syntaxes.bin", &syntaxset_test_fixture).unwrap();
+
+    let md = MDBook::load(book_dir).unwrap();
+    md.build().unwrap();
+
+    let second = book_dir.join("book/format/mdbook.html");
+
+    assert_contains_strings(&second, &["syn-rustmodifiedtestfixture"]);
+    assert_doesnt_contain_strings(&second, &["syn-rust\""]);
 }
 
 #[test]

@@ -130,7 +130,7 @@
           "title": 3
         },
         "26": {
-          "body": 20,
+          "body": 30,
           "breadcrumbs": 4,
           "title": 2
         },
@@ -301,7 +301,7 @@
           "title": "Heading with id and classes"
         },
         "26": {
-          "body": "This makes sure you can insert runnable Rust files. fn main() { println!(\"Hello World!\");\n#\n# // You can even hide lines! :D\n# println!(\"I am hidden! Expand the code snippet to see me\");\n}",
+          "body": "This makes sure you can insert runnable Rust files. fn main() { println!(\"Hello World!\");\n#\n# // You can even hide lines! :D\n# println!(\"I am hidden! Expand the code snippet to see me\"); // You can hide lines within string literals. let _t = \"interesting string\n# boring string \";\n}",
           "breadcrumbs": "Second Chapter » Second Chapter",
           "id": "26",
           "title": "Second Chapter"
@@ -394,6 +394,18 @@
             "docs": {
               "14": {
                 "tf": 1.0
+              }
+            }
+          },
+          "_": {
+            "df": 0,
+            "docs": {},
+            "t": {
+              "df": 1,
+              "docs": {
+                "26": {
+                  "tf": 1.0
+                }
               }
             }
           },
@@ -727,6 +739,18 @@
                       "tf": 1.0
                     },
                     "10": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              },
+              "r": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 1,
+                  "docs": {
+                    "26": {
                       "tf": 1.0
                     }
                   }
@@ -1648,7 +1672,7 @@
                   "df": 1,
                   "docs": {
                     "26": {
-                      "tf": 1.0
+                      "tf": 1.4142135623730951
                     }
                   }
                 }
@@ -1806,9 +1830,12 @@
                         "df": 0,
                         "docs": {},
                         "t": {
-                          "df": 1,
+                          "df": 2,
                           "docs": {
                             "1": {
+                              "tf": 1.0
+                            },
+                            "26": {
                               "tf": 1.0
                             }
                           }
@@ -1919,7 +1946,7 @@
                       "tf": 1.4142135623730951
                     },
                     "26": {
-                      "tf": 1.0
+                      "tf": 1.4142135623730951
                     },
                     "6": {
                       "tf": 1.0
@@ -1931,6 +1958,22 @@
                   "docs": {
                     "27": {
                       "tf": 2.23606797749979
+                    }
+                  }
+                }
+              },
+              "t": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 0,
+                  "docs": {},
+                  "r": {
+                    "df": 1,
+                    "docs": {
+                      "26": {
+                        "tf": 1.0
+                      }
                     }
                   }
                 }
@@ -2959,8 +3002,11 @@
                     "df": 0,
                     "docs": {},
                     "g": {
-                      "df": 1,
+                      "df": 2,
                       "docs": {
+                        "26": {
+                          "tf": 1.7320508075688772
+                        },
                         "6": {
                           "tf": 1.0
                         }
@@ -3266,6 +3312,30 @@
             },
             "df": 0,
             "docs": {},
+            "i": {
+              "df": 0,
+              "docs": {},
+              "t": {
+                "df": 0,
+                "docs": {},
+                "h": {
+                  "df": 0,
+                  "docs": {},
+                  "i": {
+                    "df": 0,
+                    "docs": {},
+                    "n": {
+                      "df": 1,
+                      "docs": {
+                        "26": {
+                          "tf": 1.0
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
             "o": {
               "df": 0,
               "docs": {},
@@ -3353,6 +3423,18 @@
             "docs": {
               "14": {
                 "tf": 1.0
+              }
+            }
+          },
+          "_": {
+            "df": 0,
+            "docs": {},
+            "t": {
+              "df": 1,
+              "docs": {
+                "26": {
+                  "tf": 1.0
+                }
               }
             }
           },
@@ -3692,6 +3774,18 @@
                       "tf": 1.7320508075688772
                     },
                     "10": {
+                      "tf": 1.0
+                    }
+                  }
+                }
+              },
+              "r": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 1,
+                  "docs": {
+                    "26": {
                       "tf": 1.0
                     }
                   }
@@ -4748,7 +4842,7 @@
                   "df": 1,
                   "docs": {
                     "26": {
-                      "tf": 1.0
+                      "tf": 1.4142135623730951
                     }
                   }
                 }
@@ -4906,9 +5000,12 @@
                         "df": 0,
                         "docs": {},
                         "t": {
-                          "df": 1,
+                          "df": 2,
                           "docs": {
                             "1": {
+                              "tf": 1.0
+                            },
+                            "26": {
                               "tf": 1.0
                             }
                           }
@@ -5019,7 +5116,7 @@
                       "tf": 1.4142135623730951
                     },
                     "26": {
-                      "tf": 1.0
+                      "tf": 1.4142135623730951
                     },
                     "6": {
                       "tf": 1.0
@@ -5031,6 +5128,22 @@
                   "docs": {
                     "27": {
                       "tf": 2.449489742783178
+                    }
+                  }
+                }
+              },
+              "t": {
+                "df": 0,
+                "docs": {},
+                "e": {
+                  "df": 0,
+                  "docs": {},
+                  "r": {
+                    "df": 1,
+                    "docs": {
+                      "26": {
+                        "tf": 1.0
+                      }
                     }
                   }
                 }
@@ -6098,8 +6211,11 @@
                     "df": 0,
                     "docs": {},
                     "g": {
-                      "df": 1,
+                      "df": 2,
                       "docs": {
+                        "26": {
+                          "tf": 1.7320508075688772
+                        },
                         "6": {
                           "tf": 1.0
                         }
@@ -6405,6 +6521,30 @@
             },
             "df": 0,
             "docs": {},
+            "i": {
+              "df": 0,
+              "docs": {},
+              "t": {
+                "df": 0,
+                "docs": {},
+                "h": {
+                  "df": 0,
+                  "docs": {},
+                  "i": {
+                    "df": 0,
+                    "docs": {},
+                    "n": {
+                      "df": 1,
+                      "docs": {
+                        "26": {
+                          "tf": 1.0
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
             "o": {
               "df": 0,
               "docs": {},

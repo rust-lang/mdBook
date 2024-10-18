@@ -1,0 +1,59 @@
+## SPDX file metadata
+## Validate with https://tools.spdx.org/app/validate/
+DocumentNamespace: http://github.com/rust-lang/mdBook/blob/bc4c4f1/src/theme/syntaxes/syntaxes.spdx
+DocumentName: mdBook-syntaxes
+SPDXID: SPDXRef-DOCUMENT
+SPDXVersion: SPDX-2.2
+DataLicense: CC0-1.0
+Creator: Organization: mdBook
+Created: 2021-09-28T18:10:00Z
+
+## Handlebars comes from this repository
+
+PackageName: Handlebars
+SPDXID: SPDXRef-mdBook.Handlebars
+PackageHomePage: https://github.com/daaain/Handlebars
+PackageLicenseDeclared: MIT
+PackageLicenseConcluded: MIT
+PackageLicenseInfoFromFiles: MIT
+PackageCopyrightText: NONE
+PackageDownloadLocation: https://github.com/daaain/Handlebars/blob/c2c0994/grammars/Handlebars.tmLanguage
+PackageVersion: c2c0994
+
+## To generate this hash, create a new folder, copy
+## Handlebars.sublime-syntax into it, then run this script:
+## find "." -type f -print0 | xargs -0 sha1sum | cut -d' ' -f1 \
+##   | sort | tr -d '\r\n' | sha1sum - | cut -d' ' -f1
+PackageVerificationCode: 00be93c257d3c248da54bb854467b2004e2f79ed
+
+FileName: Handlebars.sublime-syntax
+SPDXID: SPDXRef-mdBook.Handlebars.Handlebars
+FileChecksum: SHA1: 06b99a815cd6895a0fb6293fc3d3ec36afe77af5
+LicenseConcluded: MIT
+LicenseInfoInFile: NONE
+FileCopyrightText: NONE
+
+## TOML comes from this repository
+
+PackageName: sublime-toml-highlighting
+SPDXID: SPDXRef-mdBook.sublime-toml-highlighting
+PackageHomePage: https://github.com/jasonwilliams/sublime_toml_highlighting
+PackageLicenseDeclared: MIT
+PackageLicenseConcluded: MIT
+PackageLicenseInfoFromFiles: MIT
+PackageCopyrightText: <text>Copyright (c) 2021 Jason Williams</text>
+PackageDownloadLocation: https://github.com/jasonwilliams/sublime_toml_highlighting/blob/0f14b7c/TOML.sublime-syntax
+PackageVersion: 0f14b7c
+
+## To generate this hash, create a new folder, copy
+## TOML.sublime-syntax into it, then run this script:
+## find "." -type f -print0 | xargs -0 sha1sum | cut -d' ' -f1 \
+##   | sort | tr -d '\r\n' | sha1sum - | cut -d' ' -f1
+PackageVerificationCode: 0481182990ab3cc2115944f725846375168b3ed4
+
+FileName: ./TOML.sublime-syntax
+SPDXID: SPDXRef-mdBook.sublime-toml-highlighting.TOML
+FileChecksum: SHA1: 13640cfd33741c8ebb4414aee9682aa3e4299c0e
+LicenseConcluded: MIT
+LicenseInfoInFile: NONE
+FileCopyrightText: NONE

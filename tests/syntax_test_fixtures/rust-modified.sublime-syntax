@@ -1,0 +1,92 @@
+%YAML 1.2
+---
+# http://www.sublimetext.com/docs/3/syntax.html
+#
+# Based on https://github.com/sublimehq/Packages/tree/759d6eed9b4beed87e602a23303a121c3a6c2fb3/Rust
+# but with rustmodifiedtestfixture added everywhere and somewhat truncated.
+name: Rust
+file_extensions:
+  - rs
+scope: source.rustmodifiedtestfixture
+variables:
+  identifier: '(?:(?:[[:alpha:]][_[:alnum:]]*|_[_[:alnum:]]+)\b)' # include a word boundary at the end to ensure all possible characters are consumed, to prevent catastrophic backtracking
+  escaped_byte: '\\(x\h{2}|n|r|t|0|"|''|\\)'
+  escaped_char: '\\(x\h{2}|n|r|t|0|"|''|\\|u\{\h{1,6}\})'
+  int_suffixes: 'i8|i16|i32|i64|i128|isize|u8|u16|u32|u64|u128|usize'
+  support_type: \b(Copy|Send|Sized|Sync|Drop|Fn|FnMut|FnOnce|Box|ToOwned|Clone|PartialEq|PartialOrd|Eq|Ord|AsRef|AsMut|Into|From|Default|Iterator|Extend|IntoIterator|DoubleEndedIterator|ExactSizeIterator|Option|Some|None|Result|Ok|Err|SliceConcatExt|String|ToString|Vec)\b
+contexts:
+  main:
+    - include: statements
+
+  prototype:
+    # Macro metavariables. Ideally we would do this as a with_prototype,
+    # however then we run into infinite recursion. It needs to be a prototype
+    # since macro_rules! allows constructing new code, thus the metavariables
+    # can be inserted in just about any position in the syntax.
+    - match: '\${{identifier}}'
+      scope: variable.other.rustmodifiedtestfixture
+
+  else-pop:
+    - match: (?=\S)
+      pop: true
+
+  pop-immediately:
+    - match: ''
+      pop: true
+
+  statements:
+
+    - match: '(''{{identifier}})\s*(:)'
+      captures:
+        1: entity.name.label.rustmodifiedtestfixture
+        2: punctuation.separator.rustmodifiedtestfixture
+    - match: '''{{identifier}}(?!\'')\b'
+      scope: storage.modifier.lifetime.rustmodifiedtestfixture
+
+    - match: '\b(?:(pub)\s+)?\b(mod)\s+({{identifier}})\b'
+      captures:
+        1: storage.modifier.rustmodifiedtestfixture
+        2: storage.type.module.rustmodifiedtestfixture
+        3: entity.name.module.rustmodifiedtestfixture
+
+    - match: '\b({{identifier}})\s*(=)\s*(?=\|)'
+      captures:
+        1: entity.name.function.rustmodifiedtestfixture
+        2: keyword.operator.rustmodifiedtestfixture
+
+    - match: '\b(?:(pub)\s+)?\b(fn)\s+(?={{identifier}})'
+      scope: meta.function.rustmodifiedtestfixture
+      captures:
+        1: storage.modifier.rustmodifiedtestfixture
+        2: storage.type.function.rustmodifiedtestfixture
+
+    - match: '\b(?:(pub)\s+)?(struct)\s+'
+      scope: meta.struct.rustmodifiedtestfixture
+      captures:
+        1: storage.modifier.rustmodifiedtestfixture
+        2: storage.type.struct.rustmodifiedtestfixture
+
+    - match: '\b(?:(pub)\s+)?(type)\s+({{identifier}})\b'
+      captures:
+        1: storage.modifier.rustmodifiedtestfixture
+        2: storage.type.type.rustmodifiedtestfixture
+        3: entity.name.type.rustmodifiedtestfixture
+
+    - match: '\b(?:(pub)\s+)?(trait)\s+({{identifier}})\b'
+      captures:
+        1: storage.modifier.rustmodifiedtestfixture
+        2: storage.type.trait.rustmodifiedtestfixture
+        3: entity.name.trait.rustmodifiedtestfixture
+
+    - match: '\bimpl\b'
+      scope: storage.type.impl.rustmodifiedtestfixture
+
+    - match: '\b(?:(pub)\s+)?(enum)\s+({{identifier}})\b'
+      captures:
+        1: storage.modifier.rustmodifiedtestfixture
+        2: storage.type.enum.rustmodifiedtestfixture
+        3: entity.name.enum.rustmodifiedtestfixture
+
+    - match: \b(let|const|static)\b
+      scope: storage.type.rustmodifiedtestfixture
+

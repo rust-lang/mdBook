@@ -34,6 +34,8 @@ fn main() {
         #[cfg(feature = "serve")]
         Some(("serve", sub_matches)) => cmd::serve::execute(sub_matches),
         Some(("test", sub_matches)) => cmd::test::execute(sub_matches),
+        #[cfg(feature = "gen-syntax-cache")]
+        Some(("gen-syntax-cache", sub_matches)) => cmd::gen_syntax_cache::execute(sub_matches),
         Some(("completions", sub_matches)) => (|| {
             let shell = sub_matches
                 .get_one::<Shell>("shell")
@@ -90,6 +92,8 @@ fn create_clap_command() -> Command {
     let app = app.subcommand(cmd::watch::make_subcommand());
     #[cfg(feature = "serve")]
     let app = app.subcommand(cmd::serve::make_subcommand());
+    #[cfg(feature = "gen-syntax-cache")]
+    let app = app.subcommand(cmd::gen_syntax_cache::make_subcommand());
 
     app
 }

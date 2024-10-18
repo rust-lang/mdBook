@@ -6,7 +6,7 @@ use crate::renderer::{RenderContext, Renderer};
 use crate::theme::{self, playground_editor, Theme};
 use crate::utils;
 
-use std::borrow::Cow;
+use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::fs::{self, File};
@@ -18,13 +18,18 @@ use log::{debug, trace, warn};
 use once_cell::sync::Lazy;
 use regex::{Captures, Regex};
 use serde_json::json;
+use syntect::parsing::SyntaxSet;
 
 #[derive(Default)]
-pub struct HtmlHandlebars;
+pub struct HtmlHandlebars {
+    pub(crate) syntaxes: RefCell<Option<SyntaxSet>>,
+}
 
 impl HtmlHandlebars {
     pub fn new() -> Self {
-        HtmlHandlebars
+        HtmlHandlebars {
+            syntaxes: RefCell::new(None),
+        }
     }
 
     fn render_item(
@@ -54,12 +59,22 @@ impl HtmlHandlebars {
                 .insert("git_repository_edit_url".to_owned(), json!(edit_url));
         }
 
-        let content = utils::render_markdown(&ch.content, ctx.html_config.smart_punctuation());
+        let content = ch.content.clone();
+        let content = utils::render_markdown(
+            &content,
+            ctx.html_config.smart_punctuation(),
+            self.syntaxes.borrow().as_ref().unwrap(),
+            &ctx.html_config.playground,
+            ctx.edition,
+        );
 
         let fixed_content = utils::render_markdown_with_path(
             &ch.content,
             ctx.html_config.smart_punctuation(),
             Some(path),
+            self.syntaxes.borrow().as_ref().unwrap(),
+            &ctx.html_config.playground,
+            ctx.edition,
         );
         if !ctx.is_index && ctx.html_config.print.page_break {
             // Add page break between chapters
@@ -167,8 +182,13 @@ impl HtmlHandlebars {
                     .to_string()
             }
         };
-        let html_content_404 =
-            utils::render_markdown(&content_404, html_config.smart_punctuation());
+        let html_content_404 = utils::render_markdown(
+            &content_404,
+            html_config.smart_punctuation(),
+            self.syntaxes.borrow().as_ref().unwrap(),
+            &html_config.playground,
+            ctx.config.rust.edition,
+        );
 
         let mut data_404 = data.clone();
         let base_url = if let Some(site_url) = &html_config.site_url {
@@ -253,10 +273,9 @@ impl HtmlHandlebars {
         if let Some(contents) = &theme.favicon_svg {
             write_file(destination, "favicon.svg", contents)?;
         }
-        write_file(destination, "highlight.css", &theme.highlight_css)?;
-        write_file(destination, "tomorrow-night.css", &theme.tomorrow_night_css)?;
-        write_file(destination, "ayu-highlight.css", &theme.ayu_highlight_css)?;
-        write_file(destination, "highlight.js", &theme.highlight_js)?;
+        write_file(destination, "css/syntax/ayu.css", &theme.syntax_ayu_css)?;
+        write_file(destination, "css/syntax/dark.css", &theme.syntax_dark_css)?;
+        write_file(destination, "css/syntax/light.css", &theme.syntax_light_css)?;
         write_file(destination, "clipboard.min.js", &theme.clipboard_js)?;
         write_file(
             destination,
@@ -479,6 +498,21 @@ impl HtmlHandlebars {
 
         Ok(())
     }
+
+    fn build_syntaxset(&self, theme: &Theme, theme_dir: &Path) {
+        let base: SyntaxSet = syntect::dumps::from_binary(&theme.base_syntaxes);
+        let mut base_builder = base.into_builder();
+
+        let syntaxes_path = theme_dir.join("syntaxes");
+        if syntaxes_path.is_dir() {
+            if let Err(e) = base_builder.add_from_folder(&theme_dir.join("syntaxes"), true) {
+                warn!("Couldn't load custom syntax definitions: {}", e);
+            }
+        }
+
+        let syntaxes = base_builder.build();
+        self.syntaxes.replace(Some(syntaxes));
+    }
 }
 
 impl Renderer for HtmlHandlebars {
@@ -513,7 +547,10 @@ impl Renderer for HtmlHandlebars {
             None => ctx.root.join("theme"),
         };
 
-        let theme = theme::Theme::new(theme_dir);
+        let theme = theme::Theme::new(theme_dir.clone());
+
+        debug!("Collect syntaxes into a syntax set");
+        self.build_syntaxset(&theme, &theme_dir);
 
         debug!("Register the index handlebars template");
         handlebars.register_template_string("index", String::from_utf8(theme.index.clone())?)?;
@@ -801,7 +838,7 @@ fn build_header_links(html: &str) -> String {
 
             // Ignore .menu-title because now it's getting detected by the regex.
             if let Some(classes) = caps.get(3) {
-                for class in classes.as_str().split(" ") {
+                for class in classes.as_str().split(' ') {
                     if IGNORE_CLASS.contains(&class) {
                         return caps[0].to_string();
                     }
@@ -904,7 +941,7 @@ fn add_playground_pre(
                     classes,
                     edition_class,
                     {
-                        let content: Cow<'_, str> = if playground_config.editable
+                        let content: std::borrow::Cow<'_, str> = if playground_config.editable
                             && classes.contains("editable")
                             || text.contains("fn main")
                             || text.contains("quick_main!")
