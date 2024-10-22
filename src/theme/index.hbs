@@ -77,6 +77,21 @@
             } catch (e) { }
         </script>
 
+        {{!-- Add Ctrl + Shift + S as a shortcut to toggle the sidebar. --}}
+        <script>
+            document.addEventListener('keydown', function({ ctrlKey, key, shiftKey }) {
+                if (ctrlKey && shiftKey && key === 'S') {
+                    const sidebar = document.getElementById('sidebar-toggle-anchor');
+                    sidebar.checked = !sidebar.checked;
+                    localStorage.setItem('mdbook-sidebar', sidebar.checked ? 'visible' : 'hidden');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar.checked ? 'false' : 'true');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar.checked ? 0 : -1);
+                    });
+                }
+            });
+        </script>
+
         <!-- Set the theme before any content is loaded, prevents flash -->
         <script>
             var theme;
