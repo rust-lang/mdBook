@@ -46,7 +46,6 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
     }
 
     if search_config.copy_js {
-        utils::fs::write_file(destination, "searchindex.json", index.as_bytes())?;
         utils::fs::write_file(
             destination,
             "searchindex.js",
