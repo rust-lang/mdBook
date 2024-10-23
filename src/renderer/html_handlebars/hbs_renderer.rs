@@ -243,6 +243,7 @@ impl HtmlHandlebars {
         write_file(destination, "book.js", &theme.js)?;
         write_file(destination, "css/general.css", &theme.general_css)?;
         write_file(destination, "css/chrome.css", &theme.chrome_css)?;
+        write_file(destination, "css/noscript.css", &theme.noscript_css)?;
         if html_config.print.enable {
             write_file(destination, "css/print.css", &theme.print_css)?;
         }

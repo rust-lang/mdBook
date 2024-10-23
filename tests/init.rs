@@ -116,6 +116,7 @@ fn copy_theme() {
         "book.js",
         "css/chrome.css",
         "css/general.css",
+        "css/noscript.css",
         "css/print.css",
         "css/variables.css",
         "favicon.png",

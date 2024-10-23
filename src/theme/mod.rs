@@ -18,6 +18,7 @@ pub static HEAD: &[u8] = include_bytes!("head.hbs");
 pub static REDIRECT: &[u8] = include_bytes!("redirect.hbs");
 pub static HEADER: &[u8] = include_bytes!("header.hbs");
 pub static CHROME_CSS: &[u8] = include_bytes!("css/chrome.css");
+pub static NOSCRIPT_CSS: &[u8] = include_bytes!("css/noscript.css");
 pub static GENERAL_CSS: &[u8] = include_bytes!("css/general.css");
 pub static PRINT_CSS: &[u8] = include_bytes!("css/print.css");
 pub static VARIABLES_CSS: &[u8] = include_bytes!("css/variables.css");
@@ -51,6 +52,7 @@ pub struct Theme {
     pub redirect: Vec<u8>,
     pub header: Vec<u8>,
     pub chrome_css: Vec<u8>,
+    pub noscript_css: Vec<u8>,
     pub general_css: Vec<u8>,
     pub print_css: Vec<u8>,
     pub variables_css: Vec<u8>,
@@ -87,6 +89,7 @@ impl Theme {
                 (theme_dir.join("header.hbs"), &mut theme.header),
                 (theme_dir.join("book.js"), &mut theme.js),
                 (theme_dir.join("css/chrome.css"), &mut theme.chrome_css),
+                (theme_dir.join("css/noscript.css"), &mut theme.noscript_css),
                 (theme_dir.join("css/general.css"), &mut theme.general_css),
                 (theme_dir.join("css/print.css"), &mut theme.print_css),
                 (
@@ -175,6 +178,7 @@ impl Default for Theme {
             redirect: REDIRECT.to_owned(),
             header: HEADER.to_owned(),
             chrome_css: CHROME_CSS.to_owned(),
+            noscript_css: NOSCRIPT_CSS.to_owned(),
             general_css: GENERAL_CSS.to_owned(),
             print_css: PRINT_CSS.to_owned(),
             variables_css: VARIABLES_CSS.to_owned(),
@@ -235,6 +239,7 @@ mod tests {
             "favicon.png",
             "favicon.svg",
             "css/chrome.css",
+            "css/noscript.css",
             "css/general.css",
             "css/print.css",
             "css/variables.css",
@@ -264,6 +269,7 @@ mod tests {
             redirect: Vec::new(),
             header: Vec::new(),
             chrome_css: Vec::new(),
+            noscript_css: Vec::new(),
             general_css: Vec::new(),
             print_css: Vec::new(),
             variables_css: Vec::new(),
