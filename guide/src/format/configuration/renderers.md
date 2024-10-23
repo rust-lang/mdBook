@@ -263,7 +263,8 @@ copy-js = true           # include Javascript code for search
 - **enable:** Enables the search feature. Defaults to `true`.
 - **limit-results:** The maximum number of search results. Defaults to `30`.
 - **teaser-word-count:** The number of words used for a search result teaser.
-  Defaults to `30`.
+  When `book.language` is set to a non-English language, this limit might
+  be exceeded in case too many keywords are matched. Defaults to `30`.
 - **use-boolean-and:** Define the logical link between multiple search words. If
   true, all search words must appear in each result. Defaults to `false`.
 - **boost-title:** Boost factor for the search result score if a search word
