@@ -136,6 +136,9 @@ impl BookBuilder {
         let mut chrome_css = File::create(cssdir.join("chrome.css"))?;
         chrome_css.write_all(theme::CHROME_CSS)?;
 
+        let mut noscript_css = File::create(cssdir.join("noscript.css"))?;
+        noscript_css.write_all(theme::NOSCRIPT_CSS)?;
+
         if html_config.print.enable {
             let mut print_css = File::create(cssdir.join("print.css"))?;
             print_css.write_all(theme::PRINT_CSS)?;

@@ -52,8 +52,11 @@
         <!-- MathJax -->
         <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
         {{/if}}
+        <noscript>
+            <link rel="stylesheet" href="{{ path_to_root }}css/noscript.css">
+        </noscript>
     </head>
-    <body class="sidebar-visible no-js">
+    <body class="sidebar-visible">
     <div id="body-container">
         <!-- Provide site root to javascript -->
         <script>
@@ -85,9 +88,7 @@
             var html = document.querySelector('html');
             html.classList.remove('{{ default_theme }}')
             html.classList.add(theme);
-            var body = document.querySelector('body');
-            body.classList.remove('no-js')
-            body.classList.add('js');
+            document.body.classList.add("js");
         </script>
 
         <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
