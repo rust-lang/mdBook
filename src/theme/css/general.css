@@ -190,6 +190,10 @@ kbd {
     vertical-align: middle;
 }
 
+sup {
+    line-height: 0;
+}
+
 :not(.footnote-definition) + .footnote-definition,
 .footnote-definition + :not(.footnote-definition) {
     margin-block-start: 2em;
@@ -200,10 +204,6 @@ kbd {
 }
 .footnote-definition p {
     display: inline;
-}
-
-.footnote-reference{
-    line-height: 0;
 }
 
 .tooltiptext {
