@@ -230,3 +230,30 @@ kbd {
 .result-no-output {
     font-style: italic;
 }
+
+.text-tooltipped {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted var(--fg);
+}
+
+.text-tooltipped .text-tooltip-content {
+    position: absolute;
+    visibility: hidden;
+    color: var(--fg);
+    background-color: var(--bg);
+    border: 1px solid var(--fg);
+    top: -35px;
+    width: 35vw;
+    font-size: 0.8em;
+    text-align: left;
+    border-radius: 6px;
+    padding: 5px 8px;
+    margin: 5px;
+    z-index: 1000;
+}
+
+.text-tooltipped:hover .text-tooltip-content {
+  visibility: visible;
+  opacity: 1;
+}

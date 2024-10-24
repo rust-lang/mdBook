@@ -3,10 +3,12 @@
 pub use self::cmd::CmdPreprocessor;
 pub use self::index::IndexPreprocessor;
 pub use self::links::LinkPreprocessor;
+pub use self::tooltips::TooltipPreprocessor;
 
 mod cmd;
 mod index;
 mod links;
+mod tooltips;
 
 use crate::book::Book;
 use crate::config::Config;

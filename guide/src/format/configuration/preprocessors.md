@@ -10,6 +10,7 @@ The following preprocessors are built-in and included by default:
 - `index`: Convert all chapter files named `README.md` into `index.md`. That is
   to say, all `README.md` would be rendered to an index file `index.html` in the
   rendered book.
+- `tooltips`: Convert all `[# tooltip | additional text ]` into tooltip element.
 
 The built-in preprocessors can be disabled with the [`build.use-default-preprocessors`] config option.
 

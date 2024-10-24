@@ -315,6 +315,16 @@ contents (sidebar) by including a `\{{#title ...}}` near the top of the page.
 \{{#title My Title}}
 ```
 
+## Using tooltips
+
+When you hover the mouse over the specified text, some additional information that has been hidden become shown.
+
+```hbs
+\[# mdBook | A command line tool ideal for creating product or API documentation, tutorials, course materials or anything that requires a clean, easily navigable and customizable presentation. ]
+```
+
+Rendered tooltip will look like: «[# mdBook | A command line tool ideal for creating product or API documentation, tutorials, course materials or anything that requires a clean, easily navigable and customizable presentation. ] is a command line tool to create books with Markdown».
+
 ## HTML classes provided by mdBook
 
 <img class="right" src="images/rust-logo-blk.svg" alt="The Rust logo">

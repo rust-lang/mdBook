@@ -213,6 +213,7 @@ impl<'a> LinkType<'a> {
         }
     }
 }
+
 fn return_relative_path<P: AsRef<Path>>(base: P, relative: P) -> PathBuf {
     base.as_ref()
         .join(relative)
