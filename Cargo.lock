@@ -999,7 +999,7 @@ dependencies = [
  "pathdiff",
  "predicates",
  "pretty_assertions",
- "pulldown-cmark",
+ "pulldown-cmark 0.10.3",
  "regex",
  "select",
  "semver",
@@ -1012,6 +1012,16 @@ dependencies = [
  "topological-sort",
  "walkdir",
  "warp",
+]
+
+[[package]]
+name = "mdbook-remove-emphasis"
+version = "0.1.0"
+dependencies = [
+ "mdbook",
+ "pulldown-cmark 0.12.2",
+ "pulldown-cmark-to-cmark",
+ "serde_json",
 ]
 
 [[package]]
@@ -1422,10 +1432,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "pulldown-cmark"
+version = "0.12.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f86ba2052aebccc42cbbb3ed234b8b13ce76f75c3551a303cb2bcffcff12bb14"
+dependencies = [
+ "bitflags 2.5.0",
+ "memchr",
+ "unicase",
+]
+
+[[package]]
 name = "pulldown-cmark-escape"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bd348ff538bc9caeda7ee8cad2d1d48236a1f443c1fa3913c6a02fe0043b1dd3"
+
+[[package]]
+name = "pulldown-cmark-to-cmark"
+version = "18.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e02b63adcb49f2eb675b1694b413b3e9fedbf549dfe2cc98727ad97a0c30650"
+dependencies = [
+ "pulldown-cmark 0.12.2",
+]
 
 [[package]]
 name = "quote"
@@ -1598,11 +1628,12 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.117"
+version = "1.0.132"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "455182ea6142b14f93f4bc5320a2b31c1f266b66a4a5c858b013302a5d8cbfc3"
+checksum = "d726bfaff4b320266d395898905d0eba0345aae23b54aee3a737e260fd46db03"
 dependencies = [
  "itoa",
+ "memchr",
  "ryu",
  "serde",
 ]

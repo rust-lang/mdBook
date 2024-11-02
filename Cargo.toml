@@ -1,3 +1,6 @@
+[workspace]
+members = [".", "examples/remove-emphasis/mdbook-remove-emphasis"]
+
 [package]
 name = "mdbook"
 version = "0.4.40"
@@ -72,4 +75,10 @@ name = "mdbook"
 
 [[example]]
 name = "nop-preprocessor"
+test = true
+
+[[example]]
+name = "remove-emphasis"
+path = "examples/remove-emphasis/test.rs"
+crate-type = ["lib"]
 test = true
