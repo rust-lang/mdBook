@@ -289,6 +289,10 @@ function playground_text(playground, hidden = true) {
     var themeToggleButton = document.getElementById('theme-toggle');
     var themePopup = document.getElementById('theme-list');
     var themeColorMetaTag = document.querySelector('meta[name="theme-color"]');
+    var themeIds = [];
+    themePopup.querySelectorAll('button.theme').forEach(function (el) {
+        themeIds.push(el.id);
+    });
     var stylesheets = {
         ayuHighlight: document.querySelector("[href$='ayu-highlight.css']"),
         tomorrowNight: document.querySelector("[href$='tomorrow-night.css']"),
@@ -317,7 +321,7 @@ function playground_text(playground, hidden = true) {
     function get_theme() {
         var theme;
         try { theme = localStorage.getItem('mdbook-theme'); } catch (e) { }
-        if (theme === null || theme === undefined) {
+        if (theme === null || theme === undefined || !themeIds.includes(theme)) {
             return default_theme;
         } else {
             return theme;
