@@ -9,7 +9,7 @@ use mdbook::utils::fs::write_file;
 use mdbook::MDBook;
 use pretty_assertions::assert_eq;
 use select::document::Document;
-use select::predicate::{Class, Name, Predicate};
+use select::predicate::{Attr, Class, Name, Predicate};
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs;
@@ -62,47 +62,12 @@ fn by_default_mdbook_generates_rendered_content_in_the_book_directory() {
 }
 
 #[test]
-fn make_sure_bottom_level_files_contain_links_to_chapters() {
-    let temp = DummyBook::new().build().unwrap();
-    let md = MDBook::load(temp.path()).unwrap();
-    md.build().unwrap();
-
-    let dest = temp.path().join("book");
-    let links = vec![
-        r#"href="intro.html""#,
-        r#"href="first/index.html""#,
-        r#"href="first/nested.html""#,
-        r#"href="second.html""#,
-        r#"href="conclusion.html""#,
-    ];
-
-    let files_in_bottom_dir = vec!["index.html", "intro.html", "second.html", "conclusion.html"];
-
-    for filename in files_in_bottom_dir {
-        assert_contains_strings(dest.join(filename), &links);
-    }
-}
-
-#[test]
 fn check_correct_cross_links_in_nested_dir() {
     let temp = DummyBook::new().build().unwrap();
     let md = MDBook::load(temp.path()).unwrap();
     md.build().unwrap();
 
     let first = temp.path().join("book").join("first");
-    let links = vec![
-        r#"href="../intro.html""#,
-        r#"href="../first/index.html""#,
-        r#"href="../first/nested.html""#,
-        r#"href="../second.html""#,
-        r#"href="../conclusion.html""#,
-    ];
-
-    let files_in_nested_dir = vec!["index.html", "nested.html"];
-
-    for filename in files_in_nested_dir {
-        assert_contains_strings(first.join(filename), &links);
-    }
 
     assert_contains_strings(
         first.join("index.html"),
@@ -265,9 +230,9 @@ fn entry_ends_with(entry: &DirEntry, ending: &str) -> bool {
     entry.file_name().to_string_lossy().ends_with(ending)
 }
 
-/// Read the main page (`book/index.html`) and expose it as a DOM which we
+/// Read the TOC (`book/toc.js`) nested HTML and expose it as a DOM which we
 /// can search with the `select` crate
-fn root_index_html() -> Result<Document> {
+fn toc_js_html() -> Result<Document> {
     let temp = DummyBook::new()
         .build()
         .with_context(|| "Couldn't create the dummy book")?;
@@ -275,15 +240,36 @@ fn root_index_html() -> Result<Document> {
         .build()
         .with_context(|| "Book building failed")?;
 
-    let index_page = temp.path().join("book").join("index.html");
-    let html = fs::read_to_string(index_page).with_context(|| "Unable to read index.html")?;
+    let toc_path = temp.path().join("book").join("toc.js");
+    let html = fs::read_to_string(toc_path).with_context(|| "Unable to read index.html")?;
+    for line in html.lines() {
+        if let Some(left) = line.strip_prefix("sidebarScrollbox.innerHTML = '") {
+            if let Some(html) = left.strip_suffix("';") {
+                return Ok(Document::from(html));
+            }
+        }
+    }
+    panic!("cannot find toc in file")
+}
 
+/// Read the TOC fallback (`book/toc.html`) HTML and expose it as a DOM which we
+/// can search with the `select` crate
+fn toc_fallback_html() -> Result<Document> {
+    let temp = DummyBook::new()
+        .build()
+        .with_context(|| "Couldn't create the dummy book")?;
+    MDBook::load(temp.path())?
+        .build()
+        .with_context(|| "Book building failed")?;
+
+    let toc_path = temp.path().join("book").join("toc.html");
+    let html = fs::read_to_string(toc_path).with_context(|| "Unable to read index.html")?;
     Ok(Document::from(html.as_str()))
 }
 
 #[test]
 fn check_second_toc_level() {
-    let doc = root_index_html().unwrap();
+    let doc = toc_js_html().unwrap();
     let mut should_be = Vec::from(TOC_SECOND_LEVEL);
     should_be.sort_unstable();
 
@@ -305,7 +291,7 @@ fn check_second_toc_level() {
 
 #[test]
 fn check_first_toc_level() {
-    let doc = root_index_html().unwrap();
+    let doc = toc_js_html().unwrap();
     let mut should_be = Vec::from(TOC_TOP_LEVEL);
 
     should_be.extend(TOC_SECOND_LEVEL);
@@ -328,13 +314,46 @@ fn check_first_toc_level() {
 
 #[test]
 fn check_spacers() {
-    let doc = root_index_html().unwrap();
+    let doc = toc_js_html().unwrap();
     let should_be = 2;
 
     let num_spacers = doc
         .find(Class("chapter").descendant(Name("li").and(Class("spacer"))))
         .count();
     assert_eq!(num_spacers, should_be);
+}
+
+// don't use target="_parent" in JS
+#[test]
+fn check_link_target_js() {
+    let doc = toc_js_html().unwrap();
+
+    let num_parent_links = doc
+        .find(
+            Class("chapter")
+                .descendant(Name("li"))
+                .descendant(Name("a").and(Attr("target", "_parent"))),
+        )
+        .count();
+    assert_eq!(num_parent_links, 0);
+}
+
+// don't use target="_parent" in IFRAME
+#[test]
+fn check_link_target_fallback() {
+    let doc = toc_fallback_html().unwrap();
+
+    let num_parent_links = doc
+        .find(
+            Class("chapter")
+                .descendant(Name("li"))
+                .descendant(Name("a").and(Attr("target", "_parent"))),
+        )
+        .count();
+    assert_eq!(
+        num_parent_links,
+        TOC_TOP_LEVEL.len() + TOC_SECOND_LEVEL.len()
+    );
 }
 
 /// Ensure building fails if `create-missing` is false and one of the files does
@@ -449,18 +468,15 @@ fn by_default_mdbook_use_index_preprocessor_to_convert_readme_to_index() {
     let md = MDBook::load_with_config(temp.path(), cfg).unwrap();
     md.build().unwrap();
 
-    let first_index = temp.path().join("book").join("first").join("index.html");
+    let first_index = temp.path().join("book").join("toc.js");
     let expected_strings = vec![
-        r#"href="../first/index.html""#,
-        r#"href="../second/index.html""#,
-        "First README",
+        r#"href="first/index.html""#,
+        r#"href="second/index.html""#,
+        "1st README",
+        "2nd README",
     ];
     assert_contains_strings(&first_index, &expected_strings);
-    assert_doesnt_contain_strings(&first_index, &["README.html"]);
-
-    let second_index = temp.path().join("book").join("second").join("index.html");
-    let unexpected_strings = vec!["Second README"];
-    assert_doesnt_contain_strings(second_index, &unexpected_strings);
+    assert_doesnt_contain_strings(&first_index, &["README.html", "Second README"]);
 }
 
 #[test]
@@ -639,11 +655,11 @@ fn summary_with_markdown_formatting() {
     let md = MDBook::load_with_config(temp.path(), cfg).unwrap();
     md.build().unwrap();
 
-    let rendered_path = temp.path().join("book/formatted-summary.html");
+    let rendered_path = temp.path().join("book/toc.js");
     assert_contains_strings(
         rendered_path,
         &[
-            r#"<a href="formatted-summary.html" class="active"><strong aria-hidden="true">1.</strong> Italic code *escape* `escape2`</a>"#,
+            r#"<a href="formatted-summary.html"><strong aria-hidden="true">1.</strong> Italic code *escape* `escape2`</a>"#,
             r#"<a href="soft.html"><strong aria-hidden="true">2.</strong> Soft line break</a>"#,
             r#"<a href="escaped-tag.html"><strong aria-hidden="true">3.</strong> &lt;escaped tag&gt;</a>"#,
         ],

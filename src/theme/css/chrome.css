@@ -420,6 +420,22 @@ ul#searchresults span.teaser em {
     background-color: var(--sidebar-bg);
     color: var(--sidebar-fg);
 }
+.sidebar-iframe-inner {
+    background-color: var(--sidebar-bg);
+    color: var(--sidebar-fg);
+    padding: 10px 10px;
+    margin: 0;
+    font-size: 1.4rem;
+}
+.sidebar-iframe-outer {
+    border: none;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
 [dir=rtl] .sidebar { left: unset; right: 0; }
 .sidebar-resizing {
     -moz-user-select: none;
