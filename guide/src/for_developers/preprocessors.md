@@ -68,33 +68,10 @@ The following code block shows how to remove all emphasis from markdown,
 without accidentally breaking the document.
 
 ```rust
-fn remove_emphasis(
-    num_removed_items: &mut usize,
-    chapter: &mut Chapter,
-) -> Result<String> {
-    let mut buf = String::with_capacity(chapter.content.len());
-
-    let events = Parser::new(&chapter.content).filter(|e| {
-        let should_keep = match *e {
-            Event::Start(Tag::Emphasis)
-            | Event::Start(Tag::Strong)
-            | Event::End(Tag::Emphasis)
-            | Event::End(Tag::Strong) => false,
-            _ => true,
-        };
-        if !should_keep {
-            *num_removed_items += 1;
-        }
-        should_keep
-    });
-
-    cmark(events, &mut buf, None).map(|_| buf).map_err(|err| {
-        Error::from(format!("Markdown serialization failed: {}", err))
-    })
-}
+{{#rustdoc_include ../../../examples/remove-emphasis/mdbook-remove-emphasis/src/main.rs:remove_emphasis}}
 ```
 
-For everything else, have a look [at the complete example][example].
+Take a look at the [full example source][emphasis-example] for more details.
 
 ## Implementing a preprocessor with a different language
 
@@ -122,11 +99,10 @@ if __name__ == '__main__':
 ```
 
 
-
+[emphasis-example]: https://github.com/rust-lang/mdBook/tree/master/examples/remove-emphasis/
 [preprocessor-docs]: https://docs.rs/mdbook/latest/mdbook/preprocess/trait.Preprocessor.html
 [pc]: https://crates.io/crates/pulldown-cmark
 [pctc]: https://crates.io/crates/pulldown-cmark-to-cmark
-[example]: https://github.com/rust-lang/mdBook/blob/master/examples/nop-preprocessor.rs
 [an example no-op preprocessor]: https://github.com/rust-lang/mdBook/blob/master/examples/nop-preprocessor.rs
 [`CmdPreprocessor::parse_input()`]: https://docs.rs/mdbook/latest/mdbook/preprocess/trait.Preprocessor.html#method.parse_input
 [`Book::for_each_mut()`]: https://docs.rs/mdbook/latest/mdbook/book/struct.Book.html#method.for_each_mut
