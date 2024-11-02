@@ -40,9 +40,9 @@ a > .hljs {
     border-block-end-style: solid;
 }
 #menu-bar.sticky,
-.js #menu-bar-hover-placeholder:hover + #menu-bar,
-.js #menu-bar:hover,
-.js.sidebar-visible #menu-bar {
+#menu-bar-hover-placeholder:hover + #menu-bar,
+#menu-bar:hover,
+html.sidebar-visible #menu-bar {
     position: -webkit-sticky;
     position: sticky;
     top: 0 !important;
@@ -91,7 +91,7 @@ a > .hljs {
     display: flex;
     margin: 0 5px;
 }
-.no-js .left-buttons button {
+html:not(.js) .left-buttons button {
     display: none;
 }
 
@@ -107,7 +107,7 @@ a > .hljs {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.js .menu-title {
+.menu-title {
     cursor: pointer;
 }
 
@@ -427,8 +427,7 @@ ul#searchresults span.teaser em {
     -ms-user-select: none;
     user-select: none;
 }
-.no-js .sidebar,
-.js:not(.sidebar-resizing) .sidebar {
+html:not(.sidebar-resizing) .sidebar {
     transition: transform 0.3s; /* Animation: slide away */
 }
 .sidebar code {
