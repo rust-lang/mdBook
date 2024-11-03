@@ -289,6 +289,10 @@
 
         {{#if search_js}}
         <script src="{{ path_to_root }}elasticlunr.min.js"></script>
+        {{#if lunr_language_subtag}}
+        <script src="{{ path_to_root }}lunr.stemmer.support.js"></script>
+        <script src="{{ path_to_root }}lunr.{{ lunr_language_subtag }}.js"></script>
+        {{/if}}
         <script src="{{ path_to_root }}mark.min.js"></script>
         <script src="{{ path_to_root }}searcher.js"></script>
         {{/if}}
