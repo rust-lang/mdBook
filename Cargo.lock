@@ -977,7 +977,7 @@ dependencies = [
 
 [[package]]
 name = "mdbook"
-version = "0.4.40"
+version = "0.4.41"
 dependencies = [
  "ammonia",
  "anyhow",

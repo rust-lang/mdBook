@@ -1,5 +1,37 @@
 # Changelog
 
+## mdBook 0.4.41
+[v0.4.40...v0.4.41](https://github.com/rust-lang/mdBook/compare/v0.4.40...v0.4.41)
+
+### Added
+
+- Added preliminary support for Rust 2024 edition.
+  [#2398](https://github.com/rust-lang/mdBook/pull/2398)
+- Added a full example of the remove-emphasis preprocessor.
+  [#2464](https://github.com/rust-lang/mdBook/pull/2464)
+
+### Changed
+
+- Adjusted styling of clipboard/play icons.
+  [#2421](https://github.com/rust-lang/mdBook/pull/2421)
+- Updated to handlebars v6.
+  [#2416](https://github.com/rust-lang/mdBook/pull/2416)
+- Attr and section rules now have specific code highlighting.
+  [#2448](https://github.com/rust-lang/mdBook/pull/2448)
+- The sidebar is now loaded from a common file, significantly reducing the book size when there are many chapters.
+  [#2414](https://github.com/rust-lang/mdBook/pull/2414)
+- Updated dependencies.
+  [#2470](https://github.com/rust-lang/mdBook/pull/2470)
+
+### Fixed
+
+- Improved theme support when JavaScript is disabled.
+  [#2454](https://github.com/rust-lang/mdBook/pull/2454)
+- Fixed broken themes when localStorage has an invalid theme id.
+  [#2463](https://github.com/rust-lang/mdBook/pull/2463)
+- Adjusted the line-height of superscripts (and footnotes) to avoid adding extra space between lines.
+  [#2465](https://github.com/rust-lang/mdBook/pull/2465)
+
 ## mdBook 0.4.40
 [v0.4.39...v0.4.40](https://github.com/rust-lang/mdBook/compare/v0.4.39...v0.4.40)
 
