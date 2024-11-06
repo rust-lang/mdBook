@@ -243,7 +243,7 @@ fn toc_js_html() -> Result<Document> {
     let toc_path = temp.path().join("book").join("toc.js");
     let html = fs::read_to_string(toc_path).with_context(|| "Unable to read index.html")?;
     for line in html.lines() {
-        if let Some(left) = line.strip_prefix("sidebarScrollbox.innerHTML = '") {
+        if let Some(left) = line.strip_prefix("        this.innerHTML = '") {
             if let Some(html) = left.strip_suffix("';") {
                 return Ok(Document::from(html));
             }
