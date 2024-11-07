@@ -1,5 +1,13 @@
 # Changelog
 
+## mdBook 0.4.42
+[v0.4.41...v0.4.42](https://github.com/rust-lang/mdBook/compare/v0.4.41...v0.4.42)
+
+### Fixed
+
+- Fixed chapter list folding.
+  [#2473](https://github.com/rust-lang/mdBook/pull/2473)
+
 ## mdBook 0.4.41
 [v0.4.40...v0.4.41](https://github.com/rust-lang/mdBook/compare/v0.4.40...v0.4.41)
 

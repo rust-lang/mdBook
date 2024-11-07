@@ -3,7 +3,7 @@ members = [".", "examples/remove-emphasis/mdbook-remove-emphasis"]
 
 [package]
 name = "mdbook"
-version = "0.4.41"
+version = "0.4.42"
 authors = [
     "Mathieu David <mathieudavid@mathieudavid.org>",
     "Michael-F-Bryan <michaelfbryan@gmail.com>",
