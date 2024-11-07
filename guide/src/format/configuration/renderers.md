@@ -98,6 +98,7 @@ theme = "my-theme"
 default-theme = "light"
 preferred-dark-theme = "navy"
 smart-punctuation = true
+footnote-backrefs = true
 mathjax-support = false
 copy-fonts = true
 additional-css = ["custom.css", "custom2.css"]
@@ -126,6 +127,7 @@ The following configuration options are available:
   See [Smart Punctuation](../markdown.md#smart-punctuation).
   Defaults to `false`.
 - **curly-quotes:** Deprecated alias for `smart-punctuation`.
+- **footnote-backrefs:** Add backreference links to footnote definitions.
 - **mathjax-support:** Adds support for [MathJax](../mathjax.md). Defaults to
   `false`.
 - **copy-fonts:** (**Deprecated**) If `true` (the default), mdBook uses its built-in fonts which are copied to the output directory.
