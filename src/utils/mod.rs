@@ -212,18 +212,156 @@ pub fn render_markdown_with_path(
     smart_punctuation: bool,
     path: Option<&Path>,
 ) -> String {
-    let mut s = String::with_capacity(text.len() * 3 / 2);
-    let p = new_cmark_parser(text, smart_punctuation);
-    let events = p
+    let mut body = String::with_capacity(text.len() * 3 / 2);
+
+    // Based on
+    // https://github.com/pulldown-cmark/pulldown-cmark/blob/master/pulldown-cmark/examples/footnote-rewrite.rs
+
+    // This handling of footnotes is a two-pass process. This is done to
+    // support linkbacks, little arrows that allow you to jump back to the
+    // footnote reference. The first pass collects the footnote definitions.
+    // The second pass modifies those definitions to include the linkbacks,
+    // and inserts the definitions back into the `events` list.
+
+    // This is a map of name -> (number, count)
+    // `name` is the name of the footnote.
+    // `number` is the footnote number displayed in the output.
+    // `count` is the number of references to this footnote (used for multiple
+    // linkbacks, and checking for unused footnotes).
+    let mut footnote_numbers = HashMap::new();
+    // This is a list of (name, Vec<Event>)
+    // `name` is the name of the footnote.
+    // The events list is the list of events needed to build the footnote definition.
+    let mut footnote_defs = Vec::new();
+
+    // The following are used when currently processing a footnote definition.
+    //
+    // This is the name of the footnote (escaped).
+    let mut in_footnote_name = String::new();
+    // This is the list of events to build the footnote definition.
+    let mut in_footnote = Vec::new();
+
+    let events = new_cmark_parser(text, smart_punctuation)
         .map(clean_codeblock_headers)
         .map(|event| adjust_links(event, path))
         .flat_map(|event| {
             let (a, b) = wrap_tables(event);
             a.into_iter().chain(b)
+        })
+        // Footnote rewriting must go last to ensure inner definition contents
+        // are processed (since they get pulled out of the initial stream).
+        .filter_map(|event| {
+            match event {
+                Event::Start(Tag::FootnoteDefinition(name)) => {
+                    if !in_footnote.is_empty() {
+                        log::warn!("internal bug: nested footnote not expected in {path:?}");
+                    }
+                    in_footnote_name = special_escape(&name);
+                    None
+                }
+                Event::End(TagEnd::FootnoteDefinition) => {
+                    let def_events = std::mem::take(&mut in_footnote);
+                    let name = std::mem::take(&mut in_footnote_name);
+                    footnote_defs.push((name, def_events));
+                    None
+                }
+                Event::FootnoteReference(name) => {
+                    let name = special_escape(&name);
+                    let len = footnote_numbers.len() + 1;
+                    let (n, count) = footnote_numbers.entry(name.clone()).or_insert((len, 0));
+                    *count += 1;
+                    let html = Event::Html(
+                        format!(
+                            "<sup class=\"footnote-reference\" id=\"fr-{name}-{count}\">\
+                                <a href=\"#footnote-{name}\">{n}</a>\
+                             </sup>"
+                        )
+                        .into(),
+                    );
+                    if in_footnote_name.is_empty() {
+                        Some(html)
+                    } else {
+                        // While inside a footnote, we need to accumulate.
+                        in_footnote.push(html);
+                        None
+                    }
+                }
+                // While inside a footnote, accumulate all events into a local.
+                _ if !in_footnote_name.is_empty() => {
+                    in_footnote.push(event);
+                    None
+                }
+                _ => Some(event),
+            }
         });
 
-    html::push_html(&mut s, events);
-    s
+    html::push_html(&mut body, events);
+
+    if !footnote_defs.is_empty() {
+        add_footnote_defs(&mut body, path, footnote_defs, &footnote_numbers);
+    }
+
+    body
+}
+
+/// Adds all footnote definitions into `body`.
+fn add_footnote_defs(
+    body: &mut String,
+    path: Option<&Path>,
+    mut defs: Vec<(String, Vec<Event<'_>>)>,
+    numbers: &HashMap<String, (usize, u32)>,
+) {
+    // Remove unused.
+    defs.retain(|(name, _)| {
+        if !numbers.contains_key(name) {
+            log::warn!(
+                "footnote `{name}` in `{}` is defined but not referenced",
+                path.map_or_else(|| Cow::from("<unknown>"), |p| p.to_string_lossy())
+            );
+            false
+        } else {
+            true
+        }
+    });
+
+    defs.sort_by_cached_key(|(name, _)| numbers[name].0);
+
+    body.push_str(
+        "<hr>\n\
+         <ol class=\"footnote-definition\">",
+    );
+
+    // Insert the backrefs to the definition, and put the definitions in the output.
+    for (name, mut fn_events) in defs {
+        let count = numbers[&name].1;
+        fn_events.insert(
+            0,
+            Event::Html(format!("<li id=\"footnote-{name}\">").into()),
+        );
+        // Generate the linkbacks.
+        for usage in 1..=count {
+            let nth = if usage == 1 {
+                String::new()
+            } else {
+                usage.to_string()
+            };
+            let backlink =
+                Event::Html(format!(" <a href=\"#fr-{name}-{usage}\">↩{nth}</a>").into());
+            if matches!(fn_events.last(), Some(Event::End(TagEnd::Paragraph))) {
+                // Put the linkback at the end of the last paragraph instead
+                // of on a line by itself.
+                fn_events.insert(fn_events.len() - 1, backlink);
+            } else {
+                // Not a clear place to put it in this circumstance, so put it
+                // at the end.
+                fn_events.push(backlink);
+            }
+        }
+        fn_events.push(Event::Html("</li>\n".into()));
+        html::push_html(body, fn_events.into_iter());
+    }
+
+    body.push_str("</ol>");
 }
 
 /// Wraps tables in a `.table-wrapper` class to apply overflow-x rules to.
@@ -267,13 +405,14 @@ pub fn log_backtrace(e: &Error) {
 
 pub(crate) fn special_escape(mut s: &str) -> String {
     let mut escaped = String::with_capacity(s.len());
-    let needs_escape: &[char] = &['<', '>', '\'', '\\', '&'];
+    let needs_escape: &[char] = &['<', '>', '\'', '"', '\\', '&'];
     while let Some(next) = s.find(needs_escape) {
         escaped.push_str(&s[..next]);
         match s.as_bytes()[next] {
             b'<' => escaped.push_str("&lt;"),
             b'>' => escaped.push_str("&gt;"),
             b'\'' => escaped.push_str("&#39;"),
+            b'"' => escaped.push_str("&quot;"),
             b'\\' => escaped.push_str("&#92;"),
             b'&' => escaped.push_str("&amp;"),
             _ => unreachable!(),

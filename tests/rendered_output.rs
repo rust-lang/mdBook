@@ -545,10 +545,38 @@ fn markdown_options() {
     assert_contains_strings(
         &path,
         &[
-            r##"<sup class="footnote-reference"><a href="#1">1</a></sup>"##,
-            r##"<sup class="footnote-reference"><a href="#word">2</a></sup>"##,
-            r##"<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>"##,
-            r##"<div class="footnote-definition" id="word"><sup class="footnote-definition-label">2</sup>"##,
+            r##"<sup class="footnote-reference" id="fr-1-1"><a href="#footnote-1">1</a></sup>"##,
+            r##"<sup class="footnote-reference" id="fr-word-1"><a href="#footnote-word">2</a></sup>"##,
+            r##"<sup class="footnote-reference" id="fr-word-2"><a href="#footnote-word">2</a></sup>"##,
+            r##"<hr>
+<ol class="footnote-definition"><li id="footnote-1">
+<p>This is a footnote. <a href="#fr-1-1">↩</a> <a href="#fr-1-2">↩2</a></p>
+</li>
+<li id="footnote-word">
+<p>A longer footnote.
+With multiple lines. <a href="unicode.html">Link to unicode</a>.
+With a reference inside.<sup class="footnote-reference" id="fr-1-2"><a href="#footnote-1">1</a></sup> <a href="#fr-word-1">↩</a> <a href="#fr-word-2">↩2</a></p>
+</li>
+<li id="footnote-para">
+<ol>
+<li>Item one
+<ol>
+<li>Sub-item</li>
+</ol>
+</li>
+<li>Item two</li>
+</ol>
+ <a href="#fr-para-1">↩</a></li>
+<li id="footnote-multiple"><p>One</p><p>Two</p><p>Three</p>
+ <a href="#fr-multiple-1">↩</a></li>
+<li id="footnote-&quot;wacky&quot;">
+<p>Testing footnote id with special characters. <a href="#fr-&quot;wacky&quot;-1">↩</a></p>
+</li>
+<li id="footnote-define-before-use">
+<p>This is defined before it is referred to. <a href="#fr-define-before-use-1">↩</a></p>
+</li>
+</ol>
+"##,
         ],
     );
     assert_contains_strings(&path, &["<del>strikethrough example</del>"]);
