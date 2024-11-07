@@ -54,11 +54,14 @@ impl HtmlHandlebars {
                 .insert("git_repository_edit_url".to_owned(), json!(edit_url));
         }
 
-        let content = utils::render_markdown(&ch.content, ctx.html_config.smart_punctuation());
+        let content = utils::render_markdown(&ch.content,
+                                             ctx.html_config.smart_punctuation(),
+                                             ctx.html_config.footnote_backrefs);
 
         let fixed_content = utils::render_markdown_with_path(
             &ch.content,
             ctx.html_config.smart_punctuation(),
+            ctx.html_config.footnote_backrefs,
             Some(path),
         );
         if !ctx.is_index && ctx.html_config.print.page_break {
@@ -168,7 +171,9 @@ impl HtmlHandlebars {
             }
         };
         let html_content_404 =
-            utils::render_markdown(&content_404, html_config.smart_punctuation());
+            utils::render_markdown(&content_404,
+                                   html_config.smart_punctuation(),
+                                   html_config.footnote_backrefs);
 
         let mut data_404 = data.clone();
         let base_url = if let Some(site_url) = &html_config.site_url {
