@@ -82,3 +82,10 @@ name = "remove-emphasis"
 path = "examples/remove-emphasis/test.rs"
 crate-type = ["lib"]
 test = true
+
+[[test]]
+harness = false
+test = false
+name = "gui"
+path = "tests/gui/runner.rs"
+crate-type = ["bin"]

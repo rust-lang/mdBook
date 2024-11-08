@@ -1,0 +1,59 @@
+// This GUI test checks sidebar hide/show and also its behaviour on smaller
+// width.
+
+// We disable the requests checks because `searchindex.json` will always fail
+// locally.
+fail-on-request-error: false
+go-to: |DOC_PATH| + "index.html"
+set-window-size: (1100, 600)
+// Need to reload for the new size to be taken account by the JS.
+reload:
+
+store-value: (content_indent, 308)
+
+define-function: (
+    "hide-sidebar",
+    [],
+    block {
+        // The content should be "moved" to the right because of the sidebar.
+        assert-css: ("#sidebar", {"transform": "none"})
+        assert-position: ("#page-wrapper", {"x": |content_indent|})
+
+        // We now hide the sidebar.
+        click: "#sidebar-toggle"
+        wait-for: "body.sidebar-hidden"
+        // `transform` is 0.3s so we need to wait a bit (0.5s) to ensure the animation is done.
+        wait-for: 5000
+        assert-css-false: ("#sidebar", {"transform": "none"})
+        // The page content should now be on the left.
+        assert-position: ("#page-wrapper", {"x": 0})
+    },
+)
+
+define-function: (
+    "show-sidebar",
+    [],
+    block {
+        // The page content should be on the left and the sidebar "moved out".
+        assert-css: ("#sidebar", {"transform": "matrix(1, 0, 0, 1, -308, 0)"})
+        assert-position: ("#page-wrapper", {"x": 0})
+
+        // We expand the sidebar.
+        click: "#sidebar-toggle"
+        wait-for: "body.sidebar-visible"
+        // `transform` is 0.3s so we need to wait a bit (0.5s) to ensure the animation is done.
+        wait-for: 5000
+        assert-css-false: ("#sidebar", {"transform": "matrix(1, 0, 0, 1, -308, 0)"})
+        // The page content should be moved to the right.
+        assert-position: ("#page-wrapper", {"x": |content_indent|})
+    },
+)
+
+call-function: ("hide-sidebar", {})
+call-function: ("show-sidebar", {})
+
+// We now test on smaller width to ensure that the sidebar is collapsed by default.
+set-window-size: (900, 600)
+reload:
+call-function: ("show-sidebar", {})
+call-function: ("hide-sidebar", {})

@@ -3,6 +3,9 @@ on:
   pull_request:
   merge_group:
 
+env:
+  BROWSER_UI_TEST_VERSION: '0.18.2'
+
 jobs:
   test:
     runs-on: ${{ matrix.os }}
@@ -47,6 +50,17 @@ jobs:
     - uses: actions/checkout@v4
     - name: Install Rust
       run: bash ci/install-rust.sh ${{ matrix.rust }} ${{ matrix.target }}
+    - name: Install npm
+      if: matrix.os != 'windows-latest'
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20
+    - name: Install browser-ui-test
+      if: matrix.os != 'windows-latest'
+      run: npm install browser-ui-test@"${BROWSER_UI_TEST_VERSION}"
+    - name: Build and run tests (+ GUI)
+      if: matrix.os != 'windows-latest'
+      run: cargo test --locked --target ${{ matrix.target }} --test gui
     - name: Build and run tests
       run: cargo test --locked --target ${{ matrix.target }}
     - name: Test no default
