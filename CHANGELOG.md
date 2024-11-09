@@ -11,6 +11,8 @@
 ## mdBook 0.4.41
 [v0.4.40...v0.4.41](https://github.com/rust-lang/mdBook/compare/v0.4.40...v0.4.41)
 
+**Note:** If you have a custom `index.hbs` theme file, you will need to update it to the latest version.
+
 ### Added
 
 - Added preliminary support for Rust 2024 edition.
