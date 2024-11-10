@@ -1,4 +1,5 @@
 use regex::Regex;
+use std::ffi::OsStr;
 use std::path::Path;
 
 use super::{Preprocessor, PreprocessorContext};
@@ -37,7 +38,16 @@ impl Preprocessor for IndexPreprocessor {
                             warn_readme_name_conflict(&path, &&mut index_md);
                         }
 
-                        path.set_file_name("index.md");
+                        let mut index_dj = source_dir.join(path.with_file_name("index.dj"));
+                        if index_dj.exists() {
+                            warn_readme_name_conflict(&path, &&mut index_dj);
+                        }
+
+                        if Some(OsStr::new("dj")) == path.extension() {
+                            path.set_file_name("index.dj");
+                        } else {
+                            path.set_file_name("index.md");
+                        }
                     }
                 }
             }
@@ -54,7 +64,7 @@ fn warn_readme_name_conflict<P: AsRef<Path>>(readme_path: P, index_path: P) {
         .parent()
         .unwrap_or_else(|| index_path.as_ref());
     warn!(
-        "It seems that there are both {:?} and index.md under \"{}\".",
+        "It seems that there are both {:?} and index.md or index.dj under \"{}\".",
         file_name,
         parent_dir.display()
     );

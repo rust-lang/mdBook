@@ -4,6 +4,7 @@ pub mod fs;
 mod string;
 pub(crate) mod toml_ext;
 use crate::errors::Error;
+use jotdown::{html::Indentation, Render};
 use log::error;
 use once_cell::sync::Lazy;
 use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, Options, Parser, Tag, TagEnd};
@@ -187,6 +188,19 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
         Event::InlineHtml(html) => Event::InlineHtml(fix_html(html, path)),
         _ => event,
     }
+}
+
+/// Wrapper around the jotdown parser for rendering djot to HTML.
+pub fn render_djot(text: &str) -> anyhow::Result<String> {
+    let events = jotdown::Parser::new(text);
+    let mut content = String::new();
+    let renderer = jotdown::html::Renderer::indented(Indentation {
+        string: " ".repeat(4),
+        initial_level: 6,
+    });
+    renderer.push(events, &mut content)?;
+    let content_stripped = content.trim().to_string();
+    Ok(content_stripped)
 }
 
 /// Wrapper around the pulldown-cmark parser for rendering markdown to HTML.

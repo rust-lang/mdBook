@@ -9,6 +9,7 @@ use crate::utils;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
+use std::ffi::OsStr;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 
@@ -54,13 +55,22 @@ impl HtmlHandlebars {
                 .insert("git_repository_edit_url".to_owned(), json!(edit_url));
         }
 
-        let content = utils::render_markdown(&ch.content, ctx.html_config.smart_punctuation());
+        let content = if Some(OsStr::new("dj")) == path.extension() {
+            utils::render_djot(&ch.content)?
+        } else {
+            utils::render_markdown(&ch.content, ctx.html_config.smart_punctuation())
+        };
 
-        let fixed_content = utils::render_markdown_with_path(
-            &ch.content,
-            ctx.html_config.smart_punctuation(),
-            Some(path),
-        );
+        let fixed_content = if Some(OsStr::new("dj")) == path.extension() {
+            utils::render_djot(&ch.content)?
+        } else {
+            utils::render_markdown_with_path(
+                &ch.content,
+                ctx.html_config.smart_punctuation(),
+                Some(path),
+            )
+        };
+
         if !ctx.is_index && ctx.html_config.print.page_break {
             // Add page break between chapters
             // See https://developer.mozilla.org/en-US/docs/Web/CSS/break-before and https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-before
@@ -124,7 +134,11 @@ impl HtmlHandlebars {
         utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
 
         if ctx.is_index {
-            ctx.data.insert("path".to_owned(), json!("index.md"));
+            if Some(OsStr::new("dj")) == path.extension() {
+                ctx.data.insert("path".to_owned(), json!("index.dj"));
+            } else {
+                ctx.data.insert("path".to_owned(), json!("index.md"));
+            }
             ctx.data.insert("path_to_root".to_owned(), json!(""));
             ctx.data.insert("is_index".to_owned(), json!(true));
             let rendered_index = ctx.handlebars.render("index", &ctx.data)?;

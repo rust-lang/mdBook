@@ -1002,6 +1002,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49f1f14873335454500d59611f1cf4a4b0f786f9ac11f4312a78e4cf2566695b"
 
 [[package]]
+name = "jotdown"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "19fa1db3b285830176c8a940d4e3376679772bee9f58a83dd9285a4a54e30f6e"
+
+[[package]]
 name = "js-sys"
 version = "0.3.72"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1152,6 +1158,7 @@ dependencies = [
  "futures-util",
  "handlebars",
  "ignore",
+ "jotdown",
  "log",
  "memchr",
  "notify",

@@ -4,10 +4,13 @@
 [![crates.io](https://img.shields.io/crates/v/mdbook.svg)](https://crates.io/crates/mdbook)
 [![LICENSE](https://img.shields.io/github/license/rust-lang/mdBook.svg)](LICENSE)
 
-mdBook is a utility to create modern online books from Markdown files.
+mdBook is a utility to create modern online books from Markdown or Djot files.
 
 Check out the **[User Guide]** for a list of features and installation and usage information.
 The User Guide also serves as a demonstration to showcase what a book looks like.
+
+If a file ends in .dj it will be treated as a djot file. Check out the test_djot_book for djot
+specific markup.
 
 If you are interested in contributing to the development of mdBook, check out the [Contribution Guide].
 

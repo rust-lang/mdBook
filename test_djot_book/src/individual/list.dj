@@ -1,0 +1,89 @@
+# Lists
+
+## ordered, decimal enumerated, followed by a period
+
+1. A
+2. Normal
+3. Ordered
+4. List
+
+## ordered, decimal enumerated, followed by a parenthesis
+
+1) A
+
+   1) Nested
+   2) List
+
+2) But
+3) Still
+4) Normal
+
+## bullet, minus
+
+- An
+- Unordered
+- Normal
+- List
+
+## bullet, plus
+
++ Nested
+
+  + Unordered
+
++ List
+
+## bullet, star
+
+* This
+
+  1. Is
+  2. Normal
+
+* ?!
+
+## task
+
+- [ ] 	task
+
+## Djot Specific
+
+(1) 	ordered, decimal-enumerated, enclosed in parentheses
+
+a. 	ordered, lower-alpha-enumerated, followed by period
+
+a) 	ordered, lower-alpha-enumerated, followed by parenthesis
+
+(a) 	ordered, lower-alpha-enumerated, enclosed in parentheses
+
+A. 	ordered, upper-alpha-enumerated, followed by period
+
+A) 	ordered, upper-alpha-enumerated, followed by parenthesis
+
+(A) 	ordered, upper-alpha-enumerated, enclosed in parentheses
+
+i. 	ordered, lower-roman-enumerated, followed by period
+
+i) 	ordered, lower-roman-enumerated, followed by parenthesis
+
+(i) 	ordered, lower-roman-enumerated, enclosed in parentheses
+
+I. 	ordered, upper-roman-enumerated, followed by period
+
+I) 	ordered, upper-roman-enumerated, followed by parenthesis
+
+(I) 	ordered, upper-roman-enumerated, enclosed in parentheses
+
+: term
+
+    definition
+
+- tight
+- tight
+
++ loose
+
++ loose
+
+9. starting a list after the number one
+22. this is prefixed with the number 22

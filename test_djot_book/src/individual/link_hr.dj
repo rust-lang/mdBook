@@ -1,0 +1,16 @@
+# Links and Horizontal Rule
+
+This is followed by a Horizontal rule
+
+---
+
+And this is preceded by a horizontal rule.
+
+[This](www.rust-lang.org) should link to rust-lang website\
+[So should this][rl]{title=this_is_also_djot_specific}.\
+*[This][rl]* is a strong link.
+_[This][rl]_ is italic.
+*_[This][rl]_* is both.
+
+{title=this_is_djot_specific}
+[rl]: www.rust-lang.org
