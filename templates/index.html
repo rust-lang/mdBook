@@ -4,39 +4,39 @@
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
         <title>{{ title }}</title>
-        {{#if is_print }}
+        {% if is_print %}
         <meta name="robots" content="noindex">
-        {{/if}}
-        {{#if base_url}}
+        {% endif %}
+        {% if base_url %}
         <base href="{{ base_url }}">
-        {{/if}}
+        {% endif %}
 
 
         <!-- Custom HTML head -->
-        {{> head}}
+        {% include "head.html" %}
 
         <meta name="description" content="{{ description }}">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
-        {{#if favicon_svg}}
+        {% if favicon_svg %}
         <link rel="icon" href="{{ path_to_root }}favicon.svg">
-        {{/if}}
-        {{#if favicon_png}}
+        {% endif %}
+        {% if favicon_png %}
         <link rel="shortcut icon" href="{{ path_to_root }}favicon.png">
-        {{/if}}
+        {% endif %}
         <link rel="stylesheet" href="{{ path_to_root }}css/variables.css">
         <link rel="stylesheet" href="{{ path_to_root }}css/general.css">
         <link rel="stylesheet" href="{{ path_to_root }}css/chrome.css">
-        {{#if print_enable}}
+        {% if print_enable %}
         <link rel="stylesheet" href="{{ path_to_root }}css/print.css" media="print">
-        {{/if}}
+        {% endif %}
 
         <!-- Fonts -->
         <link rel="stylesheet" href="{{ path_to_root }}FontAwesome/css/font-awesome.css">
-        {{#if copy_fonts}}
+        {% if copy_fonts %}
         <link rel="stylesheet" href="{{ path_to_root }}fonts/fonts.css">
-        {{/if}}
+        {% endif %}
 
         <!-- Highlight.js Stylesheets -->
         <link rel="stylesheet" href="{{ path_to_root }}highlight.css">
@@ -44,14 +44,14 @@
         <link rel="stylesheet" href="{{ path_to_root }}ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
-        {{#each additional_css}}
-        <link rel="stylesheet" href="{{ ../path_to_root }}{{ this }}">
-        {{/each}}
+        {% for extra_css in  additional_css %}
+        <link rel="stylesheet" href="../{{ path_to_root }}{{ extra_css }}">
+        {% endfor %}
 
-        {{#if mathjax_support}}
+        {% if mathjax_support %}
         <!-- MathJax -->
         <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        {{/if}}
+        {% endif %}
 
         <!-- Provide site root to javascript -->
         <script>
@@ -121,7 +121,7 @@
         <div id="page-wrapper" class="page-wrapper">
 
             <div class="page">
-                {{> header}}
+                {% include "header.html" %}
                 <div id="menu-bar-hover-placeholder"></div>
                 <div id="menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
@@ -138,36 +138,36 @@
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
-                        {{#if search_enabled}}
+                        {% if search_enabled %}
                         <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
                             <i class="fa fa-search"></i>
                         </button>
-                        {{/if}}
+                        {% endif %}
                     </div>
 
                     <h1 class="menu-title">{{ book_title }}</h1>
 
                     <div class="right-buttons">
-                        {{#if print_enable}}
+                        {% if print_enable %}
                         <a href="{{ path_to_root }}print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
-                        {{/if}}
-                        {{#if git_repository_url}}
+                        {% endif %}
+                        {% if git_repository_url %}
                         <a href="{{git_repository_url}}" title="Git repository" aria-label="Git repository">
                             <i id="git-repository-button" class="fa {{git_repository_icon}}"></i>
                         </a>
-                        {{/if}}
-                        {{#if git_repository_edit_url}}
+                        {% endif %}
+                        {% if git_repository_edit_url %}
                         <a href="{{git_repository_edit_url}}" title="Suggest an edit" aria-label="Suggest an edit">
                             <i id="git-edit-button" class="fa fa-edit"></i>
                         </a>
-                        {{/if}}
+                        {% endif %}
 
                     </div>
                 </div>
 
-                {{#if search_enabled}}
+                {% if search_enabled %}
                 <div id="search-wrapper" class="hidden">
                     <form id="searchbar-outer" class="searchbar-outer">
                         <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
@@ -178,7 +178,7 @@
                         </ul>
                     </div>
                 </div>
-                {{/if}}
+                {% endif %}
 
                 <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
                 <script>
@@ -191,22 +191,22 @@
 
                 <div id="content" class="content">
                     <main>
-                        {{{ content }}}
+                        {{ content|safe }}
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                        {{#previous}}
+                        {% filter previous %}
                             <a rel="prev" href="{{ path_to_root }}{{link}}" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
-                        {{/previous}}
+                        {% endfilter %}
 
-                        {{#next}}
+                        {% filter next %}
                             <a rel="next prefetch" href="{{ path_to_root }}{{link}}" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
-                        {{/next}}
+                        {% endfilter %}
 
                         <div style="clear: both"></div>
                     </nav>
@@ -214,26 +214,26 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                {{#previous}}
+                {% filter previous %}
                     <a rel="prev" href="{{ path_to_root }}{{link}}" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
-                {{/previous}}
+                {% endfilter %}
 
-                {{#next}}
+                {% filter next %}
                     <a rel="next prefetch" href="{{ path_to_root }}{{link}}" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
-                {{/next}}
+                {% endfilter %}
             </nav>
 
         </div>
 
-        {{#if live_reload_endpoint}}
+        {% if live_reload_endpoint %}
         <!-- Livereload script (if served using the cli tool) -->
         <script>
             const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "{{{live_reload_endpoint}}}";
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "{{live_reload_endpoint|safe}}";
             const socket = new WebSocket(wsAddress);
             socket.onmessage = function (event) {
                 if (event.data === "reload") {
@@ -246,9 +246,9 @@
                 socket.close();
             }
         </script>
-        {{/if}}
+        {% endif %}
 
-        {{#if google_analytics}}
+        {% if google_analytics %}
         <!-- Google Analytics Tag -->
         <script>
             var localAddrs = ["localhost", "127.0.0.1", ""];
@@ -265,60 +265,60 @@
                 ga('send', 'pageview');
             }
         </script>
-        {{/if}}
+        {% endif %}
 
-        {{#if playground_line_numbers}}
+        {% if playground_line_numbers %}
         <script>
             window.playground_line_numbers = true;
         </script>
-        {{/if}}
+        {% endif %}
 
-        {{#if playground_copyable}}
+        {% if playground_copyable %}
         <script>
             window.playground_copyable = true;
         </script>
-        {{/if}}
+        {% endif %}
 
-        {{#if playground_js}}
+        {% if playground_js}%}
         <script src="{{ path_to_root }}ace.js"></script>
         <script src="{{ path_to_root }}editor.js"></script>
         <script src="{{ path_to_root }}mode-rust.js"></script>
         <script src="{{ path_to_root }}theme-dawn.js"></script>
         <script src="{{ path_to_root }}theme-tomorrow_night.js"></script>
-        {{/if}}
+        {% endif %}
 
-        {{#if search_js}}
+        {% if search_js %}
         <script src="{{ path_to_root }}elasticlunr.min.js"></script>
         <script src="{{ path_to_root }}mark.min.js"></script>
         <script src="{{ path_to_root }}searcher.js"></script>
-        {{/if}}
+        {% endif %}
 
         <script src="{{ path_to_root }}clipboard.min.js"></script>
         <script src="{{ path_to_root }}highlight.js"></script>
         <script src="{{ path_to_root }}book.js"></script>
 
         <!-- Custom JS scripts -->
-        {{#each additional_js}}
-        <script src="{{ ../path_to_root }}{{this}}"></script>
-        {{/each}}
+        {% for extra_js in additional_js %}
+        <script src="{{ ../path_to_root }}{{extra_js}}"></script>
+        {% endfor %}
 
-        {{#if is_print}}
-        {{#if mathjax_support}}
-        <script>
-        window.addEventListener('load', function() {
-            MathJax.Hub.Register.StartupHook('End', function() {
+        {% if is_print %}
+            {% if mathjax_support}}
+            <script>
+                window.addEventListener('load', function() {
+                    MathJax.Hub.Register.StartupHook('End', function() {
+                        window.setTimeout(window.print, 100);
+                    });
+                });
+            </script>
+            {% else %}
+            <script>
+            window.addEventListener('load', function() {
                 window.setTimeout(window.print, 100);
             });
-        });
-        </script>
-        {{else}}
-        <script>
-        window.addEventListener('load', function() {
-            window.setTimeout(window.print, 100);
-        });
-        </script>
-        {{/if}}
-        {{/if}}
+            </script>
+            {% endif %}
+        {% endif %}
 
     </div>
     </body>
