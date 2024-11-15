@@ -1,6 +1,6 @@
-# index.hbs
+# index.html
 
-`index.hbs` is the handlebars template that is used to render the book. The
+`index.html` is the jinja template that is used to render the book. The
 markdown files are processed to html and then injected in that template.
 
 If you want to change the layout or style of your book, chances are that you
@@ -11,7 +11,7 @@ will have to modify this template a little bit. Here is what you need to know.
 A lot of data is exposed to the handlebars template with the "context". In the
 handlebars template you can access this information by using
 
-```handlebars
+```jinja
 {{name_of_property}}
 ```
 

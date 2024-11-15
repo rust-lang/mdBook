@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
-<html lang="{{ language }}" class="{{ default_theme }}" dir="{{ text_direction }}">
+<html {% if let Some(language) = book_config.language %}lang="{{ language }}" {% endif %}class="{{ default_theme }}"{% if let Some(text_direction) = book_config.text_direction %} dir="{{ text_direction.as_str()|safe }}"{% endif %}>
     <head>
-        <!-- sidebar iframe generated using mdBook
+        {#- sidebar iframe generated using mdBook
 
         This is a frame, and not included directly in the page, to control the total size of the
         book. The TOC contains an entry for each page, so if each page includes a copy of the TOC,
@@ -11,31 +11,31 @@
         instead added to the main page by `toc.js` instead. The JavaScript mode is better
         because, when running in a `file:///` URL, the iframed page would not be Same-Origin as
         the rest of the page, so the sidebar and the main page theme would fall out of sync.
-        -->
+        -#}
         <meta charset="UTF-8">
         <meta name="robots" content="noindex">
-        {% if base_url %}
-        <base href="{{ base_url }}">
-        {% endif %}
-        <!-- Custom HTML head -->
-        {% include "head.html" %}
+        {% if let Some(base_url) = html_config.site_url %}
+            <base href="{{ base_url }}">
+        {%- endif -%}
+        {# Custom HTML head #}
+        {%- include "head.html" -%}
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
         <link rel="stylesheet" href="{{ path_to_root }}css/variables.css">
         <link rel="stylesheet" href="{{ path_to_root }}css/general.css">
         <link rel="stylesheet" href="{{ path_to_root }}css/chrome.css">
-        {% if print_enable %}
-        <link rel="stylesheet" href="{{ path_to_root }}css/print.css" media="print">
-        {% endif %}
-        <!-- Fonts -->
+        {%- if html_config.print.enable -%}
+            <link rel="stylesheet" href="{{ path_to_root }}css/print.css" media="print">
+        {%- endif -%}
+        {# Fonts #}
         <link rel="stylesheet" href="{{ path_to_root }}FontAwesome/css/font-awesome.css">
-        {% if copy_fonts %}
-        <link rel="stylesheet" href="{{ path_to_root }}fonts/fonts.css">
-        {% endif %}
-        <!-- Custom theme stylesheets -->
-        {% for extra_css in additional_css %}
-        <link rel="stylesheet" href="{{ ../path_to_root }}{{ extra_css }}">
+        {%- if copy_fonts -%}
+            <link rel="stylesheet" href="{{ path_to_root }}fonts/fonts.css">
+        {%- endif -%}
+        {# Custom theme stylesheets #}
+        {% for extra_css in additional_css() %}
+            <link rel="stylesheet" href="../{{ path_to_root }}{{ extra_css }}">
         {% endfor %}
     </head>
-    <body class="sidebar-iframe-inner">{% include "toc.js" %}</body>
+    <body class="sidebar-iframe-inner">{{ crate::renderer::html_handlebars::toc::render(html_config, chapters, true)|safe }}</body>
 </html>

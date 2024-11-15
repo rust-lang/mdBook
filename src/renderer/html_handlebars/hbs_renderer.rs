@@ -1,23 +1,279 @@
 use crate::book::{Book, BookItem};
-use crate::config::{BookConfig, Code, Config, HtmlConfig, Playground, RustEdition};
+use crate::config::{BookConfig, Code, HtmlConfig, Playground, RustEdition};
 use crate::errors::*;
-use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
 use crate::theme::{self, playground_editor, Theme};
 use crate::utils;
+use crate::utils::fs::get_404_output_file;
 
 use std::borrow::Cow;
-use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::fs::{self, File};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-use crate::utils::fs::get_404_output_file;
-use handlebars::Handlebars;
 use log::{debug, trace, warn};
 use once_cell::sync::Lazy;
 use regex::{Captures, Regex};
-use serde_json::json;
+use rinja::{Error, Template};
+
+/// Target for `find_chapter`.
+enum Target {
+    Previous,
+    Next,
+}
+
+impl Target {
+    /// Returns target if found.
+    fn find_path<'a>(
+        &self,
+        base_path: &str,
+        current_path: &'a str,
+        previous_path: Option<&'a str>,
+    ) -> Option<&'a str> {
+        match *self {
+            Target::Next => {
+                if previous_path.is_some_and(|previous_path| previous_path == base_path) {
+                    return Some(current_path);
+                }
+            }
+
+            Target::Previous => {
+                if current_path == base_path {
+                    return previous_path;
+                }
+            }
+        }
+
+        None
+    }
+}
+
+fn get_chapter(chapter_path: Option<&str>) -> rinja::Result<Option<String>> {
+    let Some(path) = chapter_path else {
+        return Ok(None);
+    };
+    Path::new(path)
+        .with_extension("html")
+        .to_str()
+        .ok_or_else(|| Error::Custom("Link could not be converted to str".into()))
+        .map(|p| Some(p.replace('\\', "/")))
+}
+
+fn get_chapter_path(
+    target: Target,
+    chapters: &[Chapter],
+    base_path: &str,
+    is_index: bool,
+) -> rinja::Result<Option<String>> {
+    if is_index {
+        // Special case for index.md which may be a synthetic page.
+        // Target::find won't match because there is no page with the path
+        // "index.md" (unless there really is an index.md in SUMMARY.md).
+        match target {
+            Target::Previous => return Ok(None),
+            Target::Next => match chapters
+                .iter()
+                .filter_map(|chapter| match chapter {
+                    Chapter::Chapter {
+                        path: Some(path), ..
+                    } => Some(path),
+                    _ => None,
+                })
+                .nth(1)
+            {
+                Some(path) => return get_chapter(Some(path)),
+                None => return Ok(None),
+            },
+        }
+    }
+
+    let mut previous: Option<&str> = None;
+
+    debug!("Search for chapter");
+
+    for item in chapters {
+        if let Chapter::Chapter {
+            path: Some(path), ..
+        } = item
+        {
+            if !path.is_empty() {
+                if let Some(path) = target.find_path(base_path, path, previous) {
+                    return get_chapter(Some(path));
+                }
+                previous = Some(path);
+            }
+        } else {
+            continue;
+        }
+    }
+
+    Ok(None)
+}
+
+fn get_chapter_paths(
+    base_path: &str,
+    chapters: &[Chapter],
+    is_index: bool,
+) -> rinja::Result<(Option<String>, Option<String>)> {
+    let next_chapter = get_chapter_path(Target::Next, chapters, base_path, is_index)?;
+    let prev_chapter = get_chapter_path(Target::Previous, chapters, base_path, is_index)?;
+    Ok((next_chapter, prev_chapter))
+}
+
+fn get_default_theme(html_config: &HtmlConfig) -> String {
+    if let Some(ref theme) = html_config.default_theme {
+        theme.to_lowercase()
+    } else {
+        "light".to_string()
+    }
+}
+
+fn get_preferred_dark_theme(html_config: &HtmlConfig) -> String {
+    if let Some(ref theme) = html_config.preferred_dark_theme {
+        theme.to_lowercase()
+    } else {
+        "navy".to_string()
+    }
+}
+
+#[derive(Template)]
+#[template(path = "index.html")]
+struct Index<'a> {
+    path_to_root: String,
+    next_chapter: Option<String>,
+    previous_chapter: Option<String>,
+    book_config: &'a BookConfig,
+    html_config: &'a HtmlConfig,
+    title: &'a str,
+    copy_fonts: bool,
+    git_repository_edit_url: Option<&'a str>,
+    content: &'a str,
+    base_url: Option<&'a str>,
+    template_root: &'a Path,
+    is_print: bool,
+    has_favicon_png: bool,
+    has_favicon_svg: bool,
+    default_theme: String,
+    preferred_dark_theme: String,
+}
+
+impl<'a> Index<'a> {
+    fn new(
+        ctx: &'a RenderContext,
+        html_config: &'a HtmlConfig,
+        is_index: bool,
+        base_path: &'a str,
+        theme: &Theme,
+        title: &'a str,
+        is_print: bool,
+        git_repository_edit_url: Option<&'a str>,
+        path_to_root: String,
+        content: &'a str,
+        base_url: Option<&'a str>,
+        chapters: &[Chapter],
+    ) -> rinja::Result<Self> {
+        let (next_chapter, previous_chapter) = get_chapter_paths(base_path, chapters, is_index)?;
+
+        let has_favicon_png = theme.favicon_png.is_some();
+        let has_favicon_svg = theme.favicon_svg.is_some();
+        let default_theme = get_default_theme(html_config);
+        let preferred_dark_theme = get_preferred_dark_theme(html_config);
+
+        // This `matches!` checks for a non-empty file.
+        let copy_fonts =
+            html_config.copy_fonts || matches!(theme.fonts_css.as_deref(), Some([_, ..]));
+        Ok(Self {
+            path_to_root,
+            next_chapter,
+            previous_chapter,
+            book_config: &ctx.config.book,
+            html_config,
+            has_favicon_png,
+            has_favicon_svg,
+            title,
+            copy_fonts,
+            is_print,
+            git_repository_edit_url,
+            content,
+            base_url,
+            template_root: &ctx.root,
+            default_theme,
+            preferred_dark_theme,
+        })
+    }
+
+    fn additional_css<'b>(&'b self) -> impl Iterator<Item = &'b str> {
+        self.html_config.additional_css.iter().map(|style| {
+            match style.strip_prefix(self.template_root) {
+                Ok(p) => p.to_str().expect("Could not convert to str"),
+                Err(_) => style.to_str().expect("Could not convert to str"),
+            }
+        })
+    }
+
+    fn additional_js<'b>(&'b self) -> impl Iterator<Item = &'b str> {
+        self.html_config.additional_js.iter().map(|script| {
+            match script.strip_prefix(self.template_root) {
+                Ok(p) => p.to_str().expect("Could not convert to str"),
+                Err(_) => script.to_str().expect("Could not convert to str"),
+            }
+        })
+    }
+}
+
+#[derive(Template)]
+#[template(path = "redirect.html")]
+struct Redirect<'a> {
+    url: &'a str,
+}
+
+#[derive(Template)]
+#[template(path = "toc.html")]
+struct Toc<'a> {
+    default_theme: String,
+    book_config: &'a BookConfig,
+    html_config: &'a HtmlConfig,
+    copy_fonts: bool,
+    path_to_root: &'static str,
+    chapters: &'a [Chapter],
+}
+
+impl<'a> Toc<'a> {
+    fn new(
+        html_config: &'a HtmlConfig,
+        book_config: &'a BookConfig,
+        theme: &Theme,
+        chapters: &'a [Chapter],
+    ) -> Self {
+        let default_theme = get_default_theme(&html_config);
+        // This `matches!` checks for a non-empty file.
+        let copy_fonts =
+            html_config.copy_fonts || matches!(theme.fonts_css.as_deref(), Some([_, ..]));
+
+        Self {
+            default_theme,
+            book_config,
+            html_config,
+            path_to_root: "",
+            copy_fonts,
+            chapters,
+        }
+    }
+
+    fn additional_css<'b>(&'b self) -> impl Iterator<Item = &'b str> {
+        self.html_config
+            .additional_css
+            .iter()
+            .map(|p| p.to_str().expect("Could not convert to str"))
+    }
+}
+
+#[derive(Template)]
+#[template(path = "toc.js", ext = "txt")]
+struct TocJS<'a> {
+    html_config: &'a HtmlConfig,
+    chapters: &'a [Chapter],
+}
 
 #[derive(Default)]
 pub struct HtmlHandlebars;
@@ -30,38 +286,43 @@ impl HtmlHandlebars {
     fn render_item(
         &self,
         item: &BookItem,
-        mut ctx: RenderItemContext<'_>,
+        html_config: &HtmlConfig,
+        is_index: bool,
+        ctx: &RenderContext,
+        theme: &Theme,
         print_content: &mut String,
+        chapters: &[Chapter],
     ) -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
 
         let (ch, path) = match item {
-            BookItem::Chapter(ch) if !ch.is_draft_chapter() => (ch, ch.path.as_ref().unwrap()),
+            BookItem::Chapter(ch) if !ch.is_draft_chapter() => (ch, ch.path.as_deref().unwrap()),
             _ => return Ok(()),
         };
 
-        if let Some(ref edit_url_template) = ctx.html_config.edit_url_template {
-            let full_path = ctx.book_config.src.to_str().unwrap_or_default().to_owned()
-                + "/"
-                + ch.source_path
-                    .clone()
-                    .unwrap_or_default()
-                    .to_str()
-                    .unwrap_or_default();
+        let git_repository_edit_url =
+            if let Some(ref edit_url_template) = html_config.edit_url_template {
+                let full_path = ctx.config.book.src.to_str().unwrap_or_default().to_owned()
+                    + "/"
+                    + ch.source_path
+                        .clone()
+                        .unwrap_or_default()
+                        .to_str()
+                        .unwrap_or_default();
 
-            let edit_url = edit_url_template.replace("{path}", &full_path);
-            ctx.data
-                .insert("git_repository_edit_url".to_owned(), json!(edit_url));
-        }
+                Some(edit_url_template.replace("{path}", &full_path))
+            } else {
+                None
+            };
 
-        let content = utils::render_markdown(&ch.content, ctx.html_config.smart_punctuation());
+        let content = utils::render_markdown(&ch.content, html_config.smart_punctuation());
 
         let fixed_content = utils::render_markdown_with_path(
             &ch.content,
-            ctx.html_config.smart_punctuation(),
+            html_config.smart_punctuation(),
             Some(path),
         );
-        if !ctx.is_index && ctx.html_config.print.page_break {
+        if !is_index && html_config.print.page_break {
             // Add page break between chapters
             // See https://developer.mozilla.org/en-US/docs/Web/CSS/break-before and https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-before
             // Add both two CSS properties because of the compatibility issue
@@ -81,58 +342,74 @@ impl HtmlHandlebars {
             bail!("{} is reserved for internal use", path.display());
         };
 
-        let book_title = ctx
-            .data
-            .get("book_title")
-            .and_then(serde_json::Value::as_str)
-            .unwrap_or("");
-
         let title = if let Some(title) = ctx.chapter_titles.get(path) {
             title.clone()
-        } else if book_title.is_empty() {
-            ch.name.clone()
         } else {
-            ch.name.clone() + " - " + book_title
+            let book_title = ctx.config.book.title.as_deref().unwrap_or("");
+            if book_title.is_empty() {
+                ch.name.clone()
+            } else {
+                ch.name.clone() + " - " + book_title
+            }
         };
 
-        ctx.data.insert("path".to_owned(), json!(path));
-        ctx.data.insert("content".to_owned(), json!(content));
-        ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
-        ctx.data.insert("title".to_owned(), json!(title));
-        ctx.data.insert(
-            "path_to_root".to_owned(),
-            json!(utils::fs::path_to_root(path)),
-        );
-        if let Some(ref section) = ch.number {
-            ctx.data
-                .insert("section".to_owned(), json!(section.to_string()));
-        }
+        // FIXME: is it actually needed?
+        // if let Some(ref section) = ch.number {
+        //     ctx.data
+        //         .insert("section".to_owned(), json!(section.to_string()));
+        // }
+        let path_to_root = utils::fs::path_to_root(path);
 
         // Render the handlebars template with the data
         debug!("Render template");
-        let rendered = ctx.handlebars.render("index", &ctx.data)?;
+        let rendered = Index::new(
+            &ctx,
+            html_config,
+            is_index,
+            path.to_str().expect("failed to convert path to str"),
+            theme,
+            &title,
+            false,
+            git_repository_edit_url.as_deref(),
+            path_to_root,
+            &content,
+            None,
+            chapters,
+        )?
+        .render()?;
 
         let rendered = self.post_process(
             rendered,
-            &ctx.html_config.playground,
-            &ctx.html_config.code,
-            ctx.edition,
+            &html_config.playground,
+            &html_config.code,
+            ctx.config.rust.edition,
         );
 
         // Write to file
         debug!("Creating {}", filepath.display());
         utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
 
-        if ctx.is_index {
-            ctx.data.insert("path".to_owned(), json!("index.md"));
-            ctx.data.insert("path_to_root".to_owned(), json!(""));
-            ctx.data.insert("is_index".to_owned(), json!(true));
-            let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
+        if is_index {
+            let rendered_index = Index::new(
+                &ctx,
+                html_config,
+                true,
+                "index.md",
+                theme,
+                &title,
+                false,
+                git_repository_edit_url.as_deref(),
+                String::new(),
+                &content,
+                None,
+                chapters,
+            )?
+            .render()?;
             let rendered_index = self.post_process(
                 rendered_index,
-                &ctx.html_config.playground,
-                &ctx.html_config.code,
-                ctx.edition,
+                &html_config.playground,
+                &html_config.code,
+                ctx.config.rust.edition,
             );
             debug!("Creating index.html from {}", ctx_path);
             utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
@@ -146,8 +423,7 @@ impl HtmlHandlebars {
         ctx: &RenderContext,
         html_config: &HtmlConfig,
         src_dir: &Path,
-        handlebars: &mut Handlebars<'_>,
-        data: &mut serde_json::Map<String, serde_json::Value>,
+        theme: &Theme,
     ) -> Result<()> {
         let destination = &ctx.destination;
         let content_404 = if let Some(ref filename) = html_config.input_404 {
@@ -170,8 +446,7 @@ impl HtmlHandlebars {
         let html_content_404 =
             utils::render_markdown(&content_404, html_config.smart_punctuation());
 
-        let mut data_404 = data.clone();
-        let base_url = if let Some(site_url) = &html_config.site_url {
+        let base_url = Some(if let Some(site_url) = &html_config.site_url {
             site_url
         } else {
             debug!(
@@ -180,19 +455,28 @@ impl HtmlHandlebars {
                 subdirectory on the HTTP server."
             );
             "/"
-        };
-        data_404.insert("base_url".to_owned(), json!(base_url));
-        // Set a dummy path to ensure other paths (e.g. in the TOC) are generated correctly
-        data_404.insert("path".to_owned(), json!("404.md"));
-        data_404.insert("content".to_owned(), json!(html_content_404));
+        });
 
         let mut title = String::from("Page not found");
         if let Some(book_title) = &ctx.config.book.title {
             title.push_str(" - ");
             title.push_str(book_title);
         }
-        data_404.insert("title".to_owned(), json!(title));
-        let rendered = handlebars.render("index", &data_404)?;
+        let rendered = Index::new(
+            ctx,
+            html_config,
+            false,
+            "404.md",
+            theme,
+            &title,
+            false,
+            None,
+            String::new(),
+            &html_content_404,
+            base_url,
+            &[],
+        )?
+        .render()?;
 
         let rendered = self.post_process(
             rendered,
@@ -350,37 +634,6 @@ impl HtmlHandlebars {
         Ok(())
     }
 
-    /// Update the context with data for this file
-    fn configure_print_version(
-        &self,
-        data: &mut serde_json::Map<String, serde_json::Value>,
-        print_content: &str,
-    ) {
-        // Make sure that the Print chapter does not display the title from
-        // the last rendered chapter by removing it from its context
-        data.remove("title");
-        data.insert("is_print".to_owned(), json!(true));
-        data.insert("path".to_owned(), json!("print.md"));
-        data.insert("content".to_owned(), json!(print_content));
-        data.insert(
-            "path_to_root".to_owned(),
-            json!(utils::fs::path_to_root(Path::new("print.md"))),
-        );
-    }
-
-    fn register_hbs_helpers(&self, handlebars: &mut Handlebars<'_>, html_config: &HtmlConfig) {
-        handlebars.register_helper(
-            "toc",
-            Box::new(helpers::toc::RenderToc {
-                no_section_label: html_config.no_section_label,
-            }),
-        );
-        handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
-        handlebars.register_helper("next", Box::new(helpers::navigation::next));
-        // TODO: remove theme_option in 0.5, it is not needed.
-        handlebars.register_helper("theme_option", Box::new(helpers::theme::theme_option));
-    }
-
     /// Copy across any additional CSS and JavaScript files which the book
     /// has been configured to use.
     fn copy_additional_css_and_js(
@@ -418,12 +671,7 @@ impl HtmlHandlebars {
         Ok(())
     }
 
-    fn emit_redirects(
-        &self,
-        root: &Path,
-        handlebars: &Handlebars<'_>,
-        redirects: &HashMap<String, String>,
-    ) -> Result<()> {
+    fn emit_redirects(&self, root: &Path, redirects: &HashMap<String, String>) -> Result<()> {
         if redirects.is_empty() {
             return Ok(());
         }
@@ -437,18 +685,13 @@ impl HtmlHandlebars {
             // up `root.join(original)`).
             let original = original.trim_start_matches('/');
             let filename = root.join(original);
-            self.emit_redirect(handlebars, &filename, new)?;
+            self.emit_redirect(&filename, new)?;
         }
 
         Ok(())
     }
 
-    fn emit_redirect(
-        &self,
-        handlebars: &Handlebars<'_>,
-        original: &Path,
-        destination: &str,
-    ) -> Result<()> {
+    fn emit_redirect(&self, original: &Path, destination: &str) -> Result<()> {
         if original.exists() {
             // sanity check to avoid accidentally overwriting a real file.
             let msg = format!(
@@ -456,7 +699,7 @@ impl HtmlHandlebars {
                 original.display(),
                 destination,
             );
-            return Err(Error::msg(msg));
+            return Err(Error::Custom(msg.into()).into());
         }
 
         if let Some(parent) = original.parent() {
@@ -464,18 +707,14 @@ impl HtmlHandlebars {
                 .with_context(|| format!("Unable to ensure \"{}\" exists", parent.display()))?;
         }
 
-        let ctx = json!({
-            "url": destination,
-        });
-        let f = File::create(original)?;
-        handlebars
-            .render_to_write("redirect", &ctx, f)
-            .with_context(|| {
-                format!(
-                    "Unable to create a redirect file at \"{}\"",
-                    original.display()
-                )
-            })?;
+        let mut f = File::create(original)?;
+        let r = Redirect { url: destination };
+        r.write_into(&mut f).with_context(|| {
+            format!(
+                "Unable to create a redirect file at \"{}\"",
+                original.display()
+            )
+        })?;
 
         Ok(())
     }
@@ -500,8 +739,6 @@ impl Renderer for HtmlHandlebars {
         }
 
         trace!("render");
-        let mut handlebars = Handlebars::new();
-
         let theme_dir = match html_config.theme {
             Some(ref theme) => {
                 let dir = ctx.root.join(theme);
@@ -515,28 +752,7 @@ impl Renderer for HtmlHandlebars {
 
         let theme = theme::Theme::new(theme_dir);
 
-        debug!("Register the index handlebars template");
-        handlebars.register_template_string("index", String::from_utf8(theme.index.clone())?)?;
-
-        debug!("Register the head handlebars template");
-        handlebars.register_partial("head", String::from_utf8(theme.head.clone())?)?;
-
-        debug!("Register the redirect handlebars template");
-        handlebars
-            .register_template_string("redirect", String::from_utf8(theme.redirect.clone())?)?;
-
-        debug!("Register the header handlebars template");
-        handlebars.register_partial("header", String::from_utf8(theme.header.clone())?)?;
-
-        debug!("Register the toc handlebars template");
-        handlebars.register_template_string("toc_js", String::from_utf8(theme.toc_js.clone())?)?;
-        handlebars
-            .register_template_string("toc_html", String::from_utf8(theme.toc_html.clone())?)?;
-
-        debug!("Register handlebars helpers");
-        self.register_hbs_helpers(&mut handlebars, &html_config);
-
-        let mut data = make_data(&ctx.root, book, &ctx.config, &html_config, &theme)?;
+        let chapters = make_chapters(book, &html_config)?;
 
         // Print version
         let mut print_content = String::new();
@@ -546,36 +762,45 @@ impl Renderer for HtmlHandlebars {
 
         let mut is_index = true;
         for item in book.iter() {
-            let ctx = RenderItemContext {
-                handlebars: &handlebars,
-                destination: destination.to_path_buf(),
-                data: data.clone(),
+            self.render_item(
+                item,
+                &html_config,
                 is_index,
-                book_config: book_config.clone(),
-                html_config: html_config.clone(),
-                edition: ctx.config.rust.edition,
-                chapter_titles: &ctx.chapter_titles,
-            };
-            self.render_item(item, ctx, &mut print_content)?;
+                ctx,
+                &theme,
+                &mut print_content,
+                &chapters,
+            )?;
             // Only the first non-draft chapter item should be treated as the "index"
             is_index &= !matches!(item, BookItem::Chapter(ch) if !ch.is_draft_chapter());
         }
 
         // Render 404 page
         if html_config.input_404 != Some("".to_string()) {
-            self.render_404(ctx, &html_config, &src_dir, &mut handlebars, &mut data)?;
+            self.render_404(ctx, &html_config, &src_dir, &theme)?;
         }
 
         // Print version
-        self.configure_print_version(&mut data, &print_content);
-        if let Some(ref title) = ctx.config.book.title {
-            data.insert("title".to_owned(), json!(title));
-        }
-
         // Render the handlebars template with the data
         if html_config.print.enable {
             debug!("Render template");
-            let rendered = handlebars.render("index", &data)?;
+            let path_root = utils::fs::path_to_root(Path::new("print.md"));
+
+            let rendered = Index::new(
+                ctx,
+                &html_config,
+                false,
+                "print.md",
+                &theme,
+                ctx.config.book.title.as_deref().unwrap_or(""),
+                true,
+                None,
+                path_root,
+                &print_content,
+                None,
+                &chapters,
+            )?
+            .render()?;
 
             let rendered = self.post_process(
                 rendered,
@@ -590,14 +815,18 @@ impl Renderer for HtmlHandlebars {
 
         debug!("Render toc");
         {
-            let rendered_toc = handlebars.render("toc_js", &data)?;
+            let rendered_toc = TocJS {
+                html_config: &html_config,
+                chapters: &chapters,
+            }
+            .render()?;
             utils::fs::write_file(destination, "toc.js", rendered_toc.as_bytes())?;
             debug!("Creating toc.js ✓");
-            data.insert("is_toc_html".to_owned(), json!(true));
-            let rendered_toc = handlebars.render("toc_html", &data)?;
+            // data.insert("is_toc_html".to_owned(), json!(true));
+            let rendered_toc = Toc::new(&html_config, &book_config, &theme, &chapters).render()?;
             utils::fs::write_file(destination, "toc.html", rendered_toc.as_bytes())?;
             debug!("Creating toc.html ✓");
-            data.remove("is_toc_html");
+            // data.remove("is_toc_html");
         }
 
         debug!("Copy static files");
@@ -615,7 +844,7 @@ impl Renderer for HtmlHandlebars {
             }
         }
 
-        self.emit_redirects(&ctx.destination, &handlebars, &html_config.redirect)
+        self.emit_redirects(&ctx.destination, &html_config.redirect)
             .context("Unable to emit redirects")?;
 
         // Copy all remaining files, avoid a recursive copy from/to the book build dir
@@ -625,122 +854,21 @@ impl Renderer for HtmlHandlebars {
     }
 }
 
-fn make_data(
-    root: &Path,
-    book: &Book,
-    config: &Config,
-    html_config: &HtmlConfig,
-    theme: &Theme,
-) -> Result<serde_json::Map<String, serde_json::Value>> {
-    trace!("make_data");
+pub enum Chapter {
+    PartTitle(String),
+    Chapter {
+        section: Option<String>,
+        has_sub_items: bool,
+        name: String,
+        path: Option<String>,
+    },
+    Separator,
+}
 
-    let mut data = serde_json::Map::new();
-    data.insert(
-        "language".to_owned(),
-        json!(config.book.language.clone().unwrap_or_default()),
-    );
-    data.insert(
-        "text_direction".to_owned(),
-        json!(config.book.realized_text_direction()),
-    );
-    data.insert(
-        "book_title".to_owned(),
-        json!(config.book.title.clone().unwrap_or_default()),
-    );
-    data.insert(
-        "description".to_owned(),
-        json!(config.book.description.clone().unwrap_or_default()),
-    );
-    if theme.favicon_png.is_some() {
-        data.insert("favicon_png".to_owned(), json!("favicon.png"));
-    }
-    if theme.favicon_svg.is_some() {
-        data.insert("favicon_svg".to_owned(), json!("favicon.svg"));
-    }
-    if let Some(ref live_reload_endpoint) = html_config.live_reload_endpoint {
-        data.insert(
-            "live_reload_endpoint".to_owned(),
-            json!(live_reload_endpoint),
-        );
-    }
+fn make_chapters(book: &Book, html_config: &HtmlConfig) -> Result<Vec<Chapter>> {
+    trace!("make_chapters");
 
-    // TODO: remove default_theme in 0.5, it is not needed.
-    let default_theme = match html_config.default_theme {
-        Some(ref theme) => theme.to_lowercase(),
-        None => "light".to_string(),
-    };
-    data.insert("default_theme".to_owned(), json!(default_theme));
-
-    let preferred_dark_theme = match html_config.preferred_dark_theme {
-        Some(ref theme) => theme.to_lowercase(),
-        None => "navy".to_string(),
-    };
-    data.insert(
-        "preferred_dark_theme".to_owned(),
-        json!(preferred_dark_theme),
-    );
-
-    // Add google analytics tag
-    if let Some(ref ga) = html_config.google_analytics {
-        data.insert("google_analytics".to_owned(), json!(ga));
-    }
-
-    if html_config.mathjax_support {
-        data.insert("mathjax_support".to_owned(), json!(true));
-    }
-
-    // This `matches!` checks for a non-empty file.
-    if html_config.copy_fonts || matches!(theme.fonts_css.as_deref(), Some([_, ..])) {
-        data.insert("copy_fonts".to_owned(), json!(true));
-    }
-
-    // Add check to see if there is an additional style
-    if !html_config.additional_css.is_empty() {
-        let mut css = Vec::new();
-        for style in &html_config.additional_css {
-            match style.strip_prefix(root) {
-                Ok(p) => css.push(p.to_str().expect("Could not convert to str")),
-                Err(_) => css.push(style.to_str().expect("Could not convert to str")),
-            }
-        }
-        data.insert("additional_css".to_owned(), json!(css));
-    }
-
-    // Add check to see if there is an additional script
-    if !html_config.additional_js.is_empty() {
-        let mut js = Vec::new();
-        for script in &html_config.additional_js {
-            match script.strip_prefix(root) {
-                Ok(p) => js.push(p.to_str().expect("Could not convert to str")),
-                Err(_) => js.push(script.to_str().expect("Could not convert to str")),
-            }
-        }
-        data.insert("additional_js".to_owned(), json!(js));
-    }
-
-    if html_config.playground.editable && html_config.playground.copy_js {
-        data.insert("playground_js".to_owned(), json!(true));
-        if html_config.playground.line_numbers {
-            data.insert("playground_line_numbers".to_owned(), json!(true));
-        }
-    }
-    if html_config.playground.copyable {
-        data.insert("playground_copyable".to_owned(), json!(true));
-    }
-
-    data.insert("print_enable".to_owned(), json!(html_config.print.enable));
-    data.insert("fold_enable".to_owned(), json!(html_config.fold.enable));
-    data.insert("fold_level".to_owned(), json!(html_config.fold.level));
-
-    let search = html_config.search.clone();
-    if cfg!(feature = "search") {
-        let search = search.unwrap_or_default();
-        data.insert("search_enabled".to_owned(), json!(search.enable));
-        data.insert(
-            "search_js".to_owned(),
-            json!(search.enable && search.copy_js),
-        );
-    } else if search.is_some() {
+    if !cfg!(feature = "search") && html_config.search.is_some() {
         warn!("mdBook compiled without search support, ignoring `output.html.search` table");
         warn!(
             "please reinstall with `cargo install mdbook --force --features search`to use the \
@@ -748,56 +876,41 @@ fn make_data(
         )
     }
 
-    if let Some(ref git_repository_url) = html_config.git_repository_url {
-        data.insert("git_repository_url".to_owned(), json!(git_repository_url));
-    }
-
-    let git_repository_icon = match html_config.git_repository_icon {
-        Some(ref git_repository_icon) => git_repository_icon,
-        None => "fa-github",
-    };
-    data.insert("git_repository_icon".to_owned(), json!(git_repository_icon));
-
     let mut chapters = vec![];
 
     for item in book.iter() {
-        // Create the data to inject in the template
-        let mut chapter = BTreeMap::new();
-
         match *item {
             BookItem::PartTitle(ref title) => {
-                chapter.insert("part".to_owned(), json!(title));
+                chapters.push(Chapter::PartTitle(title.to_string()));
             }
             BookItem::Chapter(ref ch) => {
-                if let Some(ref section) = ch.number {
-                    chapter.insert("section".to_owned(), json!(section.to_string()));
-                }
+                let section = ch.number.as_ref().map(|section| section.to_string());
+                let has_sub_items = !ch.sub_items.is_empty();
 
-                chapter.insert(
-                    "has_sub_items".to_owned(),
-                    json!((!ch.sub_items.is_empty()).to_string()),
-                );
-
-                chapter.insert("name".to_owned(), json!(ch.name));
-                if let Some(ref path) = ch.path {
-                    let p = path
-                        .to_str()
-                        .with_context(|| "Could not convert path to str")?;
-                    chapter.insert("path".to_owned(), json!(p));
-                }
+                let path = if let Some(ref path) = ch.path {
+                    Some(
+                        path.to_str()
+                            .with_context(|| "Could not convert path to str")?
+                            .to_string(),
+                    )
+                } else {
+                    None
+                };
+                chapters.push(Chapter::Chapter {
+                    section,
+                    has_sub_items,
+                    name: ch.name.clone(),
+                    path,
+                });
             }
             BookItem::Separator => {
-                chapter.insert("spacer".to_owned(), json!("_spacer_"));
+                chapters.push(Chapter::Separator);
             }
         }
-
-        chapters.push(chapter);
     }
 
-    data.insert("chapters".to_owned(), json!(chapters));
-
-    debug!("[*]: JSON constructed");
-    Ok(data)
+    debug!("[*]: chapters constructed");
+    Ok(chapters)
 }
 
 /// Goes through the rendered HTML, making sure all header tags have
@@ -1062,17 +1175,6 @@ fn partition_source(s: &str) -> (String, String) {
     (before, after)
 }
 
-struct RenderItemContext<'a> {
-    handlebars: &'a Handlebars<'a>,
-    destination: PathBuf,
-    data: serde_json::Map<String, serde_json::Value>,
-    is_index: bool,
-    book_config: BookConfig,
-    html_config: HtmlConfig,
-    edition: Option<RustEdition>,
-    chapter_titles: &'a HashMap<PathBuf, String>,
-}
-
 #[cfg(test)]
 mod tests {
     use crate::config::TextDirection;
@@ -1291,7 +1393,7 @@ mod tests {
 
     #[test]
     fn test_json_direction() {
-        assert_eq!(json!(TextDirection::RightToLeft), json!("rtl"));
-        assert_eq!(json!(TextDirection::LeftToRight), json!("ltr"));
+        assert_eq!(TextDirection::RightToLeft.as_str(), "rtl");
+        assert_eq!(TextDirection::LeftToRight.as_str(), "ltr");
     }
 }

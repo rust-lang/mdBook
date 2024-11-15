@@ -122,9 +122,6 @@ impl BookBuilder {
             fs::create_dir(&themedir)?;
         }
 
-        let mut index = File::create(themedir.join("index.hbs"))?;
-        index.write_all(theme::INDEX)?;
-
         let cssdir = themedir.join("css");
         if !cssdir.exists() {
             fs::create_dir(&cssdir)?;
