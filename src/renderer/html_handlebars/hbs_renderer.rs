@@ -850,18 +850,20 @@ fn convert_fontawesome(html: &str) -> String {
             let mut other_classes = String::new();
 
             for class in classes.split(" ") {
-                if let Some(class) = class.strip_prefix("fa-") {
-                    icon = class.to_owned();
-                } else if class == "fa" {
-                    type_ = fa::Type::Regular;
-                } else if class == "fas" {
-                    type_ = fa::Type::Solid;
-                } else if class == "fab" {
-                    type_ = fa::Type::Brands;
-                } else {
-                    other_classes += " ";
-                    other_classes += class;
+                if let Some((prefix, remainder)) = class.split_once('-') {
+                    if let Some(t) = match prefix {
+                        "fa" => Some(fa::Type::Regular),
+                        "fas" => Some(fa::Type::Solid),
+                        "fab" => Some(fa::Type::Brands),
+                        _ => None,
+                    } {
+                        type_ = t;
+                        icon = remainder.to_owned();
+                        continue;
+                    }
                 }
+                other_classes += " ";
+                other_classes += class;
             }
 
             if icon.is_empty() {
@@ -870,7 +872,7 @@ fn convert_fontawesome(html: &str) -> String {
                 format!(
                     r#"<span{before}class="fa-svg{other_classes}"{after}>{svg}</span>"#,
                     before = before,
-                    other_classes = other_classes,
+                    other_classes = other_classes.replace(" fa", ""),
                     after = after,
                     svg = svg
                 )
