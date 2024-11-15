@@ -218,6 +218,7 @@ impl HtmlHandlebars {
         let rendered = fix_code_blocks(&rendered);
         let rendered = add_playground_pre(&rendered, playground_config, edition);
         let rendered = hide_lines(&rendered, code_config);
+        let rendered = convert_fontawesome(&rendered);
 
         rendered
     }
@@ -258,41 +259,7 @@ impl HtmlHandlebars {
         write_file(destination, "ayu-highlight.css", &theme.ayu_highlight_css)?;
         write_file(destination, "highlight.js", &theme.highlight_js)?;
         write_file(destination, "clipboard.min.js", &theme.clipboard_js)?;
-        write_file(
-            destination,
-            "FontAwesome/css/font-awesome.css",
-            theme::FONT_AWESOME,
-        )?;
-        write_file(
-            destination,
-            "FontAwesome/fonts/fontawesome-webfont.eot",
-            theme::FONT_AWESOME_EOT,
-        )?;
-        write_file(
-            destination,
-            "FontAwesome/fonts/fontawesome-webfont.svg",
-            theme::FONT_AWESOME_SVG,
-        )?;
-        write_file(
-            destination,
-            "FontAwesome/fonts/fontawesome-webfont.ttf",
-            theme::FONT_AWESOME_TTF,
-        )?;
-        write_file(
-            destination,
-            "FontAwesome/fonts/fontawesome-webfont.woff",
-            theme::FONT_AWESOME_WOFF,
-        )?;
-        write_file(
-            destination,
-            "FontAwesome/fonts/fontawesome-webfont.woff2",
-            theme::FONT_AWESOME_WOFF2,
-        )?;
-        write_file(
-            destination,
-            "FontAwesome/fonts/FontAwesome.ttf",
-            theme::FONT_AWESOME_TTF,
-        )?;
+
         // Don't copy the stock fonts if the user has specified their own fonts to use.
         if html_config.copy_fonts && theme.fonts_css.is_none() {
             write_file(destination, "fonts/fonts.css", theme::fonts::CSS)?;
@@ -379,6 +346,7 @@ impl HtmlHandlebars {
         handlebars.register_helper("next", Box::new(helpers::navigation::next));
         // TODO: remove theme_option in 0.5, it is not needed.
         handlebars.register_helper("theme_option", Box::new(helpers::theme::theme_option));
+        handlebars.register_helper("fa", Box::new(helpers::fontawesome::fa_helper));
     }
 
     /// Copy across any additional CSS and JavaScript files which the book
@@ -754,9 +722,19 @@ fn make_data(
 
     let git_repository_icon = match html_config.git_repository_icon {
         Some(ref git_repository_icon) => git_repository_icon,
-        None => "fa-github",
+        None => "fab-github",
+    };
+    let git_repository_icon_class = match git_repository_icon.split('-').next() {
+        Some("fa") => "regular",
+        Some("fas") => "solid",
+        Some("fab") => "brands",
+        _ => "regular",
     };
     data.insert("git_repository_icon".to_owned(), json!(git_repository_icon));
+    data.insert(
+        "git_repository_icon_class".to_owned(),
+        json!(git_repository_icon_class),
+    );
 
     let mut chapters = vec![];
 
@@ -853,6 +831,54 @@ fn insert_link_into_header(
     format!(
         r##"<h{level} id="{id}"{classes}><a class="header" href="#{id}">{content}</a></h{level}>"##
     )
+}
+
+// Convert fontawesome `<i>` tags to inline SVG
+fn convert_fontawesome(html: &str) -> String {
+    use font_awesome_as_a_crate as fa;
+
+    let regex = Regex::new(r##"<i([^>]+)class="([^"]+)"([^>]*)></i>"##).unwrap();
+    regex
+        .replace_all(html, |caps: &Captures<'_>| {
+            let text = &caps[0];
+            let before = &caps[1];
+            let classes = &caps[2];
+            let after = &caps[3];
+
+            let mut icon = String::new();
+            let mut type_ = fa::Type::Regular;
+            let mut other_classes = String::new();
+
+            for class in classes.split(" ") {
+                if let Some(class) = class.strip_prefix("fa-") {
+                    icon = class.to_owned();
+                } else if class == "fa" {
+                    type_ = fa::Type::Regular;
+                } else if class == "fas" {
+                    type_ = fa::Type::Solid;
+                } else if class == "fab" {
+                    type_ = fa::Type::Brands;
+                } else {
+                    other_classes += " ";
+                    other_classes += class;
+                }
+            }
+
+            if icon.is_empty() {
+                text.to_owned()
+            } else if let Ok(svg) = fa::svg(type_, &icon) {
+                format!(
+                    r#"<span{before}class="fa-svg{other_classes}"{after}>{svg}</span>"#,
+                    before = before,
+                    other_classes = other_classes,
+                    after = after,
+                    svg = svg
+                )
+            } else {
+                text.to_owned()
+            }
+        })
+        .into_owned()
 }
 
 // The rust book uses annotations for rustdoc to test code snippets,
