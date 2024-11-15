@@ -1322,4 +1322,29 @@ mod tests {
         assert_eq!(json!(TextDirection::RightToLeft), json!("rtl"));
         assert_eq!(json!(TextDirection::LeftToRight), json!("ltr"));
     }
+
+    #[test]
+    fn convert_valid_fontawesome_class() {
+        assert!(convert_fontawesome("<i class=\"fa fab-github\"></i>").contains("class=\"fa-svg\""));
+        assert!(
+            convert_fontawesome("<i class=\"fa fab-github some-class\"></i>")
+                .contains("class=\"fa-svg some-class\"")
+        );
+        assert!(convert_fontawesome("<i class=\"fa fas-print\"></i>").contains("class=\"fa-svg\""));
+        assert!(convert_fontawesome("<i class=\"fa fa-eye\"></i>").contains("class=\"fa-svg\""));
+    }
+
+    #[test]
+    fn convert_invalid_fontawesome_class() {
+        let invalid_fontawesome_i_tag = "<i class=\"fa\"></i>";
+        assert_eq!(
+            convert_fontawesome(invalid_fontawesome_i_tag),
+            invalid_fontawesome_i_tag
+        );
+        let non_fontawesome_i_tag = "<i class=\"some-class\"></i>";
+        assert_eq!(
+            convert_fontawesome(non_fontawesome_i_tag),
+            non_fontawesome_i_tag
+        );
+    }
 }
