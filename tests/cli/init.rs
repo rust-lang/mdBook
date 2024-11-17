@@ -43,5 +43,5 @@ fn no_git_config_with_title() {
         .stdout(predicates::str::contains("\nAll done, no errors...\n"));
 
     let config = Config::from_disk(temp.path().join("book.toml")).unwrap();
-    assert_eq!(config.book.title, None);
+    assert_eq!(config.book.title.as_deref(), Some("Example title"));
 }
