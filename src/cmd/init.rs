@@ -74,9 +74,9 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     if let Some(author) = get_author_name() {
         debug!("Obtained user name from gitconfig: {:?}", author);
         config.book.authors.push(author);
-        builder.with_config(config);
     }
 
+    builder.with_config(config);
     builder.build()?;
     println!("\nAll done, no errors...");
 
