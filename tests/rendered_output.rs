@@ -500,8 +500,8 @@ fn theme_dir_overrides_work_correctly() {
     let book_dir = book_dir.path();
     let theme_dir = book_dir.join("theme");
 
-    let mut index = mdbook::theme::INDEX.to_vec();
-    index.extend_from_slice(b"\n<!-- This is a modified index.hbs! -->");
+    let mut index = include_bytes!("../templates/index.html").to_vec();
+    index.extend_from_slice(b"\n<!-- This is a modified index.html! -->");
 
     write_file(&theme_dir, "index.hbs", &index).unwrap();
 
@@ -509,7 +509,7 @@ fn theme_dir_overrides_work_correctly() {
     md.build().unwrap();
 
     let built_index = book_dir.join("book").join("index.html");
-    dummy_book::assert_contains_strings(built_index, &["This is a modified index.hbs!"]);
+    dummy_book::assert_contains_strings(built_index, &["This is a modified index.html!"]);
 }
 
 #[test]

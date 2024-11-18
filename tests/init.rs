@@ -136,7 +136,6 @@ fn copy_theme() {
         "fonts/source-code-pro-v11-all-charsets-500.woff2",
         "highlight.css",
         "highlight.js",
-        "index.hbs",
     ];
     let theme_dir = temp.path().join("theme");
     let mut actual: Vec<_> = walkdir::WalkDir::new(&theme_dir)
