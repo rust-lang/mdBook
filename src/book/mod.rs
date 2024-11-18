@@ -27,7 +27,7 @@ use crate::errors::*;
 use crate::preprocess::{
     CmdPreprocessor, IndexPreprocessor, LinkPreprocessor, Preprocessor, PreprocessorContext,
 };
-use crate::renderer::{CmdRenderer, HtmlHandlebars, MarkdownRenderer, RenderContext, Renderer};
+use crate::renderer::{CmdRenderer, HtmlRenderer, MarkdownRenderer, RenderContext, Renderer};
 use crate::utils;
 
 use crate::config::{Config, RustEdition};
@@ -435,7 +435,7 @@ fn determine_renderers(config: &Config) -> Vec<Box<dyn Renderer>> {
     if let Some(output_table) = config.get("output").and_then(Value::as_table) {
         renderers.extend(output_table.iter().map(|(key, table)| {
             if key == "html" {
-                Box::new(HtmlHandlebars::new()) as Box<dyn Renderer>
+                Box::new(HtmlRenderer::new()) as Box<dyn Renderer>
             } else if key == "markdown" {
                 Box::new(MarkdownRenderer::new()) as Box<dyn Renderer>
             } else {
@@ -446,7 +446,7 @@ fn determine_renderers(config: &Config) -> Vec<Box<dyn Renderer>> {
 
     // if we couldn't find anything, add the HTML renderer as a default
     if renderers.is_empty() {
-        renderers.push(Box::new(HtmlHandlebars::new()));
+        renderers.push(Box::new(HtmlRenderer::new()));
     }
 
     renderers
@@ -858,7 +858,7 @@ mod tests {
             .and_then(Value::as_str)
             .unwrap();
         assert_eq!(html, "html");
-        let html_renderer = HtmlHandlebars::default();
+        let html_renderer = HtmlRenderer::default();
         let pre = LinkPreprocessor::new();
 
         let should_run = preprocessor_should_run(&pre, &html_renderer, &cfg);
@@ -883,7 +883,7 @@ mod tests {
     #[test]
     fn preprocessor_should_run_falls_back_to_supports_renderer_method() {
         let cfg = Config::default();
-        let html = HtmlHandlebars::new();
+        let html = HtmlRenderer::new();
 
         let should_be = true;
         let got = preprocessor_should_run(&BoolPreprocessor(should_be), &html, &cfg);

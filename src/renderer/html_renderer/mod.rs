@@ -1,6 +1,6 @@
 #![allow(missing_docs)] // FIXME: Document this
 
-pub use self::hbs_renderer::HtmlHandlebars;
+pub use self::hbs_renderer::HtmlRenderer;
 
 mod hbs_renderer;
 mod toc;

@@ -37,5 +37,5 @@
             <link rel="stylesheet" href="../{{ path_to_root }}{{ extra_css }}">
         {% endfor %}
     </head>
-    <body class="sidebar-iframe-inner">{{ crate::renderer::html_handlebars::toc::render(html_config, chapters, true)|safe }}</body>
+    <body class="sidebar-iframe-inner">{{ crate::renderer::html_renderer::toc::render(html_config, chapters, true)|safe }}</body>
 </html>

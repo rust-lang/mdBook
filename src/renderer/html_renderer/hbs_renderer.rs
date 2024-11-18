@@ -276,11 +276,11 @@ struct TocJS<'a> {
 }
 
 #[derive(Default)]
-pub struct HtmlHandlebars;
+pub struct HtmlRenderer;
 
-impl HtmlHandlebars {
+impl HtmlRenderer {
     pub fn new() -> Self {
-        HtmlHandlebars
+        HtmlRenderer
     }
 
     fn render_item(
@@ -720,7 +720,7 @@ impl HtmlHandlebars {
     }
 }
 
-impl Renderer for HtmlHandlebars {
+impl Renderer for HtmlRenderer {
     fn name(&self) -> &str {
         "html"
     }
