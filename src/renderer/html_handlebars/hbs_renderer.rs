@@ -868,7 +868,9 @@ fn convert_fontawesome(html: &str) -> String {
 
             if icon.is_empty() {
                 text.to_owned()
-            } else if let Ok(svg) = fa::svg(type_, &icon).or_else(|| fa::svg(fa::Type::Brands, &icon)) {
+            } else if let Ok(svg) =
+                fa::svg(type_, &icon).or_else(|_| fa::svg(fa::Type::Brands, &icon))
+            {
                 format!(
                     r#"<span{before}class="fa-svg{other_classes}"{after}>{svg}</span>"#,
                     before = before,
