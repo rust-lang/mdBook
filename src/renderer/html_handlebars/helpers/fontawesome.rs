@@ -45,6 +45,7 @@ pub fn fa_helper(
     }
     out.write(
         fa::svg(type_, name)
+            .or_else(|| fa::svg(fa::Type::Brands, name))
             .map_err(|_| RenderErrorReason::Other(format!("Missing font {}", name)))?,
     )?;
     out.write("</span>")?;
