@@ -1,5 +1,18 @@
 # Changelog
 
+## mdBook 0.4.43
+[v0.4.42...v0.4.43](https://github.com/rust-lang/mdBook/compare/v0.4.42...v0.4.43)
+
+### Fixed
+
+- Fixed setting the title in `mdbook init` when no git user is configured.
+  [#2486](https://github.com/rust-lang/mdBook/pull/2486)
+
+### Changed
+
+- The Rust 2024 edition no longer needs `-Zunstable-options`.
+  [#2495](https://github.com/rust-lang/mdBook/pull/2495)
+
 ## mdBook 0.4.42
 [v0.4.41...v0.4.42](https://github.com/rust-lang/mdBook/compare/v0.4.41...v0.4.42)
 
