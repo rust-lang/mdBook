@@ -8,7 +8,7 @@ class MDBookSidebarScrollbox extends HTMLElement {
         super();
     }
     connectedCallback() {
-        this.innerHTML = '{{#toc}}{{/toc}}';
+        this.innerHTML = '{{ crate::renderer::html_renderer::toc::render(html_config, chapters, false) }}';
         // Set the current, active page, and reveal it if it's hidden
         let current_page = document.location.href.toString();
         if (current_page.endsWith("/")) {

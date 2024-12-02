@@ -1,0 +1,3 @@
+[[escaper]]
+path = "rinja::filters::Text"
+extensions = ["js"]

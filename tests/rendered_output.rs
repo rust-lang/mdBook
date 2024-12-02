@@ -495,24 +495,6 @@ fn first_chapter_is_copied_as_index_even_if_not_first_elem() {
 }
 
 #[test]
-fn theme_dir_overrides_work_correctly() {
-    let book_dir = dummy_book::new_copy_of_example_book().unwrap();
-    let book_dir = book_dir.path();
-    let theme_dir = book_dir.join("theme");
-
-    let mut index = mdbook::theme::INDEX.to_vec();
-    index.extend_from_slice(b"\n<!-- This is a modified index.hbs! -->");
-
-    write_file(&theme_dir, "index.hbs", &index).unwrap();
-
-    let md = MDBook::load(book_dir).unwrap();
-    md.build().unwrap();
-
-    let built_index = book_dir.join("book").join("index.html");
-    dummy_book::assert_contains_strings(built_index, &["This is a modified index.hbs!"]);
-}
-
-#[test]
 fn no_index_for_print_html() {
     let temp = DummyBook::new().build().unwrap();
     let md = MDBook::load(temp.path()).unwrap();

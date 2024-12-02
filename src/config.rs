@@ -464,6 +464,14 @@ impl TextDirection {
             _ => TextDirection::LeftToRight,
         }
     }
+
+    /// Convert the text representation.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::LeftToRight => "ltr",
+            Self::RightToLeft => "rtl",
+        }
+    }
 }
 
 /// Configuration for the build procedure.

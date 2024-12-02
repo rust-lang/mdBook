@@ -11,10 +11,10 @@
 //! [For Developers]: https://rust-lang.github.io/mdBook/for_developers/index.html
 //! [RenderContext]: struct.RenderContext.html
 
-pub use self::html_handlebars::HtmlHandlebars;
+pub use self::html_renderer::HtmlRenderer;
 pub use self::markdown_renderer::MarkdownRenderer;
 
-mod html_handlebars;
+mod html_renderer;
 mod markdown_renderer;
 
 use shlex::Shlex;
@@ -38,7 +38,7 @@ use serde::{Deserialize, Serialize};
 /// provide your own renderer, there are two main renderer implementations that
 /// 99% of users will ever use:
 ///
-/// - [`HtmlHandlebars`] - the built-in HTML renderer
+/// - [`HtmlRenderer`] - the built-in HTML renderer
 /// - [`CmdRenderer`] - a generic renderer which shells out to a program to do the
 ///   actual rendering
 pub trait Renderer {

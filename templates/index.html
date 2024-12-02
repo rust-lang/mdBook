@@ -1,0 +1,342 @@
+<!DOCTYPE HTML>
+<html {% if let Some(lang) = book_config.language %}lang="{{ lang }}" {% endif %}class="{{ default_theme }} sidebar-visible"{% if let Some(text_direction) = book_config.text_direction %} dir="{{ text_direction.as_str()|safe }}"{% endif %}>
+    <head>
+        {# Book generated using mdBook #}
+        <meta charset="UTF-8">
+        <title>{{ title }}</title>
+        {%- if is_print -%}
+            <meta name="robots" content="noindex">
+        {%- endif -%}
+        {%- if let Some(base_url) = base_url -%}
+            <base href="{{ base_url }}">
+        {%- endif -%}
+
+        {# Custom HTML head #}
+        {% include "head.html" %}
+
+        {%- if let Some(description) = book_config.description -%}
+            <meta name="description" content="{{ description }}">
+        {%- endif -%}
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        {%- if has_favicon_svg -%}
+            <link rel="icon" href="{{ path_to_root }}favicon.svg">
+        {%- endif -%}
+        {%- if has_favicon_png -%}
+            <link rel="shortcut icon" href="{{ path_to_root }}favicon.png">
+        {%- endif -%}
+        <link rel="stylesheet" href="{{ path_to_root }}css/variables.css">
+        <link rel="stylesheet" href="{{ path_to_root }}css/general.css">
+        <link rel="stylesheet" href="{{ path_to_root }}css/chrome.css">
+        {%- if html_config.print.enable -%}
+            <link rel="stylesheet" href="{{ path_to_root }}css/print.css" media="print">
+        {%- endif -%}
+
+        {# Fonts #}
+        <link rel="stylesheet" href="{{ path_to_root }}FontAwesome/css/font-awesome.css">
+        {%- if copy_fonts -%}
+            <link rel="stylesheet" href="{{ path_to_root }}fonts/fonts.css">
+        {%- endif -%}
+
+        {# Highlight.js Stylesheets #}
+        <link rel="stylesheet" href="{{ path_to_root }}highlight.css">
+        <link rel="stylesheet" href="{{ path_to_root }}tomorrow-night.css">
+        <link rel="stylesheet" href="{{ path_to_root }}ayu-highlight.css">
+
+        {# Custom theme stylesheets #}
+        {%- for extra_css in additional_css() -%}
+            <link rel="stylesheet" href="../{{ path_to_root }}{{ extra_css }}">
+        {%- endfor -%}
+
+        {%- if html_config.mathjax_support -%}
+            {# MathJax #}
+            <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        {%- endif -%}
+
+        {# Provide site root to javascript #}
+        <script>
+            var path_to_root = "{{ path_to_root }}";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "{{ preferred_dark_theme }}" : "{{ default_theme }}";
+        </script>
+        {# Start loading toc.js asap #}
+        <script src="{{ path_to_root }}toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        {# Work around some values being stored in localStorage wrapped in quotes #}
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        {# Set the theme before any content is loaded, prevents flash #}
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('{{ default_theme }}')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        {# Hide / unhide sidebar before it is displayed #}
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            {#- populated by js -#}
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="{{ path_to_root }}toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+            <div class="page">
+                {% include "header.html" %}
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        {%- if cfg!(feature = "search") -%}
+                            {%- if let Some(search) = html_config.search -%}
+                                {%- if search.enable -%}
+                                    <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                                        <i class="fa fa-search"></i>
+                                    </button>
+                                {%- endif -%}
+                            {%- endif -%}
+                        {%- endif -%}
+                    </div>
+
+                    <h1 class="menu-title">{{ book_config.title.as_deref().unwrap_or_default() }}</h1>
+
+                    <div class="right-buttons">
+                        {%- if html_config.print.enable -%}
+                        <a href="{{ path_to_root }}print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        {%- endif -%}
+
+                        {%- if let Some(git_repository_url) = html_config.git_repository_url -%}
+                            <a href="{{git_repository_url}}" title="Git repository" aria-label="Git repository">
+                                <i id="git-repository-button" class="fa {% if let Some(git_repository_icon) = html_config.git_repository_icon -%}
+                                    {{- git_repository_icon -}}
+                                {%- else -%}
+                                    fa-github
+                                {%- endif %}"></i>
+                            </a>
+                        {%- endif -%}
+
+                        {%- if let Some(git_repository_edit_url) = git_repository_edit_url -%}
+                            <a href="{{git_repository_edit_url}}" title="Suggest an edit" aria-label="Suggest an edit">
+                                <i id="git-edit-button" class="fa fa-edit"></i>
+                            </a>
+                        {%- endif -%}
+
+                    </div>
+                </div>
+
+                {%- if cfg!(feature = "search") -%}
+                    {%- if let Some(search) = html_config.search -%}
+                        {%- if search.enable -%}
+                            <div id="search-wrapper" class="hidden">
+                                <form id="searchbar-outer" class="searchbar-outer">
+                                    <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                                </form>
+                                <div id="searchresults-outer" class="searchresults-outer hidden">
+                                    <div id="searchresults-header" class="searchresults-header"></div>
+                                    <ul id="searchresults">
+                                    </ul>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+                {# Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM #}
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        {{ content|safe }}
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        {# Mobile navigation buttons #}
+                        {% if let Some(link) = previous_chapter %}
+                            <a rel="prev" href="{{ path_to_root }}{{link}}" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        {% endif %}
+
+                        {% if let Some(link) = next_chapter %}
+                            <a rel="next prefetch" href="{{ path_to_root }}{{link}}" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        {% endif %}
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                {% if let Some(link) = previous_chapter %}
+                    <a rel="prev" href="{{ path_to_root }}{{link}}" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                {% endif %}
+
+                {% if let Some(link) = next_chapter %}
+                    <a rel="next prefetch" href="{{ path_to_root }}{{link}}" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                {% endif %}
+            </nav>
+
+        </div>
+
+        {%- if let Some(live_reload_endpoint) = html_config.live_reload_endpoint -%}
+            {#- Livereload script (if served using the cli tool) -#}
+            <script>
+                const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsAddress = wsProtocol + "//" + location.host + "/" + "{{live_reload_endpoint|safe}}";
+                const socket = new WebSocket(wsAddress);
+                socket.onmessage = function (event) {
+                    if (event.data === "reload") {
+                        socket.close();
+                        location.reload();
+                    }
+                };
+
+                window.onbeforeunload = function() {
+                    socket.close();
+                }
+            </script>
+        {%- endif -%}
+
+        {%- if let Some(google_analytics) = html_config.google_analytics -%}
+            {#- Google Analytics Tag -#}
+            <script>
+                var localAddrs = ["localhost", "127.0.0.1", ""];
+
+                // make sure we don't activate google analytics if the developer is
+                // inspecting the book locally...
+                if (localAddrs.indexOf(document.location.hostname) === -1) {
+                    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+                    ga('create', '{{google_analytics|safe}}', 'auto');
+                    ga('send', 'pageview');
+                }
+            </script>
+        {%- endif -%}
+
+        {%- if html_config.playground.editable && html_config.playground.copy_js && html_config.playground.line_numbers -%}
+            <script>
+                window.playground_line_numbers = true;
+            </script>
+        {%- endif -%}
+
+        {%- if html_config.playground.copyable -%}
+            <script>
+                window.playground_copyable = true;
+            </script>
+        {%- endif -%}
+
+        {%- if html_config.playground.editable && html_config.playground.copy_js -%}
+            <script src="{{ path_to_root }}ace.js"></script>
+            <script src="{{ path_to_root }}editor.js"></script>
+            <script src="{{ path_to_root }}mode-rust.js"></script>
+            <script src="{{ path_to_root }}theme-dawn.js"></script>
+            <script src="{{ path_to_root }}theme-tomorrow_night.js"></script>
+        {%- endif -%}
+
+        {%- if cfg!(feature = "search") -%}
+            {%- if let Some(search) = html_config.search -%}
+                {%- if search.enable && search.copy_js -%}
+                    <script src="{{ path_to_root }}elasticlunr.min.js"></script>
+                    <script src="{{ path_to_root }}mark.min.js"></script>
+                    <script src="{{ path_to_root }}searcher.js"></script>
+                {%- endif -%}
+            {%- endif -%}
+        {%- endif -%}
+
+        <script src="{{ path_to_root }}clipboard.min.js"></script>
+        <script src="{{ path_to_root }}highlight.js"></script>
+        <script src="{{ path_to_root }}book.js"></script>
+
+        {#- Custom JS scripts #}
+        {%- for extra_js in additional_js() -%}
+            <script src="../{{ path_to_root }}{{extra_js}}"></script>
+        {%- endfor -%}
+
+        {%- if is_print -%}
+            {%- if html_config.mathjax_support -%}
+                <script>
+                    window.addEventListener('load', function() {
+                        MathJax.Hub.Register.StartupHook('End', function() {
+                            window.setTimeout(window.print, 100);
+                        });
+                    });
+                </script>
+            {%- else -%}
+                <script>
+                window.addEventListener('load', function() {
+                    window.setTimeout(window.print, 100);
+                });
+                </script>
+            {%- endif -%}
+        {%- endif -%}
+
+    </div>
+    </body>
+</html>
