@@ -531,6 +531,8 @@ pub struct HtmlConfig {
     pub preferred_dark_theme: Option<String>,
     /// Supports smart quotes, apostrophes, ellipsis, en-dash, and em-dash.
     pub smart_punctuation: bool,
+    /// Add backreference links to footnote definitions.
+    pub footnote_backrefs: bool,
     /// Deprecated alias for `smart_punctuation`.
     pub curly_quotes: bool,
     /// Should mathjax be enabled?
@@ -596,6 +598,7 @@ impl Default for HtmlConfig {
             default_theme: None,
             preferred_dark_theme: None,
             smart_punctuation: false,
+            footnote_backrefs: false,
             curly_quotes: false,
             mathjax_support: false,
             copy_fonts: true,
