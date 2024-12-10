@@ -306,13 +306,13 @@ impl MDBook {
 
         let color_output = std::io::stderr().is_terminal();
 
-        // get extra args we'll need for rustdoc
-        // assumes current working directory is project root, eventually
-        // pick up manifest directory from some config.
+        // get extra args we'll need for rustdoc, if config points to a cargo project.
 
         let mut extern_args = ExternArgs::new();
-        extern_args.load(&std::env::current_dir()?)?;
-
+        if let Some(package_dir) = &self.config.rust.package_dir {
+            extern_args.load(&package_dir)?;
+        }
+ 
         let mut failed = false;
         for item in book.iter() {
             if let BookItem::Chapter(ref ch) = *item {
