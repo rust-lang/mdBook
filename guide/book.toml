@@ -6,6 +6,7 @@ language = "en"
 
 [rust]
 edition = "2018"
+package-dir = "../"
 
 [output.html]
 smart-punctuation = true
