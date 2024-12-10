@@ -1,9 +1,9 @@
 #![allow(missing_docs)] // FIXME: Document this
 
+pub mod extern_args;
 pub mod fs;
 mod string;
 pub(crate) mod toml_ext;
-pub mod extern_args;
 use crate::errors::Error;
 use log::error;
 use once_cell::sync::Lazy;
