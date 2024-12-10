@@ -98,10 +98,15 @@ impl ExternArgs {
 
                 while let Some(arg) = arg_iter.next() {
                     match arg {
-                        "-L" | "--library-path" | "--extern" => {
+                        "-L" | "--library-path" => {
                             self.suffix_args.push(arg.to_owned());
                             self.suffix_args
                                 .push(arg_iter.next().unwrap_or("").to_owned());
+                        }
+                        "--extern" => { // needs a hack to force reference to rlib over rmeta
+                            self.suffix_args.push(arg.to_owned());
+                            self.suffix_args
+                                .push(arg_iter.next().unwrap_or("").replace(".rmeta", ".rlib").to_owned());
                         }
                         _ => {}
                     }
