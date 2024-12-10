@@ -1,32 +1,16 @@
 # The test command
 
-When writing a book, you sometimes need to automate some tests. For example,
+When writing a book, you may want to provide some code samples,
+and it's important that these be accurate.
+For example,
 [The Rust Programming Book](https://doc.rust-lang.org/stable/book/) uses a lot
-of code examples that could get outdated. Therefore it is very important for
+of code samples that could get outdated as the language evolves. Therefore it is very important for
 them to be able to automatically test these code examples.
 
-mdBook supports a `test` command that will run all available tests in a book. At
-the moment, only Rust tests are supported.
+mdBook supports a `test` command that will run code samples as doc tests for your book. At
+the moment, only Rust doc tests are supported.  
 
-#### Disable tests on a code block
-
-rustdoc doesn't test code blocks which contain the `ignore` attribute:
-
-    ```rust,ignore
-    fn main() {}
-    ```
-
-rustdoc also doesn't test code blocks which specify a language other than Rust:
-
-    ```markdown
-    **Foo**: _bar_
-    ```
-
-rustdoc *does* test code blocks which have no language specified:
-
-    ```
-    This is going to cause an error!
-    ```
+For details on writing code samples and runnable code samples in your book, see [Writing](../guide/writing.md).
 
 #### Specify a directory
 
@@ -38,6 +22,10 @@ mdbook test path/to/book
 ```
 
 #### `--library-path`
+
+> Note: This argument doesn't provide sufficient information for current Rust compilers.  
+Instead, add `package-dir` to your ***book.toml***, as described in [configuration](/format/configuration/general.md#rust-options).
+
 
 The `--library-path` (`-L`) option allows you to add directories to the library
 search path used by `rustdoc` when it builds and tests the examples. Multiple

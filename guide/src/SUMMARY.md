@@ -7,6 +7,7 @@
 - [Installation](guide/installation.md)
 - [Reading Books](guide/reading.md)
 - [Creating a Book](guide/creating.md)
+- [Writing Code Samples](guide/writing.md)
 
 # Reference Guide
 
