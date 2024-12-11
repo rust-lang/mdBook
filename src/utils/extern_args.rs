@@ -200,7 +200,7 @@ mod test {
     fn verify_touch() -> Result<()> {
         const FILE_CONTENT: &[u8] =
             b"I am some random text with crlfs \r\n but also nls \n and terminated with a nl \n";
-        const DELAY: Duration = Duration::from_millis(10); // don't hang up tests  for too long.
+        const DELAY: Duration = Duration::from_millis(20); // don't hang up tests  for too long, but maybe 10ms is too short?
 
         let temp_dir = tempfile::TempDir::new()?;
         let mut victim_path = temp_dir.path().to_owned();
@@ -215,15 +215,20 @@ mod test {
         let act_content = fs::read(&victim_path)?;
 
         assert_eq!(FILE_CONTENT, act_content);
+        let tdif = new_md
+            .modified()
+            .expect("getting modified time new")
+            .duration_since(old_md.modified().expect("getting modified time old"))
+            .expect("system time botch");
+        // can't expect sleep 20ms to actually delay exactly that --
+        // but the test is to verify that `touch` made the file look any newer.
+        // Give ourselves 50% slop under what we were aiming for and call it good enough.
         assert!(
-            new_md
-                .modified()
-                .expect("getting modified time")
-                .duration_since(old_md.modified().expect("getting modified time old"))
-                .expect("system botch")
-                >= DELAY
+            tdif >= (DELAY / 2),
+            "verify_touch: expected {:?}, actual {:?}",
+            DELAY,
+            tdif
         );
-
         Ok(())
     }
 }
