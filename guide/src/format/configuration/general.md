@@ -68,8 +68,15 @@ integration.
 
 ```toml
 [rust]
+package-dir = "folder/for/Cargo.toml"
 edition = "2015"   # the default edition for code blocks
 ```
+
+- **package-dir**: Folder containing a Cargo package whose targets and dependencies 
+you want to use in your book's code samples.  
+It must be specified if you want to test code samples with `use` statements, even if
+there is a `Cargo.toml` in the folder containing the `book.toml`. 
+This can be a relative path, relative to the folder containing `book.toml`.
 
 - **edition**: Rust edition to use by default for the code snippets. Default
   is `"2015"`. Individual code blocks can be controlled with the `edition2015`,
@@ -81,6 +88,7 @@ edition = "2015"   # the default edition for code blocks
   let try = true;
   ```
   ~~~
+
 
 ### Build options
 

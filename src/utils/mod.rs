@@ -1,5 +1,6 @@
 #![allow(missing_docs)] // FIXME: Document this
 
+pub mod extern_args;
 pub mod fs;
 mod string;
 pub(crate) mod toml_ext;
