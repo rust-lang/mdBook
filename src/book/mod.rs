@@ -312,7 +312,7 @@ impl MDBook {
         if let Some(package_dir) = &self.config.rust.package_dir {
             extern_args.load(&package_dir)?;
         }
- 
+
         let mut failed = false;
         for item in book.iter() {
             if let BookItem::Chapter(ref ch) = *item {

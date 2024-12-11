@@ -2,7 +2,9 @@
 
 use crate::errors::*;
 use log::{info, warn};
+use std::fs;
 use std::fs::File;
+use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -62,8 +64,7 @@ impl ExternArgs {
             let try_path: PathBuf = [&proj_root.to_string_lossy(), "src", fname]
                 .iter()
                 .collect();
-            let f = File::options().append(true).open(&try_path)?;
-            f.set_modified(std::time::SystemTime::now())?;
+            touch(&try_path)?;
             break;
             // file should be closed when f goes out of scope at bottom of this loop
         }
@@ -103,10 +104,16 @@ impl ExternArgs {
                             self.suffix_args
                                 .push(arg_iter.next().unwrap_or("").to_owned());
                         }
-                        "--extern" => { // needs a hack to force reference to rlib over rmeta
+                        "--extern" => {
+                            // needs a hack to force reference to rlib over rmeta
                             self.suffix_args.push(arg.to_owned());
-                            self.suffix_args
-                                .push(arg_iter.next().unwrap_or("").replace(".rmeta", ".rlib").to_owned());
+                            self.suffix_args.push(
+                                arg_iter
+                                    .next()
+                                    .unwrap_or("")
+                                    .replace(".rmeta", ".rlib")
+                                    .to_owned(),
+                            );
                         }
                         _ => {}
                     }
@@ -129,9 +136,31 @@ impl ExternArgs {
     }
 }
 
+// Private "touch" function to update file modification time without changing content.
+// needed because [std::fs::set_modified] is unstable in rust 1.74,
+// which is currently the MSRV for mdBook.  It is available in rust 1.76 onward.
+
+fn touch(victim: &Path) -> Result<()> {
+    let curr_content = fs::read(victim).with_context(|| "reading existing file")?;
+    let mut touchfs = File::options()
+        .append(true)
+        .open(victim)
+        .with_context(|| "opening for touch")?;
+
+    let _len_written = touchfs.write(b"z")?; // write a byte
+    touchfs.flush().expect("closing"); // close the file
+    drop(touchfs); // close modified file, hopefully updating modification time
+
+    fs::write(victim, curr_content).with_context(|| "trying to restore old content")
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
+    use std::fs;
+    use std::thread;
+    use std::time::Duration;
+    use tempfile;
 
     #[test]
     fn parse_response_parses_string() -> Result<()> {
@@ -163,6 +192,37 @@ mod test {
 
         assert_eq!(1, args.iter().filter(|i| *i == "-L").count());
         assert_eq!(8, args.iter().filter(|i| *i == "--extern").count());
+
+        Ok(())
+    }
+
+    #[test]
+    fn verify_touch() -> Result<()> {
+        const FILE_CONTENT: &[u8] =
+            b"I am some random text with crlfs \r\n but also nls \n and terminated with a nl \n";
+        const DELAY: Duration = Duration::from_millis(10); // don't hang up tests  for too long.
+
+        let temp_dir = tempfile::TempDir::new()?;
+        let mut victim_path = temp_dir.path().to_owned();
+        victim_path.push("workfile.dir");
+        fs::write(&victim_path, FILE_CONTENT)?;
+        let old_md = fs::metadata(&victim_path)?;
+        thread::sleep(DELAY);
+
+        touch(&victim_path)?;
+        let new_md = fs::metadata(&victim_path)?;
+
+        let act_content = fs::read(&victim_path)?;
+
+        assert_eq!(FILE_CONTENT, act_content);
+        assert!(
+            new_md
+                .modified()
+                .expect("getting modified time")
+                .duration_since(old_md.modified().expect("getting modified time old"))
+                .expect("system botch")
+                >= DELAY
+        );
 
         Ok(())
     }

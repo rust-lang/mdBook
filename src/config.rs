@@ -1368,7 +1368,6 @@ mod tests {
         );
     }
 
-
     /* todo -- make this test fail, as it should
     #[test]
     #[should_panic(expected = "Invalid configuration file")]
