@@ -64,11 +64,17 @@ impl ExternArgs {
             let try_path: PathBuf = [&proj_root.to_string_lossy(), "src", fname]
                 .iter()
                 .collect();
-            touch(&try_path)?;
-            break;
-            // file should be closed when f goes out of scope at bottom of this loop
+            if try_path.exists() {
+                touch(&try_path)?;
+                self.run_cargo(proj_root)?;
+                return Ok(self);
+                // file should be closed when f goes out of scope at bottom of this loop
+            }
         }
+        bail!("Couldn't find source target in project {:?}", proj_root)
+    }
 
+    fn run_cargo(&mut self, proj_root: &Path) -> Result<&Self> {
         let mut cmd = Command::new("cargo");
         cmd.current_dir(&proj_root).arg("build").arg("--verbose");
 
@@ -76,7 +82,12 @@ impl ExternArgs {
         let output = cmd.output()?;
 
         if !output.status.success() {
-            bail!("Exit status {} from {:?}", output.status, cmd);
+            bail!(
+                "Exit status {} from {:?}\nMessage:\n{:?}",
+                output.status,
+                cmd,
+                std::string::String::from_utf8_lossy(&output.stderr)
+            );
         }
 
         let cmd_resp: &str = std::str::from_utf8(&output.stderr)?;
