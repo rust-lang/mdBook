@@ -237,7 +237,7 @@ impl MDBook {
             .chapter_titles
             .extend(preprocess_ctx.chapter_titles.borrow_mut().drain());
 
-        debug!("Running the {} backend", renderer.name());
+        info!("Running the {} backend", renderer.name());
         renderer
             .render(&render_context)
             .with_context(|| "Rendering failed")

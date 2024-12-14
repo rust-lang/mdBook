@@ -41,7 +41,7 @@ use std::process::Command;
 
 #[derive(Debug)]
 pub struct ExternArgs {
-    edition: String,
+    edition: String, // where default value of "" means arg wasn't specified
     crate_name: String,
     lib_list: Vec<String>,
     extern_list: Vec<String>,
@@ -75,7 +75,7 @@ impl ExternArgs {
         self.edition = if let Some(Local(edition)) = package.edition {
             my_display_edition(edition)
         } else {
-            "2015".to_owned() // and good luck to you, sir!
+            "".to_owned()   // 
         };
 
         debug!(
@@ -198,7 +198,11 @@ impl ExternArgs {
 
     /// provide the parsed external args used to invoke rustdoc (--edition, -L and --extern).
     pub fn get_args(&self) -> Vec<String> {
-        let mut ret_val: Vec<String> = vec!["--edition".to_owned(), self.edition.clone()];
+        let mut ret_val: Vec<String> = vec![];
+        if self.edition != "" {
+            ret_val.push("--edition".to_owned());
+            ret_val.push(self.edition.clone());
+        };
         for i in &self.lib_list {
             ret_val.push("-L".to_owned());
             ret_val.push(i.clone());
@@ -263,16 +267,15 @@ mod test {
         Dirty leptos-book v0.1.0 (/home/bobhy/src/localdep/book): the file `src/lib.rs` has changed (1733758773.052514835s, 10h 32m 29s after last build at 1733720824.458358565s)
     Compiling leptos-book v0.1.0 (/home/bobhy/src/localdep/book)
       Running `/home/bobhy/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/rustc --crate-name leptos_book --edition=2021 src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type cdylib --crate-type rlib --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --check-cfg 'cfg(docsrs)' --check-cfg 'cfg(feature, values("hydrate", "ssr"))' -C metadata=2eec49d479de095c --out-dir /home/bobhy/src/localdep/book/target/debug/deps -C incremental=/home/bobhy/src/localdep/book/target/debug/incremental -L dependency=/home/bobhy/src/localdep/book/target/debug/deps --extern console_error_panic_hook=/home/bobhy/src/localdep/book/target/debug/deps/libconsole_error_panic_hook-d34cf0116774f283.rlib --extern http=/home/bobhy/src/localdep/book/target/debug/deps/libhttp-d4d503240b7a6b18.rlib --extern leptos=/home/bobhy/src/localdep/book/target/debug/deps/libleptos-1dabf2e09ca58f3d.rlib --extern leptos_meta=/home/bobhy/src/localdep/book/target/debug/deps/libleptos_meta-df8ce1704acca063.rlib --extern leptos_router=/home/bobhy/src/localdep/book/target/debug/deps/libleptos_router-df109cd2ee44b2a0.rlib --extern mdbook_keeper_lib=/home/bobhy/src/localdep/book/target/debug/deps/libmdbook_keeper_lib-f4016aaf2c5da5f2.rlib --extern thiserror=/home/bobhy/src/localdep/book/target/debug/deps/libthiserror-acc5435cdf9551fe.rlib --extern wasm_bindgen=/home/bobhy/src/localdep/book/target/debug/deps/libwasm_bindgen-89a7b1dccd9668ae.rlib`
-      Running `/home/bobhy/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/rustc --crate-name leptos_book --edition=2021 src/main.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --check-cfg 'cfg(docsrs)' --check-cfg 'cfg(feature, values("hydrate", "ssr"))' -C metadata=24fbc99376c5eff3 -C extra-filename=-24fbc99376c5eff3 --out-dir /home/bobhy/src/localdep/book/target/debug/deps -C incremental=/home/bobhy/src/localdep/book/target/debug/incremental -L dependency=/home/bobhy/src/localdep/book/target/debug/deps --extern console_error_panic_hook=/home/bobhy/src/localdep/book/target/debug/deps/libconsole_error_panic_hook-d34cf0116774f283.rlib --extern http=/home/bobhy/src/localdep/book/target/debug/deps/libhttp-d4d503240b7a6b18.rlib --extern leptos=/home/bobhy/src/localdep/book/target/debug/deps/libleptos-1dabf2e09ca58f3d.rlib --extern leptos_book=/home/bobhy/src/localdep/book/target/debug/deps/libleptos_book.rlib --extern leptos_meta=/home/bobhy/src/localdep/book/target/debug/deps/libleptos_meta-df8ce1704acca063.rlib --extern leptos_router=/home/bobhy/src/localdep/book/target/debug/deps/libleptos_router-df109cd2ee44b2a0.rlib --extern mdbook_keeper_lib=/home/bobhy/src/localdep/book/target/debug/deps/libmdbook_keeper_lib-f4016aaf2c5da5f2.rlib --extern thiserror=/home/bobhy/src/localdep/book/target/debug/deps/libthiserror-acc5435cdf9551fe.rlib --extern wasm_bindgen=/home/bobhy/src/localdep/book/target/debug/deps/libwasm_bindgen-89a7b1dccd9668ae.rlib`
      Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.60s
  
      "###;
 
         let mut ea = ExternArgs::new();
-        ea.parse_response(&test_str, "leptos_book")?;
+        ea.parse_response("leptos_book", &test_str)?;
 
         let args = ea.get_args();
-        assert_eq!(18, args.len());
+        assert_eq!(20, args.len());
 
         assert_eq!(1, args.iter().filter(|i| *i == "-L").count());
         assert_eq!(8, args.iter().filter(|i| *i == "--extern").count());
