@@ -1,0 +1,14 @@
+[package]
+name = "mdbook-book-code-samples"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+mdbook.workspace = true
+pulldown-cmark.workspace = true
+pulldown-cmark-to-cmark = "18.0.0"
+serde.workspace = true
+serde_json.workspace = true
+semver.workspace = true
