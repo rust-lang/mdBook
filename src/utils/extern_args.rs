@@ -1,7 +1,8 @@
 //! Get "compiler" args from cargo
 
 use crate::errors::*;
-use log::{info, warn};
+use cargo_manifest::{Edition, Manifest, MaybeInherited::Local};
+use log::{debug, info};
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
@@ -40,45 +41,73 @@ use std::process::Command;
 
 #[derive(Debug)]
 pub struct ExternArgs {
-    suffix_args: Vec<String>,
+    edition: String,
+    crate_name: String,
+    lib_list: Vec<String>,
+    extern_list: Vec<String>,
 }
 
 impl ExternArgs {
     /// simple constructor
     pub fn new() -> Self {
         ExternArgs {
-            suffix_args: vec![],
+            edition: String::default(),
+            crate_name: String::default(),
+            lib_list: vec![],
+            extern_list: vec![],
         }
     }
 
     /// Run a `cargo build` to see what args Cargo is using for library paths and extern crates.
-    /// Touch a source file to ensure something is compiled and the args will be visible.
-    ///
-    /// >>>Future research: see whether `cargo check` can be used instead.  It emits the `--extern`s
-    /// with `.rmeta` instead of `.rlib`, and the compiler can't actually use those
-    /// when compiling a doctest.  But  perhaps simply changing the file extension would work?
-    pub fn load(&mut self, proj_root: &Path) -> Result<&Self> {
-        // touch (change) a file in the project to force check to do something
+    /// Touch a source file in the crate to ensure something is compiled and the args will be visible.
 
-        for fname in ["lib.rs", "main.rs"] {
-            let try_path: PathBuf = [&proj_root.to_string_lossy(), "src", fname]
-                .iter()
-                .collect();
+    pub fn load(&mut self, proj_root: &Path) -> Result<&Self> {
+        // find Cargo.toml and determine the package name and lib or bin source file.
+        let cargo_path = proj_root.join("Cargo.toml");
+        let mut manifest = Manifest::from_path(&cargo_path)?;
+        manifest.complete_from_path(proj_root)?; // try real hard to determine bin or lib
+        let package = manifest
+            .package
+            .expect("doctest Cargo.toml must include a [package] section");
+
+        self.crate_name = package.name.replace('-', "_"); // maybe cargo shouldn't allow packages to include non-identifier characters?
+                                                          // in any case, this won't work when default crate doesn't have package name (which I'm sure cargo allows somehow or another)
+        self.edition = if let Some(Local(edition)) = package.edition {
+            my_display_edition(edition)
+        } else {
+            "2015".to_owned() // and good luck to you, sir!
+        };
+
+        debug!(
+            "parsed from manifest: name: {}, edition: {}",
+            self.crate_name,
+            format!("{:?}", self.edition)
+        );
+
+        // touch (change) a file in the project to force check to do something
+        // I haven't figured out how to determine bin or lib source file from cargo, fall back on heuristics here.
+
+        for fname in ["main.rs", "lib.rs"] {
+            let try_path: PathBuf = proj_root.join("src").join(fname);
             if try_path.exists() {
                 touch(&try_path)?;
-                self.run_cargo(proj_root)?;
+                self.run_cargo(proj_root, &cargo_path)?;
                 return Ok(self);
                 // file should be closed when f goes out of scope at bottom of this loop
             }
         }
-        bail!("Couldn't find source target in project {:?}", proj_root)
+        bail!("Couldn't find lib or bin source in project {:?}", proj_root)
     }
 
-    fn run_cargo(&mut self, proj_root: &Path) -> Result<&Self> {
+    fn run_cargo(&mut self, proj_root: &Path, manifest_path: &Path) -> Result<&Self> {
         let mut cmd = Command::new("cargo");
-        cmd.current_dir(&proj_root).arg("build").arg("--verbose");
-
+        cmd.current_dir(&proj_root)
+            .arg("build")
+            .arg("--verbose")
+            .arg("--manifest-path")
+            .arg(manifest_path);
         info!("running {:?}", cmd);
+
         let output = cmd.output()?;
 
         if !output.status.success() {
@@ -90,63 +119,107 @@ impl ExternArgs {
             );
         }
 
+        //ultimatedebug std::fs::write(proj_root.join("mdbook_cargo_out.txt"), &output.stderr)?;
+
         let cmd_resp: &str = std::str::from_utf8(&output.stderr)?;
-        self.parse_response(&cmd_resp)?;
+        self.parse_response(&self.crate_name.clone(), &cmd_resp)?;
 
         Ok(self)
     }
 
     /// Parse response stdout+stderr response from `cargo build`
-    /// into arguments we can use to invoke rustdoc.
-    /// Stop at first line that traces a compiler invocation.
+    /// into arguments we can use to invoke rustdoc (--edition --extern and -L).
+    /// The response may contain multiple builds, scan for the one that corresponds to the doctest crate.
     ///
-    /// >>> This parser is broken, doesn't handle arg values with embedded spaces (single quoted).
+    /// > This parser is broken, doesn't handle arg values with embedded spaces (single quoted).
     /// Fortunately, the args we care about (so far) don't have those kinds of values.
-    pub fn parse_response(&mut self, buf: &str) -> Result<()> {
+    pub fn parse_response(&mut self, my_crate: &str, buf: &str) -> Result<()> {
+        let mut builds_ignored = 0;
+
+        let my_cn_arg = format!(" --crate-name {}", my_crate);
         for l in buf.lines() {
             if let Some(_i) = l.find(" Running ") {
-                let args_seg: &str = l.split('`').skip(1).take(1).collect::<Vec<_>>()[0]; // sadly, cargo decorates string with backticks
-                let mut arg_iter = args_seg.split_whitespace();
+                if let Some(_cn_pos) = l.find(&my_cn_arg) {
+                    let args_seg: &str = l.split('`').skip(1).take(1).collect::<Vec<_>>()[0]; // sadly, cargo decorates string with backticks
+                    let mut arg_iter = args_seg.split_whitespace();
 
-                while let Some(arg) = arg_iter.next() {
-                    match arg {
-                        "-L" | "--library-path" => {
-                            self.suffix_args.push(arg.to_owned());
-                            self.suffix_args
-                                .push(arg_iter.next().unwrap_or("").to_owned());
+                    while let Some(arg) = arg_iter.next() {
+                        match arg {
+                            "-L" | "--library-path" => {
+                                self.lib_list
+                                    .push(arg_iter.next().unwrap_or_default().to_owned());
+                            }
+
+                            "--extern" => {
+                                let mut dep_arg = arg_iter.next().unwrap_or_default().to_owned();
+
+                                // sometimes, build references the.rmeta even though our doctests will require .rlib
+                                // so convert the argument and hope for the best.
+                                // if .rlib is not there when the doctest runs, it will complain.
+                                if dep_arg.ends_with(".rmeta") {
+                                    debug!(
+                                        "Build referenced {}, converted to .rlib hoping that actual file will be there in time.",
+                                        dep_arg);
+                                    dep_arg = dep_arg.replace(".rmeta", ".rlib");
+                                }
+                                self.extern_list.push(dep_arg);
+                            }
+
+                            "--crate-name" => {
+                                self.crate_name = arg_iter.next().unwrap_or_default().to_owned();
+                            }
+
+                            _ => {
+                                if let Some((kw, val)) = arg.split_once('=') {
+                                    if kw == "--edition" {
+                                        self.edition = val.to_owned();
+                                    }
+                                }
+                            }
                         }
-                        "--extern" => {
-                            // needs a hack to force reference to rlib over rmeta
-                            self.suffix_args.push(arg.to_owned());
-                            self.suffix_args.push(
-                                arg_iter
-                                    .next()
-                                    .unwrap_or("")
-                                    .replace(".rmeta", ".rlib")
-                                    .to_owned(),
-                            );
-                        }
-                        _ => {}
                     }
+                } else {
+                    builds_ignored += 1;
                 }
-
-                return Ok(());
             };
         }
 
-        if self.suffix_args.len() < 1 {
-            warn!("Couldn't extract --extern args from Cargo, is current directory == cargo project root?");
+        if self.extern_list.len() == 0 || self.lib_list.len() == 0 {
+            bail!("Couldn't extract -L or --extern args from Cargo, is current directory == cargo project root?");
         }
+
+        debug!(
+            "Ignored {} other builds performed in this run",
+            builds_ignored
+        );
 
         Ok(())
     }
 
-    /// get a list of (-L and --extern) args used to invoke rustdoc.
+    /// provide the parsed external args used to invoke rustdoc (--edition, -L and --extern).
     pub fn get_args(&self) -> Vec<String> {
-        self.suffix_args.clone()
+        let mut ret_val: Vec<String> = vec!["--edition".to_owned(), self.edition.clone()];
+        for i in &self.lib_list {
+            ret_val.push("-L".to_owned());
+            ret_val.push(i.clone());
+        }
+        for j in &self.extern_list {
+            ret_val.push("--extern".to_owned());
+            ret_val.push(j.clone());
+        }
+        ret_val
     }
 }
 
+fn my_display_edition(edition: Edition) -> String {
+    match edition {
+        Edition::E2015 => "2015",
+        Edition::E2018 => "2018",
+        Edition::E2021 => "2021",
+        Edition::E2024 => "2024",
+    }
+    .to_owned()
+}
 // Private "touch" function to update file modification time without changing content.
 // needed because [std::fs::set_modified] is unstable in rust 1.74,
 // which is currently the MSRV for mdBook.  It is available in rust 1.76 onward.
@@ -196,7 +269,7 @@ mod test {
      "###;
 
         let mut ea = ExternArgs::new();
-        ea.parse_response(&test_str)?;
+        ea.parse_response(&test_str, "leptos_book")?;
 
         let args = ea.get_args();
         assert_eq!(18, args.len());

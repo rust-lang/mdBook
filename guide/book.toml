@@ -5,8 +5,8 @@ authors = ["Mathieu David", "Michael-F-Bryan"]
 language = "en"
 
 [rust]
-edition = "2018"
-package-dir = "../"
+## not needed, and will cause an error, if using Cargo.toml: edition = "2021"
+package-dir = "."
 
 [output.html]
 smart-punctuation = true
