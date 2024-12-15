@@ -1,6 +1,7 @@
 //! Get "compiler" args from cargo
 
 use crate::errors::*;
+use anyhow::anyhow;
 use cargo_manifest::{Edition, Manifest, MaybeInherited::Local};
 use log::{debug, info};
 use std::fs;
@@ -27,9 +28,9 @@ use std::process::Command;
 ///
 /// # fn main() -> Result<()> {
 /// // Get cargo to say what the compiler args need to be...
-/// let proj_root = std::env::current_dir()?;    // or other path to `Cargo.toml`
+/// let manifest_file = std::env::current_dir()?.join("Cargo.toml");    // or other path to `Cargo.toml`
 /// let mut extern_args = ExternArgs::new();
-/// extern_args.load(&proj_root)?;
+/// extern_args.load(&manifest_file)?;
 ///
 /// // then, when actually invoking rustdoc or some other compiler-like tool...
 ///
@@ -61,11 +62,14 @@ impl ExternArgs {
     /// Run a `cargo build` to see what args Cargo is using for library paths and extern crates.
     /// Touch a source file in the crate to ensure something is compiled and the args will be visible.
 
-    pub fn load(&mut self, proj_root: &Path) -> Result<&Self> {
+    pub fn load(&mut self, cargo_path: &Path) -> Result<&Self> {
         // find Cargo.toml and determine the package name and lib or bin source file.
-        let cargo_path = proj_root.join("Cargo.toml");
+        let proj_root = cargo_path
+            .canonicalize()?
+            .parent()
+            .ok_or(anyhow!("can't find parent of {:?}", cargo_path))?.to_owned();
         let mut manifest = Manifest::from_path(&cargo_path)?;
-        manifest.complete_from_path(proj_root)?; // try real hard to determine bin or lib
+        manifest.complete_from_path(&proj_root)?; // try real hard to determine bin or lib
         let package = manifest
             .package
             .expect("doctest Cargo.toml must include a [package] section");
@@ -75,7 +79,7 @@ impl ExternArgs {
         self.edition = if let Some(Local(edition)) = package.edition {
             my_display_edition(edition)
         } else {
-            "".to_owned()   // 
+            "".to_owned() //
         };
 
         debug!(
@@ -91,7 +95,7 @@ impl ExternArgs {
             let try_path: PathBuf = proj_root.join("src").join(fname);
             if try_path.exists() {
                 touch(&try_path)?;
-                self.run_cargo(proj_root, &cargo_path)?;
+                self.run_cargo(&proj_root, &cargo_path)?;
                 return Ok(self);
                 // file should be closed when f goes out of scope at bottom of this loop
             }

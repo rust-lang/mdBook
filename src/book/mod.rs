@@ -309,8 +309,8 @@ impl MDBook {
         // get extra args we'll need for rustdoc, if config points to a cargo project.
 
         let mut extern_args = ExternArgs::new();
-        if let Some(package_dir) = &self.config.rust.package_dir {
-            extern_args.load(&package_dir)?;
+        if let Some(manifest) = &self.config.rust.manifest {
+            extern_args.load(&manifest)?;
         }
 
         let mut failed = false;

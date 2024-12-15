@@ -6,7 +6,7 @@ language = "en"
 
 [rust]
 ## not needed, and will cause an error, if using Cargo.toml: edition = "2021"
-package-dir = "."
+manifest = "Cargo.toml"
 
 [output.html]
 smart-punctuation = true
