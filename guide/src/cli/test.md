@@ -8,9 +8,7 @@ of code samples that could get outdated as the language evolves. Therefore it is
 them to be able to automatically test these code examples.
 
 mdBook supports a `test` command that will run code samples as doc tests for your book. At
-the moment, only Rust doc tests are supported.  
-
-For details on writing code samples and runnable code samples in your book, see [Writing](../guide/writing.md).
+the moment, only Rust doc tests are supported.
 
 #### Specify a directory
 
@@ -21,10 +19,22 @@ instead of the current working directory.
 mdbook test path/to/book
 ```
 
-#### `--library-path`
+#### `--dest-dir`
 
-> Note: This argument doesn't provide sufficient information for current Rust compilers.  
-Instead, add `package-dir` to your ***book.toml***, as described in [configuration](/format/configuration/general.md#rust-options).
+The `--dest-dir` (`-d`) option allows you to change the output directory for the
+book. Relative paths are interpreted relative to the book's root directory. If
+not specified it will default to the value of the `build.build-dir` key in
+`book.toml`, or to `./book`.
+
+#### `--chapter`
+
+The `--chapter` (`-c`) option allows you to test a specific chapter of the
+book using the chapter name or the relative path to the chapter.
+
+#### `--library-path` `[`deprecated`]`
+
+> Note: This argument doesn't provide sufficient extern crate information to run doc tests in current Rust compilers.  
+Instead, add **manifest** to point to a **Cargo.toml** file in your ***book.toml***, as described in [rust configuration](/format/configuration/general.html#rust-options).
 
 
 The `--library-path` (`-L`) option allows you to add directories to the library
@@ -41,15 +51,3 @@ mdbook test my-book -L target/debug/deps/
 
 See the `rustdoc` command-line [documentation](https://doc.rust-lang.org/rustdoc/command-line-arguments.html#-l--library-path-where-to-look-for-dependencies)
 for more information.
-
-#### `--dest-dir`
-
-The `--dest-dir` (`-d`) option allows you to change the output directory for the
-book. Relative paths are interpreted relative to the book's root directory. If
-not specified it will default to the value of the `build.build-dir` key in
-`book.toml`, or to `./book`.
-
-#### `--chapter`
-
-The `--chapter` (`-c`) option allows you to test a specific chapter of the
-book using the chapter name or the relative path to the chapter.

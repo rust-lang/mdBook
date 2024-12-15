@@ -67,7 +67,8 @@ impl ExternArgs {
         let proj_root = cargo_path
             .canonicalize()?
             .parent()
-            .ok_or(anyhow!("can't find parent of {:?}", cargo_path))?.to_owned();
+            .ok_or(anyhow!("can't find parent of {:?}", cargo_path))?
+            .to_owned();
         let mut manifest = Manifest::from_path(&cargo_path)?;
         manifest.complete_from_path(&proj_root)?; // try real hard to determine bin or lib
         let package = manifest
