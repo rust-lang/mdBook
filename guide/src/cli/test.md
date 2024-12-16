@@ -1,14 +1,14 @@
 # The test command
 
 When writing a book, you may want to provide some code samples,
-and it's important that these be accurate.
+and it's important that these be kept accurate as your software API evolves.
 For example,
 [The Rust Programming Book](https://doc.rust-lang.org/stable/book/) uses a lot
-of code samples that could get outdated as the language evolves. Therefore it is very important for
-them to be able to automatically test these code examples.
+of code samples that could become outdated as the language evolves.
 
-mdBook supports a `test` command that will run code samples as doc tests for your book. At
-the moment, only Rust doc tests are supported.
+MdBook supports a `test` command which runs code samples in your book as doc tests to verify they
+will compile, and, optionally, run correctly. 
+At the moment, mdBook only supports doc *tests* written in Rust, although code samples can be written and *displayed* in many programming languages.
 
 #### Specify a directory
 
@@ -33,8 +33,8 @@ book using the chapter name or the relative path to the chapter.
 
 #### `--library-path` `[`deprecated`]`
 
-> Note: This argument doesn't provide sufficient extern crate information to run doc tests in current Rust compilers.  
-Instead, add **manifest** to point to a **Cargo.toml** file in your ***book.toml***, as described in [rust configuration](/format/configuration/general.html#rust-options).
+***Note*** This argument is deprecated.  Since Rust edition 2018, the compiler needs an explicit `--extern` argument for each external crate used in a  doc test, it no longer simply scans the library path for likely-looking crates.  
+New projects should list external crates as dependencies in a **Cargo.toml** file and reference that file in your ***book.toml***, as described in [rust configuration](/format/configuration/general.html#rust-options).
 
 
 The `--library-path` (`-L`) option allows you to add directories to the library
