@@ -83,5 +83,5 @@ fn main() {
 
     // Then we run the GUI tests on it.
     let status = command.status().expect("failed to get command output");
-    assert!(status.success());
+    assert!(status.success(), "{status:?}");
 }
