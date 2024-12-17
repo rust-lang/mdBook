@@ -310,7 +310,7 @@ impl MDBook {
 
         let mut extern_args = ExternArgs::new();
         if let Some(manifest) = &self.config.rust.manifest {
-            extern_args.load(&manifest)?;
+            extern_args.load(&self.root.join(manifest))?;
         }
 
         let mut failed = false;

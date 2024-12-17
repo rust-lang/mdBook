@@ -31,9 +31,9 @@ a [`RenderContext::from_json()`] constructor which will load a `RenderContext`.
 
 This is all the boilerplate necessary for our backend to load the book.
 
-```rust
+```rust,should_panic
+# // this sample panics because it can't open stdin
 // src/main.rs
-extern crate mdbook;
 
 use std::io;
 use mdbook::renderer::RenderContext;
@@ -55,14 +55,18 @@ fn main() {
 
 ## Inspecting the Book
 
-Now our backend has a copy of the book, lets count how many words are in each
+Now our backend has a copy of the book, let's count how many words are in each
 chapter!
 
 Because the `RenderContext` contains a [`Book`] field (`book`), and a `Book` has
 the [`Book::iter()`] method for iterating over all items in a `Book`, this step
 turns out to be just as easy as the first.
 
-```rust
+```rust,should_panic
+# // this sample panics because it can't open stdin
+use std::io;
+use mdbook::renderer::RenderContext;
+use mdbook::book::{BookItem, Chapter};
 
 fn main() {
     let mut stdin = io::stdin();
@@ -174,25 +178,24 @@ deserializing to some arbitrary type `T`.
 To implement this, we'll create our own serializable `WordcountConfig` struct
 which will encapsulate all configuration for this backend.
 
-First add `serde` and `serde_derive` to your `Cargo.toml`,
+First add `serde` to your `Cargo.toml`,
 
-```
-$ cargo add serde serde_derive
+```shell
+$ cargo add serde 
 ```
 
 And then you can create the config struct,
 
 ```rust
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
+use serde::{Serialize, Deserialize};
 
-...
+fn main() {
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct WordcountConfig {
   pub ignores: Vec<String>,
+}
 }
 ```
 
