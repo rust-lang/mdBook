@@ -1,5 +1,11 @@
 # Changelog
 
+## mdBook 0.4.43+ (tba)
+
+### Fixed
+
+- Allow doctests to use external crates by referencing a `Cargo.toml`
+
 ## mdBook 0.4.43
 [v0.4.42...v0.4.43](https://github.com/rust-lang/mdBook/compare/v0.4.42...v0.4.43)
 

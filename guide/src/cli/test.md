@@ -7,7 +7,9 @@ For example,
 of code samples that could become outdated as the language evolves.
 
 MdBook supports a `test` command which runs code samples in your book as doc tests to verify they
-will compile, and, optionally, run correctly. 
+will compile, and, optionally, run correctly.
+For details on how to specify the test to be done and outcome to be expected, see [Code Blocks](/format/mdbook.md#code-blocks).
+
 At the moment, mdBook only supports doc *tests* written in Rust, although code samples can be written and *displayed* in many programming languages.
 
 #### Specify a directory
@@ -35,7 +37,6 @@ book using the chapter name or the relative path to the chapter.
 
 ***Note*** This argument is deprecated.  Since Rust edition 2018, the compiler needs an explicit `--extern` argument for each external crate used in a  doc test, it no longer simply scans the library path for likely-looking crates.  
 New projects should list external crates as dependencies in a **Cargo.toml** file and reference that file in your ***book.toml***, as described in [rust configuration](/format/configuration/general.html#rust-options).
-
 
 The `--library-path` (`-L`) option allows you to add directories to the library
 search path used by `rustdoc` when it builds and tests the examples. Multiple

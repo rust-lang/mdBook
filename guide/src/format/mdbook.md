@@ -1,8 +1,8 @@
 # mdBook-specific features
 
-# Features for code blocks
+# Code blocks
 
-These capabilities primarily affect how the user sees or interacts with code samples in your book and are supported directly by mdBook.  Some also affect documentation tests (for which mdBook invokes `rustdoc --test`): this is detailed in the sections below.
+These capabilities primarily affect how the user sees or interacts with code samples in your book and are supported directly by mdBook.  Some also affect running the sample as a documentation test. (for which mdBook invokes `rustdoc --test`), so : this is detailed in the sections below.
 
 ## Hiding code lines
 
@@ -12,7 +12,7 @@ For the Rust language, you can use the `#` character as a prefix which will hide
 
 [rustdoc-hide]: https://doc.rust-lang.org/stable/rustdoc/write-documentation/documentation-tests.html#hiding-portions-of-the-example
 
-```bash
+```text
 # fn main() {
     let x = 5;
     let y = 6;
@@ -44,7 +44,7 @@ python = "~"
 
 The prefix will hide any lines that begin with the given prefix. With the python prefix shown above, this:
 
-```bash
+```text
 ~hidden()
 nothidden():
 ~    hidden()
@@ -155,6 +155,7 @@ interpreting them.
 ````
 
 ## Including portions of a file
+
 Often you only need a specific part of the file, e.g. relevant lines for an
 example. We support four different modes of partial includes:
 
@@ -179,6 +180,7 @@ the regex `ANCHOR_END:\s*[\w_-]+`. This allows you to put anchors in
 any kind of commented line.
 
 Consider the following file to include:
+
 ```rs
 /* ANCHOR: all */
 
@@ -196,6 +198,7 @@ impl System for MySystem { ... }
 ```
 
 Then in the book, all you have to do is:
+
 ````hbs
 Here is a component:
 ```rust,no_run,noplayground
