@@ -230,7 +230,7 @@ Rustdoc will use the complete example when you run `mdbook test`.
 
 For example, consider a file named `file.rs` that contains this Rust program:
 
-```rust
+```rust,editable
 fn main() {
     let x = add_one(2);
     assert_eq!(x, 3);
@@ -320,8 +320,8 @@ To configure this:
 
 1. Create a ***Cargo.toml*** file with a `[package.dependencies]` section that defines a dependency for each `<crate>` you want to use in any sample.  If your book is already embedded in an existing Cargo project, you may be able to use the existing project `Cargo.toml`.
 2. In your ***book.toml***:
-    * configure the path to ***Cargo.toml** in `rust.manifest`, as described in [rust configuration](/format/configuration/general.html#rust-options).
-    * remove `rust.edition` if it is configured.  The edition of rust compiler will be as specified in the ***Cargo.toml***.
+    * configure the path to ***Cargo.toml*** in `rust.manifest`, as described in [rust configuration](/format/configuration/general.html#rust-options).
+    * remove `rust.edition` if it is configured.  The default rust edition will be as specified in the ***Cargo.toml*** (though this can be overridden for a specific code block).
     * Refrain from invoking `mdbook test` with `-L` or `--library-path` argument.  This, too, will be inferred from cargo project configuration
 
 # Features for general content
