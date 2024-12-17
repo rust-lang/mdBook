@@ -206,7 +206,6 @@ fn render_item(
                 body.push_str(&format!(" [{number}] "));
             }
             Event::TaskListMarker(_checked) => {}
-            Event::InlineMath(_) | Event::DisplayMath(_) => {}
         }
     }
 
