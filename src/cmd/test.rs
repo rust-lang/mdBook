@@ -28,7 +28,7 @@ pub fn make_subcommand() -> Command {
                 .value_parser(NonEmptyStringValueParser::new())
                 .action(ArgAction::Append)
                 .help(
-                    "A comma-separated list of directories to add to the crate \
+                    "[deprecated] A comma-separated list of directories to add to the crate \
                     search path when building tests",
                 ),
         )
