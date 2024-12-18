@@ -344,7 +344,11 @@ impl MDBook {
                     .args(&library_args) // also need --extern for doctest to actually work
                     .args(extern_args.get_args());
 
-                if let Some(edition) = self.config.rust.edition {
+                // rustdoc edition from cargo manifest takes precedence over book.toml
+                // bugbug but also takes precedence over command line flag -- that seems rude.
+                if extern_args.edition != "" {
+                    cmd.args(["--edition", &extern_args.edition]);
+                } else if let Some(edition) = self.config.rust.edition {
                     match edition {
                         RustEdition::E2015 => {
                             cmd.args(["--edition", "2015"]);
@@ -361,6 +365,7 @@ impl MDBook {
                     }
                 }
 
+                // bugbug Why show color in hidden invocation of rustdoc?
                 if color_output {
                     cmd.args(["--color", "always"]);
                 }

@@ -42,9 +42,13 @@ use std::process::Command;
 
 #[derive(Debug)]
 pub struct ExternArgs {
-    edition: String, // where default value of "" means arg wasn't specified
-    crate_name: String,
+    /// rust edition as specified in manifest
+    pub edition: String, // where default value of "" means arg wasn't specified
+    /// crate name as specified in manifest
+    pub crate_name: String,
+    // accumulated library path(s), as observed from live cargo run
     lib_list: Vec<String>,
+    // explicit extern crates, as observed from live cargo run
     extern_list: Vec<String>,
 }
 
@@ -65,11 +69,18 @@ impl ExternArgs {
     pub fn load(&mut self, cargo_path: &Path) -> Result<&Self> {
         // find Cargo.toml and determine the package name and lib or bin source file.
         let proj_root = cargo_path
-            .canonicalize()?
+            .canonicalize()
+            .context(format!(
+                "can't find cargo manifest {}",
+                &cargo_path.to_string_lossy()
+            ))?
             .parent()
             .ok_or(anyhow!("can't find parent of {:?}", cargo_path))?
             .to_owned();
-        let mut manifest = Manifest::from_path(&cargo_path)?;
+        let mut manifest = Manifest::from_path(&cargo_path).context(format!(
+            "can't open cargo manifest {}",
+            &cargo_path.to_string_lossy()
+        ))?;
         manifest.complete_from_path(&proj_root)?; // try real hard to determine bin or lib
         let package = manifest
             .package
@@ -204,10 +215,6 @@ impl ExternArgs {
     /// provide the parsed external args used to invoke rustdoc (--edition, -L and --extern).
     pub fn get_args(&self) -> Vec<String> {
         let mut ret_val: Vec<String> = vec![];
-        if self.edition != "" {
-            ret_val.push("--edition".to_owned());
-            ret_val.push(self.edition.clone());
-        };
         for i in &self.lib_list {
             ret_val.push("-L".to_owned());
             ret_val.push(i.clone());
