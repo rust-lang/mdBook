@@ -316,7 +316,9 @@ window.search = window.search || {};
     
     // Eventhandler for keyevents on `document`
     function globalKeyHandler(e) {
-        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.target.type === 'textarea' || e.target.type === 'text' || !hasFocus() && /^(?:input|select|textarea)$/i.test(e.target.nodeName)) { return; }
+        // Support web components along with normal HTML to get the proper target
+        target = e.composedPath()[0]
+        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || target.type === 'textarea' || target.type === 'text' || !hasFocus() && /^(?:input|select|textarea)$/i.test(target.nodeName)) { return; }
 
         if (e.keyCode === ESCAPE_KEYCODE) {
             e.preventDefault();
