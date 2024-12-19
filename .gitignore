@@ -16,3 +16,8 @@ test_book/book/
 # Ignore Vim temporary and swap files.
 *.sw?
 *~
+
+# GUI tests
+node_modules
+package-lock.json
+package.json
