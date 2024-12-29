@@ -2,7 +2,9 @@ use super::{Preprocessor, PreprocessorContext};
 use crate::book::Book;
 use crate::errors::*;
 use log::{debug, trace, warn};
+use regex::{Captures, Regex};
 use shlex::Shlex;
+use std::env;
 use std::io::{self, Read, Write};
 use std::process::{Child, Command, Stdio};
 
@@ -72,6 +74,11 @@ impl CmdPreprocessor {
     }
 
     fn command(&self) -> Result<Command> {
+        let re = if cfg!(windows) {
+            Regex::new(r"%([[:word:]]*)%").unwrap()
+        } else {
+            Regex::new(r"\$([[:word:]]*)").unwrap()
+        };
         let mut words = Shlex::new(&self.cmd);
         let executable = match words.next() {
             Some(e) => e,
@@ -81,6 +88,17 @@ impl CmdPreprocessor {
         let mut cmd = Command::new(executable);
 
         for arg in words {
+            let arg = re
+                .replace_all(&arg, |caps: &Captures<'_>| {
+                    if let Ok(var) = env::var(&caps[1]) {
+                        var
+                    } else if cfg!(windows) {
+                        format!("%{}%", &caps[1])
+                    } else {
+                        format!("${}", &caps[1])
+                    }
+                })
+                .to_string();
             cmd.arg(arg);
         }
 
