@@ -177,6 +177,9 @@ pub struct Chapter {
     pub source_path: Option<PathBuf>,
     /// An ordered list of the names of each chapter above this one in the hierarchy.
     pub parent_names: Vec<String>,
+    /// Data that can be shared between preprocessors, accessed in the renderer
+    /// or accessed in the theme's `.hbs` files
+    pub data: serde_json::Map<String, serde_json::Value>,
 }
 
 impl Chapter {
@@ -455,6 +458,7 @@ And here is some \
             source_path: Some(PathBuf::from("second.md")),
             parent_names: vec![String::from("Chapter 1")],
             sub_items: Vec::new(),
+            data: serde_json::Map::new(),
         };
         let should_be = BookItem::Chapter(Chapter {
             name: String::from("Chapter 1"),
@@ -468,6 +472,7 @@ And here is some \
                 BookItem::Separator,
                 BookItem::Chapter(nested),
             ],
+            data: serde_json::Map::new(),
         });
 
         let got = load_summary_item(&SummaryItem::Link(root), temp.path(), Vec::new()).unwrap();
@@ -544,6 +549,7 @@ And here is some \
                             Vec::new(),
                         )),
                     ],
+                    data: serde_json::Map::new(),
                 }),
                 BookItem::Separator,
             ],
@@ -597,6 +603,7 @@ And here is some \
                             Vec::new(),
                         )),
                     ],
+                    data: serde_json::Map::new(),
                 }),
                 BookItem::Separator,
             ],
