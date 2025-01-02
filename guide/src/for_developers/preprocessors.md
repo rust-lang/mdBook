@@ -36,9 +36,8 @@ be adapted for other preprocessors.
 <details>
 <summary>Example no-op preprocessor</summary>
 
-```rust
+```rust,no_run
 // nop-preprocessors.rs
-
 {{#include ../../../examples/nop-preprocessor.rs}}
 ```
 </details>
@@ -67,7 +66,12 @@ translate events back into markdown text.
 The following code block shows how to remove all emphasis from markdown,
 without accidentally breaking the document.
 
-```rust
+```rust,compile_fail
+# // tagged compile_fail because 
+# // sample fails to compile here:
+# // "trait Borrow not implemented for pulldown_cmark_to_cmark::..."
+# // Probably due to version skew on pulldown-cmark
+# // between examples/remove-emphasis/Cargo.toml and <root>/Cargo.toml
 {{#rustdoc_include ../../../examples/remove-emphasis/mdbook-remove-emphasis/src/main.rs:remove_emphasis}}
 ```
 
