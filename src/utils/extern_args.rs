@@ -65,7 +65,6 @@ impl ExternArgs {
 
     /// Run a `cargo build` to see what args Cargo is using for library paths and extern crates.
     /// Touch a source file in the crate to ensure something is compiled and the args will be visible.
-
     pub fn load(&mut self, cargo_path: &Path) -> Result<&Self> {
         // find Cargo.toml and determine the package name and lib or bin source file.
         let proj_root = cargo_path
@@ -77,7 +76,7 @@ impl ExternArgs {
             .parent()
             .ok_or(anyhow!("can't find parent of {:?}", cargo_path))?
             .to_owned();
-        let mut manifest = Manifest::from_path(&cargo_path).context(format!(
+        let mut manifest = Manifest::from_path(cargo_path).context(format!(
             "can't open cargo manifest {}",
             &cargo_path.to_string_lossy()
         ))?;
@@ -107,7 +106,7 @@ impl ExternArgs {
             let try_path: PathBuf = proj_root.join("src").join(fname);
             if try_path.exists() {
                 touch(&try_path)?;
-                self.run_cargo(&proj_root, &cargo_path)?;
+                self.run_cargo(&proj_root, cargo_path)?;
                 return Ok(self);
                 // file should be closed when f goes out of scope at bottom of this loop
             }
@@ -117,7 +116,7 @@ impl ExternArgs {
 
     fn run_cargo(&mut self, proj_root: &Path, manifest_path: &Path) -> Result<&Self> {
         let mut cmd = Command::new("cargo");
-        cmd.current_dir(&proj_root)
+        cmd.current_dir(proj_root)
             .arg("build")
             .arg("--verbose")
             .arg("--manifest-path")
@@ -138,7 +137,7 @@ impl ExternArgs {
         //ultimatedebug std::fs::write(proj_root.join("mdbook_cargo_out.txt"), &output.stderr)?;
 
         let cmd_resp: &str = std::str::from_utf8(&output.stderr)?;
-        self.parse_response(&self.crate_name.clone(), &cmd_resp)?;
+        self.parse_response(self.crate_name.clone().as_str(), cmd_resp)?;
 
         Ok(self)
     }
@@ -148,7 +147,7 @@ impl ExternArgs {
     /// The response may contain multiple builds, scan for the one that corresponds to the doctest crate.
     ///
     /// > This parser is broken, doesn't handle arg values with embedded spaces (single quoted).
-    /// Fortunately, the args we care about (so far) don't have those kinds of values.
+    /// > Fortunately, the args we care about (so far) don't have those kinds of values.
     pub fn parse_response(&mut self, my_crate: &str, buf: &str) -> Result<()> {
         let mut builds_ignored = 0;
 
@@ -200,7 +199,7 @@ impl ExternArgs {
             };
         }
 
-        if self.extern_list.len() == 0 || self.lib_list.len() == 0 {
+        if self.extern_list.is_empty() || self.lib_list.is_empty() {
             bail!("Couldn't extract -L or --extern args from Cargo, is current directory == cargo project root?");
         }
 
@@ -224,6 +223,12 @@ impl ExternArgs {
             ret_val.push(j.clone());
         }
         ret_val
+    }
+}
+
+impl Default for ExternArgs {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

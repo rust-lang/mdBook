@@ -346,7 +346,7 @@ impl MDBook {
 
                 // rustdoc edition from cargo manifest takes precedence over book.toml
                 // bugbug but also takes precedence over command line flag -- that seems rude.
-                if extern_args.edition != "" {
+                if !extern_args.edition.is_empty() {
                     cmd.args(["--edition", &extern_args.edition]);
                 } else if let Some(edition) = self.config.rust.edition {
                     match edition {
