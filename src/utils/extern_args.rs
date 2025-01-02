@@ -292,7 +292,11 @@ mod test {
         ea.parse_response("leptos_book", &test_str)?;
 
         let args = ea.get_args();
-        assert_eq!(20, args.len());
+
+        assert_eq!(ea.edition, "2021");
+        assert_eq!(ea.crate_name, "leptos_book");
+
+        assert_eq!(18, args.len());
 
         assert_eq!(1, args.iter().filter(|i| *i == "-L").count());
         assert_eq!(8, args.iter().filter(|i| *i == "--extern").count());
