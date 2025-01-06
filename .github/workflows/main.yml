@@ -3,6 +3,9 @@ on:
   pull_request:
   merge_group:
 
+env:
+  BROWSER_UI_TEST_VERSION: '0.18.2'
+
 jobs:
   test:
     runs-on: ${{ matrix.os }}
@@ -69,6 +72,22 @@ jobs:
     - name: Install Rust
       run: rustup update stable && rustup default stable && rustup component add rustfmt
     - run: cargo fmt --check
+
+  gui:
+    name: GUI tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
+      - name: Install npm
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - name: Install browser-ui-test
+        run: npm install browser-ui-test@"${BROWSER_UI_TEST_VERSION}"
+      - name: Build and run tests (+ GUI)
+        run: cargo test --locked --target x86_64-unknown-linux-gnu --test gui
 
   # The success job is here to consolidate the total success/failure state of
   # all other jobs. This job is then included in the GitHub branch protection
