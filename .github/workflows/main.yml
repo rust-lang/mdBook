@@ -25,7 +25,7 @@ jobs:
             rust: nightly
             target: x86_64-unknown-linux-gnu
           - name: stable x86_64-unknown-linux-musl
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             rust: stable
             target: x86_64-unknown-linux-musl
           - name: stable x86_64 macos
@@ -41,7 +41,7 @@ jobs:
             rust: stable
             target: x86_64-pc-windows-msvc
           - name: msrv
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             # sync MSRV with docs: guide/src/guide/installation.md and Cargo.toml
             rust: 1.74.0
             target: x86_64-unknown-linux-gnu
@@ -56,7 +56,7 @@ jobs:
       run: cargo test --no-default-features --target ${{ matrix.target }}
 
   aarch64-cross-builds:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
     - name: Install Rust
