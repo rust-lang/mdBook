@@ -117,6 +117,21 @@ Which, of course displays the image like so:
 
 ![The Rust Logo](images/rust-logo-blk.svg)
 
+
+## Light and Dark Image Variants
+
+Separate light mode and dark mode images may be presented to the viewer by adding `#light-only` or `#dark-only` to an image path:
+
+```markdown
+![rust logo standard edition](images/rust-logo-blk.svg#only-light)
+![rust logo dark mode](images/rust-logo-blk-dark.svg#only-dark)
+```
+
+Try switching the theme to see the effect below (brush icon at the top left of the page):
+
+![rust logo standard edition](images/rust-logo-blk.svg#only-light)
+![rust logo dark mode](images/rust-logo-blk-dark.svg#only-dark)
+
 ## Extensions
 
 mdBook has several extensions beyond the standard CommonMark specification.
