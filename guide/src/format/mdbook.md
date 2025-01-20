@@ -4,7 +4,8 @@
 
 There is a feature in mdBook that lets you hide code lines by prepending them with a specific prefix.
 
-For the Rust language, you can use the `#` character as a prefix which will hide lines [like you would with Rustdoc][rustdoc-hide].
+For the Rust language, you can prefix lines with `# ` (`#` followed by a space) to hide them [like you would with Rustdoc][rustdoc-hide].
+This prefix can be escaped with `##` to prevent the hiding of a line that should begin with the literal string `# ` (see [Rustdoc's docs][rustdoc-hide] for more details)
 
 [rustdoc-hide]: https://doc.rust-lang.org/stable/rustdoc/write-documentation/documentation-tests.html#hiding-portions-of-the-example
 
