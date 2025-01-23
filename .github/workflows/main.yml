@@ -4,7 +4,7 @@ on:
   merge_group:
 
 env:
-  BROWSER_UI_TEST_VERSION: '0.18.2'
+  BROWSER_UI_TEST_VERSION: '0.19.0'
 
 jobs:
   test:

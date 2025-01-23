@@ -75,7 +75,6 @@ fn main() {
     let mut command = Command::new("npx");
     command
         .arg("browser-ui-test")
-        .arg("--no-sandbox")
         .args(["--variable", "DOC_PATH", book_dir.as_str()])
         .args(["--test-folder", "tests/gui"]);
     if std::env::args().any(|arg| arg == "--disable-headless-test") {
