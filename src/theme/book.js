@@ -449,6 +449,7 @@ function playground_text(playground, hidden = true) {
     var sidebar = document.getElementById("sidebar");
     var sidebarLinks = document.querySelectorAll('#sidebar a');
     var sidebarToggleButton = document.getElementById("sidebar-toggle");
+    var sidebarToggleAnchor = document.getElementById("sidebar-toggle-anchor");
     var sidebarResizeHandle = document.getElementById("sidebar-resize-handle");
     var firstContact = null;
 
@@ -475,22 +476,16 @@ function playground_text(playground, hidden = true) {
     }
 
     // Toggle sidebar
-    sidebarToggleButton.addEventListener('click', function sidebarToggle() {
-        if (body.classList.contains("sidebar-hidden")) {
+    sidebarToggleAnchor.addEventListener('change', function sidebarToggle() {
+        if (sidebarToggleAnchor.checked) {
             var current_width = parseInt(
                 document.documentElement.style.getPropertyValue('--sidebar-width'), 10);
             if (current_width < 150) {
                 document.documentElement.style.setProperty('--sidebar-width', '150px');
             }
             showSidebar();
-        } else if (body.classList.contains("sidebar-visible")) {
-            hideSidebar();
         } else {
-            if (getComputedStyle(sidebar)['transform'] === 'none') {
-                hideSidebar();
-            } else {
-                showSidebar();
-            }
+            hideSidebar();
         }
     });
 
