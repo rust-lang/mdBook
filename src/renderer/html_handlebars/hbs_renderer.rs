@@ -931,7 +931,7 @@ fn add_playground_pre(
                             // we need to inject our own main
                             let (attrs, code) = partition_source(code);
 
-                            format!("# #![allow(unused)]\n{attrs}#fn main() {{\n{code}#}}").into()
+                            format!("# #![allow(unused)]\n{attrs}# fn main() {{\n{code}# }}").into()
                         };
                         content
                     }
@@ -1003,12 +1003,9 @@ fn hide_lines_rust(content: &str) -> String {
                 result += &caps[3];
                 result += newline;
                 continue;
-            } else if &caps[2] != "!" && &caps[2] != "[" {
+            } else if matches!(&caps[2], "" | " ") {
                 result += "<span class=\"boring\">";
                 result += &caps[1];
-                if &caps[2] != " " {
-                    result += &caps[2];
-                }
                 result += &caps[3];
                 result += newline;
                 result += "</span>";
@@ -1134,7 +1131,7 @@ mod tests {
     fn add_playground() {
         let inputs = [
           ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust\"># #![allow(unused)]\n#fn main() {\nx()\n#}</code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust\"># #![allow(unused)]\n# fn main() {\nx()\n# }</code></pre>"),
           ("<code class=\"language-rust\">fn main() {}</code>",
            "<pre class=\"playground\"><code class=\"language-rust\">fn main() {}</code></pre>"),
           ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code>",
@@ -1164,7 +1161,7 @@ mod tests {
     fn add_playground_edition2015() {
         let inputs = [
           ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2015\"># #![allow(unused)]\n#fn main() {\nx()\n#}</code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust edition2015\"># #![allow(unused)]\n# fn main() {\nx()\n# }</code></pre>"),
           ("<code class=\"language-rust\">fn main() {}</code>",
            "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}</code></pre>"),
           ("<code class=\"language-rust edition2015\">fn main() {}</code>",
@@ -1188,7 +1185,7 @@ mod tests {
     fn add_playground_edition2018() {
         let inputs = [
           ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2018\"># #![allow(unused)]\n#fn main() {\nx()\n#}</code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust edition2018\"># #![allow(unused)]\n# fn main() {\nx()\n# }</code></pre>"),
           ("<code class=\"language-rust\">fn main() {}</code>",
            "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}</code></pre>"),
           ("<code class=\"language-rust edition2015\">fn main() {}</code>",
@@ -1212,7 +1209,7 @@ mod tests {
     fn add_playground_edition2021() {
         let inputs = [
             ("<code class=\"language-rust\">x()</code>",
-             "<pre class=\"playground\"><code class=\"language-rust edition2021\"># #![allow(unused)]\n#fn main() {\nx()\n#}</code></pre>"),
+             "<pre class=\"playground\"><code class=\"language-rust edition2021\"># #![allow(unused)]\n# fn main() {\nx()\n# }</code></pre>"),
             ("<code class=\"language-rust\">fn main() {}</code>",
              "<pre class=\"playground\"><code class=\"language-rust edition2021\">fn main() {}</code></pre>"),
             ("<code class=\"language-rust edition2015\">fn main() {}</code>",
@@ -1237,8 +1234,12 @@ mod tests {
     fn hide_lines_language_rust() {
         let inputs = [
           (
-           "<pre class=\"playground\"><code class=\"language-rust\">\n# #![allow(unused)]\n#fn main() {\nx()\n#}</code></pre>",
+           "<pre class=\"playground\"><code class=\"language-rust\">\n# #![allow(unused)]\n# fn main() {\nx()\n# }</code></pre>",
            "<pre class=\"playground\"><code class=\"language-rust\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}</span></code></pre>",),
+          // # must be followed by a space for a line to be hidden
+          (
+           "<pre class=\"playground\"><code class=\"language-rust\">\n#fn main() {\nx()\n#}</code></pre>",
+           "<pre class=\"playground\"><code class=\"language-rust\">\n#fn main() {\nx()\n#}</code></pre>",),
           (
            "<pre class=\"playground\"><code class=\"language-rust\">fn main() {}</code></pre>",
            "<pre class=\"playground\"><code class=\"language-rust\">fn main() {}</code></pre>",),
