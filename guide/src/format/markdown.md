@@ -221,6 +221,13 @@ To enable it, see the [`output.html.smart-punctuation`] config option.
 [task list extension]: https://github.github.com/gfm/#task-list-items-extension-
 [`output.html.smart-punctuation`]: configuration/renderers.md#html-renderer-options
 
+### Footnote backreference links
+
+Add backreference links to footnote definitions.
+
+This feature is disabled by default.
+To enable it, see the [`output.html.footnote-backrefs`] config option.
+
 ### Heading attributes
 
 Headings can have a custom HTML ID and classes. This lets you maintain the same ID even if you change the heading's text, it also lets you add multiple classes in the heading.

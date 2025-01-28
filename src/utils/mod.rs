@@ -190,8 +190,8 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
 }
 
 /// Wrapper around the pulldown-cmark parser for rendering markdown to HTML.
-pub fn render_markdown(text: &str, smart_punctuation: bool) -> String {
-    render_markdown_with_path(text, smart_punctuation, None)
+pub fn render_markdown(text: &str, smart_punctuation: bool, footnote_backrefs: bool) -> String {
+    render_markdown_with_path(text, smart_punctuation, footnote_backrefs, None)
 }
 
 pub fn new_cmark_parser(text: &str, smart_punctuation: bool) -> Parser<'_> {
@@ -210,11 +210,16 @@ pub fn new_cmark_parser(text: &str, smart_punctuation: bool) -> Parser<'_> {
 pub fn render_markdown_with_path(
     text: &str,
     smart_punctuation: bool,
+    footnote_backrefs: bool,
     path: Option<&Path>,
 ) -> String {
-    let mut s = String::with_capacity(text.len() * 3 / 2);
-    let p = new_cmark_parser(text, smart_punctuation);
-    let events = p
+    if footnote_backrefs {
+        return render_markdown_with_path_with_footnote_backrefs(text, smart_punctuation, path);
+    }
+
+    let mut body = String::with_capacity(text.len() * 3 / 2);
+    let parser = new_cmark_parser(text, smart_punctuation);
+    let events = parser
         .map(clean_codeblock_headers)
         .map(|event| adjust_links(event, path))
         .flat_map(|event| {
@@ -222,8 +227,137 @@ pub fn render_markdown_with_path(
             a.into_iter().chain(b)
         });
 
-    html::push_html(&mut s, events);
-    s
+    html::push_html(&mut body, events);
+    body
+}
+
+pub fn render_markdown_with_path_with_footnote_backrefs(
+    text: &str,
+    smart_punctuation: bool,
+    path: Option<&Path>,
+) -> String {
+    let mut body = String::with_capacity(text.len() * 3 / 2);
+
+    // Based on
+    // https://github.com/pulldown-cmark/pulldown-cmark/blob/master/pulldown-cmark/examples/footnote-rewrite.rs
+
+    // To generate this style, you have to collect the footnotes at the end, while parsing.
+    // You also need to count usages.
+    let mut footnotes = Vec::new();
+    let mut in_footnote = Vec::new();
+    let mut footnote_numbers = HashMap::new();
+
+    let parser = new_cmark_parser(text, smart_punctuation)
+        .filter_map(|event| {
+            match event {
+                Event::Start(Tag::FootnoteDefinition(_)) => {
+                    in_footnote.push(vec![event]);
+                    None
+                }
+                Event::End(TagEnd::FootnoteDefinition) => {
+                    let mut f = in_footnote.pop().unwrap();
+                    f.push(event);
+                    footnotes.push(f);
+                    None
+                }
+                Event::FootnoteReference(name) => {
+                    let n = footnote_numbers.len() + 1;
+                    let (n, nr) = footnote_numbers.entry(name.clone()).or_insert((n, 0usize));
+                    *nr += 1;
+                    let html = Event::Html(format!(r##"<sup class="footnote-reference" id="fr-{name}-{nr}"><a href="#fn-{name}">{n}</a></sup>"##).into());
+                    if in_footnote.is_empty() {
+                        Some(html)
+                    } else {
+                        in_footnote.last_mut().unwrap().push(html);
+                        None
+                    }
+                }
+                _ if !in_footnote.is_empty() => {
+                    in_footnote.last_mut().unwrap().push(event);
+                    None
+                }
+                _ => Some(event),
+            }
+        });
+
+    let events = parser
+        .map(clean_codeblock_headers)
+        .map(|event| adjust_links(event, path))
+        .flat_map(|event| {
+            let (a, b) = wrap_tables(event);
+            a.into_iter().chain(b)
+        });
+
+    html::push_html(&mut body, events);
+
+    // To make the footnotes look right, we need to sort them by their appearance order, not by
+    // the in-tree order of their actual definitions. Unused items are omitted entirely.
+    if !footnotes.is_empty() {
+        footnotes.retain(|f| match f.first() {
+            Some(Event::Start(Tag::FootnoteDefinition(name))) => {
+                footnote_numbers.get(name).unwrap_or(&(0, 0)).1 != 0
+            }
+            _ => false,
+        });
+        footnotes.sort_by_cached_key(|f| match f.first() {
+            Some(Event::Start(Tag::FootnoteDefinition(name))) => {
+                footnote_numbers.get(name).unwrap_or(&(0, 0)).0
+            }
+            _ => unreachable!(),
+        });
+
+        body.push_str("<div class=\"footnotes\">\n");
+
+        html::push_html(
+            &mut body,
+            footnotes.into_iter().flat_map(|fl| {
+                // To write backrefs, the name needs kept until the end of the footnote definition.
+                let mut name = CowStr::from("");
+
+                let mut has_written_backrefs = false;
+                let fl_len = fl.len();
+                let footnote_numbers = &footnote_numbers;
+                fl.into_iter().enumerate().map(move |(i, f)| match f {
+                    Event::Start(Tag::FootnoteDefinition(current_name)) => {
+                        name = current_name;
+                        let fn_number = footnote_numbers.get(&name).unwrap().0;
+                        has_written_backrefs = false;
+                        Event::Html(format!(r##"<aside class="footnote-definition" id="fn-{name}"><sup class="footnote-definition-label">{fn_number}</sup>"##).into())
+                    }
+                    Event::End(TagEnd::FootnoteDefinition) | Event::End(TagEnd::Paragraph)
+                        if !has_written_backrefs && i >= fl_len - 2 =>
+                    {
+                        let usage_count = footnote_numbers.get(&name).unwrap().1;
+                        let mut end = String::with_capacity(
+                            name.len() + (r##" <a href="#fr--1">↩</a></div>"##.len() * usage_count),
+                        );
+                        for usage in 1..=usage_count {
+                            if usage == 1 {
+                                end.push_str(&format!(r##" <a href="#fr-{name}-{usage}">↩</a>"##));
+                            } else {
+                                end.push_str(&format!(r##" <a href="#fr-{name}-{usage}">↩{usage}</a>"##));
+                            }
+                        }
+                        has_written_backrefs = true;
+                        if f == Event::End(TagEnd::FootnoteDefinition) {
+                            end.push_str("</aside>\n");
+                        } else {
+                            end.push_str("</p>\n");
+                        }
+                        Event::Html(end.into())
+                    }
+                    Event::End(TagEnd::FootnoteDefinition) => Event::Html("</aside>\n".into()),
+                    Event::FootnoteReference(_) => unreachable!("converted to HTML earlier"),
+                    f => f,
+                })
+            }),
+        );
+
+        // Closing div.footnotes
+        body.push_str("</div>\n");
+    }
+
+    body
 }
 
 /// Wraps tables in a `.table-wrapper` class to apply overflow-x rules to.
@@ -310,7 +444,7 @@ mod tests {
         #[test]
         fn preserves_external_links() {
             assert_eq!(
-                render_markdown("[example](https://www.rust-lang.org/)", false),
+                render_markdown("[example](https://www.rust-lang.org/)", false, false),
                 "<p><a href=\"https://www.rust-lang.org/\">example</a></p>\n"
             );
         }
@@ -318,17 +452,17 @@ mod tests {
         #[test]
         fn it_can_adjust_markdown_links() {
             assert_eq!(
-                render_markdown("[example](example.md)", false),
+                render_markdown("[example](example.md)", false, false),
                 "<p><a href=\"example.html\">example</a></p>\n"
             );
             assert_eq!(
-                render_markdown("[example_anchor](example.md#anchor)", false),
+                render_markdown("[example_anchor](example.md#anchor)", false, false),
                 "<p><a href=\"example.html#anchor\">example_anchor</a></p>\n"
             );
 
             // this anchor contains 'md' inside of it
             assert_eq!(
-                render_markdown("[phantom data](foo.html#phantomdata)", false),
+                render_markdown("[phantom data](foo.html#phantomdata)", false, false),
                 "<p><a href=\"foo.html#phantomdata\">phantom data</a></p>\n"
             );
         }
@@ -346,12 +480,12 @@ mod tests {
 </tbody></table>
 </div>
 "#.trim();
-            assert_eq!(render_markdown(src, false), out);
+            assert_eq!(render_markdown(src, false, false), out);
         }
 
         #[test]
         fn it_can_keep_quotes_straight() {
-            assert_eq!(render_markdown("'one'", false), "<p>'one'</p>\n");
+            assert_eq!(render_markdown("'one'", false, false), "<p>'one'</p>\n");
         }
 
         #[test]
@@ -367,7 +501,7 @@ mod tests {
 </code></pre>
 <p><code>'three'</code> ‘four’</p>
 "#;
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, true, false), expected);
         }
 
         #[test]
@@ -389,8 +523,8 @@ more text with spaces
 </code></pre>
 <p>more text with spaces</p>
 "#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, false, false), expected);
+            assert_eq!(render_markdown(input, true, false), expected);
         }
 
         #[test]
@@ -402,8 +536,8 @@ more text with spaces
 
             let expected = r#"<pre><code class="language-rust,no_run,should_panic,property_3"></code></pre>
 "#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, false, false), expected);
+            assert_eq!(render_markdown(input, true, false), expected);
         }
 
         #[test]
@@ -415,8 +549,8 @@ more text with spaces
 
             let expected = r#"<pre><code class="language-rust,,,,,no_run,,,should_panic,,,,property_3"></code></pre>
 "#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, false, false), expected);
+            assert_eq!(render_markdown(input, true, false), expected);
         }
 
         #[test]
@@ -428,15 +562,15 @@ more text with spaces
 
             let expected = r#"<pre><code class="language-rust"></code></pre>
 "#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, false, false), expected);
+            assert_eq!(render_markdown(input, true, false), expected);
 
             let input = r#"
 ```rust
 ```
 "#;
-            assert_eq!(render_markdown(input, false), expected);
-            assert_eq!(render_markdown(input, true), expected);
+            assert_eq!(render_markdown(input, false, false), expected);
+            assert_eq!(render_markdown(input, true, false), expected);
         }
     }
 
