@@ -1,5 +1,36 @@
 # Changelog
 
+## mdBook 0.4.44
+[v0.4.43...v0.4.44](https://github.com/rust-lang/mdBook/compare/v0.4.43...v0.4.44)
+
+### Added
+
+- Added pre-built aarch64-apple-darwin binaries to the releases.
+  [#2500](https://github.com/rust-lang/mdBook/pull/2500)
+- `mdbook clean` now shows a summary of what it did.
+  [#2458](https://github.com/rust-lang/mdBook/pull/2458)
+- Added the `output.html.search.chapter` config setting to disable search indexing of individual chapters.
+  [#2533](https://github.com/rust-lang/mdBook/pull/2533)
+
+### Fixed
+
+- Fixed auto-scrolling the side-bar when loading a page with a `#` fragment URL.
+  [#2517](https://github.com/rust-lang/mdBook/pull/2517)
+- Fixed display of sidebar when javascript is disabled.
+  [#2529](https://github.com/rust-lang/mdBook/pull/2529)
+- Fixed the sidebar visibility getting out of sync with the button.
+  [#2532](https://github.com/rust-lang/mdBook/pull/2532)
+
+### Changed
+
+- ❗ Rust code block hidden lines now follow the same logic as rustdoc. This requires a space after the `#` symbol.
+  [#2530](https://github.com/rust-lang/mdBook/pull/2530)
+- ❗ Updated the Linux pre-built binaries which requires a newer version of glibc (2.34).
+  [#2523](https://github.com/rust-lang/mdBook/pull/2523)
+- Updated dependencies
+  [#2538](https://github.com/rust-lang/mdBook/pull/2538)
+  [#2539](https://github.com/rust-lang/mdBook/pull/2539)
+
 ## mdBook 0.4.43
 [v0.4.42...v0.4.43](https://github.com/rust-lang/mdBook/compare/v0.4.42...v0.4.43)
 
