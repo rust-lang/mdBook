@@ -735,6 +735,11 @@ pub struct Search {
     /// Copy JavaScript files for the search functionality to the output directory?
     /// Default: `true`.
     pub copy_js: bool,
+    /// Specifies search settings for the given path.
+    ///
+    /// The path can be for a specific chapter, or a directory. This will
+    /// merge recursively, with more specific paths taking precedence.
+    pub chapter: HashMap<String, SearchChapterSettings>,
 }
 
 impl Default for Search {
@@ -751,8 +756,17 @@ impl Default for Search {
             expand: true,
             heading_split_level: 3,
             copy_js: true,
+            chapter: HashMap::new(),
         }
     }
+}
+
+/// Search options for chapters (or paths).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct SearchChapterSettings {
+    /// Whether or not indexing is enabled, default `true`.
+    pub enable: Option<bool>,
 }
 
 /// Allows you to "update" any arbitrary field in a struct by round-tripping via

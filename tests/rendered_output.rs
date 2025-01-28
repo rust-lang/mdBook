@@ -736,6 +736,7 @@ fn failure_on_missing_theme_directory() {
 #[cfg(feature = "search")]
 mod search {
     use crate::dummy_book::DummyBook;
+    use mdbook::utils::fs::write_file;
     use mdbook::MDBook;
     use std::fs::{self, File};
     use std::path::Path;
@@ -808,6 +809,51 @@ mod search {
             docs[&heading_attrs]["breadcrumbs"],
             "First Chapter » Heading Attributes » Heading with id and classes"
         );
+    }
+
+    #[test]
+    fn can_disable_individual_chapters() {
+        let temp = DummyBook::new().build().unwrap();
+        let book_toml = r#"
+            [book]
+            title = "Search Test"
+
+            [output.html.search.chapter]
+            "second" = { enable = false }
+            "first/unicode.md" = { enable = false }
+            "#;
+        write_file(temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
+        let md = MDBook::load(temp.path()).unwrap();
+        md.build().unwrap();
+        let index = read_book_index(temp.path());
+        let doc_urls = index["doc_urls"].as_array().unwrap();
+        let contains = |path| {
+            doc_urls
+                .iter()
+                .any(|p| p.as_str().unwrap().starts_with(path))
+        };
+        assert!(contains("second.html"));
+        assert!(!contains("second/"));
+        assert!(!contains("first/unicode.html"));
+        assert!(contains("first/markdown.html"));
+    }
+
+    #[test]
+    fn chapter_settings_validation_error() {
+        let temp = DummyBook::new().build().unwrap();
+        let book_toml = r#"
+            [book]
+            title = "Search Test"
+
+            [output.html.search.chapter]
+            "does-not-exist" = { enable = false }
+            "#;
+        write_file(temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
+        let md = MDBook::load(temp.path()).unwrap();
+        let err = md.build().unwrap_err();
+        assert!(format!("{err:?}").contains(
+            "[output.html.search.chapter] key `does-not-exist` does not match any chapter paths"
+        ));
     }
 
     // Setting this to `true` may cause issues with `cargo watch`,

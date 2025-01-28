@@ -1,13 +1,13 @@
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use elasticlunr::{Index, IndexBuilder};
 use once_cell::sync::Lazy;
 use pulldown_cmark::*;
 
-use crate::book::{Book, BookItem};
-use crate::config::Search;
+use crate::book::{Book, BookItem, Chapter};
+use crate::config::{Search, SearchChapterSettings};
 use crate::errors::*;
 use crate::theme::searcher;
 use crate::utils;
@@ -35,8 +35,20 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
 
     let mut doc_urls = Vec::with_capacity(book.sections.len());
 
+    let chapter_configs = sort_search_config(&search_config.chapter);
+    validate_chapter_config(&chapter_configs, book)?;
+
     for item in book.iter() {
-        render_item(&mut index, search_config, &mut doc_urls, item)?;
+        let chapter = match item {
+            BookItem::Chapter(ch) if !ch.is_draft_chapter() => ch,
+            _ => continue,
+        };
+        let chapter_settings =
+            get_chapter_settings(&chapter_configs, chapter.source_path.as_ref().unwrap());
+        if !chapter_settings.enable.unwrap_or(true) {
+            continue;
+        }
+        render_item(&mut index, search_config, &mut doc_urls, chapter)?;
     }
 
     let index = write_to_json(index, search_config, doc_urls)?;
@@ -100,13 +112,8 @@ fn render_item(
     index: &mut Index,
     search_config: &Search,
     doc_urls: &mut Vec<String>,
-    item: &BookItem,
+    chapter: &Chapter,
 ) -> Result<()> {
-    let chapter = match *item {
-        BookItem::Chapter(ref ch) if !ch.is_draft_chapter() => ch,
-        _ => return Ok(()),
-    };
-
     let chapter_path = chapter
         .path
         .as_ref()
@@ -312,4 +319,82 @@ fn clean_html(html: &str) -> String {
         builder
     });
     AMMONIA.clean(html).to_string()
+}
+
+fn validate_chapter_config(
+    chapter_configs: &[(PathBuf, SearchChapterSettings)],
+    book: &Book,
+) -> Result<()> {
+    for (path, _) in chapter_configs {
+        let found = book
+            .iter()
+            .filter_map(|item| match item {
+                BookItem::Chapter(ch) if !ch.is_draft_chapter() => Some(ch),
+                _ => None,
+            })
+            .any(|chapter| {
+                let ch_path = chapter.source_path.as_ref().unwrap();
+                ch_path.starts_with(path)
+            });
+        if !found {
+            bail!(
+                "[output.html.search.chapter] key `{}` does not match any chapter paths",
+                path.display()
+            );
+        }
+    }
+    Ok(())
+}
+
+fn sort_search_config(
+    map: &HashMap<String, SearchChapterSettings>,
+) -> Vec<(PathBuf, SearchChapterSettings)> {
+    let mut settings: Vec<_> = map
+        .iter()
+        .map(|(key, value)| (PathBuf::from(key), value.clone()))
+        .collect();
+    // Note: This is case-sensitive, and assumes the author uses the same case
+    // as the actual filename.
+    settings.sort_by(|a, b| a.0.cmp(&b.0));
+    settings
+}
+
+fn get_chapter_settings(
+    chapter_configs: &[(PathBuf, SearchChapterSettings)],
+    source_path: &Path,
+) -> SearchChapterSettings {
+    let mut result = SearchChapterSettings::default();
+    for (path, config) in chapter_configs {
+        if source_path.starts_with(path) {
+            result.enable = config.enable.or(result.enable);
+        }
+    }
+    result
+}
+
+#[test]
+fn chapter_settings_priority() {
+    let cfg = r#"
+        [output.html.search.chapter]
+        "cli/watch.md" = { enable = true }
+        "cli" = { enable = false }
+        "cli/inner/foo.md" = { enable = false }
+        "cli/inner" = { enable = true }
+        "foo" = {} # Just to make sure empty table is allowed.
+    "#;
+    let cfg: crate::Config = toml::from_str(cfg).unwrap();
+    let html = cfg.html_config().unwrap();
+    let chapter_configs = sort_search_config(&html.search.unwrap().chapter);
+    for (path, enable) in [
+        ("foo.md", None),
+        ("cli/watch.md", Some(true)),
+        ("cli/index.md", Some(false)),
+        ("cli/inner/index.md", Some(true)),
+        ("cli/inner/foo.md", Some(false)),
+    ] {
+        assert_eq!(
+            get_chapter_settings(&chapter_configs, Path::new(path)),
+            SearchChapterSettings { enable }
+        );
+    }
 }
