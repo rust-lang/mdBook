@@ -281,6 +281,20 @@ copy-js = true           # include Javascript code for search
 - **copy-js:** Copy JavaScript files for the search implementation to the output
   directory. Defaults to `true`.
 
+#### `[output.html.search.chapter]`
+
+The [`output.html.search.chapter`] table provides the ability to modify search settings per chapter or directory. Each key is the path to the chapter source file or directory, and the value is a table of settings to apply to that path. This will merge recursively, with more specific paths taking precedence.
+
+```toml
+[output.html.search.chapter]
+# Disables search indexing for all chapters in the `appendix` directory.
+"appendix" = { enable = false }
+# Enables search indexing for just this one appendix chapter.
+"appendix/glossary.md" = { enable = true }
+```
+
+- **enable:** Enables or disables search indexing for the given chapters. Defaults to `true`. This does not override the overall `output.html.search.enable` setting; that must be `true` for any search functionality to be enabled. Be cautious when disabling indexing for chapters because that can potentially lead to user confusion when they search for terms and expect them to be found. This should only be used in exceptional circumstances where keeping the chapter in the index will cause issues with the quality of the search results.
+
 ### `[output.html.redirect]`
 
 The `[output.html.redirect]` table provides a way to add redirects.
