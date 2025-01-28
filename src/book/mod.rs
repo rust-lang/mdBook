@@ -31,6 +31,7 @@ use crate::renderer::{CmdRenderer, HtmlHandlebars, MarkdownRenderer, RenderConte
 use crate::utils;
 
 use crate::config::{Config, RustEdition};
+use crate::utils::extern_args::ExternArgs;
 
 /// The object used to manage and build a book.
 pub struct MDBook {
@@ -304,6 +305,14 @@ impl MDBook {
         let (book, _) = self.preprocess_book(&TestRenderer)?;
 
         let color_output = std::io::stderr().is_terminal();
+
+        // get extra args we'll need for rustdoc, if config points to a cargo project.
+
+        let mut extern_args = ExternArgs::new();
+        if let Some(manifest) = &self.config.rust.manifest {
+            extern_args.load(&self.root.join(manifest))?;
+        }
+
         let mut failed = false;
         for item in book.iter() {
             if let BookItem::Chapter(ref ch) = *item {
@@ -332,9 +341,14 @@ impl MDBook {
                 cmd.current_dir(temp_dir.path())
                     .arg(chapter_path)
                     .arg("--test")
-                    .args(&library_args);
+                    .args(&library_args) // also need --extern for doctest to actually work
+                    .args(extern_args.get_args());
 
-                if let Some(edition) = self.config.rust.edition {
+                // rustdoc edition from cargo manifest takes precedence over book.toml
+                // bugbug but also takes precedence over command line flag -- that seems rude.
+                if !extern_args.edition.is_empty() {
+                    cmd.args(["--edition", &extern_args.edition]);
+                } else if let Some(edition) = self.config.rust.edition {
                     match edition {
                         RustEdition::E2015 => {
                             cmd.args(["--edition", "2015"]);
@@ -351,6 +365,7 @@ impl MDBook {
                     }
                 }
 
+                // bugbug Why show color in hidden invocation of rustdoc?
                 if color_output {
                     cmd.args(["--color", "always"]);
                 }

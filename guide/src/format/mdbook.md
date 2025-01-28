@@ -1,5 +1,9 @@
 # mdBook-specific features
 
+# Code blocks
+
+These capabilities primarily affect how the user sees or interacts with code samples in your book and are supported directly by mdBook.  Some also affect running the sample as a documentation test. (for which mdBook invokes `rustdoc --test`), so : this is detailed in the sections below.
+
 ## Hiding code lines
 
 There is a feature in mdBook that lets you hide code lines by prepending them with a specific prefix.
@@ -9,7 +13,7 @@ This prefix can be escaped with `##` to prevent the hiding of a line that should
 
 [rustdoc-hide]: https://doc.rust-lang.org/stable/rustdoc/write-documentation/documentation-tests.html#hiding-portions-of-the-example
 
-```bash
+```text
 # fn main() {
     let x = 5;
     let y = 6;
@@ -41,7 +45,7 @@ python = "~"
 
 The prefix will hide any lines that begin with the given prefix. With the python prefix shown above, this:
 
-```bash
+```text
 ~hidden()
 nothidden():
 ~    hidden()
@@ -152,6 +156,7 @@ interpreting them.
 ````
 
 ## Including portions of a file
+
 Often you only need a specific part of the file, e.g. relevant lines for an
 example. We support four different modes of partial includes:
 
@@ -176,6 +181,7 @@ the regex `ANCHOR_END:\s*[\w_-]+`. This allows you to put anchors in
 any kind of commented line.
 
 Consider the following file to include:
+
 ```rs
 /* ANCHOR: all */
 
@@ -193,6 +199,7 @@ impl System for MySystem { ... }
 ```
 
 Then in the book, all you have to do is:
+
 ````hbs
 Here is a component:
 ```rust,no_run,noplayground
@@ -224,7 +231,7 @@ Rustdoc will use the complete example when you run `mdbook test`.
 
 For example, consider a file named `file.rs` that contains this Rust program:
 
-```rust
+```rust,editable
 fn main() {
     let x = add_one(2);
     assert_eq!(x, 3);
@@ -306,6 +313,21 @@ For example `\{{#playground example.rs editable}}` will create the code block li
 And the `editable` attribute will enable the [editor] as described at [Rust code block attributes](#rust-code-block-attributes).
 
 [Rust Playground]: https://play.rust-lang.org/
+
+## Using external crates and dependencies
+
+If your code samples depend on external crates, you will probably want to include `use <crate>` statements in the code and want them to resolve and allow documentation tests to run.
+To configure this:
+
+1. Create a ***Cargo.toml*** file with a `[package.dependencies]` section that defines a dependency for each `<crate>` you want to use in any sample.  If your book is already embedded in an existing Cargo project, you may be able to use the existing project `Cargo.toml`.
+2. In your ***book.toml***:
+    * configure the path to ***Cargo.toml*** in `rust.manifest`, as described in [rust configuration](/format/configuration/general.html#rust-options).
+    * remove `rust.edition` if it is configured.  The default rust edition will be as specified in the ***Cargo.toml*** (though this can be overridden for a specific code block).
+    * Refrain from invoking `mdbook test` with `-L` or `--library-path` argument.  This, too, will be inferred from cargo project configuration
+
+# Features for general content
+
+These can be used in markdown text (outside code blocks).
 
 ## Controlling page \<title\>
 
