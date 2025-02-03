@@ -356,7 +356,9 @@ impl MDBook {
                 }
 
                 debug!("running {:?}", cmd);
-                let output = cmd.output()?;
+                let output = cmd
+                    .output()
+                    .with_context(|| "failed to execute `rustdoc`")?;
 
                 if !output.status.success() {
                     failed = true;
