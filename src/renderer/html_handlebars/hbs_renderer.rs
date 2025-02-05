@@ -95,6 +95,11 @@ impl HtmlHandlebars {
             ch.name.clone() + " - " + book_title
         };
 
+        // Make base_url available for .hbs to set base href if required.
+        if let Some(site_url) = ctx.html_config.site_url {
+            ctx.data.insert("base_url".to_owned(), json!(site_url.clone()));
+        };
+        
         ctx.data.insert("path".to_owned(), json!(path));
         ctx.data.insert("content".to_owned(), json!(content));
         ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
