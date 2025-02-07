@@ -256,6 +256,16 @@ impl MDBook {
         self
     }
 
+    /// Clear all registered renderers.
+    pub fn clear_renderers(&mut self) {
+        self.renderers.clear();
+    }
+
+    /// Clear all registered preprocessors.
+    pub fn clear_preprocessors(&mut self) {
+        self.preprocessors.clear();
+    }
+
     /// Run `rustdoc` tests on the book, linking against the provided libraries.
     pub fn test(&mut self, library_paths: Vec<&str>) -> Result<()> {
         // test_chapter with chapter:None will run all tests.
