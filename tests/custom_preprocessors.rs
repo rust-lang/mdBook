@@ -17,7 +17,7 @@ fn example_supports_whatever() {
 
     let got = cmd.supports_renderer("whatever");
 
-    assert_eq!(got, true);
+    assert!(got);
 }
 
 #[test]
@@ -26,7 +26,7 @@ fn example_doesnt_support_not_supported() {
 
     let got = cmd.supports_renderer("not-supported");
 
-    assert_eq!(got, false);
+    assert!(!got);
 }
 
 #[test]
