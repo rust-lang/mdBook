@@ -43,10 +43,11 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
             BookItem::Chapter(ch) if !ch.is_draft_chapter() => ch,
             _ => continue,
         };
-        let chapter_settings =
-            get_chapter_settings(&chapter_configs, chapter.source_path.as_ref().unwrap());
-        if !chapter_settings.enable.unwrap_or(true) {
-            continue;
+        if let Some(path) = settings_path(chapter) {
+            let chapter_settings = get_chapter_settings(&chapter_configs, path);
+            if !chapter_settings.enable.unwrap_or(true) {
+                continue;
+            }
         }
         render_item(&mut index, search_config, &mut doc_urls, chapter)?;
     }
@@ -321,6 +322,10 @@ fn clean_html(html: &str) -> String {
     AMMONIA.clean(html).to_string()
 }
 
+fn settings_path(ch: &Chapter) -> Option<&Path> {
+    ch.source_path.as_deref().or_else(|| ch.path.as_deref())
+}
+
 fn validate_chapter_config(
     chapter_configs: &[(PathBuf, SearchChapterSettings)],
     book: &Book,
@@ -329,13 +334,10 @@ fn validate_chapter_config(
         let found = book
             .iter()
             .filter_map(|item| match item {
-                BookItem::Chapter(ch) if !ch.is_draft_chapter() => Some(ch),
+                BookItem::Chapter(ch) if !ch.is_draft_chapter() => settings_path(ch),
                 _ => None,
             })
-            .any(|chapter| {
-                let ch_path = chapter.source_path.as_ref().unwrap();
-                ch_path.starts_with(path)
-            });
+            .any(|source_path| source_path.starts_with(path));
         if !found {
             bail!(
                 "[output.html.search.chapter] key `{}` does not match any chapter paths",

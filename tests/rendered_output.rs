@@ -3,10 +3,11 @@ mod dummy_book;
 use crate::dummy_book::{assert_contains_strings, assert_doesnt_contain_strings, DummyBook};
 
 use anyhow::Context;
+use mdbook::book::Chapter;
 use mdbook::config::Config;
 use mdbook::errors::*;
 use mdbook::utils::fs::write_file;
-use mdbook::MDBook;
+use mdbook::{BookItem, MDBook};
 use pretty_assertions::assert_eq;
 use select::document::Document;
 use select::predicate::{Attr, Class, Name, Predicate};
@@ -1030,4 +1031,22 @@ fn custom_header_attributes() {
         r##"<h2 id="both" class="class1 class2"><a class="header" href="#both">Heading with id and classes</a></h2>"##,
     ];
     assert_contains_strings(&contents, summary_strings);
+}
+
+#[test]
+fn with_no_source_path() {
+    // Test for a regression where search would fail if source_path is None.
+    let temp = DummyBook::new().build().unwrap();
+    let mut md = MDBook::load(temp.path()).unwrap();
+    let chapter = Chapter {
+        name: "Sample chapter".to_string(),
+        content: "".to_string(),
+        number: None,
+        sub_items: Vec::new(),
+        path: Some(PathBuf::from("sample.html")),
+        source_path: None,
+        parent_names: Vec::new(),
+    };
+    md.book.sections.push(BookItem::Chapter(chapter));
+    md.build().unwrap();
 }

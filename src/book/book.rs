@@ -173,7 +173,8 @@ pub struct Chapter {
     /// `index.md` via the [`Chapter::path`] field. The `source_path` field
     /// exists if you need access to the true file path.
     ///
-    /// This is `None` for a draft chapter.
+    /// This is `None` for a draft chapter, or a synthetically generated
+    /// chapter that has no file on disk.
     pub source_path: Option<PathBuf>,
     /// An ordered list of the names of each chapter above this one in the hierarchy.
     pub parent_names: Vec<String>,
