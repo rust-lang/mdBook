@@ -1034,7 +1034,6 @@ fn custom_header_attributes() {
 }
 
 #[test]
-#[should_panic]
 fn with_no_source_path() {
     // Test for a regression where search would fail if source_path is None.
     let temp = DummyBook::new().build().unwrap();
