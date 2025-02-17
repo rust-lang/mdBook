@@ -136,10 +136,10 @@ fn recursive_copy<A: AsRef<Path>, B: AsRef<Path>>(from: A, to: B) -> Result<()> 
 
 pub fn new_copy_of_example_book() -> Result<TempDir> {
     let temp = TempFileBuilder::new().prefix("guide").tempdir()?;
+    let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
 
-    let guide = Path::new(env!("CARGO_MANIFEST_DIR")).join("guide");
-
-    recursive_copy(guide, temp.path())?;
+    recursive_copy(manifest_dir.join("guide"), temp.path().join("guide"))?;
+    recursive_copy(manifest_dir.join("examples"), temp.path().join("examples"))?;
 
     Ok(temp)
 }
