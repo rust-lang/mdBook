@@ -1,5 +1,20 @@
 # Changelog
 
+## mdBook 0.4.45
+[v0.4.44...v0.4.45](https://github.com/rust-lang/mdBook/compare/v0.4.44...v0.4.45)
+
+### Changed
+
+- Added context to error message when rustdoc is not found.
+  [#2545](https://github.com/rust-lang/mdBook/pull/2545)
+- Slightly changed the styling rules around margins of footnotes.
+  [#2524](https://github.com/rust-lang/mdBook/pull/2524)
+
+### Fixed
+
+- Fixed an issue where it would panic if a source_path is not set.
+  [#2550](https://github.com/rust-lang/mdBook/pull/2550)
+
 ## mdBook 0.4.44
 [v0.4.43...v0.4.44](https://github.com/rust-lang/mdBook/compare/v0.4.43...v0.4.44)
 
