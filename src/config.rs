@@ -587,6 +587,8 @@ pub struct HtmlConfig {
     /// The mapping from old pages to new pages/URLs to use when generating
     /// redirects.
     pub redirect: HashMap<String, String>,
+    /// Don't copy extra files from the src folder to the output folder
+    pub no_copy_extra_files: bool,
 }
 
 impl Default for HtmlConfig {
@@ -616,6 +618,7 @@ impl Default for HtmlConfig {
             cname: None,
             live_reload_endpoint: None,
             redirect: HashMap::new(),
+            no_copy_extra_files: false,
         }
     }
 }

@@ -618,9 +618,16 @@ impl Renderer for HtmlHandlebars {
         self.emit_redirects(&ctx.destination, &handlebars, &html_config.redirect)
             .context("Unable to emit redirects")?;
 
-        // Copy all remaining files, avoid a recursive copy from/to the book build dir
-        utils::fs::copy_files_except_ext(&src_dir, destination, true, Some(&build_dir), &["md"])?;
-
+        if !html_config.no_copy_extra_files {
+            // Copy all remaining files, avoid a recursive copy from/to the book build dir
+            utils::fs::copy_files_except_ext(
+                &src_dir,
+                destination,
+                true,
+                Some(&build_dir),
+                &["md"],
+            )?;
+        }
         Ok(())
     }
 }
