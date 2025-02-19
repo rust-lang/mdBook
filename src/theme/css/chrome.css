@@ -164,11 +164,14 @@ html:not(.js) .left-buttons button {
 
 .mobile-nav-chapters {
     font-size: 2.5em;
-    text-align: center;
     text-decoration: none;
     width: 90px;
+    height: 55px;
     border-radius: 5px;
     background-color: var(--sidebar-bg);
+
+    display: grid;
+    place-items: center;
 }
 
 /* Only Firefox supports flow-relative values */
