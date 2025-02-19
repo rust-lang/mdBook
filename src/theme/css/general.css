@@ -144,6 +144,16 @@ table tbody tr:nth-child(2n) {
     background: var(--table-alternate-bg);
 }
 
+.light img[src$="#only-dark"],
+.rust  img[src$="#only-dark"] {
+    display:none;
+}
+
+.navy img[src$="#only-light"],
+.ayu  img[src$="#only-light"],
+.coal img[src$="#only-light"] {
+    display:none;
+}
 
 blockquote {
     margin: 20px 0;
