@@ -314,7 +314,8 @@ mod tests {
     use crate::config::HtmlConfig;
     use crate::theme::Theme;
     use crate::utils::fs::write_file;
-    use std::io::Read;
+    use tempfile::TempDir;
+
     #[test]
     fn test_write_directive() {
         let theme = Theme {
@@ -339,40 +340,30 @@ mod tests {
             fonts_css: None,
             font_files: Vec::new(),
         };
-        let reference_js = PathBuf::from("target/static-files-test-case-reference.js");
-        let test_case = PathBuf::from("target/static-files-test-case");
+        let temp_dir = TempDir::with_prefix("mdbook-").unwrap();
+        let reference_js = Path::new("static-files-test-case-reference.js");
         let mut html_config = HtmlConfig::default();
-        html_config.additional_js.push(reference_js.clone());
+        html_config.additional_js.push(reference_js.to_owned());
         write_file(
-            &Path::new("."),
-            &reference_js,
+            temp_dir.path(),
+            reference_js,
             br#"{{ resource "book.js" }}"#,
         )
         .unwrap();
-        let mut static_files = StaticFiles::new(&theme, &html_config, &Path::new(".")).unwrap();
+        let mut static_files = StaticFiles::new(&theme, &html_config, temp_dir.path()).unwrap();
         static_files.hash_files().unwrap();
-        static_files.write_files(&test_case).unwrap();
+        static_files.write_files(temp_dir.path()).unwrap();
         // custom JS winds up referencing book.js
-        let mut reference_js_dest = File::open(
-            "target/static-files-test-case/target/static-files-test-case-reference-635c9cdc.js",
+        let reference_js_content = std::fs::read_to_string(
+            temp_dir
+                .path()
+                .join("static-files-test-case-reference-635c9cdc.js"),
         )
         .unwrap();
-        let mut reference_js_content = Vec::new();
-        reference_js_dest
-            .read_to_end(&mut reference_js_content)
-            .unwrap();
-        std::mem::drop(reference_js_dest);
-        assert_eq!(br#"../book-e3b0c442.js"#, &reference_js_content[..]);
+        assert_eq!("book-e3b0c442.js", reference_js_content);
         // book.js winds up empty
-        let mut reference_js_dest =
-            File::open("target/static-files-test-case/book-e3b0c442.js").unwrap();
-        let mut reference_js_content = Vec::new();
-        reference_js_dest
-            .read_to_end(&mut reference_js_content)
-            .unwrap();
-        std::mem::drop(reference_js_dest);
-        assert_eq!(br#""#, &reference_js_content[..]);
-        std::fs::remove_dir_all(&test_case).unwrap();
-        std::fs::remove_file(&reference_js).unwrap();
+        let book_js_content =
+            std::fs::read_to_string(temp_dir.path().join("book-e3b0c442.js")).unwrap();
+        assert_eq!("", book_js_content);
     }
 }
