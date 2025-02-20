@@ -1,6 +1,7 @@
 //! Support for writing static files.
 
 use log::{debug, warn};
+use once_cell::sync::Lazy;
 
 use crate::config::HtmlConfig;
 use crate::errors::*;
@@ -231,27 +232,32 @@ impl StaticFiles {
         use std::io::Read;
         // The `{{ resource "name" }}` directive in static resources look like
         // handlebars syntax, even if they technically aren't.
-        let resource = Regex::new(r#"\{\{ resource "([^"]+)" \}\}"#).unwrap();
-        for static_file in self.static_files {
+        static RESOURCE: Lazy<Regex> =
+            Lazy::new(|| Regex::new(r#"\{\{ resource "([^"]+)" \}\}"#).unwrap());
+        fn replace_all<'a>(
+            hash_map: &HashMap<String, String>,
+            data: &'a [u8],
+            filename: &str,
+        ) -> Cow<'a, [u8]> {
+            RESOURCE.replace_all(data, move |captures: &Captures<'_>| {
+                let name = captures
+                    .get(1)
+                    .expect("capture 1 in resource regex")
+                    .as_bytes();
+                let name = std::str::from_utf8(name).expect("resource name with invalid utf8");
+                let resource_filename = hash_map.get(name).map(|s| &s[..]).unwrap_or(&name);
+                let path_to_root = utils::fs::path_to_root(&filename);
+                format!("{}{}", path_to_root, resource_filename)
+                    .as_bytes()
+                    .to_owned()
+            })
+        }
+        for static_file in &self.static_files {
             match static_file {
                 StaticFile::Builtin { filename, data } => {
                     debug!("Writing builtin -> {}", filename);
-                    let hash_map = &self.hash_map;
                     let data = if filename.ends_with(".css") || filename.ends_with(".js") {
-                        resource.replace_all(&data, |captures: &Captures<'_>| {
-                            let name = captures
-                                .get(1)
-                                .expect("capture 1 in resource regex")
-                                .as_bytes();
-                            let name =
-                                std::str::from_utf8(name).expect("resource name with invalid utf8");
-                            let resource_filename =
-                                hash_map.get(name).map(|s| &s[..]).unwrap_or(&name);
-                            let path_to_root = utils::fs::path_to_root(&filename);
-                            format!("{}{}", path_to_root, resource_filename)
-                                .as_bytes()
-                                .to_owned()
-                        })
+                        replace_all(&self.hash_map, data, filename)
                     } else {
                         Cow::Borrowed(&data[..])
                     };
@@ -272,25 +278,11 @@ impl StaticFiles {
                             .with_context(|| format!("Unable to create {}", parent.display()))?;
                     }
                     if filename.ends_with(".css") || filename.ends_with(".js") {
-                        let hash_map = &self.hash_map;
                         let mut file = File::open(input_location)?;
                         let mut data = Vec::new();
                         file.read_to_end(&mut data)?;
-                        let data = resource.replace_all(&data, |captures: &Captures<'_>| {
-                            let name = captures
-                                .get(1)
-                                .expect("capture 1 in resource regex")
-                                .as_bytes();
-                            let name =
-                                std::str::from_utf8(name).expect("resource name with invalid utf8");
-                            let resource_filename =
-                                hash_map.get(name).map(|s| &s[..]).unwrap_or(&name);
-                            let path_to_root = utils::fs::path_to_root(&filename);
-                            format!("{}{}", path_to_root, resource_filename)
-                                .as_bytes()
-                                .to_owned()
-                        });
-                        write_file(destination, &filename, &data)?;
+                        let data = replace_all(&self.hash_map, &data, filename);
+                        write_file(destination, filename, &data)?;
                     } else {
                         fs::copy(&input_location, &output_location).with_context(|| {
                             format!(
