@@ -64,7 +64,6 @@ pub fn create_files(
     }
 
     if search_config.copy_js {
-        static_files.add_builtin("searchindex.json", index.as_bytes());
         static_files.add_builtin(
             "searchindex.js",
             format!("Object.assign(window.search, {});", index).as_bytes(),

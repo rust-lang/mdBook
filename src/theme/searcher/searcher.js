@@ -363,7 +363,7 @@ window.search = window.search || {};
             }
         }
     }
-    
+
     function showSearch(yes) {
         if (yes) {
             search_wrap.classList.remove('hidden');
@@ -441,7 +441,6 @@ window.search = window.search || {};
     }
     
     function doSearch(searchterm) {
-
         // Don't search the same twice
         if (current_searchterm == searchterm) { return; }
         else { current_searchterm = searchterm; }
@@ -468,15 +467,18 @@ window.search = window.search || {};
         showResults(true);
     }
 
-    fetch(path_to_root + '{{ resource "searchindex.json" }}')
-        .then(response => response.json())
-        .then(json => init(json))        
-        .catch(error => { // Try to load searchindex.js if fetch failed
-            var script = document.createElement('script');
-            script.src = path_to_root + '{{ resource "searchindex.js" }}';
-            script.onload = () => init(window.search);
-            document.head.appendChild(script);
-        });
+    function loadScript(url, id) {
+        const script = document.createElement('script');
+        script.src = url;
+        script.id = id;
+        script.onload = () => init(window.search);
+        script.onerror = error => {
+            console.error(`Failed to load \`${url}\`: ${error}`);    
+        };
+        document.head.append(script);
+    }
+
+    loadScript(path_to_root + '{{ resource "searchindex.js" }}', 'search-index');
 
     // Exported functions
     search.hasFocus = hasFocus;
