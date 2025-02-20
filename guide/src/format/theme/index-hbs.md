@@ -99,3 +99,13 @@ Of course the inner html can be changed to your liking.
 
 *If you would like other properties or helpers exposed, please [create a new
 issue](https://github.com/rust-lang/mdBook/issues)*
+
+### 3. resource
+
+The path to a static file.
+It implicitly includes `path_to_root`,
+and accounts for files that are renamed with a hash in their filename.
+
+```handlebars
+<link rel="stylesheet" href="{{ resource "css/chrome.css" }}">
+```

@@ -9,6 +9,7 @@ use pulldown_cmark::*;
 use crate::book::{Book, BookItem, Chapter};
 use crate::config::{Search, SearchChapterSettings};
 use crate::errors::*;
+use crate::renderer::html_handlebars::StaticFiles;
 use crate::theme::searcher;
 use crate::utils;
 use log::{debug, warn};
@@ -26,7 +27,11 @@ fn tokenize(text: &str) -> Vec<String> {
 }
 
 /// Creates all files required for search.
-pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> Result<()> {
+pub fn create_files(
+    search_config: &Search,
+    static_files: &mut StaticFiles,
+    book: &Book,
+) -> Result<()> {
     let mut index = IndexBuilder::new()
         .add_field_with_tokenizer("title", Box::new(&tokenize))
         .add_field_with_tokenizer("body", Box::new(&tokenize))
@@ -59,15 +64,14 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
     }
 
     if search_config.copy_js {
-        utils::fs::write_file(destination, "searchindex.json", index.as_bytes())?;
-        utils::fs::write_file(
-            destination,
+        static_files.add_builtin("searchindex.json", index.as_bytes());
+        static_files.add_builtin(
             "searchindex.js",
-            format!("Object.assign(window.search, {index});").as_bytes(),
-        )?;
-        utils::fs::write_file(destination, "searcher.js", searcher::JS)?;
-        utils::fs::write_file(destination, "mark.min.js", searcher::MARK_JS)?;
-        utils::fs::write_file(destination, "elasticlunr.min.js", searcher::ELASTICLUNR_JS)?;
+            format!("Object.assign(window.search, {});", index).as_bytes(),
+        );
+        static_files.add_builtin("searcher.js", searcher::JS);
+        static_files.add_builtin("mark.min.js", searcher::MARK_JS);
+        static_files.add_builtin("elasticlunr.min.js", searcher::ELASTICLUNR_JS);
         debug!("Copying search files ✓");
     }
 

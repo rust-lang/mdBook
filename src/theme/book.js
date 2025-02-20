@@ -294,9 +294,9 @@ function playground_text(playground, hidden = true) {
         themeIds.push(el.id);
     });
     var stylesheets = {
-        ayuHighlight: document.querySelector("[href$='ayu-highlight.css']"),
-        tomorrowNight: document.querySelector("[href$='tomorrow-night.css']"),
-        highlight: document.querySelector("[href$='highlight.css']"),
+        ayuHighlight: document.querySelector("#ayu-highlight-css"),
+        tomorrowNight: document.querySelector("#tomorrow-night-css"),
+        highlight: document.querySelector("#highlight-css"),
     };
 
     function showThemes() {
