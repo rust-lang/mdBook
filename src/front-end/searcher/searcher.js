@@ -262,6 +262,17 @@ window.search = window.search || {};
         doc_urls = config.doc_urls;
         searchindex = elasticlunr.Index.load(config.index);
 
+        searchbar.removeAttribute("disabled");
+        searchbar.focus();
+
+        const searchterm = searchbar.value.trim();
+        if (searchterm !== "") {
+            searchbar.classList.add("active");
+            doSearch(searchterm);
+        }
+    }
+
+    function initSearchInteractions(config) {
         // Set up events
         searchicon.addEventListener('click', () => {
             searchIconClickHandler();
@@ -287,6 +298,8 @@ window.search = window.search || {};
         // Exported functions
         config.hasFocus = hasFocus;
     }
+
+    initSearchInteractions(window.search);
 
     function unfocusSearchbar() {
         // hacky, but just focusing a div only works once
@@ -401,8 +414,23 @@ window.search = window.search || {};
         }
     }
 
+    function loadScript(url, id) {
+        if (document.getElementById(id)) {
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = url;
+        script.id = id;
+        script.onload = () => init(window.search);
+        script.onerror = error => {
+            console.error(`Failed to load \`${url}\`: ${error}`);
+        };
+        document.head.append(script);
+    }
+
     function showSearch(yes) {
         if (yes) {
+            loadScript(path_to_root + '{{ resource "searchindex.js" }}', 'search-index');
             search_wrap.classList.remove('hidden');
             searchicon.setAttribute('aria-expanded', 'true');
         } else {
@@ -483,15 +511,14 @@ window.search = window.search || {};
 
     function doSearch(searchterm) {
         // Don't search the same twice
-        if (current_searchterm === searchterm) {
+        if (current_searchterm == searchterm) {
             return;
-        } else {
-            current_searchterm = searchterm;
+        }
+        if (searchindex == null) {
+            return;
         }
 
-        if (searchindex === null) {
-            return;
-        }
+        current_searchterm = searchterm;
 
         // Do the actual search
         const results = searchindex.search(searchterm, search_options);
@@ -513,17 +540,6 @@ window.search = window.search || {};
         showResults(true);
     }
 
-    function loadScript(url, id) {
-        const script = document.createElement('script');
-        script.src = url;
-        script.id = id;
-        script.onload = () => init(window.search);
-        script.onerror = error => {
-            console.error(`Failed to load \`${url}\`: ${error}`);
-        };
-        document.head.append(script);
-    }
-
-    loadScript(path_to_root + '{{ resource "searchindex.js" }}', 'search-index');
-
+    // Exported functions
+    search.hasFocus = hasFocus;
 })(window.search);
