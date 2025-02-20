@@ -9,6 +9,7 @@ edition = "2018"
 
 [output.html]
 mathjax-support = true
+hash-files = true
 
 [output.html.playground]
 editable = true

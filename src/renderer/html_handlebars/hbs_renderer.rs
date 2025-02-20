@@ -392,16 +392,11 @@ impl Renderer for HtmlHandlebars {
             }
         }
 
-        debug!("Render toc");
+        debug!("Render toc js");
         {
             let rendered_toc = handlebars.render("toc_js", &data)?;
             static_files.add_builtin("toc.js", rendered_toc.as_bytes());
             debug!("Creating toc.js ✓");
-            data.insert("is_toc_html".to_owned(), json!(true));
-            let rendered_toc = handlebars.render("toc_html", &data)?;
-            static_files.add_builtin("toc.html", rendered_toc.as_bytes());
-            debug!("Creating toc.html ✓");
-            data.remove("is_toc_html");
         }
 
         if html_config.hash_files {
@@ -414,6 +409,17 @@ impl Renderer for HtmlHandlebars {
             .with_context(|| "Unable to copy across static files")?;
 
         handlebars.register_helper("resource", Box::new(resource_helper));
+
+        debug!("Render toc html");
+        {
+            data.insert("is_toc_html".to_owned(), json!(true));
+            data.insert("path".to_owned(), json!("toc.html"));
+            let rendered_toc = handlebars.render("toc_html", &data)?;
+            utils::fs::write_file(destination, "toc.html", rendered_toc.as_bytes())?;
+            debug!("Creating toc.html ✓");
+            data.remove("path");
+            data.remove("is_toc_html");
+        }
 
         utils::fs::write_file(
             destination,
