@@ -1,3 +1,5 @@
+//! Support for writing static files.
+
 use log::{debug, warn};
 
 use crate::config::HtmlConfig;
@@ -18,7 +20,7 @@ use std::path::{Path, PathBuf};
 /// It also writes files to their final destination, when `write_files` is called,
 /// and interprets the `{{ resource }}` directives to allow assets to name each other.
 ///
-/// [fingerprinting]: https://guides.rubyonrails.org/asset_pipeline.html#what-is-fingerprinting-and-why-should-i-care-questionmark
+/// [fingerprinting]: https://guides.rubyonrails.org/asset_pipeline.html#fingerprinting-versioning-with-digest-based-urls
 pub struct StaticFiles {
     static_files: Vec<StaticFile>,
     hash_map: HashMap<String, String>,
@@ -154,12 +156,16 @@ impl StaticFiles {
 
         Ok(this)
     }
+
     pub fn add_builtin(&mut self, filename: &str, data: &[u8]) {
         self.static_files.push(StaticFile::Builtin {
             filename: filename.to_owned(),
             data: data.to_owned(),
         });
     }
+
+    /// Updates this [`StaticFiles`] to hash the contents for determining the
+    /// filename for each resource.
     pub fn hash_files(&mut self) -> Result<()> {
         use sha2::{Digest, Sha256};
         use std::io::Read;
@@ -218,6 +224,7 @@ impl StaticFiles {
         }
         Ok(())
     }
+
     pub fn write_files(self, destination: &Path) -> Result<ResourceHelper> {
         use crate::utils::fs::write_file;
         use regex::bytes::{Captures, Regex};
