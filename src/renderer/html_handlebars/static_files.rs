@@ -54,10 +54,10 @@ impl StaticFiles {
         }
         this.add_builtin("css/variables.css", &theme.variables_css);
         if let Some(contents) = &theme.favicon_png {
-            this.add_builtin("favicon.png", &contents);
+            this.add_builtin("favicon.png", contents);
         }
         if let Some(contents) = &theme.favicon_svg {
-            this.add_builtin("favicon.svg", &contents);
+            this.add_builtin("favicon.svg", contents);
         }
         this.add_builtin("highlight.css", &theme.highlight_css);
         this.add_builtin("tomorrow-night.css", &theme.tomorrow_night_css);
@@ -131,8 +131,8 @@ impl StaticFiles {
             .iter()
             .chain(html_config.additional_js.iter());
 
-        for custom_file in custom_files.cloned() {
-            let input_location = root.join(&custom_file);
+        for custom_file in custom_files {
+            let input_location = root.join(custom_file);
 
             this.static_files.push(StaticFile::Additional {
                 input_location,
@@ -245,8 +245,8 @@ impl StaticFiles {
                     .expect("capture 1 in resource regex")
                     .as_bytes();
                 let name = std::str::from_utf8(name).expect("resource name with invalid utf8");
-                let resource_filename = hash_map.get(name).map(|s| &s[..]).unwrap_or(&name);
-                let path_to_root = utils::fs::path_to_root(&filename);
+                let resource_filename = hash_map.get(name).map(|s| &s[..]).unwrap_or(name);
+                let path_to_root = utils::fs::path_to_root(filename);
                 format!("{}{}", path_to_root, resource_filename)
                     .as_bytes()
                     .to_owned()
@@ -261,7 +261,7 @@ impl StaticFiles {
                     } else {
                         Cow::Borrowed(&data[..])
                     };
-                    write_file(destination, &filename, &data)?;
+                    write_file(destination, filename, &data)?;
                 }
                 StaticFile::Additional {
                     ref input_location,
@@ -284,7 +284,7 @@ impl StaticFiles {
                         let data = replace_all(&self.hash_map, &data, filename);
                         write_file(destination, filename, &data)?;
                     } else {
-                        fs::copy(&input_location, &output_location).with_context(|| {
+                        fs::copy(input_location, &output_location).with_context(|| {
                             format!(
                                 "Unable to copy {} to {}",
                                 input_location.display(),
