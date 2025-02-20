@@ -229,7 +229,6 @@ impl StaticFiles {
     pub fn write_files(self, destination: &Path) -> Result<ResourceHelper> {
         use crate::utils::fs::write_file;
         use regex::bytes::{Captures, Regex};
-        use std::io::Read;
         // The `{{ resource "name" }}` directive in static resources look like
         // handlebars syntax, even if they technically aren't.
         static RESOURCE: Lazy<Regex> =
@@ -278,9 +277,7 @@ impl StaticFiles {
                             .with_context(|| format!("Unable to create {}", parent.display()))?;
                     }
                     if filename.ends_with(".css") || filename.ends_with(".js") {
-                        let mut file = File::open(input_location)?;
-                        let mut data = Vec::new();
-                        file.read_to_end(&mut data)?;
+                        let data = fs::read(input_location)?;
                         let data = replace_all(&self.hash_map, &data, filename);
                         write_file(destination, filename, &data)?;
                     } else {
