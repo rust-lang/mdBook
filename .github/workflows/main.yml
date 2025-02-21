@@ -3,9 +3,6 @@ on:
   pull_request:
   merge_group:
 
-env:
-  BROWSER_UI_TEST_VERSION: '0.19.0'
-
 jobs:
   test:
     runs-on: ${{ matrix.os }}
@@ -85,7 +82,9 @@ jobs:
         with:
           node-version: 20
       - name: Install browser-ui-test
-        run: npm install browser-ui-test@"${BROWSER_UI_TEST_VERSION}"
+        run: npm install
+      - name: Run eslint
+        run: npm run lint
       - name: Build and run tests (+ GUI)
         run: cargo test --locked --target x86_64-unknown-linux-gnu --test gui
 
