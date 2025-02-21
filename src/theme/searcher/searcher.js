@@ -255,7 +255,6 @@ window.search = window.search || {};
     function init(config) {
         results_options = config.results_options;
         search_options = config.search_options;
-        searchbar_outer = config.searchbar_outer;
         doc_urls = config.doc_urls;
         searchindex = elasticlunr.Index.load(config.index);
 
@@ -471,6 +470,7 @@ window.search = window.search || {};
     function doSearch(searchterm) {
         // Don't search the same twice
         if (current_searchterm == searchterm) { return; }
+        searchbar_outer.classList.add("searching");
         if (searchindex == null) { return; }
 
         current_searchterm = searchterm;
@@ -493,6 +493,7 @@ window.search = window.search || {};
 
         // Display results
         showResults(true);
+        searchbar_outer.classList.remove("searching");
     }
 
     // Exported functions
