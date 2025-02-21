@@ -22,6 +22,7 @@ window.search = window.search || {};
     }
 
     const search_wrap = document.getElementById('search-wrapper'),
+        searchbar_outer = document.getElementById('searchbar-outer'),
         searchbar = document.getElementById('searchbar'),
         searchresults = document.getElementById('searchresults'),
         searchresults_outer = document.getElementById('searchresults-outer'),
@@ -262,12 +263,13 @@ window.search = window.search || {};
         doc_urls = config.doc_urls;
         searchindex = elasticlunr.Index.load(config.index);
 
-        searchbar.removeAttribute("disabled");
+        searchbar_outer.classList.remove('searching');
+
         searchbar.focus();
 
         const searchterm = searchbar.value.trim();
-        if (searchterm !== "") {
-            searchbar.classList.add("active");
+        if (searchterm !== '') {
+            searchbar.classList.add('active');
             doSearch(searchterm);
         }
     }
@@ -414,10 +416,12 @@ window.search = window.search || {};
         }
     }
 
-    function loadScript(url, id) {
+    function loadSearchScript(url, id) {
         if (document.getElementById(id)) {
             return;
         }
+        searchbar_outer.classList.add('searching');
+
         const script = document.createElement('script');
         script.src = url;
         script.id = id;
@@ -430,7 +434,7 @@ window.search = window.search || {};
 
     function showSearch(yes) {
         if (yes) {
-            loadScript(path_to_root + '{{ resource "searchindex.js" }}', 'search-index');
+            loadSearchScript(path_to_root + '{{ resource "searchindex.js" }}', 'search-index');
             search_wrap.classList.remove('hidden');
             searchicon.setAttribute('aria-expanded', 'true');
         } else {
@@ -511,10 +515,11 @@ window.search = window.search || {};
 
     function doSearch(searchterm) {
         // Don't search the same twice
-        if (current_searchterm == searchterm) {
+        if (current_searchterm === searchterm) {
             return;
         }
-        if (searchindex == null) {
+        searchbar_outer.classList.add('searching');
+        if (searchindex === null) {
             return;
         }
 
@@ -538,6 +543,7 @@ window.search = window.search || {};
 
         // Display results
         showResults(true);
+        searchbar_outer.classList.remove('searching');
     }
 
     // Exported functions

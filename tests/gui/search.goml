@@ -32,16 +32,13 @@ wait-for-text: ("#searchresults-header", "2 search results for 'strikethrough':"
 // Now we test search shortcuts and more page changes.
 go-to: |DOC_PATH| + "index.html"
 
-// First we ensure that the search input is disabled and hidden.
-assert: "#searchbar:disabled"
 // This check is to ensure that the search bar is inside the search wrapper.
 assert: "#search-wrapper #searchbar"
 assert-css: ("#search-wrapper", {"display": "none"})
 
 // Now we make the search input appear with the `S` shortcut.
 press-key: 'S'
-wait-for: "#searchbar:not(:disabled)"
-assert-css: ("#search-wrapper", {"display": "block"})
+wait-for-css: ("#search-wrapper", {"display": "block"})
 // We ensure the search bar has the focus.
 assert: "#searchbar:focus"
 
