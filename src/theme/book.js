@@ -111,11 +111,11 @@ function playground_text(playground, hidden = true) {
         let text = playground_text(code_block);
         let classes = code_block.querySelector('code').classList;
         let edition = "2015";
-        if(classes.contains("edition2018")) {
-            edition = "2018";
-        } else if(classes.contains("edition2021")) {
-            edition = "2021";
-        }
+        classes.forEach(className => {
+            if (className.startsWith("edition")) {
+                edition = className.slice(7);
+            }
+        });
         var params = {
             version: "stable",
             optimize: "0",
