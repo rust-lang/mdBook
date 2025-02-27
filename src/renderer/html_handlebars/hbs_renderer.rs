@@ -566,6 +566,18 @@ fn make_data(
         data.insert("additional_css".to_owned(), json!(css));
     }
 
+    // Add check to see if there are additional themes
+    if !html_config.additional_theme.is_empty() {
+        let mut theme = Vec::new();
+        for name in &html_config.additional_theme {
+            match name.strip_prefix(root) {
+                Ok(p) => theme.push(p.to_str().expect("Could not convert to str")),
+                Err(_) => theme.push(name.to_str().expect("Could not convert to str")),
+            }
+        }
+        data.insert("additional_theme".to_owned(), json!(theme));
+    }
+
     // Add check to see if there is an additional script
     if !html_config.additional_js.is_empty() {
         let mut js = Vec::new();

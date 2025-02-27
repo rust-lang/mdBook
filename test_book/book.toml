@@ -10,6 +10,8 @@ edition = "2018"
 [output.html]
 mathjax-support = true
 hash-files = true
+additional-css = ["orange.css"]
+additional-theme = ["Orange"]
 
 [output.html.playground]
 editable = true
