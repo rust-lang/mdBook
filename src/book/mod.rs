@@ -25,7 +25,8 @@ use topological_sort::TopologicalSort;
 
 use crate::errors::*;
 use crate::preprocess::{
-    CmdPreprocessor, IndexPreprocessor, LinkPreprocessor, Preprocessor, PreprocessorContext,
+    CmdPreprocessor, DrinkPreprocessor, IndexPreprocessor, LinkPreprocessor, Preprocessor,
+    PreprocessorContext,
 };
 use crate::renderer::{CmdRenderer, HtmlHandlebars, MarkdownRenderer, RenderContext, Renderer};
 use crate::utils;
@@ -454,7 +455,7 @@ fn determine_renderers(config: &Config) -> Vec<Box<dyn Renderer>> {
     renderers
 }
 
-const DEFAULT_PREPROCESSORS: &[&str] = &["links", "index"];
+const DEFAULT_PREPROCESSORS: &[&str] = &["drinks", "links", "index"];
 
 fn is_default_preprocessor(pre: &dyn Preprocessor) -> bool {
     let name = pre.name();
@@ -549,6 +550,7 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<dyn Preprocessor>>
         names.sort();
         for name in names {
             let preprocessor: Box<dyn Preprocessor> = match name.as_str() {
+                "drinks" => Box::new(DrinkPreprocessor::new()),
                 "links" => Box::new(LinkPreprocessor::new()),
                 "index" => Box::new(IndexPreprocessor::new()),
                 _ => {
@@ -676,9 +678,10 @@ mod tests {
         let got = determine_preprocessors(&cfg);
 
         assert!(got.is_ok());
-        assert_eq!(got.as_ref().unwrap().len(), 2);
-        assert_eq!(got.as_ref().unwrap()[0].name(), "index");
-        assert_eq!(got.as_ref().unwrap()[1].name(), "links");
+        assert_eq!(got.as_ref().unwrap().len(), 3);
+        assert_eq!(got.as_ref().unwrap()[0].name(), "drinks");
+        assert_eq!(got.as_ref().unwrap()[1].name(), "index");
+        assert_eq!(got.as_ref().unwrap()[2].name(), "links");
     }
 
     #[test]
