@@ -75,10 +75,10 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
 /// [`iter()`]: #method.iter
 /// [`for_each_mut()`]: #method.for_each_mut
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct Book {
     /// The sections in this book.
     pub sections: Vec<BookItem>,
-    __non_exhaustive: (),
 }
 
 impl Book {
@@ -150,6 +150,7 @@ impl From<Chapter> for BookItem {
 /// The representation of a "chapter", usually mapping to a single file on
 /// disk however it may contain multiple sub-chapters.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct Chapter {
     /// The chapter's name.
     pub name: String,
@@ -239,10 +240,7 @@ pub(crate) fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P)
         chapters.push(chapter);
     }
 
-    Ok(Book {
-        sections: chapters,
-        __non_exhaustive: (),
-    })
+    Ok(Book { sections: chapters })
 }
 
 fn load_summary_item<P: AsRef<Path> + Clone>(
