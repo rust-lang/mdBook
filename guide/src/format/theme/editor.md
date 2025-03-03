@@ -9,8 +9,8 @@ be added to the ***book.toml***:
 editable = true
 ```
 
-To make a specific block available for editing, the attribute `editable` needs
-to be added to it:
+After enabling editable code blocks, the `editable` attribute must be added to a
+code block to make it editable:
 
 ~~~markdown
 ```rust,editable
