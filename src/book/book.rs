@@ -442,6 +442,8 @@ And here is some \
 
         let got = load_chapter(&link, "", Vec::new());
         assert!(got.is_err());
+        let error_message = got.err().unwrap().to_string();
+        assert_eq!(error_message, "Chapter file not found, /foo/bar/baz.md");
     }
 
     #[test]
@@ -627,6 +629,12 @@ And here is some \
 
         let got = load_book_from_disk(&summary, temp.path());
         assert!(got.is_err());
+        let error_message = got.err().unwrap().to_string();
+        let expected = format!(
+            r#"Unable to read "Empty" ({}/)"#,
+            temp.path().to_str().unwrap()
+        );
+        assert_eq!(error_message, expected);
     }
 
     #[test]
@@ -646,5 +654,11 @@ And here is some \
 
         let got = load_book_from_disk(&summary, temp.path());
         assert!(got.is_err());
+        let error_message = got.err().unwrap().to_string();
+        let expected = format!(
+            r#"Unable to read "nested" ({}/nested)"#,
+            temp.path().to_str().unwrap()
+        );
+        assert_eq!(error_message, expected);
     }
 }
