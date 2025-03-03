@@ -750,6 +750,18 @@ mod tests {
     }
 
     #[test]
+    fn expected_a_start_of_a_link() {
+        let src = "- Title\n";
+        let mut parser = SummaryParser::new(src);
+
+        let got = parser.parse_affix(false);
+
+        assert!(got.is_err());
+        let error_message = got.err().unwrap().to_string();
+        assert_eq!(error_message, "failed to parse SUMMARY.md line 1, column 0: Suffix chapters cannot be followed by a list");
+    }
+
+    #[test]
     fn parse_a_link() {
         let src = "[First](./first.md)";
         let should_be = Link {
