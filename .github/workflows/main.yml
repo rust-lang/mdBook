@@ -73,6 +73,15 @@ jobs:
       run: rustup update stable && rustup default stable && rustup component add rustfmt
     - run: cargo fmt --check
 
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install Rust
+      run: rustup update stable && rustup default stable
+    - run: cargo clippy -- -D warnings
+
   gui:
     name: GUI tests
     runs-on: ubuntu-latest
