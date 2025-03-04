@@ -327,7 +327,7 @@ fn clean_html(html: &str) -> String {
 }
 
 fn settings_path(ch: &Chapter) -> Option<&Path> {
-    ch.source_path.as_deref().or_else(|| ch.path.as_deref())
+    ch.source_path.as_deref().or(ch.path.as_deref())
 }
 
 fn validate_chapter_config(

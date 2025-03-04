@@ -201,7 +201,7 @@ impl From<RangeFull> for LineRange {
     }
 }
 
-impl<'a> LinkType<'a> {
+impl LinkType<'_> {
     fn relative_path<P: AsRef<Path>>(self, base: P) -> Option<PathBuf> {
         let base = base.as_ref();
         match self {

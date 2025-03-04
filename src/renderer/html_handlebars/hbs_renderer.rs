@@ -388,7 +388,7 @@ impl Renderer for HtmlHandlebars {
             let default = crate::config::Search::default();
             let search = html_config.search.as_ref().unwrap_or(&default);
             if search.enable {
-                super::search::create_files(&search, &mut static_files, &book)?;
+                super::search::create_files(search, &mut static_files, book)?;
             }
         }
 
@@ -405,7 +405,7 @@ impl Renderer for HtmlHandlebars {
 
         debug!("Copy static files");
         let resource_helper = static_files
-            .write_files(&destination)
+            .write_files(destination)
             .with_context(|| "Unable to copy across static files")?;
 
         handlebars.register_helper("resource", Box::new(resource_helper));
