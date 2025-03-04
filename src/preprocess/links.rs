@@ -19,9 +19,9 @@ const MAX_LINK_NESTED_DEPTH: usize = 10;
 /// A preprocessor for expanding helpers in a chapter. Supported helpers are:
 ///
 /// - `{{# include}}` - Insert an external file of any type. Include the whole file, only particular
-///.  lines, or only between the specified anchors.
+///   lines, or only between the specified anchors.
 /// - `{{# rustdoc_include}}` - Insert an external Rust file, showing the particular lines
-///.  specified or the lines between specified anchors, and include the rest of the file behind `#`.
+///   specified or the lines between specified anchors, and include the rest of the file behind `#`.
 ///   This hides the lines from initial display but shows them when the reader expands the code
 ///   block and provides them to Rustdoc for testing.
 /// - `{{# playground}}` - Insert runnable Rust files
