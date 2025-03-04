@@ -166,7 +166,7 @@ impl Watcher {
                             // `.` entries, which can cause issues with
                             // diff_paths.
                             let path = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
-                            let relative_path = diff_paths(&path, &ignore_path)
+                            let relative_path = diff_paths(&path, ignore_path)
                                 .expect("One of the paths should be an absolute");
                             if ignore
                                 .matched_path_or_any_parents(&relative_path, relative_path.is_dir())

@@ -74,7 +74,7 @@ impl Clean {
                 }
                 files = take(&mut children);
             }
-            fs::remove_dir_all(&dir).with_context(|| "Unable to remove the build directory")?;
+            fs::remove_dir_all(dir).with_context(|| "Unable to remove the build directory")?;
         }
 
         Ok(Clean {
