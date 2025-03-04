@@ -200,7 +200,7 @@ impl StaticFiles {
                     let mut parts = filename.splitn(2, '.');
                     let parts = parts.next().and_then(|p| Some((p, parts.next()?)));
                     if let Some((name, suffix)) = parts {
-                        if name != "" && suffix != "" {
+                        if !name.is_empty() && !suffix.is_empty() {
                             let mut digest = Sha256::new();
                             let mut input_file = File::open(input_location)
                                 .with_context(|| "open static file for hashing")?;
