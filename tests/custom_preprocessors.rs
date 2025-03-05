@@ -43,6 +43,11 @@ fn ask_the_preprocessor_to_blow_up() {
     let got = md.build();
 
     assert!(got.is_err());
+    let error_message = got.err().unwrap().to_string();
+    assert_eq!(
+        error_message,
+        r#"The "nop-preprocessor" preprocessor exited unsuccessfully with exit status: 1 status"#
+    );
 }
 
 #[test]
