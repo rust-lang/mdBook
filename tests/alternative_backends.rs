@@ -23,7 +23,10 @@ fn failing_alternate_backend() {
 #[test]
 fn missing_backends_are_fatal() {
     let (md, _temp) = dummy_book_with_backend("missing", "trduyvbhijnorgevfuhn", false);
-    assert!(md.build().is_err());
+    let got = md.build();
+    assert!(got.is_err());
+    let error_message = got.err().unwrap().to_string();
+    assert_eq!(error_message, "Rendering failed");
 }
 
 #[test]
