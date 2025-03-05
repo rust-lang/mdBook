@@ -4,9 +4,9 @@ Renderers (also called "backends") are responsible for creating the output of th
 
 The following backends are built-in:
 
-* [`html`](#html-renderer-options) — This renders the book to HTML.
+* [`html`](#html-renderer-options) --- This renders the book to HTML.
   This is enabled by default if no other `[output]` tables are defined in `book.toml`.
-* [`markdown`](#markdown-renderer) — This outputs the book as markdown after running the preprocessors.
+* [`markdown`](#markdown-renderer) --- This outputs the book as markdown after running the preprocessors.
   This is useful for debugging preprocessors.
 
 The community has developed several backends.
@@ -97,7 +97,7 @@ description = "The example book covers examples."
 theme = "my-theme"
 default-theme = "light"
 preferred-dark-theme = "navy"
-curly-quotes = true
+smart-punctuation = true
 mathjax-support = false
 asciimath-support = false
 copy-fonts = true
@@ -121,10 +121,12 @@ The following configuration options are available:
   'Change Theme' dropdown. Defaults to `light`.
 - **preferred-dark-theme:** The default dark theme. This theme will be used if
   the browser requests the dark version of the site via the
-  ['prefers-color-scheme'](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)
+  [`prefers-color-scheme`](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)
   CSS media query. Defaults to `navy`.
-- **curly-quotes:** Convert straight quotes to curly quotes, except for those
-  that occur in code blocks and code spans. Defaults to `false`.
+- **smart-punctuation:** Converts quotes to curly quotes, `...` to `…`, `--` to en-dash, and `---` to em-dash.
+  See [Smart Punctuation](../markdown.md#smart-punctuation).
+  Defaults to `false`.
+- **curly-quotes:** Deprecated alias for `smart-punctuation`.
 - **mathjax-support:** Adds support for [MathJax](../mathjax.md). Defaults to
   `false`.
 - **asciimath-support:** Enables AsciiMath for [MathJax](../mathjax.md) if enabled, otherwise has no effect. Defaults to
@@ -153,9 +155,9 @@ The following configuration options are available:
 - **edit-url-template:** Edit url template, when provided shows a
   "Suggest an edit" button (which looks like <i class="fa fa-edit"></i>) for directly jumping to editing the currently
   viewed page. For e.g. GitHub projects set this to
-  `https://github.com/<owner>/<repo>/edit/master/{path}` or for
+  `https://github.com/<owner>/<repo>/edit/<branch>/{path}` or for
   Bitbucket projects set it to
-  `https://bitbucket.org/<owner>/<repo>/src/master/{path}?mode=edit`
+  `https://bitbucket.org/<owner>/<repo>/src/<branch>/{path}?mode=edit`
   where {path} will be replaced with the full path of the file in the
   repository.
 - **input-404:** The name of the markdown file used for missing files.
@@ -169,6 +171,12 @@ The following configuration options are available:
   This string will be written to a file named CNAME in the root of your site, as
   required by GitHub Pages (see [*Managing a custom domain for your GitHub Pages
   site*][custom domain]).
+- **hash-files:** Include a cryptographic "fingerprint" of the files' contents in static asset filenames,
+  so that if the contents of the file are changed, the name of the file will also change.
+  For example, `css/chrome.css` may become `css/chrome-9b8f428e.css`.
+  Chapter HTML files are not renamed.
+  Static CSS and JS files can reference each other using `{{ resource "filename" }}` directives.
+  Defaults to `false` (in a future release, this may change to `true`).
 
 [custom domain]: https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site
 
@@ -185,7 +193,7 @@ page-break = true # insert page-break after each chapter
 
 - **enable:** Enable print support. When `false`, all print support will not be
   rendered. Defaults to `true`.
-- **page-break** Insert page breaks between chapters. Defaults to `true`.
+- **page-break:** Insert page breaks between chapters. Defaults to `true`.
 
 ### `[output.html.fold]`
 
@@ -221,10 +229,24 @@ runnable = true          # displays a run button for rust code
 - **copyable:** Display the copy button on code snippets. Defaults to `true`.
 - **copy-js:** Copy JavaScript files for the editor to the output directory.
   Defaults to `true`.
-- **line-numbers** Display line numbers on editable sections of code. Requires both `editable` and `copy-js` to be `true`. Defaults to `false`.
-- **runnable** Displays a run button for rust code snippets. Changing this to `false` will disable the run in playground feature globally. Defaults to `true`.
+- **line-numbers:** Display line numbers on editable sections of code. Requires both `editable` and `copy-js` to be `true`. Defaults to `false`.
+- **runnable:** Displays a run button for rust code snippets. Changing this to `false` will disable the run in playground feature globally. Defaults to `true`.
 
 [Ace]: https://ace.c9.io/
+
+### `[output.html.code]`
+
+The `[output.html.code]` table provides options for controlling code blocks.
+
+```toml
+[output.html.code]
+# A prefix string per language (one or more chars).
+# Any line starting with whitespace+prefix is hidden.
+hidelines = { python = "~" }
+```
+
+- **hidelines:** A table that defines how [hidden code lines](../mdbook.md#hiding-code-lines) work for each language.
+  The key is the language and the value is a string that will cause code lines starting with that prefix to be hidden.
 
 ### `[output.html.search]`
 
@@ -267,6 +289,20 @@ copy-js = true           # include Javascript code for search
   level or less. Defaults to `3`. (`### This is a level 3 heading`)
 - **copy-js:** Copy JavaScript files for the search implementation to the output
   directory. Defaults to `true`.
+
+#### `[output.html.search.chapter]`
+
+The [`output.html.search.chapter`] table provides the ability to modify search settings per chapter or directory. Each key is the path to the chapter source file or directory, and the value is a table of settings to apply to that path. This will merge recursively, with more specific paths taking precedence.
+
+```toml
+[output.html.search.chapter]
+# Disables search indexing for all chapters in the `appendix` directory.
+"appendix" = { enable = false }
+# Enables search indexing for just this one appendix chapter.
+"appendix/glossary.md" = { enable = true }
+```
+
+- **enable:** Enables or disables search indexing for the given chapters. Defaults to `true`. This does not override the overall `output.html.search.enable` setting; that must be `true` for any search functionality to be enabled. Be cautious when disabling indexing for chapters because that can potentially lead to user confusion when they search for terms and expect them to be found. This should only be used in exceptional circumstances where keeping the chapter in the index will cause issues with the quality of the search results.
 
 ### `[output.html.redirect]`
 

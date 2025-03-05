@@ -10,7 +10,9 @@ This is a codeblock
 
 ---
 
-This line contains `inline code`
+This line contains `inline code` mixed with some other stuff. (LTR)
+
+ושורה זו מכילה `inline code` אבל עם טקסט בשפה שנכתבת מימין לשמאל. (RTL)
 
 ---
 

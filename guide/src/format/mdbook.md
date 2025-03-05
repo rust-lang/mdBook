@@ -2,11 +2,12 @@
 
 ## Hiding code lines
 
-There is a feature in mdBook that lets you hide code lines by prepending them
-with a `#` [like you would with Rustdoc][rustdoc-hide].
-This currently only works with Rust language code blocks.
+There is a feature in mdBook that lets you hide code lines by prepending them with a specific prefix.
 
-[rustdoc-hide]: https://doc.rust-lang.org/stable/rustdoc/documentation-tests.html#hiding-portions-of-the-example
+For the Rust language, you can prefix lines with `# ` (`#` followed by a space) to hide them [like you would with Rustdoc][rustdoc-hide].
+This prefix can be escaped with `##` to prevent the hiding of a line that should begin with the literal string `# ` (see [Rustdoc's docs][rustdoc-hide] for more details)
+
+[rustdoc-hide]: https://doc.rust-lang.org/stable/rustdoc/write-documentation/documentation-tests.html#hiding-portions-of-the-example
 
 ```bash
 # fn main() {
@@ -28,7 +29,47 @@ Will render as
 # }
 ```
 
-The code block has an eyeball icon (<i class="fa fa-eye"></i>) which will toggle the visibility of the hidden lines.
+When you tap or hover the mouse over the code block, there will be an eyeball icon (<i class="fa fa-eye"></i>) which will toggle the visibility of the hidden lines.
+
+By default, this only works for code examples that are annotated with `rust`.
+However, you can define custom prefixes for other languages by adding a new line-hiding prefix in your `book.toml` with the language name and prefix character(s):
+
+```toml
+[output.html.code.hidelines]
+python = "~"
+```
+
+The prefix will hide any lines that begin with the given prefix. With the python prefix shown above, this:
+
+```bash
+~hidden()
+nothidden():
+~    hidden()
+    ~hidden()
+    nothidden()
+```
+
+will render as
+
+```python
+~hidden()
+nothidden():
+~    hidden()
+    ~hidden()
+    nothidden()
+```
+
+This behavior can be overridden locally with a different prefix. This has the same effect as above:
+
+~~~markdown
+```python,hidelines=!!!
+!!!hidden()
+nothidden():
+!!!    hidden()
+    !!!hidden()
+    nothidden()
+```
+~~~
 
 ## Rust Playground
 
@@ -72,16 +113,16 @@ panic!("oops!");
 These are particularly important when using [`mdbook test`] to test Rust examples.
 These use the same attributes as [rustdoc attributes], with a few additions:
 
-* `editable` — Enables the [editor].
-* `noplayground` — Removes the play button, but will still be tested.
-* `mdbook-runnable` — Forces the play button to be displayed.
+* `editable` --- Enables the [editor].
+* `noplayground` --- Removes the play button, but will still be tested.
+* `mdbook-runnable` --- Forces the play button to be displayed.
   This is intended to be combined with the `ignore` attribute for examples that should not be tested, but you want to allow the reader to run.
-* `ignore` — Will not be tested and no play button is shown, but it is still highlighted as Rust syntax.
-* `should_panic` — When executed, it should produce a panic.
-* `no_run` — The code is compiled when tested, but it is not run.
+* `ignore` --- Will not be tested and no play button is shown, but it is still highlighted as Rust syntax.
+* `should_panic` --- When executed, it should produce a panic.
+* `no_run` --- The code is compiled when tested, but it is not run.
   The play button is also not shown.
-* `compile_fail` — The code should fail to compile.
-* `edition2015`, `edition2018`, `edition2021` — Forces the use of a specific Rust edition.
+* `compile_fail` --- The code should fail to compile.
+* `edition2015`, `edition2018`, `edition2021` --- Forces the use of a specific Rust edition.
   See [`rust.edition`] to set this globally.
 
 [`mdbook test`]: ../cli/test.md
@@ -274,3 +315,51 @@ contents (sidebar) by including a `\{{#title ...}}` near the top of the page.
 ```hbs
 \{{#title My Title}}
 ```
+
+## HTML classes provided by mdBook
+
+<img class="right" src="images/rust-logo-blk.svg" alt="The Rust logo">
+
+### `class="left"` and `"right"`
+
+These classes are provided by default, for inline HTML to float images.
+
+```html
+<img class="right" src="images/rust-logo-blk.svg" alt="The Rust logo">
+```
+
+### `class="hidden"`
+
+HTML tags with class `hidden` will not be shown.
+
+```html
+<div class="hidden">This will not be seen.</div>
+```
+
+<div class="hidden">This will not be seen.</div>
+
+### `class="warning"`
+
+To make a warning or similar note stand out, wrap it in a warning div.
+
+```html
+<div class="warning">
+
+This is a bad thing that you should pay attention to.
+
+Warning blocks should be used sparingly in documentation, to avoid "warning
+fatigue," where people are trained to ignore them because they usually don't
+matter for what they're doing.
+
+</div>
+```
+
+<div class="warning">
+
+This is a bad thing that you should pay attention to.
+
+Warning blocks should be used sparingly in documentation, to avoid "warning
+fatigue," where people are trained to ignore them because they usually don't
+matter for what they're doing.
+
+</div>

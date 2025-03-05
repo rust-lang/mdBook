@@ -1,9 +1,10 @@
 use crate::book::{Book, BookItem};
-use crate::config::{BookConfig, Config, HtmlConfig, Playground, RustEdition};
+use crate::config::{BookConfig, Code, Config, HtmlConfig, Playground, RustEdition};
 use crate::errors::*;
 use crate::renderer::html_handlebars::helpers;
+use crate::renderer::html_handlebars::StaticFiles;
 use crate::renderer::{RenderContext, Renderer};
-use crate::theme::{self, playground_editor, Theme};
+use crate::theme::{self, Theme};
 use crate::utils;
 
 use std::borrow::Cow;
@@ -54,11 +55,13 @@ impl HtmlHandlebars {
                 .insert("git_repository_edit_url".to_owned(), json!(edit_url));
         }
 
-        let content = ch.content.clone();
-        let content = utils::render_markdown(&content, ctx.html_config.curly_quotes);
+        let content = utils::render_markdown(&ch.content, ctx.html_config.smart_punctuation());
 
-        let fixed_content =
-            utils::render_markdown_with_path(&ch.content, ctx.html_config.curly_quotes, Some(path));
+        let fixed_content = utils::render_markdown_with_path(
+            &ch.content,
+            ctx.html_config.smart_punctuation(),
+            Some(path),
+        );
         if !ctx.is_index && ctx.html_config.print.page_break {
             // Add page break between chapters
             // See https://developer.mozilla.org/en-US/docs/Web/CSS/break-before and https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-before
@@ -99,7 +102,7 @@ impl HtmlHandlebars {
         ctx.data.insert("title".to_owned(), json!(title));
         ctx.data.insert(
             "path_to_root".to_owned(),
-            json!(utils::fs::path_to_root(&path)),
+            json!(utils::fs::path_to_root(path)),
         );
         if let Some(ref section) = ch.number {
             ctx.data
@@ -110,7 +113,12 @@ impl HtmlHandlebars {
         debug!("Render template");
         let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
-        let rendered = self.post_process(rendered, &ctx.html_config.playground, ctx.edition);
+        let rendered = self.post_process(
+            rendered,
+            &ctx.html_config.playground,
+            &ctx.html_config.code,
+            ctx.edition,
+        );
 
         // Write to file
         debug!("Creating {}", filepath.display());
@@ -121,8 +129,12 @@ impl HtmlHandlebars {
             ctx.data.insert("path_to_root".to_owned(), json!(""));
             ctx.data.insert("is_index".to_owned(), json!(true));
             let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
-            let rendered_index =
-                self.post_process(rendered_index, &ctx.html_config.playground, ctx.edition);
+            let rendered_index = self.post_process(
+                rendered_index,
+                &ctx.html_config.playground,
+                &ctx.html_config.code,
+                ctx.edition,
+            );
             debug!("Creating index.html from {}", ctx_path);
             utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
         }
@@ -142,13 +154,13 @@ impl HtmlHandlebars {
         let content_404 = if let Some(ref filename) = html_config.input_404 {
             let path = src_dir.join(filename);
             std::fs::read_to_string(&path)
-                .with_context(|| format!("unable to open 404 input file {:?}", path))?
+                .with_context(|| format!("unable to open 404 input file {path:?}"))?
         } else {
             // 404 input not explicitly configured try the default file 404.md
             let default_404_location = src_dir.join("404.md");
             if default_404_location.exists() {
                 std::fs::read_to_string(&default_404_location).with_context(|| {
-                    format!("unable to open 404 input file {:?}", default_404_location)
+                    format!("unable to open 404 input file {default_404_location:?}")
                 })?
             } else {
                 "# Document not found (404)\n\nThis URL is invalid, sorry. Please use the \
@@ -156,7 +168,8 @@ impl HtmlHandlebars {
                     .to_string()
             }
         };
-        let html_content_404 = utils::render_markdown(&content_404, html_config.curly_quotes);
+        let html_content_404 =
+            utils::render_markdown(&content_404, html_config.smart_punctuation());
 
         let mut data_404 = data.clone();
         let base_url = if let Some(site_url) = &html_config.site_url {
@@ -182,160 +195,32 @@ impl HtmlHandlebars {
         data_404.insert("title".to_owned(), json!(title));
         let rendered = handlebars.render("index", &data_404)?;
 
-        let rendered =
-            self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
+        let rendered = self.post_process(
+            rendered,
+            &html_config.playground,
+            &html_config.code,
+            ctx.config.rust.edition,
+        );
         let output_file = get_404_output_file(&html_config.input_404);
         utils::fs::write_file(destination, output_file, rendered.as_bytes())?;
         debug!("Creating 404.html ✓");
         Ok(())
     }
 
-    #[cfg_attr(feature = "cargo-clippy", allow(clippy::let_and_return))]
+    #[allow(clippy::let_and_return)]
     fn post_process(
         &self,
         rendered: String,
         playground_config: &Playground,
+        code_config: &Code,
         edition: Option<RustEdition>,
     ) -> String {
         let rendered = build_header_links(&rendered);
         let rendered = fix_code_blocks(&rendered);
         let rendered = add_playground_pre(&rendered, playground_config, edition);
+        let rendered = hide_lines(&rendered, code_config);
 
         rendered
-    }
-
-    fn copy_static_files(
-        &self,
-        destination: &Path,
-        theme: &Theme,
-        html_config: &HtmlConfig,
-    ) -> Result<()> {
-        use crate::utils::fs::write_file;
-
-        write_file(
-            destination,
-            ".nojekyll",
-            b"This file makes sure that Github Pages doesn't process mdBook's output.\n",
-        )?;
-
-        if let Some(cname) = &html_config.cname {
-            write_file(destination, "CNAME", format!("{}\n", cname).as_bytes())?;
-        }
-
-        write_file(destination, "book.js", &theme.js)?;
-        write_file(destination, "css/general.css", &theme.general_css)?;
-        write_file(destination, "css/chrome.css", &theme.chrome_css)?;
-        if html_config.print.enable {
-            write_file(destination, "css/print.css", &theme.print_css)?;
-        }
-        write_file(destination, "css/variables.css", &theme.variables_css)?;
-        if let Some(contents) = &theme.favicon_png {
-            write_file(destination, "favicon.png", contents)?;
-        }
-        if let Some(contents) = &theme.favicon_svg {
-            write_file(destination, "favicon.svg", contents)?;
-        }
-        write_file(destination, "highlight.css", &theme.highlight_css)?;
-        write_file(destination, "tomorrow-night.css", &theme.tomorrow_night_css)?;
-        write_file(destination, "ayu-highlight.css", &theme.ayu_highlight_css)?;
-        write_file(destination, "highlight.js", &theme.highlight_js)?;
-        write_file(destination, "clipboard.min.js", &theme.clipboard_js)?;
-        write_file(
-            destination,
-            "FontAwesome/css/font-awesome.css",
-            theme::FONT_AWESOME,
-        )?;
-        write_file(
-            destination,
-            "FontAwesome/fonts/fontawesome-webfont.eot",
-            theme::FONT_AWESOME_EOT,
-        )?;
-        write_file(
-            destination,
-            "FontAwesome/fonts/fontawesome-webfont.svg",
-            theme::FONT_AWESOME_SVG,
-        )?;
-        write_file(
-            destination,
-            "FontAwesome/fonts/fontawesome-webfont.ttf",
-            theme::FONT_AWESOME_TTF,
-        )?;
-        write_file(
-            destination,
-            "FontAwesome/fonts/fontawesome-webfont.woff",
-            theme::FONT_AWESOME_WOFF,
-        )?;
-        write_file(
-            destination,
-            "FontAwesome/fonts/fontawesome-webfont.woff2",
-            theme::FONT_AWESOME_WOFF2,
-        )?;
-        write_file(
-            destination,
-            "FontAwesome/fonts/FontAwesome.ttf",
-            theme::FONT_AWESOME_TTF,
-        )?;
-        if html_config.copy_fonts {
-            write_file(destination, "fonts/fonts.css", theme::fonts::CSS)?;
-            for (file_name, contents) in theme::fonts::LICENSES.iter() {
-                write_file(destination, file_name, contents)?;
-            }
-            for (file_name, contents) in theme::fonts::OPEN_SANS.iter() {
-                write_file(destination, file_name, contents)?;
-            }
-            write_file(
-                destination,
-                theme::fonts::SOURCE_CODE_PRO.0,
-                theme::fonts::SOURCE_CODE_PRO.1,
-            )?;
-        }
-        if let Some(fonts_css) = &theme.fonts_css {
-            if !fonts_css.is_empty() {
-                if html_config.copy_fonts {
-                    warn!(
-                        "output.html.copy_fonts is deprecated.\n\
-                        Set copy_fonts=false and ensure the fonts you want are in \
-                        the `theme/fonts/` directory."
-                    );
-                }
-                write_file(destination, "fonts/fonts.css", &fonts_css)?;
-            }
-        }
-        if !html_config.copy_fonts && theme.fonts_css.is_none() {
-            warn!(
-                "output.html.copy_fonts is deprecated.\n\
-                This book appears to have copy_fonts=false without a fonts.css file.\n\
-                Add an empty `theme/fonts/fonts.css` file to squelch this warning."
-            );
-        }
-        for font_file in &theme.font_files {
-            let contents = fs::read(font_file)?;
-            let filename = font_file.file_name().unwrap();
-            let filename = Path::new("fonts").join(filename);
-            write_file(destination, filename, &contents)?;
-        }
-
-        let playground_config = &html_config.playground;
-
-        // Ace is a very large dependency, so only load it when requested
-        if playground_config.editable && playground_config.copy_js {
-            // Load the editor
-            write_file(destination, "editor.js", playground_editor::JS)?;
-            write_file(destination, "ace.js", playground_editor::ACE_JS)?;
-            write_file(destination, "mode-rust.js", playground_editor::MODE_RUST_JS)?;
-            write_file(
-                destination,
-                "theme-dawn.js",
-                playground_editor::THEME_DAWN_JS,
-            )?;
-            write_file(
-                destination,
-                "theme-tomorrow_night.js",
-                playground_editor::THEME_TOMORROW_NIGHT_JS,
-            )?;
-        }
-
-        Ok(())
     }
 
     /// Update the context with data for this file
@@ -367,43 +252,6 @@ impl HtmlHandlebars {
         handlebars.register_helper("next", Box::new(helpers::navigation::next));
         // TODO: remove theme_option in 0.5, it is not needed.
         handlebars.register_helper("theme_option", Box::new(helpers::theme::theme_option));
-    }
-
-    /// Copy across any additional CSS and JavaScript files which the book
-    /// has been configured to use.
-    fn copy_additional_css_and_js(
-        &self,
-        html: &HtmlConfig,
-        root: &Path,
-        destination: &Path,
-    ) -> Result<()> {
-        let custom_files = html.additional_css.iter().chain(html.additional_js.iter());
-
-        debug!("Copying additional CSS and JS");
-
-        for custom_file in custom_files {
-            let input_location = root.join(custom_file);
-            let output_location = destination.join(custom_file);
-            if let Some(parent) = output_location.parent() {
-                fs::create_dir_all(parent)
-                    .with_context(|| format!("Unable to create {}", parent.display()))?;
-            }
-            debug!(
-                "Copying {} -> {}",
-                input_location.display(),
-                output_location.display()
-            );
-
-            fs::copy(&input_location, &output_location).with_context(|| {
-                format!(
-                    "Unable to copy {} to {}",
-                    input_location.display(),
-                    output_location.display()
-                )
-            })?;
-        }
-
-        Ok(())
     }
 
     fn emit_redirects(
@@ -469,25 +317,6 @@ impl HtmlHandlebars {
     }
 }
 
-// TODO(mattico): Remove some time after the 0.1.8 release
-fn maybe_wrong_theme_dir(dir: &Path) -> Result<bool> {
-    fn entry_is_maybe_book_file(entry: fs::DirEntry) -> Result<bool> {
-        Ok(entry.file_type()?.is_file()
-            && entry.path().extension().map_or(false, |ext| ext == "md"))
-    }
-
-    if dir.is_dir() {
-        for entry in fs::read_dir(dir)? {
-            if entry_is_maybe_book_file(entry?).unwrap_or(false) {
-                return Ok(false);
-            }
-        }
-        Ok(true)
-    } else {
-        Ok(false)
-    }
-}
-
 impl Renderer for HtmlHandlebars {
     fn name(&self) -> &str {
         "html"
@@ -520,16 +349,6 @@ impl Renderer for HtmlHandlebars {
             None => ctx.root.join("theme"),
         };
 
-        if html_config.theme.is_none()
-            && maybe_wrong_theme_dir(&src_dir.join("theme")).unwrap_or(false)
-        {
-            warn!(
-                "Previous versions of mdBook erroneously accepted `./src/theme` as an automatic \
-                 theme directory"
-            );
-            warn!("Please move your theme files to `./theme` for them to continue being used");
-        }
-
         let theme = theme::Theme::new(theme_dir);
 
         debug!("Register the index handlebars template");
@@ -545,6 +364,11 @@ impl Renderer for HtmlHandlebars {
         debug!("Register the header handlebars template");
         handlebars.register_partial("header", String::from_utf8(theme.header.clone())?)?;
 
+        debug!("Register the toc handlebars template");
+        handlebars.register_template_string("toc_js", String::from_utf8(theme.toc_js.clone())?)?;
+        handlebars
+            .register_template_string("toc_html", String::from_utf8(theme.toc_html.clone())?)?;
+
         debug!("Register handlebars helpers");
         self.register_hbs_helpers(&mut handlebars, &html_config);
 
@@ -553,8 +377,59 @@ impl Renderer for HtmlHandlebars {
         // Print version
         let mut print_content = String::new();
 
-        fs::create_dir_all(&destination)
+        fs::create_dir_all(destination)
             .with_context(|| "Unexpected error when constructing destination path")?;
+
+        let mut static_files = StaticFiles::new(&theme, &html_config, &ctx.root)?;
+
+        // Render search index
+        #[cfg(feature = "search")]
+        {
+            let default = crate::config::Search::default();
+            let search = html_config.search.as_ref().unwrap_or(&default);
+            if search.enable {
+                super::search::create_files(&search, &mut static_files, &book)?;
+            }
+        }
+
+        debug!("Render toc js");
+        {
+            let rendered_toc = handlebars.render("toc_js", &data)?;
+            static_files.add_builtin("toc.js", rendered_toc.as_bytes());
+            debug!("Creating toc.js ✓");
+        }
+
+        if html_config.hash_files {
+            static_files.hash_files()?;
+        }
+
+        debug!("Copy static files");
+        let resource_helper = static_files
+            .write_files(&destination)
+            .with_context(|| "Unable to copy across static files")?;
+
+        handlebars.register_helper("resource", Box::new(resource_helper));
+
+        debug!("Render toc html");
+        {
+            data.insert("is_toc_html".to_owned(), json!(true));
+            data.insert("path".to_owned(), json!("toc.html"));
+            let rendered_toc = handlebars.render("toc_html", &data)?;
+            utils::fs::write_file(destination, "toc.html", rendered_toc.as_bytes())?;
+            debug!("Creating toc.html ✓");
+            data.remove("path");
+            data.remove("is_toc_html");
+        }
+
+        utils::fs::write_file(
+            destination,
+            ".nojekyll",
+            b"This file makes sure that Github Pages doesn't process mdBook's output.\n",
+        )?;
+
+        if let Some(cname) = &html_config.cname {
+            utils::fs::write_file(destination, "CNAME", format!("{cname}\n").as_bytes())?;
+        }
 
         let mut is_index = true;
         for item in book.iter() {
@@ -589,26 +464,15 @@ impl Renderer for HtmlHandlebars {
             debug!("Render template");
             let rendered = handlebars.render("index", &data)?;
 
-            let rendered =
-                self.post_process(rendered, &html_config.playground, ctx.config.rust.edition);
+            let rendered = self.post_process(
+                rendered,
+                &html_config.playground,
+                &html_config.code,
+                ctx.config.rust.edition,
+            );
 
             utils::fs::write_file(destination, "print.html", rendered.as_bytes())?;
             debug!("Creating print.html ✓");
-        }
-
-        debug!("Copy static files");
-        self.copy_static_files(destination, &theme, &html_config)
-            .with_context(|| "Unable to copy across static files")?;
-        self.copy_additional_css_and_js(&html_config, &ctx.root, destination)
-            .with_context(|| "Unable to copy across additional CSS and JS")?;
-
-        // Render search index
-        #[cfg(feature = "search")]
-        {
-            let search = html_config.search.unwrap_or_default();
-            if search.enable {
-                super::search::create_files(&search, destination, book)?;
-            }
         }
 
         self.emit_redirects(&ctx.destination, &handlebars, &html_config.redirect)
@@ -634,6 +498,10 @@ fn make_data(
     data.insert(
         "language".to_owned(),
         json!(config.book.language.clone().unwrap_or_default()),
+    );
+    data.insert(
+        "text_direction".to_owned(),
+        json!(config.book.realized_text_direction()),
     );
     data.insert(
         "book_title".to_owned(),
@@ -799,8 +667,10 @@ fn make_data(
 /// Goes through the rendered HTML, making sure all header tags have
 /// an anchor respectively so people can link to sections directly.
 fn build_header_links(html: &str) -> String {
-    static BUILD_HEADER_LINKS: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r"<h(\d)>(.*?)</h\d>").unwrap());
+    static BUILD_HEADER_LINKS: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(r#"<h(\d)(?: id="([^"]+)")?(?: class="([^"]+)")?>(.*?)</h\d>"#).unwrap()
+    });
+    static IGNORE_CLASS: &[&str] = &["menu-title"];
 
     let mut id_counter = HashMap::new();
 
@@ -810,7 +680,22 @@ fn build_header_links(html: &str) -> String {
                 .parse()
                 .expect("Regex should ensure we only ever get numbers here");
 
-            insert_link_into_header(level, &caps[2], &mut id_counter)
+            // Ignore .menu-title because now it's getting detected by the regex.
+            if let Some(classes) = caps.get(3) {
+                for class in classes.as_str().split(" ") {
+                    if IGNORE_CLASS.contains(&class) {
+                        return caps[0].to_string();
+                    }
+                }
+            }
+
+            insert_link_into_header(
+                level,
+                &caps[4],
+                caps.get(2).map(|x| x.as_str().to_string()),
+                caps.get(3).map(|x| x.as_str().to_string()),
+                &mut id_counter,
+            )
         })
         .into_owned()
 }
@@ -820,15 +705,17 @@ fn build_header_links(html: &str) -> String {
 fn insert_link_into_header(
     level: usize,
     content: &str,
+    id: Option<String>,
+    classes: Option<String>,
     id_counter: &mut HashMap<String, usize>,
 ) -> String {
-    let id = utils::unique_id_from_content(content, id_counter);
+    let id = id.unwrap_or_else(|| utils::unique_id_from_content(content, id_counter));
+    let classes = classes
+        .map(|s| format!(" class=\"{s}\""))
+        .unwrap_or_default();
 
     format!(
-        r##"<h{level} id="{id}"><a class="header" href="#{id}">{text}</a></h{level}>"##,
-        level = level,
-        id = id,
-        text = content
+        r##"<h{level} id="{id}"{classes}><a class="header" href="#{id}">{content}</a></h{level}>"##
     )
 }
 
@@ -850,77 +737,69 @@ fn fix_code_blocks(html: &str) -> String {
             let classes = &caps[2].replace(',', " ");
             let after = &caps[3];
 
-            format!(
-                r#"<code{before}class="{classes}"{after}>"#,
-                before = before,
-                classes = classes,
-                after = after
-            )
+            format!(r#"<code{before}class="{classes}"{after}>"#)
         })
         .into_owned()
 }
+
+static CODE_BLOCK_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap());
 
 fn add_playground_pre(
     html: &str,
     playground_config: &Playground,
     edition: Option<RustEdition>,
 ) -> String {
-    static ADD_PLAYGROUND_PRE: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap());
-
-    ADD_PLAYGROUND_PRE
+    CODE_BLOCK_RE
         .replace_all(html, |caps: &Captures<'_>| {
             let text = &caps[1];
             let classes = &caps[2];
             let code = &caps[3];
 
-            if classes.contains("language-rust") {
-                if (!classes.contains("ignore")
+            if classes.contains("language-rust")
+                && ((!classes.contains("ignore")
                     && !classes.contains("noplayground")
                     && !classes.contains("noplaypen")
                     && playground_config.runnable)
-                    || classes.contains("mdbook-runnable")
-                {
-                    let contains_e2015 = classes.contains("edition2015");
-                    let contains_e2018 = classes.contains("edition2018");
-                    let contains_e2021 = classes.contains("edition2021");
-                    let edition_class = if contains_e2015 || contains_e2018 || contains_e2021 {
-                        // the user forced edition, we should not overwrite it
-                        ""
-                    } else {
-                        match edition {
-                            Some(RustEdition::E2015) => " edition2015",
-                            Some(RustEdition::E2018) => " edition2018",
-                            Some(RustEdition::E2021) => " edition2021",
-                            None => "",
-                        }
-                    };
-
-                    // wrap the contents in an external pre block
-                    format!(
-                        "<pre class=\"playground\"><code class=\"{}{}\">{}</code></pre>",
-                        classes,
-                        edition_class,
-                        {
-                            let content: Cow<'_, str> = if playground_config.editable
-                                && classes.contains("editable")
-                                || text.contains("fn main")
-                                || text.contains("quick_main!")
-                            {
-                                code.into()
-                            } else {
-                                // we need to inject our own main
-                                let (attrs, code) = partition_source(code);
-
-                                format!("# #![allow(unused)]\n{}#fn main() {{\n{}#}}", attrs, code)
-                                    .into()
-                            };
-                            hide_lines(&content)
-                        }
-                    )
+                    || classes.contains("mdbook-runnable"))
+            {
+                let contains_e2015 = classes.contains("edition2015");
+                let contains_e2018 = classes.contains("edition2018");
+                let contains_e2021 = classes.contains("edition2021");
+                let edition_class = if contains_e2015 || contains_e2018 || contains_e2021 {
+                    // the user forced edition, we should not overwrite it
+                    ""
                 } else {
-                    format!("<code class=\"{}\">{}</code>", classes, hide_lines(code))
-                }
+                    match edition {
+                        Some(RustEdition::E2015) => " edition2015",
+                        Some(RustEdition::E2018) => " edition2018",
+                        Some(RustEdition::E2021) => " edition2021",
+                        Some(RustEdition::E2024) => " edition2024",
+                        None => "",
+                    }
+                };
+
+                // wrap the contents in an external pre block
+                format!(
+                    "<pre class=\"playground\"><code class=\"{}{}\">{}</code></pre>",
+                    classes,
+                    edition_class,
+                    {
+                        let content: Cow<'_, str> = if playground_config.editable
+                            && classes.contains("editable")
+                            || text.contains("fn main")
+                            || text.contains("quick_main!")
+                        {
+                            code.into()
+                        } else {
+                            // we need to inject our own main
+                            let (attrs, code) = partition_source(code);
+
+                            format!("# #![allow(unused)]\n{attrs}# fn main() {{\n{code}# }}").into()
+                        };
+                        content
+                    }
+                )
             } else {
                 // not language-rust, so no-op
                 text.to_owned()
@@ -929,7 +808,51 @@ fn add_playground_pre(
         .into_owned()
 }
 
-fn hide_lines(content: &str) -> String {
+/// Modifies all `<code>` blocks to convert "hidden" lines and to wrap them in
+/// a `<span class="boring">`.
+fn hide_lines(html: &str, code_config: &Code) -> String {
+    static LANGUAGE_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\blanguage-(\w+)\b").unwrap());
+    static HIDELINES_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\bhidelines=(\S+)").unwrap());
+
+    CODE_BLOCK_RE
+        .replace_all(html, |caps: &Captures<'_>| {
+            let text = &caps[1];
+            let classes = &caps[2];
+            let code = &caps[3];
+
+            if classes.contains("language-rust") {
+                format!(
+                    "<code class=\"{}\">{}</code>",
+                    classes,
+                    hide_lines_rust(code)
+                )
+            } else {
+                // First try to get the prefix from the code block
+                let hidelines_capture = HIDELINES_REGEX.captures(classes);
+                let hidelines_prefix = match &hidelines_capture {
+                    Some(capture) => Some(&capture[1]),
+                    None => {
+                        // Then look up the prefix by language
+                        LANGUAGE_REGEX.captures(classes).and_then(|capture| {
+                            code_config.hidelines.get(&capture[1]).map(|p| p.as_str())
+                        })
+                    }
+                };
+
+                match hidelines_prefix {
+                    Some(prefix) => format!(
+                        "<code class=\"{}\">{}</code>",
+                        classes,
+                        hide_lines_with_prefix(code, prefix)
+                    ),
+                    None => text.to_owned(),
+                }
+            }
+        })
+        .into_owned()
+}
+
+fn hide_lines_rust(content: &str) -> String {
     static BORING_LINES_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\s*)#(.?)(.*)$").unwrap());
 
     let mut result = String::with_capacity(content.len());
@@ -944,12 +867,9 @@ fn hide_lines(content: &str) -> String {
                 result += &caps[3];
                 result += newline;
                 continue;
-            } else if &caps[2] != "!" && &caps[2] != "[" {
+            } else if matches!(&caps[2], "" | " ") {
                 result += "<span class=\"boring\">";
                 result += &caps[1];
-                if &caps[2] != " " {
-                    result += &caps[2];
-                }
                 result += &caps[3];
                 result += newline;
                 result += "</span>";
@@ -958,6 +878,26 @@ fn hide_lines(content: &str) -> String {
         }
         result += line;
         result += newline;
+    }
+    result
+}
+
+fn hide_lines_with_prefix(content: &str, prefix: &str) -> String {
+    let mut result = String::with_capacity(content.len());
+    for line in content.lines() {
+        if line.trim_start().starts_with(prefix) {
+            let pos = line.find(prefix).unwrap();
+            let (ws, rest) = (&line[..pos], &line[pos + prefix.len()..]);
+
+            result += "<span class=\"boring\">";
+            result += ws;
+            result += rest;
+            result += "\n";
+            result += "</span>";
+            continue;
+        }
+        result += line;
+        result += "\n";
     }
     result
 }
@@ -996,7 +936,10 @@ struct RenderItemContext<'a> {
 
 #[cfg(test)]
 mod tests {
+    use crate::config::TextDirection;
+
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn original_build_header_links() {
@@ -1025,6 +968,21 @@ mod tests {
                 "<h1>Foo</h1><h3>Foo</h3>",
                 r##"<h1 id="foo"><a class="header" href="#foo">Foo</a></h1><h3 id="foo-1"><a class="header" href="#foo-1">Foo</a></h3>"##,
             ),
+            // id only
+            (
+                r##"<h1 id="foobar">Foo</h1>"##,
+                r##"<h1 id="foobar"><a class="header" href="#foobar">Foo</a></h1>"##,
+            ),
+            // class only
+            (
+                r##"<h1 class="class1 class2">Foo</h1>"##,
+                r##"<h1 id="foo" class="class1 class2"><a class="header" href="#foo">Foo</a></h1>"##,
+            ),
+            // both id and class
+            (
+                r##"<h1 id="foobar" class="class1 class2">Foo</h1>"##,
+                r##"<h1 id="foobar" class="class1 class2"><a class="header" href="#foobar">Foo</a></h1>"##,
+            ),
         ];
 
         for (src, should_be) in inputs {
@@ -1037,17 +995,17 @@ mod tests {
     fn add_playground() {
         let inputs = [
           ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust\"><span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}</span></code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust\"># #![allow(unused)]\n# fn main() {\nx()\n# }</code></pre>"),
           ("<code class=\"language-rust\">fn main() {}</code>",
            "<pre class=\"playground\"><code class=\"language-rust\">fn main() {}</code></pre>"),
           ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";</code></pre>"),
-          ("<code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code>",
            "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code></pre>"),
+          ("<code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code>",
+           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code></pre>"),
           ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span><span class=\"boring\">\n</span>\";</code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code></pre>"),
           ("<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>",
-           "<code class=\"language-rust ignore\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";</code>"),
+           "<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>"),
           ("<code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code>",
            "<pre class=\"playground\"><code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code></pre>"),
         ];
@@ -1067,7 +1025,7 @@ mod tests {
     fn add_playground_edition2015() {
         let inputs = [
           ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2015\"><span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}</span></code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust edition2015\"># #![allow(unused)]\n# fn main() {\nx()\n# }</code></pre>"),
           ("<code class=\"language-rust\">fn main() {}</code>",
            "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}</code></pre>"),
           ("<code class=\"language-rust edition2015\">fn main() {}</code>",
@@ -1091,7 +1049,7 @@ mod tests {
     fn add_playground_edition2018() {
         let inputs = [
           ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2018\"><span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}</span></code></pre>"),
+           "<pre class=\"playground\"><code class=\"language-rust edition2018\"># #![allow(unused)]\n# fn main() {\nx()\n# }</code></pre>"),
           ("<code class=\"language-rust\">fn main() {}</code>",
            "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}</code></pre>"),
           ("<code class=\"language-rust edition2015\">fn main() {}</code>",
@@ -1115,7 +1073,7 @@ mod tests {
     fn add_playground_edition2021() {
         let inputs = [
             ("<code class=\"language-rust\">x()</code>",
-             "<pre class=\"playground\"><code class=\"language-rust edition2021\"><span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}</span></code></pre>"),
+             "<pre class=\"playground\"><code class=\"language-rust edition2021\"># #![allow(unused)]\n# fn main() {\nx()\n# }</code></pre>"),
             ("<code class=\"language-rust\">fn main() {}</code>",
              "<pre class=\"playground\"><code class=\"language-rust edition2021\">fn main() {}</code></pre>"),
             ("<code class=\"language-rust edition2015\">fn main() {}</code>",
@@ -1134,5 +1092,71 @@ mod tests {
             );
             assert_eq!(&*got, *should_be);
         }
+    }
+
+    #[test]
+    fn hide_lines_language_rust() {
+        let inputs = [
+          (
+           "<pre class=\"playground\"><code class=\"language-rust\">\n# #![allow(unused)]\n# fn main() {\nx()\n# }</code></pre>",
+           "<pre class=\"playground\"><code class=\"language-rust\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}</span></code></pre>",),
+          // # must be followed by a space for a line to be hidden
+          (
+           "<pre class=\"playground\"><code class=\"language-rust\">\n#fn main() {\nx()\n#}</code></pre>",
+           "<pre class=\"playground\"><code class=\"language-rust\">\n#fn main() {\nx()\n#}</code></pre>",),
+          (
+           "<pre class=\"playground\"><code class=\"language-rust\">fn main() {}</code></pre>",
+           "<pre class=\"playground\"><code class=\"language-rust\">fn main() {}</code></pre>",),
+          (
+           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code></pre>",
+           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";</code></pre>",),
+          (
+           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code></pre>",
+           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code></pre>",),
+          (
+           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code></pre>",
+           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span><span class=\"boring\">\n</span>\";</code></pre>",),
+          (
+           "<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>",
+           "<code class=\"language-rust ignore\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";</code>",),
+          (
+           "<pre class=\"playground\"><code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code></pre>",
+           "<pre class=\"playground\"><code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code></pre>",),
+        ];
+        for (src, should_be) in &inputs {
+            let got = hide_lines(src, &Code::default());
+            assert_eq!(&*got, *should_be);
+        }
+    }
+
+    #[test]
+    fn hide_lines_language_other() {
+        let inputs = [
+          (
+           "<code class=\"language-python\">~hidden()\nnothidden():\n~    hidden()\n    ~hidden()\n    nothidden()</code>",
+           "<code class=\"language-python\"><span class=\"boring\">hidden()\n</span>nothidden():\n<span class=\"boring\">    hidden()\n</span><span class=\"boring\">    hidden()\n</span>    nothidden()\n</code>",),
+           (
+            "<code class=\"language-python hidelines=!!!\">!!!hidden()\nnothidden():\n!!!    hidden()\n    !!!hidden()\n    nothidden()</code>",
+            "<code class=\"language-python hidelines=!!!\"><span class=\"boring\">hidden()\n</span>nothidden():\n<span class=\"boring\">    hidden()\n</span><span class=\"boring\">    hidden()\n</span>    nothidden()\n</code>",),
+        ];
+        for (src, should_be) in &inputs {
+            let got = hide_lines(
+                src,
+                &Code {
+                    hidelines: {
+                        let mut map = HashMap::new();
+                        map.insert("python".to_string(), "~".to_string());
+                        map
+                    },
+                },
+            );
+            assert_eq!(&*got, *should_be);
+        }
+    }
+
+    #[test]
+    fn test_json_direction() {
+        assert_eq!(json!(TextDirection::RightToLeft), json!("rtl"));
+        assert_eq!(json!(TextDirection::LeftToRight), json!("ltr"));
     }
 }

@@ -1,0 +1,5 @@
+[book]
+title = "remove-emphasis"
+
+[preprocessor.remove-emphasis]
+command = "cargo run --manifest-path=mdbook-remove-emphasis/Cargo.toml --locked"

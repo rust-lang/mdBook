@@ -56,7 +56,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
             "git" => builder.create_gitignore(true),
             _ => builder.create_gitignore(false),
         };
-    } else {
+    } else if !args.get_flag("force") {
         println!("\nDo you want a .gitignore to be created? (y/n)");
         if confirm() {
             builder.create_gitignore(true);
@@ -65,6 +65,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     config.book.title = if args.contains_id("title") {
         args.get_one::<String>("title").map(String::from)
+    } else if args.get_flag("force") {
+        None
     } else {
         request_book_title()
     };
@@ -72,9 +74,9 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     if let Some(author) = get_author_name() {
         debug!("Obtained user name from gitconfig: {:?}", author);
         config.book.authors.push(author);
-        builder.with_config(config);
     }
 
+    builder.with_config(config);
     builder.build()?;
     println!("\nAll done, no errors...");
 
@@ -84,7 +86,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 /// Obtains author name from git config file by running the `git config` command.
 fn get_author_name() -> Option<String> {
     let output = Command::new("git")
-        .args(&["config", "--get", "user.name"])
+        .args(["config", "--get", "user.name"])
         .output()
         .ok()?;
 
@@ -114,5 +116,5 @@ fn confirm() -> bool {
     io::stdout().flush().unwrap();
     let mut s = String::new();
     io::stdin().read_line(&mut s).ok();
-    matches!(&*s.trim(), "Y" | "y" | "yes" | "Yes")
+    matches!(s.trim(), "Y" | "y" | "yes" | "Yes")
 }

@@ -46,6 +46,9 @@ This is general information about your book.
   `src` directly under the root folder. But this is configurable with the `src`
   key in the configuration file.
 - **language:** The main language of the book, which is used as a language attribute `<html lang="en">` for example.
+  This is also used to derive the direction of text (RTL, LTR) within the book.
+- **text-direction**: The direction of text in the book: Left-to-right (LTR) or Right-to-left (RTL). Possible values: `ltr`, `rtl`.
+  When not specified, the text direction is derived from the book's `language` attribute.
 
 **book.toml**
 ```toml
@@ -55,6 +58,7 @@ authors = ["John Doe", "Jane Doe"]
 description = "The example book covers examples."
 src = "my-src"  # the source files will be found in `root/my-src` instead of `root/src`
 language = "en"
+text-direction = "ltr"
 ```
 
 ### Rust options
@@ -68,7 +72,7 @@ edition = "2015"   # the default edition for code blocks
 ```
 
 - **edition**: Rust edition to use by default for the code snippets. Default
-  is "2015". Individual code blocks can be controlled with the `edition2015`, 
+  is `"2015"`. Individual code blocks can be controlled with the `edition2015`,
   `edition2018` or `edition2021` annotations, such as:
 
   ~~~text
@@ -97,7 +101,7 @@ extra-watch-dirs = []             # directories to watch for triggering builds
   will be created when the book is built (i.e. `create-missing = true`). If this
   is `false` then the build process will instead exit with an error if any files
   do not exist.
-- **use-default-preprocessors:** Disable the default preprocessors of (`links` &
+- **use-default-preprocessors:** Disable the default preprocessors (of `links` &
   `index`) by setting this option to `false`.
 
   If you have the same, and/or other preprocessors declared via their table

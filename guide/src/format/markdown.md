@@ -73,14 +73,14 @@ Linking to a URL or local file is easy:
 ```markdown
 Use [mdBook](https://github.com/rust-lang/mdBook). 
 
-Read about [mdBook](mdBook.md).
+Read about [mdBook](mdbook.md).
 
 A bare url: <https://www.rust-lang.org>.
 ```
 
 Use [mdBook](https://github.com/rust-lang/mdBook). 
 
-Read about [mdBook](mdBook.md).
+Read about [mdBook](mdbook.md).
 
 A bare url: <https://www.rust-lang.org>.
 
@@ -124,7 +124,7 @@ mdBook has several extensions beyond the standard CommonMark specification.
 ### Strikethrough
 
 Text may be rendered with a horizontal line through the center by wrapping the
-text with two tilde characters on each side:
+text with one or two tilde characters on each side:
 
 ```text
 An example of ~~strikethrough text~~.
@@ -214,9 +214,22 @@ characters:
 So, no need to manually enter those Unicode characters!
 
 This feature is disabled by default.
-To enable it, see the [`output.html.curly-quotes`] config option.
+To enable it, see the [`output.html.smart-punctuation`] config option.
 
 [strikethrough]: https://github.github.com/gfm/#strikethrough-extension-
 [tables]: https://github.github.com/gfm/#tables-extension-
 [task list extension]: https://github.github.com/gfm/#task-list-items-extension-
-[`output.html.curly-quotes`]: configuration/renderers.md#html-renderer-options
+[`output.html.smart-punctuation`]: configuration/renderers.md#html-renderer-options
+
+### Heading attributes
+
+Headings can have a custom HTML ID and classes. This lets you maintain the same ID even if you change the heading's text, it also lets you add multiple classes in the heading.
+
+Example:
+```md
+# Example heading { #first .class1 .class2 }
+```
+
+This makes the level 1 heading with the content `Example heading`, ID `first`, and classes `class1` and `class2`. Note that the attributes should be space-separated.
+
+More information can be found in the [heading attrs spec page](https://github.com/raphlinus/pulldown-cmark/blob/master/pulldown-cmark/specs/heading_attrs.txt).

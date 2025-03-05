@@ -44,6 +44,8 @@ your own `highlight.js` file:
 - makefile
 - markdown
 - nginx
+- nim
+- nix
 - objectivec
 - perl
 - php
@@ -76,38 +78,6 @@ website, or make it yourself, rename it to `highlight.css` and put it in
 the `theme` folder of your book.
 
 Now your theme will be used instead of the default theme.
-
-## Hiding code lines
-
-There is a feature in mdBook that lets you hide code lines by prepending them
-with a `#`.
-
-
-```bash
-# fn main() {
-    let x = 5;
-    let y = 6;
-
-    println!("{}", x + y);
-# }
-```
-
-Will render as
-
-```rust
-# fn main() {
-    let x = 5;
-    let y = 7;
-
-    println!("{}", x + y);
-# }
-```
-
-**At the moment, this only works for code examples that are annotated with
-`rust`. Because it would collide with semantics of some programming languages.
-In the future, we want to make this configurable through the `book.toml` so that
-everyone can benefit from it.**
-
 
 ## Improve default theme
 

@@ -138,8 +138,23 @@ We generally strive to keep mdBook compatible with a relatively recent browser o
 That is, supporting Chrome, Safari, Firefox, Edge on Windows, macOS, Linux, iOS, and Android.
 If possible, do your best to avoid breaking older browser releases.
 
-Any change to the HTML or styling is encouraged to manually check on as many browsers and platforms that you can.
-Unfortunately at this time we don't have any automated UI or browser testing, so your assistance in testing is appreciated.
+GUI tests are checked with the GUI testsuite. To run it, you need to install `npm` first. Then run:
+
+```
+cargo test --test gui
+```
+
+The first time, it'll fail and ask you to install the `browser-ui-test` package. Install it then re-run the tests.
+
+If you want to disable the headless mode, use the `DISABLE_HEADLESS_TEST=1` environment variable:
+
+```
+cargo test --test gui -- --disable-headless-test
+```
+
+The GUI tests are in the directory `tests/gui` in text files with the `.goml` extension. These tests are run
+using a `node.js` framework called `browser-ui-test`. You can find documentation for this language on its
+[repository](https://github.com/GuillaumeGomez/browser-UI-test/blob/master/goml-script.md).
 
 ## Updating highlight.js
 
@@ -148,8 +163,28 @@ The following are instructions for updating [highlight.js](https://highlightjs.o
 1. Clone the repository at <https://github.com/highlightjs/highlight.js>
 1. Check out a tagged release (like `10.1.1`).
 1. Run `npm install`
-1. Run `node tools/build.js :common apache armasm coffeescript d handlebars haskell http julia nginx properties r scala x86asm yaml`
+1. Run `node tools/build.js :common apache armasm coffeescript d handlebars haskell http julia nginx nim nix properties r scala x86asm yaml`
 1. Compare the language list that it spits out to the one in [`syntax-highlighting.md`](https://github.com/camelid/mdBook/blob/master/guide/src/format/theme/syntax-highlighting.md). If any are missing, add them to the list and rebuild (and update these docs). If any are added to the common set, add them to `syntax-highlighting.md`.
 1. Copy `build/highlight.min.js` to mdbook's directory [`highlight.js`](https://github.com/rust-lang/mdBook/blob/master/src/theme/highlight.js).
 1. Be sure to check the highlight.js [CHANGES](https://github.com/highlightjs/highlight.js/blob/main/CHANGES.md) for any breaking changes. Breaking changes that would affect users will need to wait until the next major release.
 1. Build mdbook with the new file and build some books with the new version and compare the output with a variety of languages to see if anything changes. The [test_book](https://github.com/rust-lang/mdBook/tree/master/test_book) contains a chapter with many languages to examine.
+
+## Publishing new releases
+
+Instructions for mdBook maintainers to publish a new release:
+
+1. Create a PR to update the version and update the CHANGELOG:
+    1. Update the version in `Cargo.toml`
+    2. Run `cargo test` to verify that everything is passing, and to update `Cargo.lock`.
+    3. Double-check for any SemVer breaking changes.
+       Try [`cargo-semver-checks`](https://crates.io/crates/cargo-semver-checks), though beware that the current version of mdBook isn't properly adhering to SemVer due to the lack of `#[non_exhaustive]` and other issues. See https://github.com/rust-lang/mdBook/issues/1835.
+    4. Update `CHANGELOG.md` with any changes that users may be interested in.
+    5. Update `continuous-integration.md` to update the version number for the installation instructions.
+    6. Commit the changes, and open a PR.
+2. After the PR has been merged, create a release in GitHub. This can either be done in the GitHub web UI, or on the command-line:
+   ```bash
+   MDBOOK_VERS="`cargo read-manifest | jq -r .version`" ; \
+    gh release create -R rust-lang/mdbook v$MDBOOK_VERS \
+        --title v$MDBOOK_VERS \
+        --notes "See https://github.com/rust-lang/mdBook/blob/master/CHANGELOG.md#mdbook-${MDBOOK_VERS//.} for a complete list of changes."
+   ```

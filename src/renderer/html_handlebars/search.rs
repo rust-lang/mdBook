@@ -1,14 +1,15 @@
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use elasticlunr::{Index, IndexBuilder};
 use once_cell::sync::Lazy;
 use pulldown_cmark::*;
 
-use crate::book::{Book, BookItem};
-use crate::config::Search;
+use crate::book::{Book, BookItem, Chapter};
+use crate::config::{Search, SearchChapterSettings};
 use crate::errors::*;
+use crate::renderer::html_handlebars::StaticFiles;
 use crate::theme::searcher;
 use crate::utils;
 use log::{debug, warn};
@@ -26,7 +27,11 @@ fn tokenize(text: &str) -> Vec<String> {
 }
 
 /// Creates all files required for search.
-pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> Result<()> {
+pub fn create_files(
+    search_config: &Search,
+    static_files: &mut StaticFiles,
+    book: &Book,
+) -> Result<()> {
     let mut index = IndexBuilder::new()
         .add_field_with_tokenizer("title", Box::new(&tokenize))
         .add_field_with_tokenizer("body", Box::new(&tokenize))
@@ -35,8 +40,21 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
 
     let mut doc_urls = Vec::with_capacity(book.sections.len());
 
+    let chapter_configs = sort_search_config(&search_config.chapter);
+    validate_chapter_config(&chapter_configs, book)?;
+
     for item in book.iter() {
-        render_item(&mut index, search_config, &mut doc_urls, item)?;
+        let chapter = match item {
+            BookItem::Chapter(ch) if !ch.is_draft_chapter() => ch,
+            _ => continue,
+        };
+        if let Some(path) = settings_path(chapter) {
+            let chapter_settings = get_chapter_settings(&chapter_configs, path);
+            if !chapter_settings.enable.unwrap_or(true) {
+                continue;
+            }
+        }
+        render_item(&mut index, search_config, &mut doc_urls, chapter)?;
     }
 
     let index = write_to_json(index, search_config, doc_urls)?;
@@ -46,15 +64,14 @@ pub fn create_files(search_config: &Search, destination: &Path, book: &Book) -> 
     }
 
     if search_config.copy_js {
-        utils::fs::write_file(destination, "searchindex.json", index.as_bytes())?;
-        utils::fs::write_file(
-            destination,
+        static_files.add_builtin("searchindex.json", index.as_bytes());
+        static_files.add_builtin(
             "searchindex.js",
             format!("Object.assign(window.search, {});", index).as_bytes(),
-        )?;
-        utils::fs::write_file(destination, "searcher.js", searcher::JS)?;
-        utils::fs::write_file(destination, "mark.min.js", searcher::MARK_JS)?;
-        utils::fs::write_file(destination, "elasticlunr.min.js", searcher::ELASTICLUNR_JS)?;
+        );
+        static_files.add_builtin("searcher.js", searcher::JS);
+        static_files.add_builtin("mark.min.js", searcher::MARK_JS);
+        static_files.add_builtin("elasticlunr.min.js", searcher::ELASTICLUNR_JS);
         debug!("Copying search files ✓");
     }
 
@@ -66,11 +83,24 @@ fn add_doc(
     index: &mut Index,
     doc_urls: &mut Vec<String>,
     anchor_base: &str,
-    section_id: &Option<String>,
+    heading: &str,
+    id_counter: &mut HashMap<String, usize>,
+    section_id: &Option<CowStr<'_>>,
     items: &[&str],
 ) {
-    let url = if let Some(ref id) = *section_id {
-        Cow::Owned(format!("{}#{}", anchor_base, id))
+    // Either use the explicit section id the user specified, or generate one
+    // from the heading content.
+    let section_id = section_id.as_ref().map(|id| id.to_string()).or_else(|| {
+        if heading.is_empty() {
+            // In the case where a chapter has no heading, don't set a section id.
+            None
+        } else {
+            Some(utils::unique_id_from_content(heading, id_counter))
+        }
+    });
+
+    let url = if let Some(id) = section_id {
+        Cow::Owned(format!("{anchor_base}#{id}"))
     } else {
         Cow::Borrowed(anchor_base)
     };
@@ -87,13 +117,8 @@ fn render_item(
     index: &mut Index,
     search_config: &Search,
     doc_urls: &mut Vec<String>,
-    item: &BookItem,
+    chapter: &Chapter,
 ) -> Result<()> {
-    let chapter = match *item {
-        BookItem::Chapter(ref ch) if !ch.is_draft_chapter() => ch,
-        _ => return Ok(()),
-    };
-
     let chapter_path = chapter
         .path
         .as_ref()
@@ -119,7 +144,7 @@ fn render_item(
     let mut id_counter = HashMap::new();
     while let Some(event) = p.next() {
         match event {
-            Event::Start(Tag::Heading(i, ..)) if i as u32 <= max_section_depth => {
+            Event::Start(Tag::Heading { level, id, .. }) if level as u32 <= max_section_depth => {
                 if !heading.is_empty() {
                     // Section finished, the next heading is following now
                     // Write the data to the index, and clear it for the next section
@@ -127,20 +152,21 @@ fn render_item(
                         index,
                         doc_urls,
                         &anchor_base,
+                        &heading,
+                        &mut id_counter,
                         &section_id,
                         &[&heading, &body, &breadcrumbs.join(" » ")],
                     );
-                    section_id = None;
                     heading.clear();
                     body.clear();
                     breadcrumbs.pop();
                 }
 
+                section_id = id;
                 in_heading = true;
             }
-            Event::End(Tag::Heading(i, ..)) if i as u32 <= max_section_depth => {
+            Event::End(TagEnd::Heading(level)) if level as u32 <= max_section_depth => {
                 in_heading = false;
-                section_id = Some(utils::unique_id_from_content(&heading, &mut id_counter));
                 breadcrumbs.push(heading.clone());
             }
             Event::Start(Tag::FootnoteDefinition(name)) => {
@@ -157,8 +183,18 @@ fn render_item(
                     html_block.push_str(html);
                     p.next();
                 }
-
                 body.push_str(&clean_html(&html_block));
+            }
+            Event::InlineHtml(html) => {
+                // This is not capable of cleaning inline tags like
+                // `foo <script>…</script>`. The `<script>` tags show up as
+                // individual InlineHtml events, and the content inside is
+                // just a regular Text event. There isn't a very good way to
+                // know how to collect all the content in-between. I'm not
+                // sure if this is easily fixable. It should be extremely
+                // rare, since script and style tags should almost always be
+                // blocks, and worse case you have some noise in the index.
+                body.push_str(&clean_html(&html));
             }
             Event::Start(_) | Event::End(_) | Event::Rule | Event::SoftBreak | Event::HardBreak => {
                 // Insert spaces where HTML output would usually separate text
@@ -179,25 +215,31 @@ fn render_item(
             Event::FootnoteReference(name) => {
                 let len = footnote_numbers.len() + 1;
                 let number = footnote_numbers.entry(name).or_insert(len);
-                body.push_str(&format!(" [{}] ", number));
+                body.push_str(&format!(" [{number}] "));
             }
             Event::TaskListMarker(_checked) => {}
         }
     }
 
     if !body.is_empty() || !heading.is_empty() {
-        if heading.is_empty() {
+        let title = if heading.is_empty() {
             if let Some(chapter) = breadcrumbs.first() {
-                heading = chapter.clone();
+                chapter
+            } else {
+                ""
             }
-        }
+        } else {
+            &heading
+        };
         // Make sure the last section is added to the index
         add_doc(
             index,
             doc_urls,
             &anchor_base,
+            &heading,
+            &mut id_counter,
             &section_id,
-            &[&heading, &body, &breadcrumbs.join(" » ")],
+            &[title, &body, &breadcrumbs.join(" » ")],
         );
     }
 
@@ -282,4 +324,83 @@ fn clean_html(html: &str) -> String {
         builder
     });
     AMMONIA.clean(html).to_string()
+}
+
+fn settings_path(ch: &Chapter) -> Option<&Path> {
+    ch.source_path.as_deref().or_else(|| ch.path.as_deref())
+}
+
+fn validate_chapter_config(
+    chapter_configs: &[(PathBuf, SearchChapterSettings)],
+    book: &Book,
+) -> Result<()> {
+    for (path, _) in chapter_configs {
+        let found = book
+            .iter()
+            .filter_map(|item| match item {
+                BookItem::Chapter(ch) if !ch.is_draft_chapter() => settings_path(ch),
+                _ => None,
+            })
+            .any(|source_path| source_path.starts_with(path));
+        if !found {
+            bail!(
+                "[output.html.search.chapter] key `{}` does not match any chapter paths",
+                path.display()
+            );
+        }
+    }
+    Ok(())
+}
+
+fn sort_search_config(
+    map: &HashMap<String, SearchChapterSettings>,
+) -> Vec<(PathBuf, SearchChapterSettings)> {
+    let mut settings: Vec<_> = map
+        .iter()
+        .map(|(key, value)| (PathBuf::from(key), value.clone()))
+        .collect();
+    // Note: This is case-sensitive, and assumes the author uses the same case
+    // as the actual filename.
+    settings.sort_by(|a, b| a.0.cmp(&b.0));
+    settings
+}
+
+fn get_chapter_settings(
+    chapter_configs: &[(PathBuf, SearchChapterSettings)],
+    source_path: &Path,
+) -> SearchChapterSettings {
+    let mut result = SearchChapterSettings::default();
+    for (path, config) in chapter_configs {
+        if source_path.starts_with(path) {
+            result.enable = config.enable.or(result.enable);
+        }
+    }
+    result
+}
+
+#[test]
+fn chapter_settings_priority() {
+    let cfg = r#"
+        [output.html.search.chapter]
+        "cli/watch.md" = { enable = true }
+        "cli" = { enable = false }
+        "cli/inner/foo.md" = { enable = false }
+        "cli/inner" = { enable = true }
+        "foo" = {} # Just to make sure empty table is allowed.
+    "#;
+    let cfg: crate::Config = toml::from_str(cfg).unwrap();
+    let html = cfg.html_config().unwrap();
+    let chapter_configs = sort_search_config(&html.search.unwrap().chapter);
+    for (path, enable) in [
+        ("foo.md", None),
+        ("cli/watch.md", Some(true)),
+        ("cli/index.md", Some(false)),
+        ("cli/inner/index.md", Some(true)),
+        ("cli/inner/foo.md", Some(false)),
+    ] {
+        assert_eq!(
+            get_chapter_settings(&chapter_configs, Path::new(path)),
+            SearchChapterSettings { enable }
+        );
+    }
 }

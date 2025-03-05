@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html lang="{{ language }}" class="{{ default_theme }}" dir="{{ text_direction }}">
+    <head>
+        <!-- sidebar iframe generated using mdBook
+
+        This is a frame, and not included directly in the page, to control the total size of the
+        book. The TOC contains an entry for each page, so if each page includes a copy of the TOC,
+        the total size of the page becomes O(n**2).
+
+        The frame is only used as a fallback when JS is turned off. When it's on, the sidebar is
+        instead added to the main page by `toc.js` instead. The JavaScript mode is better
+        because, when running in a `file:///` URL, the iframed page would not be Same-Origin as
+        the rest of the page, so the sidebar and the main page theme would fall out of sync.
+        -->
+        <meta charset="UTF-8">
+        <meta name="robots" content="noindex">
+        {{#if base_url}}
+        <base href="{{ base_url }}">
+        {{/if}}
+        <!-- Custom HTML head -->
+        {{> head}}
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+        <link rel="stylesheet" href="{{ resource "css/variables.css" }}">
+        <link rel="stylesheet" href="{{ resource "css/general.css" }}">
+        <link rel="stylesheet" href="{{ resource "css/chrome.css" }}">
+        {{#if print_enable}}
+        <link rel="stylesheet" href="{{ resource "css/print.css" }}" media="print">
+        {{/if}}
+        <!-- Fonts -->
+        <link rel="stylesheet" href="{{ resource "FontAwesome/css/font-awesome.css" }}">
+        {{#if copy_fonts}}
+        <link rel="stylesheet" href="{{ resource "fonts/fonts.css" }}">
+        {{/if}}
+        <!-- Custom theme stylesheets -->
+        {{#each additional_css}}
+        <link rel="stylesheet" href="{{ resource this }}">
+        {{/each}}
+    </head>
+    <body class="sidebar-iframe-inner">
+        {{#toc}}{{/toc}}
+    </body>
+</html>

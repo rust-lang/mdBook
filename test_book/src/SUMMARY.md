@@ -22,6 +22,7 @@
   - [Tables](individual/table.md)
   - [Tasks](individual/task.md)
   - [Strikethrough](individual/strikethrough.md)
+  - [MathJax](individual/mathjax.md)
   - [Mixed](individual/mixed.md)
 - [Languages](languages/README.md)
   - [Syntax Highlight](languages/highlight.md)
