@@ -899,7 +899,7 @@ mod tests {
     fn fail_on_invalid_config_field() {
         let src = r#"
         [book]
-        password = Secret
+        password = "Secret"
         "#;
 
         Config::from_str(src).unwrap();
