@@ -255,10 +255,20 @@ window.search = window.search || {};
     function init(config) {
         results_options = config.results_options;
         search_options = config.search_options;
-        searchbar_outer = config.searchbar_outer;
         doc_urls = config.doc_urls;
         searchindex = elasticlunr.Index.load(config.index);
 
+        searchbar.removeAttribute("disabled");
+        searchbar.focus();
+
+        const searchterm = searchbar.value.trim();
+        if (searchterm !== "") {
+            searchbar.classList.add("active");
+            doSearch(searchterm);
+        }
+    }
+
+    function initSearchInteractions() {
         // Set up events
         searchicon.addEventListener('click', function(e) { searchIconClickHandler(); }, false);
         searchbar.addEventListener('keyup', function(e) { searchbarKeyUpHandler(); }, false);
@@ -271,7 +281,9 @@ window.search = window.search || {};
         // If reloaded, do the search or mark again, depending on the current url parameters
         doSearchOrMarkFromUrl();
     }
-    
+
+    initSearchInteractions();
+
     function unfocusSearchbar() {
         // hacky, but just focusing a div only works once
         var tmp = document.createElement('input');
@@ -280,7 +292,7 @@ window.search = window.search || {};
         tmp.focus();
         tmp.remove();
     }
-    
+
     // On reload or browser history backwards/forwards events, parse the url and do search or mark
     function doSearchOrMarkFromUrl() {
         // Check current URL for search request
@@ -313,7 +325,7 @@ window.search = window.search || {};
             }
         }
     }
-    
+
     // Eventhandler for keyevents on `document`
     function globalKeyHandler(e) {
         if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.target.type === 'textarea' || e.target.type === 'text' || !hasFocus() && /^(?:input|select|textarea)$/i.test(e.target.nodeName)) { return; }
@@ -363,9 +375,24 @@ window.search = window.search || {};
             }
         }
     }
-    
+
+    function loadScript(url, id) {
+        if (document.getElementById(id)) {
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = url;
+        script.id = id;
+        script.onload = () => init(window.search);
+        script.onerror = error => {
+            console.error(`Failed to load \`${url}\`: ${error}`);
+        };
+        document.head.append(script);
+    }
+
     function showSearch(yes) {
         if (yes) {
+            loadScript('{{ resource "searchindex.js" }}', 'search-index');
             search_wrap.classList.remove('hidden');
             searchicon.setAttribute('aria-expanded', 'true');
         } else {
@@ -441,12 +468,12 @@ window.search = window.search || {};
     }
     
     function doSearch(searchterm) {
-
         // Don't search the same twice
         if (current_searchterm == searchterm) { return; }
-        else { current_searchterm = searchterm; }
-
+        searchbar_outer.classList.add("searching");
         if (searchindex == null) { return; }
+
+        current_searchterm = searchterm;
 
         // Do the actual search
         var results = searchindex.search(searchterm, search_options);
@@ -466,17 +493,8 @@ window.search = window.search || {};
 
         // Display results
         showResults(true);
+        searchbar_outer.classList.remove("searching");
     }
-
-    fetch('{{ resource "searchindex.json" }}')
-        .then(response => response.json())
-        .then(json => init(json))        
-        .catch(error => { // Try to load searchindex.js if fetch failed
-            var script = document.createElement('script');
-            script.src = '{{ resource "searchindex.js" }}';
-            script.onload = () => init(window.search);
-            document.head.appendChild(script);
-        });
 
     // Exported functions
     search.hasFocus = hasFocus;
