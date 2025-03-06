@@ -549,6 +549,10 @@ fn make_data(
         data.insert("mathjax_support".to_owned(), json!(true));
     }
 
+    if html_config.asciimath_support {
+        data.insert("asciimath_support".to_owned(), json!(true));
+    }
+
     // This `matches!` checks for a non-empty file.
     if html_config.copy_fonts || matches!(theme.fonts_css.as_deref(), Some([_, ..])) {
         data.insert("copy_fonts".to_owned(), json!(true));
