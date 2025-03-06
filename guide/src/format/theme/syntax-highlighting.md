@@ -23,6 +23,7 @@ your own `highlight.js` file:
 - armasm
 - bash
 - c
+- cairo
 - coffeescript
 - cpp
 - csharp
