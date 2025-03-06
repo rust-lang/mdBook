@@ -397,7 +397,7 @@ fn is_legacy_format(table: &Value) -> bool {
 /// Configuration options which are specific to the book and required for
 /// loading it from disk.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(default, rename_all = "kebab-case")]
+#[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
 pub struct BookConfig {
     /// The book's title.
     pub title: Option<String>,
@@ -892,6 +892,17 @@ mod tests {
         assert_eq!(got.build, build_should_be);
         assert_eq!(got.rust, rust_should_be);
         assert_eq!(got.html_config().unwrap(), html_should_be);
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid configuration file")]
+    fn fail_on_invalid_config_field() {
+        let src = r#"
+        [book]
+        password = Secret
+        "#;
+
+        Config::from_str(src).unwrap();
     }
 
     #[test]
