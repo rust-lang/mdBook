@@ -329,7 +329,13 @@ aria-label="Show hidden lines"></button>';
         themePopup.querySelectorAll('.theme-selected').forEach(function(el) {
             el.classList.remove('theme-selected');
         });
-        themePopup.querySelector('button#' + get_theme()).classList.add('theme-selected');
+        const selected = get_saved_theme() ?? "default_theme";
+        var element = themePopup.querySelector("button#" + selected);
+        if (element === null) {
+            // Fall back in case there is no "Default" item.
+            element = themePopup.querySelector("button#" + get_theme());
+        }
+        element.classList.add('theme-selected');
     }
 
     function hideThemes() {
@@ -338,13 +344,22 @@ aria-label="Show hidden lines"></button>';
         themeToggleButton.focus();
     }
 
-    function get_theme() {
-        let theme;
+    function get_saved_theme() {
+        var theme = null;
         try {
             theme = localStorage.getItem('mdbook-theme');
         } catch (e) {
             // ignore error.
         }
+        return theme;
+    }
+
+    function delete_saved_theme() {
+        localStorage.removeItem('mdbook-theme');
+    }
+
+    function get_theme() {
+        var theme = get_saved_theme();
         if (theme === null || theme === undefined || !themeIds.includes(theme)) {
             if (typeof default_dark_theme === 'undefined') {
                 // A customized index.hbs might not define this, so fall back to
@@ -430,7 +445,12 @@ aria-label="Show hidden lines"></button>';
         } else {
             return;
         }
-        set_theme(theme);
+        if (theme === "default_theme" || theme == null) {
+            delete_saved_theme();
+            set_theme(get_theme(), false);
+        } else {
+            set_theme(theme);
+        }
     });
 
     themePopup.addEventListener('focusout', function(e) {
