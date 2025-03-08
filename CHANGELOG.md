@@ -1,5 +1,18 @@
 # Changelog
 
+## mdBook 0.4.46
+[v0.4.45...v0.4.46](https://github.com/rust-lang/mdBook/compare/v0.4.45...v0.4.46)
+
+### Changed
+
+- The `output.html.hash-files` config option has been added to add hashes to static filenames to bust any caches when a book is updated. `{{resource}}` template tags have been added so that links can be properly generated to those files.
+  [#1368](https://github.com/rust-lang/mdBook/pull/1368)
+
+### Fixed
+
+- Playground links for Rust 2024 now set the edition correctly.
+  [#2557](https://github.com/rust-lang/mdBook/pull/2557)
+
 ## mdBook 0.4.45
 [v0.4.44...v0.4.45](https://github.com/rust-lang/mdBook/compare/v0.4.44...v0.4.45)
 
