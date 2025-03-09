@@ -732,6 +732,8 @@ fn failure_on_missing_theme_directory() {
     let md = MDBook::load(temp.path()).unwrap();
     let got = md.build();
     assert!(got.is_err());
+    let error_message = got.err().unwrap().to_string();
+    assert_eq!(error_message, "Rendering failed");
 }
 
 #[cfg(feature = "search")]
