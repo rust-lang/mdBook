@@ -1,5 +1,13 @@
 # Changelog
 
+## mdBook 0.4.47
+[v0.4.46...v0.4.47](https://github.com/rust-lang/mdBook/compare/v0.4.46...v0.4.47)
+
+### Fixed
+
+- Fixed search not showing up in sub-directories.
+  [#2586](https://github.com/rust-lang/mdBook/pull/2586)
+
 ## mdBook 0.4.46
 [v0.4.45...v0.4.46](https://github.com/rust-lang/mdBook/compare/v0.4.45...v0.4.46)
 
