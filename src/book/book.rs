@@ -657,8 +657,8 @@ And here is some \
         assert!(got.is_err());
         let error_message = got.err().unwrap().to_string();
         let expeceted = format!(
-            r#"Couldn't open SUMMARY.md in "{}" directory"#,
-            temp_dir.path().display()
+            r#"Couldn't open SUMMARY.md in {:?} directory"#,
+            temp_dir.path()
         );
         assert_eq!(error_message, expeceted);
     }
