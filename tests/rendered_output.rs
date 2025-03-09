@@ -458,6 +458,8 @@ fn book_with_a_reserved_filename_does_not_build() {
     let md = MDBook::load(tmp_dir.path()).unwrap();
     let got = md.build();
     assert!(got.is_err());
+    let error_message = got.err().unwrap().to_string();
+    assert_eq!(error_message, "Rendering failed");
 }
 
 #[test]
