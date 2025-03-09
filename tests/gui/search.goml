@@ -1,0 +1,33 @@
+// This tests basic search behavior.
+
+// We disable the requests checks because `searchindex.json` will always fail
+// locally (due to CORS), but the searchindex.js will succeed.
+fail-on-request-error: false
+go-to: |DOC_PATH| + "index.html"
+
+define-function: (
+    "open-search",
+    [],
+    block {
+        assert-css: ("#search-wrapper", {"display": "none"})
+        press-key: 'S'
+        wait-for-css-false: ("#search-wrapper", {"display": "none"})
+    }
+)
+
+call-function: ("open-search", {})
+assert-text: ("#searchresults-header", "")
+write: "strikethrough"
+wait-for-text: ("#searchresults-header", "2 search results for 'strikethrough':")
+// Close the search display
+press-key: 'Escape'
+wait-for-css: ("#search-wrapper", {"display": "none"})
+// Reopening the search should show the last value
+call-function: ("open-search", {})
+assert-text: ("#searchresults-header", "2 search results for 'strikethrough':")
+// Navigate to a sub-chapter
+go-to: "./individual/strikethrough.html"
+assert-text: ("#searchresults-header", "")
+call-function: ("open-search", {})
+write: "strikethrough"
+wait-for-text: ("#searchresults-header", "2 search results for 'strikethrough':")
