@@ -1,9 +1,6 @@
 // This GUI test checks sidebar hide/show and also its behaviour on smaller
 // width.
 
-// We disable the requests checks because `searchindex.json` will always fail
-// locally.
-fail-on-request-error: false
 go-to: |DOC_PATH| + "index.html"
 set-window-size: (1100, 600)
 // Need to reload for the new size to be taken account by the JS.
