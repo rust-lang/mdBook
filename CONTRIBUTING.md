@@ -144,9 +144,15 @@ GUI tests are checked with the GUI testsuite. To run it, you need to install `np
 cargo test --test gui
 ```
 
+If you want to only run some tests, you can filter them by passing (part of) their name:
+
+```
+cargo test --test gui -- search
+```
+
 The first time, it'll fail and ask you to install the `browser-ui-test` package. Install it then re-run the tests.
 
-If you want to disable the headless mode, use the `DISABLE_HEADLESS_TEST=1` environment variable:
+If you want to disable the headless mode, use the `--disable-headless-test` option:
 
 ```
 cargo test --test gui -- --disable-headless-test
