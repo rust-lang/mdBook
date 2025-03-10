@@ -27,12 +27,16 @@ fn get_available_browser_ui_test_version() -> Option<String> {
 }
 
 fn expected_browser_ui_test_version() -> String {
-    let content = read_to_string(".github/workflows/main.yml")
-        .expect("failed to read `.github/workflows/main.yml`");
-    for line in content.lines() {
-        let line = line.trim();
-        if let Some(version) = line.strip_prefix("BROWSER_UI_TEST_VERSION:") {
-            return version.trim().replace('\'', "");
+    let content = read_to_string("package.json").expect("failed to read `package.json`");
+    let json = json::parse(&content).expect("invalid JSON");
+    if let json::JsonValue::Object(obj) = json {
+        if let Some(json::JsonValue::Object(deps)) = obj.get("dependencies") {
+            if let Some(version) = deps
+                .get("browser-ui-test")
+                .and_then(|version| version.as_str())
+            {
+                return version.trim().to_string();
+            }
         }
     }
     panic!("failed to retrieved `browser-ui-test` version");
