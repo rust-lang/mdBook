@@ -48,7 +48,8 @@ window.search = window.search || {};
         URL_MARK_PARAM = 'highlight',
         teaser_count = 0,
 
-        SEARCH_HOTKEY_KEYCODE = 83,
+        SEARCH_HOTKEY_KEYCODE_S = 83,
+        SEARCH_HOTKEY_KEYCODE_SLASH = 191,
         ESCAPE_KEYCODE = 27,
         DOWN_KEYCODE = 40,
         UP_KEYCODE = 38,
@@ -328,7 +329,7 @@ window.search = window.search || {};
             }
             showSearch(false);
             marker.unmark();
-        } else if (!hasFocus() && e.keyCode === SEARCH_HOTKEY_KEYCODE) {
+        } else if (!hasFocus() && (e.keyCode === SEARCH_HOTKEY_KEYCODE_S) || (e.keyCode === SEARCH_HOTKEY_KEYCODE_SLASH)) {
             e.preventDefault();
             showSearch(true);
             window.scrollTo(0, 0);
