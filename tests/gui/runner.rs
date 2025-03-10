@@ -1,5 +1,6 @@
+use std::collections::HashSet;
 use std::env::current_dir;
-use std::fs::{read_to_string, remove_dir_all};
+use std::fs::{read_dir, read_to_string, remove_dir_all};
 use std::process::Command;
 
 fn get_available_browser_ui_test_version_inner(global: bool) -> Option<String> {
@@ -72,13 +73,56 @@ fn main() {
 
     let book_dir = format!("file://{}", current_dir.join("test_book/book/").display());
 
+    let mut no_headless = false;
+    let mut filters = Vec::new();
+    for arg in std::env::args() {
+        if arg == "--disable-headless-test" {
+            no_headless = true;
+        } else {
+            filters.push(arg);
+        }
+    }
+
     let mut command = Command::new("npx");
     command
         .arg("browser-ui-test")
-        .args(["--variable", "DOC_PATH", book_dir.as_str()])
-        .args(["--test-folder", "tests/gui"]);
-    if std::env::args().any(|arg| arg == "--disable-headless-test") {
+        .args(["--variable", "DOC_PATH", book_dir.as_str()]);
+    if no_headless {
         command.arg("--no-headless");
+    }
+
+    let test_dir = "tests/gui";
+    if filters.is_empty() {
+        command.args(["--test-folder", test_dir]);
+    } else {
+        let files = read_dir(test_dir)
+            .map(|dir| {
+                dir.filter_map(|entry| entry.ok())
+                    .map(|entry| entry.path())
+                    .filter(|path| {
+                        path.extension().is_some_and(|ext| ext == "goml") && path.is_file()
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or(Vec::new());
+        let mut matches = HashSet::new();
+        for filter in filters {
+            for file in files.iter().filter(|f| {
+                f.file_name()
+                    .and_then(|name| name.to_str())
+                    .is_some_and(|name| name.contains(&filter))
+            }) {
+                matches.insert(file.display().to_string());
+            }
+        }
+        if matches.is_empty() {
+            println!("No test found");
+            return;
+        }
+        command.arg("--test-files");
+        for entry in matches {
+            command.arg(entry);
+        }
     }
 
     // Then we run the GUI tests on it.
