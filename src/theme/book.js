@@ -561,6 +561,7 @@ function playground_text(playground, hidden = true) {
         }
         switch (e.key) {
             case 'ArrowRight':
+            case 'l':
                 e.preventDefault();
                 if (html.dir == 'rtl') {
                     prev();
@@ -569,6 +570,7 @@ function playground_text(playground, hidden = true) {
                 }
                 break;
             case 'ArrowLeft':
+            case 'h':
                 e.preventDefault();
                 if (html.dir == 'rtl') {
                     next();
