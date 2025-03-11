@@ -1,5 +1,5 @@
 use crate::book::{Book, BookItem};
-use crate::config::{BookConfig, Code, Config, HtmlConfig, Playground, RustEdition};
+use crate::config::{BookConfig, Code, Config, HtmlConfig, Playground, RustEdition, UserTheme};
 use crate::errors::*;
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::html_handlebars::StaticFiles;
@@ -552,6 +552,20 @@ fn make_data(
     // This `matches!` checks for a non-empty file.
     if html_config.copy_fonts || matches!(theme.fonts_css.as_deref(), Some([_, ..])) {
         data.insert("copy_fonts".to_owned(), json!(true));
+    }
+
+    // Build a list of themes.
+    {
+        const BUILTIN_THEMES: &[&str] = &["Light", "Rust", "Coal", "Navy", "Ayu"];
+        let themes: Vec<_> = BUILTIN_THEMES
+            .into_iter()
+            .map(|&name| UserTheme {
+                name: name.to_owned(),
+                class: name.to_lowercase(),
+            })
+            .chain(html_config.additional_themes.iter().cloned())
+            .collect();
+        data.insert("themes".to_owned(), json!(themes));
     }
 
     // Add check to see if there is an additional style
