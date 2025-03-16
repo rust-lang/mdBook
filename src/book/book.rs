@@ -647,4 +647,19 @@ And here is some \
         let got = load_book_from_disk(&summary, temp.path());
         assert!(got.is_err());
     }
+
+    #[test]
+    fn cant_open_summary_md() {
+        let cfg = BuildConfig::default();
+        let temp_dir = TempFileBuilder::new().prefix("book").tempdir().unwrap();
+
+        let got = load_book(&temp_dir, &cfg);
+        assert!(got.is_err());
+        let error_message = got.err().unwrap().to_string();
+        let expeceted = format!(
+            r#"Couldn't open SUMMARY.md in {:?} directory"#,
+            temp_dir.path()
+        );
+        assert_eq!(error_message, expeceted);
+    }
 }
