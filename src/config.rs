@@ -535,6 +535,8 @@ pub struct HtmlConfig {
     pub curly_quotes: bool,
     /// Should mathjax be enabled?
     pub mathjax_support: bool,
+    /// The configuration file used by MathJax, defaults to 'tex-mml-chtml'.
+    pub mathjax_config: Option<String>,
     /// Whether to fonts.css and respective font files to the output directory.
     pub copy_fonts: bool,
     /// An optional google analytics code.
@@ -601,6 +603,7 @@ impl Default for HtmlConfig {
             smart_punctuation: false,
             curly_quotes: false,
             mathjax_support: false,
+            mathjax_config: Some(String::from("tex-mml-chtml")),
             copy_fonts: true,
             google_analytics: None,
             additional_css: Vec::new(),
