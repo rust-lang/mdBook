@@ -1,0 +1,29 @@
+// This tests basic search behavior.
+
+// We disable the requests checks because `searchindex.json` will always fail
+// locally (due to CORS), but the searchindex.js will succeed.
+fail-on-request-error: false
+
+go-to: |DOC_PATH| + "index.html"
+
+// default page is the first numbered page
+assert-text: ("title", "Introduction - mdBook test book")
+
+// Moving left we get to the prefix page
+press-key: 'ArrowLeft'
+assert-text: ("title", "Prefix Chapter - mdBook test book")
+
+// Trying to move to the left beyond the prefix pages - nothing changes
+press-key: 'ArrowLeft'
+assert-text: ("title", "Prefix Chapter - mdBook test book")
+
+// Back to the main page
+press-key: 'ArrowRight'
+assert-text: ("title", "Introduction - mdBook test book")
+
+press-key: 'ArrowRight'
+assert-text: ("title", "Markdown Individual tags - mdBook test book")
+
+press-key: 'ArrowRight'
+assert-text: ("title", "Heading - mdBook test book")
+
