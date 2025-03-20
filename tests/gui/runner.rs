@@ -75,7 +75,7 @@ fn main() {
 
     let mut no_headless = false;
     let mut filters = Vec::new();
-    for arg in std::env::args() {
+    for arg in std::env::args().skip(1) {
         if arg == "--disable-headless-test" {
             no_headless = true;
         } else {
