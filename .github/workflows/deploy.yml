@@ -48,7 +48,7 @@ jobs:
       run: rustup update stable --no-self-update && rustup default stable
     - name: Build book
       run: cargo run -- build guide
-    - name: Deploy to GitHub
+    - name: Deploy the User Guide to GitHub Pages using the gh-pages branch
       env:
         GITHUB_DEPLOY_KEY: ${{ secrets.GITHUB_DEPLOY_KEY }}
       run: |
