@@ -1,3 +1,4 @@
+use serde_json::Value;
 use std::collections::HashSet;
 use std::env::current_dir;
 use std::fs::{read_dir, read_to_string, remove_dir_all};
@@ -27,15 +28,18 @@ fn get_available_browser_ui_test_version() -> Option<String> {
 }
 
 fn expected_browser_ui_test_version() -> String {
-    let content = read_to_string(".github/workflows/main.yml")
-        .expect("failed to read `.github/workflows/main.yml`");
-    for line in content.lines() {
-        let line = line.trim();
-        if let Some(version) = line.strip_prefix("BROWSER_UI_TEST_VERSION:") {
-            return version.trim().replace('\'', "");
-        }
-    }
-    panic!("failed to retrieved `browser-ui-test` version");
+    let content = read_to_string("package.json").expect("failed to read `package.json`");
+    let v: Value = serde_json::from_str(&content).expect("failed to parse `package.json`");
+    let Some(dependencies) = v.get("dependencies") else {
+        panic!("Missing `dependencies` key in `package.json`");
+    };
+    let Some(browser_ui_test) = dependencies.get("browser-ui-test") else {
+        panic!("Missing `browser-ui-test` key in \"dependencies\" object in `package.json`");
+    };
+    let Value::String(version) = browser_ui_test else {
+        panic!("`browser-ui-test` version is not a string");
+    };
+    version.trim().to_string()
 }
 
 fn main() {
