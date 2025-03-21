@@ -150,7 +150,8 @@ If you want to only run some tests, you can filter them by passing (part of) the
 cargo test --test gui -- search
 ```
 
-The first time, it'll fail and ask you to install the `browser-ui-test` package. Install it then re-run the tests.
+The first time, it'll fail and ask you to install the `browser-ui-test` package. Install it with the provided
+command then re-run the tests.
 
 If you want to disable the headless mode, use the `--disable-headless-test` option:
 
@@ -161,6 +162,21 @@ cargo test --test gui -- --disable-headless-test
 The GUI tests are in the directory `tests/gui` in text files with the `.goml` extension. These tests are run
 using a `node.js` framework called `browser-ui-test`. You can find documentation for this language on its
 [repository](https://github.com/GuillaumeGomez/browser-UI-test/blob/master/goml-script.md).
+
+### Checking changes in `.js` files
+
+The `.js` files source code is checked using [`eslint`](https://eslint.org/). This is a linter (just like `clippy` in Rust)
+for the Javascript language. You can install it with `npm` by running the following command:
+
+```
+npm install
+```
+
+Then you can run it using:
+
+```
+npm run lint
+```
 
 ## Updating highlight.js
 
