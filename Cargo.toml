@@ -59,7 +59,6 @@ ammonia = { version = "4.0.0", optional = true }
 
 [dev-dependencies]
 assert_cmd = "2.0.11"
-json = "0.12.4"
 predicates = "3.0.3"
 select = "0.6.0"
 semver = "1.0.17"
