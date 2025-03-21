@@ -539,6 +539,8 @@ pub struct HtmlConfig {
     pub copy_fonts: bool,
     /// An optional google analytics code.
     pub google_analytics: Option<String>,
+    /// Additional themes to list as options.
+    pub additional_themes: Vec<UserTheme>,
     /// Additional CSS stylesheets to include in the rendered page's `<head>`.
     pub additional_css: Vec<PathBuf>,
     /// Additional JS scripts to include at the bottom of the rendered page's
@@ -592,6 +594,16 @@ pub struct HtmlConfig {
     pub hash_files: bool,
 }
 
+/// Configuration for a custom theme.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct UserTheme {
+    /// The human-readable name of the theme.
+    pub name: String,
+    /// The class to apply to the `<body>` when this theme is active.
+    pub class: String,
+}
+
 impl Default for HtmlConfig {
     fn default() -> HtmlConfig {
         HtmlConfig {
@@ -603,6 +615,7 @@ impl Default for HtmlConfig {
             mathjax_support: false,
             copy_fonts: true,
             google_analytics: None,
+            additional_themes: Vec::new(),
             additional_css: Vec::new(),
             additional_js: Vec::new(),
             fold: Fold::default(),
