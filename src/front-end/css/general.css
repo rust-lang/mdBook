@@ -277,3 +277,26 @@ sup {
 .result-no-output {
     font-style: italic;
 }
+
+#help-overlay {
+    position: fixed;
+    display: none;
+    width: 20%;
+    height: 60%;
+    top: 10%;
+    left: 40%;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(225,225,225,1);
+    z-index: 2;
+    cursor: pointer;
+    border-width: 3px;
+    border-color: black;
+    border-style: solid;
+    border-radius: 25px;
+
+    padding: 10px;
+}
+#help-title {
+    text-align: center;
+}

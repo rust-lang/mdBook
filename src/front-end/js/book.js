@@ -623,7 +623,7 @@ aria-label="Show hidden lines"></button>';
 
 (function chapterNavigation() {
     document.addEventListener('keydown', function(e) {
-        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+        if (e.altKey || e.ctrlKey || e.metaKey) {
             return;
         }
         if (window.search && window.search.hasFocus()) {
@@ -643,6 +643,42 @@ aria-label="Show hidden lines"></button>';
                 window.location.href = previousButton.href;
             }
         }
+        function showHelp() {
+            document.getElementById("help-overlay").style.display = "block";
+            let help = `<h2 id="help-title">Keyboard shortcuts</h2>`;
+            help += "<p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>";
+            help += "<p>Press <kbd>s</kbd> to search in the book</p>";
+            help += "<p>Press <kbd>?</kbd> to show this help</p>";
+            help += "<p>Press <kbd>Esc</kbd> to hide this help</p>";
+
+            document.getElementById("help-overlay").innerHTML = help;
+
+            document.addEventListener('keydown', function (e) {
+                if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
+
+                switch (e.key) {
+                    case 'Escape':
+                        e.preventDefault();
+                        hideHelp();
+                        break;
+                }
+            });
+        }
+        function hideHelp() {
+            document.getElementById("help-overlay").style.display = "none";
+        }
+
+        if (e.shiftKey) {
+            switch (e.key) {
+                case '?':
+                    e.preventDefault();
+                    showHelp();
+                    break;
+            }
+
+            return;
+        }
+
         switch (e.key) {
         case 'ArrowRight':
             e.preventDefault();
