@@ -309,7 +309,9 @@ function playground_text(playground, hidden = true) {
         themePopup.querySelectorAll('.theme-selected').forEach(function (el) {
             el.classList.remove('theme-selected');
         });
-        themePopup.querySelector("button#" + get_theme()).classList.add('theme-selected');
+        try {
+            themePopup.querySelector("button#" + get_theme()).classList.add('theme-selected');
+        } catch (e) { }
     }
 
     function hideThemes() {
@@ -322,9 +324,9 @@ function playground_text(playground, hidden = true) {
         var theme;
         try { theme = localStorage.getItem('mdbook-theme'); } catch (e) { }
         if (theme === null || theme === undefined || !themeIds.includes(theme)) {
-            return default_theme;
+            return default_theme.replace(/\W+/g, '_').toLowerCase();
         } else {
-            return theme;
+            return theme.replace(/\W+/g, '_').toLowerCase();
         }
     }
 
@@ -335,13 +337,17 @@ function playground_text(playground, hidden = true) {
             stylesheets.ayuHighlight.disabled = true;
             stylesheets.tomorrowNight.disabled = false;
             stylesheets.highlight.disabled = true;
-
             ace_theme = "ace/theme/tomorrow_night";
         } else if (theme == 'ayu') {
             stylesheets.ayuHighlight.disabled = false;
             stylesheets.tomorrowNight.disabled = true;
             stylesheets.highlight.disabled = true;
             ace_theme = "ace/theme/tomorrow_night";
+        } else if (theme == 'rust' || theme == 'light') {
+            stylesheets.ayuHighlight.disabled = true;
+            stylesheets.tomorrowNight.disabled = true;
+            stylesheets.highlight.disabled = false;
+            ace_theme = "ace/theme/dawn";
         } else {
             stylesheets.ayuHighlight.disabled = true;
             stylesheets.tomorrowNight.disabled = true;
@@ -359,16 +365,22 @@ function playground_text(playground, hidden = true) {
             });
         }
 
-        var previousTheme = get_theme();
-
+        var previousTheme = get_theme().replace(/\W+/g, '_').toLowerCase();
+        var selectedTheme =       theme.replace(/\W+/g, '_').toLowerCase();
         if (store) {
-            try { localStorage.setItem('mdbook-theme', theme); } catch (e) { }
+            try { localStorage.setItem('mdbook-theme', selectedTheme); } catch (e) { }
         }
 
-        html.classList.remove(previousTheme);
-        html.classList.add(theme);
+        try { 
+            html.classList.remove( previousTheme );
+            html.classList.add(    selectedTheme ); 
+        } catch (e) { }
+        
         updateThemeSelected();
     }
+
+    // Sanitize theme id names
+    themePopup.querySelectorAll("button").forEach(e=>{e.id=e.id.replace(/\W+/g, '_').toLowerCase();});
 
     // Set theme
     var theme = get_theme();

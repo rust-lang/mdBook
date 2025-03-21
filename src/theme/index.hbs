@@ -57,6 +57,7 @@
         <script>
             var path_to_root = "{{ path_to_root }}";
             var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "{{ preferred_dark_theme }}" : "{{ default_theme }}";
+            default_theme = default_theme.replace(/\W+/g, '_').toLowerCase();
         </script>
         <!-- Start loading toc.js asap -->
         <script src="{{ resource "toc.js" }}"></script>
@@ -85,8 +86,10 @@
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
             const html = document.documentElement;
-            html.classList.remove('{{ default_theme }}')
-            html.classList.add(theme);
+            try { 
+                html.classList.remove('{{ default_theme }}');
+                html.classList.add(theme.replace(/\W+/g, '_').toLowerCase()); 
+            } catch(e) { }
             html.classList.add("js");
         </script>
 
@@ -137,6 +140,9 @@
                             <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            {{#each additional_theme}}
+                            <li role="none"><button role="menuitem" class="theme" id="{{ this }}">{{ this }}</button></li>
+                            {{/each}}
                         </ul>
                         {{#if search_enabled}}
                         <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
