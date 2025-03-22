@@ -1,8 +1,5 @@
 // This tests basic search behavior.
 
-// We disable the requests checks because `searchindex.json` will always fail
-// locally (due to CORS), but the searchindex.js will succeed.
-fail-on-request-error: false
 go-to: |DOC_PATH| + "index.html"
 
 define-function: (

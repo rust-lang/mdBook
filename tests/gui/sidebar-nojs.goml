@@ -2,9 +2,6 @@
 // an iframe (because of JS disabled).
 // Regression test for <https://github.com/rust-lang/mdBook/issues/2528>.
 
-// We disable the requests checks because `searchindex.json` will always fail
-// locally.
-fail-on-request-error: false
 // We disable javascript
 javascript: false
 go-to: |DOC_PATH| + "index.html"
