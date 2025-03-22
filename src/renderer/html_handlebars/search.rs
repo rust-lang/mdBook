@@ -60,11 +60,10 @@ pub fn create_files(
     let index = write_to_json(index, search_config, doc_urls)?;
     debug!("Writing search index ✓");
     if index.len() > 10_000_000 {
-        warn!("searchindex.json is very large ({} bytes)", index.len());
+        warn!("search index is very large ({} bytes)", index.len());
     }
 
     if search_config.copy_js {
-        static_files.add_builtin("searchindex.json", index.as_bytes());
         static_files.add_builtin(
             "searchindex.js",
             format!("Object.assign(window.search, {});", index).as_bytes(),
