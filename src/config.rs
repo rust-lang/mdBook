@@ -480,6 +480,12 @@ pub struct BuildConfig {
     pub use_default_preprocessors: bool,
     /// Extra directories to trigger rebuild when watching/serving
     pub extra_watch_dirs: Vec<PathBuf>,
+    /// Should missing a preprocessor be considered an error?
+    /// By default, the application raises a warning instead and continue generation,
+    /// even if the book may be generated incorrectly.
+    /// Set this flag to  ̀false` to consider this an error, and exits the application
+    /// if a preprocessor is missing.
+    pub error_on_missing_preprocessor: bool,
 }
 
 impl Default for BuildConfig {
@@ -489,6 +495,7 @@ impl Default for BuildConfig {
             create_missing: true,
             use_default_preprocessors: true,
             extra_watch_dirs: Vec::new(),
+            error_on_missing_preprocessor: false,
         }
     }
 }
@@ -815,6 +822,7 @@ mod tests {
         build-dir = "outputs"
         create-missing = false
         use-default-preprocessors = true
+        error-on-missing-preprocessor = false
 
         [output.html]
         theme = "./themedir"
@@ -856,6 +864,7 @@ mod tests {
             create_missing: false,
             use_default_preprocessors: true,
             extra_watch_dirs: Vec::new(),
+            error_on_missing_preprocessor: false,
         };
         let rust_should_be = RustConfig { edition: None };
         let playground_should_be = Playground {
@@ -1067,6 +1076,8 @@ mod tests {
             create_missing: true,
             use_default_preprocessors: true,
             extra_watch_dirs: Vec::new(),
+            error_on_missing_preprocessor: false, // This flag is missing from "src" string,
+                                                  // so it should be false to ensure backward compatibility
         };
 
         let html_should_be = HtmlConfig {
