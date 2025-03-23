@@ -100,6 +100,7 @@ preferred-dark-theme = "navy"
 smart-punctuation = true
 mathjax-support = false
 copy-fonts = true
+additional-themes = [{ name = "Midnight Blue", class = "midnight" }]
 additional-css = ["custom.css", "custom2.css"]
 additional-js = ["custom.js"]
 no-section-label = false
@@ -134,6 +135,11 @@ The following configuration options are available:
   create a `theme/fonts/fonts.css` file and store the fonts in the `theme/fonts/` directory.
 - **google-analytics:** This field has been deprecated and will be removed in a future release.
   Use the `theme/head.hbs` file to add the appropriate Google Analytics code instead.
+- **additional-themes:** If you supply user-defined themes in `additional-css`, include them
+  here so they are listed in the theme dropdown. Each theme is specified as an object with two keys:
+  - **name:** The human-readable name of the theme.
+  - **class:** The css class to be applied to the body element while the theme is active.
+    This should correspond to selectors in one of the `additional-css` sheets.
 - **additional-css:** If you need to slightly change the appearance of your book
   without overwriting the whole style, you can specify a set of stylesheets that
   will be loaded after the default ones where you can surgically change the
