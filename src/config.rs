@@ -312,6 +312,8 @@ impl<'de> serde::Deserialize<'de> for Config {
             return Ok(Config::from_legacy(raw));
         }
 
+        warn_on_invalid_fields(&raw);
+
         use serde::de::Error;
         let mut table = match raw {
             Value::Table(t) => t,
@@ -374,6 +376,20 @@ impl Serialize for Config {
 fn parse_env(key: &str) -> Option<String> {
     key.strip_prefix("MDBOOK_")
         .map(|key| key.to_lowercase().replace("__", ".").replace('_', "-"))
+}
+
+fn warn_on_invalid_fields(table: &Value) {
+    let valid_items = ["book", "build", "rust", "output", "preprocessor"];
+
+    if let Some(table) = table.as_table() {
+        for item in table.keys() {
+            if !valid_items.contains(&item.as_str()) {
+                warn!("Invalid field {:?} in book.toml", &item);
+            }
+        }
+    } else {
+        warn!("Invalid format in book.toml");
+    }
 }
 
 fn is_legacy_format(table: &Value) -> bool {
