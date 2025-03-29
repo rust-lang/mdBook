@@ -4,7 +4,7 @@
     "eslint": "^8.57.1"
   },
   "scripts": {
-    "lint": "eslint src/theme/*js src/theme/**/*js",
-    "lint-fix": "eslint --fix src/theme/*js src/theme/**/*js"
+    "lint": "eslint src/front-end/*js src/front-end/**/*js",
+    "lint-fix": "eslint --fix src/front-end/*js src/front-end/**/*js"
   }  
 }
