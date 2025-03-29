@@ -13,12 +13,12 @@ use std::path::{Path, PathBuf};
 
 use crate::errors::*;
 use log::warn;
-pub static INDEX: &[u8] = include_bytes!("index.hbs");
-pub static HEAD: &[u8] = include_bytes!("head.hbs");
-pub static REDIRECT: &[u8] = include_bytes!("redirect.hbs");
-pub static HEADER: &[u8] = include_bytes!("header.hbs");
-pub static TOC_JS: &[u8] = include_bytes!("toc.js.hbs");
-pub static TOC_HTML: &[u8] = include_bytes!("toc.html.hbs");
+pub static INDEX: &[u8] = include_bytes!("../front-end/templates/index.hbs");
+pub static HEAD: &[u8] = include_bytes!("../front-end/templates/head.hbs");
+pub static REDIRECT: &[u8] = include_bytes!("../front-end/templates/redirect.hbs");
+pub static HEADER: &[u8] = include_bytes!("../front-end/templates/header.hbs");
+pub static TOC_JS: &[u8] = include_bytes!("../front-end/templates/toc.js.hbs");
+pub static TOC_HTML: &[u8] = include_bytes!("../front-end/templates/toc.html.hbs");
 pub static CHROME_CSS: &[u8] = include_bytes!("css/chrome.css");
 pub static GENERAL_CSS: &[u8] = include_bytes!("css/general.css");
 pub static PRINT_CSS: &[u8] = include_bytes!("css/print.css");
