@@ -13,32 +13,31 @@ use std::path::{Path, PathBuf};
 
 use crate::errors::*;
 use log::warn;
-pub static INDEX: &[u8] = include_bytes!("index.hbs");
-pub static HEAD: &[u8] = include_bytes!("head.hbs");
-pub static REDIRECT: &[u8] = include_bytes!("redirect.hbs");
-pub static HEADER: &[u8] = include_bytes!("header.hbs");
-pub static TOC_JS: &[u8] = include_bytes!("toc.js.hbs");
-pub static TOC_HTML: &[u8] = include_bytes!("toc.html.hbs");
+pub static INDEX: &[u8] = include_bytes!("templates/index.hbs");
+pub static HEAD: &[u8] = include_bytes!("templates/head.hbs");
+pub static REDIRECT: &[u8] = include_bytes!("templates/redirect.hbs");
+pub static HEADER: &[u8] = include_bytes!("templates/header.hbs");
+pub static TOC_JS: &[u8] = include_bytes!("templates/toc.js.hbs");
+pub static TOC_HTML: &[u8] = include_bytes!("templates/toc.html.hbs");
 pub static CHROME_CSS: &[u8] = include_bytes!("css/chrome.css");
 pub static GENERAL_CSS: &[u8] = include_bytes!("css/general.css");
 pub static PRINT_CSS: &[u8] = include_bytes!("css/print.css");
 pub static VARIABLES_CSS: &[u8] = include_bytes!("css/variables.css");
-pub static FAVICON_PNG: &[u8] = include_bytes!("favicon.png");
-pub static FAVICON_SVG: &[u8] = include_bytes!("favicon.svg");
-pub static JS: &[u8] = include_bytes!("book.js");
-pub static HIGHLIGHT_JS: &[u8] = include_bytes!("highlight.js");
-pub static TOMORROW_NIGHT_CSS: &[u8] = include_bytes!("tomorrow-night.css");
-pub static HIGHLIGHT_CSS: &[u8] = include_bytes!("highlight.css");
-pub static AYU_HIGHLIGHT_CSS: &[u8] = include_bytes!("ayu-highlight.css");
-pub static CLIPBOARD_JS: &[u8] = include_bytes!("clipboard.min.js");
-pub static FONT_AWESOME: &[u8] = include_bytes!("FontAwesome/css/font-awesome.min.css");
-pub static FONT_AWESOME_EOT: &[u8] = include_bytes!("FontAwesome/fonts/fontawesome-webfont.eot");
-pub static FONT_AWESOME_SVG: &[u8] = include_bytes!("FontAwesome/fonts/fontawesome-webfont.svg");
-pub static FONT_AWESOME_TTF: &[u8] = include_bytes!("FontAwesome/fonts/fontawesome-webfont.ttf");
-pub static FONT_AWESOME_WOFF: &[u8] = include_bytes!("FontAwesome/fonts/fontawesome-webfont.woff");
-pub static FONT_AWESOME_WOFF2: &[u8] =
-    include_bytes!("FontAwesome/fonts/fontawesome-webfont.woff2");
-pub static FONT_AWESOME_OTF: &[u8] = include_bytes!("FontAwesome/fonts/FontAwesome.otf");
+pub static FAVICON_PNG: &[u8] = include_bytes!("images/favicon.png");
+pub static FAVICON_SVG: &[u8] = include_bytes!("images/favicon.svg");
+pub static JS: &[u8] = include_bytes!("js/book.js");
+pub static HIGHLIGHT_JS: &[u8] = include_bytes!("js/highlight.js");
+pub static TOMORROW_NIGHT_CSS: &[u8] = include_bytes!("css/tomorrow-night.css");
+pub static HIGHLIGHT_CSS: &[u8] = include_bytes!("css/highlight.css");
+pub static AYU_HIGHLIGHT_CSS: &[u8] = include_bytes!("css/ayu-highlight.css");
+pub static CLIPBOARD_JS: &[u8] = include_bytes!("js/clipboard.min.js");
+pub static FONT_AWESOME: &[u8] = include_bytes!("css/font-awesome.min.css");
+pub static FONT_AWESOME_EOT: &[u8] = include_bytes!("fonts/fontawesome-webfont.eot");
+pub static FONT_AWESOME_SVG: &[u8] = include_bytes!("fonts/fontawesome-webfont.svg");
+pub static FONT_AWESOME_TTF: &[u8] = include_bytes!("fonts/fontawesome-webfont.ttf");
+pub static FONT_AWESOME_WOFF: &[u8] = include_bytes!("fonts/fontawesome-webfont.woff");
+pub static FONT_AWESOME_WOFF2: &[u8] = include_bytes!("fonts/fontawesome-webfont.woff2");
+pub static FONT_AWESOME_OTF: &[u8] = include_bytes!("fonts/FontAwesome.otf");
 
 /// The `Theme` struct should be used instead of the static variables because
 /// the `new()` method will look if the user has a theme directory in their
