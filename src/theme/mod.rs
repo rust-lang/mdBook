@@ -19,26 +19,26 @@ pub static REDIRECT: &[u8] = include_bytes!("../front-end/templates/redirect.hbs
 pub static HEADER: &[u8] = include_bytes!("../front-end/templates/header.hbs");
 pub static TOC_JS: &[u8] = include_bytes!("../front-end/templates/toc.js.hbs");
 pub static TOC_HTML: &[u8] = include_bytes!("../front-end/templates/toc.html.hbs");
-pub static CHROME_CSS: &[u8] = include_bytes!("css/chrome.css");
-pub static GENERAL_CSS: &[u8] = include_bytes!("css/general.css");
-pub static PRINT_CSS: &[u8] = include_bytes!("css/print.css");
-pub static VARIABLES_CSS: &[u8] = include_bytes!("css/variables.css");
+pub static CHROME_CSS: &[u8] = include_bytes!("../front-end/css/chrome.css");
+pub static GENERAL_CSS: &[u8] = include_bytes!("../front-end/css/general.css");
+pub static PRINT_CSS: &[u8] = include_bytes!("../front-end/css/print.css");
+pub static VARIABLES_CSS: &[u8] = include_bytes!("../front-end/css/variables.css");
 pub static FAVICON_PNG: &[u8] = include_bytes!("favicon.png");
 pub static FAVICON_SVG: &[u8] = include_bytes!("favicon.svg");
-pub static JS: &[u8] = include_bytes!("book.js");
+pub static JS: &[u8] = include_bytes!("../front-end/book.js");
 pub static HIGHLIGHT_JS: &[u8] = include_bytes!("highlight.js");
-pub static TOMORROW_NIGHT_CSS: &[u8] = include_bytes!("tomorrow-night.css");
-pub static HIGHLIGHT_CSS: &[u8] = include_bytes!("highlight.css");
-pub static AYU_HIGHLIGHT_CSS: &[u8] = include_bytes!("ayu-highlight.css");
+pub static TOMORROW_NIGHT_CSS: &[u8] = include_bytes!("../front-end/css/tomorrow-night.css");
+pub static HIGHLIGHT_CSS: &[u8] = include_bytes!("../front-end/css/highlight.css");
+pub static AYU_HIGHLIGHT_CSS: &[u8] = include_bytes!("../front-end/css/ayu-highlight.css");
 pub static CLIPBOARD_JS: &[u8] = include_bytes!("clipboard.min.js");
-pub static FONT_AWESOME: &[u8] = include_bytes!("FontAwesome/css/font-awesome.min.css");
-pub static FONT_AWESOME_EOT: &[u8] = include_bytes!("FontAwesome/fonts/fontawesome-webfont.eot");
-pub static FONT_AWESOME_SVG: &[u8] = include_bytes!("FontAwesome/fonts/fontawesome-webfont.svg");
-pub static FONT_AWESOME_TTF: &[u8] = include_bytes!("FontAwesome/fonts/fontawesome-webfont.ttf");
-pub static FONT_AWESOME_WOFF: &[u8] = include_bytes!("FontAwesome/fonts/fontawesome-webfont.woff");
+pub static FONT_AWESOME: &[u8] = include_bytes!("../front-end/css/font-awesome.min.css");
+pub static FONT_AWESOME_EOT: &[u8] = include_bytes!("../front-end/fonts/fontawesome-webfont.eot");
+pub static FONT_AWESOME_SVG: &[u8] = include_bytes!("../front-end/fonts/fontawesome-webfont.svg");
+pub static FONT_AWESOME_TTF: &[u8] = include_bytes!("../front-end/fonts/fontawesome-webfont.ttf");
+pub static FONT_AWESOME_WOFF: &[u8] = include_bytes!("../front-end/fonts/fontawesome-webfont.woff");
 pub static FONT_AWESOME_WOFF2: &[u8] =
-    include_bytes!("FontAwesome/fonts/fontawesome-webfont.woff2");
-pub static FONT_AWESOME_OTF: &[u8] = include_bytes!("FontAwesome/fonts/FontAwesome.otf");
+    include_bytes!("../front-end/fonts/fontawesome-webfont.woff2");
+pub static FONT_AWESOME_OTF: &[u8] = include_bytes!("../front-end/fonts/FontAwesome.otf");
 
 /// The `Theme` struct should be used instead of the static variables because
 /// the `new()` method will look if the user has a theme directory in their
