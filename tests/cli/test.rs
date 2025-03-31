@@ -32,3 +32,15 @@ fn mdbook_cli_detects_book_with_failing_tests() {
       .stderr(predicates::str::is_match(r##"returned an error:\n\n"##).unwrap())
       .stderr(predicates::str::is_match(r##"Nested_Chapter::Rustdoc_include_works_with_anchors_too \(line \d+\) ... FAILED"##).unwrap());
 }
+
+#[test]
+fn empty_cli() {
+    let mut cmd = mdbook_cmd();
+    cmd.assert()
+        .failure()
+        .code(2)
+        .stdout(predicates::str::is_empty())
+        .stderr(predicates::str::contains(
+            "Creates a book from markdown files",
+        ));
+}
