@@ -50,9 +50,13 @@
 
         {{#if mathjax_support}}
         <!-- MathJax -->
+        {{#if asciimath_support}}
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
+        {{else}}
         <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
         {{/if}}
-
+        {{/if}}
+        
         <!-- Provide site root to javascript -->
         <script>
             const path_to_root = "{{ path_to_root }}";
