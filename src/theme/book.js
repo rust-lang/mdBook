@@ -1,6 +1,6 @@
 'use strict';
 
-/* global default_theme, hljs, ClipboardJS */
+/* global default_theme, default_dark_theme, default_light_theme, hljs, ClipboardJS */
 
 // Fix back button cache problem
 window.onunload = function() { };
@@ -329,11 +329,11 @@ aria-label="Show hidden lines"></button>';
         themePopup.querySelectorAll('.theme-selected').forEach(function(el) {
             el.classList.remove('theme-selected');
         });
-        const selected = get_saved_theme() ?? "default_theme";
-        var element = themePopup.querySelector("button#" + selected);
+        const selected = get_saved_theme() ?? 'default_theme';
+        let element = themePopup.querySelector('button#' + selected);
         if (element === null) {
             // Fall back in case there is no "Default" item.
-            element = themePopup.querySelector("button#" + get_theme());
+            element = themePopup.querySelector('button#' + get_theme());
         }
         element.classList.add('theme-selected');
     }
@@ -345,7 +345,7 @@ aria-label="Show hidden lines"></button>';
     }
 
     function get_saved_theme() {
-        var theme = null;
+        let theme = null;
         try {
             theme = localStorage.getItem('mdbook-theme');
         } catch (e) {
@@ -359,14 +359,14 @@ aria-label="Show hidden lines"></button>';
     }
 
     function get_theme() {
-        var theme = get_saved_theme();
+        const theme = get_saved_theme();
         if (theme === null || theme === undefined || !themeIds.includes(theme)) {
             if (typeof default_dark_theme === 'undefined') {
                 // A customized index.hbs might not define this, so fall back to
                 // old behavior of determining the default on page load.
                 return default_theme;
             }
-            return window.matchMedia("(prefers-color-scheme: dark)").matches
+            return window.matchMedia('(prefers-color-scheme: dark)').matches
                 ? default_dark_theme
                 : default_light_theme;
         } else {
@@ -374,7 +374,7 @@ aria-label="Show hidden lines"></button>';
         }
     }
 
-    var previousTheme = default_theme;
+    let previousTheme = default_theme;
     function set_theme(theme, store = true) {
         let ace_theme;
 
@@ -420,9 +420,9 @@ aria-label="Show hidden lines"></button>';
         updateThemeSelected();
     }
 
-    const query = window.matchMedia("(prefers-color-scheme: dark)");
-    query.onchange = function(event) {
-      set_theme(get_theme(), false);
+    const query = window.matchMedia('(prefers-color-scheme: dark)');
+    query.onchange = function() {
+        set_theme(get_theme(), false);
     };
 
     // Set theme.
@@ -445,7 +445,7 @@ aria-label="Show hidden lines"></button>';
         } else {
             return;
         }
-        if (theme === "default_theme" || theme == null) {
+        if (theme === 'default_theme' || theme === null) {
             delete_saved_theme();
             set_theme(get_theme(), false);
         } else {
