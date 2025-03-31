@@ -145,7 +145,7 @@ table tbody tr:nth-child(2n) {
 }
 
 
-blockquote {
+blockquote, details {
     margin: 20px 0;
     padding: 0 20px;
     color: var(--fg);
@@ -175,6 +175,12 @@ blockquote {
 
 blockquote .warning:before {
     background-color: var(--quote-bg);
+}
+
+details {
+    border-left: .1em solid var(--quote-border);
+    border-right: .1em solid var(--quote-border);
+    border-radius: 4px;
 }
 
 kbd {
