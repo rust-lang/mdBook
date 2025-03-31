@@ -1,5 +1,24 @@
 # Changelog
 
+## mdBook 0.4.48
+[v0.4.47...v0.4.48](https://github.com/rust-lang/mdBook/compare/v0.4.47...v0.4.48)
+
+### Added
+
+- Footnotes now have back-reference links. These links bring the reader back to the original location. As part of this change, footnotes are now only rendered at the bottom of the page. This also includes some styling updates and fixes for footnote rendering.
+  [#2626](https://github.com/rust-lang/mdBook/pull/2626)
+- Added an "Auto" theme selection option which will default to the system-preferred mode. This will also automatically switch when the system changes the preferred mode.
+  [#2576](https://github.com/rust-lang/mdBook/pull/2576)
+
+### Changed
+
+- The `searchindex.json` file has been removed; only the `searchindex.js` file will be generated.
+  [#2552](https://github.com/rust-lang/mdBook/pull/2552)
+- Updated Javascript code to use eslint.
+  [#2554](https://github.com/rust-lang/mdBook/pull/2554)
+- An error is generated if there are duplicate files in `SUMMARY.md`.
+  [#2613](https://github.com/rust-lang/mdBook/pull/2613)
+
 ## mdBook 0.4.47
 [v0.4.46...v0.4.47](https://github.com/rust-lang/mdBook/compare/v0.4.46...v0.4.47)
 
