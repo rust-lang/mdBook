@@ -87,6 +87,7 @@ pub mod book;
 pub mod config;
 pub mod preprocess;
 pub mod renderer;
+#[path = "front-end/mod.rs"]
 pub mod theme;
 pub mod utils;
 
