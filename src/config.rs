@@ -569,6 +569,8 @@ pub struct HtmlConfig {
     pub code: Code,
     /// Print settings.
     pub print: Print,
+    /// Help settings.
+    pub help: Help,
     /// Don't render section labels.
     pub no_section_label: bool,
     /// Search settings. If `None`, the default will be used.
@@ -625,6 +627,7 @@ impl Default for HtmlConfig {
             playground: Playground::default(),
             code: Code::default(),
             print: Print::default(),
+            help: Help::default(),
             no_section_label: false,
             search: None,
             git_repository_url: None,
@@ -653,6 +656,21 @@ impl HtmlConfig {
     /// Returns `true` if smart punctuation is enabled.
     pub fn smart_punctuation(&self) -> bool {
         self.smart_punctuation || self.curly_quotes
+    }
+}
+/// Configuration for how to handle help
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct Help {
+    /// Whether help icon should be displayed.
+    pub show_icon: bool,
+}
+
+impl Default for Help {
+    fn default() -> Self {
+        Self {
+            show_icon: true,
+        }
     }
 }
 

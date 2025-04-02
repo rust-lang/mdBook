@@ -165,6 +165,11 @@
                             <i class="fa fa-search"></i>
                         </button>
                         {{/if}}
+                        {{#if help_show_icon}}
+                        <button id="show-help" class="icon-button" type="button" title="Help. (Shortkey: ?)" aria-label="Show Help popup" aria-expanded="false" aria-keyshortcuts="?" aria-controls="helpbutton">
+                            <i class="fa fa-question"></i>
+                        </button>
+                        {{/if}}
                     </div>
 
                     <h1 class="menu-title">{{ book_title }}</h1>
