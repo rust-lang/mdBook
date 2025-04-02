@@ -644,36 +644,38 @@ aria-label="Show hidden lines"></button>';
             }
         }
         function showHelp() {
-            document.getElementById("help-overlay").style.display = "block";
-            let help = `<h2 id="help-title">Keyboard shortcuts</h2>`;
-            help += "<p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>";
-            help += "<p>Press <kbd>s</kbd> to search in the book</p>";
-            help += "<p>Press <kbd>?</kbd> to show this help</p>";
-            help += "<p>Press <kbd>Esc</kbd> to hide this help</p>";
+            document.getElementById('help-overlay').style.display = 'block';
+            let help = '<h2 id="help-title">Keyboard shortcuts</h2>';
+            help += '<p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>';
+            help += '<p>Press <kbd>s</kbd> to search in the book</p>';
+            help += '<p>Press <kbd>?</kbd> to show this help</p>';
+            help += '<p>Press <kbd>Esc</kbd> to hide this help</p>';
 
-            document.getElementById("help-overlay").innerHTML = help;
+            document.getElementById('help-overlay').innerHTML = help;
 
-            document.addEventListener('keydown', function (e) {
-                if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { return; }
+            document.addEventListener('keydown', function(e) {
+                if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+                    return;
+                }
 
                 switch (e.key) {
-                    case 'Escape':
-                        e.preventDefault();
-                        hideHelp();
-                        break;
+                case 'Escape':
+                    e.preventDefault();
+                    hideHelp();
+                    break;
                 }
             });
         }
         function hideHelp() {
-            document.getElementById("help-overlay").style.display = "none";
+            document.getElementById('help-overlay').style.display = 'none';
         }
 
         // Usually needs the Shift key to be pressed
         switch (e.key) {
-            case '?':
-                e.preventDefault();
-                showHelp();
-                break;
+        case '?':
+            e.preventDefault();
+            showHelp();
+            break;
         }
 
         // Rest of the keys are only active when the Shift key is not pressed
