@@ -668,14 +668,16 @@ aria-label="Show hidden lines"></button>';
             document.getElementById("help-overlay").style.display = "none";
         }
 
-        if (e.shiftKey) {
-            switch (e.key) {
-                case '?':
-                    e.preventDefault();
-                    showHelp();
-                    break;
-            }
+        // Usually needs the Shift key to be pressed
+        switch (e.key) {
+            case '?':
+                e.preventDefault();
+                showHelp();
+                break;
+        }
 
+        // Rest of the keys are only active when the Shift key is not pressed
+        if (e.shiftKey) {
             return;
         }
 
