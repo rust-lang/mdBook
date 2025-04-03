@@ -37,7 +37,7 @@ fn ask_the_preprocessor_to_blow_up() {
     md.with_preprocessor(example());
 
     md.config
-        .set("preprocessor.nop-preprocessor.blow-up", true)
+        .set("preprocessor.nop-preprocessor.blow_up", true)
         .unwrap();
 
     let got = md.build();
