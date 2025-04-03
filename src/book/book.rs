@@ -442,6 +442,8 @@ And here is some \
 
         let got = load_chapter(&link, "", Vec::new());
         assert!(got.is_err());
+        let error_message = got.err().unwrap().to_string();
+        assert_eq!(error_message, "Chapter file not found, /foo/bar/baz.md");
     }
 
     #[test]
