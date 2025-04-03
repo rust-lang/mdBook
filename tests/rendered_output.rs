@@ -419,6 +419,38 @@ fn able_to_include_files_in_chapters() {
     assert_doesnt_contain_strings(&includes, &["{{#include ../SUMMARY.md::}}"]);
 }
 
+/// This makes sure chapter::path is a logical value and chapter::source_path has the real path
+/// on the file system which is used for partial includes.
+#[test]
+fn able_to_include_files_in_chapters_regardless_of_logical_path() {
+    let temp = DummyBook::new().build().unwrap();
+    let mut md = MDBook::load(temp.path()).unwrap();
+    fn bad_path(sec: &mut mdbook::BookItem) {
+        match sec {
+            mdbook::BookItem::Chapter(c) => {
+                if let Some(ref mut p) = c.path {
+                    p.set_extension("");
+                    p.push("oops.md");
+                }
+                c.sub_items.iter_mut().for_each(bad_path);
+            }
+            _ => {}
+        }
+    }
+    md.book.sections.iter_mut().for_each(bad_path);
+    md.build().unwrap();
+
+    let includes = temp.path().join("book/first/includes.html");
+
+    let summary_strings = &[
+        r##"<h1 id="summary"><a class="header" href="#summary">Summary</a></h1>"##,
+        ">First Chapter</a>",
+    ];
+    assert_contains_strings(&includes, summary_strings);
+
+    assert_doesnt_contain_strings(&includes, &["{{#include ../SUMMARY.md::}}"]);
+}
+
 /// Ensure cyclic includes are capped so that no exceptions occur
 #[test]
 fn recursive_includes_are_capped() {
