@@ -38,12 +38,16 @@ impl DummyBook {
         self
     }
 
-    /// Write a book to a temporary directory using the provided settings.
-    pub fn build(&self) -> Result<TempDir> {
-        let temp = TempFileBuilder::new()
+    pub fn empty(&self) -> Result<TempDir> {
+        TempFileBuilder::new()
             .prefix("dummy_book-")
             .tempdir()
-            .with_context(|| "Unable to create temp directory")?;
+            .with_context(|| "Unable to create temp directory")
+    }
+
+    /// Write a book to a temporary directory using the provided settings.
+    pub fn build(&self) -> Result<TempDir> {
+        let temp = self.empty()?;
 
         let dummy_book_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/dummy_book");
         recursive_copy(&dummy_book_root, temp.path()).with_context(|| {
