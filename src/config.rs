@@ -381,14 +381,11 @@ fn parse_env(key: &str) -> Option<String> {
 fn warn_on_invalid_fields(table: &Value) {
     let valid_items = ["book", "build", "rust", "output", "preprocessor"];
 
-    if let Some(table) = table.as_table() {
-        for item in table.keys() {
-            if !valid_items.contains(&item.as_str()) {
-                warn!("Invalid field {:?} in book.toml", &item);
-            }
+    let table = table.as_table().expect("root must be a table");
+    for item in table.keys() {
+        if !valid_items.contains(&item.as_str()) {
+            warn!("Invalid field {:?} in book.toml", &item);
         }
-    } else {
-        warn!("Invalid format in book.toml");
     }
 }
 
