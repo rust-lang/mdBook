@@ -313,6 +313,7 @@ impl<'de> serde::Deserialize<'de> for Config {
         }
 
         warn_on_invalid_fields(&raw);
+        warn_on_invalid_fields_in_book_section(&raw);
 
         use serde::de::Error;
         let mut table = match raw {
@@ -385,6 +386,29 @@ fn warn_on_invalid_fields(table: &Value) {
     for item in table.keys() {
         if !valid_items.contains(&item.as_str()) {
             warn!("Invalid field {:?} in book.toml", &item);
+        }
+    }
+}
+
+fn warn_on_invalid_fields_in_book_section(table: &Value) {
+    let valid_items = [
+        "title",
+        "authors",
+        "description",
+        "src",
+        "language",
+        "text-direction",
+        "multilingual",
+    ];
+    if let Some(book) = table.get("book") {
+        let table = book.as_table().expect("root.book must be a table");
+        for item in table.keys() {
+            if !valid_items.contains(&item.as_str()) {
+                warn!(
+                    "Invalid field {:?} in the [book] section of book.toml",
+                    &item
+                );
+            }
         }
     }
 }
