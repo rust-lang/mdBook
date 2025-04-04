@@ -7,12 +7,14 @@ pub mod fonts;
 #[cfg(feature = "search")]
 pub mod searcher;
 
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
 use crate::errors::*;
 use log::warn;
+use regex::RegexBuilder;
 pub static INDEX: &[u8] = include_bytes!("templates/index.hbs");
 pub static HEAD: &[u8] = include_bytes!("templates/head.hbs");
 pub static REDIRECT: &[u8] = include_bytes!("templates/redirect.hbs");
@@ -26,7 +28,7 @@ pub static VARIABLES_CSS: &[u8] = include_bytes!("css/variables.css");
 pub static FAVICON_PNG: &[u8] = include_bytes!("images/favicon.png");
 pub static FAVICON_SVG: &[u8] = include_bytes!("images/favicon.svg");
 pub static JS: &[u8] = include_bytes!("js/book.js");
-pub static HIGHLIGHT_JS: &[u8] = include_bytes!("js/highlight.js");
+pub static HIGHLIGHT_JS: &str = include_str!("js/highlight.js");
 pub static TOMORROW_NIGHT_CSS: &[u8] = include_bytes!("css/tomorrow-night.css");
 pub static HIGHLIGHT_CSS: &[u8] = include_bytes!("css/highlight.css");
 pub static AYU_HIGHLIGHT_CSS: &[u8] = include_bytes!("css/ayu-highlight.css");
@@ -72,9 +74,10 @@ pub struct Theme {
 impl Theme {
     /// Creates a `Theme` from the given `theme_dir`.
     /// If a file is found in the theme dir, it will override the default version.
-    pub fn new<P: AsRef<Path>>(theme_dir: P) -> Self {
+    pub fn new<P: AsRef<Path>>(theme_dir: P, languages: &[String]) -> Self {
         let theme_dir = theme_dir.as_ref();
         let mut theme = Theme::default();
+        theme.highlight_js = build_highlightjs(languages);
 
         // If the theme directory doesn't exist there's no point continuing...
         if !theme_dir.exists() || !theme_dir.is_dir() {
@@ -172,6 +175,73 @@ impl Theme {
     }
 }
 
+// The HIGHLIGHT_JS contains minified javascript code that contains the core of highlight.js
+// and sections for every supported language that starts with a comment including the name of the language.
+// For example: /*! `rust` grammar compiled for Highlight.js 11.10.0 */
+fn split_highlightjs() -> (&'static str, HashMap<&'static str, &'static str>) {
+    let re = RegexBuilder::new(r"^(?<core>.*?)/\*! `([a-z0-9]+)` grammar compiled")
+        .dot_matches_new_line(true)
+        .build()
+        .unwrap();
+    let core = match re.captures(HIGHLIGHT_JS) {
+        Some(cap) => cap["core"].len(),
+        None => panic!("Unable to find core in highlight.js"),
+    };
+
+    let mut start = core;
+    let end = HIGHLIGHT_JS.len();
+    let re = RegexBuilder::new(r"^(?<code>/\*! `(?<language>[a-z0-9]+)` grammar compiled.*?)/\*! `[a-z0-9]+` grammar compiled")
+        .dot_matches_new_line(true)
+        .build()
+        .unwrap();
+    let mut languages: HashMap<&'static str, &'static str> = HashMap::new();
+    while end > start {
+        match re.captures(&HIGHLIGHT_JS[start..end]) {
+            Some(cap) => {
+                let lang = cap.name("language").map_or("", |m| m.as_str());
+                let code = &cap.name("code").map_or("", |m| m.as_str());
+                // log::warn!("lang: {} {}", lang, code.len());
+                languages.insert(lang, code);
+                start += code.len();
+            }
+            None => break,
+        };
+    }
+
+    let re = RegexBuilder::new(r"/\*! `(?<language>[a-z0-9]+)` grammar compiled")
+        .dot_matches_new_line(true)
+        .build()
+        .unwrap();
+    match re.captures(&HIGHLIGHT_JS[start..end]) {
+        Some(cap) => {
+            let lang = cap.name("language").map_or("", |m| m.as_str());
+            let code = &HIGHLIGHT_JS[start..end];
+            // log::warn!("last lang: {} {}", lang, code.len());
+            languages.insert(lang, code);
+        }
+        None => panic!("Unable to find last language in highlight.js"),
+    };
+
+    (&HIGHLIGHT_JS[0..core], languages)
+}
+
+fn build_highlightjs(languages: &[String]) -> Vec<u8> {
+    log::info!("Building highlight.js");
+    let (core, language_mappings) = split_highlightjs();
+    // log::warn!("language_mappings: {:?}", language_mappings.keys());
+
+    let mut content = core.to_string();
+    for lang in languages.iter() {
+        if let Some(lang) = language_mappings.get(lang.as_str()) {
+            content.push_str(lang);
+        } else {
+            warn!("Unable to find highlight.js language for {}", lang);
+        }
+    }
+
+    content.as_bytes().to_vec()
+}
+
 impl Default for Theme {
     fn default() -> Theme {
         Theme {
@@ -193,7 +263,7 @@ impl Default for Theme {
             highlight_css: HIGHLIGHT_CSS.to_owned(),
             tomorrow_night_css: TOMORROW_NIGHT_CSS.to_owned(),
             ayu_highlight_css: AYU_HIGHLIGHT_CSS.to_owned(),
-            highlight_js: HIGHLIGHT_JS.to_owned(),
+            highlight_js: build_highlightjs(&vec![]),
             clipboard_js: CLIPBOARD_JS.to_owned(),
         }
     }
@@ -227,7 +297,7 @@ mod tests {
         assert!(!non_existent.exists());
 
         let should_be = Theme::default();
-        let got = Theme::new(&non_existent);
+        let got = Theme::new(&non_existent, &vec![]);
 
         assert_eq!(got, should_be);
     }
@@ -265,7 +335,7 @@ mod tests {
             File::create(&temp.path().join(file)).unwrap();
         }
 
-        let got = Theme::new(temp.path());
+        let got = Theme::new(temp.path(), &vec![]);
 
         let empty = Theme {
             index: Vec::new(),
@@ -297,13 +367,13 @@ mod tests {
     fn favicon_override() {
         let temp = TempFileBuilder::new().prefix("mdbook-").tempdir().unwrap();
         fs::write(temp.path().join("favicon.png"), "1234").unwrap();
-        let got = Theme::new(temp.path());
+        let got = Theme::new(temp.path(), &vec![]);
         assert_eq!(got.favicon_png.as_ref().unwrap(), b"1234");
         assert_eq!(got.favicon_svg, None);
 
         let temp = TempFileBuilder::new().prefix("mdbook-").tempdir().unwrap();
         fs::write(temp.path().join("favicon.svg"), "4567").unwrap();
-        let got = Theme::new(temp.path());
+        let got = Theme::new(temp.path(), &vec![]);
         assert_eq!(got.favicon_png, None);
         assert_eq!(got.favicon_svg.as_ref().unwrap(), b"4567");
     }
