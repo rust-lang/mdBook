@@ -349,7 +349,10 @@ impl Renderer for HtmlHandlebars {
             None => ctx.root.join("theme"),
         };
 
-        let theme = theme::Theme::new(theme_dir);
+        let languages = get_languages_from_book(&book);
+        debug!("Languages extracted from source files: {:?}", languages);
+
+        let theme = theme::Theme::new(theme_dir, &languages);
 
         debug!("Register the index handlebars template");
         handlebars.register_template_string("index", String::from_utf8(theme.index.clone())?)?;
@@ -483,6 +486,44 @@ impl Renderer for HtmlHandlebars {
 
         Ok(())
     }
+}
+
+/// returns a vector of unique language names like this: ["bash", "rust"]
+fn get_languages_from_book(book: &Book) -> Vec<String> {
+    let mut languages = vec![];
+    for item in book.iter() {
+        match item {
+            BookItem::Chapter(ch) => {
+                if let Some(ref path) = ch.path {
+                    if path.extension().map_or(false, |ext| ext == "md") {
+                        let content = ch.content.clone();
+                        languages.extend(get_languages_from_content(&content));
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    languages.sort();
+    languages.dedup();
+
+    languages
+}
+
+fn get_languages_from_content(content: &str) -> Vec<String> {
+    static LANGUAGE: Lazy<Regex> = Lazy::new(|| Regex::new(r#"```([a-z0-9,]+)"#).unwrap());
+
+    let mut languages = vec![];
+    for caps in LANGUAGE.captures_iter(content) {
+        // Can we really assume that the first word afer ``` is always a language?
+        let lang = &caps[1].split(',').into_iter().next().unwrap();
+        if !lang.is_empty() {
+            languages.push(lang.to_string());
+        }
+    }
+
+    languages
 }
 
 fn make_data(

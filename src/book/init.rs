@@ -157,7 +157,7 @@ impl BookBuilder {
         highlight_css.write_all(theme::HIGHLIGHT_CSS)?;
 
         let mut highlight_js = File::create(themedir.join("highlight.js"))?;
-        highlight_js.write_all(theme::HIGHLIGHT_JS)?;
+        highlight_js.write_all(theme::HIGHLIGHT_JS.to_string().as_bytes())?;
 
         write_file(&themedir.join("fonts"), "fonts.css", theme::fonts::CSS)?;
         for (file_name, contents) in theme::fonts::LICENSES {
