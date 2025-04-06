@@ -420,8 +420,6 @@ pub struct BookConfig {
     pub description: Option<String>,
     /// Location of the book source relative to the book's root directory.
     pub src: PathBuf,
-    /// Does this book support more than one language?
-    pub multilingual: bool,
     /// The main language of the book.
     pub language: Option<String>,
     /// The direction of text in the book: Left-to-right (LTR) or Right-to-left (RTL).
@@ -436,7 +434,6 @@ impl Default for BookConfig {
             authors: Vec::new(),
             description: None,
             src: PathBuf::from("src"),
-            multilingual: false,
             language: Some(String::from("en")),
             text_direction: None,
         }
@@ -820,7 +817,6 @@ mod tests {
         title = "Some Book"
         authors = ["Michael-F-Bryan <michaelfbryan@gmail.com>"]
         description = "A completely useless book"
-        multilingual = true
         src = "source"
         language = "ja"
 
@@ -859,7 +855,6 @@ mod tests {
             title: Some(String::from("Some Book")),
             authors: vec![String::from("Michael-F-Bryan <michaelfbryan@gmail.com>")],
             description: Some(String::from("A completely useless book")),
-            multilingual: true,
             src: PathBuf::from("source"),
             language: Some(String::from("ja")),
             text_direction: None,
