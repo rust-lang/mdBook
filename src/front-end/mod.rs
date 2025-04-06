@@ -263,7 +263,7 @@ impl Default for Theme {
             highlight_css: HIGHLIGHT_CSS.to_owned(),
             tomorrow_night_css: TOMORROW_NIGHT_CSS.to_owned(),
             ayu_highlight_css: AYU_HIGHLIGHT_CSS.to_owned(),
-            highlight_js: vec![],
+            highlight_js: build_highlightjs(&vec![]),
             clipboard_js: CLIPBOARD_JS.to_owned(),
         }
     }
@@ -297,7 +297,7 @@ mod tests {
         assert!(!non_existent.exists());
 
         let should_be = Theme::default();
-        let got = Theme::new(&non_existent);
+        let got = Theme::new(&non_existent, &vec![]);
 
         assert_eq!(got, should_be);
     }
@@ -335,7 +335,7 @@ mod tests {
             File::create(&temp.path().join(file)).unwrap();
         }
 
-        let got = Theme::new(temp.path());
+        let got = Theme::new(temp.path(), &vec![]);
 
         let empty = Theme {
             index: Vec::new(),
@@ -367,13 +367,13 @@ mod tests {
     fn favicon_override() {
         let temp = TempFileBuilder::new().prefix("mdbook-").tempdir().unwrap();
         fs::write(temp.path().join("favicon.png"), "1234").unwrap();
-        let got = Theme::new(temp.path());
+        let got = Theme::new(temp.path(), &vec![]);
         assert_eq!(got.favicon_png.as_ref().unwrap(), b"1234");
         assert_eq!(got.favicon_svg, None);
 
         let temp = TempFileBuilder::new().prefix("mdbook-").tempdir().unwrap();
         fs::write(temp.path().join("favicon.svg"), "4567").unwrap();
-        let got = Theme::new(temp.path());
+        let got = Theme::new(temp.path(), &vec![]);
         assert_eq!(got.favicon_png, None);
         assert_eq!(got.favicon_svg.as_ref().unwrap(), b"4567");
     }
