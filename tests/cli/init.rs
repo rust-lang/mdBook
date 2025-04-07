@@ -54,7 +54,7 @@ use anyhow::Context;
 use tempfile::Builder as TempFileBuilder;
 
 #[test]
-fn highlight_in_books() {
+fn highlight_in_books_without_theme() {
     // empty folder
     let temp = TempFileBuilder::new()
         .prefix("dummy_book-")
@@ -85,8 +85,6 @@ fn highlight_in_books() {
             predicate::str::contains("Book building has started")
                 .and(predicate::str::contains("Running the html backend")),
         );
-
-    //println!("dir: {:?}", std::fs::read_dir(temp.path().join("book")).unwrap().into_iter().map(|x| x.unwrap().path()).collect::<Vec<_>>());
 
     let highlight_js =
         std::fs::read_to_string(temp.path().join("book").join("highlight.js")).unwrap();
@@ -161,4 +159,82 @@ fn highlight_in_books() {
     assert_eq!(highlight_js.len(), 27452);
     assert!(highlight_js.contains("/*! `rust` grammar compiled for Highlight.js 11.10.0 */"));
     assert!(highlight_js.contains("/*! `python` grammar compiled for Highlight.js 11.10.0 */"));
+}
+
+#[test]
+fn highlight_in_books_with_them() {
+    // empty folder
+    let temp = TempFileBuilder::new()
+        .prefix("dummy_book-")
+        .tempdir()
+        .with_context(|| "Unable to create temp directory")
+        .unwrap();
+
+    let mut cmd = mdbook_cmd();
+    cmd.args(["init", "--title", "Example title", "--theme"])
+        .current_dir(temp.path());
+    cmd.assert()
+        .success()
+        .stdout(predicates::str::contains("\nAll done, no errors...\n"));
+
+    assert_eq!(std::fs::read_dir(temp.path()).unwrap().count(), 4);
+    assert_eq!(
+        std::fs::read_dir(temp.path().join("book")).unwrap().count(),
+        0
+    );
+    let highlight_js_in_theme_folder =
+        std::fs::read_to_string(temp.path().join("theme").join("highlight.js")).unwrap();
+    assert_eq!(highlight_js_in_theme_folder.len(), 1078246); // the whole file
+
+    // pretend that we have a custom highlight.js file
+    let content = "Manually modified highlight.js";
+    std::fs::write(temp.path().join("theme").join("highlight.js"), content).unwrap();
+
+    // build the book
+    let mut cmd = mdbook_cmd();
+    cmd.args(["build"]).current_dir(temp.path());
+    cmd.assert()
+        .success()
+        .stdout(predicates::str::is_empty())
+        .stderr(
+            predicate::str::contains("Book building has started")
+                .and(predicate::str::contains("Running the html backend")),
+        );
+
+    // check that the highlight.js file in the book folder is the same as the one in the theme folder
+    let highlight_js =
+        std::fs::read_to_string(temp.path().join("book").join("highlight.js")).unwrap();
+    assert_eq!(highlight_js, content);
+
+    let chapter_file = temp.path().join("src").join("chapter_1.md");
+    assert!(chapter_file.exists());
+
+    // Add rust code block to the chapter file
+    let mut fh = OpenOptions::new()
+        .write(true)
+        .append(true)
+        .open(&chapter_file)
+        .unwrap();
+
+    if let Err(e) = writeln!(
+        fh,
+        "```rust\nfn main() {{\n    println!(\"Hello, world!\");\n}}\n```\n\n"
+    ) {
+        eprintln!("Couldn't write to file: {}", e);
+    }
+
+    // build the book
+    let mut cmd = mdbook_cmd();
+    cmd.args(["build"]).current_dir(temp.path());
+    cmd.assert()
+        .success()
+        .stdout(predicates::str::is_empty())
+        .stderr(
+            predicate::str::contains("Book building has started")
+                .and(predicate::str::contains("Running the html backend")),
+        );
+
+    let highlight_js =
+        std::fs::read_to_string(temp.path().join("book").join("highlight.js")).unwrap();
+    assert_eq!(highlight_js, content);
 }
