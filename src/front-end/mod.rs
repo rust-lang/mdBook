@@ -13,7 +13,7 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 
 use crate::errors::*;
-use log::warn;
+use log::{debug, warn};
 use regex::RegexBuilder;
 pub static INDEX: &[u8] = include_bytes!("templates/index.hbs");
 pub static HEAD: &[u8] = include_bytes!("templates/head.hbs");
@@ -226,7 +226,7 @@ fn split_highlightjs() -> (&'static str, HashMap<&'static str, &'static str>) {
 }
 
 fn build_highlightjs(languages: &[String]) -> Vec<u8> {
-    log::info!("Building highlight.js");
+    debug!("Building highlight.js");
     let (core, language_mappings) = split_highlightjs();
     // log::warn!("language_mappings: {:?}", language_mappings.keys());
 
