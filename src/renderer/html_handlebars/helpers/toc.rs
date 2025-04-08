@@ -107,8 +107,7 @@ impl HelperDef for RenderToc {
             }
 
             // Link
-            let path_exists: bool;
-            match item.get("path") {
+            let path_exists = match item.get("path") {
                 Some(path) if !path.is_empty() => {
                     out.write("<a href=\"")?;
                     let tmp = Path::new(path)
@@ -125,13 +124,13 @@ impl HelperDef for RenderToc {
                     } else {
                         "\">"
                     })?;
-                    path_exists = true;
+                    true
                 }
                 _ => {
                     out.write("<div>")?;
-                    path_exists = false;
+                    false
                 }
-            }
+            };
 
             if !self.no_section_label {
                 // Section does not necessarily exist
