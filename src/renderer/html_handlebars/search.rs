@@ -66,7 +66,13 @@ pub fn create_files(
     if search_config.copy_js {
         static_files.add_builtin(
             "searchindex.js",
-            format!("Object.assign(window.search, {});", index).as_bytes(),
+            // To reduce the size of the generated JSON by preventing all `"` characters to be
+            // escaped, we instead surround the string with much less common `'` character.
+            format!(
+                "window.search = JSON.parse('{}');",
+                index.replace("\\", "\\\\").replace("'", "\\'")
+            )
+            .as_bytes(),
         );
         static_files.add_builtin("searcher.js", searcher::JS);
         static_files.add_builtin("mark.min.js", searcher::MARK_JS);
