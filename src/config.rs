@@ -398,7 +398,6 @@ fn warn_on_invalid_fields_in_book_section(table: &Value) {
         "src",
         "language",
         "text-direction",
-        "multilingual",
     ];
     if let Some(book) = table.get("book") {
         let table = book.as_table().expect("root.book must be a table");
