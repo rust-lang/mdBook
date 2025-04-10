@@ -696,7 +696,7 @@ fn build_header_links(html: &str) -> String {
         .into_owned()
 }
 
-/// Insert a sinle link into a header, making sure each link gets its own
+/// Insert a single link into a header, making sure each link gets its own
 /// unique ID by appending an auto-incremented number (if necessary).
 fn insert_link_into_header(
     level: usize,
