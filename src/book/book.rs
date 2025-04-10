@@ -656,10 +656,10 @@ And here is some \
         let got = load_book(&temp_dir, &cfg);
         assert!(got.is_err());
         let error_message = got.err().unwrap().to_string();
-        let expeceted = format!(
+        let expected = format!(
             r#"Couldn't open SUMMARY.md in {:?} directory"#,
             temp_dir.path()
         );
-        assert_eq!(error_message, expeceted);
+        assert_eq!(error_message, expected);
     }
 }
