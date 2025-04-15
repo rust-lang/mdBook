@@ -282,15 +282,15 @@ struct Link<'a> {
 impl<'a> Link<'a> {
     fn from_capture(cap: Captures<'a>) -> Option<Link<'a>> {
         let link_type = match (cap.get(0), cap.get(1), cap.get(2)) {
-            (_, Some(typ), Some(title)) if typ.as_str() == "title" => {
+            (_, Some(link_kind), Some(title)) if link_kind.as_str() == "title" => {
                 Some(LinkType::Title(title.as_str()))
             }
-            (_, Some(typ), Some(rest)) => {
+            (_, Some(link_kind), Some(rest)) => {
                 let mut path_props = rest.as_str().split_whitespace();
                 let file_arg = path_props.next();
                 let props: Vec<&str> = path_props.collect();
 
-                match (typ.as_str(), file_arg) {
+                match (link_kind.as_str(), file_arg) {
                     ("include", Some(pth)) => Some(parse_include_path(pth)),
                     ("playground", Some(pth)) => Some(LinkType::Playground(pth.into(), props)),
                     ("playpen", Some(pth)) => {
