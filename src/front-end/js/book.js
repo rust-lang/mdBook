@@ -514,6 +514,17 @@ aria-label="Show hidden lines"></button>';
     });
 })();
 
+function setConfig(key, value, storage = localStorage) {
+    const fullKey = "mdbook-" + key;
+    try {
+        storage.setItem(fullKey, value);
+    } catch (e) {
+        // Ignore error.
+        //  It can only be a security exception (if the user has disabled cookies/storage)
+        //  TODO: maybe display some warning to the user that the setting they are trying to change will not be kept across page changes/reloads because they disabled storage for this site/origin?
+    }
+}
+
 (function sidebar() {
     const body = document.querySelector('body');
     const sidebar = document.getElementById('sidebar');
@@ -523,34 +534,25 @@ aria-label="Show hidden lines"></button>';
     const sidebarResizeHandle = document.getElementById('sidebar-resize-handle');
     let firstContact = null;
 
-    function showSidebar() {
-        body.classList.remove('sidebar-hidden');
-        body.classList.add('sidebar-visible');
+    function setSidebarVisibility(isVisible) {
+        body.classList.toggle('sidebar-hidden', !isVisible);
+        body.classList.toggle('sidebar-visible', isVisible);
         Array.from(sidebarLinks).forEach(function(link) {
-            link.setAttribute('tabIndex', 0);
+            link.setAttribute('tabIndex', isVisible ? 0 : -1);
         });
-        sidebarToggleButton.setAttribute('aria-expanded', true);
-        sidebar.setAttribute('aria-hidden', false);
-        try {
-            localStorage.setItem('mdbook-sidebar', 'visible');
-        } catch (e) {
-            // Ignore error.
-        }
+        sidebarToggleButton.setAttribute('aria-expanded', isVisible);
+        sidebar.setAttribute('aria-hidden', !isVisible);
+
+        //  We use sessionStorage for the sidebar visibility setting, as we want it to be specific to the browser window and tab (since different windows can have different sizes), unlike the theme which is a global preference (ie. if you want a dark theme, you probably want it on all your windows)
+        setConfig("sidebar", isVisible ? 'visible' : 'hidden', sessionStorage);
+    }
+
+    function showSidebar() {
+        setSidebarVisibility(true);
     }
 
     function hideSidebar() {
-        body.classList.remove('sidebar-visible');
-        body.classList.add('sidebar-hidden');
-        Array.from(sidebarLinks).forEach(function(link) {
-            link.setAttribute('tabIndex', -1);
-        });
-        sidebarToggleButton.setAttribute('aria-expanded', false);
-        sidebar.setAttribute('aria-hidden', true);
-        try {
-            localStorage.setItem('mdbook-sidebar', 'hidden');
-        } catch (e) {
-            // Ignore error.
-        }
+        setSidebarVisibility(false);
     }
 
     // Toggle sidebar
@@ -569,11 +571,18 @@ aria-label="Show hidden lines"></button>';
 
     sidebarResizeHandle.addEventListener('mousedown', initResize, false);
 
-    function initResize() {
+    let startClientX;
+    let startSidebarWidth;
+    function initResize(e) {
         window.addEventListener('mousemove', resize, false);
         window.addEventListener('mouseup', stopResize, false);
+        
         body.classList.add('sidebar-resizing');
+
+        startClientX = e.clientX;
+        startSidebarWidth = parseInt(getComputedStyle(document.body).getPropertyValue('--sidebar-width')?.replace(/px$/, ""), 10);
     }
+
     function resize(e) {
         let pos = e.clientX - sidebar.offsetLeft;
         if (pos < 20) {
@@ -582,8 +591,9 @@ aria-label="Show hidden lines"></button>';
             if (body.classList.contains('sidebar-hidden')) {
                 showSidebar();
             }
-            pos = Math.min(pos, window.innerWidth - 100);
-            document.documentElement.style.setProperty('--sidebar-width', pos + 'px');
+            let sidebarWidth = startSidebarWidth + Math.min(e.clientX, window.innerWidth - 100) - startClientX;
+            setConfig("sidebarWidth", sidebarWidth, sessionStorage);
+            document.documentElement.style.setProperty('--sidebar-width', sidebarWidth + 'px');
         }
     }
     //on mouseup remove windows functions mousemove & mouseup
