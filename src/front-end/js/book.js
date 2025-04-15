@@ -514,19 +514,6 @@ aria-label="Show hidden lines"></button>';
     });
 })();
 
-function setConfig(key, value, storage = localStorage) {
-    const fullKey = 'mdbook-' + key;
-    try {
-        storage.setItem(fullKey, value);
-    } catch (e) {
-        // Ignore error.
-        //  It can only be a security exception (if the user has disabled cookies/storage)
-        //  TODO: maybe display some warning to the user that the setting they are trying
-        //      to change will not be kept across page changes/reloads because they disabled
-        //      storage for this site/origin?
-    }
-}
-
 (function sidebar() {
     const body = document.querySelector('body');
     const sidebar = document.getElementById('sidebar');
@@ -549,7 +536,7 @@ function setConfig(key, value, storage = localStorage) {
         //  specific to the current browser window and tab (since different windows can have
         //  different sizes), unlike the theme which is a global preference (ie. if you want
         //  a dark theme, you probably want it on all your windows)
-        setConfig('sidebar', isVisible ? 'visible' : 'hidden', sessionStorage);
+        mdBook.setConfig('sidebar', isVisible ? 'visible' : 'hidden', sessionStorage);
     }
 
     function showSidebar() {
@@ -604,7 +591,7 @@ function setConfig(key, value, storage = localStorage) {
             const sidebarWidth = startSidebarWidth +
                 Math.min(e.clientX, window.innerWidth - 100) -
                 startClientX;
-            setConfig('sidebarWidth', sidebarWidth, sessionStorage);
+            mdBook.setConfig('sidebarWidth', sidebarWidth, sessionStorage);
             document.documentElement.style.setProperty('--sidebar-width', sidebarWidth + 'px');
         }
     }

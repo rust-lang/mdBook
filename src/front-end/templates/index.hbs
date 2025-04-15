@@ -73,8 +73,10 @@
         const html = document.documentElement;
         const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
 
-        (function(){
-            function getConfig(key, storage = localStorage) {
+
+        //  Global “namespace” object to keep some of our helper functions and utils
+        const mdBook = {
+            getConfig(key, storage = localStorage) {
                 const fullKey = "mdbook-" + key;
                 try {
                     let value = storage.getItem(fullKey);
@@ -91,26 +93,49 @@
                     //  TODO: we could warn the user that we won’t be able to persist their settings, but maybe it would be better to do it only if/when they try to change them? (ie when they try to hide or show the sidebar, or change the theme)
                     return null;
                 }
-            }
+            },
+
+            setConfig(key, value, storage = localStorage) {
+                const fullKey = 'mdbook-' + key;
+                try {
+                    storage.setItem(fullKey, value);
+                } catch (e) {
+                    // Ignore error.
+                    //  It can only be a security exception (if the user has disabled cookies/storage)
+                    //  TODO: maybe display some warning to the user that the setting they are trying
+                    //      to change will not be kept across page changes/reloads because they disabled
+                    //      storage for this site/origin?
+                }
+            },
+        };
+
+
+        (function(){
 
             //  Set the theme before any content is loaded, prevents flash
 
-            let theme = getConfig("theme") ?? default_theme;
+            let theme = mdBook.getConfig("theme") ?? default_theme;
             html.classList.remove('{{ default_theme }}')
             html.classList.add(theme);
             html.classList.add("js");
 
             //  Hide / unhide sidebar before it is displayed, and restore its width if it was manually resized
 
-            let sidebar = getConfig("sidebar", sessionStorage) ??
-                ((document.body.clientWidth >= 1080) ? "visible" : "hidden");
+            let sidebar = mdBook.getConfig("sidebar", sessionStorage);
+            if(!sidebar) {
+                //  No value, this must be the first time this page is open.
+                //  By default, show or hide the sidebar depending on the window width.
+                sidebar = (document.body.clientWidth >= 1080) ? "visible" : "hidden";
+                //  Then we need to *store* the visibility of the sidebar, because without that, if the user resized the window then navigated to another page, the sidebar visibility could change unexpectedly
+                mdBook.setConfig('sidebar', sidebar, sessionStorage);
+            }
 
             sidebar_toggle.checked = sidebar === 'visible';
             html.classList.remove('sidebar-visible');
             html.classList.add("sidebar-" + sidebar);
 
             //  We need parseInt() because storage only stores strings
-            let sidebarWidth = parseInt(getConfig("sidebarWidth", sessionStorage), 10);
+            let sidebarWidth = parseInt(mdBook.getConfig("sidebarWidth", sessionStorage), 10);
             if(sidebarWidth && Number.isFinite(sidebarWidth)) {
                 document.documentElement.style.setProperty('--sidebar-width', Math.min(sidebarWidth, window.innerWidth - 100) + 'px');
             }
