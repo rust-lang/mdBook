@@ -1,6 +1,6 @@
 'use strict';
 
-/* global default_theme, default_dark_theme, default_light_theme, hljs, ClipboardJS */
+/* global default_theme, default_dark_theme, default_light_theme, hljs, ClipboardJS, mdBook */
 
 // Fix back button cache problem
 window.onunload = function() { };
