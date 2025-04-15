@@ -79,15 +79,7 @@
             getConfig(key, storage = localStorage) {
                 const fullKey = "mdbook-" + key;
                 try {
-                    let value = storage.getItem(fullKey);
-
-                    if(value && value.startsWith('"')) {
-                        //  Work around some values being stored in localStorage wrapped in quotes
-                        //  Probably for legacy reasons?
-                        value = value.replace(/^"|"$/g, "");
-                        storage.setItem(fullKey, value);
-                    }
-                    return value;
+                    return storage.getItem(fullKey);
                 } catch(e) {
                     //  It can only be a security exception (if the user has disabled cookies/storage)
                     //  TODO: we could warn the user that we won’t be able to persist their settings, but maybe it would be better to do it only if/when they try to change them? (ie when they try to hide or show the sidebar, or change the theme)
@@ -114,7 +106,15 @@
 
             //  Set the theme before any content is loaded, prevents flash
 
-            let theme = mdBook.getConfig("theme") ?? default_theme;
+            let theme = mdBook.getConfig('theme');
+            //  Work around some values being stored in localStorage wrapped in quotes
+            //  Probably for legacy reasons?
+            if(theme && theme.startsWith('"')) {
+                theme = theme.replace(/^"|"$/g, "");
+                mdBook.setConfig('theme', theme);
+            }
+            theme = theme ?? default_theme;
+
             html.classList.remove('{{ default_theme }}')
             html.classList.add(theme);
             html.classList.add("js");
