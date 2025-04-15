@@ -70,6 +70,15 @@ jobs:
       run: rustup update stable && rustup default stable && rustup component add rustfmt
     - run: cargo fmt --check
 
+  spelling:
+    name: Spell Check with Typos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Actions Repository
+        uses: actions/checkout@v4
+      - name: Spell Check repo
+        uses: crate-ci/typos@v1.31.1
+
   gui:
     name: GUI tests
     runs-on: ubuntu-latest
