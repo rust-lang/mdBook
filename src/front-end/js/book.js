@@ -515,13 +515,15 @@ aria-label="Show hidden lines"></button>';
 })();
 
 function setConfig(key, value, storage = localStorage) {
-    const fullKey = "mdbook-" + key;
+    const fullKey = 'mdbook-' + key;
     try {
         storage.setItem(fullKey, value);
     } catch (e) {
         // Ignore error.
         //  It can only be a security exception (if the user has disabled cookies/storage)
-        //  TODO: maybe display some warning to the user that the setting they are trying to change will not be kept across page changes/reloads because they disabled storage for this site/origin?
+        //  TODO: maybe display some warning to the user that the setting they are trying
+        //      to change will not be kept across page changes/reloads because they disabled
+        //      storage for this site/origin?
     }
 }
 
@@ -543,8 +545,11 @@ function setConfig(key, value, storage = localStorage) {
         sidebarToggleButton.setAttribute('aria-expanded', isVisible);
         sidebar.setAttribute('aria-hidden', !isVisible);
 
-        //  We use sessionStorage for the sidebar visibility setting, as we want it to be specific to the browser window and tab (since different windows can have different sizes), unlike the theme which is a global preference (ie. if you want a dark theme, you probably want it on all your windows)
-        setConfig("sidebar", isVisible ? 'visible' : 'hidden', sessionStorage);
+        //  We use sessionStorage for the sidebar visibility setting, as we want it to be
+        //  specific to the current browser window and tab (since different windows can have
+        //  different sizes), unlike the theme which is a global preference (ie. if you want
+        //  a dark theme, you probably want it on all your windows)
+        setConfig('sidebar', isVisible ? 'visible' : 'hidden', sessionStorage);
     }
 
     function showSidebar() {
@@ -576,23 +581,30 @@ function setConfig(key, value, storage = localStorage) {
     function initResize(e) {
         window.addEventListener('mousemove', resize, false);
         window.addEventListener('mouseup', stopResize, false);
-        
+
         body.classList.add('sidebar-resizing');
 
         startClientX = e.clientX;
-        startSidebarWidth = parseInt(getComputedStyle(document.body).getPropertyValue('--sidebar-width')?.replace(/px$/, ""), 10);
+        startSidebarWidth = parseInt(
+            getComputedStyle(document.body)
+                .getPropertyValue('--sidebar-width')
+                ?.replace(/px$/, ''),
+            10,
+        );
     }
 
     function resize(e) {
-        let pos = e.clientX - sidebar.offsetLeft;
+        const pos = e.clientX - sidebar.offsetLeft;
         if (pos < 20) {
             hideSidebar();
         } else {
             if (body.classList.contains('sidebar-hidden')) {
                 showSidebar();
             }
-            let sidebarWidth = startSidebarWidth + Math.min(e.clientX, window.innerWidth - 100) - startClientX;
-            setConfig("sidebarWidth", sidebarWidth, sessionStorage);
+            const sidebarWidth = startSidebarWidth +
+                Math.min(e.clientX, window.innerWidth - 100) -
+                startClientX;
+            setConfig('sidebarWidth', sidebarWidth, sessionStorage);
             document.documentElement.style.setProperty('--sidebar-width', sidebarWidth + 'px');
         }
     }
