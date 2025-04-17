@@ -29,7 +29,8 @@ window.search = window.search || {};
         searchicon = document.getElementById('search-toggle'),
         content = document.getElementById('content'),
 
-        mark_exclude = [],
+        // SVG text elements don't render if inside a <mark> tag.
+        mark_exclude = ["text"],
         marker = new Mark(content),
         URL_SEARCH_PARAM = 'search',
         URL_MARK_PARAM = 'highlight',
