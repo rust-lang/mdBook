@@ -30,7 +30,7 @@ window.search = window.search || {};
         content = document.getElementById('content'),
 
         // SVG text elements don't render if inside a <mark> tag.
-        mark_exclude = ["text"],
+        mark_exclude = ['text'],
         marker = new Mark(content),
         URL_SEARCH_PARAM = 'search',
         URL_MARK_PARAM = 'highlight',
