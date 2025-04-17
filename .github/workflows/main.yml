@@ -99,6 +99,8 @@ jobs:
     needs:
       - test
       - rustfmt
+      - aarch64-cross-builds
+      - gui
     runs-on: ubuntu-latest
     steps:
       - run: jq --exit-status 'all(.result == "success")' <<< '${{ toJson(needs) }}'
