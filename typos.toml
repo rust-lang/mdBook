@@ -1,0 +1,18 @@
+[files]
+extend-exclude = [
+    "test_book/",
+    "*.css",
+    "tests/summary_md_files/the_book-2nd_edition.md",
+    "CHANGELOG.md",
+    "tests/parse_existing_summary_files.rs",
+    "src/front-end/fonts/fontawesome-webfont.svg",
+    "src/front-end/searcher/elasticlunr.min.js",
+    "src/front-end/playground_editor/ace.js",
+    "src/front-end/playground_editor/ace.js",
+    "src/front-end/js/highlight.js",
+    "src/front-end/js/book.js",
+    "src/preprocess/links.rs",
+    "src/preprocess/links.rs",
+    "src/book/book.rs",
+    "src/renderer/html_handlebars/hbs_renderer.rs",
+]
