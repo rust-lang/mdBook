@@ -212,7 +212,7 @@ impl MDBook {
         let mut preprocessed_book = self.book.clone();
         for preprocessor in &self.preprocessors {
             if preprocessor_should_run(&**preprocessor, renderer, &self.config) {
-                debug!("Running the {} preprocessor.", preprocessor.name());
+                info!("Running the {} preprocessor.", preprocessor.name());
                 preprocessed_book = preprocessor.run(&preprocess_ctx, preprocessed_book)?;
             }
         }
