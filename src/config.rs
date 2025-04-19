@@ -1360,7 +1360,7 @@ mod tests {
         smart-punctuation = true
         "#;
         let config = Config::from_str(src).unwrap();
-        assert_eq!(config.html_config().unwrap().smart_punctuation(), true);
+        assert!(config.html_config().unwrap().smart_punctuation());
 
         let src = r#"
         [book]
@@ -1370,16 +1370,13 @@ mod tests {
         curly-quotes = true
         "#;
         let config = Config::from_str(src).unwrap();
-        assert_eq!(config.html_config().unwrap().smart_punctuation(), true);
+        assert!(config.html_config().unwrap().smart_punctuation());
 
         let src = r#"
         [book]
         title = "mdBook Documentation"
         "#;
         let config = Config::from_str(src).unwrap();
-        assert_eq!(
-            config.html_config().unwrap_or_default().smart_punctuation(),
-            false
-        );
+        assert!(!config.html_config().unwrap_or_default().smart_punctuation());
     }
 }
