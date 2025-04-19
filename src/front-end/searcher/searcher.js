@@ -3,7 +3,7 @@
 /* global Mark, elasticlunr, path_to_root */
 
 window.search = window.search || {};
-(function search(search) {
+(function search() {
     // Search functionality
     //
     // You can use !hasFocus() to prevent keyhandling in your key
@@ -289,6 +289,9 @@ window.search = window.search || {};
 
         // If reloaded, do the search or mark again, depending on the current url parameters
         doSearchOrMarkFromUrl();
+
+        // Exported functions
+        config.hasFocus = hasFocus;
     }
 
     function unfocusSearchbar() {
@@ -522,6 +525,4 @@ window.search = window.search || {};
 
     loadScript(path_to_root + '{{ resource "searchindex.js" }}', 'search-index');
 
-    // Exported functions
-    search.hasFocus = hasFocus;
 })(window.search);
