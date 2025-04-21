@@ -88,6 +88,16 @@ jobs:
       - name: Build and run tests (+ GUI)
         run: cargo test --locked --target x86_64-unknown-linux-gnu --test gui
 
+  # Ensure there are no clippy warnings
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
+      - run: rustup component add clippy
+      - run: cargo clippy --workspace --all-targets --no-deps -- -D warnings
+
   # The success job is here to consolidate the total success/failure state of
   # all other jobs. This job is then included in the GitHub branch protection
   # rule which prevents merges unless all other jobs are passing. This makes
@@ -101,6 +111,7 @@ jobs:
       - rustfmt
       - aarch64-cross-builds
       - gui
+      - clippy
     runs-on: ubuntu-latest
     steps:
       - run: jq --exit-status 'all(.result == "success")' <<< '${{ toJson(needs) }}'

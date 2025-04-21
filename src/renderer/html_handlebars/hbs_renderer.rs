@@ -207,7 +207,6 @@ impl HtmlHandlebars {
         Ok(())
     }
 
-    #[allow(clippy::let_and_return)]
     fn post_process(
         &self,
         rendered: String,

@@ -780,7 +780,6 @@ mod search {
     }
 
     #[test]
-    #[allow(clippy::float_cmp)]
     fn book_creates_reasonable_search_index() {
         let temp = DummyBook::new().build().unwrap();
         let md = MDBook::load(temp.path()).unwrap();

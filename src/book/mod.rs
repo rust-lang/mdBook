@@ -5,7 +5,6 @@
 //!
 //! [1]: ../index.html
 
-#[allow(clippy::module_inception)]
 mod book;
 mod init;
 mod summary;
