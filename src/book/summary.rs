@@ -248,7 +248,7 @@ impl<'a> SummaryParser<'a> {
 
         let mut files = HashSet::new();
         for part in [&prefix_chapters, &numbered_chapters, &suffix_chapters] {
-            self.check_for_duplicates(&part, &mut files)?;
+            Self::check_for_duplicates(&part, &mut files)?;
         }
 
         Ok(Summary {
@@ -261,7 +261,6 @@ impl<'a> SummaryParser<'a> {
 
     /// Recursively check for duplicate files in the summary items.
     fn check_for_duplicates<'b>(
-        &self,
         items: &'b [SummaryItem],
         files: &mut HashSet<&'b PathBuf>,
     ) -> Result<()> {
@@ -276,7 +275,7 @@ impl<'a> SummaryParser<'a> {
                     }
                 }
                 // Recursively check nested items
-                self.check_for_duplicates(&link.nested_items, files)?;
+                Self::check_for_duplicates(&link.nested_items, files)?;
             }
         }
         Ok(())
