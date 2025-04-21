@@ -39,12 +39,7 @@ impl HelperDef for ResourceHelper {
         let path_to_root = utils::fs::path_to_root(&base_path);
 
         out.write(&path_to_root)?;
-        out.write(
-            self.hash_map
-                .get(&param[..])
-                .map(|p| &p[..])
-                .unwrap_or(&param),
-        )?;
+        out.write(self.hash_map.get(param).map(|p| &p[..]).unwrap_or(&param))?;
         Ok(())
     }
 }

@@ -1,6 +1,12 @@
 [workspace]
 members = [".", "examples/remove-emphasis/mdbook-remove-emphasis"]
 
+[workspace.lints.clippy]
+all = { level = "allow", priority = -2 }
+correctness = { level = "warn", priority = -1 }
+complexity = { level = "warn", priority = -1 }
+needless-lifetimes = "allow"  # Remove once 1.87 is stable, https://github.com/rust-lang/rust-clippy/issues/13514
+
 [package]
 name = "mdbook"
 version = "0.4.48"
@@ -91,3 +97,6 @@ test = false
 name = "gui"
 path = "tests/gui/runner.rs"
 crate-type = ["bin"]
+
+[lints]
+workspace = true
