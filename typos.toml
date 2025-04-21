@@ -8,7 +8,6 @@ extend-exclude = [
     "src/front-end/fonts/fontawesome-webfont.svg",
     "src/front-end/searcher/elasticlunr.min.js",
     "src/front-end/playground_editor/ace.js",
-    "src/front-end/playground_editor/ace.js",
     "src/front-end/js/highlight.js",
     "src/front-end/js/book.js",
     "src/preprocess/links.rs",
