@@ -1,4 +1,4 @@
-#![allow(missing_docs)] // FIXME: Document this
+//! Various helpers and utilities.
 
 pub mod fs;
 mod string;
@@ -194,6 +194,7 @@ pub fn render_markdown(text: &str, smart_punctuation: bool) -> String {
     render_markdown_with_path(text, smart_punctuation, None)
 }
 
+/// Creates a new pulldown-cmark parser of the given text.
 pub fn new_cmark_parser(text: &str, smart_punctuation: bool) -> Parser<'_> {
     let mut opts = Options::empty();
     opts.insert(Options::ENABLE_TABLES);
@@ -207,6 +208,11 @@ pub fn new_cmark_parser(text: &str, smart_punctuation: bool) -> Parser<'_> {
     Parser::new_ext(text, opts)
 }
 
+/// Renders markdown to HTML.
+///
+/// `path` should only be set if this is being generated for the consolidated
+/// print page. It should point to the page being rendered relative to the
+/// root of the book.
 pub fn render_markdown_with_path(
     text: &str,
     smart_punctuation: bool,
