@@ -859,7 +859,7 @@ mod tests {
             .and_then(Value::as_str)
             .unwrap();
         assert_eq!(html, "html");
-        let html_renderer = HtmlHandlebars::default();
+        let html_renderer = HtmlHandlebars;
         let pre = LinkPreprocessor::new();
 
         let should_run = preprocessor_should_run(&pre, &html_renderer, &cfg);
