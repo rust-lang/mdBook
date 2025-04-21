@@ -1,3 +1,5 @@
+//! Filesystem utilities and helpers.
+
 use crate::errors::*;
 use log::{debug, trace};
 use std::fs::{self, File};
@@ -202,6 +204,7 @@ fn copy<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> Result<()> {
     }
 }
 
+/// Returns the name of the file used for HTTP 404 "not found" with the `.html` extension.
 pub fn get_404_output_file(input_404: &Option<String>) -> String {
     input_404
         .as_ref()

@@ -20,10 +20,12 @@ use once_cell::sync::Lazy;
 use regex::{Captures, Regex};
 use serde_json::json;
 
+/// The HTML renderer for mdBook.
 #[derive(Default)]
 pub struct HtmlHandlebars;
 
 impl HtmlHandlebars {
+    /// Returns a new instance of [`HtmlHandlebars`].
     pub fn new() -> Self {
         HtmlHandlebars
     }
