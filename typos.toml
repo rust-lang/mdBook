@@ -11,6 +11,4 @@ extend-exclude = [
     "src/front-end/js/highlight.js",
     "src/front-end/js/book.js",
     "src/preprocess/links.rs",
-    "src/book/book.rs",
-    "src/renderer/html_handlebars/hbs_renderer.rs",
 ]
