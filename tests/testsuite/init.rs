@@ -71,3 +71,31 @@ src/chapter_1.md
 "#]],
     );
 }
+
+// Run `mdbook init` with `--force` to skip the confirmation prompts
+#[test]
+fn init_force() {
+    let mut test = BookTest::empty();
+    test.run("init --force", |cmd| {
+        cmd.expect_stdout(str![[r#"
+
+All done, no errors...
+
+"#]])
+            .expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book::init): Creating a new book with stub content
+
+"#]]);
+    })
+    .check_file(
+        "book.toml",
+        str![[r#"
+[book]
+authors = []
+language = "en"
+src = "src"
+
+"#]],
+    );
+    assert!(!test.dir.join(".gitignore").exists());
+}
