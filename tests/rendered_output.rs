@@ -357,22 +357,6 @@ fn failure_on_missing_theme_directory() {
     let md = MDBook::load(temp.path()).unwrap();
     let got = md.build();
     assert!(got.is_ok());
-
-    // 3. Pointing to a non-existent directory should fail
-    let temp = DummyBook::new().build().unwrap();
-    let book_toml = r#"
-        [book]
-        title = "implicit"
-        src = "src"
-
-        [output.html]
-        theme = "./non-existent-directory"
-        "#;
-
-    write_file(temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
-    let md = MDBook::load(temp.path()).unwrap();
-    let got = md.build();
-    assert!(got.is_err());
 }
 
 #[test]

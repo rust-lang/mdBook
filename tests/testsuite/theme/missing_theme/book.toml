@@ -1,0 +1,5 @@
+[book]
+title = "missing_theme"
+
+[output.html]
+theme = "./non-existent-directory"
