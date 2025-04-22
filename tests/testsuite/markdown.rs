@@ -108,3 +108,39 @@ Carrots</li>
 "##]],
     );
 }
+
+// Smart punctuation test.
+#[test]
+fn smart_punctuation() {
+    BookTest::from_dir("markdown/smart_punctuation")
+        // Default is off.
+        .check_main_file(
+            "book/smart_punctuation.html",
+            str![[r##"
+<h1 id="smart-punctuation"><a class="header" href="#smart-punctuation">Smart Punctuation</a></h1>
+<ul>
+<li>En dash: --</li>
+<li>Em dash: ---</li>
+<li>Ellipsis: ...</li>
+<li>Double quote: "quote"</li>
+<li>Single quote: 'quote'</li>
+</ul>
+"##]],
+        )
+        .run("build", |cmd| {
+            cmd.env("MDBOOK_OUTPUT__HTML__SMART_PUNCTUATION", "true");
+        })
+        .check_main_file(
+            "book/smart_punctuation.html",
+            str![[r##"
+<h1 id="smart-punctuation"><a class="header" href="#smart-punctuation">Smart Punctuation</a></h1>
+<ul>
+<li>En dash: –</li>
+<li>Em dash: —</li>
+<li>Ellipsis: …</li>
+<li>Double quote: “quote”</li>
+<li>Single quote: ‘quote’</li>
+</ul>
+"##]],
+        );
+}
