@@ -94,21 +94,6 @@ fn check_correct_relative_links_in_print_page() {
 }
 
 #[test]
-fn rendered_code_has_playground_stuff() {
-    let temp = DummyBook::new().build().unwrap();
-    let md = MDBook::load(temp.path()).unwrap();
-    md.build().unwrap();
-
-    let nested = temp.path().join("book/first/nested.html");
-    let playground_class = vec![r#"class="playground""#];
-
-    assert_contains_strings(nested, &playground_class);
-
-    let book_js = temp.path().join("book/book.js");
-    assert_contains_strings(book_js, &[".playground"]);
-}
-
-#[test]
 fn rendered_code_does_not_have_playground_stuff_in_html_when_disabled_in_config() {
     let temp = DummyBook::new().build().unwrap();
     let config = Config::from_str(

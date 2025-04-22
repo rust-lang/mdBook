@@ -9,6 +9,7 @@ mod includes;
 mod index;
 mod init;
 mod markdown;
+mod playground;
 
 mod prelude {
     pub use crate::book_test::BookTest;
