@@ -1,0 +1,6 @@
+[book]
+title = "redirects_are_emitted_correctly"
+
+[output.html.redirect]
+"/overview.html" = "index.html"
+"/nested/page.html" = "https://rust-lang.org/"

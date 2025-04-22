@@ -1,6 +1,6 @@
 mod dummy_book;
 
-use crate::dummy_book::{assert_contains_strings, assert_doesnt_contain_strings, DummyBook};
+use crate::dummy_book::{assert_contains_strings, DummyBook};
 
 use anyhow::Context;
 use mdbook::book::Chapter;
@@ -11,10 +11,8 @@ use mdbook::{BookItem, MDBook};
 use pretty_assertions::assert_eq;
 use select::document::Document;
 use select::predicate::{Attr, Class, Name, Predicate};
-use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs;
-use std::io::Write;
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
 use tempfile::Builder as TempFileBuilder;
@@ -307,35 +305,6 @@ fn theme_dir_overrides_work_correctly() {
 }
 
 #[test]
-fn redirects_are_emitted_correctly() {
-    let temp = DummyBook::new().build().unwrap();
-    let mut md = MDBook::load(temp.path()).unwrap();
-
-    // override the "outputs.html.redirect" table
-    let redirects: HashMap<PathBuf, String> = vec![
-        (PathBuf::from("/overview.html"), String::from("index.html")),
-        (
-            PathBuf::from("/nexted/page.md"),
-            String::from("https://rust-lang.org/"),
-        ),
-    ]
-    .into_iter()
-    .collect();
-    md.config.set("output.html.redirect", &redirects).unwrap();
-
-    md.build().unwrap();
-
-    for (original, redirect) in &redirects {
-        let mut redirect_file = md.build_dir_for("html");
-        // append everything except the bits that make it absolute
-        // (e.g. "/" or "C:\")
-        redirect_file.extend(remove_absolute_components(original));
-        let contents = fs::read_to_string(&redirect_file).unwrap();
-        assert!(contents.contains(redirect));
-    }
-}
-
-#[test]
 fn edit_url_has_default_src_dir_edit_url() {
     let temp = DummyBook::new().build().unwrap();
     let book_toml = r#"
@@ -384,11 +353,6 @@ fn edit_url_has_configured_src_dir_edit_url() {
             r#"href="https://github.com/rust-lang/mdBook/edit/master/guide/src2/README.md" title="Suggest an edit""#,
         ],
     );
-}
-
-fn remove_absolute_components(path: &Path) -> impl Iterator<Item = Component> + '_ {
-    path.components()
-        .skip_while(|c| matches!(c, Component::Prefix(_) | Component::RootDir))
 }
 
 /// Checks formatting of summary names with inline elements.

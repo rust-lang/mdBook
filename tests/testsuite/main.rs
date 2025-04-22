@@ -12,6 +12,7 @@ mod markdown;
 mod playground;
 mod preprocessor;
 mod print;
+mod redirects;
 
 mod prelude {
     pub use crate::book_test::BookTest;
