@@ -99,3 +99,37 @@ src = "src"
     );
     assert!(!test.dir.join(".gitignore").exists());
 }
+
+// Run `mdbook init` with `--title` without git config.
+//
+// Regression test for https://github.com/rust-lang/mdBook/issues/2485
+#[test]
+fn no_git_config_with_title() {
+    let mut test = BookTest::empty();
+    test.run("init", |cmd| {
+        cmd.expect_stdout(str![[r#"
+
+Do you want a .gitignore to be created? (y/n)
+
+All done, no errors...
+
+"#]])
+            .expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book::init): Creating a new book with stub content
+
+"#]])
+            .args(&["--title", "Example title"]);
+    })
+    .check_file(
+        "book.toml",
+        str![[r#"
+[book]
+authors = []
+language = "en"
+src = "src"
+title = "Example title"
+
+"#]],
+    );
+    assert!(!test.dir.join(".gitignore").exists());
+}
