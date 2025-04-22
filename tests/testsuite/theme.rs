@@ -137,3 +137,21 @@ book/fonts/myfont.woff
 "#]],
         );
 }
+
+// copy-fonts=false, no theme, deprecated
+#[test]
+fn copy_fonts_false_no_theme() {
+    BookTest::from_dir("theme/copy_fonts_false_no_theme")
+        .run("build", |cmd| {
+            cmd.expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book): Book building has started
+[TIMESTAMP] [INFO] (mdbook::book): Running the html backend
+[TIMESTAMP] [WARN] (mdbook::renderer::html_handlebars::static_files): output.html.copy-fonts is deprecated.
+This book appears to have copy-fonts=false in book.toml without a fonts.css file.
+Add an empty `theme/fonts/fonts.css` file to squelch this warning.
+
+"#]]);
+        })
+        .check_file_doesnt_contain("book/index.html", "fonts.css")
+        .check_file_list("book/fonts", str![[""]]);
+}
