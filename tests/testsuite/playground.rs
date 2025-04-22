@@ -16,3 +16,15 @@ fn playground_on_rust_code() {
 "##]],
     );
 }
+
+// When the playground is disabled, there should be no playground class.
+#[test]
+fn disabled_playground() {
+    BookTest::from_dir("playground/disabled_playground").check_main_file(
+        "book/index.html",
+        str![[r##"
+<h1 id="rust-sample"><a class="header" href="#rust-sample">Rust Sample</a></h1>
+<pre><code class="language-rust">let x = 1;</code></pre>
+"##]],
+    );
+}

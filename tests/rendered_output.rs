@@ -94,25 +94,6 @@ fn check_correct_relative_links_in_print_page() {
 }
 
 #[test]
-fn rendered_code_does_not_have_playground_stuff_in_html_when_disabled_in_config() {
-    let temp = DummyBook::new().build().unwrap();
-    let config = Config::from_str(
-        "
-    [output.html.playground]
-    runnable = false
-    ",
-    )
-    .unwrap();
-    let md = MDBook::load_with_config(temp.path(), config).unwrap();
-    md.build().unwrap();
-
-    let nested = temp.path().join("book/first/nested.html");
-    let playground_class = vec![r#"class="playground""#];
-
-    assert_doesnt_contain_strings(nested, &playground_class);
-}
-
-#[test]
 fn chapter_content_appears_in_rendered_document() {
     let content = vec![
         ("index.html", "This file is just here to cause the"),
