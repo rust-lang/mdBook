@@ -52,3 +52,19 @@ fn nop_preprocessor() {
 "#]]);
     });
 }
+
+// Failing preprocessor generates an error.
+#[test]
+fn failing_preprocessor() {
+    BookTest::from_dir("preprocessor/failing_preprocessor")
+        .run("build", |cmd| {
+            cmd.expect_failure()
+                .expect_stdout(str![[""]])
+                .expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book): Book building has started
+Boom!!1!
+[TIMESTAMP] [ERROR] (mdbook::utils): Error: The "nop-preprocessor" preprocessor exited unsuccessfully with [EXIT_STATUS]: 1 status
+
+"#]]);
+        });
+}
