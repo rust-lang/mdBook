@@ -406,24 +406,6 @@ fn example_book_can_build() {
 }
 
 #[test]
-fn book_with_a_reserved_filename_does_not_build() {
-    let tmp_dir = TempFileBuilder::new().prefix("mdBook").tempdir().unwrap();
-    let src_path = tmp_dir.path().join("src");
-    fs::create_dir(&src_path).unwrap();
-
-    let summary_path = src_path.join("SUMMARY.md");
-    let print_path = src_path.join("print.md");
-
-    fs::File::create(print_path).unwrap();
-    let mut summary_file = fs::File::create(summary_path).unwrap();
-    writeln!(summary_file, "[print](print.md)").unwrap();
-
-    let md = MDBook::load(tmp_dir.path()).unwrap();
-    let got = md.build();
-    assert!(got.is_err());
-}
-
-#[test]
 fn by_default_mdbook_use_index_preprocessor_to_convert_readme_to_index() {
     let temp = DummyBook::new().build().unwrap();
     let mut cfg = Config::default();

@@ -39,3 +39,17 @@ fn create_missing() {
     test.load_book();
     assert!(test.dir.join("src/chapter_1.md").exists());
 }
+
+// Checks that it fails if the summary has a reserved filename.
+#[test]
+fn no_reserved_filename() {
+    BookTest::from_dir("build/no_reserved_filename").run("build", |cmd| {
+        cmd.expect_failure().expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book): Book building has started
+[TIMESTAMP] [INFO] (mdbook::book): Running the html backend
+[TIMESTAMP] [ERROR] (mdbook::utils): Error: Rendering failed
+[TIMESTAMP] [ERROR] (mdbook::utils): [TAB]Caused By: print.md is reserved for internal use
+
+"#]]);
+    });
+}
