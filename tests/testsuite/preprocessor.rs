@@ -3,7 +3,7 @@
 use crate::prelude::*;
 use mdbook::book::Book;
 use mdbook::errors::Result;
-use mdbook::preprocess::{Preprocessor, PreprocessorContext};
+use mdbook::preprocess::{CmdPreprocessor, Preprocessor, PreprocessorContext};
 use std::sync::{Arc, Mutex};
 
 struct Spy(Arc<Mutex<Inner>>);
@@ -67,4 +67,29 @@ Boom!!1!
 
 "#]]);
         });
+}
+
+fn example() -> CmdPreprocessor {
+    CmdPreprocessor::new(
+        "nop-preprocessor".to_string(),
+        "cargo run --quiet --example nop-preprocessor --".to_string(),
+    )
+}
+
+#[test]
+fn example_supports_whatever() {
+    let cmd = example();
+
+    let got = cmd.supports_renderer("whatever");
+
+    assert_eq!(got, true);
+}
+
+#[test]
+fn example_doesnt_support_not_supported() {
+    let cmd = example();
+
+    let got = cmd.supports_renderer("not-supported");
+
+    assert_eq!(got, false);
 }
