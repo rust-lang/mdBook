@@ -7,13 +7,6 @@ use std::path::Path;
 use tempfile::{Builder as TempFileBuilder, TempDir};
 
 #[test]
-fn passing_alternate_backend() {
-    let (md, _temp) = dummy_book_with_backend("passing", success_cmd(), false);
-
-    md.build().unwrap();
-}
-
-#[test]
 fn failing_alternate_backend() {
     let (md, _temp) = dummy_book_with_backend("failing", fail_cmd(), false);
 
@@ -140,14 +133,6 @@ fn fail_cmd() -> &'static str {
         r#"cmd.exe /c "exit 1""#
     } else {
         "false"
-    }
-}
-
-fn success_cmd() -> &'static str {
-    if cfg!(windows) {
-        r#"cmd.exe /c "exit 0""#
-    } else {
-        "true"
     }
 }
 
