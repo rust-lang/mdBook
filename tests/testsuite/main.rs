@@ -17,6 +17,7 @@ mod renderer;
 mod rendering;
 #[cfg(feature = "search")]
 mod search;
+mod test;
 
 mod prelude {
     pub use crate::book_test::BookTest;
