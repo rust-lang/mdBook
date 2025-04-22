@@ -89,18 +89,6 @@ fn chapter_content_appears_in_rendered_document() {
     }
 }
 
-/// Apply a series of predicates to some root predicate, where each
-/// successive predicate is the descendant of the last one. Similar to how you
-/// might do `ul.foo li a` in CSS to access all anchor tags in the `foo` list.
-macro_rules! descendants {
-    ($root:expr, $($child:expr),*) => {
-        $root
-        $(
-            .descendant($child)
-        )*
-    };
-}
-
 /// Make sure that all `*.md` files (excluding `SUMMARY.md`) were rendered
 /// and placed in the `book` directory with their extensions set to `*.html`.
 #[test]
@@ -167,17 +155,6 @@ fn toc_fallback_html() -> Result<Document> {
     let toc_path = temp.path().join("book").join("toc.html");
     let html = fs::read_to_string(toc_path).with_context(|| "Unable to read index.html")?;
     Ok(Document::from(html.as_str()))
-}
-
-#[test]
-fn check_spacers() {
-    let doc = toc_js_html().unwrap();
-    let should_be = 2;
-
-    let num_spacers = doc
-        .find(Class("chapter").descendant(Name("li").and(Class("spacer"))))
-        .count();
-    assert_eq!(num_spacers, should_be);
 }
 
 // don't use target="_parent" in JS

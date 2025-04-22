@@ -84,3 +84,14 @@ fn check_first_toc_level() {
 
     assert_eq!(children, should_be);
 }
+
+#[test]
+fn check_spacers() {
+    let doc = toc_js_html();
+    let should_be = 2;
+
+    let num_spacers = doc
+        .find(Class("chapter").descendant(Name("li").and(Class("spacer"))))
+        .count();
+    assert_eq!(num_spacers, should_be);
+}
