@@ -381,44 +381,6 @@ mod search {
     use crate::dummy_book::DummyBook;
     use mdbook::utils::fs::write_file;
     use mdbook::MDBook;
-    use std::fs;
-    use std::path::Path;
-
-    fn read_book_index(root: &Path) -> serde_json::Value {
-        let index = root.join("book/searchindex.js");
-        let index = fs::read_to_string(index).unwrap();
-        let index = index.trim_start_matches("window.search = JSON.parse('");
-        let index = index.trim_end_matches("');");
-        // We need unescape the string as it's supposed to be an escaped JS string.
-        serde_json::from_str(&index.replace("\\'", "'").replace("\\\\", "\\")).unwrap()
-    }
-
-    #[test]
-    fn can_disable_individual_chapters() {
-        let temp = DummyBook::new().build().unwrap();
-        let book_toml = r#"
-            [book]
-            title = "Search Test"
-
-            [output.html.search.chapter]
-            "second" = { enable = false }
-            "first/unicode.md" = { enable = false }
-            "#;
-        write_file(temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
-        let md = MDBook::load(temp.path()).unwrap();
-        md.build().unwrap();
-        let index = read_book_index(temp.path());
-        let doc_urls = index["doc_urls"].as_array().unwrap();
-        let contains = |path| {
-            doc_urls
-                .iter()
-                .any(|p| p.as_str().unwrap().starts_with(path))
-        };
-        assert!(contains("second.html"));
-        assert!(!contains("second/"));
-        assert!(!contains("first/unicode.html"));
-        assert!(contains("first/markdown.html"));
-    }
 
     #[test]
     fn chapter_settings_validation_error() {

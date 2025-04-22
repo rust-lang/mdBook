@@ -86,3 +86,21 @@ fn search_index_hasnt_changed_accidentally() {
         file!["search/reasonable_search_index/expected_index.js"],
     );
 }
+
+// Ability to disable search chapters.
+#[test]
+fn can_disable_individual_chapters() {
+    let mut test = BookTest::from_dir("search/disable_search_chapter");
+    test.build();
+    let index = read_book_index(&test.dir);
+    let doc_urls = index["doc_urls"].as_array().unwrap();
+    let contains = |path| {
+        doc_urls
+            .iter()
+            .any(|p| p.as_str().unwrap().starts_with(path))
+    };
+    assert!(contains("second.html"));
+    assert!(!contains("second/"));
+    assert!(!contains("first/disable_me.html"));
+    assert!(contains("first/keep_me.html"));
+}
