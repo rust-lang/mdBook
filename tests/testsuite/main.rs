@@ -10,6 +10,7 @@ mod index;
 mod init;
 mod markdown;
 mod playground;
+mod preprocessor;
 
 mod prelude {
     pub use crate::book_test::BookTest;
