@@ -53,3 +53,24 @@ failing!
 "#]]);
     });
 }
+
+// Test with a specific chapter.
+#[test]
+fn test_individual_chapter() {
+    let mut test = BookTest::from_dir("test/passing_tests");
+    test.run("test -c", |cmd| {
+        cmd.args(&["Passing 1"])
+            .expect_stdout(str![[""]])
+            .expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book): Testing chapter 'Passing 1': "passing1.md"
+
+"#]]);
+    })
+    // Can also be a source path.
+    .run("test -c passing2.md", |cmd| {
+        cmd.expect_stdout(str![[""]]).expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book): Testing chapter 'Passing 2': "passing2.md"
+
+"#]]);
+    });
+}
