@@ -170,3 +170,24 @@ fn copy_fonts_false_with_empty_fonts_css() {
         .check_file_doesnt_contain("book/index.html", "fonts.css")
         .check_file_list("book/fonts", str![[""]]);
 }
+
+// copy-fonts=false, fonts.css has contents
+#[test]
+fn copy_fonts_false_with_fonts_css() {
+    BookTest::from_dir("theme/copy_fonts_false_with_fonts_css")
+        .run("build", |cmd| {
+            cmd.expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book): Book building has started
+[TIMESTAMP] [INFO] (mdbook::book): Running the html backend
+
+"#]]);
+        })
+        .check_file_contains("book/index.html", "fonts.css")
+        .check_file_list(
+            "book/fonts",
+            str![[r#"
+book/fonts/fonts.css
+book/fonts/myfont.woff
+"#]],
+        );
+}

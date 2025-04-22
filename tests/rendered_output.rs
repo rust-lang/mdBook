@@ -305,38 +305,3 @@ fn summary_with_markdown_formatting() {
         "# &lt;escaped tag&gt;\n"
     );
 }
-
-#[test]
-fn custom_fonts() {
-    // Tests to ensure custom fonts are copied as expected.
-    let actual_files = |path: &Path| -> Vec<String> {
-        let mut actual: Vec<_> = path
-            .read_dir()
-            .unwrap()
-            .map(|entry| entry.unwrap().file_name().into_string().unwrap())
-            .collect();
-        actual.sort();
-        actual
-    };
-    let has_fonts_css = |path: &Path| -> bool {
-        let contents = fs::read_to_string(path.join("book/index.html")).unwrap();
-        contents.contains("fonts/fonts.css")
-    };
-
-    // copy-fonts=false with fonts theme
-    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
-    let p = temp.path();
-    MDBook::init(p).build().unwrap();
-    write_file(&p.join("theme/fonts"), "fonts.css", b"/*custom*/").unwrap();
-    write_file(&p.join("theme/fonts"), "myfont.woff", b"").unwrap();
-    let config = Config::from_str("output.html.copy-fonts = false").unwrap();
-    MDBook::load_with_config(p, config)
-        .unwrap()
-        .build()
-        .unwrap();
-    assert!(has_fonts_css(p));
-    assert_eq!(
-        actual_files(&p.join("book/fonts")),
-        &["fonts.css", "myfont.woff"]
-    );
-}
