@@ -142,3 +142,46 @@ fn check_link_target_fallback() {
         TOC_TOP_LEVEL.len() + TOC_SECOND_LEVEL.len()
     );
 }
+
+// Checks formatting of summary names with inline elements.
+#[test]
+fn summary_with_markdown_formatting() {
+    BookTest::from_dir("toc/summary_with_markdown_formatting")
+        .check_toc_js(str![[r#"
+<ol class="chapter">
+<li class="chapter-item expanded ">
+<a href="formatted-summary.html">
+<strong aria-hidden="true">1.</strong> Italic code *escape* `escape2`</a>
+</li>
+<li class="chapter-item expanded ">
+<a href="soft.html">
+<strong aria-hidden="true">2.</strong> Soft line break</a>
+</li>
+<li class="chapter-item expanded ">
+<a href="escaped-tag.html">
+<strong aria-hidden="true">3.</strong> &lt;escaped tag&gt;</a>
+</li>
+</ol>
+"#]])
+        .check_file(
+            "src/formatted-summary.md",
+            str![[r#"
+# Italic code *escape* `escape2`
+
+"#]],
+        )
+        .check_file(
+            "src/soft.md",
+            str![[r#"
+# Soft line break
+
+"#]],
+        )
+        .check_file(
+            "src/escaped-tag.md",
+            str![[r#"
+# &lt;escaped tag&gt;
+
+"#]],
+        );
+}
