@@ -8,6 +8,7 @@ mod cli;
 mod includes;
 mod index;
 mod init;
+mod markdown;
 
 mod prelude {
     pub use crate::book_test::BookTest;
