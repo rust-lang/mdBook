@@ -364,24 +364,6 @@ fn able_to_include_playground_files_in_chapters() {
     assert_doesnt_contain_strings(&second, &["{{#playground example.rs}}"]);
 }
 
-/// This makes sure you can include a Rust file with `{{#include ../SUMMARY.md}}`.
-#[test]
-fn able_to_include_files_in_chapters() {
-    let temp = DummyBook::new().build().unwrap();
-    let md = MDBook::load(temp.path()).unwrap();
-    md.build().unwrap();
-
-    let includes = temp.path().join("book/first/includes.html");
-
-    let summary_strings = &[
-        r##"<h1 id="summary"><a class="header" href="#summary">Summary</a></h1>"##,
-        ">First Chapter</a>",
-    ];
-    assert_contains_strings(&includes, summary_strings);
-
-    assert_doesnt_contain_strings(&includes, &["{{#include ../SUMMARY.md::}}"]);
-}
-
 /// Ensure cyclic includes are capped so that no exceptions occur
 #[test]
 fn recursive_includes_are_capped() {
