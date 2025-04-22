@@ -329,26 +329,6 @@ fn example_book_can_build() {
 }
 
 #[test]
-fn by_default_mdbook_use_index_preprocessor_to_convert_readme_to_index() {
-    let temp = DummyBook::new().build().unwrap();
-    let mut cfg = Config::default();
-    cfg.set("book.src", "src2")
-        .expect("Couldn't set config.book.src to \"src2\".");
-    let md = MDBook::load_with_config(temp.path(), cfg).unwrap();
-    md.build().unwrap();
-
-    let first_index = temp.path().join("book").join("toc.js");
-    let expected_strings = vec![
-        r#"href="first/index.html""#,
-        r#"href="second/index.html""#,
-        "1st README",
-        "2nd README",
-    ];
-    assert_contains_strings(&first_index, &expected_strings);
-    assert_doesnt_contain_strings(&first_index, &["README.html", "Second README"]);
-}
-
-#[test]
 fn first_chapter_is_copied_as_index_even_if_not_first_elem() {
     let temp = DummyBook::new().build().unwrap();
     let mut cfg = Config::default();

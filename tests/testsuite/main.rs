@@ -6,6 +6,7 @@ mod book_test;
 mod build;
 mod cli;
 mod includes;
+mod index;
 
 mod prelude {
     pub use crate::book_test::BookTest;
