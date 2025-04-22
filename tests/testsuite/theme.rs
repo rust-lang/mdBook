@@ -42,3 +42,29 @@ This is a modified index.hbs!
 "#]],
     );
 }
+
+// After building, what are the default set of fonts?
+#[test]
+fn default_fonts() {
+    BookTest::init(|_| {})
+        .check_file_contains("book/index.html", "fonts/fonts.css")
+        .check_file_list(
+            "book/fonts",
+            str![[r#"
+book/fonts/OPEN-SANS-LICENSE.txt
+book/fonts/SOURCE-CODE-PRO-LICENSE.txt
+book/fonts/fonts.css
+book/fonts/open-sans-v17-all-charsets-300.woff2
+book/fonts/open-sans-v17-all-charsets-300italic.woff2
+book/fonts/open-sans-v17-all-charsets-600.woff2
+book/fonts/open-sans-v17-all-charsets-600italic.woff2
+book/fonts/open-sans-v17-all-charsets-700.woff2
+book/fonts/open-sans-v17-all-charsets-700italic.woff2
+book/fonts/open-sans-v17-all-charsets-800.woff2
+book/fonts/open-sans-v17-all-charsets-800italic.woff2
+book/fonts/open-sans-v17-all-charsets-italic.woff2
+book/fonts/open-sans-v17-all-charsets-regular.woff2
+book/fonts/source-code-pro-v11-all-charsets-500.woff2
+"#]],
+        );
+}

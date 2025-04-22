@@ -339,14 +339,6 @@ fn custom_fonts() {
         contents.contains("fonts/fonts.css")
     };
 
-    // No theme:
-    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
-    let p = temp.path();
-    MDBook::init(p).build().unwrap();
-    MDBook::load(p).unwrap().build().unwrap();
-    assert_eq!(actual_files(&p.join("book/fonts")), &builtin_fonts);
-    assert!(has_fonts_css(p));
-
     // Full theme.
     let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
     let p = temp.path();
