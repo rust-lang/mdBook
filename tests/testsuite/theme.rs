@@ -115,3 +115,25 @@ book/fonts/source-code-pro-v11-all-charsets-500.woff2
 "#]],
     );
 }
+
+// Custom fonts.css.
+#[test]
+fn fonts_css() {
+    BookTest::from_dir("theme/fonts_css")
+        .check_file_contains("book/index.html", "fonts/fonts.css")
+        .check_file(
+            "book/fonts/fonts.css",
+            str![[r#"
+/*custom*/
+
+"#]],
+        )
+        .check_file("book/fonts/myfont.woff", str![[""]])
+        .check_file_list(
+            "book/fonts",
+            str![[r#"
+book/fonts/fonts.css
+book/fonts/myfont.woff
+"#]],
+        );
+}

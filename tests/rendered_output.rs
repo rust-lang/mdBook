@@ -323,20 +323,6 @@ fn custom_fonts() {
         contents.contains("fonts/fonts.css")
     };
 
-    // Mixed with copy-fonts=true
-    // Should ignore the copy-fonts setting since the user has provided their own fonts.css.
-    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
-    let p = temp.path();
-    MDBook::init(p).build().unwrap();
-    write_file(&p.join("theme/fonts"), "fonts.css", b"/*custom*/").unwrap();
-    write_file(&p.join("theme/fonts"), "myfont.woff", b"").unwrap();
-    MDBook::load(p).unwrap().build().unwrap();
-    assert!(has_fonts_css(p));
-    assert_eq!(
-        actual_files(&p.join("book/fonts")),
-        ["fonts.css", "myfont.woff"]
-    );
-
     // copy-fonts=false, no theme
     // This should generate a deprecation warning.
     let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
