@@ -29,3 +29,13 @@ fn failure_on_missing_file() {
 "#]]);
     });
 }
+
+// Ensure a missing file is created if `create-missing` is true.
+#[test]
+fn create_missing() {
+    let test = BookTest::from_dir("build/create_missing");
+    assert!(test.dir.join("src/SUMMARY.md").exists());
+    assert!(!test.dir.join("src/chapter_1.md").exists());
+    test.load_book();
+    assert!(test.dir.join("src/chapter_1.md").exists());
+}

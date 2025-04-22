@@ -348,20 +348,6 @@ fn check_link_target_fallback() {
     );
 }
 
-/// Ensure a missing file is created if `create-missing` is true.
-#[test]
-fn create_missing_file_with_config() {
-    let temp = DummyBook::new().build().unwrap();
-    fs::remove_file(temp.path().join("src").join("intro.md")).unwrap();
-
-    let mut cfg = Config::default();
-    cfg.build.create_missing = true;
-
-    assert!(!temp.path().join("src").join("intro.md").exists());
-    let _md = MDBook::load_with_config(temp.path(), cfg).unwrap();
-    assert!(temp.path().join("src").join("intro.md").exists());
-}
-
 /// This makes sure you can include a Rust file with `{{#playground example.rs}}`.
 /// Specification is in `guide/src/format/rust.md`
 #[test]
