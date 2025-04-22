@@ -125,3 +125,17 @@ fn with_no_source_path() {
     book.book.sections.push(BookItem::Chapter(chapter));
     book.build().unwrap();
 }
+
+// Checks that invalid settings in search chapter is rejected.
+#[test]
+fn chapter_settings_validation_error() {
+    BookTest::from_dir("search/chapter_settings_validation_error").run("build", |cmd| {
+        cmd.expect_failure().expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book): Book building has started
+[TIMESTAMP] [INFO] (mdbook::book): Running the html backend
+[TIMESTAMP] [ERROR] (mdbook::utils): Error: Rendering failed
+[TIMESTAMP] [ERROR] (mdbook::utils): [TAB]Caused By: [output.html.search.chapter] key `does-not-exist` does not match any chapter paths
+
+"#]]);
+    });
+}

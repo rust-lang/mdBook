@@ -375,31 +375,6 @@ fn failure_on_missing_theme_directory() {
     assert!(got.is_err());
 }
 
-#[cfg(feature = "search")]
-mod search {
-    use crate::dummy_book::DummyBook;
-    use mdbook::utils::fs::write_file;
-    use mdbook::MDBook;
-
-    #[test]
-    fn chapter_settings_validation_error() {
-        let temp = DummyBook::new().build().unwrap();
-        let book_toml = r#"
-            [book]
-            title = "Search Test"
-
-            [output.html.search.chapter]
-            "does-not-exist" = { enable = false }
-            "#;
-        write_file(temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
-        let md = MDBook::load(temp.path()).unwrap();
-        let err = md.build().unwrap_err();
-        assert!(format!("{err:?}").contains(
-            "[output.html.search.chapter] key `does-not-exist` does not match any chapter paths"
-        ));
-    }
-}
-
 #[test]
 fn custom_fonts() {
     // Tests to ensure custom fonts are copied as expected.
