@@ -17,3 +17,16 @@ cmd.expect_failure()
 "#]]);
     });
 }
+
+// Checks what happens if the theme directory is empty.
+#[test]
+fn empty_theme() {
+    BookTest::from_dir("theme/empty_theme").run("build", |cmd| {
+        std::fs::create_dir(cmd.dir.join("theme")).unwrap();
+        cmd.expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book): Book building has started
+[TIMESTAMP] [INFO] (mdbook::book): Running the html backend
+
+"#]]);
+    });
+}
