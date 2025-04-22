@@ -30,3 +30,15 @@ fn empty_theme() {
 "#]]);
     });
 }
+
+// Checks overriding index.hbs.
+#[test]
+fn override_index() {
+    BookTest::from_dir("theme/override_index").check_file(
+        "book/index.html",
+        str![[r#"
+This is a modified index.hbs!
+
+"#]],
+    );
+}
