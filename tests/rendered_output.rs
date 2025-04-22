@@ -437,7 +437,7 @@ Around the world, around the world"];
 fn example_book_can_build() {
     let example_book_dir = dummy_book::new_copy_of_example_book().unwrap();
 
-    let md = MDBook::load(example_book_dir.path()).unwrap();
+    let md = MDBook::load(example_book_dir.path().join("guide")).unwrap();
 
     md.build().unwrap();
 }
@@ -498,7 +498,7 @@ fn first_chapter_is_copied_as_index_even_if_not_first_elem() {
 #[test]
 fn theme_dir_overrides_work_correctly() {
     let book_dir = dummy_book::new_copy_of_example_book().unwrap();
-    let book_dir = book_dir.path();
+    let book_dir = &book_dir.path().join("guide");
     let theme_dir = book_dir.join("theme");
 
     let mut index = mdbook::theme::INDEX.to_vec();
