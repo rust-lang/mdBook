@@ -1,0 +1,17 @@
+// This GUI test checks the active page sidebar highlight.
+
+go-to: |DOC_PATH| + "index.html"
+
+assert-text: ("mdbook-sidebar-scrollbox a.active", "Prefix Chapter")
+
+go-to: |DOC_PATH| + "individual/index.html"
+
+assert-text: ("mdbook-sidebar-scrollbox a.active", "3. Markdown Individual tags")
+
+go-to: |DOC_PATH| + "index.html?highlight=test"
+
+assert-text: ("mdbook-sidebar-scrollbox a.active", "Prefix Chapter")
+
+go-to: |DOC_PATH| + "individual/index.html?highlight=test"
+
+assert-text: ("mdbook-sidebar-scrollbox a.active", "3. Markdown Individual tags")
