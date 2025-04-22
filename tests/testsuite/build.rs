@@ -53,3 +53,15 @@ fn no_reserved_filename() {
 "#]]);
     });
 }
+
+// Build without book.toml should be OK.
+#[test]
+fn book_toml_isnt_required() {
+    let mut test = BookTest::init(|_| {});
+    std::fs::remove_file(test.dir.join("book.toml")).unwrap();
+    test.build();
+    test.check_main_file(
+        "book/chapter_1.html",
+        str![[r##"<h1 id="chapter-1"><a class="header" href="#chapter-1">Chapter 1</a></h1>"##]],
+    );
+}

@@ -99,16 +99,6 @@ fn run_mdbook_init_with_custom_book_and_src_locations() {
 }
 
 #[test]
-fn book_toml_isnt_required() {
-    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
-    let md = MDBook::init(temp.path()).build().unwrap();
-
-    let _ = fs::remove_file(temp.path().join("book.toml"));
-
-    md.build().unwrap();
-}
-
-#[test]
 fn copy_theme() {
     let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
     MDBook::init(temp.path()).copy_theme(true).build().unwrap();
