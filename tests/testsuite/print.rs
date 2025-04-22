@@ -21,3 +21,12 @@ both the print page and the non-print page.</p>
 <h2 id="some-section"><a class="header" href="#some-section">Some section</a></h2>
 "##]]);
 }
+
+// Checks that print.html is noindex.
+#[test]
+fn noindex() {
+    let robots = r#"<meta name="robots" content="noindex">"#;
+    BookTest::from_dir("print/noindex")
+        .check_file_contains("book/print.html", robots)
+        .check_file_doesnt_contain("book/index.html", robots);
+}
