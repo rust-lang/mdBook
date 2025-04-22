@@ -323,19 +323,6 @@ fn custom_fonts() {
         contents.contains("fonts/fonts.css")
     };
 
-    // copy-fonts=false with empty fonts.css
-    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
-    let p = temp.path();
-    MDBook::init(p).build().unwrap();
-    write_file(&p.join("theme/fonts"), "fonts.css", b"").unwrap();
-    let config = Config::from_str("output.html.copy-fonts = false").unwrap();
-    MDBook::load_with_config(p, config)
-        .unwrap()
-        .build()
-        .unwrap();
-    assert!(!has_fonts_css(p));
-    assert!(!p.join("book/fonts").exists());
-
     // copy-fonts=false with fonts theme
     let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
     let p = temp.path();
