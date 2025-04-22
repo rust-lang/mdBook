@@ -19,6 +19,7 @@ mod rendering;
 mod search;
 mod test;
 mod theme;
+mod toc;
 
 mod prelude {
     pub use crate::book_test::BookTest;

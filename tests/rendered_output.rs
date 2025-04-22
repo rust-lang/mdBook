@@ -5,7 +5,6 @@ use crate::dummy_book::{assert_contains_strings, DummyBook};
 use anyhow::Context;
 use mdbook::config::Config;
 use mdbook::errors::*;
-use mdbook::utils::fs::write_file;
 use mdbook::MDBook;
 use pretty_assertions::assert_eq;
 use select::document::Document;
@@ -13,8 +12,6 @@ use select::predicate::{Attr, Class, Name, Predicate};
 use std::ffi::OsStr;
 use std::fs;
 use std::path::Path;
-use std::str::FromStr;
-use tempfile::Builder as TempFileBuilder;
 use walkdir::{DirEntry, WalkDir};
 
 const BOOK_ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/dummy_book");
@@ -170,28 +167,6 @@ fn toc_fallback_html() -> Result<Document> {
     let toc_path = temp.path().join("book").join("toc.html");
     let html = fs::read_to_string(toc_path).with_context(|| "Unable to read index.html")?;
     Ok(Document::from(html.as_str()))
-}
-
-#[test]
-fn check_second_toc_level() {
-    let doc = toc_js_html().unwrap();
-    let mut should_be = Vec::from(TOC_SECOND_LEVEL);
-    should_be.sort_unstable();
-
-    let pred = descendants!(
-        Class("chapter"),
-        Name("li"),
-        Name("li"),
-        Name("a").and(Class("toggle").not())
-    );
-
-    let mut children_of_children: Vec<_> = doc
-        .find(pred)
-        .map(|elem| elem.text().trim().to_string())
-        .collect();
-    children_of_children.sort();
-
-    assert_eq!(children_of_children, should_be);
 }
 
 #[test]
