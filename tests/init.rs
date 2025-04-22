@@ -1,46 +1,6 @@
-use mdbook::config::Config;
 use mdbook::MDBook;
 use pretty_assertions::assert_eq;
-use std::fs;
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::PathBuf;
 use tempfile::Builder as TempFileBuilder;
-
-/// Set some custom arguments for where to place the source and destination
-/// files, then call `mdbook init`.
-#[test]
-fn run_mdbook_init_with_custom_book_and_src_locations() {
-    let created_files = vec!["out", "in", "in/SUMMARY.md", "in/chapter_1.md"];
-
-    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
-    for file in &created_files {
-        assert!(
-            !temp.path().join(file).exists(),
-            "{file} shouldn't exist yet!"
-        );
-    }
-
-    let mut cfg = Config::default();
-    cfg.book.src = PathBuf::from("in");
-    cfg.build.build_dir = PathBuf::from("out");
-
-    MDBook::init(temp.path()).with_config(cfg).build().unwrap();
-
-    for file in &created_files {
-        let target = temp.path().join(file);
-        assert!(
-            target.exists(),
-            "{file} should have been created by `mdbook init`"
-        );
-    }
-
-    let contents = fs::read_to_string(temp.path().join("book.toml")).unwrap();
-    assert_eq!(
-        contents,
-        "[book]\nauthors = []\nlanguage = \"en\"\nsrc = \"in\"\n\n[build]\nbuild-dir = \"out\"\ncreate-missing = true\nextra-watch-dirs = []\nuse-default-preprocessors = true\n"
-    );
-}
 
 #[test]
 fn copy_theme() {

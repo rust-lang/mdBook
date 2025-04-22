@@ -1,7 +1,8 @@
 //! Tests for `mdbook init`.
 
 use crate::prelude::*;
-use mdbook::MDBook;
+use mdbook::{Config, MDBook};
+use std::path::PathBuf;
 
 // Tests "init" with no args.
 #[test]
@@ -161,4 +162,48 @@ fn init_from_summary() {
 
 "#]],
         );
+}
+
+// Set some custom arguments for where to place the source and destination
+// files, then call `mdbook init`.
+#[test]
+fn init_with_custom_book_and_src_locations() {
+    let mut test = BookTest::empty();
+    let mut cfg = Config::default();
+    cfg.book.src = PathBuf::from("in");
+    cfg.build.build_dir = PathBuf::from("out");
+    MDBook::init(&test.dir).with_config(cfg).build().unwrap();
+    test.check_file(
+        "book.toml",
+        str![[r#"
+[book]
+authors = []
+language = "en"
+src = "in"
+
+[build]
+build-dir = "out"
+create-missing = true
+extra-watch-dirs = []
+use-default-preprocessors = true
+
+"#]],
+    )
+    .check_file(
+        "in/SUMMARY.md",
+        str![[r#"
+# Summary
+
+- [Chapter 1](./chapter_1.md)
+
+"#]],
+    )
+    .check_file(
+        "in/chapter_1.md",
+        str![[r#"
+# Chapter 1
+
+"#]],
+    );
+    assert!(test.dir.join("out").exists());
 }
