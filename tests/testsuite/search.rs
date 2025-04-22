@@ -1,0 +1,78 @@
+//! Tests for search support.
+
+use crate::prelude::*;
+use std::path::Path;
+
+fn read_book_index(root: &Path) -> serde_json::Value {
+    let index = root.join("book/searchindex.js");
+    let index = std::fs::read_to_string(index).unwrap();
+    let index = index.trim_start_matches("window.search = JSON.parse('");
+    let index = index.trim_end_matches("');");
+    // We need unescape the string as it's supposed to be an escaped JS string.
+    serde_json::from_str(&index.replace("\\'", "'").replace("\\\\", "\\")).unwrap()
+}
+
+// Some spot checks for the generation of the search index.
+#[test]
+fn reasonable_search_index() {
+    let mut test = BookTest::from_dir("search/reasonable_search_index");
+    test.build();
+    let index = read_book_index(&test.dir);
+
+    let doc_urls = index["doc_urls"].as_array().unwrap();
+    eprintln!("doc_urls={doc_urls:#?}",);
+    let get_doc_ref = |url: &str| -> String {
+        doc_urls
+            .iter()
+            .position(|s| s == url)
+            .unwrap_or_else(|| panic!("failed to find {url}"))
+            .to_string()
+    };
+
+    let first_chapter = get_doc_ref("first/index.html#first-chapter");
+    let introduction = get_doc_ref("intro.html#introduction");
+    let some_section = get_doc_ref("first/index.html#some-section");
+    let summary = get_doc_ref("first/includes.html#summary");
+    let no_headers = get_doc_ref("first/no-headers.html");
+    let duplicate_headers_1 = get_doc_ref("first/duplicate-headers.html#header-text-1");
+    let heading_attrs = get_doc_ref("first/heading-attributes.html#both");
+    let sneaky = get_doc_ref("intro.html#sneaky");
+
+    let bodyidx = &index["index"]["index"]["body"]["root"];
+    let textidx = &bodyidx["t"]["e"]["x"]["t"];
+    assert_eq!(textidx["df"], 5);
+    assert_eq!(textidx["docs"][&first_chapter]["tf"], 1.0);
+    assert_eq!(textidx["docs"][&introduction]["tf"], 1.0);
+
+    let docs = &index["index"]["documentStore"]["docs"];
+    assert_eq!(docs[&first_chapter]["body"], "more text.");
+    assert_eq!(docs[&some_section]["body"], "");
+    assert_eq!(
+        docs[&summary]["body"],
+        "Introduction First Chapter Includes Unicode No Headers Duplicate Headers Heading Attributes"
+    );
+    assert_eq!(
+        docs[&summary]["breadcrumbs"],
+        "First Chapter » Includes » Summary"
+    );
+    // See note about InlineHtml in search.rs. Ideally the `alert()` part
+    // should not be in the index, but we don't have a way to scrub inline
+    // html.
+    assert_eq!(docs[&sneaky]["body"], "I put &lt;HTML&gt; in here! Sneaky inline event alert(\"inline\");. But regular inline is indexed.");
+    assert_eq!(
+        docs[&no_headers]["breadcrumbs"],
+        "First Chapter » No Headers"
+    );
+    assert_eq!(
+        docs[&duplicate_headers_1]["breadcrumbs"],
+        "First Chapter » Duplicate Headers » Header Text"
+    );
+    assert_eq!(
+        docs[&no_headers]["body"],
+        "Capybara capybara capybara. Capybara capybara capybara. ThisLongWordIsIncludedSoWeCanCheckThatSufficientlyLongWordsAreOmittedFromTheSearchIndex."
+    );
+    assert_eq!(
+        docs[&heading_attrs]["breadcrumbs"],
+        "First Chapter » Heading Attributes » Heading with id and classes"
+    );
+}

@@ -15,6 +15,8 @@ mod print;
 mod redirects;
 mod renderer;
 mod rendering;
+#[cfg(feature = "search")]
+mod search;
 
 mod prelude {
     pub use crate::book_test::BookTest;

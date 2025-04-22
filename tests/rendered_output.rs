@@ -394,67 +394,6 @@ mod search {
     }
 
     #[test]
-    fn book_creates_reasonable_search_index() {
-        let temp = DummyBook::new().build().unwrap();
-        let md = MDBook::load(temp.path()).unwrap();
-        md.build().unwrap();
-
-        let index = read_book_index(temp.path());
-
-        let doc_urls = index["doc_urls"].as_array().unwrap();
-        eprintln!("doc_urls={doc_urls:#?}",);
-        let get_doc_ref =
-            |url: &str| -> String { doc_urls.iter().position(|s| s == url).unwrap().to_string() };
-
-        let first_chapter = get_doc_ref("first/index.html#first-chapter");
-        let introduction = get_doc_ref("intro.html#introduction");
-        let some_section = get_doc_ref("first/index.html#some-section");
-        let summary = get_doc_ref("first/includes.html#summary");
-        let no_headers = get_doc_ref("first/no-headers.html");
-        let duplicate_headers_1 = get_doc_ref("first/duplicate-headers.html#header-text-1");
-        let conclusion = get_doc_ref("conclusion.html#conclusion");
-        let heading_attrs = get_doc_ref("first/heading-attributes.html#both");
-
-        let bodyidx = &index["index"]["index"]["body"]["root"];
-        let textidx = &bodyidx["t"]["e"]["x"]["t"];
-        assert_eq!(textidx["df"], 5);
-        assert_eq!(textidx["docs"][&first_chapter]["tf"], 1.0);
-        assert_eq!(textidx["docs"][&introduction]["tf"], 1.0);
-
-        let docs = &index["index"]["documentStore"]["docs"];
-        assert_eq!(docs[&first_chapter]["body"], "more text.");
-        assert_eq!(docs[&some_section]["body"], "");
-        assert_eq!(
-            docs[&summary]["body"],
-            "Dummy Book Introduction First Chapter Nested Chapter Includes Recursive Markdown Unicode No Headers Duplicate Headers Heading Attributes Second Chapter Nested Chapter Conclusion"
-        );
-        assert_eq!(
-            docs[&summary]["breadcrumbs"],
-            "First Chapter » Includes » Summary"
-        );
-        // See note about InlineHtml in search.rs. Ideally the `alert()` part
-        // should not be in the index, but we don't have a way to scrub inline
-        // html.
-        assert_eq!(docs[&conclusion]["body"], "I put &lt;HTML&gt; in here! Sneaky inline event alert(\"inline\");. But regular inline is indexed.");
-        assert_eq!(
-            docs[&no_headers]["breadcrumbs"],
-            "First Chapter » No Headers"
-        );
-        assert_eq!(
-            docs[&duplicate_headers_1]["breadcrumbs"],
-            "First Chapter » Duplicate Headers » Header Text"
-        );
-        assert_eq!(
-            docs[&no_headers]["body"],
-            "Capybara capybara capybara. Capybara capybara capybara. ThisLongWordIsIncludedSoWeCanCheckThatSufficientlyLongWordsAreOmittedFromTheSearchIndex."
-        );
-        assert_eq!(
-            docs[&heading_attrs]["breadcrumbs"],
-            "First Chapter » Heading Attributes » Heading with id and classes"
-        );
-    }
-
-    #[test]
     fn can_disable_individual_chapters() {
         let temp = DummyBook::new().build().unwrap();
         let book_toml = r#"
