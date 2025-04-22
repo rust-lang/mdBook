@@ -74,3 +74,16 @@ fn test_individual_chapter() {
 "#]]);
     });
 }
+
+// Unknown chapter name.
+#[test]
+fn chapter_not_found() {
+    BookTest::from_dir("test/passing_tests").run("test -c bogus", |cmd| {
+        cmd.expect_failure()
+            .expect_stdout(str![[""]])
+            .expect_stderr(str![[r#"
+[TIMESTAMP] [ERROR] (mdbook::utils): Error: Chapter not found: bogus
+
+"#]]);
+    });
+}
