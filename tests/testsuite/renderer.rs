@@ -91,3 +91,17 @@ fn missing_renderer() {
 "#]]);
     });
 }
+
+// Optional missing is not an error.
+#[test]
+fn missing_optional_not_fatal() {
+    BookTest::from_dir("renderer/missing_optional_not_fatal").run("build", |cmd| {
+        cmd.expect_stdout(str![[""]]).expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book): Book building has started
+[TIMESTAMP] [INFO] (mdbook::book): Running the missing backend
+[TIMESTAMP] [INFO] (mdbook::renderer): Invoking the "missing" renderer
+[TIMESTAMP] [WARN] (mdbook::renderer): The command `trduyvbhijnorgevfuhn` for backend `missing` was not found, but was marked as optional.
+
+"#]]);
+    });
+}

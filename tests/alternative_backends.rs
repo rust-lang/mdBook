@@ -7,12 +7,6 @@ use std::path::Path;
 use tempfile::{Builder as TempFileBuilder, TempDir};
 
 #[test]
-fn missing_optional_backends_are_not_fatal() {
-    let (md, _temp) = dummy_book_with_backend("missing", "trduyvbhijnorgevfuhn", true);
-    assert!(md.build().is_ok());
-}
-
-#[test]
 fn alternate_backend_with_arguments() {
     let (md, _temp) = dummy_book_with_backend("arguments", "echo Hello World!", false);
 
