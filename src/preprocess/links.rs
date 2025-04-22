@@ -48,7 +48,7 @@ impl Preprocessor for LinkPreprocessor {
 
         book.for_each_mut(|section: &mut BookItem| {
             if let BookItem::Chapter(ref mut ch) = *section {
-                if let Some(ref chapter_path) = ch.path {
+                if let Some(ref chapter_path) = ch.source_path {
                     let base = chapter_path
                         .parent()
                         .map(|dir| src_dir.join(dir))
