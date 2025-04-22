@@ -170,29 +170,6 @@ fn toc_fallback_html() -> Result<Document> {
 }
 
 #[test]
-fn check_first_toc_level() {
-    let doc = toc_js_html().unwrap();
-    let mut should_be = Vec::from(TOC_TOP_LEVEL);
-
-    should_be.extend(TOC_SECOND_LEVEL);
-    should_be.sort_unstable();
-
-    let pred = descendants!(
-        Class("chapter"),
-        Name("li"),
-        Name("a").and(Class("toggle").not())
-    );
-
-    let mut children: Vec<_> = doc
-        .find(pred)
-        .map(|elem| elem.text().trim().to_string())
-        .collect();
-    children.sort();
-
-    assert_eq!(children, should_be);
-}
-
-#[test]
 fn check_spacers() {
     let doc = toc_js_html().unwrap();
     let should_be = 2;

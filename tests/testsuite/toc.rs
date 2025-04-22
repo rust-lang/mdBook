@@ -4,6 +4,14 @@ use crate::prelude::*;
 use select::document::Document;
 use select::predicate::{Class, Name, Predicate};
 
+const TOC_TOP_LEVEL: &[&str] = &[
+    "1. With Readme",
+    "3. Deep Nest 1",
+    "Prefix 1",
+    "Prefix 2",
+    "Suffix 1",
+    "Suffix 2",
+];
 const TOC_SECOND_LEVEL: &[&str] = &[
     "1.1. Nested Index",
     "1.2. Nested two",
@@ -52,4 +60,27 @@ fn check_second_toc_level() {
     children_of_children.sort();
 
     assert_eq!(children_of_children, should_be);
+}
+
+#[test]
+fn check_first_toc_level() {
+    let doc = toc_js_html();
+    let mut should_be = Vec::from(TOC_TOP_LEVEL);
+
+    should_be.extend(TOC_SECOND_LEVEL);
+    should_be.sort_unstable();
+
+    let pred = descendants!(
+        Class("chapter"),
+        Name("li"),
+        Name("a").and(Class("toggle").not())
+    );
+
+    let mut children: Vec<_> = doc
+        .find(pred)
+        .map(|elem| elem.text().trim().to_string())
+        .collect();
+    children.sort();
+
+    assert_eq!(children, should_be);
 }
