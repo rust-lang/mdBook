@@ -128,21 +128,6 @@ fn rendered_code_does_not_have_playground_stuff_in_html_when_disabled_in_config(
 }
 
 #[test]
-fn rustdoc_include_hides_the_unspecified_part_of_the_file() {
-    let temp = DummyBook::new().build().unwrap();
-    let md = MDBook::load(temp.path()).unwrap();
-    md.build().unwrap();
-
-    let nested = temp.path().join("book/first/nested.html");
-    let text = vec![
-        "<span class=\"boring\">fn some_function() {",
-        "<span class=\"boring\">fn some_other_function() {",
-    ];
-
-    assert_contains_strings(nested, &text);
-}
-
-#[test]
 fn chapter_content_appears_in_rendered_document() {
     let content = vec![
         ("index.html", "This file is just here to cause the"),

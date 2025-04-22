@@ -84,3 +84,29 @@ fn playground_include() {
 </span>}</code></pre></pre>
 "##]]);
 }
+
+// Checks the behavior of `{{#rustdoc_include}}`.
+#[test]
+fn rustdoc_include() {
+    BookTest::from_dir("includes/all_includes")
+        .check_main_file("book/rustdoc.html",
+            str![[r##"
+<h1 id="rustdoc-includes"><a class="header" href="#rustdoc-includes">Rustdoc Includes</a></h1>
+<h2 id="rustdoc-include-adds-the-rest-of-the-file-as-hidden"><a class="header" href="#rustdoc-include-adds-the-rest-of-the-file-as-hidden">Rustdoc include adds the rest of the file as hidden</a></h2>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">fn some_function() {
+</span><span class="boring">    println!("some function");
+</span><span class="boring">}
+</span><span class="boring">
+</span>fn main() {
+    some_function();
+}</code></pre></pre>
+<h2 id="rustdoc-include-works-with-anchors-too"><a class="header" href="#rustdoc-include-works-with-anchors-too">Rustdoc include works with anchors too</a></h2>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">fn some_other_function() {
+</span><span class="boring">    println!("unused anchor");
+</span><span class="boring">}
+</span><span class="boring">
+</span>fn main() {
+    some_other_function();
+}</code></pre></pre>
+"##]]);
+}
