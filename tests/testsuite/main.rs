@@ -4,6 +4,7 @@
 
 mod book_test;
 mod build;
+mod cli;
 
 mod prelude {
     pub use crate::book_test::BookTest;
