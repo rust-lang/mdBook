@@ -334,22 +334,6 @@ fn check_link_target_fallback() {
     );
 }
 
-/// This makes sure you can include a Rust file with `{{#playground example.rs}}`.
-/// Specification is in `guide/src/format/rust.md`
-#[test]
-fn able_to_include_playground_files_in_chapters() {
-    let temp = DummyBook::new().build().unwrap();
-    let md = MDBook::load(temp.path()).unwrap();
-    md.build().unwrap();
-
-    let second = temp.path().join("book/second.html");
-
-    let playground_strings = &[r#"class="playground""#, r#"println!("Hello World!");"#];
-
-    assert_contains_strings(&second, playground_strings);
-    assert_doesnt_contain_strings(&second, &["{{#playground example.rs}}"]);
-}
-
 #[test]
 fn example_book_can_build() {
     let example_book_dir = dummy_book::new_copy_of_example_book().unwrap();

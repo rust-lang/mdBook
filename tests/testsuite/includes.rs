@@ -68,3 +68,19 @@ Around the world, around the world</p>
 "#]],
         );
 }
+
+// Checks the behavior of `{{#playground}}` include.
+#[test]
+fn playground_include() {
+    BookTest::from_dir("includes/all_includes")
+        .check_main_file("book/playground.html",
+            str![[r##"
+<h1 id="playground-includes"><a class="header" href="#playground-includes">Playground Includes</a></h1>
+<pre><pre class="playground"><code class="language-rust">fn main() {
+    println!("Hello World!");
+<span class="boring">
+</span><span class="boring">   // You can even hide lines! :D
+</span><span class="boring">  println!("I am hidden! Expand the code snippet to see me");
+</span>}</code></pre></pre>
+"##]]);
+}
