@@ -1,6 +1,7 @@
 //! Tests for search support.
 
 use crate::prelude::*;
+use snapbox::file;
 use std::path::Path;
 
 fn read_book_index(root: &Path) -> serde_json::Value {
@@ -74,5 +75,14 @@ fn reasonable_search_index() {
     assert_eq!(
         docs[&heading_attrs]["breadcrumbs"],
         "First Chapter » Heading Attributes » Heading with id and classes"
+    );
+}
+
+// This test is here to catch any unexpected changes to the search index.
+#[test]
+fn search_index_hasnt_changed_accidentally() {
+    BookTest::from_dir("search/reasonable_search_index").check_file(
+        "book/searchindex.js",
+        file!["search/reasonable_search_index/expected_index.js"],
     );
 }

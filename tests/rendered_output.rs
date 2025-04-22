@@ -381,7 +381,7 @@ mod search {
     use crate::dummy_book::DummyBook;
     use mdbook::utils::fs::write_file;
     use mdbook::MDBook;
-    use std::fs::{self, File};
+    use std::fs;
     use std::path::Path;
 
     fn read_book_index(root: &Path) -> serde_json::Value {
@@ -436,57 +436,6 @@ mod search {
         assert!(format!("{err:?}").contains(
             "[output.html.search.chapter] key `does-not-exist` does not match any chapter paths"
         ));
-    }
-
-    // Setting this to `true` may cause issues with `cargo watch`,
-    // since it may not finish writing the fixture before the tests
-    // are run again.
-    const GENERATE_FIXTURE: bool = false;
-
-    fn get_fixture() -> serde_json::Value {
-        if GENERATE_FIXTURE {
-            let temp = DummyBook::new().build().unwrap();
-            let md = MDBook::load(temp.path()).unwrap();
-            md.build().unwrap();
-
-            let src = read_book_index(temp.path());
-
-            let dest = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/searchindex_fixture.json");
-            let dest = File::create(dest).unwrap();
-            serde_json::to_writer_pretty(dest, &src).unwrap();
-
-            src
-        } else {
-            let json = include_str!("searchindex_fixture.json");
-            serde_json::from_str(json).expect("Unable to deserialize the fixture")
-        }
-    }
-
-    // So you've broken the test. If you changed dummy_book, it's probably
-    // safe to regenerate the fixture. If you haven't then make sure that the
-    // search index still works. Run `cargo run -- serve tests/dummy_book`
-    // and try some searches. Are you getting results? Do the teasers look OK?
-    // Are there new errors in the JS console?
-    //
-    // If you're pretty sure you haven't broken anything, change `GENERATE_FIXTURE`
-    // above to `true`, and run `cargo test` to generate a new fixture. Then
-    // **change it back to `false`**. Include the changed `searchindex_fixture.json` in your commit.
-    #[test]
-    fn search_index_hasnt_changed_accidentally() {
-        let temp = DummyBook::new().build().unwrap();
-        let md = MDBook::load(temp.path()).unwrap();
-        md.build().unwrap();
-
-        let book_index = read_book_index(temp.path());
-
-        let fixture_index = get_fixture();
-
-        // Uncomment this if you're okay with pretty-printing 32KB of JSON
-        //assert_eq!(fixture_index, book_index);
-
-        if book_index != fixture_index {
-            panic!("The search index has changed from the fixture");
-        }
     }
 }
 
