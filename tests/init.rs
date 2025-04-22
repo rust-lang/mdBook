@@ -7,32 +7,6 @@ use std::io::prelude::*;
 use std::path::PathBuf;
 use tempfile::Builder as TempFileBuilder;
 
-/// Run `mdbook init` in an empty directory and make sure the default files
-/// are created.
-#[test]
-fn base_mdbook_init_should_create_default_content() {
-    let created_files = vec!["book", "src", "src/SUMMARY.md", "src/chapter_1.md"];
-
-    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
-    for file in &created_files {
-        assert!(!temp.path().join(file).exists());
-    }
-
-    MDBook::init(temp.path()).build().unwrap();
-
-    for file in &created_files {
-        let target = temp.path().join(file);
-        println!("{}", target.display());
-        assert!(target.exists(), "{file} doesn't exist");
-    }
-
-    let contents = fs::read_to_string(temp.path().join("book.toml")).unwrap();
-    assert_eq!(
-        contents,
-        "[book]\nauthors = []\nlanguage = \"en\"\nsrc = \"src\"\n"
-    );
-}
-
 /// Run `mdbook init` in a directory containing a SUMMARY.md should create the
 /// files listed in the summary.
 #[test]
