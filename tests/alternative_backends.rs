@@ -7,13 +7,6 @@ use std::path::Path;
 use tempfile::{Builder as TempFileBuilder, TempDir};
 
 #[test]
-fn alternate_backend_with_arguments() {
-    let (md, _temp) = dummy_book_with_backend("arguments", "echo Hello World!", false);
-
-    md.build().unwrap();
-}
-
-#[test]
 fn backends_receive_render_context_via_stdin() {
     use mdbook::renderer::RenderContext;
     use std::fs::File;

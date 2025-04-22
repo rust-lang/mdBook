@@ -105,3 +105,34 @@ fn missing_optional_not_fatal() {
 "#]]);
     });
 }
+
+// Command can include arguments.
+#[test]
+fn renderer_with_arguments() {
+    BookTest::from_dir("renderer/renderer_with_arguments")
+        .rust_program(
+            "arguments",
+            r#"
+            fn main() {
+                let args: Vec<_> = std::env::args().skip(1).collect();
+                assert_eq!(args, &["arg1", "arg2"]);
+                println!("Hello World!");
+                use std::io::Read;
+                let mut s = String::new();
+                std::io::stdin().read_to_string(&mut s).unwrap();
+            }
+            "#,
+        )
+        .run("build", |cmd| {
+            cmd.expect_stdout(str![[r#"
+Hello World!
+
+"#]])
+                .expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book): Book building has started
+[TIMESTAMP] [INFO] (mdbook::book): Running the arguments backend
+[TIMESTAMP] [INFO] (mdbook::renderer): Invoking the "arguments" renderer
+
+"#]]);
+        });
+}
