@@ -21,3 +21,23 @@ fn edit_url_template_explicit_src() {
          title=\"Suggest an edit\" aria-label=\"Suggest an edit\">",
     );
 }
+
+// Checks that index.html is generated correctly, even when the first few
+// chapters are drafts.
+#[test]
+fn first_chapter_is_copied_as_index_even_if_not_first_elem() {
+    BookTest::from_dir("rendering/first_chapter_is_copied_as_index_even_if_not_first_elem")
+        // These two files should be equal.
+        .check_main_file(
+            "book/chapter_1.html",
+            str![[
+                r##"<h1 id="chapter-1"><a class="header" href="#chapter-1">Chapter 1</a></h1>"##
+            ]],
+        )
+        .check_main_file(
+            "book/index.html",
+            str![[
+                r##"<h1 id="chapter-1"><a class="header" href="#chapter-1">Chapter 1</a></h1>"##
+            ]],
+        );
+}
