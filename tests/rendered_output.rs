@@ -40,15 +40,6 @@ const TOC_SECOND_LEVEL: &[&str] = &[
     "2.1. Nested Chapter",
 ];
 
-/// Make sure you can load the dummy book and build it without panicking.
-#[test]
-fn build_the_dummy_book() {
-    let temp = DummyBook::new().build().unwrap();
-    let md = MDBook::load(temp.path()).unwrap();
-
-    md.build().unwrap();
-}
-
 #[test]
 fn by_default_mdbook_generates_rendered_content_in_the_book_directory() {
     let temp = DummyBook::new().build().unwrap();
