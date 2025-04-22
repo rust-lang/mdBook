@@ -14,6 +14,7 @@ mod preprocessor;
 mod print;
 mod redirects;
 mod renderer;
+mod rendering;
 
 mod prelude {
     pub use crate::book_test::BookTest;

@@ -13,7 +13,7 @@ use select::document::Document;
 use select::predicate::{Attr, Class, Name, Predicate};
 use std::ffi::OsStr;
 use std::fs;
-use std::path::{Component, Path, PathBuf};
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use tempfile::Builder as TempFileBuilder;
 use walkdir::{DirEntry, WalkDir};
@@ -302,57 +302,6 @@ fn theme_dir_overrides_work_correctly() {
 
     let built_index = book_dir.join("book").join("index.html");
     dummy_book::assert_contains_strings(built_index, &["This is a modified index.hbs!"]);
-}
-
-#[test]
-fn edit_url_has_default_src_dir_edit_url() {
-    let temp = DummyBook::new().build().unwrap();
-    let book_toml = r#"
-        [book]
-        title = "implicit"
-
-        [output.html]
-        edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"    
-        "#;
-
-    write_file(temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
-
-    let md = MDBook::load(temp.path()).unwrap();
-    md.build().unwrap();
-
-    let index_html = temp.path().join("book").join("index.html");
-    assert_contains_strings(
-        index_html,
-        &[
-            r#"href="https://github.com/rust-lang/mdBook/edit/master/guide/src/README.md" title="Suggest an edit""#,
-        ],
-    );
-}
-
-#[test]
-fn edit_url_has_configured_src_dir_edit_url() {
-    let temp = DummyBook::new().build().unwrap();
-    let book_toml = r#"
-        [book]
-        title = "implicit"
-        src = "src2"
-
-        [output.html]
-        edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"    
-        "#;
-
-    write_file(temp.path(), "book.toml", book_toml.as_bytes()).unwrap();
-
-    let md = MDBook::load(temp.path()).unwrap();
-    md.build().unwrap();
-
-    let index_html = temp.path().join("book").join("index.html");
-    assert_contains_strings(
-        index_html,
-        &[
-            r#"href="https://github.com/rust-lang/mdBook/edit/master/guide/src2/README.md" title="Suggest an edit""#,
-        ],
-    );
 }
 
 /// Checks formatting of summary names with inline elements.
