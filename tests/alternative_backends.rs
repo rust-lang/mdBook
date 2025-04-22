@@ -7,15 +7,6 @@ use std::path::Path;
 use tempfile::{Builder as TempFileBuilder, TempDir};
 
 #[test]
-fn missing_backends_are_fatal() {
-    let (md, _temp) = dummy_book_with_backend("missing", "trduyvbhijnorgevfuhn", false);
-    let got = md.build();
-    assert!(got.is_err());
-    let error_message = got.err().unwrap().to_string();
-    assert_eq!(error_message, "Rendering failed");
-}
-
-#[test]
 fn missing_optional_backends_are_not_fatal() {
     let (md, _temp) = dummy_book_with_backend("missing", "trduyvbhijnorgevfuhn", true);
     assert!(md.build().is_ok());

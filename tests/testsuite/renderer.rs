@@ -72,3 +72,22 @@ fn failing_command() {
 "#]]);
         });
 }
+
+// Renderer command is missing.
+#[test]
+fn missing_renderer() {
+    BookTest::from_dir("renderer/missing_renderer").run("build", |cmd| {
+        cmd.expect_failure()
+            .expect_stdout(str![[""]])
+            .expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book): Book building has started
+[TIMESTAMP] [INFO] (mdbook::book): Running the missing backend
+[TIMESTAMP] [INFO] (mdbook::renderer): Invoking the "missing" renderer
+[TIMESTAMP] [ERROR] (mdbook::renderer): The command `trduyvbhijnorgevfuhn` wasn't found, is the "missing" backend installed? If you want to ignore this error when the "missing" backend is not installed, set `optional = true` in the `[output.missing]` section of the book.toml configuration file.
+[TIMESTAMP] [ERROR] (mdbook::utils): Error: Rendering failed
+[TIMESTAMP] [ERROR] (mdbook::utils): [TAB]Caused By: Unable to start the backend
+[TIMESTAMP] [ERROR] (mdbook::utils): [TAB]Caused By: [NOT_FOUND]
+
+"#]]);
+    });
+}
