@@ -133,3 +133,32 @@ title = "Example title"
     );
     assert!(!test.dir.join(".gitignore").exists());
 }
+
+// Run `mdbook init` in a directory containing a SUMMARY.md should create the
+// files listed in the summary.
+#[test]
+fn init_from_summary() {
+    BookTest::from_dir("init/init_from_summary")
+        .run("init", |_| {})
+        .check_file(
+            "src/intro.md",
+            str![[r#"
+# intro
+
+"#]],
+        )
+        .check_file(
+            "src/first.md",
+            str![[r#"
+# First chapter
+
+"#]],
+        )
+        .check_file(
+            "src/outro.md",
+            str![[r#"
+# outro
+
+"#]],
+        );
+}
