@@ -830,22 +830,6 @@ fn custom_fonts() {
 }
 
 #[test]
-fn custom_header_attributes() {
-    let temp = DummyBook::new().build().unwrap();
-    let md = MDBook::load(temp.path()).unwrap();
-    md.build().unwrap();
-
-    let contents = temp.path().join("book/first/heading-attributes.html");
-
-    let summary_strings = &[
-        r##"<h1 id="attrs"><a class="header" href="#attrs">Heading Attributes</a></h1>"##,
-        r##"<h2 id="heading-with-classes" class="class1 class2"><a class="header" href="#heading-with-classes">Heading with classes</a></h2>"##,
-        r##"<h2 id="both" class="class1 class2"><a class="header" href="#both">Heading with id and classes</a></h2>"##,
-    ];
-    assert_contains_strings(&contents, summary_strings);
-}
-
-#[test]
 fn with_no_source_path() {
     // Test for a regression where search would fail if source_path is None.
     let temp = DummyBook::new().build().unwrap();

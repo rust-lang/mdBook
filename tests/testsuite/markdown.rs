@@ -2,6 +2,17 @@
 
 use crate::prelude::*;
 
+// Checks custom header id and classes.
+#[test]
+fn custom_header_attributes() {
+    BookTest::from_dir("markdown/custom_header_attributes")
+        .check_main_file("book/custom_header_attributes.html", str![[r##"
+<h1 id="attrs"><a class="header" href="#attrs">Heading Attributes</a></h1>
+<h2 id="heading-with-classes" class="class1 class2"><a class="header" href="#heading-with-classes">Heading with classes</a></h2>
+<h2 id="both" class="class1 class2"><a class="header" href="#both">Heading with id and classes</a></h2>
+"##]]);
+}
+
 // Test for a variety of footnote renderings.
 #[test]
 fn footnotes() {
