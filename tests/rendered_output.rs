@@ -348,20 +348,6 @@ fn check_link_target_fallback() {
     );
 }
 
-/// Ensure building fails if `create-missing` is false and one of the files does
-/// not exist.
-#[test]
-fn failure_on_missing_file() {
-    let temp = DummyBook::new().build().unwrap();
-    fs::remove_file(temp.path().join("src").join("intro.md")).unwrap();
-
-    let mut cfg = Config::default();
-    cfg.build.create_missing = false;
-
-    let got = MDBook::load_with_config(temp.path(), cfg);
-    assert!(got.is_err());
-}
-
 /// Ensure a missing file is created if `create-missing` is true.
 #[test]
 fn create_missing_file_with_config() {

@@ -16,3 +16,16 @@ fn basic_build() {
 "#]]);
     });
 }
+
+// Ensure building fails if `create-missing` is false and one of the files does
+// not exist.
+#[test]
+fn failure_on_missing_file() {
+    BookTest::from_dir("build/missing_file").run("build", |cmd| {
+        cmd.expect_failure().expect_stderr(str![[r#"
+[TIMESTAMP] [ERROR] (mdbook::utils): Error: Chapter file not found, ./chapter_1.md
+[TIMESTAMP] [ERROR] (mdbook::utils): [TAB]Caused By: [NOT_FOUND]
+
+"#]]);
+    });
+}
