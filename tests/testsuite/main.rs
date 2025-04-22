@@ -13,6 +13,7 @@ mod playground;
 mod preprocessor;
 mod print;
 mod redirects;
+mod renderer;
 
 mod prelude {
     pub use crate::book_test::BookTest;
