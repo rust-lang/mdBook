@@ -207,3 +207,47 @@ use-default-preprocessors = true
     );
     assert!(test.dir.join("out").exists());
 }
+
+// Copies the theme into the initialized directory.
+#[test]
+fn copy_theme() {
+    BookTest::empty()
+        .run("init --theme", |_| {})
+        .check_file_list(
+            ".",
+            str![[r#"
+book
+book.toml
+src
+src/SUMMARY.md
+src/chapter_1.md
+theme
+theme/book.js
+theme/css
+theme/css/chrome.css
+theme/css/general.css
+theme/css/print.css
+theme/css/variables.css
+theme/favicon.png
+theme/favicon.svg
+theme/fonts
+theme/fonts/OPEN-SANS-LICENSE.txt
+theme/fonts/SOURCE-CODE-PRO-LICENSE.txt
+theme/fonts/fonts.css
+theme/fonts/open-sans-v17-all-charsets-300.woff2
+theme/fonts/open-sans-v17-all-charsets-300italic.woff2
+theme/fonts/open-sans-v17-all-charsets-600.woff2
+theme/fonts/open-sans-v17-all-charsets-600italic.woff2
+theme/fonts/open-sans-v17-all-charsets-700.woff2
+theme/fonts/open-sans-v17-all-charsets-700italic.woff2
+theme/fonts/open-sans-v17-all-charsets-800.woff2
+theme/fonts/open-sans-v17-all-charsets-800italic.woff2
+theme/fonts/open-sans-v17-all-charsets-italic.woff2
+theme/fonts/open-sans-v17-all-charsets-regular.woff2
+theme/fonts/source-code-pro-v11-all-charsets-500.woff2
+theme/highlight.css
+theme/highlight.js
+theme/index.hbs
+"#]],
+        );
+}
