@@ -68,3 +68,50 @@ book/fonts/source-code-pro-v11-all-charsets-500.woff2
 "#]],
         );
 }
+
+// When the theme is initialized, what does the fonts list look like?
+#[test]
+fn theme_fonts_copied() {
+    BookTest::init(|bb| {
+        bb.copy_theme(true);
+    })
+    .check_file_contains("book/index.html", "fonts/fonts.css")
+    .check_file_list(
+        "theme/fonts",
+        str![[r#"
+theme/fonts/OPEN-SANS-LICENSE.txt
+theme/fonts/SOURCE-CODE-PRO-LICENSE.txt
+theme/fonts/fonts.css
+theme/fonts/open-sans-v17-all-charsets-300.woff2
+theme/fonts/open-sans-v17-all-charsets-300italic.woff2
+theme/fonts/open-sans-v17-all-charsets-600.woff2
+theme/fonts/open-sans-v17-all-charsets-600italic.woff2
+theme/fonts/open-sans-v17-all-charsets-700.woff2
+theme/fonts/open-sans-v17-all-charsets-700italic.woff2
+theme/fonts/open-sans-v17-all-charsets-800.woff2
+theme/fonts/open-sans-v17-all-charsets-800italic.woff2
+theme/fonts/open-sans-v17-all-charsets-italic.woff2
+theme/fonts/open-sans-v17-all-charsets-regular.woff2
+theme/fonts/source-code-pro-v11-all-charsets-500.woff2
+"#]],
+    )
+    .check_file_list(
+        "book/fonts",
+        str![[r#"
+book/fonts/OPEN-SANS-LICENSE.txt
+book/fonts/SOURCE-CODE-PRO-LICENSE.txt
+book/fonts/fonts.css
+book/fonts/open-sans-v17-all-charsets-300.woff2
+book/fonts/open-sans-v17-all-charsets-300italic.woff2
+book/fonts/open-sans-v17-all-charsets-600.woff2
+book/fonts/open-sans-v17-all-charsets-600italic.woff2
+book/fonts/open-sans-v17-all-charsets-700.woff2
+book/fonts/open-sans-v17-all-charsets-700italic.woff2
+book/fonts/open-sans-v17-all-charsets-800.woff2
+book/fonts/open-sans-v17-all-charsets-800italic.woff2
+book/fonts/open-sans-v17-all-charsets-italic.woff2
+book/fonts/open-sans-v17-all-charsets-regular.woff2
+book/fonts/source-code-pro-v11-all-charsets-500.woff2
+"#]],
+    );
+}

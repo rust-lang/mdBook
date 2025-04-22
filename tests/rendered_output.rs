@@ -309,22 +309,6 @@ fn summary_with_markdown_formatting() {
 #[test]
 fn custom_fonts() {
     // Tests to ensure custom fonts are copied as expected.
-    let builtin_fonts = [
-        "OPEN-SANS-LICENSE.txt",
-        "SOURCE-CODE-PRO-LICENSE.txt",
-        "fonts.css",
-        "open-sans-v17-all-charsets-300.woff2",
-        "open-sans-v17-all-charsets-300italic.woff2",
-        "open-sans-v17-all-charsets-600.woff2",
-        "open-sans-v17-all-charsets-600italic.woff2",
-        "open-sans-v17-all-charsets-700.woff2",
-        "open-sans-v17-all-charsets-700italic.woff2",
-        "open-sans-v17-all-charsets-800.woff2",
-        "open-sans-v17-all-charsets-800italic.woff2",
-        "open-sans-v17-all-charsets-italic.woff2",
-        "open-sans-v17-all-charsets-regular.woff2",
-        "source-code-pro-v11-all-charsets-500.woff2",
-    ];
     let actual_files = |path: &Path| -> Vec<String> {
         let mut actual: Vec<_> = path
             .read_dir()
@@ -338,15 +322,6 @@ fn custom_fonts() {
         let contents = fs::read_to_string(path.join("book/index.html")).unwrap();
         contents.contains("fonts/fonts.css")
     };
-
-    // Full theme.
-    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
-    let p = temp.path();
-    MDBook::init(p).copy_theme(true).build().unwrap();
-    assert_eq!(actual_files(&p.join("theme/fonts")), &builtin_fonts);
-    MDBook::load(p).unwrap().build().unwrap();
-    assert_eq!(actual_files(&p.join("book/fonts")), &builtin_fonts);
-    assert!(has_fonts_css(p));
 
     // Mixed with copy-fonts=true
     // Should ignore the copy-fonts setting since the user has provided their own fonts.css.
