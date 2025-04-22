@@ -38,3 +38,33 @@ fn anchored_include() {
 "##]],
     );
 }
+
+// Checks behavior of recursive include.
+#[test]
+fn recursive_include() {
+    BookTest::from_dir("includes/all_includes")
+        .run("build", |cmd| {
+            cmd.expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book): Book building has started
+[TIMESTAMP] [ERROR] (mdbook::preprocess::links): Stack depth exceeded in recursive.md. Check for cyclic includes
+[TIMESTAMP] [INFO] (mdbook::book): Running the html backend
+
+"#]]);
+        })
+        .check_main_file(
+            "book/recursive.html",
+            str![[r#"
+<p>Around the world, around the world
+Around the world, around the world
+Around the world, around the world
+Around the world, around the world
+Around the world, around the world
+Around the world, around the world
+Around the world, around the world
+Around the world, around the world
+Around the world, around the world
+Around the world, around the world
+Around the world, around the world</p>
+"#]],
+        );
+}

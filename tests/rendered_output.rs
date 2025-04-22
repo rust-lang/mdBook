@@ -350,20 +350,6 @@ fn able_to_include_playground_files_in_chapters() {
     assert_doesnt_contain_strings(&second, &["{{#playground example.rs}}"]);
 }
 
-/// Ensure cyclic includes are capped so that no exceptions occur
-#[test]
-fn recursive_includes_are_capped() {
-    let temp = DummyBook::new().build().unwrap();
-    let md = MDBook::load(temp.path()).unwrap();
-    md.build().unwrap();
-
-    let recursive = temp.path().join("book/first/recursive.html");
-    let content = &["Around the world, around the world
-Around the world, around the world
-Around the world, around the world"];
-    assert_contains_strings(recursive, content);
-}
-
 #[test]
 fn example_book_can_build() {
     let example_book_dir = dummy_book::new_copy_of_example_book().unwrap();
