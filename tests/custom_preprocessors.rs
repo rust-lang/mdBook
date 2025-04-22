@@ -56,13 +56,3 @@ fn ask_the_preprocessor_to_blow_up() {
         )
     );
 }
-
-#[test]
-fn process_the_dummy_book() {
-    let dummy_book = DummyBook::new();
-    let temp = dummy_book.build().unwrap();
-    let mut md = MDBook::load(temp.path()).unwrap();
-    md.with_preprocessor(example());
-
-    md.build().unwrap();
-}

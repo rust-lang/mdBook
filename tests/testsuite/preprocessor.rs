@@ -40,3 +40,15 @@ fn runs_preprocessors() {
     assert_eq!(inner.run_count, 1);
     assert_eq!(inner.rendered_with, ["html"]);
 }
+
+// No-op preprocessor works.
+#[test]
+fn nop_preprocessor() {
+    BookTest::from_dir("preprocessor/nop_preprocessor").run("build", |cmd| {
+        cmd.expect_stdout(str![[""]]).expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book): Book building has started
+[TIMESTAMP] [INFO] (mdbook::book): Running the html backend
+
+"#]]);
+    });
+}
