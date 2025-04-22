@@ -7,13 +7,6 @@ use std::path::Path;
 use tempfile::{Builder as TempFileBuilder, TempDir};
 
 #[test]
-fn failing_alternate_backend() {
-    let (md, _temp) = dummy_book_with_backend("failing", fail_cmd(), false);
-
-    md.build().unwrap_err();
-}
-
-#[test]
 fn missing_backends_are_fatal() {
     let (md, _temp) = dummy_book_with_backend("missing", "trduyvbhijnorgevfuhn", false);
     let got = md.build();
@@ -126,14 +119,6 @@ fn dummy_book_with_backend(
         .unwrap();
 
     (md, temp)
-}
-
-fn fail_cmd() -> &'static str {
-    if cfg!(windows) {
-        r#"cmd.exe /c "exit 1""#
-    } else {
-        "false"
-    }
 }
 
 fn rust_exe(temp: &Path, name: &str, src: &str) {

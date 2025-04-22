@@ -36,3 +36,39 @@ fn runs_renderers() {
     let inner = spy.lock().unwrap();
     assert_eq!(inner.run_count, 1);
 }
+
+// Test renderer with a failing command fails.
+#[test]
+fn failing_command() {
+    BookTest::init(|_| {})
+        .rust_program(
+            "failing",
+            r#"
+            fn main() {
+                // Read from stdin to avoid random pipe failures on Linux.
+                use std::io::Read;
+                let mut s = String::new();
+                std::io::stdin().read_to_string(&mut s).unwrap();
+                std::process::exit(1);
+            }
+            "#,
+        )
+        .change_file(
+            "book.toml",
+            "[output.failing]\n\
+             command = './failing'\n",
+        )
+        .run("build", |cmd| {
+            cmd.expect_failure()
+                .expect_stdout(str![[""]])
+                .expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book): Book building has started
+[TIMESTAMP] [INFO] (mdbook::book): Running the failing backend
+[TIMESTAMP] [INFO] (mdbook::renderer): Invoking the "failing" renderer
+[TIMESTAMP] [ERROR] (mdbook::renderer): Renderer exited with non-zero return code.
+[TIMESTAMP] [ERROR] (mdbook::utils): Error: Rendering failed
+[TIMESTAMP] [ERROR] (mdbook::utils): [TAB]Caused By: The "failing" renderer failed
+
+"#]]);
+        });
+}
