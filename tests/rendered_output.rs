@@ -120,28 +120,6 @@ fn entry_ends_with(entry: &DirEntry, ending: &str) -> bool {
     entry.file_name().to_string_lossy().ends_with(ending)
 }
 
-/// Read the TOC (`book/toc.js`) nested HTML and expose it as a DOM which we
-/// can search with the `select` crate
-fn toc_js_html() -> Result<Document> {
-    let temp = DummyBook::new()
-        .build()
-        .with_context(|| "Couldn't create the dummy book")?;
-    MDBook::load(temp.path())?
-        .build()
-        .with_context(|| "Book building failed")?;
-
-    let toc_path = temp.path().join("book").join("toc.js");
-    let html = fs::read_to_string(toc_path).with_context(|| "Unable to read index.html")?;
-    for line in html.lines() {
-        if let Some(left) = line.strip_prefix("        this.innerHTML = '") {
-            if let Some(html) = left.strip_suffix("';") {
-                return Ok(Document::from(html));
-            }
-        }
-    }
-    panic!("cannot find toc in file")
-}
-
 /// Read the TOC fallback (`book/toc.html`) HTML and expose it as a DOM which we
 /// can search with the `select` crate
 fn toc_fallback_html() -> Result<Document> {
@@ -155,21 +133,6 @@ fn toc_fallback_html() -> Result<Document> {
     let toc_path = temp.path().join("book").join("toc.html");
     let html = fs::read_to_string(toc_path).with_context(|| "Unable to read index.html")?;
     Ok(Document::from(html.as_str()))
-}
-
-// don't use target="_parent" in JS
-#[test]
-fn check_link_target_js() {
-    let doc = toc_js_html().unwrap();
-
-    let num_parent_links = doc
-        .find(
-            Class("chapter")
-                .descendant(Name("li"))
-                .descendant(Name("a").and(Attr("target", "_parent"))),
-        )
-        .count();
-    assert_eq!(num_parent_links, 0);
 }
 
 // don't use target="_parent" in IFRAME

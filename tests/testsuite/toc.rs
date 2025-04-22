@@ -2,7 +2,7 @@
 
 use crate::prelude::*;
 use select::document::Document;
-use select::predicate::{Class, Name, Predicate};
+use select::predicate::{Attr, Class, Name, Predicate};
 
 const TOC_TOP_LEVEL: &[&str] = &[
     "1. With Readme",
@@ -94,4 +94,19 @@ fn check_spacers() {
         .find(Class("chapter").descendant(Name("li").and(Class("spacer"))))
         .count();
     assert_eq!(num_spacers, should_be);
+}
+
+// don't use target="_parent" in JS
+#[test]
+fn check_link_target_js() {
+    let doc = toc_js_html();
+
+    let num_parent_links = doc
+        .find(
+            Class("chapter")
+                .descendant(Name("li"))
+                .descendant(Name("a").and(Attr("target", "_parent"))),
+        )
+        .count();
+    assert_eq!(num_parent_links, 0);
 }
