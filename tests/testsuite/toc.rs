@@ -1,8 +1,11 @@
 //! Tests for table of contents (sidebar).
 
 use crate::prelude::*;
+use anyhow::Context;
+use mdbook::errors::*;
 use select::document::Document;
 use select::predicate::{Attr, Class, Name, Predicate};
+use std::fs;
 
 const TOC_TOP_LEVEL: &[&str] = &[
     "1. With Readme",
@@ -38,6 +41,17 @@ fn toc_js_html() -> Document {
     test.build();
     let html = test.toc_js_html();
     Document::from(html.as_str())
+}
+
+/// Read the TOC fallback (`book/toc.html`) HTML and expose it as a DOM which we
+/// can search with the `select` crate
+fn toc_fallback_html() -> Result<Document> {
+    let mut test = BookTest::from_dir("toc/basic_toc");
+    test.build();
+
+    let toc_path = test.dir.join("book").join("toc.html");
+    let html = fs::read_to_string(toc_path).with_context(|| "Unable to read index.html")?;
+    Ok(Document::from(html.as_str()))
 }
 
 #[test]
@@ -109,4 +123,22 @@ fn check_link_target_js() {
         )
         .count();
     assert_eq!(num_parent_links, 0);
+}
+
+// don't use target="_parent" in IFRAME
+#[test]
+fn check_link_target_fallback() {
+    let doc = toc_fallback_html().unwrap();
+
+    let num_parent_links = doc
+        .find(
+            Class("chapter")
+                .descendant(Name("li"))
+                .descendant(Name("a").and(Attr("target", "_parent"))),
+        )
+        .count();
+    assert_eq!(
+        num_parent_links,
+        TOC_TOP_LEVEL.len() + TOC_SECOND_LEVEL.len()
+    );
 }
