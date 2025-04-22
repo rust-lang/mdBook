@@ -4,37 +4,7 @@ use mdbook::config::Config;
 use mdbook::MDBook;
 use std::fs;
 use std::path::Path;
-use tempfile::{Builder as TempFileBuilder, TempDir};
-
-#[test]
-fn backends_receive_render_context_via_stdin() {
-    use mdbook::renderer::RenderContext;
-    use std::fs::File;
-
-    let (md, temp) = dummy_book_with_backend("cat-to-file", "renderers/myrenderer", false);
-
-    let renderers = temp.path().join("renderers");
-    fs::create_dir(&renderers).unwrap();
-    rust_exe(
-        &renderers,
-        "myrenderer",
-        r#"fn main() {
-            use std::io::Read;
-            let mut s = String::new();
-            std::io::stdin().read_to_string(&mut s).unwrap();
-            std::fs::write("out.txt", s).unwrap();
-        }"#,
-    );
-
-    let out_file = temp.path().join("book/out.txt");
-
-    assert!(!out_file.exists());
-    md.build().unwrap();
-    assert!(out_file.exists());
-
-    let got = RenderContext::from_json(File::open(&out_file).unwrap());
-    assert!(got.is_ok());
-}
+use tempfile::Builder as TempFileBuilder;
 
 #[test]
 fn relative_command_path() {
@@ -73,30 +43,6 @@ fn relative_command_path() {
     }
     // Modern path, relative to the book directory.
     do_test("renderers/myrenderer");
-}
-
-fn dummy_book_with_backend(
-    name: &str,
-    command: &str,
-    backend_is_optional: bool,
-) -> (MDBook, TempDir) {
-    let temp = TempFileBuilder::new().prefix("mdbook").tempdir().unwrap();
-
-    let mut config = Config::default();
-    config
-        .set(format!("output.{name}.command"), command)
-        .unwrap();
-
-    if backend_is_optional {
-        config.set(format!("output.{name}.optional"), true).unwrap();
-    }
-
-    let md = MDBook::init(temp.path())
-        .with_config(config)
-        .build()
-        .unwrap();
-
-    (md, temp)
 }
 
 fn rust_exe(temp: &Path, name: &str, src: &str) {

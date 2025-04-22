@@ -3,6 +3,8 @@
 use crate::prelude::*;
 use mdbook::errors::Result;
 use mdbook::renderer::{RenderContext, Renderer};
+use snapbox::IntoData;
+use std::fs::File;
 use std::sync::{Arc, Mutex};
 
 struct Spy(Arc<Mutex<Inner>>);
@@ -135,4 +137,74 @@ Hello World!
 
 "#]]);
         });
+}
+
+// Checks the render context received by the renderer.
+#[test]
+fn backends_receive_render_context_via_stdin() {
+    let mut test = BookTest::from_dir("renderer/backends_receive_render_context_via_stdin");
+    test.rust_program(
+        "cat-to-file",
+        r#"
+        fn main() {
+            use std::io::Read;
+            let mut s = String::new();
+            std::io::stdin().read_to_string(&mut s).unwrap();
+            std::fs::write("out.txt", s).unwrap();
+        }
+        "#,
+    )
+    .run("build", |cmd| {
+        cmd.expect_stdout(str![[""]]).expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book): Book building has started
+[TIMESTAMP] [INFO] (mdbook::book): Running the cat-to-file backend
+[TIMESTAMP] [INFO] (mdbook::renderer): Invoking the "cat-to-file" renderer
+
+"#]]);
+    })
+    .check_file(
+        "book/out.txt",
+        str![[r##"
+{
+  "book": {
+    "__non_exhaustive": null,
+    "sections": [
+      {
+        "Chapter": {
+          "content": "# Chapter 1\n",
+          "name": "Chapter 1",
+          "number": [
+            1
+          ],
+          "parent_names": [],
+          "path": "chapter_1.md",
+          "source_path": "chapter_1.md",
+          "sub_items": []
+        }
+      }
+    ]
+  },
+  "config": {
+    "book": {
+      "authors": [],
+      "language": "en",
+      "src": "src"
+    },
+    "output": {
+      "cat-to-file": {
+        "command": "./cat-to-file"
+      }
+    }
+  },
+  "destination": "[ROOT]/book",
+  "root": "[ROOT]",
+  "version": "[VERSION]"
+}
+"##]]
+        .is_json(),
+    );
+
+    // Can round-trip.
+    let f = File::open(test.dir.join("book/out.txt")).unwrap();
+    RenderContext::from_json(f).unwrap();
 }
