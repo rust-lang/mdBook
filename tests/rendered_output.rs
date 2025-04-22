@@ -128,20 +128,6 @@ fn rendered_code_does_not_have_playground_stuff_in_html_when_disabled_in_config(
 }
 
 #[test]
-fn anchors_include_text_between_but_not_anchor_comments() {
-    let temp = DummyBook::new().build().unwrap();
-    let md = MDBook::load(temp.path()).unwrap();
-    md.build().unwrap();
-
-    let nested = temp.path().join("book/first/nested.html");
-    let text_between_anchors = vec!["unique-string-for-anchor-test"];
-    let anchor_text = vec!["ANCHOR"];
-
-    assert_contains_strings(nested.clone(), &text_between_anchors);
-    assert_doesnt_contain_strings(nested, &anchor_text);
-}
-
-#[test]
 fn rustdoc_include_hides_the_unspecified_part_of_the_file() {
     let temp = DummyBook::new().build().unwrap();
     let md = MDBook::load(temp.path()).unwrap();

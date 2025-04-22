@@ -23,3 +23,18 @@ fn include() {
 "##]],
         );
 }
+
+// Checks for anchored includes.
+#[test]
+fn anchored_include() {
+    BookTest::from_dir("includes/all_includes").check_main_file(
+        "book/anchors.html",
+        str![[r##"
+<h1 id="include-anchors"><a class="header" href="#include-anchors">Include Anchors</a></h1>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let x = 1;
+<span class="boring">}</span></code></pre></pre>
+"##]],
+    );
+}
