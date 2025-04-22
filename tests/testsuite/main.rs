@@ -11,6 +11,7 @@ mod init;
 mod markdown;
 mod playground;
 mod preprocessor;
+mod print;
 
 mod prelude {
     pub use crate::book_test::BookTest;

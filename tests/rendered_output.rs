@@ -73,27 +73,6 @@ fn check_correct_cross_links_in_nested_dir() {
 }
 
 #[test]
-fn check_correct_relative_links_in_print_page() {
-    let temp = DummyBook::new().build().unwrap();
-    let md = MDBook::load(temp.path()).unwrap();
-    md.build().unwrap();
-
-    let first = temp.path().join("book");
-
-    assert_contains_strings(
-        first.join("print.html"),
-        &[
-            r##"<a href="second/../first/nested.html">the first section</a>,"##,
-            r##"<a href="second/../../std/foo/bar.html">outside</a>"##,
-            r##"<img src="second/../images/picture.png" alt="Some image" />"##,
-            r##"<a href="second/nested.html#some-section">fragment link</a>"##,
-            r##"<a href="second/../first/markdown.html">HTML Link</a>"##,
-            r##"<img src="second/../images/picture.png" alt="raw html">"##,
-        ],
-    );
-}
-
-#[test]
 fn chapter_content_appears_in_rendered_document() {
     let content = vec![
         ("index.html", "This file is just here to cause the"),
