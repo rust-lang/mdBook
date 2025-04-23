@@ -1,3 +1,0 @@
-# Includes
-
-{{#include ../SUMMARY.md::}}
