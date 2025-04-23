@@ -9,6 +9,7 @@ guide/book
 .vscode
 tests/dummy_book/book/
 test_book/book/
+tests/testsuite/*/*/book/
 
 # Ignore Jetbrains specific files.
 .idea/
