@@ -2,7 +2,8 @@
 /* Globals */
 
 :root {
-    --sidebar-width: 300px;
+    --sidebar-target-width: 300px;
+    --sidebar-width: min(var(--sidebar-target-width), 80vw);
     --sidebar-resize-indicator-width: 8px;
     --sidebar-resize-indicator-space: 2px;
     --page-padding: 15px;

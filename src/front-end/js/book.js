@@ -557,9 +557,9 @@ aria-label="Show hidden lines"></button>';
     sidebarToggleAnchor.addEventListener('change', function sidebarToggle() {
         if (sidebarToggleAnchor.checked) {
             const current_width = parseInt(
-                document.documentElement.style.getPropertyValue('--sidebar-width'), 10);
+                document.documentElement.style.getPropertyValue('--sidebar-target-width'), 10);
             if (current_width < 150) {
-                document.documentElement.style.setProperty('--sidebar-width', '150px');
+                document.documentElement.style.setProperty('--sidebar-target-width', '150px');
             }
             showSidebar();
         } else {
@@ -583,7 +583,7 @@ aria-label="Show hidden lines"></button>';
                 showSidebar();
             }
             pos = Math.min(pos, window.innerWidth - 100);
-            document.documentElement.style.setProperty('--sidebar-width', pos + 'px');
+            document.documentElement.style.setProperty('--sidebar-target-width', pos + 'px');
         }
     }
     //on mouseup remove windows functions mousemove & mouseup
