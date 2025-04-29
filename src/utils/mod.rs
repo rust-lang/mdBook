@@ -235,10 +235,10 @@ pub fn render_markdown_with_path(
     // `count` is the number of references to this footnote (used for multiple
     // linkbacks, and checking for unused footnotes).
     let mut footnote_numbers = HashMap::new();
-    // This is a list of (name, Vec<Event>)
+    // This is a map of name -> Vec<Event>
     // `name` is the name of the footnote.
     // The events list is the list of events needed to build the footnote definition.
-    let mut footnote_defs = Vec::new();
+    let mut footnote_defs = HashMap::new();
 
     // The following are used when currently processing a footnote definition.
     //
@@ -268,7 +268,16 @@ pub fn render_markdown_with_path(
                 Event::End(TagEnd::FootnoteDefinition) => {
                     let def_events = std::mem::take(&mut in_footnote);
                     let name = std::mem::take(&mut in_footnote_name);
-                    footnote_defs.push((name, def_events));
+
+                    if footnote_defs.contains_key(&name) {
+                        log::warn!(
+                            "footnote `{name}` in {} defined multiple times - \
+                             not updating to new definition",
+                            path.map_or_else(|| Cow::from("<unknown>"), |p| p.to_string_lossy())
+                        );
+                    } else {
+                        footnote_defs.insert(name, def_events);
+                    }
                     None
                 }
                 Event::FootnoteReference(name) => {
@@ -304,7 +313,12 @@ pub fn render_markdown_with_path(
     html::push_html(&mut body, events);
 
     if !footnote_defs.is_empty() {
-        add_footnote_defs(&mut body, path, footnote_defs, &footnote_numbers);
+        add_footnote_defs(
+            &mut body,
+            path,
+            footnote_defs.into_iter().collect(),
+            &footnote_numbers,
+        );
     }
 
     body
