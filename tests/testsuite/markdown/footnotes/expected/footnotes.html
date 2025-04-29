@@ -5,6 +5,8 @@
 <p>Footnote with multiple paragraphs<sup class="footnote-reference" id="fr-multiple-1"><a href="#footnote-multiple">4</a></sup></p>
 <p>Footnote name with wacky characters<sup class="footnote-reference" id="fr-&quot;wacky&quot;-1"><a href="#footnote-&quot;wacky&quot;">5</a></sup></p>
 <p>Testing when referring to something earlier.<sup class="footnote-reference" id="fr-define-before-use-1"><a href="#footnote-define-before-use">6</a></sup></p>
+<p>Footnote that is defined multiple times.<sup class="footnote-reference" id="fr-multiple-definitions-1"><a href="#footnote-multiple-definitions">7</a></sup></p>
+<p>And another<sup class="footnote-reference" id="fr-in-between-1"><a href="#footnote-in-between">8</a></sup> that references the duplicate again.<sup class="footnote-reference" id="fr-multiple-definitions-2"><a href="#footnote-multiple-definitions">7</a></sup></p>
 <hr>
 <ol class="footnote-definition"><li id="footnote-1">
 <p>This is a footnote. <a href="#fr-1-1">↩</a> <a href="#fr-1-2">↩2</a></p>
@@ -34,5 +36,14 @@ With a reference inside.<sup class="footnote-reference" id="fr-1-2"><a href="#fo
 </li>
 <li id="footnote-define-before-use">
 <p>This is defined before it is referred to. <a href="#fr-define-before-use-1">↩</a></p>
+</li>
+<li id="footnote-multiple-definitions">
+<p>This is the first definition of the footnote with tag multiple-definitions <a href="#fr-multiple-definitions-1">↩</a> <a href="#fr-multiple-definitions-2">↩2</a></p>
+</li>
+<li id="footnote-multiple-definitions">
+<p>This is the second definition of the footnote with tag multiple-definitions <a href="#fr-multiple-definitions-1">↩</a> <a href="#fr-multiple-definitions-2">↩2</a></p>
+</li>
+<li id="footnote-in-between">
+<p>Footnote between duplicates. <a href="#fr-in-between-1">↩</a></p>
 </li>
 </ol>
