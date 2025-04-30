@@ -35,3 +35,13 @@ Footnote name with wacky characters[^"wacky"]
 [^"wacky"]: Testing footnote id with special characters.
 
 Testing when referring to something earlier.[^define-before-use]
+
+Footnote that is defined multiple times.[^multiple-definitions]
+
+[^multiple-definitions]: This is the first definition of the footnote with tag multiple-definitions
+
+And another[^in-between] that references the duplicate again.[^multiple-definitions]
+
+[^in-between]: Footnote between duplicates.
+
+[^multiple-definitions]: This is the second definition of the footnote with tag multiple-definitions
