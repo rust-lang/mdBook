@@ -9,7 +9,7 @@ needless-lifetimes = "allow"  # Remove once 1.87 is stable, https://github.com/r
 
 [package]
 name = "mdbook"
-version = "0.4.48"
+version = "0.4.49"
 authors = [
     "Mathieu David <mathieudavid@mathieudavid.org>",
     "Michael-F-Bryan <michaelfbryan@gmail.com>",
