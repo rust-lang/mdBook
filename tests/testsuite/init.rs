@@ -28,6 +28,7 @@ All done, no errors...
 [book]
 authors = []
 language = "en"
+multilingual = false
 src = "src"
 
 "#]],
@@ -94,6 +95,7 @@ All done, no errors...
 [book]
 authors = []
 language = "en"
+multilingual = false
 src = "src"
 
 "#]],
@@ -127,6 +129,7 @@ All done, no errors...
 [book]
 authors = []
 language = "en"
+multilingual = false
 src = "src"
 title = "Example title"
 
@@ -179,6 +182,7 @@ fn init_with_custom_book_and_src_locations() {
 [book]
 authors = []
 language = "en"
+multilingual = false
 src = "in"
 
 [build]
