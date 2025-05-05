@@ -421,6 +421,9 @@ pub struct BookConfig {
     /// Location of the book source relative to the book's root directory.
     pub src: PathBuf,
     /// Does this book support more than one language?
+    // TODO: Remove this field in 0.5, it is unused:
+    // https://github.com/rust-lang/mdBook/issues/2636
+    #[serde(skip_serializing)]
     pub multilingual: bool,
     /// The main language of the book.
     pub language: Option<String>,

@@ -188,7 +188,6 @@ fn backends_receive_render_context_via_stdin() {
     "book": {
       "authors": [],
       "language": "en",
-      "multilingual": false,
       "src": "src"
     },
     "output": {
