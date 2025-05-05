@@ -23,7 +23,7 @@ license = "MPL-2.0"
 readme = "README.md"
 repository = "https://github.com/rust-lang/mdBook"
 description = "Creates a book from markdown files"
-rust-version = "1.77" # Keep in sync with installation.md and .github/workflows/main.yml
+rust-version = "1.81" # Keep in sync with installation.md and .github/workflows/main.yml
 
 [dependencies]
 anyhow = "1.0.71"
