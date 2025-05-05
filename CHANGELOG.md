@@ -1,5 +1,36 @@
 # Changelog
 
+## mdBook 0.4.49
+[v0.4.48...v0.4.49](https://github.com/rust-lang/mdBook/compare/v0.4.48...v0.4.49)
+
+### Added
+
+- Added a warning on unused fields in the root of `book.toml`.
+  [#2622](https://github.com/rust-lang/mdBook/pull/2622)
+
+### Changed
+
+- Updated dependencies.
+  [#2650](https://github.com/rust-lang/mdBook/pull/2650)
+  [#2688](https://github.com/rust-lang/mdBook/pull/2688)
+- Updated minimum Rust version to 1.81.
+  [#2688](https://github.com/rust-lang/mdBook/pull/2688)
+- The unused `book.multilingual` field is no longer serialized, or shown in `mdbook init`.
+  [#2689](https://github.com/rust-lang/mdBook/pull/2689)
+- Speed up search index loading by using `JSON.parse` instead of parsing JavaScript.
+  [#2633](https://github.com/rust-lang/mdBook/pull/2633)
+
+### Fixed
+
+- Search highlighting will not try to highlight in SVG `<text>` elements because it breaks the element.
+  [#2668](https://github.com/rust-lang/mdBook/pull/2668)
+- Fixed scrolling of the sidebar when a search highlight term is in the URL.
+  [#2675](https://github.com/rust-lang/mdBook/pull/2675)
+- Fixed issues when multiple footnote definitions use the same ID. Now, only one definition is used, and a warning is displayed.
+  [#2681](https://github.com/rust-lang/mdBook/pull/2681)
+- The sidebar is now restricted to 80% of the viewport width to make it possible to collapse it when the viewport is very narrow.
+  [#2679](https://github.com/rust-lang/mdBook/pull/2679)
+
 ## mdBook 0.4.48
 [v0.4.47...v0.4.48](https://github.com/rust-lang/mdBook/compare/v0.4.47...v0.4.48)
 
