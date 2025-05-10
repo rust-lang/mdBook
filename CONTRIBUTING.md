@@ -7,7 +7,7 @@ If you have come here to learn how to contribute to mdBook, we have some tips fo
 First of all, don't hesitate to ask questions!
 Use the [issue tracker](https://github.com/rust-lang/mdBook/issues), no question is too simple.
 
-### Issue assignment
+## Issue assignment
 
 **:warning: Important :warning:**
 
