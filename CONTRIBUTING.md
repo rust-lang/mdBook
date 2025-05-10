@@ -7,7 +7,7 @@ If you have come here to learn how to contribute to mdBook, we have some tips fo
 First of all, don't hesitate to ask questions!
 Use the [issue tracker](https://github.com/rust-lang/mdBook/issues), no question is too simple.
 
-### Issue assignment
+## Issue assignment
 
 **:warning: Important :warning:**
 
@@ -16,7 +16,7 @@ The current PR backlog is beyond what we can process at this time.
 Only issues that have an [`E-Help-wanted`](https://github.com/rust-lang/mdBook/labels/E-Help-wanted) or [`Feature accepted`](https://github.com/rust-lang/mdBook/labels/Feature%20accepted) label will likely receive reviews.
 If there isn't already an open issue for what you want to work on, please open one first to see if it is something we would be available to review.
 
-### Issues to work on
+## Issues to work on
 
 If you are starting out, you might be interested in the
 [E-Easy issues](https://github.com/rust-lang/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AE-Easy).
@@ -41,7 +41,7 @@ Issues on the issue tracker are categorized with the following labels:
 - **S**-prefixed labels show the status of the issue
 - **C**-prefixed labels show the category of issue
 
-### Building mdBook
+## Building mdBook
 
 mdBook builds on stable Rust, if you want to build mdBook from source, here are the steps to follow:
 
@@ -56,11 +56,11 @@ mdBook builds on stable Rust, if you want to build mdBook from source, here are 
 
 The resulting binary can be found in `mdBook/target/debug/` under the name `mdbook` or `mdbook.exe`.
 
-### Code Quality
+## Code Quality
 
 We love code quality and Rust has some excellent tools to assist you with contributions.
 
-#### Formatting Code with rustfmt
+### Formatting Code with rustfmt
 
 Before you make your Pull Request to the project, please run it through the `rustfmt` utility.
 This will ensure we have good quality source code that is better for us all to maintain.
@@ -84,8 +84,7 @@ The quick guide is
 
 For more information, such as running it from your favourite editor, please see the `rustfmt` project. [rustfmt](https://github.com/rust-lang/rustfmt)
 
-
-#### Finding Issues with Clippy
+### Finding Issues with Clippy
 
 [Clippy](https://doc.rust-lang.org/clippy/) is a code analyser/linter detecting mistakes, and therefore helps to improve your code.
 Like formatting your code with `rustfmt`, running clippy regularly and before your Pull Request will help us maintain awesome code.
@@ -99,7 +98,7 @@ Like formatting your code with `rustfmt`, running clippy regularly and before yo
     cargo clippy
     ```
 
-### Change requirements
+## Change requirements
 
 Please consider the following when making a change:
 
@@ -124,7 +123,7 @@ Please consider the following when making a change:
 
 * Check out the [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/) for guidelines on designing the API.
 
-### Making a pull-request
+## Making a pull-request
 
 When you feel comfortable that your changes could be integrated into mdBook, you can create a pull-request on GitHub.
 One of the core maintainers will then approve the changes or request some changes before it gets merged.
