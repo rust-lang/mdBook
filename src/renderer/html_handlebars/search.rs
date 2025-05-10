@@ -185,7 +185,7 @@ fn render_item(
                 // in an HtmlBlock tag. We must collect consecutive Html events
                 // into a block ourselves.
                 while let Some(Event::Html(html)) = p.peek() {
-                    html_block.push_str(html);
+                    html_block.push_str(&html);
                     p.next();
                 }
                 body.push_str(&clean_html(&html_block));
@@ -200,6 +200,13 @@ fn render_item(
                 // rare, since script and style tags should almost always be
                 // blocks, and worse case you have some noise in the index.
                 body.push_str(&clean_html(&html));
+            }
+            Event::InlineMath(text) | Event::DisplayMath(text) => {
+                if in_heading {
+                    heading.push_str(&text);
+                } else {
+                    body.push_str(&text);
+                }
             }
             Event::Start(_) | Event::End(_) | Event::Rule | Event::SoftBreak | Event::HardBreak => {
                 // Insert spaces where HTML output would usually separate text
