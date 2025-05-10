@@ -23,6 +23,7 @@ Here is a list of the properties that are exposed:
 - ***book_title*** Title of the book, as specified in `book.toml`
 - ***chapter_title*** Title of the current chapter, as listed in `SUMMARY.md`
 
+- ***rendered_path*** Relative path to the rendered path from the source directory
 - ***path*** Relative path to the original markdown file from the source
   directory
 - ***content*** This is the rendered markdown.
