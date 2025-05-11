@@ -1,7 +1,6 @@
 //! Support for writing static files.
 
 use log::{debug, warn};
-use once_cell::sync::Lazy;
 
 use crate::config::HtmlConfig;
 use crate::errors::*;
@@ -13,6 +12,7 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 
 /// Map static files to their final names and contents.
 ///
@@ -231,8 +231,8 @@ impl StaticFiles {
         use regex::bytes::{Captures, Regex};
         // The `{{ resource "name" }}` directive in static resources look like
         // handlebars syntax, even if they technically aren't.
-        static RESOURCE: Lazy<Regex> =
-            Lazy::new(|| Regex::new(r#"\{\{ resource "([^"]+)" \}\}"#).unwrap());
+        static RESOURCE: LazyLock<Regex> =
+            LazyLock::new(|| Regex::new(r#"\{\{ resource "([^"]+)" \}\}"#).unwrap());
         fn replace_all<'a>(
             hash_map: &HashMap<String, String>,
             data: &'a [u8],

@@ -5,7 +5,6 @@ mod string;
 pub(crate) mod toml_ext;
 use crate::errors::Error;
 use log::error;
-use once_cell::sync::Lazy;
 use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, Options, Parser, Tag, TagEnd};
 use regex::Regex;
 
@@ -13,6 +12,7 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt::Write;
 use std::path::Path;
+use std::sync::LazyLock;
 
 pub use self::string::{
     take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,
@@ -21,7 +21,7 @@ pub use self::string::{
 
 /// Replaces multiple consecutive whitespace characters with a single space character.
 pub fn collapse_whitespace(text: &str) -> Cow<'_, str> {
-    static RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\s\s+").unwrap());
+    static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\s\s+").unwrap());
     RE.replace_all(text, " ")
 }
 
@@ -50,7 +50,7 @@ pub fn id_from_content(content: &str) -> String {
     let mut content = content.to_string();
 
     // Skip any tags or html-encoded stuff
-    static HTML: Lazy<Regex> = Lazy::new(|| Regex::new(r"(<.*?>)").unwrap());
+    static HTML: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(<.*?>)").unwrap());
     content = HTML.replace_all(&content, "").into();
     const REPL_SUB: &[&str] = &["&lt;", "&gt;", "&amp;", "&#39;", "&quot;"];
     for sub in REPL_SUB {
@@ -93,9 +93,10 @@ pub fn unique_id_from_content(content: &str, id_counter: &mut HashMap<String, us
 /// None. Ideally, print page links would link to anchors on the print page,
 /// but that is very difficult.
 fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
-    static SCHEME_LINK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-z][a-z0-9+.-]*:").unwrap());
-    static MD_LINK: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r"(?P<link>.*)\.md(?P<anchor>#.*)?").unwrap());
+    static SCHEME_LINK: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"^[a-z][a-z0-9+.-]*:").unwrap());
+    static MD_LINK: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"(?P<link>.*)\.md(?P<anchor>#.*)?").unwrap());
 
     fn fix<'a>(dest: CowStr<'a>, path: Option<&Path>) -> CowStr<'a> {
         if dest.starts_with('#') {
@@ -148,8 +149,8 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
         // There are dozens of HTML tags/attributes that contain paths, so
         // feel free to add more tags if desired; these are the only ones I
         // care about right now.
-        static HTML_LINK: Lazy<Regex> =
-            Lazy::new(|| Regex::new(r#"(<(?:a|img) [^>]*?(?:src|href)=")([^"]+?)""#).unwrap());
+        static HTML_LINK: LazyLock<Regex> =
+            LazyLock::new(|| Regex::new(r#"(<(?:a|img) [^>]*?(?:src|href)=")([^"]+?)""#).unwrap());
 
         HTML_LINK
             .replace_all(&html, |caps: &regex::Captures<'_>| {

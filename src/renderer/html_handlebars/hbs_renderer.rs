@@ -12,11 +12,11 @@ use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 
 use crate::utils::fs::get_404_output_file;
 use handlebars::Handlebars;
 use log::{debug, trace, warn};
-use once_cell::sync::Lazy;
 use regex::{Captures, Regex};
 use serde_json::json;
 
@@ -664,7 +664,7 @@ fn make_data(
 /// Goes through the rendered HTML, making sure all header tags have
 /// an anchor respectively so people can link to sections directly.
 fn build_header_links(html: &str) -> String {
-    static BUILD_HEADER_LINKS: Lazy<Regex> = Lazy::new(|| {
+    static BUILD_HEADER_LINKS: LazyLock<Regex> = LazyLock::new(|| {
         Regex::new(r#"<h(\d)(?: id="([^"]+)")?(?: class="([^"]+)")?>(.*?)</h\d>"#).unwrap()
     });
     static IGNORE_CLASS: &[&str] = &["menu-title"];
@@ -725,8 +725,8 @@ fn insert_link_into_header(
 // ```
 // This function replaces all commas by spaces in the code block classes
 fn fix_code_blocks(html: &str) -> String {
-    static FIX_CODE_BLOCKS: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r##"<code([^>]+)class="([^"]+)"([^>]*)>"##).unwrap());
+    static FIX_CODE_BLOCKS: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r##"<code([^>]+)class="([^"]+)"([^>]*)>"##).unwrap());
 
     FIX_CODE_BLOCKS
         .replace_all(html, |caps: &Captures<'_>| {
@@ -739,8 +739,8 @@ fn fix_code_blocks(html: &str) -> String {
         .into_owned()
 }
 
-static CODE_BLOCK_RE: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap());
+static CODE_BLOCK_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r##"((?s)<code[^>]?class="([^"]+)".*?>(.*?)</code>)"##).unwrap());
 
 fn add_playground_pre(
     html: &str,
@@ -808,8 +808,10 @@ fn add_playground_pre(
 /// Modifies all `<code>` blocks to convert "hidden" lines and to wrap them in
 /// a `<span class="boring">`.
 fn hide_lines(html: &str, code_config: &Code) -> String {
-    static LANGUAGE_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\blanguage-(\w+)\b").unwrap());
-    static HIDELINES_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\bhidelines=(\S+)").unwrap());
+    static LANGUAGE_REGEX: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"\blanguage-(\w+)\b").unwrap());
+    static HIDELINES_REGEX: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"\bhidelines=(\S+)").unwrap());
 
     CODE_BLOCK_RE
         .replace_all(html, |caps: &Captures<'_>| {
@@ -850,7 +852,8 @@ fn hide_lines(html: &str, code_config: &Code) -> String {
 }
 
 fn hide_lines_rust(content: &str) -> String {
-    static BORING_LINES_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\s*)#(.?)(.*)$").unwrap());
+    static BORING_LINES_REGEX: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"^(\s*)#(.?)(.*)$").unwrap());
 
     let mut result = String::with_capacity(content.len());
     let mut lines = content.lines().peekable();
