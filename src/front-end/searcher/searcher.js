@@ -369,8 +369,11 @@ window.search = window.search || {};
             searchbar.select();
         } else if (hasFocus() && e.keyCode === DOWN_KEYCODE) {
             e.preventDefault();
-            unfocusSearchbar();
-            searchresults.firstElementChild.classList.add('focus');
+            const first = searchresults.firstElementChild;
+            if (first !== null) {
+                unfocusSearchbar();
+                first.classList.add('focus');
+            }
         } else if (!hasFocus() && (e.keyCode === DOWN_KEYCODE
                                 || e.keyCode === UP_KEYCODE
                                 || e.keyCode === SELECT_KEYCODE)) {
