@@ -367,12 +367,16 @@ window.search = window.search || {};
             showSearch(true);
             window.scrollTo(0, 0);
             searchbar.select();
-        } else if (hasFocus() && e.keyCode === DOWN_KEYCODE) {
+        } else if (hasFocus() && (e.keyCode === DOWN_KEYCODE
+                               || e.keyCode === SELECT_KEYCODE)) {
             e.preventDefault();
             const first = searchresults.firstElementChild;
             if (first !== null) {
                 unfocusSearchbar();
                 first.classList.add('focus');
+                if (e.keyCode === SELECT_KEYCODE) {
+                    window.location.assign(first.querySelector('a'));
+                }
             }
         } else if (!hasFocus() && (e.keyCode === DOWN_KEYCODE
                                 || e.keyCode === UP_KEYCODE
