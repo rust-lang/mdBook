@@ -42,7 +42,7 @@ Tapping the menu bar will scroll the page to the top.
 ## Search
 
 Each book has a built-in search system.
-Pressing the search icon (<i class="fa fa-search"></i>) in the menu bar, or pressing the `S` key on the keyboard will open an input box for entering search terms.
+Pressing the search icon (<i class="fa fa-search"></i>) in the menu bar, or pressing the `/` or `S` key on the keyboard will open an input box for entering search terms.
 Typing some terms will show matching chapters and sections in real time.
 
 Clicking any of the results will jump to that section.

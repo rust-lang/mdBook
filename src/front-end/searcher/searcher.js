@@ -35,7 +35,7 @@ window.search = window.search || {};
         URL_SEARCH_PARAM = 'search',
         URL_MARK_PARAM = 'highlight',
 
-        SEARCH_HOTKEY_KEYCODE = 83,
+        SEARCH_HOTKEY_KEYCODES = [83, 191], // `s` or `/`.
         ESCAPE_KEYCODE = 27,
         DOWN_KEYCODE = 40,
         UP_KEYCODE = 38,
@@ -362,7 +362,7 @@ window.search = window.search || {};
             }
             showSearch(false);
             marker.unmark();
-        } else if (!hasFocus() && e.keyCode === SEARCH_HOTKEY_KEYCODE) {
+        } else if (!hasFocus() && SEARCH_HOTKEY_KEYCODES.includes(e.keyCode)) {
             e.preventDefault();
             showSearch(true);
             window.scrollTo(0, 0);
