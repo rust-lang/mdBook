@@ -30,6 +30,13 @@ authors = []
 language = "en"
 src = "src"
 
+[build]
+build-dir = "book"
+create-missing = true
+error-on-missing-preprocessor = true
+extra-watch-dirs = []
+use-default-preprocessors = true
+
 "#]],
     )
     .check_file(
@@ -96,6 +103,13 @@ authors = []
 language = "en"
 src = "src"
 
+[build]
+build-dir = "book"
+create-missing = true
+error-on-missing-preprocessor = true
+extra-watch-dirs = []
+use-default-preprocessors = true
+
 "#]],
     );
     assert!(!test.dir.join(".gitignore").exists());
@@ -129,6 +143,13 @@ authors = []
 language = "en"
 src = "src"
 title = "Example title"
+
+[build]
+build-dir = "book"
+create-missing = true
+error-on-missing-preprocessor = true
+extra-watch-dirs = []
+use-default-preprocessors = true
 
 "#]],
     );
@@ -184,6 +205,7 @@ src = "in"
 [build]
 build-dir = "out"
 create-missing = true
+error-on-missing-preprocessor = false
 extra-watch-dirs = []
 use-default-preprocessors = true
 

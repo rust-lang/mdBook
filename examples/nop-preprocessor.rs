@@ -57,7 +57,7 @@ fn handle_supports(pre: &dyn Preprocessor, sub_args: &ArgMatches) -> ! {
     let renderer = sub_args
         .get_one::<String>("renderer")
         .expect("Required argument");
-    let supported = pre.supports_renderer(renderer);
+    let supported = pre.supports_renderer(renderer, false);
 
     // Signal whether the renderer is supported by exiting with 1 or 0.
     if supported {
@@ -99,7 +99,7 @@ mod nop_lib {
             Ok(book)
         }
 
-        fn supports_renderer(&self, renderer: &str) -> bool {
+        fn supports_renderer(&self, renderer: &str, _error_on_missing_preprocessor: bool) -> bool {
             renderer != "not-supported"
         }
     }

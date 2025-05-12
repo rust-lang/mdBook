@@ -1,8 +1,7 @@
 use crate::get_book_dir;
 use clap::{arg, ArgMatches, Command as ClapCommand};
-use mdbook::config;
 use mdbook::errors::Result;
-use mdbook::MDBook;
+use mdbook::{Config, MDBook};
 use std::io;
 use std::io::Write;
 use std::process::Command;
@@ -31,7 +30,12 @@ pub fn make_subcommand() -> ClapCommand {
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
     let mut builder = MDBook::init(&book_dir);
-    let mut config = config::Config::default();
+
+    let mut config = Config::default();
+    // We want new books to raise an error if a preprocessor is missing, but we want old books to simply emit a warning.
+    // This is why BuildConfig::default() sets it to false and why we force it to true here
+    config.build.error_on_missing_preprocessor = true;
+
     // If flag `--theme` is present, copy theme to src
     if args.get_flag("theme") {
         let theme_dir = book_dir.join("theme");
