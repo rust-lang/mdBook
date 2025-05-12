@@ -7,11 +7,11 @@ use regex::{CaptureMatches, Captures, Regex};
 use std::fs;
 use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeTo};
 use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 
 use super::{Preprocessor, PreprocessorContext};
 use crate::book::{Book, BookItem};
 use log::{error, warn};
-use once_cell::sync::Lazy;
 
 const ESCAPE_CHAR: char = '\\';
 const MAX_LINK_NESTED_DEPTH: usize = 10;
@@ -409,7 +409,7 @@ impl<'a> Iterator for LinkIter<'a> {
 fn find_links(contents: &str) -> LinkIter<'_> {
     // lazily compute following regex
     // r"\\\{\{#.*\}\}|\{\{#([a-zA-Z0-9]+)\s*([^}]+)\}\}")?;
-    static RE: Lazy<Regex> = Lazy::new(|| {
+    static RE: LazyLock<Regex> = LazyLock::new(|| {
         Regex::new(
             r"(?x)              # insignificant whitespace mode
         \\\{\{\#.*\}\}      # match escaped link

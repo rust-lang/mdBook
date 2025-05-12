@@ -1,9 +1,9 @@
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 
 use elasticlunr::{Index, IndexBuilder};
-use once_cell::sync::Lazy;
 use pulldown_cmark::*;
 
 use crate::book::{Book, BookItem, Chapter};
@@ -314,7 +314,7 @@ fn write_to_json(index: Index, search_config: &Search, doc_urls: Vec<String>) ->
 }
 
 fn clean_html(html: &str) -> String {
-    static AMMONIA: Lazy<ammonia::Builder<'static>> = Lazy::new(|| {
+    static AMMONIA: LazyLock<ammonia::Builder<'static>> = LazyLock::new(|| {
         let mut clean_content = HashSet::new();
         clean_content.insert("script");
         clean_content.insert("style");

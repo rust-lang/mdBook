@@ -1,7 +1,7 @@
-use once_cell::sync::Lazy;
 use regex::Regex;
 use std::ops::Bound::{Excluded, Included, Unbounded};
 use std::ops::RangeBounds;
+use std::sync::LazyLock;
 
 /// Take a range of lines from a string.
 pub fn take_lines<R: RangeBounds<usize>>(s: &str, range: R) -> String {
@@ -24,10 +24,10 @@ pub fn take_lines<R: RangeBounds<usize>>(s: &str, range: R) -> String {
     }
 }
 
-static ANCHOR_START: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"ANCHOR:\s*(?P<anchor_name>[\w_-]+)").unwrap());
-static ANCHOR_END: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"ANCHOR_END:\s*(?P<anchor_name>[\w_-]+)").unwrap());
+static ANCHOR_START: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"ANCHOR:\s*(?P<anchor_name>[\w_-]+)").unwrap());
+static ANCHOR_END: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"ANCHOR_END:\s*(?P<anchor_name>[\w_-]+)").unwrap());
 
 /// Take anchored lines from a string.
 /// Lines containing anchor are ignored.
