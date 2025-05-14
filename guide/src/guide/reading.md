@@ -42,14 +42,14 @@ Tapping the menu bar will scroll the page to the top.
 ## Search
 
 Each book has a built-in search system.
-Pressing the search icon (<i class="fa fa-search"></i>) in the menu bar, or pressing the `S` key on the keyboard will open an input box for entering search terms.
+Pressing the search icon (<i class="fa fa-search"></i>) in the menu bar, or pressing the <kbd>/</kbd> or <kbd>S</kbd> key on the keyboard will open an input box for entering search terms.
 Typing some terms will show matching chapters and sections in real time.
 
 Clicking any of the results will jump to that section.
 The up and down arrow keys can be used to navigate the results, and enter will open the highlighted section.
 
 After loading a search result, the matching search terms will be highlighted in the text.
-Clicking a highlighted word or pressing the `Esc` key will remove the highlighting.
+Clicking a highlighted word or pressing the <kbd>Escape</kbd> key will remove the highlighting.
 
 ## Code blocks
 
