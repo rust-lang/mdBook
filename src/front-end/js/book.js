@@ -644,30 +644,39 @@ aria-label="Show hidden lines"></button>';
             }
         }
         function showHelp() {
-            document.getElementById('help-overlay').style.display = 'block';
-            let help = '<h2 id="help-title">Keyboard shortcuts</h2>';
-            help += '<p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>';
-            help += '<p>Press <kbd>s</kbd> to search in the book</p>';
-            help += '<p>Press <kbd>?</kbd> to show this help</p>';
-            help += '<p>Press <kbd>Esc</kbd> to hide this help</p>';
+            const container = document.getElementById('mdbook-help-container');
+            const overlay = document.getElementById('mdbook-help-popup');
+            container.style.display = 'flex';
 
-            document.getElementById('help-overlay').innerHTML = help;
-
-            document.addEventListener('keydown', function(e) {
-                if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+            // Clicking outside the popup will dismiss it.
+            const mouseHandler = event => {
+                if (overlay.contains(event.target)) {
                     return;
                 }
-
-                switch (e.key) {
-                case 'Escape':
-                    e.preventDefault();
-                    hideHelp();
-                    break;
+                if (event.button !== 0) {
+                    return;
                 }
-            });
+                event.preventDefault();
+                event.stopPropagation();
+                document.removeEventListener('mousedown', mouseHandler);
+                hideHelp();
+            };
+
+            // Pressing esc will dismiss the popup.
+            const escapeKeyHandler = event => {
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    document.removeEventListener('keydown', escapeKeyHandler, true);
+                    hideHelp();
+                }
+            };
+            document.addEventListener('keydown', escapeKeyHandler, true);
+            document.getElementById('mdbook-help-container')
+                .addEventListener('mousedown', mouseHandler);
         }
         function hideHelp() {
-            document.getElementById('help-overlay').style.display = 'none';
+            document.getElementById('mdbook-help-container').style.display = 'none';
         }
 
         // Usually needs the Shift key to be pressed
