@@ -1,5 +1,10 @@
 # Changelog
 
+## Upcoming release
+
+### Added
+- Added [`canonical-site-url`](https://rust-lang.github.io/mdBook/format/configuration/renderers.html?highlight=canonical-site-url#html-renderer-options) setting, to set `<link rel="canonical">` in the HTML output of each page.
+
 ## mdBook 0.4.49
 [v0.4.48...v0.4.49](https://github.com/rust-lang/mdBook/compare/v0.4.48...v0.4.49)
 
