@@ -1,0 +1,16 @@
+// This GUI test checks help popup.
+
+go-to: |DOC_PATH| + "index.html"
+assert-css: ("#mdbook-help-container", {"display": "none"})
+press-key: '?'
+wait-for-css: ("#mdbook-help-container", {"display": "flex"})
+press-key: 'Escape'
+wait-for-css: ("#mdbook-help-container", {"display": "none"})
+press-key: '?'
+wait-for-css: ("#mdbook-help-container", {"display": "flex"})
+// Click inside does nothing.
+click: "#mdbook-help-popup"
+wait-for-css: ("#mdbook-help-container", {"display": "flex"})
+// Click outside dismisses.
+click: "*"
+wait-for-css: ("#mdbook-help-container", {"display": "none"})
