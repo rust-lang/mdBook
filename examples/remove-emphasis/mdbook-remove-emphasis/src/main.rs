@@ -23,7 +23,7 @@ fn main() {
     }
 
     if let Err(e) = handle_preprocessing() {
-        eprintln!("{}", e);
+        eprintln!("{e}");
         std::process::exit(1);
     }
 }
