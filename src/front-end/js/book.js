@@ -623,7 +623,7 @@ aria-label="Show hidden lines"></button>';
 
 (function chapterNavigation() {
     document.addEventListener('keydown', function(e) {
-        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+        if (e.altKey || e.ctrlKey || e.metaKey) {
             return;
         }
         if (window.search && window.search.hasFocus()) {
@@ -643,6 +643,55 @@ aria-label="Show hidden lines"></button>';
                 window.location.href = previousButton.href;
             }
         }
+        function showHelp() {
+            const container = document.getElementById('mdbook-help-container');
+            const overlay = document.getElementById('mdbook-help-popup');
+            container.style.display = 'flex';
+
+            // Clicking outside the popup will dismiss it.
+            const mouseHandler = event => {
+                if (overlay.contains(event.target)) {
+                    return;
+                }
+                if (event.button !== 0) {
+                    return;
+                }
+                event.preventDefault();
+                event.stopPropagation();
+                document.removeEventListener('mousedown', mouseHandler);
+                hideHelp();
+            };
+
+            // Pressing esc will dismiss the popup.
+            const escapeKeyHandler = event => {
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    document.removeEventListener('keydown', escapeKeyHandler, true);
+                    hideHelp();
+                }
+            };
+            document.addEventListener('keydown', escapeKeyHandler, true);
+            document.getElementById('mdbook-help-container')
+                .addEventListener('mousedown', mouseHandler);
+        }
+        function hideHelp() {
+            document.getElementById('mdbook-help-container').style.display = 'none';
+        }
+
+        // Usually needs the Shift key to be pressed
+        switch (e.key) {
+        case '?':
+            e.preventDefault();
+            showHelp();
+            break;
+        }
+
+        // Rest of the keys are only active when the Shift key is not pressed
+        if (e.shiftKey) {
+            return;
+        }
+
         switch (e.key) {
         case 'ArrowRight':
             e.preventDefault();

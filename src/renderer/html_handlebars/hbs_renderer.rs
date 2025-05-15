@@ -667,7 +667,7 @@ fn build_header_links(html: &str) -> String {
     static BUILD_HEADER_LINKS: LazyLock<Regex> = LazyLock::new(|| {
         Regex::new(r#"<h(\d)(?: id="([^"]+)")?(?: class="([^"]+)")?>(.*?)</h\d>"#).unwrap()
     });
-    static IGNORE_CLASS: &[&str] = &["menu-title"];
+    static IGNORE_CLASS: &[&str] = &["menu-title", "mdbook-help-title"];
 
     let mut id_counter = HashMap::new();
 
