@@ -33,13 +33,7 @@ window.search = window.search || {};
         mark_exclude = ['text'],
         marker = new Mark(content),
         URL_SEARCH_PARAM = 'search',
-        URL_MARK_PARAM = 'highlight',
-
-        SEARCH_HOTKEY_KEYCODES = [83, 191], // `s` or `/`.
-        ESCAPE_KEYCODE = 27,
-        DOWN_KEYCODE = 40,
-        UP_KEYCODE = 38,
-        SELECT_KEYCODE = 13;
+        URL_MARK_PARAM = 'highlight';
 
     let current_searchterm = '',
         doc_urls = [],
@@ -352,7 +346,7 @@ window.search = window.search || {};
             return;
         }
 
-        if (e.keyCode === ESCAPE_KEYCODE) {
+        if (e.key === 'Escape') {
             e.preventDefault();
             searchbar.classList.remove('active');
             setSearchUrlParameters('',
@@ -362,38 +356,38 @@ window.search = window.search || {};
             }
             showSearch(false);
             marker.unmark();
-        } else if (!hasFocus() && SEARCH_HOTKEY_KEYCODES.includes(e.keyCode)) {
+        } else if (!hasFocus() && (e.key === 'S' || e.key === '/')) {
             e.preventDefault();
             showSearch(true);
             window.scrollTo(0, 0);
             searchbar.select();
-        } else if (hasFocus() && (e.keyCode === DOWN_KEYCODE
-                               || e.keyCode === SELECT_KEYCODE)) {
+        } else if (hasFocus() && (e.key === 'ArrowDown'
+                               || e.key === 'Enter')) {
             e.preventDefault();
             const first = searchresults.firstElementChild;
             if (first !== null) {
                 unfocusSearchbar();
                 first.classList.add('focus');
-                if (e.keyCode === SELECT_KEYCODE) {
+                if (e.key === 'Enter') {
                     window.location.assign(first.querySelector('a'));
                 }
             }
-        } else if (!hasFocus() && (e.keyCode === DOWN_KEYCODE
-                                || e.keyCode === UP_KEYCODE
-                                || e.keyCode === SELECT_KEYCODE)) {
+        } else if (!hasFocus() && (e.key === 'ArrowDown'
+                                || e.key === 'ArrowUp'
+                                || e.key === 'Enter')) {
             // not `:focus` because browser does annoying scrolling
             const focused = searchresults.querySelector('li.focus');
             if (!focused) {
                 return;
             }
             e.preventDefault();
-            if (e.keyCode === DOWN_KEYCODE) {
+            if (e.key === 'ArrowDown') {
                 const next = focused.nextElementSibling;
                 if (next) {
                     focused.classList.remove('focus');
                     next.classList.add('focus');
                 }
-            } else if (e.keyCode === UP_KEYCODE) {
+            } else if (e.key === 'ArrowUp') {
                 focused.classList.remove('focus');
                 const prev = focused.previousElementSibling;
                 if (prev) {
@@ -401,7 +395,7 @@ window.search = window.search || {};
                 } else {
                     searchbar.select();
                 }
-            } else { // SELECT_KEYCODE
+            } else { // Enter
                 window.location.assign(focused.querySelector('a'));
             }
         }
