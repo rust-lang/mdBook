@@ -12,6 +12,7 @@ use mdbook_core::utils::fs;
 use mdbook_renderer::{RenderContext, Renderer};
 use serde_json::json;
 use std::collections::{BTreeMap, HashMap};
+use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use tracing::error;
 use tracing::{debug, info, trace, warn};
@@ -64,6 +65,10 @@ impl HtmlHandlebars {
             .to_str()
             .with_context(|| "Could not convert path to str")?;
         let filepath = Path::new(&ctx_path).with_extension("html");
+        let canonical_url = ctx.html_config.canonical_site_url.map(|canon_url| {
+            let canon_url = canon_url.as_str().trim_end_matches('/');
+            format!("{}/{}", canon_url, self.clean_path(&filepath))
+        });
 
         let book_title = ctx
             .data
@@ -80,6 +85,8 @@ impl HtmlHandlebars {
         };
 
         ctx.data.insert("path".to_owned(), json!(path));
+        ctx.data
+            .insert("canonical_url".to_owned(), json!(canonical_url));
         ctx.data.insert("content".to_owned(), json!(content));
         ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
         ctx.data.insert("title".to_owned(), json!(title));
@@ -297,6 +304,19 @@ impl HtmlHandlebars {
         fs::write(original, rendered)?;
 
         Ok(())
+    }
+
+    /// Strips `index.html` from the end of a path, if it exists.
+    fn clean_path(&self, path: &Path) -> String {
+        if path.file_name() != Some(OsStr::new("index.html")) {
+            return path.to_url_path();
+        }
+        match path.parent() {
+            Some(parent) if !parent.as_os_str().is_empty() => {
+                format!("{}/", parent.to_url_path())
+            }
+            _ => String::new(),
+        }
     }
 }
 

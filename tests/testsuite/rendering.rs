@@ -304,3 +304,55 @@ HTML tags must be closed before exiting a markdown element.
             str![[r##"<h3 id="option"><a class="header" href="#option">Option<t></t></a></h3>"##]],
         );
 }
+
+// Checks that a canonical URL is generated correctly.
+#[test]
+fn canonical_url() {
+    BookTest::from_dir("rendering/canonical_url")
+        .check_file_contains(
+            "book/index.html",
+            "<link rel=\"canonical\" href=\"https://example.com/test/\">",
+        )
+        .check_file_contains(
+            "book/canonical_url.html",
+            "<link rel=\"canonical\" href=\"https://example.com/test/canonical_url.html\">",
+        )
+        .check_file_contains(
+            "book/nested/page.html",
+            "<link rel=\"canonical\" href=\"https://example.com/test/nested/page.html\">",
+        )
+        .check_file_contains(
+            "book/nested/index.html",
+            "<link rel=\"canonical\" href=\"https://example.com/test/nested/\">",
+        );
+}
+
+// Checks the canonical URL of a chapter whose path is just `index.html`, in a
+// book served at the root of a site.
+#[test]
+fn canonical_url_site_root() {
+    BookTest::from_dir("rendering/canonical_url_site_root")
+        .check_file_contains(
+            "book/index.html",
+            "<link rel=\"canonical\" href=\"https://example.com/\">",
+        )
+        .check_file_contains(
+            "book/creating_templates.html",
+            "<link rel=\"canonical\" href=\"https://example.com/creating_templates.html\">",
+        );
+}
+
+// Checks that when the first chapter is not an index, the `index.html` copy of
+// it points at the chapter's own URL.
+#[test]
+fn canonical_url_index_copy() {
+    BookTest::from_dir("rendering/canonical_url_index_copy")
+        .check_file_contains(
+            "book/index.html",
+            "<link rel=\"canonical\" href=\"https://example.com/introduction.html\">",
+        )
+        .check_file_contains(
+            "book/introduction.html",
+            "<link rel=\"canonical\" href=\"https://example.com/introduction.html\">",
+        );
+}
