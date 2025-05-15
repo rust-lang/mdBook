@@ -99,6 +99,19 @@ Like formatting your code with `rustfmt`, running clippy regularly and before yo
     cargo clippy
     ```
 
+#### Finding typos with `typos-cli`
+
+[typos](https://github.com/crate-ci/typos) is a tool to check for typos in any of the repos files that are not whitelisted inside of `typos.toml`. It runs as a [GitHub Action](https://github.com/crate-ci/typos/blob/master/docs/github-action.md) as part of our CI.
+
+1. To install 
+    ```
+    cargo binstall -y typos
+    ```
+2. Running `typos`
+    ```
+    typos
+    ```
+
 ### Change requirements
 
 Please consider the following when making a change:
