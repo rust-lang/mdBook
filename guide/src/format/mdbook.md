@@ -122,7 +122,7 @@ These use the same attributes as [rustdoc attributes], with a few additions:
 * `no_run` --- The code is compiled when tested, but it is not run.
   The play button is also not shown.
 * `compile_fail` --- The code should fail to compile.
-* `edition2015`, `edition2018`, `edition2021` --- Forces the use of a specific Rust edition.
+* `edition2015`, `edition2018`, `edition2021`, `edition2024` --- Forces the use of a specific Rust edition.
   See [`rust.edition`] to set this globally.
 
 [`mdbook test`]: ../cli/test.md
