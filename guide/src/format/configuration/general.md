@@ -73,7 +73,7 @@ edition = "2015"   # the default edition for code blocks
 
 - **edition**: Rust edition to use by default for the code snippets. Default
   is `"2015"`. Individual code blocks can be controlled with the `edition2015`,
-  `edition2018` or `edition2021` annotations, such as:
+  `edition2018`, `edition2021` or `edition2024` annotations, such as:
 
   ~~~text
   ```rust,edition2015
