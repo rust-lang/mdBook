@@ -35,7 +35,7 @@ handlebars = "6.0"
 hex = "0.4.3"
 log = "0.4.17"
 memchr = "2.5.0"
-opener = "0.7.0"
+opener = "0.8.1"
 pulldown-cmark = { version = "0.10.0", default-features = false, features = ["html"] } # Do not update, part of the public api.
 regex = "1.8.1"
 serde = { version = "1.0.163", features = ["derive"] }
