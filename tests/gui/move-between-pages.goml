@@ -1,8 +1,5 @@
 // This tests pressing the left and right arrows moving to previous and next page.
 
-// We disable the requests checks because `mode-rust.js` is not found.
-fail-on-request-error: false
-
 go-to: |DOC_PATH| + "index.html"
 
 // default page is the first numbered page
