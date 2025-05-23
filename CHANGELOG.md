@@ -1,5 +1,33 @@
 # Changelog
 
+## mdBook 0.4.50
+[v0.4.49...v0.4.50](https://github.com/rust-lang/mdBook/compare/v0.4.49...v0.4.50)
+
+### Added
+
+- Added a keyboard shortcut help popup when pressing `?`.
+  [#2608](https://github.com/rust-lang/mdBook/pull/2608)
+
+### Changed
+
+- Changed the look of the sidebar resize handle to match the new rustdoc format.
+  [#2691](https://github.com/rust-lang/mdBook/pull/2691)
+- `/` can now be used to open the search bar.
+  [#2698](https://github.com/rust-lang/mdBook/pull/2698)
+- Pressing enter from the search bar will navigate to the first entry.
+  [#2698](https://github.com/rust-lang/mdBook/pull/2698)
+- Updated `opener` to drop some dependencies.
+  [#2709](https://github.com/rust-lang/mdBook/pull/2709)
+- Updated dependencies, MSRV raised to 1.82.
+  [#2711](https://github.com/rust-lang/mdBook/pull/2711)
+
+### Fixed
+
+- Fixed uncaught exception when pressing down when there are no search results.
+  [#2698](https://github.com/rust-lang/mdBook/pull/2698)
+- Fixed syntax highlighting of Rust code in the ACE editor.
+  [#2710](https://github.com/rust-lang/mdBook/pull/2710)
+
 ## mdBook 0.4.49
 [v0.4.48...v0.4.49](https://github.com/rust-lang/mdBook/compare/v0.4.48...v0.4.49)
 
