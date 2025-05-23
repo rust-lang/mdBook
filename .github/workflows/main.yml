@@ -40,7 +40,7 @@ jobs:
           - name: msrv
             os: ubuntu-22.04
             # sync MSRV with docs: guide/src/guide/installation.md and Cargo.toml
-            rust: 1.81.0
+            rust: 1.82.0
             target: x86_64-unknown-linux-gnu
     name: ${{ matrix.name }}
     steps:
