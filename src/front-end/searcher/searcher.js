@@ -356,7 +356,7 @@ window.search = window.search || {};
             }
             showSearch(false);
             marker.unmark();
-        } else if (!hasFocus() && (e.key === 'S' || e.key === '/')) {
+        } else if (!hasFocus() && (e.key === 's' || e.key === '/')) {
             e.preventDefault();
             showSearch(true);
             window.scrollTo(0, 0);
