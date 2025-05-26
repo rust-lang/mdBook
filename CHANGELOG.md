@@ -1,5 +1,12 @@
 # Changelog
 
+## mdBook 0.4.51
+[v0.4.50...v0.4.51](https://github.com/rust-lang/mdBook/compare/v0.4.50...v0.4.51)
+
+### Fixed
+- Fixed regression that broke the `S` search hotkey.
+  [#2713](https://github.com/rust-lang/mdBook/pull/2713)
+
 ## mdBook 0.4.50
 [v0.4.49...v0.4.50](https://github.com/rust-lang/mdBook/compare/v0.4.49...v0.4.50)
 
