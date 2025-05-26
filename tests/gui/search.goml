@@ -7,7 +7,7 @@ define-function: (
     [],
     block {
         assert-css: ("#search-wrapper", {"display": "none"})
-        press-key: 'S'
+        press-key: 's'
         wait-for-css-false: ("#search-wrapper", {"display": "none"})
     }
 )
