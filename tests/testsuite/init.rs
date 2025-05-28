@@ -288,3 +288,23 @@ All done, no errors...
     });
     assert!(!test.dir.join(".gitignore").exists());
 }
+
+/// Run `mdbook init` with a custom gitconfig file which contains an author name
+#[test]
+fn init_obtains_author_from_gitconfig() {
+    let mut test = BookTest::from_dir("init/init_with_gitconfig");
+    test.run("init", |cmd| {
+        let git_config_path = cmd.dir.join("gitconfig_with_user_name.gitconfig");
+        cmd.env("GIT_CONFIG_GLOBAL", git_config_path.to_str().unwrap());
+    })
+    .check_file(
+        "book.toml",
+        str![[r#"
+[book]
+authors = ["mdBook gitconfig author"]
+language = "en"
+src = "src"
+
+"#]],
+    );
+}
