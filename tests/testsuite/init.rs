@@ -251,3 +251,25 @@ theme/index.hbs
 "#]],
         );
 }
+
+/// Run `mdbook init` with `--ignore git` to create a `.gitignore` file
+#[test]
+fn init_with_ignore_git_creates_gitignore() {
+    let mut test = BookTest::empty();
+    test.run("init --ignore git", |cmd| {
+        cmd.expect_stdout(str![[r#"
+What title would you like to give the book? 
+
+All done, no errors...
+
+"#]]);
+    })
+    .check_file(
+        ".gitignore",
+        str![[r#"
+book
+
+"#]],
+    );
+    assert!(test.dir.join(".gitignore").exists());
+}
