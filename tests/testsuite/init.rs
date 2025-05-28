@@ -285,6 +285,67 @@ theme/index.hbs
         );
 }
 
+/// Runs `mdbook init --theme` in a directory which already contains a theme directory
+#[test]
+fn existing_theme() {
+    BookTest::from_dir("init/init_with_existing_theme")
+        .run("init --theme", |cmd| {
+            cmd.expect_stdout(str![[r#"
+
+Copying the default theme to [ROOT]/theme
+This could potentially overwrite files already present in that directory.
+
+Are you sure you want to continue? (y/n) 
+All done, no errors...
+
+"#]])
+                .expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book::init): Creating a new book with stub content
+
+"#]])
+                .stdin("y\n")
+                .args(&["--ignore", "none", "--title", "My Book Title"]);
+        })
+        .check_file_list(
+            ".",
+            str![[r#"
+book
+book.toml
+src
+src/SUMMARY.md
+src/chapter_1.md
+theme
+theme/book.js
+theme/css
+theme/css/chrome.css
+theme/css/general.css
+theme/css/print.css
+theme/css/variables.css
+theme/favicon.png
+theme/favicon.svg
+theme/fonts
+theme/fonts/OPEN-SANS-LICENSE.txt
+theme/fonts/SOURCE-CODE-PRO-LICENSE.txt
+theme/fonts/fonts.css
+theme/fonts/open-sans-v17-all-charsets-300.woff2
+theme/fonts/open-sans-v17-all-charsets-300italic.woff2
+theme/fonts/open-sans-v17-all-charsets-600.woff2
+theme/fonts/open-sans-v17-all-charsets-600italic.woff2
+theme/fonts/open-sans-v17-all-charsets-700.woff2
+theme/fonts/open-sans-v17-all-charsets-700italic.woff2
+theme/fonts/open-sans-v17-all-charsets-800.woff2
+theme/fonts/open-sans-v17-all-charsets-800italic.woff2
+theme/fonts/open-sans-v17-all-charsets-italic.woff2
+theme/fonts/open-sans-v17-all-charsets-regular.woff2
+theme/fonts/source-code-pro-v11-all-charsets-500.woff2
+theme/highlight.css
+theme/highlight.js
+theme/index.hbs
+theme/placeholder_theme_file.md
+"#]],
+        );
+}
+
 /// Run `mdbook init` with `--ignore git` to create a `.gitignore` file
 #[test]
 fn init_with_ignore_git_creates_gitignore() {
