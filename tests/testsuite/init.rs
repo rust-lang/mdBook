@@ -101,6 +101,39 @@ src = "src"
     assert!(!test.dir.join(".gitignore").exists());
 }
 
+// Run `mdbook init` and provide responses to the prompts to create a `.gitignore` file and set a book title.
+#[test]
+fn init_with_prompts() {
+    let mut test = BookTest::empty();
+    test.run("init", |cmd| {
+        cmd.stdin("y\nMy Book Title\n")
+            .expect_stdout(str![[r#"
+
+Do you want a .gitignore to be created? (y/n)
+What title would you like to give the book? 
+
+All done, no errors...
+
+"#]])
+            .expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book::init): Creating a new book with stub content
+
+"#]]);
+    })
+    .check_file(
+        "book.toml",
+        str![[r#"
+[book]
+authors = []
+language = "en"
+src = "src"
+title = "My Book Title"
+
+"#]],
+    );
+    assert!(test.dir.join(".gitignore").exists());
+}
+
 // Run `mdbook init` with `--title` without git config.
 //
 // Regression test for https://github.com/rust-lang/mdBook/issues/2485
