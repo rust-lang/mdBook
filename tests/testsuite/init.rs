@@ -273,3 +273,18 @@ book
     );
     assert!(test.dir.join(".gitignore").exists());
 }
+
+/// Run `mdbook init` with explicit `--ignore none` to not create a `.gitignore` file
+#[test]
+fn init_with_ignore_none() {
+    let mut test = BookTest::empty();
+    test.run("init --ignore none", |cmd| {
+        cmd.expect_stdout(str![[r#"
+What title would you like to give the book? 
+
+All done, no errors...
+
+"#]]);
+    });
+    assert!(!test.dir.join(".gitignore").exists());
+}
