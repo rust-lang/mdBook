@@ -271,3 +271,12 @@ fn render_404_default() {
 <p>This URL is invalid, sorry. Please use the navigation bar or search to continue.</p>
 "##]]);
 }
+
+/// Render 404 with custom content provided in `404.md`.
+#[test]
+fn render_404_with_custom_content() {
+    BookTest::from_dir("renderer/render_404/use_404_md").check_main_file(
+        "book/404.html",
+        str!["<p>I'm using contents in 404.md!</p>"],
+    );
+}
