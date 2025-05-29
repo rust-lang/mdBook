@@ -295,3 +295,10 @@ fn render_404_from_custom_declared_file() {
     assert!(test.dir.join("src/404.md").exists());
     assert!(!test.dir.join("book/404.html").exists());
 }
+
+/// Declaring a file which doesn't exist via output.html.input-404 in `book.toml` causes a panic
+#[test]
+#[should_panic(expected = "unable to open 404 input file")]
+fn render_404_from_custom_declared_file_which_doesnt_exist_fails() {
+    BookTest::from_dir("renderer/render_404/explicitly_defined_doesnt_exist_panics").build();
+}
