@@ -4,6 +4,7 @@ use crate::prelude::*;
 use mdbook::errors::Result;
 use mdbook::renderer::{RenderContext, Renderer};
 use snapbox::IntoData;
+use std::env;
 use std::fs::File;
 use std::sync::{Arc, Mutex};
 
@@ -73,6 +74,49 @@ fn failing_command() {
 
 "#]]);
         });
+}
+
+// Test that renderer utilizes PATH to find mdbook-FOO executables.
+#[test]
+fn renderer_utilizes_path() {
+    let mut test = BookTest::init(|_| {});
+    test.rust_program(
+        "custom_directory/mdbook-in_path",
+        r#"
+            fn main() {
+                // Read from stdin to avoid random pipe failures on Linux.
+                use std::io::Read;
+                let mut s = String::new();
+                std::io::stdin().read_to_string(&mut s).unwrap();
+                println!("Hello World!");
+            }
+            "#,
+    )
+    .change_file(
+        "book.toml",
+        "[output.in_path]\n\
+",
+    );
+    let custom_directory_location = test.dir.join("custom_directory");
+
+    test.run("build", |cmd| {
+        let current_path = env::var("PATH").unwrap_or_default();
+        let mut paths = env::split_paths(&current_path).collect::<Vec<_>>();
+        paths.insert(0, custom_directory_location.clone());
+        let new_path = env::join_paths(paths).unwrap();
+        cmd.env("PATH", new_path.into_string().unwrap());
+
+        cmd.expect_stdout(str![[r#"
+Hello World!
+
+"#]])
+            .expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book): Book building has started
+[TIMESTAMP] [INFO] (mdbook::book): Running the in_path backend
+[TIMESTAMP] [INFO] (mdbook::renderer): Invoking the "in_path" renderer
+
+"#]]);
+    });
 }
 
 // Renderer command is missing.
