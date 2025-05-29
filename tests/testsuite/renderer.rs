@@ -280,3 +280,18 @@ fn render_404_with_custom_content() {
         str!["<p>I'm using contents in 404.md!</p>"],
     );
 }
+
+/// Render a 404 error page with custom content provided by the file declared by output.html.input-404 in `book.toml`.
+/// This produces a 404 error page with the custom file name provided in the `input-404` field.
+#[test]
+fn render_404_from_custom_declared_file() {
+    let mut test = BookTest::from_dir("renderer/render_404/explicitly_defined");
+    test.check_main_file(
+        "book/custom_404_filename.html",
+        str!["<p>This is my 404 content in custom_404_filename.md</p>"],
+    );
+
+    // Check that the custom 404.md file present is not used or copied to the book output directory.
+    assert!(test.dir.join("src/404.md").exists());
+    assert!(!test.dir.join("book/404.html").exists());
+}
