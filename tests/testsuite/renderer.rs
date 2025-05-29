@@ -262,3 +262,12 @@ fn legacy_relative_command_path() {
     })
     .check_file("book/output", "test");
 }
+
+/// Render 404 defaults to standard content.
+#[test]
+fn render_404_default() {
+    BookTest::from_dir("build/basic_build").check_main_file("book/404.html", str![[r##"
+<h1 id="document-not-found-404"><a class="header" href="#document-not-found-404">Document not found (404)</a></h1>
+<p>This URL is invalid, sorry. Please use the navigation bar or search to continue.</p>
+"##]]);
+}
