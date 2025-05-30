@@ -54,7 +54,13 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let hostname = args.get_one::<String>("hostname").unwrap();
     let open_browser = args.get_flag("open");
 
-    let address = format!("{hostname}:{port}");
+    let mut address = format!("{hostname}:{port}");
+
+    if port == "0" {
+        let listener = std::net::TcpListener::bind(address).unwrap();
+        let port = listener.local_addr().unwrap().port();
+        address = format!("{hostname}:{port}");
+    }
 
     let update_config = |book: &mut MDBook| {
         book.config
