@@ -101,6 +101,39 @@ src = "src"
     assert!(!test.dir.join(".gitignore").exists());
 }
 
+// Run `mdbook init` and provide responses to the prompts to create a `.gitignore` file and set a book title.
+#[test]
+fn init_with_prompts() {
+    let mut test = BookTest::empty();
+    test.run("init", |cmd| {
+        cmd.stdin("y\nMy Book Title\n")
+            .expect_stdout(str![[r#"
+
+Do you want a .gitignore to be created? (y/n)
+What title would you like to give the book? 
+
+All done, no errors...
+
+"#]])
+            .expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book::init): Creating a new book with stub content
+
+"#]]);
+    })
+    .check_file(
+        "book.toml",
+        str![[r#"
+[book]
+authors = []
+language = "en"
+src = "src"
+title = "My Book Title"
+
+"#]],
+    );
+    assert!(test.dir.join(".gitignore").exists());
+}
+
 // Run `mdbook init` with `--title` without git config.
 //
 // Regression test for https://github.com/rust-lang/mdBook/issues/2485
@@ -250,4 +283,122 @@ theme/highlight.js
 theme/index.hbs
 "#]],
         );
+}
+
+/// Runs `mdbook init --theme` in a directory which already contains a theme directory
+#[test]
+fn existing_theme() {
+    BookTest::from_dir("init/init_with_existing_theme")
+        .run("init --theme", |cmd| {
+            cmd.expect_stdout(str![[r#"
+
+Copying the default theme to [ROOT]/theme
+This could potentially overwrite files already present in that directory.
+
+Are you sure you want to continue? (y/n) 
+All done, no errors...
+
+"#]])
+                .expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book::init): Creating a new book with stub content
+
+"#]])
+                .stdin("y\n")
+                .args(&["--ignore", "none", "--title", "My Book Title"]);
+        })
+        .check_file_list(
+            ".",
+            str![[r#"
+book
+book.toml
+src
+src/SUMMARY.md
+src/chapter_1.md
+theme
+theme/book.js
+theme/css
+theme/css/chrome.css
+theme/css/general.css
+theme/css/print.css
+theme/css/variables.css
+theme/favicon.png
+theme/favicon.svg
+theme/fonts
+theme/fonts/OPEN-SANS-LICENSE.txt
+theme/fonts/SOURCE-CODE-PRO-LICENSE.txt
+theme/fonts/fonts.css
+theme/fonts/open-sans-v17-all-charsets-300.woff2
+theme/fonts/open-sans-v17-all-charsets-300italic.woff2
+theme/fonts/open-sans-v17-all-charsets-600.woff2
+theme/fonts/open-sans-v17-all-charsets-600italic.woff2
+theme/fonts/open-sans-v17-all-charsets-700.woff2
+theme/fonts/open-sans-v17-all-charsets-700italic.woff2
+theme/fonts/open-sans-v17-all-charsets-800.woff2
+theme/fonts/open-sans-v17-all-charsets-800italic.woff2
+theme/fonts/open-sans-v17-all-charsets-italic.woff2
+theme/fonts/open-sans-v17-all-charsets-regular.woff2
+theme/fonts/source-code-pro-v11-all-charsets-500.woff2
+theme/highlight.css
+theme/highlight.js
+theme/index.hbs
+theme/placeholder_theme_file.md
+"#]],
+        );
+}
+
+/// Run `mdbook init` with `--ignore git` to create a `.gitignore` file
+#[test]
+fn init_with_ignore_git_creates_gitignore() {
+    let mut test = BookTest::empty();
+    test.run("init --ignore git", |cmd| {
+        cmd.expect_stdout(str![[r#"
+What title would you like to give the book? 
+
+All done, no errors...
+
+"#]]);
+    })
+    .check_file(
+        ".gitignore",
+        str![[r#"
+book
+
+"#]],
+    );
+    assert!(test.dir.join(".gitignore").exists());
+}
+
+/// Run `mdbook init` with explicit `--ignore none` to not create a `.gitignore` file
+#[test]
+fn init_with_ignore_none() {
+    let mut test = BookTest::empty();
+    test.run("init --ignore none", |cmd| {
+        cmd.expect_stdout(str![[r#"
+What title would you like to give the book? 
+
+All done, no errors...
+
+"#]]);
+    });
+    assert!(!test.dir.join(".gitignore").exists());
+}
+
+/// Run `mdbook init` with a custom gitconfig file which contains an author name
+#[test]
+fn init_obtains_author_from_gitconfig() {
+    let mut test = BookTest::from_dir("init/init_with_gitconfig");
+    test.run("init", |cmd| {
+        let git_config_path = cmd.dir.join("gitconfig_with_user_name.gitconfig");
+        cmd.env("GIT_CONFIG_GLOBAL", git_config_path.to_str().unwrap());
+    })
+    .check_file(
+        "book.toml",
+        str![[r#"
+[book]
+authors = ["mdBook gitconfig author"]
+language = "en"
+src = "src"
+
+"#]],
+    );
 }
