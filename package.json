@@ -1,10 +1,10 @@
 {
   "dependencies": {
-    "browser-ui-test": "0.19.0",
+    "browser-ui-test": "^0.20.6",
     "eslint": "^8.57.1"
   },
   "scripts": {
     "lint": "eslint src/front-end/*js src/front-end/**/*js",
     "lint-fix": "eslint --fix src/front-end/*js src/front-end/**/*js"
-  }  
+  }
 }
