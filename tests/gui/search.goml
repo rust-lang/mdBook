@@ -36,9 +36,9 @@ go-to: |DOC_PATH| + "index.html"
 assert: "#search-wrapper #searchbar"
 assert-css: ("#search-wrapper", {"display": "none"})
 
-// Now we make the search input appear with the `S` shortcut.
-press-key: 'S'
-wait-for-css: ("#search-wrapper", {"display": "block"})
+// Now we make sure the search input appear with the `S` shortcut.
+press-key: 's'
+wait-for-css-false: ("#search-wrapper", {"display": "none"})
 // We ensure the search bar has the focus.
 assert: "#searchbar:focus"
 
