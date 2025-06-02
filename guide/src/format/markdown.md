@@ -75,15 +75,22 @@ Use [mdBook](https://github.com/rust-lang/mdBook).
 
 Read about [mdBook](mdbook.md).
 
+And now [an mdBook link] that is not inline, unlike the above.
+
 A bare url: <https://www.rust-lang.org>.
+
+[an mdBook link]: https://github.com/rust-lang/mdBook
 ```
 
 Use [mdBook](https://github.com/rust-lang/mdBook). 
 
 Read about [mdBook](mdbook.md).
 
+And now [an mdBook link] that is not inline, unlike the above.
+
 A bare url: <https://www.rust-lang.org>.
 
+[an mdBook link]: https://github.com/rust-lang/mdBook
 ----
 
 Relative links that end with `.md` will be converted to the `.html` extension.
