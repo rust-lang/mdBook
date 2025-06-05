@@ -521,7 +521,28 @@ aria-label="Show hidden lines"></button>';
     const sidebarToggleButton = document.getElementById('sidebar-toggle');
     const sidebarToggleAnchor = document.getElementById('sidebar-toggle-anchor');
     const sidebarResizeHandle = document.getElementById('sidebar-resize-handle');
+    const sidebarCheckbox = document.getElementById('sidebar-toggle-anchor');
     let firstContact = null;
+
+
+    /* Because we cannot change the `display` using only CSS after/before the transition, we
+       need JS to do it. We change the display to prevent the browsers search to find text inside
+       the collapsed sidebar. */
+    if (!document.documentElement.classList.contains('sidebar-visible')) {
+        sidebar.style.display = 'none';
+    }
+    sidebar.addEventListener('transitionend', () => {
+        /* We only change the display to "none" if we're collapsing the sidebar. */
+        if (!sidebarCheckbox.checked) {
+            sidebar.style.display = 'none';
+        }
+    });
+    sidebarToggleButton.addEventListener('click', () => {
+        /* To allow the sidebar expansion animation, we first need to put back the display. */
+        if (!sidebarCheckbox.checked) {
+            sidebar.style.display = '';
+        }
+    });
 
     function showSidebar() {
         body.classList.add('sidebar-visible');
@@ -577,7 +598,7 @@ aria-label="Show hidden lines"></button>';
         if (pos < 20) {
             hideSidebar();
         } else {
-            if (body.classList.contains('sidebar-hidden')) {
+            if (!body.classList.contains('sidebar-visible')) {
                 showSidebar();
             }
             pos = Math.min(pos, window.innerWidth - 100);
