@@ -524,7 +524,6 @@ aria-label="Show hidden lines"></button>';
     let firstContact = null;
 
     function showSidebar() {
-        body.classList.remove('sidebar-hidden');
         body.classList.add('sidebar-visible');
         Array.from(sidebarLinks).forEach(function(link) {
             link.setAttribute('tabIndex', 0);
@@ -540,7 +539,6 @@ aria-label="Show hidden lines"></button>';
 
     function hideSidebar() {
         body.classList.remove('sidebar-visible');
-        body.classList.add('sidebar-hidden');
         Array.from(sidebarLinks).forEach(function(link) {
             link.setAttribute('tabIndex', -1);
         });
@@ -765,7 +763,7 @@ aria-label="Show hidden lines"></button>';
         let scrollTop = document.scrollingElement.scrollTop;
         let prevScrollTop = scrollTop;
         const minMenuY = -menu.clientHeight - 50;
-        // When the script loads, the page can be at any scroll (e.g. if you reforesh it).
+        // When the script loads, the page can be at any scroll (e.g. if you refresh it).
         menu.style.top = scrollTop + 'px';
         // Same as parseInt(menu.style.top.slice(0, -2), but faster
         let topCache = menu.style.top.slice(0, -2);
