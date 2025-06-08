@@ -17,7 +17,7 @@ This line contains `inline code` mixed with some other stuff. (LTR)
 ---
 
 ````
-escaping ``` in ```, fun, isn't is?
+escaping ``` in ```, fun, isn't it?
 ````
 
 ---
