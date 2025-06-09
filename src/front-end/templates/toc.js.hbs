@@ -7,14 +7,54 @@ class MDBookSidebarScrollbox extends HTMLElement {
     constructor() {
         super();
     }
+    // Set the current, active page, and reveal it if it's hidden
     connectedCallback() {
+        // Helper to compare if 2 link paths are equal:
+        // - `/foo/`, `/foo/index`, `/foo/index.html` are considered equal
+        // - `/foo`, `/foo.html` are considered equal
+        function pathEquals(a, b) {
+            // safety null checks
+            if (!a && !b) { return true; }
+            if (!a || !b) { return false; }
+            // normalize paths
+            if (a.endsWith("/")) {
+                a += "index.html";
+            } else if (!a.endsWith(".html")) {
+                a += ".html";
+            }
+            if (b.endsWith("/")) {
+                b += "index.html";
+            } else if (!b.endsWith(".html")) {
+                b += ".html";
+            }
+            return a === b;
+        }
+
+        // Helper to set a link element in TOC to be active and reveal its parent sections
+        function setActivePage(link) {
+            link.classList.add("active");
+            var parent = link.parentElement;
+            if (parent && parent.classList.contains("chapter-item")) {
+                parent.classList.add("expanded");
+            }
+            while (parent) {
+                if (parent.tagName === "LI" && parent.previousElementSibling) {
+                    if (parent.previousElementSibling.classList.contains("chapter-item")) {
+                        parent.previousElementSibling.classList.add("expanded");
+                    }
+                }
+                parent = parent.parentElement;
+            }
+        }
+
         this.innerHTML = '{{#toc}}{{/toc}}';
-        // Set the current, active page, and reveal it if it's hidden
         let current_page = document.location.href.toString().split("#")[0].split("?")[0];
         if (current_page.endsWith("/")) {
             current_page += "index.html";
         }
         var links = Array.prototype.slice.call(this.querySelectorAll("a"));
+
+        let foundActivePage = false;
         var l = links.length;
         for (var i = 0; i < l; ++i) {
             var link = links[i];
@@ -22,23 +62,40 @@ class MDBookSidebarScrollbox extends HTMLElement {
             if (href && !href.startsWith("#") && !/^(?:[a-z+]+:)?\/\//.test(href)) {
                 link.href = path_to_root + href;
             }
-            // The "index" page is supposed to alias the first chapter in the book.
-            if (link.href === current_page || (i === 0 && path_to_root === "" && current_page.endsWith("/index.html"))) {
-                link.classList.add("active");
-                var parent = link.parentElement;
-                if (parent && parent.classList.contains("chapter-item")) {
-                    parent.classList.add("expanded");
-                }
-                while (parent) {
-                    if (parent.tagName === "LI" && parent.previousElementSibling) {
-                        if (parent.previousElementSibling.classList.contains("chapter-item")) {
-                            parent.previousElementSibling.classList.add("expanded");
-                        }
+            if (pathEquals(link.href, current_page)) {
+                foundActivePage = true;
+                setActivePage(link);
+            }
+        }
+
+        if (!foundActivePage) {
+            // If the current page is not found, there is a possibility
+            // that the service has redirected /foo/index.html to /foo (without the trailing slash)
+            // try to find the active page again using this fallback
+            if (!current_page.endsWith(".html") && !current_page.endsWith("/")) {
+                let current_page_fallback = current_page + "/index.html";
+                let l = links.length;
+                for (let i = 0; i < l; ++i) {
+                    let link = links[i];
+                    if (pathEquals(link.href, current_page_fallback)) {
+                        setActivePage(link);
+                        foundActivePage = true;
+                        break;
                     }
-                    parent = parent.parentElement;
                 }
             }
         }
+
+        // In the end, if no active page are marked, check if we are on /index.html,
+        // which is an alias for the first chapter in the book.
+        // This is checked in the end because /index.html can be a real path for /index.md or /README.md,
+        // which may not be the first chapter, and in which case the first chapter will not be aliased to.
+        if (!foundActivePage) {
+            if (links[0] && path_to_root === "" && current_page.endsWith("/index.html")) {
+                setActivePage(links[0]);
+            }
+        }
+
         // Track and set sidebar scroll position
         this.addEventListener('click', function(e) {
             if (e.target.tagName === 'A') {
