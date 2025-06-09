@@ -530,7 +530,6 @@ html:not(.sidebar-resizing) .sidebar {
 /* sidebar-hidden */
 #sidebar-toggle-anchor:not(:checked) ~ .sidebar {
     transform: translateX(calc(0px - var(--sidebar-width) - var(--sidebar-resize-indicator-width)));
-    z-index: -1;
 }
 [dir=rtl] #sidebar-toggle-anchor:not(:checked) ~ .sidebar {
     transform: translateX(calc(var(--sidebar-width) + var(--sidebar-resize-indicator-width)));
