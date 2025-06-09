@@ -63,7 +63,10 @@ pub trait Preprocessor {
     /// particular renderer.
     ///
     /// By default, always returns `true`.
-    fn supports_renderer(&self, _renderer: &str) -> bool {
+    ///
+    /// Set `error_on_missing_preprocessor` to `true` to exit the application if a preprocessor is missing,
+    /// or to `false` to simply raise a warning and continue the generation.
+    fn supports_renderer(&self, _renderer: &str, _error_on_missing_preprocessor: bool) -> bool {
         true
     }
 }
