@@ -131,18 +131,18 @@ impl BookBuilder {
         }
 
         let mut general_css = File::create(cssdir.join("general.css"))?;
-        general_css.write_all(theme::GENERAL_CSS)?;
+        theme::GENERAL_CSS.write_into(&mut general_css)?;
 
         let mut chrome_css = File::create(cssdir.join("chrome.css"))?;
-        chrome_css.write_all(theme::CHROME_CSS)?;
+        theme::CHROME_CSS.write_into(&mut chrome_css)?;
 
         if html_config.print.enable {
             let mut print_css = File::create(cssdir.join("print.css"))?;
-            print_css.write_all(theme::PRINT_CSS)?;
+            theme::PRINT_CSS.write_into(&mut print_css)?;
         }
 
         let mut variables_css = File::create(cssdir.join("variables.css"))?;
-        variables_css.write_all(theme::VARIABLES_CSS)?;
+        theme::VARIABLES_CSS.write_into(&mut variables_css)?;
 
         let mut favicon = File::create(themedir.join("favicon.png"))?;
         favicon.write_all(theme::FAVICON_PNG)?;
@@ -151,10 +151,10 @@ impl BookBuilder {
         favicon.write_all(theme::FAVICON_SVG)?;
 
         let mut js = File::create(themedir.join("book.js"))?;
-        js.write_all(theme::JS)?;
+        theme::JS.write_into(&mut js)?;
 
         let mut highlight_css = File::create(themedir.join("highlight.css"))?;
-        highlight_css.write_all(theme::HIGHLIGHT_CSS)?;
+        theme::HIGHLIGHT_CSS.write_into(&mut highlight_css)?;
 
         let mut highlight_js = File::create(themedir.join("highlight.js"))?;
         highlight_js.write_all(theme::HIGHLIGHT_JS)?;

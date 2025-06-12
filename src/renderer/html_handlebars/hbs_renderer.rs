@@ -4,7 +4,7 @@ use crate::errors::*;
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::html_handlebars::StaticFiles;
 use crate::renderer::{RenderContext, Renderer};
-use crate::theme::{self, Theme};
+use crate::theme::{self, ContentToMinify, Theme};
 use crate::utils;
 
 use std::borrow::Cow;
@@ -396,7 +396,8 @@ impl Renderer for HtmlHandlebars {
         debug!("Render toc js");
         {
             let rendered_toc = handlebars.render("toc_js", &data)?;
-            static_files.add_builtin("toc.js", rendered_toc.as_bytes());
+            let rendered_toc = ContentToMinify::JS(&rendered_toc);
+            static_files.add_owned_builtin("toc.js", rendered_toc.minified());
             debug!("Creating toc.js ✓");
         }
 

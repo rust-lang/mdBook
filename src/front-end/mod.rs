@@ -19,17 +19,24 @@ pub static REDIRECT: &[u8] = include_bytes!("templates/redirect.hbs");
 pub static HEADER: &[u8] = include_bytes!("templates/header.hbs");
 pub static TOC_JS: &[u8] = include_bytes!("templates/toc.js.hbs");
 pub static TOC_HTML: &[u8] = include_bytes!("templates/toc.html.hbs");
-pub static CHROME_CSS: &[u8] = include_bytes!("css/chrome.css");
-pub static GENERAL_CSS: &[u8] = include_bytes!("css/general.css");
-pub static PRINT_CSS: &[u8] = include_bytes!("css/print.css");
-pub static VARIABLES_CSS: &[u8] = include_bytes!("css/variables.css");
+pub static CHROME_CSS: ContentToMinify<'static> =
+    ContentToMinify::CSS(include_str!("css/chrome.css"));
+pub static GENERAL_CSS: ContentToMinify<'static> =
+    ContentToMinify::CSS(include_str!("css/general.css"));
+pub static PRINT_CSS: ContentToMinify<'static> =
+    ContentToMinify::CSS(include_str!("css/print.css"));
+pub static VARIABLES_CSS: ContentToMinify<'static> =
+    ContentToMinify::CSS(include_str!("css/variables.css"));
 pub static FAVICON_PNG: &[u8] = include_bytes!("images/favicon.png");
 pub static FAVICON_SVG: &[u8] = include_bytes!("images/favicon.svg");
-pub static JS: &[u8] = include_bytes!("js/book.js");
+pub static JS: ContentToMinify<'static> = ContentToMinify::JS(include_str!("js/book.js"));
 pub static HIGHLIGHT_JS: &[u8] = include_bytes!("js/highlight.js");
-pub static TOMORROW_NIGHT_CSS: &[u8] = include_bytes!("css/tomorrow-night.css");
-pub static HIGHLIGHT_CSS: &[u8] = include_bytes!("css/highlight.css");
-pub static AYU_HIGHLIGHT_CSS: &[u8] = include_bytes!("css/ayu-highlight.css");
+pub static TOMORROW_NIGHT_CSS: ContentToMinify<'static> =
+    ContentToMinify::CSS(include_str!("css/tomorrow-night.css"));
+pub static HIGHLIGHT_CSS: ContentToMinify<'static> =
+    ContentToMinify::CSS(include_str!("css/highlight.css"));
+pub static AYU_HIGHLIGHT_CSS: ContentToMinify<'static> =
+    ContentToMinify::CSS(include_str!("css/ayu-highlight.css"));
 pub static CLIPBOARD_JS: &[u8] = include_bytes!("js/clipboard.min.js");
 pub static FONT_AWESOME: &[u8] = include_bytes!("css/font-awesome.min.css");
 pub static FONT_AWESOME_EOT: &[u8] = include_bytes!("fonts/fontawesome-webfont.eot");
@@ -38,6 +45,31 @@ pub static FONT_AWESOME_TTF: &[u8] = include_bytes!("fonts/fontawesome-webfont.t
 pub static FONT_AWESOME_WOFF: &[u8] = include_bytes!("fonts/fontawesome-webfont.woff");
 pub static FONT_AWESOME_WOFF2: &[u8] = include_bytes!("fonts/fontawesome-webfont.woff2");
 pub static FONT_AWESOME_OTF: &[u8] = include_bytes!("fonts/FontAwesome.otf");
+
+#[derive(Clone, Copy)]
+pub enum ContentToMinify<'a> {
+    CSS(&'a str),
+    JS(&'a str),
+}
+
+impl<'a> ContentToMinify<'a> {
+    pub fn minified(self) -> Vec<u8> {
+        let mut out = Vec::new();
+        self.write_into(&mut out).unwrap();
+        out
+    }
+
+    pub fn write_into<W: std::io::Write>(self, out: &mut W) -> std::io::Result<()> {
+        match self {
+            Self::CSS(data) => match minifier::css::minify(data) {
+                Ok(data) => return data.write(out),
+                Err(_) => out.write(data.as_bytes())?,
+            },
+            Self::JS(data) => return minifier::js::minify(data).write(out),
+        };
+        Ok(())
+    }
+}
 
 /// The `Theme` struct should be used instead of the static variables because
 /// the `new()` method will look if the user has a theme directory in their
@@ -181,18 +213,18 @@ impl Default for Theme {
             header: HEADER.to_owned(),
             toc_js: TOC_JS.to_owned(),
             toc_html: TOC_HTML.to_owned(),
-            chrome_css: CHROME_CSS.to_owned(),
-            general_css: GENERAL_CSS.to_owned(),
-            print_css: PRINT_CSS.to_owned(),
-            variables_css: VARIABLES_CSS.to_owned(),
+            chrome_css: CHROME_CSS.minified(),
+            general_css: GENERAL_CSS.minified(),
+            print_css: PRINT_CSS.minified(),
+            variables_css: VARIABLES_CSS.minified(),
             fonts_css: None,
             font_files: Vec::new(),
             favicon_png: Some(FAVICON_PNG.to_owned()),
             favicon_svg: Some(FAVICON_SVG.to_owned()),
-            js: JS.to_owned(),
-            highlight_css: HIGHLIGHT_CSS.to_owned(),
-            tomorrow_night_css: TOMORROW_NIGHT_CSS.to_owned(),
-            ayu_highlight_css: AYU_HIGHLIGHT_CSS.to_owned(),
+            js: JS.minified(),
+            highlight_css: HIGHLIGHT_CSS.minified(),
+            tomorrow_night_css: TOMORROW_NIGHT_CSS.minified(),
+            ayu_highlight_css: AYU_HIGHLIGHT_CSS.minified(),
             highlight_js: HIGHLIGHT_JS.to_owned(),
             clipboard_js: CLIPBOARD_JS.to_owned(),
         }
