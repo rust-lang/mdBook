@@ -117,7 +117,8 @@ impl HelperDef for RenderToc {
                         // Hack for windows who tends to use `\` as separator instead of `/`
                         .replace('\\', "/");
 
-                    // Add link
+                    // Add link - prepend with / to make it an absolute path from site root
+                    out.write("/")?;
                     out.write(&tmp)?;
                     out.write(if is_toc_html {
                         "\" target=\"_parent\">"
