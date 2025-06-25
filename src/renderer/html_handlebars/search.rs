@@ -69,7 +69,7 @@ pub fn create_files(
             // To reduce the size of the generated JSON by preventing all `"` characters to be
             // escaped, we instead surround the string with much less common `'` character.
             format!(
-                "window.search = JSON.parse('{}');",
+                "window.search = Object.assign(window.search, JSON.parse('{}'));",
                 index.replace("\\", "\\\\").replace("'", "\\'")
             )
             .as_bytes(),

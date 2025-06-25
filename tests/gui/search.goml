@@ -1,5 +1,6 @@
 // This tests basic search behavior.
 
+fail-on-js-error: true
 go-to: |DOC_PATH| + "index.html"
 
 define-function: (
@@ -41,6 +42,9 @@ press-key: 's'
 wait-for-css-false: ("#search-wrapper", {"display": "none"})
 // We ensure the search bar has the focus.
 assert: "#searchbar:focus"
+// Pressing a key will therefore update the search input.
+press-key: 't'
+assert-text: ("#searchbar", "t")
 
 // Now we press `Escape` to ensure that the search input disappears again.
 press-key: 'Escape'
