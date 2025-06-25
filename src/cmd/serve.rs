@@ -42,6 +42,7 @@ pub fn make_subcommand() -> Command {
                 .help("Port to use for HTTP connections"),
         )
         .arg_open()
+        .arg_disable_minification()
         .arg_watcher()
 }
 
@@ -62,6 +63,9 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
             .expect("live-reload-endpoint update failed");
         if let Some(dest_dir) = args.get_one::<PathBuf>("dest-dir") {
             book.config.build.build_dir = dest_dir.into();
+        }
+        if let Some(true) = args.get_one::<bool>("disable-minification") {
+            book.config.build.minification = false;
         }
         // Override site-url for local serving of the 404 file
         book.config.set("output.html.site-url", "/").unwrap();

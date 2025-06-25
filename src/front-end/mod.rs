@@ -53,7 +53,12 @@ pub enum ContentToMinify<'a> {
 }
 
 impl<'a> ContentToMinify<'a> {
-    pub fn minified(self) -> Vec<u8> {
+    /// If `minification` is false, it simply returns the inner data converted into a `Vec`.
+    pub fn minified(self, minification: bool) -> Vec<u8> {
+        if !minification {
+            let (Self::CSS(data) | Self::JS(data)) = self;
+            return data.as_bytes().to_owned();
+        }
         let mut out = Vec::new();
         self.write_into(&mut out).unwrap();
         out
@@ -104,9 +109,9 @@ pub struct Theme {
 impl Theme {
     /// Creates a `Theme` from the given `theme_dir`.
     /// If a file is found in the theme dir, it will override the default version.
-    pub fn new<P: AsRef<Path>>(theme_dir: P) -> Self {
+    pub fn new<P: AsRef<Path>>(theme_dir: P, minification: bool) -> Self {
         let theme_dir = theme_dir.as_ref();
-        let mut theme = Theme::default();
+        let mut theme = Self::new_with_set_fields(minification);
 
         // If the theme directory doesn't exist there's no point continuing...
         if !theme_dir.exists() || !theme_dir.is_dir() {
@@ -202,10 +207,8 @@ impl Theme {
 
         theme
     }
-}
 
-impl Default for Theme {
-    fn default() -> Theme {
+    fn new_with_set_fields(minification: bool) -> Self {
         Theme {
             index: INDEX.to_owned(),
             head: HEAD.to_owned(),
@@ -213,18 +216,18 @@ impl Default for Theme {
             header: HEADER.to_owned(),
             toc_js: TOC_JS.to_owned(),
             toc_html: TOC_HTML.to_owned(),
-            chrome_css: CHROME_CSS.minified(),
-            general_css: GENERAL_CSS.minified(),
-            print_css: PRINT_CSS.minified(),
-            variables_css: VARIABLES_CSS.minified(),
+            chrome_css: CHROME_CSS.minified(minification),
+            general_css: GENERAL_CSS.minified(minification),
+            print_css: PRINT_CSS.minified(minification),
+            variables_css: VARIABLES_CSS.minified(minification),
             fonts_css: None,
             font_files: Vec::new(),
             favicon_png: Some(FAVICON_PNG.to_owned()),
             favicon_svg: Some(FAVICON_SVG.to_owned()),
-            js: JS.minified(),
-            highlight_css: HIGHLIGHT_CSS.minified(),
-            tomorrow_night_css: TOMORROW_NIGHT_CSS.minified(),
-            ayu_highlight_css: AYU_HIGHLIGHT_CSS.minified(),
+            js: JS.minified(minification),
+            highlight_css: HIGHLIGHT_CSS.minified(minification),
+            tomorrow_night_css: TOMORROW_NIGHT_CSS.minified(minification),
+            ayu_highlight_css: AYU_HIGHLIGHT_CSS.minified(minification),
             highlight_js: HIGHLIGHT_JS.to_owned(),
             clipboard_js: CLIPBOARD_JS.to_owned(),
         }
@@ -258,8 +261,9 @@ mod tests {
         let non_existent = PathBuf::from("/non/existent/directory/");
         assert!(!non_existent.exists());
 
-        let should_be = Theme::default();
-        let got = Theme::new(&non_existent);
+        let minification = false;
+        let should_be = Theme::new_with_set_fields(minification);
+        let got = Theme::new(&non_existent, minification);
 
         assert_eq!(got, should_be);
     }
@@ -297,7 +301,7 @@ mod tests {
             File::create(&temp.path().join(file)).unwrap();
         }
 
-        let got = Theme::new(temp.path());
+        let got = Theme::new(temp.path(), false);
 
         let empty = Theme {
             index: Vec::new(),
@@ -329,13 +333,13 @@ mod tests {
     fn favicon_override() {
         let temp = TempFileBuilder::new().prefix("mdbook-").tempdir().unwrap();
         fs::write(temp.path().join("favicon.png"), "1234").unwrap();
-        let got = Theme::new(temp.path());
+        let got = Theme::new(temp.path(), false);
         assert_eq!(got.favicon_png.as_ref().unwrap(), b"1234");
         assert_eq!(got.favicon_svg, None);
 
         let temp = TempFileBuilder::new().prefix("mdbook-").tempdir().unwrap();
         fs::write(temp.path().join("favicon.svg"), "4567").unwrap();
-        let got = Theme::new(temp.path());
+        let got = Theme::new(temp.path(), false);
         assert_eq!(got.favicon_png, None);
         assert_eq!(got.favicon_svg.as_ref().unwrap(), b"4567");
     }
