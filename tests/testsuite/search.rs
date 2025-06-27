@@ -9,8 +9,9 @@ use std::path::{Path, PathBuf};
 fn read_book_index(root: &Path) -> serde_json::Value {
     let index = root.join("book/searchindex.js");
     let index = std::fs::read_to_string(index).unwrap();
-    let index = index.trim_start_matches("window.search = JSON.parse('");
-    let index = index.trim_end_matches("');");
+    let index =
+        index.trim_start_matches("window.search = Object.assign(window.search, JSON.parse('");
+    let index = index.trim_end_matches("'));");
     // We need unescape the string as it's supposed to be an escaped JS string.
     serde_json::from_str(&index.replace("\\'", "'").replace("\\\\", "\\")).unwrap()
 }
