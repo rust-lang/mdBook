@@ -7,23 +7,20 @@ set-window-size: (1100, 600)
 reload:
 
 store-value: (content_indent, 308)
+store-value: (sidebar_storage_value, "mdbook-sidebar")
+store-value: (sidebar_storage_hidden_value, "hidden")
+store-value: (sidebar_storage_displayed_value, "visible")
 
 define-function: (
     "hide-sidebar",
     [],
     block {
-        // The content should be "moved" to the right because of the sidebar.
-        assert-css: ("#sidebar", {"transform": "none"})
         assert-position: ("#page-wrapper", {"x": |content_indent|})
 
         // We now hide the sidebar.
         click: "#sidebar-toggle"
-        wait-for: "body.sidebar-hidden"
-        // `transform` is 0.3s so we need to wait a bit (0.5s) to ensure the animation is done.
-        wait-for: 5000
-        assert-css-false: ("#sidebar", {"transform": "none"})
-        // The page content should now be on the left.
-        assert-position: ("#page-wrapper", {"x": 0})
+        wait-for-css: ("#sidebar", {"display": "none"})
+        assert-local-storage: {|sidebar_storage_value|: |sidebar_storage_hidden_value|}
     },
 )
 
@@ -31,18 +28,18 @@ define-function: (
     "show-sidebar",
     [],
     block {
-        // The page content should be on the left and the sidebar "moved out".
-        assert-css: ("#sidebar", {"transform": "matrix(1, 0, 0, 1, -308, 0)"})
+        assert-css: ("#sidebar", {"display": "none"})
         assert-position: ("#page-wrapper", {"x": 0})
 
         // We expand the sidebar.
         click: "#sidebar-toggle"
-        wait-for: "body.sidebar-visible"
+        wait-for-css-false: ("#sidebar", {"display": "none"})
         // `transform` is 0.3s so we need to wait a bit (0.5s) to ensure the animation is done.
         wait-for: 5000
         assert-css-false: ("#sidebar", {"transform": "matrix(1, 0, 0, 1, -308, 0)"})
         // The page content should be moved to the right.
         assert-position: ("#page-wrapper", {"x": |content_indent|})
+        assert-local-storage: {|sidebar_storage_value|: |sidebar_storage_displayed_value|}
     },
 )
 
@@ -54,3 +51,13 @@ set-window-size: (900, 600)
 reload:
 call-function: ("show-sidebar", {})
 call-function: ("hide-sidebar", {})
+
+// We now test that if the sidebar is considered open and we reload the page, since
+// the width is small, it will still be collapsed.
+set-local-storage: {|sidebar_storage_value|: |sidebar_storage_displayed_value|}
+reload:
+// The stored value shouldn't have changed.
+assert-local-storage: {|sidebar_storage_value|: |sidebar_storage_displayed_value|}
+// But the sidebar should be hidden anyway.
+assert-css: ("#sidebar", {"display": "none"})
+assert-position: ("#page-wrapper", {"x": 0})
