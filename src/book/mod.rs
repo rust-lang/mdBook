@@ -605,7 +605,8 @@ fn preprocessor_should_run(
 ) -> bool {
     // default preprocessors should be run by default (if supported)
     if cfg.build.use_default_preprocessors && is_default_preprocessor(preprocessor) {
-        return preprocessor.supports_renderer(renderer.name());
+        return preprocessor
+            .supports_renderer(renderer.name(), cfg.build.error_on_missing_preprocessor);
     }
 
     let key = format!("preprocessor.{}.renderers", preprocessor.name());
@@ -618,7 +619,7 @@ fn preprocessor_should_run(
             .any(|name| name == renderer_name);
     }
 
-    preprocessor.supports_renderer(renderer_name)
+    preprocessor.supports_renderer(renderer_name, cfg.build.error_on_missing_preprocessor)
 }
 
 #[cfg(test)]
@@ -876,7 +877,7 @@ mod tests {
             unimplemented!()
         }
 
-        fn supports_renderer(&self, _renderer: &str) -> bool {
+        fn supports_renderer(&self, _renderer: &str, _error_on_missing_preprocessor: bool) -> bool {
             self.0
         }
     }
