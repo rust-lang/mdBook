@@ -4,6 +4,7 @@ use crate::prelude::*;
 use mdbook::errors::Result;
 use mdbook::renderer::{RenderContext, Renderer};
 use snapbox::IntoData;
+use std::env;
 use std::fs::File;
 use std::sync::{Arc, Mutex};
 
@@ -73,6 +74,49 @@ fn failing_command() {
 
 "#]]);
         });
+}
+
+// Test that renderer utilizes PATH to find mdbook-FOO executables.
+#[test]
+fn renderer_utilizes_path() {
+    let mut test = BookTest::init(|_| {});
+    test.rust_program(
+        "custom_directory/mdbook-in_path",
+        r#"
+            fn main() {
+                // Read from stdin to avoid random pipe failures on Linux.
+                use std::io::Read;
+                let mut s = String::new();
+                std::io::stdin().read_to_string(&mut s).unwrap();
+                println!("Hello World!");
+            }
+            "#,
+    )
+    .change_file(
+        "book.toml",
+        "[output.in_path]\n\
+",
+    );
+    let custom_directory_location = test.dir.join("custom_directory");
+
+    test.run("build", |cmd| {
+        let current_path = env::var("PATH").unwrap_or_default();
+        let mut paths = env::split_paths(&current_path).collect::<Vec<_>>();
+        paths.insert(0, custom_directory_location.clone());
+        let new_path = env::join_paths(paths).unwrap();
+        cmd.env("PATH", new_path.into_string().unwrap());
+
+        cmd.expect_stdout(str![[r#"
+Hello World!
+
+"#]])
+            .expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book): Book building has started
+[TIMESTAMP] [INFO] (mdbook::book): Running the in_path backend
+[TIMESTAMP] [INFO] (mdbook::renderer): Invoking the "in_path" renderer
+
+"#]]);
+    });
 }
 
 // Renderer command is missing.
@@ -261,4 +305,44 @@ fn legacy_relative_command_path() {
 "#]]);
     })
     .check_file("book/output", "test");
+}
+
+/// Render 404 defaults to standard content.
+#[test]
+fn render_404_default() {
+    BookTest::from_dir("build/basic_build").check_main_file("book/404.html", str![[r##"
+<h1 id="document-not-found-404"><a class="header" href="#document-not-found-404">Document not found (404)</a></h1>
+<p>This URL is invalid, sorry. Please use the navigation bar or search to continue.</p>
+"##]]);
+}
+
+/// Render 404 with custom content provided in `404.md`.
+#[test]
+fn render_404_with_custom_content() {
+    BookTest::from_dir("renderer/render_404/use_404_md").check_main_file(
+        "book/404.html",
+        str!["<p>I'm using contents in 404.md!</p>"],
+    );
+}
+
+/// Render a 404 error page with custom content provided by the file declared by output.html.input-404 in `book.toml`.
+/// This produces a 404 error page with the custom file name provided in the `input-404` field.
+#[test]
+fn render_404_from_custom_declared_file() {
+    let mut test = BookTest::from_dir("renderer/render_404/explicitly_defined");
+    test.check_main_file(
+        "book/custom_404_filename.html",
+        str!["<p>This is my 404 content in custom_404_filename.md</p>"],
+    );
+
+    // Check that the custom 404.md file present is not used or copied to the book output directory.
+    assert!(test.dir.join("src/404.md").exists());
+    assert!(!test.dir.join("book/404.html").exists());
+}
+
+/// Declaring a file which doesn't exist via output.html.input-404 in `book.toml` causes a panic
+#[test]
+#[should_panic(expected = "unable to open 404 input file")]
+fn render_404_from_custom_declared_file_which_doesnt_exist_fails() {
+    BookTest::from_dir("renderer/render_404/explicitly_defined_doesnt_exist_panics").build();
 }

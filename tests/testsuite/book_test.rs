@@ -2,10 +2,9 @@
 
 use mdbook::book::BookBuilder;
 use mdbook::MDBook;
-use snapbox::IntoData;
+use snapbox::{cmd::Command, IntoData};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::sync::atomic::{AtomicU32, Ordering};
 
 /// Test number used for generating unique temp directory names.
@@ -227,6 +226,7 @@ impl BookTest {
             expect_status: StatusCode::Success,
             expect_stderr_data: None,
             expect_stdout_data: None,
+            stdin_data: None,
         };
         f(&mut cmd);
         cmd.run();
@@ -272,6 +272,7 @@ pub struct BookCommand {
     expect_status: StatusCode,
     expect_stderr_data: Option<snapbox::Data>,
     expect_stdout_data: Option<snapbox::Data>,
+    stdin_data: Option<snapbox::Data>,
 }
 
 impl BookCommand {
@@ -299,6 +300,12 @@ impl BookCommand {
         self
     }
 
+    /// Sets the stdin data to use when running the command.
+    pub fn stdin(&mut self, input: impl snapbox::IntoData) -> &mut Self {
+        self.stdin_data = Some(input.into_data());
+        self
+    }
+
     /// Adds arguments to the command to run.
     pub fn args(&mut self, args: &[&str]) -> &mut Self {
         self.args.extend(args.into_iter().map(|t| t.to_string()));
@@ -314,7 +321,8 @@ impl BookCommand {
     /// Runs the command, and verifies the output.
     fn run(&mut self) {
         let mut cmd = Command::new(env!("CARGO_BIN_EXE_mdbook"));
-        cmd.current_dir(&self.dir)
+        cmd = cmd
+            .current_dir(&self.dir)
             .args(&self.args)
             .env_remove("RUST_LOG")
             // Don't read the system git config which is out of our control.
@@ -328,9 +336,13 @@ impl BookCommand {
 
         for (k, v) in &self.env {
             match v {
-                Some(v) => cmd.env(k, v),
-                None => cmd.env_remove(k),
+                Some(v) => cmd = cmd.env(k, v),
+                None => cmd = cmd.env_remove(k),
             };
+        }
+
+        if let Some(stdin_data) = &self.stdin_data {
+            cmd = cmd.stdin(stdin_data);
         }
 
         let output = cmd.output().expect("mdbook should be runnable");
