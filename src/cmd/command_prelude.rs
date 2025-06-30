@@ -37,6 +37,15 @@ pub trait CommandExt: Sized {
         self._arg(arg!(-o --open "Opens the compiled book in a web browser"))
     }
 
+    fn arg_disable_minification(self) -> Self {
+        self._arg(
+            Arg::new("disable-minification")
+                .long("disable-minification")
+                .action(clap::ArgAction::SetTrue)
+                .help("Disable CSS and JS minification"),
+        )
+    }
+
     #[cfg(any(feature = "watch", feature = "serve"))]
     fn arg_watcher(self) -> Self {
         #[cfg(feature = "watch")]
