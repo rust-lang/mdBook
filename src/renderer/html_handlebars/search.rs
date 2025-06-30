@@ -409,3 +409,92 @@ fn chapter_settings_priority() {
         );
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_tokenize_basic() {
+        assert_eq!(tokenize("hello world"), vec!["hello", "world"]);
+    }
+
+    #[test]
+    fn test_tokenize_with_hyphens() {
+        assert_eq!(
+            tokenize("hello-world test-case"),
+            vec!["hello", "world", "test", "case"]
+        );
+    }
+
+    #[test]
+    fn test_tokenize_mixed_whitespace() {
+        assert_eq!(
+            tokenize("hello\tworld\ntest\r\ncase"),
+            vec!["hello", "world", "test", "case"]
+        );
+    }
+
+    #[test]
+    fn test_tokenize_empty_string() {
+        assert_eq!(tokenize(""), Vec::<String>::new());
+    }
+
+    #[test]
+    fn test_tokenize_only_whitespace() {
+        assert_eq!(tokenize("   \t\n  "), Vec::<String>::new());
+    }
+
+    #[test]
+    fn test_tokenize_case_normalization() {
+        assert_eq!(tokenize("Hello WORLD Test"), vec!["hello", "world", "test"]);
+    }
+
+    #[test]
+    fn test_tokenize_trim_whitespace() {
+        assert_eq!(tokenize("  hello   world  "), vec!["hello", "world"]);
+    }
+
+    #[test]
+    fn test_tokenize_long_words_filtered() {
+        let long_word = "a".repeat(MAX_WORD_LENGTH_TO_INDEX + 1);
+        let short_word = "a".repeat(MAX_WORD_LENGTH_TO_INDEX);
+        let input = format!("{} hello {}", long_word, short_word);
+        assert_eq!(tokenize(&input), vec!["hello", &short_word]);
+    }
+
+    #[test]
+    fn test_tokenize_max_length_word() {
+        let max_word = "a".repeat(MAX_WORD_LENGTH_TO_INDEX);
+        assert_eq!(tokenize(&max_word), vec![max_word]);
+    }
+
+    #[test]
+    fn test_tokenize_special_characters() {
+        assert_eq!(
+            tokenize("hello,world.test!case?"),
+            vec!["hello,world.test!case?"]
+        );
+    }
+
+    #[test]
+    fn test_tokenize_unicode() {
+        assert_eq!(
+            tokenize("café naïve résumé"),
+            vec!["café", "naïve", "résumé"]
+        );
+    }
+
+    #[test]
+    fn test_tokenize_unicode_rtl_hebre() {
+        assert_eq!(tokenize("שלום עולם"), vec!["שלום", "עולם"]);
+    }
+
+    #[test]
+    fn test_tokenize_numbers() {
+        assert_eq!(
+            tokenize("test123 456-789 hello"),
+            vec!["test123", "456", "789", "hello"]
+        );
+    }
+}
