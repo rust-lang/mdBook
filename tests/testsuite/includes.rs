@@ -48,6 +48,7 @@ fn recursive_include() {
 [TIMESTAMP] [INFO] (mdbook::book): Book building has started
 [TIMESTAMP] [ERROR] (mdbook::preprocess::links): Stack depth exceeded in recursive.md. Check for cyclic includes
 [TIMESTAMP] [INFO] (mdbook::book): Running the html backend
+[TIMESTAMP] [INFO] (mdbook::renderer::html_handlebars::hbs_renderer): Book has been generated into `[ROOT]/book`
 
 "#]]);
         })
