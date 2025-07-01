@@ -230,7 +230,6 @@ pub fn render_markdown_with_path(text: &str, curly_quotes: bool, path: Option<&P
     render_markdown_with_abs_path(text, curly_quotes, path, None)
 }
 
-
 /// Renders markdown to HTML.
 ///
 /// `path` should only be set if this is being generated for the consolidated
@@ -651,12 +650,7 @@ more text with spaces
         #[test]
         fn replace_root_links() {
             assert_eq!(
-                render_markdown_with_abs_path(
-                    "[example](/testing)",
-                    false,
-                    None,
-                    Some("ABS_PATH")
-                ),
+                render_markdown_with_abs_path("[example](/testing)", false, None, Some("ABS_PATH")),
                 "<p><a href=\"ABS_PATH/testing\">example</a></p>\n"
             );
         }
