@@ -92,13 +92,13 @@ pub fn unique_id_from_content(content: &str, id_counter: &mut HashMap<String, us
 /// page go to the original location. Normal page rendering sets `path` to
 /// None. Ideally, print page links would link to anchors on the print page,
 /// but that is very difficult.
-fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
+fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>, abs_url: Option<&str>) -> Event<'a> {
     static SCHEME_LINK: LazyLock<Regex> =
         LazyLock::new(|| Regex::new(r"^[a-z][a-z0-9+.-]*:").unwrap());
     static MD_LINK: LazyLock<Regex> =
         LazyLock::new(|| Regex::new(r"(?P<link>.*)\.md(?P<anchor>#.*)?").unwrap());
 
-    fn fix<'a>(dest: CowStr<'a>, path: Option<&Path>) -> CowStr<'a> {
+    fn fix<'a>(dest: CowStr<'a>, path: Option<&Path>, abs_url: Option<&str>) -> CowStr<'a> {
         if dest.starts_with('#') {
             // Fragment-only link.
             if let Some(path) = path {
@@ -127,20 +127,32 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
             }
 
             if let Some(caps) = MD_LINK.captures(&dest) {
-                fixed_link.push_str(&caps["link"]);
+                fixed_link.push_str(&caps["link"].trim_start_matches('/'));
                 fixed_link.push_str(".html");
                 if let Some(anchor) = caps.name("anchor") {
                     fixed_link.push_str(anchor.as_str());
                 }
+            } else if !fixed_link.is_empty() {
+                // prevent links with double slashes
+                fixed_link.push_str(&dest.trim_start_matches('/'));
             } else {
                 fixed_link.push_str(&dest);
             };
-            return CowStr::from(fixed_link);
+            if dest.starts_with('/') || path.is_some() {
+                if let Some(abs_url) = abs_url {
+                    fixed_link = format!(
+                        "{}/{}",
+                        abs_url.trim_end_matches('/'),
+                        &fixed_link.trim_start_matches('/')
+                    );
+                }
+            }
+            return CowStr::from(fixed_link.to_string());
         }
         dest
     }
 
-    fn fix_html<'a>(html: CowStr<'a>, path: Option<&Path>) -> CowStr<'a> {
+    fn fix_html<'a>(html: CowStr<'a>, path: Option<&Path>, abs_url: Option<&str>) -> CowStr<'a> {
         // This is a terrible hack, but should be reasonably reliable. Nobody
         // should ever parse a tag with a regex. However, there isn't anything
         // in Rust that I know of that is suitable for handling partial html
@@ -154,7 +166,7 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
 
         HTML_LINK
             .replace_all(&html, |caps: &regex::Captures<'_>| {
-                let fixed = fix(caps[2].into(), path);
+                let fixed = fix(caps[2].into(), path, abs_url);
                 format!("{}{}\"", &caps[1], fixed)
             })
             .into_owned()
@@ -169,7 +181,7 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
             id,
         }) => Event::Start(Tag::Link {
             link_type,
-            dest_url: fix(dest_url, path),
+            dest_url: fix(dest_url, path, abs_url),
             title,
             id,
         }),
@@ -180,12 +192,12 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>) -> Event<'a> {
             id,
         }) => Event::Start(Tag::Image {
             link_type,
-            dest_url: fix(dest_url, path),
+            dest_url: fix(dest_url, path, abs_url),
             title,
             id,
         }),
-        Event::Html(html) => Event::Html(fix_html(html, path)),
-        Event::InlineHtml(html) => Event::InlineHtml(fix_html(html, path)),
+        Event::Html(html) => Event::Html(fix_html(html, path, abs_url)),
+        Event::InlineHtml(html) => Event::InlineHtml(fix_html(html, path, abs_url)),
         _ => event,
     }
 }
@@ -214,10 +226,28 @@ pub fn new_cmark_parser(text: &str, smart_punctuation: bool) -> Parser<'_> {
 /// `path` should only be set if this is being generated for the consolidated
 /// print page. It should point to the page being rendered relative to the
 /// root of the book.
-pub fn render_markdown_with_path(
+pub fn render_markdown_with_path(text: &str, curly_quotes: bool, path: Option<&Path>) -> String {
+    render_markdown_with_abs_path(text, curly_quotes, path, None)
+}
+
+/// Renders markdown to HTML.
+///
+/// `path` should only be set if this is being generated for the consolidated
+/// print page. It should point to the page being rendered relative to the
+/// root of the book.
+/// `abs_url` is the absolute URL to use for links that start with `/`.
+/// If `abs_url` is `None`, then links that start with `/` will be
+/// rendered relative to the current path.
+/// If `abs_url` is `Some`, then links that start with `/` will be
+/// rendered as absolute links using the provided URL.
+////// This is useful for generating links in the print page, where the
+/// links should point to the original location of the page, not the
+/// print page itself.
+pub fn render_markdown_with_abs_path(
     text: &str,
     smart_punctuation: bool,
     path: Option<&Path>,
+    abs_url: Option<&str>,
 ) -> String {
     let mut body = String::with_capacity(text.len() * 3 / 2);
 
@@ -250,7 +280,7 @@ pub fn render_markdown_with_path(
 
     let events = new_cmark_parser(text, smart_punctuation)
         .map(clean_codeblock_headers)
-        .map(|event| adjust_links(event, path))
+        .map(|event| adjust_links(event, path, abs_url))
         .flat_map(|event| {
             let (a, b) = wrap_tables(event);
             a.into_iter().chain(b)
@@ -600,6 +630,83 @@ more text with spaces
         }
     }
 
+    mod render_markdown_with_abs_path {
+        use super::super::render_markdown_with_abs_path;
+        use std::path::Path;
+
+        #[test]
+        fn preserves_external_links() {
+            assert_eq!(
+                render_markdown_with_abs_path(
+                    "[example](https://www.rust-lang.org/)",
+                    false,
+                    None,
+                    Some("ABS_PATH")
+                ),
+                "<p><a href=\"https://www.rust-lang.org/\">example</a></p>\n"
+            );
+        }
+
+        #[test]
+        fn replace_root_links() {
+            assert_eq!(
+                render_markdown_with_abs_path("[example](/testing)", false, None, Some("ABS_PATH")),
+                "<p><a href=\"ABS_PATH/testing\">example</a></p>\n"
+            );
+        }
+
+        #[test]
+        fn replace_root_links_using_path() {
+            assert_eq!(
+                render_markdown_with_abs_path(
+                    "[example](bar.md)",
+                    false,
+                    Some(Path::new("foo/chapter.md")),
+                    Some("ABS_PATH")
+                ),
+                "<p><a href=\"ABS_PATH/foo/bar.html\">example</a></p>\n"
+            );
+            assert_eq!(
+                render_markdown_with_abs_path(
+                    "[example](/bar.md)",
+                    false,
+                    Some(Path::new("foo/chapter.md")),
+                    Some("ABS_PATH")
+                ),
+                "<p><a href=\"ABS_PATH/foo/bar.html\">example</a></p>\n"
+            );
+            assert_eq!(
+                render_markdown_with_abs_path(
+                    "[example](/bar.html)",
+                    false,
+                    Some(Path::new("foo/chapter.md")),
+                    None
+                ),
+                "<p><a href=\"foo/bar.html\">example</a></p>\n"
+            );
+        }
+
+        #[test]
+        fn preserves_relative_links() {
+            assert_eq!(
+                render_markdown_with_abs_path(
+                    "[example](../testing)",
+                    false,
+                    None,
+                    Some("ABS_PATH")
+                ),
+                "<p><a href=\"../testing\">example</a></p>\n"
+            );
+        }
+
+        #[test]
+        fn preserves_root_links() {
+            assert_eq!(
+                render_markdown_with_abs_path("[example](/testing)", false, None, None),
+                "<p><a href=\"/testing\">example</a></p>\n"
+            );
+        }
+    }
     #[allow(deprecated)]
     mod id_from_content {
         use super::super::id_from_content;
