@@ -62,7 +62,7 @@ impl HtmlHandlebars {
                 &ch.content,
                 ctx.html_config.smart_punctuation(),
                 None,
-                ctx.html_config.site_url.as_ref(),
+                ctx.html_config.site_url.as_deref(),
             )
         } else {
             utils::render_markdown(&ch.content, ctx.html_config.smart_punctuation())
@@ -72,7 +72,6 @@ impl HtmlHandlebars {
             &ch.content,
             ctx.html_config.smart_punctuation(),
             Some(path),
-            None,
         );
         if !ctx.is_index && ctx.html_config.print.page_break {
             // Add page break between chapters

@@ -92,13 +92,13 @@ pub fn unique_id_from_content(content: &str, id_counter: &mut HashMap<String, us
 /// page go to the original location. Normal page rendering sets `path` to
 /// None. Ideally, print page links would link to anchors on the print page,
 /// but that is very difficult.
-fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>, abs_url: Option<&String>) -> Event<'a> {
+fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>, abs_url: Option<&str>) -> Event<'a> {
     static SCHEME_LINK: LazyLock<Regex> =
         LazyLock::new(|| Regex::new(r"^[a-z][a-z0-9+.-]*:").unwrap());
     static MD_LINK: LazyLock<Regex> =
         LazyLock::new(|| Regex::new(r"(?P<link>.*)\.md(?P<anchor>#.*)?").unwrap());
 
-    fn fix<'a>(dest: CowStr<'a>, path: Option<&Path>, abs_url: Option<&String>) -> CowStr<'a> {
+    fn fix<'a>(dest: CowStr<'a>, path: Option<&Path>, abs_url: Option<&str>) -> CowStr<'a> {
         if dest.starts_with('#') {
             // Fragment-only link.
             if let Some(path) = path {
@@ -152,7 +152,7 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>, abs_url: Option<&Stri
         dest
     }
 
-    fn fix_html<'a>(html: CowStr<'a>, path: Option<&Path>, abs_url: Option<&String>) -> CowStr<'a> {
+    fn fix_html<'a>(html: CowStr<'a>, path: Option<&Path>, abs_url: Option<&str>) -> CowStr<'a> {
         // This is a terrible hack, but should be reasonably reliable. Nobody
         // should ever parse a tag with a regex. However, there isn't anything
         // in Rust that I know of that is suitable for handling partial html
@@ -204,7 +204,7 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>, abs_url: Option<&Stri
 
 /// Wrapper around the pulldown-cmark parser for rendering markdown to HTML.
 pub fn render_markdown(text: &str, smart_punctuation: bool) -> String {
-    render_markdown_with_path(text, smart_punctuation, None, None)
+    render_markdown_with_path(text, smart_punctuation, None)
 }
 
 /// Creates a new pulldown-cmark parser of the given text.
@@ -226,11 +226,29 @@ pub fn new_cmark_parser(text: &str, smart_punctuation: bool) -> Parser<'_> {
 /// `path` should only be set if this is being generated for the consolidated
 /// print page. It should point to the page being rendered relative to the
 /// root of the book.
-pub fn render_markdown_with_path(
+pub fn render_markdown_with_path(text: &str, curly_quotes: bool, path: Option<&Path>) -> String {
+    render_markdown_with_abs_path(text, curly_quotes, path, None)
+}
+
+
+/// Renders markdown to HTML.
+///
+/// `path` should only be set if this is being generated for the consolidated
+/// print page. It should point to the page being rendered relative to the
+/// root of the book.
+/// `abs_url` is the absolute URL to use for links that start with `/`.
+/// If `abs_url` is `None`, then links that start with `/` will be
+/// rendered relative to the current path.
+/// If `abs_url` is `Some`, then links that start with `/` will be
+/// rendered as absolute links using the provided URL.
+////// This is useful for generating links in the print page, where the
+/// links should point to the original location of the page, not the
+/// print page itself.
+pub fn render_markdown_with_abs_path(
     text: &str,
     smart_punctuation: bool,
     path: Option<&Path>,
-    abs_url: Option<&String>,
+    abs_url: Option<&str>,
 ) -> String {
     let mut body = String::with_capacity(text.len() * 3 / 2);
 
@@ -624,7 +642,7 @@ more text with spaces
                     "[example](https://www.rust-lang.org/)",
                     false,
                     None,
-                    Some(&"ABS_PATH".to_string())
+                    Some("ABS_PATH")
                 ),
                 "<p><a href=\"https://www.rust-lang.org/\">example</a></p>\n"
             );
@@ -637,7 +655,7 @@ more text with spaces
                     "[example](/testing)",
                     false,
                     None,
-                    Some(&"ABS_PATH".to_string())
+                    Some("ABS_PATH")
                 ),
                 "<p><a href=\"ABS_PATH/testing\">example</a></p>\n"
             );
@@ -650,7 +668,7 @@ more text with spaces
                     "[example](bar.md)",
                     false,
                     Some(Path::new("foo/chapter.md")),
-                    Some(&"ABS_PATH".to_string())
+                    Some("ABS_PATH")
                 ),
                 "<p><a href=\"ABS_PATH/foo/bar.html\">example</a></p>\n"
             );
@@ -659,7 +677,7 @@ more text with spaces
                     "[example](/bar.md)",
                     false,
                     Some(Path::new("foo/chapter.md")),
-                    Some(&"ABS_PATH".to_string())
+                    Some("ABS_PATH")
                 ),
                 "<p><a href=\"ABS_PATH/foo/bar.html\">example</a></p>\n"
             );
@@ -681,7 +699,7 @@ more text with spaces
                     "[example](../testing)",
                     false,
                     None,
-                    Some(&"ABS_PATH".to_string())
+                    Some("ABS_PATH")
                 ),
                 "<p><a href=\"../testing\">example</a></p>\n"
             );
