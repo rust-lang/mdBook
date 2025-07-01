@@ -147,7 +147,7 @@ fn adjust_links<'a>(event: Event<'a>, path: Option<&Path>, abs_url: Option<&str>
                     );
                 }
             }
-            return CowStr::from(format!("{}", fixed_link));
+            return CowStr::from(fixed_link.to_string());
         }
         dest
     }
