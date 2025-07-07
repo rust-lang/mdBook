@@ -434,7 +434,7 @@ window.search = window.search || {};
 
     function showSearch(yes) {
         if (yes) {
-            loadSearchScript(path_to_root + '{{ resource "searchindex.js" }}', 'search-index');
+            loadSearchScript(window.path_to_searchindex_js, 'search-index');
             search_wrap.classList.remove('hidden');
             searchicon.setAttribute('aria-expanded', 'true');
         } else {
