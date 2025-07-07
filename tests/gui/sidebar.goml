@@ -43,8 +43,14 @@ define-function: (
     },
 )
 
+// Since the sidebar is visible, we should be able to find this text.
+assert-find-text: ("3.9. Links and Horizontal Rule", {"case-sensitive": true})
 call-function: ("hide-sidebar", {})
+// Text should not be findeable anymore since the sidebar is collapsed.
+assert-find-text-false: ("3.9. Links and Horizontal Rule", {"case-sensitive": true})
 call-function: ("show-sidebar", {})
+// We should be able to find this text again.
+assert-find-text: ("3.9. Links and Horizontal Rule", {"case-sensitive": true})
 
 // We now test on smaller width to ensure that the sidebar is collapsed by default.
 set-window-size: (900, 600)
