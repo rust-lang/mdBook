@@ -7,7 +7,7 @@ The following backends are built-in:
 * [`html`](#html-renderer-options) --- This renders the book to HTML.
   This is enabled by default if no other `[output]` tables are defined in `book.toml`.
 * [`markdown`](#markdown-renderer) --- This outputs the book as markdown after running the preprocessors.
-  This is useful for debugging preprocessors.
+  This is useful for debugging preprocessors and producing AI friendly content.
 
 The community has developed several backends.
 See the [Third Party Plugins] wiki page for a list of available backends.
@@ -321,9 +321,11 @@ Note that the source location does not support `#` anchor redirects.
 ## Markdown Renderer
 
 The Markdown renderer will run preprocessors and then output the resulting
-Markdown. This is mostly useful for debugging preprocessors, especially in
-conjunction with `mdbook test` to see the Markdown that `mdbook` is passing
-to `rustdoc`.
+Markdown. This is useful:
+
+- for debugging preprocessors, especially in conjunction with `mdbook test` 
+to see the Markdown that `mdbook` is passing to `rustdoc`.
+- when producing content for audiences that prefer markdown (like AI).
 
 The Markdown renderer is included with `mdbook` but disabled by default.
 Enable it by adding an empty table to your `book.toml` as follows:
