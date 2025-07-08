@@ -341,6 +341,21 @@
         {{/if}}
         {{/if}}
 
+        {{#if fragment_map}}
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const fragmentMap =
+                    {{{fragment_map}}}
+                ;
+                const target = fragmentMap[window.location.hash];
+                if (target) {
+                    let url = new URL(target, window.location.href);
+                    window.location.replace(url.href);
+                }
+            });
+        </script>
+        {{/if}}
+
     </div>
     </body>
 </html>

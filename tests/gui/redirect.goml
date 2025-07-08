@@ -1,0 +1,51 @@
+go-to: |DOC_PATH| + "format/config.html"
+assert-window-property: ({"location": |DOC_PATH| + "prefix.html"})
+
+// Check that it preserves fragments when redirecting.
+go-to: |DOC_PATH| + "format/config.html#fragment"
+assert-window-property: ({"location": |DOC_PATH| + "prefix.html#fragment"})
+
+// The fragment one here isn't necessary, but should still work.
+go-to: |DOC_PATH| + "pointless-fragment.html"
+assert-window-property: ({"location": |DOC_PATH| + "prefix.html"})
+go-to: |DOC_PATH| + "pointless-fragment.html#foo"
+assert-window-property: ({"location": |DOC_PATH| + "prefix.html#foo"})
+
+// Page rename, and a fragment rename.
+go-to: |DOC_PATH| + "rename-page-and-fragment.html"
+assert-window-property: ({"location": |DOC_PATH| + "prefix.html"})
+go-to: |DOC_PATH| + "rename-page-and-fragment.html#orig"
+assert-window-property: ({"location": |DOC_PATH| + "prefix.html#new"})
+
+// Page rename, and the fragment goes to a *different* page from the default.
+go-to: |DOC_PATH| + "rename-page-fragment-elsewhere.html"
+assert-window-property: ({"location": |DOC_PATH| + "prefix.html"})
+go-to: |DOC_PATH| + "rename-page-fragment-elsewhere.html#orig"
+assert-window-property: ({"location": |DOC_PATH| + "suffix.html#new"})
+
+// Goes to an external site.
+go-to: |DOC_PATH| + "full-url-with-fragment.html"
+assert-window-property: ({"location": "https://www.rust-lang.org/#fragment"})
+
+// External site with fragment renames.
+go-to: |DOC_PATH| + "full-url-with-fragment-map.html#a"
+assert-window-property: ({"location": "https://www.rust-lang.org/#new1"})
+go-to: |DOC_PATH| + "full-url-with-fragment-map.html#b"
+assert-window-property: ({"location": "https://www.rust-lang.org/#new2"})
+
+// Rename fragment on an existing page.
+go-to: |DOC_PATH| + "prefix.html#orig"
+assert-window-property: ({"location": |DOC_PATH| + "prefix.html#new"})
+
+// Other fragments aren't affected.
+go-to: |DOC_PATH| + "index.html" // Reset page since redirects are processed on load.
+go-to: |DOC_PATH| + "prefix.html"
+assert-window-property: ({"location": |DOC_PATH| + "prefix.html"})
+go-to: |DOC_PATH| + "index.html" // Reset page since redirects are processed on load.
+go-to: |DOC_PATH| + "prefix.html#dont-change"
+assert-window-property: ({"location": |DOC_PATH| + "prefix.html#dont-change"})
+
+// Rename fragment on an existing page to another page.
+go-to: |DOC_PATH| + "index.html" // Reset page since redirects are processed on load.
+go-to: |DOC_PATH| + "prefix.html#orig-new-page"
+assert-window-property: ({"location": |DOC_PATH| + "suffix.html#new"})

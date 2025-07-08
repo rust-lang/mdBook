@@ -310,13 +310,21 @@ This is useful when you move, rename, or remove a page to ensure that links to t
 [output.html.redirect]
 "/appendices/bibliography.html" = "https://rustc-dev-guide.rust-lang.org/appendix/bibliography.html"
 "/other-installation-methods.html" = "../infra/other-installation-methods.html"
+
+# Fragment redirects also work.
+"/some-existing-page.html#old-fragment" = "some-existing-page.html#new-fragment"
+
+# Fragment redirects also work for deleted pages.
+"/old-page.html" = "new-page.html"
+"/old-page.html#old-fragment" = "new-page.html#new-fragment"
 ```
 
 The table contains key-value pairs where the key is where the redirect file needs to be created, as an absolute path from the build directory, (e.g. `/appendices/bibliography.html`).
 The value can be any valid URI the browser should navigate to (e.g. `https://rust-lang.org/`, `/overview.html`, or `../bibliography.html`).
 
 This will generate an HTML page which will automatically redirect to the given location.
-Note that the source location does not support `#` anchor redirects.
+
+When fragment redirects are specified, the page must use JavaScript to redirect to the correct location. This is useful if you rename or move a section header. Fragment redirects work with existing pages and deleted pages.
 
 ## Markdown Renderer
 
