@@ -5,6 +5,7 @@ use anyhow::Context;
 use mdbook::errors::*;
 use select::document::Document;
 use select::predicate::{Attr, Class, Name, Predicate};
+use snapbox::{file, IntoData};
 use std::fs;
 
 const TOC_TOP_LEVEL: &[&str] = &[
@@ -184,4 +185,67 @@ fn summary_with_markdown_formatting() {
 
 "#]],
         );
+}
+
+/// Helper function to test the table of contents with different fold settings
+fn toc_folds_helper(fold_enable: bool, fold_level: usize, expected: impl IntoData) {
+    BookTest::from_dir("toc/basic_toc")
+        .change_file(
+            "book.toml",
+            format!(
+                r##"
+[output.html.fold]
+enable = {}
+level = {}
+"##,
+                fold_enable, fold_level
+            )
+            .as_str(),
+        )
+        .build()
+        .check_toc_js(expected);
+}
+
+#[test]
+fn toc_folds_disabled() {
+    // Folds disabled from level 0
+    toc_folds_helper(
+        false,
+        0,
+        file!["toc/fold_tests_expected/fold_disabled.html"],
+    );
+    // Folds disabled from any level should be the same as level 0
+    toc_folds_helper(
+        false,
+        2,
+        file!["toc/fold_tests_expected/fold_disabled.html"],
+    );
+}
+
+#[test]
+fn toc_folds_enabled() {
+    // Folds enabled from level 0
+    toc_folds_helper(
+        true,
+        0,
+        file!["toc/fold_tests_expected/fold_enabled_level_0.html"],
+    );
+    // Folds enabled from level 1
+    toc_folds_helper(
+        true,
+        1,
+        file!["toc/fold_tests_expected/fold_enabled_level_1.html"],
+    );
+    // Folds enabled from level 2
+    toc_folds_helper(
+        true,
+        2,
+        file!["toc/fold_tests_expected/fold_enabled_level_2.html"],
+    );
+    // Folds enabled from level 3
+    toc_folds_helper(
+        true,
+        3,
+        file!["toc/fold_tests_expected/fold_enabled_level_3.html"],
+    );
 }

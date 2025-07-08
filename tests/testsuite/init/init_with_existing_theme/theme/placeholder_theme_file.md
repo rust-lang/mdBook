@@ -1,0 +1,1 @@
+A placeholder file to test that `init` with an existing `theme` directory warns the user
