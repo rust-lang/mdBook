@@ -143,6 +143,29 @@ fn check_link_target_fallback() {
     );
 }
 
+// Checks that sidebar links are absolute paths (start with a forward slash).
+#[test]
+fn check_sidebar_links_are_absolute() {
+    let doc = toc_js_html();
+    
+    // Find all links in the chapter list
+    let links = doc.find(
+        Class("chapter")
+            .descendant(Name("li"))
+            .descendant(Name("a").and(Class("toggle").not()))
+    );
+    
+    // Go through each link and check if its href attribute starts with a slash
+    for link in links {
+        if let Some(href) = link.attr("href") {
+            if !href.is_empty() && !href.starts_with("#") {
+                // Skip anchor links and empty hrefs
+                assert!(href.starts_with("/"), "Link '{}' should be an absolute path starting with '/'.", href);
+            }
+        }
+    }
+}
+
 // Checks formatting of summary names with inline elements.
 #[test]
 fn summary_with_markdown_formatting() {
