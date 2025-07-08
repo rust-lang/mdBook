@@ -16,7 +16,7 @@ use std::sync::LazyLock;
 
 use crate::utils::fs::get_404_output_file;
 use handlebars::Handlebars;
-use log::{debug, trace, warn};
+use log::{debug, info, trace, warn};
 use regex::{Captures, Regex};
 use serde_json::json;
 
@@ -481,6 +481,8 @@ impl Renderer for HtmlHandlebars {
 
         // Copy all remaining files, avoid a recursive copy from/to the book build dir
         utils::fs::copy_files_except_ext(&src_dir, destination, true, Some(&build_dir), &["md"])?;
+
+        info!("Book has been generated into `{}`", build_dir.display());
 
         Ok(())
     }
