@@ -1251,6 +1251,7 @@ dependencies = [
  "ignore",
  "log",
  "memchr",
+ "minifier",
  "notify",
  "notify-debouncer-mini",
  "opener",
@@ -1303,6 +1304,15 @@ checksum = "f7c44f8e672c00fe5308fa235f821cb4198414e1c77935c1ab6948d3fd78550e"
 dependencies = [
  "mime",
  "unicase",
+]
+
+[[package]]
+name = "minifier"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14f1541610994bba178cb36757e102d06a52a2d9612aa6d34c64b3b377c5d943"
+dependencies = [
+ "clap",
 ]
 
 [[package]]

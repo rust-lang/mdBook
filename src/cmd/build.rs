@@ -10,6 +10,7 @@ pub fn make_subcommand() -> Command {
         .about("Builds a book from its markdown files")
         .arg_dest_dir()
         .arg_root_dir()
+        .arg_disable_minification()
         .arg_open()
 }
 
@@ -20,6 +21,9 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     if let Some(dest_dir) = args.get_one::<PathBuf>("dest-dir") {
         book.config.build.build_dir = dest_dir.into();
+    }
+    if let Some(true) = args.get_one::<bool>("disable-minification") {
+        book.config.build.minification = false;
     }
 
     book.build()?;

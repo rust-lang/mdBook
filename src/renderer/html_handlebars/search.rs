@@ -31,6 +31,7 @@ pub fn create_files(
     search_config: &Search,
     static_files: &mut StaticFiles,
     book: &Book,
+    minification: bool,
 ) -> Result<()> {
     let mut index = IndexBuilder::new()
         .add_field_with_tokenizer("title", Box::new(&tokenize))
@@ -74,7 +75,7 @@ pub fn create_files(
             )
             .as_bytes(),
         );
-        static_files.add_builtin("searcher.js", searcher::JS);
+        static_files.add_owned_builtin("searcher.js", searcher::JS.minified(minification));
         static_files.add_builtin("mark.min.js", searcher::MARK_JS);
         static_files.add_builtin("elasticlunr.min.js", searcher::ELASTICLUNR_JS);
         debug!("Copying search files ✓");

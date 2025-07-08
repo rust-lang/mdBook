@@ -205,7 +205,8 @@ impl BookTest {
 
     /// Builds the book in the temp directory.
     pub fn build(&mut self) -> &mut Self {
-        let book = self.load_book();
+        let mut book = self.load_book();
+        book.disable_minification();
         book.build()
             .unwrap_or_else(|e| panic!("book failed to build: {e:?}"));
         self.built = true;
