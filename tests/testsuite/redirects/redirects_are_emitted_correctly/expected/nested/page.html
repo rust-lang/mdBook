@@ -8,5 +8,29 @@
   </head>
   <body>
       <p>Redirecting to... <a href="https://rust-lang.org/">https://rust-lang.org/</a>.</p>
+
+<script>
+    // This handles redirects that involve fragments.
+    document.addEventListener('DOMContentLoaded', function() {
+        const fragmentMap =
+            {}
+        ;
+        const fragment = window.location.hash;
+        if (fragment) {
+            let redirectUrl = "https://rust-lang.org/";
+            const target = fragmentMap[fragment];
+            if (target) {
+                let url = new URL(target, window.location.href);
+                redirectUrl = url.href;
+            } else {
+                let url = new URL(redirectUrl, window.location.href);
+                url.hash = window.location.hash;
+                redirectUrl = url.href;
+            }
+            window.location.replace(redirectUrl);
+        }
+        // else redirect handled by http-equiv
+    });
+</script>
   </body>
 </html>

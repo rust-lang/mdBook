@@ -111,6 +111,14 @@ impl HtmlHandlebars {
                 .insert("section".to_owned(), json!(section.to_string()));
         }
 
+        let redirects = collect_redirects_for_path(&filepath, &ctx.html_config.redirect)?;
+        if !redirects.is_empty() {
+            ctx.data.insert(
+                "fragment_map".to_owned(),
+                json!(serde_json::to_string(&redirects)?),
+            );
+        }
+
         // Render the handlebars template with the data
         debug!("Render template");
         let rendered = ctx.handlebars.render("index", &ctx.data)?;
@@ -266,15 +274,27 @@ impl HtmlHandlebars {
         }
 
         log::debug!("Emitting redirects");
+        let redirects = combine_fragment_redirects(redirects);
 
-        for (original, new) in redirects {
-            log::debug!("Redirecting \"{}\" → \"{}\"", original, new);
+        for (original, (dest, fragment_map)) in redirects {
             // Note: all paths are relative to the build directory, so the
             // leading slash in an absolute path means nothing (and would mess
             // up `root.join(original)`).
             let original = original.trim_start_matches('/');
             let filename = root.join(original);
-            self.emit_redirect(handlebars, &filename, new)?;
+            if filename.exists() {
+                // This redirect is handled by the in-page fragment mapper.
+                continue;
+            }
+            if dest.is_empty() {
+                bail!(
+                    "redirect entry for `{original}` only has source paths with `#` fragments\n\
+                     There must be an entry without the `#` fragment to determine the default \
+                     destination."
+                );
+            }
+            log::debug!("Redirecting \"{}\" → \"{}\"", original, dest);
+            self.emit_redirect(handlebars, &filename, &dest, &fragment_map)?;
         }
 
         Ok(())
@@ -285,23 +305,17 @@ impl HtmlHandlebars {
         handlebars: &Handlebars<'_>,
         original: &Path,
         destination: &str,
+        fragment_map: &BTreeMap<String, String>,
     ) -> Result<()> {
-        if original.exists() {
-            // sanity check to avoid accidentally overwriting a real file.
-            let msg = format!(
-                "Not redirecting \"{}\" to \"{}\" because it already exists. Are you sure it needs to be redirected?",
-                original.display(),
-                destination,
-            );
-            return Err(Error::msg(msg));
-        }
-
         if let Some(parent) = original.parent() {
             std::fs::create_dir_all(parent)
                 .with_context(|| format!("Unable to ensure \"{}\" exists", parent.display()))?;
         }
 
+        let js_map = serde_json::to_string(fragment_map)?;
+
         let ctx = json!({
+            "fragment_map": js_map,
             "url": destination,
         });
         let f = File::create(original)?;
@@ -932,6 +946,62 @@ struct RenderItemContext<'a> {
     html_config: HtmlConfig,
     edition: Option<RustEdition>,
     chapter_titles: &'a HashMap<PathBuf, String>,
+}
+
+/// Redirect mapping.
+///
+/// The key is the source path (like `foo/bar.html`). The value is a tuple
+/// `(destination_path, fragment_map)`. The `destination_path` is the page to
+/// redirect to. `fragment_map` is the map of fragments that override the
+/// destination. For example, a fragment `#foo` could redirect to any other
+/// page or site.
+type CombinedRedirects = BTreeMap<String, (String, BTreeMap<String, String>)>;
+fn combine_fragment_redirects(redirects: &HashMap<String, String>) -> CombinedRedirects {
+    let mut combined: CombinedRedirects = BTreeMap::new();
+    // This needs to extract the fragments to generate the fragment map.
+    for (original, new) in redirects {
+        if let Some((source_path, source_fragment)) = original.rsplit_once('#') {
+            let e = combined.entry(source_path.to_string()).or_default();
+            if let Some(old) = e.1.insert(format!("#{source_fragment}"), new.clone()) {
+                log::error!(
+                    "internal error: found duplicate fragment redirect \
+                     {old} for {source_path}#{source_fragment}"
+                );
+            }
+        } else {
+            let e = combined.entry(original.to_string()).or_default();
+            e.0 = new.clone();
+        }
+    }
+    combined
+}
+
+/// Collects fragment redirects for an existing page.
+///
+/// The returned map has keys like `#foo` and the value is the new destination
+/// path or URL.
+fn collect_redirects_for_path(
+    path: &Path,
+    redirects: &HashMap<String, String>,
+) -> Result<BTreeMap<String, String>> {
+    let path = format!("/{}", path.display().to_string().replace('\\', "/"));
+    if redirects.contains_key(&path) {
+        bail!(
+            "redirect found for existing chapter at `{path}`\n\
+            Either delete the redirect or remove the chapter."
+        );
+    }
+
+    let key_prefix = format!("{path}#");
+    let map = redirects
+        .iter()
+        .filter_map(|(source, dest)| {
+            source
+                .strip_prefix(&key_prefix)
+                .map(|fragment| (format!("#{fragment}"), dest.to_string()))
+        })
+        .collect();
+    Ok(map)
 }
 
 #[cfg(test)]
