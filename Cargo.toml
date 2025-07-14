@@ -56,7 +56,8 @@ walkdir = { version = "2.3.3", optional = true }
 # Serve feature
 futures-util = { version = "0.3.28", optional = true }
 tokio = { version = "1.43.1", features = ["macros", "rt-multi-thread"], optional = true }
-warp = { version = "0.3.6", default-features = false, features = ["websocket"], optional = true }
+axum = { version = "0.8.0", features = ["ws"], optional = true }
+tower-http = { version = "0.6.0", features = ["fs", "trace"], optional = true }
 
 # Search feature
 elasticlunr-rs = { version = "3.0.2", optional = true }
@@ -72,7 +73,7 @@ walkdir = "2.3.3"
 [features]
 default = ["watch", "serve", "search"]
 watch = ["dep:notify", "dep:notify-debouncer-mini", "dep:ignore", "dep:pathdiff", "dep:walkdir"]
-serve = ["dep:futures-util", "dep:tokio", "dep:warp"]
+serve = ["dep:futures-util", "dep:tokio", "dep:axum", "dep:tower-http"]
 search = ["dep:elasticlunr-rs", "dep:ammonia"]
 
 [[bin]]
