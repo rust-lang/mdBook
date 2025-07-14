@@ -78,6 +78,13 @@ impl HtmlHandlebars {
             .to_str()
             .with_context(|| "Could not convert path to str")?;
         let filepath = Path::new(&ctx_path).with_extension("html");
+        let filepath_str = filepath
+            .to_str()
+            .with_context(|| format!("Could not convert path to str: {}", filepath.display()))?;
+        let canonical_url = ctx.html_config.canonical_site_url.map(|canon_url| {
+            let canon_url = canon_url.as_str().trim_end_matches('/');
+            format!("{}/{}", canon_url, self.clean_path(filepath_str))
+        });
 
         // "print.html" is used for the print page.
         if path == Path::new("print.md") {
@@ -99,6 +106,8 @@ impl HtmlHandlebars {
         };
 
         ctx.data.insert("path".to_owned(), json!(path));
+        ctx.data
+            .insert("canonical_url".to_owned(), json!(canonical_url));
         ctx.data.insert("content".to_owned(), json!(content));
         ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
         ctx.data.insert("title".to_owned(), json!(title));
@@ -329,6 +338,15 @@ impl HtmlHandlebars {
             })?;
 
         Ok(())
+    }
+
+    /// Strips `index.html` from the end of a path, if it exists.
+    fn clean_path(&self, path: &str) -> String {
+        if path == "index.html" || path.ends_with("/index.html") {
+            path[..path.len() - 10].to_string()
+        } else {
+            path.to_string()
+        }
     }
 }
 
