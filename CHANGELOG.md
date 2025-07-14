@@ -1,5 +1,34 @@
 # Changelog
 
+## mdBook 0.4.52
+[v0.4.51...v0.4.52](https://github.com/rust-lang/mdBook/compare/v0.4.51...v0.4.52)
+
+**Note:** If you have a custom `index.hbs` theme file, it is recommended that you update it to the latest version to pick up the fixes in this release.
+
+### Added
+- Added the ability to redirect `#` HTML fragments using the existing `output.html.redirect` table.
+  [#2747](https://github.com/rust-lang/mdBook/pull/2747)
+- Added the `rel="edit"` attribute to the edit page button.
+  [#2702](https://github.com/rust-lang/mdBook/pull/2702)
+
+### Changed
+- The search index is now only loaded when the search input is opened instead of always being loaded.
+  [#2553](https://github.com/rust-lang/mdBook/pull/2553)
+  [#2735](https://github.com/rust-lang/mdBook/pull/2735)
+- The `mdbook serve` command has switched its underlying server library from warp to axum.
+  [#2748](https://github.com/rust-lang/mdBook/pull/2748)
+- Updated dependencies.
+  [#2752](https://github.com/rust-lang/mdBook/pull/2752)
+
+### Fixed
+- The sidebar is now set to `display:none` when it is hidden in order to prevent the browser's search from thinking the sidebar's text is visible.
+  [#2725](https://github.com/rust-lang/mdBook/pull/2725)
+- Fixed search index URL not updating correctly when `hash-files` is enabled.
+  [#2742](https://github.com/rust-lang/mdBook/pull/2742)
+  [#2746](https://github.com/rust-lang/mdBook/pull/2746)
+- Fixed several sidebar animation bugs, particularly when manually resizing.
+  [#2750](https://github.com/rust-lang/mdBook/pull/2750)
+
 ## mdBook 0.4.51
 [v0.4.50...v0.4.51](https://github.com/rust-lang/mdBook/compare/v0.4.50...v0.4.51)
 
