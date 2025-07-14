@@ -16,6 +16,7 @@ use std::sync::LazyLock;
 
 use crate::utils::fs::get_404_output_file;
 use handlebars::Handlebars;
+use ignore::gitignore::GitignoreBuilder;
 use log::{debug, trace, warn};
 use regex::{Captures, Regex};
 use serde_json::json;
@@ -494,7 +495,23 @@ impl Renderer for HtmlHandlebars {
             .context("Unable to emit redirects")?;
 
         // Copy all remaining files, avoid a recursive copy from/to the book build dir
-        utils::fs::copy_files_except_ext(&src_dir, destination, true, Some(&build_dir), &["md"])?;
+        let mut builder = GitignoreBuilder::new(&src_dir);
+        let mdbook_ignore = src_dir.join(".mdbookignore");
+        if mdbook_ignore.exists() {
+            if let Some(err) = builder.add(mdbook_ignore) {
+                warn!("Unable to load '.mdbookignore' file: {}", err);
+            }
+        }
+        builder.add_line(None, "*.md")?;
+        let ignore = builder.build()?;
+
+        utils::fs::copy_files_except_ignored(
+            &src_dir,
+            destination,
+            true,
+            Some(&build_dir),
+            Some(&ignore),
+        )?;
 
         Ok(())
     }

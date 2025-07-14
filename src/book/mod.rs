@@ -625,7 +625,8 @@ fn preprocessor_should_run(
 mod tests {
     use super::*;
     use std::str::FromStr;
-    use toml::value::Table;
+    use tempfile::Builder as TempFileBuilder;
+    use toml::value::{Table, Value};
 
     #[test]
     fn config_defaults_to_html_renderer_if_empty() {
@@ -893,5 +894,22 @@ mod tests {
         let should_be = false;
         let got = preprocessor_should_run(&BoolPreprocessor(should_be), &html, &cfg);
         assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn mdbookignore_ignores_file() {
+        let temp_dir = TempFileBuilder::new().prefix("mdbook-").tempdir().unwrap();
+        let test_book_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("test_book");
+
+        utils::fs::copy_files_except_ignored(&test_book_dir, temp_dir.path(), true, None, None)
+            .expect("Error while copying test book to temp dir");
+
+        let book = MDBook::load(temp_dir.path()).expect("Unable to load book");
+        book.build().expect("Error while building book");
+
+        let book_dir = temp_dir.path().join("book");
+        assert!(book_dir.join("index.html").exists());
+        assert!(book_dir.join(".mdbookignore").exists());
+        assert!(!book_dir.join("ignored_file").exists());
     }
 }
