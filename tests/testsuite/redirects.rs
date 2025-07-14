@@ -16,3 +16,34 @@ fn redirects_are_emitted_correctly() {
             file!["redirects/redirects_are_emitted_correctly/expected/nested/page.html"],
         );
 }
+
+// Invalid redirect with only fragments.
+#[test]
+fn redirect_removed_with_fragments_only() {
+    BookTest::from_dir("redirects/redirect_removed_with_fragments_only").run("build", |cmd| {
+        cmd.expect_failure().expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book): Book building has started
+[TIMESTAMP] [INFO] (mdbook::book): Running the html backend
+[TIMESTAMP] [ERROR] (mdbook::utils): Error: Rendering failed
+[TIMESTAMP] [ERROR] (mdbook::utils): [TAB]Caused By: Unable to emit redirects
+[TIMESTAMP] [ERROR] (mdbook::utils): [TAB]Caused By: redirect entry for `old-file.html` only has source paths with `#` fragments
+There must be an entry without the `#` fragment to determine the default destination.
+
+"#]]);
+    });
+}
+
+// Invalid redirect for an existing page.
+#[test]
+fn redirect_existing_page() {
+    BookTest::from_dir("redirects/redirect_existing_page").run("build", |cmd| {
+        cmd.expect_failure().expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook::book): Book building has started
+[TIMESTAMP] [INFO] (mdbook::book): Running the html backend
+[TIMESTAMP] [ERROR] (mdbook::utils): Error: Rendering failed
+[TIMESTAMP] [ERROR] (mdbook::utils): [TAB]Caused By: redirect found for existing chapter at `/chapter_1.html`
+Either delete the redirect or remove the chapter.
+
+"#]]);
+    });
+}
