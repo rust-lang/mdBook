@@ -1,0 +1,519 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Renderers - mdBook Documentation</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="Create book from markdown files. Like Gitbook but implemented in Rust">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../css/variables-3865ffda.css">
+        <link rel="stylesheet" href="../../css/general-4c35105a.css">
+        <link rel="stylesheet" href="../../css/chrome-c0e702bf.css">
+        <link rel="stylesheet" href="../../css/print-ad67d350.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../FontAwesome/css/font-awesome-799aeb25.css">
+        <link rel="stylesheet" href="../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../../ayu-highlight-56612340.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../searchindex-eb3c78c8.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../toc-2434d3ae.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">mdBook Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/rust-lang/mdBook/tree/master/guide" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/rust-lang/mdBook/edit/master/guide/src/format/configuration/renderers.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="configuring-renderers"><a class="header" href="#configuring-renderers">Configuring Renderers</a></h1>
+<p>Renderers (also called “backends”) are responsible for creating the output of the book.</p>
+<p>The following backends are built-in:</p>
+<ul>
+<li><a href="#html-renderer-options"><code>html</code></a> — This renders the book to HTML.
+This is enabled by default if no other <code>[output]</code> tables are defined in <code>book.toml</code>.</li>
+<li><a href="#markdown-renderer"><code>markdown</code></a> — This outputs the book as markdown after running the preprocessors.
+This is useful for debugging preprocessors.</li>
+</ul>
+<p>The community has developed several backends.
+See the <a href="https://github.com/rust-lang/mdBook/wiki/Third-party-plugins">Third Party Plugins</a> wiki page for a list of available backends.</p>
+<p>For information on how to create a new backend, see the <a href="../../for_developers/backends.html">Backends for Developers</a> chapter.</p>
+<h2 id="output-tables"><a class="header" href="#output-tables">Output tables</a></h2>
+<p>Backends can be added by including a <code>output</code> table in <code>book.toml</code> with the name of the backend.
+For example, if you have a backend called <code>mdbook-wordcount</code>, then you can include it with:</p>
+<pre><code class="language-toml">[output.wordcount]
+</code></pre>
+<p>With this table, mdBook will execute the <code>mdbook-wordcount</code> backend.</p>
+<p>This table can include additional key-value pairs that are specific to the backend.
+For example, if our example backend needed some extra configuration options:</p>
+<pre><code class="language-toml">[output.wordcount]
+ignores = ["Example Chapter"]
+</code></pre>
+<p>If you define any <code>[output]</code> tables, then the <code>html</code> backend is not enabled by default.
+If you want to keep the <code>html</code> backend running, then just include it in the <code>book.toml</code> file.
+For example:</p>
+<pre><code class="language-toml">[book]
+title = "My Awesome Book"
+
+[output.wordcount]
+
+[output.html]
+</code></pre>
+<p>If more than one <code>output</code> table is included, this changes the behavior for the layout of the output directory.
+If there is only one backend, then it places its output directly in the <code>book</code> directory (see <a href="general.html#build-options"><code>build.build-dir</code></a> to override this location).
+If there is more than one backend, then each backend is placed in a separate directory underneath <code>book</code>.
+For example, the above would have directories <code>book/html</code> and <code>book/wordcount</code>.</p>
+<h3 id="custom-backend-commands"><a class="header" href="#custom-backend-commands">Custom backend commands</a></h3>
+<p>By default when you add an <code>[output.foo]</code> table to your <code>book.toml</code> file,
+<code>mdbook</code> will try to invoke the <code>mdbook-foo</code> executable.
+If you want to use a different program name or pass in command-line arguments,
+this behaviour can be overridden by adding a <code>command</code> field.</p>
+<pre><code class="language-toml">[output.random]
+command = "python random.py"
+</code></pre>
+<h3 id="optional-backends"><a class="header" href="#optional-backends">Optional backends</a></h3>
+<p>If you enable a backend that isn’t installed, the default behavior is to throw an error.
+This behavior can be changed by marking the backend as optional:</p>
+<pre><code class="language-toml">[output.wordcount]
+optional = true
+</code></pre>
+<p>This demotes the error to a warning.</p>
+<h2 id="html-renderer-options"><a class="header" href="#html-renderer-options">HTML renderer options</a></h2>
+<p>The HTML renderer has a variety of options detailed below.
+They should be specified in the <code>[output.html]</code> table of the <code>book.toml</code> file.</p>
+<pre><code class="language-toml"># Example book.toml file with all output options.
+[book]
+title = "Example book"
+authors = ["John Doe", "Jane Doe"]
+description = "The example book covers examples."
+
+[output.html]
+theme = "my-theme"
+default-theme = "light"
+preferred-dark-theme = "navy"
+smart-punctuation = true
+mathjax-support = false
+copy-fonts = true
+additional-css = ["custom.css", "custom2.css"]
+additional-js = ["custom.js"]
+no-section-label = false
+git-repository-url = "https://github.com/rust-lang/mdBook"
+git-repository-icon = "fa-github"
+edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"
+site-url = "/example-book/"
+cname = "myproject.rs"
+input-404 = "not-found.md"
+</code></pre>
+<p>The following configuration options are available:</p>
+<ul>
+<li><strong>theme:</strong> mdBook comes with a default theme and all the resource files needed
+for it. But if this option is set, mdBook will selectively overwrite the theme
+files with the ones found in the specified folder.</li>
+<li><strong>default-theme:</strong> The theme color scheme to select by default in the
+‘Change Theme’ dropdown. Defaults to <code>light</code>.</li>
+<li><strong>preferred-dark-theme:</strong> The default dark theme. This theme will be used if
+the browser requests the dark version of the site via the
+<a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme"><code>prefers-color-scheme</code></a>
+CSS media query. Defaults to <code>navy</code>.</li>
+<li><strong>smart-punctuation:</strong> Converts quotes to curly quotes, <code>...</code> to <code>…</code>, <code>--</code> to en-dash, and <code>---</code> to em-dash.
+See <a href="../markdown.html#smart-punctuation">Smart Punctuation</a>.
+Defaults to <code>false</code>.</li>
+<li><strong>curly-quotes:</strong> Deprecated alias for <code>smart-punctuation</code>.</li>
+<li><strong>mathjax-support:</strong> Adds support for <a href="../mathjax.html">MathJax</a>. Defaults to
+<code>false</code>.</li>
+<li><strong>copy-fonts:</strong> (<strong>Deprecated</strong>) If <code>true</code> (the default), mdBook uses its built-in fonts which are copied to the output directory.
+If <code>false</code>, the built-in fonts will not be used.
+This option is deprecated. If you want to define your own custom fonts,
+create a <code>theme/fonts/fonts.css</code> file and store the fonts in the <code>theme/fonts/</code> directory.</li>
+<li><strong>google-analytics:</strong> This field has been deprecated and will be removed in a future release.
+Use the <code>theme/head.hbs</code> file to add the appropriate Google Analytics code instead.</li>
+<li><strong>additional-css:</strong> If you need to slightly change the appearance of your book
+without overwriting the whole style, you can specify a set of stylesheets that
+will be loaded after the default ones where you can surgically change the
+style.</li>
+<li><strong>additional-js:</strong> If you need to add some behaviour to your book without
+removing the current behaviour, you can specify a set of JavaScript files that
+will be loaded alongside the default one.</li>
+<li><strong>no-section-label:</strong> mdBook by defaults adds numeric section labels in the table of
+contents column. For example, “1.”, “2.1”. Set this option to true to disable
+those labels. Defaults to <code>false</code>.</li>
+<li><strong>git-repository-url:</strong>  A url to the git repository for the book. If provided
+an icon link will be output in the menu bar of the book.</li>
+<li><strong>git-repository-icon:</strong> The FontAwesome icon class to use for the git
+repository link. Defaults to <code>fa-github</code> which looks like <i class="fa fa-github"></i>.
+If you are not using GitHub, another option to consider is <code>fa-code-fork</code> which looks like <i class="fa fa-code-fork"></i>.</li>
+<li><strong>edit-url-template:</strong> Edit url template, when provided shows a
+“Suggest an edit” button (which looks like <i class="fa fa-edit"></i>) for directly jumping to editing the currently
+viewed page. For e.g. GitHub projects set this to
+<code>https://github.com/&lt;owner&gt;/&lt;repo&gt;/edit/&lt;branch&gt;/{path}</code> or for
+Bitbucket projects set it to
+<code>https://bitbucket.org/&lt;owner&gt;/&lt;repo&gt;/src/&lt;branch&gt;/{path}?mode=edit</code>
+where {path} will be replaced with the full path of the file in the
+repository.</li>
+<li><strong>input-404:</strong> The name of the markdown file used for missing files.
+The corresponding output file will be the same, with the extension replaced with <code>html</code>.
+Defaults to <code>404.md</code>.</li>
+<li><strong>site-url:</strong> The url where the book will be hosted. This is required to ensure
+navigation links and script/css imports in the 404 file work correctly, even when accessing
+urls in subdirectories. Defaults to <code>/</code>. If <code>site-url</code> is set,
+make sure to use document relative links for your assets, meaning they should not start with <code>/</code>.</li>
+<li><strong>cname:</strong> The DNS subdomain or apex domain at which your book will be hosted.
+This string will be written to a file named CNAME in the root of your site, as
+required by GitHub Pages (see <a href="https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site"><em>Managing a custom domain for your GitHub Pages
+site</em></a>).</li>
+<li><strong>hash-files:</strong> Include a cryptographic “fingerprint” of the files’ contents in static asset filenames,
+so that if the contents of the file are changed, the name of the file will also change.
+For example, <code>css/chrome.css</code> may become <code>css/chrome-9b8f428e.css</code>.
+Chapter HTML files are not renamed.
+Static CSS and JS files can reference each other using <code>{{ resource "filename" }}</code> directives.
+Defaults to <code>false</code> (in a future release, this may change to <code>true</code>).</li>
+</ul>
+<h3 id="outputhtmlprint"><a class="header" href="#outputhtmlprint"><code>[output.html.print]</code></a></h3>
+<p>The <code>[output.html.print]</code> table provides options for controlling the printable output.
+By default, mdBook will include an icon on the top right of the book (which looks like <i class="fa fa-print"></i>) that will print the book as a single page.</p>
+<pre><code class="language-toml">[output.html.print]
+enable = true    # include support for printable output
+page-break = true # insert page-break after each chapter
+</code></pre>
+<ul>
+<li><strong>enable:</strong> Enable print support. When <code>false</code>, all print support will not be
+rendered. Defaults to <code>true</code>.</li>
+<li><strong>page-break:</strong> Insert page breaks between chapters. Defaults to <code>true</code>.</li>
+</ul>
+<h3 id="outputhtmlfold"><a class="header" href="#outputhtmlfold"><code>[output.html.fold]</code></a></h3>
+<p>The <code>[output.html.fold]</code> table provides options for controlling folding of the chapter listing in the navigation sidebar.</p>
+<pre><code class="language-toml">[output.html.fold]
+enable = false    # whether or not to enable section folding
+level = 0         # the depth to start folding
+</code></pre>
+<ul>
+<li><strong>enable:</strong> Enable section-folding. When off, all folds are open.
+Defaults to <code>false</code>.</li>
+<li><strong>level:</strong> The higher the more folded regions are open. When level is 0, all
+folds are closed. Defaults to <code>0</code>.</li>
+</ul>
+<h3 id="outputhtmlplayground"><a class="header" href="#outputhtmlplayground"><code>[output.html.playground]</code></a></h3>
+<p>The <code>[output.html.playground]</code> table provides options for controlling Rust sample code blocks, and their integration with the <a href="https://play.rust-lang.org/">Rust Playground</a>.</p>
+<pre><code class="language-toml">[output.html.playground]
+editable = false         # allows editing the source code
+copyable = true          # include the copy button for copying code snippets
+copy-js = true           # includes the JavaScript for the code editor
+line-numbers = false     # displays line numbers for editable code
+runnable = true          # displays a run button for rust code
+</code></pre>
+<ul>
+<li><strong>editable:</strong> Allow editing the source code. Defaults to <code>false</code>.</li>
+<li><strong>copyable:</strong> Display the copy button on code snippets. Defaults to <code>true</code>.</li>
+<li><strong>copy-js:</strong> Copy JavaScript files for the editor to the output directory.
+Defaults to <code>true</code>.</li>
+<li><strong>line-numbers:</strong> Display line numbers on editable sections of code. Requires both <code>editable</code> and <code>copy-js</code> to be <code>true</code>. Defaults to <code>false</code>.</li>
+<li><strong>runnable:</strong> Displays a run button for rust code snippets. Changing this to <code>false</code> will disable the run in playground feature globally. Defaults to <code>true</code>.</li>
+</ul>
+<h3 id="outputhtmlcode"><a class="header" href="#outputhtmlcode"><code>[output.html.code]</code></a></h3>
+<p>The <code>[output.html.code]</code> table provides options for controlling code blocks.</p>
+<pre><code class="language-toml">[output.html.code]
+# A prefix string per language (one or more chars).
+# Any line starting with whitespace+prefix is hidden.
+hidelines = { python = "~" }
+</code></pre>
+<ul>
+<li><strong>hidelines:</strong> A table that defines how <a href="../mdbook.html#hiding-code-lines">hidden code lines</a> work for each language.
+The key is the language and the value is a string that will cause code lines starting with that prefix to be hidden.</li>
+</ul>
+<h3 id="outputhtmlsearch"><a class="header" href="#outputhtmlsearch"><code>[output.html.search]</code></a></h3>
+<p>The <code>[output.html.search]</code> table provides options for controlling the built-in text <a href="../../guide/reading.html#search">search</a>.
+mdBook must be compiled with the <code>search</code> feature enabled (on by default).</p>
+<pre><code class="language-toml">[output.html.search]
+enable = true            # enables the search feature
+limit-results = 30       # maximum number of search results
+teaser-word-count = 30   # number of words used for a search result teaser
+use-boolean-and = true   # multiple search terms must all match
+boost-title = 2          # ranking boost factor for matches in headers
+boost-hierarchy = 1      # ranking boost factor for matches in page names
+boost-paragraph = 1      # ranking boost factor for matches in text
+expand = true            # partial words will match longer terms
+heading-split-level = 3  # link results to heading levels
+copy-js = true           # include Javascript code for search
+</code></pre>
+<ul>
+<li><strong>enable:</strong> Enables the search feature. Defaults to <code>true</code>.</li>
+<li><strong>limit-results:</strong> The maximum number of search results. Defaults to <code>30</code>.</li>
+<li><strong>teaser-word-count:</strong> The number of words used for a search result teaser.
+Defaults to <code>30</code>.</li>
+<li><strong>use-boolean-and:</strong> Define the logical link between multiple search words. If
+true, all search words must appear in each result. Defaults to <code>false</code>.</li>
+<li><strong>boost-title:</strong> Boost factor for the search result score if a search word
+appears in the header. Defaults to <code>2</code>.</li>
+<li><strong>boost-hierarchy:</strong> Boost factor for the search result score if a search word
+appears in the hierarchy. The hierarchy contains all titles of the parent
+documents and all parent headings. Defaults to <code>1</code>.</li>
+<li><strong>boost-paragraph:</strong> Boost factor for the search result score if a search word
+appears in the text. Defaults to <code>1</code>.</li>
+<li><strong>expand:</strong> True if search should match longer results e.g. search <code>micro</code>
+should match <code>microwave</code>. Defaults to <code>true</code>.</li>
+<li><strong>heading-split-level:</strong> Search results will link to a section of the document
+which contains the result. Documents are split into sections by headings this
+level or less. Defaults to <code>3</code>. (<code>### This is a level 3 heading</code>)</li>
+<li><strong>copy-js:</strong> Copy JavaScript files for the search implementation to the output
+directory. Defaults to <code>true</code>.</li>
+</ul>
+<h4 id="outputhtmlsearchchapter"><a class="header" href="#outputhtmlsearchchapter"><code>[output.html.search.chapter]</code></a></h4>
+<p>The [<code>output.html.search.chapter</code>] table provides the ability to modify search settings per chapter or directory. Each key is the path to the chapter source file or directory, and the value is a table of settings to apply to that path. This will merge recursively, with more specific paths taking precedence.</p>
+<pre><code class="language-toml">[output.html.search.chapter]
+# Disables search indexing for all chapters in the `appendix` directory.
+"appendix" = { enable = false }
+# Enables search indexing for just this one appendix chapter.
+"appendix/glossary.md" = { enable = true }
+</code></pre>
+<ul>
+<li><strong>enable:</strong> Enables or disables search indexing for the given chapters. Defaults to <code>true</code>. This does not override the overall <code>output.html.search.enable</code> setting; that must be <code>true</code> for any search functionality to be enabled. Be cautious when disabling indexing for chapters because that can potentially lead to user confusion when they search for terms and expect them to be found. This should only be used in exceptional circumstances where keeping the chapter in the index will cause issues with the quality of the search results.</li>
+</ul>
+<h3 id="outputhtmlredirect"><a class="header" href="#outputhtmlredirect"><code>[output.html.redirect]</code></a></h3>
+<p>The <code>[output.html.redirect]</code> table provides a way to add redirects.
+This is useful when you move, rename, or remove a page to ensure that links to the old URL will go to the new location.</p>
+<pre><code class="language-toml">[output.html.redirect]
+"/appendices/bibliography.html" = "https://rustc-dev-guide.rust-lang.org/appendix/bibliography.html"
+"/other-installation-methods.html" = "../infra/other-installation-methods.html"
+
+# Fragment redirects also work.
+"/some-existing-page.html#old-fragment" = "some-existing-page.html#new-fragment"
+
+# Fragment redirects also work for deleted pages.
+"/old-page.html" = "new-page.html"
+"/old-page.html#old-fragment" = "new-page.html#new-fragment"
+</code></pre>
+<p>The table contains key-value pairs where the key is where the redirect file needs to be created, as an absolute path from the build directory, (e.g. <code>/appendices/bibliography.html</code>).
+The value can be any valid URI the browser should navigate to (e.g. <code>https://rust-lang.org/</code>, <code>/overview.html</code>, or <code>../bibliography.html</code>).</p>
+<p>This will generate an HTML page which will automatically redirect to the given location.</p>
+<p>When fragment redirects are specified, the page must use JavaScript to redirect to the correct location. This is useful if you rename or move a section header. Fragment redirects work with existing pages and deleted pages.</p>
+<h2 id="markdown-renderer"><a class="header" href="#markdown-renderer">Markdown Renderer</a></h2>
+<p>The Markdown renderer will run preprocessors and then output the resulting
+Markdown. This is mostly useful for debugging preprocessors, especially in
+conjunction with <code>mdbook test</code> to see the Markdown that <code>mdbook</code> is passing
+to <code>rustdoc</code>.</p>
+<p>The Markdown renderer is included with <code>mdbook</code> but disabled by default.
+Enable it by adding an empty table to your <code>book.toml</code> as follows:</p>
+<pre><code class="language-toml">[output.markdown]
+</code></pre>
+<p>There are no configuration options for the Markdown renderer at this time;
+only whether it is enabled or disabled.</p>
+<p>See <a href="preprocessors.html">the preprocessors documentation</a> for how to
+specify which preprocessors should run before the Markdown renderer.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../format/configuration/preprocessors.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../../format/configuration/environment-variables.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../format/configuration/preprocessors.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../../format/configuration/environment-variables.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+        <script>
+            window.playground_line_numbers = true;
+        </script>
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+        <script src="../../ace-2a3cd908.js"></script>
+        <script src="../../mode-rust-2c9d5c9a.js"></script>
+        <script src="../../editor-16ca416c.js"></script>
+        <script src="../../theme-dawn-4493f9c8.js"></script>
+        <script src="../../theme-tomorrow_night-9dbe62a9.js"></script>
+
+        <script src="../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../mark-09e88c2c.min.js"></script>
+        <script src="../../searcher-9aeb6ddf.js"></script>
+
+        <script src="../../clipboard-1626706a.min.js"></script>
+        <script src="../../highlight-abc7f01d.js"></script>
+        <script src="../../book-9576a2db.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
