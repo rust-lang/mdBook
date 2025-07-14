@@ -515,7 +515,6 @@ aria-label="Show hidden lines"></button>';
 })();
 
 (function sidebar() {
-    const body = document.querySelector('body');
     const sidebar = document.getElementById('sidebar');
     const sidebarLinks = document.querySelectorAll('#sidebar a');
     const sidebarToggleButton = document.getElementById('sidebar-toggle');
@@ -548,7 +547,7 @@ aria-label="Show hidden lines"></button>';
     });
 
     function showSidebar() {
-        body.classList.add('sidebar-visible');
+        document.documentElement.classList.add('sidebar-visible');
         Array.from(sidebarLinks).forEach(function(link) {
             link.setAttribute('tabIndex', 0);
         });
@@ -562,7 +561,7 @@ aria-label="Show hidden lines"></button>';
     }
 
     function hideSidebar() {
-        body.classList.remove('sidebar-visible');
+        document.documentElement.classList.remove('sidebar-visible');
         Array.from(sidebarLinks).forEach(function(link) {
             link.setAttribute('tabIndex', -1);
         });
@@ -594,14 +593,14 @@ aria-label="Show hidden lines"></button>';
     function initResize() {
         window.addEventListener('mousemove', resize, false);
         window.addEventListener('mouseup', stopResize, false);
-        body.classList.add('sidebar-resizing');
+        document.documentElement.classList.add('sidebar-resizing');
     }
     function resize(e) {
         let pos = e.clientX - sidebar.offsetLeft;
         if (pos < 20) {
             hideSidebar();
         } else {
-            if (!body.classList.contains('sidebar-visible')) {
+            if (!document.documentElement.classList.contains('sidebar-visible')) {
                 showSidebar();
             }
             pos = Math.min(pos, window.innerWidth - 100);
@@ -610,7 +609,7 @@ aria-label="Show hidden lines"></button>';
     }
     //on mouseup remove windows functions mousemove & mouseup
     function stopResize() {
-        body.classList.remove('sidebar-resizing');
+        document.documentElement.classList.remove('sidebar-resizing');
         window.removeEventListener('mousemove', resize, false);
         window.removeEventListener('mouseup', stopResize, false);
     }
