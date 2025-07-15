@@ -115,6 +115,32 @@ pub fn take_rustdoc_include_anchored_lines(s: &str, anchor: &str) -> String {
     output
 }
 
+pub fn take_format_remove_indent(str: &str) -> String {
+    let mut output = Vec::<String>::new();
+    let mut min_indent = usize::MAX;
+
+    for line in str.lines() {
+        for (index, c) in line.chars().enumerate() {
+            if !c.is_whitespace() && min_indent > index {
+                min_indent = index;
+                break;
+            }
+        }
+    }
+
+    for line in str.lines() {
+        let formatted: String = line
+            .chars()
+            .take(0)
+            .chain(line.chars().skip(min_indent))
+            .collect();
+
+        output.push(formatted);
+    }
+
+    output.join("\n")
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
