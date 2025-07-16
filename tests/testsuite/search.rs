@@ -124,7 +124,7 @@ fn with_no_source_path() {
         parent_names: Vec::new(),
     };
     book.book.sections.push(BookItem::Chapter(chapter));
-    book.build().unwrap();
+    book.render_all().unwrap();
 }
 
 // Checks that invalid settings in search chapter is rejected.

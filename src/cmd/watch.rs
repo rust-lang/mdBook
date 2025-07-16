@@ -1,7 +1,7 @@
 use super::command_prelude::*;
-use crate::{get_book_dir, open};
-use mdbook::errors::Result;
+use crate::{get_backends, get_book_dir, open};
 use mdbook::MDBook;
+use mdbook::{book::ActiveBackends, errors::Result};
 use std::path::{Path, PathBuf};
 
 mod native;
@@ -14,6 +14,7 @@ pub fn make_subcommand() -> Command {
         .arg_dest_dir()
         .arg_root_dir()
         .arg_open()
+        .arg_backends()
         .arg_watcher()
 }
 
@@ -37,6 +38,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
     let mut book = MDBook::load(&book_dir)?;
 
+    let active_backends = get_backends(args);
+
     let update_config = |book: &mut MDBook| {
         if let Some(dest_dir) = args.get_one::<PathBuf>("dest-dir") {
             book.config.build.build_dir = dest_dir.into();
@@ -45,7 +48,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     update_config(&mut book);
 
     if args.get_flag("open") {
-        book.build()?;
+        book.render(&active_backends)?;
         let path = book.build_dir_for("html").join("index.html");
         if !path.exists() {
             error!("No chapter available to open");
@@ -55,7 +58,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     }
 
     let watcher = WatcherKind::from_str(args.get_one::<String>("watcher").unwrap());
-    rebuild_on_change(watcher, &book_dir, &update_config, &|| {});
+    rebuild_on_change(watcher, &book_dir, &update_config, &active_backends, &|| {});
 
     Ok(())
 }
@@ -64,11 +67,16 @@ pub fn rebuild_on_change(
     kind: WatcherKind,
     book_dir: &Path,
     update_config: &dyn Fn(&mut MDBook),
+    backends: &ActiveBackends,
     post_build: &dyn Fn(),
 ) {
     match kind {
-        WatcherKind::Poll => self::poller::rebuild_on_change(book_dir, update_config, post_build),
-        WatcherKind::Native => self::native::rebuild_on_change(book_dir, update_config, post_build),
+        WatcherKind::Poll => {
+            self::poller::rebuild_on_change(book_dir, update_config, backends, post_build)
+        }
+        WatcherKind::Native => {
+            self::native::rebuild_on_change(book_dir, update_config, backends, post_build)
+        }
     }
 }
 

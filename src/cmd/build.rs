@@ -1,5 +1,5 @@
 use super::command_prelude::*;
-use crate::{get_book_dir, open};
+use crate::{get_backends, get_book_dir, open};
 use mdbook::errors::Result;
 use mdbook::MDBook;
 use std::path::PathBuf;
@@ -10,6 +10,7 @@ pub fn make_subcommand() -> Command {
         .about("Builds a book from its markdown files")
         .arg_dest_dir()
         .arg_root_dir()
+        .arg_backends()
         .arg_open()
 }
 
@@ -22,7 +23,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         book.config.build.build_dir = dest_dir.into();
     }
 
-    book.build()?;
+    let active_backends = get_backends(args);
+    book.render(&active_backends)?;
 
     if args.get_flag("open") {
         // FIXME: What's the right behaviour if we don't use the HTML renderer?

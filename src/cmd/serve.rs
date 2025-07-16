@@ -1,7 +1,7 @@
 use super::command_prelude::*;
 #[cfg(feature = "watch")]
 use super::watch;
-use crate::{get_book_dir, open};
+use crate::{get_backends, get_book_dir, open};
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
 use axum::routing::get;
 use axum::Router;
@@ -43,6 +43,7 @@ pub fn make_subcommand() -> Command {
                 .value_parser(NonEmptyStringValueParser::new())
                 .help("Port to use for HTTP connections"),
         )
+        .arg_backends()
         .arg_open()
         .arg_watcher()
 }
@@ -55,6 +56,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let port = args.get_one::<String>("port").unwrap();
     let hostname = args.get_one::<String>("hostname").unwrap();
     let open_browser = args.get_flag("open");
+    let active_backends = get_backends(args);
 
     let address = format!("{hostname}:{port}");
 
@@ -69,7 +71,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         book.config.set("output.html.site-url", "/").unwrap();
     };
     update_config(&mut book);
-    book.build()?;
+    book.render(&active_backends)?;
 
     let sockaddr: SocketAddr = address
         .to_socket_addrs()?
@@ -101,9 +103,15 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     #[cfg(feature = "watch")]
     {
         let watcher = watch::WatcherKind::from_str(args.get_one::<String>("watcher").unwrap());
-        watch::rebuild_on_change(watcher, &book_dir, &update_config, &move || {
-            let _ = tx.send(Message::text("reload"));
-        });
+        watch::rebuild_on_change(
+            watcher,
+            &book_dir,
+            &update_config,
+            &active_backends,
+            &move || {
+                let _ = tx.send(Message::text("reload"));
+            },
+        );
     }
 
     let _ = thread_handle.join();

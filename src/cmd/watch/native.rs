@@ -1,6 +1,7 @@
 //! A filesystem watcher using native operating system facilities.
 
 use ignore::gitignore::Gitignore;
+use mdbook::book::ActiveBackends;
 use mdbook::MDBook;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::channel;
@@ -10,6 +11,7 @@ use std::time::Duration;
 pub fn rebuild_on_change(
     book_dir: &Path,
     update_config: &dyn Fn(&mut MDBook),
+    backends: &ActiveBackends,
     post_build: &dyn Fn(),
 ) {
     use notify::RecursiveMode::*;
@@ -90,7 +92,7 @@ pub fn rebuild_on_change(
             match MDBook::load(book_dir) {
                 Ok(mut b) => {
                     update_config(&mut b);
-                    if let Err(e) = b.build() {
+                    if let Err(e) = b.render(backends) {
                         error!("failed to build the book: {e:?}");
                     } else {
                         post_build();

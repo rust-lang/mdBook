@@ -37,6 +37,22 @@ pub trait CommandExt: Sized {
         self._arg(arg!(-o --open "Opens the compiled book in a web browser"))
     }
 
+    fn arg_backends(self) -> Self {
+        self._arg(
+            Arg::new("backend")
+                .short('b')
+                .long("backend")
+                .value_name("backend")
+                .action(clap::ArgAction::Append)
+                .value_parser(clap::value_parser!(String))
+                .help(
+                    "Backend to use.\n\
+                    This option may be given multiple times to run multiple backends.\n\
+                    If omitted, mdBook uses all configured backends.",
+                ),
+        )
+    }
+
     #[cfg(any(feature = "watch", feature = "serve"))]
     fn arg_watcher(self) -> Self {
         #[cfg(feature = "watch")]

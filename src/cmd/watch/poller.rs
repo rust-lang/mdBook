@@ -5,6 +5,7 @@
 //! had problems correctly reporting changes.
 
 use ignore::gitignore::Gitignore;
+use mdbook::book::ActiveBackends;
 use mdbook::MDBook;
 use pathdiff::diff_paths;
 use std::collections::HashMap;
@@ -17,6 +18,7 @@ use walkdir::WalkDir;
 pub fn rebuild_on_change(
     book_dir: &Path,
     update_config: &dyn Fn(&mut MDBook),
+    backends: &ActiveBackends,
     post_build: &dyn Fn(),
 ) {
     let mut book = MDBook::load(book_dir).unwrap_or_else(|e| {
@@ -60,7 +62,7 @@ pub fn rebuild_on_change(
             match MDBook::load(book_dir) {
                 Ok(mut b) => {
                     update_config(&mut b);
-                    if let Err(e) = b.build() {
+                    if let Err(e) = b.render(backends) {
                         error!("failed to build the book: {e:?}");
                     } else {
                         post_build();

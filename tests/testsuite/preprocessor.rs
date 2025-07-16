@@ -34,7 +34,7 @@ fn runs_preprocessors() {
     let spy: Arc<Mutex<Inner>> = Default::default();
     let mut book = test.load_book();
     book.with_preprocessor(Spy(Arc::clone(&spy)));
-    book.build().unwrap();
+    book.render_all().unwrap();
 
     let inner = spy.lock().unwrap();
     assert_eq!(inner.run_count, 1);
