@@ -190,6 +190,13 @@ fn backends_receive_render_context_via_stdin() {
       "language": "en",
       "src": "src"
     },
+    "build": {
+      "build-dir": "book",
+      "create-missing": true,
+      "extra-watch-dirs": [],
+      "minification": false,
+      "use-default-preprocessors": true
+    },
     "output": {
       "cat-to-file": {
         "command": "./cat-to-file"

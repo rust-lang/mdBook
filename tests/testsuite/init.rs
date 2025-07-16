@@ -185,6 +185,7 @@ src = "in"
 build-dir = "out"
 create-missing = true
 extra-watch-dirs = []
+minification = true
 use-default-preprocessors = true
 
 "#]],
