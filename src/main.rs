@@ -9,6 +9,7 @@ use clap::{Arg, ArgMatches, Command};
 use clap_complete::Shell;
 use env_logger::Builder;
 use log::LevelFilter;
+use mdbook::book::ActiveBackends;
 use mdbook::utils;
 use std::env;
 use std::ffi::OsStr;
@@ -130,6 +131,14 @@ fn get_book_dir(args: &ArgMatches) -> PathBuf {
         }
     } else {
         env::current_dir().expect("Unable to determine the current directory")
+    }
+}
+
+fn get_backends(args: &ArgMatches) -> ActiveBackends {
+    if let Some(backends_iter) = args.get_many("backend") {
+        ActiveBackends::Specific(backends_iter.cloned().collect())
+    } else {
+        ActiveBackends::AllAvailable
     }
 }
 

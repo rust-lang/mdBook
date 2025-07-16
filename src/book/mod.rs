@@ -13,7 +13,9 @@ pub use self::book::{load_book, Book, BookItem, BookItems, Chapter};
 pub use self::init::BookBuilder;
 pub use self::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
 
+use anyhow::anyhow;
 use log::{debug, error, info, log_enabled, trace, warn};
+use std::collections::{BTreeSet, HashMap};
 use std::ffi::OsString;
 use std::io::{IsTerminal, Write};
 use std::path::{Path, PathBuf};
@@ -39,10 +41,19 @@ pub struct MDBook {
     pub config: Config,
     /// A representation of the book's contents in memory.
     pub book: Book,
-    renderers: Vec<Box<dyn Renderer>>,
+    renderers: HashMap<String, Box<dyn Renderer>>,
 
     /// List of pre-processors to be run on the book.
     preprocessors: Vec<Box<dyn Preprocessor>>,
+}
+
+/// Set of backends/renderes to run.
+pub enum ActiveBackends {
+    /// Run all available backends.
+    AllAvailable,
+
+    /// Run specific set of backends.
+    Specific(BTreeSet<String>),
 }
 
 impl MDBook {
@@ -190,12 +201,26 @@ impl MDBook {
         BookBuilder::new(book_root)
     }
 
-    /// Tells the renderer to build our book and put it in the build directory.
-    pub fn build(&self) -> Result<()> {
+    /// Tells all renderers/backends to build our book and put it in the build directory.
+    pub fn render_all(&self) -> Result<()> {
+        self.render(&ActiveBackends::AllAvailable)
+    }
+
+    /// Tells a set of renderers/backends to build our book and put it in the build directory.
+    pub fn render(&self, backends: &ActiveBackends) -> Result<()> {
         info!("Book building has started");
 
-        for renderer in &self.renderers {
-            self.execute_build_process(&**renderer)?;
+        let backends: BTreeSet<String> = match backends {
+            ActiveBackends::AllAvailable => self.renderers.keys().cloned().collect(),
+            ActiveBackends::Specific(backends) => backends.clone(),
+        };
+
+        for backend in backends {
+            if let Some(backend) = &self.renderers.get(&backend) {
+                self.execute_build_process(&***backend)?;
+            } else {
+                return Err(anyhow!("backend {backend} does not exist!"));
+            }
         }
 
         Ok(())
@@ -245,7 +270,8 @@ impl MDBook {
     /// The only requirement is that your renderer implement the [`Renderer`]
     /// trait.
     pub fn with_renderer<R: Renderer + 'static>(&mut self, renderer: R) -> &mut Self {
-        self.renderers.push(Box::new(renderer));
+        self.renderers
+            .insert(renderer.name().to_string(), Box::new(renderer));
         self
     }
 
@@ -430,24 +456,26 @@ impl MDBook {
 }
 
 /// Look at the `Config` and try to figure out what renderers to use.
-fn determine_renderers(config: &Config) -> Vec<Box<dyn Renderer>> {
-    let mut renderers = Vec::new();
+fn determine_renderers(config: &Config) -> HashMap<String, Box<dyn Renderer>> {
+    let mut renderers = HashMap::new();
 
     if let Some(output_table) = config.get("output").and_then(Value::as_table) {
         renderers.extend(output_table.iter().map(|(key, table)| {
-            if key == "html" {
+            let renderer = if key == "html" {
                 Box::new(HtmlHandlebars::new()) as Box<dyn Renderer>
             } else if key == "markdown" {
                 Box::new(MarkdownRenderer::new()) as Box<dyn Renderer>
             } else {
                 interpret_custom_renderer(key, table)
-            }
+            };
+            (renderer.name().to_string(), renderer)
         }));
     }
 
     // if we couldn't find anything, add the HTML renderer as a default
     if renderers.is_empty() {
-        renderers.push(Box::new(HtmlHandlebars::new()));
+        let r = Box::new(HtmlHandlebars::new());
+        renderers.insert(r.name().to_string(), r);
     }
 
     renderers
@@ -637,7 +665,7 @@ mod tests {
         let got = determine_renderers(&cfg);
 
         assert_eq!(got.len(), 1);
-        assert_eq!(got[0].name(), "html");
+        assert_eq!(got["html"].name(), "html");
     }
 
     #[test]
@@ -648,7 +676,7 @@ mod tests {
         let got = determine_renderers(&cfg);
 
         assert_eq!(got.len(), 1);
-        assert_eq!(got[0].name(), "random");
+        assert_eq!(got["random"].name(), "random");
     }
 
     #[test]
@@ -662,7 +690,7 @@ mod tests {
         let got = determine_renderers(&cfg);
 
         assert_eq!(got.len(), 1);
-        assert_eq!(got[0].name(), "random");
+        assert_eq!(got["random"].name(), "random");
     }
 
     #[test]
