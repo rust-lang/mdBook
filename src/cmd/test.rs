@@ -32,7 +32,6 @@ pub fn make_subcommand() -> Command {
                     search path when building tests",
                 ),
         )
-        .arg_disable_minification()
 }
 
 // test command implementation
@@ -49,9 +48,6 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     if let Some(dest_dir) = args.get_one::<PathBuf>("dest-dir") {
         book.config.build.build_dir = dest_dir.to_path_buf();
-    }
-    if let Some(true) = args.get_one::<bool>("disable-minification") {
-        book.config.build.minification = false;
     }
     match chapter {
         Some(_) => book.test_chapter(library_paths, chapter),
