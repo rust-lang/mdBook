@@ -415,12 +415,16 @@ impl Renderer for HtmlHandlebars {
         }
 
         if html_config.hash_files {
-            static_files.hash_files()?;
+            static_files.hash_files(ctx.config.build.static_files_dir.as_deref())?;
         }
 
         debug!("Copy static files");
+        if let Some(ref path) = ctx.config.build.static_files_dir {
+            fs::create_dir_all(path)
+                .with_context(|| "Unexpected error when constructing static files directory")?;
+        }
         let resource_helper = static_files
-            .write_files(&destination)
+            .write_files(destination)
             .with_context(|| "Unable to copy across static files")?;
 
         handlebars.register_helper("resource", Box::new(resource_helper));
