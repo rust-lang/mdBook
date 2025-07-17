@@ -167,9 +167,19 @@ impl StaticFiles {
 
     /// Updates this [`StaticFiles`] to hash the contents for determining the
     /// filename for each resource.
-    pub fn hash_files(&mut self) -> Result<()> {
+    pub fn hash_files(&mut self, static_folder: Option<&Path>) -> Result<()> {
         use sha2::{Digest, Sha256};
         use std::io::Read;
+
+        fn apply_static_folder(name: String, static_folder: Option<&Path>) -> String {
+            if let Some(static_folder) = static_folder {
+                if let Some(file_name) = name.split('/').last() {
+                    return static_folder.join(file_name).display().to_string();
+                }
+            }
+            name
+        }
+
         for static_file in &mut self.static_files {
             match static_file {
                 StaticFile::Builtin {
@@ -187,7 +197,10 @@ impl StaticFiles {
                             && !name.starts_with("FontAwesome/fonts/")
                         {
                             let hex = hex::encode(&Sha256::digest(data)[..4]);
-                            let new_filename = format!("{}-{}.{}", name, hex, suffix);
+                            let new_filename = apply_static_folder(
+                                format!("{}-{}.{}", name, hex, suffix),
+                                static_folder,
+                            );
                             self.hash_map.insert(filename.clone(), new_filename.clone());
                             *filename = new_filename;
                         }
@@ -229,7 +242,7 @@ impl StaticFiles {
     pub fn write_files(self, destination: &Path) -> Result<ResourceHelper> {
         use crate::utils::fs::write_file;
         use regex::bytes::{Captures, Regex};
-        // The `{{ resource "name" }}` directive in static resources look like
+        // The `{{ resource "name" }}` directive in static resources looks like
         // handlebars syntax, even if they technically aren't.
         static RESOURCE: LazyLock<Regex> =
             LazyLock::new(|| Regex::new(r#"\{\{ resource "([^"]+)" \}\}"#).unwrap());
