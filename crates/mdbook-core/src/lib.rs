@@ -6,6 +6,7 @@
 /// compatibility checks.
 pub const MDBOOK_VERSION: &str = env!("CARGO_PKG_VERSION");
 
+pub mod book;
 pub mod config;
 pub mod utils;
 

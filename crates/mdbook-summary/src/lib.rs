@@ -2,12 +2,12 @@
 
 use anyhow::{Context, Error, Result, bail};
 use log::{debug, trace, warn};
+pub use mdbook_core::book::SectionNumber;
 use memchr::Memchr;
 use pulldown_cmark::{DefaultBrokenLinkCallback, Event, HeadingLevel, Tag, TagEnd};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use std::fmt::{self, Display, Formatter};
-use std::ops::{Deref, DerefMut};
+use std::fmt::Display;
 use std::path::{Path, PathBuf};
 
 /// Parse the text from a `SUMMARY.md` file into a sort of "recipe" to be
@@ -635,60 +635,9 @@ fn stringify_events(events: Vec<Event<'_>>) -> String {
         .collect()
 }
 
-/// A section number like "1.2.3", basically just a newtype'd `Vec<u32>` with
-/// a pretty `Display` impl.
-#[derive(Debug, PartialEq, Clone, Default, Serialize, Deserialize)]
-pub struct SectionNumber(pub Vec<u32>);
-
-impl Display for SectionNumber {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        if self.0.is_empty() {
-            write!(f, "0")
-        } else {
-            for item in &self.0 {
-                write!(f, "{item}.")?;
-            }
-            Ok(())
-        }
-    }
-}
-
-impl Deref for SectionNumber {
-    type Target = Vec<u32>;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for SectionNumber {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-impl FromIterator<u32> for SectionNumber {
-    fn from_iter<I: IntoIterator<Item = u32>>(it: I) -> Self {
-        SectionNumber(it.into_iter().collect())
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn section_number_has_correct_dotted_representation() {
-        let inputs = vec![
-            (vec![0], "0."),
-            (vec![1, 3], "1.3."),
-            (vec![1, 2, 3], "1.2.3."),
-        ];
-
-        for (input, should_be) in inputs {
-            let section_number = SectionNumber(input).to_string();
-            assert_eq!(section_number, should_be);
-        }
-    }
 
     #[test]
     fn parse_initial_title() {

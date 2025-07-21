@@ -1,15 +1,12 @@
-use std::collections::VecDeque;
-use std::fmt::{self, Display, Formatter};
-use std::fs::{self, File};
-use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
-
 use anyhow::{Context, Result};
 use log::debug;
+use mdbook_core::book::{Book, BookItem, Chapter};
 use mdbook_core::config::BuildConfig;
 use mdbook_core::utils::bracket_escape;
-use mdbook_summary::{Link, SectionNumber, Summary, SummaryItem, parse_summary};
-use serde::{Deserialize, Serialize};
+use mdbook_summary::{Link, Summary, SummaryItem, parse_summary};
+use std::fs::{self, File};
+use std::io::{Read, Write};
+use std::path::Path;
 
 /// Load a book into memory from its `src/` directory.
 pub fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> {
@@ -65,159 +62,6 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
     Ok(())
 }
 
-/// A dumb tree structure representing a book.
-///
-/// For the moment a book is just a collection of [`BookItems`] which are
-/// accessible by either iterating (immutably) over the book with [`iter()`], or
-/// recursively applying a closure to each section to mutate the chapters, using
-/// [`for_each_mut()`].
-///
-/// [`iter()`]: #method.iter
-/// [`for_each_mut()`]: #method.for_each_mut
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-pub struct Book {
-    /// The sections in this book.
-    pub sections: Vec<BookItem>,
-    __non_exhaustive: (),
-}
-
-impl Book {
-    /// Create an empty book.
-    pub fn new() -> Self {
-        Default::default()
-    }
-
-    /// Get a depth-first iterator over the items in the book.
-    pub fn iter(&self) -> BookItems<'_> {
-        BookItems {
-            items: self.sections.iter().collect(),
-        }
-    }
-
-    /// Recursively apply a closure to each item in the book, allowing you to
-    /// mutate them.
-    ///
-    /// # Note
-    ///
-    /// Unlike the `iter()` method, this requires a closure instead of returning
-    /// an iterator. This is because using iterators can possibly allow you
-    /// to have iterator invalidation errors.
-    pub fn for_each_mut<F>(&mut self, mut func: F)
-    where
-        F: FnMut(&mut BookItem),
-    {
-        for_each_mut(&mut func, &mut self.sections);
-    }
-
-    /// Append a `BookItem` to the `Book`.
-    pub fn push_item<I: Into<BookItem>>(&mut self, item: I) -> &mut Self {
-        self.sections.push(item.into());
-        self
-    }
-}
-
-pub fn for_each_mut<'a, F, I>(func: &mut F, items: I)
-where
-    F: FnMut(&mut BookItem),
-    I: IntoIterator<Item = &'a mut BookItem>,
-{
-    for item in items {
-        if let BookItem::Chapter(ch) = item {
-            for_each_mut(func, &mut ch.sub_items);
-        }
-
-        func(item);
-    }
-}
-
-/// Enum representing any type of item which can be added to a book.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub enum BookItem {
-    /// A nested chapter.
-    Chapter(Chapter),
-    /// A section separator.
-    Separator,
-    /// A part title.
-    PartTitle(String),
-}
-
-impl From<Chapter> for BookItem {
-    fn from(other: Chapter) -> BookItem {
-        BookItem::Chapter(other)
-    }
-}
-
-/// The representation of a "chapter", usually mapping to a single file on
-/// disk however it may contain multiple sub-chapters.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-pub struct Chapter {
-    /// The chapter's name.
-    pub name: String,
-    /// The chapter's contents.
-    pub content: String,
-    /// The chapter's section number, if it has one.
-    pub number: Option<SectionNumber>,
-    /// Nested items.
-    pub sub_items: Vec<BookItem>,
-    /// The chapter's location, relative to the `SUMMARY.md` file.
-    ///
-    /// **Note**: After the index preprocessor runs, any README files will be
-    /// modified to be `index.md`. If you need access to the actual filename
-    /// on disk, use [`Chapter::source_path`] instead.
-    ///
-    /// This is `None` for a draft chapter.
-    pub path: Option<PathBuf>,
-    /// The chapter's source file, relative to the `SUMMARY.md` file.
-    ///
-    /// **Note**: Beware that README files will internally be treated as
-    /// `index.md` via the [`Chapter::path`] field. The `source_path` field
-    /// exists if you need access to the true file path.
-    ///
-    /// This is `None` for a draft chapter, or a synthetically generated
-    /// chapter that has no file on disk.
-    pub source_path: Option<PathBuf>,
-    /// An ordered list of the names of each chapter above this one in the hierarchy.
-    pub parent_names: Vec<String>,
-}
-
-impl Chapter {
-    /// Create a new chapter with the provided content.
-    pub fn new<P: Into<PathBuf>>(
-        name: &str,
-        content: String,
-        p: P,
-        parent_names: Vec<String>,
-    ) -> Chapter {
-        let path: PathBuf = p.into();
-        Chapter {
-            name: name.to_string(),
-            content,
-            path: Some(path.clone()),
-            source_path: Some(path),
-            parent_names,
-            ..Default::default()
-        }
-    }
-
-    /// Create a new draft chapter that is not attached to a source markdown file (and thus
-    /// has no content).
-    pub fn new_draft(name: &str, parent_names: Vec<String>) -> Self {
-        Chapter {
-            name: name.to_string(),
-            content: String::new(),
-            path: None,
-            source_path: None,
-            parent_names,
-            ..Default::default()
-        }
-    }
-
-    /// Check if the chapter is a draft chapter, meaning it has no path to a source markdown file.
-    pub fn is_draft_chapter(&self) -> bool {
-        self.path.is_none()
-    }
-}
-
 /// Use the provided `Summary` to load a `Book` from disk.
 ///
 /// You need to pass in the book's source directory because all the links in
@@ -239,10 +83,7 @@ pub(crate) fn load_book_from_disk<P: AsRef<Path>>(summary: &Summary, src_dir: P)
         chapters.push(chapter);
     }
 
-    Ok(Book {
-        sections: chapters,
-        __non_exhaustive: (),
-    })
+    Ok(Book::new_with_items(chapters))
 }
 
 fn load_summary_item<P: AsRef<Path> + Clone>(
@@ -310,46 +151,11 @@ fn load_chapter<P: AsRef<Path>>(
     Ok(ch)
 }
 
-/// A depth-first iterator over the items in a book.
-///
-/// # Note
-///
-/// This struct shouldn't be created directly, instead prefer the
-/// [`Book::iter()`] method.
-pub struct BookItems<'a> {
-    items: VecDeque<&'a BookItem>,
-}
-
-impl<'a> Iterator for BookItems<'a> {
-    type Item = &'a BookItem;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let item = self.items.pop_front();
-
-        if let Some(BookItem::Chapter(ch)) = item {
-            // if we wanted a breadth-first iterator we'd `extend()` here
-            for sub_item in ch.sub_items.iter().rev() {
-                self.items.push_front(sub_item);
-            }
-        }
-
-        item
-    }
-}
-
-impl Display for Chapter {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        if let Some(ref section_number) = self.number {
-            write!(f, "{section_number} ")?;
-        }
-
-        write!(f, "{}", self.name)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use mdbook_core::book::SectionNumber;
+    use std::path::PathBuf;
     use tempfile::{Builder as TempFileBuilder, TempDir};
 
     const DUMMY_SRC: &str = "
@@ -480,134 +286,18 @@ And here is some \
             numbered_chapters: vec![SummaryItem::Link(link)],
             ..Default::default()
         };
-        let should_be = Book {
-            sections: vec![BookItem::Chapter(Chapter {
-                name: String::from("Chapter 1"),
-                content: String::from(DUMMY_SRC),
-                path: Some(PathBuf::from("chapter_1.md")),
-                source_path: Some(PathBuf::from("chapter_1.md")),
-                ..Default::default()
-            })],
+        let sections = vec![BookItem::Chapter(Chapter {
+            name: String::from("Chapter 1"),
+            content: String::from(DUMMY_SRC),
+            path: Some(PathBuf::from("chapter_1.md")),
+            source_path: Some(PathBuf::from("chapter_1.md")),
             ..Default::default()
-        };
+        })];
+        let should_be = Book::new_with_items(sections);
 
         let got = load_book_from_disk(&summary, temp.path()).unwrap();
 
         assert_eq!(got, should_be);
-    }
-
-    #[test]
-    fn book_iter_iterates_over_sequential_items() {
-        let book = Book {
-            sections: vec![
-                BookItem::Chapter(Chapter {
-                    name: String::from("Chapter 1"),
-                    content: String::from(DUMMY_SRC),
-                    ..Default::default()
-                }),
-                BookItem::Separator,
-            ],
-            ..Default::default()
-        };
-
-        let should_be: Vec<_> = book.sections.iter().collect();
-
-        let got: Vec<_> = book.iter().collect();
-
-        assert_eq!(got, should_be);
-    }
-
-    #[test]
-    fn iterate_over_nested_book_items() {
-        let book = Book {
-            sections: vec![
-                BookItem::Chapter(Chapter {
-                    name: String::from("Chapter 1"),
-                    content: String::from(DUMMY_SRC),
-                    number: None,
-                    path: Some(PathBuf::from("Chapter_1/index.md")),
-                    source_path: Some(PathBuf::from("Chapter_1/index.md")),
-                    parent_names: Vec::new(),
-                    sub_items: vec![
-                        BookItem::Chapter(Chapter::new(
-                            "Hello World",
-                            String::new(),
-                            "Chapter_1/hello.md",
-                            Vec::new(),
-                        )),
-                        BookItem::Separator,
-                        BookItem::Chapter(Chapter::new(
-                            "Goodbye World",
-                            String::new(),
-                            "Chapter_1/goodbye.md",
-                            Vec::new(),
-                        )),
-                    ],
-                }),
-                BookItem::Separator,
-            ],
-            ..Default::default()
-        };
-
-        let got: Vec<_> = book.iter().collect();
-
-        assert_eq!(got.len(), 5);
-
-        // checking the chapter names are in the order should be sufficient here...
-        let chapter_names: Vec<String> = got
-            .into_iter()
-            .filter_map(|i| match *i {
-                BookItem::Chapter(ref ch) => Some(ch.name.clone()),
-                _ => None,
-            })
-            .collect();
-        let should_be: Vec<_> = vec![
-            String::from("Chapter 1"),
-            String::from("Hello World"),
-            String::from("Goodbye World"),
-        ];
-
-        assert_eq!(chapter_names, should_be);
-    }
-
-    #[test]
-    fn for_each_mut_visits_all_items() {
-        let mut book = Book {
-            sections: vec![
-                BookItem::Chapter(Chapter {
-                    name: String::from("Chapter 1"),
-                    content: String::from(DUMMY_SRC),
-                    number: None,
-                    path: Some(PathBuf::from("Chapter_1/index.md")),
-                    source_path: Some(PathBuf::from("Chapter_1/index.md")),
-                    parent_names: Vec::new(),
-                    sub_items: vec![
-                        BookItem::Chapter(Chapter::new(
-                            "Hello World",
-                            String::new(),
-                            "Chapter_1/hello.md",
-                            Vec::new(),
-                        )),
-                        BookItem::Separator,
-                        BookItem::Chapter(Chapter::new(
-                            "Goodbye World",
-                            String::new(),
-                            "Chapter_1/goodbye.md",
-                            Vec::new(),
-                        )),
-                    ],
-                }),
-                BookItem::Separator,
-            ],
-            ..Default::default()
-        };
-
-        let num_items = book.iter().count();
-        let mut visited = 0;
-
-        book.for_each_mut(|_| visited += 1);
-
-        assert_eq!(visited, num_items);
     }
 
     #[test]

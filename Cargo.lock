@@ -1340,6 +1340,7 @@ version = "0.5.0-alpha.1"
 dependencies = [
  "anyhow",
  "log",
+ "mdbook-core",
  "memchr",
  "pulldown-cmark 0.10.3",
  "serde",
