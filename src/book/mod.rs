@@ -15,6 +15,7 @@ use log::{debug, error, info, log_enabled, trace, warn};
 pub use mdbook_core::book::{Book, BookItem, BookItems, Chapter, SectionNumber};
 use mdbook_core::config::{Config, RustEdition};
 use mdbook_core::utils;
+use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 pub use mdbook_summary::{Link, Summary, SummaryItem, parse_summary};
 use std::ffi::OsString;
 use std::io::{IsTerminal, Write};
@@ -24,9 +25,7 @@ use tempfile::Builder as TempFileBuilder;
 use toml::Value;
 use topological_sort::TopologicalSort;
 
-use crate::preprocess::{
-    CmdPreprocessor, IndexPreprocessor, LinkPreprocessor, Preprocessor, PreprocessorContext,
-};
+use crate::preprocess::{CmdPreprocessor, IndexPreprocessor, LinkPreprocessor};
 use crate::renderer::{CmdRenderer, HtmlHandlebars, MarkdownRenderer, RenderContext, Renderer};
 
 /// The object used to manage and build a book.

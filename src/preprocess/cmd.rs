@@ -1,9 +1,9 @@
-use super::{Preprocessor, PreprocessorContext};
 use crate::book::Book;
 use anyhow::{Context, Result, bail, ensure};
 use log::{debug, trace, warn};
+use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use shlex::Shlex;
-use std::io::{self, Read, Write};
+use std::io::{self, Write};
 use std::process::{Child, Command, Stdio};
 
 /// A custom preprocessor which will shell out to a 3rd-party program.
@@ -39,12 +39,6 @@ impl CmdPreprocessor {
     /// Create a new `CmdPreprocessor`.
     pub fn new(name: String, cmd: String) -> CmdPreprocessor {
         CmdPreprocessor { name, cmd }
-    }
-
-    /// A convenience function custom preprocessors can use to parse the input
-    /// written to `stdin` by a `CmdRenderer`.
-    pub fn parse_input<R: Read>(reader: R) -> Result<(PreprocessorContext, Book)> {
-        serde_json::from_reader(reader).with_context(|| "Unable to parse the input")
     }
 
     fn write_input_to_child(&self, child: &mut Child, book: &Book, ctx: &PreprocessorContext) {
@@ -200,7 +194,7 @@ mod tests {
         let mut buffer = Vec::new();
         cmd.write_input(&mut buffer, &md.book, &ctx).unwrap();
 
-        let (got_ctx, got_book) = CmdPreprocessor::parse_input(buffer.as_slice()).unwrap();
+        let (got_ctx, got_book) = mdbook_preprocessor::parse_input(buffer.as_slice()).unwrap();
 
         assert_eq!(got_book, md.book);
         assert_eq!(got_ctx, ctx);

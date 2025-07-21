@@ -1,10 +1,10 @@
 //! A basic example of a preprocessor that does nothing.
 
 use crate::nop_lib::Nop;
-use anyhow::Error;
 use clap::{Arg, ArgMatches, Command};
-use mdbook::book::Book;
-use mdbook::preprocess::{CmdPreprocessor, Preprocessor, PreprocessorContext};
+use mdbook_preprocessor::book::Book;
+use mdbook_preprocessor::errors::Result;
+use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use semver::{Version, VersionReq};
 use std::io;
 use std::process;
@@ -33,8 +33,8 @@ fn main() {
     }
 }
 
-fn handle_preprocessing(pre: &dyn Preprocessor) -> Result<(), Error> {
-    let (ctx, book) = CmdPreprocessor::parse_input(io::stdin())?;
+fn handle_preprocessing(pre: &dyn Preprocessor) -> Result<()> {
+    let (ctx, book) = mdbook_preprocessor::parse_input(io::stdin())?;
 
     let book_version = Version::parse(&ctx.mdbook_version)?;
     let version_req = VersionReq::parse(mdbook::MDBOOK_VERSION)?;
@@ -88,7 +88,7 @@ mod nop_lib {
             "nop-preprocessor"
         }
 
-        fn run(&self, ctx: &PreprocessorContext, book: Book) -> Result<Book, Error> {
+        fn run(&self, ctx: &PreprocessorContext, book: Book) -> Result<Book> {
             // In testing we want to tell the preprocessor to blow up by setting a
             // particular config value
             if let Some(nop_cfg) = ctx.config.get_preprocessor(self.name()) {
@@ -149,7 +149,7 @@ mod nop_lib {
             ]"##;
             let input_json = input_json.as_bytes();
 
-            let (ctx, book) = mdbook::preprocess::CmdPreprocessor::parse_input(input_json).unwrap();
+            let (ctx, book) = mdbook_preprocessor::parse_input(input_json).unwrap();
             let expected_book = book.clone();
             let result = Nop::new().run(&ctx, book);
             assert!(result.is_ok());

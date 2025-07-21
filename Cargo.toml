@@ -24,6 +24,7 @@ rust-version = "1.85.0" # Keep in sync with installation.md and .github/workflow
 anyhow = "1.0.98"
 log = "0.4.27"
 mdbook-core = { path = "crates/mdbook-core" }
+mdbook-preprocessor = { path = "crates/mdbook-preprocessor" }
 mdbook-summary = { path = "crates/mdbook-summary" }
 memchr = "2.7.5"
 pulldown-cmark = { version = "0.10.3", default-features = false, features = ["html"] } # Do not update, part of the public api.
@@ -61,6 +62,7 @@ handlebars = "6.0"
 hex = "0.4.3"
 log.workspace = true
 mdbook-core.workspace = true
+mdbook-preprocessor.workspace = true
 mdbook-summary.workspace = true
 memchr.workspace = true
 opener = "0.8.1"

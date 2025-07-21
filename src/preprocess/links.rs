@@ -1,17 +1,16 @@
+use crate::book::{Book, BookItem};
 use anyhow::{Context, Result};
+use log::{error, warn};
 use mdbook_core::utils::{
     take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,
     take_rustdoc_include_lines,
 };
+use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use regex::{CaptureMatches, Captures, Regex};
 use std::fs;
 use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeTo};
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
-
-use super::{Preprocessor, PreprocessorContext};
-use crate::book::{Book, BookItem};
-use log::{error, warn};
 
 const ESCAPE_CHAR: char = '\\';
 const MAX_LINK_NESTED_DEPTH: usize = 10;

@@ -1,10 +1,9 @@
-use regex::Regex;
-use std::{path::Path, sync::LazyLock};
-
-use super::{Preprocessor, PreprocessorContext};
 use crate::book::{Book, BookItem};
 use anyhow::Result;
 use log::warn;
+use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
+use regex::Regex;
+use std::{path::Path, sync::LazyLock};
 
 /// A preprocessor for converting file name `README.md` to `index.md` since
 /// `README.md` is the de facto index file in markdown-based documentation.

@@ -1271,6 +1271,7 @@ dependencies = [
  "ignore",
  "log",
  "mdbook-core",
+ "mdbook-preprocessor",
  "mdbook-summary",
  "memchr",
  "notify",
@@ -1313,15 +1314,17 @@ dependencies = [
 name = "mdbook-preprocessor"
 version = "0.5.0-alpha.1"
 dependencies = [
+ "anyhow",
  "mdbook-core",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
 name = "mdbook-remove-emphasis"
 version = "0.1.0"
 dependencies = [
- "anyhow",
- "mdbook",
+ "mdbook-preprocessor",
  "pulldown-cmark 0.12.2",
  "pulldown-cmark-to-cmark",
  "serde_json",
