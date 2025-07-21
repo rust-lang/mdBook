@@ -1272,6 +1272,7 @@ dependencies = [
  "log",
  "mdbook-core",
  "mdbook-preprocessor",
+ "mdbook-renderer",
  "mdbook-summary",
  "memchr",
  "notify",
@@ -1334,7 +1335,10 @@ dependencies = [
 name = "mdbook-renderer"
 version = "0.5.0-alpha.1"
 dependencies = [
+ "anyhow",
  "mdbook-core",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

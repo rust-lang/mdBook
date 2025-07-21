@@ -16,6 +16,7 @@ pub use mdbook_core::book::{Book, BookItem, BookItems, Chapter, SectionNumber};
 use mdbook_core::config::{Config, RustEdition};
 use mdbook_core::utils;
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
+use mdbook_renderer::{RenderContext, Renderer};
 pub use mdbook_summary::{Link, Summary, SummaryItem, parse_summary};
 use std::ffi::OsString;
 use std::io::{IsTerminal, Write};
@@ -26,7 +27,7 @@ use toml::Value;
 use topological_sort::TopologicalSort;
 
 use crate::preprocess::{CmdPreprocessor, IndexPreprocessor, LinkPreprocessor};
-use crate::renderer::{CmdRenderer, HtmlHandlebars, MarkdownRenderer, RenderContext, Renderer};
+use crate::renderer::{CmdRenderer, HtmlHandlebars, MarkdownRenderer};
 
 /// The object used to manage and build a book.
 pub struct MDBook {

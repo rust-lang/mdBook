@@ -76,7 +76,7 @@
 //! access to the various methods for working with the [`Config`].
 //!
 //! [user guide]: https://rust-lang.github.io/mdBook/
-//! [`RenderContext`]: renderer::RenderContext
+//! [`RenderContext`]: mdbook_renderer::RenderContext
 //! [relevant chapter]: https://rust-lang.github.io/mdBook/for_developers/backends.html
 //! [`Config`]: mdbook_core::config::Config
 
@@ -88,6 +88,5 @@ pub mod theme;
 
 pub use crate::book::BookItem;
 pub use crate::book::MDBook;
-pub use crate::renderer::Renderer;
 pub use mdbook_core::MDBOOK_VERSION;
 pub use mdbook_core::config::Config;

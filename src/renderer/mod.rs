@@ -11,15 +11,12 @@
 //! [For Developers]: https://rust-lang.github.io/mdBook/for_developers/index.html
 //! [RenderContext]: struct.RenderContext.html
 
-use crate::book::Book;
 use anyhow::{Context, Result, bail};
 use log::{error, info, trace, warn};
-use mdbook_core::config::Config;
-use serde::{Deserialize, Serialize};
+use mdbook_renderer::{RenderContext, Renderer};
 use shlex::Shlex;
-use std::collections::HashMap;
 use std::fs;
-use std::io::{self, ErrorKind, Read};
+use std::io::{self, ErrorKind};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use toml::Value;
@@ -29,76 +26,6 @@ pub use self::markdown_renderer::MarkdownRenderer;
 
 mod html_handlebars;
 mod markdown_renderer;
-
-/// An arbitrary `mdbook` backend.
-///
-/// Although it's quite possible for you to import `mdbook` as a library and
-/// provide your own renderer, there are two main renderer implementations that
-/// 99% of users will ever use:
-///
-/// - [`HtmlHandlebars`] - the built-in HTML renderer
-/// - [`CmdRenderer`] - a generic renderer which shells out to a program to do the
-///   actual rendering
-pub trait Renderer {
-    /// The `Renderer`'s name.
-    fn name(&self) -> &str;
-
-    /// Invoke the `Renderer`, passing in all the necessary information for
-    /// describing a book.
-    fn render(&self, ctx: &RenderContext) -> Result<()>;
-}
-
-/// The context provided to all renderers.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct RenderContext {
-    /// Which version of `mdbook` did this come from (as written in `mdbook`'s
-    /// `Cargo.toml`). Useful if you know the renderer is only compatible with
-    /// certain versions of `mdbook`.
-    pub version: String,
-    /// The book's root directory.
-    pub root: PathBuf,
-    /// A loaded representation of the book itself.
-    pub book: Book,
-    /// The loaded configuration file.
-    pub config: Config,
-    /// Where the renderer *must* put any build artefacts generated. To allow
-    /// renderers to cache intermediate results, this directory is not
-    /// guaranteed to be empty or even exist.
-    pub destination: PathBuf,
-    #[serde(skip)]
-    pub(crate) chapter_titles: HashMap<PathBuf, String>,
-    #[serde(skip)]
-    __non_exhaustive: (),
-}
-
-impl RenderContext {
-    /// Create a new `RenderContext`.
-    pub fn new<P, Q>(root: P, book: Book, config: Config, destination: Q) -> RenderContext
-    where
-        P: Into<PathBuf>,
-        Q: Into<PathBuf>,
-    {
-        RenderContext {
-            book,
-            config,
-            version: crate::MDBOOK_VERSION.to_string(),
-            root: root.into(),
-            destination: destination.into(),
-            chapter_titles: HashMap::new(),
-            __non_exhaustive: (),
-        }
-    }
-
-    /// Get the source directory's (absolute) path on disk.
-    pub fn source_dir(&self) -> PathBuf {
-        self.root.join(&self.config.book.src)
-    }
-
-    /// Load a `RenderContext` from its JSON representation.
-    pub fn from_json<R: Read>(reader: R) -> Result<RenderContext> {
-        serde_json::from_reader(reader).with_context(|| "Unable to deserialize the `RenderContext`")
-    }
-}
 
 /// A generic renderer which will shell out to an arbitrary executable.
 ///

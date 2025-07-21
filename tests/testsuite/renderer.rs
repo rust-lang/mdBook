@@ -2,7 +2,7 @@
 
 use crate::prelude::*;
 use anyhow::Result;
-use mdbook::renderer::{RenderContext, Renderer};
+use mdbook_renderer::{RenderContext, Renderer};
 use snapbox::IntoData;
 use std::fs::File;
 use std::sync::{Arc, Mutex};
