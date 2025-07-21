@@ -24,6 +24,7 @@ rust-version = "1.85.0" # Keep in sync with installation.md and .github/workflow
 anyhow = "1.0.98"
 log = "0.4.27"
 mdbook-core = { path = "crates/mdbook-core" }
+mdbook-summary = { path = "crates/mdbook-summary" }
 pulldown-cmark = { version = "0.10.3", default-features = false, features = ["html"] } # Do not update, part of the public api.
 regex = "1.11.1"
 serde = { version = "1.0.219", features = ["derive"] }
