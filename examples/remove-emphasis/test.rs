@@ -1,3 +1,5 @@
+//! A test to ensure that the remove-emphasis example works.
+
 #[test]
 fn remove_emphasis_works() {
     // Tests that the remove-emphasis example works as expected.

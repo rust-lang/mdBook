@@ -80,9 +80,6 @@
 //! [relevant chapter]: https://rust-lang.github.io/mdBook/for_developers/backends.html
 //! [`Config`]: config::Config
 
-#![deny(missing_docs)]
-#![deny(rust_2018_idioms)]
-
 pub mod book;
 pub mod config;
 pub mod preprocess;

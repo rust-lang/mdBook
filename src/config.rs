@@ -47,8 +47,6 @@
 //! # run().unwrap()
 //! ```
 
-#![deny(missing_docs)]
-
 use log::{debug, trace, warn};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;

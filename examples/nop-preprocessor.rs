@@ -1,3 +1,5 @@
+//! A basic example of a preprocessor that does nothing.
+
 use crate::nop_lib::Nop;
 use clap::{Arg, ArgMatches, Command};
 use mdbook::book::Book;
@@ -7,7 +9,7 @@ use semver::{Version, VersionReq};
 use std::io;
 use std::process;
 
-pub fn make_app() -> Command {
+fn make_app() -> Command {
     Command::new("nop-preprocessor")
         .about("A mdbook preprocessor which does precisely nothing")
         .subcommand(
