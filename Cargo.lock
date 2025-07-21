@@ -1299,6 +1299,13 @@ name = "mdbook-core"
 version = "0.5.0-alpha.1"
 
 [[package]]
+name = "mdbook-preprocessor"
+version = "0.5.0-alpha.1"
+dependencies = [
+ "mdbook-core",
+]
+
+[[package]]
 name = "mdbook-remove-emphasis"
 version = "0.1.0"
 dependencies = [
@@ -1306,6 +1313,13 @@ dependencies = [
  "pulldown-cmark 0.12.2",
  "pulldown-cmark-to-cmark",
  "serde_json",
+]
+
+[[package]]
+name = "mdbook-renderer"
+version = "0.5.0-alpha.1"
+dependencies = [
+ "mdbook-core",
 ]
 
 [[package]]
