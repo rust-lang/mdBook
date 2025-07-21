@@ -1144,7 +1144,8 @@ mod tests {
         assert!(cfg.get(key).is_none());
 
         let encoded_key = encode_env_var(key);
-        env::set_var(encoded_key, value);
+        // TODO: This is unsafe, and should be rewritten to use a process.
+        unsafe { env::set_var(encoded_key, value) };
 
         cfg.update_from_env();
 
@@ -1164,7 +1165,8 @@ mod tests {
         assert!(cfg.get(key).is_none());
 
         let encoded_key = encode_env_var(key);
-        env::set_var(encoded_key, value_str);
+        // TODO: This is unsafe, and should be rewritten to use a process.
+        unsafe { env::set_var(encoded_key, value_str) };
 
         cfg.update_from_env();
 
@@ -1183,7 +1185,8 @@ mod tests {
 
         assert_ne!(cfg.book.title, Some(should_be.clone()));
 
-        env::set_var("MDBOOK_BOOK__TITLE", &should_be);
+        // TODO: This is unsafe, and should be rewritten to use a process.
+        unsafe { env::set_var("MDBOOK_BOOK__TITLE", &should_be) };
         cfg.update_from_env();
 
         assert_eq!(cfg.book.title, Some(should_be));

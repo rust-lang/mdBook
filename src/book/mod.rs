@@ -611,7 +611,7 @@ fn preprocessor_should_run(
     let key = format!("preprocessor.{}.renderers", preprocessor.name());
     let renderer_name = renderer.name();
 
-    if let Some(Value::Array(ref explicit_renderers)) = cfg.get(&key) {
+    if let Some(Value::Array(explicit_renderers)) = cfg.get(&key) {
         return explicit_renderers
             .iter()
             .filter_map(Value::as_str)

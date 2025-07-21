@@ -172,7 +172,7 @@ impl StaticFiles {
         use std::io::Read;
         for static_file in &mut self.static_files {
             match static_file {
-                StaticFile::Builtin {
+                &mut StaticFile::Builtin {
                     ref mut filename,
                     ref data,
                 } => {
@@ -193,7 +193,7 @@ impl StaticFiles {
                         }
                     }
                 }
-                StaticFile::Additional {
+                &mut StaticFile::Additional {
                     ref mut filename,
                     ref input_location,
                 } => {
@@ -263,8 +263,8 @@ impl StaticFiles {
                     write_file(destination, filename, &data)?;
                 }
                 StaticFile::Additional {
-                    ref input_location,
-                    ref filename,
+                    input_location,
+                    filename,
                 } => {
                     let output_location = destination.join(filename);
                     debug!(

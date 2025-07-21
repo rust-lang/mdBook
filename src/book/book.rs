@@ -252,9 +252,7 @@ fn load_summary_item<P: AsRef<Path> + Clone>(
 ) -> Result<BookItem> {
     match item {
         SummaryItem::Separator => Ok(BookItem::Separator),
-        SummaryItem::Link(ref link) => {
-            load_chapter(link, src_dir, parent_names).map(BookItem::Chapter)
-        }
+        SummaryItem::Link(link) => load_chapter(link, src_dir, parent_names).map(BookItem::Chapter),
         SummaryItem::PartTitle(title) => Ok(BookItem::PartTitle(title.clone())),
     }
 }

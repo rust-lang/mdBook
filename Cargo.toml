@@ -11,10 +11,10 @@ missing_docs = "warn"
 rust_2018_idioms = "warn"
 
 [workspace.package]
-edition = "2021"
+edition = "2024"
 license = "MPL-2.0"
 repository = "https://github.com/rust-lang/mdBook"
-rust-version = "1.82.0" # Keep in sync with installation.md and .github/workflows/main.yml
+rust-version = "1.85.0" # Keep in sync with installation.md and .github/workflows/main.yml
 
 [package]
 name = "mdbook"
