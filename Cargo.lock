@@ -1302,6 +1302,8 @@ dependencies = [
  "log",
  "pulldown-cmark 0.10.3",
  "regex",
+ "serde",
+ "serde_json",
  "tempfile",
  "toml",
 ]

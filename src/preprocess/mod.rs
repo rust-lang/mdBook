@@ -1,5 +1,13 @@
 //! Book preprocessing.
 
+use crate::book::Book;
+use anyhow::Result;
+use mdbook_core::config::Config;
+use serde::{Deserialize, Serialize};
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::path::PathBuf;
+
 pub use self::cmd::CmdPreprocessor;
 pub use self::index::IndexPreprocessor;
 pub use self::links::LinkPreprocessor;
@@ -7,15 +15,6 @@ pub use self::links::LinkPreprocessor;
 mod cmd;
 mod index;
 mod links;
-
-use crate::book::Book;
-use crate::config::Config;
-use anyhow::Result;
-
-use serde::{Deserialize, Serialize};
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::path::PathBuf;
 
 /// Extra information for a `Preprocessor` to give them more context when
 /// processing a book.

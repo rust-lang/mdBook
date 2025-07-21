@@ -2,9 +2,9 @@
 
 use anyhow::{Context, Result};
 use log::{debug, warn};
+use mdbook_core::config::HtmlConfig;
 use mdbook_core::utils;
 
-use crate::config::HtmlConfig;
 use crate::renderer::html_handlebars::helpers::resources::ResourceHelper;
 use crate::theme::{self, Theme, playground_editor};
 
@@ -300,8 +300,8 @@ impl StaticFiles {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::HtmlConfig;
     use crate::theme::Theme;
+    use mdbook_core::config::HtmlConfig;
     use mdbook_core::utils::fs::write_file;
     use tempfile::TempDir;
 

@@ -6,12 +6,12 @@ use std::sync::LazyLock;
 use anyhow::{Context, Result, bail};
 use elasticlunr::{Index, IndexBuilder};
 use log::{debug, warn};
+use mdbook_core::config::{Search, SearchChapterSettings};
 use mdbook_core::utils;
 use pulldown_cmark::*;
 use serde::Serialize;
 
 use crate::book::{Book, BookItem, Chapter};
-use crate::config::{Search, SearchChapterSettings};
 use crate::renderer::html_handlebars::StaticFiles;
 use crate::theme::searcher;
 

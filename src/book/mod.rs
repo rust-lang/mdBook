@@ -15,6 +15,8 @@ pub use self::summary::{Link, SectionNumber, Summary, SummaryItem, parse_summary
 
 use anyhow::{Context, Error, Result, bail};
 use log::{debug, error, info, log_enabled, trace, warn};
+use mdbook_core::config::{Config, RustEdition};
+use mdbook_core::utils;
 use std::ffi::OsString;
 use std::io::{IsTerminal, Write};
 use std::path::{Path, PathBuf};
@@ -27,9 +29,6 @@ use crate::preprocess::{
     CmdPreprocessor, IndexPreprocessor, LinkPreprocessor, Preprocessor, PreprocessorContext,
 };
 use crate::renderer::{CmdRenderer, HtmlHandlebars, MarkdownRenderer, RenderContext, Renderer};
-use mdbook_core::utils;
-
-use crate::config::{Config, RustEdition};
 
 /// The object used to manage and build a book.
 pub struct MDBook {

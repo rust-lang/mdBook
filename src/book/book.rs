@@ -5,9 +5,9 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
 use super::summary::{Link, SectionNumber, Summary, SummaryItem, parse_summary};
-use crate::config::BuildConfig;
 use anyhow::{Context, Result};
 use log::debug;
+use mdbook_core::config::BuildConfig;
 use mdbook_core::utils::bracket_escape;
 use serde::{Deserialize, Serialize};
 

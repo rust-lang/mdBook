@@ -3,10 +3,10 @@ use std::io::Write;
 use std::path::PathBuf;
 
 use super::MDBook;
-use crate::config::Config;
 use crate::theme;
 use anyhow::{Context, Result};
 use log::{debug, error, info, trace};
+use mdbook_core::config::Config;
 use mdbook_core::utils::fs::write_file;
 
 /// A helper for setting up a new book and its directory structure.

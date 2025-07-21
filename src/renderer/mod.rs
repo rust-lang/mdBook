@@ -12,9 +12,9 @@
 //! [RenderContext]: struct.RenderContext.html
 
 use crate::book::Book;
-use crate::config::Config;
 use anyhow::{Context, Result, bail};
 use log::{error, info, trace, warn};
+use mdbook_core::config::Config;
 use serde::{Deserialize, Serialize};
 use shlex::Shlex;
 use std::collections::HashMap;

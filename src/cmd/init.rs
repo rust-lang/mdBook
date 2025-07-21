@@ -2,7 +2,7 @@ use crate::get_book_dir;
 use anyhow::Result;
 use clap::{ArgMatches, Command as ClapCommand, arg};
 use mdbook::MDBook;
-use mdbook::config;
+use mdbook_core::config;
 use std::io;
 use std::io::Write;
 use std::process::Command;

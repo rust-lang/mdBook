@@ -29,7 +29,7 @@
 //!
 //! ```rust,no_run
 //! use mdbook::MDBook;
-//! use mdbook::config::Config;
+//! use mdbook_core::config::Config;
 //!
 //! let root_dir = "/path/to/book/root";
 //!
@@ -78,10 +78,9 @@
 //! [user guide]: https://rust-lang.github.io/mdBook/
 //! [`RenderContext`]: renderer::RenderContext
 //! [relevant chapter]: https://rust-lang.github.io/mdBook/for_developers/backends.html
-//! [`Config`]: config::Config
+//! [`Config`]: mdbook_core::config::Config
 
 pub mod book;
-pub mod config;
 pub mod preprocess;
 pub mod renderer;
 #[path = "front-end/mod.rs"]
@@ -89,6 +88,6 @@ pub mod theme;
 
 pub use crate::book::BookItem;
 pub use crate::book::MDBook;
-pub use crate::config::Config;
 pub use crate::renderer::Renderer;
 pub use mdbook_core::MDBOOK_VERSION;
+pub use mdbook_core::config::Config;

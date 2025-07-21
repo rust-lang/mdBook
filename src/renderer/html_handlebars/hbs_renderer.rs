@@ -1,11 +1,8 @@
 use crate::book::{Book, BookItem};
-use crate::config::{BookConfig, Code, Config, HtmlConfig, Playground, RustEdition};
 use crate::renderer::html_handlebars::StaticFiles;
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
 use crate::theme::{self, Theme};
-use mdbook_core::utils;
-use mdbook_core::utils::fs::get_404_output_file;
 
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -17,6 +14,9 @@ use std::sync::LazyLock;
 use anyhow::{Context, Result, bail};
 use handlebars::Handlebars;
 use log::{debug, info, trace, warn};
+use mdbook_core::config::{BookConfig, Code, Config, HtmlConfig, Playground, RustEdition};
+use mdbook_core::utils;
+use mdbook_core::utils::fs::get_404_output_file;
 use regex::{Captures, Regex};
 use serde_json::json;
 
@@ -400,7 +400,7 @@ impl Renderer for HtmlHandlebars {
         // Render search index
         #[cfg(feature = "search")]
         {
-            let default = crate::config::Search::default();
+            let default = mdbook_core::config::Search::default();
             let search = html_config.search.as_ref().unwrap_or(&default);
             if search.enable {
                 super::search::create_files(&search, &mut static_files, &book)?;
@@ -1008,9 +1008,8 @@ fn collect_redirects_for_path(
 
 #[cfg(test)]
 mod tests {
-    use crate::config::TextDirection;
-
     use super::*;
+    use mdbook_core::config::TextDirection;
     use pretty_assertions::assert_eq;
 
     #[test]

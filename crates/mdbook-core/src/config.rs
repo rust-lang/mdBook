@@ -12,7 +12,7 @@
 //! # use anyhow::Result;
 //! use std::path::PathBuf;
 //! use std::str::FromStr;
-//! use mdbook::Config;
+//! use mdbook_core::config::Config;
 //! use toml::Value;
 //!
 //! # fn run() -> Result<()> {
@@ -47,11 +47,10 @@
 //! # run().unwrap()
 //! ```
 
-use crate::utils::{self, toml_ext::TomlExt};
+use crate::utils::log_backtrace;
+use crate::utils::toml_ext::TomlExt;
 use anyhow::{Context, Error, Result, bail};
 use log::{debug, trace, warn};
-use mdbook_core::utils::log_backtrace;
-use mdbook_core::utils::toml_ext::TomlExt;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
 use std::env;
@@ -814,7 +813,7 @@ impl<'de, T> Updateable<'de> for T where T: Serialize + Deserialize<'de> {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mdbook_core::utils::fs::get_404_output_file;
+    use crate::utils::fs::get_404_output_file;
     use serde_json::json;
 
     const COMPLEX_CONFIG: &str = r#"
