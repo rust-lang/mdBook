@@ -1,11 +1,10 @@
 use std::path::Path;
 use std::{cmp::Ordering, collections::BTreeMap};
 
-use mdbook_core::utils::special_escape;
-
 use handlebars::{
     Context, Handlebars, Helper, HelperDef, Output, RenderContext, RenderError, RenderErrorReason,
 };
+use mdbook_markdown::special_escape;
 
 // Handlebars helper to construct TOC
 #[derive(Clone, Copy)]

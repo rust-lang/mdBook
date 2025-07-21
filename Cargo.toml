@@ -24,6 +24,7 @@ rust-version = "1.85.0" # Keep in sync with installation.md and .github/workflow
 anyhow = "1.0.98"
 log = "0.4.27"
 mdbook-core = { path = "crates/mdbook-core" }
+mdbook-markdown = { path = "crates/mdbook-markdown" }
 mdbook-preprocessor = { path = "crates/mdbook-preprocessor" }
 mdbook-renderer = { path = "crates/mdbook-renderer" }
 mdbook-summary = { path = "crates/mdbook-summary" }
@@ -63,6 +64,7 @@ handlebars = "6.0"
 hex = "0.4.3"
 log.workspace = true
 mdbook-core.workspace = true
+mdbook-markdown.workspace = true
 mdbook-preprocessor.workspace = true
 mdbook-renderer.workspace = true
 mdbook-summary.workspace = true

@@ -1271,6 +1271,7 @@ dependencies = [
  "ignore",
  "log",
  "mdbook-core",
+ "mdbook-markdown",
  "mdbook-preprocessor",
  "mdbook-renderer",
  "mdbook-summary",
@@ -1309,6 +1310,15 @@ dependencies = [
  "serde_json",
  "tempfile",
  "toml",
+]
+
+[[package]]
+name = "mdbook-markdown"
+version = "0.5.0-alpha.1"
+dependencies = [
+ "log",
+ "pulldown-cmark 0.10.3",
+ "regex",
 ]
 
 [[package]]
