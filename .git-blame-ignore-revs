@@ -1,0 +1,4 @@
+# Use `git config blame.ignorerevsfile .git-blame-ignore-revs` to make `git blame` ignore the following commits.
+
+# Rustfmt for 2024
+c7b67e363bb9ce3383636ee615e8e761bf185b33
