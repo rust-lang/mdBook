@@ -25,7 +25,7 @@ mdbook-core = { path = "crates/mdbook-core" }
 
 [package]
 name = "mdbook"
-version = "0.4.52"
+version = "0.5.0-alpha.1"
 authors = [
     "Mathieu David <mathieudavid@mathieudavid.org>",
     "Michael-F-Bryan <michaelfbryan@gmail.com>",
