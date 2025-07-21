@@ -1297,6 +1297,9 @@ dependencies = [
 [[package]]
 name = "mdbook-core"
 version = "0.5.0-alpha.1"
+dependencies = [
+ "anyhow",
+]
 
 [[package]]
 name = "mdbook-preprocessor"
@@ -1309,6 +1312,7 @@ dependencies = [
 name = "mdbook-remove-emphasis"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "mdbook",
  "pulldown-cmark 0.12.2",
  "pulldown-cmark-to-cmark",

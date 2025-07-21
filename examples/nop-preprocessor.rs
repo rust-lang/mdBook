@@ -1,9 +1,9 @@
 //! A basic example of a preprocessor that does nothing.
 
 use crate::nop_lib::Nop;
+use anyhow::Error;
 use clap::{Arg, ArgMatches, Command};
 use mdbook::book::Book;
-use mdbook::errors::Error;
 use mdbook::preprocess::{CmdPreprocessor, Preprocessor, PreprocessorContext};
 use semver::{Version, VersionReq};
 use std::io;

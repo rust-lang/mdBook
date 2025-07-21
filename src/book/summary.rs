@@ -1,4 +1,4 @@
-use crate::errors::*;
+use anyhow::{Context, Error, Result, bail};
 use log::{debug, trace, warn};
 use memchr::Memchr;
 use pulldown_cmark::{DefaultBrokenLinkCallback, Event, HeadingLevel, Tag, TagEnd};

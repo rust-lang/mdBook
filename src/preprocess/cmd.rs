@@ -1,6 +1,6 @@
 use super::{Preprocessor, PreprocessorContext};
 use crate::book::Book;
-use crate::errors::*;
+use anyhow::{Context, Result, bail, ensure};
 use log::{debug, trace, warn};
 use shlex::Shlex;
 use std::io::{self, Read, Write};

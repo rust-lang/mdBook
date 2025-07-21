@@ -11,26 +11,24 @@
 //! [For Developers]: https://rust-lang.github.io/mdBook/for_developers/index.html
 //! [RenderContext]: struct.RenderContext.html
 
-pub use self::html_handlebars::HtmlHandlebars;
-pub use self::markdown_renderer::MarkdownRenderer;
-
-mod html_handlebars;
-mod markdown_renderer;
-
+use crate::book::Book;
+use crate::config::Config;
+use anyhow::{Context, Result, bail};
+use log::{error, info, trace, warn};
+use serde::{Deserialize, Serialize};
 use shlex::Shlex;
 use std::collections::HashMap;
 use std::fs;
 use std::io::{self, ErrorKind, Read};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-
-use crate::book::Book;
-use crate::config::Config;
-use crate::errors::*;
-use log::{error, info, trace, warn};
 use toml::Value;
 
-use serde::{Deserialize, Serialize};
+pub use self::html_handlebars::HtmlHandlebars;
+pub use self::markdown_renderer::MarkdownRenderer;
+
+mod html_handlebars;
+mod markdown_renderer;
 
 /// An arbitrary `mdbook` backend.
 ///

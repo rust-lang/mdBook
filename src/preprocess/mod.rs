@@ -10,7 +10,7 @@ mod links;
 
 use crate::book::Book;
 use crate::config::Config;
-use crate::errors::*;
+use anyhow::Result;
 
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;

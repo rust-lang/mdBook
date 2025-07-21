@@ -6,8 +6,8 @@ use std::path::{Path, PathBuf};
 
 use super::summary::{Link, SectionNumber, Summary, SummaryItem, parse_summary};
 use crate::config::BuildConfig;
-use crate::errors::*;
 use crate::utils::bracket_escape;
+use anyhow::{Context, Result};
 use log::debug;
 use serde::{Deserialize, Serialize};
 

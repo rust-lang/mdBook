@@ -2,6 +2,7 @@ use super::command_prelude::*;
 #[cfg(feature = "watch")]
 use super::watch;
 use crate::{get_book_dir, open};
+use anyhow::Result;
 use axum::Router;
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
 use axum::routing::get;
@@ -9,7 +10,6 @@ use clap::builder::NonEmptyStringValueParser;
 use futures_util::StreamExt;
 use futures_util::sink::SinkExt;
 use mdbook::MDBook;
-use mdbook::errors::*;
 use mdbook::utils::fs::get_404_output_file;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::path::PathBuf;

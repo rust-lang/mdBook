@@ -1,18 +1,18 @@
 //! Various helpers and utilities.
 
-pub mod fs;
-mod string;
-pub(crate) mod toml_ext;
-use crate::errors::Error;
+use anyhow::Error;
 use log::error;
 use pulldown_cmark::{CodeBlockKind, CowStr, Event, Options, Parser, Tag, TagEnd, html};
 use regex::Regex;
-
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt::Write;
 use std::path::Path;
 use std::sync::LazyLock;
+
+pub mod fs;
+mod string;
+pub(crate) mod toml_ext;
 
 pub use self::string::{
     take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,

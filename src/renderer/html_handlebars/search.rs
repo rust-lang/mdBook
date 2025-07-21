@@ -3,17 +3,17 @@ use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
+use anyhow::{Context, Result, bail};
 use elasticlunr::{Index, IndexBuilder};
+use log::{debug, warn};
 use pulldown_cmark::*;
+use serde::Serialize;
 
 use crate::book::{Book, BookItem, Chapter};
 use crate::config::{Search, SearchChapterSettings};
-use crate::errors::*;
 use crate::renderer::html_handlebars::StaticFiles;
 use crate::theme::searcher;
 use crate::utils;
-use log::{debug, warn};
-use serde::Serialize;
 
 const MAX_WORD_LENGTH_TO_INDEX: usize = 80;
 

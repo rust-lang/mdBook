@@ -3,7 +3,7 @@ use std::{path::Path, sync::LazyLock};
 
 use super::{Preprocessor, PreprocessorContext};
 use crate::book::{Book, BookItem};
-use crate::errors::*;
+use anyhow::Result;
 use log::warn;
 
 /// A preprocessor for converting file name `README.md` to `index.md` since

@@ -9,7 +9,7 @@
 //! # Examples
 //!
 //! ```rust
-//! # use mdbook::errors::*;
+//! # use anyhow::Result;
 //! use std::path::PathBuf;
 //! use std::str::FromStr;
 //! use mdbook::Config;
@@ -47,6 +47,8 @@
 //! # run().unwrap()
 //! ```
 
+use crate::utils::{self, toml_ext::TomlExt};
+use anyhow::{Context, Error, Result, bail};
 use log::{debug, trace, warn};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
@@ -57,9 +59,6 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use toml::Value;
 use toml::value::Table;
-
-use crate::errors::*;
-use crate::utils::{self, toml_ext::TomlExt};
 
 /// The overall configuration object for MDBook, essentially an in-memory
 /// representation of `book.toml`.

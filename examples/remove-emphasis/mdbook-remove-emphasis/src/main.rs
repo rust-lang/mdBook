@@ -1,9 +1,9 @@
 //! This is a demonstration of an mdBook preprocessor which parses markdown
 //! and removes any instances of emphasis.
 
+use anyhow::Error;
 use mdbook::BookItem;
 use mdbook::book::{Book, Chapter};
-use mdbook::errors::Error;
 use mdbook::preprocess::{CmdPreprocessor, Preprocessor, PreprocessorContext};
 use pulldown_cmark::{Event, Parser, Tag, TagEnd};
 use std::io;

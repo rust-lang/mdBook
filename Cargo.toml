@@ -21,6 +21,7 @@ repository = "https://github.com/rust-lang/mdBook"
 rust-version = "1.85.0" # Keep in sync with installation.md and .github/workflows/main.yml
 
 [workspace.dependencies]
+anyhow = "1.0.98"
 mdbook-core = { path = "crates/mdbook-core" }
 
 [package]
@@ -42,7 +43,7 @@ description = "Creates a book from markdown files"
 rust-version.workspace = true
 
 [dependencies]
-anyhow = "1.0.71"
+anyhow.workspace = true
 chrono = { version = "0.4.24", default-features = false, features = ["clock"] }
 clap = { version = "4.3.12", features = ["cargo", "wrap_help"] }
 clap_complete = "4.3.2"

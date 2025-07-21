@@ -1,9 +1,9 @@
 //! Support for writing static files.
 
+use anyhow::{Context, Result};
 use log::{debug, warn};
 
 use crate::config::HtmlConfig;
-use crate::errors::*;
 use crate::renderer::html_handlebars::helpers::resources::ResourceHelper;
 use crate::theme::{self, Theme, playground_editor};
 use crate::utils;

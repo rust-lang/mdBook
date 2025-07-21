@@ -93,9 +93,3 @@ pub use crate::book::MDBook;
 pub use crate::config::Config;
 pub use crate::renderer::Renderer;
 pub use mdbook_core::MDBOOK_VERSION;
-
-/// The error types used through out this crate.
-pub mod errors {
-    pub(crate) use anyhow::{Context, bail, ensure};
-    pub use anyhow::{Error, Result};
-}

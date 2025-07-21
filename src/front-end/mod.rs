@@ -1,18 +1,16 @@
 #![allow(missing_docs)]
 
-pub mod playground_editor;
-
-pub mod fonts;
-
-#[cfg(feature = "search")]
-pub mod searcher;
-
+use anyhow::Result;
+use log::warn;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
-use crate::errors::*;
-use log::warn;
+pub mod fonts;
+pub mod playground_editor;
+#[cfg(feature = "search")]
+pub mod searcher;
+
 pub static INDEX: &[u8] = include_bytes!("templates/index.hbs");
 pub static HEAD: &[u8] = include_bytes!("templates/head.hbs");
 pub static REDIRECT: &[u8] = include_bytes!("templates/redirect.hbs");

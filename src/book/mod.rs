@@ -13,6 +13,7 @@ pub use self::book::{Book, BookItem, BookItems, Chapter, load_book};
 pub use self::init::BookBuilder;
 pub use self::summary::{Link, SectionNumber, Summary, SummaryItem, parse_summary};
 
+use anyhow::{Context, Error, Result, bail};
 use log::{debug, error, info, log_enabled, trace, warn};
 use std::ffi::OsString;
 use std::io::{IsTerminal, Write};
@@ -22,7 +23,6 @@ use tempfile::Builder as TempFileBuilder;
 use toml::Value;
 use topological_sort::TopologicalSort;
 
-use crate::errors::*;
 use crate::preprocess::{
     CmdPreprocessor, IndexPreprocessor, LinkPreprocessor, Preprocessor, PreprocessorContext,
 };

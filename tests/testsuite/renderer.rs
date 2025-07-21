@@ -1,7 +1,7 @@
 //! Tests for custom renderers.
 
 use crate::prelude::*;
-use mdbook::errors::Result;
+use anyhow::Result;
 use mdbook::renderer::{RenderContext, Renderer};
 use snapbox::IntoData;
 use std::fs::File;

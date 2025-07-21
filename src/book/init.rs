@@ -4,9 +4,9 @@ use std::path::PathBuf;
 
 use super::MDBook;
 use crate::config::Config;
-use crate::errors::*;
 use crate::theme;
 use crate::utils::fs::write_file;
+use anyhow::{Context, Result};
 use log::{debug, error, info, trace};
 
 /// A helper for setting up a new book and its directory structure.

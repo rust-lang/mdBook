@@ -5,3 +5,8 @@
 /// This is provided as a way for custom preprocessors and renderers to do
 /// compatibility checks.
 pub const MDBOOK_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+/// The error types used in mdbook.
+pub mod errors {
+    pub use anyhow::{Error, Result};
+}

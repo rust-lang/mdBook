@@ -1,8 +1,8 @@
 //! Tests for custom preprocessors.
 
 use crate::prelude::*;
+use anyhow::Result;
 use mdbook::book::Book;
-use mdbook::errors::Result;
 use mdbook::preprocess::{CmdPreprocessor, Preprocessor, PreprocessorContext};
 use std::sync::{Arc, Mutex};
 

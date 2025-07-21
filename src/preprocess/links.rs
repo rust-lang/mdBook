@@ -1,8 +1,8 @@
-use crate::errors::*;
 use crate::utils::{
     take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,
     take_rustdoc_include_lines,
 };
+use anyhow::{Context, Result};
 use regex::{CaptureMatches, Captures, Regex};
 use std::fs;
 use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeTo};

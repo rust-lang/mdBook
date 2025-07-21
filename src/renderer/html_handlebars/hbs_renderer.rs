@@ -1,11 +1,11 @@
 use crate::book::{Book, BookItem};
 use crate::config::{BookConfig, Code, Config, HtmlConfig, Playground, RustEdition};
-use crate::errors::*;
 use crate::renderer::html_handlebars::StaticFiles;
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
 use crate::theme::{self, Theme};
 use crate::utils;
+use crate::utils::fs::get_404_output_file;
 
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -14,7 +14,7 @@ use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
-use crate::utils::fs::get_404_output_file;
+use anyhow::{Context, Result, bail};
 use handlebars::Handlebars;
 use log::{debug, info, trace, warn};
 use regex::{Captures, Regex};
