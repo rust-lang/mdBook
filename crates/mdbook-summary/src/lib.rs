@@ -1,3 +1,5 @@
+//! Summary parser for mdBook.
+
 use anyhow::{Context, Error, Result, bail};
 use log::{debug, trace, warn};
 use memchr::Memchr;

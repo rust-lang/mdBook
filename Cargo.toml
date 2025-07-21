@@ -25,6 +25,7 @@ anyhow = "1.0.98"
 log = "0.4.27"
 mdbook-core = { path = "crates/mdbook-core" }
 mdbook-summary = { path = "crates/mdbook-summary" }
+memchr = "2.7.5"
 pulldown-cmark = { version = "0.10.3", default-features = false, features = ["html"] } # Do not update, part of the public api.
 regex = "1.11.1"
 serde = { version = "1.0.219", features = ["derive"] }
@@ -60,7 +61,8 @@ handlebars = "6.0"
 hex = "0.4.3"
 log.workspace = true
 mdbook-core.workspace = true
-memchr = "2.5.0"
+mdbook-summary.workspace = true
+memchr.workspace = true
 opener = "0.8.1"
 pulldown-cmark.workspace = true
 regex.workspace = true

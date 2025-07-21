@@ -4,11 +4,11 @@ use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
-use super::summary::{Link, SectionNumber, Summary, SummaryItem, parse_summary};
 use anyhow::{Context, Result};
 use log::debug;
 use mdbook_core::config::BuildConfig;
 use mdbook_core::utils::bracket_escape;
+use mdbook_summary::{Link, SectionNumber, Summary, SummaryItem, parse_summary};
 use serde::{Deserialize, Serialize};
 
 /// Load a book into memory from its `src/` directory.

@@ -7,16 +7,15 @@
 
 mod book;
 mod init;
-mod summary;
 
 pub use self::book::{Book, BookItem, BookItems, Chapter, load_book};
 pub use self::init::BookBuilder;
-pub use self::summary::{Link, SectionNumber, Summary, SummaryItem, parse_summary};
 
 use anyhow::{Context, Error, Result, bail};
 use log::{debug, error, info, log_enabled, trace, warn};
 use mdbook_core::config::{Config, RustEdition};
 use mdbook_core::utils;
+pub use mdbook_summary::{Link, SectionNumber, Summary, SummaryItem, parse_summary};
 use std::ffi::OsString;
 use std::io::{IsTerminal, Write};
 use std::path::{Path, PathBuf};

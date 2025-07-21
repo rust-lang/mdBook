@@ -1271,6 +1271,7 @@ dependencies = [
  "ignore",
  "log",
  "mdbook-core",
+ "mdbook-summary",
  "memchr",
  "notify",
  "notify-debouncer-mini",
@@ -1336,6 +1337,13 @@ dependencies = [
 [[package]]
 name = "mdbook-summary"
 version = "0.5.0-alpha.1"
+dependencies = [
+ "anyhow",
+ "log",
+ "memchr",
+ "pulldown-cmark 0.10.3",
+ "serde",
+]
 
 [[package]]
 name = "memchr"
