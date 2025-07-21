@@ -24,8 +24,8 @@ fn basic_build() {
 fn failure_on_missing_file() {
     BookTest::from_dir("build/missing_file").run("build", |cmd| {
         cmd.expect_failure().expect_stderr(str![[r#"
-[TIMESTAMP] [ERROR] (mdbook::utils): Error: Chapter file not found, ./chapter_1.md
-[TIMESTAMP] [ERROR] (mdbook::utils): [TAB]Caused By: [NOT_FOUND]
+[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Chapter file not found, ./chapter_1.md
+[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: [NOT_FOUND]
 
 "#]]);
     });
@@ -48,8 +48,8 @@ fn no_reserved_filename() {
         cmd.expect_failure().expect_stderr(str![[r#"
 [TIMESTAMP] [INFO] (mdbook::book): Book building has started
 [TIMESTAMP] [INFO] (mdbook::book): Running the html backend
-[TIMESTAMP] [ERROR] (mdbook::utils): Error: Rendering failed
-[TIMESTAMP] [ERROR] (mdbook::utils): [TAB]Caused By: print.md is reserved for internal use
+[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Rendering failed
+[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: print.md is reserved for internal use
 
 "#]]);
     });

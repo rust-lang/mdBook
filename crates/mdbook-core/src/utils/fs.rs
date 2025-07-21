@@ -29,7 +29,7 @@ pub fn write_file<P: AsRef<Path>>(build_dir: &Path, filename: P, content: &[u8])
 ///
 /// ```rust
 /// # use std::path::Path;
-/// # use mdbook::utils::fs::path_to_root;
+/// # use mdbook_core::utils::fs::path_to_root;
 /// let path = Path::new("some/relative/path");
 /// assert_eq!(path_to_root(path), "../../");
 /// ```

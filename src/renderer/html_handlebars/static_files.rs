@@ -2,11 +2,11 @@
 
 use anyhow::{Context, Result};
 use log::{debug, warn};
+use mdbook_core::utils;
 
 use crate::config::HtmlConfig;
 use crate::renderer::html_handlebars::helpers::resources::ResourceHelper;
 use crate::theme::{self, Theme, playground_editor};
-use crate::utils;
 
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -227,7 +227,7 @@ impl StaticFiles {
     }
 
     pub fn write_files(self, destination: &Path) -> Result<ResourceHelper> {
-        use crate::utils::fs::write_file;
+        use mdbook_core::utils::fs::write_file;
         use regex::bytes::{Captures, Regex};
         // The `{{ resource "name" }}` directive in static resources look like
         // handlebars syntax, even if they technically aren't.
@@ -302,7 +302,7 @@ mod tests {
     use super::*;
     use crate::config::HtmlConfig;
     use crate::theme::Theme;
-    use crate::utils::fs::write_file;
+    use mdbook_core::utils::fs::write_file;
     use tempfile::TempDir;
 
     #[test]

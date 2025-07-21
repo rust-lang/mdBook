@@ -11,8 +11,8 @@ cmd.expect_failure()
         .expect_stderr(str![[r#"
 [TIMESTAMP] [INFO] (mdbook::book): Book building has started
 [TIMESTAMP] [INFO] (mdbook::book): Running the html backend
-[TIMESTAMP] [ERROR] (mdbook::utils): Error: Rendering failed
-[TIMESTAMP] [ERROR] (mdbook::utils): [TAB]Caused By: theme dir [ROOT]/./non-existent-directory does not exist
+[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Rendering failed
+[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: theme dir [ROOT]/./non-existent-directory does not exist
 
 "#]]);
     });

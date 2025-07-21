@@ -48,7 +48,7 @@ test failing_include.md - Failing_Include (line 3) ... FAILED
 thread 'main' panicked at failing_include.md:3:1:
 failing!
 ...
-[TIMESTAMP] [ERROR] (mdbook::utils): Error: One or more tests failed
+[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: One or more tests failed
 
 "#]]);
     });
@@ -82,7 +82,7 @@ fn chapter_not_found() {
         cmd.expect_failure()
             .expect_stdout(str![[""]])
             .expect_stderr(str![[r#"
-[TIMESTAMP] [ERROR] (mdbook::utils): Error: Chapter not found: bogus
+[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Chapter not found: bogus
 
 "#]]);
     });

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::utils;
+use mdbook_core::utils;
 
 use handlebars::{
     Context, Handlebars, Helper, HelperDef, Output, RenderContext, RenderError, RenderErrorReason,

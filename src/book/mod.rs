@@ -27,7 +27,7 @@ use crate::preprocess::{
     CmdPreprocessor, IndexPreprocessor, LinkPreprocessor, Preprocessor, PreprocessorContext,
 };
 use crate::renderer::{CmdRenderer, HtmlHandlebars, MarkdownRenderer, RenderContext, Renderer};
-use crate::utils;
+use mdbook_core::utils;
 
 use crate::config::{Config, RustEdition};
 

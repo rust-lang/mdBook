@@ -5,8 +5,8 @@ use handlebars::{
     Context, Handlebars, Helper, Output, RenderContext, RenderError, RenderErrorReason, Renderable,
 };
 
-use crate::utils;
 use log::{debug, trace};
+use mdbook_core::utils;
 use serde_json::json;
 
 type StringMap = BTreeMap<String, String>;

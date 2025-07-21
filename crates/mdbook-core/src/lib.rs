@@ -10,3 +10,4 @@ pub const MDBOOK_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub mod errors {
     pub use anyhow::{Error, Result};
 }
+pub mod utils;

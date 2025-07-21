@@ -50,6 +50,8 @@
 use crate::utils::{self, toml_ext::TomlExt};
 use anyhow::{Context, Error, Result, bail};
 use log::{debug, trace, warn};
+use mdbook_core::utils::log_backtrace;
+use mdbook_core::utils::toml_ext::TomlExt;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
 use std::env;
@@ -182,7 +184,7 @@ impl Config {
             Ok(Some(config)) => Some(config),
             Ok(None) => None,
             Err(e) => {
-                utils::log_backtrace(&e);
+                log_backtrace(&e);
                 None
             }
         }
@@ -812,7 +814,7 @@ impl<'de, T> Updateable<'de> for T where T: Serialize + Deserialize<'de> {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utils::fs::get_404_output_file;
+    use mdbook_core::utils::fs::get_404_output_file;
     use serde_json::json;
 
     const COMPLEX_CONFIG: &str = r#"

@@ -22,7 +22,12 @@ rust-version = "1.85.0" # Keep in sync with installation.md and .github/workflow
 
 [workspace.dependencies]
 anyhow = "1.0.98"
+log = "0.4.27"
 mdbook-core = { path = "crates/mdbook-core" }
+pulldown-cmark = { version = "0.10.3", default-features = false, features = ["html"] } # Do not update, part of the public api.
+regex = "1.11.1"
+tempfile = "3.20.0"
+toml = "0.5.11" # Do not update, see https://github.com/rust-lang/mdBook/issues/2037
 
 [package]
 name = "mdbook"
@@ -50,18 +55,18 @@ clap_complete = "4.3.2"
 env_logger = "0.11.1"
 handlebars = "6.0"
 hex = "0.4.3"
-log = "0.4.17"
+log.workspace = true
 mdbook-core.workspace = true
 memchr = "2.5.0"
 opener = "0.8.1"
-pulldown-cmark = { version = "0.10.0", default-features = false, features = ["html"] } # Do not update, part of the public api.
-regex = "1.8.1"
+pulldown-cmark.workspace = true
+regex.workspace = true
 serde = { version = "1.0.163", features = ["derive"] }
 serde_json = "1.0.96"
 sha2 = "0.10.8"
 shlex = "1.3.0"
-tempfile = "3.4.0"
-toml = "0.5.11" # Do not update, see https://github.com/rust-lang/mdBook/issues/2037
+tempfile.workspace = true
+toml.workspace = true
 topological-sort = "0.2.2"
 
 # Watch feature

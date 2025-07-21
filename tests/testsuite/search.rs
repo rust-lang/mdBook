@@ -137,8 +137,8 @@ fn chapter_settings_validation_error() {
         cmd.expect_failure().expect_stderr(str![[r#"
 [TIMESTAMP] [INFO] (mdbook::book): Book building has started
 [TIMESTAMP] [INFO] (mdbook::book): Running the html backend
-[TIMESTAMP] [ERROR] (mdbook::utils): Error: Rendering failed
-[TIMESTAMP] [ERROR] (mdbook::utils): [TAB]Caused By: [output.html.search.chapter] key `does-not-exist` does not match any chapter paths
+[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Rendering failed
+[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: [output.html.search.chapter] key `does-not-exist` does not match any chapter paths
 
 "#]]);
     });

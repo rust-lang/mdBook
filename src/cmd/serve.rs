@@ -10,7 +10,7 @@ use clap::builder::NonEmptyStringValueParser;
 use futures_util::StreamExt;
 use futures_util::sink::SinkExt;
 use mdbook::MDBook;
-use mdbook::utils::fs::get_404_output_file;
+use mdbook_core::utils::fs::get_404_output_file;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::path::PathBuf;
 use tokio::sync::broadcast;

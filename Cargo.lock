@@ -1299,6 +1299,11 @@ name = "mdbook-core"
 version = "0.5.0-alpha.1"
 dependencies = [
  "anyhow",
+ "log",
+ "pulldown-cmark 0.10.3",
+ "regex",
+ "tempfile",
+ "toml",
 ]
 
 [[package]]

@@ -1,8 +1,8 @@
 use crate::book::BookItem;
 use crate::renderer::{RenderContext, Renderer};
-use crate::utils;
 use anyhow::{Context, Result};
 use log::trace;
+use mdbook_core::utils;
 use std::fs;
 
 #[derive(Default)]

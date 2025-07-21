@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::{cmp::Ordering, collections::BTreeMap};
 
-use crate::utils::special_escape;
+use mdbook_core::utils::special_escape;
 
 use handlebars::{
     Context, Handlebars, Helper, HelperDef, Output, RenderContext, RenderError, RenderErrorReason,

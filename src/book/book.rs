@@ -6,9 +6,9 @@ use std::path::{Path, PathBuf};
 
 use super::summary::{Link, SectionNumber, Summary, SummaryItem, parse_summary};
 use crate::config::BuildConfig;
-use crate::utils::bracket_escape;
 use anyhow::{Context, Result};
 use log::debug;
+use mdbook_core::utils::bracket_escape;
 use serde::{Deserialize, Serialize};
 
 /// Load a book into memory from its `src/` directory.

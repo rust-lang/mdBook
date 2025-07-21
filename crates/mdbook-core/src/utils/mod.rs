@@ -12,7 +12,7 @@ use std::sync::LazyLock;
 
 pub mod fs;
 mod string;
-pub(crate) mod toml_ext;
+pub mod toml_ext;
 
 pub use self::string::{
     take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,
@@ -424,7 +424,8 @@ pub fn log_backtrace(e: &Error) {
     }
 }
 
-pub(crate) fn special_escape(mut s: &str) -> String {
+/// Escape characters to make it safe for an HTML string.
+pub fn special_escape(mut s: &str) -> String {
     let mut escaped = String::with_capacity(s.len());
     let needs_escape: &[char] = &['<', '>', '\'', '"', '\\', '&'];
     while let Some(next) = s.find(needs_escape) {
@@ -444,7 +445,8 @@ pub(crate) fn special_escape(mut s: &str) -> String {
     escaped
 }
 
-pub(crate) fn bracket_escape(mut s: &str) -> String {
+/// Escape `<` and `>` for HTML.
+pub fn bracket_escape(mut s: &str) -> String {
     let mut escaped = String::with_capacity(s.len());
     let needs_escape: &[char] = &['<', '>'];
     while let Some(next) = s.find(needs_escape) {

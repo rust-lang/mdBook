@@ -64,7 +64,7 @@ fn failing_preprocessor() {
                 .expect_stderr(str![[r#"
 [TIMESTAMP] [INFO] (mdbook::book): Book building has started
 Boom!!1!
-[TIMESTAMP] [ERROR] (mdbook::utils): Error: The "nop-preprocessor" preprocessor exited unsuccessfully with [EXIT_STATUS]: 1 status
+[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: The "nop-preprocessor" preprocessor exited unsuccessfully with [EXIT_STATUS]: 1 status
 
 "#]]);
         });

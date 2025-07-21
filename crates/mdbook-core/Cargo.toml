@@ -9,6 +9,13 @@ rust-version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+log.workspace = true
+pulldown-cmark.workspace = true
+regex.workspace = true
+toml.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
 
 [lints]
 workspace = true

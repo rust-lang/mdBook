@@ -4,8 +4,8 @@ use crate::renderer::html_handlebars::StaticFiles;
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
 use crate::theme::{self, Theme};
-use crate::utils;
-use crate::utils::fs::get_404_output_file;
+use mdbook_core::utils;
+use mdbook_core::utils::fs::get_404_output_file;
 
 use std::borrow::Cow;
 use std::collections::BTreeMap;

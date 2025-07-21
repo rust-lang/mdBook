@@ -68,8 +68,8 @@ fn failing_command() {
 [TIMESTAMP] [INFO] (mdbook::book): Running the failing backend
 [TIMESTAMP] [INFO] (mdbook::renderer): Invoking the "failing" renderer
 [TIMESTAMP] [ERROR] (mdbook::renderer): Renderer exited with non-zero return code.
-[TIMESTAMP] [ERROR] (mdbook::utils): Error: Rendering failed
-[TIMESTAMP] [ERROR] (mdbook::utils): [TAB]Caused By: The "failing" renderer failed
+[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Rendering failed
+[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: The "failing" renderer failed
 
 "#]]);
         });
@@ -86,9 +86,9 @@ fn missing_renderer() {
 [TIMESTAMP] [INFO] (mdbook::book): Running the missing backend
 [TIMESTAMP] [INFO] (mdbook::renderer): Invoking the "missing" renderer
 [TIMESTAMP] [ERROR] (mdbook::renderer): The command `trduyvbhijnorgevfuhn` wasn't found, is the "missing" backend installed? If you want to ignore this error when the "missing" backend is not installed, set `optional = true` in the `[output.missing]` section of the book.toml configuration file.
-[TIMESTAMP] [ERROR] (mdbook::utils): Error: Rendering failed
-[TIMESTAMP] [ERROR] (mdbook::utils): [TAB]Caused By: Unable to start the backend
-[TIMESTAMP] [ERROR] (mdbook::utils): [TAB]Caused By: [NOT_FOUND]
+[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Rendering failed
+[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: Unable to start the backend
+[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: [NOT_FOUND]
 
 "#]]);
     });

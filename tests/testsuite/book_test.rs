@@ -35,7 +35,7 @@ impl BookTest {
         let dir = Path::new("tests/testsuite").join(dir);
         assert!(dir.exists(), "{dir:?} should exist");
         let tmp = Self::new_tmp();
-        mdbook::utils::fs::copy_files_except_ext(
+        mdbook_core::utils::fs::copy_files_except_ext(
             &dir,
             &tmp,
             true,

@@ -24,9 +24,9 @@ fn redirect_removed_with_fragments_only() {
         cmd.expect_failure().expect_stderr(str![[r#"
 [TIMESTAMP] [INFO] (mdbook::book): Book building has started
 [TIMESTAMP] [INFO] (mdbook::book): Running the html backend
-[TIMESTAMP] [ERROR] (mdbook::utils): Error: Rendering failed
-[TIMESTAMP] [ERROR] (mdbook::utils): [TAB]Caused By: Unable to emit redirects
-[TIMESTAMP] [ERROR] (mdbook::utils): [TAB]Caused By: redirect entry for `old-file.html` only has source paths with `#` fragments
+[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Rendering failed
+[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: Unable to emit redirects
+[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: redirect entry for `old-file.html` only has source paths with `#` fragments
 There must be an entry without the `#` fragment to determine the default destination.
 
 "#]]);
@@ -40,8 +40,8 @@ fn redirect_existing_page() {
         cmd.expect_failure().expect_stderr(str![[r#"
 [TIMESTAMP] [INFO] (mdbook::book): Book building has started
 [TIMESTAMP] [INFO] (mdbook::book): Running the html backend
-[TIMESTAMP] [ERROR] (mdbook::utils): Error: Rendering failed
-[TIMESTAMP] [ERROR] (mdbook::utils): [TAB]Caused By: redirect found for existing chapter at `/chapter_1.html`
+[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Rendering failed
+[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: redirect found for existing chapter at `/chapter_1.html`
 Either delete the redirect or remove the chapter.
 
 "#]]);
