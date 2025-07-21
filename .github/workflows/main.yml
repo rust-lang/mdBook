@@ -48,9 +48,9 @@ jobs:
     - name: Install Rust
       run: bash ci/install-rust.sh ${{ matrix.rust }} ${{ matrix.target }}
     - name: Build and run tests
-      run: cargo test --locked --target ${{ matrix.target }}
+      run: cargo test --workspace --locked --target ${{ matrix.target }}
     - name: Test no default
-      run: cargo test --no-default-features --target ${{ matrix.target }}
+      run: cargo test --workspace --no-default-features --target ${{ matrix.target }}
 
   aarch64-cross-builds:
     runs-on: ubuntu-22.04

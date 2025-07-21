@@ -8,3 +8,8 @@ mdbook = { version = "0.4.40", path = "../../.." }
 pulldown-cmark = { version = "0.12.2", default-features = false }
 pulldown-cmark-to-cmark = "18.0.0"
 serde_json = "1.0.132"
+
+[[bin]]
+name = "mdbook-remove-emphasis"
+# This is tested through a separate test from the main package.
+test = false
