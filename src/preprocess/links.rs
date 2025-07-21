@@ -684,8 +684,7 @@ mod tests {
 
     #[test]
     fn test_find_playgrounds_with_properties() {
-        let s =
-            "Some random text with escaped playground {{#playground file.rs editable }} and some \
+        let s = "Some random text with escaped playground {{#playground file.rs editable }} and some \
                  more\n text {{#playground my.rs editable no_run should_panic}} ...";
 
         let res = find_links(s).collect::<Vec<_>>();
@@ -714,8 +713,7 @@ mod tests {
 
     #[test]
     fn test_find_all_link_types() {
-        let s =
-            "Some random text with escaped playground {{#include file.rs}} and \\{{#contents are \
+        let s = "Some random text with escaped playground {{#include file.rs}} and \\{{#contents are \
                  insignifficant in escaped link}} some more\n text  {{#playground my.rs editable \
                  no_run should_panic}} ...";
 

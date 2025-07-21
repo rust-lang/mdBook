@@ -1,8 +1,8 @@
 //! Tests for search support.
 
 use crate::prelude::*;
-use mdbook::book::Chapter;
 use mdbook::BookItem;
+use mdbook::book::Chapter;
 use snapbox::file;
 use std::path::{Path, PathBuf};
 
@@ -62,7 +62,10 @@ fn reasonable_search_index() {
     // See note about InlineHtml in search.rs. Ideally the `alert()` part
     // should not be in the index, but we don't have a way to scrub inline
     // html.
-    assert_eq!(docs[&sneaky]["body"], "I put &lt;HTML&gt; in here! Sneaky inline event alert(\"inline\");. But regular inline is indexed.");
+    assert_eq!(
+        docs[&sneaky]["body"],
+        "I put &lt;HTML&gt; in here! Sneaky inline event alert(\"inline\");. But regular inline is indexed."
+    );
     assert_eq!(
         docs[&no_headers]["breadcrumbs"],
         "First Chapter » No Headers"

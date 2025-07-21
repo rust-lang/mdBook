@@ -1,9 +1,9 @@
 use super::command_prelude::*;
 use crate::get_book_dir;
-use clap::builder::NonEmptyStringValueParser;
 use clap::ArgAction;
-use mdbook::errors::Result;
+use clap::builder::NonEmptyStringValueParser;
 use mdbook::MDBook;
+use mdbook::errors::Result;
 use std::path::PathBuf;
 
 // Create clap subcommand arguments

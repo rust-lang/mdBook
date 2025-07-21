@@ -1,7 +1,7 @@
 //! Utility for building and running tests against mdbook.
 
-use mdbook::book::BookBuilder;
 use mdbook::MDBook;
+use mdbook::book::BookBuilder;
 use snapbox::IntoData;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};

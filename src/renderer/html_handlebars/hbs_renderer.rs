@@ -1,8 +1,8 @@
 use crate::book::{Book, BookItem};
 use crate::config::{BookConfig, Code, Config, HtmlConfig, Playground, RustEdition};
 use crate::errors::*;
-use crate::renderer::html_handlebars::helpers;
 use crate::renderer::html_handlebars::StaticFiles;
+use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
 use crate::theme::{self, Theme};
 use crate::utils;
@@ -1066,20 +1066,34 @@ mod tests {
     #[test]
     fn add_playground() {
         let inputs = [
-          ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust\"># #![allow(unused)]\n# fn main() {\nx()\n# }</code></pre>"),
-          ("<code class=\"language-rust\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust\">fn main() {}</code></pre>"),
-          ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code></pre>"),
-          ("<code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code></pre>"),
-          ("<code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code></pre>"),
-          ("<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>",
-           "<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>"),
-          ("<code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code></pre>"),
+            (
+                "<code class=\"language-rust\">x()</code>",
+                "<pre class=\"playground\"><code class=\"language-rust\"># #![allow(unused)]\n# fn main() {\nx()\n# }</code></pre>",
+            ),
+            (
+                "<code class=\"language-rust\">fn main() {}</code>",
+                "<pre class=\"playground\"><code class=\"language-rust\">fn main() {}</code></pre>",
+            ),
+            (
+                "<code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code>",
+                "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code></pre>",
+            ),
+            (
+                "<code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code>",
+                "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code></pre>",
+            ),
+            (
+                "<code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code>",
+                "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code></pre>",
+            ),
+            (
+                "<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>",
+                "<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>",
+            ),
+            (
+                "<code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code>",
+                "<pre class=\"playground\"><code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code></pre>",
+            ),
         ];
         for (src, should_be) in &inputs {
             let got = add_playground_pre(
@@ -1096,14 +1110,22 @@ mod tests {
     #[test]
     fn add_playground_edition2015() {
         let inputs = [
-          ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2015\"># #![allow(unused)]\n# fn main() {\nx()\n# }</code></pre>"),
-          ("<code class=\"language-rust\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}</code></pre>"),
-          ("<code class=\"language-rust edition2015\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}</code></pre>"),
-          ("<code class=\"language-rust edition2018\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}</code></pre>"),
+            (
+                "<code class=\"language-rust\">x()</code>",
+                "<pre class=\"playground\"><code class=\"language-rust edition2015\"># #![allow(unused)]\n# fn main() {\nx()\n# }</code></pre>",
+            ),
+            (
+                "<code class=\"language-rust\">fn main() {}</code>",
+                "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}</code></pre>",
+            ),
+            (
+                "<code class=\"language-rust edition2015\">fn main() {}</code>",
+                "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}</code></pre>",
+            ),
+            (
+                "<code class=\"language-rust edition2018\">fn main() {}</code>",
+                "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}</code></pre>",
+            ),
         ];
         for (src, should_be) in &inputs {
             let got = add_playground_pre(
@@ -1120,14 +1142,22 @@ mod tests {
     #[test]
     fn add_playground_edition2018() {
         let inputs = [
-          ("<code class=\"language-rust\">x()</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2018\"># #![allow(unused)]\n# fn main() {\nx()\n# }</code></pre>"),
-          ("<code class=\"language-rust\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}</code></pre>"),
-          ("<code class=\"language-rust edition2015\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}</code></pre>"),
-          ("<code class=\"language-rust edition2018\">fn main() {}</code>",
-           "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}</code></pre>"),
+            (
+                "<code class=\"language-rust\">x()</code>",
+                "<pre class=\"playground\"><code class=\"language-rust edition2018\"># #![allow(unused)]\n# fn main() {\nx()\n# }</code></pre>",
+            ),
+            (
+                "<code class=\"language-rust\">fn main() {}</code>",
+                "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}</code></pre>",
+            ),
+            (
+                "<code class=\"language-rust edition2015\">fn main() {}</code>",
+                "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}</code></pre>",
+            ),
+            (
+                "<code class=\"language-rust edition2018\">fn main() {}</code>",
+                "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}</code></pre>",
+            ),
         ];
         for (src, should_be) in &inputs {
             let got = add_playground_pre(
@@ -1144,14 +1174,22 @@ mod tests {
     #[test]
     fn add_playground_edition2021() {
         let inputs = [
-            ("<code class=\"language-rust\">x()</code>",
-             "<pre class=\"playground\"><code class=\"language-rust edition2021\"># #![allow(unused)]\n# fn main() {\nx()\n# }</code></pre>"),
-            ("<code class=\"language-rust\">fn main() {}</code>",
-             "<pre class=\"playground\"><code class=\"language-rust edition2021\">fn main() {}</code></pre>"),
-            ("<code class=\"language-rust edition2015\">fn main() {}</code>",
-             "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}</code></pre>"),
-            ("<code class=\"language-rust edition2018\">fn main() {}</code>",
-             "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}</code></pre>"),
+            (
+                "<code class=\"language-rust\">x()</code>",
+                "<pre class=\"playground\"><code class=\"language-rust edition2021\"># #![allow(unused)]\n# fn main() {\nx()\n# }</code></pre>",
+            ),
+            (
+                "<code class=\"language-rust\">fn main() {}</code>",
+                "<pre class=\"playground\"><code class=\"language-rust edition2021\">fn main() {}</code></pre>",
+            ),
+            (
+                "<code class=\"language-rust edition2015\">fn main() {}</code>",
+                "<pre class=\"playground\"><code class=\"language-rust edition2015\">fn main() {}</code></pre>",
+            ),
+            (
+                "<code class=\"language-rust edition2018\">fn main() {}</code>",
+                "<pre class=\"playground\"><code class=\"language-rust edition2018\">fn main() {}</code></pre>",
+            ),
         ];
         for (src, should_be) in &inputs {
             let got = add_playground_pre(
@@ -1169,31 +1207,39 @@ mod tests {
     #[test]
     fn hide_lines_language_rust() {
         let inputs = [
-          (
-           "<pre class=\"playground\"><code class=\"language-rust\">\n# #![allow(unused)]\n# fn main() {\nx()\n# }</code></pre>",
-           "<pre class=\"playground\"><code class=\"language-rust\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}</span></code></pre>",),
-          // # must be followed by a space for a line to be hidden
-          (
-           "<pre class=\"playground\"><code class=\"language-rust\">\n#fn main() {\nx()\n#}</code></pre>",
-           "<pre class=\"playground\"><code class=\"language-rust\">\n#fn main() {\nx()\n#}</code></pre>",),
-          (
-           "<pre class=\"playground\"><code class=\"language-rust\">fn main() {}</code></pre>",
-           "<pre class=\"playground\"><code class=\"language-rust\">fn main() {}</code></pre>",),
-          (
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code></pre>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";</code></pre>",),
-          (
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code></pre>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code></pre>",),
-          (
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code></pre>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span><span class=\"boring\">\n</span>\";</code></pre>",),
-          (
-           "<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>",
-           "<code class=\"language-rust ignore\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";</code>",),
-          (
-           "<pre class=\"playground\"><code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code></pre>",
-           "<pre class=\"playground\"><code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code></pre>",),
+            (
+                "<pre class=\"playground\"><code class=\"language-rust\">\n# #![allow(unused)]\n# fn main() {\nx()\n# }</code></pre>",
+                "<pre class=\"playground\"><code class=\"language-rust\">\n<span class=\"boring\">#![allow(unused)]\n</span><span class=\"boring\">fn main() {\n</span>x()\n<span class=\"boring\">}</span></code></pre>",
+            ),
+            // # must be followed by a space for a line to be hidden
+            (
+                "<pre class=\"playground\"><code class=\"language-rust\">\n#fn main() {\nx()\n#}</code></pre>",
+                "<pre class=\"playground\"><code class=\"language-rust\">\n#fn main() {\nx()\n#}</code></pre>",
+            ),
+            (
+                "<pre class=\"playground\"><code class=\"language-rust\">fn main() {}</code></pre>",
+                "<pre class=\"playground\"><code class=\"language-rust\">fn main() {}</code></pre>",
+            ),
+            (
+                "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code></pre>",
+                "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";</code></pre>",
+            ),
+            (
+                "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code></pre>",
+                "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code></pre>",
+            ),
+            (
+                "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code></pre>",
+                "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n<span class=\"boring\"> bar\n</span><span class=\"boring\">\n</span>\";</code></pre>",
+            ),
+            (
+                "<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>",
+                "<code class=\"language-rust ignore\">let s = \"foo\n<span class=\"boring\"> bar\n</span>\";</code>",
+            ),
+            (
+                "<pre class=\"playground\"><code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code></pre>",
+                "<pre class=\"playground\"><code class=\"language-rust editable\">#![no_std]\nlet s = \"foo\";\n #[some_attr]</code></pre>",
+            ),
         ];
         for (src, should_be) in &inputs {
             let got = hide_lines(src, &Code::default());
@@ -1204,12 +1250,14 @@ mod tests {
     #[test]
     fn hide_lines_language_other() {
         let inputs = [
-          (
-           "<code class=\"language-python\">~hidden()\nnothidden():\n~    hidden()\n    ~hidden()\n    nothidden()</code>",
-           "<code class=\"language-python\"><span class=\"boring\">hidden()\n</span>nothidden():\n<span class=\"boring\">    hidden()\n</span><span class=\"boring\">    hidden()\n</span>    nothidden()\n</code>",),
-           (
-            "<code class=\"language-python hidelines=!!!\">!!!hidden()\nnothidden():\n!!!    hidden()\n    !!!hidden()\n    nothidden()</code>",
-            "<code class=\"language-python hidelines=!!!\"><span class=\"boring\">hidden()\n</span>nothidden():\n<span class=\"boring\">    hidden()\n</span><span class=\"boring\">    hidden()\n</span>    nothidden()\n</code>",),
+            (
+                "<code class=\"language-python\">~hidden()\nnothidden():\n~    hidden()\n    ~hidden()\n    nothidden()</code>",
+                "<code class=\"language-python\"><span class=\"boring\">hidden()\n</span>nothidden():\n<span class=\"boring\">    hidden()\n</span><span class=\"boring\">    hidden()\n</span>    nothidden()\n</code>",
+            ),
+            (
+                "<code class=\"language-python hidelines=!!!\">!!!hidden()\nnothidden():\n!!!    hidden()\n    !!!hidden()\n    nothidden()</code>",
+                "<code class=\"language-python hidelines=!!!\"><span class=\"boring\">hidden()\n</span>nothidden():\n<span class=\"boring\">    hidden()\n</span><span class=\"boring\">    hidden()\n</span>    nothidden()\n</code>",
+            ),
         ];
         for (src, should_be) in &inputs {
             let got = hide_lines(

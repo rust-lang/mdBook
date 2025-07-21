@@ -776,7 +776,10 @@ mod tests {
 
         assert!(got.is_err());
         let error_message = got.err().unwrap().to_string();
-        assert_eq!(error_message, "failed to parse SUMMARY.md line 2, column 1: Suffix chapters cannot be followed by a list");
+        assert_eq!(
+            error_message,
+            "failed to parse SUMMARY.md line 2, column 1: Suffix chapters cannot be followed by a list"
+        );
     }
 
     #[test]
@@ -788,7 +791,10 @@ mod tests {
 
         assert!(got.is_err());
         let error_message = got.err().unwrap().to_string();
-        assert_eq!(error_message, "failed to parse SUMMARY.md line 1, column 0: Suffix chapters cannot be followed by a list");
+        assert_eq!(
+            error_message,
+            "failed to parse SUMMARY.md line 1, column 0: Suffix chapters cannot be followed by a list"
+        );
     }
 
     #[test]

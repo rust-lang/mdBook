@@ -9,9 +9,9 @@ mod book;
 mod init;
 mod summary;
 
-pub use self::book::{load_book, Book, BookItem, BookItems, Chapter};
+pub use self::book::{Book, BookItem, BookItems, Chapter, load_book};
 pub use self::init::BookBuilder;
-pub use self::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
+pub use self::summary::{Link, SectionNumber, Summary, SummaryItem, parse_summary};
 
 use log::{debug, error, info, log_enabled, trace, warn};
 use std::ffi::OsString;
@@ -817,9 +817,11 @@ mod tests {
 
         let preprocessors = determine_preprocessors(&cfg).unwrap();
 
-        assert!(!preprocessors
-            .iter()
-            .any(|preprocessor| preprocessor.name() == "random"));
+        assert!(
+            !preprocessors
+                .iter()
+                .any(|preprocessor| preprocessor.name() == "random")
+        );
     }
 
     #[test]
@@ -836,9 +838,11 @@ mod tests {
 
         let preprocessors = determine_preprocessors(&cfg).unwrap();
 
-        assert!(!preprocessors
-            .iter()
-            .any(|preprocessor| preprocessor.name() == "links"));
+        assert!(
+            !preprocessors
+                .iter()
+                .any(|preprocessor| preprocessor.name() == "links")
+        );
     }
 
     #[test]

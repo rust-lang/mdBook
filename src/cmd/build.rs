@@ -1,7 +1,7 @@
 use super::command_prelude::*;
 use crate::{get_book_dir, open};
-use mdbook::errors::Result;
 use mdbook::MDBook;
+use mdbook::errors::Result;
 use std::path::PathBuf;
 
 // Create clap subcommand arguments

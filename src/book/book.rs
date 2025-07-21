@@ -4,7 +4,7 @@ use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
-use super::summary::{parse_summary, Link, SectionNumber, Summary, SummaryItem};
+use super::summary::{Link, SectionNumber, Summary, SummaryItem, parse_summary};
 use crate::config::BuildConfig;
 use crate::errors::*;
 use crate::utils::bracket_escape;

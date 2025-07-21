@@ -101,6 +101,6 @@ pub use crate::renderer::Renderer;
 
 /// The error types used through out this crate.
 pub mod errors {
-    pub(crate) use anyhow::{bail, ensure, Context};
+    pub(crate) use anyhow::{Context, bail, ensure};
     pub use anyhow::{Error, Result};
 }

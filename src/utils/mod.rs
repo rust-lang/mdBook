@@ -5,7 +5,7 @@ mod string;
 pub(crate) mod toml_ext;
 use crate::errors::Error;
 use log::error;
-use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, Options, Parser, Tag, TagEnd};
+use pulldown_cmark::{CodeBlockKind, CowStr, Event, Options, Parser, Tag, TagEnd, html};
 use regex::Regex;
 
 use std::borrow::Cow;
