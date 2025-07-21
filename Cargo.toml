@@ -10,6 +10,12 @@ complexity = { level = "warn", priority = -1 }
 missing_docs = "warn"
 rust_2018_idioms = "warn"
 
+[workspace.package]
+edition = "2021"
+license = "MPL-2.0"
+repository = "https://github.com/rust-lang/mdBook"
+rust-version = "1.82.0" # Keep in sync with installation.md and .github/workflows/main.yml
+
 [package]
 name = "mdbook"
 version = "0.4.52"
@@ -19,14 +25,14 @@ authors = [
     "Matt Ickstadt <mattico8@gmail.com>"
 ]
 documentation = "https://rust-lang.github.io/mdBook/index.html"
-edition = "2021"
+edition.workspace = true
 exclude = ["/guide/*"]
 keywords = ["book", "gitbook", "rustbook", "markdown"]
-license = "MPL-2.0"
+license.workspace = true
 readme = "README.md"
-repository = "https://github.com/rust-lang/mdBook"
+repository.workspace = true
 description = "Creates a book from markdown files"
-rust-version = "1.82" # Keep in sync with installation.md and .github/workflows/main.yml
+rust-version.workspace = true
 
 [dependencies]
 anyhow = "1.0.71"
