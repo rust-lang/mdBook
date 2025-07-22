@@ -34,6 +34,14 @@ book. Relative paths are interpreted relative to the book's root directory. If
 not specified it will default to the value of the `build.build-dir` key in
 `book.toml`, or to `./book`.
 
+#### `--backend`
+
+By default, all backends configured in the `book.toml` config file will be executed.
+If this flag is given, only the specified backend will be run. This flag 
+may be given multiple times to run multiple backends. Providing a name of
+a backend that is not configured results in an error. For more information
+about backends, see [here](./format/configuration/renderers.md).
+
 -------------------
 
 ***Note:*** *The build command copies all files (excluding files with `.md` extension) from the source directory
