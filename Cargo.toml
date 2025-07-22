@@ -65,6 +65,7 @@ handlebars = "6.0"
 hex = "0.4.3"
 log.workspace = true
 mdbook-core.workspace = true
+mdbook-html.workspace = true
 mdbook-markdown.workspace = true
 mdbook-preprocessor.workspace = true
 mdbook-renderer.workspace = true
@@ -109,7 +110,7 @@ walkdir = "2.3.3"
 default = ["watch", "serve", "search"]
 watch = ["dep:notify", "dep:notify-debouncer-mini", "dep:ignore", "dep:pathdiff", "dep:walkdir"]
 serve = ["dep:futures-util", "dep:tokio", "dep:axum", "dep:tower-http"]
-search = ["dep:elasticlunr-rs", "dep:ammonia"]
+search = ["dep:elasticlunr-rs", "dep:ammonia", "mdbook-html/search"]
 
 [[bin]]
 doc = false

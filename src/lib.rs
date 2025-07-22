@@ -83,8 +83,6 @@
 pub mod book;
 pub mod preprocess;
 pub mod renderer;
-#[path = "front-end/mod.rs"]
-pub mod theme;
 
 pub use crate::book::BookItem;
 pub use crate::book::MDBook;

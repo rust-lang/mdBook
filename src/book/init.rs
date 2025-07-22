@@ -3,11 +3,11 @@ use std::io::Write;
 use std::path::PathBuf;
 
 use super::MDBook;
-use crate::theme;
 use anyhow::{Context, Result};
 use log::{debug, error, info, trace};
 use mdbook_core::config::Config;
 use mdbook_core::utils::fs::write_file;
+use mdbook_html::theme;
 
 /// A helper for setting up a new book and its directory structure.
 #[derive(Debug, Clone, PartialEq)]

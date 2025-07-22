@@ -8,13 +8,13 @@ use elasticlunr::{Index, IndexBuilder};
 use log::{debug, warn};
 use mdbook_core::config::{Search, SearchChapterSettings};
 use mdbook_core::utils;
+use mdbook_html::theme::searcher;
 use mdbook_markdown::new_cmark_parser;
 use pulldown_cmark::*;
 use serde::Serialize;
 
 use crate::book::{Book, BookItem, Chapter};
 use crate::renderer::html_handlebars::StaticFiles;
-use crate::theme::searcher;
 
 const MAX_WORD_LENGTH_TO_INDEX: usize = 80;
 

@@ -2,7 +2,6 @@ use crate::book::{Book, BookItem};
 use crate::renderer::html_handlebars::StaticFiles;
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::{RenderContext, Renderer};
-use crate::theme::{self, Theme};
 
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -17,6 +16,7 @@ use log::{debug, info, trace, warn};
 use mdbook_core::config::{BookConfig, Code, Config, HtmlConfig, Playground, RustEdition};
 use mdbook_core::utils;
 use mdbook_core::utils::fs::get_404_output_file;
+use mdbook_html::theme::Theme;
 use mdbook_markdown::{render_markdown, render_markdown_with_path};
 
 use regex::{Captures, Regex};
@@ -362,7 +362,7 @@ impl Renderer for HtmlHandlebars {
             None => ctx.root.join("theme"),
         };
 
-        let theme = theme::Theme::new(theme_dir);
+        let theme = Theme::new(theme_dir);
 
         debug!("Register the index handlebars template");
         handlebars.register_template_string("index", String::from_utf8(theme.index.clone())?)?;
