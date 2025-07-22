@@ -668,9 +668,7 @@ pub struct Help {
 
 impl Default for Help {
     fn default() -> Self {
-        Self {
-            show_icon: true,
-        }
+        Self { show_icon: true }
     }
 }
 
