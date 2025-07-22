@@ -111,3 +111,37 @@ fn rustdoc_include() {
 }</code></pre></pre>
 "##]]);
 }
+
+/// Checks the behavior of `{{#title}}` include.
+#[test]
+fn test_title_include() {
+    BookTest::from_dir("includes/title_handler")
+        .check_file_contains(
+            "book/title_from_title_handler.html",
+            "<title>This is from title handler</title>",
+        )
+        .check_file_doesnt_contain(
+            "book/title_from_title_handler.html",
+            "<title>Title from summary - 1</title>",
+        )
+        .check_file_contains(
+            "book/title_from_summary.html",
+            "<title>Title from summary - 2</title>",
+        );
+}
+
+/// Checks the behavior of `{{#title}}` include when a book title is present.
+#[test]
+fn test_title_include_with_book_title() {
+    BookTest::from_dir("includes/title_handler_with_book_title")
+        // Checks that the title from the title handler is used when present
+        .check_file_contains(
+            "book/title_from_title_handler.html",
+            "<title>This is from title handler</title>",
+        )
+        // Checks that the title from the summary appended with the book title is used when no title handler is present
+        .check_file_contains(
+            "book/title_from_summary.html",
+            "<title>Title from summary - 2 - Test Book Title</title>",
+        );
+}
