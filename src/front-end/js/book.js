@@ -614,6 +614,20 @@ aria-label="Show hidden lines"></button>';
         window.removeEventListener('mouseup', stopResize, false);
     }
 
+    // Add Ctrl + Shift + S as a shortcut to toggle the sidebar.
+    document.addEventListener('keydown', function(event) {
+        if (event.ctrlKey && event.shiftKey && event.key === 'S') {
+            event.preventDefault();
+            if (sidebarToggleAnchor.checked) {
+                sidebarToggleAnchor.checked = false;
+                hideSidebar();
+            } else {
+                sidebarToggleAnchor.checked = true;
+                showSidebar();
+            }
+        }
+    });
+
     document.addEventListener('touchstart', function(e) {
         firstContact = {
             x: e.touches[0].clientX,
