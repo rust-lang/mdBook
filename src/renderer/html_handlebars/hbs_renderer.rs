@@ -110,6 +110,7 @@ impl HtmlHandlebars {
             ctx.data
                 .insert("section".to_owned(), json!(section.to_string()));
         }
+        ctx.data.insert("data".to_owned(), json!(ch.data));
 
         let redirects = collect_redirects_for_path(&filepath, &ctx.html_config.redirect)?;
         if !redirects.is_empty() {
