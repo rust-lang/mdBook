@@ -4,7 +4,7 @@
     "eslint": "^8.57.1"
   },
   "scripts": {
-    "lint": "eslint src/front-end/*js src/front-end/**/*js",
-    "lint-fix": "eslint --fix src/front-end/*js src/front-end/**/*js"
+    "lint": "eslint crates/mdbook-html/front-end/*js crates/mdbook-html/front-end/**/*js",
+    "lint-fix": "eslint --fix crates/mdbook-html/front-end/*js crates/mdbook-html/front-end/**/*js"
   }
 }
