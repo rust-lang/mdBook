@@ -78,14 +78,7 @@ mdbook-markdown.workspace = true
 mdbook-preprocessor.workspace = true
 mdbook-renderer.workspace = true
 mdbook-summary.workspace = true
-memchr.workspace = true
 opener = "0.8.1"
-pulldown-cmark.workspace = true
-regex.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-shlex.workspace = true
-tempfile.workspace = true
 toml.workspace = true
 
 # Watch feature
@@ -102,9 +95,12 @@ axum = { version = "0.8.0", features = ["ws"], optional = true }
 tower-http = { version = "0.6.0", features = ["fs", "trace"], optional = true }
 
 [dev-dependencies]
+regex.workspace = true
 select = "0.6.0"
 semver = "1.0.17"
+serde_json.workspace = true
 snapbox = { version = "0.6.21", features = ["diff", "dir", "term-svg", "regex", "json"] }
+tempfile.workspace = true
 walkdir = "2.3.3"
 
 [features]
