@@ -81,7 +81,7 @@ fn example() -> CmdPreprocessor {
 fn example_supports_whatever() {
     let cmd = example();
 
-    let got = cmd.supports_renderer("whatever");
+    let got = cmd.supports_renderer("whatever", false);
 
     assert_eq!(got, true);
 }
@@ -90,7 +90,7 @@ fn example_supports_whatever() {
 fn example_doesnt_support_not_supported() {
     let cmd = example();
 
-    let got = cmd.supports_renderer("not-supported");
+    let got = cmd.supports_renderer("not-supported", false);
 
     assert_eq!(got, false);
 }
