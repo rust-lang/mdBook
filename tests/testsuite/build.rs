@@ -10,8 +10,8 @@ use crate::prelude::*;
 fn basic_build() {
     BookTest::from_dir("build/basic_build").run("build", |cmd| {
         cmd.expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook::book): Book building has started
-[TIMESTAMP] [INFO] (mdbook::book): Running the html backend
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
 [TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
 
 "#]]);
@@ -46,8 +46,8 @@ fn create_missing() {
 fn no_reserved_filename() {
     BookTest::from_dir("build/no_reserved_filename").run("build", |cmd| {
         cmd.expect_failure().expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook::book): Book building has started
-[TIMESTAMP] [INFO] (mdbook::book): Running the html backend
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
 [TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Rendering failed
 [TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: print.md is reserved for internal use
 

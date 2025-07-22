@@ -20,8 +20,8 @@ fn footnotes() {
     BookTest::from_dir("markdown/footnotes")
         .run("build", |cmd| {
             cmd.expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook::book): Book building has started
-[TIMESTAMP] [INFO] (mdbook::book): Running the html backend
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
 [TIMESTAMP] [WARN] (mdbook_markdown): footnote `multiple-definitions` in <unknown> defined multiple times - not updating to new definition
 [TIMESTAMP] [WARN] (mdbook_markdown): footnote `unused` in `<unknown>` is defined but not referenced
 [TIMESTAMP] [WARN] (mdbook_markdown): footnote `multiple-definitions` in footnotes.md defined multiple times - not updating to new definition

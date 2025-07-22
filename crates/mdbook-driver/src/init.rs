@@ -1,3 +1,5 @@
+//! Support for initializing a new book.
+
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::PathBuf;

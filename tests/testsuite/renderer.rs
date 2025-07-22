@@ -64,8 +64,8 @@ fn failing_command() {
             cmd.expect_failure()
                 .expect_stdout(str![[""]])
                 .expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook::book): Book building has started
-[TIMESTAMP] [INFO] (mdbook::book): Running the failing backend
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the failing backend
 [TIMESTAMP] [INFO] (mdbook_driver::builtin_renderers): Invoking the "failing" renderer
 [TIMESTAMP] [ERROR] (mdbook_driver::builtin_renderers): Renderer exited with non-zero return code.
 [TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Rendering failed
@@ -82,8 +82,8 @@ fn missing_renderer() {
         cmd.expect_failure()
             .expect_stdout(str![[""]])
             .expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook::book): Book building has started
-[TIMESTAMP] [INFO] (mdbook::book): Running the missing backend
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the missing backend
 [TIMESTAMP] [INFO] (mdbook_driver::builtin_renderers): Invoking the "missing" renderer
 [TIMESTAMP] [ERROR] (mdbook_driver::builtin_renderers): The command `trduyvbhijnorgevfuhn` wasn't found, is the "missing" backend installed? If you want to ignore this error when the "missing" backend is not installed, set `optional = true` in the `[output.missing]` section of the book.toml configuration file.
 [TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Rendering failed
@@ -99,8 +99,8 @@ fn missing_renderer() {
 fn missing_optional_not_fatal() {
     BookTest::from_dir("renderer/missing_optional_not_fatal").run("build", |cmd| {
         cmd.expect_stdout(str![[""]]).expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook::book): Book building has started
-[TIMESTAMP] [INFO] (mdbook::book): Running the missing backend
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the missing backend
 [TIMESTAMP] [INFO] (mdbook_driver::builtin_renderers): Invoking the "missing" renderer
 [TIMESTAMP] [WARN] (mdbook_driver::builtin_renderers): The command `trduyvbhijnorgevfuhn` for backend `missing` was not found, but was marked as optional.
 
@@ -131,8 +131,8 @@ Hello World!
 
 "#]])
                 .expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook::book): Book building has started
-[TIMESTAMP] [INFO] (mdbook::book): Running the arguments backend
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the arguments backend
 [TIMESTAMP] [INFO] (mdbook_driver::builtin_renderers): Invoking the "arguments" renderer
 
 "#]]);
@@ -156,8 +156,8 @@ fn backends_receive_render_context_via_stdin() {
     )
     .run("build", |cmd| {
         cmd.expect_stdout(str![[""]]).expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook::book): Book building has started
-[TIMESTAMP] [INFO] (mdbook::book): Running the cat-to-file backend
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the cat-to-file backend
 [TIMESTAMP] [INFO] (mdbook_driver::builtin_renderers): Invoking the "cat-to-file" renderer
 
 "#]]);
@@ -234,8 +234,8 @@ fn legacy_relative_command_path() {
     )
     .run("build", |cmd| {
         cmd.expect_stdout(str![[""]]).expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook::book): Book building has started
-[TIMESTAMP] [INFO] (mdbook::book): Running the myrenderer backend
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the myrenderer backend
 [TIMESTAMP] [INFO] (mdbook_driver::builtin_renderers): Invoking the "myrenderer" renderer
 
 "#]]);
@@ -253,8 +253,8 @@ fn legacy_relative_command_path() {
     )
     .run("build", |cmd| {
         cmd.expect_stdout(str![[""]]).expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook::book): Book building has started
-[TIMESTAMP] [INFO] (mdbook::book): Running the myrenderer backend
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the myrenderer backend
 [TIMESTAMP] [INFO] (mdbook_driver::builtin_renderers): Invoking the "myrenderer" renderer
 [TIMESTAMP] [WARN] (mdbook_driver::builtin_renderers): Renderer command `../renderers/myrenderer[EXE]` uses a path relative to the renderer output directory `[ROOT]/book`. This was previously accepted, but has been deprecated. Relative executable paths should be relative to the book root.
 

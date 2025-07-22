@@ -170,7 +170,6 @@ impl Preprocessor for CmdPreprocessor {
     }
 }
 
-#[cfg(false)] // Needs to wait for MDBook transfer
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -178,7 +177,7 @@ mod tests {
     use std::path::Path;
 
     fn guide() -> MDBook {
-        let example = Path::new(env!("CARGO_MANIFEST_DIR")).join("guide");
+        let example = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../guide");
         MDBook::load(example).unwrap()
     }
 

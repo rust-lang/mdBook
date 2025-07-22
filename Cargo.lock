@@ -1289,7 +1289,6 @@ dependencies = [
  "tempfile",
  "tokio",
  "toml",
- "topological-sort",
  "tower-http",
  "walkdir",
 ]
@@ -1315,12 +1314,16 @@ dependencies = [
  "anyhow",
  "log",
  "mdbook-core",
+ "mdbook-html",
  "mdbook-preprocessor",
  "mdbook-renderer",
+ "mdbook-summary",
  "regex",
  "serde_json",
  "shlex",
+ "tempfile",
  "toml",
+ "topological-sort",
 ]
 
 [[package]]

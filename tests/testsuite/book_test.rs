@@ -1,7 +1,7 @@
 //! Utility for building and running tests against mdbook.
 
-use mdbook::MDBook;
-use mdbook::book::BookBuilder;
+use mdbook_driver::MDBook;
+use mdbook_driver::init::BookBuilder;
 use snapbox::IntoData;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -424,7 +424,8 @@ fn assert(root: &Path) -> snapbox::Assert {
         regex!(r"(?m)(?<redacted>20\d\d-\d{2}-\d{2} \d{2}:\d{2}:\d{2})"),
     )
     .unwrap();
-    subs.insert("[VERSION]", mdbook::MDBOOK_VERSION).unwrap();
+    subs.insert("[VERSION]", mdbook_core::MDBOOK_VERSION)
+        .unwrap();
 
     subs.extend(LITERAL_REDACTIONS.into_iter().cloned())
         .unwrap();

@@ -28,7 +28,7 @@
 //! the `MDBook::init()` method.
 //!
 //! ```rust,no_run
-//! use mdbook::MDBook;
+//! use mdbook_driver::MDBook;
 //! use mdbook_core::config::Config;
 //!
 //! let root_dir = "/path/to/book/root";
@@ -48,7 +48,7 @@
 //! You can also load an existing book and build it.
 //!
 //! ```rust,no_run
-//! use mdbook::MDBook;
+//! use mdbook_driver::MDBook;
 //!
 //! let root_dir = "/path/to/book/root";
 //!
@@ -79,10 +79,3 @@
 //! [`RenderContext`]: mdbook_renderer::RenderContext
 //! [relevant chapter]: https://rust-lang.github.io/mdBook/for_developers/backends.html
 //! [`Config`]: mdbook_core::config::Config
-
-pub mod book;
-
-pub use crate::book::BookItem;
-pub use crate::book::MDBook;
-pub use mdbook_core::MDBOOK_VERSION;
-pub use mdbook_core::config::Config;
