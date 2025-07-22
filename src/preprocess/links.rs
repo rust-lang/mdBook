@@ -1,7 +1,7 @@
 use crate::errors::*;
 use crate::utils::{
-    take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,
-    take_rustdoc_include_lines,
+    take_anchored_lines, take_format_remove_indent, take_lines,
+    take_rustdoc_include_anchored_lines, take_rustdoc_include_lines,
 };
 use regex::{CaptureMatches, Captures, Regex};
 use std::fs;
@@ -136,6 +136,7 @@ where
 enum LinkType<'a> {
     Escaped,
     Include(PathBuf, RangeOrAnchor),
+    IncludeNoIndent(PathBuf, RangeOrAnchor),
     Playground(PathBuf, Vec<&'a str>),
     RustdocInclude(PathBuf, RangeOrAnchor),
     Title(&'a str),
@@ -206,6 +207,7 @@ impl<'a> LinkType<'a> {
         match self {
             LinkType::Escaped => None,
             LinkType::Include(p, _) => Some(return_relative_path(base, &p)),
+            LinkType::IncludeNoIndent(p, _) => Some(return_relative_path(base, &p)),
             LinkType::Playground(p, _) => Some(return_relative_path(base, &p)),
             LinkType::RustdocInclude(p, _) => Some(return_relative_path(base, &p)),
             LinkType::Title(_) => None,
@@ -254,9 +256,13 @@ fn parse_include_path(path: &str) -> LinkType<'static> {
     let mut parts = path.splitn(2, ':');
 
     let path = parts.next().unwrap().into();
+    let is_indented = parts.clone().next().unwrap_or("").rsplit(":").next();
     let range_or_anchor = parse_range_or_anchor(parts.next());
 
-    LinkType::Include(path, range_or_anchor)
+    match is_indented {
+        Some(_some) if _some.eq("-no-indent") => LinkType::IncludeNoIndent(path, range_or_anchor),
+        _ => LinkType::Include(path, range_or_anchor),
+    }
 }
 
 fn parse_rustdoc_include_path(path: &str) -> LinkType<'static> {
@@ -342,6 +348,23 @@ impl<'a> Link<'a> {
                             target.display(),
                         )
                     })
+            }
+            LinkType::IncludeNoIndent(ref pat, ref range_or_anchor) => {
+                let target = base.join(pat);
+
+                fs::read_to_string(&target)
+                    .map(|s| match range_or_anchor {
+                        RangeOrAnchor::Range(range) => take_lines(&s, range.clone()),
+                        RangeOrAnchor::Anchor(anchor) => take_anchored_lines(&s, anchor),
+                    })
+                    .with_context(|| {
+                        format!(
+                            "Could not read file for link {} ({})",
+                            self.link_text,
+                            target.display(),
+                        )
+                    })
+                    .map(|s| take_format_remove_indent(s.as_str()))
             }
             LinkType::RustdocInclude(ref pat, ref range_or_anchor) => {
                 let target = base.join(pat);
@@ -660,6 +683,25 @@ mod tests {
                     RangeOrAnchor::Anchor(String::from("anchor"))
                 ),
                 link_text: "{{#include file.rs:anchor}}",
+            }]
+        );
+    }
+
+    #[test]
+    fn test_find_links_with_anchor_no_indent() {
+        let s = "Some random text with {{#include file.rs:anchor:-no-indent}}...";
+        let res = find_links(s).collect::<Vec<_>>();
+        println!("\nOUTPUT: {:?}\n", res);
+        assert_eq!(
+            res,
+            vec![Link {
+                start_index: 22,
+                end_index: 60,
+                link_type: LinkType::IncludeNoIndent(
+                    PathBuf::from("file.rs"),
+                    RangeOrAnchor::Anchor(String::from("anchor"))
+                ),
+                link_text: "{{#include file.rs:anchor:-no-indent}}",
             }]
         );
     }
