@@ -98,6 +98,10 @@ impl HtmlHandlebars {
             ch.name.clone() + " - " + book_title
         };
 
+        let rendered_path = path.with_extension("html");
+
+        ctx.data
+            .insert("rendered_path".to_owned(), json!(rendered_path));
         ctx.data.insert("path".to_owned(), json!(path));
         ctx.data.insert("content".to_owned(), json!(content));
         ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
@@ -135,6 +139,8 @@ impl HtmlHandlebars {
         utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
 
         if ctx.is_index {
+            ctx.data
+                .insert("rendered_path".to_owned(), json!("index.html"));
             ctx.data.insert("path".to_owned(), json!("index.md"));
             ctx.data.insert("path_to_root".to_owned(), json!(""));
             ctx.data.insert("is_index".to_owned(), json!(true));
@@ -193,6 +199,7 @@ impl HtmlHandlebars {
             "/"
         };
         data_404.insert("base_url".to_owned(), json!(base_url));
+        data_404.insert("rendered_path".to_owned(), json!("404.html"));
         // Set a dummy path to ensure other paths (e.g. in the TOC) are generated correctly
         data_404.insert("path".to_owned(), json!("404.md"));
         data_404.insert("content".to_owned(), json!(html_content_404));
@@ -242,6 +249,7 @@ impl HtmlHandlebars {
         // the last rendered chapter by removing it from its context
         data.remove("title");
         data.insert("is_print".to_owned(), json!(true));
+        data.insert("rendered_path".to_owned(), json!("print.html"));
         data.insert("path".to_owned(), json!("print.md"));
         data.insert("content".to_owned(), json!(print_content));
         data.insert(
