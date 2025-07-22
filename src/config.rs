@@ -496,6 +496,8 @@ pub struct BuildConfig {
     pub use_default_preprocessors: bool,
     /// Extra directories to trigger rebuild when watching/serving
     pub extra_watch_dirs: Vec<PathBuf>,
+    /// Directory where to store static files.
+    pub static_files_dir: Option<PathBuf>,
 }
 
 impl Default for BuildConfig {
@@ -505,6 +507,7 @@ impl Default for BuildConfig {
             create_missing: true,
             use_default_preprocessors: true,
             extra_watch_dirs: Vec::new(),
+            static_files_dir: None,
         }
     }
 }
@@ -872,6 +875,7 @@ mod tests {
             create_missing: false,
             use_default_preprocessors: true,
             extra_watch_dirs: Vec::new(),
+            static_files_dir: None,
         };
         let rust_should_be = RustConfig { edition: None };
         let playground_should_be = Playground {
@@ -1083,6 +1087,7 @@ mod tests {
             create_missing: true,
             use_default_preprocessors: true,
             extra_watch_dirs: Vec::new(),
+            static_files_dir: None,
         };
 
         let html_should_be = HtmlConfig {
