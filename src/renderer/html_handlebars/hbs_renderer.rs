@@ -4,7 +4,7 @@ use crate::errors::*;
 use crate::renderer::html_handlebars::helpers;
 use crate::renderer::html_handlebars::StaticFiles;
 use crate::renderer::{RenderContext, Renderer};
-use crate::theme::{self, Theme};
+use crate::theme::{self, ContentToMinify, Theme};
 use crate::utils;
 
 use std::borrow::Cow;
@@ -344,6 +344,7 @@ impl Renderer for HtmlHandlebars {
         let destination = &ctx.destination;
         let book = &ctx.book;
         let build_dir = ctx.root.join(&ctx.config.build.build_dir);
+        let minification = ctx.config.build.minification;
 
         if destination.exists() {
             utils::fs::remove_dir_content(destination)
@@ -364,7 +365,7 @@ impl Renderer for HtmlHandlebars {
             None => ctx.root.join("theme"),
         };
 
-        let theme = theme::Theme::new(theme_dir);
+        let theme = theme::Theme::new(theme_dir, minification);
 
         debug!("Register the index handlebars template");
         handlebars.register_template_string("index", String::from_utf8(theme.index.clone())?)?;
@@ -403,14 +404,15 @@ impl Renderer for HtmlHandlebars {
             let default = crate::config::Search::default();
             let search = html_config.search.as_ref().unwrap_or(&default);
             if search.enable {
-                super::search::create_files(&search, &mut static_files, &book)?;
+                super::search::create_files(&search, &mut static_files, &book, minification)?;
             }
         }
 
         debug!("Render toc js");
         {
             let rendered_toc = handlebars.render("toc_js", &data)?;
-            static_files.add_builtin("toc.js", rendered_toc.as_bytes());
+            let rendered_toc = ContentToMinify::JS(&rendered_toc);
+            static_files.add_owned_builtin("toc.js", rendered_toc.minified(minification));
             debug!("Creating toc.js ✓");
         }
 

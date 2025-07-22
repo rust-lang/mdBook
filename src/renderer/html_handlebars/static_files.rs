@@ -159,6 +159,10 @@ impl StaticFiles {
     }
 
     pub fn add_builtin(&mut self, filename: &str, data: &[u8]) {
+        self.add_owned_builtin(filename, data.to_owned());
+    }
+
+    pub fn add_owned_builtin(&mut self, filename: &str, data: Vec<u8>) {
         self.static_files.push(StaticFile::Builtin {
             filename: filename.to_owned(),
             data: data.to_owned(),

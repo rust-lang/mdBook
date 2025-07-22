@@ -201,6 +201,12 @@ impl MDBook {
         Ok(())
     }
 
+    /// This method is only used by mdbook's tests.
+    #[doc(hidden)]
+    pub fn disable_minification(&mut self) {
+        self.config.build.minification = false;
+    }
+
     /// Run preprocessors and return the final book.
     pub fn preprocess_book(&self, renderer: &dyn Renderer) -> Result<(Book, PreprocessorContext)> {
         let preprocess_ctx = PreprocessorContext::new(
