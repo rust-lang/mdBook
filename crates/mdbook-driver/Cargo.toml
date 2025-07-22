@@ -12,9 +12,11 @@ anyhow.workspace = true
 log.workspace = true
 mdbook-core.workspace = true
 mdbook-preprocessor.workspace = true
+mdbook-renderer.workspace = true
 regex.workspace = true
 serde_json.workspace = true
 shlex.workspace = true
+toml.workspace = true
 
 [lints]
 workspace = true

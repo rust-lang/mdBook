@@ -1316,9 +1316,11 @@ dependencies = [
  "log",
  "mdbook-core",
  "mdbook-preprocessor",
+ "mdbook-renderer",
  "regex",
  "serde_json",
  "shlex",
+ "toml",
 ]
 
 [[package]]
