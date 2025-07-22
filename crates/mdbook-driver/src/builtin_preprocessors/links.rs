@@ -1,6 +1,6 @@
-use crate::book::{Book, BookItem};
 use anyhow::{Context, Result};
 use log::{error, warn};
+use mdbook_core::book::{Book, BookItem};
 use mdbook_core::utils::{
     take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,
     take_rustdoc_include_lines,
@@ -29,7 +29,8 @@ const MAX_LINK_NESTED_DEPTH: usize = 10;
 pub struct LinkPreprocessor;
 
 impl LinkPreprocessor {
-    pub(crate) const NAME: &'static str = "links";
+    /// Name of this preprocessor.
+    pub const NAME: &'static str = "links";
 
     /// Create a new `LinkPreprocessor`.
     pub fn new() -> Self {

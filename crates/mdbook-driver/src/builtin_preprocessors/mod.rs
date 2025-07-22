@@ -1,4 +1,4 @@
-//! Book preprocessing.
+//! Built-in preprocessors.
 
 pub use self::cmd::CmdPreprocessor;
 pub use self::index::IndexPreprocessor;

@@ -81,7 +81,6 @@
 //! [`Config`]: mdbook_core::config::Config
 
 pub mod book;
-pub mod preprocess;
 pub mod renderer;
 
 pub use crate::book::BookItem;

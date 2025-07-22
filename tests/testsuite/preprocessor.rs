@@ -3,7 +3,7 @@
 use crate::prelude::*;
 use anyhow::Result;
 use mdbook::book::Book;
-use mdbook::preprocess::CmdPreprocessor;
+use mdbook_driver::builtin_preprocessors::CmdPreprocessor;
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use std::sync::{Arc, Mutex};
 

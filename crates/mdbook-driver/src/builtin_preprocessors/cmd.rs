@@ -1,6 +1,6 @@
-use crate::book::Book;
 use anyhow::{Context, Result, bail, ensure};
 use log::{debug, trace, warn};
+use mdbook_core::book::Book;
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use shlex::Shlex;
 use std::io::{self, Write};
@@ -170,6 +170,7 @@ impl Preprocessor for CmdPreprocessor {
     }
 }
 
+#[cfg(false)] // Needs to wait for MDBook transfer
 #[cfg(test)]
 mod tests {
     use super::*;

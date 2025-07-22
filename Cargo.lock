@@ -1267,6 +1267,7 @@ dependencies = [
  "ignore",
  "log",
  "mdbook-core",
+ "mdbook-driver",
  "mdbook-html",
  "mdbook-markdown",
  "mdbook-preprocessor",
@@ -1310,6 +1311,15 @@ dependencies = [
 [[package]]
 name = "mdbook-driver"
 version = "0.5.0-alpha.1"
+dependencies = [
+ "anyhow",
+ "log",
+ "mdbook-core",
+ "mdbook-preprocessor",
+ "regex",
+ "serde_json",
+ "shlex",
+]
 
 [[package]]
 name = "mdbook-html"

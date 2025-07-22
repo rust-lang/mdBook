@@ -10,13 +10,13 @@ mod init;
 
 pub use self::book::load_book;
 pub use self::init::BookBuilder;
-use crate::preprocess::{CmdPreprocessor, IndexPreprocessor, LinkPreprocessor};
 use crate::renderer::{CmdRenderer, MarkdownRenderer};
 use anyhow::{Context, Error, Result, bail};
 use log::{debug, error, info, log_enabled, trace, warn};
 pub use mdbook_core::book::{Book, BookItem, BookItems, Chapter, SectionNumber};
 use mdbook_core::config::{Config, RustEdition};
 use mdbook_core::utils;
+use mdbook_driver::builtin_preprocessors::{CmdPreprocessor, IndexPreprocessor, LinkPreprocessor};
 use mdbook_html::HtmlHandlebars;
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use mdbook_renderer::{RenderContext, Renderer};

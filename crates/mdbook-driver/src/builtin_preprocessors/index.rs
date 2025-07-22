@@ -1,6 +1,6 @@
-use crate::book::{Book, BookItem};
 use anyhow::Result;
 use log::warn;
+use mdbook_core::book::{Book, BookItem};
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use regex::Regex;
 use std::{path::Path, sync::LazyLock};
@@ -11,7 +11,8 @@ use std::{path::Path, sync::LazyLock};
 pub struct IndexPreprocessor;
 
 impl IndexPreprocessor {
-    pub(crate) const NAME: &'static str = "index";
+    /// Name of this preprocessor.
+    pub const NAME: &'static str = "index";
 
     /// Create a new `IndexPreprocessor`.
     pub fn new() -> Self {

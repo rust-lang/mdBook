@@ -46,7 +46,7 @@ fn recursive_include() {
         .run("build", |cmd| {
             cmd.expect_stderr(str![[r#"
 [TIMESTAMP] [INFO] (mdbook::book): Book building has started
-[TIMESTAMP] [ERROR] (mdbook::preprocess::links): Stack depth exceeded in recursive.md. Check for cyclic includes
+[TIMESTAMP] [ERROR] (mdbook_driver::builtin_preprocessors::links): Stack depth exceeded in recursive.md. Check for cyclic includes
 [TIMESTAMP] [INFO] (mdbook::book): Running the html backend
 [TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
 

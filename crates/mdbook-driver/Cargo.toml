@@ -8,6 +8,13 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+anyhow.workspace = true
+log.workspace = true
+mdbook-core.workspace = true
+mdbook-preprocessor.workspace = true
+regex.workspace = true
+serde_json.workspace = true
+shlex.workspace = true
 
 [lints]
 workspace = true
