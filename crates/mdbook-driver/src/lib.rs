@@ -7,3 +7,4 @@ mod load;
 mod mdbook;
 
 pub use mdbook::MDBook;
+pub use mdbook_core::{book, config, errors};
