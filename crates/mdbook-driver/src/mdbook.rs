@@ -140,7 +140,7 @@ impl MDBook {
     ///
     /// ```no_run
     /// # use mdbook_driver::MDBook;
-    /// # use mdbook_core::book::BookItem;
+    /// # use mdbook_driver::book::BookItem;
     /// # let book = MDBook::load("mybook").unwrap();
     /// for item in book.iter() {
     ///     match *item {

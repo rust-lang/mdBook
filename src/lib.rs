@@ -29,7 +29,7 @@
 //!
 //! ```rust,no_run
 //! use mdbook_driver::MDBook;
-//! use mdbook_core::config::Config;
+//! use mdbook_driver::config::Config;
 //!
 //! let root_dir = "/path/to/book/root";
 //!
@@ -78,4 +78,4 @@
 //! [user guide]: https://rust-lang.github.io/mdBook/
 //! [`RenderContext`]: mdbook_renderer::RenderContext
 //! [relevant chapter]: https://rust-lang.github.io/mdBook/for_developers/backends.html
-//! [`Config`]: mdbook_core::config::Config
+//! [`Config`]: mdbook_driver::config::Config
