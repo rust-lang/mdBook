@@ -1,13 +1,11 @@
 //! Support for writing static files.
 
+use super::helpers::resources::ResourceHelper;
+use crate::theme::{self, Theme, playground_editor};
 use anyhow::{Context, Result};
 use log::{debug, warn};
 use mdbook_core::config::HtmlConfig;
 use mdbook_core::utils;
-use mdbook_html::theme::{self, Theme, playground_editor};
-
-use crate::renderer::html_handlebars::helpers::resources::ResourceHelper;
-
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fs::{self, File};
@@ -300,9 +298,9 @@ impl StaticFiles {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::theme::Theme;
     use mdbook_core::config::HtmlConfig;
     use mdbook_core::utils::fs::write_file;
-    use mdbook_html::theme::Theme;
     use tempfile::TempDir;
 
     #[test]

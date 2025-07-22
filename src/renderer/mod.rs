@@ -21,10 +21,8 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use toml::Value;
 
-pub use self::html_handlebars::HtmlHandlebars;
 pub use self::markdown_renderer::MarkdownRenderer;
 
-mod html_handlebars;
 mod markdown_renderer;
 
 /// A generic renderer which will shell out to an arbitrary executable.

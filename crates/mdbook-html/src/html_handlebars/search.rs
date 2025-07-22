@@ -1,20 +1,18 @@
+use super::static_files::StaticFiles;
+use crate::theme::searcher;
+use anyhow::{Context, Result, bail};
+use elasticlunr::{Index, IndexBuilder};
+use log::{debug, warn};
+use mdbook_core::book::{Book, BookItem, Chapter};
+use mdbook_core::config::{Search, SearchChapterSettings};
+use mdbook_core::utils;
+use mdbook_markdown::new_cmark_parser;
+use pulldown_cmark::*;
+use serde::Serialize;
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
-
-use anyhow::{Context, Result, bail};
-use elasticlunr::{Index, IndexBuilder};
-use log::{debug, warn};
-use mdbook_core::config::{Search, SearchChapterSettings};
-use mdbook_core::utils;
-use mdbook_html::theme::searcher;
-use mdbook_markdown::new_cmark_parser;
-use pulldown_cmark::*;
-use serde::Serialize;
-
-use crate::book::{Book, BookItem, Chapter};
-use crate::renderer::html_handlebars::StaticFiles;
 
 const MAX_WORD_LENGTH_TO_INDEX: usize = 80;
 
@@ -394,7 +392,7 @@ fn chapter_settings_priority() {
         "cli/inner" = { enable = true }
         "foo" = {} # Just to make sure empty table is allowed.
     "#;
-    let cfg: crate::Config = toml::from_str(cfg).unwrap();
+    let cfg: mdbook_core::config::Config = toml::from_str(cfg).unwrap();
     let html = cfg.html_config().unwrap();
     let chapter_configs = sort_search_config(&html.search.unwrap().chapter);
     for (path, enable) in [

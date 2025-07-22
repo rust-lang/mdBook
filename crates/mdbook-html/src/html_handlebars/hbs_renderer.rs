@@ -1,26 +1,23 @@
-use crate::book::{Book, BookItem};
-use crate::renderer::html_handlebars::StaticFiles;
-use crate::renderer::html_handlebars::helpers;
-use crate::renderer::{RenderContext, Renderer};
-
+use super::helpers;
+use super::static_files::StaticFiles;
+use crate::theme::Theme;
+use anyhow::{Context, Result, bail};
+use handlebars::Handlebars;
+use log::{debug, info, trace, warn};
+use mdbook_core::book::{Book, BookItem};
+use mdbook_core::config::{BookConfig, Code, Config, HtmlConfig, Playground, RustEdition};
+use mdbook_core::utils;
+use mdbook_core::utils::fs::get_404_output_file;
+use mdbook_markdown::{render_markdown, render_markdown_with_path};
+use mdbook_renderer::{RenderContext, Renderer};
+use regex::{Captures, Regex};
+use serde_json::json;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
-
-use anyhow::{Context, Result, bail};
-use handlebars::Handlebars;
-use log::{debug, info, trace, warn};
-use mdbook_core::config::{BookConfig, Code, Config, HtmlConfig, Playground, RustEdition};
-use mdbook_core::utils;
-use mdbook_core::utils::fs::get_404_output_file;
-use mdbook_html::theme::Theme;
-use mdbook_markdown::{render_markdown, render_markdown_with_path};
-
-use regex::{Captures, Regex};
-use serde_json::json;
 
 /// The HTML renderer for mdBook.
 #[derive(Default)]

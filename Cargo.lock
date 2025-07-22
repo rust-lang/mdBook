@@ -1257,17 +1257,13 @@ checksum = "47e1ffaa40ddd1f3ed91f717a33c8c0ee23fff369e3aa8772b9605cc1d22f4c3"
 name = "mdbook"
 version = "0.5.0-alpha.1"
 dependencies = [
- "ammonia",
  "anyhow",
  "axum",
  "chrono",
  "clap",
  "clap_complete",
- "elasticlunr-rs",
  "env_logger",
  "futures-util",
- "handlebars",
- "hex",
  "ignore",
  "log",
  "mdbook-core",
@@ -1281,14 +1277,12 @@ dependencies = [
  "notify-debouncer-mini",
  "opener",
  "pathdiff",
- "pretty_assertions",
  "pulldown-cmark 0.10.3",
  "regex",
  "select",
  "semver",
  "serde",
  "serde_json",
- "sha2",
  "shlex",
  "snapbox",
  "tempfile",
@@ -1317,9 +1311,23 @@ dependencies = [
 name = "mdbook-html"
 version = "0.5.0-alpha.1"
 dependencies = [
+ "ammonia",
  "anyhow",
+ "elasticlunr-rs",
+ "handlebars",
+ "hex",
  "log",
+ "mdbook-core",
+ "mdbook-markdown",
+ "mdbook-renderer",
+ "pretty_assertions",
+ "pulldown-cmark 0.10.3",
+ "regex",
+ "serde",
+ "serde_json",
+ "sha2",
  "tempfile",
+ "toml",
 ]
 
 [[package]]

@@ -26,7 +26,7 @@ fn footnotes() {
 [TIMESTAMP] [WARN] (mdbook_markdown): footnote `unused` in `<unknown>` is defined but not referenced
 [TIMESTAMP] [WARN] (mdbook_markdown): footnote `multiple-definitions` in footnotes.md defined multiple times - not updating to new definition
 [TIMESTAMP] [WARN] (mdbook_markdown): footnote `unused` in `footnotes.md` is defined but not referenced
-[TIMESTAMP] [INFO] (mdbook::renderer::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
+[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
 
 "#]]);
         })

@@ -49,7 +49,7 @@ fn nop_preprocessor() {
         cmd.expect_stdout(str![[""]]).expect_stderr(str![[r#"
 [TIMESTAMP] [INFO] (mdbook::book): Book building has started
 [TIMESTAMP] [INFO] (mdbook::book): Running the html backend
-[TIMESTAMP] [INFO] (mdbook::renderer::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
+[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
 
 "#]]);
     });

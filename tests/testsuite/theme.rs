@@ -26,7 +26,7 @@ fn empty_theme() {
         cmd.expect_stderr(str![[r#"
 [TIMESTAMP] [INFO] (mdbook::book): Book building has started
 [TIMESTAMP] [INFO] (mdbook::book): Running the html backend
-[TIMESTAMP] [INFO] (mdbook::renderer::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
+[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
 
 "#]]);
     });
@@ -147,10 +147,10 @@ fn copy_fonts_false_no_theme() {
             cmd.expect_stderr(str![[r#"
 [TIMESTAMP] [INFO] (mdbook::book): Book building has started
 [TIMESTAMP] [INFO] (mdbook::book): Running the html backend
-[TIMESTAMP] [WARN] (mdbook::renderer::html_handlebars::static_files): output.html.copy-fonts is deprecated.
+[TIMESTAMP] [WARN] (mdbook_html::html_handlebars::static_files): output.html.copy-fonts is deprecated.
 This book appears to have copy-fonts=false in book.toml without a fonts.css file.
 Add an empty `theme/fonts/fonts.css` file to squelch this warning.
-[TIMESTAMP] [INFO] (mdbook::renderer::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
+[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
 
 "#]]);
         })
@@ -166,7 +166,7 @@ fn copy_fonts_false_with_empty_fonts_css() {
             cmd.expect_stderr(str![[r#"
 [TIMESTAMP] [INFO] (mdbook::book): Book building has started
 [TIMESTAMP] [INFO] (mdbook::book): Running the html backend
-[TIMESTAMP] [INFO] (mdbook::renderer::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
+[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
 
 "#]]);
         })
@@ -182,7 +182,7 @@ fn copy_fonts_false_with_fonts_css() {
             cmd.expect_stderr(str![[r#"
 [TIMESTAMP] [INFO] (mdbook::book): Book building has started
 [TIMESTAMP] [INFO] (mdbook::book): Running the html backend
-[TIMESTAMP] [INFO] (mdbook::renderer::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
+[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
 
 "#]]);
         })
