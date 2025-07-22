@@ -28,6 +28,7 @@ handlebars = "6.3.2"
 hex = "0.4.3"
 log = "0.4.27"
 mdbook-core = { path = "crates/mdbook-core" }
+mdbook-driver = { path = "crates/mdbook-driver" }
 mdbook-html = { path = "crates/mdbook-html" }
 mdbook-markdown = { path = "crates/mdbook-markdown" }
 mdbook-preprocessor = { path = "crates/mdbook-preprocessor" }
