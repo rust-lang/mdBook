@@ -134,9 +134,7 @@ impl MDBook {
         })
     }
 
-    /// Returns a flat depth-first iterator over the elements of the book,
-    /// it returns a [`BookItem`] enum:
-    /// `(section: String, bookitem: &BookItem)`
+    /// Returns a flat depth-first iterator over the [`BookItem`]s of the book.
     ///
     /// ```no_run
     /// # use mdbook_driver::MDBook;
