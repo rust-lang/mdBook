@@ -582,6 +582,8 @@ pub struct HtmlConfig {
     pub input_404: Option<String>,
     /// Absolute url to site, used to emit correct paths for the 404 page, which might be accessed in a deeply nested directory
     pub site_url: Option<String>,
+    /// Prepend the `site_url` in links with absolute path.
+    pub use_site_url_as_root: bool,
     /// The DNS subdomain or apex domain at which your book will be hosted. This
     /// string will be written to a file named CNAME in the root of your site,
     /// as required by GitHub Pages (see [*Managing a custom domain for your
@@ -632,6 +634,7 @@ impl Default for HtmlConfig {
             edit_url_template: None,
             input_404: None,
             site_url: None,
+            use_site_url_as_root: false,
             cname: None,
             live_reload_endpoint: None,
             redirect: HashMap::new(),
