@@ -24,6 +24,7 @@ rust-version = "1.85.0" # Keep in sync with installation.md and .github/workflow
 anyhow = "1.0.98"
 log = "0.4.27"
 mdbook-core = { path = "crates/mdbook-core" }
+mdbook-html = { path = "crates/mdbook-html" }
 mdbook-markdown = { path = "crates/mdbook-markdown" }
 mdbook-preprocessor = { path = "crates/mdbook-preprocessor" }
 mdbook-renderer = { path = "crates/mdbook-renderer" }
