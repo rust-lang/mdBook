@@ -1310,6 +1310,7 @@ dependencies = [
  "log",
  "mdbook-core",
  "mdbook-html",
+ "mdbook-markdown",
  "mdbook-preprocessor",
  "mdbook-renderer",
  "mdbook-summary",

@@ -1,4 +1,13 @@
 //! Markdown processing used in mdBook.
+//!
+//! This crate provides functions for processing Markdown in the same way as
+//! [mdBook](https://rust-lang.github.io/mdBook/). The [`pulldown_cmark`]
+//! crate is used as the underlying parser. This crate re-exports
+//! [`pulldown_cmark`] so that you can access its types.
+//!
+//! The parser in this library adds several modifications to the
+//! [`pulldown_cmark`] event stream. For example, it adjusts some links,
+//! modifies the behavior of footnotes, and adds various HTML wrappers.
 
 use pulldown_cmark::{CodeBlockKind, CowStr, Event, Options, Parser, Tag, TagEnd, html};
 use regex::Regex;
@@ -8,6 +17,7 @@ use std::fmt::Write;
 use std::path::Path;
 use std::sync::LazyLock;
 
+#[doc(inline)]
 pub use pulldown_cmark;
 
 #[cfg(test)]

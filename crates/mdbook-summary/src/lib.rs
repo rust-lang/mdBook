@@ -1,4 +1,8 @@
 //! Summary parser for mdBook.
+//!
+//! This is used to parse the
+//! [`SUMMARY.md`](https://rust-lang.github.io/mdBook/format/summary.html)
+//! file structure for [mdBook](https://rust-lang.github.io/mdBook/).
 
 use anyhow::{Context, Error, Result, bail};
 use log::{debug, trace, warn};

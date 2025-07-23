@@ -1,4 +1,9 @@
 //! Library to assist implementing an mdbook renderer.
+//!
+//! This library is used to implement a
+//! [renderer](https://rust-lang.github.io/mdBook/for_developers/backends.html)
+//! for [mdBook](https://rust-lang.github.io/mdBook/). See the linked chapter
+//! for more information on how to implement a renderer.
 
 use anyhow::Context;
 use mdbook_core::book::Book;
@@ -15,6 +20,11 @@ pub use mdbook_core::config;
 pub use mdbook_core::errors;
 
 /// An mdbook backend.
+///
+/// Types that implement the `Renderer` trait can be used with
+/// [`MDBook::with_renderer`] to programmatically add renderers.
+///
+/// [`MDBook::with_renderer`]: https://docs.rs/mdbook-driver/latest/mdbook_driver/struct.MDBook.html#method.with_renderer
 pub trait Renderer {
     /// The `Renderer`'s name.
     fn name(&self) -> &str;

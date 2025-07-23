@@ -1,4 +1,9 @@
 //! Library to assist implementing an mdbook preprocessor.
+//!
+//! This library is used to implement a
+//! [preprocessor](https://rust-lang.github.io/mdBook/for_developers/preprocessors.html)
+//! for [mdBook](https://rust-lang.github.io/mdBook/). See the linked chapter
+//! for more information on how to implement a preprocessor.
 
 use anyhow::Context;
 use mdbook_core::book::Book;
@@ -17,6 +22,11 @@ pub use mdbook_core::errors;
 
 /// An operation which is run immediately after loading a book into memory and
 /// before it gets rendered.
+///
+/// Types that implement the `Preprocessor` trait can be used with
+/// [`MDBook::with_preprocessor`] to programmatically add preprocessors.
+///
+/// [`MDBook::with_preprocessor`]: https://docs.rs/mdbook-driver/latest/mdbook_driver/struct.MDBook.html#method.with_preprocessor
 pub trait Preprocessor {
     /// Get the `Preprocessor`'s name.
     fn name(&self) -> &str;
