@@ -123,6 +123,18 @@ Please consider the following when making a change:
 
 * Check out the [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/) for guidelines on designing the API.
 
+## Tests
+
+The main test harness is described in the [testsuite documentation](tests/testsuite/README.md). There are several different commands to run different kinds of tests:
+
+- `cargo test --workspace` — This runs all of the unit and integration tests, except for the GUI tests.
+- `cargo test --test gui` — This runs the [GUI test harness](#browser-compatibility-and-testing). This does not get run automatically due to its extra requirements.
+- `npm run lint` — [Checks the `.js` files](#checking-changes-in-js-files)
+- `cargo test --workspace --no-default-features` — Testing without default features helps check that all feature checks are implemented correctly.
+- `cargo clippy --workspace --all-targets --no-deps -- -D warnings` — This makes sure that there are no clippy warnings.
+- `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --document-private-items --no-deps` — This verifies that there aren't any rustdoc warnings.
+- `cargo fmt --check` — Verifies that everything is formatted correctly.
+
 ## Making a pull-request
 
 When you feel comfortable that your changes could be integrated into mdBook, you can create a pull-request on GitHub.
