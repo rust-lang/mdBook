@@ -1,7 +1,7 @@
 use super::command_prelude::*;
 use crate::{get_book_dir, open};
-use mdbook::errors::Result;
-use mdbook::MDBook;
+use anyhow::Result;
+use mdbook_driver::MDBook;
 use std::path::{Path, PathBuf};
 
 mod native;

@@ -1,3 +1,9 @@
+//! The GUI test runner.
+//!
+//! This uses the browser-ui-test npm package to use a headless Chrome to
+//! exercise the behavior of rendered books. See `CONTRIBUTING.md` for more
+//! information.
+
 use serde_json::Value;
 use std::collections::HashSet;
 use std::env::current_dir;

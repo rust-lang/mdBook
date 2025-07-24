@@ -1,0 +1,19 @@
+[package]
+name = "mdbook-summary"
+version = "0.5.0-alpha.1"
+description = "Summary parser for mdBook"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+log.workspace = true
+mdbook-core.workspace = true
+memchr.workspace = true
+pulldown-cmark.workspace = true
+serde.workspace = true
+
+[lints]
+workspace = true

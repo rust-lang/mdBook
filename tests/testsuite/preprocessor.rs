@@ -1,9 +1,10 @@
 //! Tests for custom preprocessors.
 
 use crate::prelude::*;
-use mdbook::book::Book;
-use mdbook::errors::Result;
-use mdbook::preprocess::{CmdPreprocessor, Preprocessor, PreprocessorContext};
+use anyhow::Result;
+use mdbook_core::book::Book;
+use mdbook_driver::builtin_preprocessors::CmdPreprocessor;
+use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use std::sync::{Arc, Mutex};
 
 struct Spy(Arc<Mutex<Inner>>);
@@ -46,9 +47,9 @@ fn runs_preprocessors() {
 fn nop_preprocessor() {
     BookTest::from_dir("preprocessor/nop_preprocessor").run("build", |cmd| {
         cmd.expect_stdout(str![[""]]).expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook::book): Book building has started
-[TIMESTAMP] [INFO] (mdbook::book): Running the html backend
-[TIMESTAMP] [INFO] (mdbook::renderer::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
+[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
 
 "#]]);
     });
@@ -62,9 +63,9 @@ fn failing_preprocessor() {
             cmd.expect_failure()
                 .expect_stdout(str![[""]])
                 .expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook::book): Book building has started
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
 Boom!!1!
-[TIMESTAMP] [ERROR] (mdbook::utils): Error: The "nop-preprocessor" preprocessor exited unsuccessfully with [EXIT_STATUS]: 1 status
+[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: The "nop-preprocessor" preprocessor exited unsuccessfully with [EXIT_STATUS]: 1 status
 
 "#]]);
         });

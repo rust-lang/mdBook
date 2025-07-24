@@ -1,10 +1,9 @@
 //! This is a demonstration of an mdBook preprocessor which parses markdown
 //! and removes any instances of emphasis.
 
-use mdbook::book::{Book, Chapter};
-use mdbook::errors::Error;
-use mdbook::preprocess::{CmdPreprocessor, Preprocessor, PreprocessorContext};
-use mdbook::BookItem;
+use mdbook_preprocessor::book::{Book, BookItem, Chapter};
+use mdbook_preprocessor::errors::Result;
+use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use pulldown_cmark::{Event, Parser, Tag, TagEnd};
 use std::io;
 
@@ -35,7 +34,7 @@ impl Preprocessor for RemoveEmphasis {
         "remove-emphasis"
     }
 
-    fn run(&self, _ctx: &PreprocessorContext, mut book: Book) -> Result<Book, Error> {
+    fn run(&self, _ctx: &PreprocessorContext, mut book: Book) -> Result<Book> {
         let mut total = 0;
         book.for_each_mut(|item| {
             let BookItem::Chapter(ch) = item else {
@@ -55,7 +54,7 @@ impl Preprocessor for RemoveEmphasis {
 }
 
 // ANCHOR: remove_emphasis
-fn remove_emphasis(num_removed_items: &mut usize, chapter: &mut Chapter) -> Result<String, Error> {
+fn remove_emphasis(num_removed_items: &mut usize, chapter: &mut Chapter) -> Result<String> {
     let mut buf = String::with_capacity(chapter.content.len());
 
     let events = Parser::new(&chapter.content).filter(|e| match e {
@@ -71,9 +70,9 @@ fn remove_emphasis(num_removed_items: &mut usize, chapter: &mut Chapter) -> Resu
 }
 // ANCHOR_END: remove_emphasis
 
-pub fn handle_preprocessing() -> Result<(), Error> {
+pub fn handle_preprocessing() -> Result<()> {
     let pre = RemoveEmphasis;
-    let (ctx, book) = CmdPreprocessor::parse_input(io::stdin())?;
+    let (ctx, book) = mdbook_preprocessor::parse_input(io::stdin())?;
 
     let processed_book = pre.run(&ctx, book)?;
     serde_json::to_writer(io::stdout(), &processed_book)?;

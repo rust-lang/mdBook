@@ -1,6 +1,6 @@
 //! Helpers for building the command-line arguments for commands.
 
-pub use clap::{arg, Arg, ArgMatches, Command};
+pub use clap::{Arg, ArgMatches, Command, arg};
 use std::path::PathBuf;
 
 pub trait CommandExt: Sized {

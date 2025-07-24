@@ -1,0 +1,35 @@
+[package]
+name = "mdbook-html"
+version = "0.5.0-alpha.1"
+description = "mdBook HTML renderer"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+ammonia = { workspace = true, optional = true }
+anyhow.workspace = true
+elasticlunr-rs = { workspace = true, optional = true }
+handlebars.workspace = true
+hex.workspace = true
+log.workspace = true
+mdbook-core.workspace = true
+mdbook-markdown.workspace = true
+mdbook-renderer.workspace = true
+pulldown-cmark.workspace = true
+regex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+
+[dev-dependencies]
+pretty_assertions.workspace = true
+tempfile.workspace = true
+toml.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+search = ["dep:ammonia", "dep:elasticlunr-rs"]

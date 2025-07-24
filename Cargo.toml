@@ -1,79 +1,130 @@
 [workspace]
-members = [".", "examples/remove-emphasis/mdbook-remove-emphasis"]
+members = [
+    ".",
+    "crates/*",
+    "examples/remove-emphasis/mdbook-remove-emphasis",
+]
 
 [workspace.lints.clippy]
 all = { level = "allow", priority = -2 }
 correctness = { level = "warn", priority = -1 }
 complexity = { level = "warn", priority = -1 }
 
+[workspace.lints.rust]
+missing_docs = "warn"
+rust_2018_idioms = "warn"
+
+[workspace.package]
+edition = "2024"
+license = "MPL-2.0"
+repository = "https://github.com/rust-lang/mdBook"
+rust-version = "1.85.0" # Keep in sync with installation.md and .github/workflows/main.yml
+
+[workspace.dependencies]
+ammonia = "4.1.1"
+anyhow = "1.0.98"
+axum = "0.8.4"
+chrono = { version = "0.4.41", default-features = false, features = ["clock"] }
+clap = { version = "4.5.41", features = ["cargo", "wrap_help"] }
+clap_complete = "4.5.55"
+elasticlunr-rs = "3.0.2"
+env_logger = "0.11.8"
+futures-util = "0.3.31"
+handlebars = "6.3.2"
+hex = "0.4.3"
+ignore = "0.4.23"
+log = "0.4.27"
+mdbook-core = { path = "crates/mdbook-core" }
+mdbook-driver = { path = "crates/mdbook-driver" }
+mdbook-html = { path = "crates/mdbook-html" }
+mdbook-markdown = { path = "crates/mdbook-markdown" }
+mdbook-preprocessor = { path = "crates/mdbook-preprocessor" }
+mdbook-renderer = { path = "crates/mdbook-renderer" }
+mdbook-summary = { path = "crates/mdbook-summary" }
+memchr = "2.7.5"
+notify = "8.1.0"
+notify-debouncer-mini = "0.6.0"
+opener = "0.8.2"
+pathdiff = "0.2.3"
+pretty_assertions = "1.4.1"
+pulldown-cmark = { version = "0.10.3", default-features = false, features = ["html"] } # Do not update, part of the public api.
+regex = "1.11.1"
+select = "0.6.1"
+semver = "1.0.26"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+sha2 = "0.10.9"
+shlex = "1.3.0"
+snapbox = "0.6.21"
+tempfile = "3.20.0"
+tokio = "1.46.1"
+toml = "0.5.11" # Do not update, see https://github.com/rust-lang/mdBook/issues/2037
+topological-sort = "0.2.2"
+tower-http = "0.6.6"
+walkdir = "2.5.0"
+
 [package]
 name = "mdbook"
-version = "0.4.52"
+version = "0.5.0-alpha.1"
 authors = [
     "Mathieu David <mathieudavid@mathieudavid.org>",
     "Michael-F-Bryan <michaelfbryan@gmail.com>",
     "Matt Ickstadt <mattico8@gmail.com>"
 ]
 documentation = "https://rust-lang.github.io/mdBook/index.html"
-edition = "2021"
+edition.workspace = true
 exclude = ["/guide/*"]
 keywords = ["book", "gitbook", "rustbook", "markdown"]
-license = "MPL-2.0"
+license.workspace = true
 readme = "README.md"
-repository = "https://github.com/rust-lang/mdBook"
+repository.workspace = true
 description = "Creates a book from markdown files"
-rust-version = "1.82" # Keep in sync with installation.md and .github/workflows/main.yml
+rust-version.workspace = true
 
 [dependencies]
-anyhow = "1.0.71"
-chrono = { version = "0.4.24", default-features = false, features = ["clock"] }
-clap = { version = "4.3.12", features = ["cargo", "wrap_help"] }
-clap_complete = "4.3.2"
-env_logger = "0.11.1"
-handlebars = "6.0"
-hex = "0.4.3"
-log = "0.4.17"
-memchr = "2.5.0"
-opener = "0.8.1"
-pulldown-cmark = { version = "0.10.0", default-features = false, features = ["html"] } # Do not update, part of the public api.
-regex = "1.8.1"
-serde = { version = "1.0.163", features = ["derive"] }
-serde_json = "1.0.96"
-sha2 = "0.10.8"
-shlex = "1.3.0"
-tempfile = "3.4.0"
-toml = "0.5.11" # Do not update, see https://github.com/rust-lang/mdBook/issues/2037
-topological-sort = "0.2.2"
+anyhow.workspace = true
+chrono.workspace = true
+clap.workspace = true
+clap_complete.workspace = true
+env_logger.workspace = true
+log.workspace = true
+mdbook-core.workspace = true
+mdbook-driver.workspace = true
+mdbook-html.workspace = true
+mdbook-markdown.workspace = true
+mdbook-preprocessor.workspace = true
+mdbook-renderer.workspace = true
+mdbook-summary.workspace = true
+opener.workspace = true
+toml.workspace = true
 
 # Watch feature
-notify = { version = "8.0.0", optional = true }
-notify-debouncer-mini = { version = "0.6.0", optional = true }
-ignore = { version = "0.4.20", optional = true }
-pathdiff = { version = "0.2.1", optional = true }
-walkdir = { version = "2.3.3", optional = true }
+ignore = { workspace = true, optional = true }
+notify = { workspace = true, optional = true }
+notify-debouncer-mini = { workspace = true, optional = true }
+pathdiff = { workspace = true, optional = true }
+walkdir = { workspace = true, optional = true }
 
 # Serve feature
-futures-util = { version = "0.3.28", optional = true }
-tokio = { version = "1.43.1", features = ["macros", "rt-multi-thread"], optional = true }
-axum = { version = "0.8.0", features = ["ws"], optional = true }
-tower-http = { version = "0.6.0", features = ["fs", "trace"], optional = true }
-
-# Search feature
-elasticlunr-rs = { version = "3.0.2", optional = true }
-ammonia = { version = "4.0.0", optional = true }
+axum = { workspace = true, features = ["ws"], optional = true }
+futures-util = { workspace = true, optional = true }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"], optional = true }
+tower-http = { workspace = true, features = ["fs", "trace"], optional = true }
 
 [dev-dependencies]
-select = "0.6.0"
-semver = "1.0.17"
-snapbox = { version = "0.6.21", features = ["diff", "dir", "term-svg", "regex", "json"] }
-pretty_assertions = "1.3.0"
-walkdir = "2.3.3"
+regex.workspace = true
+select.workspace = true
+semver.workspace = true
+serde_json.workspace = true
+snapbox = { workspace = true, features = ["diff", "dir", "term-svg", "regex", "json"] }
+tempfile.workspace = true
+walkdir.workspace = true
 
 [features]
 default = ["watch", "serve", "search"]
 watch = ["dep:notify", "dep:notify-debouncer-mini", "dep:ignore", "dep:pathdiff", "dep:walkdir"]
 serve = ["dep:futures-util", "dep:tokio", "dep:axum", "dep:tower-http"]
-search = ["dep:elasticlunr-rs", "dep:ammonia"]
+search = ["mdbook-html/search"]
 
 [[bin]]
 doc = false

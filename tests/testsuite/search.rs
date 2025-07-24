@@ -1,8 +1,7 @@
 //! Tests for search support.
 
 use crate::prelude::*;
-use mdbook::book::Chapter;
-use mdbook::BookItem;
+use mdbook_core::book::{BookItem, Chapter};
 use snapbox::file;
 use std::path::{Path, PathBuf};
 
@@ -62,7 +61,10 @@ fn reasonable_search_index() {
     // See note about InlineHtml in search.rs. Ideally the `alert()` part
     // should not be in the index, but we don't have a way to scrub inline
     // html.
-    assert_eq!(docs[&sneaky]["body"], "I put &lt;HTML&gt; in here! Sneaky inline event alert(\"inline\");. But regular inline is indexed.");
+    assert_eq!(
+        docs[&sneaky]["body"],
+        "I put &lt;HTML&gt; in here! Sneaky inline event alert(\"inline\");. But regular inline is indexed."
+    );
     assert_eq!(
         docs[&no_headers]["breadcrumbs"],
         "First Chapter » No Headers"
@@ -132,10 +134,10 @@ fn with_no_source_path() {
 fn chapter_settings_validation_error() {
     BookTest::from_dir("search/chapter_settings_validation_error").run("build", |cmd| {
         cmd.expect_failure().expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook::book): Book building has started
-[TIMESTAMP] [INFO] (mdbook::book): Running the html backend
-[TIMESTAMP] [ERROR] (mdbook::utils): Error: Rendering failed
-[TIMESTAMP] [ERROR] (mdbook::utils): [TAB]Caused By: [output.html.search.chapter] key `does-not-exist` does not match any chapter paths
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
+[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Rendering failed
+[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: [output.html.search.chapter] key `does-not-exist` does not match any chapter paths
 
 "#]]);
     });
