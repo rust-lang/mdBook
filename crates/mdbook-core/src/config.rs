@@ -230,6 +230,8 @@ impl Config {
             self.book.update_value(key, value);
         } else if let Some(key) = index.strip_prefix("build.") {
             self.build.update_value(key, value);
+        } else if let Some(key) = index.strip_prefix("rust.") {
+            self.rust.update_value(key, value);
         } else {
             self.rest.insert(index, value);
         }
@@ -1109,6 +1111,22 @@ mod tests {
 
         let got: String = cfg.get_deserialized_opt(key).unwrap().unwrap();
         assert_eq!(got, value);
+    }
+
+    #[test]
+    fn set_special_tables() {
+        let mut cfg = Config::default();
+        assert_eq!(cfg.book.title, None);
+        cfg.set("book.title", "my title").unwrap();
+        assert_eq!(cfg.book.title, Some("my title".to_string()));
+
+        assert_eq!(&cfg.build.build_dir, Path::new("book"));
+        cfg.set("build.build-dir", "some-directory").unwrap();
+        assert_eq!(&cfg.build.build_dir, Path::new("some-directory"));
+
+        assert_eq!(cfg.rust.edition, None);
+        cfg.set("rust.edition", "2024").unwrap();
+        assert_eq!(cfg.rust.edition, Some(RustEdition::E2024));
     }
 
     #[test]
