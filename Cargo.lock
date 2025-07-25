@@ -1315,6 +1315,7 @@ dependencies = [
  "mdbook-renderer",
  "mdbook-summary",
  "regex",
+ "serde",
  "serde_json",
  "shlex",
  "tempfile",

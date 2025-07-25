@@ -1,15 +1,15 @@
 use super::*;
 use std::str::FromStr;
-use toml::value::Table;
+use toml::value::{Table, Value};
 
 #[test]
 fn config_defaults_to_html_renderer_if_empty() {
     let cfg = Config::default();
 
     // make sure we haven't got anything in the `output` table
-    assert!(cfg.get("output").is_none());
+    assert!(cfg.get::<Value>("output").unwrap().is_none());
 
-    let got = determine_renderers(&cfg);
+    let got = determine_renderers(&cfg).unwrap();
 
     assert_eq!(got.len(), 1);
     assert_eq!(got[0].name(), "html");
@@ -20,7 +20,7 @@ fn add_a_random_renderer_to_the_config() {
     let mut cfg = Config::default();
     cfg.set("output.random", Table::new()).unwrap();
 
-    let got = determine_renderers(&cfg);
+    let got = determine_renderers(&cfg).unwrap();
 
     assert_eq!(got.len(), 1);
     assert_eq!(got[0].name(), "random");
@@ -34,7 +34,7 @@ fn add_a_random_renderer_with_custom_command_to_the_config() {
     table.insert("command".to_string(), Value::String("false".to_string()));
     cfg.set("output.random", table).unwrap();
 
-    let got = determine_renderers(&cfg);
+    let got = determine_renderers(&cfg).unwrap();
 
     assert_eq!(got.len(), 1);
     assert_eq!(got[0].name(), "random");
@@ -45,7 +45,7 @@ fn config_defaults_to_link_and_index_preprocessor_if_not_set() {
     let cfg = Config::default();
 
     // make sure we haven't got anything in the `preprocessor` table
-    assert!(cfg.get("preprocessor").is_none());
+    assert!(cfg.get::<Value>("preprocessor").unwrap().is_none());
 
     let got = determine_preprocessors(&cfg);
 
@@ -81,7 +81,7 @@ fn can_determine_third_party_preprocessors() {
     let cfg = Config::from_str(cfg_str).unwrap();
 
     // make sure the `preprocessor.random` table exists
-    assert!(cfg.get_preprocessor("random").is_some());
+    assert!(cfg.get::<Value>("preprocessor.random").unwrap().is_some());
 
     let got = determine_preprocessors(&cfg).unwrap();
 
@@ -98,10 +98,11 @@ fn preprocessors_can_provide_their_own_commands() {
     let cfg = Config::from_str(cfg_str).unwrap();
 
     // make sure the `preprocessor.random` table exists
-    let random = cfg.get_preprocessor("random").unwrap();
-    let random = get_custom_preprocessor_cmd("random", &Value::Table(random.clone()));
-
-    assert_eq!(random, "python random.py");
+    let random = cfg
+        .get::<OutputConfig>("preprocessor.random")
+        .unwrap()
+        .unwrap();
+    assert_eq!(random.command, Some("python random.py".to_string()));
 }
 
 #[test]
@@ -229,19 +230,10 @@ fn config_respects_preprocessor_selection() {
 
     let cfg = Config::from_str(cfg_str).unwrap();
 
-    // double-check that we can access preprocessor.links.renderers[0]
-    let html = cfg
-        .get_preprocessor("links")
-        .and_then(|links| links.get("renderers"))
-        .and_then(Value::as_array)
-        .and_then(|renderers| renderers.get(0))
-        .and_then(Value::as_str)
-        .unwrap();
-    assert_eq!(html, "html");
     let html_renderer = HtmlHandlebars;
     let pre = LinkPreprocessor::new();
 
-    let should_run = preprocessor_should_run(&pre, &html_renderer, &cfg);
+    let should_run = preprocessor_should_run(&pre, &html_renderer, &cfg).unwrap();
     assert!(should_run);
 }
 
@@ -266,10 +258,10 @@ fn preprocessor_should_run_falls_back_to_supports_renderer_method() {
     let html = HtmlHandlebars::new();
 
     let should_be = true;
-    let got = preprocessor_should_run(&BoolPreprocessor(should_be), &html, &cfg);
+    let got = preprocessor_should_run(&BoolPreprocessor(should_be), &html, &cfg).unwrap();
     assert_eq!(got, should_be);
 
     let should_be = false;
-    let got = preprocessor_should_run(&BoolPreprocessor(should_be), &html, &cfg);
+    let got = preprocessor_should_run(&BoolPreprocessor(should_be), &html, &cfg).unwrap();
     assert_eq!(got, should_be);
 }

@@ -3,11 +3,9 @@
 use toml::value::{Table, Value};
 
 /// Helper for working with toml types.
-pub trait TomlExt {
+pub(crate) trait TomlExt {
     /// Read a dotted key.
     fn read(&self, key: &str) -> Option<&Value>;
-    /// Read a dotted key for a mutable value.
-    fn read_mut(&mut self, key: &str) -> Option<&mut Value>;
     /// Insert with a dotted key.
     fn insert(&mut self, key: &str, value: Value);
     /// Delete a dotted key value.
@@ -20,14 +18,6 @@ impl TomlExt for Value {
             self.get(head)?.read(tail)
         } else {
             self.get(key)
-        }
-    }
-
-    fn read_mut(&mut self, key: &str) -> Option<&mut Value> {
-        if let Some((head, tail)) = split(key) {
-            self.get_mut(head)?.read_mut(tail)
-        } else {
-            self.get_mut(key)
         }
     }
 

@@ -24,7 +24,7 @@
 //! [build]
 //! src = "out"
 //!
-//! [other-table.foo]
+//! [preprocessor.my-preprocessor]
 //! bar = 123
 //! "#;
 //!
@@ -32,24 +32,24 @@
 //! let mut cfg = Config::from_str(src)?;
 //!
 //! // retrieve a nested value
-//! let bar = cfg.get("other-table.foo.bar").cloned();
-//! assert_eq!(bar, Some(Value::Integer(123)));
+//! let bar = cfg.get::<i32>("preprocessor.my-preprocessor.bar")?;
+//! assert_eq!(bar, Some(123));
 //!
 //! // Set the `output.html.theme` directory
-//! assert!(cfg.get("output.html").is_none());
+//! assert!(cfg.get::<Value>("output.html")?.is_none());
 //! cfg.set("output.html.theme", "./themes");
 //!
 //! // then load it again, automatically deserializing to a `PathBuf`.
-//! let got: Option<PathBuf> = cfg.get_deserialized_opt("output.html.theme")?;
+//! let got = cfg.get("output.html.theme")?;
 //! assert_eq!(got, Some(PathBuf::from("./themes")));
 //! # Ok(())
 //! # }
 //! # run().unwrap()
 //! ```
 
+use crate::utils::TomlExt;
 use crate::utils::log_backtrace;
-use crate::utils::toml_ext::TomlExt;
-use anyhow::{Context, Error, Result, bail};
+use anyhow::{Context, Error, Result};
 use log::{debug, trace, warn};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
@@ -154,18 +154,28 @@ impl Config {
         }
     }
 
-    /// Fetch an arbitrary item from the `Config` as a `toml::Value`.
+    /// Get a value from the configuration.
     ///
-    /// You can use dotted indices to access nested items (e.g.
-    /// `output.html.playground` will fetch the "playground" out of the html output
-    /// table).
-    pub fn get(&self, key: &str) -> Option<&Value> {
-        self.rest.read(key)
-    }
-
-    /// Fetch a value from the `Config` so you can mutate it.
-    pub fn get_mut(&mut self, key: &str) -> Option<&mut Value> {
-        self.rest.read_mut(key)
+    /// This fetches a value from the book configuration. The key can have
+    /// dotted indices to access nested items (e.g. `output.html.playground`
+    /// will fetch the "playground" out of the html output table).
+    ///
+    /// This does not have access to the [`Config::book`], [`Config::build`],
+    /// or [`Config::rust`] fields.
+    ///
+    /// Returns `Ok(None)` if the field is not set.
+    ///
+    /// Returns `Err` if it fails to deserialize.
+    pub fn get<'de, T: Deserialize<'de>>(&self, name: &str) -> Result<Option<T>> {
+        self.rest
+            .read(name)
+            .map(|value| {
+                value
+                    .clone()
+                    .try_into()
+                    .with_context(|| "Couldn't deserialize the value")
+            })
+            .transpose()
     }
 
     /// Convenience method for getting the html renderer's configuration.
@@ -177,7 +187,7 @@ impl Config {
     #[doc(hidden)]
     pub fn html_config(&self) -> Option<HtmlConfig> {
         match self
-            .get_deserialized_opt("output.html")
+            .get("output.html")
             .with_context(|| "Parsing configuration [output.html]")
         {
             Ok(Some(config)) => Some(config),
@@ -189,34 +199,11 @@ impl Config {
         }
     }
 
-    /// Deprecated, use get_deserialized_opt instead.
-    #[deprecated = "use get_deserialized_opt instead"]
-    pub fn get_deserialized<'de, T: Deserialize<'de>, S: AsRef<str>>(&self, name: S) -> Result<T> {
-        let name = name.as_ref();
-        match self.get_deserialized_opt(name)? {
-            Some(value) => Ok(value),
-            None => bail!("Key not found, {:?}", name),
-        }
-    }
-
-    /// Convenience function to fetch a value from the config and deserialize it
-    /// into some arbitrary type.
-    pub fn get_deserialized_opt<'de, T: Deserialize<'de>, S: AsRef<str>>(
-        &self,
-        name: S,
-    ) -> Result<Option<T>> {
-        let name = name.as_ref();
-        self.get(name)
-            .map(|value| {
-                value
-                    .clone()
-                    .try_into()
-                    .with_context(|| "Couldn't deserialize the value")
-            })
-            .transpose()
-    }
-
     /// Set a config key, clobbering any existing values along the way.
+    ///
+    /// The key can have dotted indices for nested items (e.g.
+    /// `output.html.playground` will set the "playground" in the html output
+    /// table).
     ///
     /// The only way this can fail is if we can't serialize `value` into a
     /// `toml::Value`.
@@ -230,23 +217,13 @@ impl Config {
             self.book.update_value(key, value);
         } else if let Some(key) = index.strip_prefix("build.") {
             self.build.update_value(key, value);
+        } else if let Some(key) = index.strip_prefix("rust.") {
+            self.rust.update_value(key, value);
         } else {
             self.rest.insert(index, value);
         }
 
         Ok(())
-    }
-
-    /// Get the table associated with a particular renderer.
-    pub fn get_renderer<I: AsRef<str>>(&self, index: I) -> Option<&Table> {
-        let key = format!("output.{}", index.as_ref());
-        self.get(&key).and_then(Value::as_table)
-    }
-
-    /// Get the table associated with a particular preprocessor.
-    pub fn get_preprocessor<I: AsRef<str>>(&self, index: I) -> Option<&Table> {
-        let key = format!("preprocessor.{}", index.as_ref());
-        self.get(&key).and_then(Value::as_table)
     }
 
     fn from_legacy(mut table: Value) -> Config {
@@ -1019,30 +996,14 @@ mod tests {
         };
 
         let cfg = Config::from_str(src).unwrap();
-        let got: RandomOutput = cfg.get_deserialized_opt("output.random").unwrap().unwrap();
+        let got: RandomOutput = cfg.get("output.random").unwrap().unwrap();
 
         assert_eq!(got, should_be);
 
-        let got_baz: Vec<bool> = cfg
-            .get_deserialized_opt("output.random.baz")
-            .unwrap()
-            .unwrap();
+        let got_baz: Vec<bool> = cfg.get("output.random.baz").unwrap().unwrap();
         let baz_should_be = vec![true, true, false];
 
         assert_eq!(got_baz, baz_should_be);
-    }
-
-    #[test]
-    fn mutate_some_stuff() {
-        // really this is just a sanity check to make sure the borrow checker
-        // is happy...
-        let src = COMPLEX_CONFIG;
-        let mut config = Config::from_str(src).unwrap();
-        let key = "output.html.playground.editable";
-
-        assert_eq!(config.get(key).unwrap(), &Value::Boolean(true));
-        *config.get_mut(key).unwrap() = Value::Boolean(false);
-        assert_eq!(config.get(key).unwrap(), &Value::Boolean(false));
     }
 
     /// The config file format has slightly changed (metadata stuff is now under
@@ -1104,11 +1065,27 @@ mod tests {
         let key = "foo.bar.baz";
         let value = "Something Interesting";
 
-        assert!(cfg.get(key).is_none());
+        assert!(cfg.get::<i32>(key).unwrap().is_none());
         cfg.set(key, value).unwrap();
 
-        let got: String = cfg.get_deserialized_opt(key).unwrap().unwrap();
+        let got: String = cfg.get(key).unwrap().unwrap();
         assert_eq!(got, value);
+    }
+
+    #[test]
+    fn set_special_tables() {
+        let mut cfg = Config::default();
+        assert_eq!(cfg.book.title, None);
+        cfg.set("book.title", "my title").unwrap();
+        assert_eq!(cfg.book.title, Some("my title".to_string()));
+
+        assert_eq!(&cfg.build.build_dir, Path::new("book"));
+        cfg.set("build.build-dir", "some-directory").unwrap();
+        assert_eq!(&cfg.build.build_dir, Path::new("some-directory"));
+
+        assert_eq!(cfg.rust.edition, None);
+        cfg.set("rust.edition", "2024").unwrap();
+        assert_eq!(cfg.rust.edition, Some(RustEdition::E2024));
     }
 
     #[test]
@@ -1141,7 +1118,7 @@ mod tests {
         let key = "foo.bar";
         let value = "baz";
 
-        assert!(cfg.get(key).is_none());
+        assert!(cfg.get::<String>(key).unwrap().is_none());
 
         let encoded_key = encode_env_var(key);
         // TODO: This is unsafe, and should be rewritten to use a process.
@@ -1149,10 +1126,7 @@ mod tests {
 
         cfg.update_from_env();
 
-        assert_eq!(
-            cfg.get_deserialized_opt::<String, _>(key).unwrap().unwrap(),
-            value
-        );
+        assert_eq!(cfg.get::<String>(key).unwrap().unwrap(), value);
     }
 
     #[test]
@@ -1162,7 +1136,7 @@ mod tests {
         let value = json!({"array": [1, 2, 3], "number": 13.37});
         let value_str = serde_json::to_string(&value).unwrap();
 
-        assert!(cfg.get(key).is_none());
+        assert!(cfg.get::<serde_json::Value>(key).unwrap().is_none());
 
         let encoded_key = encode_env_var(key);
         // TODO: This is unsafe, and should be rewritten to use a process.
@@ -1170,12 +1144,7 @@ mod tests {
 
         cfg.update_from_env();
 
-        assert_eq!(
-            cfg.get_deserialized_opt::<serde_json::Value, _>(key)
-                .unwrap()
-                .unwrap(),
-            value
-        );
+        assert_eq!(cfg.get::<serde_json::Value>(key).unwrap().unwrap(), value);
     }
 
     #[test]

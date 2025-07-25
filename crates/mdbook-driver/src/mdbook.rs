@@ -13,12 +13,13 @@ use mdbook_html::HtmlHandlebars;
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use mdbook_renderer::{RenderContext, Renderer};
 use mdbook_summary::Summary;
+use serde::Deserialize;
+use std::collections::HashMap;
 use std::ffi::OsString;
 use std::io::{IsTerminal, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::Builder as TempFileBuilder;
-use toml::Value;
 use topological_sort::TopologicalSort;
 
 #[cfg(test)]
@@ -99,7 +100,7 @@ impl MDBook {
         let src_dir = root.join(&config.book.src);
         let book = load_book(src_dir, &config.build)?;
 
-        let renderers = determine_renderers(&config);
+        let renderers = determine_renderers(&config)?;
         let preprocessors = determine_preprocessors(&config)?;
 
         Ok(MDBook {
@@ -122,7 +123,7 @@ impl MDBook {
         let src_dir = root.join(&config.book.src);
         let book = load_book_from_disk(&summary, src_dir)?;
 
-        let renderers = determine_renderers(&config);
+        let renderers = determine_renderers(&config)?;
         let preprocessors = determine_preprocessors(&config)?;
 
         Ok(MDBook {
@@ -201,7 +202,7 @@ impl MDBook {
         );
         let mut preprocessed_book = self.book.clone();
         for preprocessor in &self.preprocessors {
-            if preprocessor_should_run(&**preprocessor, renderer, &self.config) {
+            if preprocessor_should_run(&**preprocessor, renderer, &self.config)? {
                 debug!("Running the {} preprocessor.", preprocessor.name());
                 preprocessed_book = preprocessor.run(&preprocess_ctx, preprocessed_book)?;
             }
@@ -420,20 +421,31 @@ impl MDBook {
     }
 }
 
+/// An `output` table.
+#[derive(Deserialize)]
+struct OutputConfig {
+    command: Option<String>,
+}
+
 /// Look at the `Config` and try to figure out what renderers to use.
-fn determine_renderers(config: &Config) -> Vec<Box<dyn Renderer>> {
+fn determine_renderers(config: &Config) -> Result<Vec<Box<dyn Renderer>>> {
     let mut renderers = Vec::new();
 
-    if let Some(output_table) = config.get("output").and_then(Value::as_table) {
-        renderers.extend(output_table.iter().map(|(key, table)| {
-            if key == "html" {
-                Box::new(HtmlHandlebars::new()) as Box<dyn Renderer>
-            } else if key == "markdown" {
-                Box::new(MarkdownRenderer::new()) as Box<dyn Renderer>
-            } else {
-                interpret_custom_renderer(key, table)
-            }
-        }));
+    match config.get::<HashMap<String, OutputConfig>>("output") {
+        Ok(Some(output_table)) => {
+            renderers.extend(output_table.into_iter().map(|(key, table)| {
+                if key == "html" {
+                    Box::new(HtmlHandlebars::new()) as Box<dyn Renderer>
+                } else if key == "markdown" {
+                    Box::new(MarkdownRenderer::new()) as Box<dyn Renderer>
+                } else {
+                    let command = table.command.unwrap_or_else(|| format!("mdbook-{key}"));
+                    Box::new(CmdRenderer::new(key, command))
+                }
+            }));
+        }
+        Ok(None) => {}
+        Err(e) => bail!("failed to get output table config: {e}"),
     }
 
     // if we couldn't find anything, add the HTML renderer as a default
@@ -441,7 +453,7 @@ fn determine_renderers(config: &Config) -> Vec<Box<dyn Renderer>> {
         renderers.push(Box::new(HtmlHandlebars::new()));
     }
 
-    renderers
+    Ok(renderers)
 }
 
 const DEFAULT_PREPROCESSORS: &[&str] = &["links", "index"];
@@ -449,6 +461,16 @@ const DEFAULT_PREPROCESSORS: &[&str] = &["links", "index"];
 fn is_default_preprocessor(pre: &dyn Preprocessor) -> bool {
     let name = pre.name();
     name == LinkPreprocessor::NAME || name == IndexPreprocessor::NAME
+}
+
+/// A `preprocessor` table.
+#[derive(Deserialize)]
+struct PreprocessorConfig {
+    command: Option<String>,
+    #[serde(default)]
+    before: Vec<String>,
+    #[serde(default)]
+    after: Vec<String>,
 }
 
 /// Look at the `MDBook` and try to figure out what preprocessors to run.
@@ -463,62 +485,43 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<dyn Preprocessor>>
         }
     }
 
-    if let Some(preprocessor_table) = config.get("preprocessor").and_then(Value::as_table) {
-        for (name, table) in preprocessor_table.iter() {
-            preprocessor_names.insert(name.to_string());
+    let preprocessor_table = match config.get::<HashMap<String, PreprocessorConfig>>("preprocessor")
+    {
+        Ok(Some(preprocessor_table)) => preprocessor_table,
+        Ok(None) => HashMap::new(),
+        Err(e) => bail!("failed to get preprocessor table config: {e}"),
+    };
 
-            let exists = |name| {
-                (config.build.use_default_preprocessors && DEFAULT_PREPROCESSORS.contains(&name))
-                    || preprocessor_table.contains_key(name)
-            };
+    for (name, table) in preprocessor_table.iter() {
+        preprocessor_names.insert(name.to_string());
 
-            if let Some(before) = table.get("before") {
-                let before = before.as_array().ok_or_else(|| {
-                    Error::msg(format!(
-                        "Expected preprocessor.{name}.before to be an array"
-                    ))
-                })?;
-                for after in before {
-                    let after = after.as_str().ok_or_else(|| {
-                        Error::msg(format!(
-                            "Expected preprocessor.{name}.before to contain strings"
-                        ))
-                    })?;
+        let exists = |name| {
+            (config.build.use_default_preprocessors && DEFAULT_PREPROCESSORS.contains(&name))
+                || preprocessor_table.contains_key(name)
+        };
 
-                    if !exists(after) {
-                        // Only warn so that preprocessors can be toggled on and off (e.g. for
-                        // troubleshooting) without having to worry about order too much.
-                        warn!(
-                            "preprocessor.{}.after contains \"{}\", which was not found",
-                            name, after
-                        );
-                    } else {
-                        preprocessor_names.add_dependency(name, after);
-                    }
-                }
+        for after in &table.before {
+            if !exists(&after) {
+                // Only warn so that preprocessors can be toggled on and off (e.g. for
+                // troubleshooting) without having to worry about order too much.
+                warn!(
+                    "preprocessor.{}.after contains \"{}\", which was not found",
+                    name, after
+                );
+            } else {
+                preprocessor_names.add_dependency(name, after);
             }
+        }
 
-            if let Some(after) = table.get("after") {
-                let after = after.as_array().ok_or_else(|| {
-                    Error::msg(format!("Expected preprocessor.{name}.after to be an array"))
-                })?;
-                for before in after {
-                    let before = before.as_str().ok_or_else(|| {
-                        Error::msg(format!(
-                            "Expected preprocessor.{name}.after to contain strings"
-                        ))
-                    })?;
-
-                    if !exists(before) {
-                        // See equivalent warning above for rationale
-                        warn!(
-                            "preprocessor.{}.before contains \"{}\", which was not found",
-                            name, before
-                        );
-                    } else {
-                        preprocessor_names.add_dependency(before, name);
-                    }
-                }
+        for before in &table.after {
+            if !exists(&before) {
+                // See equivalent warning above for rationale
+                warn!(
+                    "preprocessor.{}.before contains \"{}\", which was not found",
+                    name, before
+                );
+            } else {
+                preprocessor_names.add_dependency(before, name);
             }
         }
     }
@@ -544,8 +547,11 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<dyn Preprocessor>>
                 _ => {
                     // The only way to request a custom preprocessor is through the `preprocessor`
                     // table, so it must exist, be a table, and contain the key.
-                    let table = &config.get("preprocessor").unwrap().as_table().unwrap()[&name];
-                    let command = get_custom_preprocessor_cmd(&name, table);
+                    let table = &preprocessor_table[&name];
+                    let command = table
+                        .command
+                        .to_owned()
+                        .unwrap_or_else(|| format!("mdbook-{name}"));
                     Box::new(CmdPreprocessor::new(name, command))
                 }
             };
@@ -562,27 +568,6 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<dyn Preprocessor>>
     }
 }
 
-fn get_custom_preprocessor_cmd(key: &str, table: &Value) -> String {
-    table
-        .get("command")
-        .and_then(Value::as_str)
-        .map(ToString::to_string)
-        .unwrap_or_else(|| format!("mdbook-{key}"))
-}
-
-fn interpret_custom_renderer(key: &str, table: &Value) -> Box<CmdRenderer> {
-    // look for the `command` field, falling back to using the key
-    // prepended by "mdbook-"
-    let table_dot_command = table
-        .get("command")
-        .and_then(Value::as_str)
-        .map(ToString::to_string);
-
-    let command = table_dot_command.unwrap_or_else(|| format!("mdbook-{key}"));
-
-    Box::new(CmdRenderer::new(key.to_string(), command))
-}
-
 /// Check whether we should run a particular `Preprocessor` in combination
 /// with the renderer, falling back to `Preprocessor::supports_renderer()`
 /// method if the user doesn't say anything.
@@ -593,21 +578,20 @@ fn preprocessor_should_run(
     preprocessor: &dyn Preprocessor,
     renderer: &dyn Renderer,
     cfg: &Config,
-) -> bool {
+) -> Result<bool> {
     // default preprocessors should be run by default (if supported)
     if cfg.build.use_default_preprocessors && is_default_preprocessor(preprocessor) {
-        return preprocessor.supports_renderer(renderer.name());
+        return Ok(preprocessor.supports_renderer(renderer.name()));
     }
 
     let key = format!("preprocessor.{}.renderers", preprocessor.name());
     let renderer_name = renderer.name();
 
-    if let Some(Value::Array(explicit_renderers)) = cfg.get(&key) {
-        return explicit_renderers
-            .iter()
-            .filter_map(Value::as_str)
-            .any(|name| name == renderer_name);
+    match cfg.get::<Vec<String>>(&key) {
+        Ok(Some(explicit_renderers)) => {
+            Ok(explicit_renderers.iter().any(|name| name == renderer_name))
+        }
+        Ok(None) => Ok(preprocessor.supports_renderer(renderer_name)),
+        Err(e) => bail!("failed to get `{key}`: {e}"),
     }
-
-    preprocessor.supports_renderer(renderer_name)
 }
