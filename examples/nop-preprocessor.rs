@@ -71,6 +71,7 @@ fn handle_supports(pre: &dyn Preprocessor, sub_args: &ArgMatches) -> ! {
 
 /// The actual implementation of the `Nop` preprocessor. This would usually go
 /// in your main `lib.rs` file.
+#[allow(unreachable_pub, reason = "wouldn't be a problem in a proper lib.rs")]
 mod nop_lib {
     use super::*;
 

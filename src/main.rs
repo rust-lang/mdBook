@@ -1,5 +1,7 @@
 //! The mdbook CLI.
 
+#![allow(unreachable_pub, reason = "not needed in a bin crate")]
+
 #[macro_use]
 extern crate clap;
 #[macro_use]

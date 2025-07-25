@@ -20,7 +20,7 @@ use std::sync::LazyLock;
 /// and interprets the `{{ resource }}` directives to allow assets to name each other.
 ///
 /// [fingerprinting]: https://guides.rubyonrails.org/asset_pipeline.html#fingerprinting-versioning-with-digest-based-urls
-pub struct StaticFiles {
+pub(super) struct StaticFiles {
     static_files: Vec<StaticFile>,
     hash_map: HashMap<String, String>,
 }
@@ -37,7 +37,7 @@ enum StaticFile {
 }
 
 impl StaticFiles {
-    pub fn new(theme: &Theme, html_config: &HtmlConfig, root: &Path) -> Result<StaticFiles> {
+    pub(super) fn new(theme: &Theme, html_config: &HtmlConfig, root: &Path) -> Result<StaticFiles> {
         let static_files = Vec::new();
         let mut this = StaticFiles {
             hash_map: HashMap::new(),
@@ -156,7 +156,7 @@ impl StaticFiles {
         Ok(this)
     }
 
-    pub fn add_builtin(&mut self, filename: &str, data: &[u8]) {
+    pub(super) fn add_builtin(&mut self, filename: &str, data: &[u8]) {
         self.static_files.push(StaticFile::Builtin {
             filename: filename.to_owned(),
             data: data.to_owned(),
@@ -165,7 +165,7 @@ impl StaticFiles {
 
     /// Updates this [`StaticFiles`] to hash the contents for determining the
     /// filename for each resource.
-    pub fn hash_files(&mut self) -> Result<()> {
+    pub(super) fn hash_files(&mut self) -> Result<()> {
         use sha2::{Digest, Sha256};
         use std::io::Read;
         for static_file in &mut self.static_files {
@@ -224,7 +224,7 @@ impl StaticFiles {
         Ok(())
     }
 
-    pub fn write_files(self, destination: &Path) -> Result<ResourceHelper> {
+    pub(super) fn write_files(self, destination: &Path) -> Result<ResourceHelper> {
         use mdbook_core::utils::fs::write_file;
         use regex::bytes::{Captures, Regex};
         // The `{{ resource "name" }}` directive in static resources look like

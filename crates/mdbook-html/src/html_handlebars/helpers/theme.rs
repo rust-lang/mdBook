@@ -3,7 +3,7 @@ use handlebars::{
 };
 use log::trace;
 
-pub fn theme_option(
+pub(crate) fn theme_option(
     h: &Helper<'_>,
     _r: &Handlebars<'_>,
     ctx: &Context,

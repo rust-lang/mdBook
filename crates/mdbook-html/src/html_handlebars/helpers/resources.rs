@@ -8,7 +8,7 @@ use handlebars::{
 
 // Handlebars helper to find filenames with hashes in them
 #[derive(Clone)]
-pub struct ResourceHelper {
+pub(crate) struct ResourceHelper {
     pub hash_map: HashMap<String, String>,
 }
 

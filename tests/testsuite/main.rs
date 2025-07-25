@@ -2,6 +2,8 @@
 //!
 //! See README.md for documentation.
 
+#![allow(unreachable_pub, reason = "not needed in an integration test crate")]
+
 mod book_test;
 mod build;
 mod cli;
