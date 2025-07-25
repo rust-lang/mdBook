@@ -26,7 +26,7 @@ fn tokenize(text: &str) -> Vec<String> {
 }
 
 /// Creates all files required for search.
-pub fn create_files(
+pub(super) fn create_files(
     search_config: &Search,
     static_files: &mut StaticFiles,
     book: &Book,

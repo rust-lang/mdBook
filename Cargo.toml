@@ -13,6 +13,7 @@ complexity = { level = "warn", priority = -1 }
 [workspace.lints.rust]
 missing_docs = "warn"
 rust_2018_idioms = "warn"
+unreachable_pub = "warn"
 
 [workspace.package]
 edition = "2024"

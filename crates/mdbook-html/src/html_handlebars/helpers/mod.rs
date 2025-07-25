@@ -1,4 +1,4 @@
-pub mod navigation;
-pub mod resources;
-pub mod theme;
-pub mod toc;
+pub(crate) mod navigation;
+pub(crate) mod resources;
+pub(crate) mod theme;
+pub(crate) mod toc;

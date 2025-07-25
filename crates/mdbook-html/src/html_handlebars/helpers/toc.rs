@@ -8,7 +8,7 @@ use mdbook_markdown::special_escape;
 
 // Handlebars helper to construct TOC
 #[derive(Clone, Copy)]
-pub struct RenderToc {
+pub(crate) struct RenderToc {
     pub no_section_label: bool,
 }
 

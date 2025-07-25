@@ -169,7 +169,7 @@ fn render(
     t.render(r, &local_ctx, &mut local_rc, out)
 }
 
-pub fn previous(
+pub(crate) fn previous(
     _h: &Helper<'_>,
     r: &Handlebars<'_>,
     ctx: &Context,
@@ -185,7 +185,7 @@ pub fn previous(
     Ok(())
 }
 
-pub fn next(
+pub(crate) fn next(
     _h: &Helper<'_>,
     r: &Handlebars<'_>,
     ctx: &Context,
