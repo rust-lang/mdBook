@@ -101,12 +101,11 @@ impl BookBuilder {
     fn write_book_toml(&self) -> Result<()> {
         debug!("Writing book.toml");
         let book_toml = self.root.join("book.toml");
-        let cfg = toml::to_vec(&self.config).with_context(|| "Unable to serialize the config")?;
+        let cfg =
+            toml::to_string(&self.config).with_context(|| "Unable to serialize the config")?;
 
-        File::create(book_toml)
-            .with_context(|| "Couldn't create book.toml")?
-            .write_all(&cfg)
-            .with_context(|| "Unable to write config to book.toml")?;
+        std::fs::write(&book_toml, cfg)
+            .with_context(|| format!("Unable to write config to {book_toml:?}"))?;
         Ok(())
     }
 
