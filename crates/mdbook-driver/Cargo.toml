@@ -17,6 +17,7 @@ mdbook-preprocessor.workspace = true
 mdbook-renderer.workspace = true
 mdbook-summary.workspace = true
 regex.workspace = true
+serde.workspace = true
 serde_json.workspace = true
 shlex.workspace = true
 tempfile.workspace = true

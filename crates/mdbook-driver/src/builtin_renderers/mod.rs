@@ -10,7 +10,6 @@ use std::fs;
 use std::io::{self, ErrorKind};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-use toml::Value;
 
 pub use self::markdown_renderer::MarkdownRenderer;
 
@@ -108,8 +107,9 @@ impl CmdRenderer {
             let optional_key = format!("output.{}.optional", self.name);
 
             let is_optional = match ctx.config.get(&optional_key) {
-                Some(Value::Boolean(value)) => *value,
-                _ => false,
+                Ok(Some(value)) => value,
+                Err(e) => bail!("expected bool for `{optional_key}`: {e}"),
+                Ok(None) => false,
             };
 
             if is_optional {

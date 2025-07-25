@@ -9,7 +9,9 @@ use std::sync::LazyLock;
 
 pub mod fs;
 mod string;
-pub mod toml_ext;
+mod toml_ext;
+
+pub(crate) use self::toml_ext::TomlExt;
 
 pub use self::string::{
     take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,
