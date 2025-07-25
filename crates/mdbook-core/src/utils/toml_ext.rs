@@ -62,12 +62,11 @@ fn split(key: &str) -> Option<(&str, &str)> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::str::FromStr;
 
     #[test]
     fn read_simple_table() {
         let src = "[table]";
-        let value = Value::from_str(src).unwrap();
+        let value: Value = toml::from_str(src).unwrap();
 
         let got = value.read("table").unwrap();
 
@@ -77,7 +76,7 @@ mod tests {
     #[test]
     fn read_nested_item() {
         let src = "[table]\nnested=true";
-        let value = Value::from_str(src).unwrap();
+        let value: Value = toml::from_str(src).unwrap();
 
         let got = value.read("table.nested").unwrap();
 
@@ -108,7 +107,7 @@ mod tests {
     #[test]
     fn delete_a_top_level_item() {
         let src = "top = true";
-        let mut value = Value::from_str(src).unwrap();
+        let mut value: Value = toml::from_str(src).unwrap();
 
         let got = value.delete("top").unwrap();
 
@@ -118,7 +117,7 @@ mod tests {
     #[test]
     fn delete_a_nested_item() {
         let src = "[table]\n nested = true";
-        let mut value = Value::from_str(src).unwrap();
+        let mut value: Value = toml::from_str(src).unwrap();
 
         let got = value.delete("table.nested").unwrap();
 
