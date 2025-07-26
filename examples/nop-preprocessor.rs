@@ -123,7 +123,6 @@ mod nop_lib {
                         "book": {
                             "authors": ["AUTHOR"],
                             "language": "en",
-                            "multilingual": false,
                             "src": "src",
                             "title": "TITLE"
                         },
