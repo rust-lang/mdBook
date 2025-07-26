@@ -200,6 +200,13 @@ fn render_item(
                 // blocks, and worse case you have some noise in the index.
                 body.push_str(&clean_html(&html));
             }
+            Event::InlineMath(text) | Event::DisplayMath(text) => {
+                if in_heading {
+                    heading.push_str(&text);
+                } else {
+                    body.push_str(&text);
+                }
+            }
             Event::Start(_) | Event::End(_) | Event::Rule | Event::SoftBreak | Event::HardBreak => {
                 // Insert spaces where HTML output would usually separate text
                 // to ensure words don't get merged together

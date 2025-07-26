@@ -48,7 +48,7 @@ notify-debouncer-mini = "0.6.0"
 opener = "0.8.2"
 pathdiff = "0.2.3"
 pretty_assertions = "1.4.1"
-pulldown-cmark = { version = "0.10.3", default-features = false, features = ["html"] } # Do not update, part of the public api.
+pulldown-cmark = { version = "0.13.0", default-features = false, features = ["html"] } # Do not update, part of the public api.
 regex = "1.11.1"
 select = "0.6.1"
 semver = "1.0.26"
