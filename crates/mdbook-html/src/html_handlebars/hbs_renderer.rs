@@ -552,11 +552,6 @@ fn make_data(
         json!(preferred_dark_theme),
     );
 
-    // Add google analytics tag
-    if let Some(ref ga) = html_config.google_analytics {
-        data.insert("google_analytics".to_owned(), json!(ga));
-    }
-
     if html_config.mathjax_support {
         data.insert("mathjax_support".to_owned(), json!(true));
     }

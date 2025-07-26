@@ -522,8 +522,6 @@ pub struct HtmlConfig {
     pub mathjax_support: bool,
     /// Whether to fonts.css and respective font files to the output directory.
     pub copy_fonts: bool,
-    /// An optional google analytics code.
-    pub google_analytics: Option<String>,
     /// Additional CSS stylesheets to include in the rendered page's `<head>`.
     pub additional_css: Vec<PathBuf>,
     /// Additional JS scripts to include at the bottom of the rendered page's
@@ -587,7 +585,6 @@ impl Default for HtmlConfig {
             curly_quotes: false,
             mathjax_support: false,
             copy_fonts: true,
-            google_analytics: None,
             additional_css: Vec::new(),
             additional_js: Vec::new(),
             fold: Fold::default(),
@@ -804,7 +801,6 @@ mod tests {
         theme = "./themedir"
         default-theme = "rust"
         smart-punctuation = true
-        google-analytics = "123456"
         additional-css = ["./foo/bar/baz.css"]
         git-repository-url = "https://foo.com/"
         git-repository-icon = "fa-code-fork"
@@ -850,7 +846,6 @@ mod tests {
         };
         let html_should_be = HtmlConfig {
             smart_punctuation: true,
-            google_analytics: Some(String::from("123456")),
             additional_css: vec![PathBuf::from("./foo/bar/baz.css")],
             theme: Some(PathBuf::from("./themedir")),
             default_theme: Some(String::from("rust")),
@@ -1014,7 +1009,6 @@ mod tests {
         destination = "my-book" # the output files will be generated in `root/my-book` instead of `root/book`
         theme = "my-theme"
         smart-punctuation = true
-        google-analytics = "123456"
         additional-css = ["custom.css", "custom2.css"]
         additional-js = ["custom.js"]
         "#;
@@ -1039,7 +1033,6 @@ mod tests {
         let html_should_be = HtmlConfig {
             theme: Some(PathBuf::from("my-theme")),
             smart_punctuation: true,
-            google_analytics: Some(String::from("123456")),
             additional_css: vec![PathBuf::from("custom.css"), PathBuf::from("custom2.css")],
             additional_js: vec![PathBuf::from("custom.js")],
             ..Default::default()
