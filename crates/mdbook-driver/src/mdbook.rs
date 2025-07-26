@@ -65,16 +65,6 @@ impl MDBook {
         config.update_from_env();
 
         if let Some(html_config) = config.html_config() {
-            if html_config.google_analytics.is_some() {
-                warn!(
-                    "The output.html.google-analytics field has been deprecated; \
-                     it will be removed in a future release.\n\
-                     Consider placing the appropriate site tag code into the \
-                     theme/head.hbs file instead.\n\
-                     The tracking code may be found in the Google Analytics Admin page.\n\
-                   "
-                );
-            }
             if html_config.curly_quotes {
                 warn!(
                     "The output.html.curly-quotes field has been renamed to \
