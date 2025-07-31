@@ -12,7 +12,55 @@ use pulldown_cmark::{DefaultBrokenLinkCallback, Event, HeadingLevel, Tag, TagEnd
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::fmt::Display;
+use std::fs::File;
+use std::io::Read;
 use std::path::{Path, PathBuf};
+
+/// Given a path to a markdown file, find the first H1 heading and return its text.
+fn find_h1_in_file(location: &Path) -> Option<String> {
+    // This assumes the book's src dir is at CWD/src, which is not ideal but
+    // matches the behavior of the original commit. A more robust solution would
+    // involve passing the book's source directory to the parser.
+    let path_to_open = Path::new("src").join(location);
+    let mut file = match File::open(&path_to_open) {
+        Ok(f) => f,
+        Err(_) => {
+            warn!("Could not open {:?} to find chapter title", path_to_open);
+            return None;
+        }
+    };
+
+    let mut chapter_content = String::new();
+    if let Err(e) = file.read_to_string(&mut chapter_content) {
+        warn!(
+            "Could not read {:?} to find chapter title: {}",
+            path_to_open, e
+        );
+        return None;
+    }
+
+    let mut parser = pulldown_cmark::Parser::new(&chapter_content);
+
+    while let Some(event) = parser.next() {
+        if let Event::Start(Tag::Heading {
+            level: HeadingLevel::H1,
+            ..
+        }) = event
+        {
+            let mut heading_events = Vec::new();
+            // collect all events until the end of the heading
+            for inner_event in parser.by_ref() {
+                if let Event::End(TagEnd::Heading(HeadingLevel::H1)) = inner_event {
+                    break;
+                }
+                heading_events.push(inner_event);
+            }
+            return Some(stringify_events(heading_events));
+        }
+    }
+
+    None
+}
 
 /// Parse the text from a `SUMMARY.md` file into a sort of "recipe" to be
 /// used when loading a book from disk.
@@ -548,6 +596,14 @@ impl<'a> SummaryParser<'a> {
                     );
 
                     link.number = Some(number);
+
+                    if link.name.is_empty() {
+                        if let Some(location) = &link.location {
+                            if let Some(h1_name) = find_h1_in_file(location) {
+                                link.name = h1_name;
+                            }
+                        }
+                    }
 
                     return Ok(SummaryItem::Link(link));
                 }
