@@ -21,6 +21,7 @@ use std::sync::LazyLock;
 
 /// The HTML renderer for mdBook.
 #[derive(Default)]
+#[non_exhaustive]
 pub struct HtmlHandlebars;
 
 impl HtmlHandlebars {
@@ -656,6 +657,7 @@ fn make_data(
             BookItem::Separator => {
                 chapter.insert("spacer".to_owned(), json!("_spacer_"));
             }
+            _ => panic!("BookItem {item:?} not covered"),
         }
 
         chapters.push(chapter);
@@ -778,6 +780,7 @@ fn add_playground_pre(
                         Some(RustEdition::E2018) => " edition2018",
                         Some(RustEdition::E2021) => " edition2021",
                         Some(RustEdition::E2024) => " edition2024",
+                        Some(_) => panic!("edition {edition:?} not covered"),
                         None => "",
                     }
                 };
@@ -1085,14 +1088,9 @@ mod tests {
             ),
         ];
         for (src, should_be) in &inputs {
-            let got = add_playground_pre(
-                src,
-                &Playground {
-                    editable: true,
-                    ..Playground::default()
-                },
-                None,
-            );
+            let mut p = Playground::default();
+            p.editable = true;
+            let got = add_playground_pre(src, &p, None);
             assert_eq!(&*got, *should_be);
         }
     }
@@ -1117,14 +1115,9 @@ mod tests {
             ),
         ];
         for (src, should_be) in &inputs {
-            let got = add_playground_pre(
-                src,
-                &Playground {
-                    editable: true,
-                    ..Playground::default()
-                },
-                Some(RustEdition::E2015),
-            );
+            let mut p = Playground::default();
+            p.editable = true;
+            let got = add_playground_pre(src, &p, Some(RustEdition::E2015));
             assert_eq!(&*got, *should_be);
         }
     }
@@ -1149,14 +1142,9 @@ mod tests {
             ),
         ];
         for (src, should_be) in &inputs {
-            let got = add_playground_pre(
-                src,
-                &Playground {
-                    editable: true,
-                    ..Playground::default()
-                },
-                Some(RustEdition::E2018),
-            );
+            let mut p = Playground::default();
+            p.editable = true;
+            let got = add_playground_pre(src, &p, Some(RustEdition::E2018));
             assert_eq!(&*got, *should_be);
         }
     }
@@ -1181,14 +1169,9 @@ mod tests {
             ),
         ];
         for (src, should_be) in &inputs {
-            let got = add_playground_pre(
-                src,
-                &Playground {
-                    editable: true,
-                    ..Playground::default()
-                },
-                Some(RustEdition::E2021),
-            );
+            let mut p = Playground::default();
+            p.editable = true;
+            let got = add_playground_pre(src, &p, Some(RustEdition::E2021));
             assert_eq!(&*got, *should_be);
         }
     }
@@ -1248,17 +1231,10 @@ mod tests {
                 "<code class=\"language-python hidelines=!!!\"><span class=\"boring\">hidden()\n</span>nothidden():\n<span class=\"boring\">    hidden()\n</span><span class=\"boring\">    hidden()\n</span>    nothidden()\n</code>",
             ),
         ];
+        let mut code = Code::default();
+        code.hidelines.insert("python".to_string(), "~".to_string());
         for (src, should_be) in &inputs {
-            let got = hide_lines(
-                src,
-                &Code {
-                    hidelines: {
-                        let mut map = HashMap::new();
-                        map.insert("python".to_string(), "~".to_string());
-                        map
-                    },
-                },
-            );
+            let got = hide_lines(src, &code);
             assert_eq!(&*got, *should_be);
         }
     }

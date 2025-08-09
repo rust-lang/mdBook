@@ -146,8 +146,7 @@ mod nop_lib {
                                 "parent_names": []
                             }
                         }
-                    ],
-                    "__non_exhaustive": null
+                    ]
                 }
             ]"##;
             let input_json = input_json.as_bytes();

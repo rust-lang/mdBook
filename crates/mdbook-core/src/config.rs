@@ -64,6 +64,7 @@ use toml::value::Table;
 /// The overall configuration object for MDBook, essentially an in-memory
 /// representation of `book.toml`.
 #[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 pub struct Config {
     /// Metadata about the book.
     pub book: BookConfig,
@@ -386,6 +387,7 @@ fn is_legacy_format(table: &Value) -> bool {
 /// loading it from disk.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
+#[non_exhaustive]
 pub struct BookConfig {
     /// The book's title.
     pub title: Option<String>,
@@ -429,6 +431,7 @@ impl BookConfig {
 
 /// Text direction to use for HTML output
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum TextDirection {
     /// Left to right.
     #[serde(rename = "ltr")]
@@ -454,6 +457,7 @@ impl TextDirection {
 /// Configuration for the build procedure.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
+#[non_exhaustive]
 pub struct BuildConfig {
     /// Where to put built artefacts relative to the book's root directory.
     pub build_dir: PathBuf,
@@ -481,13 +485,15 @@ impl Default for BuildConfig {
 /// Configuration for the Rust compiler(e.g., for playground)
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
+#[non_exhaustive]
 pub struct RustConfig {
     /// Rust edition used in playground
     pub edition: Option<RustEdition>,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 /// Rust edition to use for the code.
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum RustEdition {
     /// The 2024 edition of Rust
     #[serde(rename = "2024")]
@@ -506,6 +512,7 @@ pub enum RustEdition {
 /// Configuration for the HTML renderer.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
+#[non_exhaustive]
 pub struct HtmlConfig {
     /// The theme directory, if specified.
     pub theme: Option<PathBuf>,
@@ -625,6 +632,7 @@ impl HtmlConfig {
 /// Configuration for how to render the print icon, print.html, and print.css.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
+#[non_exhaustive]
 pub struct Print {
     /// Whether print support is enabled.
     pub enable: bool,
@@ -644,6 +652,7 @@ impl Default for Print {
 /// Configuration for how to fold chapters of sidebar.
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
+#[non_exhaustive]
 pub struct Fold {
     /// When off, all folds are open. Default: `false`.
     pub enable: bool,
@@ -656,6 +665,7 @@ pub struct Fold {
 /// Configuration for tweaking how the HTML renderer handles the playground.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
+#[non_exhaustive]
 pub struct Playground {
     /// Should playground snippets be editable? Default: `false`.
     pub editable: bool,
@@ -685,6 +695,7 @@ impl Default for Playground {
 /// Configuration for tweaking how the HTML renderer handles code blocks.
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
+#[non_exhaustive]
 pub struct Code {
     /// A prefix string to hide lines per language (one or more chars).
     pub hidelines: HashMap<String, String>,
@@ -693,6 +704,7 @@ pub struct Code {
 /// Configuration of the search functionality of the HTML renderer.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
+#[non_exhaustive]
 pub struct Search {
     /// Enable the search feature. Default: `true`.
     pub enable: bool,
@@ -750,6 +762,7 @@ impl Default for Search {
 /// Search options for chapters (or paths).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 #[serde(default, rename_all = "kebab-case")]
+#[non_exhaustive]
 pub struct SearchChapterSettings {
     /// Whether or not indexing is enabled, default `true`.
     pub enable: Option<bool>,

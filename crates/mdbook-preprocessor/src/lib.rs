@@ -47,6 +47,7 @@ pub trait Preprocessor {
 /// Extra information for a `Preprocessor` to give them more context when
 /// processing a book.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct PreprocessorContext {
     /// The location of the book directory on disk.
     pub root: PathBuf,
@@ -62,8 +63,6 @@ pub struct PreprocessorContext {
     /// This should not be used outside of mdbook's internals.
     #[serde(skip)]
     pub chapter_titles: RefCell<HashMap<PathBuf, String>>,
-    #[serde(skip)]
-    __non_exhaustive: (),
 }
 
 impl PreprocessorContext {
@@ -75,7 +74,6 @@ impl PreprocessorContext {
             renderer,
             mdbook_version: crate::MDBOOK_VERSION.to_string(),
             chapter_titles: RefCell::new(HashMap::new()),
-            __non_exhaustive: (),
         }
     }
 }

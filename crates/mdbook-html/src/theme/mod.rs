@@ -49,6 +49,7 @@ pub static FONT_AWESOME_OTF: &[u8] = include_bytes!("../../front-end/fonts/FontA
 /// You should only ever use the static variables directly if you want to
 /// override the user's theme with the defaults.
 #[derive(Debug, PartialEq)]
+#[non_exhaustive]
 pub struct Theme {
     pub index: Vec<u8>,
     pub head: Vec<u8>,

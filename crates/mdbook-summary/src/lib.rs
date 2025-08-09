@@ -63,6 +63,7 @@ pub fn parse_summary(summary: &str) -> Result<Summary> {
 
 /// The parsed `SUMMARY.md`, specifying how the book should be laid out.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct Summary {
     /// An optional title for the `SUMMARY.md`, currently just ignored.
     pub title: Option<String>,
@@ -79,6 +80,7 @@ pub struct Summary {
 ///
 /// This is roughly the equivalent of `[Some section](./path/to/file.md)`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct Link {
     /// The name of the chapter.
     pub name: String,
@@ -114,8 +116,9 @@ impl Default for Link {
     }
 }
 
-/// An item in `SUMMARY.md` which could be either a separator or a `Link`.
+/// An item in `SUMMARY.md`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum SummaryItem {
     /// A link to a chapter.
     Link(Link),

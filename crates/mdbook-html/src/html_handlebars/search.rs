@@ -409,9 +409,11 @@ fn chapter_settings_priority() {
         ("cli/inner/index.md", Some(true)),
         ("cli/inner/foo.md", Some(false)),
     ] {
+        let mut settings = SearchChapterSettings::default();
+        settings.enable = enable;
         assert_eq!(
             get_chapter_settings(&chapter_configs, Path::new(path)),
-            SearchChapterSettings { enable }
+            settings
         );
     }
 }

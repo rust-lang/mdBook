@@ -26,6 +26,7 @@ const MAX_LINK_NESTED_DEPTH: usize = 10;
 /// - `{{# playground}}` - Insert runnable Rust files
 /// - `{{# title}}` - Override \<title\> of a webpage.
 #[derive(Default)]
+#[non_exhaustive]
 pub struct LinkPreprocessor;
 
 impl LinkPreprocessor {
