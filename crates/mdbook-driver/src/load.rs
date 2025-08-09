@@ -194,7 +194,7 @@ And here is some \
             .unwrap();
 
         let mut second = Link::new("Nested Chapter 1", &second_path);
-        second.number = Some(SectionNumber(vec![1, 2]));
+        second.number = Some(SectionNumber::new([1, 2]));
 
         root.nested_items.push(second.clone().into());
         root.nested_items.push(SummaryItem::Separator);
@@ -255,7 +255,7 @@ And here is some \
         let nested = Chapter {
             name: String::from("Nested Chapter 1"),
             content: String::from("Hello World!"),
-            number: Some(SectionNumber(vec![1, 2])),
+            number: Some(SectionNumber::new([1, 2])),
             path: Some(PathBuf::from("second.md")),
             source_path: Some(PathBuf::from("second.md")),
             parent_names: vec![String::from("Chapter 1")],

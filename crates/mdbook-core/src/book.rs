@@ -180,7 +180,14 @@ impl Display for Chapter {
 /// A section number like "1.2.3", basically just a newtype'd `Vec<u32>` with
 /// a pretty `Display` impl.
 #[derive(Debug, PartialEq, Clone, Default, Serialize, Deserialize)]
-pub struct SectionNumber(pub Vec<u32>);
+pub struct SectionNumber(Vec<u32>);
+
+impl SectionNumber {
+    /// Creates a new [`SectionNumber`].
+    pub fn new(numbers: impl Into<Vec<u32>>) -> SectionNumber {
+        SectionNumber(numbers.into())
+    }
+}
 
 impl Display for SectionNumber {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
