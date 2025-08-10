@@ -167,7 +167,6 @@ fn backends_receive_render_context_via_stdin() {
         str![[r##"
 {
   "book": {
-    "__non_exhaustive": null,
     "sections": [
       {
         "Chapter": {

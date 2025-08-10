@@ -230,7 +230,7 @@ fn config_respects_preprocessor_selection() {
 
     let cfg = Config::from_str(cfg_str).unwrap();
 
-    let html_renderer = HtmlHandlebars;
+    let html_renderer = HtmlHandlebars::default();
     let pre = LinkPreprocessor::new();
 
     let should_run = preprocessor_should_run(&pre, &html_renderer, &cfg).unwrap();

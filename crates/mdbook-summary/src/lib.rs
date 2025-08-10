@@ -63,6 +63,7 @@ pub fn parse_summary(summary: &str) -> Result<Summary> {
 
 /// The parsed `SUMMARY.md`, specifying how the book should be laid out.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct Summary {
     /// An optional title for the `SUMMARY.md`, currently just ignored.
     pub title: Option<String>,
@@ -79,6 +80,7 @@ pub struct Summary {
 ///
 /// This is roughly the equivalent of `[Some section](./path/to/file.md)`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct Link {
     /// The name of the chapter.
     pub name: String,
@@ -114,8 +116,9 @@ impl Default for Link {
     }
 }
 
-/// An item in `SUMMARY.md` which could be either a separator or a `Link`.
+/// An item in `SUMMARY.md`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum SummaryItem {
     /// A link to a chapter.
     Link(Link),
@@ -536,7 +539,7 @@ impl<'a> SummaryParser<'a> {
                     let mut link = self.parse_link(dest_url.to_string());
 
                     let mut number = parent.clone();
-                    number.0.push(num_existing_items as u32 + 1);
+                    number.push(num_existing_items as u32 + 1);
                     trace!(
                         "Found chapter: {} {} ({})",
                         number,
@@ -602,7 +605,7 @@ fn update_section_numbers(sections: &mut [SummaryItem], level: usize, by: u32) {
     for section in sections {
         if let SummaryItem::Link(ref mut link) = *section {
             if let Some(ref mut number) = link.number {
-                number.0[level] += by;
+                number[level] += by;
             }
 
             update_section_numbers(&mut link.nested_items, level, by);
@@ -779,7 +782,7 @@ mod tests {
         let link = Link {
             name: String::from("First"),
             location: Some(PathBuf::from("./first.md")),
-            number: Some(SectionNumber(vec![1])),
+            number: Some(SectionNumber::new([1])),
             ..Default::default()
         };
         let should_be = vec![SummaryItem::Link(link)];
@@ -800,18 +803,18 @@ mod tests {
             SummaryItem::Link(Link {
                 name: String::from("First"),
                 location: Some(PathBuf::from("./first.md")),
-                number: Some(SectionNumber(vec![1])),
+                number: Some(SectionNumber::new([1])),
                 nested_items: vec![SummaryItem::Link(Link {
                     name: String::from("Nested"),
                     location: Some(PathBuf::from("./nested.md")),
-                    number: Some(SectionNumber(vec![1, 1])),
+                    number: Some(SectionNumber::new([1, 1])),
                     nested_items: Vec::new(),
                 })],
             }),
             SummaryItem::Link(Link {
                 name: String::from("Second"),
                 location: Some(PathBuf::from("./second.md")),
-                number: Some(SectionNumber(vec![2])),
+                number: Some(SectionNumber::new([2])),
                 nested_items: Vec::new(),
             }),
         ];
@@ -832,13 +835,13 @@ mod tests {
             SummaryItem::Link(Link {
                 name: String::from("First"),
                 location: Some(PathBuf::from("./first.md")),
-                number: Some(SectionNumber(vec![1])),
+                number: Some(SectionNumber::new([1])),
                 nested_items: Vec::new(),
             }),
             SummaryItem::Link(Link {
                 name: String::from("Second"),
                 location: Some(PathBuf::from("./second.md")),
-                number: Some(SectionNumber(vec![2])),
+                number: Some(SectionNumber::new([2])),
                 nested_items: Vec::new(),
             }),
         ];
@@ -860,24 +863,24 @@ mod tests {
             SummaryItem::Link(Link {
                 name: String::from("First"),
                 location: Some(PathBuf::from("./first.md")),
-                number: Some(SectionNumber(vec![1])),
+                number: Some(SectionNumber::new([1])),
                 nested_items: Vec::new(),
             }),
             SummaryItem::Link(Link {
                 name: String::from("Second"),
                 location: Some(PathBuf::from("./second.md")),
-                number: Some(SectionNumber(vec![2])),
+                number: Some(SectionNumber::new([2])),
                 nested_items: Vec::new(),
             }),
             SummaryItem::PartTitle(String::from("Title 2")),
             SummaryItem::Link(Link {
                 name: String::from("Third"),
                 location: Some(PathBuf::from("./third.md")),
-                number: Some(SectionNumber(vec![3])),
+                number: Some(SectionNumber::new([3])),
                 nested_items: vec![SummaryItem::Link(Link {
                     name: String::from("Fourth"),
                     location: Some(PathBuf::from("./fourth.md")),
-                    number: Some(SectionNumber(vec![3, 1])),
+                    number: Some(SectionNumber::new([3, 1])),
                     nested_items: Vec::new(),
                 })],
             }),
@@ -900,13 +903,13 @@ mod tests {
             SummaryItem::Link(Link {
                 name: String::from("First"),
                 location: Some(PathBuf::from("./first.md")),
-                number: Some(SectionNumber(vec![1])),
+                number: Some(SectionNumber::new([1])),
                 nested_items: Vec::new(),
             }),
             SummaryItem::Link(Link {
                 name: String::from("Second"),
                 location: Some(PathBuf::from("./second.md")),
-                number: Some(SectionNumber(vec![2])),
+                number: Some(SectionNumber::new([2])),
                 nested_items: Vec::new(),
             }),
         ];
@@ -928,7 +931,7 @@ mod tests {
         let should_be = vec![SummaryItem::Link(Link {
             name: String::from("Empty"),
             location: None,
-            number: Some(SectionNumber(vec![1])),
+            number: Some(SectionNumber::new([1])),
             nested_items: Vec::new(),
         })];
 
@@ -946,21 +949,21 @@ mod tests {
             SummaryItem::Link(Link {
                 name: String::from("First"),
                 location: Some(PathBuf::from("./first.md")),
-                number: Some(SectionNumber(vec![1])),
+                number: Some(SectionNumber::new([1])),
                 nested_items: Vec::new(),
             }),
             SummaryItem::Separator,
             SummaryItem::Link(Link {
                 name: String::from("Second"),
                 location: Some(PathBuf::from("./second.md")),
-                number: Some(SectionNumber(vec![2])),
+                number: Some(SectionNumber::new([2])),
                 nested_items: Vec::new(),
             }),
             SummaryItem::Separator,
             SummaryItem::Link(Link {
                 name: String::from("Third"),
                 location: Some(PathBuf::from("./third.md")),
-                number: Some(SectionNumber(vec![3])),
+                number: Some(SectionNumber::new([3])),
                 nested_items: Vec::new(),
             }),
         ];
@@ -981,7 +984,7 @@ mod tests {
         let should_be = vec![SummaryItem::Link(Link {
             name: String::from("Chapter title"),
             location: Some(PathBuf::from("./chapter.md")),
-            number: Some(SectionNumber(vec![1])),
+            number: Some(SectionNumber::new([1])),
             nested_items: Vec::new(),
         })];
 
@@ -1000,13 +1003,13 @@ mod tests {
             SummaryItem::Link(Link {
                 name: String::from("test1"),
                 location: Some(PathBuf::from("./test link1.md")),
-                number: Some(SectionNumber(vec![1])),
+                number: Some(SectionNumber::new([1])),
                 nested_items: Vec::new(),
             }),
             SummaryItem::Link(Link {
                 name: String::from("test2"),
                 location: Some(PathBuf::from("./test link2.md")),
-                number: Some(SectionNumber(vec![2])),
+                number: Some(SectionNumber::new([2])),
                 nested_items: Vec::new(),
             }),
         ];
@@ -1089,7 +1092,7 @@ mod tests {
             SummaryItem::Link(Link {
                 name: String::from(name),
                 location: Some(PathBuf::from(location)),
-                number: Some(SectionNumber(numbers.to_vec())),
+                number: Some(SectionNumber::new(numbers)),
                 nested_items,
             })
         };

@@ -3,7 +3,7 @@
 use crate::prelude::*;
 use mdbook_core::book::{BookItem, Chapter};
 use snapbox::file;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 fn read_book_index(root: &Path) -> serde_json::Value {
     let index = root.join("book/searchindex.js");
@@ -116,15 +116,7 @@ fn can_disable_individual_chapters() {
 fn with_no_source_path() {
     let test = BookTest::from_dir("search/reasonable_search_index");
     let mut book = test.load_book();
-    let chapter = Chapter {
-        name: "Sample chapter".to_string(),
-        content: "".to_string(),
-        number: None,
-        sub_items: Vec::new(),
-        path: Some(PathBuf::from("sample.html")),
-        source_path: None,
-        parent_names: Vec::new(),
-    };
+    let chapter = Chapter::new("Sample chapter", String::new(), "sample.html", vec![]);
     book.book.sections.push(BookItem::Chapter(chapter));
     book.build().unwrap();
 }

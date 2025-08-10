@@ -5,9 +5,10 @@ use mdbook_core::utils;
 use mdbook_renderer::{RenderContext, Renderer};
 use std::fs;
 
-#[derive(Default)]
 /// A renderer to output the Markdown after the preprocessors have run. Mostly useful
 /// when debugging preprocessors.
+#[derive(Default)]
+#[non_exhaustive]
 pub struct MarkdownRenderer;
 
 impl MarkdownRenderer {

@@ -95,6 +95,7 @@ fn load_summary_item<P: AsRef<Path> + Clone>(
         SummaryItem::Separator => Ok(BookItem::Separator),
         SummaryItem::Link(link) => load_chapter(link, src_dir, parent_names).map(BookItem::Chapter),
         SummaryItem::PartTitle(title) => Ok(BookItem::PartTitle(title.clone())),
+        _ => panic!("SummaryItem {item:?} not covered"),
     }
 }
 
@@ -194,7 +195,7 @@ And here is some \
             .unwrap();
 
         let mut second = Link::new("Nested Chapter 1", &second_path);
-        second.number = Some(SectionNumber(vec![1, 2]));
+        second.number = Some(SectionNumber::new([1, 2]));
 
         root.nested_items.push(second.clone().into());
         root.nested_items.push(SummaryItem::Separator);
@@ -252,28 +253,21 @@ And here is some \
     fn load_recursive_link_with_separators() {
         let (root, temp) = nested_links();
 
-        let nested = Chapter {
-            name: String::from("Nested Chapter 1"),
-            content: String::from("Hello World!"),
-            number: Some(SectionNumber(vec![1, 2])),
-            path: Some(PathBuf::from("second.md")),
-            source_path: Some(PathBuf::from("second.md")),
-            parent_names: vec![String::from("Chapter 1")],
-            sub_items: Vec::new(),
-        };
-        let should_be = BookItem::Chapter(Chapter {
-            name: String::from("Chapter 1"),
-            content: String::from(DUMMY_SRC),
-            number: None,
-            path: Some(PathBuf::from("chapter_1.md")),
-            source_path: Some(PathBuf::from("chapter_1.md")),
-            parent_names: Vec::new(),
-            sub_items: vec![
-                BookItem::Chapter(nested.clone()),
-                BookItem::Separator,
-                BookItem::Chapter(nested),
-            ],
-        });
+        let mut nested = Chapter::new(
+            "Nested Chapter 1",
+            String::from("Hello World!"),
+            "second.md",
+            vec![String::from("Chapter 1")],
+        );
+        nested.number = Some(SectionNumber::new([1, 2]));
+        let mut chapter =
+            Chapter::new("Chapter 1", String::from(DUMMY_SRC), "chapter_1.md", vec![]);
+        chapter.sub_items = vec![
+            BookItem::Chapter(nested.clone()),
+            BookItem::Separator,
+            BookItem::Chapter(nested),
+        ];
+        let should_be = BookItem::Chapter(chapter);
 
         let got = load_summary_item(&SummaryItem::Link(root), temp.path(), Vec::new()).unwrap();
         assert_eq!(got, should_be);
@@ -282,17 +276,15 @@ And here is some \
     #[test]
     fn load_a_book_with_a_single_chapter() {
         let (link, temp) = dummy_link();
-        let summary = Summary {
-            numbered_chapters: vec![SummaryItem::Link(link)],
-            ..Default::default()
-        };
-        let sections = vec![BookItem::Chapter(Chapter {
-            name: String::from("Chapter 1"),
-            content: String::from(DUMMY_SRC),
-            path: Some(PathBuf::from("chapter_1.md")),
-            source_path: Some(PathBuf::from("chapter_1.md")),
-            ..Default::default()
-        })];
+        let mut summary = Summary::default();
+        summary.numbered_chapters = vec![SummaryItem::Link(link)];
+        let chapter = Chapter::new(
+            "Chapter 1",
+            String::from(DUMMY_SRC),
+            PathBuf::from("chapter_1.md"),
+            vec![],
+        );
+        let sections = vec![BookItem::Chapter(chapter)];
         let should_be = Book::new_with_items(sections);
 
         let got = load_book_from_disk(&summary, temp.path()).unwrap();
@@ -303,16 +295,9 @@ And here is some \
     #[test]
     fn cant_load_chapters_with_an_empty_path() {
         let (_, temp) = dummy_link();
-        let summary = Summary {
-            numbered_chapters: vec![SummaryItem::Link(Link {
-                name: String::from("Empty"),
-                location: Some(PathBuf::from("")),
-                ..Default::default()
-            })],
-
-            ..Default::default()
-        };
-
+        let mut summary = Summary::default();
+        let link = Link::new("Empty", "");
+        summary.numbered_chapters = vec![SummaryItem::Link(link)];
         let got = load_book_from_disk(&summary, temp.path());
         assert!(got.is_err());
     }
@@ -323,14 +308,9 @@ And here is some \
         let dir = temp.path().join("nested");
         fs::create_dir(&dir).unwrap();
 
-        let summary = Summary {
-            numbered_chapters: vec![SummaryItem::Link(Link {
-                name: String::from("nested"),
-                location: Some(dir),
-                ..Default::default()
-            })],
-            ..Default::default()
-        };
+        let mut summary = Summary::default();
+        let link = Link::new("nested", dir);
+        summary.numbered_chapters = vec![SummaryItem::Link(link)];
 
         let got = load_book_from_disk(&summary, temp.path());
         assert!(got.is_err());

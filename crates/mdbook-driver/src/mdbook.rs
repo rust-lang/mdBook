@@ -136,6 +136,7 @@ impl MDBook {
     ///         BookItem::Chapter(ref chapter) => {},
     ///         BookItem::Separator => {},
     ///         BookItem::PartTitle(ref title) => {}
+    ///         _ => {}
     ///     }
     /// }
     ///
@@ -329,6 +330,7 @@ impl MDBook {
                         RustEdition::E2024 => {
                             cmd.args(["--edition", "2024"]);
                         }
+                        _ => panic!("RustEdition {edition:?} not covered"),
                     }
                 }
 
