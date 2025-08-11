@@ -8,8 +8,6 @@ pub(crate) trait TomlExt {
     fn read(&self, key: &str) -> Option<&Value>;
     /// Insert with a dotted key.
     fn insert(&mut self, key: &str, value: Value);
-    /// Delete a dotted key value.
-    fn delete(&mut self, key: &str) -> Option<Value>;
 }
 
 impl TomlExt for Value {
@@ -35,16 +33,6 @@ impl TomlExt for Value {
                 .insert(tail, value);
         } else {
             table.insert(key.to_string(), value);
-        }
-    }
-
-    fn delete(&mut self, key: &str) -> Option<Value> {
-        if let Some((head, tail)) = split(key) {
-            self.get_mut(head)?.delete(tail)
-        } else if let Some(table) = self.as_table_mut() {
-            table.remove(key)
-        } else {
-            None
         }
     }
 }
@@ -102,25 +90,5 @@ mod tests {
 
         let inserted = value.read("first.second").unwrap();
         assert_eq!(inserted, &item);
-    }
-
-    #[test]
-    fn delete_a_top_level_item() {
-        let src = "top = true";
-        let mut value: Value = toml::from_str(src).unwrap();
-
-        let got = value.delete("top").unwrap();
-
-        assert_eq!(got, Value::Boolean(true));
-    }
-
-    #[test]
-    fn delete_a_nested_item() {
-        let src = "[table]\n nested = true";
-        let mut value: Value = toml::from_str(src).unwrap();
-
-        let got = value.delete("table.nested").unwrap();
-
-        assert_eq!(got, Value::Boolean(true));
     }
 }
