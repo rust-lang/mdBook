@@ -259,7 +259,7 @@ pre > .buttons button {
 pre > .buttons button.clip-button {
     padding: 2px 4px 0px 6px;
 }
-pre > .buttons button.clip-button::before {
+.clip-button::before {
     /* clipboard image from octicons (https://github.com/primer/octicons/tree/v2.0.0) MIT license
      */
     content: url('data:image/svg+xml,<svg width="21" height="20" viewBox="0 0 24 25" \
