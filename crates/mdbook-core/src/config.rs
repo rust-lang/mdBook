@@ -226,39 +226,6 @@ impl Config {
 
         Ok(())
     }
-
-    fn from_legacy(mut table: Value) -> Config {
-        let mut cfg = Config::default();
-
-        // we use a macro here instead of a normal loop because the $out
-        // variable can be different types. This way we can make type inference
-        // figure out what try_into() deserializes to.
-        macro_rules! get_and_insert {
-            ($table:expr, $key:expr => $out:expr) => {
-                let got = $table
-                    .as_table_mut()
-                    .and_then(|t| t.remove($key))
-                    .and_then(|v| v.try_into().ok());
-                if let Some(value) = got {
-                    $out = value;
-                }
-            };
-        }
-
-        get_and_insert!(table, "title" => cfg.book.title);
-        get_and_insert!(table, "authors" => cfg.book.authors);
-        get_and_insert!(table, "source" => cfg.book.src);
-        get_and_insert!(table, "description" => cfg.book.description);
-
-        if let Some(dest) = table.delete("output.html.destination") {
-            if let Ok(destination) = dest.try_into() {
-                cfg.build.build_dir = destination;
-            }
-        }
-
-        cfg.rest = table;
-        cfg
-    }
 }
 
 impl Default for Config {
@@ -275,18 +242,6 @@ impl Default for Config {
 impl<'de> serde::Deserialize<'de> for Config {
     fn deserialize<D: Deserializer<'de>>(de: D) -> std::result::Result<Self, D::Error> {
         let raw = Value::deserialize(de)?;
-
-        if is_legacy_format(&raw) {
-            warn!("It looks like you are using the legacy book.toml format.");
-            warn!("We'll parse it for now, but you should probably convert to the new format.");
-            warn!("See the mdbook documentation for more details, although as a rule of thumb");
-            warn!("just move all top level configuration entries like `title`, `author` and");
-            warn!("`description` under a table called `[book]`, move the `destination` entry");
-            warn!("from `[output.html]`, renamed to `build-dir`, under a table called");
-            warn!("`[build]`, and it should all work.");
-            warn!("Documentation: https://rust-lang.github.io/mdBook/format/config.html");
-            return Ok(Config::from_legacy(raw));
-        }
 
         warn_on_invalid_fields(&raw);
 
@@ -363,24 +318,6 @@ fn warn_on_invalid_fields(table: &Value) {
             warn!("Invalid field {:?} in book.toml", &item);
         }
     }
-}
-
-fn is_legacy_format(table: &Value) -> bool {
-    let legacy_items = [
-        "title",
-        "authors",
-        "source",
-        "description",
-        "output.html.destination",
-    ];
-
-    for item in &legacy_items {
-        if table.read(item).is_some() {
-            return true;
-        }
-    }
-
-    false
 }
 
 /// Configuration options which are specific to the book and required for
@@ -1004,57 +941,6 @@ mod tests {
         let baz_should_be = vec![true, true, false];
 
         assert_eq!(got_baz, baz_should_be);
-    }
-
-    /// The config file format has slightly changed (metadata stuff is now under
-    /// the `book` table instead of being at the top level) so we're adding a
-    /// **temporary** compatibility check. You should be able to still load the
-    /// old format, emitting a warning.
-    #[test]
-    fn can_still_load_the_previous_format() {
-        let src = r#"
-        title = "mdBook Documentation"
-        description = "Create book from markdown files. Like Gitbook but implemented in Rust"
-        authors = ["Mathieu David"]
-        source = "./source"
-
-        [output.html]
-        destination = "my-book" # the output files will be generated in `root/my-book` instead of `root/book`
-        theme = "my-theme"
-        smart-punctuation = true
-        additional-css = ["custom.css", "custom2.css"]
-        additional-js = ["custom.js"]
-        "#;
-
-        let book_should_be = BookConfig {
-            title: Some(String::from("mdBook Documentation")),
-            description: Some(String::from(
-                "Create book from markdown files. Like Gitbook but implemented in Rust",
-            )),
-            authors: vec![String::from("Mathieu David")],
-            src: PathBuf::from("./source"),
-            ..Default::default()
-        };
-
-        let build_should_be = BuildConfig {
-            build_dir: PathBuf::from("my-book"),
-            create_missing: true,
-            use_default_preprocessors: true,
-            extra_watch_dirs: Vec::new(),
-        };
-
-        let html_should_be = HtmlConfig {
-            theme: Some(PathBuf::from("my-theme")),
-            smart_punctuation: true,
-            additional_css: vec![PathBuf::from("custom.css"), PathBuf::from("custom2.css")],
-            additional_js: vec![PathBuf::from("custom.js")],
-            ..Default::default()
-        };
-
-        let got = Config::from_str(src).unwrap();
-        assert_eq!(got.book, book_should_be);
-        assert_eq!(got.build, build_should_be);
-        assert_eq!(got.html_config().unwrap(), html_should_be);
     }
 
     #[test]
