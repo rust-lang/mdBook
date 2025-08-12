@@ -24,6 +24,6 @@ mod theme;
 mod toc;
 
 mod prelude {
-    pub use crate::book_test::BookTest;
+    pub use crate::book_test::{BookTest, read_to_string};
     pub use snapbox::str;
 }

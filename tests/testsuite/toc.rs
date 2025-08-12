@@ -1,11 +1,9 @@
 //! Tests for table of contents (sidebar).
 
 use crate::prelude::*;
-use anyhow::Context;
 use anyhow::Result;
 use select::document::Document;
 use select::predicate::{Attr, Class, Name, Predicate};
-use std::fs;
 
 const TOC_TOP_LEVEL: &[&str] = &[
     "1. With Readme",
@@ -50,7 +48,7 @@ fn toc_fallback_html() -> Result<Document> {
     test.build();
 
     let toc_path = test.dir.join("book").join("toc.html");
-    let html = fs::read_to_string(toc_path).with_context(|| "Unable to read index.html")?;
+    let html = read_to_string(toc_path);
     Ok(Document::from(html.as_str()))
 }
 
