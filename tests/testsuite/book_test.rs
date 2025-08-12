@@ -227,6 +227,7 @@ impl BookTest {
             expect_status: StatusCode::Success,
             expect_stderr_data: None,
             expect_stdout_data: None,
+            debug: None,
         };
         f(&mut cmd);
         cmd.run();
@@ -272,6 +273,7 @@ pub struct BookCommand {
     expect_status: StatusCode,
     expect_stderr_data: Option<snapbox::Data>,
     expect_stdout_data: Option<snapbox::Data>,
+    debug: Option<String>,
 }
 
 impl BookCommand {
@@ -311,6 +313,21 @@ impl BookCommand {
         self
     }
 
+    /// Use this to debug a command.
+    ///
+    /// Pass the value that you would normally pass to `RUST_LOG`, and this
+    /// will enable logging, print the command that runs and its output.
+    ///
+    /// This will fail if you use it in CI.
+    #[allow(unused)]
+    pub fn debug(&mut self, value: &str) -> &mut Self {
+        if std::env::var_os("CI").is_some() {
+            panic!("debug is not allowed on CI");
+        }
+        self.debug = Some(value.into());
+        self
+    }
+
     /// Runs the command, and verifies the output.
     fn run(&mut self) {
         let mut cmd = Command::new(env!("CARGO_BIN_EXE_mdbook"));
@@ -326,6 +343,10 @@ impl BookCommand {
             .env_remove("GIT_COMMITTER_EMAIL")
             .env_remove("GIT_COMMITTER_NAME");
 
+        if let Some(debug) = &self.debug {
+            cmd.env("RUST_LOG", debug);
+        }
+
         for (k, v) in &self.env {
             match v {
                 Some(v) => cmd.env(k, v),
@@ -333,6 +354,9 @@ impl BookCommand {
             };
         }
 
+        if self.debug.is_some() {
+            eprintln!("running {cmd:#?}");
+        }
         let output = cmd.output().expect("mdbook should be runnable");
         let stdout = std::str::from_utf8(&output.stdout).expect("stdout is not utf8");
         let stderr = std::str::from_utf8(&output.stderr).expect("stderr is not utf8");
@@ -352,6 +376,9 @@ impl BookCommand {
                 None => panic!("process exited via signal {:?}", output.status),
             },
             _ => {}
+        }
+        if self.debug.is_some() {
+            eprintln!("{}", render_output());
         }
         self.expect_status = StatusCode::Success; // Reset to default.
         if let Some(expect_stderr_data) = &self.expect_stderr_data {
