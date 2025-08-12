@@ -186,8 +186,11 @@ fn backends_receive_render_context_via_stdin() {
   "config": {
     "book": {
       "authors": [],
+      "description": null,
       "language": "en",
-      "src": "src"
+      "src": "src",
+      "text-direction": null,
+      "title": null
     },
     "output": {
       "cat-to-file": {

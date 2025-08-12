@@ -7,7 +7,7 @@ fn config_defaults_to_html_renderer_if_empty() {
     let cfg = Config::default();
 
     // make sure we haven't got anything in the `output` table
-    assert!(cfg.get::<Value>("output").unwrap().is_none());
+    assert!(cfg.outputs::<toml::Value>().unwrap().is_empty());
 
     let got = determine_renderers(&cfg).unwrap();
 
@@ -45,7 +45,7 @@ fn config_defaults_to_link_and_index_preprocessor_if_not_set() {
     let cfg = Config::default();
 
     // make sure we haven't got anything in the `preprocessor` table
-    assert!(cfg.get::<Value>("preprocessor").unwrap().is_none());
+    assert!(cfg.preprocessors::<toml::Value>().unwrap().is_empty());
 
     let got = determine_preprocessors(&cfg);
 
