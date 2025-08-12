@@ -231,6 +231,12 @@ impl BookTest {
         };
         f(&mut cmd);
         cmd.run();
+        // Ensure that `built` gets set if a build command is used so that all
+        // the `check` methods do not overwrite the contents of what was just
+        // built.
+        if cmd.args.first().map(String::as_str) == Some("build") {
+            self.built = true
+        }
         self
     }
 
