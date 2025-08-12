@@ -14,7 +14,6 @@ use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use mdbook_renderer::{RenderContext, Renderer};
 use mdbook_summary::Summary;
 use serde::Deserialize;
-use std::collections::HashMap;
 use std::ffi::OsString;
 use std::io::{IsTerminal, Write};
 use std::path::{Path, PathBuf};
@@ -423,22 +422,17 @@ struct OutputConfig {
 fn determine_renderers(config: &Config) -> Result<Vec<Box<dyn Renderer>>> {
     let mut renderers = Vec::new();
 
-    match config.get::<HashMap<String, OutputConfig>>("output") {
-        Ok(Some(output_table)) => {
-            renderers.extend(output_table.into_iter().map(|(key, table)| {
-                if key == "html" {
-                    Box::new(HtmlHandlebars::new()) as Box<dyn Renderer>
-                } else if key == "markdown" {
-                    Box::new(MarkdownRenderer::new()) as Box<dyn Renderer>
-                } else {
-                    let command = table.command.unwrap_or_else(|| format!("mdbook-{key}"));
-                    Box::new(CmdRenderer::new(key, command))
-                }
-            }));
+    let outputs = config.outputs::<OutputConfig>()?;
+    renderers.extend(outputs.into_iter().map(|(key, table)| {
+        if key == "html" {
+            Box::new(HtmlHandlebars::new()) as Box<dyn Renderer>
+        } else if key == "markdown" {
+            Box::new(MarkdownRenderer::new()) as Box<dyn Renderer>
+        } else {
+            let command = table.command.unwrap_or_else(|| format!("mdbook-{key}"));
+            Box::new(CmdRenderer::new(key, command))
         }
-        Ok(None) => {}
-        Err(e) => bail!("failed to get output table config: {e}"),
-    }
+    }));
 
     // if we couldn't find anything, add the HTML renderer as a default
     if renderers.is_empty() {
@@ -477,12 +471,7 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<dyn Preprocessor>>
         }
     }
 
-    let preprocessor_table = match config.get::<HashMap<String, PreprocessorConfig>>("preprocessor")
-    {
-        Ok(Some(preprocessor_table)) => preprocessor_table,
-        Ok(None) => HashMap::new(),
-        Err(e) => bail!("failed to get preprocessor table config: {e}"),
-    };
+    let preprocessor_table = config.preprocessors::<PreprocessorConfig>()?;
 
     for (name, table) in preprocessor_table.iter() {
         preprocessor_names.insert(name.to_string());

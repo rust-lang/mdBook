@@ -2,7 +2,7 @@ use super::command_prelude::*;
 #[cfg(feature = "watch")]
 use super::watch;
 use crate::{get_book_dir, open};
-use anyhow::{Result, bail};
+use anyhow::Result;
 use axum::Router;
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
 use axum::routing::get;
@@ -76,10 +76,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         .next()
         .ok_or_else(|| anyhow::anyhow!("no address found for {}", address))?;
     let build_dir = book.build_dir_for("html");
-    let input_404 = match book.config.get::<String>("output.html.input-404") {
-        Ok(v) => v,
-        Err(e) => bail!("expected string for output.html.input-404: {e}"),
-    };
+    let html_config = book.config.html_config();
+    let input_404 = html_config.and_then(|c| c.input_404);
     let file_404 = get_404_output_file(&input_404);
 
     // A channel used to broadcast to any websockets to reload when a file changes.

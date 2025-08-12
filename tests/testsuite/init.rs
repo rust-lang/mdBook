@@ -28,8 +28,8 @@ All done, no errors...
         str![[r#"
 [book]
 authors = []
-language = "en"
 src = "src"
+language = "en"
 
 "#]],
     )
@@ -94,8 +94,8 @@ All done, no errors...
         str![[r#"
 [book]
 authors = []
-language = "en"
 src = "src"
+language = "en"
 
 "#]],
     );
@@ -126,10 +126,10 @@ All done, no errors...
         "book.toml",
         str![[r#"
 [book]
-authors = []
-language = "en"
-src = "src"
 title = "Example title"
+authors = []
+src = "src"
+language = "en"
 
 "#]],
     );
@@ -179,14 +179,14 @@ fn init_with_custom_book_and_src_locations() {
         str![[r#"
 [book]
 authors = []
-language = "en"
 src = "in"
+language = "en"
 
 [build]
 build-dir = "out"
 create-missing = true
-extra-watch-dirs = []
 use-default-preprocessors = true
+extra-watch-dirs = []
 
 "#]],
     )

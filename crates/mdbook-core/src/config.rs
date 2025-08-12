@@ -13,16 +13,12 @@
 //! use std::path::PathBuf;
 //! use std::str::FromStr;
 //! use mdbook_core::config::Config;
-//! use toml::Value;
 //!
 //! # fn run() -> Result<()> {
 //! let src = r#"
 //! [book]
 //! title = "My Book"
 //! authors = ["Michael-F-Bryan"]
-//!
-//! [build]
-//! src = "out"
 //!
 //! [preprocessor.my-preprocessor]
 //! bar = 123
@@ -36,7 +32,7 @@
 //! assert_eq!(bar, Some(123));
 //!
 //! // Set the `output.html.theme` directory
-//! assert!(cfg.get::<Value>("output.html")?.is_none());
+//! assert!(cfg.get::<toml::Value>("output.html")?.is_none());
 //! cfg.set("output.html.theme", "./themes");
 //!
 //! // then load it again, automatically deserializing to a `PathBuf`.
@@ -49,9 +45,9 @@
 
 use crate::utils::TomlExt;
 use crate::utils::log_backtrace;
-use anyhow::{Context, Error, Result};
-use log::{debug, trace, warn};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use anyhow::{Context, Error, Result, bail};
+use log::{debug, trace};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
 use std::fs::File;
@@ -63,16 +59,34 @@ use toml::value::Table;
 
 /// The overall configuration object for MDBook, essentially an in-memory
 /// representation of `book.toml`.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
 #[non_exhaustive]
 pub struct Config {
     /// Metadata about the book.
     pub book: BookConfig,
     /// Information about the build environment.
+    #[serde(skip_serializing_if = "is_default")]
     pub build: BuildConfig,
     /// Information about Rust language support.
+    #[serde(skip_serializing_if = "is_default")]
     pub rust: RustConfig,
-    rest: Value,
+    /// The renderer configurations.
+    #[serde(skip_serializing_if = "toml_is_empty")]
+    output: Value,
+    /// The preprocessor configurations.
+    #[serde(skip_serializing_if = "toml_is_empty")]
+    preprocessor: Value,
+}
+
+/// Helper for serde serialization.
+fn is_default<T: Default + PartialEq>(t: &T) -> bool {
+    t == &T::default()
+}
+
+/// Helper for serde serialization.
+fn toml_is_empty(table: &Value) -> bool {
+    table.as_table().unwrap().is_empty()
 }
 
 impl FromStr for Config {
@@ -81,6 +95,18 @@ impl FromStr for Config {
     /// Load a `Config` from some string.
     fn from_str(src: &str) -> Result<Self> {
         toml::from_str(src).with_context(|| "Invalid configuration file")
+    }
+}
+
+impl Default for Config {
+    fn default() -> Config {
+        Config {
+            book: BookConfig::default(),
+            build: BuildConfig::default(),
+            rust: RustConfig::default(),
+            output: Value::Table(Table::default()),
+            preprocessor: Value::Table(Table::default()),
+        }
     }
 }
 
@@ -161,22 +187,46 @@ impl Config {
     /// dotted indices to access nested items (e.g. `output.html.playground`
     /// will fetch the "playground" out of the html output table).
     ///
-    /// This does not have access to the [`Config::book`], [`Config::build`],
-    /// or [`Config::rust`] fields.
+    /// This can only access the `output` and `preprocessor` tables.
     ///
     /// Returns `Ok(None)` if the field is not set.
     ///
     /// Returns `Err` if it fails to deserialize.
     pub fn get<'de, T: Deserialize<'de>>(&self, name: &str) -> Result<Option<T>> {
-        self.rest
-            .read(name)
+        let (key, table) = if let Some(key) = name.strip_prefix("output.") {
+            (key, &self.output)
+        } else if let Some(key) = name.strip_prefix("preprocessor.") {
+            (key, &self.preprocessor)
+        } else {
+            bail!(
+                "unable to get `{name}`, only `output` and `preprocessor` table entries are allowed"
+            );
+        };
+        table
+            .read(key)
             .map(|value| {
                 value
                     .clone()
                     .try_into()
-                    .with_context(|| "Couldn't deserialize the value")
+                    .with_context(|| "Failed to deserialize `{name}`")
             })
             .transpose()
+    }
+
+    /// Returns the configuration for all preprocessors.
+    pub fn preprocessors<'de, T: Deserialize<'de>>(&self) -> Result<HashMap<String, T>> {
+        self.preprocessor
+            .clone()
+            .try_into()
+            .with_context(|| "Failed to read preprocessors")
+    }
+
+    /// Returns the configuration for all renderers.
+    pub fn outputs<'de, T: Deserialize<'de>>(&self) -> Result<HashMap<String, T>> {
+        self.output
+            .clone()
+            .try_into()
+            .with_context(|| "Failed to read renderers")
     }
 
     /// Convenience method for getting the html renderer's configuration.
@@ -187,10 +237,7 @@ impl Config {
     /// HTML renderer is refactored to be less coupled to `mdbook` internals.
     #[doc(hidden)]
     pub fn html_config(&self) -> Option<HtmlConfig> {
-        match self
-            .get("output.html")
-            .with_context(|| "Parsing configuration [output.html]")
-        {
+        match self.get("output.html") {
             Ok(Some(config)) => Some(config),
             Ok(None) => None,
             Err(e) => {
@@ -220,87 +267,15 @@ impl Config {
             self.build.update_value(key, value);
         } else if let Some(key) = index.strip_prefix("rust.") {
             self.rust.update_value(key, value);
+        } else if let Some(key) = index.strip_prefix("output.") {
+            self.output.update_value(key, value);
+        } else if let Some(key) = index.strip_prefix("preprocessor.") {
+            self.preprocessor.update_value(key, value);
         } else {
-            self.rest.insert(index, value);
+            bail!("invalid key `{index}`");
         }
 
         Ok(())
-    }
-}
-
-impl Default for Config {
-    fn default() -> Config {
-        Config {
-            book: BookConfig::default(),
-            build: BuildConfig::default(),
-            rust: RustConfig::default(),
-            rest: Value::Table(Table::default()),
-        }
-    }
-}
-
-impl<'de> serde::Deserialize<'de> for Config {
-    fn deserialize<D: Deserializer<'de>>(de: D) -> std::result::Result<Self, D::Error> {
-        let raw = Value::deserialize(de)?;
-
-        warn_on_invalid_fields(&raw);
-
-        use serde::de::Error;
-        let mut table = match raw {
-            Value::Table(t) => t,
-            _ => {
-                return Err(D::Error::custom(
-                    "A config file should always be a toml table",
-                ));
-            }
-        };
-
-        let book: BookConfig = table
-            .remove("book")
-            .map(|book| book.try_into().map_err(D::Error::custom))
-            .transpose()?
-            .unwrap_or_default();
-
-        let build: BuildConfig = table
-            .remove("build")
-            .map(|build| build.try_into().map_err(D::Error::custom))
-            .transpose()?
-            .unwrap_or_default();
-
-        let rust: RustConfig = table
-            .remove("rust")
-            .map(|rust| rust.try_into().map_err(D::Error::custom))
-            .transpose()?
-            .unwrap_or_default();
-
-        Ok(Config {
-            book,
-            build,
-            rust,
-            rest: Value::Table(table),
-        })
-    }
-}
-
-impl Serialize for Config {
-    fn serialize<S: Serializer>(&self, s: S) -> std::result::Result<S::Ok, S::Error> {
-        // TODO: This should probably be removed and use a derive instead.
-        let mut table = self.rest.clone();
-
-        let book_config = Value::try_from(&self.book).expect("should always be serializable");
-        table.insert("book", book_config);
-
-        if self.build != BuildConfig::default() {
-            let build_config = Value::try_from(&self.build).expect("should always be serializable");
-            table.insert("build", build_config);
-        }
-
-        if self.rust != RustConfig::default() {
-            let rust_config = Value::try_from(&self.rust).expect("should always be serializable");
-            table.insert("rust", rust_config);
-        }
-
-        table.serialize(s)
     }
 }
 
@@ -309,21 +284,10 @@ fn parse_env(key: &str) -> Option<String> {
         .map(|key| key.to_lowercase().replace("__", ".").replace('_', "-"))
 }
 
-fn warn_on_invalid_fields(table: &Value) {
-    let valid_items = ["book", "build", "rust", "output", "preprocessor"];
-
-    let table = table.as_table().expect("root must be a table");
-    for item in table.keys() {
-        if !valid_items.contains(&item.as_str()) {
-            warn!("Invalid field {:?} in book.toml", &item);
-        }
-    }
-}
-
 /// Configuration options which are specific to the book and required for
 /// loading it from disk.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(default, rename_all = "kebab-case")]
+#[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct BookConfig {
     /// The book's title.
@@ -393,7 +357,7 @@ impl TextDirection {
 
 /// Configuration for the build procedure.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(default, rename_all = "kebab-case")]
+#[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct BuildConfig {
     /// Where to put built artefacts relative to the book's root directory.
@@ -421,7 +385,7 @@ impl Default for BuildConfig {
 
 /// Configuration for the Rust compiler(e.g., for playground)
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(default, rename_all = "kebab-case")]
+#[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct RustConfig {
     /// Rust edition used in playground
@@ -448,7 +412,7 @@ pub enum RustEdition {
 
 /// Configuration for the HTML renderer.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(default, rename_all = "kebab-case")]
+#[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct HtmlConfig {
     /// The theme directory, if specified.
@@ -568,7 +532,7 @@ impl HtmlConfig {
 
 /// Configuration for how to render the print icon, print.html, and print.css.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(default, rename_all = "kebab-case")]
+#[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct Print {
     /// Whether print support is enabled.
@@ -588,7 +552,7 @@ impl Default for Print {
 
 /// Configuration for how to fold chapters of sidebar.
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(default, rename_all = "kebab-case")]
+#[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct Fold {
     /// When off, all folds are open. Default: `false`.
@@ -601,7 +565,7 @@ pub struct Fold {
 
 /// Configuration for tweaking how the HTML renderer handles the playground.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(default, rename_all = "kebab-case")]
+#[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct Playground {
     /// Should playground snippets be editable? Default: `false`.
@@ -631,7 +595,7 @@ impl Default for Playground {
 
 /// Configuration for tweaking how the HTML renderer handles code blocks.
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(default, rename_all = "kebab-case")]
+#[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct Code {
     /// A prefix string to hide lines per language (one or more chars).
@@ -640,7 +604,7 @@ pub struct Code {
 
 /// Configuration of the search functionality of the HTML renderer.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(default, rename_all = "kebab-case")]
+#[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct Search {
     /// Enable the search feature. Default: `true`.
@@ -698,7 +662,7 @@ impl Default for Search {
 
 /// Search options for chapters (or paths).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
-#[serde(default, rename_all = "kebab-case")]
+#[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct SearchChapterSettings {
     /// Whether or not indexing is enabled, default `true`.
@@ -732,7 +696,6 @@ impl<'de, T> Updateable<'de> for T where T: Serialize + Deserialize<'de> {}
 mod tests {
     use super::*;
     use crate::utils::fs::get_404_output_file;
-    use serde_json::json;
 
     const COMPLEX_CONFIG: &str = r#"
         [book]
@@ -757,7 +720,6 @@ mod tests {
 
         [output.html.playground]
         editable = true
-        editor = "ace"
 
         [output.html.redirect]
         "index.html" = "overview.html"
@@ -944,19 +906,6 @@ mod tests {
     }
 
     #[test]
-    fn set_a_config_item() {
-        let mut cfg = Config::default();
-        let key = "foo.bar.baz";
-        let value = "Something Interesting";
-
-        assert!(cfg.get::<i32>(key).unwrap().is_none());
-        cfg.set(key, value).unwrap();
-
-        let got: String = cfg.get(key).unwrap().unwrap();
-        assert_eq!(got, value);
-    }
-
-    #[test]
     fn set_special_tables() {
         let mut cfg = Config::default();
         assert_eq!(cfg.book.title, None);
@@ -970,6 +919,21 @@ mod tests {
         assert_eq!(cfg.rust.edition, None);
         cfg.set("rust.edition", "2024").unwrap();
         assert_eq!(cfg.rust.edition, Some(RustEdition::E2024));
+
+        cfg.set("output.foo.value", "123").unwrap();
+        let got: String = cfg.get("output.foo.value").unwrap().unwrap();
+        assert_eq!(got, "123");
+
+        cfg.set("preprocessor.bar.value", "456").unwrap();
+        let got: String = cfg.get("preprocessor.bar.value").unwrap().unwrap();
+        assert_eq!(got, "456");
+    }
+
+    #[test]
+    fn set_invalid_keys() {
+        let mut cfg = Config::default();
+        let err = cfg.set("foo", "test").unwrap_err();
+        assert!(err.to_string().contains("invalid key `foo`"));
     }
 
     #[test]
@@ -989,67 +953,10 @@ mod tests {
         }
     }
 
-    fn encode_env_var(key: &str) -> String {
-        format!(
-            "MDBOOK_{}",
-            key.to_uppercase().replace('.', "__").replace('-', "_")
-        )
-    }
-
-    #[test]
-    fn update_config_using_env_var() {
-        let mut cfg = Config::default();
-        let key = "foo.bar";
-        let value = "baz";
-
-        assert!(cfg.get::<String>(key).unwrap().is_none());
-
-        let encoded_key = encode_env_var(key);
-        // TODO: This is unsafe, and should be rewritten to use a process.
-        unsafe { env::set_var(encoded_key, value) };
-
-        cfg.update_from_env();
-
-        assert_eq!(cfg.get::<String>(key).unwrap().unwrap(), value);
-    }
-
-    #[test]
-    fn update_config_using_env_var_and_complex_value() {
-        let mut cfg = Config::default();
-        let key = "foo-bar.baz";
-        let value = json!({"array": [1, 2, 3], "number": 13.37});
-        let value_str = serde_json::to_string(&value).unwrap();
-
-        assert!(cfg.get::<serde_json::Value>(key).unwrap().is_none());
-
-        let encoded_key = encode_env_var(key);
-        // TODO: This is unsafe, and should be rewritten to use a process.
-        unsafe { env::set_var(encoded_key, value_str) };
-
-        cfg.update_from_env();
-
-        assert_eq!(cfg.get::<serde_json::Value>(key).unwrap().unwrap(), value);
-    }
-
-    #[test]
-    fn update_book_title_via_env() {
-        let mut cfg = Config::default();
-        let should_be = "Something else".to_string();
-
-        assert_ne!(cfg.book.title, Some(should_be.clone()));
-
-        // TODO: This is unsafe, and should be rewritten to use a process.
-        unsafe { env::set_var("MDBOOK_BOOK__TITLE", &should_be) };
-        cfg.update_from_env();
-
-        assert_eq!(cfg.book.title, Some(should_be));
-    }
-
     #[test]
     fn file_404_default() {
         let src = r#"
         [output.html]
-        destination = "my-book"
         "#;
 
         let got = Config::from_str(src).unwrap();
@@ -1063,7 +970,6 @@ mod tests {
         let src = r#"
         [output.html]
         input-404= "missing.md"
-        output-404= "missing.html"
         "#;
 
         let got = Config::from_str(src).unwrap();
