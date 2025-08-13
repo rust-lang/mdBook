@@ -125,7 +125,6 @@ The following configuration options are available:
 - **smart-punctuation:** Converts quotes to curly quotes, `...` to `…`, `--` to en-dash, and `---` to em-dash.
   See [Smart Punctuation](../markdown.md#smart-punctuation).
   Defaults to `false`.
-- **curly-quotes:** Deprecated alias for `smart-punctuation`.
 - **mathjax-support:** Adds support for [MathJax](../mathjax.md). Defaults to
   `false`.
 - **copy-fonts:** (**Deprecated**) If `true` (the default), mdBook uses its built-in fonts which are copied to the output directory.

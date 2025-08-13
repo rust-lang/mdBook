@@ -424,8 +424,6 @@ pub struct HtmlConfig {
     pub preferred_dark_theme: Option<String>,
     /// Supports smart quotes, apostrophes, ellipsis, en-dash, and em-dash.
     pub smart_punctuation: bool,
-    /// Deprecated alias for `smart_punctuation`.
-    pub curly_quotes: bool,
     /// Should mathjax be enabled?
     pub mathjax_support: bool,
     /// Whether to fonts.css and respective font files to the output directory.
@@ -490,7 +488,6 @@ impl Default for HtmlConfig {
             default_theme: None,
             preferred_dark_theme: None,
             smart_punctuation: false,
-            curly_quotes: false,
             mathjax_support: false,
             copy_fonts: true,
             additional_css: Vec::new(),
@@ -522,11 +519,6 @@ impl HtmlConfig {
             Some(ref d) => root.join(d),
             None => root.join("theme"),
         }
-    }
-
-    /// Returns `true` if smart punctuation is enabled.
-    pub fn smart_punctuation(&self) -> bool {
-        self.smart_punctuation || self.curly_quotes
     }
 }
 
@@ -1116,38 +1108,5 @@ mod tests {
         let html_config = got.html_config().unwrap();
         assert!(html_config.print.enable);
         assert!(!html_config.print.page_break);
-    }
-
-    #[test]
-    fn curly_quotes_or_smart_punctuation() {
-        let src = r#"
-        [book]
-        title = "mdBook Documentation"
-
-        [output.html]
-        smart-punctuation = true
-        "#;
-        let config = Config::from_str(src).unwrap();
-        assert_eq!(config.html_config().unwrap().smart_punctuation(), true);
-
-        let src = r#"
-        [book]
-        title = "mdBook Documentation"
-
-        [output.html]
-        curly-quotes = true
-        "#;
-        let config = Config::from_str(src).unwrap();
-        assert_eq!(config.html_config().unwrap().smart_punctuation(), true);
-
-        let src = r#"
-        [book]
-        title = "mdBook Documentation"
-        "#;
-        let config = Config::from_str(src).unwrap();
-        assert_eq!(
-            config.html_config().unwrap_or_default().smart_punctuation(),
-            false
-        );
     }
 }
