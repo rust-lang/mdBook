@@ -3,7 +3,7 @@
 use super::helpers::resources::ResourceHelper;
 use crate::theme::{self, Theme, playground_editor};
 use anyhow::{Context, Result};
-use log::{debug, warn};
+use log::debug;
 use mdbook_core::config::HtmlConfig;
 use mdbook_core::utils;
 use std::borrow::Cow;
@@ -84,7 +84,7 @@ impl StaticFiles {
             theme::FONT_AWESOME_WOFF2,
         );
         this.add_builtin("FontAwesome/fonts/FontAwesome.ttf", theme::FONT_AWESOME_TTF);
-        if html_config.copy_fonts && theme.fonts_css.is_none() {
+        if theme.fonts_css.is_none() {
             this.add_builtin("fonts/fonts.css", theme::fonts::CSS);
             for (file_name, contents) in theme::fonts::LICENSES.iter() {
                 this.add_builtin(file_name, contents);
@@ -100,13 +100,6 @@ impl StaticFiles {
             if !fonts_css.is_empty() {
                 this.add_builtin("fonts/fonts.css", fonts_css);
             }
-        }
-        if !html_config.copy_fonts && theme.fonts_css.is_none() {
-            warn!(
-                "output.html.copy-fonts is deprecated.\n\
-                This book appears to have copy-fonts=false in book.toml without a fonts.css file.\n\
-                Add an empty `theme/fonts/fonts.css` file to squelch this warning."
-            );
         }
 
         let playground_config = &html_config.playground;

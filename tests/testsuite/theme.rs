@@ -139,29 +139,10 @@ book/fonts/myfont.woff
         );
 }
 
-// copy-fonts=false, no theme, deprecated
+// Empty fonts.css should not copy the default fonts.
 #[test]
-fn copy_fonts_false_no_theme() {
-    BookTest::from_dir("theme/copy_fonts_false_no_theme")
-        .run("build", |cmd| {
-            cmd.expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
-[TIMESTAMP] [WARN] (mdbook_html::html_handlebars::static_files): output.html.copy-fonts is deprecated.
-This book appears to have copy-fonts=false in book.toml without a fonts.css file.
-Add an empty `theme/fonts/fonts.css` file to squelch this warning.
-[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
-
-"#]]);
-        })
-        .check_file_doesnt_contain("book/index.html", "fonts.css")
-        .check_file_list("book/fonts", str![[""]]);
-}
-
-// copy-fonts=false, empty fonts.css
-#[test]
-fn copy_fonts_false_with_empty_fonts_css() {
-    BookTest::from_dir("theme/copy_fonts_false_with_empty_fonts_css")
+fn empty_fonts_css() {
+    BookTest::from_dir("theme/empty_fonts_css")
         .run("build", |cmd| {
             cmd.expect_stderr(str![[r#"
 [TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
@@ -170,14 +151,14 @@ fn copy_fonts_false_with_empty_fonts_css() {
 
 "#]]);
         })
-        .check_file_doesnt_contain("book/index.html", "fonts.css")
+        .check_file_contains("book/index.html", "fonts.css")
         .check_file_list("book/fonts", str![[""]]);
 }
 
-// copy-fonts=false, fonts.css has contents
+// Custom fonts.css file shouldn't copy default fonts.
 #[test]
-fn copy_fonts_false_with_fonts_css() {
-    BookTest::from_dir("theme/copy_fonts_false_with_fonts_css")
+fn custom_fonts_css() {
+    BookTest::from_dir("theme/custom_fonts_css")
         .run("build", |cmd| {
             cmd.expect_stderr(str![[r#"
 [TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
