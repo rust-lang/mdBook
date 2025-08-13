@@ -43,9 +43,7 @@ pub fn normalize_id(content: &str) -> String {
 
 /// Generate an ID for use with anchors which is derived from a "normalised"
 /// string.
-// This function should be made private when the deprecation expires.
-#[deprecated(since = "0.4.16", note = "use unique_id_from_content instead")]
-pub fn id_from_content(content: &str) -> String {
+fn id_from_content(content: &str) -> String {
     let mut content = content.to_string();
 
     // Skip any tags or html-encoded stuff
@@ -67,10 +65,7 @@ pub fn id_from_content(content: &str) -> String {
 /// Each ID returned will be unique, if the same `id_counter` is provided on
 /// each call.
 pub fn unique_id_from_content(content: &str, id_counter: &mut HashMap<String, usize>) -> String {
-    let id = {
-        #[allow(deprecated)]
-        id_from_content(content)
-    };
+    let id = id_from_content(content);
 
     // If we have headers with the same normalized id, append an incrementing counter
     let id_count = id_counter.entry(id.clone()).or_insert(0);
