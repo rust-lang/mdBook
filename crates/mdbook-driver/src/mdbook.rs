@@ -63,16 +63,6 @@ impl MDBook {
 
         config.update_from_env();
 
-        if let Some(html_config) = config.html_config() {
-            if html_config.curly_quotes {
-                warn!(
-                    "The output.html.curly-quotes field has been renamed to \
-                     output.html.smart-punctuation.\n\
-                     Use the new name in book.toml to remove this warning."
-                );
-            }
-        }
-
         if log_enabled!(log::Level::Trace) {
             for line in format!("Config: {config:#?}").lines() {
                 trace!("{}", line);
