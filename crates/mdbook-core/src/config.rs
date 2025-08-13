@@ -411,7 +411,7 @@ pub enum RustEdition {
 }
 
 /// Configuration for the HTML renderer.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct HtmlConfig {
@@ -426,8 +426,6 @@ pub struct HtmlConfig {
     pub smart_punctuation: bool,
     /// Should mathjax be enabled?
     pub mathjax_support: bool,
-    /// Whether to fonts.css and respective font files to the output directory.
-    pub copy_fonts: bool,
     /// Additional CSS stylesheets to include in the rendered page's `<head>`.
     pub additional_css: Vec<PathBuf>,
     /// Additional JS scripts to include at the bottom of the rendered page's
@@ -479,36 +477,6 @@ pub struct HtmlConfig {
     /// If this option is turned on, "cache bust" static files by adding
     /// hashes to their file names.
     pub hash_files: bool,
-}
-
-impl Default for HtmlConfig {
-    fn default() -> HtmlConfig {
-        HtmlConfig {
-            theme: None,
-            default_theme: None,
-            preferred_dark_theme: None,
-            smart_punctuation: false,
-            mathjax_support: false,
-            copy_fonts: true,
-            additional_css: Vec::new(),
-            additional_js: Vec::new(),
-            fold: Fold::default(),
-            playground: Playground::default(),
-            code: Code::default(),
-            print: Print::default(),
-            no_section_label: false,
-            search: None,
-            git_repository_url: None,
-            git_repository_icon: None,
-            edit_url_template: None,
-            input_404: None,
-            site_url: None,
-            cname: None,
-            live_reload_endpoint: None,
-            redirect: HashMap::new(),
-            hash_files: false,
-        }
-    }
 }
 
 impl HtmlConfig {

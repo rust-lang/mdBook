@@ -99,7 +99,6 @@ default-theme = "light"
 preferred-dark-theme = "navy"
 smart-punctuation = true
 mathjax-support = false
-copy-fonts = true
 additional-css = ["custom.css", "custom2.css"]
 additional-js = ["custom.js"]
 no-section-label = false
@@ -127,10 +126,6 @@ The following configuration options are available:
   Defaults to `false`.
 - **mathjax-support:** Adds support for [MathJax](../mathjax.md). Defaults to
   `false`.
-- **copy-fonts:** (**Deprecated**) If `true` (the default), mdBook uses its built-in fonts which are copied to the output directory.
-  If `false`, the built-in fonts will not be used.
-  This option is deprecated. If you want to define your own custom fonts,
-  create a `theme/fonts/fonts.css` file and store the fonts in the `theme/fonts/` directory.
 - **additional-css:** If you need to slightly change the appearance of your book
   without overwriting the whole style, you can specify a set of stylesheets that
   will be loaded after the default ones where you can surgically change the
