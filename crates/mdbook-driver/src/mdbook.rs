@@ -44,16 +44,6 @@ impl MDBook {
         let book_root = book_root.into();
         let config_location = book_root.join("book.toml");
 
-        // the book.json file is no longer used, so we should emit a warning to
-        // let people know to migrate to book.toml
-        if book_root.join("book.json").exists() {
-            warn!("It appears you are still using book.json for configuration.");
-            warn!("This format is no longer used, so you should migrate to the");
-            warn!("book.toml format.");
-            warn!("Check the user guide for migration information:");
-            warn!("\thttps://rust-lang.github.io/mdBook/format/config.html");
-        }
-
         let mut config = if config_location.exists() {
             debug!("Loading config from {}", config_location.display());
             Config::from_disk(&config_location)?
