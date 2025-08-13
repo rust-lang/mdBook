@@ -211,11 +211,10 @@ fn backends_receive_render_context_via_stdin() {
     RenderContext::from_json(f).unwrap();
 }
 
-// Legacy relative renderer paths.
-//
-// https://github.com/rust-lang/mdBook/pull/1418
+// Verifies that a relative path for the renderer command is relative to the
+// book root.
 #[test]
-fn legacy_relative_command_path() {
+fn relative_command_path() {
     let mut test = BookTest::init(|_| {});
     test.rust_program(
         "renderers/myrenderer",
@@ -228,7 +227,6 @@ fn legacy_relative_command_path() {
         }
         "#,
     )
-    // Test with a modern path, relative to the book directory.
     .change_file(
         "book.toml",
         "[output.myrenderer]\n\
@@ -239,26 +237,6 @@ fn legacy_relative_command_path() {
 [TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
 [TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the myrenderer backend
 [TIMESTAMP] [INFO] (mdbook_driver::builtin_renderers): Invoking the "myrenderer" renderer
-
-"#]]);
-    })
-    .check_file("book/output", "test");
-    std::fs::remove_file(test.dir.join("book/output")).unwrap();
-    // Test with legacy path, relative to the output directory.
-    test.change_file(
-        "book.toml",
-        &format!(
-            "[output.myrenderer]\n\
-             command = '../renderers/myrenderer{exe}'\n",
-            exe = std::env::consts::EXE_SUFFIX
-        ),
-    )
-    .run("build", |cmd| {
-        cmd.expect_stdout(str![[""]]).expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the myrenderer backend
-[TIMESTAMP] [INFO] (mdbook_driver::builtin_renderers): Invoking the "myrenderer" renderer
-[TIMESTAMP] [WARN] (mdbook_driver::builtin_renderers): Renderer command `../renderers/myrenderer[EXE]` uses a path relative to the renderer output directory `[ROOT]/book`. This was previously accepted, but has been deprecated. Relative executable paths should be relative to the book root.
 
 "#]]);
     })
