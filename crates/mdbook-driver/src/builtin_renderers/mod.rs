@@ -50,7 +50,7 @@ impl CmdRenderer {
         CmdRenderer { name, cmd }
     }
 
-    fn compose_command(&self, root: &Path, destination: &Path) -> Result<Command> {
+    fn compose_command(&self, root: &Path) -> Result<Command> {
         let mut words = Shlex::new(&self.cmd);
         let exe = match words.next() {
             Some(e) => PathBuf::from(e),
@@ -61,30 +61,8 @@ impl CmdRenderer {
             // Search PATH for the executable.
             exe
         } else {
-            // Relative paths are preferred to be relative to the book root.
-            let abs_exe = root.join(&exe);
-            if abs_exe.exists() {
-                abs_exe
-            } else {
-                // Historically paths were relative to the destination, but
-                // this is not the preferred way.
-                let legacy_path = destination.join(&exe);
-                if legacy_path.exists() {
-                    warn!(
-                        "Renderer command `{}` uses a path relative to the \
-                        renderer output directory `{}`. This was previously \
-                        accepted, but has been deprecated. Relative executable \
-                        paths should be relative to the book root.",
-                        exe.display(),
-                        destination.display()
-                    );
-                    legacy_path
-                } else {
-                    // Let this bubble through to later be handled by
-                    // handle_render_command_error.
-                    abs_exe
-                }
-            }
+            // Relative path is relative to book root.
+            root.join(&exe)
         };
 
         let mut cmd = Command::new(exe);
@@ -143,7 +121,7 @@ impl Renderer for CmdRenderer {
         let _ = fs::create_dir_all(&ctx.destination);
 
         let mut child = match self
-            .compose_command(&ctx.root, &ctx.destination)?
+            .compose_command(&ctx.root)?
             .stdin(Stdio::piped())
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
