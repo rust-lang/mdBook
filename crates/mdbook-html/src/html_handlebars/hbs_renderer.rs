@@ -271,8 +271,6 @@ impl HtmlHandlebars {
                 no_section_label: html_config.no_section_label,
             }),
         );
-        // TODO: remove theme_option in 0.5, it is not needed.
-        handlebars.register_helper("theme_option", Box::new(helpers::theme::theme_option));
     }
 
     fn emit_redirects(
@@ -558,7 +556,6 @@ fn make_data(
         );
     }
 
-    // TODO: remove default_theme in 0.5, it is not needed.
     let default_theme = match html_config.default_theme {
         Some(ref theme) => theme.to_lowercase(),
         None => "light".to_string(),
