@@ -186,10 +186,6 @@ html:not(.js) .left-buttons button {
     left: var(--page-padding);
 }
 
-/* Use the correct buttons for RTL layouts*/
-[dir=rtl] .previous i.fa-angle-left:before {content:"\f105";}
-[dir=rtl] .next i.fa-angle-right:before { content:"\f104"; }
-
 @media only screen and (max-width: 1080px) {
     .nav-wide-wrapper { display: none; }
     .nav-wrapper { display: block; }

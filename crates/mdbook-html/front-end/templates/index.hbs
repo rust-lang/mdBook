@@ -221,17 +221,25 @@
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                        {{#previous}}
-                            <a rel="prev" href="{{ path_to_root }}{{link}}" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                                <i class="fa fa-angle-left"></i>
-                            </a>
-                        {{/previous}}
-
-                        {{#next}}
-                            <a rel="next prefetch" href="{{ path_to_root }}{{link}}" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        {{#if previous}}
+                            <a rel="prev" href="{{ path_to_root }}{{previous.link}}" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                {{#if (eq ../text_direction "rtl")}}
                                 <i class="fa fa-angle-right"></i>
+                                {{else}}
+                                <i class="fa fa-angle-left"></i>
+                                {{/if}}
                             </a>
-                        {{/next}}
+                        {{/if}}
+
+                        {{#if next}}
+                            <a rel="next prefetch" href="{{ path_to_root }}{{next.link}}" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                {{#if (eq ../text_direction "rtl")}}
+                                <i class="fa fa-angle-left"></i>
+                                {{else}}
+                                <i class="fa fa-angle-right"></i>
+                                {{/if}}
+                            </a>
+                        {{/if}}
 
                         <div style="clear: both"></div>
                     </nav>
@@ -239,17 +247,25 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                {{#previous}}
-                    <a rel="prev" href="{{ path_to_root }}{{link}}" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                        <i class="fa fa-angle-left"></i>
-                    </a>
-                {{/previous}}
-
-                {{#next}}
-                    <a rel="next prefetch" href="{{ path_to_root }}{{link}}" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                {{#if previous}}
+                    <a rel="prev" href="{{ path_to_root }}{{previous.link}}" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        {{#if (eq ../text_direction "rtl")}}
                         <i class="fa fa-angle-right"></i>
+                        {{else}}
+                        <i class="fa fa-angle-left"></i>
+                        {{/if}}
                     </a>
-                {{/next}}
+                {{/if}}
+
+                {{#if next}}
+                    <a rel="next prefetch" href="{{ path_to_root }}{{next.link}}" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        {{#if (eq text_direction "rtl")}}
+                        <i class="fa fa-angle-left"></i>
+                        {{else}}
+                        <i class="fa fa-angle-right"></i>
+                        {{/if}}
+                    </a>
+                {{/if}}
             </nav>
 
         </div>
