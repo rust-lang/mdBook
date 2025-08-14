@@ -23,7 +23,7 @@ impl HelperDef for ResourceHelper {
     ) -> Result<(), RenderError> {
         let param = h.param(0).and_then(|v| v.value().as_str()).ok_or_else(|| {
             RenderErrorReason::Other(
-                "Param 0 with String type is required for theme_option helper.".to_owned(),
+                "Param 0 with String type is required for resource helper.".to_owned(),
             )
         })?;
 
