@@ -271,8 +271,6 @@ impl HtmlHandlebars {
                 no_section_label: html_config.no_section_label,
             }),
         );
-        // TODO: remove theme_option in 0.5, it is not needed.
-        handlebars.register_helper("theme_option", Box::new(helpers::theme::theme_option));
     }
 
     fn emit_redirects(
