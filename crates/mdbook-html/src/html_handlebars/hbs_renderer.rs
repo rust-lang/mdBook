@@ -4,7 +4,7 @@ use crate::theme::Theme;
 use anyhow::{Context, Result, bail};
 use handlebars::Handlebars;
 use log::{debug, info, trace, warn};
-use mdbook_core::book::{Book, BookItem};
+use mdbook_core::book::{Book, BookItem, Chapter};
 use mdbook_core::config::{BookConfig, Code, Config, HtmlConfig, Playground, RustEdition};
 use mdbook_core::utils;
 use mdbook_core::utils::fs::get_404_output_file;
@@ -30,18 +30,17 @@ impl HtmlHandlebars {
         HtmlHandlebars
     }
 
-    fn render_item(
+    fn render_chapter(
         &self,
-        item: &BookItem,
-        mut ctx: RenderItemContext<'_>,
+        ch: &Chapter,
+        prev_ch: Option<&Chapter>,
+        next_ch: Option<&Chapter>,
+        mut ctx: RenderChapterContext<'_>,
         print_content: &mut String,
     ) -> Result<()> {
         // FIXME: This should be made DRY-er and rely less on mutable state
 
-        let (ch, path) = match item {
-            BookItem::Chapter(ch) if !ch.is_draft_chapter() => (ch, ch.path.as_ref().unwrap()),
-            _ => return Ok(()),
-        };
+        let path = ch.path.as_ref().unwrap();
 
         if let Some(ref edit_url_template) = ctx.html_config.edit_url_template {
             let full_path = ctx.book_config.src.to_str().unwrap_or_default().to_owned()
@@ -61,7 +60,7 @@ impl HtmlHandlebars {
 
         let fixed_content =
             render_markdown_with_path(&ch.content, ctx.html_config.smart_punctuation, Some(path));
-        if !ctx.is_index && ctx.html_config.print.page_break {
+        if prev_ch.is_some() && ctx.html_config.print.page_break {
             // Add page break between chapters
             // See https://developer.mozilla.org/en-US/docs/Web/CSS/break-before and https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-before
             // Add both two CSS properties because of the compatibility issue
@@ -116,6 +115,25 @@ impl HtmlHandlebars {
             );
         }
 
+        let mut nav = |name: &str, ch: Option<&Chapter>| {
+            let Some(ch) = ch else { return };
+            let path = ch
+                .path
+                .as_ref()
+                .unwrap()
+                .with_extension("html")
+                .to_str()
+                .unwrap()
+                .replace('\\', "//");
+            let obj = json!( {
+                "title": ch.name,
+                "link": path,
+            });
+            ctx.data.insert(name.to_string(), obj);
+        };
+        nav("previous", prev_ch);
+        nav("next", next_ch);
+
         // Render the handlebars template with the data
         debug!("Render template");
         let rendered = ctx.handlebars.render("index", &ctx.data)?;
@@ -131,7 +149,7 @@ impl HtmlHandlebars {
         debug!("Creating {}", filepath.display());
         utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
 
-        if ctx.is_index {
+        if prev_ch.is_none() {
             ctx.data.insert("path".to_owned(), json!("index.md"));
             ctx.data.insert("path_to_root".to_owned(), json!(""));
             ctx.data.insert("is_index".to_owned(), json!(true));
@@ -253,8 +271,6 @@ impl HtmlHandlebars {
                 no_section_label: html_config.no_section_label,
             }),
         );
-        handlebars.register_helper("previous", Box::new(helpers::navigation::previous));
-        handlebars.register_helper("next", Box::new(helpers::navigation::next));
         // TODO: remove theme_option in 0.5, it is not needed.
         handlebars.register_helper("theme_option", Box::new(helpers::theme::theme_option));
     }
@@ -442,21 +458,26 @@ impl Renderer for HtmlHandlebars {
             utils::fs::write_file(destination, "CNAME", format!("{cname}\n").as_bytes())?;
         }
 
-        let mut is_index = true;
-        for item in book.iter() {
-            let ctx = RenderItemContext {
+        let chapters: Vec<_> = book
+            .iter()
+            .filter_map(|item| match item {
+                BookItem::Chapter(ch) if !ch.is_draft_chapter() => Some(ch),
+                _ => None,
+            })
+            .collect();
+        for (i, ch) in chapters.iter().enumerate() {
+            let previous = (i != 0).then(|| chapters[i - 1]);
+            let next = (i != chapters.len() - 1).then(|| chapters[i + 1]);
+            let ctx = RenderChapterContext {
                 handlebars: &handlebars,
                 destination: destination.to_path_buf(),
                 data: data.clone(),
-                is_index,
                 book_config: book_config.clone(),
                 html_config: html_config.clone(),
                 edition: ctx.config.rust.edition,
                 chapter_titles: &ctx.chapter_titles,
             };
-            self.render_item(item, ctx, &mut print_content)?;
-            // Only the first non-draft chapter item should be treated as the "index"
-            is_index &= !matches!(item, BookItem::Chapter(ch) if !ch.is_draft_chapter());
+            self.render_chapter(ch, previous, next, ctx, &mut print_content)?;
         }
 
         // Render 404 page
@@ -927,11 +948,10 @@ fn partition_source(s: &str) -> (String, String) {
     (before, after)
 }
 
-struct RenderItemContext<'a> {
+struct RenderChapterContext<'a> {
     handlebars: &'a Handlebars<'a>,
     destination: PathBuf,
     data: serde_json::Map<String, serde_json::Value>,
-    is_index: bool,
     book_config: BookConfig,
     html_config: HtmlConfig,
     edition: Option<RustEdition>,

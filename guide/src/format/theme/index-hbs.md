@@ -30,7 +30,7 @@ Here is a list of the properties that are exposed:
   to the root of the book from the current file. Since the original directory
   structure is maintained, it is useful to prepend relative links with this
   `path_to_root`.
-
+- ***previous*** and ***next*** These are objects used for linking to the previous and next chapter. They contain the properties `title` and `link` of the corresponding chapter.
 - ***chapters*** Is an array of dictionaries of the form
   ```json
   {"section": "1.2.1", "name": "name of this chapter", "path": "dir/markdown.md"}
@@ -43,7 +43,7 @@ Here is a list of the properties that are exposed:
 In addition to the properties you can access, there are some handlebars helpers
 at your disposal.
 
-### 1. toc
+### toc
 
 The toc helper is used like this
 
@@ -77,30 +77,7 @@ var chapters = {{chapters}};
 </script>
 ```
 
-### 2. previous / next
-
-The previous and next helpers expose a `link` and `title` property to the
-previous and next chapters.
-
-They are used like this
-
-```handlebars
-{{#previous}}
-    <a href="{{link}}" class="nav-chapters previous">
-        <i class="fa fa-angle-left"></i> {{title}}
-    </a>
-{{/previous}}
-```
-
-The inner html will only be rendered if the previous / next chapter exists.
-Of course the inner html can be changed to your liking.
-
-------
-
-*If you would like other properties or helpers exposed, please [create a new
-issue](https://github.com/rust-lang/mdBook/issues)*
-
-### 3. resource
+### resource
 
 The path to a static file.
 It implicitly includes `path_to_root`,
