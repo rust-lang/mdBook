@@ -97,6 +97,7 @@ function playground_text(playground, hidden = true) {
 
         if (all_available) {
             play_button.classList.remove('hidden');
+            play_button.hidden = false;
         } else {
             play_button.classList.add('hidden');
         }
@@ -207,26 +208,25 @@ function playground_text(playground, hidden = true) {
 
         const buttons = document.createElement('div');
         buttons.className = 'buttons';
-        buttons.innerHTML = '<button class="fa fa-eye" title="Show hidden lines" \
+        buttons.innerHTML = '<button title="Show hidden lines" \
 aria-label="Show hidden lines"></button>';
+        buttons.firstChild.innerHTML = document.getElementById('fa-eye').innerHTML;
 
         // add expand button
         const pre_block = block.parentNode;
         pre_block.insertBefore(buttons, pre_block.firstChild);
 
-        pre_block.querySelector('.buttons').addEventListener('click', function(e) {
-            if (e.target.classList.contains('fa-eye')) {
-                e.target.classList.remove('fa-eye');
-                e.target.classList.add('fa-eye-slash');
-                e.target.title = 'Hide lines';
-                e.target.setAttribute('aria-label', e.target.title);
+        buttons.firstChild.addEventListener('click', function(e) {
+            if (this.title === 'Show hidden lines') {
+                this.innerHTML = document.getElementById('fa-eye-slash').innerHTML;
+                this.title = 'Hide lines';
+                this.setAttribute('aria-label', e.target.title);
 
                 block.classList.remove('hide-boring');
-            } else if (e.target.classList.contains('fa-eye-slash')) {
-                e.target.classList.remove('fa-eye-slash');
-                e.target.classList.add('fa-eye');
-                e.target.title = 'Show hidden lines';
-                e.target.setAttribute('aria-label', e.target.title);
+            } else if (this.title === 'Hide lines') {
+                this.innerHTML = document.getElementById('fa-eye').innerHTML;
+                this.title = 'Show hidden lines';
+                this.setAttribute('aria-label', e.target.title);
 
                 block.classList.add('hide-boring');
             }
@@ -266,10 +266,11 @@ aria-label="Show hidden lines"></button>';
         }
 
         const runCodeButton = document.createElement('button');
-        runCodeButton.className = 'fa fa-play play-button';
+        runCodeButton.className = 'play-button';
         runCodeButton.hidden = true;
         runCodeButton.title = 'Run this code';
         runCodeButton.setAttribute('aria-label', runCodeButton.title);
+        runCodeButton.innerHTML = document.getElementById('fa-play').innerHTML;
 
         buttons.insertBefore(runCodeButton, buttons.firstChild);
         runCodeButton.addEventListener('click', () => {
@@ -289,9 +290,11 @@ aria-label="Show hidden lines"></button>';
         const code_block = pre_block.querySelector('code');
         if (window.ace && code_block.classList.contains('editable')) {
             const undoChangesButton = document.createElement('button');
-            undoChangesButton.className = 'fa fa-history reset-button';
+            undoChangesButton.className = 'reset-button';
             undoChangesButton.title = 'Undo changes';
             undoChangesButton.setAttribute('aria-label', undoChangesButton.title);
+            undoChangesButton.innerHTML +=
+                document.getElementById('fa-clock-rotate-left').innerHTML;
 
             buttons.insertBefore(undoChangesButton, buttons.firstChild);
 

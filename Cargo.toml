@@ -33,6 +33,7 @@ clap = { version = "4.5.41", features = ["cargo", "wrap_help"] }
 clap_complete = "4.5.55"
 elasticlunr-rs = "3.0.2"
 env_logger = "0.11.8"
+font-awesome-as-a-crate = "0.3.0"
 futures-util = "0.3.31"
 handlebars = "6.3.2"
 hex = "0.4.3"

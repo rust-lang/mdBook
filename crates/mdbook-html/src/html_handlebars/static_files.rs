@@ -62,28 +62,6 @@ impl StaticFiles {
         this.add_builtin("ayu-highlight.css", &theme.ayu_highlight_css);
         this.add_builtin("highlight.js", &theme.highlight_js);
         this.add_builtin("clipboard.min.js", &theme.clipboard_js);
-        this.add_builtin("FontAwesome/css/font-awesome.css", theme::FONT_AWESOME);
-        this.add_builtin(
-            "FontAwesome/fonts/fontawesome-webfont.eot",
-            theme::FONT_AWESOME_EOT,
-        );
-        this.add_builtin(
-            "FontAwesome/fonts/fontawesome-webfont.svg",
-            theme::FONT_AWESOME_SVG,
-        );
-        this.add_builtin(
-            "FontAwesome/fonts/fontawesome-webfont.ttf",
-            theme::FONT_AWESOME_TTF,
-        );
-        this.add_builtin(
-            "FontAwesome/fonts/fontawesome-webfont.woff",
-            theme::FONT_AWESOME_WOFF,
-        );
-        this.add_builtin(
-            "FontAwesome/fonts/fontawesome-webfont.woff2",
-            theme::FONT_AWESOME_WOFF2,
-        );
-        this.add_builtin("FontAwesome/fonts/FontAwesome.ttf", theme::FONT_AWESOME_TTF);
         if theme.fonts_css.is_none() {
             this.add_builtin("fonts/fonts.css", theme::fonts::CSS);
             for (file_name, contents) in theme::fonts::LICENSES.iter() {
@@ -170,13 +148,7 @@ impl StaticFiles {
                     let mut parts = filename.splitn(2, '.');
                     let parts = parts.next().and_then(|p| Some((p, parts.next()?)));
                     if let Some((name, suffix)) = parts {
-                        // FontAwesome already does its own cache busting with the ?v=4.7.0 thing,
-                        // and I don't want to have to patch its CSS file to use `{{ resource }}`
-                        if name != ""
-                            && suffix != ""
-                            && suffix != "txt"
-                            && !name.starts_with("FontAwesome/fonts/")
-                        {
+                        if name != "" && suffix != "" && suffix != "txt" {
                             let hex = hex::encode(&Sha256::digest(data)[..4]);
                             let new_filename = format!("{}-{}.{}", name, hex, suffix);
                             self.hash_map.insert(filename.clone(), new_filename.clone());

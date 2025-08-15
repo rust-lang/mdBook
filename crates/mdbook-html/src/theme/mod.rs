@@ -29,18 +29,6 @@ pub static TOMORROW_NIGHT_CSS: &[u8] = include_bytes!("../../front-end/css/tomor
 pub static HIGHLIGHT_CSS: &[u8] = include_bytes!("../../front-end/css/highlight.css");
 pub static AYU_HIGHLIGHT_CSS: &[u8] = include_bytes!("../../front-end/css/ayu-highlight.css");
 pub static CLIPBOARD_JS: &[u8] = include_bytes!("../../front-end/js/clipboard.min.js");
-pub static FONT_AWESOME: &[u8] = include_bytes!("../../front-end/css/font-awesome.min.css");
-pub static FONT_AWESOME_EOT: &[u8] =
-    include_bytes!("../../front-end/fonts/fontawesome-webfont.eot");
-pub static FONT_AWESOME_SVG: &[u8] =
-    include_bytes!("../../front-end/fonts/fontawesome-webfont.svg");
-pub static FONT_AWESOME_TTF: &[u8] =
-    include_bytes!("../../front-end/fonts/fontawesome-webfont.ttf");
-pub static FONT_AWESOME_WOFF: &[u8] =
-    include_bytes!("../../front-end/fonts/fontawesome-webfont.woff");
-pub static FONT_AWESOME_WOFF2: &[u8] =
-    include_bytes!("../../front-end/fonts/fontawesome-webfont.woff2");
-pub static FONT_AWESOME_OTF: &[u8] = include_bytes!("../../front-end/fonts/FontAwesome.otf");
 
 /// The `Theme` struct should be used instead of the static variables because
 /// the `new()` method will look if the user has a theme directory in their

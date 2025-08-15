@@ -103,7 +103,7 @@ additional-css = ["custom.css", "custom2.css"]
 additional-js = ["custom.js"]
 no-section-label = false
 git-repository-url = "https://github.com/rust-lang/mdBook"
-git-repository-icon = "fa-github"
+git-repository-icon = "fab-github"
 edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"
 site-url = "/example-book/"
 cname = "myproject.rs"
@@ -139,7 +139,7 @@ The following configuration options are available:
 - **git-repository-url:**  A url to the git repository for the book. If provided
   an icon link will be output in the menu bar of the book.
 - **git-repository-icon:** The FontAwesome icon class to use for the git
-  repository link. Defaults to `fa-github` which looks like <i class="fa fa-github"></i>.
+  repository link. Defaults to `fab-github` which looks like <i class="fa fab-github"></i>.
   If you are not using GitHub, another option to consider is `fa-code-fork` which looks like <i class="fa fa-code-fork"></i>.
 - **edit-url-template:** Edit url template, when provided shows a
   "Suggest an edit" button (which looks like <i class="fa fa-edit"></i>) for directly jumping to editing the currently

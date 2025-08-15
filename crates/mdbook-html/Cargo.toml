@@ -11,6 +11,7 @@ rust-version.workspace = true
 ammonia = { workspace = true, optional = true }
 anyhow.workspace = true
 elasticlunr-rs = { workspace = true, optional = true }
+font-awesome-as-a-crate.workspace = true
 handlebars.workspace = true
 hex.workspace = true
 log.workspace = true
