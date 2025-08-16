@@ -437,6 +437,8 @@ struct PreprocessorConfig {
     before: Vec<String>,
     #[serde(default)]
     after: Vec<String>,
+    #[serde(default)]
+    optional: bool,
 }
 
 /// Look at the `MDBook` and try to figure out what preprocessors to run.
@@ -513,7 +515,12 @@ fn determine_preprocessors(config: &Config, root: &Path) -> Result<Vec<Box<dyn P
                         .command
                         .to_owned()
                         .unwrap_or_else(|| format!("mdbook-{name}"));
-                    Box::new(CmdPreprocessor::new(name, command, root.to_owned()))
+                    Box::new(CmdPreprocessor::new(
+                        name,
+                        command,
+                        root.to_owned(),
+                        table.optional,
+                    ))
                 }
             };
             preprocessors.push(preprocessor);

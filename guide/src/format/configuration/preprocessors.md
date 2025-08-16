@@ -64,6 +64,18 @@ be overridden by adding a `command` field.
 command = "python random.py"
 ```
 
+### Optional preprocessors
+
+If you enable a preprocessor that isn't installed, the default behavior is to throw an error.
+This behavior can be changed by marking the preprocessor as optional:
+
+```toml
+[preprocessor.example]
+optional = true
+```
+
+This demotes the error to a warning.
+
 ## Require A Certain Order
 
 The order in which preprocessors are run can be controlled with the `before` and `after` fields.
