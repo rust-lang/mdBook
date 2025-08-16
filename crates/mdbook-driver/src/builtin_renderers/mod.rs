@@ -5,11 +5,9 @@
 use anyhow::{Context, Result, bail};
 use log::{error, info, trace, warn};
 use mdbook_renderer::{RenderContext, Renderer};
-use shlex::Shlex;
 use std::fs;
 use std::io::{self, ErrorKind};
-use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 
 pub use self::markdown_renderer::MarkdownRenderer;
 
@@ -48,30 +46,6 @@ impl CmdRenderer {
     /// Create a new `CmdRenderer` which will invoke the provided `cmd` string.
     pub fn new(name: String, cmd: String) -> CmdRenderer {
         CmdRenderer { name, cmd }
-    }
-
-    fn compose_command(&self, root: &Path) -> Result<Command> {
-        let mut words = Shlex::new(&self.cmd);
-        let exe = match words.next() {
-            Some(e) => PathBuf::from(e),
-            None => bail!("Command string was empty"),
-        };
-
-        let exe = if exe.components().count() == 1 {
-            // Search PATH for the executable.
-            exe
-        } else {
-            // Relative path is relative to book root.
-            root.join(&exe)
-        };
-
-        let mut cmd = Command::new(exe);
-
-        for arg in words {
-            cmd.arg(arg);
-        }
-
-        Ok(cmd)
     }
 }
 
@@ -120,8 +94,8 @@ impl Renderer for CmdRenderer {
 
         let _ = fs::create_dir_all(&ctx.destination);
 
-        let mut child = match self
-            .compose_command(&ctx.root)?
+        let mut cmd = crate::compose_command(&self.cmd, &ctx.root)?;
+        let mut child = match cmd
             .stdin(Stdio::piped())
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())

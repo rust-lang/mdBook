@@ -64,5 +64,34 @@ pub mod init;
 mod load;
 mod mdbook;
 
+use anyhow::{Result, bail};
 pub use mdbook::MDBook;
 pub use mdbook_core::{book, config, errors};
+use shlex::Shlex;
+use std::path::{Path, PathBuf};
+use std::process::Command;
+
+/// Creates a [`Command`] for command renderers and preprocessors.
+fn compose_command(cmd: &str, root: &Path) -> Result<Command> {
+    let mut words = Shlex::new(cmd);
+    let exe = match words.next() {
+        Some(e) => PathBuf::from(e),
+        None => bail!("Command string was empty"),
+    };
+
+    let exe = if exe.components().count() == 1 {
+        // Search PATH for the executable.
+        exe
+    } else {
+        // Relative path is relative to book root.
+        root.join(&exe)
+    };
+
+    let mut cmd = Command::new(exe);
+
+    for arg in words {
+        cmd.arg(arg);
+    }
+
+    Ok(cmd)
+}
