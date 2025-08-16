@@ -56,11 +56,11 @@ mdBook builds on stable Rust, if you want to build mdBook from source, here are 
 
 The resulting binary can be found in `mdBook/target/debug/` under the name `mdbook` or `mdbook.exe`.
 
-## Code Quality
+## Code quality
 
 We love code quality and Rust has some excellent tools to assist you with contributions.
 
-### Formatting Code with rustfmt
+### Formatting code with rustfmt
 
 Before you make your Pull Request to the project, please run it through the `rustfmt` utility.
 This will ensure we have good quality source code that is better for us all to maintain.
@@ -84,7 +84,7 @@ The quick guide is
 
 For more information, such as running it from your favourite editor, please see the `rustfmt` project. [rustfmt](https://github.com/rust-lang/rustfmt)
 
-### Finding Issues with Clippy
+### Finding issues with clippy
 
 [Clippy](https://doc.rust-lang.org/clippy/) is a code analyser/linter detecting mistakes, and therefore helps to improve your code.
 Like formatting your code with `rustfmt`, running clippy regularly and before your Pull Request will help us maintain awesome code.

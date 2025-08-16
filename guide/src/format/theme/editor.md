@@ -32,7 +32,7 @@ fn main() {
 
 Note the new `Undo Changes` button in the editable playgrounds.
 
-## Customizing the Editor
+## Customizing the editor
 
 By default, the editor is the [Ace](https://ace.c9.io/) editor, but, if desired,
 the functionality may be overridden by providing a different folder:

@@ -1,4 +1,4 @@
-# Syntax Highlighting
+# Syntax highlighting
 
 mdBook uses [Highlight.js](https://highlightjs.org) with a custom theme
 for syntax highlighting.
