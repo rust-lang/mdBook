@@ -149,3 +149,19 @@ fn relative_command_path() {
     .check_file("support-check", "html")
     .check_file("preprocessor-ran", "test");
 }
+
+// Preprocessor command is missing.
+#[test]
+fn missing_preprocessor() {
+    BookTest::from_dir("preprocessor/missing_preprocessor").run("build", |cmd| {
+        cmd.expect_stdout(str![[""]])
+            .expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
+[TIMESTAMP] [WARN] (mdbook_driver::builtin_preprocessors::cmd): The command wasn't found, is the "missing" preprocessor installed?
+[TIMESTAMP] [WARN] (mdbook_driver::builtin_preprocessors::cmd): [TAB]Command: trduyvbhijnorgevfuhn
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
+[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
+
+"#]]);
+    });
+}
