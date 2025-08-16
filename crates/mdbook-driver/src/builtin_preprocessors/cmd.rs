@@ -114,24 +114,14 @@ impl Preprocessor for CmdPreprocessor {
         })
     }
 
-    fn supports_renderer(&self, renderer: &str) -> bool {
+    fn supports_renderer(&self, renderer: &str) -> Result<bool> {
         debug!(
             "Checking if the \"{}\" preprocessor supports \"{}\"",
             self.name(),
             renderer
         );
 
-        let mut cmd = match crate::compose_command(&self.cmd, &self.root) {
-            Ok(c) => c,
-            Err(e) => {
-                warn!(
-                    "Unable to create the command for the \"{}\" preprocessor, {}",
-                    self.name(),
-                    e
-                );
-                return false;
-            }
-        };
+        let mut cmd = crate::compose_command(&self.cmd, &self.root)?;
 
         let outcome = cmd
             .arg("supports")
@@ -153,7 +143,7 @@ impl Preprocessor for CmdPreprocessor {
             }
         }
 
-        outcome.unwrap_or(false)
+        Ok(outcome.unwrap_or(false))
     }
 }
 
