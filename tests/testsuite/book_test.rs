@@ -247,6 +247,26 @@ impl BookTest {
         self
     }
 
+    /// Removes a file or directory relative to the test root.
+    pub fn rm_r(&mut self, path: impl AsRef<Path>) -> &mut Self {
+        let path = self.dir.join(path.as_ref());
+        let meta = match path.symlink_metadata() {
+            Ok(meta) => meta,
+            Err(e) => panic!("failed to remove {path:?}, could not read: {e:?}"),
+        };
+        // There is a race condition between fetching the metadata and
+        // actually performing the removal, but we don't care all that much
+        // for our tests.
+        if meta.is_dir() {
+            if let Err(e) = std::fs::remove_dir_all(&path) {
+                panic!("failed to remove {path:?}: {e:?}");
+            }
+        } else if let Err(e) = std::fs::remove_file(&path) {
+            panic!("failed to remove {path:?}: {e:?}")
+        }
+        self
+    }
+
     /// Builds a Rust program with the given src.
     ///
     /// The given path should be the path where to output the executable in
@@ -316,6 +336,12 @@ impl BookCommand {
     /// Specifies an environment variable to set on the executable.
     pub fn env<T: Into<String>>(&mut self, key: &str, value: T) -> &mut Self {
         self.env.insert(key.to_string(), Some(value.into()));
+        self
+    }
+
+    /// Sets the directory used for running the command.
+    pub fn current_dir<S: AsRef<std::path::Path>>(&mut self, path: S) -> &mut Self {
+        self.dir = self.dir.join(path.as_ref());
         self
     }
 
