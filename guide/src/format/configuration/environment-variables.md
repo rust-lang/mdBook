@@ -1,4 +1,4 @@
-# Environment Variables
+# Environment variables
 
 All configuration values can be overridden from the command line by setting the
 corresponding environment variable. Because many operating systems restrict

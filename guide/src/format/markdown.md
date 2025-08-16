@@ -6,7 +6,7 @@ or [try out](https://spec.commonmark.org/dingus/) CommonMark in real time. A com
 this documentation, but below is a high level overview of some of the basics. For a more in-depth experience, check out the
 [Markdown Guide](https://www.markdownguide.org).
 
-## Text and Paragraphs
+## Text and paragraphs
 
 Text is rendered relatively predictably: 
 

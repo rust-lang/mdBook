@@ -1,4 +1,4 @@
-# For Developers
+# For developers
 
 While `mdbook` is mainly used as a command line tool, you can also import the
 underlying libraries directly and use those to manage a book. It also has a fairly
@@ -14,7 +14,7 @@ The two main ways a developer can hook into the book's build process is via,
 - [Preprocessors](preprocessors.md)
 - [Alternative Backends](backends.md)
 
-## The Build Process
+## The build process
 
 The process of rendering a book project goes through several steps.
 
@@ -27,7 +27,7 @@ The process of rendering a book project goes through several steps.
    1. Run all the preprocessors.
    2. Call the backend to render the processed result.
 
-## Using `mdbook` as a Library
+## Using `mdbook` as a library
 
 The `mdbook` binary is just a wrapper around the underlying mdBook crates,
 exposing their functionality as a command-line program. If you want to

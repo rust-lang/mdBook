@@ -1,4 +1,4 @@
-# General Configuration
+# General configuration
 
 You can configure the parameters for your book in the ***book.toml*** file.
 

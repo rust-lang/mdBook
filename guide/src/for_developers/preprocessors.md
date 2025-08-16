@@ -10,7 +10,7 @@ the book. Possible use cases are:
 
 See [Configuring Preprocessors](../format/configuration/preprocessors.md) for more information about using preprocessors.
 
-## Hooking Into MDBook
+## Hooking into MDBook
 
 MDBook uses a fairly simple mechanism for discovering third party plugins.
 A new table is added to `book.toml` (e.g. `[preprocessor.foo]` for the `foo`
@@ -43,7 +43,7 @@ be adapted for other preprocessors.
 ```
 </details>
 
-## Hints For Implementing A Preprocessor
+## Hints for implementing a preprocessor
 
 By pulling in `mdbook-preprocessor` as a library, preprocessors can have access to the
 existing infrastructure for dealing with books.

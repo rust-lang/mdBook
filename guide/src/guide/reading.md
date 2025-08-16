@@ -1,4 +1,4 @@
-# Reading Books
+# Reading books
 
 This chapter gives an introduction on how to interact with a book produced by mdBook.
 This assumes you are reading an HTML book.

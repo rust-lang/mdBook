@@ -1,4 +1,4 @@
-# Alternative Backends
+# Alternative backends
 
 A "backend" is simply a program which `mdbook` will invoke during the book
 rendering process. This program is passed a JSON representation of the book and
@@ -10,7 +10,7 @@ See [Configuring Renderers](../format/configuration/renderers.md) for more infor
 The community has developed several backends.
 See the [Third Party Plugins] wiki page for a list of available backends.
 
-## Setting Up
+## Setting up
 
 This page will step you through creating your own alternative backend in the form
 of a simple word counting program. Although it will be written in Rust, there's
@@ -50,7 +50,7 @@ fn main() {
 > It is recommended that backends use the [`semver`] crate to inspect this field
 > and emit a warning if there may be a compatibility issue.
 
-## Inspecting the Book
+## Inspecting the book
 
 Now our backend has a copy of the book, lets count how many words are in each
 chapter!
@@ -79,7 +79,7 @@ fn count_words(ch: &Chapter) -> usize {
 ```
 
 
-## Enabling the Backend
+## Enabling the backend
 
 Now we've got the basics running, we want to actually use it. First, install the
 program.
@@ -216,7 +216,7 @@ and then add a check to make sure we skip ignored chapters.
 ```
 
 
-## Output and Signalling Failure
+## Output and signalling failure
 
 While it's nice to print word counts to the terminal when a book is built, it
 might also be a good idea to output them to a file somewhere. `mdbook` tells a
@@ -319,7 +319,7 @@ generation or a warning).
 All environment variables are passed through to the backend, allowing you to use
 the usual `RUST_LOG` to control logging verbosity.
 
-## Wrapping Up
+## Wrapping up
 
 Although contrived, hopefully this example was enough to show how you'd create
 an alternative backend for `mdbook`. If you feel it's missing something, don't

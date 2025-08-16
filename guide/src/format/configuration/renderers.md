@@ -318,7 +318,7 @@ This will generate an HTML page which will automatically redirect to the given l
 
 When fragment redirects are specified, the page must use JavaScript to redirect to the correct location. This is useful if you rename or move a section header. Fragment redirects work with existing pages and deleted pages.
 
-## Markdown Renderer
+## Markdown renderer
 
 The Markdown renderer will run preprocessors and then output the resulting
 Markdown. This is mostly useful for debugging preprocessors, especially in

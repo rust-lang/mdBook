@@ -38,7 +38,7 @@ Here is a list of the properties that are exposed:
   containing all the chapters of the book. It is used for example to construct
   the table of contents (sidebar).
 
-## Handlebars Helpers
+## Handlebars helpers
 
 In addition to the properties you can access, there are some handlebars helpers
 at your disposal.

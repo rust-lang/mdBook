@@ -1,4 +1,4 @@
-# Running `mdbook` in Continuous Integration
+# Running `mdbook` in continuous integration
 
 There are a variety of services such as [GitHub Actions] or [GitLab CI/CD] which can be used to test and deploy your book automatically.
 
