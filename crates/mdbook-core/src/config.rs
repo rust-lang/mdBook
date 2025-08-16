@@ -297,12 +297,18 @@ pub struct BookConfig {
     /// An optional description for the book.
     pub description: Option<String>,
     /// Location of the book source relative to the book's root directory.
+    #[serde(skip_serializing_if = "is_default_src")]
     pub src: PathBuf,
     /// The main language of the book.
     pub language: Option<String>,
     /// The direction of text in the book: Left-to-right (LTR) or Right-to-left (RTL).
     /// When not specified, the text direction is derived from [`BookConfig::language`].
     pub text_direction: Option<TextDirection>,
+}
+
+/// Helper for serde serialization.
+fn is_default_src(src: &PathBuf) -> bool {
+    src == Path::new("src")
 }
 
 impl Default for BookConfig {

@@ -28,7 +28,6 @@ All done, no errors...
         str![[r#"
 [book]
 authors = []
-src = "src"
 language = "en"
 
 "#]],
@@ -94,7 +93,6 @@ All done, no errors...
         str![[r#"
 [book]
 authors = []
-src = "src"
 language = "en"
 
 "#]],
@@ -128,7 +126,6 @@ All done, no errors...
 [book]
 title = "Example title"
 authors = []
-src = "src"
 language = "en"
 
 "#]],
