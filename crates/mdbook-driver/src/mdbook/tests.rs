@@ -47,7 +47,7 @@ fn config_defaults_to_link_and_index_preprocessor_if_not_set() {
     // make sure we haven't got anything in the `preprocessor` table
     assert!(cfg.preprocessors::<toml::Value>().unwrap().is_empty());
 
-    let got = determine_preprocessors(&cfg);
+    let got = determine_preprocessors(&cfg, Path::new(""));
 
     assert!(got.is_ok());
     assert_eq!(got.as_ref().unwrap().len(), 2);
@@ -60,7 +60,7 @@ fn use_default_preprocessors_works() {
     let mut cfg = Config::default();
     cfg.build.use_default_preprocessors = false;
 
-    let got = determine_preprocessors(&cfg).unwrap();
+    let got = determine_preprocessors(&cfg, Path::new("")).unwrap();
 
     assert_eq!(got.len(), 0);
 }
@@ -83,7 +83,7 @@ fn can_determine_third_party_preprocessors() {
     // make sure the `preprocessor.random` table exists
     assert!(cfg.get::<Value>("preprocessor.random").unwrap().is_some());
 
-    let got = determine_preprocessors(&cfg).unwrap();
+    let got = determine_preprocessors(&cfg, Path::new("")).unwrap();
 
     assert!(got.into_iter().any(|p| p.name() == "random"));
 }
@@ -114,7 +114,7 @@ fn preprocessor_before_must_be_array() {
 
     let cfg = Config::from_str(cfg_str).unwrap();
 
-    assert!(determine_preprocessors(&cfg).is_err());
+    assert!(determine_preprocessors(&cfg, Path::new("")).is_err());
 }
 
 #[test]
@@ -126,7 +126,7 @@ fn preprocessor_after_must_be_array() {
 
     let cfg = Config::from_str(cfg_str).unwrap();
 
-    assert!(determine_preprocessors(&cfg).is_err());
+    assert!(determine_preprocessors(&cfg, Path::new("")).is_err());
 }
 
 #[test]
@@ -142,7 +142,7 @@ fn preprocessor_order_is_honored() {
 
     let cfg = Config::from_str(cfg_str).unwrap();
 
-    let preprocessors = determine_preprocessors(&cfg).unwrap();
+    let preprocessors = determine_preprocessors(&cfg, Path::new("")).unwrap();
     let index = |name| {
         preprocessors
             .iter()
@@ -179,7 +179,7 @@ fn cyclic_dependencies_are_detected() {
 
     let cfg = Config::from_str(cfg_str).unwrap();
 
-    assert!(determine_preprocessors(&cfg).is_err());
+    assert!(determine_preprocessors(&cfg, Path::new("")).is_err());
 }
 
 #[test]
@@ -191,7 +191,7 @@ fn dependencies_dont_register_undefined_preprocessors() {
 
     let cfg = Config::from_str(cfg_str).unwrap();
 
-    let preprocessors = determine_preprocessors(&cfg).unwrap();
+    let preprocessors = determine_preprocessors(&cfg, Path::new("")).unwrap();
 
     assert!(
         !preprocessors
@@ -212,7 +212,7 @@ fn dependencies_dont_register_builtin_preprocessors_if_disabled() {
 
     let cfg = Config::from_str(cfg_str).unwrap();
 
-    let preprocessors = determine_preprocessors(&cfg).unwrap();
+    let preprocessors = determine_preprocessors(&cfg, Path::new("")).unwrap();
 
     assert!(
         !preprocessors

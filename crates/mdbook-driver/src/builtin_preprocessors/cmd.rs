@@ -1,10 +1,10 @@
-use anyhow::{Context, Result, bail, ensure};
+use anyhow::{Context, Result, ensure};
 use log::{debug, trace, warn};
 use mdbook_core::book::Book;
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
-use shlex::Shlex;
 use std::io::{self, Write};
-use std::process::{Child, Command, Stdio};
+use std::path::PathBuf;
+use std::process::{Child, Stdio};
 
 /// A custom preprocessor which will shell out to a 3rd-party program.
 ///
@@ -33,12 +33,13 @@ use std::process::{Child, Command, Stdio};
 pub struct CmdPreprocessor {
     name: String,
     cmd: String,
+    root: PathBuf,
 }
 
 impl CmdPreprocessor {
     /// Create a new `CmdPreprocessor`.
-    pub fn new(name: String, cmd: String) -> CmdPreprocessor {
-        CmdPreprocessor { name, cmd }
+    pub fn new(name: String, cmd: String, root: PathBuf) -> CmdPreprocessor {
+        CmdPreprocessor { name, cmd, root }
     }
 
     fn write_input_to_child(&self, child: &mut Child, book: &Book, ctx: &PreprocessorContext) {
@@ -64,22 +65,6 @@ impl CmdPreprocessor {
     pub fn cmd(&self) -> &str {
         &self.cmd
     }
-
-    fn command(&self) -> Result<Command> {
-        let mut words = Shlex::new(&self.cmd);
-        let executable = match words.next() {
-            Some(e) => e,
-            None => bail!("Command string was empty"),
-        };
-
-        let mut cmd = Command::new(executable);
-
-        for arg in words {
-            cmd.arg(arg);
-        }
-
-        Ok(cmd)
-    }
 }
 
 impl Preprocessor for CmdPreprocessor {
@@ -88,12 +73,13 @@ impl Preprocessor for CmdPreprocessor {
     }
 
     fn run(&self, ctx: &PreprocessorContext, book: Book) -> Result<Book> {
-        let mut cmd = self.command()?;
+        let mut cmd = crate::compose_command(&self.cmd, &ctx.root)?;
 
         let mut child = cmd
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit())
+            .current_dir(&self.root)
             .spawn()
             .with_context(|| {
                 format!(
@@ -135,7 +121,7 @@ impl Preprocessor for CmdPreprocessor {
             renderer
         );
 
-        let mut cmd = match self.command() {
+        let mut cmd = match crate::compose_command(&self.cmd, &self.root) {
             Ok(c) => c,
             Err(e) => {
                 warn!(
@@ -153,6 +139,7 @@ impl Preprocessor for CmdPreprocessor {
             .stdin(Stdio::null())
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
+            .current_dir(&self.root)
             .status()
             .map(|status| status.code() == Some(0));
 
@@ -183,8 +170,8 @@ mod tests {
 
     #[test]
     fn round_trip_write_and_parse_input() {
-        let cmd = CmdPreprocessor::new("test".to_string(), "test".to_string());
         let md = guide();
+        let cmd = CmdPreprocessor::new("test".to_string(), "test".to_string(), md.root.clone());
         let ctx = PreprocessorContext::new(
             md.root.clone(),
             md.config.clone(),
