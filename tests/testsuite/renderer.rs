@@ -85,9 +85,9 @@ fn missing_renderer() {
 [TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
 [TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the missing backend
 [TIMESTAMP] [INFO] (mdbook_driver::builtin_renderers): Invoking the "missing" renderer
-[TIMESTAMP] [ERROR] (mdbook_driver::builtin_renderers): The command `trduyvbhijnorgevfuhn` wasn't found, is the "missing" backend installed? If you want to ignore this error when the "missing" backend is not installed, set `optional = true` in the `[output.missing]` section of the book.toml configuration file.
+[TIMESTAMP] [ERROR] (mdbook_driver): The command `trduyvbhijnorgevfuhn` wasn't found, is the `missing` backend installed? If you want to ignore this error when the `missing` backend is not installed, set `optional = true` in the `[output.missing]` section of the book.toml configuration file.
 [TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Rendering failed
-[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: Unable to start the backend
+[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: Unable to run the backend `missing`
 [TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: [NOT_FOUND]
 
 "#]]);
@@ -102,7 +102,7 @@ fn missing_optional_not_fatal() {
 [TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
 [TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the missing backend
 [TIMESTAMP] [INFO] (mdbook_driver::builtin_renderers): Invoking the "missing" renderer
-[TIMESTAMP] [WARN] (mdbook_driver::builtin_renderers): The command `trduyvbhijnorgevfuhn` for backend `missing` was not found, but was marked as optional.
+[TIMESTAMP] [WARN] (mdbook_driver): The command `trduyvbhijnorgevfuhn` for backend `missing` was not found, but is marked as optional.
 
 "#]]);
     });
