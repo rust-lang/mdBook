@@ -247,8 +247,8 @@ impl Preprocessor for BoolPreprocessor {
         unimplemented!()
     }
 
-    fn supports_renderer(&self, _renderer: &str) -> bool {
-        self.0
+    fn supports_renderer(&self, _renderer: &str) -> Result<bool> {
+        Ok(self.0)
     }
 }
 

@@ -39,8 +39,8 @@ pub trait Preprocessor {
     /// particular renderer.
     ///
     /// By default, always returns `true`.
-    fn supports_renderer(&self, _renderer: &str) -> bool {
-        true
+    fn supports_renderer(&self, _renderer: &str) -> Result<bool> {
+        Ok(true)
     }
 }
 

@@ -64,7 +64,8 @@ pub mod init;
 mod load;
 mod mdbook;
 
-use anyhow::{Result, bail};
+use anyhow::{Context, Result, bail};
+use log::{error, warn};
 pub use mdbook::MDBook;
 pub use mdbook_core::{book, config, errors};
 use shlex::Shlex;
@@ -94,4 +95,31 @@ fn compose_command(cmd: &str, root: &Path) -> Result<Command> {
     }
 
     Ok(cmd)
+}
+
+/// Handles a failure for a preprocessor or renderer.
+fn handle_command_error(
+    error: std::io::Error,
+    optional: bool,
+    key: &str,
+    what: &str,
+    name: &str,
+    cmd: &str,
+) -> Result<()> {
+    if let std::io::ErrorKind::NotFound = error.kind() {
+        if optional {
+            warn!(
+                "The command `{cmd}` for {what} `{name}` was not found, \
+                 but is marked as optional.",
+            );
+            return Ok(());
+        } else {
+            error!(
+                "The command `{cmd}` wasn't found, is the `{name}` {what} installed? \
+                If you want to ignore this error when the `{name}` {what} is not installed, \
+                set `optional = true` in the `[{key}.{name}]` section of the book.toml configuration file.",
+            );
+        }
+    }
+    Err(error).with_context(|| format!("Unable to run the {what} `{name}`"))?
 }

@@ -2,7 +2,7 @@ use anyhow::{Context, Result, ensure};
 use log::{debug, trace, warn};
 use mdbook_core::book::Book;
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
-use std::io::{self, Write};
+use std::io::Write;
 use std::path::PathBuf;
 use std::process::{Child, Stdio};
 
@@ -34,12 +34,18 @@ pub struct CmdPreprocessor {
     name: String,
     cmd: String,
     root: PathBuf,
+    optional: bool,
 }
 
 impl CmdPreprocessor {
     /// Create a new `CmdPreprocessor`.
-    pub fn new(name: String, cmd: String, root: PathBuf) -> CmdPreprocessor {
-        CmdPreprocessor { name, cmd, root }
+    pub fn new(name: String, cmd: String, root: PathBuf, optional: bool) -> CmdPreprocessor {
+        CmdPreprocessor {
+            name,
+            cmd,
+            root,
+            optional,
+        }
     }
 
     fn write_input_to_child(&self, child: &mut Child, book: &Book, ctx: &PreprocessorContext) {
@@ -75,18 +81,29 @@ impl Preprocessor for CmdPreprocessor {
     fn run(&self, ctx: &PreprocessorContext, book: Book) -> Result<Book> {
         let mut cmd = crate::compose_command(&self.cmd, &ctx.root)?;
 
-        let mut child = cmd
+        let mut child = match cmd
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit())
             .current_dir(&self.root)
             .spawn()
-            .with_context(|| {
-                format!(
-                    "Unable to start the \"{}\" preprocessor. Is it installed?",
-                    self.name()
-                )
-            })?;
+        {
+            Ok(c) => c,
+            Err(e) => {
+                crate::handle_command_error(
+                    e,
+                    self.optional,
+                    "preprocessor",
+                    "preprocessor",
+                    &self.name,
+                    &self.cmd,
+                )?;
+                // This should normally not be reached, since the validation
+                // for NotFound should have already happened when running the
+                // "supports" command.
+                return Ok(book);
+            }
+        };
 
         self.write_input_to_child(&mut child, &book, ctx);
 
@@ -114,26 +131,16 @@ impl Preprocessor for CmdPreprocessor {
         })
     }
 
-    fn supports_renderer(&self, renderer: &str) -> bool {
+    fn supports_renderer(&self, renderer: &str) -> Result<bool> {
         debug!(
             "Checking if the \"{}\" preprocessor supports \"{}\"",
             self.name(),
             renderer
         );
 
-        let mut cmd = match crate::compose_command(&self.cmd, &self.root) {
-            Ok(c) => c,
-            Err(e) => {
-                warn!(
-                    "Unable to create the command for the \"{}\" preprocessor, {}",
-                    self.name(),
-                    e
-                );
-                return false;
-            }
-        };
+        let mut cmd = crate::compose_command(&self.cmd, &self.root)?;
 
-        let outcome = cmd
+        match cmd
             .arg("supports")
             .arg(renderer)
             .stdin(Stdio::null())
@@ -141,19 +148,20 @@ impl Preprocessor for CmdPreprocessor {
             .stderr(Stdio::inherit())
             .current_dir(&self.root)
             .status()
-            .map(|status| status.code() == Some(0));
-
-        if let Err(ref e) = outcome {
-            if e.kind() == io::ErrorKind::NotFound {
-                warn!(
-                    "The command wasn't found, is the \"{}\" preprocessor installed?",
-                    self.name
-                );
-                warn!("\tCommand: {}", self.cmd);
+        {
+            Ok(status) => Ok(status.code() == Some(0)),
+            Err(e) => {
+                crate::handle_command_error(
+                    e,
+                    self.optional,
+                    "preprocessor",
+                    "preprocessor",
+                    &self.name,
+                    &self.cmd,
+                )?;
+                Ok(false)
             }
         }
-
-        outcome.unwrap_or(false)
     }
 }
 
@@ -171,7 +179,12 @@ mod tests {
     #[test]
     fn round_trip_write_and_parse_input() {
         let md = guide();
-        let cmd = CmdPreprocessor::new("test".to_string(), "test".to_string(), md.root.clone());
+        let cmd = CmdPreprocessor::new(
+            "test".to_string(),
+            "test".to_string(),
+            md.root.clone(),
+            false,
+        );
         let ctx = PreprocessorContext::new(
             md.root.clone(),
             md.config.clone(),

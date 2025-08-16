@@ -6,7 +6,6 @@ use anyhow::{Context, Result, bail};
 use log::{error, info, trace, warn};
 use mdbook_renderer::{RenderContext, Renderer};
 use std::fs;
-use std::io::{self, ErrorKind};
 use std::process::Stdio;
 
 pub use self::markdown_renderer::MarkdownRenderer;
@@ -49,41 +48,6 @@ impl CmdRenderer {
     }
 }
 
-impl CmdRenderer {
-    fn handle_render_command_error(&self, ctx: &RenderContext, error: io::Error) -> Result<()> {
-        if let ErrorKind::NotFound = error.kind() {
-            // Look for "output.{self.name}.optional".
-            // If it exists and is true, treat this as a warning.
-            // Otherwise, fail the build.
-
-            let optional_key = format!("output.{}.optional", self.name);
-
-            let is_optional = match ctx.config.get(&optional_key) {
-                Ok(Some(value)) => value,
-                Err(e) => bail!("expected bool for `{optional_key}`: {e}"),
-                Ok(None) => false,
-            };
-
-            if is_optional {
-                warn!(
-                    "The command `{}` for backend `{}` was not found, \
-                    but was marked as optional.",
-                    self.cmd, self.name
-                );
-                return Ok(());
-            } else {
-                error!(
-                    "The command `{0}` wasn't found, is the \"{1}\" backend installed? \
-                    If you want to ignore this error when the \"{1}\" backend is not installed, \
-                    set `optional = true` in the `[output.{1}]` section of the book.toml configuration file.",
-                    self.cmd, self.name
-                );
-            }
-        }
-        Err(error).with_context(|| "Unable to start the backend")?
-    }
-}
-
 impl Renderer for CmdRenderer {
     fn name(&self) -> &str {
         &self.name
@@ -91,6 +55,13 @@ impl Renderer for CmdRenderer {
 
     fn render(&self, ctx: &RenderContext) -> Result<()> {
         info!("Invoking the \"{}\" renderer", self.name);
+
+        let optional_key = format!("output.{}.optional", self.name);
+        let optional = match ctx.config.get(&optional_key) {
+            Ok(Some(value)) => value,
+            Err(e) => bail!("expected bool for `{optional_key}`: {e}"),
+            Ok(None) => false,
+        };
 
         let _ = fs::create_dir_all(&ctx.destination);
 
@@ -103,7 +74,11 @@ impl Renderer for CmdRenderer {
             .spawn()
         {
             Ok(c) => c,
-            Err(e) => return self.handle_render_command_error(ctx, e),
+            Err(e) => {
+                return crate::handle_command_error(
+                    e, optional, "output", "backend", &self.name, &self.cmd,
+                );
+            }
         };
 
         let mut stdin = child.stdin.take().expect("Child has stdin");
