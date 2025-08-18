@@ -54,13 +54,6 @@ mdbook test my-book -L target/debug/deps/
 See the `rustdoc` command-line [documentation](https://doc.rust-lang.org/rustdoc/command-line-arguments.html#-l--library-path-where-to-look-for-dependencies)
 for more information.
 
-#### `--dest-dir`
-
-The `--dest-dir` (`-d`) option allows you to change the output directory for the
-book. Relative paths are interpreted relative to the book's root directory. If
-not specified it will default to the value of the `build.build-dir` key in
-`book.toml`, or to `./book`.
-
 #### `--chapter`
 
 The `--chapter` (`-c`) option allows you to test a specific chapter of the
