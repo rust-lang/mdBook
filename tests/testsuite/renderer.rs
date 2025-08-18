@@ -241,3 +241,28 @@ fn relative_command_path() {
     })
     .check_file("book/output", "test");
 }
+
+// with_renderer of an existing name.
+#[test]
+fn with_renderer_same_name() {
+    let mut test = BookTest::init(|_| {});
+    test.change_file(
+        "book.toml",
+        "[output.dummy]\n\
+         command = 'mdbook-renderer-does-not-exist'\n",
+    );
+    let spy: Arc<Mutex<Inner>> = Default::default();
+    let mut book = test.load_book();
+    book.with_renderer(Spy(Arc::clone(&spy)));
+    let err = book.build().unwrap_err();
+    test.assert.eq(
+        format!("{err:?}"),
+        str![[r#"
+Rendering failed
+
+Caused by:
+    0: Unable to run the backend `dummy`
+    1: [NOT_FOUND]
+"#]],
+    );
+}

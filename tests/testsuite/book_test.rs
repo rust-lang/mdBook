@@ -22,7 +22,8 @@ enum StatusCode {
 pub struct BookTest {
     /// The temp directory where the test should perform its work.
     pub dir: PathBuf,
-    assert: snapbox::Assert,
+    /// Snapshot assertion support.
+    pub assert: snapbox::Assert,
     /// This indicates whether or not the book has been built.
     built: bool,
 }

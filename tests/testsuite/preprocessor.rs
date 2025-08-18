@@ -180,3 +180,27 @@ fn missing_optional_not_fatal() {
 "#]]);
     });
 }
+
+// with_preprocessor of an existing name.
+#[test]
+fn with_preprocessor_same_name() {
+    let mut test = BookTest::init(|_| {});
+    test.change_file(
+        "book.toml",
+        "[preprocessor.dummy]\n\
+         command = 'mdbook-preprocessor-does-not-exist'\n",
+    );
+    let spy: Arc<Mutex<Inner>> = Default::default();
+    let mut book = test.load_book();
+    book.with_preprocessor(Spy(Arc::clone(&spy)));
+    let err = book.build().unwrap_err();
+    test.assert.eq(
+        format!("{err:?}"),
+        str![[r#"
+Unable to run the preprocessor `dummy`
+
+Caused by:
+    [NOT_FOUND]
+"#]],
+    );
+}
