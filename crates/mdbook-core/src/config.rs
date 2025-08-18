@@ -48,7 +48,7 @@ use crate::utils::log_backtrace;
 use anyhow::{Context, Error, Result, bail};
 use log::{debug, trace};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::env;
 use std::fs::File;
 use std::io::Read;
@@ -214,7 +214,7 @@ impl Config {
     }
 
     /// Returns the configuration for all preprocessors.
-    pub fn preprocessors<'de, T: Deserialize<'de>>(&self) -> Result<HashMap<String, T>> {
+    pub fn preprocessors<'de, T: Deserialize<'de>>(&self) -> Result<BTreeMap<String, T>> {
         self.preprocessor
             .clone()
             .try_into()
@@ -222,7 +222,7 @@ impl Config {
     }
 
     /// Returns the configuration for all renderers.
-    pub fn outputs<'de, T: Deserialize<'de>>(&self) -> Result<HashMap<String, T>> {
+    pub fn outputs<'de, T: Deserialize<'de>>(&self) -> Result<BTreeMap<String, T>> {
         self.output
             .clone()
             .try_into()
