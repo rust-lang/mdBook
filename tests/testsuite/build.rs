@@ -79,9 +79,9 @@ fn dest_dir_relative_path() {
             .expect_stderr(str![[r#"
 [TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
 [TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
-[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/work/../foo`
+[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/work/foo`
 
 "#]]);
     });
-    assert!(test.dir.join("foo/index.html").exists());
+    assert!(current_dir.join("foo/index.html").exists());
 }

@@ -23,7 +23,7 @@ your default web browser.
 #### `--dest-dir`
 
 The `--dest-dir` (`-d`) option allows you to change the output directory for the
-book. Relative paths are interpreted relative to the book's root directory. If
+book. Relative paths are interpreted relative to the current directory. If
 not specified it will default to the value of the `build.build-dir` key in
 `book.toml`, or to `./book`.
 

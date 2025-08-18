@@ -1,6 +1,7 @@
 //! Helpers for building the command-line arguments for commands.
 
 pub use clap::{Arg, ArgMatches, Command, arg};
+use mdbook_driver::MDBook;
 use std::path::PathBuf;
 
 pub trait CommandExt: Sized {
@@ -15,7 +16,7 @@ pub trait CommandExt: Sized {
                 .value_parser(clap::value_parser!(PathBuf))
                 .help(
                     "Output directory for the book\n\
-                    Relative paths are interpreted relative to the book's root directory.\n\
+                    Relative paths are interpreted relative to the current directory.\n\
                     If omitted, mdBook uses build.build-dir from book.toml \
                     or defaults to `./book`.",
                 ),
@@ -55,5 +56,14 @@ pub trait CommandExt: Sized {
 impl CommandExt for Command {
     fn _arg(self, arg: Arg) -> Self {
         self.arg(arg)
+    }
+}
+
+pub fn set_dest_dir(args: &ArgMatches, book: &mut MDBook) {
+    if let Some(dest_dir) = args.get_one::<PathBuf>("dest-dir") {
+        let build_dir = std::env::current_dir()
+            .expect("current dir should be valid")
+            .join(dest_dir);
+        book.config.build.build_dir = build_dir;
     }
 }

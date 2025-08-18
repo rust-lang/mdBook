@@ -62,9 +62,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         book.config
             .set("output.html.live-reload-endpoint", LIVE_RELOAD_ENDPOINT)
             .expect("live-reload-endpoint update failed");
-        if let Some(dest_dir) = args.get_one::<PathBuf>("dest-dir") {
-            book.config.build.build_dir = dest_dir.into();
-        }
+        set_dest_dir(args, book);
         // Override site-url for local serving of the 404 file
         book.config.set("output.html.site-url", "/").unwrap();
     };
