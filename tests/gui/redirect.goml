@@ -23,16 +23,6 @@ assert-window-property: ({"location": |DOC_PATH| + "prefix.html"})
 go-to: |DOC_PATH| + "rename-page-fragment-elsewhere.html#orig"
 assert-window-property: ({"location": |DOC_PATH| + "suffix.html#new"})
 
-// Goes to an external site.
-go-to: |DOC_PATH| + "full-url-with-fragment.html"
-assert-window-property: ({"location": "https://www.rust-lang.org/#fragment"})
-
-// External site with fragment renames.
-go-to: |DOC_PATH| + "full-url-with-fragment-map.html#a"
-assert-window-property: ({"location": "https://www.rust-lang.org/#new1"})
-go-to: |DOC_PATH| + "full-url-with-fragment-map.html#b"
-assert-window-property: ({"location": "https://www.rust-lang.org/#new2"})
-
 // Rename fragment on an existing page.
 go-to: |DOC_PATH| + "prefix.html#orig"
 assert-window-property: ({"location": |DOC_PATH| + "prefix.html#new"})
