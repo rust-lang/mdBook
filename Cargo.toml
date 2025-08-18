@@ -37,6 +37,7 @@ font-awesome-as-a-crate = "0.3.0"
 futures-util = "0.3.31"
 handlebars = "6.3.2"
 hex = "0.4.3"
+indexmap = "2.10.0"
 ignore = "0.4.23"
 log = "0.4.27"
 mdbook-core = { path = "crates/mdbook-core" }

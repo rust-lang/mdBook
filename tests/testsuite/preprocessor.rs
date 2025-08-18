@@ -193,14 +193,9 @@ fn with_preprocessor_same_name() {
     let spy: Arc<Mutex<Inner>> = Default::default();
     let mut book = test.load_book();
     book.with_preprocessor(Spy(Arc::clone(&spy)));
-    let err = book.build().unwrap_err();
-    test.assert.eq(
-        format!("{err:?}"),
-        str![[r#"
-Unable to run the preprocessor `dummy`
-
-Caused by:
-    [NOT_FOUND]
-"#]],
-    );
+    // Unfortunately this is unable to capture the output when using the API.
+    book.build().unwrap();
+    let inner = spy.lock().unwrap();
+    assert_eq!(inner.run_count, 1);
+    assert_eq!(inner.rendered_with, ["html"]);
 }

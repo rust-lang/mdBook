@@ -254,15 +254,8 @@ fn with_renderer_same_name() {
     let spy: Arc<Mutex<Inner>> = Default::default();
     let mut book = test.load_book();
     book.with_renderer(Spy(Arc::clone(&spy)));
-    let err = book.build().unwrap_err();
-    test.assert.eq(
-        format!("{err:?}"),
-        str![[r#"
-Rendering failed
-
-Caused by:
-    0: Unable to run the backend `dummy`
-    1: [NOT_FOUND]
-"#]],
-    );
+    // Unfortunately this is unable to capture the output when using the API.
+    book.build().unwrap();
+    let inner = spy.lock().unwrap();
+    assert_eq!(inner.run_count, 1);
 }
