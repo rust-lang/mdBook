@@ -21,7 +21,9 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let book = MDBook::load(book_dir)?;
 
     let dir_to_remove = match args.get_one::<PathBuf>("dest-dir") {
-        Some(dest_dir) => dest_dir.into(),
+        Some(dest_dir) => std::env::current_dir()
+            .expect("current dir should be valid")
+            .join(dest_dir),
         None => book.root.join(&book.config.build.build_dir),
     };
 

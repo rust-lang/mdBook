@@ -66,3 +66,22 @@ fn book_toml_isnt_required() {
         str![[r##"<h1 id="chapter-1"><a class="header" href="#chapter-1">Chapter 1</a></h1>"##]],
     );
 }
+
+// Dest dir relative path behavior.
+#[test]
+fn dest_dir_relative_path() {
+    let mut test = BookTest::from_dir("build/basic_build");
+    let current_dir = test.dir.join("work");
+    std::fs::create_dir_all(&current_dir).unwrap();
+    test.run("build", |cmd| {
+        cmd.args(&["--dest-dir", "foo", ".."])
+            .current_dir(&current_dir)
+            .expect_stderr(str![[r#"
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
+[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
+[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/work/foo`
+
+"#]]);
+    });
+    assert!(current_dir.join("foo/index.html").exists());
+}

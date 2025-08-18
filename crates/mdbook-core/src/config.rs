@@ -366,7 +366,7 @@ impl TextDirection {
 #[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct BuildConfig {
-    /// Where to put built artefacts relative to the book's root directory.
+    /// Where to put built artifacts relative to the book's root directory.
     pub build_dir: PathBuf,
     /// Should non-existent markdown files specified in `SUMMARY.md` be created
     /// if they don't exist?
