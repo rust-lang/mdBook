@@ -47,12 +47,10 @@ fn config_defaults_to_link_and_index_preprocessor_if_not_set() {
     // make sure we haven't got anything in the `preprocessor` table
     assert!(cfg.preprocessors::<toml::Value>().unwrap().is_empty());
 
-    let got = determine_preprocessors(&cfg, Path::new(""));
+    let got = determine_preprocessors(&cfg, Path::new("")).unwrap();
 
-    assert!(got.is_ok());
-    assert_eq!(got.as_ref().unwrap().len(), 2);
-    assert_eq!(got.as_ref().unwrap()[0].name(), "index");
-    assert_eq!(got.as_ref().unwrap()[1].name(), "links");
+    let names: Vec<_> = got.values().map(|p| p.name()).collect();
+    assert_eq!(names, ["index", "links"]);
 }
 
 #[test]
@@ -251,4 +249,36 @@ fn preprocessor_should_run_falls_back_to_supports_renderer_method() {
     let should_be = false;
     let got = preprocessor_should_run(&BoolPreprocessor(should_be), &html, &cfg).unwrap();
     assert_eq!(got, should_be);
+}
+
+// Default is to sort preprocessors alphabetically.
+#[test]
+fn preprocessor_sorted_by_name() {
+    let cfg_str = r#"
+        [preprocessor.xyz]
+        [preprocessor.abc]
+        "#;
+
+    let cfg = Config::from_str(cfg_str).unwrap();
+
+    let got = determine_preprocessors(&cfg, Path::new("")).unwrap();
+
+    let names: Vec<_> = got.values().map(|p| p.name()).collect();
+    assert_eq!(names, ["abc", "index", "links", "xyz"]);
+}
+
+// Default is to sort renderers alphabetically.
+#[test]
+fn renderers_sorted_by_name() {
+    let cfg_str = r#"
+        [output.xyz]
+        [output.abc]
+        "#;
+
+    let cfg = Config::from_str(cfg_str).unwrap();
+
+    let got = determine_renderers(&cfg).unwrap();
+
+    let names: Vec<_> = got.values().map(|p| p.name()).collect();
+    assert_eq!(names, ["abc", "xyz"]);
 }
