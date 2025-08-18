@@ -1335,6 +1335,7 @@ name = "mdbook-driver"
 version = "0.5.0-alpha.1"
 dependencies = [
  "anyhow",
+ "indexmap",
  "log",
  "mdbook-core",
  "mdbook-html",

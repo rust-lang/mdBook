@@ -85,7 +85,7 @@ fn can_determine_third_party_preprocessors() {
 
     let got = determine_preprocessors(&cfg, Path::new("")).unwrap();
 
-    assert!(got.into_iter().any(|p| p.name() == "random"));
+    assert!(got.contains_key("random"));
 }
 
 #[test]
@@ -143,19 +143,12 @@ fn preprocessor_order_is_honored() {
     let cfg = Config::from_str(cfg_str).unwrap();
 
     let preprocessors = determine_preprocessors(&cfg, Path::new("")).unwrap();
-    let index = |name| {
-        preprocessors
-            .iter()
-            .enumerate()
-            .find(|(_, preprocessor)| preprocessor.name() == name)
-            .unwrap()
-            .0
-    };
+    let index = |name| preprocessors.get_index_of(name).unwrap();
     let assert_before = |before, after| {
         if index(before) >= index(after) {
             eprintln!("Preprocessor order:");
-            for preprocessor in &preprocessors {
-                eprintln!("  {}", preprocessor.name());
+            for preprocessor in preprocessors.keys() {
+                eprintln!("  {}", preprocessor);
             }
             panic!("{before} should come before {after}");
         }
@@ -193,11 +186,8 @@ fn dependencies_dont_register_undefined_preprocessors() {
 
     let preprocessors = determine_preprocessors(&cfg, Path::new("")).unwrap();
 
-    assert!(
-        !preprocessors
-            .iter()
-            .any(|preprocessor| preprocessor.name() == "random")
-    );
+    // Does not contain "random"
+    assert_eq!(preprocessors.keys().collect::<Vec<_>>(), ["index", "links"]);
 }
 
 #[test]
@@ -214,11 +204,8 @@ fn dependencies_dont_register_builtin_preprocessors_if_disabled() {
 
     let preprocessors = determine_preprocessors(&cfg, Path::new("")).unwrap();
 
-    assert!(
-        !preprocessors
-            .iter()
-            .any(|preprocessor| preprocessor.name() == "links")
-    );
+    // Does not contain "links"
+    assert_eq!(preprocessors.keys().collect::<Vec<_>>(), ["random"]);
 }
 
 #[test]

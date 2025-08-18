@@ -5,6 +5,7 @@ use crate::builtin_renderers::{CmdRenderer, MarkdownRenderer};
 use crate::init::BookBuilder;
 use crate::load::{load_book, load_book_from_disk};
 use anyhow::{Context, Error, Result, bail};
+use indexmap::IndexMap;
 use log::{debug, error, info, log_enabled, trace, warn};
 use mdbook_core::book::{Book, BookItem, BookItems};
 use mdbook_core::config::{Config, RustEdition};
@@ -28,14 +29,18 @@ mod tests;
 pub struct MDBook {
     /// The book's root directory.
     pub root: PathBuf,
+
     /// The configuration used to tweak now a book is built.
     pub config: Config,
+
     /// A representation of the book's contents in memory.
     pub book: Book,
-    renderers: Vec<Box<dyn Renderer>>,
 
-    /// List of pre-processors to be run on the book.
-    preprocessors: Vec<Box<dyn Preprocessor>>,
+    /// Renderers to execute.
+    renderers: IndexMap<String, Box<dyn Renderer>>,
+
+    /// Pre-processors to be run on the book.
+    preprocessors: IndexMap<String, Box<dyn Preprocessor>>,
 }
 
 impl MDBook {
@@ -156,7 +161,7 @@ impl MDBook {
     pub fn build(&self) -> Result<()> {
         info!("Book building has started");
 
-        for renderer in &self.renderers {
+        for renderer in self.renderers.values() {
             self.execute_build_process(&**renderer)?;
         }
 
@@ -171,7 +176,7 @@ impl MDBook {
             renderer.name().to_string(),
         );
         let mut preprocessed_book = self.book.clone();
-        for preprocessor in &self.preprocessors {
+        for preprocessor in self.preprocessors.values() {
             if preprocessor_should_run(&**preprocessor, renderer, &self.config)? {
                 debug!("Running the {} preprocessor.", preprocessor.name());
                 preprocessed_book = preprocessor.run(&preprocess_ctx, preprocessed_book)?;
@@ -207,13 +212,15 @@ impl MDBook {
     /// The only requirement is that your renderer implement the [`Renderer`]
     /// trait.
     pub fn with_renderer<R: Renderer + 'static>(&mut self, renderer: R) -> &mut Self {
-        self.renderers.push(Box::new(renderer));
+        self.renderers
+            .insert(renderer.name().to_string(), Box::new(renderer));
         self
     }
 
     /// Register a [`Preprocessor`] to be used when rendering the book.
     pub fn with_preprocessor<P: Preprocessor + 'static>(&mut self, preprocessor: P) -> &mut Self {
-        self.preprocessors.push(Box::new(preprocessor));
+        self.preprocessors
+            .insert(preprocessor.name().to_string(), Box::new(preprocessor));
         self
     }
 
@@ -258,10 +265,9 @@ impl MDBook {
 
         // Index Preprocessor is disabled so that chapter paths
         // continue to point to the actual markdown files.
-        self.preprocessors = determine_preprocessors(&self.config, &self.root)?
-            .into_iter()
-            .filter(|pre| pre.name() != IndexPreprocessor::NAME)
-            .collect();
+        self.preprocessors = determine_preprocessors(&self.config, &self.root)?;
+        self.preprocessors
+            .shift_remove_entry(IndexPreprocessor::NAME);
         let (book, _) = self.preprocess_book(&TestRenderer)?;
 
         let color_output = std::io::stderr().is_terminal();
@@ -399,24 +405,25 @@ struct OutputConfig {
 }
 
 /// Look at the `Config` and try to figure out what renderers to use.
-fn determine_renderers(config: &Config) -> Result<Vec<Box<dyn Renderer>>> {
-    let mut renderers = Vec::new();
+fn determine_renderers(config: &Config) -> Result<IndexMap<String, Box<dyn Renderer>>> {
+    let mut renderers = IndexMap::new();
 
     let outputs = config.outputs::<OutputConfig>()?;
     renderers.extend(outputs.into_iter().map(|(key, table)| {
-        if key == "html" {
+        let renderer = if key == "html" {
             Box::new(HtmlHandlebars::new()) as Box<dyn Renderer>
         } else if key == "markdown" {
             Box::new(MarkdownRenderer::new()) as Box<dyn Renderer>
         } else {
             let command = table.command.unwrap_or_else(|| format!("mdbook-{key}"));
-            Box::new(CmdRenderer::new(key, command))
-        }
+            Box::new(CmdRenderer::new(key.clone(), command))
+        };
+        (key, renderer)
     }));
 
     // if we couldn't find anything, add the HTML renderer as a default
     if renderers.is_empty() {
-        renderers.push(Box::new(HtmlHandlebars::new()));
+        renderers.insert("html".to_string(), Box::new(HtmlHandlebars::new()));
     }
 
     Ok(renderers)
@@ -442,7 +449,10 @@ struct PreprocessorConfig {
 }
 
 /// Look at the `MDBook` and try to figure out what preprocessors to run.
-fn determine_preprocessors(config: &Config, root: &Path) -> Result<Vec<Box<dyn Preprocessor>>> {
+fn determine_preprocessors(
+    config: &Config,
+    root: &Path,
+) -> Result<IndexMap<String, Box<dyn Preprocessor>>> {
     // Collect the names of all preprocessors intended to be run, and the order
     // in which they should be run.
     let mut preprocessor_names = TopologicalSort::<String>::new();
@@ -490,7 +500,7 @@ fn determine_preprocessors(config: &Config, root: &Path) -> Result<Vec<Box<dyn P
     }
 
     // Now that all links have been established, queue preprocessors in a suitable order
-    let mut preprocessors = Vec::with_capacity(preprocessor_names.len());
+    let mut preprocessors = IndexMap::with_capacity(preprocessor_names.len());
     // `pop_all()` returns an empty vector when no more items are not being depended upon
     for mut names in std::iter::repeat_with(|| preprocessor_names.pop_all())
         .take_while(|names| !names.is_empty())
@@ -516,14 +526,14 @@ fn determine_preprocessors(config: &Config, root: &Path) -> Result<Vec<Box<dyn P
                         .to_owned()
                         .unwrap_or_else(|| format!("mdbook-{name}"));
                     Box::new(CmdPreprocessor::new(
-                        name,
+                        name.clone(),
                         command,
                         root.to_owned(),
                         table.optional,
                     ))
                 }
             };
-            preprocessors.push(preprocessor);
+            preprocessors.insert(name, preprocessor);
         }
     }
 

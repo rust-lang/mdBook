@@ -180,3 +180,22 @@ fn missing_optional_not_fatal() {
 "#]]);
     });
 }
+
+// with_preprocessor of an existing name.
+#[test]
+fn with_preprocessor_same_name() {
+    let mut test = BookTest::init(|_| {});
+    test.change_file(
+        "book.toml",
+        "[preprocessor.dummy]\n\
+         command = 'mdbook-preprocessor-does-not-exist'\n",
+    );
+    let spy: Arc<Mutex<Inner>> = Default::default();
+    let mut book = test.load_book();
+    book.with_preprocessor(Spy(Arc::clone(&spy)));
+    // Unfortunately this is unable to capture the output when using the API.
+    book.build().unwrap();
+    let inner = spy.lock().unwrap();
+    assert_eq!(inner.run_count, 1);
+    assert_eq!(inner.rendered_with, ["html"]);
+}
