@@ -45,3 +45,9 @@ And another[^in-between] that references the duplicate again.[^multiple-definiti
 [^in-between]: Footnote between duplicates.
 
 [^multiple-definitions]: This is the second definition of the footnote with tag multiple-definitions
+
+Multiple footnotes in a row.[^a][^b][^c]
+
+[^a]: Footnote 1
+[^b]: Footnote 2
+[^c]: Footnote 3

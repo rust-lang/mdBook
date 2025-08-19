@@ -80,6 +80,9 @@ pub fn render_markdown_with_path(
     let mut in_footnote_name = String::new();
     // This is the list of events to build the footnote definition.
     let mut in_footnote = Vec::new();
+    // This is used to add space between consecutive footnotes. I was unable
+    // to figure out a way to do this just with pure CSS.
+    let mut prev_was_footnote = false;
 
     let events = new_cmark_parser(text, smart_punctuation)
         .map(clean_codeblock_headers)
@@ -93,6 +96,7 @@ pub fn render_markdown_with_path(
         .filter_map(|event| {
             match event {
                 Event::Start(Tag::FootnoteDefinition(name)) => {
+                    prev_was_footnote = false;
                     if !in_footnote.is_empty() {
                         log::warn!("internal bug: nested footnote not expected in {path:?}");
                     }
@@ -119,14 +123,19 @@ pub fn render_markdown_with_path(
                     let len = footnote_numbers.len() + 1;
                     let (n, count) = footnote_numbers.entry(name.clone()).or_insert((len, 0));
                     *count += 1;
-                    let html = Event::Html(
-                        format!(
-                            "<sup class=\"footnote-reference\" id=\"fr-{name}-{count}\">\
-                                <a href=\"#footnote-{name}\">{n}</a>\
-                             </sup>"
-                        )
-                        .into(),
-                    );
+                    let mut html = String::new();
+                    if prev_was_footnote {
+                        write!(html, " ").unwrap();
+                    }
+                    prev_was_footnote = true;
+                    write!(
+                        html,
+                        "<sup class=\"footnote-reference\" id=\"fr-{name}-{count}\">\
+                            <a href=\"#footnote-{name}\">{n}</a>\
+                         </sup>"
+                    )
+                    .unwrap();
+                    let html = Event::Html(html.into());
                     if in_footnote_name.is_empty() {
                         Some(html)
                     } else {
@@ -138,9 +147,13 @@ pub fn render_markdown_with_path(
                 // While inside a footnote, accumulate all events into a local.
                 _ if !in_footnote_name.is_empty() => {
                     in_footnote.push(event);
+                    prev_was_footnote = false;
                     None
                 }
-                _ => Some(event),
+                _ => {
+                    prev_was_footnote = false;
+                    Some(event)
+                }
             }
         });
 
