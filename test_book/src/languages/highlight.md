@@ -563,6 +563,15 @@ int main(int argc, const char * argv[]) {
 
 ```
 
+## nix
+
+```nix
+let
+  world = "World!";
+in
+"Hello " + world
+```
+
 ## perl
 
 ```perl

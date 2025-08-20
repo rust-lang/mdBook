@@ -7,7 +7,7 @@ If you have come here to learn how to contribute to mdBook, we have some tips fo
 First of all, don't hesitate to ask questions!
 Use the [issue tracker](https://github.com/rust-lang/mdBook/issues), no question is too simple.
 
-### Issue assignment
+## Issue assignment
 
 **:warning: Important :warning:**
 
@@ -16,7 +16,7 @@ The current PR backlog is beyond what we can process at this time.
 Only issues that have an [`E-Help-wanted`](https://github.com/rust-lang/mdBook/labels/E-Help-wanted) or [`Feature accepted`](https://github.com/rust-lang/mdBook/labels/Feature%20accepted) label will likely receive reviews.
 If there isn't already an open issue for what you want to work on, please open one first to see if it is something we would be available to review.
 
-### Issues to work on
+## Issues to work on
 
 If you are starting out, you might be interested in the
 [E-Easy issues](https://github.com/rust-lang/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AE-Easy).
@@ -41,7 +41,7 @@ Issues on the issue tracker are categorized with the following labels:
 - **S**-prefixed labels show the status of the issue
 - **C**-prefixed labels show the category of issue
 
-### Building mdBook
+## Building mdBook
 
 mdBook builds on stable Rust, if you want to build mdBook from source, here are the steps to follow:
 
@@ -56,11 +56,11 @@ mdBook builds on stable Rust, if you want to build mdBook from source, here are 
 
 The resulting binary can be found in `mdBook/target/debug/` under the name `mdbook` or `mdbook.exe`.
 
-### Code Quality
+## Code quality
 
 We love code quality and Rust has some excellent tools to assist you with contributions.
 
-#### Formatting Code with rustfmt
+### Formatting code with rustfmt
 
 Before you make your Pull Request to the project, please run it through the `rustfmt` utility.
 This will ensure we have good quality source code that is better for us all to maintain.
@@ -84,8 +84,7 @@ The quick guide is
 
 For more information, such as running it from your favourite editor, please see the `rustfmt` project. [rustfmt](https://github.com/rust-lang/rustfmt)
 
-
-#### Finding Issues with Clippy
+### Finding issues with clippy
 
 [Clippy](https://doc.rust-lang.org/clippy/) is a code analyser/linter detecting mistakes, and therefore helps to improve your code.
 Like formatting your code with `rustfmt`, running clippy regularly and before your Pull Request will help us maintain awesome code.
@@ -99,7 +98,7 @@ Like formatting your code with `rustfmt`, running clippy regularly and before yo
     cargo clippy
     ```
 
-### Change requirements
+## Change requirements
 
 Please consider the following when making a change:
 
@@ -124,7 +123,19 @@ Please consider the following when making a change:
 
 * Check out the [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/) for guidelines on designing the API.
 
-### Making a pull-request
+## Tests
+
+The main test harness is described in the [testsuite documentation](tests/testsuite/README.md). There are several different commands to run different kinds of tests:
+
+- `cargo test --workspace` — This runs all of the unit and integration tests, except for the GUI tests.
+- `cargo test --test gui` — This runs the [GUI test harness](#browser-compatibility-and-testing). This does not get run automatically due to its extra requirements.
+- `npm run lint` — [Checks the `.js` files](#checking-changes-in-js-files)
+- `cargo test --workspace --no-default-features` — Testing without default features helps check that all feature checks are implemented correctly.
+- `cargo clippy --workspace --all-targets --no-deps -- -D warnings` — This makes sure that there are no clippy warnings.
+- `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --document-private-items --no-deps` — This verifies that there aren't any rustdoc warnings.
+- `cargo fmt --check` — Verifies that everything is formatted correctly.
+
+## Making a pull-request
 
 When you feel comfortable that your changes could be integrated into mdBook, you can create a pull-request on GitHub.
 One of the core maintainers will then approve the changes or request some changes before it gets merged.
@@ -138,8 +149,45 @@ We generally strive to keep mdBook compatible with a relatively recent browser o
 That is, supporting Chrome, Safari, Firefox, Edge on Windows, macOS, Linux, iOS, and Android.
 If possible, do your best to avoid breaking older browser releases.
 
-Any change to the HTML or styling is encouraged to manually check on as many browsers and platforms that you can.
-Unfortunately at this time we don't have any automated UI or browser testing, so your assistance in testing is appreciated.
+GUI tests are checked with the GUI testsuite. To run it, you need to install `npm` first. Then run:
+
+```
+cargo test --test gui
+```
+
+If you want to only run some tests, you can filter them by passing (part of) their name:
+
+```
+cargo test --test gui -- search
+```
+
+The first time, it'll fail and ask you to install the `browser-ui-test` package. Install it with the provided
+command then re-run the tests.
+
+If you want to disable the headless mode, use the `--disable-headless-test` option:
+
+```
+cargo test --test gui -- --disable-headless-test
+```
+
+The GUI tests are in the directory `tests/gui` in text files with the `.goml` extension. These tests are run
+using a `node.js` framework called `browser-ui-test`. You can find documentation for this language on its
+[repository](https://github.com/GuillaumeGomez/browser-UI-test/blob/master/goml-script.md).
+
+### Checking changes in `.js` files
+
+The `.js` files source code is checked using [`eslint`](https://eslint.org/). This is a linter (just like `clippy` in Rust)
+for the Javascript language. You can install it with `npm` by running the following command:
+
+```
+npm install
+```
+
+Then you can run it using:
+
+```
+npm run lint
+```
 
 ## Updating highlight.js
 
@@ -148,7 +196,7 @@ The following are instructions for updating [highlight.js](https://highlightjs.o
 1. Clone the repository at <https://github.com/highlightjs/highlight.js>
 1. Check out a tagged release (like `10.1.1`).
 1. Run `npm install`
-1. Run `node tools/build.js :common apache armasm coffeescript d handlebars haskell http julia nginx nim properties r scala x86asm yaml`
+1. Run `node tools/build.js :common apache armasm coffeescript d handlebars haskell http julia nginx nim nix properties r scala x86asm yaml`
 1. Compare the language list that it spits out to the one in [`syntax-highlighting.md`](https://github.com/camelid/mdBook/blob/master/guide/src/format/theme/syntax-highlighting.md). If any are missing, add them to the list and rebuild (and update these docs). If any are added to the common set, add them to `syntax-highlighting.md`.
 1. Copy `build/highlight.min.js` to mdbook's directory [`highlight.js`](https://github.com/rust-lang/mdBook/blob/master/src/theme/highlight.js).
 1. Be sure to check the highlight.js [CHANGES](https://github.com/highlightjs/highlight.js/blob/main/CHANGES.md) for any breaking changes. Breaking changes that would affect users will need to wait until the next major release.

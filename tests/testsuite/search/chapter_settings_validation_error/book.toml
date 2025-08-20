@@ -1,0 +1,5 @@
+[book]
+title = "Search Test"
+
+[output.html.search.chapter]
+"does-not-exist" = { enable = false }

@@ -1,8 +1,8 @@
 use crate::get_book_dir;
-use clap::{arg, ArgMatches, Command as ClapCommand};
-use mdbook::config;
-use mdbook::errors::Result;
-use mdbook::MDBook;
+use anyhow::Result;
+use clap::{ArgMatches, Command as ClapCommand, arg};
+use mdbook_core::config;
+use mdbook_driver::MDBook;
 use std::io;
 use std::io::Write;
 use std::process::Command;
@@ -74,9 +74,9 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     if let Some(author) = get_author_name() {
         debug!("Obtained user name from gitconfig: {:?}", author);
         config.book.authors.push(author);
-        builder.with_config(config);
     }
 
+    builder.with_config(config);
     builder.build()?;
     println!("\nAll done, no errors...");
 

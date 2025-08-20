@@ -1,0 +1,13 @@
+// This GUI test checks that the sidebar takes the whole height when it's inside
+// an iframe (because of JS disabled).
+// Regression test for <https://github.com/rust-lang/mdBook/issues/2528>.
+
+// We disable javascript
+javascript: false
+go-to: |DOC_PATH| + "index.html"
+store-value: (height, 1000)
+set-window-size: (1000, |height|)
+
+within-iframe: (".sidebar-iframe-outer", block {
+    assert-size: (" body", {"height": |height|})
+})

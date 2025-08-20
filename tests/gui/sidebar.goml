@@ -1,0 +1,69 @@
+// This GUI test checks sidebar hide/show and also its behaviour on smaller
+// width.
+
+go-to: |DOC_PATH| + "index.html"
+set-window-size: (1100, 600)
+// Need to reload for the new size to be taken account by the JS.
+reload:
+
+store-value: (content_indent, 308)
+store-value: (sidebar_storage_value, "mdbook-sidebar")
+store-value: (sidebar_storage_hidden_value, "hidden")
+store-value: (sidebar_storage_displayed_value, "visible")
+
+define-function: (
+    "hide-sidebar",
+    [],
+    block {
+        assert-position: ("#page-wrapper", {"x": |content_indent|})
+
+        // We now hide the sidebar.
+        click: "#sidebar-toggle"
+        wait-for-css: ("#sidebar", {"display": "none"})
+        assert-local-storage: {|sidebar_storage_value|: |sidebar_storage_hidden_value|}
+    },
+)
+
+define-function: (
+    "show-sidebar",
+    [],
+    block {
+        assert-css: ("#sidebar", {"display": "none"})
+        assert-position: ("#page-wrapper", {"x": 0})
+
+        // We expand the sidebar.
+        click: "#sidebar-toggle"
+        wait-for-css-false: ("#sidebar", {"display": "none"})
+        // `transform` is 0.3s so we need to wait a bit (0.5s) to ensure the animation is done.
+        wait-for: 5000
+        assert-css-false: ("#sidebar", {"transform": "matrix(1, 0, 0, 1, -308, 0)"})
+        // The page content should be moved to the right.
+        assert-position: ("#page-wrapper", {"x": |content_indent|})
+        assert-local-storage: {|sidebar_storage_value|: |sidebar_storage_displayed_value|}
+    },
+)
+
+// Since the sidebar is visible, we should be able to find this text.
+assert-find-text: ("3.9. Links and Horizontal Rule", {"case-sensitive": true})
+call-function: ("hide-sidebar", {})
+// Text should not be findeable anymore since the sidebar is collapsed.
+assert-find-text-false: ("3.9. Links and Horizontal Rule", {"case-sensitive": true})
+call-function: ("show-sidebar", {})
+// We should be able to find this text again.
+assert-find-text: ("3.9. Links and Horizontal Rule", {"case-sensitive": true})
+
+// We now test on smaller width to ensure that the sidebar is collapsed by default.
+set-window-size: (900, 600)
+reload:
+call-function: ("show-sidebar", {})
+call-function: ("hide-sidebar", {})
+
+// We now test that if the sidebar is considered open and we reload the page, since
+// the width is small, it will still be collapsed.
+set-local-storage: {|sidebar_storage_value|: |sidebar_storage_displayed_value|}
+reload:
+// The stored value shouldn't have changed.
+assert-local-storage: {|sidebar_storage_value|: |sidebar_storage_displayed_value|}
+// But the sidebar should be hidden anyway.
+assert-css: ("#sidebar", {"display": "none"})
+assert-position: ("#page-wrapper", {"x": 0})

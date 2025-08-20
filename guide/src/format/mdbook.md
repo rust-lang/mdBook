@@ -4,7 +4,8 @@
 
 There is a feature in mdBook that lets you hide code lines by prepending them with a specific prefix.
 
-For the Rust language, you can use the `#` character as a prefix which will hide lines [like you would with Rustdoc][rustdoc-hide].
+For the Rust language, you can prefix lines with `# ` (`#` followed by a space) to hide them [like you would with Rustdoc][rustdoc-hide].
+This prefix can be escaped with `##` to prevent the hiding of a line that should begin with the literal string `# ` (see [Rustdoc's docs][rustdoc-hide] for more details)
 
 [rustdoc-hide]: https://doc.rust-lang.org/stable/rustdoc/write-documentation/documentation-tests.html#hiding-portions-of-the-example
 
@@ -70,7 +71,7 @@ nothidden():
 ```
 ~~~
 
-## Rust Playground
+## Rust playground
 
 Rust language code blocks will automatically get a play button (<i class="fa fa-play"></i>) which will execute the code and display the output just below the code block.
 This works by sending the code to the [Rust Playground].
@@ -112,16 +113,16 @@ panic!("oops!");
 These are particularly important when using [`mdbook test`] to test Rust examples.
 These use the same attributes as [rustdoc attributes], with a few additions:
 
-* `editable` — Enables the [editor].
-* `noplayground` — Removes the play button, but will still be tested.
-* `mdbook-runnable` — Forces the play button to be displayed.
+* `editable` --- Enables the [editor].
+* `noplayground` --- Removes the play button, but will still be tested.
+* `mdbook-runnable` --- Forces the play button to be displayed.
   This is intended to be combined with the `ignore` attribute for examples that should not be tested, but you want to allow the reader to run.
-* `ignore` — Will not be tested and no play button is shown, but it is still highlighted as Rust syntax.
-* `should_panic` — When executed, it should produce a panic.
-* `no_run` — The code is compiled when tested, but it is not run.
+* `ignore` --- Will not be tested and no play button is shown, but it is still highlighted as Rust syntax.
+* `should_panic` --- When executed, it should produce a panic.
+* `no_run` --- The code is compiled when tested, but it is not run.
   The play button is also not shown.
-* `compile_fail` — The code should fail to compile.
-* `edition2015`, `edition2018`, `edition2021` — Forces the use of a specific Rust edition.
+* `compile_fail` --- The code should fail to compile.
+* `edition2015`, `edition2018`, `edition2021`, `edition2024` --- Forces the use of a specific Rust edition.
   See [`rust.edition`] to set this globally.
 
 [`mdbook test`]: ../cli/test.md
@@ -362,3 +363,18 @@ fatigue," where people are trained to ignore them because they usually don't
 matter for what they're doing.
 
 </div>
+
+## Font-Awesome icons
+
+mdBook includes a copy of [Font Awesome Free's](https://fontawesome.com)
+MIT-licensed SVG files. It emulates the `<i>` syntax, but converts the results
+to inline SVG. Only the regular, solid, and brands icons are included; paid
+features like the light icons are not.
+
+For example, given this HTML syntax:
+
+```hbs
+The result looks like this: <i class="fas fa-print"></i>
+```
+
+The result looks like this: <i class="fas fa-print"></i>

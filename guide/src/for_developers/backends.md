@@ -1,4 +1,4 @@
-# Alternative Backends
+# Alternative backends
 
 A "backend" is simply a program which `mdbook` will invoke during the book
 rendering process. This program is passed a JSON representation of the book and
@@ -10,19 +10,19 @@ See [Configuring Renderers](../format/configuration/renderers.md) for more infor
 The community has developed several backends.
 See the [Third Party Plugins] wiki page for a list of available backends.
 
-## Setting Up
+## Setting up
 
 This page will step you through creating your own alternative backend in the form
 of a simple word counting program. Although it will be written in Rust, there's
 no reason why it couldn't be accomplished using something like Python or Ruby.
 
-First you'll want to create a new binary program and add `mdbook` as a
+First you'll want to create a new binary program and add `mdbook-renderer` as a
 dependency.
 
 ```shell
 $ cargo new --bin mdbook-wordcount
 $ cd mdbook-wordcount
-$ cargo add mdbook
+$ cargo add mdbook-renderer
 ```
 
 When our `mdbook-wordcount` plugin is invoked, `mdbook` will send it a JSON
@@ -33,10 +33,8 @@ This is all the boilerplate necessary for our backend to load the book.
 
 ```rust
 // src/main.rs
-extern crate mdbook;
-
 use std::io;
-use mdbook::renderer::RenderContext;
+use mdbook_renderer::RenderContext;
 
 fn main() {
     let mut stdin = io::stdin();
@@ -45,15 +43,14 @@ fn main() {
 ```
 
 > **Note:** The `RenderContext` contains a `version` field. This lets backends
-  figure out whether they are compatible with the version of `mdbook` it's being
-  called by. This `version` comes directly from the corresponding field in
-  `mdbook`'s `Cargo.toml`.
+> figure out whether they are compatible with the version of `mdbook` it's being
+> called by. This `version` comes directly from the corresponding field in
+> `mdbook`'s `Cargo.toml`.
+>
+> It is recommended that backends use the [`semver`] crate to inspect this field
+> and emit a warning if there may be a compatibility issue.
 
-  It is recommended that backends use the [`semver`] crate to inspect this field
-  and emit a warning if there may be a compatibility issue.
-
-
-## Inspecting the Book
+## Inspecting the book
 
 Now our backend has a copy of the book, lets count how many words are in each
 chapter!
@@ -82,7 +79,7 @@ fn count_words(ch: &Chapter) -> usize {
 ```
 
 
-## Enabling the Backend
+## Enabling the backend
 
 Now we've got the basics running, we want to actually use it. First, install the
 program.
@@ -183,9 +180,7 @@ $ cargo add serde serde_derive
 And then you can create the config struct,
 
 ```rust
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
+use serde_derive::{Serialize, Deserialize};
 
 ...
 
@@ -221,7 +216,7 @@ and then add a check to make sure we skip ignored chapters.
 ```
 
 
-## Output and Signalling Failure
+## Output and signalling failure
 
 While it's nice to print word counts to the terminal when a book is built, it
 might also be a good idea to output them to a file somewhere. `mdbook` tells a
@@ -287,7 +282,7 @@ like this:
 +             if cfg.deny_odds && num_words % 2 == 1 {
 +               eprintln!("{} has an odd number of words!", ch.name);
 +               process::exit(1);
-              }
++             }
           }
       }
   }
@@ -324,7 +319,7 @@ generation or a warning).
 All environment variables are passed through to the backend, allowing you to use
 the usual `RUST_LOG` to control logging verbosity.
 
-## Wrapping Up
+## Wrapping up
 
 Although contrived, hopefully this example was enough to show how you'd create
 an alternative backend for `mdbook`. If you feel it's missing something, don't
@@ -337,10 +332,10 @@ the source code or ask questions.
 
 
 [Third Party Plugins]: https://github.com/rust-lang/mdBook/wiki/Third-party-plugins
-[`RenderContext`]: https://docs.rs/mdbook/*/mdbook/renderer/struct.RenderContext.html
-[`RenderContext::from_json()`]: https://docs.rs/mdbook/*/mdbook/renderer/struct.RenderContext.html#method.from_json
+[`RenderContext`]: https://docs.rs/mdbook-renderer/latest/mdbook_renderer/struct.RenderContext.html
+[`RenderContext::from_json()`]: https://docs.rs/mdbook-renderer/latest/mdbook_renderer/struct.RenderContext.html#method.from_json
 [`semver`]: https://crates.io/crates/semver
-[`Book`]: https://docs.rs/mdbook/*/mdbook/book/struct.Book.html
-[`Book::iter()`]: https://docs.rs/mdbook/*/mdbook/book/struct.Book.html#method.iter
-[`Config`]: https://docs.rs/mdbook/*/mdbook/config/struct.Config.html
+[`Book`]: https://docs.rs/mdbook-renderer/latest/mdbook_renderer/book/struct.Book.html
+[`Book::iter()`]: https://docs.rs/mdbook-renderer/latest/mdbook_renderer/book/struct.Book.html#method.iter
+[`Config`]: https://docs.rs/mdbook-renderer/latest/mdbook_renderer/config/struct.Config.html
 [issue tracker]: https://github.com/rust-lang/mdBook/issues

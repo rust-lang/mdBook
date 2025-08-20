@@ -1,3 +1,7 @@
+//! The mdbook CLI.
+
+#![allow(unreachable_pub, reason = "not needed in a bin crate")]
+
 #[macro_use]
 extern crate clap;
 #[macro_use]
@@ -9,7 +13,7 @@ use clap::{Arg, ArgMatches, Command};
 use clap_complete::Shell;
 use env_logger::Builder;
 use log::LevelFilter;
-use mdbook::utils;
+use mdbook_core::utils;
 use std::env;
 use std::ffi::OsStr;
 use std::io::Write;

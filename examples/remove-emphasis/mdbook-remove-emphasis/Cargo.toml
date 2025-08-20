@@ -1,0 +1,15 @@
+[package]
+name = "mdbook-remove-emphasis"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+mdbook-preprocessor.workspace = true
+pulldown-cmark = { workspace = true, default-features = false }
+pulldown-cmark-to-cmark = "21.0.0"
+serde_json.workspace = true
+
+[[bin]]
+name = "mdbook-remove-emphasis"
+# This is tested through a separate test from the main package.
+test = false

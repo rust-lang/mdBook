@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "browser-ui-test": "0.21.1",
+    "eslint": "^8.57.1"
+  },
+  "scripts": {
+    "lint": "eslint crates/mdbook-html/front-end/*js crates/mdbook-html/front-end/**/*js",
+    "lint-fix": "eslint --fix crates/mdbook-html/front-end/*js crates/mdbook-html/front-end/**/*js"
+  }
+}

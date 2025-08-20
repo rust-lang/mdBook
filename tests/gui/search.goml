@@ -1,0 +1,76 @@
+// This tests basic search behavior.
+
+fail-on-js-error: true
+go-to: |DOC_PATH| + "index.html"
+
+define-function: (
+    "open-search",
+    [],
+    block {
+        assert-css: ("#search-wrapper", {"display": "none"})
+        press-key: 's'
+        wait-for-css-false: ("#search-wrapper", {"display": "none"})
+    }
+)
+
+call-function: ("open-search", {})
+assert-text: ("#searchresults-header", "")
+write: "strikethrough"
+wait-for-text: ("#searchresults-header", "2 search results for 'strikethrough':")
+// Close the search display
+press-key: 'Escape'
+wait-for-css: ("#search-wrapper", {"display": "none"})
+// Reopening the search should show the last value
+call-function: ("open-search", {})
+assert-text: ("#searchresults-header", "2 search results for 'strikethrough':")
+// Navigate to a sub-chapter
+go-to: "./individual/strikethrough.html"
+assert-text: ("#searchresults-header", "")
+call-function: ("open-search", {})
+write: "strikethrough"
+wait-for-text: ("#searchresults-header", "2 search results for 'strikethrough':")
+
+// Now we test search shortcuts and more page changes.
+go-to: |DOC_PATH| + "index.html"
+
+// This check is to ensure that the search bar is inside the search wrapper.
+assert: "#search-wrapper #searchbar"
+assert-css: ("#search-wrapper", {"display": "none"})
+
+// Now we make sure the search input appear with the `S` shortcut.
+press-key: 's'
+wait-for-css-false: ("#search-wrapper", {"display": "none"})
+// We ensure the search bar has the focus.
+assert: "#searchbar:focus"
+// Pressing a key will therefore update the search input.
+press-key: 't'
+assert-text: ("#searchbar", "t")
+
+// Now we press `Escape` to ensure that the search input disappears again.
+press-key: 'Escape'
+wait-for-css: ("#search-wrapper", {"display": "none"})
+
+// Making it appear by clicking on the search button.
+click: "#search-toggle"
+wait-for-css: ("#search-wrapper", {"display": "block"})
+// We ensure the search bar has the focus.
+assert: "#searchbar:focus"
+
+// We input "test".
+write: "test"
+// The results should now appear.
+wait-for-text: ("#searchresults-header", "search results for 'test':", ENDS_WITH)
+assert: "#searchresults"
+// Ensure that the URL was updated as well.
+assert-document-property: ({"URL": "?search=test"}, ENDS_WITH)
+
+// Now we ensure that when we land on the page with a "search in progress", the search results are
+// loaded and that the search input has focus.
+go-to: |DOC_PATH| + "index.html?search=test"
+wait-for-text: ("#searchresults-header", "search results for 'test':", ENDS_WITH)
+assert: "#searchbar:focus"
+assert: "#searchresults"
+
+// And now we press `Escape` to close everything.
+press-key: 'Escape'
+wait-for-css: ("#search-wrapper", {"display": "none"})

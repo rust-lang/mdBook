@@ -6,7 +6,7 @@ or [try out](https://spec.commonmark.org/dingus/) CommonMark in real time. A com
 this documentation, but below is a high level overview of some of the basics. For a more in-depth experience, check out the
 [Markdown Guide](https://www.markdownguide.org).
 
-## Text and Paragraphs
+## Text and paragraphs
 
 Text is rendered relatively predictably: 
 
@@ -75,15 +75,22 @@ Use [mdBook](https://github.com/rust-lang/mdBook).
 
 Read about [mdBook](mdbook.md).
 
+And now [an mdBook link] that is not inline, unlike the above.
+
 A bare url: <https://www.rust-lang.org>.
+
+[an mdBook link]: https://github.com/rust-lang/mdBook
 ```
 
 Use [mdBook](https://github.com/rust-lang/mdBook). 
 
 Read about [mdBook](mdbook.md).
 
+And now [an mdBook link] that is not inline, unlike the above.
+
 A bare url: <https://www.rust-lang.org>.
 
+[an mdBook link]: https://github.com/rust-lang/mdBook
 ----
 
 Relative links that end with `.md` will be converted to the `.html` extension.
@@ -214,12 +221,12 @@ characters:
 So, no need to manually enter those Unicode characters!
 
 This feature is disabled by default.
-To enable it, see the [`output.html.curly-quotes`] config option.
+To enable it, see the [`output.html.smart-punctuation`] config option.
 
 [strikethrough]: https://github.github.com/gfm/#strikethrough-extension-
 [tables]: https://github.github.com/gfm/#tables-extension-
 [task list extension]: https://github.github.com/gfm/#task-list-items-extension-
-[`output.html.curly-quotes`]: configuration/renderers.md#html-renderer-options
+[`output.html.smart-punctuation`]: configuration/renderers.md#html-renderer-options
 
 ### Heading attributes
 
@@ -232,4 +239,4 @@ Example:
 
 This makes the level 1 heading with the content `Example heading`, ID `first`, and classes `class1` and `class2`. Note that the attributes should be space-separated.
 
-More information can be found in the [heading attrs spec page](https://github.com/raphlinus/pulldown-cmark/blob/master/specs/heading_attrs.txt).
+More information can be found in the [heading attrs spec page](https://github.com/raphlinus/pulldown-cmark/blob/master/pulldown-cmark/specs/heading_attrs.txt).

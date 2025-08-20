@@ -1,13 +1,15 @@
+//! A basic example of a preprocessor that does nothing.
+
 use crate::nop_lib::Nop;
 use clap::{Arg, ArgMatches, Command};
-use mdbook::book::Book;
-use mdbook::errors::Error;
-use mdbook::preprocess::{CmdPreprocessor, Preprocessor, PreprocessorContext};
+use mdbook_preprocessor::book::Book;
+use mdbook_preprocessor::errors::Result;
+use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use semver::{Version, VersionReq};
 use std::io;
 use std::process;
 
-pub fn make_app() -> Command {
+fn make_app() -> Command {
     Command::new("nop-preprocessor")
         .about("A mdbook preprocessor which does precisely nothing")
         .subcommand(
@@ -26,23 +28,23 @@ fn main() {
     if let Some(sub_args) = matches.subcommand_matches("supports") {
         handle_supports(&preprocessor, sub_args);
     } else if let Err(e) = handle_preprocessing(&preprocessor) {
-        eprintln!("{}", e);
+        eprintln!("{e:?}");
         process::exit(1);
     }
 }
 
-fn handle_preprocessing(pre: &dyn Preprocessor) -> Result<(), Error> {
-    let (ctx, book) = CmdPreprocessor::parse_input(io::stdin())?;
+fn handle_preprocessing(pre: &dyn Preprocessor) -> Result<()> {
+    let (ctx, book) = mdbook_preprocessor::parse_input(io::stdin())?;
 
     let book_version = Version::parse(&ctx.mdbook_version)?;
-    let version_req = VersionReq::parse(mdbook::MDBOOK_VERSION)?;
+    let version_req = VersionReq::parse(mdbook_preprocessor::MDBOOK_VERSION)?;
 
     if !version_req.matches(&book_version) {
         eprintln!(
             "Warning: The {} plugin was built against version {} of mdbook, \
              but we're being called from version {}",
             pre.name(),
-            mdbook::MDBOOK_VERSION,
+            mdbook_preprocessor::MDBOOK_VERSION,
             ctx.mdbook_version
         );
     }
@@ -57,7 +59,7 @@ fn handle_supports(pre: &dyn Preprocessor, sub_args: &ArgMatches) -> ! {
     let renderer = sub_args
         .get_one::<String>("renderer")
         .expect("Required argument");
-    let supported = pre.supports_renderer(renderer);
+    let supported = pre.supports_renderer(renderer).unwrap();
 
     // Signal whether the renderer is supported by exiting with 1 or 0.
     if supported {
@@ -69,6 +71,7 @@ fn handle_supports(pre: &dyn Preprocessor, sub_args: &ArgMatches) -> ! {
 
 /// The actual implementation of the `Nop` preprocessor. This would usually go
 /// in your main `lib.rs` file.
+#[allow(unreachable_pub, reason = "wouldn't be a problem in a proper lib.rs")]
 mod nop_lib {
     use super::*;
 
@@ -86,21 +89,24 @@ mod nop_lib {
             "nop-preprocessor"
         }
 
-        fn run(&self, ctx: &PreprocessorContext, book: Book) -> Result<Book, Error> {
+        fn run(&self, ctx: &PreprocessorContext, book: Book) -> Result<Book> {
             // In testing we want to tell the preprocessor to blow up by setting a
             // particular config value
-            if let Some(nop_cfg) = ctx.config.get_preprocessor(self.name()) {
-                if nop_cfg.contains_key("blow-up") {
-                    anyhow::bail!("Boom!!1!");
-                }
+            match ctx
+                .config
+                .get::<bool>("preprocessor.nop-preprocessor.blow-up")
+            {
+                Ok(Some(true)) => anyhow::bail!("Boom!!1!"),
+                Ok(_) => {}
+                Err(e) => anyhow::bail!("expect bool for blow-up: {e}"),
             }
 
             // we *are* a no-op preprocessor after all
             Ok(book)
         }
 
-        fn supports_renderer(&self, renderer: &str) -> bool {
-            renderer != "not-supported"
+        fn supports_renderer(&self, renderer: &str) -> Result<bool> {
+            Ok(renderer != "not-supported")
         }
     }
 
@@ -117,7 +123,6 @@ mod nop_lib {
                         "book": {
                             "authors": ["AUTHOR"],
                             "language": "en",
-                            "multilingual": false,
                             "src": "src",
                             "title": "TITLE"
                         },
@@ -141,13 +146,12 @@ mod nop_lib {
                                 "parent_names": []
                             }
                         }
-                    ],
-                    "__non_exhaustive": null
+                    ]
                 }
             ]"##;
             let input_json = input_json.as_bytes();
 
-            let (ctx, book) = mdbook::preprocess::CmdPreprocessor::parse_input(input_json).unwrap();
+            let (ctx, book) = mdbook_preprocessor::parse_input(input_json).unwrap();
             let expected_book = book.clone();
             let result = Nop::new().run(&ctx, book);
             assert!(result.is_ok());

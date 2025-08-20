@@ -9,6 +9,7 @@ guide/book
 .vscode
 tests/dummy_book/book/
 test_book/book/
+tests/testsuite/*/*/book/
 
 # Ignore Jetbrains specific files.
 .idea/
@@ -16,3 +17,8 @@ test_book/book/
 # Ignore Vim temporary and swap files.
 *.sw?
 *~
+
+# GUI tests
+node_modules
+package-lock.json
+package.json

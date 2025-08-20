@@ -1,0 +1,36 @@
+// This tests pressing the left and right arrows moving to previous and next page.
+
+go-to: |DOC_PATH| + "index.html"
+
+// default page is the first numbered page
+assert-text: ("title", "Introduction - mdBook test book")
+
+// Moving left we get to the prefix page
+press-key: 'ArrowLeft'
+assert-text: ("title", "Prefix Chapter - mdBook test book")
+
+// Trying to move to the left beyond the prefix pages - nothing changes
+press-key: 'ArrowLeft'
+assert-text: ("title", "Prefix Chapter - mdBook test book")
+
+// Back to the main page
+press-key: 'ArrowRight'
+assert-text: ("title", "Introduction - mdBook test book")
+
+press-key: 'ArrowRight'
+assert-text: ("title", "Markdown Individual tags - mdBook test book")
+
+press-key: 'ArrowRight'
+assert-text: ("title", "Heading - mdBook test book")
+
+// Last numbered page
+go-to: "../rust/rust_codeblock.html"
+assert-text: ("title", "Rust Codeblocks - mdBook test book")
+
+// Go to the suffix chapter
+press-key: 'ArrowRight'
+assert-text: ("title", "Suffix Chapter - mdBook test book")
+
+// Try to go beyond the last page
+press-key: 'ArrowRight'
+assert-text: ("title", "Suffix Chapter - mdBook test book")

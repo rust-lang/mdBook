@@ -1,4 +1,4 @@
-# Reading Books
+# Reading books
 
 This chapter gives an introduction on how to interact with a book produced by mdBook.
 This assumes you are reading an HTML book.
@@ -30,26 +30,26 @@ The icons displayed will depend on the settings of how the book was generated.
 
 | Icon | Description |
 |------|-------------|
-| <i class="fa fa-bars"></i> | Opens and closes the chapter listing sidebar. |
-| <i class="fa fa-paint-brush"></i> | Opens a picker to choose a different color theme. |
-| <i class="fa fa-search"></i> | Opens a search bar for searching within the book. |
-| <i class="fa fa-print"></i> | Instructs the web browser to print the entire book. |
-| <i class="fa fa-github"></i> | Opens a link to the website that hosts the source code of the book. |
-| <i class="fa fa-edit"></i> | Opens a page to directly edit the source of the page you are currently reading. |
+| <i class="fas fa-bars"></i> | Opens and closes the chapter listing sidebar. |
+| <i class="fas fa-paintbrush"></i> | Opens a picker to choose a different color theme. |
+| <i class="fas fa-magnifying-glass"></i> | Opens a search bar for searching within the book. |
+| <i class="fas fa-print"></i> | Instructs the web browser to print the entire book. |
+| <i class="fab fa-github"></i> | Opens a link to the website that hosts the source code of the book. |
+| <i class="fas fa-pencil"></i> | Opens a page to directly edit the source of the page you are currently reading. |
 
 Tapping the menu bar will scroll the page to the top.
 
 ## Search
 
 Each book has a built-in search system.
-Pressing the search icon (<i class="fa fa-search"></i>) in the menu bar, or pressing the `S` key on the keyboard will open an input box for entering search terms.
+Pressing the search icon (<i class="fa fa-search"></i>) in the menu bar, or pressing the <kbd>/</kbd> or <kbd>S</kbd> key on the keyboard will open an input box for entering search terms.
 Typing some terms will show matching chapters and sections in real time.
 
 Clicking any of the results will jump to that section.
 The up and down arrow keys can be used to navigate the results, and enter will open the highlighted section.
 
 After loading a search result, the matching search terms will be highlighted in the text.
-Clicking a highlighted word or pressing the `Esc` key will remove the highlighting.
+Clicking a highlighted word or pressing the <kbd>Escape</kbd> key will remove the highlighting.
 
 ## Code blocks
 
@@ -59,9 +59,9 @@ Code blocks may contain several different icons for interacting with them:
 | Icon | Description |
 |------|-------------|
 | <i class="fa fa-copy"></i> | Copies the code block into your local clipboard, to allow pasting into another application. |
-| <i class="fa fa-play"></i> | For Rust code examples, this will execute the sample code and display the compiler output just below the example (see [playground]). |
+| <i class="fas fa-play"></i> | For Rust code examples, this will execute the sample code and display the compiler output just below the example (see [playground]). |
 | <i class="fa fa-eye"></i> | For Rust code examples, this will toggle visibility of "hidden" lines. Sometimes, larger examples will hide lines which are not particularly relevant to what is being illustrated (see [hiding code lines]). |
-| <i class="fa fa-history"></i> | For [editable code examples][editor], this will undo any changes you have made. |
+| <i class="fas fa-clock-rotate-left"></i> | For [editable code examples][editor], this will undo any changes you have made. |
 
 Here's an example:
 
