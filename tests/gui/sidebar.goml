@@ -15,11 +15,11 @@ define-function: (
     "hide-sidebar",
     [],
     block {
-        assert-position: ("#page-wrapper", {"x": |content_indent|})
+        assert-position: ("#mdbook-page-wrapper", {"x": |content_indent|})
 
         // We now hide the sidebar.
-        click: "#sidebar-toggle"
-        wait-for-css: ("#sidebar", {"display": "none"})
+        click: "#mdbook-sidebar-toggle"
+        wait-for-css: ("#mdbook-sidebar", {"display": "none"})
         assert-local-storage: {|sidebar_storage_value|: |sidebar_storage_hidden_value|}
     },
 )
@@ -28,17 +28,17 @@ define-function: (
     "show-sidebar",
     [],
     block {
-        assert-css: ("#sidebar", {"display": "none"})
-        assert-position: ("#page-wrapper", {"x": 0})
+        assert-css: ("#mdbook-sidebar", {"display": "none"})
+        assert-position: ("#mdbook-page-wrapper", {"x": 0})
 
         // We expand the sidebar.
-        click: "#sidebar-toggle"
-        wait-for-css-false: ("#sidebar", {"display": "none"})
+        click: "#mdbook-sidebar-toggle"
+        wait-for-css-false: ("#mdbook-sidebar", {"display": "none"})
         // `transform` is 0.3s so we need to wait a bit (0.5s) to ensure the animation is done.
         wait-for: 5000
-        assert-css-false: ("#sidebar", {"transform": "matrix(1, 0, 0, 1, -308, 0)"})
+        assert-css-false: ("#mdbook-sidebar", {"transform": "matrix(1, 0, 0, 1, -308, 0)"})
         // The page content should be moved to the right.
-        assert-position: ("#page-wrapper", {"x": |content_indent|})
+        assert-position: ("#mdbook-page-wrapper", {"x": |content_indent|})
         assert-local-storage: {|sidebar_storage_value|: |sidebar_storage_displayed_value|}
     },
 )
@@ -65,5 +65,5 @@ reload:
 // The stored value shouldn't have changed.
 assert-local-storage: {|sidebar_storage_value|: |sidebar_storage_displayed_value|}
 // But the sidebar should be hidden anyway.
-assert-css: ("#sidebar", {"display": "none"})
-assert-position: ("#page-wrapper", {"x": 0})
+assert-css: ("#mdbook-sidebar", {"display": "none"})
+assert-position: ("#mdbook-page-wrapper", {"x": 0})

@@ -1,0 +1,35 @@
+// Basic theme switcher test.
+
+debug: true
+
+go-to: |DOC_PATH| + "index.html"
+
+// TODO: Dark mode is automatic, how to check that here?
+assert-css: ("#mdbook-theme-list", {"display": "none"})
+click: "#mdbook-theme-toggle"
+assert-css: ("#mdbook-theme-list", {"display": "block"})
+click: "#mdbook-theme-rust"
+assert-attribute: ("html", {"class": "js rust"})
+// Clicking a theme doesn't dismiss the popup.
+assert-css: ("#mdbook-theme-list", {"display": "block"})
+assert-local-storage: {"mdbook-theme": "rust"}
+
+// Dismiss via toggle.
+click: "#mdbook-theme-toggle"
+assert-css: ("#mdbook-theme-list", {"display": "none"})
+
+// Check for dismissal for click outside.
+click: "#mdbook-theme-toggle"
+assert-css: ("#mdbook-theme-list", {"display": "block"})
+click: "main"
+assert-css: ("#mdbook-theme-list", {"display": "none"})
+
+// Check for escape.
+click: "#mdbook-theme-toggle"
+assert-css: ("#mdbook-theme-list", {"display": "block"})
+press-key: 'Escape'
+assert-css: ("#mdbook-theme-list", {"display": "none"})
+
+// Check for navigation retains theme.
+go-to: "./rust/rust_codeblock.html"
+assert-attribute: ("html", {"class": "rust js"})

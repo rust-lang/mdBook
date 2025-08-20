@@ -309,23 +309,23 @@ aria-label="Show hidden lines"></button>';
 
 (function themes() {
     const html = document.querySelector('html');
-    const themeToggleButton = document.getElementById('theme-toggle');
-    const themePopup = document.getElementById('theme-list');
+    const themeToggleButton = document.getElementById('mdbook-theme-toggle');
+    const themePopup = document.getElementById('mdbook-theme-list');
     const themeColorMetaTag = document.querySelector('meta[name="theme-color"]');
     const themeIds = [];
     themePopup.querySelectorAll('button.theme').forEach(function(el) {
         themeIds.push(el.id);
     });
     const stylesheets = {
-        ayuHighlight: document.querySelector('#ayu-highlight-css'),
-        tomorrowNight: document.querySelector('#tomorrow-night-css'),
-        highlight: document.querySelector('#highlight-css'),
+        ayuHighlight: document.querySelector('#mdbook-ayu-highlight-css'),
+        tomorrowNight: document.querySelector('#mdbook-tomorrow-night-css'),
+        highlight: document.querySelector('#mdbook-highlight-css'),
     };
 
     function showThemes() {
         themePopup.style.display = 'block';
         themeToggleButton.setAttribute('aria-expanded', true);
-        themePopup.querySelector('button#' + get_theme()).focus();
+        themePopup.querySelector('button#mdbook-theme-' + get_theme()).focus();
     }
 
     function updateThemeSelected() {
@@ -333,10 +333,10 @@ aria-label="Show hidden lines"></button>';
             el.classList.remove('theme-selected');
         });
         const selected = get_saved_theme() ?? 'default_theme';
-        let element = themePopup.querySelector('button#' + selected);
+        let element = themePopup.querySelector('button#mdbook-theme-' + selected);
         if (element === null) {
             // Fall back in case there is no "Default" item.
-            element = themePopup.querySelector('button#' + get_theme());
+            element = themePopup.querySelector('button#mdbook-theme-' + get_theme());
         }
         element.classList.add('theme-selected');
     }
@@ -363,7 +363,7 @@ aria-label="Show hidden lines"></button>';
 
     function get_theme() {
         const theme = get_saved_theme();
-        if (theme === null || theme === undefined || !themeIds.includes(theme)) {
+        if (theme === null || theme === undefined || !themeIds.includes('mdbook-theme-' + theme)) {
             if (typeof default_dark_theme === 'undefined') {
                 // A customized index.hbs might not define this, so fall back to
                 // old behavior of determining the default on page load.
@@ -448,6 +448,8 @@ aria-label="Show hidden lines"></button>';
         } else {
             return;
         }
+        theme = theme.replace(/^mdbook-theme-/, '');
+
         if (theme === 'default_theme' || theme === null) {
             delete_saved_theme();
             set_theme(get_theme(), false);
@@ -518,11 +520,11 @@ aria-label="Show hidden lines"></button>';
 })();
 
 (function sidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const sidebarLinks = document.querySelectorAll('#sidebar a');
-    const sidebarToggleButton = document.getElementById('sidebar-toggle');
-    const sidebarResizeHandle = document.getElementById('sidebar-resize-handle');
-    const sidebarCheckbox = document.getElementById('sidebar-toggle-anchor');
+    const sidebar = document.getElementById('mdbook-sidebar');
+    const sidebarLinks = document.querySelectorAll('#mdbook-sidebar a');
+    const sidebarToggleButton = document.getElementById('mdbook-sidebar-toggle');
+    const sidebarResizeHandle = document.getElementById('mdbook-sidebar-resize-handle');
+    const sidebarCheckbox = document.getElementById('mdbook-sidebar-toggle-anchor');
     let firstContact = null;
 
 
@@ -783,7 +785,7 @@ aria-label="Show hidden lines"></button>';
 })();
 
 (function controllMenu() {
-    const menu = document.getElementById('menu-bar');
+    const menu = document.getElementById('mdbook-menu-bar');
 
     (function controllPosition() {
         let scrollTop = document.scrollingElement.scrollTop;
