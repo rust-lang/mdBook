@@ -52,13 +52,13 @@ class MDBookSidebarScrollbox extends HTMLElement {
             this.scrollTop = sidebarScrollTop;
         } else {
             // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
-            var activeSection = document.querySelector('#sidebar .active');
+            var activeSection = document.querySelector('#mdbook-sidebar .active');
             if (activeSection) {
                 activeSection.scrollIntoView({ block: 'center' });
             }
         }
         // Toggle buttons
-        var sidebarAnchorToggles = document.querySelectorAll('#sidebar a.toggle');
+        var sidebarAnchorToggles = document.querySelectorAll('#mdbook-sidebar a.toggle');
         function toggleSection(ev) {
             ev.currentTarget.parentElement.classList.toggle('expanded');
         }

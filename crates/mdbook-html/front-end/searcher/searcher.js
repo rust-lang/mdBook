@@ -21,14 +21,14 @@ window.search = window.search || {};
         };
     }
 
-    const search_wrap = document.getElementById('search-wrapper'),
-        searchbar_outer = document.getElementById('searchbar-outer'),
-        searchbar = document.getElementById('searchbar'),
-        searchresults = document.getElementById('searchresults'),
-        searchresults_outer = document.getElementById('searchresults-outer'),
-        searchresults_header = document.getElementById('searchresults-header'),
-        searchicon = document.getElementById('search-toggle'),
-        content = document.getElementById('content'),
+    const search_wrap = document.getElementById('mdbook-search-wrapper'),
+        searchbar_outer = document.getElementById('mdbook-searchbar-outer'),
+        searchbar = document.getElementById('mdbook-searchbar'),
+        searchresults = document.getElementById('mdbook-searchresults'),
+        searchresults_outer = document.getElementById('mdbook-searchresults-outer'),
+        searchresults_header = document.getElementById('mdbook-searchresults-header'),
+        searchicon = document.getElementById('mdbook-search-toggle'),
+        content = document.getElementById('mdbook-content'),
 
         // SVG text elements don't render if inside a <mark> tag.
         mark_exclude = ['text'],
@@ -154,8 +154,9 @@ window.search = window.search || {};
         const encoded_search = encodeURIComponent(searchterms.join(' ')).replace(/'/g, '%27');
 
         return '<a href="' + path_to_root + url[0] + '?' + URL_MARK_PARAM + '=' + encoded_search
-            + '#' + url[1] + '" aria-details="teaser_' + teaser_count + '">'
-            + result.doc.breadcrumbs + '</a>' + '<span class="teaser" id="teaser_' + teaser_count
+            + '#' + url[1] + '" aria-details="mdbook-teaser_' + teaser_count + '">'
+            + result.doc.breadcrumbs + '</a>'
+            + '<span class="teaser" id="mdbook-teaser_' + teaser_count
             + '" aria-label="Search Result Teaser">' + teaser + '</span>';
     }
 
@@ -437,7 +438,7 @@ window.search = window.search || {};
             loadSearchScript(
                 window.path_to_searchindex_js ||
                 path_to_root + '{{ resource "searchindex.js" }}',
-                'search-index');
+                'mdbook-search-index');
             search_wrap.classList.remove('hidden');
             searchicon.setAttribute('aria-expanded', 'true');
         } else {
