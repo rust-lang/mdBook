@@ -417,7 +417,7 @@ pub enum RustEdition {
 }
 
 /// Configuration for the HTML renderer.
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct HtmlConfig {
@@ -483,6 +483,35 @@ pub struct HtmlConfig {
     /// If this option is turned on, "cache bust" static files by adding
     /// hashes to their file names.
     pub hash_files: bool,
+}
+
+impl Default for HtmlConfig {
+    fn default() -> HtmlConfig {
+        HtmlConfig {
+            theme: None,
+            default_theme: None,
+            preferred_dark_theme: None,
+            smart_punctuation: true,
+            mathjax_support: false,
+            additional_css: Vec::new(),
+            additional_js: Vec::new(),
+            fold: Fold::default(),
+            playground: Playground::default(),
+            code: Code::default(),
+            print: Print::default(),
+            no_section_label: false,
+            search: None,
+            git_repository_url: None,
+            git_repository_icon: None,
+            input_404: None,
+            site_url: None,
+            cname: None,
+            edit_url_template: None,
+            live_reload_endpoint: None,
+            redirect: HashMap::new(),
+            hash_files: false,
+        }
+    }
 }
 
 impl HtmlConfig {

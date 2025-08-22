@@ -220,8 +220,8 @@ characters:
 
 So, no need to manually enter those Unicode characters!
 
-This feature is disabled by default.
-To enable it, see the [`output.html.smart-punctuation`] config option.
+This feature is enabled by default.
+To disable it, see the [`output.html.smart-punctuation`] config option.
 
 [strikethrough]: https://github.github.com/gfm/#strikethrough-extension-
 [tables]: https://github.github.com/gfm/#tables-extension-
