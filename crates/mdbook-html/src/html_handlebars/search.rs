@@ -6,6 +6,7 @@ use log::{debug, warn};
 use mdbook_core::book::{Book, BookItem, Chapter};
 use mdbook_core::config::{Search, SearchChapterSettings};
 use mdbook_core::utils;
+use mdbook_markdown::HtmlRenderOptions;
 use mdbook_markdown::new_cmark_parser;
 use pulldown_cmark::*;
 use serde::Serialize;
@@ -133,7 +134,8 @@ fn render_item(
         .with_context(|| "Could not convert HTML path to str")?;
     let anchor_base = utils::fs::normalize_path(filepath);
 
-    let mut p = new_cmark_parser(&chapter.content, false).peekable();
+    let options = HtmlRenderOptions::new(&chapter_path);
+    let mut p = new_cmark_parser(&chapter.content, &options.markdown_options).peekable();
 
     let mut in_heading = false;
     let max_section_depth = u32::from(search_config.heading_split_level);

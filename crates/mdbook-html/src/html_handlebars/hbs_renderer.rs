@@ -8,7 +8,7 @@ use mdbook_core::book::{Book, BookItem, Chapter};
 use mdbook_core::config::{BookConfig, Code, Config, HtmlConfig, Playground, RustEdition};
 use mdbook_core::utils;
 use mdbook_core::utils::fs::get_404_output_file;
-use mdbook_markdown::{render_markdown, render_markdown_with_path};
+use mdbook_markdown::render_markdown;
 use mdbook_renderer::{RenderContext, Renderer};
 use regex::{Captures, Regex};
 use serde_json::json;
@@ -56,10 +56,10 @@ impl HtmlHandlebars {
                 .insert("git_repository_edit_url".to_owned(), json!(edit_url));
         }
 
-        let content = render_markdown(&ch.content, ctx.html_config.smart_punctuation);
-
-        let fixed_content =
-            render_markdown_with_path(&ch.content, ctx.html_config.smart_punctuation, Some(path));
+        let mut options = crate::html_render_options_from_config(path, &ctx.html_config);
+        let content = render_markdown(&ch.content, &options);
+        options.for_print = true;
+        let fixed_content = render_markdown(&ch.content, &options);
         if prev_ch.is_some() && ctx.html_config.print.page_break {
             // Add page break between chapters
             // See https://developer.mozilla.org/en-US/docs/Web/CSS/break-before and https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-before
@@ -193,7 +193,8 @@ impl HtmlHandlebars {
                     .to_string()
             }
         };
-        let html_content_404 = render_markdown(&content_404, html_config.smart_punctuation);
+        let options = crate::html_render_options_from_config(Path::new("404.md"), html_config);
+        let html_content_404 = render_markdown(&content_404, &options);
 
         let mut data_404 = data.clone();
         let base_url = if let Some(site_url) = &html_config.site_url {

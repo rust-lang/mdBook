@@ -16,26 +16,28 @@ fn escaped_special() {
 
 #[test]
 fn preserves_external_links() {
+    let options = HtmlRenderOptions::new(&Path::new(""));
     assert_eq!(
-        render_markdown("[example](https://www.rust-lang.org/)", false),
+        render_markdown("[example](https://www.rust-lang.org/)", &options),
         "<p><a href=\"https://www.rust-lang.org/\">example</a></p>\n"
     );
 }
 
 #[test]
 fn it_can_adjust_markdown_links() {
+    let options = HtmlRenderOptions::new(&Path::new(""));
     assert_eq!(
-        render_markdown("[example](example.md)", false),
+        render_markdown("[example](example.md)", &options),
         "<p><a href=\"example.html\">example</a></p>\n"
     );
     assert_eq!(
-        render_markdown("[example_anchor](example.md#anchor)", false),
+        render_markdown("[example_anchor](example.md#anchor)", &options),
         "<p><a href=\"example.html#anchor\">example_anchor</a></p>\n"
     );
 
     // this anchor contains 'md' inside of it
     assert_eq!(
-        render_markdown("[phantom data](foo.html#phantomdata)", false),
+        render_markdown("[phantom data](foo.html#phantomdata)", &options),
         "<p><a href=\"foo.html#phantomdata\">phantom data</a></p>\n"
     );
 }
@@ -53,12 +55,14 @@ fn it_can_wrap_tables() {
 </tbody></table>
 </div>
 "#.trim();
-    assert_eq!(render_markdown(src, false), out);
+    let options = HtmlRenderOptions::new(&Path::new(""));
+    assert_eq!(render_markdown(src, &options), out);
 }
 
 #[test]
 fn it_can_keep_quotes_straight() {
-    assert_eq!(render_markdown("'one'", false), "<p>'one'</p>\n");
+    let options = HtmlRenderOptions::new(&Path::new(""));
+    assert_eq!(render_markdown("'one'", &options), "<p>'one'</p>\n");
 }
 
 #[test]
@@ -74,7 +78,9 @@ fn it_can_make_quotes_curly_except_when_they_are_in_code() {
 </code></pre>
 <p><code>'three'</code> ‘four’</p>
 "#;
-    assert_eq!(render_markdown(input, true), expected);
+    let mut options = HtmlRenderOptions::new(&Path::new(""));
+    options.markdown_options.smart_punctuation = true;
+    assert_eq!(render_markdown(input, &options), expected);
 }
 
 #[test]
@@ -96,8 +102,10 @@ more text with spaces
 </code></pre>
 <p>more text with spaces</p>
 "#;
-    assert_eq!(render_markdown(input, false), expected);
-    assert_eq!(render_markdown(input, true), expected);
+    let mut options = HtmlRenderOptions::new(&Path::new(""));
+    assert_eq!(render_markdown(input, &options), expected);
+    options.markdown_options.smart_punctuation = true;
+    assert_eq!(render_markdown(input, &options), expected);
 }
 
 #[test]
@@ -109,8 +117,10 @@ fn rust_code_block_properties_are_passed_as_space_delimited_class() {
 
     let expected = r#"<pre><code class="language-rust,no_run,should_panic,property_3"></code></pre>
 "#;
-    assert_eq!(render_markdown(input, false), expected);
-    assert_eq!(render_markdown(input, true), expected);
+    let mut options = HtmlRenderOptions::new(&Path::new(""));
+    assert_eq!(render_markdown(input, &options), expected);
+    options.markdown_options.smart_punctuation = true;
+    assert_eq!(render_markdown(input, &options), expected);
 }
 
 #[test]
@@ -122,8 +132,10 @@ fn rust_code_block_properties_with_whitespace_are_passed_as_space_delimited_clas
 
     let expected = r#"<pre><code class="language-rust,,,,,no_run,,,should_panic,,,,property_3"></code></pre>
 "#;
-    assert_eq!(render_markdown(input, false), expected);
-    assert_eq!(render_markdown(input, true), expected);
+    let mut options = HtmlRenderOptions::new(&Path::new(""));
+    assert_eq!(render_markdown(input, &options), expected);
+    options.markdown_options.smart_punctuation = true;
+    assert_eq!(render_markdown(input, &options), expected);
 }
 
 #[test]
@@ -135,13 +147,17 @@ fn rust_code_block_without_properties_has_proper_html_class() {
 
     let expected = r#"<pre><code class="language-rust"></code></pre>
 "#;
-    assert_eq!(render_markdown(input, false), expected);
-    assert_eq!(render_markdown(input, true), expected);
+    let mut options = HtmlRenderOptions::new(&Path::new(""));
+    assert_eq!(render_markdown(input, &options), expected);
+    options.markdown_options.smart_punctuation = true;
+    assert_eq!(render_markdown(input, &options), expected);
 
     let input = r#"
 ```rust
 ```
 "#;
-    assert_eq!(render_markdown(input, false), expected);
-    assert_eq!(render_markdown(input, true), expected);
+    let mut options = HtmlRenderOptions::new(&Path::new(""));
+    assert_eq!(render_markdown(input, &options), expected);
+    options.markdown_options.smart_punctuation = true;
+    assert_eq!(render_markdown(input, &options), expected);
 }
