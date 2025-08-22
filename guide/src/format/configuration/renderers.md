@@ -123,7 +123,7 @@ The following configuration options are available:
   CSS media query. Defaults to `navy`.
 - **smart-punctuation:** Converts quotes to curly quotes, `...` to `…`, `--` to en-dash, and `---` to em-dash.
   See [Smart Punctuation](../markdown.md#smart-punctuation).
-  Defaults to `false`.
+  Defaults to `true`.
 - **mathjax-support:** Adds support for [MathJax](../mathjax.md). Defaults to
   `false`.
 - **additional-css:** If you need to slightly change the appearance of your book

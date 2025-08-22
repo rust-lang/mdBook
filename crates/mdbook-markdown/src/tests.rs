@@ -61,7 +61,8 @@ fn it_can_wrap_tables() {
 
 #[test]
 fn it_can_keep_quotes_straight() {
-    let options = HtmlRenderOptions::new(&Path::new(""));
+    let mut options = HtmlRenderOptions::new(&Path::new(""));
+    options.markdown_options.smart_punctuation = false;
     assert_eq!(render_markdown("'one'", &options), "<p>'one'</p>\n");
 }
 
@@ -78,8 +79,7 @@ fn it_can_make_quotes_curly_except_when_they_are_in_code() {
 </code></pre>
 <p><code>'three'</code> ‘four’</p>
 "#;
-    let mut options = HtmlRenderOptions::new(&Path::new(""));
-    options.markdown_options.smart_punctuation = true;
+    let options = HtmlRenderOptions::new(&Path::new(""));
     assert_eq!(render_markdown(input, &options), expected);
 }
 
@@ -102,9 +102,7 @@ more text with spaces
 </code></pre>
 <p>more text with spaces</p>
 "#;
-    let mut options = HtmlRenderOptions::new(&Path::new(""));
-    assert_eq!(render_markdown(input, &options), expected);
-    options.markdown_options.smart_punctuation = true;
+    let options = HtmlRenderOptions::new(&Path::new(""));
     assert_eq!(render_markdown(input, &options), expected);
 }
 
@@ -117,9 +115,7 @@ fn rust_code_block_properties_are_passed_as_space_delimited_class() {
 
     let expected = r#"<pre><code class="language-rust,no_run,should_panic,property_3"></code></pre>
 "#;
-    let mut options = HtmlRenderOptions::new(&Path::new(""));
-    assert_eq!(render_markdown(input, &options), expected);
-    options.markdown_options.smart_punctuation = true;
+    let options = HtmlRenderOptions::new(&Path::new(""));
     assert_eq!(render_markdown(input, &options), expected);
 }
 
@@ -132,9 +128,7 @@ fn rust_code_block_properties_with_whitespace_are_passed_as_space_delimited_clas
 
     let expected = r#"<pre><code class="language-rust,,,,,no_run,,,should_panic,,,,property_3"></code></pre>
 "#;
-    let mut options = HtmlRenderOptions::new(&Path::new(""));
-    assert_eq!(render_markdown(input, &options), expected);
-    options.markdown_options.smart_punctuation = true;
+    let options = HtmlRenderOptions::new(&Path::new(""));
     assert_eq!(render_markdown(input, &options), expected);
 }
 
@@ -147,17 +141,13 @@ fn rust_code_block_without_properties_has_proper_html_class() {
 
     let expected = r#"<pre><code class="language-rust"></code></pre>
 "#;
-    let mut options = HtmlRenderOptions::new(&Path::new(""));
-    assert_eq!(render_markdown(input, &options), expected);
-    options.markdown_options.smart_punctuation = true;
+    let options = HtmlRenderOptions::new(&Path::new(""));
     assert_eq!(render_markdown(input, &options), expected);
 
     let input = r#"
 ```rust
 ```
 "#;
-    let mut options = HtmlRenderOptions::new(&Path::new(""));
-    assert_eq!(render_markdown(input, &options), expected);
-    options.markdown_options.smart_punctuation = true;
+    let options = HtmlRenderOptions::new(&Path::new(""));
     assert_eq!(render_markdown(input, &options), expected);
 }

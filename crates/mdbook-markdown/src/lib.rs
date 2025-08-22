@@ -23,14 +23,23 @@ pub use pulldown_cmark;
 mod tests;
 
 /// Options for parsing markdown.
-#[derive(Default)]
 #[non_exhaustive]
 pub struct MarkdownOptions {
     /// Enables smart punctuation.
     ///
     /// Converts quotes to curly quotes, `...` to `…`, `--` to en-dash, and
     /// `---` to em-dash.
+    ///
+    /// This is `true` by default.
     pub smart_punctuation: bool,
+}
+
+impl Default for MarkdownOptions {
+    fn default() -> MarkdownOptions {
+        MarkdownOptions {
+            smart_punctuation: true,
+        }
+    }
 }
 
 /// Options for converting markdown to HTML.
