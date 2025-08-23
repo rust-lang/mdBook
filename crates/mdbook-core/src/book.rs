@@ -11,9 +11,9 @@ mod tests;
 
 /// A tree structure representing a book.
 ///
-/// For the moment a book is just a collection of [`BookItems`] which are
-/// accessible by either iterating (immutably) over the book with [`iter()`], or
-/// recursively applying a closure to each section to mutate the chapters, using
+/// A book is just a collection of [`BookItems`] which are accessible by
+/// either iterating (immutably) over the book with [`iter()`], or recursively
+/// applying a closure to each item to mutate the chapters, using
 /// [`for_each_mut()`].
 ///
 /// [`iter()`]: #method.iter
@@ -21,8 +21,8 @@ mod tests;
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]
 pub struct Book {
-    /// The sections in this book.
-    pub sections: Vec<BookItem>,
+    /// The items in this book.
+    pub items: Vec<BookItem>,
 }
 
 impl Book {
@@ -33,13 +33,13 @@ impl Book {
 
     /// Creates a new book with the given items.
     pub fn new_with_items(items: Vec<BookItem>) -> Book {
-        Book { sections: items }
+        Book { items }
     }
 
     /// Get a depth-first iterator over the items in the book.
     pub fn iter(&self) -> BookItems<'_> {
         BookItems {
-            items: self.sections.iter().collect(),
+            items: self.items.iter().collect(),
         }
     }
 
@@ -55,12 +55,12 @@ impl Book {
     where
         F: FnMut(&mut BookItem),
     {
-        for_each_mut(&mut func, &mut self.sections);
+        for_each_mut(&mut func, &mut self.items);
     }
 
     /// Append a `BookItem` to the `Book`.
     pub fn push_item<I: Into<BookItem>>(&mut self, item: I) -> &mut Self {
-        self.sections.push(item.into());
+        self.items.push(item.into());
         self
     }
 }

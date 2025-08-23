@@ -26,7 +26,7 @@ fn book_iter_iterates_over_sequential_items() {
     ];
     let book = Book::new_with_items(items);
 
-    let should_be: Vec<_> = book.sections.iter().collect();
+    let should_be: Vec<_> = book.items.iter().collect();
 
     let got: Vec<_> = book.iter().collect();
 

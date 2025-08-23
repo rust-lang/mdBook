@@ -167,7 +167,7 @@ fn backends_receive_render_context_via_stdin() {
         str![[r##"
 {
   "book": {
-    "sections": [
+    "items": [
       {
         "Chapter": {
           "content": "# Chapter 1\n",

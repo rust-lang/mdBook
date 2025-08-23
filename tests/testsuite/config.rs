@@ -54,7 +54,7 @@ fn preprocessor_cfg_from_env() {
             let mut s = String::new();
             std::io::stdin().read_to_string(&mut s).unwrap();
             std::fs::write("out.txt", s).unwrap();
-            println!("{{\"sections\": []}}");
+            println!("{{\"items\": []}}");
         }
         "#,
     )

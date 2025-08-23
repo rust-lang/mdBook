@@ -38,7 +38,7 @@ pub(super) fn create_files(
         .add_field_with_tokenizer("breadcrumbs", Box::new(&tokenize))
         .build();
 
-    let mut doc_urls = Vec::with_capacity(book.sections.len());
+    let mut doc_urls = Vec::with_capacity(book.items.len());
 
     let chapter_configs = sort_search_config(&search_config.chapter);
     validate_chapter_config(&chapter_configs, book)?;

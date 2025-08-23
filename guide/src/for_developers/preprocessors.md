@@ -91,7 +91,7 @@ if __name__ == '__main__':
     # load both the context and the book representations from stdin
     context, book = json.load(sys.stdin)
     # and now, we can just modify the content of the first chapter
-    book['sections'][0]['Chapter']['content'] = '# Hello'
+    book['items'][0]['Chapter']['content'] = '# Hello'
     # we are done with the book's modification, we can just print it to stdout, 
     print(json.dumps(book))
 ```
