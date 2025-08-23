@@ -6,6 +6,9 @@ use std::fmt::{self, Display, Formatter};
 use std::ops::{Deref, DerefMut};
 use std::path::PathBuf;
 
+#[cfg(test)]
+mod tests;
+
 /// A tree structure representing a book.
 ///
 /// For the moment a book is just a collection of [`BookItems`] which are
