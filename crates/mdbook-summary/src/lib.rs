@@ -601,9 +601,9 @@ impl<'a> SummaryParser<'a> {
     }
 }
 
-fn update_section_numbers(sections: &mut [SummaryItem], level: usize, by: u32) {
-    for section in sections {
-        if let SummaryItem::Link(ref mut link) = *section {
+fn update_section_numbers(items: &mut [SummaryItem], level: usize, by: u32) {
+    for item in items {
+        if let SummaryItem::Link(ref mut link) = *item {
             if let Some(ref mut number) = link.number {
                 number[level] += by;
             }

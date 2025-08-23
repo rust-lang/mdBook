@@ -134,7 +134,7 @@ mod nop_lib {
                     "mdbook_version": "0.4.21"
                 },
                 {
-                    "sections": [
+                    "items": [
                         {
                             "Chapter": {
                                 "name": "Chapter 1",

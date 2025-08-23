@@ -284,8 +284,8 @@ And here is some \
             PathBuf::from("chapter_1.md"),
             vec![],
         );
-        let sections = vec![BookItem::Chapter(chapter)];
-        let should_be = Book::new_with_items(sections);
+        let items = vec![BookItem::Chapter(chapter)];
+        let should_be = Book::new_with_items(items);
 
         let got = load_book_from_disk(&summary, temp.path()).unwrap();
 

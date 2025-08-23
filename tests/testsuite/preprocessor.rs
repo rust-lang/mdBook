@@ -115,7 +115,7 @@ fn relative_command_path() {
             let mut s = String::new();
             std::io::stdin().read_to_string(&mut s).unwrap();
             std::fs::write("preprocessor-ran", "test").unwrap();
-            println!("{{\"sections\": []}}");
+            println!("{{\"items\": []}}");
         }
         "#,
     )
