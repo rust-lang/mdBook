@@ -1094,6 +1094,19 @@ mod tests {
     }
 
     #[test]
+    #[should_panic(
+        expected = "unknown variant `1999`, expected one of `2024`, `2021`, `2018`, `2015`\n"
+    )]
+    fn invalid_rust_edition_expected() {
+        let src = r#"
+        [rust]
+        edition = "1999"
+        "#;
+
+        Config::from_str(src).unwrap();
+    }
+
+    #[test]
     fn print_config() {
         let src = r#"
         [output.html.print]
