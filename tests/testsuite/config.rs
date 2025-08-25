@@ -182,3 +182,28 @@ unknown field `foo`, expected one of `title`, `authors`, `description`, `src`, `
 "#]]);
         });
 }
+
+// An invalid key in the main rust table.
+#[test]
+fn bad_config_in_rust_table() {
+    BookTest::init(|_| {})
+        .change_file(
+            "book.toml",
+            "[rust]\n\
+             title = \"bad-config\"\n",
+        )
+        .run("build", |cmd| {
+            cmd.expect_failure()
+                .expect_stdout(str![[""]])
+                .expect_stderr(str![[r#"
+[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Invalid configuration file
+[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: TOML parse error at line 2, column 1
+  |
+2 | title = "bad-config"
+  | ^^^^^
+unknown field `title`, expected `edition`
+
+
+"#]]);
+        });
+}
