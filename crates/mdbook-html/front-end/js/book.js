@@ -85,7 +85,6 @@ function playground_text(playground, hidden = true) {
         const re = /extern\s+crate\s+([a-zA-Z_0-9]+)\s*;/g;
         const snippet_crates = [];
         let item;
-        // eslint-disable-next-line no-cond-assign
         while (item = re.exec(txt)) {
             snippet_crates.push(item[1]);
         }
@@ -351,7 +350,7 @@ aria-label="Show hidden lines"></button>';
         let theme = null;
         try {
             theme = localStorage.getItem('mdbook-theme');
-        } catch (e) {
+        } catch {
             // ignore error.
         }
         return theme;
@@ -412,7 +411,7 @@ aria-label="Show hidden lines"></button>';
         if (store) {
             try {
                 localStorage.setItem('mdbook-theme', theme);
-            } catch (e) {
+            } catch {
                 // ignore error.
             }
         }
@@ -560,7 +559,7 @@ aria-label="Show hidden lines"></button>';
         sidebar.setAttribute('aria-hidden', false);
         try {
             localStorage.setItem('mdbook-sidebar', 'visible');
-        } catch (e) {
+        } catch {
             // Ignore error.
         }
     }
@@ -574,7 +573,7 @@ aria-label="Show hidden lines"></button>';
         sidebar.setAttribute('aria-hidden', true);
         try {
             localStorage.setItem('mdbook-sidebar', 'hidden');
-        } catch (e) {
+        } catch {
             // Ignore error.
         }
     }
