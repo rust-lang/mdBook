@@ -4,7 +4,7 @@
     "eslint": "^9.34.0"
   },
   "scripts": {
-    "lint": "eslint --no-warn-ignored crates/mdbook-html/front-end/*js crates/mdbook-html/front-end/**/*js",
+    "lint": "eslint --no-warn-ignored crates/mdbook-html/front-end/*js crates/mdbook-html/front-end/**/*js crates/mdbook-html/front-end/**/*js.hbs",
     "lint-fix": "eslint --fix crates/mdbook-html/front-end/*js crates/mdbook-html/front-end/**/*js"
   }
 }

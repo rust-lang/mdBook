@@ -1,5 +1,27 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 
+// Custom preprocessor to strip Handlebars templates.
+const handlebarsPreprocessor = {
+    processors: {
+        "handlebars-js": {
+            preprocess(text, filename) {
+                if (filename.endsWith('.hbs')) {
+                    // This is a really dumb strip, which will likely not work
+                    // for more complex expressions, but for our use is good
+                    // enough for now.
+                    return [text.replace(/\{\{.*?\}\}/g, '')];
+                }
+                return [text];
+            },
+            postprocess(messages, filename) {
+                // Ideally this would update the locations so that they would
+                // compensate for the removed ranges.
+                return [].concat(...messages);
+            },
+        },
+    },
+};
+
 export default defineConfig([
     globalIgnores(["**/**min.js", "**/highlight.js", "**/playground_editor/*"]),
     {
@@ -68,5 +90,9 @@ export default defineConfig([
             "no-var": "error",
             eqeqeq: "error",
         },
+    },
+    {
+        files: ["**/*.js.hbs"],
+        processor: handlebarsPreprocessor.processors["handlebars-js"],
     },
 ]);
