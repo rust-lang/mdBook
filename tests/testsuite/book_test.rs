@@ -152,7 +152,7 @@ impl BookTest {
         self
     }
 
-    /// Checks that the given file contains the given string somewhere.
+    /// Checks that the given file contains the given [`snapbox::Assert`] pattern somewhere.
     ///
     /// The path can use glob-style wildcards, but it must match only a single file.
     #[track_caller]
@@ -162,10 +162,8 @@ impl BookTest {
         }
         let path = glob_one(&self.dir, path_pattern);
         let actual = read_to_string(&path);
-        assert!(
-            actual.contains(expected),
-            "Did not find {expected:?} in {path:?}\n\n{actual}",
-        );
+        let expected = format!("...\n[..]{expected}[..]\n...\n");
+        self.assert.eq(actual, expected);
         self
     }
 
