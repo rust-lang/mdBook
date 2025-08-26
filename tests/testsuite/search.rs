@@ -6,8 +6,8 @@ use snapbox::file;
 use std::path::Path;
 
 fn read_book_index(root: &Path) -> serde_json::Value {
-    let index = root.join("book/searchindex.js");
-    let index = read_to_string(index);
+    let index_path = glob_one(root, "book/searchindex*.js");
+    let index = read_to_string(&index_path);
     let index =
         index.trim_start_matches("window.search = Object.assign(window.search, JSON.parse('");
     let index = index.trim_end_matches("'));");
@@ -87,7 +87,7 @@ fn reasonable_search_index() {
 #[test]
 fn search_index_hasnt_changed_accidentally() {
     BookTest::from_dir("search/reasonable_search_index").check_file(
-        "book/searchindex.js",
+        "book/searchindex*.js",
         file!["search/reasonable_search_index/expected_index.js"],
     );
 }

@@ -482,6 +482,8 @@ pub struct HtmlConfig {
     pub redirect: HashMap<String, String>,
     /// If this option is turned on, "cache bust" static files by adding
     /// hashes to their file names.
+    ///
+    /// The default is `true`.
     pub hash_files: bool,
 }
 
@@ -509,7 +511,7 @@ impl Default for HtmlConfig {
             edit_url_template: None,
             live_reload_endpoint: None,
             redirect: HashMap::new(),
-            hash_files: false,
+            hash_files: true,
         }
     }
 }

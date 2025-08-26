@@ -165,7 +165,7 @@ The following configuration options are available:
   For example, `css/chrome.css` may become `css/chrome-9b8f428e.css`.
   Chapter HTML files are not renamed.
   Static CSS and JS files can reference each other using `{{ resource "filename" }}` directives.
-  Defaults to `false` (in a future release, this may change to `true`).
+  Defaults to `true`.
 
 [custom domain]: https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site
 

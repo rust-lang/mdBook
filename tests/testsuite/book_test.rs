@@ -124,8 +124,8 @@ impl BookTest {
     /// Returns the summary contents from `toc.js`.
     #[track_caller]
     pub fn toc_js_html(&self) -> String {
-        let full_path = self.dir.join("book/toc.js");
-        let actual = read_to_string(&full_path);
+        let toc_path = glob_one(&self.dir, "book/toc*.js");
+        let actual = read_to_string(&toc_path);
         let inner = actual
             .lines()
             .filter_map(|line| {

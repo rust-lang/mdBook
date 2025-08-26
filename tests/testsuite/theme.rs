@@ -48,24 +48,24 @@ This is a modified index.hbs!
 #[test]
 fn default_fonts() {
     BookTest::init(|_| {})
-        .check_file_contains("book/index.html", "fonts/fonts.css")
+        .check_file_contains("book/index.html", "fonts/fonts-[..].css")
         .check_file_list(
             "book/fonts",
             str![[r#"
 book/fonts/OPEN-SANS-LICENSE.txt
 book/fonts/SOURCE-CODE-PRO-LICENSE.txt
-book/fonts/fonts.css
-book/fonts/open-sans-v17-all-charsets-300.woff2
-book/fonts/open-sans-v17-all-charsets-300italic.woff2
-book/fonts/open-sans-v17-all-charsets-600.woff2
-book/fonts/open-sans-v17-all-charsets-600italic.woff2
-book/fonts/open-sans-v17-all-charsets-700.woff2
-book/fonts/open-sans-v17-all-charsets-700italic.woff2
-book/fonts/open-sans-v17-all-charsets-800.woff2
-book/fonts/open-sans-v17-all-charsets-800italic.woff2
-book/fonts/open-sans-v17-all-charsets-italic.woff2
-book/fonts/open-sans-v17-all-charsets-regular.woff2
-book/fonts/source-code-pro-v11-all-charsets-500.woff2
+book/fonts/fonts-[..].css
+book/fonts/open-sans-v17-all-charsets-300-[..].woff2
+book/fonts/open-sans-v17-all-charsets-300italic-[..].woff2
+book/fonts/open-sans-v17-all-charsets-600-[..].woff2
+book/fonts/open-sans-v17-all-charsets-600italic-[..].woff2
+book/fonts/open-sans-v17-all-charsets-700-[..].woff2
+book/fonts/open-sans-v17-all-charsets-700italic-[..].woff2
+book/fonts/open-sans-v17-all-charsets-800-[..].woff2
+book/fonts/open-sans-v17-all-charsets-800italic-[..].woff2
+book/fonts/open-sans-v17-all-charsets-italic-[..].woff2
+book/fonts/open-sans-v17-all-charsets-regular-[..].woff2
+book/fonts/source-code-pro-v11-all-charsets-500-[..].woff2
 "#]],
         );
 }
@@ -76,7 +76,7 @@ fn theme_fonts_copied() {
     BookTest::init(|bb| {
         bb.copy_theme(true);
     })
-    .check_file_contains("book/index.html", "fonts/fonts.css")
+    .check_file_contains("book/index.html", "fonts/fonts-[..].css")
     .check_file_list(
         "theme/fonts",
         str![[r#"
@@ -96,23 +96,25 @@ theme/fonts/open-sans-v17-all-charsets-regular.woff2
 theme/fonts/source-code-pro-v11-all-charsets-500.woff2
 "#]],
     )
+    // Note that license files get hashed, which is not like the behavior when
+    // the theme directory is empty. It kinda makes sense, but is weird.
     .check_file_list(
         "book/fonts",
         str![[r#"
-book/fonts/OPEN-SANS-LICENSE.txt
-book/fonts/SOURCE-CODE-PRO-LICENSE.txt
-book/fonts/fonts.css
-book/fonts/open-sans-v17-all-charsets-300.woff2
-book/fonts/open-sans-v17-all-charsets-300italic.woff2
-book/fonts/open-sans-v17-all-charsets-600.woff2
-book/fonts/open-sans-v17-all-charsets-600italic.woff2
-book/fonts/open-sans-v17-all-charsets-700.woff2
-book/fonts/open-sans-v17-all-charsets-700italic.woff2
-book/fonts/open-sans-v17-all-charsets-800.woff2
-book/fonts/open-sans-v17-all-charsets-800italic.woff2
-book/fonts/open-sans-v17-all-charsets-italic.woff2
-book/fonts/open-sans-v17-all-charsets-regular.woff2
-book/fonts/source-code-pro-v11-all-charsets-500.woff2
+book/fonts/OPEN-SANS-LICENSE-[..].txt
+book/fonts/SOURCE-CODE-PRO-LICENSE-[..].txt
+book/fonts/fonts-[..].css
+book/fonts/open-sans-v17-all-charsets-300-[..].woff2
+book/fonts/open-sans-v17-all-charsets-300italic-[..].woff2
+book/fonts/open-sans-v17-all-charsets-600-[..].woff2
+book/fonts/open-sans-v17-all-charsets-600italic-[..].woff2
+book/fonts/open-sans-v17-all-charsets-700-[..].woff2
+book/fonts/open-sans-v17-all-charsets-700italic-[..].woff2
+book/fonts/open-sans-v17-all-charsets-800-[..].woff2
+book/fonts/open-sans-v17-all-charsets-800italic-[..].woff2
+book/fonts/open-sans-v17-all-charsets-italic-[..].woff2
+book/fonts/open-sans-v17-all-charsets-regular-[..].woff2
+book/fonts/source-code-pro-v11-all-charsets-500-[..].woff2
 "#]],
     );
 }
@@ -121,20 +123,20 @@ book/fonts/source-code-pro-v11-all-charsets-500.woff2
 #[test]
 fn fonts_css() {
     BookTest::from_dir("theme/fonts_css")
-        .check_file_contains("book/index.html", "fonts/fonts.css")
+        .check_file_contains("book/index.html", "fonts/fonts-[..].css")
         .check_file(
-            "book/fonts/fonts.css",
+            "book/fonts/fonts-*.css",
             str![[r#"
 /*custom*/
 
 "#]],
         )
-        .check_file("book/fonts/myfont.woff", str![[""]])
+        .check_file("book/fonts/myfont-*.woff", str![[""]])
         .check_file_list(
             "book/fonts",
             str![[r#"
-book/fonts/fonts.css
-book/fonts/myfont.woff
+book/fonts/fonts-[..].css
+book/fonts/myfont-[..].woff
 "#]],
         );
 }
@@ -167,12 +169,12 @@ fn custom_fonts_css() {
 
 "#]]);
         })
-        .check_file_contains("book/index.html", "fonts.css")
+        .check_file_contains("book/index.html", "fonts-[..].css")
         .check_file_list(
             "book/fonts",
             str![[r#"
-book/fonts/fonts.css
-book/fonts/myfont.woff
+book/fonts/fonts-[..].css
+book/fonts/myfont-[..].woff
 "#]],
         );
 }
