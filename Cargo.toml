@@ -35,6 +35,7 @@ elasticlunr-rs = "3.0.2"
 env_logger = "0.11.8"
 font-awesome-as-a-crate = "0.3.0"
 futures-util = "0.3.31"
+glob = "0.3.3"
 handlebars = "6.3.2"
 hex = "0.4.3"
 indexmap = "2.10.0"
@@ -118,6 +119,7 @@ tokio = { workspace = true, features = ["macros", "rt-multi-thread"], optional =
 tower-http = { workspace = true, features = ["fs", "trace"], optional = true }
 
 [dev-dependencies]
+glob.workspace = true
 regex.workspace = true
 select.workspace = true
 semver.workspace = true

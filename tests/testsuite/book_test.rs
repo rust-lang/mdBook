@@ -139,24 +139,28 @@ impl BookTest {
     }
 
     /// Checks that the contents of the given file matches the expected value.
+    ///
+    /// The path can use glob-style wildcards, but it must match only a single file.
     #[track_caller]
-    pub fn check_file(&mut self, path: &str, expected: impl IntoData) -> &mut Self {
+    pub fn check_file(&mut self, path_pattern: &str, expected: impl IntoData) -> &mut Self {
         if !self.built {
             self.build();
         }
-        let path = self.dir.join(path);
+        let path = glob_one(&self.dir, path_pattern);
         let actual = read_to_string(&path);
         self.assert.eq(actual, expected);
         self
     }
 
     /// Checks that the given file contains the given string somewhere.
+    ///
+    /// The path can use glob-style wildcards, but it must match only a single file.
     #[track_caller]
-    pub fn check_file_contains(&mut self, path: &str, expected: &str) -> &mut Self {
+    pub fn check_file_contains(&mut self, path_pattern: &str, expected: &str) -> &mut Self {
         if !self.built {
             self.build();
         }
-        let path = self.dir.join(path);
+        let path = glob_one(&self.dir, path_pattern);
         let actual = read_to_string(&path);
         assert!(
             actual.contains(expected),
@@ -170,12 +174,14 @@ impl BookTest {
     /// Beware that using this is fragile, as it may be unable to catch
     /// regressions (it can't tell the difference between success, or the
     /// string being looked for changed).
+    ///
+    /// The path can use glob-style wildcards, but it must match only a single file.
     #[track_caller]
-    pub fn check_file_doesnt_contain(&mut self, path: &str, string: &str) -> &mut Self {
+    pub fn check_file_doesnt_contain(&mut self, path_pattern: &str, string: &str) -> &mut Self {
         if !self.built {
             self.build();
         }
-        let path = self.dir.join(path);
+        let path = glob_one(&self.dir, path_pattern);
         let actual = read_to_string(&path);
         assert!(
             !actual.contains(string),
@@ -510,4 +516,22 @@ pub fn read_to_string<P: AsRef<Path>>(path: P) -> String {
     std::fs::read_to_string(path)
         .with_context(|| format!("could not read file {path:?}"))
         .unwrap()
+}
+
+/// Returns the first path from the given glob pattern.
+pub fn glob_one<P: AsRef<Path>>(path: P, pattern: &str) -> PathBuf {
+    let path = path.as_ref();
+    let mut matches = glob::glob(path.join(pattern).to_str().unwrap()).unwrap();
+    let Some(first) = matches.next() else {
+        panic!("expected at least one file at `{path:?}` with pattern `{pattern}`, found none");
+    };
+    let first = first.unwrap();
+    if let Some(next) = matches.next() {
+        panic!(
+            "expected only one file for pattern `{pattern}` in `{path:?}`, \
+             found `{first:?}` and `{:?}`",
+            next.unwrap()
+        );
+    }
+    first
 }
