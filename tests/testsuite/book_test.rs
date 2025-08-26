@@ -1,5 +1,6 @@
 //! Utility for building and running tests against mdbook.
 
+use anyhow::Context;
 use mdbook_driver::MDBook;
 use mdbook_driver::init::BookBuilder;
 use snapbox::IntoData;
@@ -91,6 +92,7 @@ impl BookTest {
     ///
     /// Normally the contents outside of the `<main>` tag aren't interesting,
     /// and they add a significant amount of noise.
+    #[track_caller]
     pub fn check_main_file(&mut self, path: &str, expected: impl IntoData) -> &mut Self {
         if !self.built {
             self.build();
@@ -107,6 +109,7 @@ impl BookTest {
     }
 
     /// Checks the summary contents of `toc.js` against the expected value.
+    #[track_caller]
     pub fn check_toc_js(&mut self, expected: impl IntoData) -> &mut Self {
         if !self.built {
             self.build();
@@ -119,6 +122,7 @@ impl BookTest {
     }
 
     /// Returns the summary contents from `toc.js`.
+    #[track_caller]
     pub fn toc_js_html(&self) -> String {
         let full_path = self.dir.join("book/toc.js");
         let actual = read_to_string(&full_path);
@@ -135,6 +139,7 @@ impl BookTest {
     }
 
     /// Checks that the contents of the given file matches the expected value.
+    #[track_caller]
     pub fn check_file(&mut self, path: &str, expected: impl IntoData) -> &mut Self {
         if !self.built {
             self.build();
@@ -146,6 +151,7 @@ impl BookTest {
     }
 
     /// Checks that the given file contains the given string somewhere.
+    #[track_caller]
     pub fn check_file_contains(&mut self, path: &str, expected: &str) -> &mut Self {
         if !self.built {
             self.build();
@@ -164,6 +170,7 @@ impl BookTest {
     /// Beware that using this is fragile, as it may be unable to catch
     /// regressions (it can't tell the difference between success, or the
     /// string being looked for changed).
+    #[track_caller]
     pub fn check_file_doesnt_contain(&mut self, path: &str, string: &str) -> &mut Self {
         if !self.built {
             self.build();
@@ -178,6 +185,7 @@ impl BookTest {
     }
 
     /// Checks that the list of files at the given path matches the given value.
+    #[track_caller]
     pub fn check_file_list(&mut self, path: &str, expected: impl IntoData) -> &mut Self {
         let mut all_paths: Vec<_> = walkdir::WalkDir::new(&self.dir.join(path))
             .into_iter()
@@ -499,5 +507,7 @@ fn assert(root: &Path) -> snapbox::Assert {
 #[track_caller]
 pub fn read_to_string<P: AsRef<Path>>(path: P) -> String {
     let path = path.as_ref();
-    std::fs::read_to_string(path).unwrap_or_else(|e| panic!("could not read file {path:?}: {e:?}"))
+    std::fs::read_to_string(path)
+        .with_context(|| format!("could not read file {path:?}"))
+        .unwrap()
 }
