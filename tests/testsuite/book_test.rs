@@ -1,5 +1,6 @@
 //! Utility for building and running tests against mdbook.
 
+use anyhow::Context;
 use mdbook_driver::MDBook;
 use mdbook_driver::init::BookBuilder;
 use snapbox::IntoData;
@@ -91,6 +92,7 @@ impl BookTest {
     ///
     /// Normally the contents outside of the `<main>` tag aren't interesting,
     /// and they add a significant amount of noise.
+    #[track_caller]
     pub fn check_main_file(&mut self, path: &str, expected: impl IntoData) -> &mut Self {
         if !self.built {
             self.build();
@@ -107,6 +109,7 @@ impl BookTest {
     }
 
     /// Checks the summary contents of `toc.js` against the expected value.
+    #[track_caller]
     pub fn check_toc_js(&mut self, expected: impl IntoData) -> &mut Self {
         if !self.built {
             self.build();
@@ -119,6 +122,7 @@ impl BookTest {
     }
 
     /// Returns the summary contents from `toc.js`.
+    #[track_caller]
     pub fn toc_js_html(&self) -> String {
         let full_path = self.dir.join("book/toc.js");
         let actual = read_to_string(&full_path);
@@ -135,27 +139,31 @@ impl BookTest {
     }
 
     /// Checks that the contents of the given file matches the expected value.
-    pub fn check_file(&mut self, path: &str, expected: impl IntoData) -> &mut Self {
+    ///
+    /// The path can use glob-style wildcards, but it must match only a single file.
+    #[track_caller]
+    pub fn check_file(&mut self, path_pattern: &str, expected: impl IntoData) -> &mut Self {
         if !self.built {
             self.build();
         }
-        let path = self.dir.join(path);
+        let path = glob_one(&self.dir, path_pattern);
         let actual = read_to_string(&path);
         self.assert.eq(actual, expected);
         self
     }
 
-    /// Checks that the given file contains the given string somewhere.
-    pub fn check_file_contains(&mut self, path: &str, expected: &str) -> &mut Self {
+    /// Checks that the given file contains the given [`snapbox::Assert`] pattern somewhere.
+    ///
+    /// The path can use glob-style wildcards, but it must match only a single file.
+    #[track_caller]
+    pub fn check_file_contains(&mut self, path_pattern: &str, expected: &str) -> &mut Self {
         if !self.built {
             self.build();
         }
-        let path = self.dir.join(path);
+        let path = glob_one(&self.dir, path_pattern);
         let actual = read_to_string(&path);
-        assert!(
-            actual.contains(expected),
-            "Did not find {expected:?} in {path:?}\n\n{actual}",
-        );
+        let expected = format!("...\n[..]{expected}[..]\n...\n");
+        self.assert.eq(actual, expected);
         self
     }
 
@@ -164,11 +172,14 @@ impl BookTest {
     /// Beware that using this is fragile, as it may be unable to catch
     /// regressions (it can't tell the difference between success, or the
     /// string being looked for changed).
-    pub fn check_file_doesnt_contain(&mut self, path: &str, string: &str) -> &mut Self {
+    ///
+    /// The path can use glob-style wildcards, but it must match only a single file.
+    #[track_caller]
+    pub fn check_file_doesnt_contain(&mut self, path_pattern: &str, string: &str) -> &mut Self {
         if !self.built {
             self.build();
         }
-        let path = self.dir.join(path);
+        let path = glob_one(&self.dir, path_pattern);
         let actual = read_to_string(&path);
         assert!(
             !actual.contains(string),
@@ -178,6 +189,7 @@ impl BookTest {
     }
 
     /// Checks that the list of files at the given path matches the given value.
+    #[track_caller]
     pub fn check_file_list(&mut self, path: &str, expected: impl IntoData) -> &mut Self {
         let mut all_paths: Vec<_> = walkdir::WalkDir::new(&self.dir.join(path))
             .into_iter()
@@ -499,5 +511,25 @@ fn assert(root: &Path) -> snapbox::Assert {
 #[track_caller]
 pub fn read_to_string<P: AsRef<Path>>(path: P) -> String {
     let path = path.as_ref();
-    std::fs::read_to_string(path).unwrap_or_else(|e| panic!("could not read file {path:?}: {e:?}"))
+    std::fs::read_to_string(path)
+        .with_context(|| format!("could not read file {path:?}"))
+        .unwrap()
+}
+
+/// Returns the first path from the given glob pattern.
+pub fn glob_one<P: AsRef<Path>>(path: P, pattern: &str) -> PathBuf {
+    let path = path.as_ref();
+    let mut matches = glob::glob(path.join(pattern).to_str().unwrap()).unwrap();
+    let Some(first) = matches.next() else {
+        panic!("expected at least one file at `{path:?}` with pattern `{pattern}`, found none");
+    };
+    let first = first.unwrap();
+    if let Some(next) = matches.next() {
+        panic!(
+            "expected only one file for pattern `{pattern}` in `{path:?}`, \
+             found `{first:?}` and `{:?}`",
+            next.unwrap()
+        );
+    }
+    first
 }
