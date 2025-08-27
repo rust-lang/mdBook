@@ -730,3 +730,21 @@ html:not(.sidebar-resizing) .sidebar {
     /* mdbook's margin for h2 is way too large. */
     margin: 10px;
 }
+
+.current-header {
+    /* Allows the circle positioning. */
+    position: relative
+}
+
+/* Places a circle just before the current header in the sidebar. */
+.current-header::before {
+    content: '';
+    position: absolute;
+    left: -16px;
+    top: 0;
+    margin-top: 10px;
+    width: 8px;
+    height: 8px;
+    background-color: var(--sidebar-active);
+    border-radius: 50%;
+}

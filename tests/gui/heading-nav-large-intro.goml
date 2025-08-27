@@ -1,0 +1,15 @@
+// When there is a large intro, there shouldn't be any "current" headers until
+// you scroll down and make it visible on screen.
+
+set-window-size: (1400, 800)
+go-to: |DOC_PATH| + "headings/large-intro.html"
+assert-count: (".header-item", 2)
+assert-count: (".current-header", 0)
+
+scroll-to: "#first-header"
+wait-for-count: (".current-header", 1)
+assert-text: (".current-header", "First header")
+
+// Scrolling back to the top should set it to 0.
+scroll-to: (0, 0)
+wait-for-count: (".current-header", 0)

@@ -5,8 +5,8 @@
 // We disable javascript
 javascript: false
 go-to: |DOC_PATH| + "index.html"
-store-value: (height, 1000)
-set-window-size: (1000, |height|)
+store-value: (height, 1028)
+set-window-size: (1028, |height|)
 
 within-iframe: (".sidebar-iframe-outer", block {
     assert-size: (" body", {"height": |height|})

@@ -1,0 +1,58 @@
+// Checks that the "current" header works even when there are headers near the
+// bottom.
+
+set-window-size: (1400, 800)
+go-to: |DOC_PATH| + "headings/current-to-bottom.html"
+assert-count: (".current-header", 1)
+assert-text: (".current-header", "First header")
+
+scroll-to: "#scroll-to-1"
+assert-text: (".current-header", "First header")
+scroll-to: "#scroll-to-2"
+assert-text: (".current-header", "First header")
+scroll-to: "#scroll-to-3"
+assert-text: (".current-header", "First header")
+scroll-to: "#scroll-to-4"
+assert-text: (".current-header", "First header")
+scroll-to: "#scroll-to-5"
+assert-text: (".current-header", "First header")
+scroll-to: "#scroll-to-6"
+assert-text: (".current-header", "First header")
+scroll-to: "#scroll-to-7"
+assert-text: (".current-header", "First header")
+scroll-to: "#scroll-to-8"
+assert-text: (".current-header", "First header")
+scroll-to: "#scroll-to-9"
+assert-text: (".current-header", "First header")
+scroll-to: "#scroll-to-10"
+assert-text: (".current-header", "First header")
+scroll-to: "#scroll-to-11"
+assert-text: (".current-header", "First header")
+scroll-to: "#scroll-to-12"
+assert-text: (".current-header", "First header")
+scroll-to: "#scroll-to-13"
+assert-text: (".current-header", "First header")
+scroll-to: "#scroll-to-14"
+assert-text: (".current-header", "First header")
+scroll-to: "#scroll-to-15"
+assert-text: (".current-header", "First header")
+scroll-to: "#scroll-to-16"
+assert-text: (".current-header", "First header")
+scroll-to: "#scroll-to-17"
+assert-text: (".current-header", "First header")
+scroll-to: "#scroll-to-18"
+assert-text: (".current-header", "First header")
+scroll-to: "#scroll-to-19"
+assert-text: (".current-header", "First header")
+scroll-to: "#scroll-to-20"
+assert-text: (".current-header", "First header")
+scroll-to: "#scroll-to-21"
+wait-for-text: (".current-header", "Second sub-header")
+scroll-to: "#scroll-to-22"
+assert-text: (".current-header", "Second sub-header")
+scroll-to: "#scroll-to-23"
+assert-text: (".current-header", "Second sub-header")
+scroll-to: "#scroll-to-24"
+assert-text: (".current-header", "Second sub-header")
+scroll-to: "#scroll-to-25"
+wait-for-text: (".current-header", "Fifth header")

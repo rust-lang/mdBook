@@ -28,6 +28,14 @@
   - [Syntax Highlight](languages/highlight.md)
 - [Rust Specific](rust/README.md)
   - [Rust Codeblocks](rust/rust_codeblock.md)
+- [Heading Navigation](headings/README.md)
+  - [Empty page](headings/empty.md)
+  - [Large text before first heading](headings/large-intro.md)
+  - [Normal text before first heading](headings/normal-intro.md)
+  - [Collapsed headings](headings/collapsed.md)
+  - [Headings with markup](headings/markup.md)
+  - [Current scrolls to bottom](headings/current-to-bottom.md)
+- [Last numbered chapter](last.md)
 
 ---
 
