@@ -108,6 +108,7 @@ edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path
 site-url = "/example-book/"
 cname = "myproject.rs"
 input-404 = "not-found.md"
+sidebar-header-nav = true
 ```
 
 The following configuration options are available:
@@ -166,6 +167,7 @@ The following configuration options are available:
   Chapter HTML files are not renamed.
   Static CSS and JS files can reference each other using `{{ resource "filename" }}` directives.
   Defaults to `true`.
+- **sidebar-header-nav:** If `true`, the sidebar will contain navigation for headers on the current page. Default is `true`.
 
 [custom domain]: https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site
 

@@ -1,0 +1,51 @@
+// Tests for collapsed heading sidebar navigation.
+
+set-window-size: (1400, 800)
+go-to: |DOC_PATH| + "headings/collapsed.html"
+
+assert-count: (".header-item", 12)
+assert-count: (".current-header", 1)
+assert-text: (".current-header", "Heading 1")
+// Collapsed elements do not have "expanded" class.
+assert-attribute: ("li:has(> a[href='#heading-12'])", {"class": "header-item"})
+assert-attribute: ("li:has(> a[href='#heading-21'])", {"class": "header-item"})
+
+// Click 1.2, doesn't change expanded.
+click: "a.header-in-summary[href='#heading-12']"
+assert-attribute: ("li:has(> a[href='#heading-12'])", {"class": "header-item"})
+assert-attribute: ("li:has(> a[href='#heading-21'])", {"class": "header-item"})
+assert-css: ("//li[preceding-sibling::li[1][a[@href='#heading-12']]]/ol", {"display": "none"})
+// Click expand chevron.
+// 1.2.1 and 1.2.2 should be visible
+click: "a.header-in-summary[href='#heading-12'] ~ a.header-toggle"
+assert-attribute: ("li:has(> a[href='#heading-12'])", {"class": "header-item expanded"})
+assert-attribute: ("li:has(> a[href='#heading-21'])", {"class": "header-item"})
+assert-css: ("//li[preceding-sibling::li[1][a[@href='#heading-12']]]/ol", {"display": "block"})
+
+// Click 1.3
+click: "a.header-in-summary[href='#heading-13']"
+// Everything should be collapsed
+assert-attribute: ("li:has(> a[href='#heading-12'])", {"class": "header-item"})
+assert-attribute: ("li:has(> a[href='#heading-21'])", {"class": "header-item"})
+assert-css: ("//li[preceding-sibling::li[1][a[@href='#heading-12']]]/ol", {"display": "none"})
+assert-css: ("//li[preceding-sibling::li[1][a[@href='#heading-21']]]/ol", {"display": "none"})
+
+
+assert-attribute: ("li:has(> a[href='#heading-12'])", {"class": "header-item"})
+assert-attribute: ("li:has(> a[href='#heading-21'])", {"class": "header-item"})
+assert-attribute: ("li:has(> a[href='#heading-211'])", {"class": "header-item"})
+assert-attribute: ("li:has(> a[href='#heading-2111'])", {"class": "header-item"})
+// Scroll to bottom of page
+press-key: 'PageDown'
+press-key: 'PageDown'
+press-key: 'PageDown'
+press-key: 'PageDown'
+// 2.1.1.1.1 should be visible, and all the chevrons should be open, and expanded should be on each one
+assert-attribute: ("li:has(> a[href='#heading-12'])", {"class": "header-item"})
+assert-attribute: ("li:has(> a[href='#heading-21'])", {"class": "header-item expanded"})
+assert-attribute: ("li:has(> a[href='#heading-211'])", {"class": "header-item expanded"})
+assert-attribute: ("li:has(> a[href='#heading-2111'])", {"class": "header-item expanded"})
+assert-css: ("//li[preceding-sibling::li[1][a[@href='#heading-12']]]/ol", {"display": "none"})
+assert-css: ("//li[preceding-sibling::li[1][a[@href='#heading-21']]]/ol", {"display": "block"})
+assert-css: ("//li[preceding-sibling::li[1][a[@href='#heading-211']]]/ol", {"display": "block"})
+assert-css: ("//li[preceding-sibling::li[1][a[@href='#heading-2111']]]/ol", {"display": "block"})
