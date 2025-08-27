@@ -41,7 +41,7 @@ assert-css: ("#mdbook-search-wrapper", {"display": "none"})
 press-key: 's'
 wait-for-css-false: ("#mdbook-search-wrapper", {"display": "none"})
 // We ensure the search bar has the focus.
-assert: "#mdbook-searchbar:focus"
+wait-for: "#mdbook-searchbar:focus"
 // Pressing a key will therefore update the search input.
 press-key: 't'
 assert-text: ("#mdbook-searchbar", "t")
