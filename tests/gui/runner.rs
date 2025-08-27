@@ -83,22 +83,20 @@ fn main() {
 
     let book_dir = format!("file://{}", current_dir.join("test_book/book/").display());
 
-    let mut no_headless = false;
-    let mut filters = Vec::new();
-    for arg in std::env::args().skip(1) {
-        if arg == "--disable-headless-test" {
-            no_headless = true;
-        } else {
-            filters.push(arg);
-        }
-    }
-
     let mut command = Command::new("npx");
     command
         .arg("browser-ui-test")
         .args(["--variable", "DOC_PATH", book_dir.as_str()]);
-    if no_headless {
-        command.arg("--no-headless");
+
+    let mut filters = Vec::new();
+    for arg in std::env::args().skip(1) {
+        if arg == "--disable-headless-test" {
+            command.arg("--no-headless");
+        } else if arg.starts_with("--") {
+            command.arg(arg);
+        } else {
+            filters.push(arg);
+        }
     }
 
     let test_dir = "tests/gui";
