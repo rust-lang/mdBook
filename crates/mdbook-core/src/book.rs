@@ -18,8 +18,11 @@ mod tests;
 ///
 /// [`iter()`]: #method.iter
 /// [`for_each_mut()`]: #method.for_each_mut
+#[allow(
+    clippy::exhaustive_structs,
+    reason = "This cannot be extended without breaking preprocessors."
+)]
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-#[non_exhaustive]
 pub struct Book {
     /// The items in this book.
     pub items: Vec<BookItem>,
@@ -80,8 +83,11 @@ where
 }
 
 /// Enum representing any type of item which can be added to a book.
+#[allow(
+    clippy::exhaustive_enums,
+    reason = "This cannot be extended without breaking preprocessors."
+)]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[non_exhaustive]
 pub enum BookItem {
     /// A nested chapter.
     Chapter(Chapter),
@@ -99,8 +105,11 @@ impl From<Chapter> for BookItem {
 
 /// The representation of a "chapter", usually mapping to a single file on
 /// disk however it may contain multiple sub-chapters.
+#[allow(
+    clippy::exhaustive_structs,
+    reason = "This cannot be extended without breaking preprocessors."
+)]
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-#[non_exhaustive]
 pub struct Chapter {
     /// The chapter's name.
     pub name: String,
