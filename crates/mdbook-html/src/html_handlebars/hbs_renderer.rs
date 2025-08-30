@@ -687,7 +687,6 @@ fn make_data(
             BookItem::Separator => {
                 chapter.insert("spacer".to_owned(), json!("_spacer_"));
             }
-            _ => panic!("BookItem {item:?} not covered"),
         }
 
         chapters.push(chapter);
