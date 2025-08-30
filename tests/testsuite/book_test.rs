@@ -533,3 +533,18 @@ pub fn glob_one<P: AsRef<Path>>(path: P, pattern: &str) -> PathBuf {
     }
     first
 }
+
+/// Lists all files at the given directory.
+///
+/// Recursively walks the tree. Paths are relative to the directory.
+pub fn list_all_files(dir: &Path) -> Vec<PathBuf> {
+    walkdir::WalkDir::new(dir)
+        .sort_by_file_name()
+        .into_iter()
+        .map(|entry| {
+            let entry = entry.unwrap();
+            let path = entry.path();
+            path.strip_prefix(dir).unwrap().to_path_buf()
+        })
+        .collect()
+}
