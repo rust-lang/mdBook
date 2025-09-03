@@ -33,3 +33,9 @@ heading-split-level = 2
 
 [output.html.redirect]
 "/format/config.html" = "configuration/index.html"
+
+[preprocessor.guide-helper]
+command = "cargo run --quiet --manifest-path guide-helper/Cargo.toml"
+
+[build]
+extra-watch-dirs = ["guide-helper/src"]

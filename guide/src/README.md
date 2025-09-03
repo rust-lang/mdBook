@@ -1,5 +1,22 @@
 # Introduction
 
+<style>
+    .mdbook-version {
+        position: absolute;
+        right: 20px;
+        top: 60px;
+        background-color: var(--theme-popup-bg);
+        border-radius: 8px;
+        padding: 2px 5px 2px 5px;
+        border: 1px solid var(--theme-popup-border);
+        font-size: 0.9em;
+    }
+</style>
+
+<div class="mdbook-version">
+Version: {{ mdbook-version }}
+</div>
+
 **mdBook** is a command line tool to create books with Markdown.
 It is ideal for creating product or API documentation, tutorials, course materials or anything that requires a clean,
 easily navigable and customizable presentation.

@@ -2,7 +2,7 @@
 members = [
     ".",
     "crates/*",
-    "examples/remove-emphasis/mdbook-remove-emphasis",
+    "examples/remove-emphasis/mdbook-remove-emphasis", "guide/guide-helper",
 ]
 
 [workspace.lints.clippy]
