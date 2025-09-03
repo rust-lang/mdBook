@@ -768,6 +768,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "guide-helper"
+version = "0.0.0"
+dependencies = [
+ "mdbook-preprocessor",
+ "semver",
+ "serde_json",
+ "toml",
+]
+
+[[package]]
 name = "handlebars"
 version = "6.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
