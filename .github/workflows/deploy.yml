@@ -46,16 +46,8 @@ jobs:
     - uses: actions/checkout@v4
     - name: Install Rust (rustup)
       run: rustup update stable --no-self-update && rustup default stable
-    - name: Build book
-      run: cargo run -- build guide
     - name: Deploy the User Guide to GitHub Pages using the gh-pages branch
-      env:
-        GITHUB_DEPLOY_KEY: ${{ secrets.GITHUB_DEPLOY_KEY }}
-      run: |
-        touch guide/book/.nojekyll
-        curl -LsSf https://raw.githubusercontent.com/rust-lang/simpleinfra/master/setup-deploy-keys/src/deploy.rs | rustc - -o /tmp/deploy
-        cd guide/book
-        /tmp/deploy
+      run: ci/publish-guide.sh
   publish:
     name: Publish to crates.io
     runs-on: ubuntu-latest
