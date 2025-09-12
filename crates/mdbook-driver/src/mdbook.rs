@@ -6,7 +6,6 @@ use crate::init::BookBuilder;
 use crate::load::{load_book, load_book_from_disk};
 use anyhow::{Context, Error, Result, bail};
 use indexmap::IndexMap;
-use log::{debug, error, info, log_enabled, trace, warn};
 use mdbook_core::book::{Book, BookItem, BookItems};
 use mdbook_core::config::{Config, RustEdition};
 use mdbook_core::utils;
@@ -21,6 +20,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::Builder as TempFileBuilder;
 use topological_sort::TopologicalSort;
+use tracing::{debug, error, info, trace, warn};
 
 #[cfg(test)]
 mod tests;
@@ -58,7 +58,7 @@ impl MDBook {
 
         config.update_from_env();
 
-        if log_enabled!(log::Level::Trace) {
+        if tracing::enabled!(tracing::Level::TRACE) {
             for line in format!("Config: {config:#?}").lines() {
                 trace!("{}", line);
             }

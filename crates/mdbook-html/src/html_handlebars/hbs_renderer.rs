@@ -3,7 +3,6 @@ use super::static_files::StaticFiles;
 use crate::theme::Theme;
 use anyhow::{Context, Result, bail};
 use handlebars::Handlebars;
-use log::{debug, info, trace, warn};
 use mdbook_core::book::{Book, BookItem, Chapter};
 use mdbook_core::config::{BookConfig, Code, Config, HtmlConfig, Playground, RustEdition};
 use mdbook_core::utils;
@@ -18,6 +17,8 @@ use std::collections::HashMap;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
+use tracing::error;
+use tracing::{debug, info, trace, warn};
 
 /// The HTML renderer for mdBook.
 #[derive(Default)]
@@ -286,7 +287,7 @@ impl HtmlHandlebars {
             return Ok(());
         }
 
-        log::debug!("Emitting redirects");
+        debug!("Emitting redirects");
         let redirects = combine_fragment_redirects(redirects);
 
         for (original, (dest, fragment_map)) in redirects {
@@ -306,7 +307,7 @@ impl HtmlHandlebars {
                      destination."
                 );
             }
-            log::debug!("Redirecting \"{}\" → \"{}\"", original, dest);
+            debug!("Redirecting \"{}\" → \"{}\"", original, dest);
             self.emit_redirect(handlebars, &filename, &dest, &fragment_map)?;
         }
 
@@ -1034,7 +1035,7 @@ fn combine_fragment_redirects(redirects: &HashMap<String, String>) -> CombinedRe
         if let Some((source_path, source_fragment)) = original.rsplit_once('#') {
             let e = combined.entry(source_path.to_string()).or_default();
             if let Some(old) = e.1.insert(format!("#{source_fragment}"), new.clone()) {
-                log::error!(
+                error!(
                     "internal error: found duplicate fragment redirect \
                      {old} for {source_path}#{source_fragment}"
                 );

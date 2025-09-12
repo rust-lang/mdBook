@@ -3,10 +3,10 @@
 //! The HTML renderer can be found in the [`mdbook_html`] crate.
 
 use anyhow::{Context, Result, bail};
-use log::{error, info, trace, warn};
 use mdbook_renderer::{RenderContext, Renderer};
 use std::fs;
 use std::process::Stdio;
+use tracing::{error, info, trace, warn};
 
 pub use self::markdown_renderer::MarkdownRenderer;
 
@@ -30,7 +30,7 @@ mod markdown_renderer;
 /// whatever it wants, to avoid spamming users it is recommended to avoid
 /// unnecessary output.
 ///
-/// To help choose the appropriate output level, the `RUST_LOG` environment
+/// To help choose the appropriate output level, the `MDBOOK_LOG` environment
 /// variable will be passed through to the subprocess, if set.
 ///
 /// If the subprocess wishes to indicate that rendering failed, it should exit

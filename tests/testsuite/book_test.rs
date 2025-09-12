@@ -360,7 +360,7 @@ impl BookCommand {
 
     /// Use this to debug a command.
     ///
-    /// Pass the value that you would normally pass to `RUST_LOG`, and this
+    /// Pass the value that you would normally pass to `MDBOOK_LOG`, and this
     /// will enable logging, print the command that runs and its output.
     ///
     /// This will fail if you use it in CI.
@@ -378,7 +378,7 @@ impl BookCommand {
         let mut cmd = Command::new(env!("CARGO_BIN_EXE_mdbook"));
         cmd.current_dir(&self.dir)
             .args(&self.args)
-            .env_remove("RUST_LOG")
+            .env_remove("MDBOOK_LOG")
             // Don't read the system git config which is out of our control.
             .env("GIT_CONFIG_NOSYSTEM", "1")
             .env("GIT_CONFIG_GLOBAL", &self.dir)
@@ -389,7 +389,7 @@ impl BookCommand {
             .env_remove("GIT_COMMITTER_NAME");
 
         if let Some(debug) = &self.debug {
-            cmd.env("RUST_LOG", debug);
+            cmd.env("MDBOOK_LOG", debug);
         }
 
         for (k, v) in &self.env {
@@ -479,23 +479,9 @@ static LITERAL_REDACTIONS: &[(&str, &str)] = &[
     ("[EXE]", std::env::consts::EXE_SUFFIX),
 ];
 
-/// This makes it easier to write regex replacements that are guaranteed to only
-/// get compiled once
-macro_rules! regex {
-    ($re:literal $(,)?) => {{
-        static RE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
-        RE.get_or_init(|| regex::Regex::new($re).unwrap())
-    }};
-}
-
 fn assert(root: &Path) -> snapbox::Assert {
     let mut subs = snapbox::Redactions::new();
     subs.insert("[ROOT]", root.to_path_buf()).unwrap();
-    subs.insert(
-        "[TIMESTAMP]",
-        regex!(r"(?m)(?<redacted>20\d\d-\d{2}-\d{2} \d{2}:\d{2}:\d{2})"),
-    )
-    .unwrap();
     subs.insert("[VERSION]", mdbook_core::MDBOOK_VERSION)
         .unwrap();
 

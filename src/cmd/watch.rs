@@ -3,6 +3,7 @@ use crate::{get_book_dir, open};
 use anyhow::Result;
 use mdbook_driver::MDBook;
 use std::path::{Path, PathBuf};
+use tracing::error;
 
 mod native;
 mod poller;

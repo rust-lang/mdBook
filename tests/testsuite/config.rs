@@ -120,8 +120,8 @@ fn bad_config_top_level() {
             cmd.expect_failure()
                 .expect_stdout(str![[""]])
                 .expect_stderr(str![[r#"
-[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Invalid configuration file
-[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: TOML parse error at line 1, column 1
+ERROR Invalid configuration file
+[TAB]Caused by: TOML parse error at line 1, column 1
   |
 1 | foo = 123
   | ^^^
@@ -145,8 +145,8 @@ fn bad_config_top_level_table() {
             cmd.expect_failure()
                 .expect_stdout(str![[""]])
                 .expect_stderr(str![[r#"
-[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Invalid configuration file
-[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: TOML parse error at line 1, column 2
+ERROR Invalid configuration file
+[TAB]Caused by: TOML parse error at line 1, column 2
   |
 1 | [other]
   |  ^^^^^
@@ -171,8 +171,8 @@ fn bad_config_in_book_table() {
             cmd.expect_failure()
                 .expect_stdout(str![[""]])
                 .expect_stderr(str![[r#"
-[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Invalid configuration file
-[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: TOML parse error at line 3, column 1
+ERROR Invalid configuration file
+[TAB]Caused by: TOML parse error at line 3, column 1
   |
 3 | foo = 123
   | ^^^
@@ -196,8 +196,8 @@ fn bad_config_in_rust_table() {
             cmd.expect_failure()
                 .expect_stdout(str![[""]])
                 .expect_stderr(str![[r#"
-[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Invalid configuration file
-[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: TOML parse error at line 2, column 1
+ERROR Invalid configuration file
+[TAB]Caused by: TOML parse error at line 2, column 1
   |
 2 | title = "bad-config"
   | ^^^^^

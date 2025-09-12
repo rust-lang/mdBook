@@ -32,7 +32,6 @@ chrono = { version = "0.4.41", default-features = false, features = ["clock"] }
 clap = { version = "4.5.41", features = ["cargo", "wrap_help"] }
 clap_complete = "4.5.55"
 elasticlunr-rs = "3.0.2"
-env_logger = "0.11.8"
 font-awesome-as-a-crate = "0.3.0"
 futures-util = "0.3.31"
 glob = "0.3.3"
@@ -40,7 +39,6 @@ handlebars = "6.3.2"
 hex = "0.4.3"
 indexmap = "2.10.0"
 ignore = "0.4.23"
-log = "0.4.27"
 mdbook-core = { path = "crates/mdbook-core" }
 mdbook-driver = { path = "crates/mdbook-driver" }
 mdbook-html = { path = "crates/mdbook-html" }
@@ -68,6 +66,8 @@ tokio = "1.46.1"
 toml = "0.9.2"
 topological-sort = "0.2.2"
 tower-http = "0.6.6"
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 walkdir = "2.5.0"
 
 [package]
@@ -93,8 +93,6 @@ anyhow.workspace = true
 chrono.workspace = true
 clap.workspace = true
 clap_complete.workspace = true
-env_logger.workspace = true
-log.workspace = true
 mdbook-core.workspace = true
 mdbook-driver.workspace = true
 mdbook-html.workspace = true
@@ -104,6 +102,8 @@ mdbook-renderer.workspace = true
 mdbook-summary.workspace = true
 opener.workspace = true
 toml.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
 
 # Watch feature
 ignore = { workspace = true, optional = true }

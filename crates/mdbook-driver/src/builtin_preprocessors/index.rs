@@ -1,9 +1,9 @@
 use anyhow::Result;
-use log::warn;
 use mdbook_core::book::{Book, BookItem};
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use regex::Regex;
 use std::{path::Path, sync::LazyLock};
+use tracing::warn;
 
 /// A preprocessor for converting file name `README.md` to `index.md` since
 /// `README.md` is the de facto index file in markdown-based documentation.

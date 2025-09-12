@@ -2,6 +2,7 @@ use super::command_prelude::*;
 use crate::{get_book_dir, open};
 use anyhow::Result;
 use mdbook_driver::MDBook;
+use tracing::error;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {

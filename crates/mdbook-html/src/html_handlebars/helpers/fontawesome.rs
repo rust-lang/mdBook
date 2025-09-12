@@ -2,8 +2,8 @@ use font_awesome_as_a_crate as fa;
 use handlebars::{
     Context, Handlebars, Helper, Output, RenderContext, RenderError, RenderErrorReason,
 };
-use log::trace;
 use std::str::FromStr;
+use tracing::trace;
 
 pub(crate) fn fa_helper(
     h: &Helper<'_>,

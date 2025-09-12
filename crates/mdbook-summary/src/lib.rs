@@ -5,7 +5,6 @@
 //! file structure for [mdBook](https://rust-lang.github.io/mdBook/).
 
 use anyhow::{Context, Error, Result, bail};
-use log::{debug, trace, warn};
 pub use mdbook_core::book::SectionNumber;
 use memchr::Memchr;
 use pulldown_cmark::{DefaultBrokenLinkCallback, Event, HeadingLevel, Tag, TagEnd};
@@ -13,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::fmt::Display;
 use std::path::{Path, PathBuf};
+use tracing::{debug, trace, warn};
 
 /// Parse the text from a `SUMMARY.md` file into a sort of "recipe" to be
 /// used when loading a book from disk.

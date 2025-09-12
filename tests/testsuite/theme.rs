@@ -5,14 +5,12 @@ use crate::prelude::*;
 // Checks what happens if the theme directory is missing.
 #[test]
 fn missing_theme() {
-    BookTest::from_dir("theme/missing_theme")
-    .run("build", |cmd| {
-cmd.expect_failure()
-        .expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
-[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Rendering failed
-[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: theme dir [ROOT]/./non-existent-directory does not exist
+    BookTest::from_dir("theme/missing_theme").run("build", |cmd| {
+        cmd.expect_failure().expect_stderr(str![[r#"
+ INFO Book building has started
+ INFO Running the html backend
+ERROR Rendering failed
+[TAB]Caused by: theme dir [ROOT]/./non-existent-directory does not exist
 
 "#]]);
     });
@@ -24,9 +22,9 @@ fn empty_theme() {
     BookTest::from_dir("theme/empty_theme").run("build", |cmd| {
         std::fs::create_dir(cmd.dir.join("theme")).unwrap();
         cmd.expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
-[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
+ INFO Book building has started
+ INFO Running the html backend
+ INFO HTML book written to `[ROOT]/book`
 
 "#]]);
     });
@@ -147,9 +145,9 @@ fn empty_fonts_css() {
     BookTest::from_dir("theme/empty_fonts_css")
         .run("build", |cmd| {
             cmd.expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
-[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
+ INFO Book building has started
+ INFO Running the html backend
+ INFO HTML book written to `[ROOT]/book`
 
 "#]]);
         })
@@ -163,9 +161,9 @@ fn custom_fonts_css() {
     BookTest::from_dir("theme/custom_fonts_css")
         .run("build", |cmd| {
             cmd.expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
-[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
+ INFO Book building has started
+ INFO Running the html backend
+ INFO HTML book written to `[ROOT]/book`
 
 "#]]);
         })

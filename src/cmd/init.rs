@@ -6,6 +6,7 @@ use mdbook_driver::MDBook;
 use std::io;
 use std::io::Write;
 use std::process::Command;
+use tracing::debug;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> ClapCommand {

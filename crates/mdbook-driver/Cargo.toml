@@ -10,7 +10,6 @@ rust-version.workspace = true
 [dependencies]
 anyhow.workspace = true
 indexmap.workspace = true
-log.workspace = true
 mdbook-core.workspace = true
 mdbook-html.workspace = true
 mdbook-markdown.workspace = true
@@ -24,6 +23,7 @@ shlex.workspace = true
 tempfile.workspace = true
 toml.workspace = true
 topological-sort.workspace = true
+tracing.workspace = true
 
 [lints]
 workspace = true
