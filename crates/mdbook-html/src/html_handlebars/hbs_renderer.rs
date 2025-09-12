@@ -905,7 +905,7 @@ fn hide_lines(html: &str, code_config: &Code) -> String {
             let classes = &caps[2];
             let code = &caps[3];
 
-            if classes.contains("language-rust") {
+            if classes.contains("language-rust") && code_config.default_hidelines {
                 format!(
                     "<code class=\"{}\">{}</code>",
                     classes,
@@ -1308,6 +1308,38 @@ mod tests {
         ];
         let mut code = Code::default();
         code.hidelines.insert("python".to_string(), "~".to_string());
+        for (src, should_be) in &inputs {
+            let got = hide_lines(src, &code);
+            assert_eq!(&*got, *should_be);
+        }
+    }
+
+    #[test]
+    fn no_default_hide_lines() {
+        let inputs = [
+            (
+                "<pre class=\"playground\"><code class=\"language-rust\">\n# #![allow(unused)]\n#fn main() {\nx()\n#}</code></pre>",
+                "<pre class=\"playground\"><code class=\"language-rust\">\n# #![allow(unused)]\n#fn main() {\nx()\n#}</code></pre>",
+            ),
+            (
+                "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code></pre>",
+                "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n\";</code></pre>",
+            ),
+            (
+                "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code></pre>",
+                "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n ## bar\n\";</code></pre>",
+            ),
+            (
+                "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code></pre>",
+                "<pre class=\"playground\"><code class=\"language-rust editable\">let s = \"foo\n # bar\n#\n\";</code></pre>",
+            ),
+            (
+                "<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>",
+                "<code class=\"language-rust ignore\">let s = \"foo\n # bar\n\";</code>",
+            ),
+        ];
+        let mut code = Code::default();
+        code.default_hidelines = false;
         for (src, should_be) in &inputs {
             let got = hide_lines(src, &code);
             assert_eq!(&*got, *should_be);
