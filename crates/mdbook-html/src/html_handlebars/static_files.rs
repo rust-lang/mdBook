@@ -3,7 +3,6 @@
 use super::helpers::resources::ResourceHelper;
 use crate::theme::{self, Theme, playground_editor};
 use anyhow::{Context, Result};
-use log::debug;
 use mdbook_core::config::HtmlConfig;
 use mdbook_core::utils;
 use std::borrow::Cow;
@@ -11,6 +10,7 @@ use std::collections::HashMap;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
+use tracing::debug;
 
 /// Map static files to their final names and contents.
 ///

@@ -49,9 +49,9 @@ fn runs_preprocessors() {
 fn nop_preprocessor() {
     BookTest::from_dir("preprocessor/nop_preprocessor").run("build", |cmd| {
         cmd.expect_stdout(str![[""]]).expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
-[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
+ INFO Book building has started
+ INFO Running the html backend
+ INFO HTML book written to `[ROOT]/book`
 
 "#]]);
     });
@@ -60,17 +60,16 @@ fn nop_preprocessor() {
 // Failing preprocessor generates an error.
 #[test]
 fn failing_preprocessor() {
-    BookTest::from_dir("preprocessor/failing_preprocessor")
-        .run("build", |cmd| {
-            cmd.expect_failure()
-                .expect_stdout(str![[""]])
-                .expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
+    BookTest::from_dir("preprocessor/failing_preprocessor").run("build", |cmd| {
+        cmd.expect_failure()
+            .expect_stdout(str![[""]])
+            .expect_stderr(str![[r#"
+ INFO Book building has started
 Boom!!1!
-[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: The "nop-preprocessor" preprocessor exited unsuccessfully with [EXIT_STATUS]: 1 status
+ERROR The "nop-preprocessor" preprocessor exited unsuccessfully with [EXIT_STATUS]: 1 status
 
 "#]]);
-        });
+    });
 }
 
 fn example() -> CmdPreprocessor {
@@ -128,9 +127,9 @@ fn relative_command_path() {
     )
     .run("build", |cmd| {
         cmd.expect_stdout(str![""]).expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
-[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
+ INFO Book building has started
+ INFO Running the html backend
+ INFO HTML book written to `[ROOT]/book`
 
 "#]]);
     })
@@ -143,9 +142,9 @@ fn relative_command_path() {
         cmd.current_dir(cmd.dir.join("src"))
             .expect_stdout(str![""])
             .expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
-[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/src/../book`
+ INFO Book building has started
+ INFO Running the html backend
+ INFO HTML book written to `[ROOT]/src/../book`
 
 "#]]);
     })
@@ -160,10 +159,10 @@ fn missing_preprocessor() {
         cmd.expect_failure()
             .expect_stdout(str![[""]])
             .expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
-[TIMESTAMP] [ERROR] (mdbook_driver): The command `trduyvbhijnorgevfuhn` wasn't found, is the `missing` preprocessor installed? If you want to ignore this error when the `missing` preprocessor is not installed, set `optional = true` in the `[preprocessor.missing]` section of the book.toml configuration file.
-[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Unable to run the preprocessor `missing`
-[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: [NOT_FOUND]
+ INFO Book building has started
+ERROR The command `trduyvbhijnorgevfuhn` wasn't found, is the `missing` preprocessor installed? If you want to ignore this error when the `missing` preprocessor is not installed, set `optional = true` in the `[preprocessor.missing]` section of the book.toml configuration file.
+ERROR Unable to run the preprocessor `missing`
+[TAB]Caused by: [NOT_FOUND]
 
 "#]]);
     });
@@ -174,10 +173,10 @@ fn missing_preprocessor() {
 fn missing_optional_not_fatal() {
     BookTest::from_dir("preprocessor/missing_optional_not_fatal").run("build", |cmd| {
         cmd.expect_stdout(str![[""]]).expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
-[TIMESTAMP] [WARN] (mdbook_driver): The command `trduyvbhijnorgevfuhn` for preprocessor `missing` was not found, but is marked as optional.
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
-[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
+ INFO Book building has started
+ WARN The command `trduyvbhijnorgevfuhn` for preprocessor `missing` was not found, but is marked as optional.
+ INFO Running the html backend
+ INFO HTML book written to `[ROOT]/book`
 
 "#]]);
     });
@@ -239,14 +238,14 @@ fn extension_compatibility() {
     // that the built book is identical with the preprocessor enabled.
     test.run("build", |cmd| {
         cmd.expect_stdout(str![[""]]).expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
-[TIMESTAMP] [WARN] (mdbook_driver): The command `./my-preprocessor` for preprocessor `my-preprocessor` was not found, but is marked as optional.
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
-[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book/html`
-[TIMESTAMP] [WARN] (mdbook_driver): The command `./my-preprocessor` for preprocessor `my-preprocessor` was not found, but is marked as optional.
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the my-renderer backend
-[TIMESTAMP] [INFO] (mdbook_driver::builtin_renderers): Invoking the "my-renderer" renderer
-[TIMESTAMP] [WARN] (mdbook_driver): The command `./my-renderer` for backend `my-renderer` was not found, but is marked as optional.
+ INFO Book building has started
+ WARN The command `./my-preprocessor` for preprocessor `my-preprocessor` was not found, but is marked as optional.
+ INFO Running the html backend
+ INFO HTML book written to `[ROOT]/book/html`
+ WARN The command `./my-preprocessor` for preprocessor `my-preprocessor` was not found, but is marked as optional.
+ INFO Running the my-renderer backend
+ INFO Invoking the "my-renderer" renderer
+ WARN The command `./my-renderer` for backend `my-renderer` was not found, but is marked as optional.
 
 "#]]);
     });
@@ -441,11 +440,11 @@ fn extension_compatibility() {
     )
     .run("build", |cmd| {
         cmd.expect_stdout(str![[""]]).expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
-[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book/html`
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the my-renderer backend
-[TIMESTAMP] [INFO] (mdbook_driver::builtin_renderers): Invoking the "my-renderer" renderer
+ INFO Book building has started
+ INFO Running the html backend
+ INFO HTML book written to `[ROOT]/book/html`
+ INFO Running the my-renderer backend
+ INFO Invoking the "my-renderer" renderer
 
 "#]]);
     })

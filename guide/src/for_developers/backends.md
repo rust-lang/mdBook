@@ -317,7 +317,7 @@ the "rule of silence" and only generate output when necessary (e.g. an error in
 generation or a warning).
 
 All environment variables are passed through to the backend, allowing you to use
-the usual `RUST_LOG` to control logging verbosity.
+the usual `MDBOOK_LOG` to control logging verbosity.
 
 ## Wrapping up
 

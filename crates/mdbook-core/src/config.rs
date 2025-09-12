@@ -46,7 +46,6 @@
 use crate::utils::TomlExt;
 use crate::utils::log_backtrace;
 use anyhow::{Context, Error, Result, bail};
-use log::{debug, trace};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use std::env;
@@ -56,6 +55,7 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use toml::Value;
 use toml::value::Table;
+use tracing::{debug, trace};
 
 /// The overall configuration object for MDBook, essentially an in-memory
 /// representation of `book.toml`.
@@ -162,6 +162,10 @@ impl Config {
             env::vars().filter_map(|(key, value)| parse_env(&key).map(|index| (index, value)));
 
         for (key, value) in overrides {
+            if key == "log" {
+                // MDBOOK_LOG is used to control logging.
+                continue;
+            }
             trace!("{} => {}", key, value);
             let parsed_value = serde_json::from_str(&value)
                 .unwrap_or_else(|_| serde_json::Value::String(value.to_string()));

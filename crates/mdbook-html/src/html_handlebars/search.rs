@@ -2,7 +2,6 @@ use super::static_files::StaticFiles;
 use crate::theme::searcher;
 use anyhow::{Context, Result, bail};
 use elasticlunr::{Index, IndexBuilder};
-use log::{debug, warn};
 use mdbook_core::book::{Book, BookItem, Chapter};
 use mdbook_core::config::{Search, SearchChapterSettings};
 use mdbook_core::utils;
@@ -14,6 +13,7 @@ use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
+use tracing::{debug, warn};
 
 const MAX_WORD_LENGTH_TO_INDEX: usize = 80;
 

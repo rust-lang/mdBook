@@ -126,10 +126,10 @@ fn with_no_source_path() {
 fn chapter_settings_validation_error() {
     BookTest::from_dir("search/chapter_settings_validation_error").run("build", |cmd| {
         cmd.expect_failure().expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
-[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Rendering failed
-[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: [output.html.search.chapter] key `does-not-exist` does not match any chapter paths
+ INFO Book building has started
+ INFO Running the html backend
+ERROR Rendering failed
+[TAB]Caused by: [output.html.search.chapter] key `does-not-exist` does not match any chapter paths
 
 "#]]);
     });

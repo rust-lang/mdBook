@@ -1,10 +1,10 @@
 use anyhow::{Context, Result, ensure};
-use log::{debug, trace, warn};
 use mdbook_core::book::Book;
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::{Child, Stdio};
+use tracing::{debug, trace, warn};
 
 /// A custom preprocessor which will shell out to a 3rd-party program.
 ///

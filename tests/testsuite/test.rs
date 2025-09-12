@@ -7,9 +7,9 @@ use crate::prelude::*;
 fn passing_tests() {
     BookTest::from_dir("test/passing_tests").run("test", |cmd| {
         cmd.expect_stdout(str![[""]]).expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Testing chapter 'Intro': "intro.md"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Testing chapter 'Passing 1': "passing1.md"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Testing chapter 'Passing 2': "passing2.md"
+ INFO Testing chapter 'Intro': "intro.md"
+ INFO Testing chapter 'Passing 1': "passing1.md"
+ INFO Testing chapter 'Passing 2': "passing2.md"
 
 "#]]);
     });
@@ -27,8 +27,8 @@ fn failing_tests() {
             // still includes a little bit of output, so if that is a problem,
             // add more redactions.
             .expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Testing chapter 'Failing Tests': "failing.md"
-[TIMESTAMP] [ERROR] (mdbook_driver::mdbook): rustdoc returned an error:
+ INFO Testing chapter 'Failing Tests': "failing.md"
+ERROR rustdoc returned an error:
 
 --- stdout
 
@@ -38,8 +38,8 @@ test failing.md - Failing_Tests (line 3) ... FAILED
 thread [..] panicked at failing.md:3:1:
 fail
 ...
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Testing chapter 'Failing Include': "failing_include.md"
-[TIMESTAMP] [ERROR] (mdbook_driver::mdbook): rustdoc returned an error:
+ INFO Testing chapter 'Failing Include': "failing_include.md"
+ERROR rustdoc returned an error:
 
 --- stdout
 ...
@@ -48,7 +48,7 @@ test failing_include.md - Failing_Include (line 3) ... FAILED
 thread [..] panicked at failing_include.md:3:1:
 failing!
 ...
-[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: One or more tests failed
+ERROR One or more tests failed
 
 "#]]);
     });
@@ -62,14 +62,14 @@ fn test_individual_chapter() {
         cmd.args(&["Passing 1"])
             .expect_stdout(str![[""]])
             .expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Testing chapter 'Passing 1': "passing1.md"
+ INFO Testing chapter 'Passing 1': "passing1.md"
 
 "#]]);
     })
     // Can also be a source path.
     .run("test -c passing2.md", |cmd| {
         cmd.expect_stdout(str![[""]]).expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Testing chapter 'Passing 2': "passing2.md"
+ INFO Testing chapter 'Passing 2': "passing2.md"
 
 "#]]);
     });
@@ -82,7 +82,7 @@ fn chapter_not_found() {
         cmd.expect_failure()
             .expect_stdout(str![[""]])
             .expect_stderr(str![[r#"
-[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Chapter not found: bogus
+ERROR Chapter not found: bogus
 
 "#]]);
     });

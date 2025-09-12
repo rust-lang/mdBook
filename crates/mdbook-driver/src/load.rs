@@ -1,5 +1,4 @@
 use anyhow::{Context, Result};
-use log::debug;
 use mdbook_core::book::{Book, BookItem, Chapter};
 use mdbook_core::config::BuildConfig;
 use mdbook_core::utils::bracket_escape;
@@ -7,6 +6,7 @@ use mdbook_summary::{Link, Summary, SummaryItem, parse_summary};
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::Path;
+use tracing::debug;
 
 /// Load a book into memory from its `src/` directory.
 pub(crate) fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> {

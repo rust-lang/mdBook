@@ -65,12 +65,12 @@ mod load;
 mod mdbook;
 
 use anyhow::{Context, Result, bail};
-use log::{error, warn};
 pub use mdbook::MDBook;
 pub use mdbook_core::{book, config, errors};
 use shlex::Shlex;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use tracing::{error, warn};
 
 /// Creates a [`Command`] for command renderers and preprocessors.
 fn compose_command(cmd: &str, root: &Path) -> Result<Command> {

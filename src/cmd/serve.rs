@@ -15,6 +15,7 @@ use std::net::{SocketAddr, ToSocketAddrs};
 use std::path::PathBuf;
 use tokio::sync::broadcast;
 use tower_http::services::{ServeDir, ServeFile};
+use tracing::{error, info, trace};
 
 /// The HTTP endpoint for the websocket used to trigger reloads when a file changes.
 const LIVE_RELOAD_ENDPOINT: &str = "__livereload";

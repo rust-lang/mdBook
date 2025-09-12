@@ -9,11 +9,11 @@ rust-version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-log.workspace = true
 mdbook-core.workspace = true
 memchr.workspace = true
 pulldown-cmark.workspace = true
 serde.workspace = true
+tracing.workspace = true
 
 [lints]
 workspace = true

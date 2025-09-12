@@ -1,9 +1,9 @@
 use anyhow::{Context, Result};
-use log::trace;
 use mdbook_core::book::BookItem;
 use mdbook_core::utils;
 use mdbook_renderer::{RenderContext, Renderer};
 use std::fs;
+use tracing::trace;
 
 /// A renderer to output the Markdown after the preprocessors have run. Mostly useful
 /// when debugging preprocessors.

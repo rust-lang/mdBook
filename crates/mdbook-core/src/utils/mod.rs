@@ -1,11 +1,12 @@
 //! Various helpers and utilities.
 
 use anyhow::Error;
-use log::error;
 use regex::Regex;
 use std::borrow::Cow;
 use std::collections::HashMap;
+use std::fmt::Write;
 use std::sync::LazyLock;
+use tracing::error;
 
 pub mod fs;
 mod string;
@@ -79,11 +80,13 @@ pub fn unique_id_from_content(content: &str, id_counter: &mut HashMap<String, us
 
 /// Prints a "backtrace" of some `Error`.
 pub fn log_backtrace(e: &Error) {
-    error!("Error: {}", e);
+    let mut message = format!("{e}");
 
     for cause in e.chain().skip(1) {
-        error!("\tCaused By: {}", cause);
+        write!(message, "\n\tCaused by: {cause}").unwrap();
     }
+
+    error!("{message}");
 }
 
 /// Escape `<` and `>` for HTML.

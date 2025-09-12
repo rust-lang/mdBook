@@ -11,6 +11,7 @@ use std::collections::HashMap;
 use std::fs::FileType;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant, SystemTime};
+use tracing::{debug, error, info, trace, warn};
 use walkdir::WalkDir;
 
 /// Calls the closure when a book source file is changed, blocking indefinitely.

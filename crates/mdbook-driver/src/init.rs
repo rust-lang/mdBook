@@ -6,10 +6,10 @@ use std::path::PathBuf;
 
 use super::MDBook;
 use anyhow::{Context, Result};
-use log::{debug, error, info, trace};
 use mdbook_core::config::Config;
 use mdbook_core::utils::fs::write_file;
 use mdbook_html::theme;
+use tracing::{debug, error, info, trace};
 
 /// A helper for setting up a new book and its directory structure.
 #[derive(Debug, Clone, PartialEq)]

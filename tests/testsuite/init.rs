@@ -19,7 +19,7 @@ All done, no errors...
 
 "#]])
             .expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::init): Creating a new book with stub content
+ INFO Creating a new book with stub content
 
 "#]]);
     })
@@ -84,7 +84,7 @@ All done, no errors...
 
 "#]])
             .expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::init): Creating a new book with stub content
+ INFO Creating a new book with stub content
 
 "#]]);
     })
@@ -115,7 +115,7 @@ All done, no errors...
 
 "#]])
             .expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::init): Creating a new book with stub content
+ INFO Creating a new book with stub content
 
 "#]])
             .args(&["--title", "Example title"]);

@@ -15,6 +15,7 @@ use std::collections::HashMap;
 use std::fmt::Write;
 use std::path::Path;
 use std::sync::LazyLock;
+use tracing::warn;
 
 #[doc(inline)]
 pub use pulldown_cmark;
@@ -126,7 +127,7 @@ pub fn render_markdown(text: &str, options: &HtmlRenderOptions<'_>) -> String {
                 Event::Start(Tag::FootnoteDefinition(name)) => {
                     prev_was_footnote = false;
                     if !in_footnote.is_empty() {
-                        log::warn!(
+                        warn!(
                             "internal bug: nested footnote not expected in {:?}",
                             options.path
                         );
@@ -139,7 +140,7 @@ pub fn render_markdown(text: &str, options: &HtmlRenderOptions<'_>) -> String {
                     let name = std::mem::take(&mut in_footnote_name);
 
                     if footnote_defs.contains_key(&name) {
-                        log::warn!(
+                        warn!(
                             "footnote `{name}` in {} defined multiple times - \
                              not updating to new definition",
                             options.path.display()
@@ -212,7 +213,7 @@ fn add_footnote_defs(
     // Remove unused.
     defs.retain(|(name, _)| {
         if !numbers.contains_key(name) {
-            log::warn!(
+            warn!(
                 "footnote `{name}` in `{}` is defined but not referenced",
                 options.path.display()
             );

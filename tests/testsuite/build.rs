@@ -10,9 +10,9 @@ use crate::prelude::*;
 fn basic_build() {
     BookTest::from_dir("build/basic_build").run("build", |cmd| {
         cmd.expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
-[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/book`
+ INFO Book building has started
+ INFO Running the html backend
+ INFO HTML book written to `[ROOT]/book`
 
 "#]]);
     });
@@ -24,8 +24,8 @@ fn basic_build() {
 fn failure_on_missing_file() {
     BookTest::from_dir("build/missing_file").run("build", |cmd| {
         cmd.expect_failure().expect_stderr(str![[r#"
-[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Chapter file not found, ./chapter_1.md
-[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: [NOT_FOUND]
+ERROR Chapter file not found, ./chapter_1.md
+[TAB]Caused by: [NOT_FOUND]
 
 "#]]);
     });
@@ -46,10 +46,10 @@ fn create_missing() {
 fn no_reserved_filename() {
     BookTest::from_dir("build/no_reserved_filename").run("build", |cmd| {
         cmd.expect_failure().expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
-[TIMESTAMP] [ERROR] (mdbook_core::utils): Error: Rendering failed
-[TIMESTAMP] [ERROR] (mdbook_core::utils): [TAB]Caused By: print.md is reserved for internal use
+ INFO Book building has started
+ INFO Running the html backend
+ERROR Rendering failed
+[TAB]Caused by: print.md is reserved for internal use
 
 "#]]);
     });
@@ -77,9 +77,9 @@ fn dest_dir_relative_path() {
         cmd.args(&["--dest-dir", "foo", ".."])
             .current_dir(&current_dir)
             .expect_stderr(str![[r#"
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Book building has started
-[TIMESTAMP] [INFO] (mdbook_driver::mdbook): Running the html backend
-[TIMESTAMP] [INFO] (mdbook_html::html_handlebars::hbs_renderer): HTML book written to `[ROOT]/work/foo`
+ INFO Book building has started
+ INFO Running the html backend
+ INFO HTML book written to `[ROOT]/work/foo`
 
 "#]]);
     });

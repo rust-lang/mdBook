@@ -1,10 +1,10 @@
 #![allow(missing_docs)]
 
 use anyhow::Result;
-use log::warn;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
+use tracing::{info, warn};
 
 pub mod fonts;
 pub mod playground_editor;
@@ -133,7 +133,7 @@ impl Theme {
                             if entry.file_name() == "fonts.css" {
                                 None
                             } else if entry.file_type().ok()?.is_dir() {
-                                log::info!("skipping font directory {:?}", entry.path());
+                                info!("skipping font directory {:?}", entry.path());
                                 None
                             } else {
                                 Some(entry.path())
