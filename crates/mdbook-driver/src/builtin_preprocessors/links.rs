@@ -97,17 +97,25 @@ where
         match link.render_with_path(path, chapter_title) {
             Ok(new_content) => {
                 if depth < MAX_LINK_NESTED_DEPTH {
-                    if let Some(rel_path) = link.link_type.relative_path(path) {
-                        replaced.push_str(&replace_all(
-                            &new_content,
-                            rel_path,
-                            source,
-                            depth + 1,
-                            chapter_title,
-                        ));
+                    // use split('\n') instead of lines because we DON'T
+                    // want the last \n to be removed
+                    // Otherwise includes starting a new line would be prefixed
+                    // by the preceding line
+                    let prefix = replaced.split('\n').last().unwrap_or("");
+                    let raw_new_content = if let Some(rel_path) = link.link_type.relative_path(path)
+                    {
+                        replace_all(&new_content, rel_path, source, depth + 1, chapter_title)
                     } else {
-                        replaced.push_str(&new_content);
-                    }
+                        new_content
+                    };
+                    // use lines instead of split('\n') because we DO
+                    // want the last \n to be removed
+                    // Otherwise inlined includes would fail
+                    let prefixed_new_content = raw_new_content
+                        .lines()
+                        .collect::<Vec<_>>()
+                        .join(&format!("\n{prefix}"));
+                    replaced.push_str(&prefixed_new_content);
                 } else {
                     error!(
                         "Stack depth exceeded in {}. Check for cyclic includes",

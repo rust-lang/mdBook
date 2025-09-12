@@ -24,6 +24,28 @@ fn include() {
         );
 }
 
+// Basic test for #include.
+#[test]
+fn include_multilines() {
+    BookTest::from_dir("includes/all_includes").check_main_file(
+        "book/multilines.html",
+        str![[r##"
+<h1 id="multilines-include"><a class="header" href="#multilines-include">Multilines include</a></h1>
+<p>Simple inclusion</p>
+<pre><pre class="playground"><code class="language-rust">pub fn main() {
+    println!("Hello, World")
+}</code></pre></pre>
+<blockquote>
+<p>Quoted inclusion</p>
+<pre><pre class="playground"><code class="language-rust">pub fn main() {
+    println!("Hello, World")
+}</code></pre></pre>
+</blockquote>
+<p>end</p>
+"##]],
+    );
+}
+
 // Checks for anchored includes.
 #[test]
 fn anchored_include() {
