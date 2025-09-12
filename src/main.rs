@@ -2,9 +2,6 @@
 
 #![allow(unreachable_pub, reason = "not needed in a bin crate")]
 
-#[macro_use]
-extern crate clap;
-
 use anyhow::anyhow;
 use clap::{Arg, ArgMatches, Command};
 use clap_complete::Shell;
@@ -16,7 +13,7 @@ use tracing::{error, info};
 
 mod cmd;
 
-const VERSION: &str = concat!("v", crate_version!());
+const VERSION: &str = concat!("v", clap::crate_version!());
 
 fn main() {
     init_logger();
@@ -59,8 +56,8 @@ fn main() {
 
 /// Create a list of valid arguments and sub-commands
 fn create_clap_command() -> Command {
-    let app = Command::new(crate_name!())
-        .about(crate_description!())
+    let app = Command::new(clap::crate_name!())
+        .about(clap::crate_description!())
         .author("Mathieu David <mathieudavid@mathieudavid.org>")
         .version(VERSION)
         .propagate_version(true)
