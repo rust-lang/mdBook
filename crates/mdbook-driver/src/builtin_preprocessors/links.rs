@@ -1,15 +1,15 @@
 use anyhow::{Context, Result};
 use mdbook_core::book::{Book, BookItem};
+use mdbook_core::static_regex;
 use mdbook_core::utils::{
     take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,
     take_rustdoc_include_lines,
 };
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
-use regex::{CaptureMatches, Captures, Regex};
+use regex::{CaptureMatches, Captures};
 use std::fs;
 use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeTo};
 use std::path::{Path, PathBuf};
-use std::sync::LazyLock;
 use tracing::{error, warn};
 
 const ESCAPE_CHAR: char = '\\';
@@ -408,23 +408,19 @@ impl<'a> Iterator for LinkIter<'a> {
 }
 
 fn find_links(contents: &str) -> LinkIter<'_> {
-    // lazily compute following regex
-    // r"\\\{\{#.*\}\}|\{\{#([a-zA-Z0-9]+)\s*([^}]+)\}\}")?;
-    static RE: LazyLock<Regex> = LazyLock::new(|| {
-        Regex::new(
-            r"(?x)              # insignificant whitespace mode
+    static_regex!(
+        LINK,
+        r"(?x)              # insignificant whitespace mode
         \\\{\{\#.*\}\}      # match escaped link
         |                   # or
         \{\{\s*             # link opening parens and whitespace
         \#([a-zA-Z0-9_]+)   # link type
         \s+                 # separating whitespace
         ([^}]+)             # link target path and space separated properties
-        \}\}                # link closing parens",
-        )
-        .unwrap()
-    });
+        \}\}                # link closing parens"
+    );
 
-    LinkIter(RE.captures_iter(contents))
+    LinkIter(LINK.captures_iter(contents))
 }
 
 #[cfg(test)]
