@@ -4,12 +4,12 @@ use super::helpers::resources::ResourceHelper;
 use crate::theme::{self, Theme, playground_editor};
 use anyhow::{Context, Result};
 use mdbook_core::config::HtmlConfig;
+use mdbook_core::static_regex;
 use mdbook_core::utils;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
-use std::sync::LazyLock;
 use tracing::debug;
 
 /// Map static files to their final names and contents.
@@ -191,11 +191,10 @@ impl StaticFiles {
 
     pub(super) fn write_files(self, destination: &Path) -> Result<ResourceHelper> {
         use mdbook_core::utils::fs::write_file;
-        use regex::bytes::{Captures, Regex};
+        use regex::bytes::Captures;
         // The `{{ resource "name" }}` directive in static resources look like
         // handlebars syntax, even if they technically aren't.
-        static RESOURCE: LazyLock<Regex> =
-            LazyLock::new(|| Regex::new(r#"\{\{ resource "([^"]+)" \}\}"#).unwrap());
+        static_regex!(RESOURCE, bytes, r#"\{\{ resource "([^"]+)" \}\}"#);
         fn replace_all<'a>(
             hash_map: &HashMap<String, String>,
             data: &'a [u8],

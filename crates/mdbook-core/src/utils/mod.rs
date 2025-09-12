@@ -1,11 +1,9 @@
 //! Various helpers and utilities.
 
 use anyhow::Error;
-use regex::Regex;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt::Write;
-use std::sync::LazyLock;
 use tracing::error;
 
 pub mod fs;
@@ -19,10 +17,23 @@ pub use self::string::{
     take_rustdoc_include_lines,
 };
 
+/// Defines a `static` with a [`regex::Regex`].
+#[macro_export]
+macro_rules! static_regex {
+    ($name:ident, $regex:literal) => {
+        static $name: std::sync::LazyLock<regex::Regex> =
+            std::sync::LazyLock::new(|| regex::Regex::new($regex).unwrap());
+    };
+    ($name:ident, bytes, $regex:literal) => {
+        static $name: std::sync::LazyLock<regex::bytes::Regex> =
+            std::sync::LazyLock::new(|| regex::bytes::Regex::new($regex).unwrap());
+    };
+}
+
 /// Replaces multiple consecutive whitespace characters with a single space character.
 pub fn collapse_whitespace(text: &str) -> Cow<'_, str> {
-    static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\s\s+").unwrap());
-    RE.replace_all(text, " ")
+    static_regex!(WS, r"\s\s+");
+    WS.replace_all(text, " ")
 }
 
 /// Convert the given string to a valid HTML element ID.
@@ -48,7 +59,7 @@ fn id_from_content(content: &str) -> String {
     let mut content = content.to_string();
 
     // Skip any tags or html-encoded stuff
-    static HTML: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(<.*?>)").unwrap());
+    static_regex!(HTML, r"(<.*?>)");
     content = HTML.replace_all(&content, "").into();
     const REPL_SUB: &[&str] = &["&lt;", "&gt;", "&amp;", "&#39;", "&quot;"];
     for sub in REPL_SUB {
