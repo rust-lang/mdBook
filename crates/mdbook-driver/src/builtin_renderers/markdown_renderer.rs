@@ -1,5 +1,4 @@
 use anyhow::{Context, Result};
-use mdbook_core::book::BookItem;
 use mdbook_core::utils;
 use mdbook_renderer::{RenderContext, Renderer};
 use std::fs;
@@ -33,16 +32,12 @@ impl Renderer for MarkdownRenderer {
         }
 
         trace!("markdown render");
-        for item in book.iter() {
-            if let BookItem::Chapter(ref ch) = *item {
-                if !ch.is_draft_chapter() {
-                    utils::fs::write_file(
-                        &ctx.destination,
-                        ch.path.as_ref().expect("Checked path exists before"),
-                        ch.content.as_bytes(),
-                    )?;
-                }
-            }
+        for ch in book.chapters() {
+            utils::fs::write_file(
+                &ctx.destination,
+                ch.path.as_ref().expect("Checked path exists before"),
+                ch.content.as_bytes(),
+            )?;
         }
 
         fs::create_dir_all(destination)

@@ -459,13 +459,7 @@ impl Renderer for HtmlHandlebars {
             utils::fs::write_file(destination, "CNAME", format!("{cname}\n").as_bytes())?;
         }
 
-        let chapters: Vec<_> = book
-            .iter()
-            .filter_map(|item| match item {
-                BookItem::Chapter(ch) if !ch.is_draft_chapter() => Some(ch),
-                _ => None,
-            })
-            .collect();
+        let chapters: Vec<_> = book.chapters().collect();
         for (i, ch) in chapters.iter().enumerate() {
             let previous = (i != 0).then(|| chapters[i - 1]);
             let next = (i != chapters.len() - 1).then(|| chapters[i + 1]);
