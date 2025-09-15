@@ -2,7 +2,7 @@ use super::static_files::StaticFiles;
 use crate::theme::searcher;
 use anyhow::{Context, Result, bail};
 use elasticlunr::{Index, IndexBuilder};
-use mdbook_core::book::{Book, BookItem, Chapter};
+use mdbook_core::book::{Book, Chapter};
 use mdbook_core::config::{Search, SearchChapterSettings};
 use mdbook_core::utils;
 use mdbook_markdown::HtmlRenderOptions;
@@ -43,11 +43,7 @@ pub(super) fn create_files(
     let chapter_configs = sort_search_config(&search_config.chapter);
     validate_chapter_config(&chapter_configs, book)?;
 
-    for item in book.iter() {
-        let chapter = match item {
-            BookItem::Chapter(ch) if !ch.is_draft_chapter() => ch,
-            _ => continue,
-        };
+    for chapter in book.chapters() {
         if let Some(path) = settings_path(chapter) {
             let chapter_settings = get_chapter_settings(&chapter_configs, path);
             if !chapter_settings.enable.unwrap_or(true) {
@@ -349,11 +345,8 @@ fn validate_chapter_config(
 ) -> Result<()> {
     for (path, _) in chapter_configs {
         let found = book
-            .iter()
-            .filter_map(|item| match item {
-                BookItem::Chapter(ch) if !ch.is_draft_chapter() => settings_path(ch),
-                _ => None,
-            })
+            .chapters()
+            .filter_map(|ch| settings_path(ch))
             .any(|source_path| source_path.starts_with(path));
         if !found {
             bail!(

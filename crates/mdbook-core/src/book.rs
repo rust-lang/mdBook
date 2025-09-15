@@ -46,6 +46,14 @@ impl Book {
         }
     }
 
+    /// A depth-first iterator over each [`Chapter`], skipping draft chapters.
+    pub fn chapters(&self) -> impl Iterator<Item = &Chapter> {
+        self.iter().filter_map(|item| match item {
+            BookItem::Chapter(ch) if !ch.is_draft_chapter() => Some(ch),
+            _ => None,
+        })
+    }
+
     /// Recursively apply a closure to each item in the book, allowing you to
     /// mutate them.
     ///
@@ -59,6 +67,26 @@ impl Book {
         F: FnMut(&mut BookItem),
     {
         for_each_mut(&mut func, &mut self.items);
+    }
+
+    /// Recursively apply a closure to each non-draft chapter in the book,
+    /// allowing you to mutate them.
+    pub fn for_each_chapter_mut<F>(&mut self, mut func: F)
+    where
+        F: FnMut(&mut Chapter),
+    {
+        for_each_mut(
+            &mut |item| {
+                let BookItem::Chapter(ch) = item else {
+                    return;
+                };
+                if ch.is_draft_chapter() {
+                    return;
+                }
+                func(ch)
+            },
+            &mut self.items,
+        );
     }
 
     /// Append a `BookItem` to the `Book`.

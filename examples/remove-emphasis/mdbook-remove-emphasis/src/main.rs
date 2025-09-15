@@ -1,7 +1,7 @@
 //! This is a demonstration of an mdBook preprocessor which parses markdown
 //! and removes any instances of emphasis.
 
-use mdbook_preprocessor::book::{Book, BookItem, Chapter};
+use mdbook_preprocessor::book::{Book, Chapter};
 use mdbook_preprocessor::errors::Result;
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use pulldown_cmark::{Event, Parser, Tag, TagEnd};
@@ -36,17 +36,9 @@ impl Preprocessor for RemoveEmphasis {
 
     fn run(&self, _ctx: &PreprocessorContext, mut book: Book) -> Result<Book> {
         let mut total = 0;
-        book.for_each_mut(|item| {
-            let BookItem::Chapter(ch) = item else {
-                return;
-            };
-            if ch.is_draft_chapter() {
-                return;
-            }
-            match remove_emphasis(&mut total, ch) {
-                Ok(s) => ch.content = s,
-                Err(e) => eprintln!("failed to process chapter: {e:?}"),
-            }
+        book.for_each_chapter_mut(|ch| match remove_emphasis(&mut total, ch) {
+            Ok(s) => ch.content = s,
+            Err(e) => eprintln!("failed to process chapter: {e:?}"),
         });
         eprintln!("removed {total} emphasis");
         Ok(book)

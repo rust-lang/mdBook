@@ -1,6 +1,6 @@
 //! Preprocessor for the mdBook guide.
 
-use mdbook_preprocessor::book::{Book, BookItem};
+use mdbook_preprocessor::book::Book;
 use mdbook_preprocessor::errors::Result;
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use semver::{Version, VersionReq};
@@ -53,13 +53,7 @@ fn insert_version(book: &mut Book) {
     let manifest: toml::Value = toml::from_str(&manifest_contents).unwrap();
     let version = manifest["package"]["version"].as_str().unwrap();
     const MARKER: &str = "{{ mdbook-version }}";
-    book.for_each_mut(|item| {
-        let BookItem::Chapter(ch) = item else {
-            return;
-        };
-        if ch.is_draft_chapter() {
-            return;
-        }
+    book.for_each_chapter_mut(|ch| {
         if ch.content.contains(MARKER) {
             ch.content = ch.content.replace(MARKER, version);
         }
