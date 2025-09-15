@@ -6,14 +6,6 @@ use std::io::Write;
 use std::path::{Component, Path, PathBuf};
 use tracing::{debug, trace};
 
-/// Naively replaces any path separator with a forward-slash '/'
-pub fn normalize_path(path: &str) -> String {
-    use std::path::is_separator;
-    path.chars()
-        .map(|ch| if is_separator(ch) { '/' } else { ch })
-        .collect::<String>()
-}
-
 /// Write the given data to a file, creating it first if necessary
 pub fn write_file<P: AsRef<Path>>(build_dir: &Path, filename: P, content: &[u8]) -> Result<()> {
     let path = build_dir.join(filename);

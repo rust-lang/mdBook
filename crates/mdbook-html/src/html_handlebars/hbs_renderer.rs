@@ -1,6 +1,7 @@
 use super::helpers;
 use super::static_files::StaticFiles;
 use crate::theme::Theme;
+use crate::utils::ToUrlPath;
 use anyhow::{Context, Result, bail};
 use handlebars::Handlebars;
 use mdbook_core::book::{Book, BookItem, Chapter};
@@ -122,9 +123,7 @@ impl HtmlHandlebars {
                 .as_ref()
                 .unwrap()
                 .with_extension("html")
-                .to_str()
-                .unwrap()
-                .replace('\\', "//");
+                .to_url_path();
             let obj = json!( {
                 "title": ch.name,
                 "link": path,
@@ -1048,7 +1047,7 @@ fn collect_redirects_for_path(
     path: &Path,
     redirects: &HashMap<String, String>,
 ) -> Result<BTreeMap<String, String>> {
-    let path = format!("/{}", path.display().to_string().replace('\\', "/"));
+    let path = format!("/{}", path.to_url_path());
     if redirects.contains_key(&path) {
         bail!(
             "redirect found for existing chapter at `{path}`\n\

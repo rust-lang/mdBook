@@ -1,6 +1,7 @@
 use super::static_files::StaticFiles;
 use crate::theme::searcher;
-use anyhow::{Context, Result, bail};
+use crate::utils::ToUrlPath;
+use anyhow::{Result, bail};
 use elasticlunr::{Index, IndexBuilder};
 use mdbook_core::book::{Book, Chapter};
 use mdbook_core::config::{Search, SearchChapterSettings};
@@ -124,11 +125,9 @@ fn render_item(
         .path
         .as_ref()
         .expect("Checked that path exists above");
-    let filepath = Path::new(&chapter_path).with_extension("html");
-    let filepath = filepath
-        .to_str()
-        .with_context(|| "Could not convert HTML path to str")?;
-    let anchor_base = utils::fs::normalize_path(filepath);
+    let anchor_base = Path::new(&chapter_path)
+        .with_extension("html")
+        .to_url_path();
 
     let options = HtmlRenderOptions::new(&chapter_path);
     let mut p = new_cmark_parser(&chapter.content, &options.markdown_options).peekable();
