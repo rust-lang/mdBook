@@ -28,7 +28,6 @@ rust-version = "1.85.0" # Keep in sync with installation.md and .github/workflow
 ammonia = "4.1.1"
 anyhow = "1.0.98"
 axum = "0.8.4"
-chrono = { version = "0.4.41", default-features = false, features = ["clock"] }
 clap = { version = "4.5.41", features = ["cargo", "wrap_help"] }
 clap_complete = "4.5.55"
 elasticlunr-rs = "3.0.2"
@@ -90,7 +89,6 @@ rust-version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-chrono.workspace = true
 clap.workspace = true
 clap_complete.workspace = true
 mdbook-core.workspace = true
