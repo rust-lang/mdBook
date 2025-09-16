@@ -871,9 +871,16 @@ fn add_playground_pre(
                             code.into()
                         } else {
                             // we need to inject our own main
-                            let (attrs, code) = partition_source(code);
-
-                            format!("# #![allow(unused)]\n{attrs}# fn main() {{\n{code}# }}").into()
+                            let (attrs, code) = partition_rust_source(code);
+                            let newline = if code.is_empty() || code.ends_with('\n') {
+                                ""
+                            } else {
+                                "\n"
+                            };
+                            format!(
+                                "# #![allow(unused)]\n{attrs}# fn main() {{\n{code}{newline}# }}"
+                            )
+                            .into()
                         };
                         content
                     }
@@ -980,25 +987,26 @@ fn hide_lines_with_prefix(content: &str, prefix: &str) -> String {
     result
 }
 
-fn partition_source(s: &str) -> (String, String) {
-    let mut after_header = false;
-    let mut before = String::new();
-    let mut after = String::new();
-
-    for line in s.lines() {
-        let trimline = line.trim();
-        let header = trimline.chars().all(char::is_whitespace) || trimline.starts_with("#![");
-        if !header || after_header {
-            after_header = true;
-            after.push_str(line);
-            after.push('\n');
-        } else {
-            before.push_str(line);
-            before.push('\n');
-        }
-    }
-
-    (before, after)
+/// Splits Rust inner attributes from the given source string.
+///
+/// Returns `(inner_attrs, rest_of_code)`.
+fn partition_rust_source(s: &str) -> (&str, &str) {
+    static_regex!(
+        HEADER_RE,
+        r"^(?mx)
+        (
+            (?:
+                ^[ \t]*\#!\[.* (?:\r?\n)?
+                |
+                ^\s* (?:\r?\n)?
+            )*
+        )"
+    );
+    let split_idx = match HEADER_RE.captures(s) {
+        Some(caps) => caps[1].len(),
+        None => 0,
+    };
+    s.split_at(split_idx)
 }
 
 struct RenderChapterContext<'a> {
@@ -1314,30 +1322,27 @@ mod tests {
     }
 
     #[test]
-    fn partition_rust_source() {
-        assert_eq!(partition_source(""), ("".to_string(), "".to_string()));
+    fn it_partitions_rust_source() {
+        assert_eq!(partition_rust_source(""), ("", ""));
+        assert_eq!(partition_rust_source("let x = 1;"), ("", "let x = 1;"));
         assert_eq!(
-            partition_source("let x = 1;"),
-            ("".to_string(), "let x = 1;\n".to_string())
+            partition_rust_source("fn main()\n{ let x = 1; }\n"),
+            ("", "fn main()\n{ let x = 1; }\n")
         );
         assert_eq!(
-            partition_source("fn main()\n{ let x = 1; }\n"),
-            ("".to_string(), "fn main()\n{ let x = 1; }\n".to_string())
+            partition_rust_source("#![allow(foo)]"),
+            ("#![allow(foo)]", "")
         );
         assert_eq!(
-            partition_source("#![allow(foo)]"),
-            ("#![allow(foo)]\n".to_string(), "".to_string())
+            partition_rust_source("#![allow(foo)]\n"),
+            ("#![allow(foo)]\n", "")
         );
         assert_eq!(
-            partition_source("#![allow(foo)]\n"),
-            ("#![allow(foo)]\n".to_string(), "".to_string())
+            partition_rust_source("#![allow(foo)]\nlet x = 1;"),
+            ("#![allow(foo)]\n", "let x = 1;")
         );
         assert_eq!(
-            partition_source("#![allow(foo)]\nlet x = 1;"),
-            ("#![allow(foo)]\n".to_string(), "let x = 1;\n".to_string())
-        );
-        assert_eq!(
-            partition_source(
+            partition_rust_source(
                 "\n\
                 #![allow(foo)]\n\
                 \n\
@@ -1345,10 +1350,7 @@ mod tests {
                 \n\
                 let x = 1;"
             ),
-            (
-                "\n#![allow(foo)]\n\n#![allow(bar)]\n\n".to_string(),
-                "let x = 1;\n".to_string()
-            )
+            ("\n#![allow(foo)]\n\n#![allow(bar)]\n\n", "let x = 1;")
         );
     }
 }
