@@ -1220,6 +1220,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "mdbook-compare"
+version = "0.0.0"
+
+[[package]]
 name = "mdbook-core"
 version = "0.5.0-alpha.1"
 dependencies = [

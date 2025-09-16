@@ -1,0 +1,12 @@
+[package]
+name = "mdbook-compare"
+publish = false
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true
