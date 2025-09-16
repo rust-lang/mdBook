@@ -1312,4 +1312,43 @@ mod tests {
         assert_eq!(json!(TextDirection::RightToLeft), json!("rtl"));
         assert_eq!(json!(TextDirection::LeftToRight), json!("ltr"));
     }
+
+    #[test]
+    fn partition_rust_source() {
+        assert_eq!(partition_source(""), ("".to_string(), "".to_string()));
+        assert_eq!(
+            partition_source("let x = 1;"),
+            ("".to_string(), "let x = 1;\n".to_string())
+        );
+        assert_eq!(
+            partition_source("fn main()\n{ let x = 1; }\n"),
+            ("".to_string(), "fn main()\n{ let x = 1; }\n".to_string())
+        );
+        assert_eq!(
+            partition_source("#![allow(foo)]"),
+            ("#![allow(foo)]\n".to_string(), "".to_string())
+        );
+        assert_eq!(
+            partition_source("#![allow(foo)]\n"),
+            ("#![allow(foo)]\n".to_string(), "".to_string())
+        );
+        assert_eq!(
+            partition_source("#![allow(foo)]\nlet x = 1;"),
+            ("#![allow(foo)]\n".to_string(), "let x = 1;\n".to_string())
+        );
+        assert_eq!(
+            partition_source(
+                "\n\
+                #![allow(foo)]\n\
+                \n\
+                #![allow(bar)]\n\
+                \n\
+                let x = 1;"
+            ),
+            (
+                "\n#![allow(foo)]\n\n#![allow(bar)]\n\n".to_string(),
+                "let x = 1;\n".to_string()
+            )
+        );
+    }
 }
