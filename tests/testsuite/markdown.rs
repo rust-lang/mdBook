@@ -11,6 +11,7 @@ fn custom_header_attributes() {
 <h1 id="attrs"><a class="header" href="#attrs">Heading Attributes</a></h1>
 <h2 id="heading-with-classes" class="class1 class2"><a class="header" href="#heading-with-classes">Heading with classes</a></h2>
 <h2 id="both" class="class1 class2"><a class="header" href="#both">Heading with id and classes</a></h2>
+<h2 id="myh3" class="myclass1 myclass2" myattr="" otherattr="value">Heading with attribute</h2>
 "##]]);
 }
 
@@ -49,6 +50,9 @@ fn tables() {
 <tr><td>Double back in code</td><td><code>//</code></td></tr>
 <tr><td>Pipe in code</td><td><code>|</code></td></tr>
 <tr><td>Pipe in code2</td><td><code>test | inside</code></td></tr>
+</tbody></table>
+</div><div class="table-wrapper"><table><thead><tr><th>Neither</th><th style="text-align: left">Left</th><th style="text-align: center">Center</th><th style="text-align: right">Right</th></tr></thead><tbody>
+<tr><td>one</td><td style="text-align: left">two</td><td style="text-align: center">three</td><td style="text-align: right">four</td></tr>
 </tbody></table>
 </div>
 "##]],
@@ -101,7 +105,10 @@ fn smart_punctuation() {
 <li>Ellipsis: …</li>
 <li>Double quote: “quote”</li>
 <li>Single quote: ‘quote’</li>
+<li>Quote in <code>"code"</code></li>
 </ul>
+<pre><code>"quoted"
+</code></pre>
 "##]],
         )
         .run("build", |cmd| {
@@ -117,7 +124,17 @@ fn smart_punctuation() {
 <li>Ellipsis: ...</li>
 <li>Double quote: "quote"</li>
 <li>Single quote: 'quote'</li>
+<li>Quote in <code>"code"</code></li>
 </ul>
+<pre><code>"quoted"
+</code></pre>
 "##]],
         );
+}
+
+// Basic markdown syntax.
+// This doesn't try to cover the commonmark test suite, but maybe it could some day?
+#[test]
+fn basic_markdown() {
+    BookTest::from_dir("markdown/basic_markdown").check_all_main_files();
 }
