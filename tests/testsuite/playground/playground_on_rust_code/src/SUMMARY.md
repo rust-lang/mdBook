@@ -1,3 +1,3 @@
 # Summary
 
-- [Rust Playground](./index.md)
+- [Rust Playground](./rust-playground.md)

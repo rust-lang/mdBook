@@ -1,0 +1,67 @@
+<h1 id="inline-html"><a class="header" href="#inline-html">Inline HTML</a></h1>
+<h2 id="comments"><a class="header" href="#comments">Comments</a></h2>
+<!--comment-->
+<!--
+
+**bigger**
+
+comment
+
+-->
+<h2 id="void-elements"><a class="header" href="#void-elements">Void elements</a></h2>
+<map name="my-map">
+  <area shape="rect" coords="0,0,10,20" href="https://example.com/" alt="alt text">
+</map>
+<p>Line<br>break</p>
+<p>Word<wbr>break</p>
+<table>
+  <colgroup>
+    <col>
+    <col span="2" class="a">
+  </colgroup>
+</table>
+<p><embed
+  type="image/jpeg"
+  src="/image.jpg"
+  width="100"
+  height="200"></p>
+<p>Rule:</p>
+<hr>
+<img src="example.jpg">
+<input type="text">
+<link href="example.css" rel="stylesheet">
+<p><meta name="example"
+  content="Example content"></p>
+<video>
+  <source src="video.webm" type="video/webm">
+  <track kind="captions" src="captions.vtt" srclang="en">
+</video>
+<h2 id="blocks"><a class="header" href="#blocks">Blocks</a></h2>
+<div>
+A block HTML element trying to do *markup*.
+</div>
+<div>
+<p>A block HTML with spaces that <strong>cause</strong> it to be interleaved with markdown.</p>
+</div>
+<h2 id="scripts"><a class="header" href="#scripts">Scripts</a></h2>
+<script></script>
+<script async src="foo.js"></script>
+<script>
+const x = 'some *text* inside';
+
+*don't* < try to "parse me
+</script>
+<h2 id="style"><a class="header" href="#style">Style</a></h2>
+<style>
+
+.foo {
+    background-color: red;
+}
+
+/* **don't** < try to "parse me
+*/
+
+</style>
+<style media="(width < 500px)">
+.bar { background-color: green }
+</style>
