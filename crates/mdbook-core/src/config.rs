@@ -434,6 +434,8 @@ pub struct HtmlConfig {
     pub preferred_dark_theme: Option<String>,
     /// Supports smart quotes, apostrophes, ellipsis, en-dash, and em-dash.
     pub smart_punctuation: bool,
+    /// Support for definition lists.
+    pub definition_lists: bool,
     /// Should mathjax be enabled?
     pub mathjax_support: bool,
     /// Additional CSS stylesheets to include in the rendered page's `<head>`.
@@ -501,6 +503,7 @@ impl Default for HtmlConfig {
             default_theme: None,
             preferred_dark_theme: None,
             smart_punctuation: true,
+            definition_lists: true,
             mathjax_support: false,
             additional_css: Vec::new(),
             additional_js: Vec::new(),

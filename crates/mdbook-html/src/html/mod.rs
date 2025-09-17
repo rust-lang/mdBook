@@ -50,6 +50,7 @@ impl<'a> HtmlRenderOptions<'a> {
     ) -> HtmlRenderOptions<'a> {
         let mut markdown_options = MarkdownOptions::default();
         markdown_options.smart_punctuation = config.smart_punctuation;
+        markdown_options.definition_lists = config.definition_lists;
         HtmlRenderOptions {
             markdown_options,
             path,

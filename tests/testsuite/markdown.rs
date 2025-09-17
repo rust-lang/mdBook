@@ -146,3 +146,16 @@ fn smart_punctuation() {
 fn basic_markdown() {
     BookTest::from_dir("markdown/basic_markdown").check_all_main_files();
 }
+
+#[test]
+fn definition_lists() {
+    BookTest::from_dir("markdown/definition_lists")
+        .check_all_main_files()
+        .run("build", |cmd| {
+            cmd.env("MDBOOK_OUTPUT__HTML__DEFINITION_LISTS", "false");
+        })
+        .check_main_file(
+            "book/definition_lists.html",
+            file!["markdown/definition_lists/expected_disabled/definition_lists.html"],
+        );
+}

@@ -24,12 +24,17 @@ pub struct MarkdownOptions {
     ///
     /// This is `true` by default.
     pub smart_punctuation: bool,
+    /// Enables definition lists.
+    ///
+    /// This is `true` by default.
+    pub definition_lists: bool,
 }
 
 impl Default for MarkdownOptions {
     fn default() -> MarkdownOptions {
         MarkdownOptions {
             smart_punctuation: true,
+            definition_lists: true,
         }
     }
 }
@@ -44,6 +49,9 @@ pub fn new_cmark_parser<'text>(text: &'text str, options: &MarkdownOptions) -> P
     opts.insert(Options::ENABLE_HEADING_ATTRIBUTES);
     if options.smart_punctuation {
         opts.insert(Options::ENABLE_SMART_PUNCTUATION);
+    }
+    if options.definition_lists {
+        opts.insert(Options::ENABLE_DEFINITION_LIST);
     }
     Parser::new_ext(text, opts)
 }

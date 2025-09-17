@@ -98,6 +98,7 @@ theme = "my-theme"
 default-theme = "light"
 preferred-dark-theme = "navy"
 smart-punctuation = true
+definition-lists = true
 mathjax-support = false
 additional-css = ["custom.css", "custom2.css"]
 additional-js = ["custom.js"]
@@ -125,6 +126,7 @@ The following configuration options are available:
 - **smart-punctuation:** Converts quotes to curly quotes, `...` to `…`, `--` to en-dash, and `---` to em-dash.
   See [Smart Punctuation](../markdown.md#smart-punctuation).
   Defaults to `true`.
+- **definition-lists:** Enables [definition lists](../markdown.md#definition-lists). Defaults to `true`.
 - **mathjax-support:** Adds support for [MathJax](../mathjax.md). Defaults to
   `false`.
 - **additional-css:** If you need to slightly change the appearance of your book
