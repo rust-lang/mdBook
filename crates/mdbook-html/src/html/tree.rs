@@ -820,7 +820,7 @@ where
     /// to all header elements, and to also add an `<a>` tag so that clicking
     /// the header will set the current URL to that header's fragment.
     fn add_header_links(&mut self) {
-        let mut id_counter = HashMap::new();
+        let mut id_counter = HashSet::new();
         let headings =
             self.node_ids_for_tag(&|name| matches!(name, "h1" | "h2" | "h3" | "h4" | "h5" | "h6"));
         for heading in headings {

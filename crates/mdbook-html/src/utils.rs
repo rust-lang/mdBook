@@ -1,7 +1,6 @@
 //! Utilities for processing HTML.
 
-use std::collections::HashMap;
-use std::fmt::Write;
+use std::collections::HashSet;
 use std::path::{Component, Path, PathBuf};
 
 /// Utility function to normalize path elements like `..`.
@@ -54,18 +53,23 @@ impl ToUrlPath for Path {
 
 /// Make sure an HTML id is unique.
 ///
-/// The `id_counter` map is used to ensure the ID is globally unique. If the
-/// same id appears more than once, then it will have a number added to make
-/// it unique.
-pub(crate) fn unique_id(id: &str, id_counter: &mut HashMap<String, u32>) -> String {
-    let mut id = id.to_string();
-    let id_count = id_counter.entry(id.to_string()).or_insert(0);
-    if *id_count != 0 {
-        // FIXME: This should be a loop to ensure that the new ID is also unique.
-        write!(id, "-{id_count}").unwrap();
+/// Keeps a set of all previously returned IDs; if the requested id is already
+/// used, numeric suffixes (-1, -2, ...) are tried until an unused one is found.
+pub(crate) fn unique_id(id: &str, used: &mut HashSet<String>) -> String {
+    if used.insert(id.to_string()) {
+        return id.to_string();
     }
-    *id_count += 1;
-    id
+
+    // This ID is already in use. Generate one that is not by appending a
+    // numeric suffix.
+    let mut counter: u32 = 1;
+    loop {
+        let candidate = format!("{id}-{counter}");
+        if used.insert(candidate.clone()) {
+            return candidate;
+        }
+        counter += 1;
+    }
 }
 
 /// Generates an HTML id from the given text.
