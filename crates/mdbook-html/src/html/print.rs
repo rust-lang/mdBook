@@ -8,7 +8,7 @@ use super::Node;
 use crate::html::{ChapterTree, Element, serialize};
 use crate::utils::{ToUrlPath, id_from_content, normalize_path, unique_id};
 use mdbook_core::static_regex;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Component, PathBuf};
 
 /// Takes all the chapter trees, modifies them to be suitable to render for
@@ -42,12 +42,9 @@ pub(crate) fn render_print_page(mut chapter_trees: Vec<ChapterTree<'_>>) -> Stri
 /// been seen. This is used to generate unique IDs.
 fn make_ids_unique(
     chapter_trees: &mut [ChapterTree<'_>],
-) -> (
-    HashMap<PathBuf, HashMap<String, String>>,
-    HashMap<String, u32>,
-) {
+) -> (HashMap<PathBuf, HashMap<String, String>>, HashSet<String>) {
     let mut id_remap = HashMap::new();
-    let mut id_counter = HashMap::new();
+    let mut id_counter = HashSet::new();
     for ChapterTree {
         html_path, tree, ..
     } in chapter_trees
@@ -76,7 +73,7 @@ fn make_ids_unique(
 /// print output has something to link to.
 fn make_root_id_map(
     chapter_trees: &mut [ChapterTree<'_>],
-    id_counter: &mut HashMap<String, u32>,
+    id_counter: &mut HashSet<String>,
 ) -> HashMap<PathBuf, String> {
     let mut path_to_root_id = HashMap::new();
     for ChapterTree {
