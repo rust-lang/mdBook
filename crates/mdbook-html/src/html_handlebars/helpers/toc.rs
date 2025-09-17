@@ -1,11 +1,10 @@
 use crate::utils::ToUrlPath;
-use std::path::Path;
-use std::{cmp::Ordering, collections::BTreeMap};
-
 use handlebars::{
     Context, Handlebars, Helper, HelperDef, Output, RenderContext, RenderError, RenderErrorReason,
 };
-use mdbook_markdown::special_escape;
+use mdbook_core::utils::escape_html_attribute;
+use std::path::Path;
+use std::{cmp::Ordering, collections::BTreeMap};
 
 // Handlebars helper to construct TOC
 #[derive(Clone, Copy)]
@@ -101,7 +100,7 @@ impl HelperDef for RenderToc {
             // Part title
             if let Some(title) = item.get("part") {
                 out.write("<li class=\"part-title\">")?;
-                out.write(&special_escape(title))?;
+                out.write(&escape_html_attribute(title))?;
                 out.write("</li>")?;
                 continue;
             }
@@ -137,7 +136,7 @@ impl HelperDef for RenderToc {
             }
 
             if let Some(name) = item.get("name") {
-                out.write(&special_escape(name))?
+                out.write(&escape_html_attribute(name))?;
             }
 
             if path_exists {

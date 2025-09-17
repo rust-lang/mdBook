@@ -82,28 +82,26 @@ fn language_rust_playground() {
         "x()",
         "",
         str![[r#"
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>x()
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 "#]],
     );
     // `fn main` should not be wrapped, not boring.
     expect(
         "fn main() {}",
         "",
-        str![[
-            r#"<pre><pre class="playground"><code class="language-rust">fn main() {}</code></pre></pre>"#
-        ]],
+        str![[r#"<pre class="playground"><code class="language-rust">fn main() {}</code></pre>"#]],
     );
     // Lines starting with `#` are boring.
     expect(
         "let s = \"foo\n # bar\n\";",
         "editable",
         str![[r#"
-<pre><pre class="playground"><code class="language-rust editable">let s = "foo
+<pre class="playground"><code class="language-rust editable">let s = "foo
 <span class="boring"> bar
-</span>";</code></pre></pre>
+</span>";</code></pre>
 "#]],
     );
     // `##` is not boring and is used as an escape.
@@ -111,9 +109,9 @@ fn language_rust_playground() {
         "let s = \"foo\n ## bar\n\";",
         "editable",
         str![[r#"
-<pre><pre class="playground"><code class="language-rust editable">let s = "foo
+<pre class="playground"><code class="language-rust editable">let s = "foo
  # bar
-";</code></pre></pre>
+";</code></pre>
 "#]],
     );
     // `#` on a line by itself is boring.
@@ -121,10 +119,10 @@ fn language_rust_playground() {
         "let s = \"foo\n # bar\n#\n\";",
         "editable",
         str![[r#"
-<pre><pre class="playground"><code class="language-rust editable">let s = "foo
+<pre class="playground"><code class="language-rust editable">let s = "foo
 <span class="boring"> bar
 </span><span class="boring">
-</span>";</code></pre></pre>
+</span>";</code></pre>
 "#]],
     );
     // `#` must be followed by a space to be boring.
@@ -132,10 +130,10 @@ fn language_rust_playground() {
         "#x;",
         "",
         str![[r#"
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#x;
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 "#]],
     );
 
@@ -155,9 +153,9 @@ fn language_rust_playground() {
         "#![no_std]\nlet s = \"foo\";\n #[some_attr]",
         "editable",
         str![[r#"
-<pre><pre class="playground"><code class="language-rust editable">#![no_std]
+<pre class="playground"><code class="language-rust editable">#![no_std]
 let s = "foo";
- #[some_attr]</code></pre></pre>
+ #[some_attr]</code></pre>
 "#]],
     );
 }
@@ -183,12 +181,12 @@ fn code_block_in_list() {
 <ul>
 <li>
 <p>inside list</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>fn foo() {
   let x = 1;
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 </li>
 </ul>
 "#]],
@@ -210,14 +208,14 @@ fn busted_end_tag() {
             cmd.expect_stderr(str![[r#"
  INFO Book building has started
  INFO Running the html backend
+ WARN html parse error in `chapter_1.md`: Self-closing end tag
+Html text was:
+<div>x<span>foo</span/>y</div>
  INFO HTML book written to `[ROOT]/book`
 
 "#]]);
         })
-        .check_main_file(
-            "book/chapter_1.html",
-            str!["<div>x<span>foo</span/>y</div>"],
-        );
+        .check_main_file("book/chapter_1.html", str!["<div>x<span>foo</span>y</div>"]);
 }
 
 // Various html blocks.

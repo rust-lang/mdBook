@@ -1,19 +1,17 @@
 use super::static_files::StaticFiles;
+use crate::html::{ChapterTree, Node};
 use crate::theme::searcher;
 use crate::utils::ToUrlPath;
 use anyhow::{Result, bail};
+use ego_tree::iter::Edge;
 use elasticlunr::{Index, IndexBuilder};
-use mdbook_core::book::{Book, Chapter};
+use mdbook_core::book::Chapter;
 use mdbook_core::config::{Search, SearchChapterSettings};
-use mdbook_core::utils;
-use mdbook_markdown::HtmlRenderOptions;
-use mdbook_markdown::new_cmark_parser;
-use pulldown_cmark::*;
+use mdbook_core::static_regex;
 use serde::Serialize;
 use std::borrow::Cow;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::LazyLock;
 use tracing::{debug, warn};
 
 const MAX_WORD_LENGTH_TO_INDEX: usize = 80;
@@ -31,7 +29,7 @@ fn tokenize(text: &str) -> Vec<String> {
 pub(super) fn create_files(
     search_config: &Search,
     static_files: &mut StaticFiles,
-    book: &Book,
+    chapter_trees: &[ChapterTree<'_>],
 ) -> Result<()> {
     let mut index = IndexBuilder::new()
         .add_field_with_tokenizer("title", Box::new(&tokenize))
@@ -39,19 +37,19 @@ pub(super) fn create_files(
         .add_field_with_tokenizer("breadcrumbs", Box::new(&tokenize))
         .build();
 
-    let mut doc_urls = Vec::with_capacity(book.items.len());
+    // These are links to all of the headings in all of the chapters.
+    let mut doc_urls = Vec::new();
 
     let chapter_configs = sort_search_config(&search_config.chapter);
-    validate_chapter_config(&chapter_configs, book)?;
+    validate_chapter_config(&chapter_configs, chapter_trees)?;
 
-    for chapter in book.chapters() {
-        if let Some(path) = settings_path(chapter) {
-            let chapter_settings = get_chapter_settings(&chapter_configs, path);
-            if !chapter_settings.enable.unwrap_or(true) {
-                continue;
-            }
+    for ct in chapter_trees {
+        let path = settings_path(ct.chapter);
+        let chapter_settings = get_chapter_settings(&chapter_configs, path);
+        if !chapter_settings.enable.unwrap_or(true) {
+            continue;
         }
-        render_item(&mut index, search_config, &mut doc_urls, chapter)?;
+        index_chapter(&mut index, search_config, &mut doc_urls, ct)?;
     }
 
     let index = write_to_json(index, search_config, doc_urls)?;
@@ -85,151 +83,110 @@ fn add_doc(
     index: &mut Index,
     doc_urls: &mut Vec<String>,
     anchor_base: &str,
-    heading: &str,
-    id_counter: &mut HashMap<String, usize>,
-    section_id: &Option<CowStr<'_>>,
+    heading_id: &str,
     items: &[&str],
 ) {
-    // Either use the explicit section id the user specified, or generate one
-    // from the heading content.
-    let section_id = section_id.as_ref().map(|id| id.to_string()).or_else(|| {
-        if heading.is_empty() {
-            // In the case where a chapter has no heading, don't set a section id.
-            None
-        } else {
-            Some(utils::unique_id_from_content(heading, id_counter))
-        }
-    });
+    let mut url = anchor_base.to_string();
+    if !heading_id.is_empty() {
+        url.push('#');
+        url.push_str(heading_id);
+    }
 
-    let url = if let Some(id) = section_id {
-        Cow::Owned(format!("{anchor_base}#{id}"))
-    } else {
-        Cow::Borrowed(anchor_base)
-    };
-    let url = utils::collapse_whitespace(url.trim());
     let doc_ref = doc_urls.len().to_string();
-    doc_urls.push(url.into());
+    doc_urls.push(url);
 
-    let items = items.iter().map(|&x| utils::collapse_whitespace(x.trim()));
+    let items = items.iter().map(|&x| collapse_whitespace(x.trim()));
     index.add_doc(&doc_ref, items);
 }
 
-/// Renders markdown into flat unformatted text and adds it to the search index.
-fn render_item(
+/// Adds the chapter to the search index.
+fn index_chapter(
     index: &mut Index,
     search_config: &Search,
     doc_urls: &mut Vec<String>,
-    chapter: &Chapter,
+    chapter_tree: &ChapterTree<'_>,
 ) -> Result<()> {
-    let chapter_path = chapter
-        .path
-        .as_ref()
-        .expect("Checked that path exists above");
-    let anchor_base = Path::new(&chapter_path)
-        .with_extension("html")
-        .to_url_path();
-
-    let options = HtmlRenderOptions::new(&chapter_path);
-    let mut p = new_cmark_parser(&chapter.content, &options.markdown_options).peekable();
+    let anchor_base = chapter_tree.html_path.to_url_path();
 
     let mut in_heading = false;
-    let max_section_depth = u32::from(search_config.heading_split_level);
+    let max_section_depth = search_config.heading_split_level;
     let mut section_id = None;
     let mut heading = String::new();
     let mut body = String::new();
-    let mut breadcrumbs = chapter.parent_names.clone();
-    let mut footnote_numbers = HashMap::new();
+    let mut breadcrumbs = chapter_tree.chapter.parent_names.clone();
 
-    breadcrumbs.push(chapter.name.clone());
+    breadcrumbs.push(chapter_tree.chapter.name.clone());
 
-    let mut id_counter = HashMap::new();
-    while let Some(event) = p.next() {
-        match event {
-            Event::Start(Tag::Heading { level, id, .. }) if level as u32 <= max_section_depth => {
-                if !heading.is_empty() {
-                    // Section finished, the next heading is following now
-                    // Write the data to the index, and clear it for the next section
-                    add_doc(
-                        index,
-                        doc_urls,
-                        &anchor_base,
-                        &heading,
-                        &mut id_counter,
-                        &section_id,
-                        &[&heading, &body, &breadcrumbs.join(" » ")],
-                    );
-                    heading.clear();
-                    body.clear();
-                    breadcrumbs.pop();
-                }
+    let mut traverse = chapter_tree.tree.root().traverse();
 
-                section_id = id;
-                in_heading = true;
-            }
-            Event::End(TagEnd::Heading(level)) if level as u32 <= max_section_depth => {
-                in_heading = false;
-                breadcrumbs.push(heading.clone());
-            }
-            Event::Start(Tag::FootnoteDefinition(name)) => {
-                let number = footnote_numbers.len() + 1;
-                footnote_numbers.entry(name).or_insert(number);
-            }
-            Event::Html(html) => {
-                let mut html_block = html.into_string();
-
-                // As of pulldown_cmark 0.6, html events are no longer contained
-                // in an HtmlBlock tag. We must collect consecutive Html events
-                // into a block ourselves.
-                while let Some(Event::Html(html)) = p.peek() {
-                    html_block.push_str(html);
-                    p.next();
+    while let Some(edge) = traverse.next() {
+        match edge {
+            Edge::Open(node) => match node.value() {
+                Node::Element(el) => {
+                    if let Some(level) = el.heading_level()
+                        && level <= max_section_depth
+                        && let Some(heading_id) = el.attr("id")
+                    {
+                        if !heading.is_empty() {
+                            // Section finished, the next heading is following now
+                            // Write the data to the index, and clear it for the next section
+                            add_doc(
+                                index,
+                                doc_urls,
+                                &anchor_base,
+                                section_id.unwrap(),
+                                &[&heading, &body, &breadcrumbs.join(" » ")],
+                            );
+                            heading.clear();
+                            body.clear();
+                            breadcrumbs.pop();
+                        }
+                        section_id = Some(heading_id);
+                        in_heading = true;
+                    } else if matches!(el.name(), "script" | "style") {
+                        // Skip this node.
+                        while let Some(edge) = traverse.next() {
+                            if let Edge::Close(close) = edge
+                                && close == node
+                            {
+                                break;
+                            }
+                        }
+                    // Insert spaces where HTML output would usually separate text
+                    // to ensure words don't get merged together
+                    } else if in_heading {
+                        heading.push(' ');
+                    } else {
+                        body.push(' ');
+                    }
                 }
-                body.push_str(&clean_html(&html_block));
-            }
-            Event::InlineHtml(html) => {
-                // This is not capable of cleaning inline tags like
-                // `foo <script>…</script>`. The `<script>` tags show up as
-                // individual InlineHtml events, and the content inside is
-                // just a regular Text event. There isn't a very good way to
-                // know how to collect all the content in-between. I'm not
-                // sure if this is easily fixable. It should be extremely
-                // rare, since script and style tags should almost always be
-                // blocks, and worse case you have some noise in the index.
-                body.push_str(&clean_html(&html));
-            }
-            Event::InlineMath(text) | Event::DisplayMath(text) => {
-                if in_heading {
-                    heading.push_str(&text);
-                } else {
-                    body.push_str(&text);
+                Node::Text(text) => {
+                    if in_heading {
+                        heading.push_str(text);
+                    } else {
+                        body.push_str(text);
+                    }
                 }
-            }
-            Event::Start(_) | Event::End(_) | Event::Rule | Event::SoftBreak | Event::HardBreak => {
-                // Insert spaces where HTML output would usually separate text
-                // to ensure words don't get merged together
-                if in_heading {
-                    heading.push(' ');
-                } else {
-                    body.push(' ');
+                Node::Comment(_) => {}
+                Node::Fragment => {}
+                Node::RawData(_) => {}
+            },
+            Edge::Close(node) => match node.value() {
+                Node::Element(el) => {
+                    if let Some(level) = el.heading_level()
+                        && level <= max_section_depth
+                    {
+                        in_heading = false;
+                        breadcrumbs.push(heading.clone());
+                    }
                 }
-            }
-            Event::Text(text) | Event::Code(text) => {
-                if in_heading {
-                    heading.push_str(&text);
-                } else {
-                    body.push_str(&text);
-                }
-            }
-            Event::FootnoteReference(name) => {
-                let len = footnote_numbers.len() + 1;
-                let number = footnote_numbers.entry(name).or_insert(len);
-                body.push_str(&format!(" [{number}] "));
-            }
-            Event::TaskListMarker(_checked) => {}
+                _ => {}
+            },
         }
     }
 
     if !body.is_empty() || !heading.is_empty() {
+        // Make sure the last section is added to the index
         let title = if heading.is_empty() {
             if let Some(chapter) = breadcrumbs.first() {
                 chapter
@@ -239,14 +196,11 @@ fn render_item(
         } else {
             &heading
         };
-        // Make sure the last section is added to the index
         add_doc(
             index,
             doc_urls,
             &anchor_base,
-            &heading,
-            &mut id_counter,
-            &section_id,
+            section_id.unwrap_or_default(),
             &[title, &body, &breadcrumbs.join(" » ")],
         );
     }
@@ -316,37 +270,20 @@ fn write_to_json(index: Index, search_config: &Search, doc_urls: Vec<String>) ->
     Ok(json_contents)
 }
 
-fn clean_html(html: &str) -> String {
-    static AMMONIA: LazyLock<ammonia::Builder<'static>> = LazyLock::new(|| {
-        let mut clean_content = HashSet::new();
-        clean_content.insert("script");
-        clean_content.insert("style");
-        let mut builder = ammonia::Builder::new();
-        builder
-            .tags(HashSet::new())
-            .tag_attributes(HashMap::new())
-            .generic_attributes(HashSet::new())
-            .link_rel(None)
-            .allowed_classes(HashMap::new())
-            .clean_content_tags(clean_content);
-        builder
-    });
-    AMMONIA.clean(html).to_string()
-}
-
-fn settings_path(ch: &Chapter) -> Option<&Path> {
-    ch.source_path.as_deref().or_else(|| ch.path.as_deref())
+fn settings_path(ch: &Chapter) -> &Path {
+    ch.source_path
+        .as_deref()
+        .unwrap_or_else(|| ch.path.as_deref().unwrap())
 }
 
 fn validate_chapter_config(
     chapter_configs: &[(PathBuf, SearchChapterSettings)],
-    book: &Book,
+    chapter_trees: &[ChapterTree<'_>],
 ) -> Result<()> {
     for (path, _) in chapter_configs {
-        let found = book
-            .chapters()
-            .filter_map(|ch| settings_path(ch))
-            .any(|source_path| source_path.starts_with(path));
+        let found = chapter_trees
+            .iter()
+            .any(|ct| settings_path(ct.chapter).starts_with(path));
         if !found {
             bail!(
                 "[output.html.search.chapter] key `{}` does not match any chapter paths",
@@ -381,6 +318,12 @@ fn get_chapter_settings(
         }
     }
     result
+}
+
+/// Replaces multiple consecutive whitespace characters with a single space character.
+fn collapse_whitespace(text: &str) -> Cow<'_, str> {
+    static_regex!(WS, r"\s\s+");
+    WS.replace_all(text, " ")
 }
 
 #[test]

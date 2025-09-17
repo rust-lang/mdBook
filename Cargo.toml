@@ -22,20 +22,21 @@ unreachable_pub = "warn"
 edition = "2024"
 license = "MPL-2.0"
 repository = "https://github.com/rust-lang/mdBook"
-rust-version = "1.85.0" # Keep in sync with installation.md and .github/workflows/main.yml
+rust-version = "1.88.0" # Keep in sync with installation.md and .github/workflows/main.yml
 
 [workspace.dependencies]
-ammonia = "4.1.1"
 anyhow = "1.0.98"
 axum = "0.8.4"
 clap = { version = "4.5.41", features = ["cargo", "wrap_help"] }
 clap_complete = "4.5.55"
+ego-tree = "0.10.0"
 elasticlunr-rs = "3.0.2"
 font-awesome-as-a-crate = "0.3.0"
 futures-util = "0.3.31"
 glob = "0.3.3"
 handlebars = "6.3.2"
 hex = "0.4.3"
+html5ever = "0.35.0"
 indexmap = "2.10.0"
 ignore = "0.4.23"
 mdbook-core = { path = "crates/mdbook-core" }
@@ -50,7 +51,6 @@ notify = "8.1.0"
 notify-debouncer-mini = "0.6.0"
 opener = "0.8.2"
 pathdiff = "0.2.3"
-pretty_assertions = "1.4.1"
 pulldown-cmark = { version = "0.13.0", default-features = false, features = ["html"] } # Do not update, part of the public api.
 regex = "1.11.1"
 select = "0.6.1"
