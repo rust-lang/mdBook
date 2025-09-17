@@ -240,3 +240,33 @@ Example:
 This makes the level 1 heading with the content `Example heading`, ID `first`, and classes `class1` and `class2`. Note that the attributes should be space-separated.
 
 More information can be found in the [heading attrs spec page](https://github.com/raphlinus/pulldown-cmark/blob/master/pulldown-cmark/specs/heading_attrs.txt).
+
+### Definition lists
+
+Definition lists can be used for things like glossary entries. The term is listed on a line by itself, followed by one or more definitions. Each definition must begin with a `:` (after 0-2 spaces).
+
+Example:
+
+```md
+term A
+  : This is a definition of term A. Text
+    can span multiple lines.
+
+term B
+  : This is a definition of term B.
+  : This has more than one definition.
+```
+
+This will render as:
+
+term A
+  : This is a definition of term A. Text
+    can span multiple lines.
+
+term B
+  : This is a definition of term B.
+  : This has more than one definition.
+
+Terms are clickable just like headers, which will set the browser's URL to point directly to that term.
+
+See the [definition lists spec](https://github.com/pulldown-cmark/pulldown-cmark/blob/HEAD/pulldown-cmark/specs/definition_lists.txt) for more information on the specifics of the syntax. See the [Wikipedia guidelines for glossaries](https://en.wikipedia.org/wiki/Wikipedia:Manual_of_Style/Glossaries#General_guidelines_for_writing_glossaries) for some guidelines on how to write a glossary.

@@ -61,7 +61,8 @@ h2:target::before,
 h3:target::before,
 h4:target::before,
 h5:target::before,
-h6:target::before {
+h6:target::before,
+dt:target::before {
     display: inline-block;
     content: "»";
     margin-inline-start: -30px;
@@ -284,4 +285,42 @@ sup {
     height: 1em;
     fill: currentColor;
     margin-bottom: -0.1em;
+}
+
+dt {
+    font-weight: bold;
+    margin-top: 0.5em;
+    margin-bottom: 0.1em;
+}
+
+/* This uses a CSS counter to add numbers to definitions, but only if there is
+ more than one definition. */
+dl, dt {
+    counter-reset: dd-counter;
+}
+
+/* When there is more than one definition, increment the counter. The first
+selector selects the first definition, and the second one selects definitions
+2 and beyond.*/
+dd:has(+ dd), dd + dd {
+    counter-increment: dd-counter;
+    /* Use flex display to help with positioning the numbers when there is a p
+    tag inside the definition. */
+    display: flex;
+    align-items: flex-start;
+}
+
+/* Shows the counter for definitions. The first selector selects the first
+definition, and the second one selections definitions 2 and beyond.*/
+dd:has(+ dd)::before, dd + dd::before  {
+    content: counter(dd-counter) ". ";
+    font-weight: 600;
+    display: inline-block;
+    margin-right: 0.5em;
+}
+
+dd > p {
+    /* For loose definitions that have a p tag inside, don't add a bunch of
+    space before the definition. */
+    margin-top: 0;
 }
