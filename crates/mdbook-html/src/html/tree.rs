@@ -614,6 +614,7 @@ where
                             }
                         }
                         TagKind::EndTag => {
+                            is_raw = false;
                             if self.is_html_tag_matching(&tag.name) {
                                 self.pop();
                             }
