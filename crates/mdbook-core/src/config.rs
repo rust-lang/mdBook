@@ -1135,4 +1135,11 @@ mod tests {
         assert!(html_config.print.enable);
         assert!(!html_config.print.page_break);
     }
+
+    #[test]
+    fn test_json_direction() {
+        use serde_json::json;
+        assert_eq!(json!(TextDirection::RightToLeft), json!("rtl"));
+        assert_eq!(json!(TextDirection::LeftToRight), json!("ltr"));
+    }
 }

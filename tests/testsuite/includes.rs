@@ -31,10 +31,10 @@ fn anchored_include() {
         "book/anchors.html",
         str![[r##"
 <h1 id="include-anchors"><a class="header" href="#include-anchors">Include Anchors</a></h1>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>let x = 1;
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 "##]],
     );
 }
@@ -77,12 +77,12 @@ fn playground_include() {
         .check_main_file("book/playground.html",
             str![[r##"
 <h1 id="playground-includes"><a class="header" href="#playground-includes">Playground Includes</a></h1>
-<pre><pre class="playground"><code class="language-rust">fn main() {
+<pre class="playground"><code class="language-rust">fn main() {
     println!("Hello World!");
 <span class="boring">
 </span><span class="boring">   // You can even hide lines! :D
 </span><span class="boring">  println!("I am hidden! Expand the code snippet to see me");
-</span>}</code></pre></pre>
+</span>}</code></pre>
 "##]]);
 }
 
@@ -94,20 +94,20 @@ fn rustdoc_include() {
             str![[r##"
 <h1 id="rustdoc-includes"><a class="header" href="#rustdoc-includes">Rustdoc Includes</a></h1>
 <h2 id="rustdoc-include-adds-the-rest-of-the-file-as-hidden"><a class="header" href="#rustdoc-include-adds-the-rest-of-the-file-as-hidden">Rustdoc include adds the rest of the file as hidden</a></h2>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">fn some_function() {
+<pre class="playground"><code class="language-rust"><span class="boring">fn some_function() {
 </span><span class="boring">    println!("some function");
 </span><span class="boring">}
 </span><span class="boring">
 </span>fn main() {
     some_function();
-}</code></pre></pre>
+}</code></pre>
 <h2 id="rustdoc-include-works-with-anchors-too"><a class="header" href="#rustdoc-include-works-with-anchors-too">Rustdoc include works with anchors too</a></h2>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">fn some_other_function() {
+<pre class="playground"><code class="language-rust"><span class="boring">fn some_other_function() {
 </span><span class="boring">    println!("unused anchor");
 </span><span class="boring">}
 </span><span class="boring">
 </span>fn main() {
     some_other_function();
-}</code></pre></pre>
+}</code></pre>
 "##]]);
 }

@@ -63,7 +63,7 @@ fn reasonable_search_index() {
     // html.
     assert_eq!(
         docs[&sneaky]["body"],
-        "I put &lt;HTML&gt; in here! Sneaky inline event alert(“inline”);. But regular inline is indexed."
+        "I put <HTML> in here! Sneaky inline event . But regular inline is indexed."
     );
     assert_eq!(
         docs[&no_headers]["breadcrumbs"],

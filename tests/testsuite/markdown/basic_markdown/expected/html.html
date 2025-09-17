@@ -20,18 +20,14 @@ comment
     <col span="2" class="a">
   </colgroup>
 </table>
-<p><embed
-  type="image/jpeg"
-  src="/image.jpg"
-  width="100"
-  height="200"></p>
+
+<p><embed type="image/jpeg" src="/image.jpg" width="100" height="200"></p>
 <p>Rule:</p>
 <hr>
 <img src="example.jpg">
 <input type="text">
 <link href="example.css" rel="stylesheet">
-<p><meta name="example"
-  content="Example content"></p>
+<p><meta name="example" content="Example content"></p>
 <video>
   <source src="video.webm" type="video/webm">
   <track kind="captions" src="captions.vtt" srclang="en">
@@ -40,12 +36,14 @@ comment
 <div>
 A block HTML element trying to do *markup*.
 </div>
+
 <div>
 <p>A block HTML with spaces that <strong>cause</strong> it to be interleaved with markdown.</p>
 </div>
+
 <h2 id="scripts"><a class="header" href="#scripts">Scripts</a></h2>
 <script></script>
-<script async src="foo.js"></script>
+<script async="" src="foo.js"></script>
 <script>
 const x = 'some *text* inside';
 
@@ -62,6 +60,6 @@ const x = 'some *text* inside';
 */
 
 </style>
-<style media="(width < 500px)">
+<style media="(width &lt; 500px)">
 .bar { background-color: green }
 </style>

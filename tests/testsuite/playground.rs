@@ -9,10 +9,10 @@ fn playground_on_rust_code() {
         "book/index.html",
         str![[r##"
 <h1 id="rust-sample"><a class="header" href="#rust-sample">Rust Sample</a></h1>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>let x = 1;
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 "##]],
     );
 }

@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use mdbook_core::book::{Book, BookItem, Chapter};
 use mdbook_core::config::BuildConfig;
-use mdbook_core::utils::bracket_escape;
+use mdbook_core::utils::escape_html;
 use mdbook_summary::{Link, Summary, SummaryItem, parse_summary};
 use std::fs::{self, File};
 use std::io::{Read, Write};
@@ -51,7 +51,8 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
                     let mut f = File::create(&filename).with_context(|| {
                         format!("Unable to create missing file: {}", filename.display())
                     })?;
-                    writeln!(f, "# {}", bracket_escape(&link.name))?;
+                    let title = escape_html(&link.name);
+                    writeln!(f, "# {title}")?;
                 }
             }
 
