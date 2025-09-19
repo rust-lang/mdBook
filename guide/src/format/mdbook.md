@@ -338,32 +338,6 @@ HTML tags with class `hidden` will not be shown.
 
 <div class="hidden">This will not be seen.</div>
 
-### `class="warning"`
-
-To make a warning or similar note stand out, wrap it in a warning div.
-
-```html
-<div class="warning">
-
-This is a bad thing that you should pay attention to.
-
-Warning blocks should be used sparingly in documentation, to avoid "warning
-fatigue," where people are trained to ignore them because they usually don't
-matter for what they're doing.
-
-</div>
-```
-
-<div class="warning">
-
-This is a bad thing that you should pay attention to.
-
-Warning blocks should be used sparingly in documentation, to avoid "warning
-fatigue," where people are trained to ignore them because they usually don't
-matter for what they're doing.
-
-</div>
-
 ## Font-Awesome icons
 
 mdBook includes a copy of [Font Awesome Free's](https://fontawesome.com)

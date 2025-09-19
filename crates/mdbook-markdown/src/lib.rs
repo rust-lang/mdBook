@@ -28,6 +28,10 @@ pub struct MarkdownOptions {
     ///
     /// This is `true` by default.
     pub definition_lists: bool,
+    /// Enables admonitions.
+    ///
+    /// This is `true` by default.
+    pub admonitions: bool,
 }
 
 impl Default for MarkdownOptions {
@@ -35,6 +39,7 @@ impl Default for MarkdownOptions {
         MarkdownOptions {
             smart_punctuation: true,
             definition_lists: true,
+            admonitions: true,
         }
     }
 }
@@ -52,6 +57,9 @@ pub fn new_cmark_parser<'text>(text: &'text str, options: &MarkdownOptions) -> P
     }
     if options.definition_lists {
         opts.insert(Options::ENABLE_DEFINITION_LIST);
+    }
+    if options.admonitions {
+        opts.insert(Options::ENABLE_GFM);
     }
     Parser::new_ext(text, opts)
 }

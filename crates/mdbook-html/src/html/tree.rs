@@ -15,9 +15,7 @@ use html5ever::{LocalName, QualName};
 use indexmap::IndexMap;
 use mdbook_core::config::RustEdition;
 use mdbook_core::static_regex;
-use pulldown_cmark::{
-    Alignment, BlockQuoteKind, CodeBlockKind, CowStr, Event, LinkType, Tag, TagEnd,
-};
+use pulldown_cmark::{Alignment, CodeBlockKind, CowStr, Event, LinkType, Tag, TagEnd};
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::ops::Deref;
@@ -407,14 +405,27 @@ where
             Tag::BlockQuote(kind) => {
                 let mut b = Element::new("blockquote");
                 if let Some(kind) = kind {
-                    let class = match kind {
-                        BlockQuoteKind::Note => "markdown-alert-note",
-                        BlockQuoteKind::Tip => "markdown-alert-tip",
-                        BlockQuoteKind::Important => "markdown-alert-important",
-                        BlockQuoteKind::Warning => "markdown-alert-warning",
-                        BlockQuoteKind::Caution => "markdown-alert-caution",
-                    };
+                    let (class_kind, icon, text) = super::admonitions::select_tag(kind);
+                    let class = format!("blockquote-tag blockquote-tag-{class_kind}");
                     b.insert_attr("class", class.into());
+                    self.push(Node::Element(b));
+
+                    let mut title = Element::new("p");
+                    title.insert_attr("class", "blockquote-tag-title".into());
+                    self.push(Node::Element(title));
+
+                    let mut svg = Element::new("svg");
+                    svg.insert_attr("viewbox", "0 0 16 16".into());
+                    svg.insert_attr("width", "18".into());
+                    svg.insert_attr("height", "18".into());
+                    self.push(Node::Element(svg));
+                    self.append_html(icon);
+                    self.pop();
+
+                    self.append(Node::Text(text.into()));
+
+                    self.pop();
+                    return;
                 }
                 b
             }

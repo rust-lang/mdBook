@@ -159,3 +159,16 @@ fn definition_lists() {
             file!["markdown/definition_lists/expected_disabled/definition_lists.html"],
         );
 }
+
+#[test]
+fn admonitions() {
+    BookTest::from_dir("markdown/admonitions")
+        .check_all_main_files()
+        .run("build", |cmd| {
+            cmd.env("MDBOOK_OUTPUT__HTML__ADMONITIONS", "false");
+        })
+        .check_main_file(
+            "book/admonitions.html",
+            file!["markdown/admonitions/expected_disabled/admonitions.html"],
+        );
+}

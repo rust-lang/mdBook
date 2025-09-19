@@ -156,6 +156,8 @@ blockquote {
     border-block-end: .1em solid var(--quote-border);
 }
 
+/* TODO: Remove .warning in a future version of mdbook, it is replaced by
+blockquote tags. */
 .warning {
     margin: 20px;
     padding: 0 20px;
@@ -323,4 +325,84 @@ dd > p {
     /* For loose definitions that have a p tag inside, don't add a bunch of
     space before the definition. */
     margin-top: 0;
+}
+
+/* Remove some excess space from the bottom. */
+.blockquote-tag p:last-child {
+    margin-bottom: 2px;
+}
+
+.blockquote-tag {
+    /* Add some padding to make the vertical bar a little taller than the text.*/
+    padding: 2px 0px 2px 20px;
+    /* Add a solid color bar on the left side. */
+    border-inline-start-style: solid;
+    border-inline-start-width: 4px;
+    /* Disable the background color from normal blockquotes . */
+    background-color: inherit;
+    /* Disable border blocks from blockquotes. */
+    border-block-start: none;
+    border-block-end: none;
+}
+
+.blockquote-tag-title svg {
+    fill: currentColor;
+    /* Add space between the icon and the title. */
+    margin-right: 8px;
+}
+
+.blockquote-tag-note {
+    border-inline-start-color: var(--blockquote-note-color);
+}
+
+.blockquote-tag-tip {
+    border-inline-start-color: var(--blockquote-tip-color);
+}
+
+.blockquote-tag-important {
+    border-inline-start-color: var(--blockquote-important-color);
+}
+
+.blockquote-tag-warning {
+    border-inline-start-color: var(--blockquote-warning-color);
+}
+
+.blockquote-tag-caution {
+    border-inline-start-color: var(--blockquote-caution-color);
+}
+
+.blockquote-tag-note .blockquote-tag-title {
+    color: var(--blockquote-note-color);
+}
+
+.blockquote-tag-tip .blockquote-tag-title {
+    color: var(--blockquote-tip-color);
+}
+
+.blockquote-tag-important .blockquote-tag-title {
+    color: var(--blockquote-important-color);
+}
+
+.blockquote-tag-warning .blockquote-tag-title {
+    color: var(--blockquote-warning-color);
+}
+
+.blockquote-tag-caution .blockquote-tag-title {
+    color: var(--blockquote-caution-color);
+}
+
+.blockquote-tag-title {
+    /* Slightly increase the weight for more emphasis. */
+    font-weight: 600;
+    /* Vertically center the icon with the text. */
+    display: flex;
+    align-items: center;
+    /* Remove default large margins for a more compact display. */
+    margin: 2px 0 8px 0;
+}
+
+.blockquote-tag-title .fa-svg {
+    fill: currentColor;
+    /* Add some space between the icon and the text. */
+    margin-right: 8px;
 }

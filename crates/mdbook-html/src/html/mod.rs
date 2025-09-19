@@ -16,6 +16,7 @@ use mdbook_core::config::{HtmlConfig, RustEdition};
 use mdbook_markdown::{MarkdownOptions, new_cmark_parser};
 use std::path::{Path, PathBuf};
 
+mod admonitions;
 mod hide_lines;
 mod print;
 mod serialize;
@@ -51,6 +52,7 @@ impl<'a> HtmlRenderOptions<'a> {
         let mut markdown_options = MarkdownOptions::default();
         markdown_options.smart_punctuation = config.smart_punctuation;
         markdown_options.definition_lists = config.definition_lists;
+        markdown_options.admonitions = config.admonitions;
         HtmlRenderOptions {
             markdown_options,
             path,
