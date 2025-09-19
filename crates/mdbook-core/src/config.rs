@@ -436,6 +436,8 @@ pub struct HtmlConfig {
     pub smart_punctuation: bool,
     /// Support for definition lists.
     pub definition_lists: bool,
+    /// Support for admonitions.
+    pub admonitions: bool,
     /// Should mathjax be enabled?
     pub mathjax_support: bool,
     /// Additional CSS stylesheets to include in the rendered page's `<head>`.
@@ -504,6 +506,7 @@ impl Default for HtmlConfig {
             preferred_dark_theme: None,
             smart_punctuation: true,
             definition_lists: true,
+            admonitions: true,
             mathjax_support: false,
             additional_css: Vec::new(),
             additional_js: Vec::new(),

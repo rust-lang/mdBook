@@ -270,3 +270,46 @@ term B
 Terms are clickable just like headers, which will set the browser's URL to point directly to that term.
 
 See the [definition lists spec](https://github.com/pulldown-cmark/pulldown-cmark/blob/HEAD/pulldown-cmark/specs/definition_lists.txt) for more information on the specifics of the syntax. See the [Wikipedia guidelines for glossaries](https://en.wikipedia.org/wiki/Wikipedia:Manual_of_Style/Glossaries#General_guidelines_for_writing_glossaries) for some guidelines on how to write a glossary.
+
+### Admonitions
+
+An admonition is a special type of callout or notice block used to highlight important information. It is written as a blockquote with a special tag on the first line.
+
+```md
+> [!NOTE]
+> General information or additional context.
+
+> [!TIP]
+> A helpful suggestion or best practice.
+
+> [!IMPORTANT]
+> Key information that shouldn't be missed.
+
+> [!WARNING]
+> Critical information that highlights a potential risk.
+
+> [!CAUTION]
+> Information about potential issues that require caution.
+```
+
+These will render as:
+
+> [!NOTE]
+> General information or additional context.
+
+> [!TIP]
+> A helpful suggestion or best practice.
+
+> [!IMPORTANT]
+> Key information that shouldn't be missed.
+
+> [!WARNING]
+> Critical information that highlights a potential risk.
+
+> [!CAUTION]
+> Information about potential issues that require caution.
+
+This feature is enabled by default.
+To disable it, see the [`output.html.admonitions`] config option.
+
+[`output.html.admonitions`]: configuration/renderers.md#html-renderer-options
