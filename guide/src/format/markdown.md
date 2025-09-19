@@ -271,6 +271,11 @@ Terms are clickable just like headers, which will set the browser's URL to point
 
 See the [definition lists spec](https://github.com/pulldown-cmark/pulldown-cmark/blob/HEAD/pulldown-cmark/specs/definition_lists.txt) for more information on the specifics of the syntax. See the [Wikipedia guidelines for glossaries](https://en.wikipedia.org/wiki/Wikipedia:Manual_of_Style/Glossaries#General_guidelines_for_writing_glossaries) for some guidelines on how to write a glossary.
 
+This feature is enabled by default.
+To disable it, see the [`output.html.definition-lists`] config option.
+
+[`output.html.definition-lists`]: configuration/renderers.md#html-renderer-options
+
 ### Admonitions
 
 An admonition is a special type of callout or notice block used to highlight important information. It is written as a blockquote with a special tag on the first line.
