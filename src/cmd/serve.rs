@@ -9,7 +9,6 @@ use axum::routing::get;
 use clap::builder::NonEmptyStringValueParser;
 use futures_util::StreamExt;
 use futures_util::sink::SinkExt;
-use mdbook_core::utils::fs::get_404_output_file;
 use mdbook_driver::MDBook;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::path::PathBuf;
@@ -75,9 +74,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         .next()
         .ok_or_else(|| anyhow::anyhow!("no address found for {}", address))?;
     let build_dir = book.build_dir_for("html");
-    let html_config = book.config.html_config();
-    let input_404 = html_config.and_then(|c| c.input_404);
-    let file_404 = get_404_output_file(&input_404);
+    let html_config = book.config.html_config().unwrap_or_default();
+    let file_404 = html_config.get_404_output_file();
 
     // A channel used to broadcast to any websockets to reload when a file changes.
     let (tx, _rx) = tokio::sync::broadcast::channel::<Message>(100);

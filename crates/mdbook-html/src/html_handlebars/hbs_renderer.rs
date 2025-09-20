@@ -195,7 +195,7 @@ impl HtmlHandlebars {
         data_404.insert("title".to_owned(), json!(title));
         let rendered = handlebars.render("index", &data_404)?;
 
-        let output_file = utils::fs::get_404_output_file(&html_config.input_404);
+        let output_file = html_config.get_404_output_file();
         utils::fs::write_file(destination, output_file, rendered.as_bytes())?;
         debug!("Creating 404.html ✓");
         Ok(())
