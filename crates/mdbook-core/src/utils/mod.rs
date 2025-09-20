@@ -6,16 +6,11 @@ use tracing::error;
 
 pub mod fs;
 mod html;
-mod string;
 mod toml_ext;
 
 pub(crate) use self::toml_ext::TomlExt;
 
 pub use self::html::{escape_html, escape_html_attribute};
-pub use self::string::{
-    take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,
-    take_rustdoc_include_lines,
-};
 
 /// Defines a `static` with a [`regex::Regex`].
 #[macro_export]

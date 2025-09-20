@@ -1,9 +1,9 @@
-use crate::static_regex;
+use mdbook_core::static_regex;
 use std::ops::Bound::{Excluded, Included, Unbounded};
 use std::ops::RangeBounds;
 
 /// Take a range of lines from a string.
-pub fn take_lines<R: RangeBounds<usize>>(s: &str, range: R) -> String {
+pub(super) fn take_lines<R: RangeBounds<usize>>(s: &str, range: R) -> String {
     let start = match range.start_bound() {
         Excluded(&n) => n + 1,
         Included(&n) => n,
@@ -28,7 +28,7 @@ static_regex!(ANCHOR_END, r"ANCHOR_END:\s*(?P<anchor_name>[\w_-]+)");
 
 /// Take anchored lines from a string.
 /// Lines containing anchor are ignored.
-pub fn take_anchored_lines(s: &str, anchor: &str) -> String {
+pub(super) fn take_anchored_lines(s: &str, anchor: &str) -> String {
     let mut retained = Vec::<&str>::new();
     let mut anchor_found = false;
 
@@ -60,7 +60,7 @@ pub fn take_anchored_lines(s: &str, anchor: &str) -> String {
 /// For any lines not in the range, include them but use `#` at the beginning. This will hide the
 /// lines from initial display but include them when expanding the code snippet or testing with
 /// rustdoc.
-pub fn take_rustdoc_include_lines<R: RangeBounds<usize>>(s: &str, range: R) -> String {
+pub(super) fn take_rustdoc_include_lines<R: RangeBounds<usize>>(s: &str, range: R) -> String {
     let mut output = String::with_capacity(s.len());
 
     for (index, line) in s.lines().enumerate() {
@@ -78,7 +78,7 @@ pub fn take_rustdoc_include_lines<R: RangeBounds<usize>>(s: &str, range: R) -> S
 /// For any lines not between the anchors, include them but use `#` at the beginning. This will
 /// hide the lines from initial display but include them when expanding the code snippet or testing
 /// with rustdoc.
-pub fn take_rustdoc_include_anchored_lines(s: &str, anchor: &str) -> String {
+pub(super) fn take_rustdoc_include_anchored_lines(s: &str, anchor: &str) -> String {
     let mut output = String::with_capacity(s.len());
     let mut within_anchored_section = false;
 
