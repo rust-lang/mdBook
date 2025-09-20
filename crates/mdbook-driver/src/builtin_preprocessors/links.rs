@@ -1,16 +1,18 @@
-use anyhow::{Context, Result};
-use mdbook_core::book::{Book, BookItem};
-use mdbook_core::static_regex;
-use mdbook_core::utils::{
+use self::take_lines::{
     take_anchored_lines, take_lines, take_rustdoc_include_anchored_lines,
     take_rustdoc_include_lines,
 };
+use anyhow::{Context, Result};
+use mdbook_core::book::{Book, BookItem};
+use mdbook_core::static_regex;
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use regex::{CaptureMatches, Captures};
 use std::fs;
 use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeTo};
 use std::path::{Path, PathBuf};
 use tracing::{error, warn};
+
+mod take_lines;
 
 const ESCAPE_CHAR: char = '\\';
 const MAX_LINK_NESTED_DEPTH: usize = 10;
