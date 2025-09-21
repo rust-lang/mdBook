@@ -5,10 +5,9 @@ use crate::theme::{self, Theme, playground_editor};
 use anyhow::{Context, Result};
 use mdbook_core::config::HtmlConfig;
 use mdbook_core::static_regex;
-use mdbook_core::utils;
+use mdbook_core::utils::fs;
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use tracing::debug;
 
@@ -165,8 +164,10 @@ impl StaticFiles {
                     if let Some((name, suffix)) = parts {
                         if name != "" && suffix != "" {
                             let mut digest = Sha256::new();
-                            let mut input_file = File::open(input_location)
-                                .with_context(|| "open static file for hashing")?;
+                            let mut input_file =
+                                std::fs::File::open(input_location).with_context(|| {
+                                    format!("failed to open `{filename}` for hashing")
+                                })?;
                             let mut buf = vec![0; 1024];
                             loop {
                                 let amt = input_file
@@ -190,7 +191,6 @@ impl StaticFiles {
     }
 
     pub(super) fn write_files(self, destination: &Path) -> Result<ResourceHelper> {
-        use mdbook_core::utils::fs::write_file;
         use regex::bytes::Captures;
         // The `{{ resource "name" }}` directive in static resources look like
         // handlebars syntax, even if they technically aren't.
@@ -207,7 +207,7 @@ impl StaticFiles {
                     .as_bytes();
                 let name = std::str::from_utf8(name).expect("resource name with invalid utf8");
                 let resource_filename = hash_map.get(name).map(|s| &s[..]).unwrap_or(name);
-                let path_to_root = utils::fs::path_to_root(filename);
+                let path_to_root = fs::path_to_root(filename);
                 format!("{}{}", path_to_root, resource_filename)
                     .as_bytes()
                     .to_owned()
@@ -222,7 +222,8 @@ impl StaticFiles {
                     } else {
                         Cow::Borrowed(&data[..])
                     };
-                    write_file(destination, filename, &data)?;
+                    let path = destination.join(filename);
+                    fs::write(path, &data)?;
                 }
                 StaticFile::Additional {
                     input_location,
@@ -239,11 +240,12 @@ impl StaticFiles {
                             .with_context(|| format!("Unable to create {}", parent.display()))?;
                     }
                     if filename.ends_with(".css") || filename.ends_with(".js") {
-                        let data = fs::read(input_location)?;
-                        let data = replace_all(&self.hash_map, &data, filename);
-                        write_file(destination, filename, &data)?;
+                        let data = fs::read_to_string(input_location)?;
+                        let data = replace_all(&self.hash_map, data.as_bytes(), filename);
+                        let path = destination.join(filename);
+                        fs::write(path, &data)?;
                     } else {
-                        fs::copy(input_location, &output_location).with_context(|| {
+                        std::fs::copy(input_location, &output_location).with_context(|| {
                             format!(
                                 "Unable to copy {} to {}",
                                 input_location.display(),
@@ -264,7 +266,7 @@ mod tests {
     use super::*;
     use crate::theme::Theme;
     use mdbook_core::config::HtmlConfig;
-    use mdbook_core::utils::fs::write_file;
+    use mdbook_core::utils::fs;
     use tempfile::TempDir;
 
     #[test]
@@ -295,9 +297,8 @@ mod tests {
         let reference_js = Path::new("static-files-test-case-reference.js");
         let mut html_config = HtmlConfig::default();
         html_config.additional_js.push(reference_js.to_owned());
-        write_file(
-            temp_dir.path(),
-            reference_js,
+        fs::write(
+            temp_dir.path().join(reference_js),
             br#"{{ resource "book.js" }}"#,
         )
         .unwrap();
@@ -305,7 +306,7 @@ mod tests {
         static_files.hash_files().unwrap();
         static_files.write_files(temp_dir.path()).unwrap();
         // custom JS winds up referencing book.js
-        let reference_js_content = std::fs::read_to_string(
+        let reference_js_content = fs::read_to_string(
             temp_dir
                 .path()
                 .join("static-files-test-case-reference-635c9cdc.js"),
@@ -313,8 +314,7 @@ mod tests {
         .unwrap();
         assert_eq!("book-e3b0c442.js", reference_js_content);
         // book.js winds up empty
-        let book_js_content =
-            std::fs::read_to_string(temp_dir.path().join("book-e3b0c442.js")).unwrap();
+        let book_js_content = fs::read_to_string(temp_dir.path().join("book-e3b0c442.js")).unwrap();
         assert_eq!("", book_js_content);
     }
 }

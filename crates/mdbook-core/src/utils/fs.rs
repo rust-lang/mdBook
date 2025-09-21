@@ -1,16 +1,38 @@
 //! Filesystem utilities and helpers.
 
 use anyhow::{Context, Result};
-use std::fs::{self, File};
-use std::io::Write;
+use std::fs;
 use std::path::{Component, Path, PathBuf};
-use tracing::{debug, trace};
+use tracing::debug;
 
-/// Write the given data to a file, creating it first if necessary
-pub fn write_file<P: AsRef<Path>>(build_dir: &Path, filename: P, content: &[u8]) -> Result<()> {
-    let path = build_dir.join(filename);
+/// Reads a file into a string.
+///
+/// Equivalent to [`std::fs::read_to_string`] with better error messages.
+pub fn read_to_string<P: AsRef<Path>>(path: P) -> Result<String> {
+    let path = path.as_ref();
+    fs::read_to_string(path).with_context(|| format!("failed to read `{}`", path.display()))
+}
 
-    create_file(&path)?.write_all(content).map_err(Into::into)
+/// Writes a file to disk.
+///
+/// Equivalent to [`std::fs::write`] with better error messages. This will
+/// also create the parent directory if it doesn't exist.
+pub fn write<P: AsRef<Path>, C: AsRef<[u8]>>(path: P, contents: C) -> Result<()> {
+    let path = path.as_ref();
+    debug!("Writing `{}`", path.display());
+    if let Some(parent) = path.parent() {
+        create_dir_all(parent)?;
+    }
+    fs::write(path, contents.as_ref())
+        .with_context(|| format!("failed to write `{}`", path.display()))
+}
+
+/// Equivalent to [`std::fs::create_dir_all`] with better error messages.
+pub fn create_dir_all(p: impl AsRef<Path>) -> Result<()> {
+    let p = p.as_ref();
+    fs::create_dir_all(p)
+        .with_context(|| format!("failed to create directory `{}`", p.display()))?;
+    Ok(())
 }
 
 /// Takes a path and returns a path containing just enough `../` to point to
@@ -48,30 +70,19 @@ pub fn path_to_root<P: Into<PathBuf>>(path: P) -> String {
         })
 }
 
-/// This function creates a file and returns it. But before creating the file
-/// it checks every directory in the path to see if it exists,
-/// and if it does not it will be created.
-pub fn create_file(path: &Path) -> Result<File> {
-    debug!("Creating {}", path.display());
-
-    // Construct path
-    if let Some(p) = path.parent() {
-        trace!("Parent directory is: {:?}", p);
-
-        fs::create_dir_all(p)?;
-    }
-
-    File::create(path).map_err(Into::into)
-}
-
-/// Removes all the content of a directory but not the directory itself
+/// Removes all the content of a directory but not the directory itself.
 pub fn remove_dir_content(dir: &Path) -> Result<()> {
-    for item in fs::read_dir(dir)?.flatten() {
+    for item in fs::read_dir(dir)
+        .with_context(|| format!("failed to read directory `{}`", dir.display()))?
+        .flatten()
+    {
         let item = item.path();
         if item.is_dir() {
-            fs::remove_dir_all(item)?;
+            fs::remove_dir_all(&item)
+                .with_context(|| format!("failed to remove `{}`", item.display()))?;
         } else {
-            fs::remove_file(item)?;
+            fs::remove_file(&item)
+                .with_context(|| format!("failed to remove `{}`", item.display()))?;
         }
     }
     Ok(())
@@ -162,7 +173,7 @@ fn copy<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> Result<()> {
         use std::fs::OpenOptions;
         use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
 
-        let mut reader = File::open(from)?;
+        let mut reader = std::fs::File::open(from)?;
         let metadata = reader.metadata()?;
         if !metadata.is_file() {
             anyhow::bail!(
@@ -198,8 +209,9 @@ fn copy<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::copy_files_except_ext;
-    use std::{fs, io::Result, path::Path};
+    use super::*;
+    use std::io::Result;
+    use std::path::Path;
 
     #[cfg(target_os = "windows")]
     fn symlink<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst: Q) -> Result<()> {
@@ -219,38 +231,18 @@ mod tests {
         };
 
         // Create a couple of files
-        if let Err(err) = fs::File::create(tmp.path().join("file.txt")) {
-            panic!("Could not create file.txt: {err}");
-        }
-        if let Err(err) = fs::File::create(tmp.path().join("file.md")) {
-            panic!("Could not create file.md: {err}");
-        }
-        if let Err(err) = fs::File::create(tmp.path().join("file.png")) {
-            panic!("Could not create file.png: {err}");
-        }
-        if let Err(err) = fs::create_dir(tmp.path().join("sub_dir")) {
-            panic!("Could not create sub_dir: {err}");
-        }
-        if let Err(err) = fs::File::create(tmp.path().join("sub_dir/file.png")) {
-            panic!("Could not create sub_dir/file.png: {err}");
-        }
-        if let Err(err) = fs::create_dir(tmp.path().join("sub_dir_exists")) {
-            panic!("Could not create sub_dir_exists: {err}");
-        }
-        if let Err(err) = fs::File::create(tmp.path().join("sub_dir_exists/file.txt")) {
-            panic!("Could not create sub_dir_exists/file.txt: {err}");
-        }
+        write(tmp.path().join("file.txt"), "").unwrap();
+        write(tmp.path().join("file.md"), "").unwrap();
+        write(tmp.path().join("file.png"), "").unwrap();
+        write(tmp.path().join("sub_dir/file.png"), "").unwrap();
+        write(tmp.path().join("sub_dir_exists/file.txt"), "").unwrap();
         if let Err(err) = symlink(tmp.path().join("file.png"), tmp.path().join("symlink.png")) {
             panic!("Could not symlink file.png: {err}");
         }
 
         // Create output dir
-        if let Err(err) = fs::create_dir(tmp.path().join("output")) {
-            panic!("Could not create output: {err}");
-        }
-        if let Err(err) = fs::create_dir(tmp.path().join("output/sub_dir_exists")) {
-            panic!("Could not create output/sub_dir_exists: {err}");
-        }
+        create_dir_all(tmp.path().join("output")).unwrap();
+        create_dir_all(tmp.path().join("output/sub_dir_exists")).unwrap();
 
         if let Err(e) =
             copy_files_except_ext(tmp.path(), &tmp.path().join("output"), true, None, &["md"])

@@ -5,9 +5,9 @@ use self::take_lines::{
 use anyhow::{Context, Result};
 use mdbook_core::book::{Book, BookItem};
 use mdbook_core::static_regex;
+use mdbook_core::utils::fs;
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use regex::{CaptureMatches, Captures};
-use std::fs;
 use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeTo};
 use std::path::{Path, PathBuf};
 use tracing::{error, warn};

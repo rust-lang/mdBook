@@ -1,10 +1,8 @@
 use anyhow::{Context, Result};
 use mdbook_core::book::{Book, BookItem, Chapter};
 use mdbook_core::config::BuildConfig;
-use mdbook_core::utils::escape_html;
+use mdbook_core::utils::{escape_html, fs};
 use mdbook_summary::{Link, Summary, SummaryItem, parse_summary};
-use std::fs::{self, File};
-use std::io::{Read, Write};
 use std::path::Path;
 use tracing::debug;
 
@@ -13,11 +11,7 @@ pub(crate) fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result
     let src_dir = src_dir.as_ref();
     let summary_md = src_dir.join("SUMMARY.md");
 
-    let mut summary_content = String::new();
-    File::open(&summary_md)
-        .with_context(|| format!("Couldn't open SUMMARY.md in {src_dir:?} directory"))?
-        .read_to_string(&mut summary_content)?;
-
+    let summary_content = fs::read_to_string(&summary_md)?;
     let summary = parse_summary(&summary_content)
         .with_context(|| format!("Summary parsing failed for file={summary_md:?}"))?;
 
@@ -47,12 +41,8 @@ fn create_missing(src_dir: &Path, summary: &Summary) -> Result<()> {
                         }
                     }
                     debug!("Creating missing file {}", filename.display());
-
-                    let mut f = File::create(&filename).with_context(|| {
-                        format!("Unable to create missing file: {}", filename.display())
-                    })?;
                     let title = escape_html(&link.name);
-                    writeln!(f, "# {title}")?;
+                    fs::write(&filename, format!("# {title}\n"))?;
                 }
             }
 
@@ -116,13 +106,8 @@ fn load_chapter<P: AsRef<Path>>(
             src_dir.join(link_location)
         };
 
-        let mut f = File::open(&location)
-            .with_context(|| format!("Chapter file not found, {}", link_location.display()))?;
-
-        let mut content = String::new();
-        f.read_to_string(&mut content).with_context(|| {
-            format!("Unable to read \"{}\" ({})", link.name, location.display())
-        })?;
+        let mut content = std::fs::read_to_string(&location)
+            .with_context(|| format!("failed to read chapter `{}`", link_location.display()))?;
 
         if content.as_bytes().starts_with(b"\xef\xbb\xbf") {
             content.replace_range(..3, "");
@@ -174,10 +159,7 @@ And here is some \
         let temp = TempFileBuilder::new().prefix("book").tempdir().unwrap();
 
         let chapter_path = temp.path().join("chapter_1.md");
-        File::create(&chapter_path)
-            .unwrap()
-            .write_all(DUMMY_SRC.as_bytes())
-            .unwrap();
+        fs::write(&chapter_path, DUMMY_SRC).unwrap();
 
         let link = Link::new("Chapter 1", chapter_path);
 
@@ -189,11 +171,7 @@ And here is some \
         let (mut root, temp_dir) = dummy_link();
 
         let second_path = temp_dir.path().join("second.md");
-
-        File::create(&second_path)
-            .unwrap()
-            .write_all(b"Hello World!")
-            .unwrap();
+        fs::write(&second_path, "Hello World!").unwrap();
 
         let mut second = Link::new("Nested Chapter 1", &second_path);
         second.number = Some(SectionNumber::new([1, 2]));
@@ -224,10 +202,7 @@ And here is some \
         let temp_dir = TempFileBuilder::new().prefix("book").tempdir().unwrap();
 
         let chapter_path = temp_dir.path().join("chapter_1.md");
-        File::create(&chapter_path)
-            .unwrap()
-            .write_all(("\u{feff}".to_owned() + DUMMY_SRC).as_bytes())
-            .unwrap();
+        fs::write(&chapter_path, format!("\u{feff}{DUMMY_SRC}")).unwrap();
 
         let link = Link::new("Chapter 1", chapter_path);
 
@@ -307,7 +282,7 @@ And here is some \
     fn cant_load_chapters_when_the_link_is_a_directory() {
         let (_, temp) = dummy_link();
         let dir = temp.path().join("nested");
-        fs::create_dir(&dir).unwrap();
+        fs::create_dir_all(&dir).unwrap();
 
         let mut summary = Summary::default();
         let link = Link::new("nested", dir);
@@ -326,8 +301,8 @@ And here is some \
         assert!(got.is_err());
         let error_message = got.err().unwrap().to_string();
         let expected = format!(
-            r#"Couldn't open SUMMARY.md in {:?} directory"#,
-            temp_dir.path()
+            r#"failed to read `{}`"#,
+            temp_dir.path().join("SUMMARY.md").display()
         );
         assert_eq!(error_message, expected);
     }

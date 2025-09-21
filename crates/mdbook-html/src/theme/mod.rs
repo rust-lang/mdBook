@@ -1,8 +1,6 @@
 #![allow(missing_docs)]
 
 use anyhow::Result;
-use std::fs::File;
-use std::io::Read;
 use std::path::{Path, PathBuf};
 use tracing::{info, warn};
 
@@ -195,9 +193,7 @@ impl Default for Theme {
 /// its contents.
 fn load_file_contents<P: AsRef<Path>>(filename: P, dest: &mut Vec<u8>) -> Result<()> {
     let filename = filename.as_ref();
-
-    let mut buffer = Vec::new();
-    File::open(filename)?.read_to_end(&mut buffer)?;
+    let mut buffer = std::fs::read(filename)?;
 
     // We needed the buffer so we'd only overwrite the existing content if we
     // could successfully load the file into memory.
@@ -254,7 +250,7 @@ mod tests {
 
         // "touch" all of the special files so we have empty copies
         for file in &files {
-            File::create(&temp.path().join(file)).unwrap();
+            fs::File::create(&temp.path().join(file)).unwrap();
         }
 
         let got = Theme::new(temp.path());
