@@ -4,7 +4,7 @@ use super::MDBook;
 use anyhow::{Context, Result};
 use mdbook_core::config::Config;
 use mdbook_core::utils::fs;
-use mdbook_html::theme;
+use mdbook_html::theme::Theme;
 use std::path::PathBuf;
 use tracing::{debug, error, info, trace};
 
@@ -109,37 +109,7 @@ impl BookBuilder {
         debug!("Copying theme");
 
         let html_config = self.config.html_config().unwrap_or_default();
-        let themedir = html_config.theme_dir(&self.root);
-
-        fs::write(themedir.join("book.js"), theme::JS)?;
-        fs::write(themedir.join("favicon.png"), theme::FAVICON_PNG)?;
-        fs::write(themedir.join("favicon.svg"), theme::FAVICON_SVG)?;
-        fs::write(themedir.join("highlight.css"), theme::HIGHLIGHT_CSS)?;
-        fs::write(themedir.join("highlight.js"), theme::HIGHLIGHT_JS)?;
-        fs::write(themedir.join("index.hbs"), theme::INDEX)?;
-
-        let cssdir = themedir.join("css");
-
-        fs::write(cssdir.join("general.css"), theme::GENERAL_CSS)?;
-        fs::write(cssdir.join("chrome.css"), theme::CHROME_CSS)?;
-        fs::write(cssdir.join("variables.css"), theme::VARIABLES_CSS)?;
-        if html_config.print.enable {
-            fs::write(cssdir.join("print.css"), theme::PRINT_CSS)?;
-        }
-
-        let fonts_dir = themedir.join("fonts");
-        fs::write(fonts_dir.join("fonts.css"), theme::fonts::CSS)?;
-        for (file_name, contents) in theme::fonts::LICENSES {
-            fs::write(themedir.join(file_name), contents)?;
-        }
-        for (file_name, contents) in theme::fonts::OPEN_SANS.iter() {
-            fs::write(themedir.join(file_name), contents)?;
-        }
-        fs::write(
-            themedir.join(theme::fonts::SOURCE_CODE_PRO.0),
-            theme::fonts::SOURCE_CODE_PRO.1,
-        )?;
-
+        Theme::copy_theme(&html_config, &self.root)?;
         Ok(())
     }
 
