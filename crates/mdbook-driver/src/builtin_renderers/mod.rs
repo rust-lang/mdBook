@@ -3,8 +3,8 @@
 //! The HTML renderer can be found in the [`mdbook_html`] crate.
 
 use anyhow::{Context, Result, bail};
+use mdbook_core::utils::fs;
 use mdbook_renderer::{RenderContext, Renderer};
-use std::fs;
 use std::process::Stdio;
 use tracing::{error, info, trace, warn};
 

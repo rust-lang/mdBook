@@ -8,11 +8,10 @@ use anyhow::{Context, Result, bail};
 use handlebars::Handlebars;
 use mdbook_core::book::{Book, BookItem, Chapter};
 use mdbook_core::config::{BookConfig, Config, HtmlConfig};
-use mdbook_core::utils;
+use mdbook_core::utils::fs;
 use mdbook_renderer::{RenderContext, Renderer};
 use serde_json::json;
 use std::collections::{BTreeMap, HashMap};
-use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use tracing::error;
 use tracing::{debug, info, trace, warn};
@@ -84,10 +83,8 @@ impl HtmlHandlebars {
         ctx.data.insert("content".to_owned(), json!(content));
         ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
         ctx.data.insert("title".to_owned(), json!(title));
-        ctx.data.insert(
-            "path_to_root".to_owned(),
-            json!(utils::fs::path_to_root(path)),
-        );
+        ctx.data
+            .insert("path_to_root".to_owned(), json!(fs::path_to_root(path)));
         if let Some(ref section) = ch.number {
             ctx.data
                 .insert("section".to_owned(), json!(section.to_string()));
@@ -123,8 +120,8 @@ impl HtmlHandlebars {
         let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
         // Write to file
-        debug!("Creating {}", filepath.display());
-        utils::fs::write_file(&ctx.destination, &filepath, rendered.as_bytes())?;
+        let out_path = ctx.destination.join(filepath);
+        fs::write(&out_path, rendered)?;
 
         if prev_ch.is_none() {
             ctx.data.insert("path".to_owned(), json!("index.md"));
@@ -132,7 +129,7 @@ impl HtmlHandlebars {
             ctx.data.insert("is_index".to_owned(), json!(true));
             let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
             debug!("Creating index.html from {}", ctx_path);
-            utils::fs::write_file(&ctx.destination, "index.html", rendered_index.as_bytes())?;
+            fs::write(ctx.destination.join("index.html"), rendered_index)?;
         }
 
         Ok(())
@@ -146,18 +143,15 @@ impl HtmlHandlebars {
         handlebars: &mut Handlebars<'_>,
         data: &mut serde_json::Map<String, serde_json::Value>,
     ) -> Result<()> {
-        let destination = &ctx.destination;
         let content_404 = if let Some(ref filename) = html_config.input_404 {
             let path = src_dir.join(filename);
-            std::fs::read_to_string(&path)
-                .with_context(|| format!("unable to open 404 input file {path:?}"))?
+            fs::read_to_string(&path).with_context(|| "failed to read the 404 input file")?
         } else {
             // 404 input not explicitly configured try the default file 404.md
             let default_404_location = src_dir.join("404.md");
             if default_404_location.exists() {
-                std::fs::read_to_string(&default_404_location).with_context(|| {
-                    format!("unable to open 404 input file {default_404_location:?}")
-                })?
+                fs::read_to_string(&default_404_location)
+                    .with_context(|| "failed to read the 404 input file")?
             } else {
                 "# Document not found (404)\n\nThis URL is invalid, sorry. Please use the \
                 navigation bar or search to continue."
@@ -195,8 +189,8 @@ impl HtmlHandlebars {
         data_404.insert("title".to_owned(), json!(title));
         let rendered = handlebars.render("index", &data_404)?;
 
-        let output_file = html_config.get_404_output_file();
-        utils::fs::write_file(destination, output_file, rendered.as_bytes())?;
+        let output_file = ctx.destination.join(html_config.get_404_output_file());
+        fs::write(output_file, rendered)?;
         debug!("Creating 404.html ✓");
         Ok(())
     }
@@ -222,7 +216,7 @@ impl HtmlHandlebars {
         data.insert("content".to_owned(), json!(print_content));
         data.insert(
             "path_to_root".to_owned(),
-            json!(utils::fs::path_to_root(Path::new("print.md"))),
+            json!(fs::path_to_root(Path::new("print.md"))),
         );
 
         debug!("Render template");
@@ -285,8 +279,7 @@ impl HtmlHandlebars {
         fragment_map: &BTreeMap<String, String>,
     ) -> Result<()> {
         if let Some(parent) = original.parent() {
-            std::fs::create_dir_all(parent)
-                .with_context(|| format!("Unable to ensure \"{}\" exists", parent.display()))?;
+            fs::create_dir_all(parent)?
         }
 
         let js_map = serde_json::to_string(fragment_map)?;
@@ -295,15 +288,13 @@ impl HtmlHandlebars {
             "fragment_map": js_map,
             "url": destination,
         });
-        let f = File::create(original)?;
-        handlebars
-            .render_to_write("redirect", &ctx, f)
-            .with_context(|| {
-                format!(
-                    "Unable to create a redirect file at \"{}\"",
-                    original.display()
-                )
-            })?;
+        let rendered = handlebars.render("redirect", &ctx).with_context(|| {
+            format!(
+                "Unable to create a redirect file at `{}`",
+                original.display()
+            )
+        })?;
+        fs::write(original, rendered)?;
 
         Ok(())
     }
@@ -323,7 +314,7 @@ impl Renderer for HtmlHandlebars {
         let build_dir = ctx.root.join(&ctx.config.build.build_dir);
 
         if destination.exists() {
-            utils::fs::remove_dir_content(destination)
+            fs::remove_dir_content(destination)
                 .with_context(|| "Unable to remove stale HTML output")?;
         }
 
@@ -406,20 +397,19 @@ impl Renderer for HtmlHandlebars {
             data.insert("is_toc_html".to_owned(), json!(true));
             data.insert("path".to_owned(), json!("toc.html"));
             let rendered_toc = handlebars.render("toc_html", &data)?;
-            utils::fs::write_file(destination, "toc.html", rendered_toc.as_bytes())?;
+            fs::write(destination.join("toc.html"), rendered_toc)?;
             debug!("Creating toc.html ✓");
             data.remove("path");
             data.remove("is_toc_html");
         }
 
-        utils::fs::write_file(
-            destination,
-            ".nojekyll",
+        fs::write(
+            destination.join(".nojekyll"),
             b"This file makes sure that Github Pages doesn't process mdBook's output.\n",
         )?;
 
         if let Some(cname) = &html_config.cname {
-            utils::fs::write_file(destination, "CNAME", format!("{cname}\n").as_bytes())?;
+            fs::write(destination.join("CNAME"), format!("{cname}\n"))?;
         }
 
         for (i, chapter_tree) in chapter_trees.iter().enumerate() {
@@ -446,7 +436,7 @@ impl Renderer for HtmlHandlebars {
             let print_rendered =
                 self.render_print_page(ctx, &handlebars, &mut data, chapter_trees)?;
 
-            utils::fs::write_file(destination, "print.html", print_rendered.as_bytes())?;
+            fs::write(destination.join("print.html"), print_rendered)?;
             debug!("Creating print.html ✓");
         }
 
@@ -454,7 +444,7 @@ impl Renderer for HtmlHandlebars {
             .context("Unable to emit redirects")?;
 
         // Copy all remaining files, avoid a recursive copy from/to the book build dir
-        utils::fs::copy_files_except_ext(&src_dir, destination, true, Some(&build_dir), &["md"])?;
+        fs::copy_files_except_ext(&src_dir, destination, true, Some(&build_dir), &["md"])?;
 
         info!("HTML book written to `{}`", destination.display());
 

@@ -8,14 +8,14 @@ use anyhow::{Context, Error, Result, bail};
 use indexmap::IndexMap;
 use mdbook_core::book::{Book, BookItem, BookItems};
 use mdbook_core::config::{Config, RustEdition};
-use mdbook_core::utils;
+use mdbook_core::utils::fs;
 use mdbook_html::HtmlHandlebars;
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use mdbook_renderer::{RenderContext, Renderer};
 use mdbook_summary::Summary;
 use serde::Deserialize;
 use std::ffi::OsString;
-use std::io::{IsTerminal, Write};
+use std::io::IsTerminal;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::Builder as TempFileBuilder;
@@ -292,8 +292,7 @@ impl MDBook {
 
                 // write preprocessed file to tempdir
                 let path = temp_dir.path().join(chapter_path);
-                let mut tmpf = utils::fs::create_file(&path)?;
-                tmpf.write_all(ch.content.as_bytes())?;
+                fs::write(&path, &ch.content)?;
 
                 let mut cmd = Command::new("rustdoc");
                 cmd.current_dir(temp_dir.path())

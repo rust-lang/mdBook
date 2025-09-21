@@ -43,14 +43,11 @@
 //! # run().unwrap()
 //! ```
 
-use crate::utils::TomlExt;
-use crate::utils::log_backtrace;
+use crate::utils::{TomlExt, fs, log_backtrace};
 use anyhow::{Context, Error, Result, bail};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use std::env;
-use std::fs::File;
-use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use toml::Value;
@@ -113,13 +110,8 @@ impl Default for Config {
 impl Config {
     /// Load the configuration file from disk.
     pub fn from_disk<P: AsRef<Path>>(config_file: P) -> Result<Config> {
-        let mut buffer = String::new();
-        File::open(config_file)
-            .with_context(|| "Unable to open the configuration file")?
-            .read_to_string(&mut buffer)
-            .with_context(|| "Couldn't read the file")?;
-
-        Config::from_str(&buffer)
+        let cfg = fs::read_to_string(config_file)?;
+        Config::from_str(&cfg)
     }
 
     /// Updates the `Config` from the available environment variables.

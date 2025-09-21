@@ -1,7 +1,6 @@
 use anyhow::{Context, Result};
-use mdbook_core::utils;
+use mdbook_core::utils::fs;
 use mdbook_renderer::{RenderContext, Renderer};
-use std::fs;
 use tracing::trace;
 
 /// A renderer to output the Markdown after the preprocessors have run. Mostly useful
@@ -27,17 +26,16 @@ impl Renderer for MarkdownRenderer {
         let book = &ctx.book;
 
         if destination.exists() {
-            utils::fs::remove_dir_content(destination)
+            fs::remove_dir_content(destination)
                 .with_context(|| "Unable to remove stale Markdown output")?;
         }
 
         trace!("markdown render");
         for ch in book.chapters() {
-            utils::fs::write_file(
-                &ctx.destination,
-                ch.path.as_ref().expect("Checked path exists before"),
-                ch.content.as_bytes(),
-            )?;
+            let path = ctx
+                .destination
+                .join(ch.path.as_ref().expect("Checked path exists before"));
+            fs::write(path, &ch.content)?;
         }
 
         fs::create_dir_all(destination)

@@ -1,6 +1,6 @@
 //! Utility for building and running tests against mdbook.
 
-use anyhow::Context;
+use mdbook_core::utils::fs;
 use mdbook_driver::MDBook;
 use mdbook_driver::init::BookBuilder;
 use snapbox::IntoData;
@@ -76,7 +76,7 @@ impl BookTest {
             std::fs::remove_dir_all(&tmp)
                 .unwrap_or_else(|e| panic!("failed to remove {tmp:?}: {e:?}"));
         }
-        std::fs::create_dir_all(&tmp).unwrap_or_else(|e| panic!("failed to create {tmp:?}: {e:?}"));
+        fs::create_dir_all(&tmp).unwrap();
         tmp
     }
 
@@ -310,7 +310,7 @@ impl BookTest {
     /// Change a file's contents in the given path.
     pub fn change_file(&mut self, path: impl AsRef<Path>, body: &str) -> &mut Self {
         let path = self.dir.join(path);
-        std::fs::write(&path, body).unwrap_or_else(|e| panic!("failed to write {path:?}: {e:?}"));
+        fs::write(&path, body).unwrap();
         self
     }
 
@@ -342,9 +342,9 @@ impl BookTest {
         let rs = self.dir.join(path).with_extension("rs");
         let parent = rs.parent().unwrap();
         if !parent.exists() {
-            std::fs::create_dir_all(&parent).unwrap();
+            fs::create_dir_all(&parent).unwrap();
         }
-        std::fs::write(&rs, src).unwrap_or_else(|e| panic!("failed to write {rs:?}: {e:?}"));
+        fs::write(&rs, src).unwrap();
         let status = std::process::Command::new("rustc")
             .arg(&rs)
             .current_dir(&parent)
@@ -551,9 +551,7 @@ fn assert(root: &Path) -> snapbox::Assert {
 #[track_caller]
 pub fn read_to_string<P: AsRef<Path>>(path: P) -> String {
     let path = path.as_ref();
-    std::fs::read_to_string(path)
-        .with_context(|| format!("could not read file {path:?}"))
-        .unwrap()
+    fs::read_to_string(path).unwrap()
 }
 
 /// Returns the first path from the given glob pattern.

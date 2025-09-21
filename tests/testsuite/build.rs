@@ -24,7 +24,7 @@ fn basic_build() {
 fn failure_on_missing_file() {
     BookTest::from_dir("build/missing_file").run("build", |cmd| {
         cmd.expect_failure().expect_stderr(str![[r#"
-ERROR Chapter file not found, ./chapter_1.md
+ERROR failed to read chapter `./chapter_1.md`
 [TAB]Caused by: [NOT_FOUND]
 
 "#]]);
