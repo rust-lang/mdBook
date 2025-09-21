@@ -110,6 +110,20 @@ jobs:
         env:
           RUSTDOCFLAGS: -D warnings
 
+  check-version-bump:
+    name: Check version bump
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup update stable && rustup default stable
+      - name: Install cargo-semver-checks
+        run: |
+          mkdir installed-bins
+          curl -Lf https://github.com/obi1kenobi/cargo-semver-checks/releases/download/v0.43.0/cargo-semver-checks-x86_64-unknown-linux-gnu.tar.gz \
+            | tar -xz --directory=./installed-bins
+          echo `pwd`/installed-bins >> $GITHUB_PATH
+      - run: cargo semver-checks --workspace
+
   # The success job is here to consolidate the total success/failure state of
   # all other jobs. This job is then included in the GitHub branch protection
   # rule which prevents merges unless all other jobs are passing. This makes
@@ -125,6 +139,7 @@ jobs:
       - gui
       - clippy
       - docs
+      - check-version-bump
     runs-on: ubuntu-latest
     steps:
       - run: jq --exit-status 'all(.result == "success")' <<< '${{ toJson(needs) }}'
