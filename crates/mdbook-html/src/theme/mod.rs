@@ -1,32 +1,34 @@
-#![allow(missing_docs)]
+//! Support for theme files.
 
 use anyhow::Result;
+use mdbook_core::config::HtmlConfig;
+use mdbook_core::utils::fs;
 use std::path::{Path, PathBuf};
 use tracing::{info, warn};
 
-pub mod fonts;
-pub mod playground_editor;
+pub(crate) mod fonts;
+pub(crate) mod playground_editor;
 #[cfg(feature = "search")]
-pub mod searcher;
+pub(crate) mod searcher;
 
-pub static INDEX: &[u8] = include_bytes!("../../front-end/templates/index.hbs");
-pub static HEAD: &[u8] = include_bytes!("../../front-end/templates/head.hbs");
-pub static REDIRECT: &[u8] = include_bytes!("../../front-end/templates/redirect.hbs");
-pub static HEADER: &[u8] = include_bytes!("../../front-end/templates/header.hbs");
-pub static TOC_JS: &[u8] = include_bytes!("../../front-end/templates/toc.js.hbs");
-pub static TOC_HTML: &[u8] = include_bytes!("../../front-end/templates/toc.html.hbs");
-pub static CHROME_CSS: &[u8] = include_bytes!("../../front-end/css/chrome.css");
-pub static GENERAL_CSS: &[u8] = include_bytes!("../../front-end/css/general.css");
-pub static PRINT_CSS: &[u8] = include_bytes!("../../front-end/css/print.css");
-pub static VARIABLES_CSS: &[u8] = include_bytes!("../../front-end/css/variables.css");
-pub static FAVICON_PNG: &[u8] = include_bytes!("../../front-end/images/favicon.png");
-pub static FAVICON_SVG: &[u8] = include_bytes!("../../front-end/images/favicon.svg");
-pub static JS: &[u8] = include_bytes!("../../front-end/js/book.js");
-pub static HIGHLIGHT_JS: &[u8] = include_bytes!("../../front-end/js/highlight.js");
-pub static TOMORROW_NIGHT_CSS: &[u8] = include_bytes!("../../front-end/css/tomorrow-night.css");
-pub static HIGHLIGHT_CSS: &[u8] = include_bytes!("../../front-end/css/highlight.css");
-pub static AYU_HIGHLIGHT_CSS: &[u8] = include_bytes!("../../front-end/css/ayu-highlight.css");
-pub static CLIPBOARD_JS: &[u8] = include_bytes!("../../front-end/js/clipboard.min.js");
+static INDEX: &[u8] = include_bytes!("../../front-end/templates/index.hbs");
+static HEAD: &[u8] = include_bytes!("../../front-end/templates/head.hbs");
+static REDIRECT: &[u8] = include_bytes!("../../front-end/templates/redirect.hbs");
+static HEADER: &[u8] = include_bytes!("../../front-end/templates/header.hbs");
+static TOC_JS: &[u8] = include_bytes!("../../front-end/templates/toc.js.hbs");
+static TOC_HTML: &[u8] = include_bytes!("../../front-end/templates/toc.html.hbs");
+static CHROME_CSS: &[u8] = include_bytes!("../../front-end/css/chrome.css");
+static GENERAL_CSS: &[u8] = include_bytes!("../../front-end/css/general.css");
+static PRINT_CSS: &[u8] = include_bytes!("../../front-end/css/print.css");
+static VARIABLES_CSS: &[u8] = include_bytes!("../../front-end/css/variables.css");
+static FAVICON_PNG: &[u8] = include_bytes!("../../front-end/images/favicon.png");
+static FAVICON_SVG: &[u8] = include_bytes!("../../front-end/images/favicon.svg");
+static JS: &[u8] = include_bytes!("../../front-end/js/book.js");
+static HIGHLIGHT_JS: &[u8] = include_bytes!("../../front-end/js/highlight.js");
+static TOMORROW_NIGHT_CSS: &[u8] = include_bytes!("../../front-end/css/tomorrow-night.css");
+static HIGHLIGHT_CSS: &[u8] = include_bytes!("../../front-end/css/highlight.css");
+static AYU_HIGHLIGHT_CSS: &[u8] = include_bytes!("../../front-end/css/ayu-highlight.css");
+static CLIPBOARD_JS: &[u8] = include_bytes!("../../front-end/js/clipboard.min.js");
 
 /// The `Theme` struct should be used instead of the static variables because
 /// the `new()` method will look if the user has a theme directory in their
@@ -35,28 +37,27 @@ pub static CLIPBOARD_JS: &[u8] = include_bytes!("../../front-end/js/clipboard.mi
 /// You should only ever use the static variables directly if you want to
 /// override the user's theme with the defaults.
 #[derive(Debug, PartialEq)]
-#[non_exhaustive]
 pub struct Theme {
-    pub index: Vec<u8>,
-    pub head: Vec<u8>,
-    pub redirect: Vec<u8>,
-    pub header: Vec<u8>,
-    pub toc_js: Vec<u8>,
-    pub toc_html: Vec<u8>,
-    pub chrome_css: Vec<u8>,
-    pub general_css: Vec<u8>,
-    pub print_css: Vec<u8>,
-    pub variables_css: Vec<u8>,
-    pub fonts_css: Option<Vec<u8>>,
-    pub font_files: Vec<PathBuf>,
-    pub favicon_png: Option<Vec<u8>>,
-    pub favicon_svg: Option<Vec<u8>>,
-    pub js: Vec<u8>,
-    pub highlight_css: Vec<u8>,
-    pub tomorrow_night_css: Vec<u8>,
-    pub ayu_highlight_css: Vec<u8>,
-    pub highlight_js: Vec<u8>,
-    pub clipboard_js: Vec<u8>,
+    pub(crate) index: Vec<u8>,
+    pub(crate) head: Vec<u8>,
+    pub(crate) redirect: Vec<u8>,
+    pub(crate) header: Vec<u8>,
+    pub(crate) toc_js: Vec<u8>,
+    pub(crate) toc_html: Vec<u8>,
+    pub(crate) chrome_css: Vec<u8>,
+    pub(crate) general_css: Vec<u8>,
+    pub(crate) print_css: Vec<u8>,
+    pub(crate) variables_css: Vec<u8>,
+    pub(crate) fonts_css: Option<Vec<u8>>,
+    pub(crate) font_files: Vec<PathBuf>,
+    pub(crate) favicon_png: Option<Vec<u8>>,
+    pub(crate) favicon_svg: Option<Vec<u8>>,
+    pub(crate) js: Vec<u8>,
+    pub(crate) highlight_css: Vec<u8>,
+    pub(crate) tomorrow_night_css: Vec<u8>,
+    pub(crate) ayu_highlight_css: Vec<u8>,
+    pub(crate) highlight_js: Vec<u8>,
+    pub(crate) clipboard_js: Vec<u8>,
 }
 
 impl Theme {
@@ -159,6 +160,40 @@ impl Theme {
         }
 
         theme
+    }
+
+    /// Copies the default theme files to the theme directory.
+    pub fn copy_theme(html_config: &HtmlConfig, root: &Path) -> Result<()> {
+        let themedir = html_config.theme_dir(root);
+
+        fs::write(themedir.join("book.js"), JS)?;
+        fs::write(themedir.join("favicon.png"), FAVICON_PNG)?;
+        fs::write(themedir.join("favicon.svg"), FAVICON_SVG)?;
+        fs::write(themedir.join("highlight.css"), HIGHLIGHT_CSS)?;
+        fs::write(themedir.join("highlight.js"), HIGHLIGHT_JS)?;
+        fs::write(themedir.join("index.hbs"), INDEX)?;
+
+        let cssdir = themedir.join("css");
+
+        fs::write(cssdir.join("general.css"), GENERAL_CSS)?;
+        fs::write(cssdir.join("chrome.css"), CHROME_CSS)?;
+        fs::write(cssdir.join("variables.css"), VARIABLES_CSS)?;
+        if html_config.print.enable {
+            fs::write(cssdir.join("print.css"), PRINT_CSS)?;
+        }
+
+        fs::write(themedir.join("fonts").join("fonts.css"), fonts::CSS)?;
+        for (file_name, contents) in fonts::LICENSES {
+            fs::write(themedir.join(file_name), contents)?;
+        }
+        for (file_name, contents) in fonts::OPEN_SANS.iter() {
+            fs::write(themedir.join(file_name), contents)?;
+        }
+        fs::write(
+            themedir.join(fonts::SOURCE_CODE_PRO.0),
+            fonts::SOURCE_CODE_PRO.1,
+        )?;
+        Ok(())
     }
 }
 

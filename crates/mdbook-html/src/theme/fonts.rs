@@ -1,6 +1,6 @@
-pub static CSS: &[u8] = include_bytes!("../../front-end/fonts/fonts.css");
+pub(crate) static CSS: &[u8] = include_bytes!("../../front-end/fonts/fonts.css");
 // An array of (file_name, file_contents) pairs
-pub static LICENSES: [(&str, &[u8]); 2] = [
+pub(crate) static LICENSES: [(&str, &[u8]); 2] = [
     (
         "fonts/OPEN-SANS-LICENSE.txt",
         include_bytes!("../../front-end/fonts/OPEN-SANS-LICENSE.txt"),
@@ -11,7 +11,7 @@ pub static LICENSES: [(&str, &[u8]); 2] = [
     ),
 ];
 // An array of (file_name, file_contents) pairs
-pub static OPEN_SANS: [(&str, &[u8]); 10] = [
+pub(crate) static OPEN_SANS: [(&str, &[u8]); 10] = [
     (
         "fonts/open-sans-v17-all-charsets-300.woff2",
         include_bytes!("../../front-end/fonts/open-sans-v17-all-charsets-300.woff2"),
@@ -55,7 +55,7 @@ pub static OPEN_SANS: [(&str, &[u8]); 10] = [
 ];
 
 // A (file_name, file_contents) pair
-pub static SOURCE_CODE_PRO: (&str, &[u8]) = (
+pub(crate) static SOURCE_CODE_PRO: (&str, &[u8]) = (
     "fonts/source-code-pro-v11-all-charsets-500.woff2",
     include_bytes!("../../front-end/fonts/source-code-pro-v11-all-charsets-500.woff2"),
 );
