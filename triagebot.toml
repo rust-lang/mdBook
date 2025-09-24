@@ -4,6 +4,9 @@
 # Allows @rustbot ready, review, author, or blocked
 [shortcut]
 
+# Closes/reopens PRs created by the GitHub Actions bot so that checks will run.
+[bot-pull-requests]
+
 [relabel]
 allow-unauthenticated = [
     # For Issue areas
