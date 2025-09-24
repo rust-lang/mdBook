@@ -1,0 +1,20 @@
+name: Update dependencies
+on:
+  schedule:
+    - cron: '0 0 1 * *'
+  workflow_dispatch:
+
+jobs:
+  update:
+    name: Update dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install Rust
+        run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
+      - name: Install cargo-edit
+        run: cargo install cargo-edit --locked
+      - name: Update dependencies
+        run: ci/update-dependencies.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
