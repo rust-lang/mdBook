@@ -134,6 +134,21 @@ The main test harness is described in the [testsuite documentation](tests/testsu
 - `cargo clippy --workspace --all-targets --no-deps -- -D warnings` — This makes sure that there are no clippy warnings.
 - `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --document-private-items --no-deps` — This verifies that there aren't any rustdoc warnings.
 - `cargo fmt --check` — Verifies that everything is formatted correctly.
+- `cargo +stable semver-checks` — Verifies that no SemVer breaking changes have been made. You must install [`cargo-semver-checks`](https://crates.io/crates/cargo-semver-checks) first.
+
+To help simplify running all these commands, you can run the following cargo command:
+
+```sh
+cargo xtask test-all
+```
+
+It is useful to run all tests before submitting a PR. While developing I recommend to run some subset of that command based on what you are working on. There are individual arguments for each one. For example:
+
+```sh
+cargo xtask test-workspace clippy doc eslint fmt gui semver-checks
+```
+
+While developing, remove any of those arguments that are not relevant to what you are changing, or are really slow.
 
 ## Making a pull-request
 
@@ -208,12 +223,9 @@ Instructions for mdBook maintainers to publish a new release:
 
 1. Create a PR to update the version and update the CHANGELOG:
     1. Update the version in `Cargo.toml`
-    2. Run `cargo test` to verify that everything is passing, and to update `Cargo.lock`.
-    3. Double-check for any SemVer breaking changes.
-       Try [`cargo-semver-checks`](https://crates.io/crates/cargo-semver-checks), though beware that the current version of mdBook isn't properly adhering to SemVer due to the lack of `#[non_exhaustive]` and other issues. See https://github.com/rust-lang/mdBook/issues/1835.
-    4. Update `CHANGELOG.md` with any changes that users may be interested in.
-    5. Update `continuous-integration.md` to update the version number for the installation instructions.
-    6. Commit the changes, and open a PR.
+    2. Run `cargo xtask test-all` to verify that everything is passing, and to update `Cargo.lock`.
+    3. Update `CHANGELOG.md` with any changes that users may be interested in.
+    4. Commit the changes, and open a PR.
 2. After the PR has been merged, create a release in GitHub. This can either be done in the GitHub web UI, or on the command-line:
    ```bash
    MDBOOK_VERS="`cargo read-manifest | jq -r .version`" ; \
