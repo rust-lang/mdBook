@@ -2,8 +2,9 @@
 
 use std::collections::BTreeMap;
 use std::error::Error;
-use std::process::Command;
+use std::io::Write;
 use std::process::exit;
+use std::process::{Command, Stdio};
 
 mod changelog;
 
@@ -35,9 +36,14 @@ fn main() -> Result<()> {
         eprintln!("error: specify a command (valid options: {keys})");
         exit(1);
     }
-    for arg in args {
+    while let Some(arg) = args.next() {
         if let Some(cmd_fn) = cmds.get(arg.as_str()) {
             cmd_fn()?;
+        } else if arg == "bump" {
+            let bump_arg = args
+                .next()
+                .expect("the next argument should be one of major, minor, patch, rc, beta, alpha");
+            bump(&bump_arg)?;
         } else if matches!(arg.as_str(), "-h" | "--help") {
             println!("valid options: {keys}");
             exit(0)
@@ -46,7 +52,7 @@ fn main() -> Result<()> {
             exit(1);
         }
     }
-    println!("all tests passed!");
+    println!("success!");
     Ok(())
 }
 
@@ -120,6 +126,40 @@ fn eslint() -> Result<()> {
         .expect("npm should be installed");
     if !status.success() {
         return Err("eslint failed".into());
+    }
+    Ok(())
+}
+
+fn bump(bump: &str) -> Result<()> {
+    // Grab all the publishable crate names.
+    let metadata = Command::new("cargo")
+        .args(["metadata", "--format-version=1", "--no-deps"])
+        .output()?;
+    let mut jq = Command::new("jq")
+        .args(["-r", ".packages[] | select(.publish == null) | .name"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()?;
+    jq.stdin.as_mut().unwrap().write_all(&metadata.stdout)?;
+    let jq_out = jq.wait_with_output()?;
+    if !jq_out.status.success() {
+        eprintln!("jq failed");
+        exit(1);
+    }
+    let names = std::str::from_utf8(&jq_out.stdout).unwrap();
+    let mut names: Vec<_> = names.split_whitespace().collect();
+    for i in (0..names.len()).rev() {
+        names.insert(i, "-p");
+    }
+
+    let status = Command::new("cargo")
+        .args(["set-version", "--bump"])
+        .arg(bump)
+        .args(names)
+        .status()?;
+    if !status.success() {
+        eprintln!("cargo set-version failed");
+        exit(1);
     }
     Ok(())
 }
