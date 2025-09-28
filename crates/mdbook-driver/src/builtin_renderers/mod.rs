@@ -14,27 +14,8 @@ mod markdown_renderer;
 
 /// A generic renderer which will shell out to an arbitrary executable.
 ///
-/// # Rendering Protocol
-///
-/// When the renderer's `render()` method is invoked, `CmdRenderer` will spawn
-/// the `cmd` as a subprocess. The `RenderContext` is passed to the subprocess
-/// as a JSON string (using `serde_json`).
-///
-/// > **Note:** The command used doesn't necessarily need to be a single
-/// > executable (i.e. `/path/to/renderer`). The `cmd` string lets you pass
-/// > in command line arguments, so there's no reason why it couldn't be
-/// > `python /path/to/renderer --from mdbook --to epub`.
-///
-/// Anything the subprocess writes to `stdin` or `stdout` will be passed through
-/// to the user. While this gives the renderer maximum flexibility to output
-/// whatever it wants, to avoid spamming users it is recommended to avoid
-/// unnecessary output.
-///
-/// To help choose the appropriate output level, the `MDBOOK_LOG` environment
-/// variable will be passed through to the subprocess, if set.
-///
-/// If the subprocess wishes to indicate that rendering failed, it should exit
-/// with a non-zero return code.
+/// See <https://rust-lang.github.io/mdBook/for_developers/backends.html>
+/// for a description of the renderer protocol.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CmdRenderer {
     name: String,
