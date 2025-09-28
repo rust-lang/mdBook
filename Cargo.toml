@@ -48,7 +48,7 @@ mdbook-renderer = { path = "crates/mdbook-renderer", version = "0.5.0-alpha.1" }
 mdbook-summary = { path = "crates/mdbook-summary", version = "0.5.0-alpha.1" }
 memchr = "2.7.5"
 notify = "8.1.0"
-notify-debouncer-mini = "0.6.0"
+notify-debouncer-mini = "0.7.0"
 opener = "0.8.2"
 pathdiff = "0.2.3"
 pulldown-cmark = { version = "0.13.0", default-features = false, features = ["html"] } # Do not update, part of the public api.
