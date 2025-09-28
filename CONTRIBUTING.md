@@ -221,12 +221,18 @@ The following are instructions for updating [highlight.js](https://highlightjs.o
 
 Instructions for mdBook maintainers to publish a new release:
 
-1. Create a PR to update the version and update the CHANGELOG:
-    1. Update the version in `Cargo.toml`
-    2. Run `cargo xtask test-all` to verify that everything is passing, and to update `Cargo.lock`.
-    3. Run `cargo xtask changelog` to add a new entry to the changelog.
-        1. This will add a list of all changes at the top. You will need to move those into the appropriate categories. Most changes that are generally not relevant to a user should be removed. Rewrite the descriptions so that a user can reasonably figure out what it means.
-    4. Commit the changes, and open a PR.
+1. Create a PR that bumps the version and updates the changelog:
+    1. `git fetch upstream`
+    2. `git checkout -B bump-version upstream/master`
+    3. `cargo xtask bump <BUMP>`
+       - This will update the version of all the crates.
+       - `cargo set-version` must first be installed with `cargo install cargo-edit`.
+       - Replace `<BUMP>` with the kind of bump (patch, alpha, etc.)
+    4. `cargo xtask changelog`
+       - This will update `CHANGELOG.md` to add a list of all changes at the top. You will need to move those into the appropriate categories. Most changes that are generally not relevant to a user should be removed. Rewrite the descriptions so that a user can reasonably figure out what it means.
+    5. `git add --update  .`
+    6. `git commit`
+    7. `git push`
 2. After the PR has been merged, create a release in GitHub. This can either be done in the GitHub web UI, or on the command-line:
    ```bash
    MDBOOK_VERS="`cargo read-manifest | jq -r .version`" ; \
