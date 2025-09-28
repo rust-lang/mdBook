@@ -224,7 +224,8 @@ Instructions for mdBook maintainers to publish a new release:
 1. Create a PR to update the version and update the CHANGELOG:
     1. Update the version in `Cargo.toml`
     2. Run `cargo xtask test-all` to verify that everything is passing, and to update `Cargo.lock`.
-    3. Update `CHANGELOG.md` with any changes that users may be interested in.
+    3. Run `cargo xtask changelog` to add a new entry to the changelog.
+        1. This will add a list of all changes at the top. You will need to move those into the appropriate categories. Most changes that are generally not relevant to a user should be removed. Rewrite the descriptions so that a user can reasonably figure out what it means.
     4. Commit the changes, and open a PR.
 2. After the PR has been merged, create a release in GitHub. This can either be done in the GitHub web UI, or on the command-line:
    ```bash

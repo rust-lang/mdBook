@@ -5,11 +5,13 @@ use std::error::Error;
 use std::process::Command;
 use std::process::exit;
 
+mod changelog;
+
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 fn main() -> Result<()> {
     macro_rules! commands {
-        ($($name:literal => $func:ident),* $(,)?) => {
+        ($($name:literal => $func:expr),* $(,)?) => {
             [$(($name, $func as fn() -> Result<()>)),*]
         };
     }
@@ -23,6 +25,7 @@ fn main() -> Result<()> {
         "semver-checks" => semver_checks,
         "eslint" => eslint,
         "gui" => gui,
+        "changelog" => changelog::changelog,
     }
     .into_iter()
     .collect();
