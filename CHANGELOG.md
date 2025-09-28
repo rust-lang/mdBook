@@ -1,5 +1,215 @@
 # Changelog
 
+### 0.5 Migration Guide
+
+During the pre-release phase of the 0.5 release, the documentation may be found at <https://rust-lang.github.io/mdBook/pre-release/>.
+
+The 0.5 release contains several breaking changes from the 0.4 release. Preprocessors and renderers will need to be migrated to continue to work with this release. After updating your configuration, it is recommended to carefully compare and review how your book renders to ensure everything is working correctly.
+
+If you have overridden any of the theme files, you will likely need to update them to match the current version.
+
+The following is a summary of the changes that may require your attention when updating to 0.5:
+
+#### Config changes
+
+- Unknown fields in config are now an error.
+  [#2787](https://github.com/rust-lang/mdBook/pull/2787)
+  [#2801](https://github.com/rust-lang/mdBook/pull/2801)
+- Removed `curly-quotes`, use `output.html.smart-punctuation` instead.
+  [#2788](https://github.com/rust-lang/mdBook/pull/2788)
+- Removed `output.html.copy-fonts`. The default fonts are now always copied unless you override the `theme/fonts/fonts.css` file.
+  [#2790](https://github.com/rust-lang/mdBook/pull/2790)
+- If the `command` path for a renderer or preprocessor is relative, it is now always relative to the book root.
+  [#2792](https://github.com/rust-lang/mdBook/pull/2792)
+  [#2796](https://github.com/rust-lang/mdBook/pull/2796)
+- Added the `optional` field for preprocessors. The default is `false`, so this also means it is an error by default if the preprocessor is missing.
+  [#2797](https://github.com/rust-lang/mdBook/pull/2797)
+- `output.html.smart-punctuation` is now `true` by default.
+  [#2810](https://github.com/rust-lang/mdBook/pull/2810)
+- `output.html.hash-files` is now `true` by default.
+  [#2820](https://github.com/rust-lang/mdBook/pull/2820)
+- Removed support for google-analytics. Use a theme extension (like `head.hbs`) if you need to continue to support this.
+  [#2776](https://github.com/rust-lang/mdBook/pull/2776)
+- Removed the `book.multilingual` field. This was never used.
+  [#2775](https://github.com/rust-lang/mdBook/pull/2775)
+- Removed the very old legacy config support. Warnings have been displayed in previous versions on how to migrate.
+  [#2783](https://github.com/rust-lang/mdBook/pull/2783)
+
+#### Theme changes
+
+- Replaced the `{{#previous}}` and `{{#next}}` handlebars helpers with simple objects that contain the previous and next values.
+  [#2794](https://github.com/rust-lang/mdBook/pull/2794)
+- Removed the `{{theme_option}}` handlebars helper. It has not been used for a while.
+  [#2795](https://github.com/rust-lang/mdBook/pull/2795)
+
+#### Rendering changes
+
+- Updated to a newer version of `pulldown-cmark`. This brings a large number of fixes to markdown processing.
+  [#2401](https://github.com/rust-lang/mdBook/pull/2401)
+- The font-awesome font is no longer loaded as a font. Instead, the corresponding SVG is embedded in the output for the corresponding `<i>` tags. Additionally, a handlebars helper has been added for the `hbs` files.
+  [#1330](https://github.com/rust-lang/mdBook/pull/1330)
+- Changed all internal HTML IDs to have an `mdbook-` prefix. This helps avoid namespace conflicts with header IDs.
+  [#2808](https://github.com/rust-lang/mdBook/pull/2808)
+- There is a new internal HTML rendering pipeline. This is primarily intended to give mdBook more flexibility in generating its HTML output. This resulted in some small changes to the HTML structure. HTML parsing may now be more strict than before.
+  [#2844](https://github.com/rust-lang/mdBook/pull/2844)
+- Links on the print page now link to elements on the print page instead of linking out to the individual chapters.
+  [#2844](https://github.com/rust-lang/mdBook/pull/2844)
+- Added support for definition lists. These are enabled by default, with the option `output.html.definition-lists` to disable it.
+  [#2847](https://github.com/rust-lang/mdBook/pull/2847)
+- Added support for admonitions. These are enabled by default, with the option `output.html.admonitions` to disable it.
+  [#2851](https://github.com/rust-lang/mdBook/pull/2851)
+
+#### CLI changes
+
+- Removed the `--dest-dir` option to `mdbook test`. It was unused since `mdbook test` does not generate output.
+  [#2805](https://github.com/rust-lang/mdBook/pull/2805)
+- Changed CLI `--dest-dir` to be relative to the current directory, not the book root.
+  [#2806](https://github.com/rust-lang/mdBook/pull/2806)
+
+#### Rust API
+
+- The Rust API has been split into several crates ([#2766](https://github.com/rust-lang/mdBook/pull/2766)). In summary, the different crates are:
+  - `mdbook` — The CLI binary.
+  - [`mdbook-driver`](https://docs.rs/mdbook-driver/latest/mdbook_driver/) — The high-level library for running mdBook, primarily through the `MDBook` type. If you are driving mdBook programmatically, this is the crate you want.
+  - [`mdbook-preprocessor`](https://docs.rs/mdbook-preprocessor/latest/mdbook_preprocessor/) — Support for implementing preprocessors. If you have a preprocessor, then this is the crate you should depend on.
+  - [`mdbook-renderer`](https://docs.rs/mdbook-renderer/latest/mdbook_renderer/) — Support for implementing renderers. If you have a custom renderer, this is the crate you should depend on.
+  - [`mdbook-markdown`](https://docs.rs/mdbook-markdown/latest/mdbook_markdown/) — The Markdown renderer. If you are processing markdown, this is the crate you should depend on. This is essentially a thin wrapper around `pulldown-cmark`, and re-exports that crate so that you can ensure the version stays in sync with mdBook.
+  - [`mdbook-summary`](https://docs.rs/mdbook-summary/latest/mdbook_summary/) — The `SUMMARY.md` parser.
+  - [`mdbook-html`](https://docs.rs/mdbook-html/latest/mdbook_html/) — The HTML renderer.
+  - [`mdbook-core`](https://docs.rs/mdbook-core/latest/mdbook_core/) — An internal library that is used by the other crates for shared types. You should not depend on this crate directly since types from this crate are rexported from the other crates as appropriate.
+- Changes to `Config`:
+  - [`Config::get`](https://docs.rs/mdbook-core/latest/mdbook_core/config/struct.Config.html#method.get) is now generic over the return value, using `serde` to deserialize the value. It also returns a `Result` to handle deserialization errors. [#2773](https://github.com/rust-lang/mdBook/pull/2773)
+  - Removed `Config::get_deserialized`. Use `Config::get` instead.
+  - Removed `Config::get_deserialized_opt`. Use `Config::get` instead.
+  - Removed `Config::get_mut`. Use `Config::set` instead.
+  - Removed deprecated `Config::get_deserialized_opt`. Use `Config::get` instead.
+  - Removed `Config::get_renderer`. Use `Config::get` instead.
+  - Removed `Config::get_preprocessor`. Use `Config::get` instead.
+- Public types have been switch to use the `#[non_exhaustive]` attribute to help allow them to change in a backwards-compatible way.
+  [#2779](https://github.com/rust-lang/mdBook/pull/2779)
+  [#2823](https://github.com/rust-lang/mdBook/pull/2823)
+- Changed `MDBook` `with_renderer`/`with_preprocessor` to overwrite the entry if an extension of the same name is already loaded. This allows the caller to replace an entry.
+  [#2802](https://github.com/rust-lang/mdBook/pull/2802)
+- Added `MarkdownOptions` struct to specify settings for markdown rendering for `mdbook_markdown::new_cmark_parser`.
+  [#2809](https://github.cocm/rust-lang/mdBook/pull/2809)
+- Renamed `Book::sections` to `Book::items`.
+  [#2813](https://github.com/rust-lang/mdBook/pull/2813)
+- `mdbook::book::load_book` is now private. Instead, use one of the `MDBook` load functions like `MDBook::load_with_config`.
+- Removed `HtmlConfig::smart_punctuation` method, use the field of the same name.
+- `CmdPreprocessor::parse_input` moved to `mdbook_preprocessor::parse_input`.
+- `Preprocessor::supports_renderer` now returns a `Result<bool>` instead of `bool` to be able to handle errors.
+- Most of the types from the `theme` module are now private. The `Theme` struct is still exposed for working with themes.
+- Various functions in the `utils::fs` module have been removed, renamed, or reworked.
+- Most of the functions in the `utils` module have been moved, removed, or made private.
+
+## mdBook 0.5.0-alpha.1
+[v0.4.52...v0.5.0-alpha.1](https://github.com/rust-lang/mdBook/compare/v0.4.52...v0.5.0-alpha.1)
+
+### Added
+
+- The location of the generated HTML book is now displayed on the console.
+  [#2729](https://github.com/rust-lang/mdBook/pull/2729)
+- ❗ Added the `optional` field for preprocessors. The default is `false`, so this also changes it so that it is an error if the preprocessor is missing.
+  [#2797](https://github.com/rust-lang/mdBook/pull/2797)
+- ❗ Added `MarkdownOptions` struct to specify settings for markdown rendering.
+  [#2809](https://github.cocm/rust-lang/mdBook/pull/2809)
+- Added sidebar heading navigation. This includes the `output.html.sidebar-header-nav` option to disable it.
+  [#2822](https://github.com/rust-lang/mdBook/pull/2822)
+- Added the mdbook version to the guide.
+  [#2826](https://github.com/rust-lang/mdBook/pull/2826)
+- Added `Book::chapters` and `Book::for_each_chapter_mut` to more conveniently iterate over chapters (instead of all items).
+  [#2838](https://github.com/rust-lang/mdBook/pull/2838)
+- ❗ Added support for definition lists. These are enabled by default, with the option `output.html.definition-lists` to disable it.
+  [#2847](https://github.com/rust-lang/mdBook/pull/2847)
+- ❗ Added support for admonitions. These are enabled by default, with the option `output.html.admonitions` to disable it.
+  [#2851](https://github.com/rust-lang/mdBook/pull/2851)
+
+### Changed
+
+- ❗ The `mdbook` crate has been split into multiple crates.
+  [#2766](https://github.com/rust-lang/mdBook/pull/2766)
+- The minimum Rust version has been updated to 1.88.
+  [#2844](https://github.com/rust-lang/mdBook/pull/2844)
+- ❗ `pulldown-cmark` has been upgraded to 0.13.0, bringing a large number of fixes to markdown processing.
+  [#2401](https://github.com/rust-lang/mdBook/pull/2401)
+- ❗ Switched public types to `non_exhaustive` to help allow them to change in a backwards-compatible way.
+  [#2779](https://github.com/rust-lang/mdBook/pull/2779)
+  [#2823](https://github.com/rust-lang/mdBook/pull/2823)
+- ❗ Unknown fields in config are now an error.
+  [#2787](https://github.com/rust-lang/mdBook/pull/2787)
+  [#2801](https://github.com/rust-lang/mdBook/pull/2801)
+- ❗ Changed `id_from_content` to be private.
+  [#2791](https://github.com/rust-lang/mdBook/pull/2791)
+- ❗ Changed preprocessor `command` to use paths relative to the book root.
+  [#2796](https://github.com/rust-lang/mdBook/pull/2796)
+- ❗ Replaced the `{{#previous}}` and `{{#next}}` handelbars navigation helpers with objects.
+  [#2794](https://github.com/rust-lang/mdBook/pull/2794)
+- ❗ Use embedded SVG instead of fonts for icons, font-awesome 6.2.
+  [#1330](https://github.com/rust-lang/mdBook/pull/1330)
+- The `book.src` field is no longer serialized if it is the default of "src".
+  [#2800](https://github.com/rust-lang/mdBook/pull/2800)
+- ❗ Changed `MDBook` `with_renderer`/`with_preprocessor` to overwrite the entry if an extension of the same name is already loaded.
+  [#2802](https://github.com/rust-lang/mdBook/pull/2802)
+- ❗ Changed CLI `--dest-dir` to be relative to the current directory, not the book root.
+  [#2806](https://github.com/rust-lang/mdBook/pull/2806)
+- ❗ Changed all internal HTML IDs to have an `mdbook-` prefix. This helps avoid namespace conflicts with header IDs.
+  [#2808](https://github.com/rust-lang/mdBook/pull/2808)
+- ❗ `output.html.smart-punctuation` is now `true` by default.
+  [#2810](https://github.com/rust-lang/mdBook/pull/2810)
+- ❗ Renamed `Book::sections` to `Book::items`.
+  [#2813](https://github.com/rust-lang/mdBook/pull/2813)
+- ❗ `output.html.hash-files` is now `true` by default.
+  [#2820](https://github.com/rust-lang/mdBook/pull/2820)
+- Switched from `log` to `tracing`.
+  [#2829](https://github.com/rust-lang/mdBook/pull/2829)
+- ❗ Rewrote the HTML rendering pipeline.
+  [#2844](https://github.com/rust-lang/mdBook/pull/2844)
+- ❗ Links on the print page now link to elements on the print page instead of linking out to the individual chapters.
+  [#2844](https://github.com/rust-lang/mdBook/pull/2844)
+- ❗ Moved theme copy to the Theme type and reduced visibility.
+  [#2857](https://github.com/rust-lang/mdBook/pull/2857)
+- ❗ Cleaned up some fs-related utilities.
+  [#2856](https://github.com/rust-lang/mdBook/pull/2856)
+- ❗ Moved `get_404_output_file` to `HtmlConfig`.
+  [#2855](https://github.com/rust-lang/mdBook/pull/2855)
+- ❗ Moved `take_lines` functions to `mdbook-driver` and made private.
+  [#2854](https://github.com/rust-lang/mdBook/pull/2854)
+- Updated dependencies.
+  [#2793](https://github.com/rust-lang/mdBook/pull/2793)
+  [#2869](https://github.com/rust-lang/mdBook/pull/2869)
+
+### Removed
+
+- ❗ Removed `toml` as a public dependency.
+  [#2773](https://github.com/rust-lang/mdBook/pull/2773)
+- ❗ Removed the `book.multilingual` field. This was never used.
+  [#2775](https://github.com/rust-lang/mdBook/pull/2775)
+- ❗ Removed support for google-analytics.
+  [#2776](https://github.com/rust-lang/mdBook/pull/2776)
+- ❗ Removed the very old legacy config support.
+  [#2783](https://github.com/rust-lang/mdBook/pull/2783)
+- ❗ Removed `curly-quotes`, use `output.html.smart-punctuation` instead.
+  [#2788](https://github.com/rust-lang/mdBook/pull/2788)
+- Removed old warning about `book.json`.
+  [#2789](https://github.com/rust-lang/mdBook/pull/2789)
+- ❗ Removed `output.html.copy-fonts`. The default fonts are now always copied unless you override the `theme/fonts/fonts.css` file.
+  [#2790](https://github.com/rust-lang/mdBook/pull/2790)
+- ❗ Removed legacy relative renderer command paths. Relative renderer command paths now must always be relative to the book root.
+  [#2792](https://github.com/rust-lang/mdBook/pull/2792)
+- ❗ Removed the `{{theme_option}}` handlebars helper. It has not been used for a while.
+  [#2795](https://github.com/rust-lang/mdBook/pull/2795)
+- ❗ Removed the `--dest-dir` option to `mdbook test`.
+  [#2805](https://github.com/rust-lang/mdBook/pull/2805)
+
+### Fixed
+
+- Fixed handling of multiple footnotes in a row.
+  [#2807](https://github.com/rust-lang/mdBook/pull/2807)
+- Fixed ID collisions when the numeric suffix gets used.
+  [#2846](https://github.com/rust-lang/mdBook/pull/2846)
+- Fixed missing css vars for no-js dark mode.
+  [#2850](https://github.com/rust-lang/mdBook/pull/2850)
+
 ## mdBook 0.4.52
 [v0.4.51...v0.4.52](https://github.com/rust-lang/mdBook/compare/v0.4.51...v0.4.52)
 
