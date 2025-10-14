@@ -185,9 +185,7 @@ If you want to disable the headless mode, use the `--disable-headless-test` opti
 cargo test --test gui -- --disable-headless-test
 ```
 
-The GUI tests are in the directory `tests/gui` in text files with the `.goml` extension. These tests are run
-using a `node.js` framework called `browser-ui-test`. You can find documentation for this language on its
-[repository](https://github.com/GuillaumeGomez/browser-UI-test/blob/master/goml-script.md).
+The GUI tests are in the directory `tests/gui` in text files with the `.goml` extension. The books that the tests use are located in the `tests/gui/books` directory. These tests are run using a `node.js` framework called `browser-ui-test`. You can find documentation for this language on its [repository](https://github.com/GuillaumeGomez/browser-UI-test/blob/master/goml-script.md).
 
 ### Checking changes in `.js` files
 

@@ -1,7 +1,7 @@
 // This tests basic search behavior.
 
 fail-on-js-error: true
-go-to: |DOC_PATH| + "index.html"
+go-to: |DOC_PATH| + "test_book/index.html"
 
 define-function: (
     "open-search",
@@ -31,7 +31,7 @@ write: "strikethrough"
 wait-for-text: ("#mdbook-searchresults-header", "2 search results for 'strikethrough':")
 
 // Now we test search shortcuts and more page changes.
-go-to: |DOC_PATH| + "index.html"
+go-to: |DOC_PATH| + "test_book/index.html"
 
 // This check is to ensure that the search bar is inside the search wrapper.
 assert: "#mdbook-search-wrapper #mdbook-searchbar"
@@ -66,7 +66,7 @@ assert-document-property: ({"URL": "?search=test"}, ENDS_WITH)
 
 // Now we ensure that when we land on the page with a "search in progress", the search results are
 // loaded and that the search input has focus.
-go-to: |DOC_PATH| + "index.html?search=test"
+go-to: |DOC_PATH| + "test_book/index.html?search=test"
 wait-for-text: ("#mdbook-searchresults-header", "search results for 'test':", ENDS_WITH)
 assert: "#mdbook-searchbar:focus"
 assert: "#mdbook-searchresults"

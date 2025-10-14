@@ -2,7 +2,7 @@
 
 debug: true
 
-go-to: |DOC_PATH| + "index.html"
+go-to: |DOC_PATH| + "test_book/index.html"
 
 // TODO: Dark mode is automatic, how to check that here?
 assert-css: ("#mdbook-theme-list", {"display": "none"})

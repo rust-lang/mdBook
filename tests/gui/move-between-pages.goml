@@ -1,6 +1,6 @@
 // This tests pressing the left and right arrows moving to previous and next page.
 
-go-to: |DOC_PATH| + "index.html"
+go-to: |DOC_PATH| + "test_book/index.html"
 
 // default page is the first numbered page
 assert-text: ("title", "Introduction - mdBook test book")
