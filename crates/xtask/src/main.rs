@@ -74,7 +74,7 @@ fn cargo(args: &str, cb: &dyn Fn(&mut Command)) -> Result<()> {
     cb(&mut cmd);
     let status = cmd.status().expect("cargo should be installed");
     if !status.success() {
-        return Err("command `cargo {args}` failed".into());
+        return Err(format!("command `cargo {args}` failed").into());
     }
     Ok(())
 }
