@@ -6,7 +6,7 @@
 
 use serde_json::Value;
 use std::fs::read_to_string;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::{Command, Output};
 
 fn get_available_browser_ui_test_version_inner(global: bool) -> Option<String> {
@@ -75,7 +75,6 @@ fn main() {
 }
 
 fn build_books(out_dir: &Path) {
-    let exe = build_mdbook();
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let books_dir = root.join("tests/gui/books");
     for entry in books_dir.read_dir().unwrap() {
@@ -85,7 +84,7 @@ fn build_books(out_dir: &Path) {
             continue;
         }
         println!("Building `{}`", path.display());
-        let mut cmd = Command::new(&exe);
+        let mut cmd = Command::new(env!("CARGO_BIN_EXE_mdbook"));
         let output = cmd
             .arg("build")
             .arg("--dest-dir")
@@ -95,28 +94,6 @@ fn build_books(out_dir: &Path) {
             .expect("mdbook should be built");
         check_status(&cmd, &output);
     }
-}
-
-fn build_mdbook() -> PathBuf {
-    let mut cmd = Command::new("cargo");
-    let output = cmd
-        .arg("build")
-        .output()
-        .expect("cargo should be installed");
-    check_status(&cmd, &output);
-    let target_dir = detect_target_dir();
-    target_dir.join("debug/mdbook")
-}
-
-fn detect_target_dir() -> PathBuf {
-    let mut cmd = Command::new("cargo");
-    let output = cmd
-        .args(["metadata", "--format-version=1", "--no-deps"])
-        .output()
-        .expect("cargo should be installed");
-    check_status(&cmd, &output);
-    let v: serde_json::Value = serde_json::from_slice(&output.stdout).expect("invalid json");
-    PathBuf::from(v["target_directory"].as_str().unwrap())
 }
 
 fn check_status(cmd: &Command, output: &Output) {
