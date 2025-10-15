@@ -1,7 +1,7 @@
 // Tests for collapsed heading sidebar navigation.
 
 set-window-size: (1400, 800)
-go-to: |DOC_PATH| + "headings/collapsed.html"
+go-to: |DOC_PATH| + "heading-nav/collapsed.html"
 
 assert-count: (".header-item", 12)
 assert-count: (".current-header", 1)

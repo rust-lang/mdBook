@@ -1,6 +1,6 @@
 // This GUI test checks help popup.
 
-go-to: |DOC_PATH| + "index.html"
+go-to: |DOC_PATH| + "basic/index.html"
 assert-css: ("#mdbook-help-container", {"display": "none"})
 press-key: '?'
 wait-for-css: ("#mdbook-help-container", {"display": "flex"})

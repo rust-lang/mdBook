@@ -1,36 +1,43 @@
 // This tests pressing the left and right arrows moving to previous and next page.
 
-go-to: |DOC_PATH| + "index.html"
+go-to: |DOC_PATH| + "all-summary/index.html"
 
-// default page is the first numbered page
-assert-text: ("title", "Introduction - mdBook test book")
-
-// Moving left we get to the prefix page
-press-key: 'ArrowLeft'
-assert-text: ("title", "Prefix Chapter - mdBook test book")
+// default page is the first chapter
+assert-text: ("title", "Prefix 1 - all-summary")
 
 // Trying to move to the left beyond the prefix pages - nothing changes
 press-key: 'ArrowLeft'
-assert-text: ("title", "Prefix Chapter - mdBook test book")
+assert-text: ("title", "Prefix 1 - all-summary")
 
-// Back to the main page
+// Move left
+go-to: |DOC_PATH| + "all-summary/intro.html"
+assert-text: ("title", "Introduction - all-summary")
+
+press-key: 'ArrowLeft'
+assert-text: ("title", "Prefix 2 - all-summary")
+
+press-key: 'ArrowLeft'
+assert-text: ("title", "Prefix 1 - all-summary")
+
+// Move right
 press-key: 'ArrowRight'
-assert-text: ("title", "Introduction - mdBook test book")
+assert-text: ("title", "Prefix 2 - all-summary")
 
 press-key: 'ArrowRight'
-assert-text: ("title", "Markdown Individual tags - mdBook test book")
+assert-text: ("title", "Introduction - all-summary")
 
 press-key: 'ArrowRight'
-assert-text: ("title", "Heading - mdBook test book")
+assert-text: ("title", "P1 C1 - all-summary")
 
-// Last numbered page
-go-to: "../last.html"
-assert-text: ("title", "Last numbered chapter - mdBook test book")
-
-// Go to the suffix chapter
 press-key: 'ArrowRight'
-assert-text: ("title", "Suffix Chapter - mdBook test book")
+assert-text: ("title", "P2 C1 - all-summary")
+
+press-key: 'ArrowRight'
+assert-text: ("title", "Suffix 1 - all-summary")
+
+press-key: 'ArrowRight'
+assert-text: ("title", "Suffix 2 - all-summary")
 
 // Try to go beyond the last page
 press-key: 'ArrowRight'
-assert-text: ("title", "Suffix Chapter - mdBook test book")
+assert-text: ("title", "Suffix 2 - all-summary")

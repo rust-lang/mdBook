@@ -4,7 +4,7 @@
 
 // We disable javascript
 javascript: false
-go-to: |DOC_PATH| + "index.html"
+go-to: |DOC_PATH| + "basic/index.html"
 store-value: (height, 1028)
 set-window-size: (1028, |height|)
 

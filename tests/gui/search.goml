@@ -1,7 +1,7 @@
 // This tests basic search behavior.
 
 fail-on-js-error: true
-go-to: |DOC_PATH| + "index.html"
+go-to: |DOC_PATH| + "search/index.html"
 
 define-function: (
     "open-search",
@@ -15,23 +15,23 @@ define-function: (
 
 call-function: ("open-search", {})
 assert-text: ("#mdbook-searchresults-header", "")
-write: "strikethrough"
-wait-for-text: ("#mdbook-searchresults-header", "2 search results for 'strikethrough':")
+write: "extraordinary"
+wait-for-text: ("#mdbook-searchresults-header", "2 search results for 'extraordinary':")
 // Close the search display
 press-key: 'Escape'
 wait-for-css: ("#mdbook-search-wrapper", {"display": "none"})
 // Reopening the search should show the last value
 call-function: ("open-search", {})
-assert-text: ("#mdbook-searchresults-header", "2 search results for 'strikethrough':")
+assert-text: ("#mdbook-searchresults-header", "2 search results for 'extraordinary':")
 // Navigate to a sub-chapter
-go-to: "./individual/strikethrough.html"
+go-to: "./inner/chapter_2.html"
 assert-text: ("#mdbook-searchresults-header", "")
 call-function: ("open-search", {})
-write: "strikethrough"
-wait-for-text: ("#mdbook-searchresults-header", "2 search results for 'strikethrough':")
+write: "kaleidoscope"
+wait-for-text: ("#mdbook-searchresults-header", "2 search results for 'kaleidoscope':")
 
 // Now we test search shortcuts and more page changes.
-go-to: |DOC_PATH| + "index.html"
+go-to: |DOC_PATH| + "search/index.html"
 
 // This check is to ensure that the search bar is inside the search wrapper.
 assert: "#mdbook-search-wrapper #mdbook-searchbar"
@@ -56,18 +56,18 @@ wait-for-css: ("#mdbook-search-wrapper", {"display": "block"})
 // We ensure the search bar has the focus.
 assert: "#mdbook-searchbar:focus"
 
-// We input "test".
-write: "test"
+// We input "thunder".
+write: "thunder"
 // The results should now appear.
-wait-for-text: ("#mdbook-searchresults-header", "search results for 'test':", ENDS_WITH)
+wait-for-text: ("#mdbook-searchresults-header", "1 search result for 'thunder':")
 assert: "#mdbook-searchresults"
 // Ensure that the URL was updated as well.
-assert-document-property: ({"URL": "?search=test"}, ENDS_WITH)
+assert-document-property: ({"URL": "?search=thunder"}, ENDS_WITH)
 
 // Now we ensure that when we land on the page with a "search in progress", the search results are
 // loaded and that the search input has focus.
-go-to: |DOC_PATH| + "index.html?search=test"
-wait-for-text: ("#mdbook-searchresults-header", "search results for 'test':", ENDS_WITH)
+go-to: |DOC_PATH| + "search/index.html?search=thunder"
+wait-for-text: ("#mdbook-searchresults-header", "1 search result for 'thunder':")
 assert: "#mdbook-searchbar:focus"
 assert: "#mdbook-searchresults"
 

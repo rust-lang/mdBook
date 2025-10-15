@@ -2,7 +2,7 @@
 
 debug: true
 
-go-to: |DOC_PATH| + "index.html"
+go-to: |DOC_PATH| + "all-summary/index.html"
 
 // TODO: Dark mode is automatic, how to check that here?
 assert-css: ("#mdbook-theme-list", {"display": "none"})
@@ -31,5 +31,5 @@ press-key: 'Escape'
 assert-css: ("#mdbook-theme-list", {"display": "none"})
 
 // Check for navigation retains theme.
-go-to: "./rust/rust_codeblock.html"
+go-to: "./part-1/chapter-1.html"
 assert-attribute: ("html", {"class": "rust js"})

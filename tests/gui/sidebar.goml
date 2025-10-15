@@ -1,7 +1,7 @@
 // This GUI test checks sidebar hide/show and also its behaviour on smaller
 // width.
 
-go-to: |DOC_PATH| + "index.html"
+go-to: |DOC_PATH| + "all-summary/index.html"
 set-window-size: (1100, 600)
 // Need to reload for the new size to be taken account by the JS.
 reload:
@@ -44,13 +44,13 @@ define-function: (
 )
 
 // Since the sidebar is visible, we should be able to find this text.
-assert-find-text: ("3.9. Links and Horizontal Rule", {"case-sensitive": true})
+assert-find-text: ("3. P1 C1", {"case-sensitive": true})
 call-function: ("hide-sidebar", {})
 // Text should not be findeable anymore since the sidebar is collapsed.
-assert-find-text-false: ("3.9. Links and Horizontal Rule", {"case-sensitive": true})
+assert-find-text-false: ("3. P1 C1", {"case-sensitive": true})
 call-function: ("show-sidebar", {})
 // We should be able to find this text again.
-assert-find-text: ("3.9. Links and Horizontal Rule", {"case-sensitive": true})
+assert-find-text: ("3. P1 C1", {"case-sensitive": true})
 
 // We now test on smaller width to ensure that the sidebar is collapsed by default.
 set-window-size: (900, 600)

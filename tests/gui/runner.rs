@@ -5,9 +5,9 @@
 //! information.
 
 use serde_json::Value;
-use std::env::current_dir;
-use std::fs::{read_to_string, remove_dir_all};
-use std::process::Command;
+use std::fs::read_to_string;
+use std::path::{Path, PathBuf};
+use std::process::{Command, Output};
 
 fn get_available_browser_ui_test_version_inner(global: bool) -> Option<String> {
     let mut command = Command::new("npm");
@@ -69,23 +69,75 @@ fn main() {
         }
     }
 
-    let current_dir = current_dir().expect("failed to retrieve current directory");
-    let test_book = current_dir.join("test_book");
+    let out_dir = Path::new(env!("CARGO_TARGET_TMPDIR")).join("gui");
+    build_books(&out_dir);
+    run_browser_ui_test(&out_dir);
+}
 
-    // Result doesn't matter.
-    let _ = remove_dir_all(test_book.join("book"));
+fn build_books(out_dir: &Path) {
+    let exe = build_mdbook();
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let books_dir = root.join("tests/gui/books");
+    for entry in books_dir.read_dir().unwrap() {
+        let entry = entry.unwrap();
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+        println!("Building `{}`", path.display());
+        let mut cmd = Command::new(&exe);
+        let output = cmd
+            .arg("build")
+            .arg("--dest-dir")
+            .arg(out_dir.join(path.file_name().unwrap()))
+            .arg(&path)
+            .output()
+            .expect("mdbook should be built");
+        check_status(&cmd, &output);
+    }
+}
 
+fn build_mdbook() -> PathBuf {
     let mut cmd = Command::new("cargo");
-    cmd.arg("run").arg("build").arg(&test_book);
-    // Then we run the GUI tests on it.
-    assert!(cmd.status().is_ok_and(|status| status.success()));
+    let output = cmd
+        .arg("build")
+        .output()
+        .expect("cargo should be installed");
+    check_status(&cmd, &output);
+    let target_dir = detect_target_dir();
+    target_dir.join("debug/mdbook")
+}
 
-    let book_dir = format!("file://{}", current_dir.join("test_book/book/").display());
+fn detect_target_dir() -> PathBuf {
+    let mut cmd = Command::new("cargo");
+    let output = cmd
+        .args(["metadata", "--format-version=1", "--no-deps"])
+        .output()
+        .expect("cargo should be installed");
+    check_status(&cmd, &output);
+    let v: serde_json::Value = serde_json::from_slice(&output.stdout).expect("invalid json");
+    PathBuf::from(v["target_directory"].as_str().unwrap())
+}
 
+fn check_status(cmd: &Command, output: &Output) {
+    if !output.status.success() {
+        eprintln!("error: `{cmd:?}` failed");
+        let stdout = std::str::from_utf8(&output.stdout).expect("stdout is not utf8");
+        let stderr = std::str::from_utf8(&output.stderr).expect("stderr is not utf8");
+        eprintln!("\n--- stdout\n{stdout}\n--- stderr\n{stderr}");
+        std::process::exit(1);
+    }
+}
+
+fn run_browser_ui_test(out_dir: &Path) {
     let mut command = Command::new("npx");
+    let mut doc_path = format!("file://{}", out_dir.display());
+    if !doc_path.ends_with('/') {
+        doc_path.push('/');
+    }
     command
         .arg("browser-ui-test")
-        .args(["--variable", "DOC_PATH", book_dir.as_str()])
+        .args(["--variable", "DOC_PATH", doc_path.as_str()])
         .args(["--display-format", "compact"]);
 
     for arg in std::env::args().skip(1) {

@@ -185,9 +185,7 @@ If you want to disable the headless mode, use the `--disable-headless-test` opti
 cargo test --test gui -- --disable-headless-test
 ```
 
-The GUI tests are in the directory `tests/gui` in text files with the `.goml` extension. These tests are run
-using a `node.js` framework called `browser-ui-test`. You can find documentation for this language on its
-[repository](https://github.com/GuillaumeGomez/browser-UI-test/blob/master/goml-script.md).
+The GUI tests are in the directory `tests/gui` in text files with the `.goml` extension. The books that the tests use are located in the `tests/gui/books` directory. These tests are run using a `node.js` framework called `browser-ui-test`. You can find documentation for this language on its [repository](https://github.com/GuillaumeGomez/browser-UI-test/blob/master/goml-script.md).
 
 ### Checking changes in `.js` files
 
@@ -215,7 +213,7 @@ The following are instructions for updating [highlight.js](https://highlightjs.o
 1. Compare the language list that it spits out to the one in [`syntax-highlighting.md`](https://github.com/camelid/mdBook/blob/master/guide/src/format/theme/syntax-highlighting.md). If any are missing, add them to the list and rebuild (and update these docs). If any are added to the common set, add them to `syntax-highlighting.md`.
 1. Copy `build/highlight.min.js` to mdbook's directory [`highlight.js`](https://github.com/rust-lang/mdBook/blob/master/src/theme/highlight.js).
 1. Be sure to check the highlight.js [CHANGES](https://github.com/highlightjs/highlight.js/blob/main/CHANGES.md) for any breaking changes. Breaking changes that would affect users will need to wait until the next major release.
-1. Build mdbook with the new file and build some books with the new version and compare the output with a variety of languages to see if anything changes. The [test_book](https://github.com/rust-lang/mdBook/tree/master/test_book) contains a chapter with many languages to examine.
+1. Build mdbook with the new file and build some books with the new version and compare the output with a variety of languages to see if anything changes. The [syntax GUI test](https://github.com/rust-lang/mdBook/tree/master/tests/gui/books/highlighting) contains a chapter with many languages to examine. Update the test (`highlighting.goml`) to add any new languages.
 
 ## Publishing new releases
 
