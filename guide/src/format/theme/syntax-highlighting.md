@@ -65,12 +65,17 @@ your own `highlight.js` file:
 - xml
 - yaml
 
+If you want to support another set of languages for syntax highlighting,
+you can download a "Custom package" from their website, rename the
+`highlight.min.js` to `highlight.js` and move it into the `theme` folder of your
+book.
+
 ## Custom theme
 Like the rest of the theme, the files used for syntax highlighting can be
 overridden with your own.
 
 - ***highlight.js*** normally you shouldn't have to overwrite this file, unless
-  you want to use a more recent version.
+  you want to use a more recent version or support additional languages.
 - ***highlight.css*** theme used by highlight.js for syntax highlighting.
 
 If you want to use another theme for `highlight.js` download it from their
