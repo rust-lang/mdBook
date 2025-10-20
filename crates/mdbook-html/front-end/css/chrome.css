@@ -509,9 +509,9 @@ html:not(.sidebar-resizing) .sidebar {
     height: 16px;
     color: var(--icons);
     margin-inline-start: var(--sidebar-resize-indicator-space);
-	display: flex;
-	align-items: center;
-	justify-content: flex-start;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
 }
 .sidebar-resize-handle .sidebar-resize-indicator::before {
     content: "";
