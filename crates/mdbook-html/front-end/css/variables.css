@@ -73,6 +73,8 @@
     --blockquote-important-color: #d3abff;
     --blockquote-warning-color: #f0b72f;
     --blockquote-caution-color: #f21424;
+
+    --sidebar-header-border-color: #c18639;
 }
 
 .coal {
@@ -132,6 +134,8 @@
     --blockquote-important-color: #ab7df8;
     --blockquote-warning-color: #d29922;
     --blockquote-caution-color: #d91b29;
+
+    --sidebar-header-border-color: #3473ad;
 }
 
 .light, html:not(.js) {
@@ -191,6 +195,8 @@
     --blockquote-important-color: #8250df;
     --blockquote-warning-color: #9a6700;
     --blockquote-caution-color: #b52731;
+
+    --sidebar-header-border-color: #6e6edb;
 }
 
 .navy {
@@ -250,6 +256,8 @@
     --blockquote-important-color: #ab7df8;
     --blockquote-warning-color: #d29922;
     --blockquote-caution-color: #f21424;
+
+    --sidebar-header-border-color: #2f6ab5;
 }
 
 .rust {
@@ -307,6 +315,8 @@
     --blockquote-important-color: #8250df;
     --blockquote-warning-color: #603700;
     --blockquote-caution-color: #aa1721;
+
+    --sidebar-header-border-color: #8c391f;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -367,5 +377,7 @@
         --blockquote-important-color: #ab7df8;
         --blockquote-warning-color: #d29922;
         --blockquote-caution-color: #d91b29;
+
+        --sidebar-header-border-color: #3473ad;
     }
 }
