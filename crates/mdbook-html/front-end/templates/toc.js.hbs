@@ -78,10 +78,6 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
 // ---------------------------------------------------------------------------
 // Support for dynamically adding headers to the sidebar.
 
-// This is a debugging tool for the threshold which you can enable in the console.
-// eslint-disable-next-line prefer-const
-let mdbookThresholdDebug = false;
-
 (function() {
     // This is used to detect which direction the page has scrolled since the
     // last scroll event.
@@ -108,6 +104,101 @@ let mdbookThresholdDebug = false;
     // I'm not sure why eslint seems to have a false positive here.
     // eslint-disable-next-line prefer-const
     let headerToggles = [];
+    // This is a debugging tool for the threshold which you can enable in the console.
+    let thresholdDebug = false;
+
+    // Updates the threshold based on the scroll position.
+    function updateThreshold() {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const windowHeight = window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+
+        // The number of pixels below the viewport, at most documentHeight.
+        // This is used to push the threshold down to the bottom of the page
+        // as the user scrolls towards the bottom.
+        const pixelsBelow = Math.max(0, documentHeight - (scrollTop + windowHeight));
+        // The number of pixels above the viewport, at least defaultDownThreshold.
+        // Similar to pixelsBelow, this is used to push the threshold back towards
+        // the top when reaching the top of the page.
+        const pixelsAbove = Math.max(0, defaultDownThreshold - scrollTop);
+        // How much the threshold should be offset once it gets close to the
+        // bottom of the page.
+        const bottomAdd = Math.max(0, windowHeight - pixelsBelow - defaultDownThreshold);
+        let adjustedBottomAdd = bottomAdd;
+
+        // Adjusts bottomAdd for a small document. The calculation above
+        // assumes the document is at least twice the windowheight in size. If
+        // it is less than that, then bottomAdd needs to be shrunk
+        // proportional to the difference in size.
+        if (documentHeight < windowHeight * 2) {
+            const maxPixelsBelow = documentHeight - windowHeight;
+            const t = 1 - pixelsBelow / maxPixelsBelow;
+            const clamp = Math.max(0, Math.min(1, t));
+            adjustedBottomAdd *= clamp;
+        }
+
+        let scrollingDown = true;
+        if (scrollTop < lastKnownScrollPosition) {
+            scrollingDown = false;
+        }
+
+        if (scrollingDown) {
+            // When scrolling down, move the threshold up towards the default
+            // downwards threshold position. If near the bottom of the page,
+            // adjustedBottomAdd will offset the threshold towards the bottom
+            // of the page.
+            const amountScrolledDown = scrollTop - lastKnownScrollPosition;
+            const adjustedDefault = defaultDownThreshold + adjustedBottomAdd;
+            threshold = Math.max(adjustedDefault, threshold - amountScrolledDown);
+        } else {
+            // When scrolling up, move the threshold down towards the default
+            // upwards threshold position. If near the bottom of the page,
+            // quickly transition the threshold back up where it normally
+            // belongs.
+            const amountScrolledUp = lastKnownScrollPosition - scrollTop;
+            const adjustedDefault = defaultUpThreshold - pixelsAbove
+                + Math.max(0, adjustedBottomAdd - defaultDownThreshold);
+            threshold = Math.min(adjustedDefault, threshold + amountScrolledUp);
+        }
+
+        if (documentHeight <= windowHeight) {
+            threshold = 0;
+        }
+
+        if (thresholdDebug) {
+            const id = 'mdbook-threshold-debug-data';
+            let data = document.getElementById(id);
+            if (data === null) {
+                data = document.createElement('div');
+                data.id = id;
+                data.style.cssText = `
+                    position: fixed;
+                    top: 50px;
+                    right: 10px;
+                    background-color: 0xeeeeee;
+                    z-index: 9999;
+                    pointer-events: none;
+                `;
+                document.body.appendChild(data);
+            }
+            data.innerHTML = `
+                <table>
+                  <tr><td>documentHeight</td><td>${documentHeight.toFixed(1)}</td></tr>
+                  <tr><td>windowHeight</td><td>${windowHeight.toFixed(1)}</td></tr>
+                  <tr><td>scrollTop</td><td>${scrollTop.toFixed(1)}</td></tr>
+                  <tr><td>pixelsAbove</td><td>${pixelsAbove.toFixed(1)}</td></tr>
+                  <tr><td>pixelsBelow</td><td>${pixelsBelow.toFixed(1)}</td></tr>
+                  <tr><td>bottomAdd</td><td>${bottomAdd.toFixed(1)}</td></tr>
+                  <tr><td>adjustedBottomAdd</td><td>${adjustedBottomAdd.toFixed(1)}</td></tr>
+                  <tr><td>scrollingDown</td><td>${scrollingDown}</td></tr>
+                  <tr><td>threshold</td><td>${threshold.toFixed(1)}</td></tr>
+                </table>
+            `;
+            drawDebugLine();
+        }
+
+        lastKnownScrollPosition = scrollTop;
+    }
 
     function drawDebugLine() {
         if (!document.body) {
@@ -133,59 +224,13 @@ let mdbookThresholdDebug = false;
         document.body.appendChild(line);
     }
 
-    // Updates the threshold based on the scroll position.
-    function updateThreshold() {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const windowHeight = window.innerHeight;
-        const documentHeight = document.documentElement.scrollHeight;
-        // The number of pixels below the viewport, at most documentHeight.
-        // This is used to push the threshold down to the bottom of the page
-        // as the user scrolls towards the bottom.
-        const pixelsBelow = Math.max(0, documentHeight - (scrollTop + windowHeight));
-        // The number of pixels above the viewport, at most defaultDownThreshold.
-        // Similar to pixelsBelow, this is used to push the threshold back towards
-        // the top when reaching the top of the page.
-        const pixelsAbove = Math.max(0, defaultDownThreshold - scrollTop);
-        // How much the threshold should be offset once it gets close to the
-        // bottom of the page.
-        let bottomAdd = Math.max(0, windowHeight - pixelsBelow - defaultDownThreshold);
-
-        // Adjusts bottomAdd for a small document. The calculation above
-        // assumes the document is at least twice the windowheight in size. If
-        // it is less than that, then bottomAdd needs to be shrunk
-        // proportional to the difference in size.
-        if (documentHeight < windowHeight * 2) {
-            const maxPixelsBelow = documentHeight - windowHeight;
-            const t = 1 - pixelsBelow / maxPixelsBelow;
-            const clamp = Math.max(0, Math.min(1, t));
-            bottomAdd *= clamp;
-        }
-
-        let scrollingDown = true;
-        if (scrollTop < lastKnownScrollPosition) {
-            scrollingDown = false;
-        }
-
-        if (scrollingDown) {
-            // When scrolling down, move the threshold up towards the default
-            // downwards threshold position. If near the bottom of the page,
-            // bottomAdd will offset the threshold towards the bottom of the
-            // page.
-            const amountScrolledDown = scrollTop - lastKnownScrollPosition;
-            const adjustedDefault = defaultDownThreshold + bottomAdd;
-            threshold = Math.max(adjustedDefault, threshold - amountScrolledDown);
-        } else {
-            // When scrolling up, move the threshold down towards the default
-            // upwards threshold position. If near the bottom of the page,
-            // quickly transition the threshold back up where it normally
-            // belongs.
-            const amountScrolledUp = lastKnownScrollPosition - scrollTop;
-            const adjustedDefault = defaultUpThreshold - pixelsAbove
-                + Math.max(0, bottomAdd - defaultDownThreshold);
-            threshold = Math.min(adjustedDefault, threshold + amountScrolledUp);
-        }
-        lastKnownScrollPosition = scrollTop;
+    function mdbookEnableThresholdDebug() {
+        thresholdDebug = true;
+        updateThreshold();
+        drawDebugLine();
     }
+
+    window.mdbookEnableThresholdDebug = mdbookEnableThresholdDebug;
 
     // Updates which headers in the sidebar should be expanded. If the current
     // header is inside a collapsed group, then it, and all its parents should
@@ -210,9 +255,6 @@ let mdbookThresholdDebug = false;
     // This is done with a virtual Y threshold, where headers at or below
     // that line will be considered the current one.
     function updateCurrentHeader() {
-        if (mdbookThresholdDebug) {
-            drawDebugLine();
-        }
         if (!headers || !headers.length) {
             return;
         }
