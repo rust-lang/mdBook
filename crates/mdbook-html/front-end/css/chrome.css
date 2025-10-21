@@ -624,6 +624,20 @@ html:not(.sidebar-resizing) .sidebar {
     transform: rotate(90deg);
 }
 
+.chapter a.current-header {
+    color: var(--sidebar-active);
+}
+
+.on-this-page {
+    margin-left: 22px;
+    border-inline-start: 4px solid var(--sidebar-header-border-color);
+    padding-left: 8px;
+}
+
+.on-this-page > ol {
+    padding-left: 0;
+}
+
 /* Horizontal line in chapter list. */
 .spacer {
     width: 100%;
@@ -734,21 +748,4 @@ html:not(.sidebar-resizing) .sidebar {
     text-align: center;
     /* mdbook's margin for h2 is way too large. */
     margin: 10px;
-}
-
-.current-header {
-    /* Allows the circle positioning. */
-    position: relative
-}
-
-/* Places a circle just before the current header in the sidebar. */
-.current-header::before {
-    content: '';
-    position: absolute;
-    left: -16px;
-    margin-top: 10px;
-    width: 8px;
-    height: 8px;
-    background-color: var(--sidebar-active);
-    border-radius: 50%;
 }

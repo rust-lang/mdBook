@@ -424,8 +424,11 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
             currentParent.ol.appendChild(li);
         }
 
+        const onThisPage = document.createElement('div');
+        onThisPage.classList.add('on-this-page');
+        onThisPage.append(stack[0].ol);
         const activeItemSpan = activeSection.parentElement;
-        activeItemSpan.after(stack[0].ol);
+        activeItemSpan.after(onThisPage);
     });
 
     document.addEventListener('DOMContentLoaded', reloadCurrentHeader);
