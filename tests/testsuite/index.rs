@@ -20,16 +20,22 @@ fn readme_to_index() {
     )
     .check_toc_js(str![[r#"
 <ol class="chapter">
-<li class="chapter-item expanded affix ">
+<li class="chapter-item expanded ">
+<span class="chapter-link-wrapper">
 <a href="index.html">Intro</a>
+</span>
 </li>
 <li class="chapter-item expanded ">
+<span class="chapter-link-wrapper">
 <a href="first/index.html">
 <strong aria-hidden="true">1.</strong> First</a>
+</span>
 </li>
 <li class="chapter-item expanded ">
+<span class="chapter-link-wrapper">
 <a href="second/index.html">
 <strong aria-hidden="true">2.</strong> Second</a>
+</span>
 </li>
 </ol>
 "#]]);

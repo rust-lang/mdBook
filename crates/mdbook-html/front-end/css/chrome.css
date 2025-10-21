@@ -571,17 +571,18 @@ html:not(.sidebar-resizing) .sidebar {
     line-height: 2.2em;
 }
 
-.chapter ol {
-    width: 100%;
-}
-
 .chapter li {
-    display: flex;
     color: var(--sidebar-non-existant);
 }
+
+/* This is a span wrapping the chapter link and the fold chevron. */
+.chapter-link-wrapper {
+    /* Used to position the chevron to the right, allowing the text to wrap before it. */
+    display: flex;
+}
+
 .chapter li a {
-    display: block;
-    padding: 0;
+    /* Remove underlines. */
     text-decoration: none;
     color: var(--sidebar-fg);
 }
@@ -594,21 +595,22 @@ html:not(.sidebar-resizing) .sidebar {
     color: var(--sidebar-active);
 }
 
-.chapter li > a.toggle {
+/* This is the toggle chevron. */
+.chapter-fold-toggle {
     cursor: pointer;
-    display: block;
+    /* Positions the chevron to the side. */
     margin-inline-start: auto;
     padding: 0 10px;
     user-select: none;
     opacity: 0.68;
 }
 
-.chapter li > a.toggle div {
+.chapter-fold-toggle div {
     transition: transform 0.5s;
 }
 
 /* collapse the section */
-.chapter li:not(.expanded) + li > ol {
+.chapter li:not(.expanded) > ol {
     display: none;
 }
 
@@ -617,10 +619,12 @@ html:not(.sidebar-resizing) .sidebar {
     margin-block-start: 0.6em;
 }
 
-.chapter li.expanded > a.toggle div {
+/* When expanded, rotate the chevron to point down. */
+.chapter li.expanded > span > .chapter-fold-toggle div {
     transform: rotate(90deg);
 }
 
+/* Horizontal line in chapter list. */
 .spacer {
     width: 100%;
     height: 3px;
@@ -630,6 +634,7 @@ html:not(.sidebar-resizing) .sidebar {
     background-color: var(--sidebar-spacer);
 }
 
+/* On touch devices, add more vertical spacing to make it easier to tap links. */
 @media (-moz-touch-enabled: 1), (pointer: coarse) {
     .chapter li a { padding: 5px 0; }
     .spacer { margin: 10px 0; }
@@ -741,7 +746,6 @@ html:not(.sidebar-resizing) .sidebar {
     content: '';
     position: absolute;
     left: -16px;
-    top: 0;
     margin-top: 10px;
     width: 8px;
     height: 8px;
