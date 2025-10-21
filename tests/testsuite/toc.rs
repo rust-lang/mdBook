@@ -148,16 +148,22 @@ fn summary_with_markdown_formatting() {
         .check_toc_js(str![[r#"
 <ol class="chapter">
 <li class="chapter-item expanded ">
+<span class="chapter-link-wrapper">
 <a href="formatted-summary.html">
 <strong aria-hidden="true">1.</strong> Italic code *escape* `escape2`</a>
+</span>
 </li>
 <li class="chapter-item expanded ">
+<span class="chapter-link-wrapper">
 <a href="soft.html">
 <strong aria-hidden="true">2.</strong> Soft line break</a>
+</span>
 </li>
 <li class="chapter-item expanded ">
+<span class="chapter-link-wrapper">
 <a href="escaped-tag.html">
 <strong aria-hidden="true">3.</strong> &lt;escaped tag&gt;</a>
+</span>
 </li>
 </ol>
 "#]])

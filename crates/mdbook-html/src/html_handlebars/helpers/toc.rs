@@ -57,13 +57,13 @@ impl HelperDef for RenderToc {
         out.write("<ol class=\"chapter\">")?;
 
         let mut current_level = 1;
+        let mut first = true;
 
         for item in chapters {
-            let (_section, level) = if let Some(s) = item.get("section") {
-                (s.as_str(), s.matches('.').count())
-            } else {
-                ("", 1)
-            };
+            let level = item
+                .get("section")
+                .map(|s| s.matches('.').count())
+                .unwrap_or(1);
 
             // Expand if folding is disabled, or if levels that are larger than this would not
             // be folded.
@@ -71,25 +71,31 @@ impl HelperDef for RenderToc {
 
             match level.cmp(&current_level) {
                 Ordering::Greater => {
-                    while level > current_level {
-                        out.write("<li>")?;
-                        out.write("<ol class=\"section\">")?;
-                        current_level += 1;
-                    }
-                    write_li_open_tag(out, is_expanded, false)?;
+                    // There is an assumption that when descending, it can
+                    // only go one level down at a time. This should be
+                    // enforced by the nature of markdown lists and the
+                    // summary parser.
+                    assert_eq!(level, current_level + 1);
+                    current_level += 1;
+                    out.write("<ol class=\"section\">")?;
+                    write_li_open_tag(out, is_expanded)?;
                 }
                 Ordering::Less => {
                     while level < current_level {
-                        out.write("</ol>")?;
                         out.write("</li>")?;
+                        out.write("</ol>")?;
                         current_level -= 1;
                     }
-                    write_li_open_tag(out, is_expanded, false)?;
+                    write_li_open_tag(out, is_expanded)?;
                 }
                 Ordering::Equal => {
-                    write_li_open_tag(out, is_expanded, !item.contains_key("section"))?;
+                    if !first {
+                        out.write("</li>")?;
+                    }
+                    write_li_open_tag(out, is_expanded)?;
                 }
             }
+            first = false;
 
             // Spacer
             if item.contains_key("spacer") {
@@ -104,6 +110,8 @@ impl HelperDef for RenderToc {
                 out.write("</li>")?;
                 continue;
             }
+
+            out.write("<span class=\"chapter-link-wrapper\">")?;
 
             // Link
             let path_exists = match item.get("path") {
@@ -121,7 +129,7 @@ impl HelperDef for RenderToc {
                     true
                 }
                 _ => {
-                    out.write("<div>")?;
+                    out.write("<span>")?;
                     false
                 }
             };
@@ -142,40 +150,34 @@ impl HelperDef for RenderToc {
             if path_exists {
                 out.write("</a>")?;
             } else {
-                out.write("</div>")?;
+                out.write("</span>")?;
             }
 
             // Render expand/collapse toggle
             if let Some(flag) = item.get("has_sub_items") {
                 let has_sub_items = flag.parse::<bool>().unwrap_or_default();
                 if fold_enable && has_sub_items {
-                    out.write("<a class=\"toggle\"><div>❱</div></a>")?;
+                    // The <div> here is to manage rotating the element when
+                    // the chapter title is long and word-wraps.
+                    out.write("<a class=\"chapter-fold-toggle\"><div>❱</div></a>")?;
                 }
             }
-            out.write("</li>")?;
+            out.write("</span>")?;
         }
-        while current_level > 1 {
-            out.write("</ol>")?;
+        while current_level > 0 {
             out.write("</li>")?;
+            out.write("</ol>")?;
             current_level -= 1;
         }
 
-        out.write("</ol>")?;
         Ok(())
     }
 }
 
-fn write_li_open_tag(
-    out: &mut dyn Output,
-    is_expanded: bool,
-    is_affix: bool,
-) -> Result<(), std::io::Error> {
+fn write_li_open_tag(out: &mut dyn Output, is_expanded: bool) -> Result<(), std::io::Error> {
     let mut li = String::from("<li class=\"chapter-item ");
     if is_expanded {
         li.push_str("expanded ");
-    }
-    if is_affix {
-        li.push_str("affix ");
     }
     li.push_str("\">");
     out.write(&li)
