@@ -132,7 +132,7 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
         // proportional to the difference in size.
         if (documentHeight < windowHeight * 2) {
             const maxPixelsBelow = documentHeight - windowHeight;
-            const t = 1 - pixelsBelow / maxPixelsBelow;
+            const t = 1 - pixelsBelow / Math.max(1, maxPixelsBelow);
             const clamp = Math.max(0, Math.min(1, t));
             adjustedBottomAdd *= clamp;
         }
