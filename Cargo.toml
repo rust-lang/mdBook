@@ -25,10 +25,10 @@ repository = "https://github.com/rust-lang/mdBook"
 rust-version = "1.88.0" # Keep in sync with installation.md and .github/workflows/main.yml
 
 [workspace.dependencies]
-anyhow = "1.0.98"
-axum = "0.8.4"
-clap = { version = "4.5.41", features = ["cargo", "wrap_help"] }
-clap_complete = "4.5.55"
+anyhow = "1.0.100"
+axum = "0.8.6"
+clap = { version = "4.5.50", features = ["cargo", "wrap_help"] }
+clap_complete = "4.5.59"
 ego-tree = "0.10.0"
 elasticlunr-rs = "3.0.2"
 font-awesome-as-a-crate = "0.3.0"
@@ -37,8 +37,8 @@ glob = "0.3.3"
 handlebars = "6.3.2"
 hex = "0.4.3"
 html5ever = "0.35.0"
-indexmap = "2.10.0"
-ignore = "0.4.23"
+indexmap = "2.12.0"
+ignore = "0.4.24"
 mdbook-core = { path = "crates/mdbook-core", version = "0.5.0-alpha.1" }
 mdbook-driver = { path = "crates/mdbook-driver", version = "0.5.0-alpha.1" }
 mdbook-html = { path = "crates/mdbook-html", version = "0.5.0-alpha.1" }
@@ -46,23 +46,23 @@ mdbook-markdown = { path = "crates/mdbook-markdown", version = "0.5.0-alpha.1" }
 mdbook-preprocessor = { path = "crates/mdbook-preprocessor", version = "0.5.0-alpha.1" }
 mdbook-renderer = { path = "crates/mdbook-renderer", version = "0.5.0-alpha.1" }
 mdbook-summary = { path = "crates/mdbook-summary", version = "0.5.0-alpha.1" }
-memchr = "2.7.5"
-notify = "8.1.0"
+memchr = "2.7.6"
+notify = "8.2.0"
 notify-debouncer-mini = "0.7.0"
-opener = "0.8.2"
+opener = "0.8.3"
 pathdiff = "0.2.3"
 pulldown-cmark = { version = "0.13.0", default-features = false, features = ["html"] } # Do not update, part of the public api.
-regex = "1.11.1"
+regex = "1.12.2"
 select = "0.6.1"
-semver = "1.0.26"
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.140"
+semver = "1.0.27"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
 sha2 = "0.10.9"
 shlex = "1.3.0"
-snapbox = "0.6.21"
-tempfile = "3.20.0"
-tokio = "1.46.1"
-toml = "0.9.2"
+snapbox = "0.6.22"
+tempfile = "3.23.0"
+tokio = "1.48.0"
+toml = "0.9.8"
 topological-sort = "0.2.2"
 tower-http = "0.6.6"
 tracing = "0.1.41"
