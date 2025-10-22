@@ -327,6 +327,16 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
         });
     }
 
+    // Takes the nodes from the given head and copies them over to the
+    // destination, along with some filtering.
+    function filterHeader(source, dest) {
+        const clone = source.cloneNode(true);
+        clone.querySelectorAll('mark').forEach(mark => {
+            mark.replaceWith(...mark.childNodes);
+        });
+        dest.append(...clone.childNodes);
+    }
+
     // Scans page for headers and adds them to the sidebar.
     document.addEventListener('DOMContentLoaded', function() {
         const activeSection = document.querySelector('#mdbook-sidebar .active');
@@ -399,7 +409,7 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
             span.appendChild(a);
             a.href = '#' + header.id;
             a.classList.add('header-in-summary');
-            a.innerHTML = header.children[0].innerHTML;
+            filterHeader(header.children[0], a);
             a.addEventListener('click', headerThresholdClick);
             const nextHeader = headers[i + 1];
             if (nextHeader !== undefined) {

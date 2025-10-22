@@ -7,3 +7,4 @@
 - [Headings with markup](markup.md)
 - [Current scrolls to bottom](current-to-bottom.md)
 - [Unusual heading levels](unusual-heading-levels.md)
+- [Filtered headings](filtered-headings.md)
