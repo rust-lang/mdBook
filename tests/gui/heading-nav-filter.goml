@@ -5,4 +5,4 @@ go-to: |DOC_PATH| + "heading-nav/filtered-headings.html?highlight=skateboard#ska
 
 assert-property: ("//h2[@id='skateboard']", {"innerHTML": '<a class="header" href="#skateboard"><mark data-markjs="true">Skateboard</mark></a>'})
 
-assert-property: ("//a[contains(@class, 'header-in-summary') and @href='#skateboard']", {"innerHTML": '<mark data-markjs="true">Skateboard</mark>'})
+assert-property: ("//a[contains(@class, 'header-in-summary') and @href='#skateboard']", {"innerHTML": 'Skateboard'})
