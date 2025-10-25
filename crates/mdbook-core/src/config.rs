@@ -1147,4 +1147,15 @@ mod tests {
         assert_eq!(json!(TextDirection::RightToLeft), json!("rtl"));
         assert_eq!(json!(TextDirection::LeftToRight), json!("ltr"));
     }
+
+    #[test]
+    fn get_deserialize_error() {
+        let src = r#"
+        [preprocessor.foo]
+        x = 123
+        "#;
+        let cfg = Config::from_str(src).unwrap();
+        let err = cfg.get::<String>("preprocessor.foo.x").unwrap_err();
+        assert_eq!(err.to_string(), "Failed to deserialize `{name}`");
+    }
 }
