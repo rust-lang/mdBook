@@ -1,6 +1,6 @@
 [package]
 name = "mdbook-summary"
-version = "0.5.0-alpha.1"
+version = "0.5.0-beta.1"
 description = "Summary parser for mdBook"
 edition.workspace = true
 license.workspace = true
