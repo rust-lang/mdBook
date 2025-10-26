@@ -1,6 +1,6 @@
 # Changelog
 
-### 0.5 Migration Guide
+## 0.5 Migration Guide
 
 During the pre-release phase of the 0.5 release, the documentation may be found at <https://rust-lang.github.io/mdBook/pre-release/>.
 
@@ -10,7 +10,7 @@ If you have overridden any of the theme files, you will likely need to update th
 
 The following is a summary of the changes that may require your attention when updating to 0.5:
 
-#### Config changes
+### Config changes
 
 - Unknown fields in config are now an error.
   [#2787](https://github.com/rust-lang/mdBook/pull/2787)
@@ -35,14 +35,14 @@ The following is a summary of the changes that may require your attention when u
 - Removed the very old legacy config support. Warnings have been displayed in previous versions on how to migrate.
   [#2783](https://github.com/rust-lang/mdBook/pull/2783)
 
-#### Theme changes
+### Theme changes
 
 - Replaced the `{{#previous}}` and `{{#next}}` handlebars helpers with simple objects that contain the previous and next values.
   [#2794](https://github.com/rust-lang/mdBook/pull/2794)
 - Removed the `{{theme_option}}` handlebars helper. It has not been used for a while.
   [#2795](https://github.com/rust-lang/mdBook/pull/2795)
 
-#### Rendering changes
+### Rendering changes
 
 - Updated to a newer version of `pulldown-cmark`. This brings a large number of fixes to markdown processing.
   [#2401](https://github.com/rust-lang/mdBook/pull/2401)
@@ -59,14 +59,14 @@ The following is a summary of the changes that may require your attention when u
 - Added support for admonitions. These are enabled by default, with the option `output.html.admonitions` to disable it.
   [#2851](https://github.com/rust-lang/mdBook/pull/2851)
 
-#### CLI changes
+### CLI changes
 
 - Removed the `--dest-dir` option to `mdbook test`. It was unused since `mdbook test` does not generate output.
   [#2805](https://github.com/rust-lang/mdBook/pull/2805)
 - Changed CLI `--dest-dir` to be relative to the current directory, not the book root.
   [#2806](https://github.com/rust-lang/mdBook/pull/2806)
 
-#### Rust API
+### Rust API
 
 - The Rust API has been split into several crates ([#2766](https://github.com/rust-lang/mdBook/pull/2766)). In summary, the different crates are:
   - `mdbook` — The CLI binary.
@@ -101,6 +101,29 @@ The following is a summary of the changes that may require your attention when u
 - Most of the types from the `theme` module are now private. The `Theme` struct is still exposed for working with themes.
 - Various functions in the `utils::fs` module have been removed, renamed, or reworked.
 - Most of the functions in the `utils` module have been moved, removed, or made private.
+
+## mdBook 0.5.0-beta.1
+[v0.5.0-alpha.1...v0.5.0-beta.1](https://github.com/rust-lang/mdBook/compare/v0.5.0-alpha.1...v0.5.0-beta.1)
+
+### Changed
+
+- Reworked the look of the header navigation.
+  [#2898](https://github.com/rust-lang/mdBook/pull/2898)
+- Update cargo dependencies.
+  [#2896](https://github.com/rust-lang/mdBook/pull/2896)
+- Improved the heading nav debug.
+  [#2892](https://github.com/rust-lang/mdBook/pull/2892)
+
+### Fixed
+
+- Fixed error message for config.get deserialization error.
+  [#2902](https://github.com/rust-lang/mdBook/pull/2902)
+- Filter `<mark>` tags from sidebar heading nav.
+  [#2899](https://github.com/rust-lang/mdBook/pull/2899)
+- Avoid divide-by-zero in heading nav computation
+  [#2891](https://github.com/rust-lang/mdBook/pull/2891)
+- Fixed heading nav with folded chapters.
+  [#2893](https://github.com/rust-lang/mdBook/pull/2893)
 
 ## mdBook 0.5.0-alpha.1
 [v0.4.52...v0.5.0-alpha.1](https://github.com/rust-lang/mdBook/compare/v0.4.52...v0.5.0-alpha.1)
