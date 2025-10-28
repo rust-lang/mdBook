@@ -179,4 +179,8 @@ fn it_partitions_rust_source() {
         ),
         ("\n#![allow(foo)]\n\n#![allow(bar)]\n\n", "let x = 1;")
     );
+    assert_eq!(
+        partition_rust_source("    // Example"),
+        ("    ", "// Example")
+    );
 }

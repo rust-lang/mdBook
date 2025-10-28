@@ -223,3 +223,9 @@ Html text was:
 fn html_blocks() {
     BookTest::from_dir("rendering/html_blocks").check_all_main_files();
 }
+
+// Test for a fenced code block that is also indented.
+#[test]
+fn code_block_fenced_with_indent() {
+    BookTest::from_dir("rendering/code_blocks_fenced_with_indent").check_all_main_files();
+}
