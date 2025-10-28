@@ -141,7 +141,14 @@ fn partition_rust_source(s: &str) -> (&str, &str) {
     let split_idx = match HEADER_RE.captures(s) {
         Some(caps) => {
             let attributes = &caps[1];
-            attributes.len()
+            if attributes.trim().is_empty() {
+                // Don't include pure whitespace as an attribute. The
+                // whitespace in the regex is intended to handle multiple
+                // attributes *separated* by potential whitespace.
+                0
+            } else {
+                attributes.len()
+            }
         }
         None => 0,
     };
@@ -178,5 +185,9 @@ fn it_partitions_rust_source() {
         let x = 1;"
         ),
         ("\n#![allow(foo)]\n\n#![allow(bar)]\n\n", "let x = 1;")
+    );
+    assert_eq!(
+        partition_rust_source("    // Example"),
+        ("", "    // Example")
     );
 }
