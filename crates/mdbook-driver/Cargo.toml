@@ -27,3 +27,6 @@ tracing.workspace = true
 
 [lints]
 workspace = true
+
+[features]
+search = ["mdbook-html/search"]

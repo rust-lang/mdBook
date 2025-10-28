@@ -23,6 +23,12 @@
 //!   for shared types. Types from this crate are rexported from the other
 //!   crates as appropriate.
 //!
+//! ## Cargo features
+//!
+//! The following cargo features are available:
+//!
+//! - `search`: Enables the search index in the HTML renderer.
+//!
 //! ## Examples
 //!
 //! If creating a new book from scratch, you'll want to get a [`init::BookBuilder`] via
