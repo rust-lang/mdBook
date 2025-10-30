@@ -157,6 +157,10 @@ fn definition_lists() {
         .check_main_file(
             "book/definition_lists.html",
             file!["markdown/definition_lists/expected_disabled/definition_lists.html"],
+        )
+        .check_main_file(
+            "book/html_definition_lists.html",
+            file!["markdown/definition_lists/expected_disabled/html_definition_lists.html"],
         );
 }
 
