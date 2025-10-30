@@ -76,7 +76,7 @@ The following is a summary of the changes that may require your attention when u
   - [`mdbook-markdown`](https://docs.rs/mdbook-markdown/latest/mdbook_markdown/) — The Markdown renderer. If you are processing markdown, this is the crate you should depend on. This is essentially a thin wrapper around `pulldown-cmark`, and re-exports that crate so that you can ensure the version stays in sync with mdBook.
   - [`mdbook-summary`](https://docs.rs/mdbook-summary/latest/mdbook_summary/) — The `SUMMARY.md` parser.
   - [`mdbook-html`](https://docs.rs/mdbook-html/latest/mdbook_html/) — The HTML renderer.
-  - [`mdbook-core`](https://docs.rs/mdbook-core/latest/mdbook_core/) — An internal library that is used by the other crates for shared types. You should not depend on this crate directly since types from this crate are rexported from the other crates as appropriate.
+  - [`mdbook-core`](https://docs.rs/mdbook-core/latest/mdbook_core/) — An internal library that is used by the other crates for shared types. You should not depend on this crate directly since types from this crate are re-exported from the other crates as appropriate.
 - Changes to `Config`:
   - [`Config::get`](https://docs.rs/mdbook-core/latest/mdbook_core/config/struct.Config.html#method.get) is now generic over the return value, using `serde` to deserialize the value. It also returns a `Result` to handle deserialization errors. [#2773](https://github.com/rust-lang/mdBook/pull/2773)
   - Removed `Config::get_deserialized`. Use `Config::get` instead.
