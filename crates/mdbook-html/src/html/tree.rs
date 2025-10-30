@@ -77,6 +77,8 @@ pub(crate) struct Element {
     pub(crate) attrs: Attributes,
     /// True if this tag ends with `/>`.
     pub(crate) self_closing: bool,
+    /// True if this was raw HTML written in the markdown.
+    pub(crate) was_raw: bool,
 }
 
 impl Element {
@@ -87,6 +89,7 @@ impl Element {
             name,
             attrs: Attributes::new(),
             self_closing: false,
+            was_raw: false,
         }
     }
 
@@ -618,6 +621,7 @@ where
                                 name,
                                 attrs,
                                 self_closing: tag.self_closing,
+                                was_raw: true,
                             };
                             fix_html_link(&mut el);
                             self.push(Node::Element(el));
@@ -842,6 +846,11 @@ where
         for heading in headings {
             let node = self.tree.get(heading).unwrap();
             let el = node.value().as_element().unwrap();
+            // Don't modify tags if they were manually written HTML. The
+            // user probably had some intent, and we don't want to mess it up.
+            if el.was_raw {
+                continue;
+            }
             let href = if let Some(id) = el.attr("id") {
                 format!("#{id}")
             } else {
