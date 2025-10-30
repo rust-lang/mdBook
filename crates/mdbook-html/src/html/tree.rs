@@ -19,7 +19,7 @@ use pulldown_cmark::{Alignment, CodeBlockKind, CowStr, Event, LinkType, Tag, Tag
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::ops::Deref;
-use tracing::{error, warn};
+use tracing::{error, trace, warn};
 
 /// Helper to create a [`QualName`].
 macro_rules! attr_qual_name {
@@ -300,6 +300,7 @@ where
     /// The main processing loop. Processes all events until the end.
     fn process_events(&mut self) {
         while let Some(event) = self.events.next() {
+            trace!("event={event:?}");
             match event {
                 Event::Start(tag) => self.start_tag(tag),
                 Event::End(tag) => {
@@ -599,6 +600,7 @@ where
         let tokens = parse_html(&html);
         let mut is_raw = false;
         for token in tokens {
+            trace!("html token={token:?}");
             match token {
                 Token::DoctypeToken(_) => {}
                 Token::TagToken(tag) => {
