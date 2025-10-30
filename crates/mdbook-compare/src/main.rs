@@ -104,7 +104,7 @@ fn tidy(path: &Path) {
 
 fn diff(a: &Path, b: &Path) {
     let args = "diff --no-index";
-    println!("running `git diff {args} {a:?} {b:?}`");
+    println!("running `git {args} {a:?} {b:?}`");
     Command::new("git")
         .args(args.split(' '))
         .args([a, b])
