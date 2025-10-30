@@ -209,6 +209,23 @@ impl Config {
             .transpose()
     }
 
+    /// Returns whether the config contains the given dotted key name.
+    ///
+    /// The key can have dotted indices to access nested items (e.g.
+    /// `preprocessor.foo.bar` will check if that key is set in the config).
+    ///
+    /// This can only access the `output` and `preprocessor` tables.
+    pub fn contains_key(&self, name: &str) -> bool {
+        if let Some(key) = name.strip_prefix("output.") {
+            self.output.read(key)
+        } else if let Some(key) = name.strip_prefix("preprocessor.") {
+            self.preprocessor.read(key)
+        } else {
+            panic!("invalid key `{name}`");
+        }
+        .is_some()
+    }
+
     /// Returns the configuration for all preprocessors.
     pub fn preprocessors<'de, T: Deserialize<'de>>(&self) -> Result<BTreeMap<String, T>> {
         self.preprocessor
@@ -1160,5 +1177,25 @@ mod tests {
             err.to_string(),
             "Failed to deserialize `preprocessor.foo.x`"
         );
+    }
+
+    #[test]
+    fn contains_key() {
+        let src = r#"
+        [preprocessor.foo]
+        x = 123
+        [output.foo.sub]
+        y = 'x'
+        "#;
+        let cfg = Config::from_str(src).unwrap();
+        assert!(cfg.contains_key("preprocessor.foo"));
+        assert!(cfg.contains_key("preprocessor.foo.x"));
+        assert!(!cfg.contains_key("preprocessor.bar"));
+        assert!(!cfg.contains_key("preprocessor.foo.y"));
+        assert!(cfg.contains_key("output.foo"));
+        assert!(cfg.contains_key("output.foo.sub"));
+        assert!(cfg.contains_key("output.foo.sub.y"));
+        assert!(!cfg.contains_key("output.bar"));
+        assert!(!cfg.contains_key("output.foo.sub.z"));
     }
 }
