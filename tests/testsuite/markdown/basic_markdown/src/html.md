@@ -92,3 +92,9 @@ const x = 'some *text* inside';
 <style media="(width < 500px)">
 .bar { background-color: green }
 </style>
+
+## Manual headers
+
+<h2 id="my header"><a href="#foo">My Header</a></h2>
+
+<h3>Another header</h3>
