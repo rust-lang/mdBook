@@ -6,4 +6,4 @@
 
 <i class="fab fa-font-awesome"></i>
 
-<i class="fas fa-heart">Some text here.</i>
+<i class="fas fa-heart">Text prevents translation.</i>
