@@ -47,7 +47,16 @@ fn first_chapter_is_copied_as_index_even_if_not_first_elem() {
 // Fontawesome `<i>` tag support.
 #[test]
 fn fontawesome() {
-    BookTest::from_dir("rendering/fontawesome").check_all_main_files();
+    BookTest::from_dir("rendering/fontawesome")
+        .run("build", |cmd| {
+            cmd.expect_stderr(str![[r#"
+ INFO Book building has started
+ INFO Running the html backend
+ INFO HTML book written to `[ROOT]/book`
+
+"#]]);
+        })
+        .check_all_main_files();
 }
 
 // Tests the rendering when setting the default rust edition.
