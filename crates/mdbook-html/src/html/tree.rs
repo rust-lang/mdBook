@@ -977,19 +977,29 @@ where
                     new_classes += class;
                 }
             }
+            if icon.is_empty() {
+                continue;
+            }
 
-            if !icon.is_empty()
-                && let Ok(svg) = fa::svg(type_, &icon)
-            {
-                let mut span = Element::new("span");
-                span.insert_attr("class", new_classes.into());
-                for (name, value) in &i_el.attrs {
-                    if *name != attr_qual_name!("class") {
-                        span.attrs.insert(name.clone(), value.clone());
+            match fa::svg(type_, &icon) {
+                Ok(svg) => {
+                    let mut span = Element::new("span");
+                    span.insert_attr("class", new_classes.into());
+                    for (name, value) in &i_el.attrs {
+                        if *name != attr_qual_name!("class") {
+                            span.attrs.insert(name.clone(), value.clone());
+                        }
                     }
+                    *node.value() = Node::Element(span);
+                    node.append(Node::RawData(svg.into()));
                 }
-                *node.value() = Node::Element(span);
-                node.append(Node::RawData(svg.into()));
+                Err(e) => {
+                    warn!(
+                        "failed to find Font Awesome icon for icon `{icon}` \
+                         with type `{type_}` in `{}`: {e}",
+                        self.options.path.display()
+                    );
+                }
             }
         }
     }
