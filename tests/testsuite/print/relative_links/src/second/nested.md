@@ -11,6 +11,11 @@ Link [outside](../../std/foo/bar.html).
 
 Link [outside with anchor](../../std/foo/bar.html#panic).
 
+Link [inside but doesn't exist](../first/alpha/beta.md).
+Link [inside but doesn't exist with anchor](../first/alpha/beta.md#anchor).
+Link [inside to html](../first/alpha/gamma.html).
+Link [inside to html with anchor](../first/alpha/gamma.html#anchor).
+
 ![Some image](../images/picture.png)
 
 <a href="../first/nested.md">HTML Link</a>

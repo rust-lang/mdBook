@@ -9,7 +9,7 @@ use crate::html::{ChapterTree, Element, serialize};
 use crate::utils::{ToUrlPath, id_from_content, normalize_path, unique_id};
 use mdbook_core::static_regex;
 use std::collections::{HashMap, HashSet};
-use std::path::{Component, PathBuf};
+use std::path::PathBuf;
 
 /// Takes all the chapter trees, modifies them to be suitable to render for
 /// the print page, and returns an string of all the chapters rendered to a
@@ -166,13 +166,9 @@ fn rewrite_links(
                 {
                     lookup_key.pop();
                     lookup_key.push(href_path);
-                    let normalized = normalize_path(&lookup_key);
-                    // If this points outside of the book, don't modify it.
-                    let is_outside = matches!(
-                        normalized.components().next(),
-                        Some(Component::ParentDir | Component::RootDir)
-                    );
-                    if is_outside || !href_path.ends_with(".html") {
+                    lookup_key = normalize_path(&lookup_key);
+                    let is_a_chapter = path_to_root_id.contains_key(&lookup_key);
+                    if !is_a_chapter {
                         // Make the link relative to the print page location.
                         let mut rel_path = normalize_path(&base.join(href_path)).to_url_path();
                         if let Some(anchor) = caps.name("anchor") {
@@ -184,10 +180,7 @@ fn rewrite_links(
                     }
                 }
 
-                let lookup_key = normalize_path(&lookup_key);
-
-                let anchor = caps.name("anchor");
-                let id = match anchor {
+                let id = match caps.name("anchor") {
                     Some(anchor_id) => {
                         let anchor_id = anchor_id.as_str().to_string();
                         match id_remap.get(&lookup_key) {
@@ -204,7 +197,15 @@ fn rewrite_links(
                     }
                     None => match path_to_root_id.get(&lookup_key) {
                         Some(id) => id.to_string(),
-                        None => continue,
+                        None => {
+                            // This should be guaranteed that either the
+                            // chapter itself is in the map (for anchor-only
+                            // links), or the is_a_chapter check above.
+                            panic!(
+                                "internal error: expected `{lookup_key:?}` to be in \
+                                 root map (chapter path is `{html_path:?}`)"
+                            );
+                        }
                     },
                 };
                 el.insert_attr(attr, format!("#{id}").into());
