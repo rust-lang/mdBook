@@ -80,7 +80,7 @@ jobs:
       - name: Install npm
         uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
       - name: Install browser-ui-test
         run: npm install
       - name: Run eslint
