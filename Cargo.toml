@@ -27,8 +27,8 @@ rust-version = "1.88.0" # Keep in sync with installation.md and .github/workflow
 [workspace.dependencies]
 anyhow = "1.0.100"
 axum = "0.8.6"
-clap = { version = "4.5.50", features = ["cargo", "wrap_help"] }
-clap_complete = "4.5.59"
+clap = { version = "4.5.51", features = ["cargo", "wrap_help"] }
+clap_complete = "4.5.60"
 ego-tree = "0.10.0"
 elasticlunr-rs = "3.0.2"
 font-awesome-as-a-crate = "0.3.0"
@@ -38,7 +38,7 @@ handlebars = "6.3.2"
 hex = "0.4.3"
 html5ever = "0.35.0"
 indexmap = "2.12.0"
-ignore = "0.4.24"
+ignore = "0.4.25"
 mdbook-core = { path = "crates/mdbook-core", version = "0.5.0-beta.1" }
 mdbook-driver = { path = "crates/mdbook-driver", version = "0.5.0-beta.1" }
 mdbook-html = { path = "crates/mdbook-html", version = "0.5.0-beta.1" }
@@ -59,7 +59,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 sha2 = "0.10.9"
 shlex = "1.3.0"
-snapbox = "0.6.22"
+snapbox = "0.6.23"
 tempfile = "3.23.0"
 tokio = "1.48.0"
 toml = "0.9.8"
