@@ -58,8 +58,11 @@ The following is a summary of the changes that may require your attention when u
   [#2847](https://github.com/rust-lang/mdBook/pull/2847)
 - Added support for admonitions. These are enabled by default, with the option `output.html.admonitions` to disable it.
   [#2851](https://github.com/rust-lang/mdBook/pull/2851)
-- Headers that start or end with HTML characters like `<`, `&`, or `>` now replace those characters in the link ID with `-` instead of being stripped. This brings the header ID generation closer to other tools and sites.
-  [#2844](https://github.com/rust-lang/mdBook/pull/2844)
+- Header ID generation has some minor changes to bring the ID generation closer to other tools and sites:
+  - IDs now use Unicode lowercase instead of ASCII lowercase.
+    [#2922](https://github.com/rust-lang/mdBook/pull/2922)
+  - Headers that start or end with HTML characters like `<`, `&`, or `>` now replace those characters in the link ID with `-` instead of being stripped.
+    [#2844](https://github.com/rust-lang/mdBook/pull/2844)
 
 ### CLI changes
 
