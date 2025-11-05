@@ -19,7 +19,7 @@ use pulldown_cmark::{Alignment, CodeBlockKind, CowStr, Event, LinkType, Tag, Tag
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::ops::Deref;
-use tracing::{error, trace, warn};
+use tracing::{trace, warn};
 
 /// Helper to create a [`QualName`].
 macro_rules! attr_qual_name {
@@ -664,9 +664,18 @@ where
         *is_raw = false;
         if self.is_html_tag_matching(&tag.name) {
             self.pop();
+        } else {
+            // The proper thing to do here is to recover. However, the HTML
+            // parsing algorithm for that is quite complex. See
+            // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inbody
+            // and the adoption agency algorithm.
+            warn!(
+                "unexpected HTML end tag `</{}>` found in `{}`\n\
+                 Check that the HTML tags are properly balanced.",
+                tag.name,
+                self.options.path.display()
+            );
         }
-        // else the stack is corrupt. I'm not really sure
-        // what to do here...
     }
 
     /// This is used to verify HTML parsing keeps the stack of tags in sync.
@@ -675,16 +684,10 @@ where
         if let Node::Element(el) = current
             && el.name() == name
         {
-            return true;
+            true
+        } else {
+            false
         }
-        error!(
-            "internal error: HTML tag stack out of sync.\n
-             path: `{}`\n\
-             current={current:?}\n\
-             pop name: {name}",
-            self.options.path.display()
-        );
-        false
     }
 
     /// Eats all pulldown-cmark events until the next `End` matching the
