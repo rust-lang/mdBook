@@ -74,6 +74,15 @@ pub(crate) fn unique_id(id: &str, used: &mut HashSet<String>) -> String {
 
 /// Generates an HTML id from the given text.
 pub(crate) fn id_from_content(content: &str) -> String {
+    // This is intended to be close to how header ID generation is done in
+    // other sites and tools, but is not 100% the same. Not all sites and
+    // tools use the same algorithm. See these for more information:
+    //
+    // - https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#section-links
+    // - https://docs.gitlab.com/user/markdown/#heading-ids-and-links
+    // - https://pandoc.org/MANUAL.html#extension-auto_identifiers
+    // - https://kramdown.gettalong.org/converter/html#auto-ids
+    // - https://docs.rs/comrak/latest/comrak/options/struct.Extension.html#structfield.header_ids
     content
         .trim()
         .to_lowercase()
