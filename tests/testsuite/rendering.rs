@@ -264,3 +264,28 @@ fn unclosed_html_tags() {
             str!["<div>x<span>foo<i>xyz</i></span></div>"],
         );
 }
+
+// Test for HTML tags out of sync.
+#[test]
+fn unbalanced_html_tags() {
+    BookTest::init(|_| {})
+        .change_file("src/chapter_1.md", "<div>x<span>foo</div></span>")
+        .run("build", |cmd| {
+            cmd.expect_stderr(str![[r#"
+ INFO Book building has started
+ INFO Running the html backend
+ERROR internal error: HTML tag stack out of sync.
+
+             path: `chapter_1.md`
+current=Element(Element { name: QualName { prefix: None, ns: Atom('http://www.w3.org/1999/xhtml' type=static), local: Atom('span' type=inline) }, attrs: {}, self_closing: false, was_raw: true })
+pop name: div
+ WARN unclosed HTML tag `<div>` found in `chapter_1.md`
+ INFO HTML book written to `[ROOT]/book`
+
+"#]]);
+        })
+        .check_main_file(
+            "book/chapter_1.html",
+            str!["<div>x<span>foo</span></div>"],
+        );
+}
