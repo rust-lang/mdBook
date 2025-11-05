@@ -307,6 +307,8 @@ where
             match event {
                 Event::Start(tag) => self.start_tag(tag),
                 Event::End(tag) => {
+                    // TODO: This should validate that the event stack is
+                    // properly synchronized with the tag stack.
                     self.pop();
                     match tag {
                         TagEnd::TableHead => {
