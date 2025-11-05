@@ -378,6 +378,7 @@ where
                 }
             }
         }
+        self.finish_stack();
         self.collect_footnote_defs();
     }
 
@@ -734,6 +735,40 @@ where
             }
         }
         output
+    }
+
+    /// Deals with any unclosed elements on the stack.
+    fn finish_stack(&mut self) {
+        while let Some(node_id) = self.tag_stack.pop() {
+            let node = self.tree.get(node_id).unwrap().value();
+            match node {
+                Node::Fragment => {}
+                Node::Element(el) => {
+                    if el.was_raw {
+                        warn!(
+                            "unclosed HTML tag `<{}>` found in `{}`",
+                            el.name.local,
+                            self.options.path.display()
+                        );
+                    } else {
+                        panic!(
+                            "internal error: expected empty tag stack.\n
+                             path: `{}`\n\
+                             element={el:?}",
+                            self.options.path.display()
+                        );
+                    }
+                }
+                node => {
+                    panic!(
+                        "internal error: expected empty tag stack.\n
+                         path: `{}`\n\
+                         node={node:?}",
+                        self.options.path.display()
+                    );
+                }
+            }
+        }
     }
 
     /// Appends a new footnote reference.

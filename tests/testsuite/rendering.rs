@@ -252,6 +252,9 @@ fn unclosed_html_tags() {
             cmd.expect_stderr(str![[r#"
  INFO Book building has started
  INFO Running the html backend
+ WARN unclosed HTML tag `<i>` found in `chapter_1.md`
+ WARN unclosed HTML tag `<span>` found in `chapter_1.md`
+ WARN unclosed HTML tag `<div>` found in `chapter_1.md`
  INFO HTML book written to `[ROOT]/book`
 
 "#]]);
