@@ -76,10 +76,11 @@ pub(crate) fn unique_id(id: &str, used: &mut HashSet<String>) -> String {
 pub(crate) fn id_from_content(content: &str) -> String {
     content
         .trim()
+        .to_lowercase()
         .chars()
         .filter_map(|ch| {
             if ch.is_alphanumeric() || ch == '_' || ch == '-' {
-                Some(ch.to_ascii_lowercase())
+                Some(ch)
             } else if ch.is_whitespace() {
                 Some('-')
             } else {
@@ -120,6 +121,6 @@ mod tests {
         assert_eq!(id_from_content("한국어"), "한국어");
         assert_eq!(id_from_content(""), "");
         assert_eq!(id_from_content("中文標題 CJK title"), "中文標題-cjk-title");
-        assert_eq!(id_from_content("Über"), "Über");
+        assert_eq!(id_from_content("Über"), "über");
     }
 }
