@@ -607,40 +607,10 @@ where
             trace!("html token={token:?}");
             match token {
                 Token::DoctypeToken(_) => {}
-                Token::TagToken(tag) => {
-                    match tag.kind {
-                        TagKind::StartTag => {
-                            let is_closed = is_void_element(&tag.name) || tag.self_closing;
-                            is_raw = matches!(&*tag.name, "script" | "style");
-                            let name = QualName::new(None, html5ever::ns!(html), tag.name);
-                            let attrs = tag
-                                .attrs
-                                .into_iter()
-                                .map(|attr| (attr.name, attr.value))
-                                .collect();
-                            let mut el = Element {
-                                name,
-                                attrs,
-                                self_closing: tag.self_closing,
-                                was_raw: true,
-                            };
-                            fix_html_link(&mut el);
-                            self.push(Node::Element(el));
-                            if is_closed {
-                                // No end element.
-                                self.pop();
-                            }
-                        }
-                        TagKind::EndTag => {
-                            is_raw = false;
-                            if self.is_html_tag_matching(&tag.name) {
-                                self.pop();
-                            }
-                            // else the stack is corrupt. I'm not really sure
-                            // what to do here...
-                        }
-                    }
-                }
+                Token::TagToken(tag) => match tag.kind {
+                    TagKind::StartTag => self.start_html_tag(tag, &mut is_raw),
+                    TagKind::EndTag => self.end_html_tag(tag, &mut is_raw),
+                },
                 Token::CommentToken(comment) => {
                     self.append(Node::Comment(comment));
                 }
@@ -663,6 +633,40 @@ where
                 }
             }
         }
+    }
+
+    /// Adds an open HTML tag.
+    fn start_html_tag(&mut self, tag: html5ever::tokenizer::Tag, is_raw: &mut bool) {
+        let is_closed = is_void_element(&tag.name) || tag.self_closing;
+        *is_raw = matches!(&*tag.name, "script" | "style");
+        let name = QualName::new(None, html5ever::ns!(html), tag.name);
+        let attrs = tag
+            .attrs
+            .into_iter()
+            .map(|attr| (attr.name, attr.value))
+            .collect();
+        let mut el = Element {
+            name,
+            attrs,
+            self_closing: tag.self_closing,
+            was_raw: true,
+        };
+        fix_html_link(&mut el);
+        self.push(Node::Element(el));
+        if is_closed {
+            // No end element.
+            self.pop();
+        }
+    }
+
+    /// Closes the given HTML tag.
+    fn end_html_tag(&mut self, tag: html5ever::tokenizer::Tag, is_raw: &mut bool) {
+        *is_raw = false;
+        if self.is_html_tag_matching(&tag.name) {
+            self.pop();
+        }
+        // else the stack is corrupt. I'm not really sure
+        // what to do here...
     }
 
     /// This is used to verify HTML parsing keeps the stack of tags in sync.
