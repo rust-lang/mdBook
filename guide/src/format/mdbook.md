@@ -73,7 +73,7 @@ nothidden():
 
 ## Rust playground
 
-Rust language code blocks will automatically get a play button (<i class="fa fa-play"></i>) which will execute the code and display the output just below the code block.
+Rust language code blocks will automatically get a play button (<i class="fas fa-play"></i>) which will execute the code and display the output just below the code block.
 This works by sending the code to the [Rust Playground].
 
 ```rust
