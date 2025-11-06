@@ -290,18 +290,17 @@ fn heading_with_unbalanced_html() {
     BookTest::init(|_| {})
         .change_file("src/chapter_1.md", "### Option<T>")
         .run("build", |cmd| {
-            cmd.expect_failure().expect_stderr(str![[r#"
+            cmd.expect_stderr(str![[r#"
  INFO Book building has started
  INFO Running the html backend
-
-thread 'main' ([..]) panicked at crates/mdbook-html/src/html/tree.rs:[..]
-internal error: expected empty tag stack.
-
-                             path: `chapter_1.md`
-element=Element { name: QualName { prefix: None, ns: Atom('http://www.w3.org/1999/xhtml' type=static), local: Atom('h3' type=inline) }, attrs: {}, self_closing: false, was_raw: false }
-note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+ WARN unclosed HTML tag `<t>` found in `chapter_1.md` while exiting Heading(H3)
+HTML tags must be closed before exiting a markdown element.
+ INFO HTML book written to `[ROOT]/book`
 
 "#]]);
-        });
-    // .check_main_file("book/chapter_1.html", str![[""]]);
+        })
+        .check_main_file(
+            "book/chapter_1.html",
+            str![[r##"<h3 id="option"><a class="header" href="#option">Option<t></t></a></h3>"##]],
+        );
 }

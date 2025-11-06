@@ -583,8 +583,28 @@ where
     }
 
     fn end_tag(&mut self, tag: TagEnd) {
-        // TODO: This should validate that the event stack is
-        // properly synchronized with the tag stack.
+        // TODO: This should validate that the event stack is properly
+        // synchronized with the tag stack. That, would likely require keeping
+        // a parallel "expected end tag" with the tag stack, since mapping a
+        // pulldown-cmark event tag to an HTML tag isn't always clear.
+        //
+        // Check for unclosed HTML tags when exiting a markdown event.
+        while let Some(node_id) = self.tag_stack.last() {
+            let node = self.tree.get(*node_id).unwrap().value();
+            let Node::Element(el) = node else {
+                break;
+            };
+            if !el.was_raw {
+                break;
+            }
+            warn!(
+                "unclosed HTML tag `<{}>` found in `{}` while exiting {tag:?}\n\
+                HTML tags must be closed before exiting a markdown element.",
+                el.name.local,
+                self.options.path.display(),
+            );
+            self.pop();
+        }
         self.pop();
         match tag {
             TagEnd::TableHead => {
