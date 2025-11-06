@@ -239,3 +239,47 @@ fn html_blocks() {
 fn code_block_fenced_with_indent() {
     BookTest::from_dir("rendering/code_blocks_fenced_with_indent").check_all_main_files();
 }
+
+// Unclosed HTML tags.
+//
+// Note that the HTML parsing algorithm is much more complicated than what
+// this is checking.
+#[test]
+fn unclosed_html_tags() {
+    BookTest::init(|_| {})
+        .change_file("src/chapter_1.md", "<div>x<span>foo<i>xyz")
+        .run("build", |cmd| {
+            cmd.expect_stderr(str![[r#"
+ INFO Book building has started
+ INFO Running the html backend
+ WARN unclosed HTML tag `<i>` found in `chapter_1.md`
+ WARN unclosed HTML tag `<span>` found in `chapter_1.md`
+ WARN unclosed HTML tag `<div>` found in `chapter_1.md`
+ INFO HTML book written to `[ROOT]/book`
+
+"#]]);
+        })
+        .check_main_file(
+            "book/chapter_1.html",
+            str!["<div>x<span>foo<i>xyz</i></span></div>"],
+        );
+}
+
+// Test for HTML tags out of sync.
+#[test]
+fn unbalanced_html_tags() {
+    BookTest::init(|_| {})
+        .change_file("src/chapter_1.md", "<div>x<span>foo</div></span>")
+        .run("build", |cmd| {
+            cmd.expect_stderr(str![[r#"
+ INFO Book building has started
+ INFO Running the html backend
+ WARN unexpected HTML end tag `</div>` found in `chapter_1.md`
+Check that the HTML tags are properly balanced.
+ WARN unclosed HTML tag `<div>` found in `chapter_1.md`
+ INFO HTML book written to `[ROOT]/book`
+
+"#]]);
+        })
+        .check_main_file("book/chapter_1.html", str!["<div>x<span>foo</span></div>"]);
+}
