@@ -306,25 +306,7 @@ where
             trace!("event={event:?}");
             match event {
                 Event::Start(tag) => self.start_tag(tag),
-                Event::End(tag) => {
-                    // TODO: This should validate that the event stack is
-                    // properly synchronized with the tag stack.
-                    self.pop();
-                    match tag {
-                        TagEnd::TableHead => {
-                            self.table_state = TableState::Body;
-                            self.push(Node::Element(Element::new("tbody")));
-                        }
-                        TagEnd::TableCell => {
-                            self.table_cell_index += 1;
-                        }
-                        TagEnd::Table => {
-                            // Pop tbody or thead
-                            self.pop();
-                        }
-                        _ => {}
-                    }
-                }
+                Event::End(tag) => self.end_tag(tag),
                 Event::Text(text) => {
                     self.append_text(text.into_tendril());
                 }
@@ -598,6 +580,26 @@ where
             }
         };
         self.push(Node::Element(element));
+    }
+
+    fn end_tag(&mut self, tag: TagEnd) {
+        // TODO: This should validate that the event stack is
+        // properly synchronized with the tag stack.
+        self.pop();
+        match tag {
+            TagEnd::TableHead => {
+                self.table_state = TableState::Body;
+                self.push(Node::Element(Element::new("tbody")));
+            }
+            TagEnd::TableCell => {
+                self.table_cell_index += 1;
+            }
+            TagEnd::Table => {
+                // Pop tbody or thead
+                self.pop();
+            }
+            _ => {}
+        }
     }
 
     /// Given some HTML, parse it into [`Node`] elements and append them to
