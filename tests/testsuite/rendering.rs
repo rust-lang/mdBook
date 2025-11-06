@@ -283,3 +283,24 @@ Check that the HTML tags are properly balanced.
         })
         .check_main_file("book/chapter_1.html", str!["<div>x<span>foo</span></div>"]);
 }
+
+// Test for bug with unbalanced HTML handling in the heading.
+#[test]
+fn heading_with_unbalanced_html() {
+    BookTest::init(|_| {})
+        .change_file("src/chapter_1.md", "### Option<T>")
+        .run("build", |cmd| {
+            cmd.expect_stderr(str![[r#"
+ INFO Book building has started
+ INFO Running the html backend
+ WARN unclosed HTML tag `<t>` found in `chapter_1.md` while exiting Heading(H3)
+HTML tags must be closed before exiting a markdown element.
+ INFO HTML book written to `[ROOT]/book`
+
+"#]]);
+        })
+        .check_main_file(
+            "book/chapter_1.html",
+            str![[r##"<h3 id="option"><a class="header" href="#option">Option<t></t></a></h3>"##]],
+        );
+}
