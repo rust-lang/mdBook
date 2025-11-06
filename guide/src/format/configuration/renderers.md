@@ -145,9 +145,9 @@ The following configuration options are available:
   an icon link will be output in the menu bar of the book.
 - **git-repository-icon:** The FontAwesome icon class to use for the git
   repository link. Defaults to `fab-github` which looks like <i class="fa fab-github"></i>.
-  If you are not using GitHub, another option to consider is `fa-code-fork` which looks like <i class="fa fa-code-fork"></i>.
+  If you are not using GitHub, another option to consider is `fa-code-fork` which looks like <i class="fas fa-code-fork"></i>.
 - **edit-url-template:** Edit url template, when provided shows a
-  "Suggest an edit" button (which looks like <i class="fa fa-edit"></i>) for directly jumping to editing the currently
+  "Suggest an edit" button (which looks like <i class="fas fa-pencil"></i>) for directly jumping to editing the currently
   viewed page. For e.g. GitHub projects set this to
   `https://github.com/<owner>/<repo>/edit/<branch>/{path}` or for
   Bitbucket projects set it to
@@ -178,7 +178,7 @@ The following configuration options are available:
 ### `[output.html.print]`
 
 The `[output.html.print]` table provides options for controlling the printable output.
-By default, mdBook will include an icon on the top right of the book (which looks like <i class="fa fa-print"></i>) that will print the book as a single page.
+By default, mdBook will include an icon on the top right of the book (which looks like <i class="fas fa-print"></i>) that will print the book as a single page.
 
 ```toml
 [output.html.print]
