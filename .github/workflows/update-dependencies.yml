@@ -8,6 +8,7 @@ jobs:
   update:
     name: Update dependencies
     runs-on: ubuntu-latest
+    if: github.repository == 'rust-lang/mdBook'
     steps:
       - uses: actions/checkout@v5
       - name: Install Rust
