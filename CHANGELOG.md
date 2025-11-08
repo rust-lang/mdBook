@@ -63,6 +63,8 @@ The following is a summary of the changes that may require your attention when u
     [#2922](https://github.com/rust-lang/mdBook/pull/2922)
   - Headers that start or end with HTML characters like `<`, `&`, or `>` now replace those characters in the link ID with `-` instead of being stripped.
     [#2844](https://github.com/rust-lang/mdBook/pull/2844)
+- Headers are no longer modified if the tag is manually written HTML.
+  [#2913](https://github.com/rust-lang/mdBook/pull/2913)
 
 ### CLI changes
 
@@ -106,6 +108,46 @@ The following is a summary of the changes that may require your attention when u
 - Most of the types from the `theme` module are now private. The `Theme` struct is still exposed for working with themes.
 - Various functions in the `utils::fs` module have been removed, renamed, or reworked.
 - Most of the functions in the `utils` module have been moved, removed, or made private.
+
+## mdBook 0.5.0-beta.2
+[v0.5.0-beta.1...v0.5.0-beta.2](https://github.com/rust-lang/mdBook/compare/v0.5.0-beta.1...v0.5.0-beta.2)
+
+### Added
+
+- Added a warning when a Font Awesome icon is missing.
+  [#2915](https://github.com/rust-lang/mdBook/pull/2915)
+- Added some trace logging for event processing.
+  [#2911](https://github.com/rust-lang/mdBook/pull/2911)
+- Added `Config::contains_key`.
+  [#2910](https://github.com/rust-lang/mdBook/pull/2910)
+
+### Changed
+
+- Heading IDs are now lowercase.
+  [#2922](https://github.com/rust-lang/mdBook/pull/2922)
+- Updated cargo dependencies.
+  [#2916](https://github.com/rust-lang/mdBook/pull/2916)
+- Removed italics for in quotes/comments in code blocks with the `ayu` theme.
+  [#2904](https://github.com/rust-lang/mdBook/pull/2904)
+- Exposed "search" feature from mdbook-driver.
+  [#2907](https://github.com/rust-lang/mdBook/pull/2907)
+
+### Fixed
+
+- Fixed rust fenced code blocks with an indent.
+  [#2905](https://github.com/rust-lang/mdBook/pull/2905)
+- Headers and `dt` tags are no longer modified if the tag is manually written HTML.
+  [#2913](https://github.com/rust-lang/mdBook/pull/2913)
+- Fixed print page links for internal links to non-chapters.
+  [#2914](https://github.com/rust-lang/mdBook/pull/2914)
+- Better handling for unbalanced HTML tags.
+  [#2924](https://github.com/rust-lang/mdBook/pull/2924)
+- Handle unclosed HTML tags inside a markdown element.
+  [#2927](https://github.com/rust-lang/mdBook/pull/2927)
+- Fixed missing font-awesome icons in the guide.
+  [#2926](https://github.com/rust-lang/mdBook/pull/2926)
+- Hide the sidebar resize indicator when JS isn't available.
+  [#2923](https://github.com/rust-lang/mdBook/pull/2923)
 
 ## mdBook 0.5.0-beta.1
 [v0.5.0-alpha.1...v0.5.0-beta.1](https://github.com/rust-lang/mdBook/compare/v0.5.0-alpha.1...v0.5.0-beta.1)
