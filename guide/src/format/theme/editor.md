@@ -9,8 +9,8 @@ be added to the ***book.toml***:
 editable = true
 ```
 
-To make a specific block available for editing, the attribute `editable` needs
-to be added to it:
+After enabling editable code blocks, the `editable` attribute must be added to a
+code block to make it editable:
 
 ~~~markdown
 ```rust,editable
@@ -32,7 +32,7 @@ fn main() {
 
 Note the new `Undo Changes` button in the editable playgrounds.
 
-## Customizing the Editor
+## Customizing the editor
 
 By default, the editor is the [Ace](https://ace.c9.io/) editor, but, if desired,
 the functionality may be overridden by providing a different folder:

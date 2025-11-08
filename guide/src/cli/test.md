@@ -52,3 +52,8 @@ mdbook test my-book -L target/debug/deps/
 
 See the `rustdoc` command-line [documentation](https://doc.rust-lang.org/rustdoc/command-line-arguments.html#-l--library-path-where-to-look-for-dependencies)
 for more information.
+
+#### `--chapter`
+
+The `--chapter` (`-c`) option allows you to test a specific chapter of the
+book using the chapter name or the relative path to the chapter.

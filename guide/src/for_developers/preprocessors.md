@@ -10,7 +10,7 @@ the book. Possible use cases are:
 
 See [Configuring Preprocessors](../format/configuration/preprocessors.md) for more information about using preprocessors.
 
-## Hooking Into MDBook
+## Hooking into MDBook
 
 MDBook uses a fairly simple mechanism for discovering third party plugins.
 A new table is added to `book.toml` (e.g. `[preprocessor.foo]` for the `foo`
@@ -42,9 +42,9 @@ be adapted for other preprocessors.
 ```
 </details>
 
-## Hints For Implementing A Preprocessor
+## Hints for implementing a preprocessor
 
-By pulling in `mdbook` as a library, preprocessors can have access to the
+By pulling in `mdbook-preprocessor` as a library, preprocessors can have access to the
 existing infrastructure for dealing with books.
 
 For example, a custom preprocessor could use the
@@ -59,9 +59,7 @@ chapters) or via the `Book::for_each_mut()` convenience method.
 The `chapter.content` is just a string which happens to be markdown. While it's
 entirely possible to use regular expressions or do a manual find & replace,
 you'll probably want to process the input into something more computer-friendly.
-The [`pulldown-cmark`][pc] crate implements a production-quality event-based
-Markdown parser, with the [`pulldown-cmark-to-cmark`][pctc] crate allowing you to
-translate events back into markdown text.
+The [`mdbook-markdown`] crate exposes the [`pulldown-cmark`][pc] crate used by mdBook to parse Markdown. The [`pulldown-cmark-to-cmark`][pctc] crate can be used to translate events back into markdown text.
 
 The following code block shows how to remove all emphasis from markdown,
 without accidentally breaking the document.
@@ -97,18 +95,18 @@ if __name__ == '__main__':
     # load both the context and the book representations from stdin
     context, book = json.load(sys.stdin)
     # and now, we can just modify the content of the first chapter
-    book['sections'][0]['Chapter']['content'] = '# Hello'
+    book['items'][0]['Chapter']['content'] = '# Hello'
     # we are done with the book's modification, we can just print it to stdout, 
     print(json.dumps(book))
 ```
 
 
 [emphasis-example]: https://github.com/rust-lang/mdBook/tree/master/examples/remove-emphasis/
-[preprocessor-docs]: https://docs.rs/mdbook/latest/mdbook/preprocess/trait.Preprocessor.html
 [pc]: https://crates.io/crates/pulldown-cmark
 [pctc]: https://crates.io/crates/pulldown-cmark-to-cmark
 [an example no-op preprocessor]: https://github.com/rust-lang/mdBook/blob/master/examples/nop-preprocessor.rs
-[`CmdPreprocessor::parse_input()`]: https://docs.rs/mdbook/latest/mdbook/preprocess/trait.Preprocessor.html#method.parse_input
-[`Book::for_each_mut()`]: https://docs.rs/mdbook/latest/mdbook/book/struct.Book.html#method.for_each_mut
-[`PreprocessorContext`]: https://docs.rs/mdbook/latest/mdbook/preprocess/struct.PreprocessorContext.html
-[`Book`]: https://docs.rs/mdbook/latest/mdbook/book/struct.Book.html
+[`CmdPreprocessor::parse_input()`]: https://docs.rs/mdbook-preprocessor/latest/mdbook_preprocessor/trait.Preprocessor.html#method.parse_input
+[`Book::for_each_mut()`]: https://docs.rs/mdbook-preprocessor/latest/mdbook_preprocessor/book/struct.Book.html#method.for_each_mut
+[`PreprocessorContext`]: https://docs.rs/mdbook-preprocessor/latest/mdbook_preprocessor/struct.PreprocessorContext.html
+[`Book`]: https://docs.rs/mdbook-preprocessor/latest/mdbook_preprocessor/book/struct.Book.html
+[`mdbook-markdown`]: https://docs.rs/mdbook-markdown/latest/mdbook_markdown/

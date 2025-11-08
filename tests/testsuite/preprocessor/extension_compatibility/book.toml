@@ -1,0 +1,18 @@
+[book]
+title = "extension_compatibility"
+
+[preprocessor.my-preprocessor]
+command = "./my-preprocessor"
+custom-config = true
+optional = true
+[preprocessor.my-preprocessor.custom-table]
+extra = "abc"
+
+[output.html]
+
+[output.my-renderer]
+command = "./my-renderer"
+custom-config = "renderer settings"
+optional = true
+[output.my-renderer.custom-table]
+extra = "xyz"

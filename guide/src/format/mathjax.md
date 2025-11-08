@@ -1,4 +1,4 @@
-# MathJax Support
+# MathJax support
 
 mdBook has optional support for math equations through
 [MathJax](https://www.mathjax.org/).

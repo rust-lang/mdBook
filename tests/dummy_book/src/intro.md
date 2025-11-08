@@ -1,3 +1,0 @@
-# Introduction
-
-Here's some interesting text...

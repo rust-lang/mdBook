@@ -17,11 +17,11 @@ jobs:
       matrix:
         include:
           - target: aarch64-unknown-linux-musl
-            os: ubuntu-20.04
+            os: ubuntu-22.04
           - target: x86_64-unknown-linux-gnu
-            os: ubuntu-20.04
+            os: ubuntu-22.04
           - target: x86_64-unknown-linux-musl
-            os: ubuntu-20.04
+            os: ubuntu-22.04
           - target: x86_64-apple-darwin
             os: macos-latest
           - target: aarch64-apple-darwin
@@ -30,7 +30,7 @@ jobs:
             os: windows-latest
     name: Deploy ${{ matrix.target }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Install Rust
       run: ci/install-rust.sh stable ${{ matrix.target }}
     - name: Build asset
@@ -43,27 +43,25 @@ jobs:
     name: GitHub Pages
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Install Rust (rustup)
       run: rustup update stable --no-self-update && rustup default stable
-    - name: Build book
-      run: cargo run -- build guide
-    - name: Deploy to GitHub
-      env:
-        GITHUB_DEPLOY_KEY: ${{ secrets.GITHUB_DEPLOY_KEY }}
-      run: |
-        touch guide/book/.nojekyll
-        curl -LsSf https://raw.githubusercontent.com/rust-lang/simpleinfra/master/setup-deploy-keys/src/deploy.rs | rustc - -o /tmp/deploy
-        cd guide/book
-        /tmp/deploy
+    - name: Deploy the User Guide to GitHub Pages using the gh-pages branch
+      run: ci/publish-guide.sh
   publish:
     name: Publish to crates.io
     runs-on: ubuntu-latest
+    permissions:
+      # Required for OIDC token exchange
+      id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install Rust (rustup)
         run: rustup update stable --no-self-update && rustup default stable
+      - name: Authenticate with crates.io
+        id: auth
+        uses: rust-lang/crates-io-auth-action@v1
       - name: Publish
         env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: cargo publish --no-verify
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+        run: cargo publish --workspace --no-verify

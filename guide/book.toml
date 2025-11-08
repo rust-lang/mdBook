@@ -14,6 +14,7 @@ mathjax-support = true
 site-url = "/mdBook/"
 git-repository-url = "https://github.com/rust-lang/mdBook/tree/master/guide"
 edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"
+hash-files = true
 
 [output.html.playground]
 editable = true
@@ -33,3 +34,9 @@ heading-split-level = 2
 
 [output.html.redirect]
 "/format/config.html" = "configuration/index.html"
+
+[preprocessor.guide-helper]
+command = "cargo run --quiet --manifest-path guide-helper/Cargo.toml"
+
+[build]
+extra-watch-dirs = ["guide-helper/src"]

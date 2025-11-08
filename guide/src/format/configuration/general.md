@@ -1,4 +1,4 @@
-# General Configuration
+# General configuration
 
 You can configure the parameters for your book in the ***book.toml*** file.
 
@@ -74,11 +74,9 @@ edition = "2015"   # [deprecated] the default edition for code blocks
 - **manifest**: Path to a ***Cargo.toml*** file which is used to resolve dependencies of your sample code.  mdBook also uses the `package.edition` configured in the cargo project as the default for code snippets in your book.  
 See [Using External Crates and Dependencies](/format/mdbook.html#using-external-crates-and-dependencies) for details.
 
-- **edition** `[`deprecated`]`: Rust edition to use by default for the code snippets.  
-Default is `"2015"`. Individual code blocks can be controlled with the `edition2015`,
-  `edition2018` or `edition2021` annotations, as described in [Rust code block attributes](/format/mdbook.html#rust-code-block-attributes).  
-  This option is deprecated because it's only useful if your code samples don't depend on external crates or you're not doctest'ing them.  In any case, this option cannot be specified if **manifest** is configured.
-
+- **edition**: Rust edition to use by default for the code snippets. Default
+  is `"2015"`. Individual code blocks can be controlled with the `edition2015`,
+  `edition2018`, `edition2021` or `edition2024` annotations, such as:
 
 
 ### Build options

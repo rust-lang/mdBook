@@ -6,7 +6,7 @@ or [try out](https://spec.commonmark.org/dingus/) CommonMark in real time. A com
 this documentation, but below is a high level overview of some of the basics. For a more in-depth experience, check out the
 [Markdown Guide](https://www.markdownguide.org).
 
-## Text and Paragraphs
+## Text and paragraphs
 
 Text is rendered relatively predictably: 
 
@@ -75,15 +75,22 @@ Use [mdBook](https://github.com/rust-lang/mdBook).
 
 Read about [mdBook](mdbook.md).
 
+And now [an mdBook link] that is not inline, unlike the above.
+
 A bare url: <https://www.rust-lang.org>.
+
+[an mdBook link]: https://github.com/rust-lang/mdBook
 ```
 
 Use [mdBook](https://github.com/rust-lang/mdBook). 
 
 Read about [mdBook](mdbook.md).
 
+And now [an mdBook link] that is not inline, unlike the above.
+
 A bare url: <https://www.rust-lang.org>.
 
+[an mdBook link]: https://github.com/rust-lang/mdBook
 ----
 
 Relative links that end with `.md` will be converted to the `.html` extension.
@@ -213,8 +220,8 @@ characters:
 
 So, no need to manually enter those Unicode characters!
 
-This feature is disabled by default.
-To enable it, see the [`output.html.smart-punctuation`] config option.
+This feature is enabled by default.
+To disable it, see the [`output.html.smart-punctuation`] config option.
 
 [strikethrough]: https://github.github.com/gfm/#strikethrough-extension-
 [tables]: https://github.github.com/gfm/#tables-extension-
@@ -233,3 +240,81 @@ Example:
 This makes the level 1 heading with the content `Example heading`, ID `first`, and classes `class1` and `class2`. Note that the attributes should be space-separated.
 
 More information can be found in the [heading attrs spec page](https://github.com/raphlinus/pulldown-cmark/blob/master/pulldown-cmark/specs/heading_attrs.txt).
+
+### Definition lists
+
+Definition lists can be used for things like glossary entries. The term is listed on a line by itself, followed by one or more definitions. Each definition must begin with a `:` (after 0-2 spaces).
+
+Example:
+
+```md
+term A
+  : This is a definition of term A. Text
+    can span multiple lines.
+
+term B
+  : This is a definition of term B.
+  : This has more than one definition.
+```
+
+This will render as:
+
+term A
+  : This is a definition of term A. Text
+    can span multiple lines.
+
+term B
+  : This is a definition of term B.
+  : This has more than one definition.
+
+Terms are clickable just like headers, which will set the browser's URL to point directly to that term.
+
+See the [definition lists spec](https://github.com/pulldown-cmark/pulldown-cmark/blob/HEAD/pulldown-cmark/specs/definition_lists.txt) for more information on the specifics of the syntax. See the [Wikipedia guidelines for glossaries](https://en.wikipedia.org/wiki/Wikipedia:Manual_of_Style/Glossaries#General_guidelines_for_writing_glossaries) for some guidelines on how to write a glossary.
+
+This feature is enabled by default.
+To disable it, see the [`output.html.definition-lists`] config option.
+
+[`output.html.definition-lists`]: configuration/renderers.md#html-renderer-options
+
+### Admonitions
+
+An admonition is a special type of callout or notice block used to highlight important information. It is written as a blockquote with a special tag on the first line.
+
+```md
+> [!NOTE]
+> General information or additional context.
+
+> [!TIP]
+> A helpful suggestion or best practice.
+
+> [!IMPORTANT]
+> Key information that shouldn't be missed.
+
+> [!WARNING]
+> Critical information that highlights a potential risk.
+
+> [!CAUTION]
+> Information about potential issues that require caution.
+```
+
+These will render as:
+
+> [!NOTE]
+> General information or additional context.
+
+> [!TIP]
+> A helpful suggestion or best practice.
+
+> [!IMPORTANT]
+> Key information that shouldn't be missed.
+
+> [!WARNING]
+> Critical information that highlights a potential risk.
+
+> [!CAUTION]
+> Information about potential issues that require caution.
+
+This feature is enabled by default.
+To disable it, see the [`output.html.admonitions`] config option.
+
+[`output.html.admonitions`]: configuration/renderers.md#html-renderer-options

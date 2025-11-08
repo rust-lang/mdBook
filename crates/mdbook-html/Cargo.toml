@@ -1,0 +1,37 @@
+[package]
+name = "mdbook-html"
+version = "0.5.0-beta.2"
+description = "mdBook HTML renderer"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+ego-tree.workspace = true
+elasticlunr-rs = { workspace = true, optional = true }
+font-awesome-as-a-crate.workspace = true
+handlebars.workspace = true
+hex.workspace = true
+html5ever.workspace = true
+indexmap.workspace = true
+mdbook-core.workspace = true
+mdbook-markdown.workspace = true
+mdbook-renderer.workspace = true
+pulldown-cmark.workspace = true
+regex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+toml.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+search = ["dep:elasticlunr-rs"]

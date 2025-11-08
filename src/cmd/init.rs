@@ -1,11 +1,12 @@
 use crate::get_book_dir;
-use clap::{arg, ArgMatches, Command as ClapCommand};
-use mdbook::config;
-use mdbook::errors::Result;
-use mdbook::MDBook;
+use anyhow::Result;
+use clap::{ArgMatches, Command as ClapCommand, arg};
+use mdbook_core::config;
+use mdbook_driver::MDBook;
 use std::io;
 use std::io::Write;
 use std::process::Command;
+use tracing::debug;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> ClapCommand {

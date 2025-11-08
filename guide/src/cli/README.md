@@ -1,4 +1,4 @@
-# Command Line Tool
+# Command-line tool
 
 The `mdbook` command-line tool is used to create and build books.
 After you have [installed](../guide/installation.md) `mdbook`, you can run the `mdbook help` command in your terminal to view the available commands.

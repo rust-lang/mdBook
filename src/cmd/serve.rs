@@ -2,17 +2,19 @@ use super::command_prelude::*;
 #[cfg(feature = "watch")]
 use super::watch;
 use crate::{get_book_dir, open};
+use anyhow::Result;
+use axum::Router;
+use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
+use axum::routing::get;
 use clap::builder::NonEmptyStringValueParser;
-use futures_util::sink::SinkExt;
 use futures_util::StreamExt;
-use mdbook::errors::*;
-use mdbook::utils::fs::get_404_output_file;
-use mdbook::MDBook;
+use futures_util::sink::SinkExt;
+use mdbook_driver::MDBook;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::path::PathBuf;
 use tokio::sync::broadcast;
-use warp::ws::Message;
-use warp::Filter;
+use tower_http::services::{ServeDir, ServeFile};
+use tracing::{error, info, trace};
 
 /// The HTTP endpoint for the websocket used to trigger reloads when a file changes.
 const LIVE_RELOAD_ENDPOINT: &str = "__livereload";
@@ -60,9 +62,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         book.config
             .set("output.html.live-reload-endpoint", LIVE_RELOAD_ENDPOINT)
             .expect("live-reload-endpoint update failed");
-        if let Some(dest_dir) = args.get_one::<PathBuf>("dest-dir") {
-            book.config.build.build_dir = dest_dir.into();
-        }
+        set_dest_dir(args, book);
         // Override site-url for local serving of the 404 file
         book.config.set("output.html.site-url", "/").unwrap();
     };
@@ -74,12 +74,8 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         .next()
         .ok_or_else(|| anyhow::anyhow!("no address found for {}", address))?;
     let build_dir = book.build_dir_for("html");
-    let input_404 = book
-        .config
-        .get("output.html.input-404")
-        .and_then(toml::Value::as_str)
-        .map(ToString::to_string);
-    let file_404 = get_404_output_file(&input_404);
+    let html_config = book.config.html_config().unwrap_or_default();
+    let file_404 = html_config.get_404_output_file();
 
     // A channel used to broadcast to any websockets to reload when a file changes.
     let (tx, _rx) = tokio::sync::broadcast::channel::<Message>(100);
@@ -116,32 +112,19 @@ async fn serve(
     reload_tx: broadcast::Sender<Message>,
     file_404: &str,
 ) {
-    // A warp Filter which captures `reload_tx` and provides an `rx` copy to
-    // receive reload messages.
-    let sender = warp::any().map(move || reload_tx.subscribe());
+    let reload_tx_clone = reload_tx.clone();
 
-    // A warp Filter to handle the livereload endpoint. This upgrades to a
-    // websocket, and then waits for any filesystem change notifications, and
-    // relays them over the websocket.
-    let livereload = warp::path(LIVE_RELOAD_ENDPOINT)
-        .and(warp::ws())
-        .and(sender)
-        .map(|ws: warp::ws::Ws, mut rx: broadcast::Receiver<Message>| {
-            ws.on_upgrade(move |ws| async move {
-                let (mut user_ws_tx, _user_ws_rx) = ws.split();
-                trace!("websocket got connection");
-                if let Ok(m) = rx.recv().await {
-                    trace!("notify of reload");
-                    let _ = user_ws_tx.send(m).await;
-                }
-            })
-        });
-    // A warp Filter that serves from the filesystem.
-    let book_route = warp::fs::dir(build_dir.clone());
-    // The fallback route for 404 errors
-    let fallback_route = warp::fs::file(build_dir.join(file_404))
-        .map(|reply| warp::reply::with_status(reply, warp::http::StatusCode::NOT_FOUND));
-    let routes = livereload.or(book_route).or(fallback_route);
+    // WebSocket handler for live reload
+    let websocket_handler = move |ws: WebSocketUpgrade| async move {
+        let reload_tx = reload_tx_clone.clone();
+        ws.on_upgrade(move |socket| websocket_connection(socket, reload_tx))
+    };
+
+    let app = Router::new()
+        .route(&format!("/{LIVE_RELOAD_ENDPOINT}"), get(websocket_handler))
+        .fallback_service(
+            ServeDir::new(&build_dir).not_found_service(ServeFile::new(build_dir.join(file_404))),
+        );
 
     std::panic::set_hook(Box::new(move |panic_info| {
         // exit if serve panics
@@ -149,5 +132,20 @@ async fn serve(
         std::process::exit(1);
     }));
 
-    warp::serve(routes).run(address).await;
+    let listener = tokio::net::TcpListener::bind(&address)
+        .await
+        .unwrap_or_else(|e| panic!("Unable to bind to {address}: {e}"));
+
+    axum::serve(listener, app).await.unwrap();
+}
+
+async fn websocket_connection(ws: WebSocket, reload_tx: broadcast::Sender<Message>) {
+    let (mut user_ws_tx, _user_ws_rx) = ws.split();
+    let mut rx = reload_tx.subscribe();
+
+    trace!("websocket got connection");
+    if let Ok(m) = rx.recv().await {
+        trace!("notify of reload");
+        let _ = user_ws_tx.send(m).await;
+    }
 }

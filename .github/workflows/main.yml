@@ -22,7 +22,7 @@ jobs:
             rust: nightly
             target: x86_64-unknown-linux-gnu
           - name: stable x86_64-unknown-linux-musl
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             rust: stable
             target: x86_64-unknown-linux-musl
           - name: stable x86_64 macos
@@ -38,24 +38,24 @@ jobs:
             rust: stable
             target: x86_64-pc-windows-msvc
           - name: msrv
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             # sync MSRV with docs: guide/src/guide/installation.md and Cargo.toml
-            rust: 1.74.0
+            rust: 1.88.0
             target: x86_64-unknown-linux-gnu
     name: ${{ matrix.name }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Install Rust
       run: bash ci/install-rust.sh ${{ matrix.rust }} ${{ matrix.target }}
     - name: Build and run tests
-      run: cargo test --locked --target ${{ matrix.target }}
+      run: cargo test --workspace --locked --target ${{ matrix.target }}
     - name: Test no default
-      run: cargo test --no-default-features --target ${{ matrix.target }}
+      run: cargo test --workspace --no-default-features --target ${{ matrix.target }}
 
   aarch64-cross-builds:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Install Rust
       run: bash ci/install-rust.sh stable aarch64-unknown-linux-musl
     - name: Build
@@ -65,10 +65,64 @@ jobs:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Install Rust
       run: rustup update stable && rustup default stable && rustup component add rustfmt
     - run: cargo fmt --check
+
+  gui:
+    name: GUI tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install Rust
+        run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
+      - name: Install npm
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Install browser-ui-test
+        run: npm install
+      - name: Run eslint
+        run: npm run lint
+      - name: Build and run tests (+ GUI)
+        run: cargo test --locked --target x86_64-unknown-linux-gnu --test gui
+
+  # Ensure there are no clippy warnings
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install Rust
+        run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
+      - run: rustup component add clippy
+      - run: cargo clippy --workspace --all-targets --no-deps -- -D warnings
+
+  docs:
+    name: Check API docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install Rust
+        run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
+      - name: Ensure intradoc links are valid
+        run: cargo doc --workspace --document-private-items --no-deps
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  check-version-bump:
+    name: Check version bump
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: rustup update stable && rustup default stable
+      - name: Install cargo-semver-checks
+        run: |
+          mkdir installed-bins
+          curl -Lf https://github.com/obi1kenobi/cargo-semver-checks/releases/download/v0.45.0/cargo-semver-checks-x86_64-unknown-linux-gnu.tar.gz \
+            | tar -xz --directory=./installed-bins
+          echo `pwd`/installed-bins >> $GITHUB_PATH
+      - run: cargo semver-checks --workspace
 
   # The success job is here to consolidate the total success/failure state of
   # all other jobs. This job is then included in the GitHub branch protection
@@ -81,6 +135,11 @@ jobs:
     needs:
       - test
       - rustfmt
+      - aarch64-cross-builds
+      - gui
+      - clippy
+      - docs
+      - check-version-bump
     runs-on: ubuntu-latest
     steps:
       - run: jq --exit-status 'all(.result == "success")' <<< '${{ toJson(needs) }}'

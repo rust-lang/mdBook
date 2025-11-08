@@ -1,17 +1,14 @@
 use super::command_prelude::*;
 use crate::get_book_dir;
-use clap::builder::NonEmptyStringValueParser;
+use anyhow::Result;
 use clap::ArgAction;
-use mdbook::errors::Result;
-use mdbook::MDBook;
-use std::path::PathBuf;
+use clap::builder::NonEmptyStringValueParser;
+use mdbook_driver::MDBook;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("test")
         .about("Tests that a book's Rust code samples compile")
-        // FIXME: --dest-dir is unused by the test command, it should be removed
-        .arg_dest_dir()
         .arg_root_dir()
         .arg(
             Arg::new("chapter")
@@ -46,9 +43,6 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
     let mut book = MDBook::load(book_dir)?;
 
-    if let Some(dest_dir) = args.get_one::<PathBuf>("dest-dir") {
-        book.config.build.build_dir = dest_dir.to_path_buf();
-    }
     match chapter {
         Some(_) => book.test_chapter(library_paths, chapter),
         None => book.test(library_paths),

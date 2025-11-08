@@ -1,11 +1,12 @@
 //! A filesystem watcher using native operating system facilities.
 
 use ignore::gitignore::Gitignore;
-use mdbook::MDBook;
+use mdbook_driver::MDBook;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::channel;
 use std::thread::sleep;
 use std::time::Duration;
+use tracing::{error, info, warn};
 
 pub fn rebuild_on_change(
     book_dir: &Path,
@@ -71,7 +72,7 @@ pub fn rebuild_on_change(
             .filter_map(|event| match event {
                 Ok(events) => Some(events),
                 Err(error) => {
-                    log::warn!("error while watching for changes: {error}");
+                    warn!("error while watching for changes: {error}");
                     None
                 }
             })

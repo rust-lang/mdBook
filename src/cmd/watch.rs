@@ -1,8 +1,9 @@
 use super::command_prelude::*;
 use crate::{get_book_dir, open};
-use mdbook::errors::Result;
-use mdbook::MDBook;
+use anyhow::Result;
+use mdbook_driver::MDBook;
 use std::path::{Path, PathBuf};
+use tracing::error;
 
 mod native;
 mod poller;
@@ -38,9 +39,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let mut book = MDBook::load(&book_dir)?;
 
     let update_config = |book: &mut MDBook| {
-        if let Some(dest_dir) = args.get_one::<PathBuf>("dest-dir") {
-            book.config.build.build_dir = dest_dir.into();
-        }
+        set_dest_dir(args, book);
     };
     update_config(&mut book);
 

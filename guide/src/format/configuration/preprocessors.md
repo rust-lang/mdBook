@@ -23,7 +23,7 @@ For information on how to create a new preprocessor, see the [Preprocessors for 
 [Third Party Plugins]: https://github.com/rust-lang/mdBook/wiki/Third-party-plugins
 [Preprocessors for Developers]: ../../for_developers/preprocessors.md
 
-## Custom Preprocessor Configuration
+## Custom preprocessor configuration
 
 Preprocessors can be added by including a `preprocessor` table in `book.toml` with the name of the preprocessor.
 For example, if you have a preprocessor called `mdbook-example`, then you can include it with:
@@ -42,7 +42,7 @@ For example, if our example preprocessor needed some extra configuration options
 some-extra-feature = true
 ```
 
-## Locking a Preprocessor dependency to a renderer
+## Locking a preprocessor dependency to a renderer
 
 You can explicitly specify that a preprocessor should run for a renderer by
 binding the two together.
@@ -52,7 +52,7 @@ binding the two together.
 renderers = ["html"]  # example preprocessor only runs with the HTML renderer
 ```
 
-## Provide Your Own Command
+## Provide your own command
 
 By default when you add a `[preprocessor.foo]` table to your `book.toml` file,
 `mdbook` will try to invoke the `mdbook-foo` executable. If you want to use a
@@ -64,7 +64,19 @@ be overridden by adding a `command` field.
 command = "python random.py"
 ```
 
-## Require A Certain Order
+### Optional preprocessors
+
+If you enable a preprocessor that isn't installed, the default behavior is to throw an error.
+This behavior can be changed by marking the preprocessor as optional:
+
+```toml
+[preprocessor.example]
+optional = true
+```
+
+This demotes the error to a warning.
+
+## Require a certain order
 
 The order in which preprocessors are run can be controlled with the `before` and `after` fields.
 For example, suppose you want your `linenos` preprocessor to process lines that may have been `{{#include}}`d; then you want it to run after the built-in `links` preprocessor, which you can require using either the `before` or `after` field:

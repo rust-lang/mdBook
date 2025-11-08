@@ -8,7 +8,8 @@ These capabilities primarily affect how the user sees or interacts with code sam
 
 There is a feature in mdBook that lets you hide code lines by prepending them with a specific prefix.
 
-For the Rust language, you can use the `#` character as a prefix which will hide lines [like you would with Rustdoc][rustdoc-hide].
+For the Rust language, you can prefix lines with `# ` (`#` followed by a space) to hide them [like you would with Rustdoc][rustdoc-hide].
+This prefix can be escaped with `##` to prevent the hiding of a line that should begin with the literal string `# ` (see [Rustdoc's docs][rustdoc-hide] for more details)
 
 [rustdoc-hide]: https://doc.rust-lang.org/stable/rustdoc/write-documentation/documentation-tests.html#hiding-portions-of-the-example
 
@@ -74,9 +75,9 @@ nothidden():
 ```
 ~~~
 
-## Rust Playground
+## Rust playground
 
-Rust language code blocks will automatically get a play button (<i class="fa fa-play"></i>) which will execute the code and display the output just below the code block.
+Rust language code blocks will automatically get a play button (<i class="fas fa-play"></i>) which will execute the code and display the output just below the code block.
 This works by sending the code to the [Rust Playground].
 
 ```rust
@@ -125,7 +126,7 @@ These use the same attributes as [rustdoc attributes], with a few additions:
 * `no_run` --- The code is compiled when tested, but it is not run.
   The play button is also not shown.
 * `compile_fail` --- The code should fail to compile.
-* `edition2015`, `edition2018`, `edition2021` --- Forces the use of a specific Rust edition.
+* `edition2015`, `edition2018`, `edition2021`, `edition2024` --- Forces the use of a specific Rust edition.
   See [`rust.edition`] to set this globally.
 
 [`mdbook test`]: ../cli/test.md
@@ -359,28 +360,17 @@ HTML tags with class `hidden` will not be shown.
 
 <div class="hidden">This will not be seen.</div>
 
-### `class="warning"`
+## Font-Awesome icons
 
-To make a warning or similar note stand out, wrap it in a warning div.
+mdBook includes a copy of [Font Awesome Free's](https://fontawesome.com)
+MIT-licensed SVG files. It emulates the `<i>` syntax, but converts the results
+to inline SVG. Only the regular, solid, and brands icons are included; paid
+features like the light icons are not.
 
-```html
-<div class="warning">
+For example, given this HTML syntax:
 
-This is a bad thing that you should pay attention to.
-
-Warning blocks should be used sparingly in documentation, to avoid "warning
-fatigue," where people are trained to ignore them because they usually don't
-matter for what they're doing.
-
-</div>
+```hbs
+The result looks like this: <i class="fas fa-print"></i>
 ```
 
-<div class="warning">
-
-This is a bad thing that you should pay attention to.
-
-Warning blocks should be used sparingly in documentation, to avoid "warning
-fatigue," where people are trained to ignore them because they usually don't
-matter for what they're doing.
-
-</div>
+The result looks like this: <i class="fas fa-print"></i>

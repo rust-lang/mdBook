@@ -1,4 +1,4 @@
-# User Guide
+# User guide
 
 This user guide provides an introduction to basic concepts of using mdBook.
 

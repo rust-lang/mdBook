@@ -20,7 +20,7 @@ mdbook clean path/to/book
 
 The `--dest-dir` (`-d`) option allows you to override the book's output
 directory, which will be deleted by this command. Relative paths are interpreted
-relative to the book's root directory. If not specified it will default to the
+relative to the current directory. If not specified it will default to the
 value of the `build.build-dir` key in `book.toml`, or to `./book`.
 
 ```bash
