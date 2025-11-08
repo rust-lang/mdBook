@@ -1,14 +1,14 @@
 //! Get "compiler" args from cargo
 
 use crate::errors::*;
-use anyhow::anyhow;
+use anyhow::{Context, anyhow, bail};
 use cargo_manifest::{Edition, Manifest, MaybeInherited::Local};
-use log::{debug, info};
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use tracing::{debug, info};
 
 /// Get the arguments needed to invoke rustc so it can find external crates
 /// when invoked by rustdoc to compile doctests.
@@ -23,8 +23,8 @@ use std::process::Command;
 /// Example:
 /// ```rust
 ///
-/// use mdbook::utils::extern_args::ExternArgs;
-/// # use mdbook::errors::*;
+/// use mdbook_core::utils::extern_args::ExternArgs;
+/// # use mdbook_core::errors::*;
 ///
 /// # fn main() -> Result<()> {
 /// // Get cargo to say what the compiler args need to be...
@@ -86,7 +86,7 @@ impl ExternArgs {
             .expect("doctest Cargo.toml must include a [package] section");
 
         self.crate_name = package.name.replace('-', "_"); // maybe cargo shouldn't allow packages to include non-identifier characters?
-                                                          // in any case, this won't work when default crate doesn't have package name (which I'm sure cargo allows somehow or another)
+        // in any case, this won't work when default crate doesn't have package name (which I'm sure cargo allows somehow or another)
         self.edition = if let Some(Local(edition)) = package.edition {
             my_display_edition(edition)
         } else {
@@ -174,7 +174,8 @@ impl ExternArgs {
                                 if dep_arg.ends_with(".rmeta") {
                                     debug!(
                                         "Build referenced {}, converted to .rlib hoping that actual file will be there in time.",
-                                        dep_arg);
+                                        dep_arg
+                                    );
                                     dep_arg = dep_arg.replace(".rmeta", ".rlib");
                                 }
                                 self.extern_list.push(dep_arg);
@@ -200,7 +201,9 @@ impl ExternArgs {
         }
 
         if self.extern_list.is_empty() || self.lib_list.is_empty() {
-            bail!("Couldn't extract -L or --extern args from Cargo, is current directory == cargo project root?");
+            bail!(
+                "Couldn't extract -L or --extern args from Cargo, is current directory == cargo project root?"
+            );
         }
 
         debug!(

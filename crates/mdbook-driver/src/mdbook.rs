@@ -8,7 +8,7 @@ use anyhow::{Context, Error, Result, bail};
 use indexmap::IndexMap;
 use mdbook_core::book::{Book, BookItem, BookItems};
 use mdbook_core::config::{Config, RustEdition};
-use mdbook_core::utils::fs;
+use mdbook_core::utils::{extern_args, fs};
 use mdbook_html::HtmlHandlebars;
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use mdbook_renderer::{RenderContext, Renderer};
@@ -271,6 +271,13 @@ impl MDBook {
         let (book, _) = self.preprocess_book(&TestRenderer)?;
 
         let color_output = std::io::stderr().is_terminal();
+        // get extra args we'll need for rustdoc, if config points to a cargo project
+
+        let mut extern_args = extern_args::ExternArgs::new();
+        if let Some(manifest) = &self.config.rust.manifest {
+            extern_args.load(&self.root.join(manifest))?;
+        }
+
         let mut failed = false;
         for item in book.iter() {
             if let BookItem::Chapter(ref ch) = *item {
@@ -298,7 +305,8 @@ impl MDBook {
                 cmd.current_dir(temp_dir.path())
                     .arg(chapter_path)
                     .arg("--test")
-                    .args(&library_args);
+                    .args(&library_args)
+                    .args(extern_args.get_args());
 
                 if let Some(edition) = self.config.rust.edition {
                     match edition {
