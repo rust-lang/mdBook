@@ -148,6 +148,7 @@ The following is a summary of the changes that may require your attention when u
   [#2926](https://github.com/rust-lang/mdBook/pull/2926)
 - Hide the sidebar resize indicator when JS isn't available.
   [#2923](https://github.com/rust-lang/mdBook/pull/2923)
+- Allow doctests to use external crates by referencing a `Cargo.toml`
 
 ## mdBook 0.5.0-beta.1
 [v0.5.0-alpha.1...v0.5.0-beta.1](https://github.com/rust-lang/mdBook/compare/v0.5.0-alpha.1...v0.5.0-beta.1)
