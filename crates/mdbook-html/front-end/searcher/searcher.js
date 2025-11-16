@@ -351,7 +351,8 @@ window.search = window.search || {};
 
     // Eventhandler for keyevents on `document`
     function globalKeyHandler(e) {
-        const metaIsCtrl = navigator.platform && (navigator.platform.startsWith("Mac") || navigator.platform === "iPhone");
+        const metaIsCtrl = navigator.platform &&
+            (navigator.platform.startsWith('Mac') || navigator.platform === 'iPhone');
         if ((metaIsCtrl ? e.metaKey : e.ctrlKey) && e.key === 'k') {
             e.preventDefault();
             showSearch(true);
