@@ -12,11 +12,10 @@ underscore (`_`) is replaced with a dash (`-`).
 
 For example:
 
-- `MDBOOK_foo` -> `foo`
-- `MDBOOK_FOO` -> `foo`
-- `MDBOOK_FOO__BAR` -> `foo.bar`
-- `MDBOOK_FOO_BAR` -> `foo-bar`
-- `MDBOOK_FOO_bar__baz` -> `foo-bar.baz`
+- `MDBOOK_book` -> `book`
+- `MDBOOK_BOOK` -> `book`
+- `MDBOOK_BOOK__TITLE` -> `book.title`
+- `MDBOOK_BOOK__TEXT_DIRECTION` -> `book.text-direction`
 
 So by setting the `MDBOOK_BOOK__TITLE` environment variable you can override the
 book's title without needing to touch your `book.toml`.

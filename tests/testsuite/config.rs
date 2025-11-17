@@ -207,3 +207,137 @@ unknown field `title`, expected `edition`
 "#]]);
         });
 }
+
+// An invalid top-level key in the environment.
+#[test]
+fn env_invalid_config_key() {
+    BookTest::from_dir("config/empty").run("build", |cmd| {
+        cmd.env("MDBOOK_FOO", "testing")
+            .expect_failure()
+            .expect_stdout(str![[""]])
+            .expect_stderr(str![[r#"
+ERROR invalid key `foo`
+
+"#]]);
+    });
+}
+
+// An invalid value in the environment.
+#[test]
+fn env_invalid_value() {
+    BookTest::from_dir("config/empty")
+        .run("build", |cmd| {
+            cmd.env("MDBOOK_BOOK", r#"{"titlez": "typo"}"#)
+                .expect_failure()
+                .expect_stdout(str![[""]])
+                .expect_stderr(str![[r#"
+ERROR unknown field `titlez`, expected one of `title`, `authors`, `description`, `src`, `language`, `text-direction`
+
+
+"#]]);
+        })
+        .run("build", |cmd| {
+            cmd.env("MDBOOK_BOOK__TITLE", r#"{"looks like obj": "abc"}"#)
+                .expect_failure()
+                .expect_stdout(str![[""]])
+                .expect_stderr(str![[r#"
+ERROR invalid type: map, expected a string
+in `title`
+
+
+"#]]);
+        })
+        // This is not valid JSON, so falls back to be interpreted as a string.
+        .run("build", |cmd| {
+            cmd.env("MDBOOK_BOOK__TITLE", r#"{braces}"#)
+                .expect_stdout(str![[""]])
+                .expect_stderr(str![[r#"
+ INFO Book building has started
+ INFO Running the html backend
+ INFO HTML book written to `[ROOT]/book`
+
+"#]]);
+        })
+        .check_file_contains("book/index.html", "<title>Chapter 1 - {braces}</title>");
+}
+
+// Replacing the entire book table from the environment.
+#[test]
+fn env_entire_book_table() {
+    BookTest::init(|_| {})
+        .change_file(
+            "book.toml",
+            "[book]\n\
+             title = \"config title\"\n\
+            ",
+        )
+        .run("build", |cmd| {
+            cmd.env("MDBOOK_BOOK", r#"{"description": "custom description"}"#);
+        })
+        // The book.toml title is removed.
+        .check_file_contains("book/index.html", "<title>Chapter 1</title>")
+        .check_file_contains(
+            "book/index.html",
+            r#"<meta name="description" content="custom description">"#,
+        );
+}
+
+// Replacing the entire output or preprocessor table from the environment.
+#[test]
+fn env_entire_output_preprocessor_table() {
+    BookTest::from_dir("config/empty")
+        .rust_program(
+            "mdbook-my-preprocessor",
+            r#"
+            fn main() {
+                let mut args = std::env::args().skip(1);
+                if args.next().as_deref() == Some("supports") {
+                    return;
+                }
+                use std::io::Read;
+                let mut s = String::new();
+                std::io::stdin().read_to_string(&mut s).unwrap();
+                assert!(s.contains("custom preprocessor config"));
+                println!("{{\"items\": []}}");
+            }
+            "#,
+        )
+        .rust_program(
+            "mdbook-my-output",
+            r#"
+            fn main() {
+                use std::io::Read;
+                let mut s = String::new();
+                std::io::stdin().read_to_string(&mut s).unwrap();
+                assert!(s.contains("custom output config"));
+                eprintln!("preprocessor saw custom config");
+            }
+            "#,
+        )
+        .run("build", |cmd| {
+            let mut paths: Vec<_> =
+                std::env::split_paths(&std::env::var_os("PATH").unwrap_or_default()).collect();
+            paths.push(cmd.dir.clone());
+            let path = std::env::join_paths(paths).unwrap().into_string().unwrap();
+
+            cmd.env(
+                "MDBOOK_OUTPUT",
+                r#"{"my-output": {"foo": "custom output config"}}"#,
+            )
+            .env(
+                "MDBOOK_PREPROCESSOR",
+                r#"{"my-preprocessor": {"foo": "custom preprocessor config"}}"#,
+            )
+            .env("PATH", path)
+            .expect_stdout(str![[""]])
+            .expect_stderr(str![[r#"
+ INFO Book building has started
+ INFO Running the my-output backend
+ INFO Invoking the "my-output" renderer
+preprocessor saw custom config
+
+"#]]);
+        })
+        // No HTML output
+        .check_file_list("book", str![[""]]);
+}
