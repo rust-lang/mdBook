@@ -115,6 +115,10 @@ The following is a summary of the changes that may require your attention when u
   - [`mdbook-core`](https://docs.rs/mdbook-core/latest/mdbook_core/) — An internal library that is used by the other crates for shared types. You should not depend on this crate directly since types from this crate are re-exported from the other crates as appropriate.
 - Changes to `Config`:
   - [`Config::get`](https://docs.rs/mdbook-core/latest/mdbook_core/config/struct.Config.html#method.get) is now generic over the return value, using `serde` to deserialize the value. It also returns a `Result` to handle deserialization errors. [#2773](https://github.com/rust-lang/mdBook/pull/2773)
+  - [`Config::set`](https://docs.rs/mdbook-core/latest/mdbook_core/config/struct.Config.html#method.set) now validates that the config keys and values are valid.
+    [#2942](https://github.com/rust-lang/mdBook/pull/2942)
+  - [`Config::update_from_env`](https://docs.rs/mdbook-core/latest/mdbook_core/config/struct.Config.html#method.update_from_env) now returns a `Result` to indicate any errors.
+    [#2942](https://github.com/rust-lang/mdBook/pull/2942)
   - Removed `Config::get_deserialized`. Use `Config::get` instead.
   - Removed `Config::get_deserialized_opt`. Use `Config::get` instead.
   - Removed `Config::get_mut`. Use `Config::set` instead.
