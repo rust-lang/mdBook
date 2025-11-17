@@ -1,14 +1,36 @@
 # Changelog
 
-## 0.5 Migration Guide
+## mdBook 0.5.0
+[v0.4.52...v0.5.0](https://github.com/rust-lang/mdBook/compare/v0.4.52...v0.5.0)
 
-During the pre-release phase of the 0.5 release, the documentation may be found at <https://rust-lang.github.io/mdBook/pre-release/>.
+The 0.5.0 release is the next major release of mdBook, containing over 130 PRs since 0.4.52! The primary focus for this release has been an evolution of the Rust APIs to make it easier to maintain, to evolve in a backwards-compatible fashion, to clean up some things that have accumulated over time, and to significantly improve the performance and compile-times.
+
+This release also includes many new features described below.
+
+We have prepared a [0.5 Migration Guide](#05-migration-guide) to help existing authors switch from 0.4.
+
+The final 0.5.0 release does not contain any changes since [0.5.0-beta.2](#mdbook-050-beta2).
+
+## 0.5 Migration Guide
 
 The 0.5 release contains several breaking changes from the 0.4 release. Preprocessors and renderers will need to be migrated to continue to work with this release. After updating your configuration, it is recommended to carefully compare and review how your book renders to ensure everything is working correctly.
 
 If you have overridden any of the theme files, you will likely need to update them to match the current version.
 
+See the entries below for [mdBook 0.5.0-alpha.1](#mdbook-050-alpha1), [mdBook 0.5.0-beta.1](#mdbook-050-beta1), and [mdBook 0.5.0-beta.2](#mdbook-050-beta2) for a more complete list of changes and fixes.
+
 The following is a summary of the changes that may require your attention when updating to 0.5:
+
+### Major additions
+
+- Added sidebar heading navigation. This includes the `output.html.sidebar-header-nav` option to disable it.
+  [#2822](https://github.com/rust-lang/mdBook/pull/2822)
+- Added support for definition lists. These are enabled by default, with the option `output.html.definition-lists` to disable it. See [docs](https://rust-lang.github.io/mdBook/format/markdown.html#definition-lists) for more.
+  [#2847](https://github.com/rust-lang/mdBook/pull/2847)
+- Added support for admonitions. These are enabled by default, with the option `output.html.admonitions` to disable it. See [docs](https://rust-lang.github.io/mdBook/format/markdown.html#admonitions) for more.
+  [#2851](https://github.com/rust-lang/mdBook/pull/2851)
+- Links on the print page now link to elements on the print page instead of linking out to the individual chapters.
+  [#2844](https://github.com/rust-lang/mdBook/pull/2844)
 
 ### Config changes
 
