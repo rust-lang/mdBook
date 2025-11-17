@@ -56,7 +56,7 @@ impl MDBook {
             Config::default()
         };
 
-        config.update_from_env();
+        config.update_from_env()?;
 
         if tracing::enabled!(tracing::Level::TRACE) {
             for line in format!("Config: {config:#?}").lines() {

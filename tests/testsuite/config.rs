@@ -216,10 +216,7 @@ fn env_invalid_config_key() {
             .expect_failure()
             .expect_stdout(str![[""]])
             .expect_stderr(str![[r#"
-
-thread 'main' ([..]) panicked at [..]
-unreachable: invalid key `foo`
-note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+ERROR invalid key `foo`
 
 "#]]);
     });
@@ -231,25 +228,26 @@ fn env_invalid_value() {
     BookTest::from_dir("config/empty")
         .run("build", |cmd| {
             cmd.env("MDBOOK_BOOK", r#"{"titlez": "typo"}"#)
+                .expect_failure()
                 .expect_stdout(str![[""]])
                 .expect_stderr(str![[r#"
- INFO Book building has started
- INFO Running the html backend
- INFO HTML book written to `[ROOT]/book`
+ERROR unknown field `titlez`, expected one of `title`, `authors`, `description`, `src`, `language`, `text-direction`
+
 
 "#]]);
         })
         .run("build", |cmd| {
             cmd.env("MDBOOK_BOOK__TITLE", r#"{"looks like obj": "abc"}"#)
+                .expect_failure()
                 .expect_stdout(str![[""]])
                 .expect_stderr(str![[r#"
- INFO Book building has started
- INFO Running the html backend
- INFO HTML book written to `[ROOT]/book`
+ERROR invalid type: map, expected a string
+in `title`
+
 
 "#]]);
         })
-        .check_file_contains("book/index.html", "<title>Chapter 1</title>")
+        // This is not valid JSON, so falls back to be interpreted as a string.
         .run("build", |cmd| {
             cmd.env("MDBOOK_BOOK__TITLE", r#"{braces}"#)
                 .expect_stdout(str![[""]])
@@ -276,7 +274,8 @@ fn env_entire_book_table() {
         .run("build", |cmd| {
             cmd.env("MDBOOK_BOOK", r#"{"description": "custom description"}"#);
         })
-        .check_file_contains("book/index.html", "<title>Chapter 1 - config title</title>")
+        // The book.toml title is removed.
+        .check_file_contains("book/index.html", "<title>Chapter 1</title>")
         .check_file_contains(
             "book/index.html",
             r#"<meta name="description" content="custom description">"#,
@@ -311,6 +310,7 @@ fn env_entire_output_preprocessor_table() {
                 let mut s = String::new();
                 std::io::stdin().read_to_string(&mut s).unwrap();
                 assert!(s.contains("custom output config"));
+                eprintln!("preprocessor saw custom config");
             }
             "#,
         )
@@ -329,14 +329,15 @@ fn env_entire_output_preprocessor_table() {
                 r#"{"my-preprocessor": {"foo": "custom preprocessor config"}}"#,
             )
             .env("PATH", path)
-            .expect_failure()
             .expect_stdout(str![[""]])
             .expect_stderr(str![[r#"
-
-thread 'main' ([..]) panicked at [..]
-unreachable: invalid key `output`
-note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+ INFO Book building has started
+ INFO Running the my-output backend
+ INFO Invoking the "my-output" renderer
+preprocessor saw custom config
 
 "#]]);
-        });
+        })
+        // No HTML output
+        .check_file_list("book", str![[""]]);
 }

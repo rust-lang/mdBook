@@ -9,7 +9,10 @@ This release also includes many new features described below.
 
 We have prepared a [0.5 Migration Guide](#05-migration-guide) to help existing authors switch from 0.4.
 
-The final 0.5.0 release does not contain any changes since [0.5.0-beta.2](#mdbook-050-beta2).
+The final 0.5.0 release only contains the following changes since [0.5.0-beta.2](#mdbook-050-beta2):
+
+- Added error handling to environment config handling. This checks that environment variables starting with `MDBOOK_` are correctly specified instead of silently ignoring. This also fixed being able to replace entire top-level tables like `MDBOOK_OUTPUT`.
+  [#2942](https://github.com/rust-lang/mdBook/pull/2942)
 
 ## 0.5 Migration Guide
 
@@ -56,6 +59,10 @@ The following is a summary of the changes that may require your attention when u
   [#2775](https://github.com/rust-lang/mdBook/pull/2775)
 - Removed the very old legacy config support. Warnings have been displayed in previous versions on how to migrate.
   [#2783](https://github.com/rust-lang/mdBook/pull/2783)
+- Top-level config values set from the environment like `MDBOOK_BOOK` now *replace* the contents of the top-level table instead of merging into it.
+  [#2942](https://github.com/rust-lang/mdBook/pull/2942)
+- Invalid environment variables are now rejected. Previously unknown keys like `MDBOOK_FOO` would be ignored, or keys or invalid values inside objects like the `[book]` table would be ignored.
+  [#2942](https://github.com/rust-lang/mdBook/pull/2942)
 
 ### Theme changes
 
