@@ -53,6 +53,7 @@ fn fontawesome() {
  INFO Book building has started
  INFO Running the html backend
  WARN failed to find Font Awesome icon for icon `does-not-exist` with type `regular` in `fa.md`: Invalid Font Awesome icon name: visit https://fontawesome.com/icons?d=gallery&m=free to see valid names
+ WARN failed to find Font Awesome icon for icon `cat` with type `regular` in `fa.md`: Invalid Font Awesome icon name: visit https://fontawesome.com/icons?d=gallery&m=free to see valid names
  INFO HTML book written to `[ROOT]/book`
 
 "#]]);
