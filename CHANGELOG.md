@@ -75,7 +75,7 @@ The following is a summary of the changes that may require your attention when u
 
 - Updated to a newer version of `pulldown-cmark`. This brings a large number of fixes to markdown processing.
   [#2401](https://github.com/rust-lang/mdBook/pull/2401)
-- The font-awesome font is no longer loaded as a font. Instead, the corresponding SVG is embedded in the output for the corresponding `<i>` tags. Additionally, a handlebars helper has been added for the `hbs` files.
+- The font-awesome font is no longer loaded as a font. Instead, the corresponding SVG is embedded in the output for the corresponding `<i>` tags. Additionally, a handlebars helper has been added for the `hbs` files. This also updates the version from 4.7.0 to 6.2.0, which means some of the icon names and styles have changed. Most of the free icons are in the "solid" set. See the [free icon set](https://fontawesome.com/v6/search) for the available icons.
   [#1330](https://github.com/rust-lang/mdBook/pull/1330)
 - Changed all internal HTML IDs to have an `mdbook-` prefix. This helps avoid namespace conflicts with header IDs.
   [#2808](https://github.com/rust-lang/mdBook/pull/2808)

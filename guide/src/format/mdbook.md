@@ -340,7 +340,7 @@ HTML tags with class `hidden` will not be shown.
 
 ## Font-Awesome icons
 
-mdBook includes a copy of [Font Awesome Free's](https://fontawesome.com)
+mdBook includes a copy of version 6 of [Font Awesome Free's](https://fontawesome.com)
 MIT-licensed SVG files. It emulates the `<i>` syntax, but converts the results
 to inline SVG. Only the regular, solid, and brands icons are included; paid
 features like the light icons are not.
@@ -348,7 +348,9 @@ features like the light icons are not.
 For example, given this HTML syntax:
 
 ```hbs
-The result looks like this: <i class="fas fa-print"></i>
+The result looks like this: <i class="fa-solid fa-print"></i>
 ```
 
-The result looks like this: <i class="fas fa-print"></i>
+The result looks like this: <i class="fa-solid fa-print"></i>
+
+See the [free icon set](https://fontawesome.com/v6/search) for the available icons.
