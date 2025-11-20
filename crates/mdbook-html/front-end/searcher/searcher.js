@@ -351,6 +351,16 @@ window.search = window.search || {};
 
     // Eventhandler for keyevents on `document`
     function globalKeyHandler(e) {
+        const metaIsCtrl = navigator.platform &&
+            (navigator.platform.startsWith('Mac') || navigator.platform === 'iPhone');
+        if ((metaIsCtrl ? e.metaKey : e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            showSearch(true);
+            window.scrollTo(0, 0);
+            searchbar.select();
+            return;
+        }
+
         if (e.altKey ||
             e.ctrlKey ||
             e.metaKey ||
