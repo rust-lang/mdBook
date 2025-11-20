@@ -392,7 +392,7 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
                     stack.push({level: nextLevel, ol: ol});
                 }
             } else if (level < currentLevel) {
-                while (stack.length > 1 && stack[stack.length - 1].level >= level) {
+                while (stack.length > 1 && stack[stack.length - 1].level > level) {
                     stack.pop();
                 }
             }
