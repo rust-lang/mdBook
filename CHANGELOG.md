@@ -1,5 +1,20 @@
 # Changelog
 
+## mdBook 0.5.1
+[v0.5.0...v0.5.1](https://github.com/rust-lang/mdBook/compare/v0.5.0...v0.5.1)
+
+### Changed
+- Changed the scrollbar background to be transparent.
+  [#2932](https://github.com/rust-lang/mdBook/pull/2932)
+- Ignore invalid top-level environment variable config keys. This allows setting things like `MDBOOK_VERSION` to not cause an error.
+  [#2952](https://github.com/rust-lang/mdBook/pull/2952)
+
+### Fixed
+- Fixed the sidebar heading nav to have the correct nesting levels.
+  [#2953](https://github.com/rust-lang/mdBook/pull/2953)
+- Various Font Awesome fixes and improvements.
+  [#2951](https://github.com/rust-lang/mdBook/pull/2951)
+
 ## mdBook 0.5.0
 [v0.4.52...v0.5.0](https://github.com/rust-lang/mdBook/compare/v0.4.52...v0.5.0)
 

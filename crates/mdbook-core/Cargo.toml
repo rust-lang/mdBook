@@ -1,6 +1,6 @@
 [package]
 name = "mdbook-core"
-version = "0.5.0"
+version = "0.5.1"
 description = "The base support library for mdbook, intended for internal use only"
 edition.workspace = true
 license.workspace = true

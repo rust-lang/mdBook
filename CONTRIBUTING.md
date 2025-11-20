@@ -221,7 +221,7 @@ Instructions for mdBook maintainers to publish a new release:
 
 1. Create a PR that bumps the version and updates the changelog:
     1. `git fetch upstream`
-    2. `git checkout -B bump-version upstream/master`
+    2. `git checkout -B bump-version upstream/master && git branch --set-upstream-to=origin/bump-version`
     3. `cargo xtask bump <BUMP>`
        - This will update the version of all the crates.
        - `cargo set-version` must first be installed with `cargo install cargo-edit`.
