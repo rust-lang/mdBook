@@ -43,6 +43,7 @@
 //! # run().unwrap()
 //! ```
 
+use crate::static_regex;
 use crate::utils::{TomlExt, fs, log_backtrace};
 use anyhow::{Context, Error, Result, bail};
 use serde::{Deserialize, Serialize};
@@ -149,15 +150,23 @@ impl Config {
     pub fn update_from_env(&mut self) -> Result<()> {
         debug!("Updating the config from environment variables");
 
+        static_regex!(
+            VALID_KEY,
+            r"^(:?book|build|rust|output|preprocessor)(:?$|\.)"
+        );
+
         let overrides =
             env::vars().filter_map(|(key, value)| parse_env(&key).map(|index| (index, value)));
 
         for (key, value) in overrides {
-            if key == "log" {
-                // MDBOOK_LOG is used to control logging.
+            trace!("{} => {}", key, value);
+            if !VALID_KEY.is_match(&key) {
+                // Ignore environment variables for other top-level things.
+                // This allows users to set things like `MDBOOK_VERSION` or
+                // `MDBOOK_DOWNLOAD_URL` for their own scripts and not
+                // interfere with how the config is loaded.
                 continue;
             }
-            trace!("{} => {}", key, value);
             let parsed_value = serde_json::from_str(&value)
                 .unwrap_or_else(|_| serde_json::Value::String(value.to_string()));
 

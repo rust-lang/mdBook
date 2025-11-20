@@ -213,10 +213,11 @@ unknown field `title`, expected `edition`
 fn env_invalid_config_key() {
     BookTest::from_dir("config/empty").run("build", |cmd| {
         cmd.env("MDBOOK_FOO", "testing")
-            .expect_failure()
             .expect_stdout(str![[""]])
             .expect_stderr(str![[r#"
-ERROR invalid key `foo`
+ INFO Book building has started
+ INFO Running the html backend
+ INFO HTML book written to `[ROOT]/book`
 
 "#]]);
     });
