@@ -304,3 +304,25 @@ HTML tags must be closed before exiting a markdown element.
             str![[r##"<h3 id="option"><a class="header" href="#option">Option<t></t></a></h3>"##]],
         );
 }
+
+// Checks that a canonical URL is generated correctly.
+#[test]
+fn canonical_url() {
+    BookTest::from_dir("rendering/canonical_url")
+        .check_file_contains(
+            "book/index.html",
+            "<link rel=\"canonical\" href=\"https://example.com/test/\">",
+        )
+        .check_file_contains(
+            "book/canonical_url.html",
+            "<link rel=\"canonical\" href=\"https://example.com/test/canonical_url.html\">",
+        )
+        .check_file_contains(
+            "book/nested/page.html",
+            "<link rel=\"canonical\" href=\"https://example.com/test/nested/page.html\">",
+        )
+        .check_file_contains(
+            "book/nested/index.html",
+            "<link rel=\"canonical\" href=\"https://example.com/test/nested/\">",
+        );
+}
