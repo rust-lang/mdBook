@@ -956,7 +956,7 @@ checksum = "47e1ffaa40ddd1f3ed91f717a33c8c0ee23fff369e3aa8772b9605cc1d22f4c3"
 
 [[package]]
 name = "mdbook"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "anyhow",
  "axum",
@@ -996,7 +996,7 @@ version = "0.0.0"
 
 [[package]]
 name = "mdbook-core"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "anyhow",
  "regex",
@@ -1009,7 +1009,7 @@ dependencies = [
 
 [[package]]
 name = "mdbook-driver"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "anyhow",
  "indexmap",
@@ -1031,7 +1031,7 @@ dependencies = [
 
 [[package]]
 name = "mdbook-html"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "anyhow",
  "ego-tree",
@@ -1056,7 +1056,7 @@ dependencies = [
 
 [[package]]
 name = "mdbook-markdown"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "pulldown-cmark",
  "regex",
@@ -1065,7 +1065,7 @@ dependencies = [
 
 [[package]]
 name = "mdbook-preprocessor"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "anyhow",
  "mdbook-core",
@@ -1085,7 +1085,7 @@ dependencies = [
 
 [[package]]
 name = "mdbook-renderer"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "anyhow",
  "mdbook-core",
@@ -1095,7 +1095,7 @@ dependencies = [
 
 [[package]]
 name = "mdbook-summary"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "anyhow",
  "mdbook-core",
