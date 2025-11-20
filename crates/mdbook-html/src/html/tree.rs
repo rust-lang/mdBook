@@ -1030,14 +1030,14 @@ where
             let i_el = node.value().as_element().unwrap();
             let classes = i_el.attr("class").unwrap_or_default();
             for class in classes.split(" ") {
-                if let Some(class) = class.strip_prefix("fa-") {
-                    icon = class.to_owned();
-                } else if class == "fa" {
+                if matches!(class, "fa" | "fa-regular") {
                     type_ = fa::Type::Regular;
-                } else if class == "fas" {
+                } else if matches!(class, "fas" | "fa-solid") {
                     type_ = fa::Type::Solid;
-                } else if class == "fab" {
+                } else if matches!(class, "fab" | "fa-brands") {
                     type_ = fa::Type::Brands;
+                } else if let Some(class) = class.strip_prefix("fa-") {
+                    icon = class.to_owned();
                 } else {
                     new_classes += " ";
                     new_classes += class;
