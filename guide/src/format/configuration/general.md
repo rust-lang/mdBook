@@ -11,7 +11,7 @@ authors = ["John Doe"]
 description = "The example book covers examples."
 
 [rust]
-edition = "2018"
+manifest = "./Cargo.toml"
 
 [build]
 build-dir = "my-example-book"
@@ -30,13 +30,23 @@ limit-results = 15
 
 ## Supported configuration options
 
-It is important to note that **any** relative path specified in the
+> Note: **any** relative path specified in the
 configuration will always be taken relative from the root of the book where the
 configuration file is located.
 
 ### General metadata
 
 This is general information about your book.
+
+```toml
+[book]
+title = "Example book"
+authors = ["John Doe", "Jane Doe"]
+description = "The example book covers examples."
+src = "my-src"  # source files in `root/my-src` instead of `root/src`
+language = "en"
+text-direction = "ltr"
+```
 
 - **title:** The title of the book
 - **authors:** The author(s) of the book
@@ -50,17 +60,6 @@ This is general information about your book.
 - **text-direction**: The direction of text in the book: Left-to-right (LTR) or Right-to-left (RTL). Possible values: `ltr`, `rtl`.
   When not specified, the text direction is derived from the book's `language` attribute.
 
-**book.toml**
-```toml
-[book]
-title = "Example book"
-authors = ["John Doe", "Jane Doe"]
-description = "The example book covers examples."
-src = "my-src"  # the source files will be found in `root/my-src` instead of `root/src`
-language = "en"
-text-direction = "ltr"
-```
-
 ### Rust options
 
 Options for the Rust language, relevant to running tests and playground
@@ -68,19 +67,17 @@ integration.
 
 ```toml
 [rust]
-edition = "2015"   # the default edition for code blocks
+manifest = "path/for/Cargo.toml"
+edition = "2015"   # [deprecated] the default edition for code blocks
 ```
+
+- **manifest**: Path to a ***Cargo.toml*** file which is used to resolve dependencies of your sample code.  mdBook also uses the `package.edition` configured in the cargo project as the default for code snippets in your book.  
+See [Using External Crates and Dependencies](/format/mdbook.html#using-external-crates-and-dependencies) for details.
 
 - **edition**: Rust edition to use by default for the code snippets. Default
   is `"2015"`. Individual code blocks can be controlled with the `edition2015`,
   `edition2018`, `edition2021` or `edition2024` annotations, such as:
 
-  ~~~text
-  ```rust,edition2015
-  // This only works in 2015.
-  let try = true;
-  ```
-  ~~~
 
 ### Build options
 
