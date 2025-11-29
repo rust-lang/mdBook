@@ -9,7 +9,7 @@ edition = "2018"
 
 [output.html]
 smart-punctuation = true
-mathjax-support = true
+math = true
 site-url = "/mdBook/"
 git-repository-url = "https://github.com/rust-lang/mdBook/tree/master/guide"
 edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"
