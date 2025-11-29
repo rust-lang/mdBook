@@ -460,7 +460,9 @@ pub struct HtmlConfig {
     pub definition_lists: bool,
     /// Support for admonitions.
     pub admonitions: bool,
-    /// Should mathjax be enabled?
+    /// Parse and render `$...$` and `$$...$$` as math formulas.
+    pub math: bool,
+    /// Legacy math support.
     pub mathjax_support: bool,
     /// Additional CSS stylesheets to include in the rendered page's `<head>`.
     pub additional_css: Vec<PathBuf>,
@@ -529,6 +531,7 @@ impl Default for HtmlConfig {
             smart_punctuation: true,
             definition_lists: true,
             admonitions: true,
+            math: false,
             mathjax_support: false,
             additional_css: Vec::new(),
             additional_js: Vec::new(),
