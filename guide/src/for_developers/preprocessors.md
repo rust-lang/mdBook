@@ -49,7 +49,7 @@ By pulling in `mdbook-preprocessor` as a library, preprocessors can have access 
 existing infrastructure for dealing with books.
 
 For example, a custom preprocessor could use the
-[`CmdPreprocessor::parse_input()`] function to deserialize the JSON written to
+[`parse_input()`] function to deserialize the JSON written to
 `stdin`. Then each chapter of the `Book` can be mutated in-place via
 [`Book::for_each_mut()`], and then written to `stdout` with the `serde_json`
 crate.
@@ -101,7 +101,7 @@ if __name__ == '__main__':
 [pc]: https://crates.io/crates/pulldown-cmark
 [pctc]: https://crates.io/crates/pulldown-cmark-to-cmark
 [an example no-op preprocessor]: https://github.com/rust-lang/mdBook/blob/master/examples/nop-preprocessor.rs
-[`CmdPreprocessor::parse_input()`]: https://docs.rs/mdbook-preprocessor/latest/mdbook_preprocessor/trait.Preprocessor.html#method.parse_input
+[`parse_input()`]: https://docs.rs/mdbook-preprocessor/latest/mdbook_preprocessor/fn.parse_input.html
 [`Book::for_each_mut()`]: https://docs.rs/mdbook-preprocessor/latest/mdbook_preprocessor/book/struct.Book.html#method.for_each_mut
 [`PreprocessorContext`]: https://docs.rs/mdbook-preprocessor/latest/mdbook_preprocessor/struct.PreprocessorContext.html
 [`Book`]: https://docs.rs/mdbook-preprocessor/latest/mdbook_preprocessor/book/struct.Book.html
