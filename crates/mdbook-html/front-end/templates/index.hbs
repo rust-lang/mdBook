@@ -69,7 +69,12 @@
             <div>
                 <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
                 {{#if search_enabled}}
-                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>S</kbd>, <kbd>/</kbd>, or <kbd id="kbd-ctrl-cmd">Ctrl</kbd>+<kbd>K</kbd> to search in the book</p>
+                <script>
+                    if (navigator.platform && (navigator.platform.startsWith("Mac") || navigator.platform === "iPhone")) {
+                        document.getElementById("kbd-ctrl-cmd").innerText = "⌘";
+                    }
+                </script>
                 {{/if}}
                 <p>Press <kbd>?</kbd> to show this help</p>
                 <p>Press <kbd>Esc</kbd> to hide this help</p>
