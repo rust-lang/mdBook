@@ -518,6 +518,12 @@ pub struct HtmlConfig {
     /// If enabled, the sidebar includes navigation for headers on the current
     /// page. Default is `true`.
     pub sidebar_header_nav: bool,
+    /// File extensions to exclude when copying files from the source directory.
+    /// These files will not be copied to the output directory.
+    /// By default, only `.md` files are excluded.
+    /// Example: `["md", "rs", "toml"]`
+    #[serde(rename = "copy-exclude-extensions")]
+    pub copy_exclude_extensions: Vec<String>,
 }
 
 impl Default for HtmlConfig {
@@ -548,6 +554,7 @@ impl Default for HtmlConfig {
             redirect: HashMap::new(),
             hash_files: true,
             sidebar_header_nav: true,
+            copy_exclude_extensions: Vec::new(),
         }
     }
 }
