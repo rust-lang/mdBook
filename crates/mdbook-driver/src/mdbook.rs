@@ -20,7 +20,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::Builder as TempFileBuilder;
 use topological_sort::TopologicalSort;
-use tracing::{debug, error, info, trace, warn};
+use tracing::{debug, info, trace, warn};
 
 #[cfg(test)]
 mod tests;
@@ -329,8 +329,8 @@ impl MDBook {
 
                 if !output.status.success() {
                     failed = true;
-                    error!(
-                        "rustdoc returned an error:\n\
+                    eprintln!(
+                        "ERROR rustdoc returned an error:\n\
                         \n--- stdout\n{}\n--- stderr\n{}",
                         String::from_utf8_lossy(&output.stdout),
                         String::from_utf8_lossy(&output.stderr)
