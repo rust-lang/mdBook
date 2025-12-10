@@ -54,8 +54,8 @@ fn test_with_custom_preprocessor() {
     book.test(vec![]).unwrap();
 
     let inner = spy.lock().unwrap();
-    assert_eq!(inner.run_count, 0);
-    assert_eq!(inner.rendered_with, Vec::<String>::new());
+    assert_eq!(inner.run_count, 1);
+    assert_eq!(inner.rendered_with, ["test"]);
 }
 
 // No-op preprocessor works.

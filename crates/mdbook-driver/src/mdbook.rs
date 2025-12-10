@@ -263,11 +263,6 @@ impl MDBook {
             }
         }
 
-        // Index Preprocessor is disabled so that chapter paths
-        // continue to point to the actual markdown files.
-        self.preprocessors = determine_preprocessors(&self.config, &self.root)?;
-        self.preprocessors
-            .shift_remove_entry(IndexPreprocessor::NAME);
         let (book, _) = self.preprocess_book(&TestRenderer)?;
 
         let color_output = std::io::stderr().is_terminal();
