@@ -40,14 +40,22 @@ class MDBookSidebarScrollbox extends HTMLElement {
         // Track and set sidebar scroll position
         this.addEventListener('click', e => {
             if (e.target.tagName === 'A') {
-                sessionStorage.setItem('sidebar-scroll', this.scrollTop);
+                const clientRect = e.target.getBoundingClientRect();
+                const sidebarRect = this.getBoundingClientRect();
+                sessionStorage.setItem('sidebar-scroll-offset', clientRect.top - sidebarRect.top);
             }
         }, { passive: true });
-        const sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
-        sessionStorage.removeItem('sidebar-scroll');
-        if (sidebarScrollTop) {
+        const sidebarScrollOffset = sessionStorage.getItem('sidebar-scroll-offset');
+        sessionStorage.removeItem('sidebar-scroll-offset');
+        if (sidebarScrollOffset !== null) {
             // preserve sidebar scroll position when navigating via links within sidebar
-            this.scrollTop = sidebarScrollTop;
+            const activeSection = this.querySelector('.active');
+            if (activeSection) {
+                const clientRect = activeSection.getBoundingClientRect();
+                const sidebarRect = this.getBoundingClientRect();
+                const currentOffset = clientRect.top - sidebarRect.top;
+                this.scrollTop += currentOffset - parseFloat(sidebarScrollOffset);
+            }
         } else {
             // scroll sidebar to current active section when navigating via
             // 'next/previous chapter' buttons
