@@ -41,7 +41,6 @@ pub fn rebuild_on_change(
 
     loop {
         std::thread::sleep(Duration::new(1, 0));
-        watcher.set_roots(&book);
         let start = Instant::now();
         let paths = watcher.scan();
         let elapsed = start.elapsed().as_secs_f64();
@@ -67,6 +66,7 @@ pub fn rebuild_on_change(
                         post_build();
                     }
                     book = b;
+                    watcher.set_roots(&book);
                 }
                 Err(e) => error!("failed to load book config: {e:?}"),
             }
