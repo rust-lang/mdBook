@@ -1,6 +1,6 @@
 [package]
 name = "mdbook-renderer"
-version = "0.5.1"
+version = "0.5.2"
 description = "Library to assist implementing an mdBook renderer"
 edition.workspace = true
 license.workspace = true

@@ -1,6 +1,6 @@
 [package]
 name = "mdbook-driver"
-version = "0.5.1"
+version = "0.5.2"
 description = "High-level library for running mdBook"
 edition.workspace = true
 license.workspace = true

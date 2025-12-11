@@ -1,6 +1,6 @@
 [package]
 name = "mdbook-preprocessor"
-version = "0.5.1"
+version = "0.5.2"
 description = "Library to assist implementing an mdBook preprocessor"
 edition.workspace = true
 license.workspace = true

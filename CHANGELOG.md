@@ -1,5 +1,26 @@
 # Changelog
 
+## mdBook 0.5.2
+[v0.5.1...v0.5.2](https://github.com/rust-lang/mdBook/compare/v0.5.1...v0.5.2)
+
+### Changed
+
+- Updated Rust crate html5ever to 0.36.0.
+  [#2970](https://github.com/rust-lang/mdBook/pull/2970)
+- Updated cargo dependencies.
+  [#2969](https://github.com/rust-lang/mdBook/pull/2969)
+
+### Fixed
+
+- Fixed repeated error message when HTML config is invalid in `mdbook serve`.
+  [#2983](https://github.com/rust-lang/mdBook/pull/2983)
+- Fixed sidebar scroll position when heading nav is involved.
+  [#2982](https://github.com/rust-lang/mdBook/pull/2982)
+- Fixed color for rustdoc error messages.
+  [#2981](https://github.com/rust-lang/mdBook/pull/2981)
+- Fixed usage of custom preprocessors with `MDBook::test`.
+  [#2980](https://github.com/rust-lang/mdBook/pull/2980)
+
 ## mdBook 0.5.1
 [v0.5.0...v0.5.1](https://github.com/rust-lang/mdBook/compare/v0.5.0...v0.5.1)
 
