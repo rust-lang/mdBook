@@ -12,12 +12,22 @@ use futures_util::sink::SinkExt;
 use mdbook_driver::MDBook;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::path::PathBuf;
+use std::process::Stdio;
 use tokio::sync::broadcast;
 use tower_http::services::{ServeDir, ServeFile};
 use tracing::{error, info, trace};
 
 /// The HTTP endpoint for the websocket used to trigger reloads when a file changes.
 const LIVE_RELOAD_ENDPOINT: &str = "__livereload";
+
+#[cfg(target_family = "unix")]
+const LAUNCH_SHELL_COMMAND: &str = "sh";
+#[cfg(target_family = "unix")]
+const LAUNCH_SHELL_FLAG: &str = "-c";
+#[cfg(target_family = "windows")]
+const LAUNCH_SHELL_COMMAND: &str = "cmd";
+#[cfg(target_family = "windows")]
+const LAUNCH_SHELL_FLAG: &str = "/C";
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -43,8 +53,26 @@ pub fn make_subcommand() -> Command {
                 .value_parser(NonEmptyStringValueParser::new())
                 .help("Port to use for HTTP connections"),
         )
+        .arg(
+            Arg::new("post-build")
+                .short('c')
+                .long("post-build")
+                .num_args(1)
+                .value_parser(NonEmptyStringValueParser::new())
+                .help("Command to run after the build is completed and before reload notification is sent.")
+        )
         .arg_open()
         .arg_watcher()
+}
+
+pub fn run_post_build_command(cmd: &str, book_dir: &PathBuf) -> Result<()> {
+    std::process::Command::new(LAUNCH_SHELL_COMMAND)
+        .args([LAUNCH_SHELL_FLAG, cmd])
+        .current_dir(book_dir)
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .spawn()?;
+    Ok(())
 }
 
 // Serve command implementation
@@ -55,6 +83,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let port = args.get_one::<String>("port").unwrap();
     let hostname = args.get_one::<String>("hostname").unwrap();
     let open_browser = args.get_flag("open");
+    let post_build = args.get_one::<String>("post-build");
 
     let address = format!("{hostname}:{port}");
 
@@ -68,6 +97,9 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     };
     update_config(&mut book);
     book.build()?;
+    if let Some(cmd) = post_build {
+        run_post_build_command(cmd, &book_dir)?;
+    }
 
     let sockaddr: SocketAddr = address
         .to_socket_addrs()?
@@ -95,7 +127,11 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     #[cfg(feature = "watch")]
     {
         let watcher = watch::WatcherKind::from_str(args.get_one::<String>("watcher").unwrap());
+        let book_dir_alt = book_dir.clone();
         watch::rebuild_on_change(watcher, &book_dir, &update_config, &move || {
+            if let Some(cmd) = post_build {
+                let _ = run_post_build_command(cmd, &book_dir_alt);
+            }
             let _ = tx.send(Message::text("reload"));
         });
     }
