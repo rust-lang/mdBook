@@ -24,6 +24,7 @@ your own `highlight.js` file:
 - bash
 - c
 - coffeescript
+- console
 - cpp
 - csharp
 - css
