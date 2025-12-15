@@ -4,6 +4,7 @@ use anyhow::Error;
 use std::fmt::Write;
 use tracing::error;
 
+pub mod extern_args;
 pub mod fs;
 mod html;
 mod toml_ext;

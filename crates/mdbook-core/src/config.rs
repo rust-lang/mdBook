@@ -420,6 +420,8 @@ impl Default for BuildConfig {
 #[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct RustConfig {
+    /// Path to a Cargo.toml
+    pub manifest: Option<PathBuf>,
     /// Rust edition used in playground
     pub edition: Option<RustEdition>,
 }
@@ -745,6 +747,9 @@ mod tests {
         create-missing = false
         use-default-preprocessors = true
 
+        [rust]
+        manifest = "./Cargo.toml"
+
         [output.html]
         theme = "./themedir"
         default-theme = "rust"
@@ -783,7 +788,10 @@ mod tests {
             use_default_preprocessors: true,
             extra_watch_dirs: Vec::new(),
         };
-        let rust_should_be = RustConfig { edition: None };
+        let rust_should_be = RustConfig {
+            manifest: Some(PathBuf::from("./Cargo.toml")),
+            edition: None,
+        };
         let playground_should_be = Playground {
             editable: true,
             copyable: true,
@@ -861,6 +869,7 @@ mod tests {
         assert_eq!(got.book, book_should_be);
 
         let rust_should_be = RustConfig {
+            manifest: None,
             edition: Some(RustEdition::E2015),
         };
         let got = Config::from_str(src).unwrap();
@@ -880,6 +889,7 @@ mod tests {
         "#;
 
         let rust_should_be = RustConfig {
+            manifest: None,
             edition: Some(RustEdition::E2018),
         };
 
@@ -900,6 +910,7 @@ mod tests {
         "#;
 
         let rust_should_be = RustConfig {
+            manifest: None,
             edition: Some(RustEdition::E2021),
         };
 
@@ -1187,6 +1198,19 @@ mod tests {
         );
     }
 
+    /* todo -- make this test fail, as it should
+    #[test]
+    #[should_panic(expected = "Invalid configuration file")]
+    // invalid key in config file should really generate an error...
+    fn invalid_rust_setting() {
+        let src = r#"
+        [rust]
+        foo = "bar"
+        "#;
+
+        Config::from_str(src).unwrap();
+    }
+    */
     #[test]
     fn contains_key() {
         let src = r#"

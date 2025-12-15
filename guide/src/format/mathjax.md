@@ -20,24 +20,25 @@ extra backslash to work. Hopefully this limitation will be lifted soon.
 > to add _two extra_ backslashes (e.g., `\begin{cases} \frac 1 2 \\\\ \frac 3 4
 > \end{cases}`).
 
-
 ### Inline equations
+
 Inline equations are delimited by `\\(` and `\\)`. So for example, to render the
 following inline equation \\( \int x dx = \frac{x^2}{2} + C \\) you would write
 the following:
-```
+
+```text
 \\( \int x dx = \frac{x^2}{2} + C \\)
 ```
 
 ### Block equations
+
 Block equations are delimited by `\\[` and `\\]`. To render the following
 equation
 
 \\[ \mu = \frac{1}{N} \sum_{i=0} x_i \\]
 
-
 you would write:
 
-```bash
+```text
 \\[ \mu = \frac{1}{N} \sum_{i=0} x_i \\]
 ```
