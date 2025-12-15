@@ -27,6 +27,7 @@ rust-version = "1.88.0" # Keep in sync with installation.md and .github/workflow
 [workspace.dependencies]
 anyhow = "1.0.100"
 axum = "0.8.7"
+cargo-manifest = "0.19.1"
 clap = { version = "4.5.53", features = ["cargo", "wrap_help"] }
 clap_complete = "4.5.61"
 ego-tree = "0.10.0"
