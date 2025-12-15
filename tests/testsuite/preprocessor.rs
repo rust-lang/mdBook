@@ -44,6 +44,20 @@ fn runs_preprocessors() {
     assert_eq!(inner.rendered_with, ["html"]);
 }
 
+// Run tests with a custom preprocessor.
+#[test]
+fn test_with_custom_preprocessor() {
+    let test = BookTest::init(|_| {});
+    let spy: Arc<Mutex<Inner>> = Default::default();
+    let mut book = test.load_book();
+    book.with_preprocessor(Spy(Arc::clone(&spy)));
+    book.test(vec![]).unwrap();
+
+    let inner = spy.lock().unwrap();
+    assert_eq!(inner.run_count, 1);
+    assert_eq!(inner.rendered_with, ["test"]);
+}
+
 // No-op preprocessor works.
 #[test]
 fn nop_preprocessor() {

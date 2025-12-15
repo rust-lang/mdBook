@@ -9,3 +9,5 @@
 <i class="fas fa-heart">Text prevents translation.</i>
 
 <i class="fa fa-does-not-exist"></i>
+
+<i class="fa-solid fa-cat"></i>

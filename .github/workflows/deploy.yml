@@ -54,6 +54,7 @@ jobs:
     permissions:
       # Required for OIDC token exchange
       id-token: write
+    environment: publish
     steps:
       - uses: actions/checkout@v5
       - name: Install Rust (rustup)

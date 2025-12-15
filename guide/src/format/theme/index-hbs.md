@@ -95,7 +95,7 @@ MIT-licensed SVG files. It accepts three positional arguments:
 1. Type: one of "solid", "regular", and "brands" (light and duotone are not
    currently supported)
 2. Icon: anything chosen from the
-   [free icon set](https://fontawesome.com/icons?d=gallery&m=free)
+   [free icon set](https://fontawesome.com/v6/search)
 3. ID (optional): if included, an HTML ID attribute will be added to the
    icon's wrapping `<span>` tag
 

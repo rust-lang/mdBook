@@ -1,0 +1,65 @@
+// This GUI test checks the sidebar scroll position when navigating.
+
+store-value: (windowHeight, 900)
+set-window-size: (1200, |windowHeight|)
+go-to: |DOC_PATH| + "sidebar-scroll/index.html"
+assert-property: ("mdbook-sidebar-scrollbox", {"scrollTop": 0})
+
+click: ".chapter a[href='chapter_2.html']"
+assert-text: ("title", "Chapter 2 - sidebar-scroll")
+assert-property: ("mdbook-sidebar-scrollbox", {"scrollTop": 0})
+
+click: ".chapter a[href='chapter_10.html']"
+assert-text: ("title", "Chapter 10 - sidebar-scroll")
+assert-property: ("mdbook-sidebar-scrollbox", {"scrollTop": 0})
+
+// Check that heading nav of chapter 10 pushes 11 off the bottom.
+store-position: (".chapter a[href='chapter_11.html']", {"y": chapter_y})
+assert: |chapter_y| > |windowHeight|
+
+// Clicking 11 should scroll back up because it is not possible for it to stay
+// in position since there are only a few lines above.
+click: ".chapter a[href='chapter_11.html']"
+assert-text: ("title", "Chapter 11 - sidebar-scroll")
+assert-property: ("mdbook-sidebar-scrollbox", {"scrollTop": 0})
+
+// Scroll down a little, and click on a chapter that can stay in place when
+// clicked.
+scroll-element-to: ("mdbook-sidebar-scrollbox", (0, 230))
+store-property: ("mdbook-sidebar-scrollbox", {"scrollTop": sidebarScrollTop})
+assert: |sidebarScrollTop| > 0
+click: ".chapter a[href='chapter_35.html']"
+assert-text: ("title", "Chapter 35 - sidebar-scroll")
+assert-property: ("mdbook-sidebar-scrollbox", {"scrollTop": |sidebarScrollTop|})
+
+// Go to the next chapter, and verify that it scrolls to the middle.
+press-key: "ArrowRight"
+assert-text: ("title", "Chapter 36 - sidebar-scroll")
+// The active link should be roughly in the middle of the screen.
+store-position: (".chapter a.active", {"y": active_y})
+// Approximate check just in case the browser has slight rendering differences.
+assert: |active_y| > 400
+assert: |active_y| < 450
+
+// Go to something near the top, it shouldn't scroll.
+store-property: ("mdbook-sidebar-scrollbox", {"scrollTop": sidebarScrollTop})
+click: ".chapter a[href='chapter_24.html']"
+assert-text: ("title", "Chapter 24 - sidebar-scroll")
+assert-property: ("mdbook-sidebar-scrollbox", {"scrollTop": |sidebarScrollTop|})
+
+// Go to the last chapter, and verify it is scrolled to the bottom.
+go-to: |DOC_PATH| + "sidebar-scroll/chapter_100.html"
+store-property: ("mdbook-sidebar-scrollbox", {"scrollTop": scrollTop, "scrollHeight": scrollHeight, "clientHeight": clientHeight})
+// This needs to be approximate since there is a slight difference.
+assert: |scrollTop| >= |scrollHeight| - |clientHeight| - 1
+
+// Clicking upwards shouldn't scroll.
+store-property: ("mdbook-sidebar-scrollbox", {"scrollTop": sidebarScrollTop})
+click: ".chapter a[href='chapter_97.html']"
+assert-text: ("title", "Chapter 97 - sidebar-scroll")
+assert-property: ("mdbook-sidebar-scrollbox", {"scrollTop": |sidebarScrollTop|})
+
+store-property: ("mdbook-sidebar-scrollbox", {"scrollTop": sidebarScrollTop})
+click: ".chapter a[href='chapter_76.html']"
+assert-text: ("title", "Chapter 76 - sidebar-scroll")
+assert-property: ("mdbook-sidebar-scrollbox", {"scrollTop": |sidebarScrollTop|})

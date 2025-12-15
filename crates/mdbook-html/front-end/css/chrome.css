@@ -1,7 +1,7 @@
 /* CSS for UI elements (a.k.a. chrome) */
 
 html {
-    scrollbar-color: var(--scrollbar) var(--bg);
+    scrollbar-color: var(--scrollbar) transparent;
 }
 #mdbook-searchresults a,
 .content a:link,

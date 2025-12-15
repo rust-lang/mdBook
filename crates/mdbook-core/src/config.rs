@@ -43,6 +43,7 @@
 //! # run().unwrap()
 //! ```
 
+use crate::static_regex;
 use crate::utils::{TomlExt, fs, log_backtrace};
 use anyhow::{Context, Error, Result, bail};
 use serde::{Deserialize, Serialize};
@@ -123,11 +124,10 @@ impl Config {
     ///
     /// For example:
     ///
-    /// - `MDBOOK_foo` -> `foo`
-    /// - `MDBOOK_FOO` -> `foo`
-    /// - `MDBOOK_FOO__BAR` -> `foo.bar`
-    /// - `MDBOOK_FOO_BAR` -> `foo-bar`
-    /// - `MDBOOK_FOO_bar__baz` -> `foo-bar.baz`
+    /// - `MDBOOK_book` -> `book`
+    /// - `MDBOOK_BOOK` -> `book`
+    /// - `MDBOOK_BOOK__TITLE` -> `book.title`
+    /// - `MDBOOK_BOOK__TEXT_DIRECTION` -> `book.text-direction`
     ///
     /// So by setting the `MDBOOK_BOOK__TITLE` environment variable you can
     /// override the book's title without needing to touch your `book.toml`.
@@ -147,34 +147,32 @@ impl Config {
     /// The latter case may be useful in situations where `mdbook` is invoked
     /// from a script or CI, where it sometimes isn't possible to update the
     /// `book.toml` before building.
-    pub fn update_from_env(&mut self) {
+    pub fn update_from_env(&mut self) -> Result<()> {
         debug!("Updating the config from environment variables");
+
+        static_regex!(
+            VALID_KEY,
+            r"^(:?book|build|rust|output|preprocessor)(:?$|\.)"
+        );
 
         let overrides =
             env::vars().filter_map(|(key, value)| parse_env(&key).map(|index| (index, value)));
 
         for (key, value) in overrides {
-            if key == "log" {
-                // MDBOOK_LOG is used to control logging.
+            trace!("{} => {}", key, value);
+            if !VALID_KEY.is_match(&key) {
+                // Ignore environment variables for other top-level things.
+                // This allows users to set things like `MDBOOK_VERSION` or
+                // `MDBOOK_DOWNLOAD_URL` for their own scripts and not
+                // interfere with how the config is loaded.
                 continue;
             }
-            trace!("{} => {}", key, value);
             let parsed_value = serde_json::from_str(&value)
                 .unwrap_or_else(|_| serde_json::Value::String(value.to_string()));
 
-            if key == "book" || key == "build" {
-                if let serde_json::Value::Object(ref map) = parsed_value {
-                    // To `set` each `key`, we wrap them as `prefix.key`
-                    for (k, v) in map {
-                        let full_key = format!("{key}.{k}");
-                        self.set(&full_key, v).expect("unreachable");
-                    }
-                    return;
-                }
-            }
-
-            self.set(key, parsed_value).expect("unreachable");
+            self.set(key, parsed_value)?;
         }
+        Ok(())
     }
 
     /// Get a value from the configuration.
@@ -266,24 +264,39 @@ impl Config {
     /// `output.html.playground` will set the "playground" in the html output
     /// table).
     ///
-    /// The only way this can fail is if we can't serialize `value` into a
-    /// `toml::Value`.
+    /// # Errors
+    ///
+    /// This will fail if:
+    ///
+    /// - The value cannot be represented as TOML.
+    /// - The value is not a correct type.
+    /// - The key is an unknown configuration option.
     pub fn set<S: Serialize, I: AsRef<str>>(&mut self, index: I, value: S) -> Result<()> {
         let index = index.as_ref();
 
         let value = Value::try_from(value)
             .with_context(|| "Unable to represent the item as a JSON Value")?;
 
-        if let Some(key) = index.strip_prefix("book.") {
-            self.book.update_value(key, value);
+        if index == "book" {
+            self.book = value.try_into()?;
+        } else if index == "build" {
+            self.build = value.try_into()?;
+        } else if index == "rust" {
+            self.rust = value.try_into()?;
+        } else if index == "output" {
+            self.output = value;
+        } else if index == "preprocessor" {
+            self.preprocessor = value;
+        } else if let Some(key) = index.strip_prefix("book.") {
+            self.book.update_value(key, value)?;
         } else if let Some(key) = index.strip_prefix("build.") {
-            self.build.update_value(key, value);
+            self.build.update_value(key, value)?;
         } else if let Some(key) = index.strip_prefix("rust.") {
-            self.rust.update_value(key, value);
+            self.rust.update_value(key, value)?;
         } else if let Some(key) = index.strip_prefix("output.") {
-            self.output.update_value(key, value);
+            self.output.update_value(key, value)?;
         } else if let Some(key) = index.strip_prefix("preprocessor.") {
-            self.preprocessor.update_value(key, value);
+            self.preprocessor.update_value(key, value)?;
         } else {
             bail!("invalid key `{index}`");
         }
@@ -705,18 +718,13 @@ pub struct SearchChapterSettings {
 /// This is definitely not the most performant way to do things, which means you
 /// should probably keep it away from tight loops...
 trait Updateable<'de>: Serialize + Deserialize<'de> {
-    fn update_value<S: Serialize>(&mut self, key: &str, value: S) {
+    fn update_value<S: Serialize>(&mut self, key: &str, value: S) -> Result<()> {
         let mut raw = Value::try_from(&self).expect("unreachable");
-
-        if let Ok(value) = Value::try_from(value) {
-            raw.insert(key, value);
-        } else {
-            return;
-        }
-
-        if let Ok(updated) = raw.try_into() {
-            *self = updated;
-        }
+        let value = Value::try_from(value)?;
+        raw.insert(key, value);
+        let updated = raw.try_into()?;
+        *self = updated;
+        Ok(())
     }
 }
 
