@@ -6,10 +6,12 @@ use crate::theme::Theme;
 use crate::utils::ToUrlPath;
 use anyhow::{Context, Result, bail};
 use handlebars::Handlebars;
+use ignore::gitignore::Gitignore;
 use mdbook_core::book::{Book, BookItem, Chapter};
 use mdbook_core::config::{BookConfig, Config, HtmlConfig};
 use mdbook_core::utils::fs;
 use mdbook_renderer::{RenderContext, Renderer};
+use pathdiff::diff_paths;
 use serde_json::json;
 use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
@@ -443,8 +445,56 @@ impl Renderer for HtmlHandlebars {
         self.emit_redirects(&ctx.destination, &handlebars, &html_config.redirect)
             .context("Unable to emit redirects")?;
 
+        let ignore = src_dir
+            .ancestors()
+            .map(|p| p.join(".gitignore"))
+            .find(|p| p.exists())
+            .map(|gitignore_path| {
+                let (ignore, err) = Gitignore::new(&gitignore_path);
+                if let Some(err) = err {
+                    warn!(
+                        "error reading gitignore `{}`: {err}",
+                        gitignore_path.display()
+                    );
+                }
+                // Note: The usage of `canonicalize` may encounter occasional
+                // failures on the Windows platform, presenting a potential risk.
+                // For more details, refer to [Pull Request
+                // #2229](https://github.com/rust-lang/mdBook/pull/2229#discussion_r1408665981).
+                let ignore_path = ignore
+                    .path()
+                    .canonicalize()
+                    .expect("ignore root canonicalize error");
+                (ignore_path, ignore)
+            });
+
         // Copy all remaining files, avoid a recursive copy from/to the book build dir
-        fs::copy_files_except_ext(&src_dir, destination, true, Some(&build_dir), &["md"])?;
+        // and also honor the .gitignore file found in the project if any
+        fs::copy_files_when(&src_dir, destination, true, &|path| {
+            if *path == build_dir {
+                return false;
+            }
+
+            if let Some(ext) = path.extension() {
+                if ext.to_str().unwrap() == "md" {
+                    return false;
+                }
+            }
+
+            if let Some((ignore_path, ignore)) = &ignore {
+                let path = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
+                let relative_path = diff_paths(&path, &ignore_path)
+                    .expect("One of the paths should be an absolute");
+                if ignore
+                    .matched_path_or_any_parents(&relative_path, relative_path.is_dir())
+                    .is_ignore()
+                {
+                    return false;
+                }
+            }
+
+            true
+        })?;
 
         info!("HTML book written to `{}`", destination.display());
 

@@ -14,6 +14,8 @@ elasticlunr-rs = { workspace = true, optional = true }
 font-awesome-as-a-crate.workspace = true
 handlebars.workspace = true
 hex.workspace = true
+ignore.workspace = true
+pathdiff.workspace = true
 html5ever.workspace = true
 indexmap.workspace = true
 mdbook-core.workspace = true
