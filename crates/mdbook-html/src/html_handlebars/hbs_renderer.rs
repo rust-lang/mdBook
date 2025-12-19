@@ -449,7 +449,7 @@ impl Renderer for HtmlHandlebars {
             .ancestors()
             .map(|p| p.join(".gitignore"))
             .find(|p| p.exists())
-            .map(|gitignore_path| {
+            .and_then(|gitignore_path| {
                 let (ignore, err) = Gitignore::new(&gitignore_path);
                 if let Some(err) = err {
                     warn!(
@@ -457,15 +457,14 @@ impl Renderer for HtmlHandlebars {
                         gitignore_path.display()
                     );
                 }
-                // Note: The usage of `canonicalize` may encounter occasional
-                // failures on the Windows platform, presenting a potential risk.
-                // For more details, refer to [Pull Request
-                // #2229](https://github.com/rust-lang/mdBook/pull/2229#discussion_r1408665981).
-                let ignore_path = ignore
-                    .path()
-                    .canonicalize()
-                    .expect("ignore root canonicalize error");
-                (ignore_path, ignore)
+
+                match ignore.path().canonicalize() {
+                    Err(error) => {
+                        warn!("unable to canonicalize path for ignore: {error:?}");
+                        None
+                    }
+                    Ok(path) => Some((path, ignore)),
+                }
             });
 
         // Copy all remaining files, avoid a recursive copy from/to the book build dir
