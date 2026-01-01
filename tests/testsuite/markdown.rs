@@ -165,6 +165,19 @@ fn definition_lists() {
 }
 
 #[test]
+fn math() {
+    BookTest::from_dir("markdown/math")
+        .check_all_main_files()
+        .run("build", |cmd| {
+            cmd.env("MDBOOK_OUTPUT__HTML__MATH", "true");
+        })
+        .check_main_file(
+            "book/math.html",
+            file!["markdown/math/expected_enabled/math.html"],
+        );
+}
+
+#[test]
 fn admonitions() {
     BookTest::from_dir("markdown/admonitions")
         .check_all_main_files()
