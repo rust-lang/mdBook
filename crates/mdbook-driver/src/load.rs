@@ -4,14 +4,41 @@ use mdbook_core::config::BuildConfig;
 use mdbook_core::utils::{escape_html, fs};
 use mdbook_summary::{Link, Summary, SummaryItem, parse_summary};
 use std::path::Path;
-use tracing::debug;
+use tracing::{debug, info};
 
 /// Load a book into memory from its `src/` directory.
 pub(crate) fn load_book<P: AsRef<Path>>(src_dir: P, cfg: &BuildConfig) -> Result<Book> {
     let src_dir = src_dir.as_ref();
     let summary_md = src_dir.join("SUMMARY.md");
 
-    let summary_content = fs::read_to_string(&summary_md)?;
+    let summary_content = match fs::read_to_string(&summary_md) {
+        Ok(content) => content,
+        Err(e) => {
+            // If not found, help user if they are too nested
+            let is_not_found = e
+                .root_cause()
+                .downcast_ref::<std::io::Error>()
+                .map(|io_err| io_err.kind() == std::io::ErrorKind::NotFound)
+                .unwrap_or(false);
+            if is_not_found {
+                let mut current_path = src_dir;
+                while let Some(parent) = current_path.parent() {
+                    if parent.join("src").join("SUMMARY.md").exists() {
+                        info!(
+                            "Couldn't find SUMMARY.md here, but found one at: {}",
+                            parent.display()
+                        );
+                        info!("Did you mean to run it from there?");
+                        break;
+                    }
+                    current_path = parent;
+                }
+            }
+
+            // Rewrap
+            return Err(e);
+        }
+    };
     let summary = parse_summary(&summary_content)
         .with_context(|| format!("Summary parsing failed for file={summary_md:?}"))?;
 
