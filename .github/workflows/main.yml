@@ -119,7 +119,7 @@ jobs:
       - name: Install cargo-semver-checks
         run: |
           mkdir installed-bins
-          curl -Lf https://github.com/obi1kenobi/cargo-semver-checks/releases/download/v0.45.0/cargo-semver-checks-x86_64-unknown-linux-gnu.tar.gz \
+          curl -Lf https://github.com/obi1kenobi/cargo-semver-checks/releases/download/v0.46.0/cargo-semver-checks-x86_64-unknown-linux-gnu.tar.gz \
             | tar -xz --directory=./installed-bins
           echo `pwd`/installed-bins >> $GITHUB_PATH
       - run: cargo semver-checks --workspace
