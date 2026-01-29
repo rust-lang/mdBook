@@ -52,6 +52,7 @@ notify-debouncer-mini = "0.7.0"
 opener = "0.8.3"
 pathdiff = "0.2.3"
 pulldown-cmark = { version = "0.13.0", default-features = false, features = ["html"] } # Do not update, part of the public api.
+pulldown-cmark-to-cmark = "22.0.0"
 regex = "1.12.2"
 select = "0.6.1"
 semver = "1.0.27"
