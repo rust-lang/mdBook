@@ -3,7 +3,7 @@
 Here is a list of the contributors who have helped improving mdBook. Big
 shout-out to them!
 
-- [mdinger](https://github.com/mdinger)
+- [mdinger](https://github.com/murshid69)
 - Kevin ([kbknapp](https://github.com/kbknapp))
 - Steve Klabnik ([steveklabnik](https://github.com/steveklabnik))
 - Adam Solove ([asolove](https://github.com/asolove))
