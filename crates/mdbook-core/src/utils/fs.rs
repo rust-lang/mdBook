@@ -105,6 +105,31 @@ pub fn copy_files_except_ext(
         avoid_dir
     );
 
+    copy_files_when(from, to, recursive, &|path| {
+        if let Some(avoid) = avoid_dir {
+            if path == avoid {
+                return false;
+            }
+        }
+
+        if let Some(ext) = path.extension() {
+            if ext_blacklist.contains(&ext.to_str().unwrap()) {
+                return false;
+            }
+        }
+
+        true
+    })
+}
+
+/// Copies all files of a directory to another one
+/// when the copy logic returns true.  It should be
+/// noted that the predicate is required by reference
+/// should it be called recursively.
+pub fn copy_files_when<T>(from: &Path, to: &Path, recursive: bool, predicate: &T) -> Result<()>
+where
+    T: Fn(&PathBuf) -> bool,
+{
     // Check that from and to are different
     if from == to {
         return Ok(());
@@ -125,10 +150,9 @@ pub fn copy_files_except_ext(
                 continue;
             }
 
-            if let Some(avoid) = avoid_dir {
-                if entry == *avoid {
-                    continue;
-                }
+            if !predicate(&entry) {
+                debug!("Skipping copy {entry:?}");
+                continue;
             }
 
             // check if output dir already exists
@@ -136,13 +160,12 @@ pub fn copy_files_except_ext(
                 fs::create_dir(&target_file_path)?;
             }
 
-            copy_files_except_ext(&entry, &target_file_path, true, avoid_dir, ext_blacklist)?;
+            copy_files_when(&entry, &target_file_path, true, predicate)?;
         } else if metadata.is_file() {
             // Check if it is in the blacklist
-            if let Some(ext) = entry.extension() {
-                if ext_blacklist.contains(&ext.to_str().unwrap()) {
-                    continue;
-                }
+            if !predicate(&entry) {
+                debug!("Skipping copy {entry:?}");
+                continue;
             }
             debug!("Copying {entry:?} to {target_file_path:?}");
             copy(&entry, &target_file_path)?;
