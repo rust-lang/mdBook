@@ -27,6 +27,7 @@ rust-version = "1.88.0" # Keep in sync with installation.md and .github/workflow
 [workspace.dependencies]
 anyhow = "1.0.100"
 axum = "0.8.8"
+cargo-manifest = "0.20.0"
 clap = { version = "4.5.56", features = ["cargo", "wrap_help"] }
 clap_complete = "4.5.65"
 ego-tree = "0.11.0"
@@ -75,7 +76,7 @@ version = "0.5.2"
 authors = [
     "Mathieu David <mathieudavid@mathieudavid.org>",
     "Michael-F-Bryan <michaelfbryan@gmail.com>",
-    "Matt Ickstadt <mattico8@gmail.com>"
+    "Matt Ickstadt <mattico8@gmail.com>",
 ]
 documentation = "https://rust-lang.github.io/mdBook/index.html"
 edition.workspace = true
