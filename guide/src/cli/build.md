@@ -34,7 +34,24 @@ book. Relative paths are interpreted relative to the current directory. If
 not specified it will default to the value of the `build.build-dir` key in
 `book.toml`, or to `./book`.
 
+#### `--copy-exclude-extensions`
+
+The `--copy-exclude-extensions` option allows you to exclude specific file extensions
+when copying files from the source directory to the build directory. This is useful when
+your source directory contains symlinks to other directories with files you don't want to
+include in the output.
+
+Provide a comma-separated list of extensions (without dots):
+
+```bash
+mdbook build --copy-exclude-extensions rs,toml,lock
+```
+
+This supplements any extensions configured in `book.toml` via the
+`output.html.copy-exclude-extensions` setting.
+
 -------------------
 
-***Note:*** *The build command copies all files (excluding files with `.md` extension) from the source directory
-into the build directory.*
+***Note:*** *The build command copies all files from the source directory into the build directory.
+You can exclude specific file extensions using the `--copy-exclude-extensions` flag or the
+`output.html.copy-exclude-extensions` configuration option.*
