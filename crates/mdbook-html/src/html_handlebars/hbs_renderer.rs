@@ -339,12 +339,24 @@ impl Renderer for HtmlHandlebars {
         use std::str::FromStr;
         let override_theme_dir = ctx.root.join("theme");
         let mut canon_theme_dir = theme_dir.canonicalize().unwrap_or(theme_dir.clone());
-        let mut canon_override_theme_dir = override_theme_dir.canonicalize().unwrap_or(override_theme_dir.clone());
+        let mut canon_override_theme_dir = override_theme_dir
+            .canonicalize()
+            .unwrap_or(override_theme_dir.clone());
         let re = regex::Regex::new(r###"[\\/]$"###).unwrap();
-        canon_theme_dir = PathBuf::from_str(&re.replace(canon_theme_dir.to_str().unwrap(), "").into_owned()).unwrap();
-        canon_override_theme_dir = PathBuf::from_str(&re.replace(canon_override_theme_dir.to_str().unwrap(), "").into_owned()).unwrap();
+        canon_theme_dir = PathBuf::from_str(
+            &re.replace(canon_theme_dir.to_str().unwrap(), "")
+                .into_owned(),
+        )
+        .unwrap();
+        canon_override_theme_dir = PathBuf::from_str(
+            &re.replace(canon_override_theme_dir.to_str().unwrap(), "")
+                .into_owned(),
+        )
+        .unwrap();
         let mut override_theme_dir = Some(override_theme_dir);
-        if canon_theme_dir == canon_override_theme_dir || override_theme_dir.as_ref().map_or(true, |d| !d.is_dir()) {
+        if canon_theme_dir == canon_override_theme_dir
+            || override_theme_dir.as_ref().map_or(true, |d| !d.is_dir())
+        {
             override_theme_dir = None;
         }
 

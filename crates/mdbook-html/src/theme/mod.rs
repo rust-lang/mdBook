@@ -69,7 +69,10 @@ impl Theme {
 
     /// Creates a `Theme` from the given `theme_dir` and, optionally,
     /// a semi-overriding `override_theme_dir`.
-    pub fn new_with_override<P: AsRef<Path>, O: AsRef<Path>>(theme_dir: P, override_theme_dir: Option<O>) -> Self {
+    pub fn new_with_override<P: AsRef<Path>, O: AsRef<Path>>(
+        theme_dir: P,
+        override_theme_dir: Option<O>,
+    ) -> Self {
         let theme_dir = theme_dir.as_ref();
         let override_theme_dir = override_theme_dir.as_ref().map(|p| p.as_ref());
         let mut theme = Theme::default();
@@ -150,7 +153,7 @@ impl Theme {
             }
 
             // extra theme/ overrides
-            if let Some(dir) = override_theme_dir.clone() {
+            if let Some(dir) = override_theme_dir {
                 combine_utf(&dir.join("head.hbs"), &mut theme.head);
                 override_binary(&dir.join("highlight.js"), &mut theme.highlight_js);
             }
@@ -186,7 +189,7 @@ impl Theme {
             let mut svg = load_with_warn(&theme_dir.join("favicon.svg"), favicon_svg);
 
             // one more overrider for the favicon
-            if let Some(dir) = override_theme_dir.clone() {
+            if let Some(dir) = override_theme_dir {
                 png = png || override_binary(&dir.join("favicon.png"), favicon_png);
                 svg = svg || override_binary(&dir.join("favicon.svg"), favicon_svg);
             }
