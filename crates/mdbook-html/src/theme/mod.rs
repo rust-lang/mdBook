@@ -190,8 +190,8 @@ impl Theme {
 
             // one more overrider for the favicon
             if let Some(dir) = override_theme_dir {
-                png = png || override_binary(&dir.join("favicon.png"), favicon_png);
-                svg = svg || override_binary(&dir.join("favicon.svg"), favicon_svg);
+                png = override_binary(&dir.join("favicon.png"), favicon_png) || png;
+                svg = override_binary(&dir.join("favicon.svg"), favicon_svg) || svg;
             }
 
             match (png, svg) {
