@@ -47,6 +47,8 @@ warp = { version = "0.2.2", default-features = false, features = ["websocket"], 
 elasticlunr-rs = { version = "2.3", optional = true, default-features = false }
 ammonia = { version = "3", optional = true }
 
+ego-tree = "0.11.0"
+
 [dev-dependencies]
 select = "0.5"
 pretty_assertions = "0.6"
