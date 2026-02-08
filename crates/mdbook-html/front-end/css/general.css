@@ -156,8 +156,7 @@ blockquote {
     border-block-end: .1em solid var(--quote-border);
 }
 
-/* TODO: Remove .warning in a future version of mdbook, it is replaced by
-blockquote tags. */
+/* TODO: Remove .warning in a future version of mdbook, it is replaced by admonitions. */
 .warning {
     margin: 20px;
     padding: 0 20px;
@@ -328,70 +327,68 @@ dd > p {
 }
 
 /* Remove some excess space from the bottom. */
-.blockquote-tag p:last-child {
+.admonition-tag p:last-child {
     margin-bottom: 2px;
 }
 
-.blockquote-tag {
+.admonition-tag {
+    /* Same margin and color as for blockquote */
+    margin: 20px 0;
+    color: var(--fg);
     /* Add some padding to make the vertical bar a little taller than the text.*/
     padding: 2px 0px 2px 20px;
     /* Add a solid color bar on the left side. */
     border-inline-start-style: solid;
     border-inline-start-width: 4px;
-    /* Disable the background color from normal blockquotes . */
-    background-color: inherit;
-    /* Disable border blocks from blockquotes. */
-    border-block-start: none;
-    border-block-end: none;
 }
 
-.blockquote-tag-title svg {
+.admonition-tag-title svg {
     fill: currentColor;
     /* Add space between the icon and the title. */
     margin-right: 8px;
 }
 
-.blockquote-tag-note {
+.admonition-tag-note {
     border-inline-start-color: var(--blockquote-note-color);
 }
 
-.blockquote-tag-tip {
+.admonition-tag-tip {
     border-inline-start-color: var(--blockquote-tip-color);
 }
 
-.blockquote-tag-important {
+.admonition-tag-important {
     border-inline-start-color: var(--blockquote-important-color);
 }
 
-.blockquote-tag-warning {
+.admonition-tag-warning {
     border-inline-start-color: var(--blockquote-warning-color);
 }
 
-.blockquote-tag-caution {
+.admonition-tag-caution {
     border-inline-start-color: var(--blockquote-caution-color);
 }
 
-.blockquote-tag-note .blockquote-tag-title {
+.admonition-tag-note .admonition-tag-title {
     color: var(--blockquote-note-color);
 }
 
-.blockquote-tag-tip .blockquote-tag-title {
+.admonition-tag-tip .admonition-tag-title {
     color: var(--blockquote-tip-color);
 }
 
-.blockquote-tag-important .blockquote-tag-title {
+.admonition-tag-important .admonition-tag-title {
     color: var(--blockquote-important-color);
 }
 
-.blockquote-tag-warning .blockquote-tag-title {
+.admonition-tag-warning .admonition-tag-title {
     color: var(--blockquote-warning-color);
 }
 
-.blockquote-tag-caution .blockquote-tag-title {
+.admonition-tag-caution .admonition-tag-title {
     color: var(--blockquote-caution-color);
 }
 
-.blockquote-tag-title {
+.admonition-tag-title {
     /* Slightly increase the weight for more emphasis. */
     font-weight: 600;
     /* Vertically center the icon with the text. */
@@ -401,7 +398,7 @@ dd > p {
     margin: 2px 0 8px 0;
 }
 
-.blockquote-tag-title .fa-svg {
+.admonition-tag-title .fa-svg {
     fill: currentColor;
     /* Add some space between the icon and the text. */
     margin-right: 8px;

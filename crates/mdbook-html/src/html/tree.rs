@@ -392,15 +392,16 @@ where
                 el
             }
             Tag::BlockQuote(kind) => {
-                let mut b = Element::new("blockquote");
                 if let Some(kind) = kind {
+                    let mut b = Element::new("div");
                     let (class_kind, icon, text) = super::admonitions::select_tag(kind);
-                    let class = format!("blockquote-tag blockquote-tag-{class_kind}");
+                    let class = format!("admonition-tag admonition-tag-{class_kind}");
                     b.insert_attr("class", class.into());
+                    b.insert_attr("role", "note".into());
                     self.push(Node::Element(b));
 
-                    let mut title = Element::new("p");
-                    title.insert_attr("class", "blockquote-tag-title".into());
+                    let mut title = Element::new("span");
+                    title.insert_attr("class", "admonition-tag-title".into());
                     self.push(Node::Element(title));
 
                     let mut svg = Element::new("svg");
@@ -416,7 +417,7 @@ where
                     self.pop();
                     return;
                 }
-                b
+                Element::new("blockquote")
             }
             Tag::CodeBlock(kind) => {
                 let mut code = Element::new("code");
