@@ -51,7 +51,7 @@ pub(crate) fn inject_frontmatter_data(
     };
     let yaml_str = &after_open[..end];
 
-    match serde_yaml::from_str::<FrontMatter>(yaml_str) {
+    match serde_yml::from_str::<FrontMatter>(yaml_str) {
         Ok(fm) => {
             data.insert("is_frontmatter".to_owned(), json!(true));
             data.insert("og_title".to_owned(), json!(fm.title));
