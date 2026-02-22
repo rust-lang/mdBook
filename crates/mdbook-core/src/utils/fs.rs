@@ -236,6 +236,7 @@ fn copy<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ignore::gitignore::GitignoreBuilder;
     use std::io::Result;
     use std::path::Path;
 
@@ -294,6 +295,58 @@ mod tests {
         }
         if !tmp.path().join("output/symlink.png").exists() {
             panic!("output/symlink.png should exist")
+        }
+    }
+
+    #[test]
+    fn copy_files_except_ignored_test() {
+        let tmp = match tempfile::TempDir::new() {
+            Ok(t) => t,
+            Err(e) => panic!("Could not create a temp dir: {e}"),
+        };
+
+        // Create files and directories
+        write(tmp.path().join("file.txt"), "").unwrap();
+        write(tmp.path().join("file.json"), "").unwrap();
+        write(tmp.path().join("ignored_dir/nested.txt"), "").unwrap();
+        write(tmp.path().join("included_dir/file.json"), "").unwrap();
+        write(tmp.path().join("included_dir/file.txt"), "").unwrap();
+
+        // Create a gitignore that ignores *.txt and ignored_dir/
+        let mut builder = GitignoreBuilder::new(tmp.path());
+        builder.add_line(None, "*.txt").unwrap();
+        builder.add_line(None, "ignored_dir/").unwrap();
+        let ignore = builder.build().unwrap();
+
+        // Create output dir
+        create_dir_all(tmp.path().join("output")).unwrap();
+
+        copy_files_except_ignored(
+            tmp.path(),
+            &tmp.path().join("output"),
+            true,
+            None,
+            Some(&ignore),
+        )
+        .unwrap();
+
+        // Check that .txt files are ignored
+        if tmp.path().join("output/file.txt").exists() {
+            panic!("output/file.txt should not exist")
+        }
+        if tmp.path().join("output/included_dir/file.txt").exists() {
+            panic!("output/included_dir/file.txt should not exist")
+        }
+        // Check that ignored_dir is not copied
+        if tmp.path().join("output/ignored_dir").exists() {
+            panic!("output/ignored_dir should not exist")
+        }
+        // Check that non-ignored files are copied
+        if !tmp.path().join("output/file.json").exists() {
+            panic!("output/file.json should exist")
+        }
+        if !tmp.path().join("output/included_dir/file.json").exists() {
+            panic!("output/included_dir/file.json should exist")
         }
     }
 }
