@@ -1,6 +1,7 @@
 //! Filesystem utilities and helpers.
 
 use anyhow::{Context, Result};
+use ignore::gitignore::Gitignore;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 use tracing::debug;
@@ -97,11 +98,29 @@ pub fn copy_files_except_ext(
     avoid_dir: Option<&PathBuf>,
     ext_blacklist: &[&str],
 ) -> Result<()> {
+    let mut builder = ignore::gitignore::GitignoreBuilder::new(from);
+    for ext in ext_blacklist {
+        builder.add_line(None, &format!("*.{ext}"))?;
+    }
+    let ignore = builder.build()?;
+
+    copy_files_except_ignored(from, to, recursive, avoid_dir, Some(&ignore))
+}
+
+/// Copies all files of a directory to another one except the files that are
+/// ignored by the passed [`Gitignore`]
+pub fn copy_files_except_ignored(
+    from: &Path,
+    to: &Path,
+    recursive: bool,
+    avoid_dir: Option<&PathBuf>,
+    ignore: Option<&Gitignore>,
+) -> Result<()> {
     debug!(
-        "Copying all files from {} to {} (blacklist: {:?}), avoiding {:?}",
+        "Copying all files from {} to {} (ignoring: {:?}), avoiding {:?}",
         from.display(),
         to.display(),
-        ext_blacklist,
+        ignore,
         avoid_dir
     );
 
@@ -131,16 +150,23 @@ pub fn copy_files_except_ext(
                 }
             }
 
+            if let Some(ignore) = ignore {
+                let path = entry.as_path();
+                if ignore.matched(path, true).is_ignore() {
+                    continue;
+                }
+            }
+
             // check if output dir already exists
             if !target_file_path.exists() {
                 fs::create_dir(&target_file_path)?;
             }
 
-            copy_files_except_ext(&entry, &target_file_path, true, avoid_dir, ext_blacklist)?;
+            copy_files_except_ignored(&entry, &target_file_path, true, avoid_dir, ignore)?;
         } else if metadata.is_file() {
-            // Check if it is in the blacklist
-            if let Some(ext) = entry.extension() {
-                if ext_blacklist.contains(&ext.to_str().unwrap()) {
+            if let Some(ignore) = ignore {
+                let path = entry.as_path();
+                if ignore.matched(path, false).is_ignore() {
                     continue;
                 }
             }
