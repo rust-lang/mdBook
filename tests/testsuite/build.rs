@@ -85,3 +85,18 @@ fn dest_dir_relative_path() {
     });
     assert!(current_dir.join("foo/index.html").exists());
 }
+
+// Test that .mdbookignore files are respected (single files, glob patterns, and directories).
+#[test]
+fn mdbookignore() {
+    let mut test = BookTest::from_dir("build/mdbookignore");
+    test.build();
+    // Single file listed by name should not be copied.
+    assert!(!test.dir.join("book/ignored_file").exists());
+    // Files matching *.txt glob pattern should not be copied.
+    assert!(!test.dir.join("book/ignored.txt").exists());
+    // Directories listed in .mdbookignore should not be copied.
+    assert!(!test.dir.join("book/ignored_dir").exists());
+    // Non-ignored files should be copied.
+    assert!(test.dir.join("book/included.json").exists());
+}
