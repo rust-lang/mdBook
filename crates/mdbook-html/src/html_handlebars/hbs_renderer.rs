@@ -572,6 +572,10 @@ fn make_data(
         "sidebar_header_nav".to_owned(),
         json!(html_config.sidebar_header_nav),
     );
+    data.insert(
+        "no_html_extension".to_owned(),
+        json!(html_config.no_html_extension),
+    );
 
     let search = html_config.search.clone();
     if cfg!(feature = "search") {
