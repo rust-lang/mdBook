@@ -1,7 +1,7 @@
 use super::static_files::StaticFiles;
 use crate::html::{ChapterTree, Node};
 use crate::theme::searcher;
-use crate::utils::ToUrlPath;
+use crate::utils::{ToUrlPath, clean_url_link_path};
 use anyhow::{Result, bail};
 use ego_tree::iter::Edge;
 use elasticlunr::{Index, IndexBuilder};
@@ -30,6 +30,7 @@ pub(super) fn create_files(
     search_config: &Search,
     static_files: &mut StaticFiles,
     chapter_trees: &[ChapterTree<'_>],
+    no_html_extension: bool,
 ) -> Result<()> {
     let mut index = IndexBuilder::new()
         .add_field_with_tokenizer("title", Box::new(&tokenize))
@@ -49,7 +50,13 @@ pub(super) fn create_files(
         if !chapter_settings.enable.unwrap_or(true) {
             continue;
         }
-        index_chapter(&mut index, search_config, &mut doc_urls, ct)?;
+        index_chapter(
+            &mut index,
+            search_config,
+            &mut doc_urls,
+            ct,
+            no_html_extension,
+        )?;
     }
 
     let index = write_to_json(index, search_config, doc_urls)?;
@@ -105,8 +112,13 @@ fn index_chapter(
     search_config: &Search,
     doc_urls: &mut Vec<String>,
     chapter_tree: &ChapterTree<'_>,
+    no_html_extension: bool,
 ) -> Result<()> {
-    let anchor_base = chapter_tree.html_path.to_url_path();
+    let anchor_base = if no_html_extension {
+        clean_url_link_path(&chapter_tree.html_path)
+    } else {
+        chapter_tree.html_path.to_url_path()
+    };
 
     let mut in_heading = false;
     let max_section_depth = search_config.heading_split_level;
