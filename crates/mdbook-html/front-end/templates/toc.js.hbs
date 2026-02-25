@@ -11,9 +11,15 @@ class MDBookSidebarScrollbox extends HTMLElement {
         this.innerHTML = '{{#toc}}{{/toc}}';
         // Set the current, active page, and reveal it if it's hidden
         let current_page = document.location.href.toString().split('#')[0].split('?')[0];
+        {{#if no_html_extension}}
+        if (current_page.endsWith('index.html')) {
+            current_page = current_page.slice(0, -'index.html'.length);
+        }
+{{else}}
         if (current_page.endsWith('/')) {
             current_page += 'index.html';
         }
+{{/if}}
         const links = Array.prototype.slice.call(this.querySelectorAll('a'));
         const l = links.length;
         for (let i = 0; i < l; ++i) {
@@ -23,10 +29,20 @@ class MDBookSidebarScrollbox extends HTMLElement {
                 link.href = path_to_root + href;
             }
             // The 'index' page is supposed to alias the first chapter in the book.
+            {{#if no_html_extension}}
+            let link_href = link.href;
+            if (link_href.endsWith('index.html')) {
+                link_href = link_href.slice(0, -'index.html'.length);
+            }
+            if (link_href === current_page
+                || i === 0
+                && path_to_root === '') {
+{{else}}
             if (link.href === current_page
                 || i === 0
                 && path_to_root === ''
                 && current_page.endsWith('/index.html')) {
+{{/if}}
                 link.classList.add('active');
                 let parent = link.parentElement;
                 while (parent) {
