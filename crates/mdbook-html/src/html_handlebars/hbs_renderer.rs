@@ -3,7 +3,7 @@ use super::static_files::StaticFiles;
 use crate::html::ChapterTree;
 use crate::html::{build_trees, render_markdown, serialize};
 use crate::theme::Theme;
-use crate::utils::{clean_url_output_path, clean_url_path_to_root, ToUrlPath};
+use crate::utils::{clean_url_link_path, clean_url_output_path, clean_url_path_to_root, ToUrlPath};
 use anyhow::{Context, Result, bail};
 use handlebars::Handlebars;
 use mdbook_core::book::{Book, BookItem, Chapter};
@@ -111,12 +111,15 @@ impl HtmlHandlebars {
 
         let mut nav = |name: &str, ch: Option<&Chapter>| {
             let Some(ch) = ch else { return };
-            let path = ch
-                .path
-                .as_ref()
-                .unwrap()
-                .with_extension("html")
-                .to_url_path();
+            let path = if ctx.html_config.no_html_extension {
+                clean_url_link_path(&ch.path.as_ref().unwrap().with_extension("html"))
+            } else {
+                ch.path
+                    .as_ref()
+                    .unwrap()
+                    .with_extension("html")
+                    .to_url_path()
+            };
             let obj = json!( {
                 "title": ch.name,
                 "link": path,
@@ -241,6 +244,7 @@ impl HtmlHandlebars {
             "toc",
             Box::new(helpers::toc::RenderToc {
                 no_section_label: html_config.no_section_label,
+                no_html_extension: html_config.no_html_extension,
             }),
         );
         handlebars.register_helper("fa", Box::new(helpers::fontawesome::fa_helper));
