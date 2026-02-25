@@ -3,7 +3,7 @@ use super::static_files::StaticFiles;
 use crate::html::ChapterTree;
 use crate::html::{build_trees, render_markdown, serialize};
 use crate::theme::Theme;
-use crate::utils::{clean_url_link_path, clean_url_output_path, clean_url_path_to_root, ToUrlPath};
+use crate::utils::{ToUrlPath, clean_url_link_path, clean_url_output_path, clean_url_path_to_root};
 use anyhow::{Context, Result, bail};
 use handlebars::Handlebars;
 use mdbook_core::book::{Book, BookItem, Chapter};
@@ -386,7 +386,12 @@ impl Renderer for HtmlHandlebars {
             let default = mdbook_core::config::Search::default();
             let search = html_config.search.as_ref().unwrap_or(&default);
             if search.enable {
-                super::search::create_files(&search, &mut static_files, &chapter_trees)?;
+                super::search::create_files(
+                    &search,
+                    &mut static_files,
+                    &chapter_trees,
+                    html_config.no_html_extension,
+                )?;
             }
         }
 
