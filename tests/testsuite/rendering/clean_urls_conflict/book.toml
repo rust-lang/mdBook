@@ -1,0 +1,5 @@
+[book]
+title = "Conflict Test"
+
+[output.html]
+no-html-extension = true
