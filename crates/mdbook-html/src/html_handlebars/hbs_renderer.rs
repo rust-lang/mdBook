@@ -3,7 +3,7 @@ use super::static_files::StaticFiles;
 use crate::html::ChapterTree;
 use crate::html::{build_trees, render_markdown, serialize};
 use crate::theme::Theme;
-use crate::utils::ToUrlPath;
+use crate::utils::{clean_url_output_path, clean_url_path_to_root, ToUrlPath};
 use anyhow::{Context, Result, bail};
 use handlebars::Handlebars;
 use mdbook_core::book::{Book, BookItem, Chapter};
@@ -64,6 +64,11 @@ impl HtmlHandlebars {
             .to_str()
             .with_context(|| "Could not convert path to str")?;
         let filepath = Path::new(&ctx_path).with_extension("html");
+        let filepath = if ctx.html_config.no_html_extension {
+            clean_url_output_path(&filepath)
+        } else {
+            filepath
+        };
 
         let book_title = ctx
             .data
@@ -83,8 +88,14 @@ impl HtmlHandlebars {
         ctx.data.insert("content".to_owned(), json!(content));
         ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
         ctx.data.insert("title".to_owned(), json!(title));
-        ctx.data
-            .insert("path_to_root".to_owned(), json!(fs::path_to_root(path)));
+        ctx.data.insert(
+            "path_to_root".to_owned(),
+            if ctx.html_config.no_html_extension {
+                json!(clean_url_path_to_root(path))
+            } else {
+                json!(fs::path_to_root(path))
+            },
+        );
         if let Some(ref section) = ch.number {
             ctx.data
                 .insert("section".to_owned(), json!(section.to_string()));
@@ -121,6 +132,7 @@ impl HtmlHandlebars {
 
         // Write to file
         let out_path = ctx.destination.join(filepath);
+        fs::create_dir_all(out_path.parent().unwrap())?;
         fs::write(&out_path, rendered)?;
 
         if prev_ch.is_none() {
