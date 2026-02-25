@@ -49,3 +49,92 @@ impl HelperDef for ResourceHelper {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use handlebars::Handlebars;
+    use serde_json::json;
+
+    #[test]
+    fn resource_helper_without_clean_urls() {
+        let helper = ResourceHelper {
+            hash_map: HashMap::new(),
+            no_html_extension: false,
+        };
+
+        let mut hbs = Handlebars::new();
+        hbs.register_helper("resource", Box::new(helper));
+
+        let data = json!({"path": "foo/bar.md"});
+        let result = hbs
+            .render_template("{{resource \"css/style.css\"}}", &data)
+            .unwrap();
+
+        // For foo/bar.md without clean URLs: path_to_root = "../"
+        assert_eq!(result, "../css/style.css");
+    }
+
+    #[test]
+    fn resource_helper_with_clean_urls() {
+        let helper = ResourceHelper {
+            hash_map: HashMap::new(),
+            no_html_extension: true,
+        };
+
+        let mut hbs = Handlebars::new();
+        hbs.register_helper("resource", Box::new(helper));
+
+        let data = json!({"path": "foo/bar.md"});
+        let result = hbs
+            .render_template("{{resource \"css/style.css\"}}", &data)
+            .unwrap();
+
+        // For foo/bar.md with clean URLs: path_to_root = "../../" (extra level for bar/index.html)
+        assert_eq!(result, "../../css/style.css");
+    }
+
+    #[test]
+    fn resource_helper_clean_urls_index_page() {
+        let helper = ResourceHelper {
+            hash_map: HashMap::new(),
+            no_html_extension: true,
+        };
+
+        let mut hbs = Handlebars::new();
+        hbs.register_helper("resource", Box::new(helper));
+
+        let data = json!({"path": "foo/index.md"});
+        let result = hbs
+            .render_template("{{resource \"css/style.css\"}}", &data)
+            .unwrap();
+
+        // For foo/index.md with clean URLs: path_to_root = "../" (no extra level for index pages)
+        assert_eq!(result, "../css/style.css");
+    }
+
+    #[test]
+    fn resource_helper_with_hash_map() {
+        let mut hash_map = HashMap::new();
+        hash_map.insert(
+            "css/style.css".to_string(),
+            "css/style-abc123.css".to_string(),
+        );
+
+        let helper = ResourceHelper {
+            hash_map,
+            no_html_extension: false,
+        };
+
+        let mut hbs = Handlebars::new();
+        hbs.register_helper("resource", Box::new(helper));
+
+        let data = json!({"path": "foo/bar.md"});
+        let result = hbs
+            .render_template("{{resource \"css/style.css\"}}", &data)
+            .unwrap();
+
+        // Should use hashed filename
+        assert_eq!(result, "../css/style-abc123.css");
+    }
+}
