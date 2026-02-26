@@ -157,6 +157,7 @@ impl HtmlHandlebars {
         src_dir: &Path,
         handlebars: &mut Handlebars<'_>,
         data: &mut serde_json::Map<String, serde_json::Value>,
+        not_found_dir: Option<&str>,
     ) -> Result<()> {
         let content_404 = if let Some(ref filename) = html_config.input_404 {
             let path = src_dir.join(filename);
@@ -202,11 +203,21 @@ impl HtmlHandlebars {
             title.push_str(book_title);
         }
         data_404.insert("title".to_owned(), json!(title));
+        if not_found_dir.is_some() {
+            data_404.insert("path_to_root".to_owned(), json!("../"));
+        }
         let rendered = handlebars.render("index", &data_404)?;
 
-        let output_file = ctx.destination.join(html_config.get_404_output_file());
-        fs::write(output_file, rendered)?;
-        debug!("Creating 404.html ✓");
+        if let Some(dir) = not_found_dir {
+            let output_file = ctx.destination.join(format!("{dir}/index.html"));
+            fs::create_dir_all(output_file.parent().unwrap())?;
+            fs::write(output_file, rendered)?;
+            debug!("Creating {dir}/index.html ✓");
+        } else {
+            let output_file = ctx.destination.join(html_config.get_404_output_file());
+            fs::write(output_file, rendered)?;
+            debug!("Creating 404.html ✓");
+        }
         Ok(())
     }
 
@@ -216,6 +227,7 @@ impl HtmlHandlebars {
         handlebars: &Handlebars<'_>,
         data: &mut serde_json::Map<String, serde_json::Value>,
         chapter_trees: Vec<ChapterTree<'_>>,
+        no_html_extension: bool,
     ) -> Result<String> {
         let print_content = crate::html::render_print_page(chapter_trees);
 
@@ -231,7 +243,11 @@ impl HtmlHandlebars {
         data.insert("content".to_owned(), json!(print_content));
         data.insert(
             "path_to_root".to_owned(),
-            json!(fs::path_to_root(Path::new("print.md"))),
+            if no_html_extension {
+                json!("../")
+            } else {
+                json!(fs::path_to_root(Path::new("print.md")))
+            },
         );
 
         debug!("Render template");
@@ -314,6 +330,28 @@ impl HtmlHandlebars {
 
         Ok(())
     }
+}
+
+/// Validates that chapter paths don't conflict with reserved special page directories.
+/// When `no-html-extension` is enabled, special pages use underscore-prefixed directories
+/// (_print/, _toc/, _404/). Any chapter that would conflict with these is an error.
+fn validate_no_reserved_conflict(chapter_trees: &[ChapterTree<'_>]) -> Result<()> {
+    let reserved = ["_print", "_toc", "_404"];
+    for ct in chapter_trees {
+        if let Some(path) = &ct.chapter.path {
+            for reserved_name in reserved {
+                if path.starts_with(reserved_name) {
+                    bail!(
+                        "Chapter path '{}' conflicts with reserved special page directory '{}/'. \
+                         Please rename the chapter to avoid paths starting with '_print', '_toc', or '_404'.",
+                        path.display(),
+                        reserved_name
+                    );
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 impl Renderer for HtmlHandlebars {
@@ -413,15 +451,42 @@ impl Renderer for HtmlHandlebars {
 
         handlebars.register_helper("resource", Box::new(resource_helper));
 
+        // Compute special page directory names for clean URL mode.
+        // When clean URLs are enabled, validate no chapter conflicts with reserved directories
+        if html_config.no_html_extension {
+            validate_no_reserved_conflict(&chapter_trees)?;
+        }
+
+        // Special page directories: always use underscore-prefixed paths when clean URLs enabled
+        let (print_dir, toc_dir, not_found_dir) = if html_config.no_html_extension {
+            ("_print", "_toc", "_404")
+        } else {
+            // When disabled, these are just file basenames (print.html, toc.html, 404.html)
+            ("print", "toc", "404")
+        };
+
         debug!("Render toc html");
         {
             data.insert("is_toc_html".to_owned(), json!(true));
             data.insert("path".to_owned(), json!("toc.html"));
+            if html_config.no_html_extension {
+                data.insert("path_to_root".to_owned(), json!("../"));
+            }
             let rendered_toc = handlebars.render("toc_html", &data)?;
-            fs::write(destination.join("toc.html"), rendered_toc)?;
-            debug!("Creating toc.html ✓");
+            if html_config.no_html_extension {
+                let toc_path = destination.join(format!("{toc_dir}/index.html"));
+                fs::create_dir_all(toc_path.parent().unwrap())?;
+                fs::write(toc_path, rendered_toc)?;
+                debug!("Creating {toc_dir}/index.html ✓");
+            } else {
+                fs::write(destination.join("toc.html"), rendered_toc)?;
+                debug!("Creating toc.html ✓");
+            }
             data.remove("path");
             data.remove("is_toc_html");
+            if html_config.no_html_extension {
+                data.remove("path_to_root");
+            }
         }
 
         fs::write(
@@ -449,16 +514,35 @@ impl Renderer for HtmlHandlebars {
 
         // Render 404 page
         if html_config.input_404 != Some("".to_string()) {
-            self.render_404(ctx, &html_config, &src_dir, &mut handlebars, &mut data)?;
+            let not_found_opt = html_config.no_html_extension.then_some(not_found_dir);
+            self.render_404(
+                ctx,
+                &html_config,
+                &src_dir,
+                &mut handlebars,
+                &mut data,
+                not_found_opt,
+            )?;
         }
 
         // Render the print version.
         if html_config.print.enable {
-            let print_rendered =
-                self.render_print_page(ctx, &handlebars, &mut data, chapter_trees)?;
-
-            fs::write(destination.join("print.html"), print_rendered)?;
-            debug!("Creating print.html ✓");
+            let print_rendered = self.render_print_page(
+                ctx,
+                &handlebars,
+                &mut data,
+                chapter_trees,
+                html_config.no_html_extension,
+            )?;
+            if html_config.no_html_extension {
+                let print_path = destination.join(format!("{print_dir}/index.html"));
+                fs::create_dir_all(print_path.parent().unwrap())?;
+                fs::write(print_path, print_rendered)?;
+                debug!("Creating {print_dir}/index.html ✓");
+            } else {
+                fs::write(destination.join("print.html"), print_rendered)?;
+                debug!("Creating print.html ✓");
+            }
         }
 
         self.emit_redirects(&ctx.destination, &handlebars, &html_config.redirect)
