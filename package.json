@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "browser-ui-test": "0.23.3",
-    "eslint": "^9.34.0"
+    "eslint": "^10.0.0"
   },
   "scripts": {
     "lint": "eslint --no-warn-ignored crates/mdbook-html/front-end/*js crates/mdbook-html/front-end/**/*js crates/mdbook-html/front-end/**/*js.hbs",
