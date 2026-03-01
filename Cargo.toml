@@ -25,14 +25,14 @@ repository = "https://github.com/rust-lang/mdBook"
 rust-version = "1.88.0" # Keep in sync with installation.md and .github/workflows/main.yml
 
 [workspace.dependencies]
-anyhow = "1.0.100"
+anyhow = "1.0.102"
 axum = "0.8.8"
-clap = { version = "4.5.56", features = ["cargo", "wrap_help"] }
-clap_complete = "4.5.65"
+clap = { version = "4.5.60", features = ["cargo", "wrap_help"] }
+clap_complete = "4.5.66"
 ego-tree = "0.11.0"
 elasticlunr-rs = "3.0.2"
 font-awesome-as-a-crate = "0.3.0"
-futures-util = "0.3.31"
+futures-util = "0.3.32"
 glob = "0.3.3"
 handlebars = "6.4.0"
 hex = "0.4.3"
@@ -46,13 +46,13 @@ mdbook-markdown = { path = "crates/mdbook-markdown", version = "0.5.2" }
 mdbook-preprocessor = { path = "crates/mdbook-preprocessor", version = "0.5.2" }
 mdbook-renderer = { path = "crates/mdbook-renderer", version = "0.5.2" }
 mdbook-summary = { path = "crates/mdbook-summary", version = "0.5.2" }
-memchr = "2.7.6"
+memchr = "2.8.0"
 notify = "8.2.0"
 notify-debouncer-mini = "0.7.0"
 opener = "0.8.4"
 pathdiff = "0.2.3"
-pulldown-cmark = { version = "0.13.0", default-features = false, features = ["html"] } # Do not update, part of the public api.
-regex = "1.12.2"
+pulldown-cmark = { version = "0.13.1", default-features = false, features = ["html"] } # Do not update, part of the public api.
+regex = "1.12.3"
 select = "0.6.1"
 semver = "1.0.27"
 serde = { version = "1.0.228", features = ["derive"] }
@@ -60,9 +60,9 @@ serde_json = "1.0.149"
 sha2 = "0.10.9"
 shlex = "1.3.0"
 snapbox = "1.0.0"
-tempfile = "3.24.0"
+tempfile = "3.26.0"
 tokio = "1.49.0"
-toml = "1.0.0"
+toml = "1.0.3"
 topological-sort = "0.2.2"
 tower-http = "0.6.8"
 tracing = "0.1.44"
