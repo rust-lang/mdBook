@@ -1,15 +1,17 @@
 use std::collections::HashMap;
+use std::path::Path;
 
-use mdbook_core::utils;
-
+use crate::utils::clean_url_path_to_root;
 use handlebars::{
     Context, Handlebars, Helper, HelperDef, Output, RenderContext, RenderError, RenderErrorReason,
 };
+use mdbook_core::utils;
 
 // Handlebars helper to find filenames with hashes in them
 #[derive(Clone)]
 pub(crate) struct ResourceHelper {
     pub hash_map: HashMap<String, String>,
+    pub no_html_extension: bool,
 }
 
 impl HelperDef for ResourceHelper {
@@ -36,7 +38,11 @@ impl HelperDef for ResourceHelper {
             })?
             .replace("\"", "");
 
-        let path_to_root = utils::fs::path_to_root(&base_path);
+        let path_to_root = if self.no_html_extension {
+            clean_url_path_to_root(Path::new(&base_path))
+        } else {
+            utils::fs::path_to_root(&base_path)
+        };
 
         out.write(&path_to_root)?;
         out.write(self.hash_map.get(param).map(|p| &p[..]).unwrap_or(&param))?;
