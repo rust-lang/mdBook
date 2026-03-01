@@ -1007,7 +1007,12 @@ where
         }
 
         for code_id in code_ids {
-            hide_lines(&mut self.tree, code_id, &self.options.config.code.hidelines);
+            hide_lines(
+                &mut self.tree,
+                code_id,
+                &self.options.config.code.hidelines,
+                self.options.config.code.default_hidelines,
+            );
         }
     }
 
