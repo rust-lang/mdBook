@@ -52,6 +52,7 @@ notify-debouncer-mini = "0.7.0"
 opener = "0.8.4"
 pathdiff = "0.2.3"
 pulldown-cmark = { version = "0.13.0", default-features = false, features = ["html"] } # Do not update, part of the public api.
+pulldown-cmark-to-cmark = "22.0.0"
 regex = "1.12.2"
 select = "0.6.1"
 semver = "1.0.27"
@@ -67,6 +68,7 @@ topological-sort = "0.2.2"
 tower-http = "0.6.8"
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
+url = "2.5.8"
 walkdir = "2.5.0"
 
 [package]
