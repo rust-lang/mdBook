@@ -332,7 +332,35 @@ impl Renderer for HtmlHandlebars {
             None => ctx.root.join("theme"),
         };
 
-        let theme = Theme::new(theme_dir);
+        // the user-specified theme directory may still be overridden
+        // by an additional "theme/" directory.
+        // this is useful when one needs to integrate an external
+        // theme project, but still modify certain parts of it.
+        use std::str::FromStr;
+        let override_theme_dir = ctx.root.join("theme");
+        let mut canon_theme_dir = theme_dir.canonicalize().unwrap_or(theme_dir.clone());
+        let mut canon_override_theme_dir = override_theme_dir
+            .canonicalize()
+            .unwrap_or(override_theme_dir.clone());
+        let re = regex::Regex::new(r###"[\\/]$"###).unwrap();
+        canon_theme_dir = PathBuf::from_str(
+            &re.replace(canon_theme_dir.to_str().unwrap(), "")
+                .into_owned(),
+        )
+        .unwrap();
+        canon_override_theme_dir = PathBuf::from_str(
+            &re.replace(canon_override_theme_dir.to_str().unwrap(), "")
+                .into_owned(),
+        )
+        .unwrap();
+        let mut override_theme_dir = Some(override_theme_dir);
+        if canon_theme_dir == canon_override_theme_dir
+            || override_theme_dir.as_ref().map_or(true, |d| !d.is_dir())
+        {
+            override_theme_dir = None;
+        }
+
+        let theme = Theme::new_with_override(theme_dir, override_theme_dir);
 
         debug!("Register the index handlebars template");
         handlebars.register_template_string("index", String::from_utf8(theme.index.clone())?)?;
