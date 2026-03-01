@@ -96,7 +96,11 @@ pub(crate) fn build_trees<'book>(
             let path = ch.path.as_ref().unwrap();
             let html_path = ch.path.as_ref().unwrap().with_extension("html");
             let options = HtmlRenderOptions::new(path, html_config, edition);
-            let tree = build_tree(&ch.content, &options);
+            #[cfg(feature = "frontmatter")]
+            let chapter_content = crate::frontmatter::strip_frontmatter(&ch.content);
+            #[cfg(not(feature = "frontmatter"))]
+            let chapter_content = ch.content.clone();
+            let tree = build_tree(&chapter_content, &options);
 
             ChapterTree {
                 chapter: ch,
