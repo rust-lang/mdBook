@@ -45,8 +45,36 @@
         <link rel="stylesheet" href="{{ resource this }}">
         {{/each}}
 
-        {{#if mathjax_support}}
-        <!-- MathJax -->
+        {{#if math}}
+        <!-- Load MathJax -->
+        {{! MathJax normally looks for math tags in the page content. In our case,
+            the math tags are parsed in the Markdown input by pulldown-cmark and
+            converted to <span> tags with special CSS classes. This bit of code
+            tells MathJax to render these and only these. Adapted from
+            <https://docs.mathjax.org/en/latest/upgrading/v2.html#math-script-example> }}
+        <script>
+        MathJax = {
+          options: {
+            renderActions: {
+              find: [10, function (doc) {
+                for (const node of document.querySelectorAll('span.math-inline, span.math-display')) {
+                  const display = node.classList.contains('math-display');
+                  const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+                  const text = document.createTextNode('');
+                  node.parentNode.replaceChild(text, node);
+                  math.start = {node: text, delim: '', n: 0};
+                  math.end = {node: text, delim: '', n: 0};
+                  doc.math.push(math);
+                }
+              }, '']
+            }
+          }
+        };
+        </script>
+        <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+        {{else if mathjax_support}}
+        <!-- Load MathJax -->
+        {{! Legacy MathJax support that just tells MathJax to look for math tags in the page content }}
         <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
         {{/if}}
 

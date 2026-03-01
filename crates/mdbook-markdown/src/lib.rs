@@ -28,6 +28,11 @@ pub struct MarkdownOptions {
     ///
     /// This is `true` by default.
     pub admonitions: bool,
+    /// Enables `$...$` and `$$...$$` syntax for inline and display math,
+    /// respectively.
+    ///
+    /// This is `false` by default.
+    pub math: bool,
 }
 
 impl Default for MarkdownOptions {
@@ -36,6 +41,7 @@ impl Default for MarkdownOptions {
             smart_punctuation: true,
             definition_lists: true,
             admonitions: true,
+            math: false,
         }
     }
 }
@@ -56,6 +62,9 @@ pub fn new_cmark_parser<'text>(text: &'text str, options: &MarkdownOptions) -> P
     }
     if options.admonitions {
         opts.insert(Options::ENABLE_GFM);
+    }
+    if options.math {
+        opts.insert(Options::ENABLE_MATH);
     }
     Parser::new_ext(text, opts)
 }

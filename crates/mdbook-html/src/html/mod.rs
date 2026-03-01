@@ -53,6 +53,7 @@ impl<'a> HtmlRenderOptions<'a> {
         markdown_options.smart_punctuation = config.smart_punctuation;
         markdown_options.definition_lists = config.definition_lists;
         markdown_options.admonitions = config.admonitions;
+        markdown_options.math = config.math;
         HtmlRenderOptions {
             markdown_options,
             path,
