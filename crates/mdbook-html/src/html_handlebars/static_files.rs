@@ -161,19 +161,23 @@ impl StaticFiles {
 
             this.static_files.push(StaticFile::Additional {
                 input_location,
+                // Always use forward slashes for consistent hash_map keys across platforms.
                 filename: custom_file
                     .to_str()
                     .with_context(|| "resource file names must be valid utf8")?
-                    .to_owned(),
+                    .replace('\\', "/"),
             });
         }
 
         for input_location in theme.font_files.iter().cloned() {
-            let filename = Path::new("fonts")
-                .join(input_location.file_name().unwrap())
-                .to_str()
-                .with_context(|| "resource file names must be valid utf8")?
-                .to_owned();
+            let filename = format!(
+                "fonts/{}",
+                input_location
+                    .file_name()
+                    .unwrap()
+                    .to_str()
+                    .with_context(|| "resource file names must be valid utf8")?
+            );
             this.static_files.push(StaticFile::Additional {
                 input_location,
                 filename,
