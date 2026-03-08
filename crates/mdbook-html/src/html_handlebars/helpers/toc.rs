@@ -1,4 +1,4 @@
-use crate::utils::ToUrlPath;
+use crate::utils::{ToUrlPath, clean_url_link_path};
 use handlebars::{
     Context, Handlebars, Helper, HelperDef, Output, RenderContext, RenderError, RenderErrorReason,
 };
@@ -10,6 +10,7 @@ use std::{cmp::Ordering, collections::BTreeMap};
 #[derive(Clone, Copy)]
 pub(crate) struct RenderToc {
     pub no_section_label: bool,
+    pub no_html_extension: bool,
 }
 
 impl HelperDef for RenderToc {
@@ -117,7 +118,11 @@ impl HelperDef for RenderToc {
             let path_exists = match item.get("path") {
                 Some(path) if !path.is_empty() => {
                     out.write("<a href=\"")?;
-                    let tmp = Path::new(path).with_extension("html").to_url_path();
+                    let tmp = if self.no_html_extension {
+                        clean_url_link_path(&Path::new(path).with_extension("html"))
+                    } else {
+                        Path::new(path).with_extension("html").to_url_path()
+                    };
 
                     // Add link
                     out.write(&tmp)?;
