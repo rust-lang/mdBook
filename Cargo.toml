@@ -66,7 +66,6 @@ toml = "1.0.3"
 topological-sort = "0.2.2"
 tower-http = "0.6.8"
 tracing = "0.1.44"
-tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 walkdir = "2.5.0"
 
 [package]
@@ -96,7 +95,6 @@ mdbook-driver.workspace = true
 mdbook-html.workspace = true
 opener.workspace = true
 tracing.workspace = true
-tracing-subscriber.workspace = true
 
 # Watch feature
 ignore = { workspace = true, optional = true }
