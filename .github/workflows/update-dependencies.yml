@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository == 'rust-lang/mdBook'
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install Rust
         run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
       - name: Install cargo-edit
