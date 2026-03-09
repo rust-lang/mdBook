@@ -85,6 +85,9 @@ impl HtmlHandlebars {
         ctx.data.insert("title".to_owned(), json!(title));
         ctx.data
             .insert("path_to_root".to_owned(), json!(fs::path_to_root(path)));
+        let current_link = path.with_extension("html").to_url_path();
+        ctx.data
+            .insert("current_link".to_owned(), json!(current_link));
         if let Some(ref section) = ch.number {
             ctx.data
                 .insert("section".to_owned(), json!(section.to_string()));
@@ -127,6 +130,8 @@ impl HtmlHandlebars {
             ctx.data.insert("path".to_owned(), json!("index.md"));
             ctx.data.insert("path_to_root".to_owned(), json!(""));
             ctx.data.insert("is_index".to_owned(), json!(true));
+            ctx.data
+                .insert("current_link".to_owned(), json!("index.html"));
             let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
             debug!("Creating index.html from {}", ctx_path);
             fs::write(ctx.destination.join("index.html"), rendered_index)?;
@@ -180,6 +185,7 @@ impl HtmlHandlebars {
         // Set a dummy path to ensure other paths (e.g. in the TOC) are generated correctly
         data_404.insert("path".to_owned(), json!("404.md"));
         data_404.insert("content".to_owned(), json!(html_content_404));
+        data_404.insert("current_link".to_owned(), json!("404.html"));
 
         let mut title = String::from("Page not found");
         if let Some(book_title) = &ctx.config.book.title {
