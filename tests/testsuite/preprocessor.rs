@@ -490,3 +490,18 @@ fn extension_compatibility() {
         }
     }
 }
+
+#[test]
+fn runs_log_preprocessor() {
+    let mut test = BookTest::from_dir("preprocessor/log_preprocessor");
+    test.run("build", |cmd| {
+        cmd.expect_stdout(str![[""]]).expect_stderr(str![[r#"
+ INFO Book building has started
+ INFO It works
+ WARN It works
+ INFO Running the html backend
+ INFO HTML book written to `[ROOT]/book`
+
+"#]]);
+    });
+}

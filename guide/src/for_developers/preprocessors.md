@@ -96,6 +96,18 @@ if __name__ == '__main__':
     print(json.dumps(book))
 ```
 
+## Logging
+
+You can plug your preprocessor output to the MdBook's logger, as shown by the [log-preprocessor example]:
+
+```rust,ignore
+fn run(&self, _ctx: &PreprocessorContext, book: Book) -> Result<Book> {
+    init_logger();
+    info!("It works");
+    warn!("It works");
+    Ok(book)
+}
+```
 
 [emphasis-example]: https://github.com/rust-lang/mdBook/tree/main/examples/remove-emphasis/
 [pc]: https://crates.io/crates/pulldown-cmark
@@ -106,3 +118,4 @@ if __name__ == '__main__':
 [`PreprocessorContext`]: https://docs.rs/mdbook-preprocessor/latest/mdbook_preprocessor/struct.PreprocessorContext.html
 [`Book`]: https://docs.rs/mdbook-preprocessor/latest/mdbook_preprocessor/book/struct.Book.html
 [`mdbook-markdown`]: https://docs.rs/mdbook-markdown/latest/mdbook_markdown/
+[log-preprocessor example]: https://github.com/rust-lang/mdBook/tree/main/examples/log-preprocessor/

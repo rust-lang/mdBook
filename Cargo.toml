@@ -96,7 +96,6 @@ mdbook-core.workspace = true
 mdbook-driver.workspace = true
 mdbook-html.workspace = true
 opener.workspace = true
-tracing-subscriber.workspace = true
 tracing.workspace = true
 
 # Watch feature
@@ -136,6 +135,10 @@ name = "mdbook"
 
 [[example]]
 name = "nop-preprocessor"
+test = true
+
+[[example]]
+name = "log-preprocessor"
 test = true
 
 [[example]]

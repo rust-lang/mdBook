@@ -1,0 +1,2 @@
+[preprocessor.log-preprocessor]
+command = "cargo run --quiet --example log-preprocessor --"
