@@ -14,6 +14,19 @@ class MDBookSidebarScrollbox extends HTMLElement {
         if (current_page.endsWith('/')) {
             current_page += 'index.html';
         }
+        // Normalize a URL for comparison by stripping .html suffix.
+        // This ensures TOC highlighting works on hosts that use "pretty URLs"
+        // (e.g. Cloudflare Pages) which strip the .html extension.
+        function normalizeUrl(url) {
+            if (url.endsWith('/index.html')) {
+                return url.slice(0, -'/index.html'.length + 1);
+            }
+            if (url.endsWith('.html')) {
+                return url.slice(0, -'.html'.length);
+            }
+            return url;
+        }
+        const normalizedCurrentPage = normalizeUrl(current_page);
         const links = Array.prototype.slice.call(this.querySelectorAll('a'));
         const l = links.length;
         for (let i = 0; i < l; ++i) {
@@ -24,6 +37,7 @@ class MDBookSidebarScrollbox extends HTMLElement {
             }
             // The 'index' page is supposed to alias the first chapter in the book.
             if (link.href === current_page
+                || normalizeUrl(link.href) === normalizedCurrentPage
                 || i === 0
                 && path_to_root === ''
                 && current_page.endsWith('/index.html')) {
