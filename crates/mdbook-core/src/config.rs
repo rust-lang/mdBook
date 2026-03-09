@@ -518,6 +518,9 @@ pub struct HtmlConfig {
     /// If enabled, the sidebar includes navigation for headers on the current
     /// page. Default is `true`.
     pub sidebar_header_nav: bool,
+    /// If enabled, HTML files will not have the `.html` extension in URLs.
+    /// Defaults to `false`.
+    pub no_html_extension: bool,
 }
 
 impl Default for HtmlConfig {
@@ -548,6 +551,7 @@ impl Default for HtmlConfig {
             redirect: HashMap::new(),
             hash_files: true,
             sidebar_header_nav: true,
+            no_html_extension: false,
         }
     }
 }
