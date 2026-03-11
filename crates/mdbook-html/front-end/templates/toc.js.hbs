@@ -72,6 +72,54 @@ class MDBookSidebarScrollbox extends HTMLElement {
         Array.from(sidebarAnchorToggles).forEach(el => {
             el.addEventListener('click', toggleSection);
         });
+{{#if fold_enable}}
+        // Collapse All / Expand All button
+        // Deferred to DOMContentLoaded because the button and icon
+        // <template> elements appear later in the HTML body.
+        const scrollbox = this;
+        document.addEventListener('DOMContentLoaded', () => {
+            const collapseAllBtn =
+                document.getElementById('mdbook-collapse-all');
+            const collapseIconHTML =
+                document.getElementById('fa-square-minus').innerHTML;
+            const expandIconHTML =
+                document.getElementById('fa-square-plus').innerHTML;
+            function getFoldableItems() {
+                const selector = 'li.chapter-item, li.header-item';
+                return Array.from(scrollbox.querySelectorAll(selector))
+                    .filter(li => li.querySelector(':scope > ol.section'));
+            }
+            function updateCollapseAllButton() {
+                const foldable = getFoldableItems();
+                const anyExpanded = foldable.some(
+                    li => li.classList.contains('expanded'));
+                collapseAllBtn.innerHTML = anyExpanded
+                    ? collapseIconHTML : expandIconHTML;
+            }
+            collapseAllBtn.addEventListener('click', () => {
+                const foldable = getFoldableItems();
+                const anyExpanded = foldable.some(
+                    li => li.classList.contains('expanded'));
+                foldable.forEach(li => {
+                    if (anyExpanded) {
+                        li.classList.remove('expanded');
+                    } else {
+                        li.classList.add('expanded');
+                    }
+                });
+                updateCollapseAllButton();
+            });
+            updateCollapseAllButton();
+            // Hook all fold toggles (including dynamically added ones)
+            const allToggles =
+                scrollbox.querySelectorAll('.chapter-fold-toggle');
+            Array.from(allToggles).forEach(el => {
+                el.addEventListener('click', () => {
+                    setTimeout(updateCollapseAllButton, 0);
+                });
+            });
+        });
+{{/if}}
     }
 }
 window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox);
