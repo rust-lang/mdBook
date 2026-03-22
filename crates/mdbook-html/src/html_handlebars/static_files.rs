@@ -22,6 +22,7 @@ use tracing::debug;
 pub(super) struct StaticFiles {
     static_files: Vec<StaticFile>,
     hash_map: HashMap<String, String>,
+    no_html_extension: bool,
 }
 
 enum StaticFile {
@@ -41,6 +42,7 @@ impl StaticFiles {
         let mut this = StaticFiles {
             hash_map: HashMap::new(),
             static_files,
+            no_html_extension: html_config.no_html_extension,
         };
 
         this.add_builtin("book.js", &theme.js);
@@ -257,7 +259,11 @@ impl StaticFiles {
             }
         }
         let hash_map = self.hash_map;
-        Ok(ResourceHelper { hash_map })
+        let no_html_extension = self.no_html_extension;
+        Ok(ResourceHelper {
+            hash_map,
+            no_html_extension,
+        })
     }
 }
 
