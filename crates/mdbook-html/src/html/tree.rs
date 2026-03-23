@@ -19,6 +19,7 @@ use pulldown_cmark::{Alignment, CodeBlockKind, CowStr, Event, LinkType, Tag, Tag
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::ops::Deref;
+use std::path::Path;
 use tracing::{trace, warn};
 
 /// Helper to create a [`QualName`].
@@ -542,7 +543,12 @@ where
                 let href: StrTendril = if matches!(link_type, LinkType::Email) {
                     format!("mailto:{dest_url}").into()
                 } else {
-                    fix_link(dest_url).into_tendril()
+                    fix_link(
+                        dest_url,
+                        self.options.path,
+                        self.options.config.no_html_extension,
+                    )
+                    .into_tendril()
                 };
                 let mut a = Element::new("a");
                 a.insert_attr("href", href);
@@ -558,7 +564,12 @@ where
                 id: _,
             } => {
                 let mut img = Element::new("img");
-                let src = fix_link(dest_url).into_tendril();
+                let src = fix_link(
+                    dest_url,
+                    self.options.path,
+                    self.options.config.no_html_extension,
+                )
+                .into_tendril();
                 img.insert_attr("src", src);
                 if !title.is_empty() {
                     img.insert_attr("title", title.into_tendril());
@@ -675,7 +686,11 @@ where
             self_closing: tag.self_closing,
             was_raw: true,
         };
-        fix_html_link(&mut el);
+        fix_html_link(
+            &mut el,
+            self.options.path,
+            self.options.config.no_html_extension,
+        );
         self.push(Node::Element(el));
         if is_closed {
             // No end element.
@@ -1089,10 +1104,14 @@ fn text_in_node(node: NodeRef<'_, Node>, output: &mut String) {
 
 /// Modifies links to work with HTML.
 ///
-/// For local paths, this changes the `.md` extension to `.html`.
-fn fix_link<'a>(link: CowStr<'a>) -> CowStr<'a> {
+/// For local paths, this changes the `.md` extension to `.html` when
+/// `clean_urls` is `false`, or to a trailing-slash clean URL when `true`.
+///
+/// When `clean_urls` is `true`, this also prepends `path_to_root` to ensure
+/// links work correctly from pages in subdirectories.
+fn fix_link<'a>(link: CowStr<'a>, source_path: &Path, clean_urls: bool) -> CowStr<'a> {
     static_regex!(SCHEME_LINK, r"^[a-z][a-z0-9+.-]*:");
-    static_regex!(MD_LINK, r"(?P<link>.*)\.md(?P<anchor>#.*)?");
+    static_regex!(MD_LINK, r"(?P<link>.*)\.md(?P<anchor>#[^?]*)?");
 
     if link.starts_with('#') {
         // Fragment-only link.
@@ -1105,8 +1124,22 @@ fn fix_link<'a>(link: CowStr<'a>) -> CowStr<'a> {
 
     // This is a relative link, adjust it as necessary.
     if let Some(caps) = MD_LINK.captures(&link) {
-        let mut fixed_link = String::from(&caps["link"]);
-        fixed_link.push_str(".html");
+        let link_stem = &caps["link"];
+        let mut fixed_link = if clean_urls {
+            // For clean URLs, pages are in subdirectories, so we need path_to_root.
+            let path_to_root = super::super::utils::clean_url_path_to_root(source_path);
+            let url_stem = if link_stem == "index" {
+                // Link to book index - just use path_to_root
+                String::new()
+            } else if let Some(parent) = link_stem.strip_suffix("/index") {
+                format!("{parent}/")
+            } else {
+                format!("{link_stem}/")
+            };
+            format!("{path_to_root}{url_stem}")
+        } else {
+            format!("{link_stem}.html")
+        };
         if let Some(anchor) = caps.name("anchor") {
             fixed_link.push_str(anchor.as_str());
         }
@@ -1117,13 +1150,13 @@ fn fix_link<'a>(link: CowStr<'a>) -> CowStr<'a> {
 }
 
 /// Calls [`fix_link`] for HTML elements.
-fn fix_html_link(el: &mut Element) {
+fn fix_html_link(el: &mut Element, source_path: &Path, clean_urls: bool) {
     if el.name() != "a" {
         return;
     }
     for attr in ["href", "xlink:href"] {
         if let Some(value) = el.attr(attr) {
-            let fixed = fix_link(value.into());
+            let fixed = fix_link(value.into(), source_path, clean_urls);
             el.insert_attr(attr, fixed.into_tendril());
         }
     }
@@ -1152,4 +1185,73 @@ pub(crate) fn is_void_element(name: &str) -> bool {
             | "track"
             | "wbr"
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::fix_link;
+    use pulldown_cmark::CowStr;
+    use std::path::Path;
+
+    fn fl(s: &str, source: &str, clean: bool) -> String {
+        fix_link(CowStr::Borrowed(s), Path::new(source), clean).into_string()
+    }
+
+    #[test]
+    fn fix_link_html_default() {
+        // With clean_urls=false, .md links become .html without path_to_root prefix.
+        assert_eq!(fl("chapter-b.md", "chapter-a.md", false), "chapter-b.html");
+    }
+
+    #[test]
+    fn fix_link_clean_url_basic() {
+        // With clean_urls=true, links get path_to_root prepended.
+        // From root-level chapter-a.md, path_to_root = "../"
+        assert_eq!(fl("chapter-b.md", "chapter-a.md", true), "../chapter-b/");
+    }
+
+    #[test]
+    fn fix_link_clean_url_from_index() {
+        // From index.md at root, path_to_root = "" (no extra ../)
+        assert_eq!(fl("chapter-b.md", "index.md", true), "chapter-b/");
+    }
+
+    #[test]
+    fn fix_link_clean_url_nested() {
+        // From nested chapter, path_to_root = "../../"
+        assert_eq!(fl("other.md", "foo/bar.md", true), "../../other/");
+    }
+
+    #[test]
+    fn fix_link_clean_url_index() {
+        // Links to index.md become ./
+        assert_eq!(fl("index.md", "chapter-a.md", true), "../");
+    }
+
+    #[test]
+    fn fix_link_clean_url_nested_index() {
+        // Links to foo/index.md become foo/
+        assert_eq!(fl("foo/index.md", "chapter-a.md", true), "../foo/");
+    }
+
+    #[test]
+    fn fix_link_clean_url_with_anchor() {
+        assert_eq!(
+            fl("foo/bar.md#section", "index.md", true),
+            "foo/bar/#section"
+        );
+    }
+
+    #[test]
+    fn fix_link_clean_url_external_unchanged() {
+        assert_eq!(
+            fl("https://example.com", "chapter-a.md", true),
+            "https://example.com"
+        );
+    }
+
+    #[test]
+    fn fix_link_clean_url_anchor_only_unchanged() {
+        assert_eq!(fl("#anchor", "chapter-a.md", true), "#anchor");
+    }
 }

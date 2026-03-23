@@ -4,12 +4,25 @@ import { defineConfig, globalIgnores } from "eslint/config";
 const handlebarsPreprocessor = {
     processors: {
         "handlebars-js": {
+            meta: {
+                name: 'handlebars-js',
+                version: '1.0.0',
+            },
             preprocess(text, filename) {
                 if (filename.endsWith('.hbs')) {
-                    // This is a really dumb strip, which will likely not work
-                    // for more complex expressions, but for our use is good
-                    // enough for now.
-                    return [text.replace(/\{\{.*?\}\}/g, '')];
+                    // Handle block expressions: {{#if ...}}...{{else}}...{{/if}}
+                    // We keep the first branch and remove the else branch
+                    let result = text;
+                    // Remove {{else}}...{{/if}} (the else branch)
+                    result = result.replace(/\{\{else\}\}[\s\S]*?\{\{\/if\}\}/g, '');
+                    // Remove remaining {{#if ...}} and {{/if}} tags
+                    result = result.replace(/\{\{#if[^}]*\}\}/g, '');
+                    result = result.replace(/\{\{\/if\}\}/g, '');
+                    // Remove simple Handlebars tags
+                    result = result.replace(/\{\{[^}]*\}\}/g, '');
+                    // Strip trailing whitespace from lines that only had handlebars tags
+                    result = result.replace(/[ \t]+$/gm, '');
+                    return [result];
                 }
                 return [text];
             },
