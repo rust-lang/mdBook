@@ -115,6 +115,10 @@ impl HtmlHandlebars {
         nav("previous", prev_ch);
         nav("next", next_ch);
 
+        // Inject frontmatter OG metadata into template context
+        #[cfg(feature = "frontmatter")]
+        crate::frontmatter::inject_frontmatter_data(&ch.content, &mut ctx.data);
+
         // Render the handlebars template with the data
         debug!("Render template");
         let rendered = ctx.handlebars.render("index", &ctx.data)?;
