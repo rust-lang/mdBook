@@ -356,6 +356,16 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
         headers = Array.from(main.querySelectorAll('h2, h3, h4, h5, h6'))
             .filter(h => h.id !== '' && h.children.length && h.children[0].tagName === 'A');
 
+        // Skip the first heading if its text matches the active sidebar link.
+        // This avoids duplicating the chapter title in the "on this page" list
+        // when a chapter's markdown starts with a heading (e.g. `## Section Title`)
+        // that matches its SUMMARY.md entry.
+        // See https://github.com/rust-lang/mdBook/issues/2995
+        if (headers.length > 0
+            && activeSection.textContent.trim() === headers[0].textContent.trim()) {
+            headers.shift();
+        }
+
         if (headers.length === 0) {
             return;
         }
