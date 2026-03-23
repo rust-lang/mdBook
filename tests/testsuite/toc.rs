@@ -141,6 +141,16 @@ fn check_link_target_fallback() {
     );
 }
 
+/// The generated toc.js should normalize URLs for comparison so that TOC
+/// highlighting works on hosts that use "pretty URLs" (stripping .html).
+/// See <https://github.com/rust-lang/mdBook/issues/3034>.
+#[test]
+fn toc_js_normalizes_urls_for_pretty_urls() {
+    BookTest::from_dir("toc/basic_toc")
+        .check_file_contains("book/toc*.js", "normalizeUrl")
+        .check_file_contains("book/toc*.js", "normalizeUrl(link.href) === normalizedCurrentPage");
+}
+
 // Checks formatting of summary names with inline elements.
 #[test]
 fn summary_with_markdown_formatting() {
