@@ -755,7 +755,19 @@ aria-label="Show hidden lines"></button>';
         text: function(trigger) {
             hideTooltip(trigger);
             const playground = trigger.closest('pre');
-            return playground_text(playground, false);
+            let text = playground_text(playground, false);
+
+            // Often console code blocks begin with a dollar or hash prompt and have
+            // example output. Copying and pasting this into a terminal will fail.
+            // Instead, strip the prompts and skip the output lines.
+            const codeBlock = playground.querySelector('code');
+            if (codeBlock && codeBlock.classList.contains('language-console')) {
+                text = text.split('\n')
+                    .filter(line => line.startsWith('$ ') || line.startsWith('# '))
+                    .map(line => line.substring(2))
+                    .join('\n');
+            }
+            return text;
         },
     });
 
