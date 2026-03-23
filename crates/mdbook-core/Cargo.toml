@@ -14,6 +14,7 @@ serde.workspace = true
 serde_json.workspace = true
 toml.workspace = true
 tracing.workspace = true
+tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 
 [dev-dependencies]
 tempfile.workspace = true
