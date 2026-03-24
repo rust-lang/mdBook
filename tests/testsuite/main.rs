@@ -12,6 +12,7 @@ mod includes;
 mod index;
 mod init;
 mod markdown;
+mod mdbookignore;
 mod playground;
 mod preprocessor;
 mod print;
