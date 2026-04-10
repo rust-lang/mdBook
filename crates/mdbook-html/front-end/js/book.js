@@ -706,10 +706,20 @@ aria-label="Show hidden lines"></button>';
 
         // Usually needs the Shift key to be pressed
         switch (e.key) {
-        case '?':
+        case '?': {
+            const active = document.activeElement;
+            if (active &&
+                (
+                    active.tagName === 'INPUT' ||
+                    active.tagName === 'TEXTAREA' ||
+                    active.isContentEditable
+                )) {
+                return;
+            }
             e.preventDefault();
             showHelp();
             break;
+        }
         }
 
         // Rest of the keys are only active when the Shift key is not pressed
