@@ -89,17 +89,17 @@ rust-version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-clap.workspace = true
 clap_complete.workspace = true
+clap.workspace = true
+ignore.workspace = true
 mdbook-core.workspace = true
 mdbook-driver.workspace = true
 mdbook-html.workspace = true
 opener.workspace = true
-tracing.workspace = true
 tracing-subscriber.workspace = true
+tracing.workspace = true
 
 # Watch feature
-ignore = { workspace = true, optional = true }
 notify = { workspace = true, optional = true }
 notify-debouncer-mini = { workspace = true, optional = true }
 pathdiff = { workspace = true, optional = true }
@@ -125,7 +125,7 @@ walkdir.workspace = true
 
 [features]
 default = ["watch", "serve", "search"]
-watch = ["dep:notify", "dep:notify-debouncer-mini", "dep:ignore", "dep:pathdiff", "dep:walkdir"]
+watch = ["dep:notify", "dep:notify-debouncer-mini", "dep:pathdiff", "dep:walkdir"]
 serve = ["dep:futures-util", "dep:tokio", "dep:axum", "dep:tower-http"]
 search = ["mdbook-html/search"]
 
