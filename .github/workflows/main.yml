@@ -44,7 +44,7 @@ jobs:
             target: x86_64-unknown-linux-gnu
     name: ${{ matrix.name }}
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Install Rust
       run: bash ci/install-rust.sh ${{ matrix.rust }} ${{ matrix.target }}
     - name: Build and run tests
@@ -55,7 +55,7 @@ jobs:
   aarch64-cross-builds:
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Install Rust
       run: bash ci/install-rust.sh stable aarch64-unknown-linux-musl
     - name: Build
@@ -65,7 +65,7 @@ jobs:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Install Rust
       run: rustup update stable && rustup default stable && rustup component add rustfmt
     - run: cargo fmt --check
@@ -74,7 +74,7 @@ jobs:
     name: GUI tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install Rust
         run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
       - name: Install npm
@@ -92,7 +92,7 @@ jobs:
   clippy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install Rust
         run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
       - run: rustup component add clippy
@@ -102,7 +102,7 @@ jobs:
     name: Check API docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install Rust
         run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
       - name: Ensure intradoc links are valid
@@ -114,7 +114,7 @@ jobs:
     name: Check version bump
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - run: rustup update stable && rustup default stable
       - name: Install cargo-semver-checks
         run: |

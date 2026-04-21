@@ -30,7 +30,7 @@ jobs:
             os: windows-latest
     name: Deploy ${{ matrix.target }}
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Install Rust
       run: ci/install-rust.sh stable ${{ matrix.target }}
     - name: Build asset
@@ -43,7 +43,7 @@ jobs:
     name: GitHub Pages
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Install Rust (rustup)
       run: rustup update stable --no-self-update && rustup default stable
     - name: Deploy the User Guide to GitHub Pages using the gh-pages branch
@@ -56,7 +56,7 @@ jobs:
       id-token: write
     environment: publish
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install Rust (rustup)
         run: rustup update stable --no-self-update && rustup default stable
       - name: Authenticate with crates.io
