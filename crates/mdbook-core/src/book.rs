@@ -89,6 +89,29 @@ impl Book {
         );
     }
 
+    /// Recursively collect all chapters in the book as mutable thin references,
+    /// allowing you to mutate them in parallel.
+    ///
+    /// ```
+    /// use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
+    /// # use mdbook_core::book::{Book, BookItem, Chapter};
+    /// # let mut chapter = Chapter::new("Chapter 1", String::new(), "1.md", vec![]);
+    /// # let mut section = Chapter::new("Section 1.1", String::new(), "1/1.md", vec![]);
+    /// # let subsection = Chapter::new("Subsection 1.1.1", String::new(), "1/1/1.md", vec![]);
+    /// # section.sub_items.push(BookItem::Chapter(subsection));
+    /// # chapter.sub_items.push(BookItem::Chapter(section));
+    /// # let mut book = Book::new_with_items(vec![BookItem::Chapter(chapter)]);
+    /// book.chapters_mut_thin()
+    ///     .par_iter_mut()
+    ///     .for_each(|chapter| chapter.name.push_str(" [edited]"));
+    /// assert!(book.chapters().all(|chapter| chapter.name.ends_with(" [edited]")));
+    /// ```
+    pub fn chapters_mut_thin(&mut self) -> Vec<ChapterMutThin<'_>> {
+        let mut chapters_thin = Vec::new();
+        chapters_mut_thin(&mut self.items, &mut chapters_thin);
+        chapters_thin
+    }
+
     /// Append a `BookItem` to the `Book`.
     pub fn push_item<I: Into<BookItem>>(&mut self, item: I) -> &mut Self {
         self.items.push(item.into());
@@ -108,6 +131,32 @@ where
 
         func(item);
     }
+}
+
+/// Collect all chapters in the book.
+fn chapters_mut_thin<'a>(items: &'a mut [BookItem], accumulator: &mut Vec<ChapterMutThin<'a>>) {
+    items.iter_mut().for_each(move |item| {
+        if let BookItem::Chapter(Chapter {
+            name,
+            content,
+            number,
+            sub_items,
+            path,
+            source_path,
+            parent_names,
+        }) = item
+        {
+            accumulator.push(ChapterMutThin {
+                name,
+                content,
+                number,
+                path,
+                source_path,
+                parent_names,
+            });
+            chapters_mut_thin(sub_items, accumulator);
+        }
+    })
 }
 
 /// Enum representing any type of item which can be added to a book.
@@ -200,6 +249,30 @@ impl Chapter {
         }
     }
 
+    /// Check if the chapter is a draft chapter, meaning it has no path to a source markdown file.
+    pub fn is_draft_chapter(&self) -> bool {
+        self.path.is_none()
+    }
+}
+
+/// A thin mutable reference to a chapter for parallel book patching.
+#[non_exhaustive]
+pub struct ChapterMutThin<'a> {
+    /// The chapter's name.
+    pub name: &'a mut String,
+    /// The chapter's contents.
+    pub content: &'a mut String,
+    /// The chapter's section number, if it has one.
+    pub number: &'a mut Option<SectionNumber>,
+    /// The chapter's location, relative to the `SUMMARY.md` file.
+    pub path: &'a mut Option<PathBuf>,
+    /// The chapter's source file, relative to the `SUMMARY.md` file.
+    pub source_path: &'a mut Option<PathBuf>,
+    /// An ordered list of the names of each chapter above this one in the hierarchy.
+    pub parent_names: &'a mut Vec<String>,
+}
+
+impl ChapterMutThin<'_> {
     /// Check if the chapter is a draft chapter, meaning it has no path to a source markdown file.
     pub fn is_draft_chapter(&self) -> bool {
         self.path.is_none()
