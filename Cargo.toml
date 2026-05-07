@@ -108,6 +108,7 @@ walkdir = { workspace = true, optional = true }
 # Serve feature
 axum = { workspace = true, features = ["ws"], optional = true }
 futures-util = { workspace = true, optional = true }
+listenfd = { version = "1", optional = true }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"], optional = true }
 tower-http = { workspace = true, features = ["fs", "trace"], optional = true }
 
@@ -126,7 +127,7 @@ walkdir.workspace = true
 [features]
 default = ["watch", "serve", "search"]
 watch = ["dep:notify", "dep:notify-debouncer-mini", "dep:ignore", "dep:pathdiff", "dep:walkdir"]
-serve = ["dep:futures-util", "dep:tokio", "dep:axum", "dep:tower-http"]
+serve = ["dep:futures-util", "dep:listenfd", "dep:tokio", "dep:axum", "dep:tower-http"]
 search = ["mdbook-html/search"]
 
 [[bin]]
