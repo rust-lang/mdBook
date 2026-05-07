@@ -83,7 +83,7 @@ pub(crate) fn id_from_content(content: &str) -> String {
     // - https://pandoc.org/MANUAL.html#extension-auto_identifiers
     // - https://kramdown.gettalong.org/converter/html#auto-ids
     // - https://docs.rs/comrak/latest/comrak/options/struct.Extension.html#structfield.header_ids
-    content
+    let id: String = content
         .trim()
         .to_lowercase()
         .chars()
@@ -96,7 +96,16 @@ pub(crate) fn id_from_content(content: &str) -> String {
                 None
             }
         })
-        .collect()
+        .collect();
+    // Headings consisting entirely of stripped characters (e.g. `## ::`) would
+    // otherwise produce an empty id and an empty `href="#"`, so fall back to
+    // "section" the way pandoc and kramdown do. `unique_id` will append a
+    // numeric suffix when the same fallback is used more than once.
+    if id.is_empty() {
+        String::from("section")
+    } else {
+        id
+    }
 }
 
 #[cfg(test)]
@@ -128,8 +137,32 @@ mod tests {
         assert_eq!(id_from_content("中文"), "中文");
         assert_eq!(id_from_content("にほんご"), "にほんご");
         assert_eq!(id_from_content("한국어"), "한국어");
-        assert_eq!(id_from_content(""), "");
+        assert_eq!(id_from_content(""), "section");
+        assert_eq!(id_from_content("::"), "section");
+        assert_eq!(id_from_content("!.():"), "section");
+        assert_eq!(id_from_content("   "), "section");
         assert_eq!(id_from_content("中文標題 CJK title"), "中文標題-cjk-title");
         assert_eq!(id_from_content("Über"), "über");
+    }
+
+    #[test]
+    fn punctuation_only_headings_get_unique_section_ids() {
+        let mut id_counter = Default::default();
+        assert_eq!(
+            unique_id(&id_from_content("::"), &mut id_counter),
+            "section"
+        );
+        assert_eq!(
+            unique_id(&id_from_content("!!!"), &mut id_counter),
+            "section-1"
+        );
+        assert_eq!(
+            unique_id(&id_from_content("Real Heading"), &mut id_counter),
+            "real-heading"
+        );
+        assert_eq!(
+            unique_id(&id_from_content("***"), &mut id_counter),
+            "section-2"
+        );
     }
 }
