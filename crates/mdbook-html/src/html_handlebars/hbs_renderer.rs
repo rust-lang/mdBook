@@ -39,7 +39,8 @@ impl HtmlHandlebars {
 
         let path = ch.path.as_ref().unwrap();
         // "print.html" is used for the print page.
-        if path == Path::new("print.md") {
+        // "toc.html" is used for the no-JS table of contents fallback.
+        if path == Path::new("print.md") || path == Path::new("toc.md") {
             bail!("{} is reserved for internal use", path.display());
         };
 
