@@ -129,7 +129,7 @@
             <!-- populated by js -->
             <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
             <noscript>
-                <iframe class="sidebar-iframe-outer" src="{{ path_to_root }}toc.html"></iframe>
+                {{#if no_html_extension}}<iframe class="sidebar-iframe-outer" src="{{ path_to_root }}_toc/"></iframe>{{else}}<iframe class="sidebar-iframe-outer" src="{{ path_to_root }}toc.html"></iframe>{{/if}}
             </noscript>
             <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -168,7 +168,7 @@
 
                     <div class="right-buttons">
                         {{#if print_enable}}
-                        <a href="{{ path_to_root }}print.html" title="Print this book" aria-label="Print this book">
+                        {{#if no_html_extension}}<a href="{{ path_to_root }}_print/" title="Print this book" aria-label="Print this book">{{else}}<a href="{{ path_to_root }}print.html" title="Print this book" aria-label="Print this book">{{/if}}
                             {{fa "solid" "print" "print-button"}}
                         </a>
                         {{/if}}

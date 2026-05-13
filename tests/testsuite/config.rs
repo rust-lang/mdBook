@@ -342,3 +342,23 @@ preprocessor saw custom config
         // No HTML output
         .check_file_list("book", str![[""]]);
 }
+
+// Test that no-html-extension config can be parsed from TOML.
+#[test]
+fn config_no_html_extension_true() {
+    let mut test = BookTest::init(|_| {});
+    test.change_file("book.toml", "[output.html]\nno-html-extension = true");
+    let book = test.load_book();
+    let html_config = book.config.html_config().expect("html config should exist");
+    assert_eq!(html_config.no_html_extension, true);
+}
+
+// Test that no-html-extension defaults to false when not specified.
+#[test]
+fn config_no_html_extension_default() {
+    let mut test = BookTest::init(|_| {});
+    test.change_file("book.toml", "[output.html]\n");
+    let book = test.load_book();
+    let html_config = book.config.html_config().expect("html config should exist");
+    assert_eq!(html_config.no_html_extension, false);
+}

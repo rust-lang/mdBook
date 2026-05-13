@@ -1,0 +1,5 @@
+[book]
+title = "Clean URLs Test"
+
+[output.html]
+no-html-extension = true

@@ -1,6 +1,7 @@
 //! Utilities for processing HTML.
 
 use std::collections::HashSet;
+use std::ffi::OsStr;
 use std::path::{Component, Path, PathBuf};
 
 /// Utility function to normalize path elements like `..`.
@@ -99,6 +100,74 @@ pub(crate) fn id_from_content(content: &str) -> String {
         .collect()
 }
 
+/// Converts a logical HTML path to a clean URL link string.
+///
+/// Index pages have their `index.html` stripped, keeping a trailing slash.
+/// Non-index pages have their `.html` extension replaced by `/`.
+///
+/// # Examples
+///
+/// - `foo/bar.html` → `"foo/bar/"`
+/// - `foo/index.html` → `"foo/"`
+/// - `index.html` → `"./"`
+/// - `bar.html` → `"bar/"`
+pub(crate) fn clean_url_link_path(logical_html_path: &Path) -> String {
+    let is_index = logical_html_path.file_stem() == Some(OsStr::new("index"));
+
+    if is_index {
+        match logical_html_path.parent() {
+            Some(parent) if parent.as_os_str().is_empty() => "./".to_string(),
+            Some(parent) => format!("{}/", parent.to_url_path()),
+            None => "./".to_string(),
+        }
+    } else {
+        let without_ext = logical_html_path.with_extension("");
+        format!("{}/", without_ext.to_url_path())
+    }
+}
+
+/// Converts a logical HTML path to the physical output path in clean URL mode.
+///
+/// Index pages are left unchanged. Non-index pages are moved into a
+/// subdirectory so the URL has no extension.
+///
+/// # Examples
+///
+/// - `foo/bar.html` → `PathBuf::from("foo/bar/index.html")`
+/// - `foo/index.html` → `PathBuf::from("foo/index.html")`
+/// - `index.html` → `PathBuf::from("index.html")`
+/// - `bar.html` → `PathBuf::from("bar/index.html")`
+pub(crate) fn clean_url_output_path(logical_html_path: &Path) -> PathBuf {
+    let is_index = logical_html_path.file_stem() == Some(OsStr::new("index"));
+
+    if is_index {
+        logical_html_path.to_path_buf()
+    } else {
+        logical_html_path.with_extension("").join("index.html")
+    }
+}
+
+/// Computes the path-to-root for a source `.md` file in clean URL mode.
+///
+/// Wraps [`mdbook_core::utils::fs::path_to_root`], adding one extra `../`
+/// for non-index files because those pages are served from a subdirectory.
+///
+/// # Examples
+///
+/// - `foo/bar.md` → `"../../"`
+/// - `foo/index.md` → `"../"`
+/// - `index.md` → `""`
+/// - `bar.md` → `"../"`
+/// - `a/b/c.md` → `"../../../"`
+pub(crate) fn clean_url_path_to_root(source_md_path: &Path) -> String {
+    let is_index = source_md_path.file_stem() == Some(OsStr::new("index"));
+    let mut root = mdbook_core::utils::fs::path_to_root(source_md_path);
+    if !is_index {
+        root.push_str("../");
+    }
+    root
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -131,5 +200,112 @@ mod tests {
         assert_eq!(id_from_content(""), "");
         assert_eq!(id_from_content("中文標題 CJK title"), "中文標題-cjk-title");
         assert_eq!(id_from_content("Über"), "über");
+    }
+
+    #[test]
+    fn clean_url_link_path_root_index() {
+        assert_eq!(clean_url_link_path(Path::new("index.html")), "./");
+    }
+
+    #[test]
+    fn clean_url_link_path_root_non_index() {
+        assert_eq!(clean_url_link_path(Path::new("bar.html")), "bar/");
+    }
+
+    #[test]
+    fn clean_url_link_path_nested_index() {
+        assert_eq!(clean_url_link_path(Path::new("foo/index.html")), "foo/");
+    }
+
+    #[test]
+    fn clean_url_link_path_nested_non_index() {
+        assert_eq!(clean_url_link_path(Path::new("foo/bar.html")), "foo/bar/");
+    }
+
+    #[test]
+    fn clean_url_link_path_deeply_nested() {
+        assert_eq!(clean_url_link_path(Path::new("a/b/c.html")), "a/b/c/");
+        assert_eq!(clean_url_link_path(Path::new("a/b/index.html")), "a/b/");
+    }
+
+    #[test]
+    fn clean_url_output_path_root_index() {
+        assert_eq!(
+            clean_url_output_path(Path::new("index.html")),
+            PathBuf::from("index.html")
+        );
+    }
+
+    #[test]
+    fn clean_url_output_path_root_non_index() {
+        assert_eq!(
+            clean_url_output_path(Path::new("bar.html")),
+            PathBuf::from("bar/index.html")
+        );
+    }
+
+    #[test]
+    fn clean_url_output_path_nested_index() {
+        assert_eq!(
+            clean_url_output_path(Path::new("foo/index.html")),
+            PathBuf::from("foo/index.html")
+        );
+    }
+
+    #[test]
+    fn clean_url_output_path_nested_non_index() {
+        assert_eq!(
+            clean_url_output_path(Path::new("foo/bar.html")),
+            PathBuf::from("foo/bar/index.html")
+        );
+    }
+
+    #[test]
+    fn clean_url_output_path_deeply_nested() {
+        assert_eq!(
+            clean_url_output_path(Path::new("a/b/c.html")),
+            PathBuf::from("a/b/c/index.html")
+        );
+        assert_eq!(
+            clean_url_output_path(Path::new("a/b/index.html")),
+            PathBuf::from("a/b/index.html")
+        );
+    }
+
+    #[test]
+    fn clean_url_path_to_root_root_index() {
+        // index.md at root: path_to_root = "", no extra since index
+        assert_eq!(clean_url_path_to_root(Path::new("index.md")), "");
+    }
+
+    #[test]
+    fn clean_url_path_to_root_root_non_index() {
+        // bar.md at root: path_to_root = "", +"../" since non-index
+        assert_eq!(clean_url_path_to_root(Path::new("bar.md")), "../");
+    }
+
+    #[test]
+    fn clean_url_path_to_root_nested_index() {
+        // foo/index.md: path_to_root = "../", no extra since index
+        assert_eq!(clean_url_path_to_root(Path::new("foo/index.md")), "../");
+    }
+
+    #[test]
+    fn clean_url_path_to_root_nested_non_index() {
+        // foo/bar.md: path_to_root = "../", +"../" since non-index
+        assert_eq!(clean_url_path_to_root(Path::new("foo/bar.md")), "../../");
+    }
+
+    #[test]
+    fn clean_url_path_to_root_deeply_nested() {
+        // a/b/c.md: path_to_root(parent=a/b) = "../../", +"../" since non-index
+        assert_eq!(clean_url_path_to_root(Path::new("a/b/c.md")), "../../../");
+        // a/b/index.md: path_to_root(parent=a/b) = "../../", no extra since index
+        assert_eq!(clean_url_path_to_root(Path::new("a/b/index.md")), "../../");
+        // a/b/c/d.md: path_to_root(parent=a/b/c) = "../../../", +"../" since non-index
+        assert_eq!(
+            clean_url_path_to_root(Path::new("a/b/c/d.md")),
+            "../../../../"
+        );
     }
 }

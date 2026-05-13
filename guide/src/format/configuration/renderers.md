@@ -111,6 +111,7 @@ site-url = "/example-book/"
 cname = "myproject.rs"
 input-404 = "not-found.md"
 sidebar-header-nav = true
+no-html-extension = false
 ```
 
 The following configuration options are available:
@@ -170,6 +171,13 @@ The following configuration options are available:
   Static CSS and JS files can reference each other using `{{ resource "filename" }}` directives.
   Defaults to `true`.
 - **sidebar-header-nav:** If `true`, the sidebar will contain navigation for headers on the current page. Default is `true`.
+- **no-html-extension:** When set to `true`, generates clean URLs without `.html` extensions.
+  All pages are written to directory-based paths (e.g., `chapter/index.html` instead of `chapter.html`).
+  Special pages are placed in `_print/`, `_toc/`, and `_404/` directories.
+  All internal links use trailing-slash format (`chapter/` instead of `chapter.html`).
+  Works with all major static hosting providers (GitHub Pages, Netlify, Cloudflare Pages) and the built-in `mdbook serve` command.
+  **Note:** Chapter paths starting with `_print`, `_toc`, or `_404` will cause a build error.
+  Defaults to `false`.
 
 [custom domain]: https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site
 

@@ -322,3 +322,75 @@ HTML tags must be closed before exiting a markdown element.
             str![[r##"<h3 id="option"><a class="header" href="#option">Option<t></t></a></h3>"##]],
         );
 }
+
+// Checks that the `no-html-extension = true` setting produces directory-based output.
+#[test]
+fn clean_urls_produces_directory_based_output() {
+    let mut test = BookTest::from_dir("rendering/clean_urls");
+    test.build();
+
+    // A. File Structure — verify directory-based index.html files exist.
+    test.check_file_contains("book/index.html", "<!DOCTYPE HTML");
+    test.check_file_contains("book/intro/index.html", "<!DOCTYPE HTML");
+    test.check_file_contains("book/guide/index.html", "<!DOCTYPE HTML");
+    test.check_file_contains("book/guide/getting-started/index.html", "<!DOCTYPE HTML");
+    test.check_file_contains("book/reference/api/endpoints/index.html", "<!DOCTYPE HTML");
+    test.check_file_contains("book/_print/index.html", "<!DOCTYPE HTML");
+    test.check_file_contains("book/_toc/index.html", "<!DOCTYPE HTML");
+    test.check_file_contains("book/_404/index.html", "<!DOCTYPE HTML");
+
+    // Verify flat .html files do NOT exist.
+    assert!(!test.dir.join("book/intro.html").exists());
+    assert!(!test.dir.join("book/guide/getting-started.html").exists());
+    assert!(!test.dir.join("book/print.html").exists());
+    assert!(!test.dir.join("book/toc.html").exists());
+    assert!(!test.dir.join("book/404.html").exists());
+
+    // B. TOC Link Verification — clean URL hrefs in the TOC page.
+    test.check_file_contains("book/_toc/index.html", "href=\"guide/getting-started/\"");
+    test.check_file_contains("book/_toc/index.html", "href=\"intro/\"");
+
+    // C. path_to_root Verification.
+    // Root-level chapter: intro/ needs ../
+    test.check_file_contains("book/intro/index.html", "path_to_root = \"../\"");
+    // Nested chapter: guide/getting-started/ needs ../../
+    test.check_file_contains(
+        "book/guide/getting-started/index.html",
+        "path_to_root = \"../../\"",
+    );
+
+    // D. Print button and TOC iframe use clean URLs.
+    test.check_file_contains("book/intro/index.html", "href=\"../_print/\"");
+    test.check_file_contains("book/intro/index.html", "src=\"../_toc/\"");
+}
+
+// Checks that books without `no-html-extension` still produce flat .html files.
+#[test]
+fn clean_urls_backward_compatible_when_disabled() {
+    let mut test = BookTest::init(|_| {});
+    test.build();
+
+    // Default behavior: flat .html files should exist.
+    assert!(test.dir.join("book/chapter_1.html").exists());
+    // Directory-based file should NOT exist.
+    assert!(!test.dir.join("book/chapter_1/index.html").exists());
+    // print.html and 404.html should be flat.
+    assert!(test.dir.join("book/print.html").exists());
+    assert!(!test.dir.join("book/print/index.html").exists());
+}
+
+// Checks that clean URLs error when a chapter conflicts with a reserved directory.
+#[test]
+fn clean_urls_errors_on_reserved_path_conflict() {
+    BookTest::from_dir("rendering/clean_urls_conflict")
+        .run("build", |cmd| {
+            cmd.expect_failure();
+            cmd.expect_stderr(str![[r#"
+ INFO Book building has started
+ INFO Running the html backend
+ERROR Rendering failed
+[TAB]Caused by: Chapter path '_print/guide.md' conflicts with reserved special page directory '_print/'. Please rename the chapter to avoid paths starting with '_print', '_toc', or '_404'.
+
+"#]]);
+        });
+}
