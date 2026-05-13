@@ -87,7 +87,6 @@ Some may want to do this every time a change is pushed, and others may want to o
 
 You'll also need to understand the specifics on how to push a change to your web service.
 For example, [GitHub Pages] just requires committing the output onto a specific git branch.
-Other services may require using something like SSH to connect to a remote server.
 
 The basic outline is that you need to run `mdbook build` to generate the output, and then transfer the files (which are in the `book` directory) to the correct location.
 
