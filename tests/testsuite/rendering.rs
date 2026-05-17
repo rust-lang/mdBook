@@ -32,15 +32,11 @@ fn first_chapter_is_copied_as_index_even_if_not_first_elem() {
         // These two files should be equal.
         .check_main_file(
             "book/chapter_1.html",
-            str![[
-                r##"<h1 id="chapter-1"><a class="header" href="#chapter-1">Chapter 1</a></h1>"##
-            ]],
+            str![[r##"<h1 id="chapter-1"><a class="header" href="#chapter-1"></a>Chapter 1</h1>"##]],
         )
         .check_main_file(
             "book/index.html",
-            str![[
-                r##"<h1 id="chapter-1"><a class="header" href="#chapter-1">Chapter 1</a></h1>"##
-            ]],
+            str![[r##"<h1 id="chapter-1"><a class="header" href="#chapter-1"></a>Chapter 1</h1>"##]],
         );
 }
 
@@ -71,6 +67,7 @@ fn fontawesome_error_message() {
  INFO Book building has started
  INFO Running the html backend
 ERROR Rendering failed
+[TAB]Caused by: Error rendering `index` template
 [TAB]Caused by: Error rendering "index" line [..], col [..]: Unknown Font Awesome icon `github` for type `regular`. Hint: check the icon name and prefix (fas (solid), fab (brands), or far (regular)) at https://fontawesome.com/v6/search?m=free
 [TAB]Caused by: Unknown Font Awesome icon `github` for type `regular`. Hint: check the icon name and prefix (fas (solid), fab (brands), or far (regular)) at https://fontawesome.com/v6/search?m=free
 
@@ -319,6 +316,6 @@ HTML tags must be closed before exiting a markdown element.
         })
         .check_main_file(
             "book/chapter_1.html",
-            str![[r##"<h3 id="option"><a class="header" href="#option">Option<t></t></a></h3>"##]],
+            str![[r##"<h3 id="option"><a class="header" href="#option"></a>Option<t></t></h3>"##]],
         );
 }
