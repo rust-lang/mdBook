@@ -199,6 +199,12 @@ pub(crate) struct MarkdownTreeBuilder<'opts, 'event, EventIter> {
     /// tag. After the document has been parsed, all the definitions are moved
     /// to the end of the document.
     footnote_defs: HashMap<CowStr<'event>, NodeId>,
+    /// Nesting depth of HTML fragments that contain Handlebars syntax.
+    ///
+    /// Handlebars helpers such as `{{#include}}` are expanded after the HTML
+    /// tree is built; validating tag balance on the pre-expansion source
+    /// produces false positives (see issue #2941).
+    suppress_html_balance_warnings: usize,
 }
 
 impl<'opts, 'event, EventIter> MarkdownTreeBuilder<'opts, 'event, EventIter>
@@ -222,6 +228,7 @@ where
             table_cell_index: 0,
             footnote_numbers: HashMap::new(),
             footnote_defs: HashMap::new(),
+            suppress_html_balance_warnings: 0,
         };
         builder.process_events();
         builder.add_header_links();
@@ -597,12 +604,14 @@ where
             if !el.was_raw {
                 break;
             }
-            warn!(
-                "unclosed HTML tag `<{}>` found in `{}` while exiting {tag:?}\n\
-                HTML tags must be closed before exiting a markdown element.",
-                el.name.local,
-                self.options.path.display(),
-            );
+            if self.suppress_html_balance_warnings == 0 {
+                warn!(
+                    "unclosed HTML tag `<{}>` found in `{}` while exiting {tag:?}\n\
+                    HTML tags must be closed before exiting a markdown element.",
+                    el.name.local,
+                    self.options.path.display(),
+                );
+            }
             self.pop();
         }
         self.pop();
@@ -625,6 +634,10 @@ where
     /// Given some HTML, parse it into [`Node`] elements and append them to
     /// the current node.
     fn append_html(&mut self, html: &str) {
+        let has_handlebars = html.contains("{{");
+        if has_handlebars {
+            self.suppress_html_balance_warnings += 1;
+        }
         let tokens = parse_html(&html);
         let mut is_raw = false;
         for token in tokens {
@@ -647,7 +660,7 @@ where
                 }
                 Token::NullCharacterToken => {}
                 Token::EOFToken => {}
-                Token::ParseError(error) => {
+                Token::ParseError(error) if self.suppress_html_balance_warnings == 0 => {
                     warn!(
                         "html parse error in `{}`: {error}\n\
                          Html text was:\n\
@@ -655,7 +668,11 @@ where
                         self.options.path.display()
                     );
                 }
+                Token::ParseError(_) => {}
             }
+        }
+        if has_handlebars {
+            self.suppress_html_balance_warnings -= 1;
         }
     }
 
@@ -688,7 +705,7 @@ where
         *is_raw = false;
         if self.is_html_tag_matching(&tag.name) {
             self.pop();
-        } else {
+        } else if self.suppress_html_balance_warnings == 0 {
             // The proper thing to do here is to recover. However, the HTML
             // parsing algorithm for that is quite complex. See
             // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inbody
@@ -776,11 +793,13 @@ where
                 Node::Fragment => {}
                 Node::Element(el) => {
                     if el.was_raw {
-                        warn!(
-                            "unclosed HTML tag `<{}>` found in `{}`",
-                            el.name.local,
-                            self.options.path.display()
-                        );
+                        if self.suppress_html_balance_warnings == 0 {
+                            warn!(
+                                "unclosed HTML tag `<{}>` found in `{}`",
+                                el.name.local,
+                                self.options.path.display()
+                            );
+                        }
                     } else {
                         panic!(
                             "internal error: expected empty tag stack.\n

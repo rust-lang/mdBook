@@ -283,6 +283,26 @@ fn unclosed_html_tags() {
         );
 }
 
+// HTML with Handlebars helpers inside raw tags should not emit balance warnings
+// before the template is expanded (see issue #2941).
+#[test]
+fn html_with_handlebars_include_in_admonition() {
+    BookTest::init(|_| {})
+        .change_file(
+            "src/chapter_1.md",
+            "> [!TIP]\n> <details><summary>Click to open</summary>{{#include assets/partial.html}}</details>",
+        )
+        .change_file("src/assets/partial.html", "<p>included</p>")
+        .run("build", |cmd| {
+            cmd.expect_stderr(str![[r#"
+ INFO Book building has started
+ INFO Running the html backend
+ INFO HTML book written to `[ROOT]/book`
+
+"#]]);
+        });
+}
+
 // Test for HTML tags out of sync.
 #[test]
 fn unbalanced_html_tags() {
