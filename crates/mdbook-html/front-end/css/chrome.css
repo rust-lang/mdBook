@@ -1,5 +1,21 @@
 /* CSS for UI elements (a.k.a. chrome) */
 
+.skip-to-content {
+    position: absolute;
+    top: -100px;
+    left: 0;
+    padding: 0.5rem 1rem;
+    background-color: var(--bg);
+    color: var(--fg);
+    z-index: 1000;
+    text-decoration: none;
+    border: 2px solid var(--links);
+}
+
+.skip-to-content:focus {
+    top: 0;
+}
+
 html {
     scrollbar-color: var(--scrollbar) transparent;
 }

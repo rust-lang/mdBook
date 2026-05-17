@@ -63,6 +63,7 @@
         <script src="{{ resource "toc.js" }}"></script>
     </head>
     <body>
+    <a class="skip-to-content" href="#mdbook-content">Skip to main content</a>
     <div id="mdbook-help-container">
         <div id="mdbook-help-popup">
             <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
@@ -143,9 +144,9 @@
                 <div id="mdbook-menu-bar-hover-placeholder"></div>
                 <div id="mdbook-menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
-                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                        <button id="mdbook-sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
                             {{fa "solid" "bars"}}
-                        </label>
+                        </button>
                         <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
                             {{fa "solid" "paintbrush"}}
                         </button>
@@ -213,7 +214,7 @@
                     });
                 </script>
 
-                <div id="mdbook-content" class="content">
+                <div id="mdbook-content" class="content" tabindex="-1">
                     <main>
                         {{{ content }}}
                     </main>
