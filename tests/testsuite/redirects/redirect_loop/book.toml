@@ -1,0 +1,6 @@
+[book]
+title = "redirect_loop"
+
+[output.html.redirect]
+"/chapter_1.html#a" = "chapter_2.html#b"
+"/chapter_2.html#b" = "chapter_1.html#a"

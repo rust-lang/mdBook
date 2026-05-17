@@ -245,6 +245,7 @@ impl HtmlHandlebars {
         }
 
         debug!("Emitting redirects");
+        detect_redirect_loops(redirects)?;
         let redirects = combine_fragment_redirects(redirects);
 
         for (original, (dest, fragment_map)) in redirects {
@@ -637,6 +638,69 @@ struct RenderChapterContext<'a> {
     book_config: BookConfig,
     html_config: HtmlConfig,
     chapter_titles: &'a HashMap<PathBuf, String>,
+}
+
+/// Returns the redirect source path used in `[output.html.redirect]` keys.
+fn canonical_redirect_source(path: &str) -> String {
+    if path.starts_with('/') {
+        path.to_string()
+    } else {
+        format!("/{path}")
+    }
+}
+
+fn redirect_destination_is_external(dest: &str) -> bool {
+    let dest = dest.trim();
+    dest.starts_with("http://") || dest.starts_with("https://") || dest.starts_with("//")
+}
+
+/// Detects cycles in `[output.html.redirect]` before emitting redirect pages.
+fn detect_redirect_loops(redirects: &HashMap<String, String>) -> Result<()> {
+    use std::collections::HashSet;
+
+    let mut visited = HashSet::new();
+    let mut sources: Vec<_> = redirects.keys().collect();
+    sources.sort();
+    for start in sources {
+        if visited.contains(start) {
+            continue;
+        }
+        let mut path: Vec<&str> = Vec::new();
+        let mut current = start.as_str();
+        loop {
+            if let Some(pos) = path.iter().position(|&p| p == current) {
+                let mut cycle = String::new();
+                for source in &path[pos..] {
+                    if !cycle.is_empty() {
+                        cycle.push_str(" -> ");
+                    }
+                    cycle.push_str(source);
+                    if let Some(dest) = redirects.get(*source) {
+                        cycle.push_str(" -> ");
+                        cycle.push_str(dest);
+                    }
+                }
+                bail!("redirect loop detected: {cycle}");
+            }
+            visited.insert(current.to_owned());
+            path.push(current);
+            let Some(dest) = redirects.get(current) else {
+                break;
+            };
+            if redirect_destination_is_external(dest) {
+                break;
+            }
+            let canonical = canonical_redirect_source(dest);
+            let Some((next, _)) = redirects
+                .get_key_value(&canonical)
+                .or_else(|| redirects.get_key_value(dest))
+            else {
+                break;
+            };
+            current = next.as_str();
+        }
+    }
+    Ok(())
 }
 
 /// Redirect mapping.
