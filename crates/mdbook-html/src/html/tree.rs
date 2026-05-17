@@ -392,10 +392,11 @@ where
                 el
             }
             Tag::BlockQuote(kind) => {
-                let mut b = Element::new("blockquote");
                 if let Some(kind) = kind {
                     let (class_kind, icon, text) = super::admonitions::select_tag(kind);
                     let class = format!("blockquote-tag blockquote-tag-{class_kind}");
+                    let mut b = Element::new("div");
+                    b.insert_attr("role", "note".into());
                     b.insert_attr("class", class.into());
                     self.push(Node::Element(b));
 
@@ -416,7 +417,7 @@ where
                     self.pop();
                     return;
                 }
-                b
+                Element::new("blockquote")
             }
             Tag::CodeBlock(kind) => {
                 let mut code = Element::new("code");
