@@ -32,11 +32,15 @@ fn first_chapter_is_copied_as_index_even_if_not_first_elem() {
         // These two files should be equal.
         .check_main_file(
             "book/chapter_1.html",
-            str![[r##"<h1 id="chapter-1"><a class="header" href="#chapter-1"></a>Chapter 1</h1>"##]],
+            str![[
+                r##"<h1 id="chapter-1"><a class="header" href="#chapter-1"></a>Chapter 1</h1>"##
+            ]],
         )
         .check_main_file(
             "book/index.html",
-            str![[r##"<h1 id="chapter-1"><a class="header" href="#chapter-1"></a>Chapter 1</h1>"##]],
+            str![[
+                r##"<h1 id="chapter-1"><a class="header" href="#chapter-1"></a>Chapter 1</h1>"##
+            ]],
         );
 }
 
