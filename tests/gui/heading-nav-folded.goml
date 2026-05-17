@@ -1,3 +1,13 @@
-// Tests when chapter folding is enabled.
+// Tests when chapter and header folding are enabled.
 
-go-to: |DOC_PATH| + "heading-nav-folded/index.html"
+go-to: |DOC_PATH| + "heading-nav-folded/intro.html"
+
+// Nested headers start collapsed when fold level is 0.
+assert-count: (".header-item", 4)
+assert-attribute: ("li:has(> span > a[href='#heading-a'])", {"class": "header-item"})
+assert-attribute: ("li:has(> span > a[href='#heading-a2'])", {"class": "header-item"})
+assert-css: ("//a[@href='#heading-a2']/../following-sibling::ol", {"display": "none"})
+
+click: "a.header-in-summary[href='#heading-a']"
+wait-for-attribute: ("li:has(> span > a[href='#heading-a'])", {"class": "header-item expanded"})
+wait-for-css: ("//a[@href='#heading-a2']/../following-sibling::ol", {"display": "block"})

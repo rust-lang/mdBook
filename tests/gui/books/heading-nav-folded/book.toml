@@ -4,3 +4,4 @@ title = "heading-nav-folded"
 [output.html.fold]
 enable = true
 level = 0
+headers = true

@@ -196,12 +196,16 @@ The `[output.html.fold]` table provides options for controlling folding of the c
 [output.html.fold]
 enable = false    # whether or not to enable section folding
 level = 0         # the depth to start folding
+headers = false   # whether to fold page headers in the sidebar
 ```
 
 - **enable:** Enable section-folding. When off, all folds are open.
   Defaults to `false`.
 - **level:** The higher the more folded regions are open. When level is 0, all
   folds are closed. Defaults to `0`.
+- **headers:** When `true` and **enable** is `true`, apply the same fold
+  settings to the page header list shown by `sidebar-header-nav`. Defaults to
+  `false`.
 
 ### `[output.html.playground]`
 

@@ -602,6 +602,10 @@ pub struct Fold {
     /// are closed.
     /// Default: `0`.
     pub level: u8,
+    /// When `true` and [`enable`](Self::enable) is `true`, apply the same fold
+    /// settings to the page header list in [`HtmlConfig::sidebar_header_nav`].
+    /// Default: `false`.
+    pub headers: bool,
 }
 
 /// Configuration for tweaking how the HTML renderer handles the playground.

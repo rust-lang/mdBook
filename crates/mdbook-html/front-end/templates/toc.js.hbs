@@ -374,8 +374,32 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
             stack.push({level: i + 1, ol: ol});
         }
 
-        // The level where it will start folding deeply nested headers.
-        const foldLevel = 3;
+        const foldHeaders = {{fold_headers}};
+        const foldEnable = {{fold_enable}};
+        const foldLevel = {{fold_level}};
+        // Legacy default when header folding is not configured.
+        const legacyFoldLevel = 3;
+
+        function headerDepth(level) {
+            return level - firstLevel;
+        }
+
+        function headerIsExpanded(level) {
+            if (foldHeaders && foldEnable) {
+                return headerDepth(level) < foldLevel;
+            }
+            return true;
+        }
+
+        function headerHasFoldToggle(level, nextLevel) {
+            if (nextLevel <= level) {
+                return false;
+            }
+            if (foldHeaders && foldEnable) {
+                return true;
+            }
+            return level >= legacyFoldLevel;
+        }
 
         for (let i = 0; i < headers.length; i++) {
             const header = headers[i];
@@ -407,8 +431,7 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
 
             const li = document.createElement('li');
             li.classList.add('header-item');
-            li.classList.add('expanded');
-            if (level < foldLevel) {
+            if (headerIsExpanded(level)) {
                 li.classList.add('expanded');
             }
             const span = document.createElement('span');
@@ -422,7 +445,7 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
             const nextHeader = headers[i + 1];
             if (nextHeader !== undefined) {
                 const nextLevel = parseInt(nextHeader.tagName.charAt(1));
-                if (nextLevel > level && level >= foldLevel) {
+                if (headerHasFoldToggle(level, nextLevel)) {
                     const toggle = document.createElement('a');
                     toggle.classList.add('chapter-fold-toggle');
                     toggle.classList.add('header-toggle');

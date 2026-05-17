@@ -11,7 +11,7 @@ use mdbook_core::config::{BookConfig, Config, HtmlConfig};
 use mdbook_core::utils::fs;
 use mdbook_renderer::{RenderContext, Renderer};
 use serde_json::json;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use tracing::error;
 use tracing::{debug, info, trace, warn};
@@ -245,6 +245,7 @@ impl HtmlHandlebars {
         }
 
         debug!("Emitting redirects");
+        validate_redirect_loops(redirects)?;
         let redirects = combine_fragment_redirects(redirects);
 
         for (original, (dest, fragment_map)) in redirects {
@@ -547,6 +548,7 @@ fn make_data(
     data.insert("print_enable".to_owned(), json!(html_config.print.enable));
     data.insert("fold_enable".to_owned(), json!(html_config.fold.enable));
     data.insert("fold_level".to_owned(), json!(html_config.fold.level));
+    data.insert("fold_headers".to_owned(), json!(html_config.fold.headers));
     data.insert(
         "sidebar_header_nav".to_owned(),
         json!(html_config.sidebar_header_nav),
@@ -639,6 +641,75 @@ struct RenderChapterContext<'a> {
     chapter_titles: &'a HashMap<PathBuf, String>,
 }
 
+/// Returns the canonical redirect map key (leading `/`, no leading `./`).
+fn redirect_lookup_key(path: &str) -> String {
+    let path = path.trim_start_matches('/');
+    format!("/{path}")
+}
+
+fn is_external_redirect(url: &str) -> bool {
+    let url = url.trim();
+    url.starts_with("http://") || url.starts_with("https://") || url.starts_with("//")
+}
+
+fn find_redirect_cycle(start: &str, redirects: &HashMap<String, String>) -> Option<Vec<String>> {
+    let mut chain = vec![start.to_string()];
+    let mut current = start.to_string();
+
+    loop {
+        let dest = redirects.get(&current)?;
+        if is_external_redirect(dest) {
+            return None;
+        }
+
+        let next = redirect_lookup_key(dest);
+        if let Some(loop_start) = chain.iter().position(|node| node == &next) {
+            let mut cycle = chain[loop_start..].to_vec();
+            cycle.push(next);
+            return Some(cycle);
+        }
+        chain.push(next.clone());
+        current = next;
+    }
+}
+
+/// Rotates a redirect cycle so the lexicographically smallest node is first.
+fn canonicalize_redirect_cycle(cycle: &[String]) -> Vec<String> {
+    if cycle.len() <= 1 {
+        return cycle.to_vec();
+    }
+
+    let nodes = &cycle[..cycle.len() - 1];
+    let min_idx = nodes
+        .iter()
+        .enumerate()
+        .min_by_key(|(_, node)| node.as_str())
+        .map(|(idx, _)| idx)
+        .unwrap_or(0);
+
+    let mut rotated = nodes[min_idx..].to_vec();
+    rotated.extend_from_slice(&nodes[..min_idx]);
+    rotated.push(rotated[0].clone());
+    rotated
+}
+
+/// Detects cycles in `[output.html.redirect]` before emitting redirect pages.
+fn validate_redirect_loops(redirects: &HashMap<String, String>) -> Result<()> {
+    let mut reported = HashSet::new();
+
+    for start in redirects.keys() {
+        let Some(cycle) = find_redirect_cycle(start, redirects) else {
+            continue;
+        };
+        let canonical = canonicalize_redirect_cycle(&cycle);
+        let signature: Vec<_> = canonical[..canonical.len() - 1].to_vec();
+        if reported.insert(signature) {
+            bail!("redirect loop detected: {}", canonical.join(" → "));
+        }
+    }
+    Ok(())
+}
+
 /// Redirect mapping.
 ///
 /// The key is the source path (like `foo/bar.html`). The value is a tuple
@@ -693,4 +764,50 @@ fn collect_redirects_for_path(
         })
         .collect();
     Ok(map)
+}
+
+#[cfg(test)]
+mod redirect_loop_tests {
+    use super::*;
+
+    #[test]
+    fn detects_fragment_redirect_loop() {
+        let redirects = HashMap::from([
+            (
+                "/chapter_1.html#a".to_string(),
+                "chapter_2.html#b".to_string(),
+            ),
+            (
+                "/chapter_2.html#b".to_string(),
+                "chapter_1.html#a".to_string(),
+            ),
+        ]);
+        let err = validate_redirect_loops(&redirects).unwrap_err();
+        assert!(err.to_string().contains("redirect loop detected"));
+    }
+
+    #[test]
+    fn detects_page_redirect_loop() {
+        let redirects = HashMap::from([
+            ("/a.html".to_string(), "b.html".to_string()),
+            ("/b.html".to_string(), "a.html".to_string()),
+        ]);
+        let err = validate_redirect_loops(&redirects).unwrap_err();
+        assert!(err.to_string().contains("/a.html"));
+    }
+
+    #[test]
+    fn allows_acyclic_redirect_chain() {
+        let redirects = HashMap::from([
+            ("/a.html".to_string(), "b.html".to_string()),
+            ("/b.html".to_string(), "c.html".to_string()),
+        ]);
+        validate_redirect_loops(&redirects).unwrap();
+    }
+
+    #[test]
+    fn stops_at_external_redirect() {
+        let redirects = HashMap::from([("/a.html".to_string(), "https://example.com".to_string())]);
+        validate_redirect_loops(&redirects).unwrap();
+    }
 }
