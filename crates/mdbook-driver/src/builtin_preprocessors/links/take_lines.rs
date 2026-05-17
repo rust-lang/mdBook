@@ -1,6 +1,7 @@
 use mdbook_core::static_regex;
 use std::ops::Bound::{Excluded, Included, Unbounded};
 use std::ops::RangeBounds;
+use tracing::warn;
 
 /// Take a range of lines from a string.
 pub(super) fn take_lines<R: RangeBounds<usize>>(s: &str, range: R) -> String {
@@ -41,7 +42,15 @@ pub(super) fn take_anchored_lines(s: &str, anchor: &str) -> String {
                     }
                 }
                 None => {
-                    if !ANCHOR_START.is_match(l) {
+                    if let Some(cap) = ANCHOR_START.captures(l) {
+                        if &cap["anchor_name"] == anchor {
+                            warn!(
+                                "duplicate ANCHOR start `{anchor}` without a matching \
+                                 `ANCHOR_END: {anchor}`; anchor regions must be closed with \
+                                 ANCHOR_END"
+                            );
+                        }
+                    } else {
                         retained.push(l);
                     }
                 }
@@ -91,7 +100,15 @@ pub(super) fn take_rustdoc_include_anchored_lines(s: &str, anchor: &str) -> Stri
                     }
                 }
                 None => {
-                    if !ANCHOR_START.is_match(l) {
+                    if let Some(cap) = ANCHOR_START.captures(l) {
+                        if &cap["anchor_name"] == anchor {
+                            warn!(
+                                "duplicate ANCHOR start `{anchor}` without a matching \
+                                 `ANCHOR_END: {anchor}`; anchor regions must be closed with \
+                                 ANCHOR_END"
+                            );
+                        }
+                    } else {
                         output.push_str(l);
                         output.push('\n');
                     }
@@ -248,6 +265,17 @@ mod tests {
         assert_eq!(
             take_rustdoc_include_anchored_lines(s, "test"),
             "# Lorem\nipsum\n# dolor\nsit\n# amet"
+        );
+    }
+
+    #[test]
+    fn duplicate_anchor_start_does_not_close_region() {
+        let closed = "ANCHOR: all\nstruct\nANCHOR_END: all\ntrailing";
+        let duplicate_start = "ANCHOR: all\nstruct\nANCHOR: all\ntrailing";
+        assert_eq!(take_anchored_lines(closed, "all"), "struct");
+        assert_eq!(
+            take_anchored_lines(duplicate_start, "all"),
+            "struct\ntrailing"
         );
     }
 }
