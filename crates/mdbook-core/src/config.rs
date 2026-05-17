@@ -202,7 +202,7 @@ impl Config {
                 value
                     .clone()
                     .try_into()
-                    .with_context(|| format!("Failed to deserialize `{name}`"))
+                    .map_err(|e| anyhow::anyhow!("Failed to deserialize `{name}`: {e}"))
             })
             .transpose()
     }
@@ -1181,9 +1181,14 @@ mod tests {
         "#;
         let cfg = Config::from_str(src).unwrap();
         let err = cfg.get::<String>("preprocessor.foo.x").unwrap_err();
-        assert_eq!(
-            err.to_string(),
-            "Failed to deserialize `preprocessor.foo.x`"
+        assert!(
+            err.to_string()
+                .contains("Failed to deserialize `preprocessor.foo.x`"),
+            "unexpected error: {err}"
+        );
+        assert!(
+            err.to_string().contains("expected"),
+            "serde error details should be included: {err}"
         );
     }
 
