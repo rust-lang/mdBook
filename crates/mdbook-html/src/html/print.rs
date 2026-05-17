@@ -6,7 +6,7 @@
 
 use super::Node;
 use crate::html::{ChapterTree, Element, serialize};
-use crate::utils::{ToUrlPath, id_from_content, normalize_path, unique_id};
+use crate::utils::{ToUrlPath, id_from_content_or_fallback, normalize_path, unique_id};
 use mdbook_core::static_regex;
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
@@ -103,8 +103,7 @@ fn make_root_id_map(
             // TODO: This might want to be a warning? Chapters generally
             // should start with an h1.
             let mut h1 = Element::new("h1");
-            let id = id_from_content(&chapter.name);
-            let id = unique_id(&id, id_counter);
+            let id = id_from_content_or_fallback(&chapter.name, id_counter);
             h1.insert_attr("id", id.clone().into());
             let mut root = tree.root_mut();
             let mut h1 = root.prepend(Node::Element(h1));

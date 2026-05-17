@@ -7,7 +7,7 @@
 
 use super::tokenizer::parse_html;
 use super::{HtmlRenderOptions, hide_lines, wrap_rust_main};
-use crate::utils::{id_from_content, unique_id};
+use crate::utils::id_from_content_or_fallback;
 use ego_tree::{NodeId, NodeRef, Tree};
 use html5ever::tendril::StrTendril;
 use html5ever::tokenizer::{TagKind, Token};
@@ -924,8 +924,7 @@ where
                 let node_id = node.id();
                 let node_ref = self.tree.get(node_id).unwrap();
                 text_in_node(node_ref, &mut id);
-                let id = id_from_content(&id);
-                let id = unique_id(&id, &mut id_counter);
+                let id = id_from_content_or_fallback(&id, &mut id_counter);
                 let mut node = self.tree.get_mut(heading).unwrap();
                 let el = node.value().as_element_mut().unwrap();
                 let href = format!("#{id}");

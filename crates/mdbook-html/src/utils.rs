@@ -99,6 +99,19 @@ pub(crate) fn id_from_content(content: &str) -> String {
         .collect()
 }
 
+/// Returns a non-empty HTML id for heading content.
+///
+/// Headings that contain only punctuation (e.g. `## ::`) produce an empty slug via
+/// [`id_from_content`]; this helper falls back to a generic prefix so anchor links work.
+pub(crate) fn id_from_content_or_fallback(content: &str, used: &mut HashSet<String>) -> String {
+    let id = id_from_content(content);
+    if id.is_empty() {
+        unique_id("section", used)
+    } else {
+        unique_id(&id, used)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -129,7 +142,15 @@ mod tests {
         assert_eq!(id_from_content("にほんご"), "にほんご");
         assert_eq!(id_from_content("한국어"), "한국어");
         assert_eq!(id_from_content(""), "");
+        assert_eq!(id_from_content("::"), "");
         assert_eq!(id_from_content("中文標題 CJK title"), "中文標題-cjk-title");
         assert_eq!(id_from_content("Über"), "über");
+    }
+
+    #[test]
+    fn empty_heading_gets_fallback_id() {
+        let mut used = HashSet::new();
+        assert_eq!(id_from_content_or_fallback("::", &mut used), "section");
+        assert_eq!(id_from_content_or_fallback("::", &mut used), "section-1");
     }
 }
