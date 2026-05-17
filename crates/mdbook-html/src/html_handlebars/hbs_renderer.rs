@@ -117,7 +117,7 @@ impl HtmlHandlebars {
 
         // Render the handlebars template with the data
         debug!("Render template");
-        let rendered = ctx.handlebars.render("index", &ctx.data)?;
+        let rendered = render_template(ctx.handlebars, "index", &ctx.data)?;
 
         // Write to file
         let out_path = ctx.destination.join(filepath);
@@ -127,7 +127,7 @@ impl HtmlHandlebars {
             ctx.data.insert("path".to_owned(), json!("index.md"));
             ctx.data.insert("path_to_root".to_owned(), json!(""));
             ctx.data.insert("is_index".to_owned(), json!(true));
-            let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
+            let rendered_index = render_template(ctx.handlebars, "index", &ctx.data)?;
             debug!("Creating index.html from {}", ctx_path);
             fs::write(ctx.destination.join("index.html"), rendered_index)?;
         }
@@ -187,7 +187,7 @@ impl HtmlHandlebars {
             title.push_str(book_title);
         }
         data_404.insert("title".to_owned(), json!(title));
-        let rendered = handlebars.render("index", &data_404)?;
+        let rendered = render_template(handlebars, "index", &data_404)?;
 
         let output_file = ctx.destination.join(html_config.get_404_output_file());
         fs::write(output_file, rendered)?;
@@ -220,7 +220,7 @@ impl HtmlHandlebars {
         );
 
         debug!("Render template");
-        let rendered = handlebars.render("index", &data)?;
+        let rendered = render_template(handlebars, "index", &data)?;
         Ok(rendered)
     }
 
@@ -245,6 +245,7 @@ impl HtmlHandlebars {
         }
 
         debug!("Emitting redirects");
+        detect_redirect_loops(redirects)?;
         let redirects = combine_fragment_redirects(redirects);
 
         for (original, (dest, fragment_map)) in redirects {
@@ -288,7 +289,7 @@ impl HtmlHandlebars {
             "fragment_map": js_map,
             "url": destination,
         });
-        let rendered = handlebars.render("redirect", &ctx).with_context(|| {
+        let rendered = render_template(handlebars, "redirect", &ctx).with_context(|| {
             format!(
                 "Unable to create a redirect file at `{}`",
                 original.display()
@@ -376,7 +377,7 @@ impl Renderer for HtmlHandlebars {
 
         debug!("Render toc js");
         {
-            let rendered_toc = handlebars.render("toc_js", &data)?;
+            let rendered_toc = render_template(&handlebars, "toc_js", &data)?;
             static_files.add_builtin("toc.js", rendered_toc.as_bytes());
             debug!("Creating toc.js ✓");
         }
@@ -396,7 +397,7 @@ impl Renderer for HtmlHandlebars {
         {
             data.insert("is_toc_html".to_owned(), json!(true));
             data.insert("path".to_owned(), json!("toc.html"));
-            let rendered_toc = handlebars.render("toc_html", &data)?;
+            let rendered_toc = render_template(&handlebars, "toc_html", &data)?;
             fs::write(destination.join("toc.html"), rendered_toc)?;
             debug!("Creating toc.html ✓");
             data.remove("path");
@@ -639,6 +640,69 @@ struct RenderChapterContext<'a> {
     chapter_titles: &'a HashMap<PathBuf, String>,
 }
 
+/// Returns the redirect source path used in `[output.html.redirect]` keys.
+fn canonical_redirect_source(path: &str) -> String {
+    if path.starts_with('/') {
+        path.to_string()
+    } else {
+        format!("/{path}")
+    }
+}
+
+fn redirect_destination_is_external(dest: &str) -> bool {
+    let dest = dest.trim();
+    dest.starts_with("http://") || dest.starts_with("https://") || dest.starts_with("//")
+}
+
+/// Detects cycles in `[output.html.redirect]` before emitting redirect pages.
+fn detect_redirect_loops(redirects: &HashMap<String, String>) -> Result<()> {
+    use std::collections::HashSet;
+
+    let mut visited = HashSet::new();
+    let mut sources: Vec<_> = redirects.keys().collect();
+    sources.sort();
+    for start in sources {
+        if visited.contains(start) {
+            continue;
+        }
+        let mut path: Vec<&str> = Vec::new();
+        let mut current = start.as_str();
+        loop {
+            if let Some(pos) = path.iter().position(|&p| p == current) {
+                let mut cycle = String::new();
+                for source in &path[pos..] {
+                    if !cycle.is_empty() {
+                        cycle.push_str(" -> ");
+                    }
+                    cycle.push_str(source);
+                    if let Some(dest) = redirects.get(*source) {
+                        cycle.push_str(" -> ");
+                        cycle.push_str(dest);
+                    }
+                }
+                bail!("redirect loop detected: {cycle}");
+            }
+            visited.insert(current.to_owned());
+            path.push(current);
+            let Some(dest) = redirects.get(current) else {
+                break;
+            };
+            if redirect_destination_is_external(dest) {
+                break;
+            }
+            let canonical = canonical_redirect_source(dest);
+            let Some((next, _)) = redirects
+                .get_key_value(&canonical)
+                .or_else(|| redirects.get_key_value(dest))
+            else {
+                break;
+            };
+            current = next.as_str();
+        }
+    }
+    Ok(())
+}
+
 /// Redirect mapping.
 ///
 /// The key is the source path (like `foo/bar.html`). The value is a tuple
@@ -693,4 +757,72 @@ fn collect_redirects_for_path(
         })
         .collect();
     Ok(map)
+}
+
+fn render_template(
+    handlebars: &Handlebars<'_>,
+    name: &str,
+    data: &impl serde::Serialize,
+) -> Result<String> {
+    handlebars
+        .render(name, data)
+        .map_err(|err| enhance_template_render_error(name, err))
+}
+
+fn enhance_template_render_error(
+    template: &str,
+    err: handlebars::RenderError,
+) -> anyhow::Error {
+    let message = err.to_string();
+    let mut error: anyhow::Error = err.into();
+    error = error.context(format!("Error rendering `{template}` template"));
+    if let Some(hint) = missing_helper_hint(&message) {
+        error = error.context(hint.to_owned());
+    }
+    error
+}
+
+fn missing_helper_hint(message: &str) -> Option<&'static str> {
+    if !message.contains("Helper not found") {
+        return None;
+    }
+    if message.contains("fa") {
+        Some(
+            "The `fa` Font Awesome helper is provided by mdBook's HTML renderer (mdBook 0.5+). \
+             If you override `theme/index.hbs`, copy it from the same mdBook version you use to \
+             build (for example with `mdbook init`), not from a different branch or release.",
+        )
+    } else if message.contains("toc") {
+        Some(
+            "The `toc` helper is provided by mdBook's HTML renderer. \
+             Copy theme templates from the mdBook version you use to build (for example with `mdbook init`).",
+        )
+    } else if message.contains("resource") {
+        Some(
+            "The `resource` helper is provided by mdBook's HTML renderer. \
+             Copy theme templates from the mdBook version you use to build (for example with `mdbook init`).",
+        )
+    } else {
+        Some(
+            "A custom theme template uses a Handlebars helper that is not registered. \
+             Copy theme files from the mdBook version you use to build (for example with `mdbook init`).",
+        )
+    }
+}
+
+#[cfg(test)]
+mod render_hint_tests {
+    use super::missing_helper_hint;
+
+    #[test]
+    fn hints_for_builtin_helpers() {
+        assert!(missing_helper_hint("Helper not found: fa").is_some());
+        assert!(missing_helper_hint("Helper not found toc").is_some());
+        assert!(missing_helper_hint("Helper not found resource").is_some());
+    }
+
+    #[test]
+    fn no_hint_for_other_errors() {
+        assert!(missing_helper_hint("syntax error").is_none());
+    }
 }
