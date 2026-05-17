@@ -1,0 +1,6 @@
+// README.md not listed first should not double-highlight the sidebar on index.html.
+
+go-to: |DOC_PATH| + "readme-not-first/index.html"
+
+assert-count: (".sidebar-scrollbox a.active", 1)
+assert-text: (".sidebar-scrollbox a.active", "Prefix 1")

@@ -23,10 +23,14 @@ class MDBookSidebarScrollbox extends HTMLElement {
                 link.href = path_to_root + href;
             }
             // The 'index' page is supposed to alias the first chapter in the book.
-            if (link.href === current_page
-                || i === 0
-                && path_to_root === ''
-                && current_page.endsWith('/index.html')) {
+            const on_book_index = path_to_root === ''
+                && current_page.endsWith('/index.html');
+            const is_index_alias = i === 0 && on_book_index;
+            // When the book index displays the first chapter, don't also highlight
+            // other chapters that incorrectly resolve to `index.html` (issue #2883).
+            const is_exact_match = link.href === current_page
+                && !(on_book_index && i !== 0);
+            if (is_exact_match || is_index_alias) {
                 link.classList.add('active');
                 let parent = link.parentElement;
                 while (parent) {
@@ -39,11 +43,19 @@ class MDBookSidebarScrollbox extends HTMLElement {
         }
         // Track and set sidebar scroll position
         this.addEventListener('click', e => {
-            if (e.target.tagName === 'A') {
-                const clientRect = e.target.getBoundingClientRect();
-                const sidebarRect = this.getBoundingClientRect();
-                sessionStorage.setItem('sidebar-scroll-offset', clientRect.top - sidebarRect.top);
+            const link = e.target.closest('a');
+            if (!link || !this.contains(link)) {
+                return;
             }
+            const href = link.getAttribute('href');
+            // Ignore fold toggles and in-page header links; chapter links may
+            // contain child elements (e.g. <strong>) so e.target is not always <a>.
+            if (!href || href.startsWith('#') || link.classList.contains('chapter-fold-toggle')) {
+                return;
+            }
+            const clientRect = link.getBoundingClientRect();
+            const sidebarRect = this.getBoundingClientRect();
+            sessionStorage.setItem('sidebar-scroll-offset', clientRect.top - sidebarRect.top);
         }, { passive: true });
         const sidebarScrollOffset = sessionStorage.getItem('sidebar-scroll-offset');
         sessionStorage.removeItem('sidebar-scroll-offset');
@@ -335,10 +347,25 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
         });
     }
 
+    // Returns the node to copy header text from. When the heading uses an
+    // empty `.header` link as its first child (see issue #221), use the full
+    // heading so the sidebar still shows the title text.
+    function headerContentRoot(header) {
+        const first = header.children[0];
+        if (first?.tagName === 'A' && first.classList.contains('header')) {
+            if (first.textContent.trim() === '') {
+                return header;
+            }
+            return first;
+        }
+        return first;
+    }
+
     // Takes the nodes from the given head and copies them over to the
     // destination, along with some filtering.
     function filterHeader(source, dest) {
         const clone = source.cloneNode(true);
+        clone.querySelectorAll('a.header').forEach(a => a.remove());
         clone.querySelectorAll('mark').forEach(mark => {
             mark.replaceWith(...mark.childNodes);
         });
@@ -417,7 +444,7 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
             span.appendChild(a);
             a.href = '#' + header.id;
             a.classList.add('header-in-summary');
-            filterHeader(header.children[0], a);
+            filterHeader(headerContentRoot(header), a);
             a.addEventListener('click', headerThresholdClick);
             const nextHeader = headers[i + 1];
             if (nextHeader !== undefined) {
