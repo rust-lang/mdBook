@@ -8,10 +8,10 @@ use snapbox::file;
 fn custom_header_attributes() {
     BookTest::from_dir("markdown/custom_header_attributes")
         .check_main_file("book/custom_header_attributes.html", str![[r##"
-<h1 id="attrs"><a class="header" href="#attrs"></a>Heading Attributes</h1>
-<h2 class="class1 class2" id="heading-with-classes"><a class="header" href="#heading-with-classes"></a>Heading with classes</h2>
-<h2 id="both" class="class1 class2"><a class="header" href="#both"></a>Heading with id and classes</h2>
-<h2 myattr="" otherattr="value" id="myh3" class="myclass1 myclass2"><a class="header" href="#myh3"></a>Heading with attribute</h2>
+<h1 id="attrs"><a class="header" href="#attrs">Heading Attributes</a></h1>
+<h2 class="class1 class2" id="heading-with-classes"><a class="header" href="#heading-with-classes">Heading with classes</a></h2>
+<h2 id="both" class="class1 class2"><a class="header" href="#both">Heading with id and classes</a></h2>
+<h2 myattr="" otherattr="value" id="myh3" class="myclass1 myclass2"><a class="header" href="#myh3">Heading with attribute</a></h2>
 "##]]);
 }
 
@@ -41,7 +41,7 @@ fn tables() {
     BookTest::from_dir("markdown/tables").check_main_file(
         "book/tables.html",
         str![[r##"
-<h1 id="tables"><a class="header" href="#tables"></a>Tables</h1>
+<h1 id="tables"><a class="header" href="#tables">Tables</a></h1>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -76,7 +76,7 @@ fn strikethrough() {
     BookTest::from_dir("markdown/strikethrough").check_main_file(
         "book/strikethrough.html",
         str![[r##"
-<h1 id="strikethrough"><a class="header" href="#strikethrough"></a>Strikethrough</h1>
+<h1 id="strikethrough"><a class="header" href="#strikethrough">Strikethrough</a></h1>
 <p><del>strikethrough example</del></p>
 "##]],
     );
@@ -88,7 +88,7 @@ fn tasklists() {
     BookTest::from_dir("markdown/tasklists").check_main_file(
         "book/tasklists.html",
         str![[r##"
-<h2 id="tasklisks"><a class="header" href="#tasklisks"></a>Tasklisks</h2>
+<h2 id="tasklisks"><a class="header" href="#tasklisks">Tasklisks</a></h2>
 <ul>
 <li><input disabled="" type="checkbox" checked=""> Apples</li>
 <li><input disabled="" type="checkbox" checked=""> Broccoli</li>
@@ -106,7 +106,7 @@ fn smart_punctuation() {
         .check_main_file(
             "book/smart_punctuation.html",
             str![[r##"
-<h1 id="smart-punctuation"><a class="header" href="#smart-punctuation"></a>Smart Punctuation</h1>
+<h1 id="smart-punctuation"><a class="header" href="#smart-punctuation">Smart Punctuation</a></h1>
 <ul>
 <li>En dash: –</li>
 <li>Em dash: —</li>
@@ -125,7 +125,7 @@ fn smart_punctuation() {
         .check_main_file(
             "book/smart_punctuation.html",
             str![[r##"
-<h1 id="smart-punctuation"><a class="header" href="#smart-punctuation"></a>Smart Punctuation</h1>
+<h1 id="smart-punctuation"><a class="header" href="#smart-punctuation">Smart Punctuation</a></h1>
 <ul>
 <li>En dash: --</li>
 <li>Em dash: ---</li>

@@ -50,7 +50,7 @@ language = "en"
     )
     .check_main_file(
         "book/chapter_1.html",
-        str![[r##"<h1 id="chapter-1"><a class="header" href="#chapter-1"></a>Chapter 1</h1>"##]],
+        str![[r##"<h1 id="chapter-1"><a class="header" href="#chapter-1">Chapter 1</a></h1>"##]],
     );
     assert!(!test.dir.join(".gitignore").exists());
     assert!(test.dir.join("book").exists());

@@ -1,5 +1,7 @@
 # Header Links
 
+## Header with [link](https://example.com).
+
 ## Foo^bar
 
 ###

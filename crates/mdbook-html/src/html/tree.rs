@@ -932,15 +932,26 @@ where
                 el.insert_attr("id", id.into());
                 href
             };
-            // Insert an empty header link as the first child so headings may
-            // contain other links without nesting `<a>` elements (issue #221).
             let mut a = Element::new("a");
             a.insert_attr("class", "header".into());
             a.insert_attr("href", href.into());
-            self.tree
-                .get_mut(heading)
-                .unwrap()
-                .prepend(Node::Element(a));
+
+            let heading_node = self.tree.get(heading).unwrap();
+            if heading_contains_nested_anchor(heading_node) {
+                // Prepend an empty header link so headings may contain other
+                // links without nesting `<a>` elements (issue #221).
+                self.tree
+                    .get_mut(heading)
+                    .unwrap()
+                    .prepend(Node::Element(a));
+            } else {
+                // Insert an `<a>` element between the heading and its children.
+                let mut a = self.tree.orphan(Node::Element(a));
+                a.reparent_from_id_append(heading);
+                let a_id = a.id();
+                let mut node = self.tree.get_mut(heading).unwrap();
+                node.append_id(a_id);
+            }
         }
     }
 
@@ -1074,6 +1085,27 @@ where
 /// Traverse the given node, emitting any plain text into the output.
 ///
 /// This is used to generate the `id` of a header.
+/// Returns true if the heading contains an `<a>` element from the markdown source.
+fn heading_contains_nested_anchor(node: NodeRef<'_, Node>) -> bool {
+    for child in node.children() {
+        match child.value() {
+            Node::Element(el) if el.name() == "a" => return true,
+            Node::Element(_) => {
+                if heading_contains_nested_anchor(child) {
+                    return true;
+                }
+            }
+            Node::Fragment => {
+                if heading_contains_nested_anchor(child) {
+                    return true;
+                }
+            }
+            Node::Text(_) | Node::Comment(_) | Node::RawData(_) => {}
+        }
+    }
+    false
+}
+
 fn text_in_node(node: NodeRef<'_, Node>, output: &mut String) {
     for child in node.children() {
         match child.value() {
