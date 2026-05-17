@@ -643,6 +643,11 @@ html:not(.js) .sidebar-resize-handle {
     padding-left: 0;
 }
 
+.on-this-page li.header-item {
+    margin-block-end: 0.5em;
+    line-height: 1.5em;
+}
+
 /* Horizontal line in chapter list. */
 .spacer {
     width: 100%;
