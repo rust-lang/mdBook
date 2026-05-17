@@ -32,15 +32,11 @@ fn first_chapter_is_copied_as_index_even_if_not_first_elem() {
         // These two files should be equal.
         .check_main_file(
             "book/chapter_1.html",
-            str![[
-                r##"<h1 id="chapter-1"><a class="header" href="#chapter-1">Chapter 1</a></h1>"##
-            ]],
+            str![[r##"<h1 id="chapter-1"><a class="header" href="#chapter-1"></a>Chapter 1</h1>"##]],
         )
         .check_main_file(
             "book/index.html",
-            str![[
-                r##"<h1 id="chapter-1"><a class="header" href="#chapter-1">Chapter 1</a></h1>"##
-            ]],
+            str![[r##"<h1 id="chapter-1"><a class="header" href="#chapter-1"></a>Chapter 1</h1>"##]],
         );
 }
 
@@ -319,6 +315,6 @@ HTML tags must be closed before exiting a markdown element.
         })
         .check_main_file(
             "book/chapter_1.html",
-            str![[r##"<h3 id="option"><a class="header" href="#option">Option<t></t></a></h3>"##]],
+            str![[r##"<h3 id="option"><a class="header" href="#option"></a>Option<t></t></h3>"##]],
         );
 }

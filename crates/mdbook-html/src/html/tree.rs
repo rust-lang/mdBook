@@ -932,15 +932,15 @@ where
                 el.insert_attr("id", id.into());
                 href
             };
-            // Insert an <a> element between the heading and its children.
+            // Insert an empty header link as the first child so headings may
+            // contain other links without nesting `<a>` elements (issue #221).
             let mut a = Element::new("a");
             a.insert_attr("class", "header".into());
             a.insert_attr("href", href.into());
-            let mut a = self.tree.orphan(Node::Element(a));
-            a.reparent_from_id_append(heading);
-            let a_id = a.id();
-            let mut node = self.tree.get_mut(heading).unwrap();
-            node.append_id(a_id);
+            self.tree
+                .get_mut(heading)
+                .unwrap()
+                .prepend(Node::Element(a));
         }
     }
 
