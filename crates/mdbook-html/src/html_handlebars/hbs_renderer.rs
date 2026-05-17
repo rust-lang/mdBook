@@ -769,10 +769,7 @@ fn render_template(
         .map_err(|err| enhance_template_render_error(name, err))
 }
 
-fn enhance_template_render_error(
-    template: &str,
-    err: handlebars::RenderError,
-) -> anyhow::Error {
+fn enhance_template_render_error(template: &str, err: handlebars::RenderError) -> anyhow::Error {
     let message = err.to_string();
     let mut error: anyhow::Error = err.into();
     error = error.context(format!("Error rendering `{template}` template"));
