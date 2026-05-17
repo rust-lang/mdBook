@@ -551,14 +551,16 @@ aria-label="Show hidden lines"></button>';
         }
     });
     sidebarToggleButton.addEventListener('click', () => {
+        sidebarCheckbox.checked = !sidebarCheckbox.checked;
         /* To allow the sidebar expansion animation, we first need to put back the display. */
-        if (!sidebarCheckbox.checked) {
+        if (sidebarCheckbox.checked) {
             sidebar.style.display = '';
             // Workaround for Safari skipping the animation when changing
             // `display` and a transform in the same event loop. This forces a
             // reflow after updating the display.
             sidebar.offsetHeight;
         }
+        sidebarCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
     function showSidebar() {
