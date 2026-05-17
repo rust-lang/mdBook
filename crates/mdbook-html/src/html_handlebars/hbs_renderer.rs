@@ -38,8 +38,8 @@ impl HtmlHandlebars {
         let ch = chapter_tree.chapter;
 
         let path = ch.path.as_ref().unwrap();
-        // "print.html" is used for the print page.
-        if path == Path::new("print.md") {
+        // "print.html" and "toc.html" are used for special output pages.
+        if path == Path::new("print.md") || path == Path::new("toc.md") {
             bail!("{} is reserved for internal use", path.display());
         };
 

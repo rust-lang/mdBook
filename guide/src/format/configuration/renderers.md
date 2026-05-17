@@ -173,6 +173,16 @@ The following configuration options are available:
 
 [custom domain]: https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site
 
+#### `toc.html` and `toc.md`
+
+mdBook writes **`toc.html`** to the book output directory.
+It contains the table of contents for environments that do not run JavaScript (including some crawlers).
+
+**`toc.md` is reserved** for internal use.
+Do not create `src/toc.md` or add it to `SUMMARY.md`.
+A chapter named `toc.md` would be rendered to `toc.html` and overwrite the generated table of contents.
+If you try, the build fails with the error `toc.md is reserved for internal use`.
+
 ### `[output.html.print]`
 
 The `[output.html.print]` table provides options for controlling the printable output.
@@ -187,6 +197,16 @@ page-break = true # insert page-break after each chapter
 - **enable:** Enable print support. When `false`, all print support will not be
   rendered. Defaults to `true`.
 - **page-break:** Insert page breaks between chapters. Defaults to `true`.
+
+#### `print.html` and `print.md`
+
+When print support is enabled, mdBook writes **`print.html`** to the book output directory.
+This file contains the entire book on a single page.
+The print icon in the menu bar (see [Reading a book](../../guide/reading.md)) opens this file for printing.
+
+**`print.md` is reserved** for internal use.
+Do not create `src/print.md` or add it to `SUMMARY.md`.
+If you do, the build fails with the error `print.md is reserved for internal use`.
 
 ### `[output.html.fold]`
 

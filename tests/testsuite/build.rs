@@ -55,6 +55,19 @@ ERROR Rendering failed
     });
 }
 
+#[test]
+fn no_reserved_toc_filename() {
+    BookTest::from_dir("build/no_reserved_toc_filename").run("build", |cmd| {
+        cmd.expect_failure().expect_stderr(str![[r#"
+ INFO Book building has started
+ INFO Running the html backend
+ERROR Rendering failed
+[TAB]Caused by: toc.md is reserved for internal use
+
+"#]]);
+    });
+}
+
 // Build without book.toml should be OK.
 #[test]
 fn book_toml_isnt_required() {
