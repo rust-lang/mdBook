@@ -188,6 +188,16 @@ page-break = true # insert page-break after each chapter
   rendered. Defaults to `true`.
 - **page-break:** Insert page breaks between chapters. Defaults to `true`.
 
+#### `print.html` and `print.md`
+
+When print support is enabled, mdBook writes **`print.html`** to the book output directory.
+This file contains the entire book on a single page.
+The print icon in the menu bar (see [Reading a book](../../guide/reading.md)) opens this file for printing.
+
+**`print.md` is reserved** for internal use.
+Do not create `src/print.md` or add it to `SUMMARY.md`.
+If you do, the build fails with the error `print.md is reserved for internal use`.
+
 ### `[output.html.fold]`
 
 The `[output.html.fold]` table provides options for controlling folding of the chapter listing in the navigation sidebar.

@@ -33,7 +33,7 @@ The icons displayed will depend on the settings of how the book was generated.
 | <i class="fas fa-bars"></i> | Opens and closes the chapter listing sidebar. |
 | <i class="fas fa-paintbrush"></i> | Opens a picker to choose a different color theme. |
 | <i class="fas fa-magnifying-glass"></i> | Opens a search bar for searching within the book. |
-| <i class="fas fa-print"></i> | Instructs the web browser to print the entire book. |
+| <i class="fas fa-print"></i> | Opens **print.html**, which contains the entire book on one page for printing. |
 | <i class="fab fa-github"></i> | Opens a link to the website that hosts the source code of the book. |
 | <i class="fas fa-pencil"></i> | Opens a page to directly edit the source of the page you are currently reading. |
 
