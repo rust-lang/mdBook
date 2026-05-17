@@ -6,7 +6,7 @@ use crate::init::BookBuilder;
 use crate::load::{load_book, load_book_from_disk};
 use anyhow::{Context, Error, Result, bail};
 use indexmap::IndexMap;
-use mdbook_core::book::{Book, BookItem, BookItems};
+use mdbook_core::book::{Book, BookItem, BookItems, Chapter};
 use mdbook_core::config::{Config, RustEdition};
 use mdbook_core::utils::fs;
 use mdbook_html::HtmlHandlebars;
@@ -274,9 +274,9 @@ impl MDBook {
                     _ => continue,
                 };
 
-                if let Some(chapter) = chapter {
-                    if ch.name != chapter && chapter_path.to_str() != Some(chapter) {
-                        if chapter == "?" {
+                if let Some(filter) = chapter {
+                    if !chapter_matches_filter(filter, ch, &self.config.book.src) {
+                        if filter == "?" {
                             info!("Skipping chapter '{}'...", ch.name);
                         }
                         continue;
@@ -399,6 +399,49 @@ struct OutputConfig {
 }
 
 /// Look at the `Config` and try to figure out what renderers to use.
+/// Whether `filter` from `mdbook test --chapter` matches `ch`.
+fn chapter_matches_filter(filter: &str, ch: &Chapter, book_src: &Path) -> bool {
+    if ch.name == filter {
+        return true;
+    }
+
+    let Some(path) = ch.path.as_ref().filter(|p| !p.as_os_str().is_empty()) else {
+        return false;
+    };
+
+    if path.to_string_lossy() == filter {
+        return true;
+    }
+
+    if ch
+        .source_path
+        .as_ref()
+        .is_some_and(|source| source.to_string_lossy() == filter)
+    {
+        return true;
+    }
+
+    let filter_norm = normalize_chapter_path(filter);
+    if filter_norm == normalize_chapter_path(path) {
+        return true;
+    }
+
+    let via_src = book_src.join(path);
+    if filter_norm == normalize_chapter_path(&via_src) {
+        return true;
+    }
+
+    false
+}
+
+fn normalize_chapter_path(path: impl AsRef<Path>) -> String {
+    path.as_ref()
+        .to_string_lossy()
+        .replace('\\', "/")
+        .trim_start_matches("./")
+        .to_string()
+}
+
 fn determine_renderers(config: &Config) -> Result<IndexMap<String, Box<dyn Renderer>>> {
     let mut renderers = IndexMap::new();
 

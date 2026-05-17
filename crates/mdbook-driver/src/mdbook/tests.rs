@@ -1,6 +1,24 @@
 use super::*;
+use mdbook_core::book::Chapter;
+use std::path::Path;
 use std::str::FromStr;
 use toml::value::{Table, Value};
+
+#[test]
+fn chapter_matches_filter_accepts_src_prefixed_paths() {
+    let ch = Chapter::new(
+        "Intro",
+        String::new(),
+        Path::new("chapter_1.md"),
+        Vec::new(),
+    );
+    let src = Path::new("src");
+
+    assert!(chapter_matches_filter("Intro", &ch, src));
+    assert!(chapter_matches_filter("chapter_1.md", &ch, src));
+    assert!(chapter_matches_filter("src/chapter_1.md", &ch, src));
+    assert!(!chapter_matches_filter("other.md", &ch, src));
+}
 
 #[test]
 fn config_defaults_to_html_renderer_if_empty() {
