@@ -33,6 +33,21 @@ There must be an entry without the `#` fragment to determine the default destina
     });
 }
 
+// Redirect loops should fail the build.
+#[test]
+fn redirect_loop() {
+    BookTest::from_dir("redirects/redirect_loop").run("build", |cmd| {
+        cmd.expect_failure().expect_stderr(str![[r#"
+ INFO Book building has started
+ INFO Running the html backend
+ERROR Rendering failed
+[TAB]Caused by: Unable to emit redirects
+[TAB]Caused by: redirect loop detected: /chapter_1.html#a → /chapter_2.html#b → /chapter_1.html#a
+
+"#]]);
+    });
+}
+
 // Invalid redirect for an existing page.
 #[test]
 fn redirect_existing_page() {
