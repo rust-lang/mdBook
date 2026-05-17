@@ -65,7 +65,10 @@ impl Default for MarkdownOptions {
 }
 
 /// Creates a new pulldown-cmark parser of the given text.
-pub fn new_cmark_parser<'text>(text: &'text str, options: &MarkdownOptions) -> MarkdownParser<'text> {
+pub fn new_cmark_parser<'text>(
+    text: &'text str,
+    options: &MarkdownOptions,
+) -> MarkdownParser<'text> {
     let mut opts = Options::empty();
     opts.insert(Options::ENABLE_TABLES);
     opts.insert(Options::ENABLE_FOOTNOTES);
