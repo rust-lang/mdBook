@@ -335,10 +335,25 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
         });
     }
 
+    // Returns the node to copy header text from. When the heading uses an
+    // empty `.header` link as its first child (see issue #221), use the full
+    // heading so the sidebar still shows the title text.
+    function headerContentRoot(header) {
+        const first = header.children[0];
+        if (first?.tagName === 'A' && first.classList.contains('header')) {
+            if (first.textContent.trim() === '') {
+                return header;
+            }
+            return first;
+        }
+        return first;
+    }
+
     // Takes the nodes from the given head and copies them over to the
     // destination, along with some filtering.
     function filterHeader(source, dest) {
         const clone = source.cloneNode(true);
+        clone.querySelectorAll('a.header').forEach(a => a.remove());
         clone.querySelectorAll('mark').forEach(mark => {
             mark.replaceWith(...mark.childNodes);
         });
@@ -417,7 +432,7 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
             span.appendChild(a);
             a.href = '#' + header.id;
             a.classList.add('header-in-summary');
-            filterHeader(header.children[0], a);
+            filterHeader(headerContentRoot(header), a);
             a.addEventListener('click', headerThresholdClick);
             const nextHeader = headers[i + 1];
             if (nextHeader !== undefined) {
