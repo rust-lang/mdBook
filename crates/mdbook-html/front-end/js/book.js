@@ -388,6 +388,20 @@ aria-label="Show hidden lines"></button>';
     }
 
     let previousTheme = default_theme;
+
+    function clear_theme_classes() {
+        themeIds.forEach(function(id) {
+            html.classList.remove(id.replace(/^mdbook-theme-/, ''));
+        });
+        html.classList.remove(default_theme);
+        if (typeof default_light_theme !== 'undefined') {
+            html.classList.remove(default_light_theme);
+        }
+        if (typeof default_dark_theme !== 'undefined') {
+            html.classList.remove(default_dark_theme);
+        }
+    }
+
     function set_theme(theme, store = true) {
         let ace_theme;
 
@@ -427,11 +441,22 @@ aria-label="Show hidden lines"></button>';
             }
         }
 
-        html.classList.remove(previousTheme);
+        clear_theme_classes();
         html.classList.add(theme);
         previousTheme = theme;
         updateThemeSelected();
     }
+
+    window.addEventListener('storage', function(e) {
+        if (e.key !== 'mdbook-theme') {
+            return;
+        }
+        if (e.newValue === null) {
+            set_theme(get_theme(), false);
+        } else {
+            set_theme(e.newValue, false);
+        }
+    });
 
     const query = window.matchMedia('(prefers-color-scheme: dark)');
     query.onchange = function() {
@@ -551,14 +576,16 @@ aria-label="Show hidden lines"></button>';
         }
     });
     sidebarToggleButton.addEventListener('click', () => {
+        sidebarCheckbox.checked = !sidebarCheckbox.checked;
         /* To allow the sidebar expansion animation, we first need to put back the display. */
-        if (!sidebarCheckbox.checked) {
+        if (sidebarCheckbox.checked) {
             sidebar.style.display = '';
             // Workaround for Safari skipping the animation when changing
             // `display` and a transform in the same event loop. This forces a
             // reflow after updating the display.
             sidebar.offsetHeight;
         }
+        sidebarCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
     function showSidebar() {
