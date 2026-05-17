@@ -384,11 +384,12 @@ impl MDBook {
     }
 
     /// Get the directory containing the theme resources for the book.
-    pub fn theme_dir(&self) -> PathBuf {
-        self.config
-            .html_config()
+    pub fn theme_dir(&self) -> Result<PathBuf> {
+        Ok(self
+            .config
+            .html_config()?
             .unwrap_or_default()
-            .theme_dir(&self.root)
+            .theme_dir(&self.root))
     }
 }
 

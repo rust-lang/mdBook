@@ -4,6 +4,7 @@
 //! lots of problems. Various operating systems and different filesystems have
 //! had problems correctly reporting changes.
 
+use anyhow::Result;
 use ignore::gitignore::Gitignore;
 use mdbook_driver::MDBook;
 use pathdiff::diff_paths;
@@ -29,7 +30,10 @@ pub fn rebuild_on_change(
 
     info!("Watching for changes...");
     // Scan once to initialize the starting point.
-    watcher.set_roots(&book);
+    if let Err(e) = watcher.set_roots(&book) {
+        error!("invalid book configuration: {e}");
+        std::process::exit(1);
+    }
     watcher.scan();
 
     // Track average scan time, to help investigate if the poller is taking
@@ -66,7 +70,9 @@ pub fn rebuild_on_change(
                         post_build();
                     }
                     book = b;
-                    watcher.set_roots(&book);
+                    if let Err(e) = watcher.set_roots(&book) {
+                        error!("invalid book configuration: {e}");
+                    }
                 }
                 Err(e) => error!("failed to load book config: {e:?}"),
             }
@@ -121,10 +127,10 @@ impl Watcher {
     }
 
     /// Sets the root directories where scanning will start.
-    fn set_roots(&mut self, book: &MDBook) {
+    fn set_roots(&mut self, book: &MDBook) -> Result<()> {
         let mut root_paths = vec![
             book.source_dir(),
-            book.theme_dir(),
+            book.theme_dir()?,
             book.root.join("book.toml"),
         ];
         root_paths.extend(
@@ -134,7 +140,7 @@ impl Watcher {
                 .iter()
                 .map(|path| book.root.join(path)),
         );
-        if let Some(html_config) = book.config.html_config() {
+        if let Some(html_config) = book.config.html_config()? {
             root_paths.extend(
                 html_config
                     .additional_css
@@ -145,6 +151,7 @@ impl Watcher {
         }
 
         self.root_paths = root_paths;
+        Ok(())
     }
 
     /// Scans for changes.
@@ -276,7 +283,7 @@ mod tests {
         // Create a watcher and check its behavior.
         let book = MDBook::load(&book_root).unwrap();
         let mut watcher = Watcher::new(&book_root);
-        watcher.set_roots(&book);
+        watcher.set_roots(&book).unwrap();
         // Do an initial scan to initialize its state.
         watcher.scan();
         // Verify the steady state is empty.

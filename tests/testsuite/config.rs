@@ -183,6 +183,33 @@ unknown field `foo`, expected one of `title`, `authors`, `description`, `src`, `
         });
 }
 
+// An invalid key in the HTML output table should fail the build.
+#[test]
+fn bad_config_in_html_table() {
+    BookTest::init(|_| {})
+        .change_file(
+            "book.toml",
+            "[book]\n\
+             title = \"bad-html-config\"\n\
+             \n\
+             [output.html]\n\
+             foo = 123",
+        )
+        .run("build", |cmd| {
+            cmd.expect_failure()
+                .expect_stdout(str![[""]])
+                .expect_stderr(str![[r#"
+ INFO Book building has started
+ INFO Running the html backend
+ERROR Rendering failed
+[TAB]Caused by: Failed to deserialize `output.html`
+[TAB]Caused by: unknown field `foo`, expected one of `theme`, `default-theme`, `preferred-dark-theme`, `smart-punctuation`, `definition-lists`, `admonitions`, `mathjax-support`, `additional-css`, `additional-js`, `fold`, `playground`, `playpen`, `code`, `print`, `no-section-label`, `search`, `git-repository-url`, `git-repository-icon`, `input-404`, `site-url`, `cname`, `edit-url-template`, `live-reload-endpoint`, `redirect`, `hash-files`, `sidebar-header-nav`
+
+
+"#]]);
+        });
+}
+
 // An invalid key in the main rust table.
 #[test]
 fn bad_config_in_rust_table() {

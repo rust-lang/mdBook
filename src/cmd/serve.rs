@@ -74,7 +74,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         .next()
         .ok_or_else(|| anyhow::anyhow!("no address found for {}", address))?;
     let build_dir = book.build_dir_for("html");
-    let html_config = book.config.html_config().unwrap_or_default();
+    let html_config = book.config.html_config()?.unwrap_or_default();
     let file_404 = html_config.get_404_output_file();
 
     // A channel used to broadcast to any websockets to reload when a file changes.

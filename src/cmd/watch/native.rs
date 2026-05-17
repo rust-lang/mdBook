@@ -38,7 +38,11 @@ pub fn rebuild_on_change(
         std::process::exit(1);
     };
 
-    let _ = watcher.watch(&book.theme_dir(), Recursive);
+    let theme_dir = book.theme_dir().unwrap_or_else(|e| {
+        error!("invalid book configuration: {e}");
+        std::process::exit(1);
+    });
+    let _ = watcher.watch(&theme_dir, Recursive);
 
     // Add the book.toml file to the watcher if it exists
     let _ = watcher.watch(&book.root.join("book.toml"), NonRecursive);

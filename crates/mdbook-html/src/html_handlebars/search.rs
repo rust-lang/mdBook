@@ -337,7 +337,7 @@ fn chapter_settings_priority() {
         "foo" = {} # Just to make sure empty table is allowed.
     "#;
     let cfg: mdbook_core::config::Config = toml::from_str(cfg).unwrap();
-    let html = cfg.html_config().unwrap();
+    let html = cfg.html_config().unwrap().unwrap();
     let chapter_configs = sort_search_config(&html.search.unwrap().chapter);
     for (path, enable) in [
         ("foo.md", None),
