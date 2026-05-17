@@ -662,7 +662,7 @@ where
     /// Adds an open HTML tag.
     fn start_html_tag(&mut self, tag: html5ever::tokenizer::Tag, is_raw: &mut bool) {
         let is_closed = is_void_element(&tag.name) || tag.self_closing;
-        *is_raw = matches!(&*tag.name, "script" | "style");
+        *is_raw = matches!(&*tag.name, "script" | "style" | "svg");
         let name = QualName::new(None, html5ever::ns!(html), tag.name);
         let attrs = tag
             .attrs

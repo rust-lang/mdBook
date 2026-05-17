@@ -9,6 +9,7 @@ use html5ever::tokenizer::states::RawKind;
 use html5ever::tokenizer::{
     BufferQueue, TagKind, Token, TokenSink, TokenSinkResult, Tokenizer, TokenizerOpts,
 };
+use std::borrow::Cow;
 use std::cell::RefCell;
 
 /// Collector for HTML tokens.
@@ -45,6 +46,15 @@ impl TokenSink for TokenCollector {
                         TagKind::EndTag => {}
                     }
                 }
+                if tag_name == b"svg" {
+                    match tag.kind {
+                        TagKind::StartTag => {
+                            self.tokens.borrow_mut().push(token);
+                            return TokenSinkResult::RawData(RawKind::Rawtext);
+                        }
+                        TagKind::EndTag => {}
+                    }
+                }
                 self.tokens.borrow_mut().push(token);
             }
             Token::CommentToken(_) => {
@@ -63,8 +73,32 @@ impl TokenSink for TokenCollector {
     }
 }
 
+/// Strips XML processing instructions (e.g. `<?xml ...?>`) that are invalid in HTML
+/// but commonly appear in inline SVG emitted by preprocessors.
+fn strip_xml_processing_instructions(html: &str) -> Cow<'_, str> {
+    let mut out = String::new();
+    let mut rest = html;
+    let mut changed = false;
+    while let Some(start) = rest.find("<?") {
+        changed = true;
+        out.push_str(&rest[..start]);
+        let after = &rest[start + 2..];
+        let Some(end) = after.find("?>") else {
+            out.push_str(&rest[start..]);
+            return Cow::Owned(out);
+        };
+        rest = &after[end + 2..];
+    }
+    if !changed {
+        return Cow::Borrowed(html);
+    }
+    out.push_str(rest);
+    Cow::Owned(out)
+}
+
 /// Parse HTML into tokens.
 pub(crate) fn parse_html(html: &str) -> Vec<Token> {
+    let html = strip_xml_processing_instructions(html);
     let tendril: ByteTendril = html.as_bytes().into();
     let mut queue = BufferQueue::default();
     queue.push_back(tendril.try_reinterpret().unwrap());
