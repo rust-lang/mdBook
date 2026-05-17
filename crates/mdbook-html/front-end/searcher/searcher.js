@@ -485,7 +485,7 @@ window.search = window.search || {};
             removeChildren(searchresults);
         }
 
-        setSearchUrlParameters(searchterm, 'push_if_new_search_else_replace');
+        setSearchUrlParameters(searchterm, 'replace');
 
         // Remove marks
         marker.unmark();
