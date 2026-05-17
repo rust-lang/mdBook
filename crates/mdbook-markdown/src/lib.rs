@@ -5,10 +5,34 @@
 //! crate is used as the underlying parser. This crate re-exports
 //! [`pulldown_cmark`] so that you can access its types.
 
-use pulldown_cmark::{Options, Parser};
+use pulldown_cmark::{Event, Options, Parser};
+
+mod admonition_blockquote_merge;
+use admonition_blockquote_merge::AdmonitionBlockquoteMerge;
 
 #[doc(inline)]
 pub use pulldown_cmark;
+
+/// Markdown event iterator returned by [`new_cmark_parser`].
+pub struct MarkdownParser<'text> {
+    inner: MarkdownParserInner<'text>,
+}
+
+enum MarkdownParserInner<'text> {
+    Plain(Parser<'text>),
+    WithAdmonitionMerge(AdmonitionBlockquoteMerge<'text, Parser<'text>>),
+}
+
+impl<'text> Iterator for MarkdownParser<'text> {
+    type Item = Event<'text>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match &mut self.inner {
+            MarkdownParserInner::Plain(parser) => parser.next(),
+            MarkdownParserInner::WithAdmonitionMerge(parser) => parser.next(),
+        }
+    }
+}
 
 /// Options for parsing markdown.
 #[non_exhaustive]
@@ -41,7 +65,7 @@ impl Default for MarkdownOptions {
 }
 
 /// Creates a new pulldown-cmark parser of the given text.
-pub fn new_cmark_parser<'text>(text: &'text str, options: &MarkdownOptions) -> Parser<'text> {
+pub fn new_cmark_parser<'text>(text: &'text str, options: &MarkdownOptions) -> MarkdownParser<'text> {
     let mut opts = Options::empty();
     opts.insert(Options::ENABLE_TABLES);
     opts.insert(Options::ENABLE_FOOTNOTES);
@@ -57,5 +81,11 @@ pub fn new_cmark_parser<'text>(text: &'text str, options: &MarkdownOptions) -> P
     if options.admonitions {
         opts.insert(Options::ENABLE_GFM);
     }
-    Parser::new_ext(text, opts)
+    let parser = Parser::new_ext(text, opts);
+    let inner = if options.admonitions {
+        MarkdownParserInner::WithAdmonitionMerge(AdmonitionBlockquoteMerge::new(parser))
+    } else {
+        MarkdownParserInner::Plain(parser)
+    };
+    MarkdownParser { inner }
 }

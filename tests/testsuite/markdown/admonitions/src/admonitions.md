@@ -5,6 +5,10 @@
 >
 > There are multiple paragraphs.
 
+> [!NOTE]
+>
+> Blank line after the admonition header (prettifier-safe).
+
 > [!TIP]
 > This is a tip.
 
