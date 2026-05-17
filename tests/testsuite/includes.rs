@@ -12,6 +12,9 @@ fn include() {
 <h1 id="basic-includes"><a class="header" href="#basic-includes">Basic Includes</a></h1>
 <h2 id="sample"><a class="header" href="#sample">Sample</a></h2>
 <p>This is a sample include.</p>
+<h2 id="file-with-space-in-name"><a class="header" href="#file-with-space-in-name">File with space in name</a></h2>
+<h1 id="file-with-space"><a class="header" href="#file-with-space">File With Space</a></h1>
+<p>This file name contains a space.</p>
 "##]],
         )
         .check_main_file(
