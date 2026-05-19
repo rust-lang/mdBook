@@ -1078,7 +1078,7 @@ version = "0.0.0"
 
 [[package]]
 name = "mdbook-core"
-version = "0.5.2"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "regex",

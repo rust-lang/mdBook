@@ -103,7 +103,7 @@ admonitions = true
 mathjax-support = false
 additional-css = ["custom.css", "custom2.css"]
 additional-js = ["custom.js"]
-no-section-label = false
+section-label-toc = true
 git-repository-url = "https://github.com/rust-lang/mdBook"
 git-repository-icon = "fab-github"
 edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"
@@ -138,9 +138,9 @@ The following configuration options are available:
 - **additional-js:** If you need to add some behaviour to your book without
   removing the current behaviour, you can specify a set of JavaScript files that
   will be loaded alongside the default one.
-- **no-section-label:** mdBook by defaults adds numeric section labels in the table of
-  contents column. For example, "1.", "2.1". Set this option to true to disable
-  those labels. Defaults to `false`.
+- **section-label-toc:** mdBook by default adds numeric section labels in the table
+  of contents column. For example, "1.", "2.1". Set this option to `false` to
+  disable those labels. Defaults to `true`.
 - **git-repository-url:**  A url to the git repository for the book. If provided
   an icon link will be output in the menu bar of the book.
 - **git-repository-icon:** The Font Awesome icon class to use for the git repository link. Defaults to `fab-github` which looks like <i class="fab fa-github"></i>. If you are not using GitHub, another option to consider is `fas-code-fork` which looks like <i class="fas fa-code-fork"></i>. The start of the string should be `fa-` for regular icons, `fas-` for solid icons, or `fab-` for brand icons. See the [free icon set](https://fontawesome.com/v6/search) for the available icons.

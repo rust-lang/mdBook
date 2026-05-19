@@ -39,7 +39,7 @@ hex = "0.4.3"
 html5ever = "0.39.0"
 indexmap = "2.14.0"
 ignore = "0.4.25"
-mdbook-core = { path = "crates/mdbook-core", version = "0.5.2" }
+mdbook-core = { path = "crates/mdbook-core", version = "0.6.0" }
 mdbook-driver = { path = "crates/mdbook-driver", version = "0.5.2" }
 mdbook-html = { path = "crates/mdbook-html", version = "0.5.2" }
 mdbook-markdown = { path = "crates/mdbook-markdown", version = "0.5.2" }
