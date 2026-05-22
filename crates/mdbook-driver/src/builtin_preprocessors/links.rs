@@ -119,7 +119,18 @@ where
                 previous_end_index = link.end_index;
             }
             Err(e) => {
-                error!("Error updating \"{}\", {}", link.link_text, e);
+                let line = s[..link.start_index]
+                    .bytes()
+                    .filter(|b| *b == b'\n')
+                    .count()
+                    + 1;
+                error!(
+                    "Error updating \"{}\" in {}:{}, {}",
+                    link.link_text,
+                    source.display(),
+                    line,
+                    e
+                );
                 for cause in e.chain().skip(1) {
                     warn!("Caused By: {}", cause);
                 }

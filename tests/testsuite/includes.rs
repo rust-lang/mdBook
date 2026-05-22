@@ -70,6 +70,28 @@ Around the world, around the world</p>
         );
 }
 
+// Checks that errors include where the broken include appears.
+#[test]
+fn broken_include_error_location() {
+    BookTest::from_dir("includes/all_includes")
+        .change_file(
+            "src/includes.md",
+            "# Basic Includes\n\n{{#include src/not-found.md}}\n",
+        )
+        .change_file("src/recursive.md", "Not recursive.\n")
+        .run("build", |cmd| {
+            cmd.expect_stderr(str![[r#"
+ INFO Book building has started
+ERROR Error updating "{{#include src/not-found.md}}" in includes.md:3, Could not read file for link {{#include src/not-found.md}} ([ROOT]/src/src/not-found.md)
+ WARN Caused By: failed to read `[ROOT]/src/src/not-found.md`
+ WARN Caused By: [NOT_FOUND]
+ INFO Running the html backend
+ INFO HTML book written to `[ROOT]/book`
+
+"#]]);
+        });
+}
+
 // Checks the behavior of `{{#playground}}` include.
 #[test]
 fn playground_include() {
