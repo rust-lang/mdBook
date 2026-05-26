@@ -409,3 +409,35 @@ dd > p {
     /* Add some space between the icon and the text. */
     margin-right: 8px;
 }
+
+.content .checkbox-img, .checkbox-label > .img-wrapper {
+    display: none;
+}
+.content .checkbox-label {
+    display: block;
+    max-width: 100%;
+}
+.content .checkbox-label img {
+    cursor: zoom-in;
+}
+.content .checkbox-img:checked + .checkbox-label > .img-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 1001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: zoom-out;
+}
+.content .checkbox-img:checked + .checkbox-label > .img-wrapper img {
+    --img-padding: 5px;
+    padding: var(--img-padding);
+    background: #999;
+    cursor: zoom-out;
+    max-width: calc(100% - (var(--img-padding) * 2));
+    max-height: calc(100% - (var(--img-padding) * 2));
+}

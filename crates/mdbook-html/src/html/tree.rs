@@ -9,7 +9,7 @@ use super::tokenizer::parse_html;
 use super::{HtmlRenderOptions, hide_lines, wrap_rust_main};
 use crate::utils::{id_from_content, unique_id};
 use ego_tree::{NodeId, NodeRef, Tree};
-use html5ever::tendril::StrTendril;
+use html5ever::tendril::{SliceExt, StrTendril};
 use html5ever::tokenizer::{TagKind, Token};
 use html5ever::{LocalName, QualName};
 use indexmap::IndexMap;
@@ -69,7 +69,7 @@ impl Node {
 }
 
 /// An HTML element.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct Element {
     /// The tag name.
     pub(crate) name: QualName,
@@ -199,6 +199,8 @@ pub(crate) struct MarkdownTreeBuilder<'opts, 'event, EventIter> {
     /// tag. After the document has been parsed, all the definitions are moved
     /// to the end of the document.
     footnote_defs: HashMap<CowStr<'event>, NodeId>,
+    /// Current ID to be used to generate the images label and checkbox.
+    img_label_id: usize,
 }
 
 impl<'opts, 'event, EventIter> MarkdownTreeBuilder<'opts, 'event, EventIter>
@@ -222,12 +224,20 @@ where
             table_cell_index: 0,
             footnote_numbers: HashMap::new(),
             footnote_defs: HashMap::new(),
+            img_label_id: 0,
         };
         builder.process_events();
         builder.add_header_links();
         builder.update_code_blocks();
         builder.convert_fontawesome();
         builder.tree
+    }
+
+    /// Returns the current `img_label_id` and increase its value.
+    fn get_current_img_label_id(&mut self) -> usize {
+        let ret = self.img_label_id;
+        self.img_label_id += 1;
+        ret
     }
 
     /// Append a new child to the current node.
@@ -557,6 +567,19 @@ where
                 title,
                 id: _,
             } => {
+                let img_input_id = format!("checkbox-img-{}", self.get_current_img_label_id());
+
+                let mut input = Element::new("input");
+                input.insert_attr("id", img_input_id.to_tendril());
+                input.insert_attr("class", "checkbox-img".to_tendril());
+                input.insert_attr("type", "checkbox".to_tendril());
+                self.append(Node::Element(input));
+
+                let mut label = Element::new("label");
+                label.insert_attr("class", "checkbox-label".to_tendril());
+                label.insert_attr("for", img_input_id.to_tendril());
+                self.push(Node::Element(label));
+
                 let mut img = Element::new("img");
                 let src = fix_link(dest_url).into_tendril();
                 img.insert_attr("src", src);
@@ -566,7 +589,15 @@ where
                 // This will eat TagEnd::Image
                 let alt = self.text_for_img_alt();
                 img.insert_attr("alt", alt.into());
+                self.append(Node::Element(img.clone()));
+
+                let mut wrapper = Element::new("span");
+                wrapper.insert_attr("class", "img-wrapper".to_tendril());
+                self.push_no_stack(Node::Element(wrapper));
                 self.append(Node::Element(img));
+
+                // We exit the `label` and the `div`.
+                self.pop();
                 return;
             }
             Tag::MetadataBlock(_) => {
