@@ -11,17 +11,36 @@ define-function: (
     },
 )
 
+define-function: (
+    "check-image-zoomed-in",
+    [],
+    block {
+        // The image wrapper should now be displayed and have a "zoom-out" cursor.
+        assert-css: (".checkbox-label > .img-wrapper", {"display": "flex", "cursor": "zoom-out"})
+        // Same for the image it contains.
+        assert-css: (
+            ".checkbox-label > .img-wrapper img",
+            {"display": "block", "cursor": "zoom-out"},
+        )
+    },
+)
+
 go-to: |DOC_PATH| + "basic/index.html"
 call-function: ("check-image-not-zoomed-in", {})
 
 // We click on the image to "zoom in".
 click: ".checkbox-label > img"
-// The image wrapper should now be displayed and have a "zoom-out" cursor.
-assert-css: (".checkbox-label > .img-wrapper", {"display": "flex", "cursor": "zoom-out"})
-// Same for the image it contains.
-assert-css: (".checkbox-label > .img-wrapper img", {"display": "block", "cursor": "zoom-out"})
+call-function: ("check-image-zoomed-in", {})
 
 // We click on the wrapper to "zoom out".
 click: ".checkbox-label > img"
+// We check that everything is back to the previous state.
+call-function: ("check-image-not-zoomed-in", {})
+
+// We test that the "escape" key also hides the "zoomed in" image.
+// We click on the image to "zoom in".
+click: ".checkbox-label > img"
+call-function: ("check-image-zoomed-in", {})
+press-key: "Escape"
 // We check that everything is back to the previous state.
 call-function: ("check-image-not-zoomed-in", {})

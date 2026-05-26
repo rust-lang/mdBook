@@ -658,6 +658,12 @@ aria-label="Show hidden lines"></button>';
 })();
 
 (function chapterNavigation() {
+    function zoomOutImages() {
+        for (const elem of Array.from(document.querySelectorAll('input.checkbox-img'))) {
+            elem.checked = false;
+        }
+    }
+
     document.addEventListener('keydown', function(e) {
         if (e.altKey ||
             e.ctrlKey ||
@@ -723,6 +729,9 @@ aria-label="Show hidden lines"></button>';
         case '?':
             e.preventDefault();
             showHelp();
+            break;
+        case 'Escape':
+            zoomOutImages();
             break;
         }
 
