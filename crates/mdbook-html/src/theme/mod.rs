@@ -64,7 +64,17 @@ impl Theme {
     /// Creates a `Theme` from the given `theme_dir`.
     /// If a file is found in the theme dir, it will override the default version.
     pub fn new<P: AsRef<Path>>(theme_dir: P) -> Self {
+        Self::new_with_override::<_, &str>(theme_dir, None)
+    }
+
+    /// Creates a `Theme` from the given `theme_dir` and, optionally,
+    /// a semi-overriding `override_theme_dir`.
+    pub fn new_with_override<P: AsRef<Path>, O: AsRef<Path>>(
+        theme_dir: P,
+        override_theme_dir: Option<O>,
+    ) -> Self {
         let theme_dir = theme_dir.as_ref();
+        let override_theme_dir = override_theme_dir.as_ref().map(|p| p.as_ref());
         let mut theme = Theme::default();
 
         // If the theme directory doesn't exist there's no point continuing...
@@ -115,8 +125,37 @@ impl Theme {
                 }
             };
 
+            let override_binary = |filename: &Path, dest: &mut Vec<u8>| {
+                if !filename.exists() {
+                    return false;
+                }
+                load_file_contents(filename, dest).is_ok()
+            };
+
+            let combine_utf = |filename: &Path, dest: &mut Vec<u8>| {
+                if !filename.exists() {
+                    return false;
+                }
+                let mut tmp: Vec<u8> = Vec::new();
+                if load_file_contents(filename, &mut tmp).is_err() {
+                    false
+                } else {
+                    let mut new_str = String::from_utf8(dest.clone()).unwrap();
+                    new_str.push_str("\n\n");
+                    new_str.push_str(&String::from_utf8(tmp).unwrap());
+                    *dest = new_str.as_bytes().iter().cloned().collect::<_>();
+                    true
+                }
+            };
+
             for (filename, dest) in files {
                 load_with_warn(&filename, dest);
+            }
+
+            // extra theme/ overrides
+            if let Some(dir) = override_theme_dir {
+                combine_utf(&dir.join("head.hbs"), &mut theme.head);
+                override_binary(&dir.join("highlight.js"), &mut theme.highlight_js);
             }
 
             let fonts_dir = theme_dir.join("fonts");
@@ -145,9 +184,16 @@ impl Theme {
             // If the user overrides one favicon, but not the other, do not
             // copy the default for the other.
             let favicon_png = &mut theme.favicon_png.as_mut().unwrap();
-            let png = load_with_warn(&theme_dir.join("favicon.png"), favicon_png);
+            let mut png = load_with_warn(&theme_dir.join("favicon.png"), favicon_png);
             let favicon_svg = &mut theme.favicon_svg.as_mut().unwrap();
-            let svg = load_with_warn(&theme_dir.join("favicon.svg"), favicon_svg);
+            let mut svg = load_with_warn(&theme_dir.join("favicon.svg"), favicon_svg);
+
+            // one more overrider for the favicon
+            if let Some(dir) = override_theme_dir {
+                png = override_binary(&dir.join("favicon.png"), favicon_png) || png;
+                svg = override_binary(&dir.join("favicon.svg"), favicon_svg) || svg;
+            }
+
             match (png, svg) {
                 (true, true) | (false, false) => {}
                 (true, false) => {
