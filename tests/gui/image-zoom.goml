@@ -44,3 +44,17 @@ call-function: ("check-image-zoomed-in", {})
 press-key: "Escape"
 // We check that everything is back to the previous state.
 call-function: ("check-image-not-zoomed-in", {})
+
+// Now we check that images in links (in `<a>` elements) don't get the "zoom-in" feature enabled.
+// There is only one zoomable image.
+assert-count: ("main .checkbox-img", 1)
+// We should have 3 images: 2 "normal" ones visible in the rendered book and one hidden which is
+// used only for the "zoom-in" feature.
+assert-count: ("main img", 3)
+// We check exact paths to ensure the 3 `<img>` are different.
+assert: ("main > p > label.checkbox-label > img")
+assert: ("main > p > label.checkbox-label > span.img-wrapper > img")
+assert: ("main > p > a > img")
+
+// The cursor for the image in link should not have "zoom-in".
+assert-css: ("main > p > a > img", {"cursor": "pointer"})

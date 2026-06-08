@@ -567,37 +567,53 @@ where
                 title,
                 id: _,
             } => {
-                let img_input_id = format!("checkbox-img-{}", self.get_current_img_label_id());
-
-                let mut input = Element::new("input");
-                input.insert_attr("id", img_input_id.to_tendril());
-                input.insert_attr("class", "checkbox-img".to_tendril());
-                input.insert_attr("type", "checkbox".to_tendril());
-                self.append(Node::Element(input));
-
-                let mut label = Element::new("label");
-                label.insert_attr("class", "checkbox-label".to_tendril());
-                label.insert_attr("for", img_input_id.to_tendril());
-                self.push(Node::Element(label));
-
                 let mut img = Element::new("img");
                 let src = fix_link(dest_url).into_tendril();
                 img.insert_attr("src", src);
-                if !title.is_empty() {
-                    img.insert_attr("title", title.into_tendril());
-                }
+
                 // This will eat TagEnd::Image
                 let alt = self.text_for_img_alt();
                 img.insert_attr("alt", alt.into());
                 self.append(Node::Element(img.clone()));
 
-                let mut wrapper = Element::new("span");
-                wrapper.insert_attr("class", "img-wrapper".to_tendril());
-                self.push_no_stack(Node::Element(wrapper));
-                self.append(Node::Element(img));
+                // If the image is not being rendered inside a link, we can enable the "zoom-in"
+                // feature.
+                if !self
+                    .tag_stack
+                    .iter()
+                    .filter_map(|node_id| {
+                        self.tree
+                            .get(*node_id)
+                            .and_then(|el| el.value().as_element())
+                    })
+                    .any(|el| *el.name.local == *"a")
+                {
+                    let img_input_id = format!("checkbox-img-{}", self.get_current_img_label_id());
 
-                // We exit the `label` and the `div`.
-                self.pop();
+                    let mut input = Element::new("input");
+                    input.insert_attr("id", img_input_id.to_tendril());
+                    input.insert_attr("class", "checkbox-img".to_tendril());
+                    input.insert_attr("type", "checkbox".to_tendril());
+                    self.append(Node::Element(input));
+
+                    let mut label = Element::new("label");
+                    label.insert_attr("class", "checkbox-label".to_tendril());
+                    label.insert_attr("for", img_input_id.to_tendril());
+                    self.push(Node::Element(label));
+
+                    self.append(Node::Element(img.clone()));
+
+                    let mut wrapper = Element::new("span");
+                    wrapper.insert_attr("class", "img-wrapper".to_tendril());
+                    self.push_no_stack(Node::Element(wrapper));
+
+                    self.append(Node::Element(img));
+
+                    // We exit the `label` and the `div`.
+                    self.pop();
+                } else {
+                    self.append(Node::Element(img));
+                }
                 return;
             }
             Tag::MetadataBlock(_) => {
