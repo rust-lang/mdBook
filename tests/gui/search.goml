@@ -74,3 +74,24 @@ assert: "#mdbook-searchresults"
 // And now we press `Escape` to close everything.
 press-key: 'Escape'
 wait-for-css: ("#mdbook-search-wrapper", {"display": "none"})
+
+// Search result links should have a `?highlight=` query param, which will highlight
+// the search term when we navigate to the destination page.
+go-to: |DOC_PATH| + "search/index.html?search=kale"
+assert: '[href*="highlight=kale"]'
+
+// On navigation, text on the destination page that matches the search term should be highlighted.
+go-to: |DOC_PATH| + "search/index.html?highlight=kale"
+wait-for: '[data-markjs="true"]'
+assert-text: ('[data-markjs="true"]', "kale", ALL)
+
+// Clicking on any of the highlights should dismiss them.
+click: '[data-markjs="true"]'
+assert-false: '[data-markjs="true"]'
+// The `?highlight=` URL query param should also have been removed
+// (so that highlights don't unexpectedly appear again.)
+assert-window-property-false: ({"location": "highlight=kale"}, CONTAINS)
+// Verify this by clicking on a heading to navigate to its anchor. This would otherwise preserve
+// search params, and if the query param were not removed, highlights would appear again.
+click: 'main h1 a'
+assert-false: '[data-markjs="true"]'

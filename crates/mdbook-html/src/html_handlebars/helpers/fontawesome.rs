@@ -43,10 +43,14 @@ pub(crate) fn fa_helper(
     } else {
         out.write("<span class=fa-svg>")?;
     }
-    out.write(
-        fa::svg(type_, name)
-            .map_err(|_| RenderErrorReason::Other(format!("Missing font {}", name)))?,
-    )?;
+    out.write(fa::svg(type_, name).map_err(|_| {
+        let valid_types = "fas (solid), fab (brands), or far (regular)";
+        RenderErrorReason::Other(format!(
+            "Unknown Font Awesome icon `{name}` for type `{type_}`. \
+             Hint: check the icon name and prefix ({valid_types}) at \
+             https://fontawesome.com/v6/search?m=free"
+        ))
+    })?)?;
     out.write("</span>")?;
 
     Ok(())

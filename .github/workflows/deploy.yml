@@ -30,7 +30,7 @@ jobs:
             os: windows-latest
     name: Deploy ${{ matrix.target }}
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
     - name: Install Rust
       run: ci/install-rust.sh stable ${{ matrix.target }}
     - name: Build asset
@@ -43,7 +43,7 @@ jobs:
     name: GitHub Pages
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
     - name: Install Rust (rustup)
       run: rustup update stable --no-self-update && rustup default stable
     - name: Deploy the User Guide to GitHub Pages using the gh-pages branch
@@ -56,12 +56,12 @@ jobs:
       id-token: write
     environment: publish
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
       - name: Install Rust (rustup)
         run: rustup update stable --no-self-update && rustup default stable
       - name: Authenticate with crates.io
         id: auth
-        uses: rust-lang/crates-io-auth-action@v1
+        uses: rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe  # v1.0.4
       - name: Publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}

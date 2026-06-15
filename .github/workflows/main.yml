@@ -44,7 +44,7 @@ jobs:
             target: x86_64-unknown-linux-gnu
     name: ${{ matrix.name }}
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
     - name: Install Rust
       run: bash ci/install-rust.sh ${{ matrix.rust }} ${{ matrix.target }}
     - name: Build and run tests
@@ -55,7 +55,7 @@ jobs:
   aarch64-cross-builds:
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
     - name: Install Rust
       run: bash ci/install-rust.sh stable aarch64-unknown-linux-musl
     - name: Build
@@ -65,7 +65,7 @@ jobs:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
     - name: Install Rust
       run: rustup update stable && rustup default stable && rustup component add rustfmt
     - run: cargo fmt --check
@@ -74,11 +74,11 @@ jobs:
     name: GUI tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
       - name: Install Rust
         run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
       - name: Install npm
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v6.4.0
         with:
           node-version: 24
       - name: Install browser-ui-test
@@ -92,7 +92,7 @@ jobs:
   clippy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
       - name: Install Rust
         run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
       - run: rustup component add clippy
@@ -102,7 +102,7 @@ jobs:
     name: Check API docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
       - name: Install Rust
         run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
       - name: Ensure intradoc links are valid
@@ -114,12 +114,12 @@ jobs:
     name: Check version bump
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
       - run: rustup update stable && rustup default stable
       - name: Install cargo-semver-checks
         run: |
           mkdir installed-bins
-          curl -Lf https://github.com/obi1kenobi/cargo-semver-checks/releases/download/v0.46.0/cargo-semver-checks-x86_64-unknown-linux-gnu.tar.gz \
+          curl -Lf https://github.com/obi1kenobi/cargo-semver-checks/releases/download/v0.48.0/cargo-semver-checks-x86_64-unknown-linux-gnu.tar.gz \
             | tar -xz --directory=./installed-bins
           echo `pwd`/installed-bins >> $GITHUB_PATH
       - run: cargo semver-checks --workspace

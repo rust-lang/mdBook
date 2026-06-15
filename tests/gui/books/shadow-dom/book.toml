@@ -1,0 +1,6 @@
+[book]
+title = "shadow-dom"
+language = "en"
+
+[output.html]
+additional-js = ["shadow-dom.js"]

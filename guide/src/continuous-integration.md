@@ -21,7 +21,7 @@ A simple approach would be to use the popular `curl` CLI tool to download the ex
 
 ```sh
 mkdir bin
-curl -sSL https://github.com/rust-lang/mdBook/releases/download/{{ mdbook-version }}/mdbook-{{ mdbook-version }}-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=bin
+curl -sSL https://github.com/rust-lang/mdBook/releases/download/v{{ mdbook-version }}/mdbook-v{{ mdbook-version }}-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=bin
 bin/mdbook build
 ```
 
@@ -74,11 +74,11 @@ Some services have Rust pre-installed, but if your service does not, you will ne
 
 Other than making sure the appropriate version of Rust is installed, there's not much more than just running `mdbook test` from the book directory.
 
-You may also want to consider running other kinds of tests, like [mdbook-linkcheck] which will check for broken links.
+You may also want to consider running other kinds of tests, like [mdbook-linkcheck2] which will check for broken links.
 Or if you have your own style checks, spell checker, or any other tests it might be good to run them in CI.
 
 [`mdbook test`]: cli/test.md
-[mdbook-linkcheck]: https://github.com/Michael-F-Bryan/mdbook-linkcheck#continuous-integration
+[mdbook-linkcheck2]: https://github.com/marxin/mdbook-linkcheck2#continuous-integration
 
 ## Deploying
 
