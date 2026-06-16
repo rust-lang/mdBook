@@ -48,8 +48,9 @@
 - Updated cargo dependencies.
   [#2969](https://github.com/rust-lang/mdBook/pull/2969)
 - [#2503](https://github.com/rust-lang/mdBook/pull/2503))
-  Added capability to include external crates in code samples, and to run doc tests  on them.
-  
+  Added capability to use external crates in code samples which are tested
+  as doc tests.
+
 ### Fixed
 
 - Fixed repeated error message when HTML config is invalid in `mdbook serve`.
