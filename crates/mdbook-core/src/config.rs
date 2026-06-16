@@ -1198,9 +1198,8 @@ mod tests {
         );
     }
 
-    /* todo -- make this test fail, as it should
     #[test]
-    #[should_panic(expected = "Invalid configuration file")]
+    #[should_panic(expected = "unknown field `foo`, expected `manifest` or `edition`")]
     // invalid key in config file should really generate an error...
     fn invalid_rust_setting() {
         let src = r#"
@@ -1210,7 +1209,7 @@ mod tests {
 
         Config::from_str(src).unwrap();
     }
-    */
+
     #[test]
     fn contains_key() {
         let src = r#"
