@@ -43,6 +43,10 @@ pub fn make_subcommand() -> Command {
                 .value_parser(NonEmptyStringValueParser::new())
                 .help("Port to use for HTTP connections"),
         )
+        .arg(
+            arg!(--"preserve-site-url" "Keep the configured `output.html.site-url` instead of \
+            overriding it to `/` for local serving (useful to preview production absolute links)"),
+        )
         .arg_open()
         .arg_watcher()
 }
@@ -55,16 +59,32 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let port = args.get_one::<String>("port").unwrap();
     let hostname = args.get_one::<String>("hostname").unwrap();
     let open_browser = args.get_flag("open");
+    let preserve_site_url = args.get_flag("preserve-site-url");
 
     let address = format!("{hostname}:{port}");
+
+    // The book is served from the root of the local HTTP server, so a configured
+    // `site-url` (used for the 404 page and, when enabled, absolute links) is
+    // overridden to "/" so links resolve locally. `--preserve-site-url` keeps the
+    // configured value, e.g. to preview the production absolute links.
+    if !preserve_site_url
+        && let Some(site_url) = book.config.html_config().and_then(|c| c.site_url)
+        && site_url != "/"
+    {
+        info!(
+            "overriding `output.html.site-url` (`{site_url}`) to `/` for local serving; \
+             pass `--preserve-site-url` to keep it"
+        );
+    }
 
     let update_config = |book: &mut MDBook| {
         book.config
             .set("output.html.live-reload-endpoint", LIVE_RELOAD_ENDPOINT)
             .expect("live-reload-endpoint update failed");
         set_dest_dir(args, book);
-        // Override site-url for local serving of the 404 file
-        book.config.set("output.html.site-url", "/").unwrap();
+        if !preserve_site_url {
+            book.config.set("output.html.site-url", "/").unwrap();
+        }
     };
     update_config(&mut book);
     book.build()?;

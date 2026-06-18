@@ -155,10 +155,14 @@ The following configuration options are available:
 - **input-404:** The name of the markdown file used for missing files.
   The corresponding output file will be the same, with the extension replaced with `html`.
   Defaults to `404.md`.
-- **site-url:** The url where the book will be hosted. This is required to ensure
-  navigation links and script/css imports in the 404 file work correctly, even when accessing
-  urls in subdirectories. Defaults to `/`. If `site-url` is set,
-  make sure to use document relative links for your assets, meaning they should not start with `/`.
+- **site-url:** The absolute URL where the book will be hosted, for example `/`
+  or `https://example.com/docs/`. When set, every generated link — page
+  navigation, the sidebar, static asset imports and the 404 page — is rooted at
+  this URL, so the book resolves correctly even when served from a subdirectory
+  or accessed at a deeply nested path. Root-relative links written in chapter
+  content as `./path` are also anchored to this URL. Defaults to `/`. During
+  [`mdbook serve`](../../cli/serve.md) this value is overridden to `/` for local
+  previewing unless `--preserve-site-url` is passed.
 - **cname:** The DNS subdomain or apex domain at which your book will be hosted.
   This string will be written to a file named CNAME in the root of your site, as
   required by GitHub Pages (see [*Managing a custom domain for your GitHub Pages

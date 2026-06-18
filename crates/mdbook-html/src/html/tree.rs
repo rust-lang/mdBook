@@ -542,7 +542,7 @@ where
                 let href: StrTendril = if matches!(link_type, LinkType::Email) {
                     format!("mailto:{dest_url}").into()
                 } else {
-                    fix_link(dest_url).into_tendril()
+                    fix_link(dest_url, self.options.config.site_url.as_deref()).into_tendril()
                 };
                 let mut a = Element::new("a");
                 a.insert_attr("href", href);
@@ -558,7 +558,8 @@ where
                 id: _,
             } => {
                 let mut img = Element::new("img");
-                let src = fix_link(dest_url).into_tendril();
+                let src =
+                    fix_link(dest_url, self.options.config.site_url.as_deref()).into_tendril();
                 img.insert_attr("src", src);
                 if !title.is_empty() {
                     img.insert_attr("title", title.into_tendril());
@@ -675,7 +676,7 @@ where
             self_closing: tag.self_closing,
             was_raw: true,
         };
-        fix_html_link(&mut el);
+        fix_html_link(&mut el, self.options.config.site_url.as_deref());
         self.push(Node::Element(el));
         if is_closed {
             // No end element.
@@ -1090,7 +1091,12 @@ fn text_in_node(node: NodeRef<'_, Node>, output: &mut String) {
 /// Modifies links to work with HTML.
 ///
 /// For local paths, this changes the `.md` extension to `.html`.
-fn fix_link<'a>(link: CowStr<'a>) -> CowStr<'a> {
+///
+/// When `site_url` is set (the `output.html.site-url` option), root-relative
+/// links written as `./path` are rewritten to absolute `{site_url}path` links,
+/// so a book served from a subdirectory resolves cross-chapter links correctly
+/// regardless of the page's own depth.
+fn fix_link<'a>(link: CowStr<'a>, site_url: Option<&str>) -> CowStr<'a> {
     static_regex!(SCHEME_LINK, r"^[a-z][a-z0-9+.-]*:");
     static_regex!(MD_LINK, r"(?P<link>.*)\.md(?P<anchor>#.*)?");
 
@@ -1104,7 +1110,7 @@ fn fix_link<'a>(link: CowStr<'a>) -> CowStr<'a> {
     }
 
     // This is a relative link, adjust it as necessary.
-    if let Some(caps) = MD_LINK.captures(&link) {
+    let link = if let Some(caps) = MD_LINK.captures(&link) {
         let mut fixed_link = String::from(&caps["link"]);
         fixed_link.push_str(".html");
         if let Some(anchor) = caps.name("anchor") {
@@ -1113,17 +1119,26 @@ fn fix_link<'a>(link: CowStr<'a>) -> CowStr<'a> {
         CowStr::from(fixed_link)
     } else {
         link
+    };
+
+    // Anchor root-relative `./` links to the configured site URL.
+    if let Some(site_url) = site_url
+        && let Some(rest) = link.strip_prefix("./")
+    {
+        CowStr::from(format!("{site_url}{rest}"))
+    } else {
+        link
     }
 }
 
 /// Calls [`fix_link`] for HTML elements.
-fn fix_html_link(el: &mut Element) {
+fn fix_html_link(el: &mut Element, site_url: Option<&str>) {
     if el.name() != "a" {
         return;
     }
     for attr in ["href", "xlink:href"] {
         if let Some(value) = el.attr(attr) {
-            let fixed = fix_link(value.into());
+            let fixed = fix_link(value.into(), site_url);
             el.insert_attr(attr, fixed.into_tendril());
         }
     }
@@ -1152,4 +1167,57 @@ pub(crate) fn is_void_element(name: &str) -> bool {
             | "track"
             | "wbr"
     )
+}
+
+#[cfg(test)]
+mod fix_link_tests {
+    use super::fix_link;
+
+    #[test]
+    fn rewrites_md_extension() {
+        assert_eq!(&*fix_link("foo.md".into(), None), "foo.html");
+        assert_eq!(&*fix_link("foo.md#frag".into(), None), "foo.html#frag");
+    }
+
+    #[test]
+    fn leaves_schemes_and_fragments_alone() {
+        assert_eq!(
+            &*fix_link("https://example.com/x".into(), None),
+            "https://example.com/x"
+        );
+        assert_eq!(&*fix_link("mailto:a@b.c".into(), None), "mailto:a@b.c");
+        assert_eq!(&*fix_link("#anchor".into(), None), "#anchor");
+    }
+
+    #[test]
+    fn site_url_anchors_root_relative_links() {
+        let site = Some("https://example.com/docs/");
+        assert_eq!(
+            &*fix_link("./nested/deep.md".into(), site),
+            "https://example.com/docs/nested/deep.html"
+        );
+        // Non-markdown root-relative links are anchored too.
+        assert_eq!(
+            &*fix_link("./img/logo.png".into(), site),
+            "https://example.com/docs/img/logo.png"
+        );
+        // The anchor is preserved through the rewrite.
+        assert_eq!(
+            &*fix_link("./other.md#sec".into(), site),
+            "https://example.com/docs/other.html#sec"
+        );
+    }
+
+    #[test]
+    fn site_url_does_not_touch_schemes_or_non_dot_relative() {
+        let site = Some("https://example.com/docs/");
+        // Absolute/scheme links are never rewritten.
+        assert_eq!(
+            &*fix_link("https://rust-lang.org".into(), site),
+            "https://rust-lang.org"
+        );
+        // Only `./`-prefixed links are treated as root-relative; bare relative
+        // links keep their page-relative meaning.
+        assert_eq!(&*fix_link("sibling.md".into(), site), "sibling.html");
+    }
 }

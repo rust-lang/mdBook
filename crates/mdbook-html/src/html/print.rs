@@ -9,15 +9,18 @@ use crate::html::{ChapterTree, Element, serialize};
 use crate::utils::{ToUrlPath, id_from_content, normalize_path, unique_id};
 use mdbook_core::static_regex;
 use std::collections::{HashMap, HashSet};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// Takes all the chapter trees, modifies them to be suitable to render for
 /// the print page, and returns an string of all the chapters rendered to a
 /// single HTML page.
-pub(crate) fn render_print_page(mut chapter_trees: Vec<ChapterTree<'_>>) -> String {
+pub(crate) fn render_print_page(
+    mut chapter_trees: Vec<ChapterTree<'_>>,
+    site_url: Option<&str>,
+) -> String {
     let (id_remap, mut id_counter) = make_ids_unique(&mut chapter_trees);
     let path_to_root_id = make_root_id_map(&mut chapter_trees, &mut id_counter);
-    rewrite_links(&mut chapter_trees, &id_remap, &path_to_root_id);
+    rewrite_links(&mut chapter_trees, &id_remap, &path_to_root_id, site_url);
 
     let mut print_content = String::new();
     for ChapterTree { tree, .. } in chapter_trees {
@@ -125,6 +128,7 @@ fn rewrite_links(
     chapter_trees: &mut [ChapterTree<'_>],
     id_remap: &HashMap<PathBuf, HashMap<String, String>>,
     path_to_root_id: &HashMap<PathBuf, String>,
+    site_url: Option<&str>,
 ) {
     static_regex!(
         LINK,
@@ -149,13 +153,21 @@ fn rewrite_links(
                 continue;
             }
             for attr in ["href", "src", "xlink:href"] {
-                let Some(dest) = el.attr(attr) else {
+                let Some(dest) = el.attr(attr).map(str::to_string) else {
                     continue;
                 };
-                let Some(caps) = LINK.captures(&dest) else {
+                // Links emitted under `site-url` are absolute (`{site_url}path`)
+                // and root-relative (anchored at the book root). Strip the
+                // prefix so the path resolves against the print page like any
+                // other chapter link, instead of being skipped as a scheme.
+                let (search, root_relative) = match site_url {
+                    Some(site_url) if dest.starts_with(site_url) => (&dest[site_url.len()..], true),
+                    _ => (dest.as_str(), false),
+                };
+                let Some(caps) = LINK.captures(search) else {
                     continue;
                 };
-                if caps.name("scheme").is_some() {
+                if !root_relative && caps.name("scheme").is_some() {
                     continue;
                 }
                 // The lookup_key is the key to look up in the remap table.
@@ -164,18 +176,29 @@ fn rewrite_links(
                     && let href_path = href_path.as_str()
                     && !href_path.is_empty()
                 {
-                    lookup_key.pop();
-                    lookup_key.push(href_path);
-                    lookup_key = normalize_path(&lookup_key);
+                    if root_relative {
+                        // The path is already relative to the book root.
+                        lookup_key = normalize_path(Path::new(href_path));
+                    } else {
+                        lookup_key.pop();
+                        lookup_key.push(href_path);
+                        lookup_key = normalize_path(&lookup_key);
+                    }
                     let is_a_chapter = path_to_root_id.contains_key(&lookup_key);
                     if !is_a_chapter {
-                        // Make the link relative to the print page location.
-                        let mut rel_path = normalize_path(&base.join(href_path)).to_url_path();
+                        // Not part of the print page; rebuild a link to the
+                        // standalone resource, preserving the absolute form for
+                        // `site-url` links and a print-relative path otherwise.
+                        let mut link = if root_relative {
+                            format!("{}{href_path}", site_url.unwrap_or_default())
+                        } else {
+                            normalize_path(&base.join(href_path)).to_url_path()
+                        };
                         if let Some(anchor) = caps.name("anchor") {
-                            rel_path.push('#');
-                            rel_path.push_str(anchor.as_str());
+                            link.push('#');
+                            link.push_str(anchor.as_str());
                         }
-                        el.insert_attr(attr, rel_path.into());
+                        el.insert_attr(attr, link.into());
                         continue;
                     }
                 }
