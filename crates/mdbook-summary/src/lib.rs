@@ -25,15 +25,15 @@ use tracing::{debug, trace, warn};
 ///
 /// **Prefix Chapter:** Before the main numbered chapters you can add a couple
 /// of elements that will not be numbered. This is useful for forewords,
-/// introductions, etc. There are however some constraints. You can not nest
-/// prefix chapters, they should all be on the root level. And you can not add
+/// introductions, etc. However, there are some constraints. You cannot nest
+/// prefix chapters; they should all be on the root level. And you cannot add
 /// prefix chapters once you have added numbered chapters.
 ///
 /// ```markdown
 /// [Title of prefix element](relative/path/to/markdown.md)
 /// ```
 ///
-/// **Part Title:** An optional title for the next collect of numbered chapters. The numbered
+/// **Part Title:** An optional title for the next collection of numbered chapters. The numbered
 /// chapters can be broken into as many parts as desired.
 ///
 /// **Numbered Chapter:** Numbered chapters are the main content of the book,
