@@ -450,10 +450,10 @@ pub struct HtmlConfig {
     /// The theme directory, if specified.
     pub theme: Option<PathBuf>,
     /// The default theme to use, defaults to 'light'
-    pub default_theme: Option<String>,
+    pub default_theme: Option<BuiltinTheme>,
     /// The theme to use if the browser requests the dark version of the site.
     /// Defaults to 'navy'.
-    pub preferred_dark_theme: Option<String>,
+    pub preferred_dark_theme: Option<BuiltinTheme>,
     /// Supports smart quotes, apostrophes, ellipsis, en-dash, and em-dash.
     pub smart_punctuation: bool,
     /// Support for definition lists.
@@ -728,6 +728,40 @@ trait Updateable<'de>: Serialize + Deserialize<'de> {
 
 impl<'de, T> Updateable<'de> for T where T: Serialize + Deserialize<'de> {}
 
+/// A built-in HTML theme supported by mdBook.
+///
+/// These themes are defined in `crates/mdbook-html/front-end/css/variables.css`.
+///
+/// The enum variants correspond to the theme names accepted by the
+/// `[output.html]` configuration keys `default-theme` and
+/// `preferred-dark-theme`.
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase", deny_unknown_fields)]
+#[non_exhaustive]
+pub enum BuiltinTheme {
+    /// A dark theme with a balanced color palette.
+    Ayu,
+    /// A dark theme with a gray-on-gray aesthetic.
+    Coal,
+    /// A light theme optimized for readability.
+    Light,
+    /// A dark navy-themed variant.
+    Navy,
+    /// A rust-colored theme.
+    Rust,
+}
+
+impl BuiltinTheme {
+    /// An array of all built-in themes, in the order they should be displayed in the theme selector.
+    pub const ALL: [BuiltinTheme; 5] = [
+        BuiltinTheme::Light,
+        BuiltinTheme::Rust,
+        BuiltinTheme::Coal,
+        BuiltinTheme::Navy,
+        BuiltinTheme::Ayu,
+    ];
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -795,7 +829,7 @@ mod tests {
             smart_punctuation: true,
             additional_css: vec![PathBuf::from("./foo/bar/baz.css")],
             theme: Some(PathBuf::from("./themedir")),
-            default_theme: Some(String::from("rust")),
+            default_theme: Some(BuiltinTheme::Rust),
             playground: playground_should_be,
             git_repository_url: Some(String::from("https://foo.com/")),
             git_repository_icon: Some(String::from("fa-code-fork")),
@@ -817,6 +851,53 @@ mod tests {
         assert_eq!(got.build, build_should_be);
         assert_eq!(got.rust, rust_should_be);
         assert_eq!(got.html_config().unwrap(), html_should_be);
+    }
+
+    #[test]
+    fn parse_builtin_html_themes() {
+        let src = r#"
+        [output.html]
+        default-theme = "rust"
+        preferred-dark-theme = "coal"
+        "#;
+
+        let got = Config::from_str(src).unwrap();
+        let html_config = got.html_config().unwrap();
+
+        assert_eq!(html_config.default_theme, Some(BuiltinTheme::Rust));
+        assert_eq!(html_config.preferred_dark_theme, Some(BuiltinTheme::Coal));
+        assert_eq!(
+            BuiltinTheme::ALL,
+            [
+                BuiltinTheme::Light,
+                BuiltinTheme::Rust,
+                BuiltinTheme::Coal,
+                BuiltinTheme::Navy,
+                BuiltinTheme::Ayu,
+            ]
+        );
+    }
+
+    #[test]
+    fn invalid_default_theme() {
+        let src = r#"
+        [output.html]
+        default-theme = "does-not-exist"
+        "#;
+
+        let got = Config::from_str(src).unwrap();
+        assert_eq!(got.html_config(), None);
+    }
+
+    #[test]
+    fn invalid_preferred_dark_theme() {
+        let src = r#"
+        [output.html]
+        preferred-dark-theme = "does-not-exist"
+        "#;
+
+        let got = Config::from_str(src).unwrap();
+        assert_eq!(got.html_config(), None);
     }
 
     #[test]
