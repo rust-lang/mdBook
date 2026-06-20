@@ -6,19 +6,16 @@ use crate::init::BookBuilder;
 use crate::load::{load_book, load_book_from_disk};
 use anyhow::{Context, Error, Result, bail};
 use indexmap::IndexMap;
-use mdbook_core::book::{Book, BookItem, BookItems};
-use mdbook_core::config::{Config, RustEdition};
-use mdbook_core::utils::{extern_args, fs};
+use mdbook_core::book::{Book, BookItem, BookItems, Chapter};
+use mdbook_core::config::Config;
+use mdbook_core::utils::fs;
 use mdbook_html::HtmlHandlebars;
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use mdbook_renderer::{RenderContext, Renderer};
 use mdbook_summary::Summary;
 use serde::Deserialize;
-use std::ffi::OsString;
-use std::io::IsTerminal;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use tempfile::Builder as TempFileBuilder;
 use topological_sort::TopologicalSort;
 use tracing::{debug, info, trace, warn};
 
@@ -225,32 +222,15 @@ impl MDBook {
     }
 
     /// Run `rustdoc` tests on the book, linking against the provided libraries.
-    pub fn test(&mut self, library_paths: Vec<&str>) -> Result<()> {
+    pub fn test(&mut self) -> Result<()> {
         // test_chapter with chapter:None will run all tests.
-        self.test_chapter(library_paths, None)
+        self.test_chapter(None)
     }
 
-    /// Run `rustdoc` tests on a specific chapter of the book, linking against the provided libraries.
-    /// If `chapter` is `None`, all tests will be run.
-    pub fn test_chapter(&mut self, library_paths: Vec<&str>, chapter: Option<&str>) -> Result<()> {
-        let cwd = std::env::current_dir()?;
-        let library_args: Vec<OsString> = library_paths
-            .into_iter()
-            .flat_map(|path| {
-                let path = Path::new(path);
-                let path = if path.is_relative() {
-                    cwd.join(path).into_os_string()
-                } else {
-                    path.to_path_buf().into_os_string()
-                };
-                [OsString::from("-L"), path]
-            })
-            .collect();
-
-        let temp_dir = TempFileBuilder::new().prefix("mdbook-").tempdir()?;
-
-        let mut chapter_found = false;
-
+    /// Run `cargo test --doc` tests on a specific chapter of the book,
+    /// linking against the provided libraries. If `chapter` is `None`,
+    /// all tests will be run.
+    pub fn test_chapter(&mut self, filter: Option<&str>) -> Result<()> {
         struct TestRenderer;
         impl Renderer for TestRenderer {
             // FIXME: Is "test" the proper renderer name to use here?
@@ -265,90 +245,82 @@ impl MDBook {
 
         let (book, _) = self.preprocess_book(&TestRenderer)?;
 
-        let color_output = std::io::stderr().is_terminal();
-        // get extra args we'll need for rustdoc, if config points to a cargo project
+        // let color_output = std::io::stderr().is_terminal();
 
-        let mut extern_args = extern_args::ExternArgs::new();
-        if let Some(manifest) = &self.config.rust.manifest {
-            extern_args.load(&self.root.join(manifest))?;
-        }
-
-        let mut failed = false;
-        for item in book.iter() {
+        let cargo_toml = if let Some(manifest) = &self.config.rust.manifest {
+            // extern_args.load(&self.root.join(manifest))?;
+            self.root.join(manifest)
+        } else {
+            let manifest = self.root.join("Cargo.toml");
+            fs::write(&manifest, "")?;
+            manifest
+        };
+        
+        fn get_chapter(item: &BookItem) -> Option<(&Chapter, &PathBuf)> {
             if let BookItem::Chapter(ref ch) = *item {
-                let chapter_path = match ch.path {
-                    Some(ref path) if !path.as_os_str().is_empty() => path,
-                    _ => continue,
-                };
-
-                if let Some(chapter) = chapter {
-                    if ch.name != chapter && chapter_path.to_str() != Some(chapter) {
-                        if chapter == "?" {
-                            info!("Skipping chapter '{}'...", ch.name);
-                        }
-                        continue;
-                    }
+                match ch.path {
+                    Some(ref path) if !path.as_os_str().is_empty() => Some((ch, path)),
+                    _ => None,
                 }
-                chapter_found = true;
-                info!("Testing chapter '{}': {:?}", ch.name, chapter_path);
-
-                // write preprocessed file to tempdir
-                let path = temp_dir.path().join(chapter_path);
-                fs::write(&path, &ch.content)?;
-
-                let mut cmd = Command::new("rustdoc");
-                cmd.current_dir(temp_dir.path())
-                    .arg(chapter_path)
-                    .arg("--test")
-                    .args(&library_args)
-                    .args(extern_args.get_args());
-
-                if let Some(edition) = self.config.rust.edition {
-                    match edition {
-                        RustEdition::E2015 => {
-                            cmd.args(["--edition", "2015"]);
-                        }
-                        RustEdition::E2018 => {
-                            cmd.args(["--edition", "2018"]);
-                        }
-                        RustEdition::E2021 => {
-                            cmd.args(["--edition", "2021"]);
-                        }
-                        RustEdition::E2024 => {
-                            cmd.args(["--edition", "2024"]);
-                        }
-                        _ => panic!("RustEdition {edition:?} not covered"),
-                    }
-                }
-
-                if color_output {
-                    cmd.args(["--color", "always"]);
-                }
-
-                debug!("running {:?}", cmd);
-                let output = cmd
-                    .output()
-                    .with_context(|| "failed to execute `rustdoc`")?;
-
-                if !output.status.success() {
-                    failed = true;
-                    eprintln!(
-                        "ERROR rustdoc returned an error:\n\
-                        \n--- stdout\n{}\n--- stderr\n{}",
-                        String::from_utf8_lossy(&output.stdout),
-                        String::from_utf8_lossy(&output.stderr)
-                    );
-                }
+            } else {
+                None
             }
         }
-        if failed {
-            bail!("One or more tests failed");
-        }
-        if let Some(chapter) = chapter {
-            if !chapter_found {
-                bail!("Chapter not found: {}", chapter);
+
+        let mut selected_chapter = None;
+
+        let rustify = |name: String| {
+            name.chars().map(|ch| if ch.is_ascii_alphanumeric() { ch.to_ascii_lowercase() } else { '_' }).collect::<String>()
+        };
+
+        let chapters: Vec<_> = book.iter().filter_map(get_chapter).enumerate().map(|(i, (chapter, path))| {
+            if let Some(needle) = filter {
+                if chapter.name == needle || path.to_str() == Some(needle) {
+                    info!("Testing chapter '{}': {:?}", chapter.name, path);
+                    selected_chapter = Some(i);
+                } else {
+                    info!("Skipping chapter '{}'...", chapter.name);
+                }
+            } else {
+                info!("Testing chapter '{}': {:?}", chapter.name, path);
             }
+            (format!("{}_{}", rustify(chapter.name.clone()), i), chapter.content.clone())
+        }).collect();
+
+        let lib = self.root.join(&self.config.book.src).join("lib.rs");
+        fs::write(&lib, chapters.iter().map(|(name, content)| {
+            format!("{} mod {} {{}}\n", content.split("\n").map(|line| format!("/// {}\n", line)).collect::<String>(), name)
+        }).collect::<String>())?;
+
+        let mut cargo = Command::new("cargo");
+        cargo.current_dir(&self.root)
+            .arg("test")
+            .arg("--doc")
+            .arg("--manifest-path")
+            .arg(cargo_toml);
+        if let Some(id) = selected_chapter {
+            cargo.arg(chapters[id].0.clone());
         }
+
+        debug!("running {:?}", cargo);
+        let output = cargo
+            .output()
+            .with_context(|| "failed to execute `cargo`")?;
+
+        if !output.status.success() {
+            // failed = true;
+            eprintln!(
+                "ERROR cargo returned an error:\n\
+                \n--- stdout\n{}\n--- stderr\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+        } else {
+            print!("{}", String::from_utf8_lossy(&output.stdout));
+        }
+
+        fs::write(&lib, "")?;
+
         Ok(())
     }
 

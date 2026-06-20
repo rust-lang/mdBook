@@ -63,8 +63,8 @@ turns out to be just as easy as the first.
 ```rust,should_panic
 # // this sample panics because it can't open stdin
 use std::io;
-use mdbook::renderer::RenderContext;
-use mdbook::book::{BookItem, Chapter};
+use mdbook_renderer::RenderContext;
+use mdbook_core::book::{BookItem, Chapter};
 
 fn main() {
     let mut stdin = io::stdin();
@@ -185,7 +185,7 @@ $ cargo add serde
 And then you can create the config struct,
 
 ```rust
-use serde_derive::{Serialize, Deserialize};
+use serde::{Serialize, Deserialize};
 
 fn main() {
 

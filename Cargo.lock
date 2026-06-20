@@ -1065,6 +1065,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "mdbook-book-code-samples"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "mdbook-core",
+ "mdbook-driver",
+ "mdbook-html",
+ "mdbook-markdown",
+ "mdbook-preprocessor",
+ "mdbook-renderer",
+ "mdbook-summary",
+ "pulldown-cmark 0.13.4",
+ "pulldown-cmark-to-cmark 18.0.0",
+ "semver",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "mdbook-compare"
 version = "0.0.0"
 
@@ -1119,7 +1139,7 @@ dependencies = [
  "mdbook-core",
  "mdbook-markdown",
  "mdbook-renderer",
- "pulldown-cmark",
+ "pulldown-cmark 0.13.4",
  "regex",
  "serde",
  "serde_json",
@@ -1133,7 +1153,7 @@ dependencies = [
 name = "mdbook-markdown"
 version = "0.5.3"
 dependencies = [
- "pulldown-cmark",
+ "pulldown-cmark 0.13.4",
  "regex",
  "tracing",
 ]
@@ -1153,8 +1173,8 @@ name = "mdbook-remove-emphasis"
 version = "0.1.0"
 dependencies = [
  "mdbook-preprocessor",
- "pulldown-cmark",
- "pulldown-cmark-to-cmark",
+ "pulldown-cmark 0.13.4",
+ "pulldown-cmark-to-cmark 22.0.0",
  "serde_json",
 ]
 
@@ -1175,7 +1195,7 @@ dependencies = [
  "anyhow",
  "mdbook-core",
  "memchr",
- "pulldown-cmark",
+ "pulldown-cmark 0.13.4",
  "serde",
  "tracing",
 ]
@@ -1537,6 +1557,17 @@ dependencies = [
 
 [[package]]
 name = "pulldown-cmark"
+version = "0.12.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f86ba2052aebccc42cbbb3ed234b8b13ce76f75c3551a303cb2bcffcff12bb14"
+dependencies = [
+ "bitflags",
+ "memchr",
+ "unicase",
+]
+
+[[package]]
+name = "pulldown-cmark"
 version = "0.13.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e9f068eba8e7071c5f9511831b44f32c740d5adf574e990f946ddb53db2f314e"
@@ -1555,11 +1586,20 @@ checksum = "007d8adb5ddab6f8e3f491ac63566a7d5002cc7ed73901f72057943fa71ae1ae"
 
 [[package]]
 name = "pulldown-cmark-to-cmark"
+version = "18.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e02b63adcb49f2eb675b1694b413b3e9fedbf549dfe2cc98727ad97a0c30650"
+dependencies = [
+ "pulldown-cmark 0.12.2",
+]
+
+[[package]]
+name = "pulldown-cmark-to-cmark"
 version = "22.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "50793def1b900256624a709439404384204a5dc3a6ec580281bfaac35e882e90"
 dependencies = [
- "pulldown-cmark",
+ "pulldown-cmark 0.13.4",
 ]
 
 [[package]]

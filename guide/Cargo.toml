@@ -1,12 +1,18 @@
 [package]
 name = "mdbook-book-code-samples"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 anyhow.workspace = true
 clap.workspace = true
-mdbook.workspace = true
+mdbook-core.workspace = true
+mdbook-driver.workspace = true
+mdbook-html.workspace = true
+mdbook-markdown.workspace = true
+mdbook-preprocessor.workspace = true
+mdbook-renderer.workspace = true
+mdbook-summary.workspace = true
 pulldown-cmark.workspace = true
 pulldown-cmark-to-cmark = "18.0.0"
 serde.workspace = true
