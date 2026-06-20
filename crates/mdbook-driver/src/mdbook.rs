@@ -255,7 +255,7 @@ impl MDBook {
             fs::write(&manifest, "")?;
             manifest
         };
-        
+
         fn get_chapter(item: &BookItem) -> Option<(&Chapter, &PathBuf)> {
             if let BookItem::Chapter(ref ch) = *item {
                 match ch.path {
@@ -270,30 +270,60 @@ impl MDBook {
         let mut selected_chapter = None;
 
         let rustify = |name: String| {
-            name.chars().map(|ch| if ch.is_ascii_alphanumeric() { ch.to_ascii_lowercase() } else { '_' }).collect::<String>()
+            name.chars()
+                .map(|ch| {
+                    if ch.is_ascii_alphanumeric() {
+                        ch.to_ascii_lowercase()
+                    } else {
+                        '_'
+                    }
+                })
+                .collect::<String>()
         };
 
-        let chapters: Vec<_> = book.iter().filter_map(get_chapter).enumerate().map(|(i, (chapter, path))| {
-            if let Some(needle) = filter {
-                if chapter.name == needle || path.to_str() == Some(needle) {
-                    info!("Testing chapter '{}': {:?}", chapter.name, path);
-                    selected_chapter = Some(i);
+        let chapters: Vec<_> = book
+            .iter()
+            .filter_map(get_chapter)
+            .enumerate()
+            .map(|(i, (chapter, path))| {
+                if let Some(needle) = filter {
+                    if chapter.name == needle || path.to_str() == Some(needle) {
+                        info!("Testing chapter '{}': {:?}", chapter.name, path);
+                        selected_chapter = Some(i);
+                    } else {
+                        info!("Skipping chapter '{}'...", chapter.name);
+                    }
                 } else {
-                    info!("Skipping chapter '{}'...", chapter.name);
+                    info!("Testing chapter '{}': {:?}", chapter.name, path);
                 }
-            } else {
-                info!("Testing chapter '{}': {:?}", chapter.name, path);
-            }
-            (format!("{}_{}", rustify(chapter.name.clone()), i), chapter.content.clone())
-        }).collect();
+                (
+                    format!("{}_{}", rustify(chapter.name.clone()), i),
+                    chapter.content.clone(),
+                )
+            })
+            .collect();
 
         let lib = self.root.join(&self.config.book.src).join("lib.rs");
-        fs::write(&lib, chapters.iter().map(|(name, content)| {
-            format!("{} mod {} {{}}\n", content.split("\n").map(|line| format!("/// {}\n", line)).collect::<String>(), name)
-        }).collect::<String>())?;
+        fs::write(
+            &lib,
+            chapters
+                .iter()
+                .map(|(name, content)| {
+                    format!(
+                        "{} mod {} {{}}\n",
+                        content
+                            .split("\n")
+                            .map(|line| format!("/// {}\n", line))
+                            .collect::<String>(),
+                        name
+                    )
+                })
+                .collect::<String>(),
+        )?;
 
         let mut cargo = Command::new("cargo");
-        cargo.current_dir(&self.root)
+        cargo
+            .current_dir(&self.root)
             .arg("test")
             .arg("--doc")
             .arg("--manifest-path")
@@ -319,7 +349,8 @@ impl MDBook {
             print!("{}", String::from_utf8_lossy(&output.stdout));
         }
 
-        fs::write(&lib, "")?;
+        // Newline is necessary for `rustfmt` related checks not to complain
+        fs::write(&lib, "\n")?;
 
         Ok(())
     }
