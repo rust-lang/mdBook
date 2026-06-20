@@ -93,8 +93,6 @@ impl BookBuilder {
 
         self.write_cargo_toml()?;
 
-        self.write_src_gitignore()?;
-
         match MDBook::load(&self.root) {
             Ok(book) => Ok(book),
             Err(e) => {
@@ -122,12 +120,6 @@ impl BookBuilder {
         debug!("Writing Cargo.toml");
         let cargo_toml = self.root.join("Cargo.toml");
         fs::write(&cargo_toml, INIT_CARGO_TOML)
-    }
-
-    fn write_src_gitignore(&self) -> Result<()> {
-        debug!("Writing src/.gitignore");
-        let src_gitignore = self.root.join(&self.config.book.src).join(".gitignore");
-        fs::write(&src_gitignore, "/lib.rs\n")
     }
 
     fn copy_across_theme(&self) -> Result<()> {
