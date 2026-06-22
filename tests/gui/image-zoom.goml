@@ -26,6 +26,7 @@ define-function: (
 )
 
 go-to: |DOC_PATH| + "basic/index.html"
+show-text: true
 call-function: ("check-image-not-zoomed-in", {})
 
 // We click on the image to "zoom in".
@@ -45,16 +46,42 @@ press-key: "Escape"
 // We check that everything is back to the previous state.
 call-function: ("check-image-not-zoomed-in", {})
 
+// We test that we can zoom in and out using only the keyboard.
+// First we focus on the link just before the image we want to zoom in.
+focus: "a[href='a']"
+assert: "a[href='a']:focus"
+press-key: "Tab"
+// We check that the checkbox to "zoom in" is focused.
+assert: ".checkbox-img:focus"
+// We check that the image about to be zoomed in has the outline.
+store-css: (".checkbox-img:focus", {"outline": outline})
+// Because we're using "auto" to match the system outline, we cannot check the whole value directly
+// so instead we check if "auto" is present.
+assert-variable: (outline, "auto", CONTAINS)
+// We zoom in.
+press-key: "Space"
+call-function: ("check-image-zoomed-in", {})
+// We press the key again to zoom out.
+press-key: "Space"
+call-function: ("check-image-not-zoomed-in", {})
+// We now check it works with the "Escape" key as well.
+press-key: "Space"
+call-function: ("check-image-zoomed-in", {})
+press-key: "Escape"
+call-function: ("check-image-not-zoomed-in", {})
+
 // Now we check that images in links (in `<a>` elements) don't get the "zoom-in" feature enabled.
 // There is only one zoomable image.
 assert-count: ("main .checkbox-img", 1)
-// We should have 3 images: 2 "normal" ones visible in the rendered book and one hidden which is
+// We should have 5 images: 4 "normal" ones visible in the rendered book and one hidden which is
 // used only for the "zoom-in" feature.
-assert-count: ("main img", 3)
-// We check exact paths to ensure the 3 `<img>` are different.
-assert: ("main > p > label.checkbox-label > img")
+assert-count: ("main img", 5)
+// We check exact paths to ensure the 5 `<img>` are different.
+assert: ("main > p > label.checkbox-label > img:nth-of-type(1)")
 assert: ("main > p > label.checkbox-label > span.img-wrapper > img")
-assert: ("main > p > a > img")
+assert: ("main > p:nth-of-type(1) > a:nth-of-type(1) > img")
+assert: ("main > p:nth-of-type(1) > a:nth-of-type(2) > img")
+assert: ("main > p:not(:nth-of-type(2)) > a > img")
 
 // The cursor for the image in link should not have "zoom-in".
 assert-css: ("main > p > a > img", {"cursor": "pointer"})

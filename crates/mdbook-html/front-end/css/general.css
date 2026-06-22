@@ -410,7 +410,28 @@ dd > p {
     margin-right: 8px;
 }
 
-.content .checkbox-img, .checkbox-label > .img-wrapper {
+/* All this code is to handle the "zoomable" images feature. */
+
+/* This one makes the checkbox invisible while keeping it selectable with the keyboard (with the
+   "tab" key). */
+.content .checkbox-img {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+/* When the input is focused, we make it appear to the user by adding an outline to the img
+   instead */
+.content .checkbox-img:focus + img {
+    outline: auto;
+}
+/* The "zoomed-in" image is not displayed until the checkbox is "ticked". */
+.content .checkbox-img:not(:checked) ~ .img-wrapper {
     display: none;
 }
 .content .checkbox-label {
@@ -420,7 +441,7 @@ dd > p {
 .content .checkbox-label img {
     cursor: zoom-in;
 }
-.content .checkbox-img:checked + .checkbox-label > .img-wrapper {
+.content .checkbox-img:checked ~ .img-wrapper {
     position: fixed;
     top: 0;
     left: 0;
@@ -433,7 +454,7 @@ dd > p {
     justify-content: center;
     cursor: zoom-out;
 }
-.content .checkbox-img:checked + .checkbox-label > .img-wrapper img {
+.content .checkbox-img:checked ~ .img-wrapper > img {
     --img-padding: 5px;
     padding: var(--img-padding);
     background: #999;
