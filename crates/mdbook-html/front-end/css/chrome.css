@@ -158,6 +158,7 @@ html:not(.js) .left-buttons button {
 }
 
 .nav-chapters.previous {
+    /* Ensure that the previous arrow does not overlap the resize indicator. */
     margin-inline-start: var(--sidebar-resize-indicator-width);
 }
 
