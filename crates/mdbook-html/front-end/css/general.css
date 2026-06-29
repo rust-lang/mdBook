@@ -111,6 +111,9 @@ html:not(.js) .page-wrapper,
 .content a { text-decoration: none; }
 .content a:hover { text-decoration: underline; }
 .content img, .content video { max-width: 100%; }
+/* When an image is inside an anchor, ensure the focus ring covers the entire
+   image instead of the anchor's line box. */
+.content a:has(img) { display: inline-block; }
 .content .header:link,
 .content .header:visited {
     color: var(--fg);
