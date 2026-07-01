@@ -64,7 +64,7 @@ tempfile = "3.27.0"
 tokio = "1.52.3"
 toml = "1.1.2"
 topological-sort = "0.2.2"
-tower-http = "0.6.11"
+tower-http = "0.7.0"
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 walkdir = "2.5.0"
