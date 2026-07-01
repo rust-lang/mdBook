@@ -40,8 +40,15 @@ pub fn make_subcommand() -> Command {
                 .long("port")
                 .num_args(1)
                 .default_value("3000")
-                .value_parser(NonEmptyStringValueParser::new())
+                .value_parser(clap::value_parser!(u16))
                 .help("Port to use for HTTP connections"),
+        )
+        .arg(
+            Arg::new("socket-activate")
+                .long("socket-activate")
+                .num_args(0)
+                .conflicts_with_all(["hostname", "port"])
+                .help("Use a pre-bound socket from LISTEN_FDS (systemd/foreman socket activation)"),
         )
         .arg_open()
         .arg_watcher()
@@ -52,11 +59,13 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let book_dir = get_book_dir(args);
     let mut book = MDBook::load(&book_dir)?;
 
-    let port = args.get_one::<String>("port").unwrap();
+    let port = *args.get_one::<u16>("port").unwrap();
     let hostname = args.get_one::<String>("hostname").unwrap();
     let open_browser = args.get_flag("open");
-
-    let address = format!("{hostname}:{port}");
+    let bind_explicitly_set = args.value_source("port")
+        == Some(clap::parser::ValueSource::CommandLine)
+        || args.value_source("hostname") == Some(clap::parser::ValueSource::CommandLine);
+    let socket_activate = args.get_flag("socket-activate");
 
     let update_config = |book: &mut MDBook| {
         book.config
@@ -69,10 +78,37 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     update_config(&mut book);
     book.build()?;
 
-    let sockaddr: SocketAddr = address
-        .to_socket_addrs()?
-        .next()
-        .ok_or_else(|| anyhow::anyhow!("no address found for {}", address))?;
+    // Two ways to obtain a listener; depending on the flags we try
+    // one or both, in order.
+    let from_env = || -> Option<std::net::TcpListener> {
+        listenfd::ListenFd::from_env()
+            .take_tcp_listener(0)
+            .expect("failed to take listenfd TCP listener")
+    };
+    let from_bind = || -> Result<std::net::TcpListener> {
+        let address = format!("{hostname}:{port}");
+        let sockaddr: SocketAddr = address
+            .to_socket_addrs()?
+            .next()
+            .ok_or_else(|| anyhow::anyhow!("no address found for {}", address))?;
+        Ok(std::net::TcpListener::bind(sockaddr)?)
+    };
+
+    let listener = if socket_activate {
+        from_env().ok_or_else(|| {
+            anyhow::anyhow!(
+                "LISTEN_FDS not set or no TCP listener at fd 3; \
+                 --socket-activate requires exactly one pre-bound TCP socket"
+            )
+        })?
+    } else if bind_explicitly_set {
+        from_bind()?
+    } else {
+        from_env().map_or_else(|| from_bind(), Ok)?
+    };
+
+    let local_addr = listener.local_addr()?;
+
     let build_dir = book.build_dir_for("html");
     let html_config = book.config.html_config().unwrap_or_default();
     let file_404 = html_config.get_404_output_file();
@@ -82,11 +118,11 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     let reload_tx = tx.clone();
     let thread_handle = std::thread::spawn(move || {
-        serve(build_dir, sockaddr, reload_tx, &file_404);
+        serve(build_dir, listener, reload_tx, &file_404);
     });
 
-    let serving_url = format!("http://{address}");
-    info!("Serving on: {}", serving_url);
+    let serving_url = format!("http://{local_addr}");
+    info!("Serving on: {serving_url}");
 
     if open_browser {
         open(serving_url);
@@ -108,7 +144,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 #[tokio::main]
 async fn serve(
     build_dir: PathBuf,
-    address: SocketAddr,
+    std_listener: std::net::TcpListener,
     reload_tx: broadcast::Sender<Message>,
     file_404: &str,
 ) {
@@ -132,9 +168,11 @@ async fn serve(
         std::process::exit(1);
     }));
 
-    let listener = tokio::net::TcpListener::bind(&address)
-        .await
-        .unwrap_or_else(|e| panic!("Unable to bind to {address}: {e}"));
+    std_listener
+        .set_nonblocking(true)
+        .expect("failed to set nonblocking");
+    let listener = tokio::net::TcpListener::from_std(std_listener)
+        .expect("failed to convert listener to tokio");
 
     axum::serve(listener, app).await.unwrap();
 }
