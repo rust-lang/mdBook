@@ -8,6 +8,15 @@ use mdbook_html::theme::Theme;
 use std::path::PathBuf;
 use tracing::{debug, error, info, trace};
 
+const INIT_CARGO_TOML: &str = r#"
+[package]
+name = "book"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+"#;
+
 /// A helper for setting up a new book and its directory structure.
 #[derive(Debug, Clone, PartialEq)]
 pub struct BookBuilder {
@@ -82,6 +91,8 @@ impl BookBuilder {
 
         self.write_book_toml()?;
 
+        self.write_cargo_toml()?;
+
         match MDBook::load(&self.root) {
             Ok(book) => Ok(book),
             Err(e) => {
@@ -103,6 +114,12 @@ impl BookBuilder {
 
         fs::write(&book_toml, cfg)?;
         Ok(())
+    }
+
+    fn write_cargo_toml(&self) -> Result<()> {
+        debug!("Writing Cargo.toml");
+        let cargo_toml = self.root.join("Cargo.toml");
+        fs::write(&cargo_toml, INIT_CARGO_TOML)
     }
 
     fn copy_across_theme(&self) -> Result<()> {

@@ -173,9 +173,9 @@ checksum = "349f9b6a179ed607305526ca489b34ad0a41aed5f7980fa90eb03160b69598fb"
 
 [[package]]
 name = "bitflags"
-version = "2.11.1"
+version = "2.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4512299f36f043ab09a583e57bceb5a5aab7a73db1805848e8fef3c9e8c78b3"
+checksum = "b4388bee8683e3d04af747c73422af53102d2bd24d9eadb6cbc100baef4b43f8"
 
 [[package]]
 name = "block-buffer"
@@ -188,9 +188,9 @@ dependencies = [
 
 [[package]]
 name = "block-buffer"
-version = "0.12.0"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cdd35008169921d80bc60d3d0ab416eecb028c4cd653352907921d95084790be"
+checksum = "d2f6c7dbe95a6ed67ad9f18e57daf93a2f034c524b99fd2b76d18fdfeb6660aa"
 dependencies = [
  "hybrid-array",
 ]
@@ -211,6 +211,17 @@ name = "bytes"
 version = "1.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e748733b7cbc798e1434b6ac524f0c1ff2ab456fe201501e6497c8417a4fc33"
+
+[[package]]
+name = "cargo-manifest"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fae5b96898dec422317cc18037ff6ddd3f7d0766e74a230e9aeddfc21f878267"
+dependencies = [
+ "serde",
+ "thiserror",
+ "toml",
+]
 
 [[package]]
 name = "cfg-if"
@@ -426,7 +437,7 @@ version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1dd6dbb5841937940781866fa1281a1ff7bd3bf827091440879f9994983d5c2"
 dependencies = [
- "block-buffer 0.12.0",
+ "block-buffer 0.12.1",
  "const-oid",
  "crypto-common 0.2.2",
 ]
@@ -738,9 +749,9 @@ dependencies = [
 
 [[package]]
 name = "http"
-version = "1.4.1"
+version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8be7462df143984c4598a256ef469b251d7d7f9e271135073e78fc535414f3d0"
+checksum = "6970f50e31d6fc17d3fa27329444bfa74e196cf62e95052a3f6fee181dba6425"
 dependencies = [
  "bytes",
  "itoa",
@@ -845,9 +856,9 @@ checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
 
 [[package]]
 name = "ignore"
-version = "0.4.25"
+version = "0.4.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3d782a365a015e0f5c04902246139249abf769125006fbe7649e2ee88169b4a"
+checksum = "b915661dd01db3f05050265b2477bcc6527b3792388e2749b41623cc592be67d"
 dependencies = [
  "crossbeam-deque",
  "globset",
@@ -873,9 +884,9 @@ dependencies = [
 
 [[package]]
 name = "inotify"
-version = "0.11.1"
+version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd5b3eaf1a28b758ac0faa5a4254e8ab2705605496f1b1f3fbbc3988ad73d199"
+checksum = "533e68a5842e734946fe159fb03fc9bbbb254f590dd0d8ad321ae5ff7beca2c1"
 dependencies = [
  "bitflags",
  "inotify-sys",
@@ -958,9 +969,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.30"
+version = "0.4.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "616ec5685824bcc94416c6d4a7a446eea774a31efd7062c8480ba6fd06d7a6e5"
+checksum = "953f07c43838f8e6f9758cab68bf5bed85465e7587ebe0b823f1bcd81978ad3a"
 
 [[package]]
 name = "mac"
@@ -1054,6 +1065,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "mdbook-book-code-samples"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "mdbook-core",
+ "mdbook-driver",
+ "mdbook-html",
+ "mdbook-markdown",
+ "mdbook-preprocessor",
+ "mdbook-renderer",
+ "mdbook-summary",
+ "pulldown-cmark 0.13.4",
+ "pulldown-cmark-to-cmark 18.0.0",
+ "semver",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "mdbook-compare"
 version = "0.0.0"
 
@@ -1062,6 +1093,7 @@ name = "mdbook-core"
 version = "0.5.3"
 dependencies = [
  "anyhow",
+ "cargo-manifest",
  "regex",
  "serde",
  "serde_json",
@@ -1107,7 +1139,7 @@ dependencies = [
  "mdbook-core",
  "mdbook-markdown",
  "mdbook-renderer",
- "pulldown-cmark",
+ "pulldown-cmark 0.13.4",
  "regex",
  "serde",
  "serde_json",
@@ -1121,7 +1153,7 @@ dependencies = [
 name = "mdbook-markdown"
 version = "0.5.3"
 dependencies = [
- "pulldown-cmark",
+ "pulldown-cmark 0.13.4",
  "regex",
  "tracing",
 ]
@@ -1141,8 +1173,8 @@ name = "mdbook-remove-emphasis"
 version = "0.1.0"
 dependencies = [
  "mdbook-preprocessor",
- "pulldown-cmark",
- "pulldown-cmark-to-cmark",
+ "pulldown-cmark 0.13.4",
+ "pulldown-cmark-to-cmark 22.0.0",
  "serde_json",
 ]
 
@@ -1163,16 +1195,16 @@ dependencies = [
  "anyhow",
  "mdbook-core",
  "memchr",
- "pulldown-cmark",
+ "pulldown-cmark 0.13.4",
  "serde",
  "tracing",
 ]
 
 [[package]]
 name = "memchr"
-version = "2.8.1"
+version = "2.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b947ae49db0d222b1dbc6b113ce7248a3fc3a6ca21b696717bfc000ba4484d8"
+checksum = "88904434abc2901f197fe8cc55f0445e7ded921dba5911dad2e2b39b48e663c4"
 
 [[package]]
 name = "mime"
@@ -1273,9 +1305,9 @@ dependencies = [
 
 [[package]]
 name = "num-modular"
-version = "0.6.1"
+version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17bb261bf36fa7d83f4c294f834e91256769097b3cb505d44831e0a179ac647f"
+checksum = "fc41a1374056e9672221567958a66c16be12d0e2c1b408761e14d901c237d5e0"
 
 [[package]]
 name = "num-order"
@@ -1300,9 +1332,9 @@ checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
 
 [[package]]
 name = "opener"
-version = "0.8.4"
+version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2fa337e0cf13357c13ef1dc108df1333eb192f75fc170bea03fcf1fd404c2ee"
+checksum = "b2b03ff07a220d0d0ec9a1f0f238951b7967a5a2e96aefcd21a117b1083415e9"
 dependencies = [
  "bstr",
  "normpath",
@@ -1525,6 +1557,17 @@ dependencies = [
 
 [[package]]
 name = "pulldown-cmark"
+version = "0.12.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f86ba2052aebccc42cbbb3ed234b8b13ce76f75c3551a303cb2bcffcff12bb14"
+dependencies = [
+ "bitflags",
+ "memchr",
+ "unicase",
+]
+
+[[package]]
+name = "pulldown-cmark"
 version = "0.13.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e9f068eba8e7071c5f9511831b44f32c740d5adf574e990f946ddb53db2f314e"
@@ -1543,11 +1586,20 @@ checksum = "007d8adb5ddab6f8e3f491ac63566a7d5002cc7ed73901f72057943fa71ae1ae"
 
 [[package]]
 name = "pulldown-cmark-to-cmark"
+version = "18.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e02b63adcb49f2eb675b1694b413b3e9fedbf549dfe2cc98727ad97a0c30650"
+dependencies = [
+ "pulldown-cmark 0.12.2",
+]
+
+[[package]]
+name = "pulldown-cmark-to-cmark"
 version = "22.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "50793def1b900256624a709439404384204a5dc3a6ec580281bfaac35e882e90"
 dependencies = [
- "pulldown-cmark",
+ "pulldown-cmark 0.13.4",
 ]
 
 [[package]]
@@ -1641,9 +1693,9 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.12.3"
+version = "1.12.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e10754a14b9137dd7b1e3e5b0493cc9171fdd105e0ab477f51b72e7f3ac0e276"
+checksum = "f1292b7759ae1cb9ec195452d1390a074f0cd8541ab7a5a8c31cd6db45d4a6ba"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -1664,9 +1716,9 @@ dependencies = [
 
 [[package]]
 name = "regex-syntax"
-version = "0.8.10"
+version = "0.8.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
+checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 
 [[package]]
 name = "rustix"
@@ -1871,9 +1923,9 @@ checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
 
 [[package]]
 name = "smallvec"
-version = "1.15.1"
+version = "1.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "67b1b7a3b5fe4f1376887184045fcf45c69e92af734b7aaddc05fb777b6fbd03"
+checksum = "8ed6a63f02c8539c91a8685a86f4099661ba3da017932f6ebbea6de3f0fa7c90"
 
 [[package]]
 name = "snapbox"
@@ -2384,9 +2436,9 @@ checksum = "ccf3ec651a847eb01de73ccad15eb7d99f80485de043efb2f370cd654f4ea44b"
 
 [[package]]
 name = "wasip2"
-version = "1.0.3+wasi-0.2.9"
+version = "1.0.4+wasi-0.2.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20064672db26d7cdc89c7798c48a0fdfac8213434a1186e5ef29fd560ae223d6"
+checksum = "b67efb37e106e55ce722a510d6b5f9c17f083e5fc79afc2badeb12cc313d9487"
 dependencies = [
  "wit-bindgen 0.57.1",
 ]
@@ -2661,18 +2713,18 @@ version = "0.0.0"
 
 [[package]]
 name = "zerocopy"
-version = "0.8.50"
+version = "0.8.52"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b065d4f0e55f82fae73202e189638116a87c55ab6b8e6c2721e13dd9d854ad1"
+checksum = "ce1022995ff5ff5d841ad7d994facc23098cd40152f2c1d11cd607c6f530653f"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.8.50"
+version = "0.8.52"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b631b19d36a892ab55420c92dbc83ccd79274f25be714855d3074aa71cab639"
+checksum = "1ae7f38b72ec2a254e2b87ef277cf2cd4fb97cbebf944faa6f33354da0867930"
 dependencies = [
  "proc-macro2",
  "quote",

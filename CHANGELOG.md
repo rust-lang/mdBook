@@ -47,6 +47,9 @@
   [#2970](https://github.com/rust-lang/mdBook/pull/2970)
 - Updated cargo dependencies.
   [#2969](https://github.com/rust-lang/mdBook/pull/2969)
+- [#2503](https://github.com/rust-lang/mdBook/pull/2503))
+  Added capability to use external crates in code samples which are tested
+  as doc tests.
 
 ### Fixed
 
@@ -255,6 +258,7 @@ The following is a summary of the changes that may require your attention when u
   [#2926](https://github.com/rust-lang/mdBook/pull/2926)
 - Hide the sidebar resize indicator when JS isn't available.
   [#2923](https://github.com/rust-lang/mdBook/pull/2923)
+- Allow doctests to use external crates by referencing a `Cargo.toml`
 
 ## mdBook 0.5.0-beta.1
 [v0.5.0-alpha.1...v0.5.0-beta.1](https://github.com/rust-lang/mdBook/compare/v0.5.0-alpha.1...v0.5.0-beta.1)

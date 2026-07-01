@@ -201,7 +201,7 @@ ERROR Invalid configuration file
   |
 2 | title = "bad-config"
   | ^^^^^
-unknown field `title`, expected `edition`
+unknown field `title`, expected `manifest` or `edition`
 
 
 "#]]);

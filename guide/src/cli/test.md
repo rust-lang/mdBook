@@ -1,32 +1,16 @@
 # The test command
 
-When writing a book, you sometimes need to automate some tests. For example,
+When writing a book, you may want to provide some code samples,
+and it's important that these be kept accurate as your software API evolves.
+For example,
 [The Rust Programming Book](https://doc.rust-lang.org/stable/book/) uses a lot
-of code examples that could get outdated. Therefore it is very important for
-them to be able to automatically test these code examples.
+of code samples that could become outdated as the language evolves.
 
-mdBook supports a `test` command that will run all available tests in a book. At
-the moment, only Rust tests are supported.
+MdBook supports a `test` command which runs code samples in your book as doc tests to verify they
+will compile, and, optionally, run correctly.
+For details on how to specify the test to be done and outcome to be expected, see [Code Blocks](/format/mdbook.md#code-blocks).
 
-#### Disable tests on a code block
-
-rustdoc doesn't test code blocks which contain the `ignore` attribute:
-
-    ```rust,ignore
-    fn main() {}
-    ```
-
-rustdoc also doesn't test code blocks which specify a language other than Rust:
-
-    ```markdown
-    **Foo**: _bar_
-    ```
-
-rustdoc *does* test code blocks which have no language specified:
-
-    ```
-    This is going to cause an error!
-    ```
+At the moment, mdBook only supports doc *tests* written in Rust, although code samples can be written and *displayed* in many programming languages.
 
 #### Specify a directory
 
@@ -37,7 +21,22 @@ instead of the current working directory.
 mdbook test path/to/book
 ```
 
-#### `--library-path`
+#### `--dest-dir`
+
+The `--dest-dir` (`-d`) option allows you to change the output directory for the
+book. Relative paths are interpreted relative to the book's root directory. If
+not specified it will default to the value of the `build.build-dir` key in
+`book.toml`, or to `./book`.
+
+#### `--chapter`
+
+The `--chapter` (`-c`) option allows you to test a specific chapter of the
+book using the chapter name or the relative path to the chapter.
+
+#### `--library-path` `[`deprecated`]`
+
+***Note*** This argument is deprecated.  Since Rust edition 2018, the compiler needs an explicit `--extern` argument for each external crate used in a  doc test, it no longer simply scans the library path for likely-looking crates.  
+New projects should list external crates as dependencies in a **Cargo.toml** file and reference that file in your ***book.toml***, as described in [rust configuration](/format/configuration/general.html#rust-options).
 
 The `--library-path` (`-L`) option allows you to add directories to the library
 search path used by `rustdoc` when it builds and tests the examples. Multiple

@@ -2,7 +2,7 @@
 members = [
     ".",
     "crates/*",
-    "examples/remove-emphasis/mdbook-remove-emphasis", "guide/guide-helper",
+    "examples/remove-emphasis/mdbook-remove-emphasis", "guide/guide-helper", "guide"
 ]
 
 [workspace.lints.clippy]
@@ -27,6 +27,7 @@ rust-version = "1.88.0" # Keep in sync with installation.md and .github/workflow
 [workspace.dependencies]
 anyhow = "1.0.102"
 axum = "0.8.9"
+cargo-manifest = "0.21.0"
 clap = { version = "4.6.1", features = ["cargo", "wrap_help"] }
 clap_complete = "4.6.5"
 ego-tree = "0.11.0"
@@ -75,7 +76,7 @@ version = "0.5.3"
 authors = [
     "Mathieu David <mathieudavid@mathieudavid.org>",
     "Michael-F-Bryan <michaelfbryan@gmail.com>",
-    "Matt Ickstadt <mattico8@gmail.com>"
+    "Matt Ickstadt <mattico8@gmail.com>",
 ]
 documentation = "https://rust-lang.github.io/mdBook/index.html"
 edition.workspace = true
