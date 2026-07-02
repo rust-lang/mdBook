@@ -12,7 +12,8 @@ use mdbook_core::utils::fs;
 use mdbook_renderer::{RenderContext, Renderer};
 use serde_json::json;
 use std::collections::{BTreeMap, HashMap};
-use std::path::{Path, PathBuf};
+use std::iter::{repeat, zip};
+use std::path::{Component, Path, PathBuf};
 use tracing::error;
 use tracing::{debug, info, trace, warn};
 
@@ -119,8 +120,30 @@ impl HtmlHandlebars {
         debug!("Render template");
         let rendered = ctx.handlebars.render("index", &ctx.data)?;
 
+        // Calculate an output path that's contained in the specified destination
+        // This is required to be able to reference files in the parent directory
+        // without putting the HTML files there
+        let out_path = ctx.destination.join(
+            &filepath
+                .parent()
+                .context("filepath points to a directory")?,
+        );
+        fs::create_dir_all(&out_path).context("could not create output directories")?;
+        let fixed_path: PathBuf = zip(
+            ctx.destination
+                .components()
+                // padding destination because it's always shorter
+                .chain(repeat(Component::CurDir)),
+            std::fs::canonicalize(&out_path)?.components(),
+        )
+        .skip_while(|(out, canonicalized)| out == canonicalized)
+        .map(|(_, canonicalized)| canonicalized)
+        .collect();
+        let out_path = ctx
+            .destination
+            .join(fixed_path)
+            .join(filepath.file_name().context("filepath points to parent")?);
         // Write to file
-        let out_path = ctx.destination.join(filepath);
         fs::write(&out_path, rendered)?;
 
         if prev_ch.is_none() {
