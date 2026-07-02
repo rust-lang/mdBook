@@ -3,7 +3,7 @@ name = "mdbook-html"
 version = "0.5.3"
 description = "mdBook HTML renderer"
 edition.workspace = true
-license.workspace = true
+license = "MPL-2.0 AND Apache-2.0 AND BSD-3-Clause AND CC-BY-4.0 AND MIT AND OFL-1.1"
 repository.workspace = true
 rust-version.workspace = true
 
