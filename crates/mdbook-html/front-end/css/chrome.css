@@ -714,6 +714,7 @@ html:not(.js) .sidebar-resize-handle {
     color: inherit;
     background: inherit;
     font-size: inherit;
+    text-transform: capitalize;
 }
 .theme-popup .theme:hover {
     background-color: var(--theme-hover);
