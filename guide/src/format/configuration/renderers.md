@@ -111,6 +111,7 @@ site-url = "/example-book/"
 cname = "myproject.rs"
 input-404 = "not-found.md"
 sidebar-header-nav = true
+copy-exclude-extensions = ["rs", "toml"]
 ```
 
 The following configuration options are available:
@@ -170,6 +171,10 @@ The following configuration options are available:
   Static CSS and JS files can reference each other using `{{ resource "filename" }}` directives.
   Defaults to `true`.
 - **sidebar-header-nav:** If `true`, the sidebar will contain navigation for headers on the current page. Default is `true`.
+- **copy-exclude-extensions:** A list of file extensions to exclude when copying files from the source directory
+  to the build directory. By default, all files are copied. This is useful when your source directory contains
+  symlinks to other directories with files you don't want to include in the output. Provide extensions without dots.
+  Example: `["rs", "toml", "lock"]`. Defaults to `[]` (no exclusions).
 
 [custom domain]: https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site
 

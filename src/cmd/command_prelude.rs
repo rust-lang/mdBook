@@ -38,6 +38,19 @@ pub trait CommandExt: Sized {
         self._arg(arg!(-o --open "Opens the compiled book in a web browser"))
     }
 
+    fn arg_copy_exclude_extensions(self) -> Self {
+        self._arg(
+            Arg::new("copy-exclude-extensions")
+                .long("copy-exclude-extensions")
+                .value_name("EXTENSIONS")
+                .help(
+                    "Comma-separated list of file extensions to exclude when copying files\n\
+                    from the source directory (e.g., 'rs,toml,lock')\n\
+                    This supplements any extensions configured in book.toml.",
+                )
+        )
+    }
+
     #[cfg(any(feature = "watch", feature = "serve"))]
     fn arg_watcher(self) -> Self {
         #[cfg(feature = "watch")]
