@@ -11,3 +11,9 @@
 ```rust
 {{#rustdoc_include partially-included-test-with-anchors.rs:rustdoc-include-anchor}}
 ```
+
+## Multiple anchor pairs
+
+```rust
+{{#rustdoc_include multiple-anchors.rs:include-these}}
+```
