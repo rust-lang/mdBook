@@ -9,7 +9,7 @@ use super::tokenizer::parse_html;
 use super::{HtmlRenderOptions, hide_lines, wrap_rust_main};
 use crate::utils::{id_from_content, unique_id};
 use ego_tree::{NodeId, NodeRef, Tree};
-use html5ever::tendril::StrTendril;
+use html5ever::tendril::{SliceExt, StrTendril};
 use html5ever::tokenizer::{TagKind, Token};
 use html5ever::{LocalName, QualName};
 use indexmap::IndexMap;
@@ -69,7 +69,7 @@ impl Node {
 }
 
 /// An HTML element.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct Element {
     /// The tag name.
     pub(crate) name: QualName,
@@ -560,13 +560,46 @@ where
                 let mut img = Element::new("img");
                 let src = fix_link(dest_url).into_tendril();
                 img.insert_attr("src", src);
-                if !title.is_empty() {
-                    img.insert_attr("title", title.into_tendril());
-                }
+
                 // This will eat TagEnd::Image
                 let alt = self.text_for_img_alt();
                 img.insert_attr("alt", alt.into());
-                self.append(Node::Element(img));
+                self.append(Node::Element(img.clone()));
+
+                // If the image is not being rendered inside a link, we can enable the "zoom-in"
+                // feature.
+                if !self
+                    .tag_stack
+                    .iter()
+                    .filter_map(|node_id| {
+                        self.tree
+                            .get(*node_id)
+                            .and_then(|el| el.value().as_element())
+                    })
+                    .any(|el| *el.name.local == *"a")
+                {
+                    let mut label = Element::new("label");
+                    label.insert_attr("class", "checkbox-label".to_tendril());
+                    self.push(Node::Element(label));
+
+                    let mut input = Element::new("input");
+                    input.insert_attr("class", "checkbox-img".to_tendril());
+                    input.insert_attr("type", "checkbox".to_tendril());
+                    self.append(Node::Element(input));
+
+                    self.append(Node::Element(img.clone()));
+
+                    let mut wrapper = Element::new("span");
+                    wrapper.insert_attr("class", "img-wrapper".to_tendril());
+                    self.push_no_stack(Node::Element(wrapper));
+
+                    self.append(Node::Element(img));
+
+                    // We exit the `label` and the `span` (which used push_no_stack).
+                    self.pop();
+                } else {
+                    self.append(Node::Element(img));
+                }
                 return;
             }
             Tag::MetadataBlock(_) => {

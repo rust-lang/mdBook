@@ -318,3 +318,7 @@ This feature is enabled by default.
 To disable it, see the [`output.html.admonitions`] config option.
 
 [`output.html.admonitions`]: configuration/renderers.md#html-renderer-options
+
+## Zoom-in
+
+All images in the chapters content have a "zoom-in" feature: you can click on it to make it bigger, and click it again to zoom out. You can focus the image with the keyboard as well, and press the spacebar to zoom in and out as well.
