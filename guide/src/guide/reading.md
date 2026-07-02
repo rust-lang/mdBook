@@ -56,9 +56,24 @@ Clicking a highlighted word or pressing the <kbd>Escape</kbd> key will remove th
 mdBook books are often used for programming projects, and thus support highlighting code blocks and samples.
 Code blocks may contain several different icons for interacting with them:
 
+<style>
+.light .table-wrapper .clip-button, .rust .table-wrapper .clip-button {
+    --copy-button-filter: initial;
+}
+.coal .table-wrapper .clip-button {
+    --copy-button-filter: brightness(0) saturate(100%) invert(72%) sepia(9%) saturate(401%) hue-rotate(167deg) brightness(90%) contrast(84%);
+}
+.navy .table-wrapper .clip-button {
+    --copy-button-filter: brightness(0) saturate(100%) invert(88%) sepia(6%) saturate(563%) hue-rotate(200deg) brightness(89%) contrast(84%);
+}
+.ayu .table-wrapper .clip-button {
+    --copy-button-filter: brightness(0) saturate(100%) invert(88%) sepia(2%) saturate(2%) hue-rotate(16deg) brightness(89%) contrast(94%);
+}
+</style>
+
 | Icon | Description |
 |------|-------------|
-| <i class="fa fa-copy"></i> | Copies the code block into your local clipboard, to allow pasting into another application. |
+| <i class="clip-button"></i> | Copies the code block into your local clipboard, to allow pasting into another application. |
 | <i class="fas fa-play"></i> | For Rust code examples, this will execute the sample code and display the compiler output just below the example (see [playground]). |
 | <i class="fa fa-eye"></i> | For Rust code examples, this will toggle visibility of "hidden" lines. Sometimes, larger examples will hide lines which are not particularly relevant to what is being illustrated (see [hiding code lines]). |
 | <i class="fas fa-clock-rotate-left"></i> | For [editable code examples][editor], this will undo any changes you have made. |
