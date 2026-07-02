@@ -15,6 +15,7 @@ font-awesome-as-a-crate.workspace = true
 handlebars.workspace = true
 hex.workspace = true
 html5ever.workspace = true
+ignore.workspace = true
 indexmap.workspace = true
 mdbook-core.workspace = true
 mdbook-markdown.workspace = true
