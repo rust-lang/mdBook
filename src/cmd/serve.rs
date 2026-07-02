@@ -69,6 +69,12 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     update_config(&mut book);
     book.build()?;
 
+    let listener = std::net::TcpListener::bind(&address);
+    if listener.is_err() {
+        return Err(anyhow::anyhow!("Unable to bind to address: {} (It is either a protected port or it is used already. Try to another port or use --port 0 to select a random port. ", address).into());
+    }
+    drop(listener);
+
     let sockaddr: SocketAddr = address
         .to_socket_addrs()?
         .next()
