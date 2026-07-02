@@ -559,6 +559,8 @@ aria-label="Show hidden lines"></button>';
             // reflow after updating the display.
             sidebar.offsetHeight;
         }
+        sidebarCheckbox.checked = !sidebarCheckbox.checked;
+        sidebarCheckbox.dispatchEvent(new Event('change'));
     });
 
     function showSidebar() {
