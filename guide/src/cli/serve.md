@@ -44,6 +44,16 @@ book. Relative paths are interpreted relative to the current directory. If
 not specified it will default to the value of the `build.build-dir` key in
 `book.toml`, or to `./book`.
 
+#### `--preserve-site-url`
+
+By default `serve` overrides the [`output.html.site-url`] setting to `/`, since
+the book is hosted at the root of the local server and links must resolve there.
+When you have configured a `site-url` (for example to emit absolute links for a
+book hosted in a subdirectory), the `--preserve-site-url` flag keeps the
+configured value so you can preview those production links locally.
+
+[`output.html.site-url`]: ../format/configuration/renderers.md#html-renderer-options
+
 {{#include arg-watcher.md}}
 
 #### Specify exclude patterns
