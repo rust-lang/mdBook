@@ -100,7 +100,7 @@ preferred-dark-theme = "navy"
 smart-punctuation = true
 definition-lists = true
 admonitions = true
-mathjax-support = false
+math = false
 additional-css = ["custom.css", "custom2.css"]
 additional-js = ["custom.js"]
 no-section-label = false
@@ -129,7 +129,7 @@ The following configuration options are available:
   Defaults to `true`.
 - **definition-lists:** Enables [definition lists](../markdown.md#definition-lists). Defaults to `true`.
 - **admonitions:** Enables [admonitions](../markdown.md#admonitions). Defaults to `true`.
-- **mathjax-support:** Adds support for [MathJax](../mathjax.md). Defaults to
+- **math:** Enables [support for math formulas](../mathjax.md). Defaults to
   `false`.
 - **additional-css:** If you need to slightly change the appearance of your book
   without overwriting the whole style, you can specify a set of stylesheets that
