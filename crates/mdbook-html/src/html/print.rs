@@ -12,7 +12,7 @@ use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
 /// Takes all the chapter trees, modifies them to be suitable to render for
-/// the print page, and returns an string of all the chapters rendered to a
+/// the print page, and returns a string of all the chapters rendered to a
 /// single HTML page.
 pub(crate) fn render_print_page(mut chapter_trees: Vec<ChapterTree<'_>>) -> String {
     let (id_remap, mut id_counter) = make_ids_unique(&mut chapter_trees);

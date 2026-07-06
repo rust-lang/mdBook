@@ -1,0 +1,25 @@
+// This test ensures that links with images render side by side and that the link element contains
+// the image entirely.
+
+set-window-size: (1100, 800)
+go-to: |DOC_PATH| + "basic/index.html"
+
+define-function: (
+    "check-link-and-img-size",
+    [selector],
+    block {
+        store-size: (|selector|, {"width": link_width, "height": link_height})
+        store-size: (|selector| + "> img", {"width": img_width, "height": img_height})
+        assert: |link_width| >= |img_width| && |link_height| >= |img_height|
+    }
+)
+
+// Both link (containing an image) should be on the same line.
+compare-elements-position: (
+    "a[href='link']:nth-child(1) > img",
+    "a[href='link']:nth-child(2) > img",
+    ["y"],
+)
+// And the link element should be at least as big as the image they contain.
+call-function: ("check-link-and-img-size", {"selector":  "a[href='link']:nth-child(1)"})
+call-function: ("check-link-and-img-size", {"selector":  "a[href='link']:nth-child(2)"})

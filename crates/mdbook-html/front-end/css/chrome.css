@@ -157,6 +157,11 @@ html:not(.js) .left-buttons button {
     transition: background-color 0.15s, color 0.15s;
 }
 
+.nav-chapters.previous {
+    /* Ensure that the previous arrow does not overlap the resize indicator. */
+    margin-inline-start: var(--sidebar-resize-indicator-width);
+}
+
 .nav-wrapper {
     margin-block-start: 50px;
     display: none;
@@ -622,6 +627,15 @@ html:not(.js) .sidebar-resize-handle {
 .chapter li.chapter-item {
     line-height: 1.5em;
     margin-block-start: 0.6em;
+}
+
+.chapter li.header-item {
+    /* Make sure there is plenty of spacing between sections so they don't blend in
+       with each other. */
+    margin-block-end: 0.5em;
+    /* Avoid too much spacing between lines when section heading word wraps so that
+       it can be distinguished between successive headings. */
+    line-height: 1.5em;
 }
 
 /* When expanded, rotate the chevron to point down. */

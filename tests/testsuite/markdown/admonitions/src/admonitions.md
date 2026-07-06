@@ -19,3 +19,9 @@
 
 > [!UNKNOWN]
 > This is an unknown tag.
+
+> [!IMPORTANT]
+> This is an important admonition.
+>
+> > [!NOTE]
+> > This nested note should have its own color.

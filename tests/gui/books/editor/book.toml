@@ -1,0 +1,6 @@
+[book]
+title = "editor"
+language = "en"
+
+[output.html.playground]
+editable = true

@@ -1,0 +1,6 @@
+[book]
+title = "fontawesome_error"
+
+[output.html]
+git-repository-url = "https://github.com/example/test"
+git-repository-icon = "fa-github"

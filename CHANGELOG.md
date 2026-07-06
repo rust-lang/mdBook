@@ -1,5 +1,43 @@
 # Changelog
 
+## mdBook 0.5.3
+[v0.5.2...v0.5.3](https://github.com/rust-lang/mdBook/compare/v0.5.2...v0.5.3)
+
+### Changed
+
+- Improve spacing in sidebar section headings.
+  [#3122](https://github.com/rust-lang/mdBook/pull/3122)
+- Updated cargo dependencies.
+  [#3083](https://github.com/rust-lang/mdBook/pull/3083)
+  [#3077](https://github.com/rust-lang/mdBook/pull/3077)
+  [#3058](https://github.com/rust-lang/mdBook/pull/3058)
+  [#3057](https://github.com/rust-lang/mdBook/pull/3057)
+  [#3042](https://github.com/rust-lang/mdBook/pull/3042)
+  [#3045](https://github.com/rust-lang/mdBook/pull/3045)
+  [#3044](https://github.com/rust-lang/mdBook/pull/3044)
+  [#3036](https://github.com/rust-lang/mdBook/pull/3036)
+  [#3022](https://github.com/rust-lang/mdBook/pull/3022)
+  [#3017](https://github.com/rust-lang/mdBook/pull/3017)
+  [#3018](https://github.com/rust-lang/mdBook/pull/3018)
+  [#3019](https://github.com/rust-lang/mdBook/pull/3019)
+  [#2998](https://github.com/rust-lang/mdBook/pull/2998)
+  [#2996](https://github.com/rust-lang/mdBook/pull/2996)
+
+### Fixed
+
+- The "current" page highlighting in the sidebar now handles servers that redirect and strip the `.html` extension.
+  [#3028](https://github.com/rust-lang/mdBook/pull/3028)
+- Remove `?highlight=` from URL when highlights are dismissed via clicking.
+  [#3084](https://github.com/rust-lang/mdBook/pull/3084)
+- Fix global keypresses triggering when other elements are in focus.
+  [#3087](https://github.com/rust-lang/mdBook/pull/3087)
+- Fix download URL format for mdBook in CI guide.
+  [#3073](https://github.com/rust-lang/mdBook/pull/3073)
+- Improve error message for invalid Font Awesome icons.
+  [#3037](https://github.com/rust-lang/mdBook/pull/3037)
+- Fix nested admonitions that use wrong header colors.
+  [#3035](https://github.com/rust-lang/mdBook/pull/3035)
+
 ## mdBook 0.5.2
 [v0.5.1...v0.5.2](https://github.com/rust-lang/mdBook/compare/v0.5.1...v0.5.2)
 

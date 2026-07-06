@@ -60,6 +60,24 @@ fn fontawesome() {
         .check_all_main_files();
 }
 
+// Verifies that an invalid `git-repository-icon` in book.toml produces a
+// helpful error message with the icon name, type, and a link to FontAwesome.
+#[test]
+fn fontawesome_error_message() {
+    BookTest::from_dir("rendering/fontawesome_error")
+        .run("build", |cmd| {
+            cmd.expect_failure();
+            cmd.expect_stderr(str![[r#"
+ INFO Book building has started
+ INFO Running the html backend
+ERROR Rendering failed
+[TAB]Caused by: Error rendering "index" line [..], col [..]: Unknown Font Awesome icon `github` for type `regular`. Hint: check the icon name and prefix (fas (solid), fab (brands), or far (regular)) at https://fontawesome.com/v6/search?m=free
+[TAB]Caused by: Unknown Font Awesome icon `github` for type `regular`. Hint: check the icon name and prefix (fas (solid), fab (brands), or far (regular)) at https://fontawesome.com/v6/search?m=free
+
+"#]]);
+        });
+}
+
 // Tests the rendering when setting the default rust edition.
 #[test]
 fn default_rust_edition() {
