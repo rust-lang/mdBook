@@ -23,6 +23,8 @@ The **arrow buttons** at the bottom of the page can be used to navigate to the p
 
 The **left and right arrow keys** on the keyboard can be used to navigate to the previous or the next chapter.
 
+Additionally, Vim-style key bindings (<kbd>H</kbd>, <kbd>J</kbd>, <kbd>K</kbd>, <kbd>L</kbd>, <kbd>D</kbd> and <kbd>U</kbd>) can be used for navigation.
+
 ## Top menu bar
 
 The menu bar at the top of the page provides some icons for interacting with the book.

@@ -745,6 +745,7 @@ aria-label="Show hidden lines"></button>';
         }
 
         switch (e.key) {
+        case 'l':
         case 'ArrowRight':
             e.preventDefault();
             if (html.dir === 'rtl') {
@@ -753,6 +754,7 @@ aria-label="Show hidden lines"></button>';
                 next();
             }
             break;
+        case 'h':
         case 'ArrowLeft':
             e.preventDefault();
             if (html.dir === 'rtl') {
@@ -761,6 +763,22 @@ aria-label="Show hidden lines"></button>';
                 prev();
             }
             break;
+        case 'j':
+          e.preventDefault();
+          window.scrollBy({ top: 80, behavior: 'smooth' });
+          break;
+        case 'k':
+          e.preventDefault();
+          window.scrollBy({ top: -80, behavior: 'smooth' });
+          break;
+        case 'd':
+          e.preventDefault();
+          window.scrollBy({ top: window.innerHeight, behavior: 'smooth' });
+          break;
+        case 'u':
+          e.preventDefault();
+          window.scrollBy({ top: -window.innerHeight, behavior: 'smooth' });
+          break;
         }
     });
 })();
