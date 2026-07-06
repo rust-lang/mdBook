@@ -15,9 +15,33 @@
         <!-- Custom HTML head -->
         {{> head}}
 
-        <meta name="description" content="{{ description }}">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
+
+        <!-- Open Graph Meta Tags for Social Media Exposure -->
+        {{#if is_frontmatter}}
+        <meta name="title" property="og:title" content="{{ og_title }}">
+        <meta name="description" property="og:description" content="{{ og_description }}">
+        <meta name="twitter:title" content="{{ og_title }}"/>
+        <meta name="twitter:description" content="{{ og_description }}"/>
+        {{else}}
+        <meta name="title" property="og:title" content="{{ book_title }}">
+        <meta name="description" property="og:description" content="{{ description }}">
+        <meta name="twitter:title" content="{{ book_title }}"/>
+        <meta name="twitter:description" content="{{ description }}"/>
+        {{/if}}
+        {{#if og_image_url}}
+        <meta property="og:image" content="{{ og_image_url }}">
+        <meta name="twitter:image" content="{{ og_image_url }}"/>
+        {{else}}
+        <meta property="og:image" content="https://avatars.githubusercontent.com/u/5430905?s=48&v=4">
+        <meta name="twitter:image" content="https://avatars.githubusercontent.com/u/5430905?s=48&v=4"/>
+        {{/if}}
+
+        <meta name="author" content="mdBook">
+        <meta property="og:type" content="book">
+        <meta name="twitter:card" content="summary_large_image"/>
+        <meta name="twitter:creator" content="@rust_foundation"/>
 
         {{#if favicon_svg}}
         <link rel="icon" href="{{ resource "favicon.svg" }}">
