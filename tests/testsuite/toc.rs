@@ -189,3 +189,55 @@ fn summary_with_markdown_formatting() {
 "#]],
         );
 }
+
+#[test]
+#[cfg(not(windows))]
+fn percent_encoded_chapter_paths() {
+    let mut test = BookTest::from_dir("toc/percent_encoded_chapter_paths");
+    // `?` cannot appear in Windows filenames, so create this source at runtime.
+    std::fs::write(
+        test.dir.join("src/question?.md"),
+        "# Question mark\n\n[Query string](asset.png?raw=1)\n",
+    )
+    .unwrap();
+    test.build();
+
+    test.check_toc_js(str![[r#"
+<ol class="chapter">
+<li class="chapter-item expanded ">
+<span class="chapter-link-wrapper">
+<a href="question%3F.html">
+<strong aria-hidden="true">1.</strong> Question mark</a>
+</span>
+</li>
+<li class="chapter-item expanded ">
+<span class="chapter-link-wrapper">
+<a href="spati%C3%ABring.html">
+<strong aria-hidden="true">2.</strong> Unicode</a>
+</span>
+</li>
+<li class="chapter-item expanded ">
+<span class="chapter-link-wrapper">
+<a href="number%23one.html">
+<strong aria-hidden="true">3.</strong> Fragment delimiter</a>
+</span>
+</li>
+</ol>
+"#]]);
+
+    assert!(test.dir.join("book/question?.html").is_file());
+    assert!(test.dir.join("book/spatiëring.html").is_file());
+    assert!(test.dir.join("book/number#one.html").is_file());
+
+    let question_html = read_to_string(test.dir.join("book/question?.html"));
+    assert!(question_html.contains(r#"href="spati%C3%ABring.html""#));
+    assert!(question_html.contains(r#"href="asset.png?raw=1""#));
+
+    #[cfg(feature = "search")]
+    {
+        let search_index = read_to_string(glob_one(&test.dir, "book/searchindex*.js"));
+        assert!(search_index.contains("question%3F.html#question-mark"));
+        assert!(search_index.contains("spati%C3%ABring.html#unicode"));
+        assert!(search_index.contains("number%23one.html#fragment-delimiter"));
+    }
+}

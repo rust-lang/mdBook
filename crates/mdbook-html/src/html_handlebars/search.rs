@@ -106,7 +106,7 @@ fn index_chapter(
     doc_urls: &mut Vec<String>,
     chapter_tree: &ChapterTree<'_>,
 ) -> Result<()> {
-    let anchor_base = chapter_tree.html_path.to_url_path();
+    let anchor_base = chapter_tree.html_path.to_encoded_url_path();
 
     let mut in_heading = false;
     let max_section_depth = search_config.heading_split_level;
