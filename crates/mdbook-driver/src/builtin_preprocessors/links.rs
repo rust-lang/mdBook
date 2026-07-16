@@ -285,13 +285,21 @@ impl<'a> Link<'a> {
             (_, Some(typ), Some(title)) if typ.as_str() == "title" => {
                 Some(LinkType::Title(title.as_str()))
             }
+            // Include directives take the full remaining capture as the path so
+            // file names may contain spaces. Playground still splits on whitespace
+            // because it accepts trailing properties after the path.
+            (_, Some(typ), Some(rest)) if typ.as_str() == "include" => {
+                Some(parse_include_path(rest.as_str().trim()))
+            }
+            (_, Some(typ), Some(rest)) if typ.as_str() == "rustdoc_include" => {
+                Some(parse_rustdoc_include_path(rest.as_str().trim()))
+            }
             (_, Some(typ), Some(rest)) => {
                 let mut path_props = rest.as_str().split_whitespace();
                 let file_arg = path_props.next();
                 let props: Vec<&str> = path_props.collect();
 
                 match (typ.as_str(), file_arg) {
-                    ("include", Some(pth)) => Some(parse_include_path(pth)),
                     ("playground", Some(pth)) => Some(LinkType::Playground(pth.into(), props)),
                     ("playpen", Some(pth)) => {
                         warn!(
@@ -301,7 +309,6 @@ impl<'a> Link<'a> {
                         );
                         Some(LinkType::Playground(pth.into(), props))
                     }
-                    ("rustdoc_include", Some(pth)) => Some(parse_rustdoc_include_path(pth)),
                     _ => None,
                 }
             }
@@ -640,6 +647,60 @@ mod tests {
                     RangeOrAnchor::Range(LineRange::from(..))
                 ),
                 link_text: "{{#include file.rs}}",
+            }]
+        );
+    }
+
+    #[test]
+    fn test_find_links_with_space_in_path() {
+        let s = "Some random text with {{#include fila a.md}}...";
+        let res = find_links(s).collect::<Vec<_>>();
+        assert_eq!(
+            res,
+            vec![Link {
+                start_index: 22,
+                end_index: 44,
+                link_type: LinkType::Include(
+                    PathBuf::from("fila a.md"),
+                    RangeOrAnchor::Range(LineRange::from(..)),
+                ),
+                link_text: "{{#include fila a.md}}",
+            }]
+        );
+    }
+
+    #[test]
+    fn test_find_links_with_space_in_path_and_range() {
+        let s = "Some random text with {{#include fila a.md:1:2}}...";
+        let res = find_links(s).collect::<Vec<_>>();
+        assert_eq!(
+            res,
+            vec![Link {
+                start_index: 22,
+                end_index: 48,
+                link_type: LinkType::Include(
+                    PathBuf::from("fila a.md"),
+                    RangeOrAnchor::Range(LineRange::from(0..2)),
+                ),
+                link_text: "{{#include fila a.md:1:2}}",
+            }]
+        );
+    }
+
+    #[test]
+    fn test_find_links_rustdoc_include_with_space_in_path() {
+        let s = "Some random text with {{#rustdoc_include fila a.rs}}...";
+        let res = find_links(s).collect::<Vec<_>>();
+        assert_eq!(
+            res,
+            vec![Link {
+                start_index: 22,
+                end_index: 52,
+                link_type: LinkType::RustdocInclude(
+                    PathBuf::from("fila a.rs"),
+                    RangeOrAnchor::Range(LineRange::from(..)),
+                ),
+                link_text: "{{#rustdoc_include fila a.rs}}",
             }]
         );
     }
