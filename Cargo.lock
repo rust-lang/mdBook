@@ -445,9 +445,9 @@ checksum = "b04dc5a38e4f151a79d9f2451ae6037fb6eaf5cba34771f44781f80e508498e3"
 
 [[package]]
 name = "elasticlunr-rs"
-version = "3.0.2"
+version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41e83863a500656dfa214fee6682de9c5b9f03de6860fec531235ed2ae9f6571"
+checksum = "2b40e20979244f65741f32baab82c0f12953b13ce78b15d644764556be123f09"
 dependencies = [
  "regex",
  "serde",

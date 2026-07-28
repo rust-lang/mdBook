@@ -43,7 +43,7 @@ fn reasonable_search_index() {
 
     let bodyidx = &index["index"]["index"]["body"]["root"];
     let textidx = &bodyidx["t"]["e"]["x"]["t"];
-    assert_eq!(textidx["df"], 5);
+    assert_eq!(textidx["df"], 2);
     assert_eq!(textidx["docs"][&first_chapter]["tf"], 1.0);
     assert_eq!(textidx["docs"][&introduction]["tf"], 1.0);
 
