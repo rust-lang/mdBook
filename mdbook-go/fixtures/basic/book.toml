@@ -1,0 +1,9 @@
+[book]
+title = "Basic Fixture"
+authors = ["Alice"]
+language = "en"
+src = "src"
+
+[build]
+build-dir = "book"
+create-missing = true

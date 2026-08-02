@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# Diff harness for mdbook-go: runs the Rust mdbook binary and the Go port on
+# the same fixture, then compares the two output trees byte for byte.
+#
+# Usage:
+#   ./harness/diff.sh [fixture ...]
+#
+# With no arguments every fixture under fixtures/ is checked. Since M2 the
+# comparison is strict: any difference is a failure. Differences that are
+# knowingly deferred to a later milestone belong in KNOWN_DIFFS.md, and the
+# fixture that triggers them should be listed in SKIP below.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="$(cd "$ROOT/.." && pwd)"
+RUST_BIN="${MDBOOK_RUST_BIN:-$REPO_ROOT/target/debug/mdbook}"
+GO_BIN="$ROOT/bin/mdbook-go"
+
+# Fixtures expected to differ, as "name # reason". Empty at M2.
+SKIP=()
+
+if [[ $# -gt 0 ]]; then
+  FIXTURES=("$@")
+else
+  FIXTURES=()
+  for dir in "$ROOT"/fixtures/*/; do
+    FIXTURES+=("$(basename "$dir")")
+  done
+fi
+
+if [[ ! -x "$RUST_BIN" ]]; then
+  echo "building Rust mdbook (debug)" >&2
+  (cd "$REPO_ROOT" && cargo build --bin mdbook) >&2
+fi
+
+echo "=== building Go binary ===" >&2
+(cd "$ROOT" && go build -o "$GO_BIN" ./cmd/mdbook)
+
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+
+failed=0
+for fixture in "${FIXTURES[@]}"; do
+  fixture_dir="$ROOT/fixtures/$fixture"
+  if [[ ! -d "$fixture_dir" ]]; then
+    echo "unknown fixture: $fixture" >&2
+    exit 2
+  fi
+
+  skip=0
+  for entry in "${SKIP[@]:-}"; do
+    [[ "${entry%% *}" == "$fixture" ]] && skip=1
+  done
+  if [[ $skip -eq 1 ]]; then
+    echo "SKIP $fixture (see KNOWN_DIFFS.md)" >&2
+    continue
+  fi
+
+  rust_out="$TMP/$fixture/rust"
+  go_out="$TMP/$fixture/go"
+  mkdir -p "$rust_out" "$go_out"
+
+  "$RUST_BIN" build "$fixture_dir" --dest-dir "$rust_out" >/dev/null 2>&1
+  "$GO_BIN" build -dir "$fixture_dir" -dest-dir "$go_out" >/dev/null
+
+  if diff -r "$rust_out" "$go_out" >"$TMP/$fixture.diff" 2>&1; then
+    count="$(find "$go_out" -type f | wc -l | tr -d ' ')"
+    echo "OK   $fixture ($count files identical)" >&2
+  else
+    echo "DIFF $fixture" >&2
+    head -50 "$TMP/$fixture.diff" >&2
+    failed=1
+  fi
+done
+
+exit $failed
