@@ -1,5 +1,34 @@
 # Changelog
 
+## mdBook 0.5.4
+[v0.5.3...v0.5.4](https://github.com/rust-lang/mdBook/compare/v0.5.3...v0.5.4)
+
+### Added
+
+- Added zoomable images feature.
+  [#3127](https://github.com/rust-lang/mdBook/pull/3127)
+
+### Changed
+
+- Updated dependencies.
+  [#3149](https://github.com/rust-lang/mdBook/pull/3149)
+  [#3152](https://github.com/rust-lang/mdBook/pull/3152)
+  [#3129](https://github.com/rust-lang/mdBook/pull/3129)
+  [#3130](https://github.com/rust-lang/mdBook/pull/3130)
+
+### Fixed
+
+- Fixed layout bug with images in links.
+  [#3142](https://github.com/rust-lang/mdBook/pull/3142)
+- Fixed previous-chapter nav hover overlapping sidebar resize handle.
+  [#3134](https://github.com/rust-lang/mdBook/pull/3134)
+- Fixed missing LICENSE files in published crates.
+  [#3135](https://github.com/rust-lang/mdBook/pull/3135)
+- Switched recommendation to linkcheck2 fork.
+  [#3132](https://github.com/rust-lang/mdBook/pull/3132)
+- Fixed version in CI source install docs.
+  [#3154](https://github.com/rust-lang/mdBook/pull/3154)
+
 ## mdBook 0.5.3
 [v0.5.2...v0.5.3](https://github.com/rust-lang/mdBook/compare/v0.5.2...v0.5.3)
 
