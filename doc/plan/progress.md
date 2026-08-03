@@ -58,17 +58,31 @@
 
 ### M3：插件兼容
 
-- [ ] M3.1 定义内部 `Preprocessor` / `Renderer` Go 接口
-- [ ] M3.2 定义 `PreprocessorContext` / `RenderContext` 字段
-- [ ] M3.3 实现 JSON 序列化对齐 Rust 端字段名
-- [ ] M3.4 实现 `CmdPreprocessor`：stdin/stdout + `supports` 探测
-- [ ] M3.5 实现 `CmdRenderer`：stdin JSON + 工作目录 + 退出码
-- [ ] M3.6 内置 `links` 预处理器
-- [ ] M3.7 内置 `index` 预处理器
-- [ ] M3.8 预处理器排序：`before`/`after` 拓扑排序
-- [ ] M3.9 `supports_renderer` 与 renderer 白名单
+- [x] M3.1 定义内部 `Preprocessor` / `Renderer` Go 接口
+  - 落地：`internal/plugin/plugin.go`：`Preprocessor`/`Renderer` 接口，`PreprocessorContext`/`RenderContext` 结构
+- [x] M3.2 定义 `PreprocessorContext` / `RenderContext` 字段
+  - 落地：同文件，含 `Root` / `Config` / `Renderer` / `MdbookVersion` / `ChapterTitles` / `Book` / `Destination`
+- [x] M3.3 实现 JSON 序列化对齐 Rust 端字段名
+  - 落地：`internal/plugin/protocol.go`：`WireBook` / `WireBookItem`（externally-tagged enum）/ `WireChapter` / `WireSectionNum` / `WireConfig` / `BookConfig` / `BuildConfig` / `RustConfig` / `WirePreprocessorContext` / `WireRenderContext`，全部 snake_case JSON tag
+  - `WireBookItem` 自定义 `MarshalJSON` / `UnmarshalJSON`，对齐 serde 对 `enum BookItem` 的 externally-tagged 编码
+  - 提供 `ToWireBook` / `FromWireBook` / `ToWireConfig` 等正反转换
+- [x] M3.4 实现 `CmdPreprocessor`：stdin/stdout + `supports` 探测
+  - 落地：`internal/plugin/cmd.go`：把 `(ctx, book)` 作为 2 元素 JSON tuple 写入 stdin，从 stdout 读取处理后的 book；`supports <renderer>` 子命令以退出码表示兼容；`optional` 在命令缺失时打 warning 并跳过
+- [x] M3.5 实现 `CmdRenderer`：stdin JSON + 工作目录 + 退出码
+  - 落地：同文件：`CmdRenderer` 把 `RenderContext` JSON 写入子进程 stdin，`cmd.Dir = ctx.Destination`（不是 book root），透传 stdout/stderr，捕获子进程退出码
+- [x] M3.6 内置 `links` 预处理器
+  - 落地：`internal/plugin/links.go`：`{{#include}}`、`{{#rustdoc_include}}`、`{{#playground}}`、`{{#title}}`、`\{{#…}}` 全部支持，行范围 / anchor 解析、嵌套 include、`ChapterTitles` 累计、`maxLinkNestedDepth=10` 防递归
+- [x] M3.7 内置 `index` 预处理器
+  - 落地：`internal/plugin/index.go`：将 `README.md`（大小写不敏感）改写为 `index.md`，存在同名 `index.md` 时打 warning
+- [x] M3.8 预处理器排序：`before`/`after` 拓扑排序
+  - 落地：`internal/plugin/registry.go::BuildPreprocessors`：Kahn 算法解析 `[preprocessor.<name>].before` / `.after` 边，字典序 tie-break 与 Rust 对齐；含循环检测
+- [x] M3.9 `supports_renderer` 与 renderer 白名单
+  - 落地：同文件 `ShouldRunPreprocessor`：内置默认对所有 renderer 支持；自定义预处理器在 `[preprocessor.<name>].renderers` 白名单中匹配；否则回退到 `SupportsRenderer` 探测
+  - `internal/driver/build.go::Build` 已接入：`plugin.BuildPreprocessors` → `plugin.RunPreprocessors` → `render.Render`
 - [ ] M3.10 fixture：外部 preprocessor、renderer、复合插件链
+  - 待办：新增 `fixtures/external-plugin/`（自定义 shell preprocessor + 复合链）
 - [ ] M3.11 M3 验收：与 Rust 端外部插件协议 diff 一致
+  - 待办：在严格模式下跑通 M3.10 fixture，确认 Go 端外部插件协议与 Rust 一致
 
 ### M4：CLI 完整化
 
@@ -124,25 +138,36 @@ harness/
 
 ## 进度记录
 
-### 当前会话（2026-08-03 会话 3）
+### 当前会话（2026-08-03 会话 4）
 
-- 当前阶段：M2 已关闭，M3 待启动
-- 工具链就绪：在 Windows 上安装 Go 1.26.4（`C:\tools\go\bin`）和 Rust 1.96.0
-  （`%USERPROFILE%\.cargo\bin`），PATH 已写入用户环境。
-- 工作目录：为绕开 `\\wsl.localhost\Ubuntu\...` 在 Windows 上对 Go 的 `RLock`
-  不兼容，整套构建与 harness 改在 `C:\work\mdBook\`（rsync 副本）执行，再把
-  改动同步回原始 WSL 路径。
-- 状态审计修正：
-  - `internal/markdown/` 目录并不存在；goldmark 集成在 `internal/html/builder.go`
-  - `internal/html/renderer.go` 也不存在；渲染主流程在 `internal/render/render.go`
-  - `cmd/mdbook/main.go` 版本字符串从「M1」更新为「M2 closed; M3 in flight」
-  - `mdbook-go/README.md` 从 M1 视角刷新为 M2 完成、M3 起步
-  - `harness/KNOWN_DIFFS.md` 清空 M1/M2 条目，仅保留两条 goldmark/pulldown-cmark
-    解析器偏差
-  - `internal/plugin/`、`internal/watch/` 目录尚未建立（M3、M5 待办）
-- 验证：当前会话在 `C:\work\mdBook\mdbook-go` 执行
-  `MDBOOK_RUST_BIN=…/target/debug/mdbook.exe ./harness/diff.sh basic nested`，
-  `basic` 与 `nested` 均通过严格 `diff -r`（0 字节差异），无须 SKIP。
+- 当前阶段：M3 进行中；M3.1～M3.9 已落地，M3.10、M3.11 待办
+- 工作目录：`C:\work\mdBook\`（Windows Git Bash 同步副本）
+- M3 落地总览：
+  - `internal/plugin/plugin.go` 定义 `Preprocessor` / `Renderer` 接口与 `PreprocessorContext` /
+    `RenderContext`，并提供 `ToWirePreprocessorContext` / `FromWirePreprocessorContext` /
+    `ToWireRenderContext` 等正反转换
+  - `internal/plugin/protocol.go` 定义 `WireBook` / `WireBookItem` / `WireChapter` /
+    `WireSectionNum` / `WireConfig` / `WirePreprocessorContext` / `WireRenderContext`
+    等 wire 类型，全部 snake_case JSON tag；`WireBookItem` 自实现
+    `MarshalJSON` / `UnmarshalJSON`，与 serde 对 `enum BookItem` 的 externally-tagged
+    编码一致；`MdbookVersion = "0.1.0-m3"`
+  - `internal/plugin/cmd.go` 实现 `CmdPreprocessor`（stdin/stdout + `supports` 探测）
+    与 `CmdRenderer`（stdin JSON + 工作目录 + 退出码），并提供 shlex 风格的命令解析
+  - `internal/plugin/links.go` 实现 `LinkPreprocessor`：`{{#include}}`（含行范围 / anchor）、
+    `{{#rustdoc_include}}`、`{{#playground}}`、`{{#title}}`、`\{{#…}}` 全部支持；累计
+    `ChapterTitles`；`maxLinkNestedDepth=10` 防递归
+  - `internal/plugin/index.go` 实现 `IndexPreprocessor`：把 `README.md` 改写为 `index.md`
+  - `internal/plugin/registry.go` 实现 `BuildPreprocessors`（Kahn 拓扑排序，含
+    `[preprocessor.<name>].before` / `.after`，字典序 tie-break，循环检测）、
+    `BuildRenderers`、`ShouldRunPreprocessor`、`RunPreprocessors`、`parsePreprocessorConfig`
+  - `internal/driver/build.go` 接入：`Build` 调用 `plugin.BuildPreprocessors` →
+    `plugin.RunPreprocessors` → `render.Render`；新增 `PreprocessBook`（仅跑预处理器链）、
+    `RenderForBackend`（按 backend 名分发）
+  - `cmd/mdbook/main.go` 版本字符串更新为 `mdbook-go 0.1.0 (M2 closed; M3 in flight)`
+- 待办：
+  - M3.10：新增 `fixtures/external-plugin/`，包含 shell 实现的 preprocessor + renderer + 复合链
+  - M3.11：跑通 `harness/diff.sh external-plugin`，与 Rust 输出 byte-identical 或差异全部入库 `KNOWN_DIFFS.md`
+  - 接 M4：`init` 完善（theme 复制、gitignore）、`test`、`clean`、`completions` 子命令
 
 ### M2 已落地的包
 
@@ -157,6 +182,8 @@ harness/
 | `internal/static` | 静态资源集合、SHA-256 指纹、`{{ resource }}` 重写 | `html_handlebars/static_files.rs` |
 | `internal/search` | elasticlunr 索引 + Porter stemmer + 停用词 | `elasticlunr-rs` + `html_handlebars/search.rs` |
 | `internal/render` | 渲染主流程、`make_data`、TOC helper、print、404、redirect | `html_handlebars/hbs_renderer.rs` |
+| `internal/plugin` | M3 预处理器 / renderer 协议、内置 `links` / `index`、外部 `Cmd*` 包装、拓扑排序 | `mdbook-driver/src/builtin_preprocessors/`、`mdbook-driver/src/builtin_renderers/`、`mdbook-driver/src/mdbook.rs::determine_preprocessors` |
+| `internal/driver` | `MDBook`、`Load`、`Build`、`PreprocessBook`、`RenderForBackend`、`Init` | `mdbook-driver/src/mdbook.rs`、`mdbook-driver/src/builtin_renderers/epub.rs` 等 |
 
 ### M2 期间关闭的 M1 遗留缺陷
 
@@ -188,6 +215,7 @@ harness/
 | `internal/fontawesome` | 图标 SVG 与 Rust 输出片段逐字节比对 | 通过 |
 | `internal/search` | 索引 JSON 与 Rust golden 逐字节比对 | 通过 |
 | `internal/html` | 以 `tests/testsuite/markdown/*/expected/*.html` 为 golden 回归 | 通过（2 项已知偏差跳过） |
+| `harness/diff.sh basic nested` | strict-mode 严格 diff | 通过（basic 40 文件、nested 48 文件 byte-identical） |
 
 ### 已知偏差与遗留问题
 
@@ -216,13 +244,21 @@ MDBOOK_RUST_BIN=$(pwd)/../target/debug/mdbook ./harness/diff.sh basic nested
 # → OK   nested (48 files identical)
 ```
 
+#### M3 待办（M3.10 / M3.11）
+
+新增 fixture 之前没有外部 preprocessor / renderer 覆盖路径；现在 `internal/plugin`
+已经具备完整协议实现，下一步是把覆盖路径补齐：
+
+- `fixtures/external-plugin/`：用 `bash` / `python` 实现一个外部 preprocessor（含
+  `supports` 子命令）和一个外部 renderer，并在 `book.toml` 里以 `command = "..."` 形式注册，
+  在 `[preprocessor.foo].before` / `[preprocessor.bar].after` 上构造拓扑链
+- `harness/diff.sh external-plugin`：严格模式跑通；任何差异登记进 `KNOWN_DIFFS.md`
+
 ### 下一步
 
-1. **M3 起步**：建立 `internal/plugin/` 包，按 M3.1～M3.5 实现内部接口与
-   JSON 协议；先做 `links`、`index` 内置预处理器（M3.6、M3.7），再做外部
-   `CmdPreprocessor`（M3.4）。
-2. **M4 起步**：补全 `clean`、`test`、`completions` 子命令（`init` 已经可用，
-   但需要补 theme 复制）。
+1. **M3 收尾**：补 `fixtures/external-plugin/`，跑通 `harness/diff.sh external-plugin`
+   严格模式（M3.10、M3.11）。
+2. **M4 起步**：补全 `clean`、`test`、`completions` 子命令；`init` 已可用，但需要补 theme 复制。
 3. **CI 准备**（M6.5 前置）：把 `harness/diff.sh` 接入 GitHub Actions，
    跑 `cargo build` + `go build` 后执行严格 diff。
 
@@ -249,3 +285,21 @@ MDBOOK_RUST_BIN=$(pwd)/../target/debug/mdbook ./harness/diff.sh basic nested
 - 跑通 `harness/diff.sh basic nested` 严格模式：`basic` 40 文件 byte-identical，
   `nested` 48 文件 byte-identical。M2.14 / M2.15 关闭。
 - 刷新 `mdbook-go/README.md`、`cmd/mdbook/main.go` 版本字符串、`harness/KNOWN_DIFFS.md`。
+
+#### 2026-08-03 会话 4
+
+- 新建 `internal/plugin/` 包，完成 M3.1～M3.9：
+  - 接口与上下文：`Preprocessor` / `Renderer` 接口，`PreprocessorContext` /
+    `RenderContext` 结构
+  - Wire 协议：`WireBook` / `WireBookItem`（externally-tagged enum）/
+    `WireChapter` / `WireSectionNum` / `WireConfig` / `WirePreprocessorContext` /
+    `WireRenderContext`，全部 snake_case JSON tag，与 serde 对齐
+  - 外部命令：`CmdPreprocessor`（stdin/stdout + `supports` 探测）、`CmdRenderer`
+    （stdin JSON + 工作目录 + 退出码），附 shlex 命令解析
+  - 内置：`LinkPreprocessor`（`{{#include}}` / `{{#rustdoc_include}}` /
+    `{{#playground}}` / `{{#title}}` / `\{{#…}}`），`IndexPreprocessor`
+  - 排序：`BuildPreprocessors`（Kahn 拓扑 + `before` / `after` + 字典序 tie-break），
+    `ShouldRunPreprocessor`（renderers 白名单）
+- `internal/driver/build.go` 接入预处理器链；新增 `PreprocessBook`、
+  `RenderForBackend`。
+- 刷新 `doc/plan/progress.md` 反映 M3 现状；M3.10 / M3.11 仍未做。
