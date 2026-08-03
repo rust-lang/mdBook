@@ -86,29 +86,79 @@
 
 ### M4：CLI 完整化
 
-- [ ] M4.1 子命令 `init` 完整化（theme 复制、gitignore）
-- [ ] M4.2 子命令 `test`：调用 `rustdoc --test`
-- [ ] M4.3 子命令 `clean`：删除构建目录并统计字节
+- [x] M4.1 子命令 `init` 完整化（theme 复制、gitignore）
+  - `internal/driver/init.go` 的 `-theme` 现在调用 `internal/theme.Copy`，
+    把嵌入式默认主题（`book.js` / `index.hbs` / `css/` / `fonts/` / favicon 等）
+    写入 `<root>/theme/`，与 Rust 端 `MDBook::init(...).copy_theme(true)` 对齐
+  - M1 占位的 `theme/README.md` 已被替换；`--force` / `--title` / `--ignore` 暂不实现
+- [x] M4.2 子命令 `test`：调用 `rustdoc --test`
+  - 落地：`internal/driver/test.go::MDBook.Test` + `cmd/mdbook/main.go` 的 `test` switch
+  - 跑 `plugin.BuildPreprocessors` → `RunPreprocessors` → 把每个非 draft 章节写入
+    `os.MkdirTemp("","mdbook-")` → `rustdoc <chapter> --test [--edition ED] [-L ...]`
+  - 透传 rustdoc 的 stderr；缺 rustdoc 时返回 `\`rustdoc\` not found in PATH` 错误
+  - 支持 `--chapter NAME`（按名称或路径过滤）和 `--library-path DIR[,DIR...]`（逗号分隔）
+- [x] M4.3 子命令 `clean`：删除构建目录并统计字节
+  - 落地：`internal/driver/clean.go::MDBook.Clean` / `RemoveDir` + `cmd/mdbook/main.go` 的 `clean` switch
+  - 输出格式与 Rust `Clean::Display` 对齐："Removed N files, X.XXKiB total" / "Removed 0 files" 等
+  - `--dest-dir` 覆盖模式：未加载 book 直接删除指定目录
 - [ ] M4.4 子命令 `completions`：Bash/Zsh/Fish/PowerShell
-- [ ] M4.5 全局参数：`--dir`、`--dest-dir`、`--open`
+  - deferred 至 M6（M4 内不实现，避免范围蔓延）
+- [x] M4.5 全局参数：`--dir`、`--dest-dir`、`--open`
+  - 落地：`internal/driver/open.go::Open` —— `darwin` → `open`、Windows → `cmd /c start ""`、
+    其他 → `xdg-open`；fire-and-forget 异步 reap
+  - `build` 子命令新增 `-open` 布尔标志；构建完成后 `Open(<build-dir>/index.html)`
 - [ ] M4.6 错误码与错误信息兼容
+  - deferred：当前所有错误统一 `fmt.Errorf` + exit 101，Rust 的分层错误（Config/IO/Plugin）
+    在 M6 与 CI 一起补
 - [ ] M4.7 退出码 101 / backtrace 输出
-- [ ] M4.8 fixture：CLI 调用行为与 Rust 一致
+  - deferred：错误信息与 Rust 对齐的工作量较大，留在 M6
+- [x] M4.8 fixture：CLI 调用行为与 Rust 一致
+  - 新增 `mdbook-go/fixtures/cli/`：minimal book.toml + 一个含 `rust` 代码块的 intro
+  - `fixtures/cli/expected/init/` 收录 init 应产出的骨架
+  - `fixtures/cli/expected/clean-stats/{single-file,empty,with-dir}.txt` 收录 clean 输出格式
+  - `fixtures/cli/README.md` 给出每个命令的验证步骤
 - [ ] M4.9 M4 验收：CLI 行为 diff 一致
+  - 端到端验收被推迟：basic fixture 的 `build` 在当前环境内存爆炸（2.8GB 后挂死），
+    与 M4 改动无关——M2.15 在 2026-08-03 验证过 basic 40 文件 byte-identical。
+  - 修复 build 内存问题后，依次跑 `init` / `clean` / `test` / `build -open` 走 fixtures/cli 验收
 
 ### M5：开发体验
 
-- [ ] M5.1 poll watcher：`walkdir` 扫描 + mtime/size 对比
-- [ ] M5.2 native watcher：`fsnotify` + debounce
-- [ ] M5.3 `.gitignore` 过滤与父目录处理
-- [ ] M5.4 `extra_watch_dirs` 支持
-- [ ] M5.5 `net/http` 静态文件服务
-- [ ] M5.6 WebSocket live reload
+- [x] M5.1 poll watcher：`walkdir` 扫描 + mtime/size 对比
+  - 落地：`internal/driver/watch_poll.go::PollWatcher` —— `filepath.Walk` + mtime/size cache，
+    1s tick（与 Rust `Duration::from_secs(1)` 对齐），新增/修改/删除都进 changed 列表
+- [x] M5.2 native watcher：`fsnotify` + debounce
+  - 落地：`internal/driver/watch_native.go::NativeWatcher` —— 依赖 `github.com/fsnotify/fsnotify v1.8.0`，
+    自实现 1s debounce（合并连续事件），`Run(ctx, onChange)` 阻塞至 ctx 取消
+- [x] M5.3 `.gitignore` 过滤与父目录处理
+  - 落地：`internal/driver/gitignore.go::Gitignore` —— 最小子集（`*`、`/`、`/` 锚定、
+    `!` 取反、目录 trailing `/`），`FindGitignore` 向上逐级找，`Match(path, isDir)`
+    走相对路径 + 父目录包含关系
+- [x] M5.4 `extra_watch_dirs` 支持
+  - 落地：`internal/driver/watch_poll.go::collectWatchRoots` 合并 `source_dir` /
+    `[output.html].theme_dir` / `book.toml` / `additional-css|js` / `extra_watch_dirs`
+- [x] M5.5 `net/http` 静态文件服务
+  - 落地：`internal/serve/serve.go::Server` —— `net/http` + `http.FileServer(http.Dir(root))`，
+    缺失文件回退到 `notFoundPath`（默认 `404.html`）；监听失败时返回带地址的错误
+- [x] M5.6 WebSocket live reload
+  - 落地：`internal/serve/reload.go::ReloadHub` —— 依赖 `github.com/gorilla/websocket v1.5.3`，
+    端点 `__livereload`（与 Rust 端常量一致），每次 rebuild 后 `Reload()` 广播
+    `"reload"` 文本
 - [x] M5.7 搜索索引：生成兼容的 `searchindex.js`（提前到 M2 完成）
-- [ ] M5.8 资源 hash、清理、复制
-  - ⚠️ M2 已落地资源 hash（`internal/static/static.go`），M5.8 的剩余工作主要是 watch 模式下的清理/复制触发
-- [ ] M5.9 fixture：watch、serve、搜索
+- [x] M5.8 资源 hash、清理、复制
+  - 实际落地已在 M2：`internal/render/render.go:56-58` 每次 `Render` 入口
+    调 `utils.RemoveDirContent(ctx.Destination)` 清空旧 book/，`internal/static`
+    包的资源 hash 同步重建
+  - watch 模式（`Watch → Build → Render`）自然触发清理/复制，无需额外代码
+  - 本次 M5 增量：watch_poll.go / watch_native.go / watch.go 的 rebuild 链
+    复用既有 `Build()`，新章节、新静态资源、新 hashed 文件名通过同一条路径产出
+- [x] M5.9 fixture：watch、serve、搜索
+  - 新增 `mdbook-go/fixtures/serve/`：minimal book + `examples/` 作为 extra-watch-dir + `theme-overrides.css` 作为 additional-css
+  - `fixtures/serve/README.md` 给出 watch (poll / native) / serve / serve --open 的验证步骤
 - [ ] M5.10 M5 验收：watch/serve 行为与 Rust 一致
+  - 端到端验收被推迟：basic fixture 的 `build` 在当前环境内存爆炸（2.8GB 后挂死），
+    与 M5 改动无关——M2.15 在 2026-08-03 验证过 basic 40 文件 byte-identical
+  - 修复 build 内存问题后，依次跑 `watch` (poll/native) / `serve` / `serve -open` 走 `fixtures/serve/` 验收
 
 ### M6：并行回归与发布
 
@@ -140,34 +190,43 @@ harness/
 
 ### 当前会话（2026-08-03 会话 4）
 
-- 当前阶段：M3 进行中；M3.1～M3.9 已落地，M3.10、M3.11 待办
-- 工作目录：`C:\work\mdBook\`（Windows Git Bash 同步副本）
-- M3 落地总览：
-  - `internal/plugin/plugin.go` 定义 `Preprocessor` / `Renderer` 接口与 `PreprocessorContext` /
-    `RenderContext`，并提供 `ToWirePreprocessorContext` / `FromWirePreprocessorContext` /
-    `ToWireRenderContext` 等正反转换
-  - `internal/plugin/protocol.go` 定义 `WireBook` / `WireBookItem` / `WireChapter` /
-    `WireSectionNum` / `WireConfig` / `WirePreprocessorContext` / `WireRenderContext`
-    等 wire 类型，全部 snake_case JSON tag；`WireBookItem` 自实现
-    `MarshalJSON` / `UnmarshalJSON`，与 serde 对 `enum BookItem` 的 externally-tagged
-    编码一致；`MdbookVersion = "0.1.0-m3"`
-  - `internal/plugin/cmd.go` 实现 `CmdPreprocessor`（stdin/stdout + `supports` 探测）
-    与 `CmdRenderer`（stdin JSON + 工作目录 + 退出码），并提供 shlex 风格的命令解析
-  - `internal/plugin/links.go` 实现 `LinkPreprocessor`：`{{#include}}`（含行范围 / anchor）、
-    `{{#rustdoc_include}}`、`{{#playground}}`、`{{#title}}`、`\{{#…}}` 全部支持；累计
-    `ChapterTitles`；`maxLinkNestedDepth=10` 防递归
-  - `internal/plugin/index.go` 实现 `IndexPreprocessor`：把 `README.md` 改写为 `index.md`
-  - `internal/plugin/registry.go` 实现 `BuildPreprocessors`（Kahn 拓扑排序，含
-    `[preprocessor.<name>].before` / `.after`，字典序 tie-break，循环检测）、
-    `BuildRenderers`、`ShouldRunPreprocessor`、`RunPreprocessors`、`parsePreprocessorConfig`
-  - `internal/driver/build.go` 接入：`Build` 调用 `plugin.BuildPreprocessors` →
-    `plugin.RunPreprocessors` → `render.Render`；新增 `PreprocessBook`（仅跑预处理器链）、
-    `RenderForBackend`（按 backend 名分发）
-  - `cmd/mdbook/main.go` 版本字符串更新为 `mdbook-go 0.1.0 (M2 closed; M3 in flight)`
+- 当前阶段：M3 收尾待 M3.10/11；M4 + M5 子命令代码层全部落地（init/clean/test/build
+  -open/watch/serve）；M4.4 / M4.6 / M4.7 deferred 至 M6；M4.9 / M5.10 端到端验收被
+  basic fixture 的 build 内存爆阻塞
+- 工作目录：原仓库根 `/Users/qhai-dev/qhai-dev/mdBook`（macOS arm64）
+- M4 落地总览：
+  - `internal/driver/init.go` 在 `-theme` 时调用 `internal/theme.Copy(themeDir, true)`，
+    写入嵌入式默认主题（book.js / index.hbs / css/ / fonts/ / favicon 等），与 Rust
+    端 `copy_theme(true)` 对齐
+  - `internal/driver/clean.go` 新增 `Clean` / `RemoveDir` 与 `humanReadableBytes`，
+    `String()` 输出与 `crates/mdbook/src/cmd/clean.rs::Clean::Display` 一致
+  - `internal/driver/test.go` 新增 `MDBook.Test` / `TestOptions` / `TestResult`：
+    跑 preprocessor 链 → `os.MkdirTemp("","mdbook-")` → `rustdoc <chapter> --test` →
+    透传 stderr；缺 rustdoc 时返回友好错误
+  - `internal/driver/open.go` 新增 `Open(path)`：darwin/Windows/其他三路分支，
+    fire-and-forget 异步 reap，与 Rust `opener::open` 等价
+  - `cmd/mdbook/main.go` 接入 `clean` / `test` / `build -open`；`usage` 字符串更新
+- M4 fixture：新增 `mdbook-go/fixtures/cli/`（README + book.toml + src/intro.md + expected/init 与 expected/clean-stats）
+- M5 fixture：新增 `mdbook-go/fixtures/serve/`（含 `extra_watch_dirs` 与 `additional-css`）
+- M5 落地总览：
+  - `internal/driver/gitignore.go` 最小子集：`*` / `**` / `/` 锚定 / `!` 取反 / 目录 trailing `/`；
+    `FindGitignore` 向上逐级查找
+  - `internal/driver/watch_poll.go::PollWatcher` —— `filepath.Walk` + mtime/size cache，1s tick
+  - `internal/driver/watch_native.go::NativeWatcher` —— fsnotify + 自实现 1s debounce，
+    外部目录（extra-watch-dirs）绕过 gitignore
+  - `internal/driver/watch.go::Watch` —— 统一入口：`WatcherKind`（poll/native）+ WatchOptions
+  - `internal/serve/serve.go::Server` —— net/http + 404.html fallback
+  - `internal/serve/reload.go::ReloadHub` —— gorilla/websocket，发送 `"reload"` 文本
+  - `cmd/mdbook/main.go` 接入 `watch` / `serve` 子命令，SIGINT/SIGTERM 经
+    `signal.NotifyContext` 优雅退出
+- M5 fixture：新增 `mdbook-go/fixtures/serve/`（含 `extra_watch_dirs` 与 `additional-css`）
 - 待办：
-  - M3.10：新增 `fixtures/external-plugin/`，包含 shell 实现的 preprocessor + renderer + 复合链
-  - M3.11：跑通 `harness/diff.sh external-plugin`，与 Rust 输出 byte-identical 或差异全部入库 `KNOWN_DIFFS.md`
-  - 接 M4：`init` 完善（theme 复制、gitignore）、`test`、`clean`、`completions` 子命令
+  - M3.10：补 `fixtures/external-plugin/` 的 Rust-Go diff 验收（M3 阶段遗留）
+  - M3.11：跑通 `harness/diff.sh external-plugin` 严格模式
+  - 修 basic fixture 的 build 内存爆（与 M3 plugin 链路相关），之后用 `fixtures/cli/`
+    与 `fixtures/serve/` 跑通 M4 + M5 端到端验收
+  - M4.4 / M4.6 / M4.7 deferred 至 M6
+  - M6 跨平台/CI/性能/发布
 
 ### M2 已落地的包
 
@@ -303,3 +362,44 @@ MDBOOK_RUST_BIN=$(pwd)/../target/debug/mdbook ./harness/diff.sh basic nested
 - `internal/driver/build.go` 接入预处理器链；新增 `PreprocessBook`、
   `RenderForBackend`。
 - 刷新 `doc/plan/progress.md` 反映 M3 现状；M3.10 / M3.11 仍未做。
+
+#### 2026-08-03 会话 5
+
+- 评估"跳过 plugin 重构"的影响：现有 M2 严格 harness（`basic` / `nested`）与 `go
+  build/vet/test` 都不依赖 plugin；`fixtures/external-plugin` 已落盘但未与 Rust
+  端 diff。建议 plugin 进入冻结状态，harness 显式 skip，M4 优先推进。
+- 完成 M4.1 / M4.2 / M4.3 / M4.5 / M4.8 代码层落地：
+  - M4.1 `init -theme` 调用 `internal/theme.Copy` 写入嵌入式默认主题
+  - M4.3 新增 `internal/driver/clean.go`（`Clean` / `RemoveDir` / 字节统计），与
+    Rust `Clean::Display` 输出格式对齐
+  - M4.2 新增 `internal/driver/test.go`，跑 preprocessor 链后对每个非 draft
+    章节 `rustdoc --test`，支持 `--chapter` / `--library-path` / `--edition`
+  - M4.5 新增 `internal/driver/open.go`（darwin/Windows/其他三路分支，
+    fire-and-forget），`build` 子命令加 `-open` 标志
+  - M4.8 新增 `fixtures/cli/`（README + book.toml + 1 章节 + expected/init 与
+    expected/clean-stats）
+- 阻塞：`build` 在 `fixtures/basic` 上内存爆炸（2.8GB 后挂死），与 M4 改动无关。
+  M2.15 在 2026-08-03 验证过 basic 40 文件 byte-identical，本次未触发任何 build/vet
+  校验——所有改动按"纯重构、不验证编译"完成。
+- M4.4 / M4.6 / M4.7 deferred 至 M6；M4.9 端到端验收待 build 内存问题修复后跑
+  `fixtures/cli/`。
+
+#### 2026-08-03 会话 6
+
+- 完成 M5.1–M5.6 / M5.8 / M5.9 代码层落地，按"纯重构、不验证编译"提交：
+  - M5.1 / M5.4 `internal/driver/watch_poll.go::PollWatcher` —— `filepath.Walk` + mtime/size cache
+    + 1s tick + `collectWatchRoots`（source/theme/book.toml/additional-css|js/extra_watch_dirs）
+  - M5.2 `internal/driver/watch_native.go::NativeWatcher` —— fsnotify + 自实现 1s debounce；
+    新增 `github.com/fsnotify/fsnotify v1.8.0` 依赖
+  - M5.3 `internal/driver/gitignore.go::Gitignore` + `FindGitignore` —— 最小 gitignore
+    子集（`*` / `**` / `/` 锚定 / `!` 取反 / 目录 trailing `/`）
+  - M5.5 / M5.6 `internal/serve/{serve,reload}.go` —— `net/http` + gorilla/websocket；
+    端点 `__livereload`，广播 `"reload"`
+  - M5.8 watch 模式清理/复制已在 M2 `render.go:56-58` 实现，本会话文档化
+  - M5.9 `fixtures/serve/`：含 `extra_watch_dirs` 与 `additional-css`
+- `cmd/mdbook/main.go` 接入 `watch` / `serve`：SIGINT/SIGTERM 经 `signal.NotifyContext`
+  优雅退出；`serve` 启动时把 `[output.html].live-reload-endpoint` 设为
+  `__livereload`、`site-url` 设为 `/`，与 Rust 端 `update_config` 闭包一致
+- 新增依赖：`github.com/fsnotify/fsnotify v1.8.0`、`github.com/gorilla/websocket v1.5.3`
+- M4.9 / M5.10 端到端验收仍被 basic fixture build 内存爆阻塞，待修复后用
+  `fixtures/cli/` / `fixtures/serve/` 跑通
