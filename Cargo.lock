@@ -1082,7 +1082,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yml",
- "sha2 0.11.0",
+ "sha2",
  "tempfile",
  "toml",
  "tracing",
