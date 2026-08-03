@@ -39,7 +39,7 @@ func main() {
 			os.Exit(101)
 		}
 	case "version", "--version", "-v":
-		fmt.Println("mdbook-go 0.1.0 (M1)")
+		fmt.Println("mdbook-go 0.1.0 (M2 closed; M3 in flight)")
 	default:
 		usage()
 		os.Exit(101)

@@ -28,8 +28,12 @@ type Context struct {
 	Destination string
 	// Config is the full book configuration.
 	Config *config.Config
-	// Book is the loaded chapter tree.
+	// Book is the post-preprocessing chapter tree. When no preprocessors
+	// are configured it is identical to the loaded book.
 	Book *book.Book
+	// ChapterTitles records per-chapter title overrides set by
+	// preprocessors such as `links`. Nil when no preprocessor ran.
+	ChapterTitles map[string]string
 }
 
 // chapterTree pairs a chapter with its rendered node tree, which is needed more
@@ -285,13 +289,17 @@ func renderChapter(ctx *Context, cfg *config.HtmlConfig, registry *hbs.Registry,
 		data["git_repository_edit_url"] = strings.ReplaceAll(cfg.EditURLTemplate, "{path}", source)
 	}
 
-	title := ch.Name
+	displayName := ch.Name
+	if override, ok := ctx.ChapterTitles[ch.Path]; ok && override != "" {
+		displayName = override
+	}
+	title := displayName
 	if ctx.Config.Book.Title != "" {
-		title = ch.Name + " - " + ctx.Config.Book.Title
+		title = displayName + " - " + ctx.Config.Book.Title
 	}
 	data["path"] = ch.Path
 	data["content"] = html.Serialize(item.tree)
-	data["chapter_title"] = ch.Name
+	data["chapter_title"] = displayName
 	data["title"] = title
 	data["path_to_root"] = utils.PathToRoot(ch.Path)
 	if section := ch.Number.String(); section != "" {

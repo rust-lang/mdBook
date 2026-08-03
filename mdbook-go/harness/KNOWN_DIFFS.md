@@ -1,53 +1,42 @@
-# Known M1 differences (Rust vs Go)
+# Known Rust vs Go differences
 
-The diff harness exits non-zero on the `basic` fixture at M1. Every line
-below is **expected** at M1 and will be removed as later milestones land.
+The diff harness exits non-zero on any byte difference between the Rust
+and Go outputs. Every line below is **expected** and corresponds to either
+an intentionally skipped fixture or a parser-level deviation that requires
+non-trivial work to close.
 
-## Missing files in the Go output
+Last updated: 2026-08-03 — both `basic` (40 files) and `nested` (48 files)
+produce byte-identical output, so no fixture is currently in `SKIP`.
 
-- `404.html` — M2.
-- `print.html` — M2.
-- `toc.html` — M2.
-- `searchindex.js` — M2.
-- `FontAwesome` resources, CSS, JS — M2.
+## Skipped fixtures
 
-## Rust-only markup in shared files
+(None. Both `basic` and `nested` pass strict diff.)
 
-The Rust output for each chapter embeds a Handlebars-rendered theme:
+## Markdown parser deviations (goldmark vs pulldown-cmark)
 
-- `<head>` contains `<link rel="stylesheet">` to a hashed CSS file.
-- `<body>` contains the menu bar, sidebar, chapter navigation, and the
-  JavaScript bootstrap.
-- The page footer contains `window.playground_copyable = true;` and other
-  theme initialisation snippets.
+These are tracked in `internal/html/markdown_golden_test.go`'s
+`knownDeviations` slice. The corresponding fixtures under
+`tests/testsuite/markdown/` are skipped from the golden regression. They
+do **not** affect `basic` or `nested`; they only show up when reusing the
+Rust `testsuite` fixtures as Go goldens, which is a separate test path.
 
-The Go output at M1 is intentionally a minimal envelope:
+1. `tests/testsuite/markdown/definition_lists/definition_lists.md` —
+   goldmark requires a single-line plain-text term; inline links or
+   multi-line terms do not become `<dt>`.
+2. `tests/testsuite/markdown/basic_markdown/html.md` — when an opening
+   HTML tag spans two lines, goldmark treats it as a block element while
+   pulldown-cmark falls back to inline HTML inside a paragraph.
 
-```html
-<!doctype html>
-<html><head><meta charset="utf-8"><title>NAME - TITLE</title></head>
-<body><main>BODY</main></body></html>
-```
+Fixing either requires swapping out part of goldmark's block parser;
+deferred until a fixture explicitly demands it.
 
-## Body content
+## Items removed from this file
 
-The visible text of each chapter matches between Rust and Go:
+These were listed under M1/M2 and have since been closed:
 
-- chapter titles
-- paragraph text
-- code blocks
-- tables
-- list items
-
-The Rust output also emits "Basic Fixture" in the header (book title) and
-side navigation. The Go output includes the book title only in `<title>`.
-
-## Closure plan
-
-| M  | File / feature expected to land            |
-|----|--------------------------------------------|
-| M2 | 404.html, print.html, toc.html             |
-| M2 | theme resources, sidebar markup, footer JS |
-| M2 | searchindex.js, redirects                  |
-| M3 | preprocessor / renderer JSON protocol      |
-| M5 | live reload, watch                         |
+- `404.html`, `print.html`, `toc.html`, `toc.js`, `searchindex.js` — M2.
+- Font Awesome CSS/JS/icons and the menu bar / sidebar / footer JS — M2.
+- Theme asset hashing and `{{ resource }}` rewriting — M2.
+- `redirect` table support — M2.
+- `additional-css` and `fold` rendering — M2 (nested fixture).
+- Strict-mode byte-for-byte equivalence on `basic` and `nested` — M2.
