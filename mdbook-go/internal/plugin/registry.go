@@ -114,12 +114,12 @@ func BuildPreprocessors(cfg *config.Config, root string) ([]Preprocessor, error)
 	for _, name := range names {
 		entry := table[name]
 		for _, before := range entry.Before {
-			// `name` runs before `before` — edge from `before` to `name`.
-			addEdge(before, name)
+			// `name` runs before `before` — edge from `name` to `before`.
+			addEdge(name, before)
 		}
 		for _, after := range entry.After {
-			// `name` runs after `after` — edge from `name` to `after`.
-			addEdge(name, after)
+			// `name` runs after `after` — edge from `after` to `name`.
+			addEdge(after, name)
 		}
 		if _, ok := indeg[name]; !ok {
 			indeg[name] = 0
@@ -131,7 +131,7 @@ func BuildPreprocessors(cfg *config.Config, root string) ([]Preprocessor, error)
 		// Find every name whose indegree is 0.
 		var ready []string
 		for _, n := range names {
-			if indeg[n] == 0 {
+			if d, ok := indeg[n]; ok && d == 0 {
 				ready = append(ready, n)
 			}
 		}
