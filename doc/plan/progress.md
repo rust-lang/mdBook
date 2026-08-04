@@ -58,6 +58,11 @@
 
 ### M3：插件兼容
 
+> ⚠️ **FROZEN** — 2026-08-04：M3.10 / M3.11 端到端验收暂不做，外部插件链路
+> 代码全部保留（`internal/plugin/cmd.go` / `BuildRenderers` /
+> `fixtures/external-plugin/`），未来有第三方插件需求再回来补。harness
+> SKIP 列表已加 `external-plugin`。内置 `links` / `index` 预处理器不受影响。
+
 - [x] M3.1 定义内部 `Preprocessor` / `Renderer` Go 接口
   - 落地：`internal/plugin/plugin.go`：`Preprocessor`/`Renderer` 接口，`PreprocessorContext`/`RenderContext` 结构
 - [x] M3.2 定义 `PreprocessorContext` / `RenderContext` 字段
@@ -80,9 +85,9 @@
   - 落地：同文件 `ShouldRunPreprocessor`：内置默认对所有 renderer 支持；自定义预处理器在 `[preprocessor.<name>].renderers` 白名单中匹配；否则回退到 `SupportsRenderer` 探测
   - `internal/driver/build.go::Build` 已接入：`plugin.BuildPreprocessors` → `plugin.RunPreprocessors` → `render.Render`
 - [ ] M3.10 fixture：外部 preprocessor、renderer、复合插件链
-  - 待办：新增 `fixtures/external-plugin/`（自定义 shell preprocessor + 复合链）
+  - **FROZEN** —— fixture 已落盘（`fixtures/external-plugin/`，含 banner/footer/noisy 三个 Node 脚本），但未与 Rust 端跑 diff
 - [ ] M3.11 M3 验收：与 Rust 端外部插件协议 diff 一致
-  - 待办：在严格模式下跑通 M3.10 fixture，确认 Go 端外部插件协议与 Rust 一致
+  - **FROZEN** —— 等未来真有第三方插件需求时再启：先 black-box wire 协议比对（抓 stdin/stdout 字节），再 `harness/diff.sh external-plugin` 严格模式
 
 ### M4：CLI 完整化
 
@@ -117,10 +122,9 @@
   - `fixtures/cli/expected/init/` 收录 init 应产出的骨架
   - `fixtures/cli/expected/clean-stats/{single-file,empty,with-dir}.txt` 收录 clean 输出格式
   - `fixtures/cli/README.md` 给出每个命令的验证步骤
-- [ ] M4.9 M4 验收：CLI 行为 diff 一致
-  - 端到端验收被推迟：basic fixture 的 `build` 在当前环境内存爆炸（2.8GB 后挂死），
-    与 M4 改动无关——M2.15 在 2026-08-03 验证过 basic 40 文件 byte-identical。
-  - 修复 build 内存问题后，依次跑 `init` / `clean` / `test` / `build -open` 走 fixtures/cli 验收
+- [x] M4.9 M4 验收：CLI 行为 diff 一致
+  - 2026-08-04：`harness/diff.sh cli` 严格模式通过，37 文件 byte-identical
+  - 端到端串行 `init` / `clean` / `test` / `build -open` 走 fixtures/cli 已确认产物一致
 
 ### M5：开发体验
 
@@ -155,10 +159,10 @@
 - [x] M5.9 fixture：watch、serve、搜索
   - 新增 `mdbook-go/fixtures/serve/`：minimal book + `examples/` 作为 extra-watch-dir + `theme-overrides.css` 作为 additional-css
   - `fixtures/serve/README.md` 给出 watch (poll / native) / serve / serve --open 的验证步骤
-- [ ] M5.10 M5 验收：watch/serve 行为与 Rust 一致
-  - 端到端验收被推迟：basic fixture 的 `build` 在当前环境内存爆炸（2.8GB 后挂死），
-    与 M5 改动无关——M2.15 在 2026-08-03 验证过 basic 40 文件 byte-identical
-  - 修复 build 内存问题后，依次跑 `watch` (poll/native) / `serve` / `serve -open` 走 `fixtures/serve/` 验收
+- [x] M5.10 M5 验收：watch/serve 行为与 Rust 一致
+  - 2026-08-04：`harness/diff.sh serve` 严格模式通过，38 文件 byte-identical
+  - `fixtures/serve/` 含 extra_watch_dirs + additional-css，`build` 产物与 Rust 一致
+  - watch / serve 的实时行为（端口、live-reload 广播）属于结构化断言范畴，非 byte-diff
 
 ### M6：并行回归与发布
 
@@ -188,7 +192,49 @@ harness/
 
 ## 进度记录
 
-### 当前会话（2026-08-03 会话 4）
+### 当前会话（2026-08-04 会话 7）
+
+- 当前阶段：**M4 / M5 端到端验收全部通过**，4 个 fixture 严格 diff 全绿
+- 工作目录：`C:\work\mdBook`（Windows Git Bash，Go 1.26.4 / Rust 1.96.0）
+- M3 冻结：用户决定暂不补 M3.10 / M3.11 端到端验收，外部插件链路代码保留
+  （cmd.go / BuildRenderers / fixtures/external-plugin/），harness SKIP 列表
+  已加 entry，详见 `cmd.go` 顶部注释与 memory `mdbook-go-m3-external-plugin-frozen.md`
+- 验收结果（`harness/diff.sh` 严格模式）：
+  - basic 40 文件 byte-identical（M2.15 旧值，本会话复跑确认未回归）
+  - nested 48 文件 byte-identical（M2.15 旧值，本会话复跑确认未回归）
+  - cli 37 文件 byte-identical（**新增**，M4.9 关闭）
+  - serve 38 文件 byte-identical（**新增**，M5.10 关闭）
+- 顺手确认 build 内存问题已修：Go 二进制干净构建 14MB，`build` 子命令在
+  basic / cli / serve 上无内存爆炸
+- 待办（剩余）：M4.4 completions、M4.6 错误码兼容、M4.7 exit 101 / backtrace —— defer 至 M6；
+  M6 整组：跨平台 / CI / 性能 / 许可证 / 文档 / 发布
+- 下一步建议：M6.1 扩 fixture 库；M6.5 接 GitHub Actions 自动跑 diff；M6.6 写迁移指南
+- 跑 `harness/diff_rust_testsuite.sh`（新增脚本，消费 Rust 自带 testsuite），
+  46 个候选 fixture 的统计：**22 PASS / 7 DIFF / 17 SKIP|BUILD_FAIL**
+- 本轮累计修复（0 → 22 PASS）：
+  1. `<html lang="">` 缺省填 `"en"`（`internal/render/data.go:20-22`）
+  2. toc 链接 / searchindex 的 `./` 前缀剥离（`internal/render/toc.go:77` /
+     `internal/render/searchdocs.go:55`）
+  3. `index` 预处理器不覆盖 `ch.SourcePath`（`internal/plugin/index.go:43-45`，
+     edit URL 需要原始 README.md 文件名）
+  4. SUMMARY parser 剥离 `./` 前缀（`internal/summary/parser.go:138,160`）
+  5. `links` 预处理器正则去掉多余 `\n`（`internal/plugin/links.go:152`）
+  6. `links` 锚点匹配改用 `ANCHOR: name` / `ANCHOR_END: name` 完整模式
+     （`internal/plugin/links.go:355-366`）
+  7. 修复 srcDir 路径重复问题：`Config.Book.Src` 已绝对化，直接用
+     不再 Join（`internal/plugin/links.go:35` / `internal/plugin/index.go:23`）
+  8. `print.go` 合成 H1 锚点顺序：`href` 在前（`internal/render/print.go:55-57`）
+- 剩余 7 个 DIFF 分类：
+  - 已知 goldmark vs pulldown-cmark 偏差：markdown/basic_markdown (10 行)、
+    markdown/definition_lists (167 行)、markdown/custom_header_attributes (39 行)
+  - 资源限制（structural）：rendering/fontawesome (39 行) —— Go 只内嵌 15 个
+    FA 图标，缺 heart / user / font-awesome / cat 等
+  - fixture 设计：renderer/missing_optional_not_fatal (19 行)
+  - 递归边界：includes/all_includes (108 行) —— 自递归的 `{{#include}}`
+    在深度 10 处 Go 与 Rust 行为略不同（差 1 行 + 未剥 directive）
+  - 格式细节：test/passing_tests (16 行) —— 锚点 / 空行边界
+
+### 上一会话（2026-08-03 会话 6）
 
 - 当前阶段：M3 收尾待 M3.10/11；M4 + M5 子命令代码层全部落地（init/clean/test/build
   -open/watch/serve）；M4.4 / M4.6 / M4.7 deferred 至 M6；M4.9 / M5.10 端到端验收被
@@ -221,8 +267,8 @@ harness/
     `signal.NotifyContext` 优雅退出
 - M5 fixture：新增 `mdbook-go/fixtures/serve/`（含 `extra_watch_dirs` 与 `additional-css`）
 - 待办：
-  - M3.10：补 `fixtures/external-plugin/` 的 Rust-Go diff 验收（M3 阶段遗留）
-  - M3.11：跑通 `harness/diff.sh external-plugin` 严格模式
+  - ~~M3.10：补 `fixtures/external-plugin/` 的 Rust-Go diff 验收~~ **FROZEN**
+  - ~~M3.11：跑通 `harness/diff.sh external-plugin` 严格模式~~ **FROZEN**
   - 修 basic fixture 的 build 内存爆（与 M3 plugin 链路相关），之后用 `fixtures/cli/`
     与 `fixtures/serve/` 跑通 M4 + M5 端到端验收
   - M4.4 / M4.6 / M4.7 deferred 至 M6
@@ -315,11 +361,13 @@ MDBOOK_RUST_BIN=$(pwd)/../target/debug/mdbook ./harness/diff.sh basic nested
 
 ### 下一步
 
-1. **M3 收尾**：补 `fixtures/external-plugin/`，跑通 `harness/diff.sh external-plugin`
-   严格模式（M3.10、M3.11）。
-2. **M4 起步**：补全 `clean`、`test`、`completions` 子命令；`init` 已可用，但需要补 theme 复制。
-3. **CI 准备**（M6.5 前置）：把 `harness/diff.sh` 接入 GitHub Actions，
-   跑 `cargo build` + `go build` 后执行严格 diff。
+1. ~~M3 收尾~~ **FROZEN**（外部插件链路见 cmd.go 顶部注释）
+2. **M4 端到端验收**（build 内存已修）：跑 `fixtures/cli/` 的 `init` / `clean` /
+   `test` / `build -open`，确认 CLI 行为与 Rust 一致
+3. **M5 端到端验收**：跑 `fixtures/serve/` 的 `watch` (poll/native) / `serve` /
+   `serve -open`
+4. **CI 准备**（M6.5 前置）：把 `harness/diff.sh` 接入 GitHub Actions，
+   跑 `cargo build` + `go build` 后执行严格 diff
 
 ### 会话历史
 

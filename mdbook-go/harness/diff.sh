@@ -16,8 +16,12 @@ REPO_ROOT="$(cd "$ROOT/.." && pwd)"
 RUST_BIN="${MDBOOK_RUST_BIN:-$REPO_ROOT/target/debug/mdbook}"
 GO_BIN="$ROOT/bin/mdbook-go"
 
-# Fixtures expected to differ, as "name # reason". Empty at M2.
-SKIP=()
+# Fixtures expected to differ, as "name # reason".
+# - external-plugin: M3 外部插件链路已冻结（见 internal/plugin/cmd.go 顶部注释与
+#   doc/plan/progress.md 的 M3 段落），代码保留、不跑端到端 diff。
+SKIP=(
+  "external-plugin # M3 external-plugin frozen, see doc/plan/progress.md"
+)
 
 if [[ $# -gt 0 ]]; then
   FIXTURES=("$@")

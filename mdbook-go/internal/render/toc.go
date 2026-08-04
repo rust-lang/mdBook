@@ -74,6 +74,8 @@ func tocHelper(noSectionLabel bool) hbs.BlockHelper {
 			path, hasPath := item["path"]
 			if hasPath && path != "" {
 				out.WriteString(`<a href="`)
+				// Rust's TOC omits any leading `./` on chapter hrefs; align.
+				path = strings.TrimPrefix(path, "./")
 				out.WriteString(utils.ToURLPath(withHTMLExtension(path)))
 				if iframe {
 					out.WriteString(`" target="_parent">`)

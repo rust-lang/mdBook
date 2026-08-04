@@ -135,7 +135,10 @@ func Parse(source string) (*Summary, error) {
 		if m := listLinkRe.FindStringSubmatch(raw); m != nil {
 			inNumbered = true
 			level := len(m[1])
-			link := &Link{Name: m[2], Location: m[3], Level: level}
+			// Strip leading "./" so chapter Path stays "comment-in-list.md" rather
+			// than "./comment-in-list.md" — matches Rust's SUMMARY parser.
+			location := strings.TrimPrefix(m[3], "./")
+			link := &Link{Name: m[2], Location: location, Level: level}
 
 			// Close every open chapter indented at least as far as this one,
 			// then attach to whatever remains open.
@@ -154,7 +157,7 @@ func Parse(source string) (*Summary, error) {
 
 		if m := bareLinkRe.FindStringSubmatch(raw); m != nil {
 			stack = nil
-			item := SummaryItem{Link: &Link{Name: m[1], Location: m[2], Level: leadingSpaces(raw)}}
+			item := SummaryItem{Link: &Link{Name: m[1], Location: strings.TrimPrefix(m[2], "./"), Level: leadingSpaces(raw)}}
 			if inNumbered {
 				sum.SuffixChapters = append(sum.SuffixChapters, item)
 			} else {

@@ -32,7 +32,8 @@ func (LinkPreprocessor) Name() string { return "links" }
 
 // Run applies the link preprocessor to every chapter in the book.
 func (p LinkPreprocessor) Run(ctx *PreprocessorContext, b *book.Book) (*book.Book, error) {
-	srcDir := filepath.Join(ctx.Root, ctx.Config.Book.Src)
+	// ctx.Config.Book.Src is already absolute after config.SetSourceDir.
+	srcDir := ctx.Config.Book.Src
 	b.Iter(func(ch *book.Chapter) bool {
 		if ch.IsDraft() {
 			return true
@@ -120,14 +121,6 @@ type linkKind interface {
 // findLinks returns every link-like token in s, in order.
 func findLinks(s string) []link {
 	var out []link
-	for _, m := range linkRegex.FindAllStringSubmatch(s, -1) {
-		loc := linkRegex.FindStringSubmatchIndex(s[len(out)+0:]) // not used
-		_ = loc
-		// FindStringSubmatchIndex can't be combined with FindAllStringSubmatch;
-		// use FindAllStringSubmatchIndex instead.
-		_ = m
-		break
-	}
 	all := linkRegex.FindAllStringSubmatchIndex(s, -1)
 	matches := linkRegex.FindAllStringSubmatch(s, -1)
 	for i, m := range matches {
@@ -149,7 +142,7 @@ func findLinks(s string) []link {
 // turns on dot-matches-newline and `(?x)` allows insignificant whitespace.
 // Both are needed because mdBook's link directives can span multiple lines
 // when users wrap the path in their own formatting.
-var linkRegex = regexp.MustCompile(`(?s)\Q{{\E\s*\n\#([A-Za-z0-9_]+)\s+([^}]+)\Q}}\E`)
+var linkRegex = regexp.MustCompile(`(?s)\Q{{\E\s*\#([A-Za-z0-9_]+)\s+([^}]+)\Q}}\E`)
 
 func linkFromMatch(s string, m []string) (link, bool) {
 	if len(m) < 3 {
@@ -356,12 +349,16 @@ func applyRange(lines []string, r lineRange) []string {
 
 func applyRangeIdx(lines []string, r lineRange) []int {
 	if r.anchor != nil {
-		// Anchor mode: lines between two lines that match the anchor.
+		// Anchor mode: lines between `ANCHOR: <name>` and `ANCHOR_END: <name>`
+		// markers (matches mdbook-driver's take_anchored_lines). Matching only
+		// on the bare name would also pick up unrelated lines.
+		startPat := "ANCHOR: " + *r.anchor
+		endPat := "ANCHOR_END: " + *r.anchor
 		start, end := -1, -1
 		for i, line := range lines {
-			if start < 0 && strings.Contains(line, *r.anchor) {
-				start = i
-			} else if start >= 0 && strings.Contains(line, *r.anchor) {
+			if start < 0 && strings.Contains(line, startPat) {
+				start = i + 1
+			} else if start >= 0 && strings.Contains(line, endPat) {
 				end = i
 				break
 			}

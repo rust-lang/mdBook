@@ -18,6 +18,9 @@ func makeData(ctx *Context, cfg *config.HtmlConfig, th *theme.Theme) map[string]
 	data := map[string]any{}
 
 	data["language"] = ctx.Config.Book.Language
+	if data["language"] == "" {
+		data["language"] = "en"
+	}
 	data["text_direction"] = ctx.Config.Book.RealizedTextDirection()
 	data["book_title"] = ctx.Config.Book.Title
 	data["description"] = ctx.Config.Book.Description

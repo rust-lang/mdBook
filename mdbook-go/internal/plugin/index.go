@@ -20,7 +20,7 @@ func (IndexPreprocessor) Name() string { return "index" }
 
 // Run rewrites every chapter with a README-style path to `index.md`.
 func (p IndexPreprocessor) Run(ctx *PreprocessorContext, b *book.Book) (*book.Book, error) {
-	srcDir := filepath.Join(ctx.Root, ctx.Config.Book.Src)
+	srcDir := ctx.Config.Book.Src
 	b.Iter(func(ch *book.Chapter) bool {
 		if ch.IsDraft() {
 			return true
@@ -41,7 +41,8 @@ func (p IndexPreprocessor) Run(ctx *PreprocessorContext, b *book.Book) (*book.Bo
 				filepath.Base(ch.Path), filepath.Dir(ch.Path), filepath.Base(ch.Path))
 		}
 		ch.Path = indexPath
-		ch.SourcePath = ch.Path
+		// SourcePath intentionally preserved — the edit URL and `git_repository_edit_url`
+		// template need the original README.md filename, not the rewritten index.md.
 		return true
 	})
 	return b, nil

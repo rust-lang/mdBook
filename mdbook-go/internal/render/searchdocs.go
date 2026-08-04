@@ -52,7 +52,7 @@ func chapterSearchEnabled(cfg config.Search, path string) bool {
 
 // indexChapter produces the search documents for a single chapter.
 func indexChapter(cfg config.Search, item *chapterTree) []search.Doc {
-	anchorBase := utils.ToURLPath(item.chapter.HTMLPath())
+	anchorBase := utils.ToURLPath(strings.TrimPrefix(item.chapter.HTMLPath(), "./"))
 	breadcrumbs := append(append([]string{}, item.chapter.ParentNames...), item.chapter.Name)
 
 	var (

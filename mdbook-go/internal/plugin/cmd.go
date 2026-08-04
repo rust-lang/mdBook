@@ -1,5 +1,18 @@
 package plugin
 
+// ⚠️  FROZEN — 外部 preprocessor / renderer 子进程协议实现已冻结 ⚠️
+//
+// 2026-08-04 决策：暂时不做 M3.10 / M3.11 端到端验收。代码保留（含本文件、
+// registry.go::BuildRenderers、fixtures/external-plugin/），不删，未来若有
+// 第三方插件需求再回来补：black-box wire 协议比对 + harness/diff.sh
+// external-plugin 严格模式。
+//
+// 影响范围：
+//   - harness/diff.sh SKIP 列表已加入 external-plugin
+//   - doc/plan/progress.md M3 段落已加 FROZEN 标记
+//   - 内置 links / index 预处理器不受影响（registry.go::BuildPreprocessors
+//     仅在 `UseDefaultPreprocessors=true` 时跑这两条，与本文件无关）
+
 import (
 	"bytes"
 	"encoding/json"
