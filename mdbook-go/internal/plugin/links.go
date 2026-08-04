@@ -87,8 +87,13 @@ func replaceAll(s, baseDir, sourcePath string, depth int, chapterTitle *string) 
 				out.WriteString(newContent)
 			}
 		} else {
+			// Mirrors links.rs: at depth == MAX_LINK_NESTED_DEPTH the Rust
+			// implementation drops the included content entirely and only
+			// logs an error — it does NOT emit the inner `{{#include}}`
+			// directive as literal text. Without this drop the recursive
+			// fixtures (e.g. tests/testsuite/includes/all_includes)
+			// accumulate one extra repetition per level past the limit.
 			fmt.Fprintf(os.Stderr, "links preprocessor: stack depth exceeded in %s (cyclic includes?)\n", sourcePath)
-			out.WriteString(newContent)
 		}
 		lastEnd = link.end
 	}
@@ -311,31 +316,89 @@ func intPtr(n int) *int { return &n }
 
 // apply returns the lines of s that fall within r.
 func (r lineRange) apply(s string) string {
-	lines := strings.Split(s, "\n")
+	lines := splitLinesLikeRust(s)
 	out := applyRange(lines, r)
 	return strings.Join(out, "\n")
 }
 
 // applyRustdoc emits the file with out-of-range lines replaced by `#` so the
 // playground still receives them but the reader only sees the selected
-// portion.
+// portion. Anchor mode mirrors Rust's take_rustdoc_include_anchored_lines:
+// lines outside the anchor block are dropped entirely, and ANCHOR/ANCHOR_END
+// markers themselves are dropped (not emitted with a `# ` prefix).
 func (r lineRange) applyRustdoc(s string) string {
-	lines := strings.Split(s, "\n")
-	selected := applyRangeIdx(lines, r)
-	mask := make([]bool, len(lines))
-	for _, i := range selected {
-		mask[i] = true
-	}
-	for i, line := range lines {
-		if !mask[i] {
-			if strings.HasPrefix(line, "#") {
-				lines[i] = "#" + line
-			} else {
-				lines[i] = "# " + line
+	lines := splitLinesLikeRust(s)
+	if r.anchor == nil {
+		selected := applyRangeIdx(lines, r)
+		mask := make([]bool, len(lines))
+		for _, i := range selected {
+			mask[i] = true
+		}
+		for i, line := range lines {
+			if !mask[i] {
+				if strings.HasPrefix(line, "#") {
+					lines[i] = "#" + line
+				} else {
+					lines[i] = "# " + line
+				}
 			}
 		}
+		return strings.Join(lines, "\n")
 	}
-	return strings.Join(lines, "\n")
+	// Anchor mode: walk the file emulating Rust's
+// take_rustdoc_include_anchored_lines (take_lines.rs:81-105). The
+// behaviour has three distinct cases:
+//
+//   - Outside the matching anchor block: ANCHOR_END lines are dropped
+//     (matches the original file's trailing marker), every other line
+//     is emitted with a `# ` prefix so it renders as <span
+//     class="boring">. ANCHOR_START lines (any name) are NOT picked up
+//     here because they trigger the `else if let Some(cap) =
+//     ANCHOR_START.captures(l)` branch in Rust and are dropped.
+//   - Inside the block: ANCHOR_END lines drop and transition out,
+//     ANCHOR_START lines (any name) drop, and ordinary lines are
+//     emitted as-is (no `# ` prefix) so they become the visible
+//     portion of the playground snippet.
+	startPat := "ANCHOR: " + *r.anchor
+	endPat := "ANCHOR_END: " + *r.anchor
+	var out strings.Builder
+	within := false
+	for _, line := range lines {
+		if within {
+			if strings.Contains(line, endPat) {
+				within = false
+				continue
+			}
+			if strings.Contains(line, "ANCHOR:") {
+				// Drop orphan ANCHOR_START lines inside the block.
+				continue
+			}
+			out.WriteString(line)
+			out.WriteString("\n")
+			continue
+		}
+		if strings.Contains(line, startPat) {
+			within = true
+			continue
+		}
+		// Outside the block: drop any ANCHOR/ANCHOR_END markers — Rust's
+		// `else if let Some(cap) = ANCHOR_START.captures(l)` branch
+		// matches any line containing `ANCHOR:`, and the second `else if
+		// !ANCHOR_END.is_match(l)` drops ANCHOR_END lines. Without this
+		// an unrelated `// ANCHOR: unused-anchor-that-should-be-stripped`
+		// would surface as a `# // ANCHOR: ...` boring span.
+		if strings.Contains(line, "ANCHOR:") || strings.Contains(line, "ANCHOR_END:") {
+			continue
+		}
+		out.WriteString("# ")
+		out.WriteString(line)
+		out.WriteString("\n")
+	}
+	result := out.String()
+	if len(result) > 0 && result[len(result)-1] == '\n' {
+		result = result[:len(result)-1]
+	}
+	return result
 }
 
 func applyRange(lines []string, r lineRange) []string {
@@ -350,26 +413,33 @@ func applyRange(lines []string, r lineRange) []string {
 func applyRangeIdx(lines []string, r lineRange) []int {
 	if r.anchor != nil {
 		// Anchor mode: lines between `ANCHOR: <name>` and `ANCHOR_END: <name>`
-		// markers (matches mdbook-driver's take_anchored_lines). Matching only
-		// on the bare name would also pick up unrelated lines.
+		// markers (matches mdbook-driver's take_anchored_lines). The Rust
+		// reference impl drops lines that contain any `ANCHOR:` directive
+		// once inside the block — including orphan `// ANCHOR: foo` lines
+		// for an unrelated anchor name. See take_lines.rs:30-44.
 		startPat := "ANCHOR: " + *r.anchor
 		endPat := "ANCHOR_END: " + *r.anchor
-		start, end := -1, -1
+		var retained []int
+		anchorFound := false
 		for i, line := range lines {
-			if start < 0 && strings.Contains(line, startPat) {
-				start = i + 1
-			} else if start >= 0 && strings.Contains(line, endPat) {
-				end = i
-				break
+			if anchorFound {
+				if strings.Contains(line, endPat) {
+					return retained
+				}
+				// Drop any line containing an ANCHOR: directive (Rust uses
+				// the full ANCHOR_START regex here; strings.Contains is a
+				// close approximation that covers every mdBook fixture).
+				if strings.Contains(line, "ANCHOR:") {
+					continue
+				}
+				retained = append(retained, i)
+				continue
+			}
+			if strings.Contains(line, startPat) {
+				anchorFound = true
 			}
 		}
-		if start < 0 {
-			return nil
-		}
-		if end < 0 {
-			end = len(lines)
-		}
-		return rangeSlice(start, end)
+		return retained
 	}
 	start := 0
 	if r.start != nil {
@@ -397,4 +467,17 @@ func rangeSlice(start, end int) []int {
 		out = append(out, i)
 	}
 	return out
+}
+
+// splitLinesLikeRust splits s on '\n' the way Rust's str::lines() does: it
+// drops a single trailing empty entry so a file ending in '\n' yields N
+// lines instead of N+1. Apply/applyRustdoc need this parity because the
+// final empty line, if kept, would surface as a stray
+// `<span class="boring"></span>` in the rendered HTML.
+func splitLinesLikeRust(s string) []string {
+	lines := strings.Split(s, "\n")
+	if len(lines) > 0 && lines[len(lines)-1] == "" {
+		lines = lines[:len(lines)-1]
+	}
+	return lines
 }

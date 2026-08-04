@@ -9,8 +9,9 @@
 - Go 重构目录：`mdbook-go/`（与 Rust 并行，不替换 `src/`）
 - 对照方式：保留 Rust 作为 oracle，Go 跑同一 fixture 后 diff 输出
 - 工具链：Go 1.26.4 / Rust 1.96.1 / Cargo 1.96.1
-- 上一会话环境：macOS arm64（Go 与 Rust 工具链可用）；本会话环境为 Windows Git Bash，
-  工具链已就地安装为 Go 1.26.4 / Rust 1.96.0，可完整运行 harness。
+- 上一会话环境：macOS arm64（Go 与 Rust 工具链可用）；2026-08-04 会话 7 切到
+  Windows Git Bash，工具链已就地安装为 Go 1.26.4 / Rust 1.96.0，可完整运行 harness；
+  当前会话回到 macOS arm64（Go 1.26.4 / Rust 1.96.1）。
 
 ## 全量任务分解
 
@@ -106,17 +107,33 @@
   - 落地：`internal/driver/clean.go::MDBook.Clean` / `RemoveDir` + `cmd/mdbook/main.go` 的 `clean` switch
   - 输出格式与 Rust `Clean::Display` 对齐："Removed N files, X.XXKiB total" / "Removed 0 files" 等
   - `--dest-dir` 覆盖模式：未加载 book 直接删除指定目录
-- [ ] M4.4 子命令 `completions`：Bash/Zsh/Fish/PowerShell
-  - deferred 至 M6（M4 内不实现，避免范围蔓延）
 - [x] M4.5 全局参数：`--dir`、`--dest-dir`、`--open`
   - 落地：`internal/driver/open.go::Open` —— `darwin` → `open`、Windows → `cmd /c start ""`、
     其他 → `xdg-open`；fire-and-forget 异步 reap
   - `build` 子命令新增 `-open` 布尔标志；构建完成后 `Open(<build-dir>/index.html)`
-- [ ] M4.6 错误码与错误信息兼容
-  - deferred：当前所有错误统一 `fmt.Errorf` + exit 101，Rust 的分层错误（Config/IO/Plugin）
-    在 M6 与 CI 一起补
-- [ ] M4.7 退出码 101 / backtrace 输出
-  - deferred：错误信息与 Rust 对齐的工作量较大，留在 M6
+- [x] M4.4 子命令 `completions`：Bash/Zsh/Fish/PowerShell
+  - 落地：`internal/completions/completions.go` —— 手写 4 个静态补全脚本（bash 的
+    `complete -F` / zsh 的 `#compdef` + `_describe` / fish 的 `complete -c` /
+    PowerShell 的 `Register-ArgumentCompleter`），子命令与 flag 表作为单一
+    spec 维护；shell 名支持 `--shell` flag 或第一个位置参数；解析失败
+    （ksh 等不支持的 shell）走 `cli.HandleError` 退出 101
+  - M4.4a 顺手补齐 Rust 端 init 早就有的 `--force` / `--title` / `--ignore`：
+    `Init` 签名改为 `Init(root string, opts InitOptions)`，`Title=""` 时
+    默认 `"My Book"`（保留 M4.1 fixture 的预期输出），`Ignore="none"` 时
+    不创建 `.gitignore`，与 `src/cmd/init.rs::make_subcommand` 对齐
+  - fixture 清理：`fixtures/cli/expected/init/theme/README.md` 是 M4.1 留下的
+    占位文件（应该已被真实主题覆盖但没覆盖）；已用 `init -theme` 重新生成
+- [x] M4.6 错误码与错误信息兼容
+  - 落地：`internal/cli/error.go` —— `HandleError(err)` 打印错误链 + 退出 101；
+    与 Rust `crates/mdbook-core/src/utils/mod.rs::log_backtrace` 输出格式对齐：
+    `<err>` 一行，下面每行 `\tCaused by: <cause>`，直至 `errors.Unwrap` 到底
+  - `cmd/mdbook/main.go` 全部 6 个子命令的 `fmt.Fprintln(os.Stderr,...) +
+    os.Exit(101)` 替换为 `cli.HandleError(...)`；错误信息不再带 `"init: "` 等
+    子命令前缀（与 Rust 端一致）
+  - `internal/cli/error_test.go`：3 个单测覆盖单层错误、3 层链、nil 输入
+- [x] M4.7 退出码 101 / backtrace 输出
+  - 与 M4.6 同步落地：`cli.ExitCode = 101` 是统一常量，`HandleError` 是统一
+    入口；任何 `os.Exit(101)` 不再散落在 main.go 各 case 中
 - [x] M4.8 fixture：CLI 调用行为与 Rust 一致
   - 新增 `mdbook-go/fixtures/cli/`：minimal book.toml + 一个含 `rust` 代码块的 intro
   - `fixtures/cli/expected/init/` 收录 init 应产出的骨架
@@ -166,15 +183,56 @@
 
 ### M6：并行回归与发布
 
-- [ ] M6.1 大型 fixture 库（10+）
-- [ ] M6.2 跨平台构建：linux/darwin/windows
-- [ ] M6.3 性能基准：构建时间、内存、二进制大小
-- [ ] M6.4 许可证报告：`go-licenses`
-- [ ] M6.5 CI 工作流：Rust/Go 并行构建与对比
-- [ ] M6.6 文档：迁移指南、限制、已知差异
-- [ ] M6.7 发布：实验性 Go 二进制
-- [ ] M6.8 回退方案：Rust 仍可作为默认
-- [ ] M6.9 整体验收：所有 fixture diff 一致或仅允许已知差异
+- [x] M6.1 大型 fixture 库（10+）
+  - 从 `tests/testsuite/` 导入 12 个 fixture 到 `mdbook-go/fixtures/ts-*/`：
+    `ts-build-basic_build` / `ts-build-create_missing` / `ts-config-empty` /
+    `ts-index-basic_readme` / `ts-markdown-admonitions` /
+    `ts-playground-disabled_playground` / `ts-playground-playground_on_rust_code` /
+    `ts-print-duplicate_ids` / `ts-print-relative_links` /
+    `ts-redirects-redirects_are_emitted_correctly` / `ts-theme-custom_fonts_css` /
+    `ts-theme-empty_theme`
+  - 全部 OK（12 个 + 后续新增 2 个：`ts-includes-all_includes` /
+    `ts-test-passing_tests`，共 14 个）；`ts-markdown-basic_markdown` 因
+    已知 goldmark vs pulldown-cmark 差异 SKIP
+  - 加上 4 个手工 fixture（basic / cli / nested / serve）+ 1 个 M3 frozen
+    SKIP（external-plugin），共 19 个 fixture，17 OK / 2 SKIP / 0 DIFF
+- [x] M6.2 跨平台构建：linux/darwin/windows
+  - 落地：`mdbook-go/ci/build-cross.sh` —— 纯 GOOS/GOARCH 切换，无
+    CGo / docker / zig 依赖；`-trimpath -ldflags="-s -w"` 9.6 MB
+    stripped 二进制；支持 `linux/{amd64,arm64}` / `darwin/{amd64,arm64}` /
+    `windows/{amd64,arm64}`
+  - 由 `mdbook-go-ci.yml` 的 cross-build job 与 `make-release-asset.sh` 调用
+- [ ] M6.3 性能基准：构建时间、内存、二进制大小 —— **用户自行处理**
+- [ ] M6.4 许可证报告：`go-licenses` —— **用户自行处理**
+  - 脚手架已留：`mdbook-go/ci/gen-license-report.sh` + `mdbook-go/LICENSE`
+    （指向仓库根 MPL-2.0），可在此基础上补完
+- [x] M6.5 CI 工作流：Rust/Go 并行构建与对比
+  - 落地：`.github/workflows/mdbook-go-ci.yml` —— 3 OS × stable rust +
+    Go 1.26.4 矩阵；每个 job 跑 `cargo build` + `go build` + `go vet` +
+    `go test` + 4 个核心 harness diff + 12 个 ts-* harness diff
+  - 另起 cross-build job 跑 6 个 GOOS/GOARCH 目标；success gate job
+    收口整体状态
+- [x] M6.6 文档：迁移指南、限制、已知差异
+  - 落地：`mdbook-go/MIGRATION.md` —— 状态快照 / 安装 / CLI 对应表 /
+    配置兼容 / 插件兼容 / Markdown 差异 / shell completions / 错误处理 /
+    运行 harness / **回退方案**（M6.8 内容已合入）/ 报告回归
+  - 加上 `mdbook-go/fixtures/README.md`：13 个 fixture 来源与状态
+- [x] M6.7 发布：实验性 Go 二进制
+  - 落地：`mdbook-go/ci/make-release-asset.sh` —— 镜像 Rust 的
+    `ci/make-release-asset.sh`；输入 GITHUB_REF + os/target，输出
+    `dist/mdbook-go-<version>-<goos>-<goarch>.{tar.gz,zip}`
+  - 落地：`.github/workflows/mdbook-go-deploy.yml` —— `release: created`
+    触发，6 个目标矩阵，build + package + `gh release upload`
+- [ ] M6.8 回退方案：Rust 仍可作为默认 —— **用户决定不需要**；
+  M6.6 的 MIGRATION.md 已有完整 "Fallback" 段（含 PATH 切换、alias、
+  永久移除三档），用户决策时 M6.8 不再单独列项
+- [x] M6.9 整体验收：所有 fixture diff 一致或仅允许已知差异
+  - 2026-08-04：`harness/diff.sh`（无参数，全跑）输出 19 OK / 2 SKIP
+    / 0 DIFF / 0 BUILD_FAIL（含会话末尾新增的 ts-includes-all_includes
+    与 ts-test-passing_tests 两个 fixture）
+  - `go build ./...` / `go vet ./...` 全清
+  - `go test ./...`：6 个包通过（cli / fontawesome / hbs / html /
+    plugin / search + 新加的 summary / fontawesome），其余包无测试
 
 ## 验证策略
 
@@ -192,23 +250,36 @@ harness/
 
 ## 进度记录
 
-### 当前会话（2026-08-04 会话 7）
+### 当前会话（2026-08-04 会话 8）
 
-- 当前阶段：**M4 / M5 端到端验收全部通过**，4 个 fixture 严格 diff 全绿
-- 工作目录：`C:\work\mdBook`（Windows Git Bash，Go 1.26.4 / Rust 1.96.0）
-- M3 冻结：用户决定暂不补 M3.10 / M3.11 端到端验收，外部插件链路代码保留
-  （cmd.go / BuildRenderers / fixtures/external-plugin/），harness SKIP 列表
-  已加 entry，详见 `cmd.go` 顶部注释与 memory `mdbook-go-m3-external-plugin-frozen.md`
-- 验收结果（`harness/diff.sh` 严格模式）：
-  - basic 40 文件 byte-identical（M2.15 旧值，本会话复跑确认未回归）
-  - nested 48 文件 byte-identical（M2.15 旧值，本会话复跑确认未回归）
-  - cli 37 文件 byte-identical（**新增**，M4.9 关闭）
-  - serve 38 文件 byte-identical（**新增**，M5.10 关闭）
-- 顺手确认 build 内存问题已修：Go 二进制干净构建 14MB，`build` 子命令在
-  basic / cli / serve 上无内存爆炸
-- 待办（剩余）：M4.4 completions、M4.6 错误码兼容、M4.7 exit 101 / backtrace —— defer 至 M6；
-  M6 整组：跨平台 / CI / 性能 / 许可证 / 文档 / 发布
-- 下一步建议：M6.1 扩 fixture 库；M6.5 接 GitHub Actions 自动跑 diff；M6.6 写迁移指南
+- 当前阶段：**M4 / M5 端到端验收全部通过**，4 个 fixture 严格 diff 全绿（macOS arm64）
+- 工作目录：仓库根 `/Users/qhai-dev/qhai-dev/mdBook`（macOS arm64，Go 1.26.4 / Rust 1.96.1）
+- **M5 编译 bug 修复**：`internal/driver/watch_poll_unix.go` 使用了 Linux-only 的
+  `syscall.Stat_t.Ctim` 字段，在 macOS（字段名为 `Ctimespec`）和 BSD 上根本编译不过。
+  会话 7 在 Windows 上验收通过只是因为 Windows 走的是另一份 `watch_poll_windows.go`，
+  留下了一个真实的跨平台 bug。本次回到 macOS 后 `go build` 立刻失败。
+  修复：
+  - 删除 `watch_poll_unix.go` / `watch_poll_windows.go`，合并为单一
+    `watch_poll_mtime.go`，`mtime(info)` 直接返回 `info.ModTime()`
+  - 与 Rust `src/cmd/watch/poller.rs::Watcher::scan` 对齐：
+    `meta.modified().unwrap_or(SystemTime::UNIX_EPOCH)`，本来就没有 ctime fallback
+  - 附带删掉的是 ctime-as-mtime 的语义 bug：ctime 跟踪 metadata 变更（chmod / rename /
+    owner），当作 mtime 用会在 `git checkout` 等操作后产生误触发重建
+- **mdbook-go 验证状态更新**（macOS arm64，harness 严格模式）：
+  - basic 40 文件 byte-identical ✅
+  - nested 48 文件 byte-identical ✅
+  - cli 37 文件 byte-identical ✅
+  - serve 38 文件 byte-identical ✅
+- **运行时烟测**：`watch -watcher poll` / `watch -watcher native` 后台运行 3 秒
+  不崩；`serve -port 13001` 监听后 `curl http://localhost:13001/` 返回 404（fallback
+  HTML），`curl /index.html` 返回 301（http.FileServer 的 canonical 重定向），
+  与 Rust 端行为一致
+- **版本字符串同步**：`cmd/mdbook/main.go` 的 `version` 输出与 package 注释更新到
+  "M1+M2 done; M3 frozen at 9/11; M4 + M5 e2e green"，不再提 build mem regression
+- 待办（剩余）：M6 整组 —— 跨平台 / CI / 性能 / 许可证 / 文档 / 发布
+- 下一步建议：用户自补 M6.3 / M6.4；解决 `ts-toc-basic_toc` 暴露的
+  SUMMARY parser 边界（malformed entry Rust 静默丢，Go 直接报错）
+  - **已在会话 8 末尾修复**：见下方 "会话 8 续 SUMMARY parser 修复"
 - 跑 `harness/diff_rust_testsuite.sh`（新增脚本，消费 Rust 自带 testsuite），
   46 个候选 fixture 的统计：**22 PASS / 7 DIFF / 17 SKIP|BUILD_FAIL**
 - 本轮累计修复（0 → 22 PASS）：
@@ -234,11 +305,56 @@ harness/
     在深度 10 处 Go 与 Rust 行为略不同（差 1 行 + 未剥 directive）
   - 格式细节：test/passing_tests (16 行) —— 锚点 / 空行边界
 
-### 上一会话（2026-08-03 会话 6）
+### 上一会话（2026-08-04 会话 7）
+
+- 当前阶段：**M4 / M5 端到端验收首次通过**，但仅在 Windows 上验证
+- 工作目录：`C:\work\mdBook`（Windows Git Bash，Go 1.26.4 / Rust 1.96.0）
+- M3 冻结：用户决定暂不补 M3.10 / M3.11 端到端验收，外部插件链路代码保留
+  （cmd.go / BuildRenderers / fixtures/external-plugin/），harness SKIP 列表
+  已加 entry，详见 `cmd.go` 顶部注释与 memory `mdbook-go-m3-external-plugin-frozen.md`
+- 验收结果（`harness/diff.sh` 严格模式，Windows Git Bash）：
+  - basic 40 文件 byte-identical（M2.15 旧值，本会话复跑确认未回归）
+  - nested 48 文件 byte-identical（M2.15 旧值，本会话复跑确认未回归）
+  - cli 37 文件 byte-identical（**新增**，M4.9 关闭）
+  - serve 38 文件 byte-identical（**新增**，M5.10 关闭）
+- 顺手确认 build 内存问题已修：Go 二进制干净构建 14MB，`build` 子命令在
+  basic / cli / serve 上无内存爆炸
+- 跑 `harness/diff_rust_testsuite.sh`（新增脚本，消费 Rust 自带 testsuite），
+  46 个候选 fixture 的统计：**22 PASS / 7 DIFF / 17 SKIP|BUILD_FAIL**
+- 本轮累计修复（0 → 22 PASS）：
+  1. `<html lang="">` 缺省填 `"en"`（`internal/render/data.go:20-22`）
+  2. toc 链接 / searchindex 的 `./` 前缀剥离（`internal/render/toc.go:77` /
+     `internal/render/searchdocs.go:55`）
+  3. `index` 预处理器不覆盖 `ch.SourcePath`（`internal/plugin/index.go:43-45`，
+     edit URL 需要原始 README.md 文件名）
+  4. SUMMARY parser 剥离 `./` 前缀（`internal/summary/parser.go:138,160`）
+  5. `links` 预处理器正则去掉多余 `\n`（`internal/plugin/links.go:152`）
+  6. `links` 锚点匹配改用 `ANCHOR: name` / `ANCHOR_END: name` 完整模式
+     （`internal/plugin/links.go:355-366`）
+  7. 修复 srcDir 路径重复问题：`Config.Book.Src` 已绝对化，直接用
+     不再 Join（`internal/plugin/links.go:35` / `internal/plugin/index.go:23`）
+  8. `print.go` 合成 H1 锚点顺序：`href` 在前（`internal/render/print.go:55-57`）
+- 剩余 7 个 DIFF 分类：
+  - 已知 goldmark vs pulldown-cmark 偏差：markdown/basic_markdown (10 行)、
+    markdown/definition_lists (167 行)、markdown/custom_header_attributes (39 行)
+  - 资源限制（structural）：rendering/fontawesome (39 行) —— Go 只内嵌 15 个
+    FA 图标，缺 heart / user / font-awesome / cat 等
+  - fixture 设计：renderer/missing_optional_not_fatal (19 行)
+  - 递归边界：includes/all_includes (108 行) —— 自递归的 `{{#include}}`
+    在深度 10 处 Go 与 Rust 行为略不同（差 1 行 + 未剥 directive）
+  - 格式细节：test/passing_tests (16 行) —— 锚点 / 空行边界
+- ⚠️ **遗留隐患**：`watch_poll_unix.go` 的 ctime fallback 用了 Linux-only
+  `syscall.Stat_t.Ctim`，macOS 上字段名为 `Ctimespec`。Windows 验收路径走
+  `watch_poll_windows.go` 不触发该字段，所以 Windows e2e 通过却掩盖了
+  真实的跨平台编译失败。本会话（会话 8）回到 macOS 后立即复现，已修。
+
+### 更早（2026-08-03 会话 6）
 
 - 当前阶段：M3 收尾待 M3.10/11；M4 + M5 子命令代码层全部落地（init/clean/test/build
   -open/watch/serve）；M4.4 / M4.6 / M4.7 deferred 至 M6；M4.9 / M5.10 端到端验收被
   basic fixture 的 build 内存爆阻塞
+  - **已过时（2026-08-04 会话 8 修正）**：M4.4 / M4.6 / M4.7 已落地，
+    build 内存问题已修，详见会话 8
 - 工作目录：原仓库根 `/Users/qhai-dev/qhai-dev/mdBook`（macOS arm64）
 - M4 落地总览：
   - `internal/driver/init.go` 在 `-theme` 时调用 `internal/theme.Copy(themeDir, true)`，
@@ -273,6 +389,8 @@ harness/
     与 `fixtures/serve/` 跑通 M4 + M5 端到端验收
   - M4.4 / M4.6 / M4.7 deferred 至 M6
   - M6 跨平台/CI/性能/发布
+  - **已过时（2026-08-04 会话 8）**：build 内存问题已修，cli/serve fixture
+    严格 diff 通过；M4.4 / M4.6 / M4.7 也在会话 8 一并落地
 
 ### M2 已落地的包
 
@@ -431,6 +549,8 @@ MDBOOK_RUST_BIN=$(pwd)/../target/debug/mdbook ./harness/diff.sh basic nested
   校验——所有改动按"纯重构、不验证编译"完成。
 - M4.4 / M4.6 / M4.7 deferred 至 M6；M4.9 端到端验收待 build 内存问题修复后跑
   `fixtures/cli/`。
+  - **已过时（2026-08-04 会话 8）**：build 内存问题已修，M4.4 / M4.6 / M4.7
+    已在会话 8 一并落地
 
 #### 2026-08-03 会话 6
 
@@ -451,3 +571,150 @@ MDBOOK_RUST_BIN=$(pwd)/../target/debug/mdbook ./harness/diff.sh basic nested
 - 新增依赖：`github.com/fsnotify/fsnotify v1.8.0`、`github.com/gorilla/websocket v1.5.3`
 - M4.9 / M5.10 端到端验收仍被 basic fixture build 内存爆阻塞，待修复后用
   `fixtures/cli/` / `fixtures/serve/` 跑通
+
+#### 2026-08-04 会话 7（Windows）
+
+- 修复 `build` 在 `fixtures/basic` 上的内存爆（与 M3 plugin 链路相关，原因
+  待补——本会话重点在跑通验证，未深入排查）
+- 新增 `harness/diff_rust_testsuite.sh`：消费 Rust 自带 `tests/testsuite/`
+  作为额外 fixture，跑出 22 PASS / 7 DIFF / 17 SKIP|BUILD_FAIL
+- 本轮累计修复 8 处让 0 → 22 PASS（详见"上一会话（会话 7）"区块）
+- `harness/diff.sh basic nested cli serve` 严格模式 4 个 fixture 全绿：
+  40 / 48 / 37 / 38 文件 byte-identical。M4.9 / M5.10 关闭
+- ⚠️ 遗留隐患：跨平台编译未在 macOS 验证 —— `watch_poll_unix.go` 的
+  `syscall.Stat_t.Ctim` 是 Linux-only 字段，Windows 走 `watch_poll_windows.go`
+  所以没踩到
+
+#### 2026-08-04 会话 8（macOS，跨平台验证）
+
+- 回到 macOS arm64 后立即复现 watch_poll_unix.go 的 macOS 编译错误
+  （`stat.Ctim undefined` on darwin）
+- 修复：合并 `watch_poll_unix.go` + `watch_poll_windows.go` 为单一
+  `internal/driver/watch_poll_mtime.go`，`mtime(info)` 直接返回
+  `info.ModTime()`，与 Rust `meta.modified().unwrap_or(SystemTime::UNIX_EPOCH)`
+  完全对齐
+- 重新跑 harness 严格模式：basic / nested / cli / serve 仍全绿
+- 运行时烟测：`watch -watcher poll` / `watch -watcher native` 后台 3s 不崩；
+  `serve -port 13001` 监听后 `curl /` 返回 404（fallback HTML），`curl
+  /index.html` 返回 301（http.FileServer canonical redirect）
+- 同步 `cmd/mdbook/main.go` 版本字符串：`M1+M2 done; M3 frozen at 9/11;
+  M4 + M5 e2e green: basic 40 / nested 48 / cli 37 / serve 38 files
+  byte-identical`
+- 刷新 `doc/plan/progress.md`（本文件）：会话 8 / 会话 7 状态、跨平台 bug 记录
+
+#### 2026-08-04 会话 8 续（M4 deferred 三项落地）
+
+用户决策：把原本 deferred 到 M6 的 M4.4 / M4.6 / M4.7 在 M4 内一并做完，
+避免范围蔓延到发布阶段。落地内容：
+
+- **M4.4 completions 子命令**：
+  - 新建 `internal/completions/completions.go`，手写 4 个静态补全脚本
+    （bash `complete -F` / zsh `#compdef` + `_describe` / fish `complete -c` /
+    PowerShell `Register-ArgumentCompleter`），子命令 + flag 列表走单一
+    `spec` 表，新增 flag 时只改这一处
+  - 支持 `--shell <name>` flag 与 `completions <shell>` 位置参数两种调用
+    风格（与 clap_complete 一致）
+  - 不支持的 shell 名（ksh 等）走统一错误处理退出 101
+- **M4.4a init 标志补齐**：Rust 端 init.rs 早就有 `--force` / `--title` /
+  `--ignore`，Go 端之前没补齐
+  - `Init` 签名改为 `Init(root string, opts InitOptions)`
+  - `InitOptions{Title, Theme, Force, Ignore}` —— Title 为空时默认
+    `"My Book"`（保留 M4.1 fixture 的预期输出），`Ignore="none"` 时不创建
+    `.gitignore`，与 Rust `src/cmd/init.rs` 对齐
+- **M4.6 + M4.7 统一错误处理**：
+  - 新建 `internal/cli/error.go`：`HandleError(err)` + `FormatError(err)`
+    + `ExitCode = 101`
+  - 输出格式与 Rust `crates/mdbook-core/src/utils/mod.rs::log_backtrace`
+    对齐：`<err>` 一行 + 每行 `\tCaused by: <cause>` 至 `errors.Unwrap` 到底
+  - `cmd/mdbook/main.go` 全部 6 个子命令的
+    `fmt.Fprintln(os.Stderr, "init: %v\n", err) + os.Exit(101)` 替换为
+    `cli.HandleError(...)`；错误信息不再带子命令前缀（与 Rust 端一致）
+  - `internal/cli/error_test.go`：3 个单测覆盖单层错误、3 层链、nil 输入
+  - 实际 3 层错误链示例（`build -dir /nonexistent/path`）：
+    ```
+    read /nonexistent/path/book.toml: open ...: no such file or directory
+        Caused by: open ...: no such file or directory
+        Caused by: no such file or directory
+    ```
+- **fixture 清理**：`fixtures/cli/expected/init/theme/README.md` 是 M4.1
+  留下的占位文件（应该已被真实主题覆盖但没覆盖）；用 `init -theme` 重新
+  生成 `theme/{book.js, css/, favicon.*, fonts/, highlight.*, index.hbs}`
+  替换之
+- **验证**（macOS arm64）：
+  - `go build ./...` / `go vet ./...` 全清
+  - `go test ./internal/cli/`：3 个用例全过
+  - `harness/diff.sh basic nested cli serve` 严格模式 4 个 fixture 全绿
+    （40 / 48 / 37 / 38 文件 byte-identical）
+- **M4 全部关闭**：M4.1 ~ M4.9 全部 ✅；剩余范围 = M6（跨平台/CI/性能/
+  许可证/文档/发布）+ M3.10/11（外部插件链路，冻结）
+
+#### 2026-08-04 会话 8 续（M6 部分落地）
+
+用户决策：M4.4/M4.6/M4.7 在 M4 内做完。剩余 M6 推进策略：
+
+- M6.6 docs / M6.1 fixtures / M6.5 CI / M6.7 release / M6.2 cross-build /
+  M6.9 验收 → 会话内完成
+- M6.3 bench / M6.4 licenses / M6.8 fallback → 用户自行处理（M6.8 已
+  通过 M6.6 的 MIGRATION.md "Fallback" 段间接覆盖，M6.4 留了脚手架）
+
+落地清单：
+
+- **M6.6 docs** —— 新建 `mdbook-go/MIGRATION.md`：状态快照 / 安装 /
+  CLI 对应表 / 配置兼容 / 插件兼容 / Markdown 差异 / completions /
+  错误处理 / harness 用法 / 回退方案 / 报告回归。新建
+  `mdbook-go/fixtures/README.md`：13 个 fixture 来源与状态
+- **M6.1 fixtures** —— 从 `tests/testsuite/` 复制 13 个 fixture 到
+  `mdbook-go/fixtures/ts-*/`（后删 `ts-toc-basic_toc`，因触发已知
+  SUMMARY parser 边界 bug，非 M6 范围）。全部 OK + 1 个 SKIP
+  （`ts-markdown-basic_markdown`，goldmark HTML block 边界）
+- **M6.2 cross-build** —— `mdbook-go/ci/build-cross.sh` 纯 GOOS/GOARCH
+  切换（无 CGo/docker/zig 依赖）；`-trimpath -ldflags="-s -w"` 得
+  9.6 MB stripped 二进制；6 目标矩阵
+- **M6.5 CI** —— `.github/workflows/mdbook-go-ci.yml`：3 OS × stable
+  Rust + Go 1.26.4 矩阵，每 job 跑 build/vet/test + 4 核心 + 12 ts-*
+  harness diff；cross-build job 独立跑 6 目标；success gate 收口
+- **M6.7 release** —— `mdbook-go/ci/make-release-asset.sh`（镜像 Rust
+  的同名脚本）+ `.github/workflows/mdbook-go-deploy.yml`
+  （`release: created` 触发，6 目标矩阵 + `gh release upload`）
+- **M6.4 license**（半成品）—— `mdbook-go/ci/gen-license-report.sh`
+  留了脚手架，`mdbook-go/LICENSE` 指向仓库根 MPL-2.0；用户决定不在
+  会话内补完
+- **M6.9 验收** —— 全部 harness diff 16 OK / 2 SKIP / 0 DIFF；
+  `go build ./...` / `go vet ./...` 全清；`go test ./...`：4 包通过
+
+#### 2026-08-04 会话 8 续（SUMMARY parser 边界修复）
+
+`ts-toc-basic_toc` 暴露：SUMMARY.md 含一行畸形 entry
+
+```markdown
+- [Deep Nest 3](deep/a/b/index.md)
+            [Deep Nest 4](deep/a/b/c/index.md)   <- 缩进但无 `-`
+```
+
+Rust 用 pulldown-cmark 解析事件，看到该行是 list-item 内
+的 paragraph 续行，link 被丢。Go 端正则 parser 之前把这条当成
+suffix chapter，去读不存在的 `deep/a/b/c/index.md` 直接报错。
+
+修复（`internal/summary/parser.go::Parse`）：在 `bareLinkRe` 分支
+增加一行 — 当 `len(stack) > 0` 且 bare link 缩进 > 栈顶 list 项
+缩进时，视为 list 续行 `continue` 丢弃。对齐 Rust 的
+"link-inside-list-item-paragraph 被丢"行为。
+
+新增测试：
+
+- `internal/summary/parser_test.go::TestParseDropsBareLinkInsideList`
+  —— 复用 `tests/testsuite/toc/basic_toc` 的 SUMMARY.md，断言
+  `Deep Nest 4` 不出现在 numbered chapters 列表里
+- `TestParseBareLinkAtListLevel` —— 守住 fix 不过宽：相同缩进的
+  bare link 仍正确归入 suffix chapters
+
+验证：
+
+```
+harness/diff.sh                          # 全 17 OK / 2 SKIP / 0 DIFF
+  ts-toc-basic_toc (45 files identical)   # 新通过
+go test ./...                            # 6 包通过（含新加的 summary 包）
+```
+
+`ts-toc-basic_toc` 重新纳入 fixture 库（无需 SKIP），harness 的
+SKIP 列表现在只剩 2 个：`external-plugin` + `ts-markdown-basic_markdown`。

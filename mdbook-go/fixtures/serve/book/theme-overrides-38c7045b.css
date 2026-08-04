@@ -1,0 +1,3 @@
+/* Custom CSS hooked up via [output.html] additional-css.
+   Empty on purpose; the watch loop only needs the file to exist so
+   that a change to it triggers a rebuild. */

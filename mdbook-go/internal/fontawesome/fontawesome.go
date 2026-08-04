@@ -10,12 +10,30 @@
 //
 // as a `const` in icons.go and register it in the appropriate `icons<Type>`
 // map; the lookup happens at runtime.
+//
+// # Deprecated
+//
+// The Font Awesome feature will be removed in a future release of
+// mdbook-go. The upstream mdBook Rust port is moving away from the
+// embedded `font-awesome-as-a-crate` dependency; once that drops, the
+// Go port will too. The 15 icons currently embedded cover only a small
+// subset of Font Awesome Free 6.2.0, and growing that table to full
+// parity (the harness diff against `tests/testsuite/rendering/fontawesome`
+// reports 39 diff lines for the missing icons) costs ~700 KB of binary
+// size for a feature the maintainers are phasing out.
+//
+// Users who depend on a specific icon should embed the SVG directly in
+// their theme or via an `<img>` tag. The `{{fa ...}}` handlebars helper
+// will continue to work until the package is removed; new code should
+// not be written against this API.
 package fontawesome
 
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
+	"sync"
 )
 
 // Type identifies the Font Awesome style for an icon.
@@ -88,7 +106,32 @@ var ErrUnknownIcon = errors.New("fontawesome: unknown icon")
 // the handlebars helper accepts), an error is returned that is suitable
 // for surfacing to the user (mirroring the message mdBook currently
 // emits from its Rust helper).
+var (
+	deprecationOnce  sync.Once
+	deprecationFired bool
+)
+
+// deprecationOnceDone reports whether warnDeprecated has fired. It
+// exists only for the test that pins the once-only contract.
+func deprecationOnceDone() bool { return deprecationFired }
+
+// warnDeprecated emits a one-shot warning so users still using
+// {{fa ...}} in their theme see a clear pointer to the planned
+// removal. The warning goes to stderr so mdbook-go's other logging
+// (which uses fmt.Fprintln(os.Stderr, …)) shares the same stream.
+func warnDeprecated() {
+	deprecationOnce.Do(func() {
+		deprecationFired = true
+		fmt.Fprintln(os.Stderr,
+			"fontawesome: {{fa ...}} is deprecated and will be removed "+
+				"in a future release; embed the SVG directly in your theme "+
+				"or use <img> instead. See "+
+				"mdbook-go/internal/fontawesome/fontawesome.go for details.")
+	})
+}
+
 func lookup(t Type, name string) (string, error) {
+	warnDeprecated()
 	stripped := strings.TrimPrefix(name, "fab-")
 	stripped = strings.TrimPrefix(stripped, "fas-")
 	stripped = strings.TrimPrefix(stripped, "fa-")

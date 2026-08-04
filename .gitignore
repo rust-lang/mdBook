@@ -22,3 +22,7 @@ tests/testsuite/*/*/book/
 node_modules
 package-lock.json
 package.json
+
+# mdbook-go build outputs (cross-build, in-source build)
+mdbook-go/bin/
+mdbook-go/dist/

@@ -1,0 +1,154 @@
+name: mdbook-go CI
+
+on:
+  pull_request:
+    paths:
+      - 'mdbook-go/**'
+      - 'src/**'
+      - 'crates/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/mdbook-go-ci.yml'
+      - 'ci/**'
+  push:
+    branches: [master]
+    paths:
+      - 'mdbook-go/**'
+      - 'src/**'
+      - 'crates/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/mdbook-go-ci.yml'
+      - 'ci/**'
+
+# One CI job per OS / Rust toolchain, mirroring the Rust-only main.yml
+# in this repo. We piggy-back on the same Rust build because the
+# harness compares the Go output against the Rust output, so the Rust
+# binary must exist before the Go tests run.
+jobs:
+  test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: stable linux (amd64)
+            os: ubuntu-latest
+            go: '1.26.4'
+            rust: stable
+          - name: stable macos (arm64)
+            os: macos-latest
+            go: '1.26.4'
+            rust: stable
+          - name: stable windows (amd64)
+            os: windows-latest
+            go: '1.26.4'
+            rust: stable
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@4dad22967c83b7013edebe631e609c6766838c5e  # master
+        with:
+          toolchain: ${{ matrix.rust }}
+
+      - name: Install Go
+        uses: actions/setup-go@0a5aa6f56e2158c5f5b8de45c6610e2c9e9c2d20  # v6.4.0
+        with:
+          go-version: ${{ matrix.go }}
+          cache-dependency-path: mdbook-go/go.sum
+
+      - name: Build Rust mdbook
+        run: cargo build --bin mdbook --locked
+
+      - name: Build Go mdbook-go
+        run: |
+          cd mdbook-go
+          go build -o bin/mdbook-go ./cmd/mdbook
+
+      - name: Vet
+        run: cd mdbook-go && go vet ./...
+
+      - name: Test
+        run: cd mdbook-go && go test ./...
+
+      - name: Harness diff (basic)
+        shell: bash
+        run: |
+          cd mdbook-go
+          MDBOOK_RUST_BIN=$(pwd)/../target/debug/mdbook ./harness/diff.sh basic
+
+      - name: Harness diff (cli + serve)
+        shell: bash
+        run: |
+          cd mdbook-go
+          MDBOOK_RUST_BIN=$(pwd)/../target/debug/mdbook ./harness/diff.sh cli serve
+
+      - name: Harness diff (nested)
+        shell: bash
+        run: |
+          cd mdbook-go
+          MDBOOK_RUST_BIN=$(pwd)/../target/debug/mdbook ./harness/diff.sh nested
+
+      - name: Harness diff (all ts-* fixtures)
+        shell: bash
+        run: |
+          cd mdbook-go
+          MDBOOK_RUST_BIN=$(pwd)/../target/debug/mdbook ./harness/diff.sh \
+            ts-build-basic_build \
+            ts-build-create_missing \
+            ts-config-empty \
+            ts-index-basic_readme \
+            ts-markdown-admonitions \
+            ts-playground-disabled_playground \
+            ts-playground-playground_on_rust_code \
+            ts-print-duplicate_ids \
+            ts-print-relative_links \
+            ts-redirects-redirects_are_emitted_correctly \
+            ts-theme-custom_fonts_css \
+            ts-theme-empty_theme
+
+  # Build every supported platform regardless of the harness outcome
+  # above, so that cross-compile breakage is caught even on PRs that
+  # don't touch rendering code.
+  cross-build:
+    name: cross-build ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - linux/amd64
+          - linux/arm64
+          - darwin/amd64
+          - darwin/arm64
+          - windows/amd64
+          - windows/arm64
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/setup-go@0a5aa6f56e2158c5f5b8de45c6610e2c9e9c2d20  # v6.4.0
+        with:
+          go-version: '1.26.4'
+      - name: Build
+        working-directory: mdbook-go
+        run: ./ci/build-cross.sh "${{ matrix.target }}"
+
+  success:
+    name: Success gate
+    if: always()
+    needs:
+      - test
+      - cross-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all jobs passed
+        run: |
+          echo "Result: ${{ needs.test.result }} / ${{ needs.cross-build.result }}"
+          if [ "${{ needs.test.result }}" != "success" ] || \
+             [ "${{ needs.cross-build.result }}" != "success" ]; then
+            exit 1
+          fi
+      - name: Done
+        run: exit 0

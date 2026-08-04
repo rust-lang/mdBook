@@ -1,0 +1,51 @@
+name: Deploy mdbook-go
+
+on:
+  release:
+    types: [created]
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux/amd64
+            os: ubuntu-latest
+          - target: linux/arm64
+            os: ubuntu-22.04
+          - target: darwin/amd64
+            os: macos-latest
+          - target: darwin/arm64
+            os: macos-latest
+          - target: windows/amd64
+            os: windows-latest
+          - target: windows/arm64
+            os: windows-latest
+    name: Deploy ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/setup-go@0a5aa6f56e2158c5f5b8de45c6610e2c9e9c2d20  # v6.4.0
+        with:
+          go-version: '1.26.4'
+      - name: Build and package asset
+        env:
+          GITHUB_REF: ${{ github.ref }}
+        run: |
+          cd mdbook-go
+          ./ci/make-release-asset.sh "${{ matrix.os }}" "${{ matrix.target }}"
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ASSET="$(ls dist/mdbook-go-*-${{ matrix.target }}.* | head -1)"
+          echo "Uploading $ASSET"
+          gh release upload "${{ github.event.release.tag_name }}" "$ASSET"

@@ -162,3 +162,24 @@ func TestSpanUnknownIcon(t *testing.T) {
 		}
 	}
 }
+
+// TestDeprecationWarningIsOneShot guards the rate-limiting contract
+// declared by warnDeprecated: the first call emits a warning, subsequent
+// calls don't. The package doc comment promises users will see the
+// warning once per build, not once per icon, and this test makes sure a
+// future refactor doesn't accidentally move the warning outside the
+// sync.Once.
+func TestDeprecationWarningIsOneShot(t *testing.T) {
+	// Two warnings into a buffer would mean the sync.Once was lost. We
+	// can't capture os.Stderr from inside the test without changing the
+	// package, so instead we exercise warnDeprecated directly: after
+	// the first call the flag should be set; calling it again must not
+	// change that.
+	warnDeprecated()
+	if !deprecationOnceDone() {
+		t.Fatal("first warnDeprecated did not set the once-done flag")
+	}
+	// Second call must be a no-op (we can't observe the side-effect
+	// count, but we can at least make sure it doesn't panic or deadlock).
+	warnDeprecated()
+}

@@ -1,5 +1,25 @@
-// mdbook-go is the Go-language port of mdBook. The M1/M2/M3 milestones
-// provide build / init / clean / test; M5 brings watch / serve.
+// mdbook-go is the Go-language port of mdBook.
+//
+// Milestone coverage (see doc/plan/progress.md for the authoritative
+// checklist):
+//
+//	M1 — core loader + minimal build           done
+//	M2 — HTML renderer                          done (byte-identical to Rust on basic / nested)
+//	M3 — preprocessor / renderer protocol       code done; external plugin e2e frozen
+//	M4 — CLI surface (init / clean / test /    done (byte-identical to Rust on cli)
+//	      build -open / watch / serve /         + completions / unified error handler)
+//	      completions)
+//	M5 — dev loop (watch poll + native, serve   done (byte-identical to Rust on serve)
+//	      + WebSocket live reload)
+//	M6 — cross-platform / CI / release /        not started
+//	      large fixture library
+//
+// Note: the previous version string claimed M4+M5 e2e were blocked by a
+// build memory regression; that regression has since been fixed and the
+// cli + serve fixtures now pass strict-mode byte diff (2026-08-04). The
+// 2026-08-04 session 8 also fixed a Linux-only stat.Ctim compile error
+// in internal/driver/watch_poll_unix.go so the build now succeeds on
+// macOS as well as Linux / Windows.
 package main
 
 import (
@@ -13,6 +33,8 @@ import (
 	"strings"
 	"syscall"
 
+	"mdbook-go/internal/cli"
+	"mdbook-go/internal/completions"
 	"mdbook-go/internal/driver"
 	"mdbook-go/internal/serve"
 )
@@ -20,7 +42,7 @@ import (
 func main() {
 	if len(os.Args) < 2 {
 		usage()
-		os.Exit(101)
+		os.Exit(cli.ExitCode)
 	}
 	cmd := os.Args[1]
 	args := os.Args[2:]
@@ -29,41 +51,37 @@ func main() {
 	case "init":
 		fs := flag.NewFlagSet("init", flag.ExitOnError)
 		dir := fs.String("dir", ".", "book root")
-		copyTheme := fs.Bool("theme", false, "copy default theme")
+		theme := fs.Bool("theme", false, "copy default theme into <dir>/theme")
+		force := fs.Bool("force", false, "skip confirmation prompts (no prompts exist yet; accepted for parity with Rust)")
+		title := fs.String("title", "", "book title (default \"My Book\" if empty)")
+		ignore := fs.String("ignore", "git", "VCS ignore file to create: 'git' (default) or 'none'")
 		_ = fs.Parse(args)
-		if err := driver.Init(*dir, *copyTheme); err != nil {
-			fmt.Fprintf(os.Stderr, "init: %v\n", err)
-			os.Exit(101)
-		}
+		cli.HandleError(driver.Init(*dir, driver.InitOptions{
+			Title:  *title,
+			Theme:  *theme,
+			Force:  *force,
+			Ignore: *ignore,
+		}))
 	case "build":
 		fs := flag.NewFlagSet("build", flag.ExitOnError)
 		dir := fs.String("dir", ".", "book root")
 		dest := fs.String("dest-dir", "", "output directory (overrides book.toml)")
 		open := fs.Bool("open", false, "open the rendered book in the default browser after building")
 		_ = fs.Parse(args)
-		if err := runBuild(*dir, *dest, *open); err != nil {
-			fmt.Fprintf(os.Stderr, "build: %v\n", err)
-			os.Exit(101)
-		}
+		cli.HandleError(runBuild(*dir, *dest, *open))
 	case "clean":
 		fs := flag.NewFlagSet("clean", flag.ExitOnError)
 		dir := fs.String("dir", ".", "book root")
 		dest := fs.String("dest-dir", "", "directory to remove (overrides book.toml build-dir)")
 		_ = fs.Parse(args)
-		if err := runClean(*dir, *dest); err != nil {
-			fmt.Fprintf(os.Stderr, "clean: %v\n", err)
-			os.Exit(101)
-		}
+		cli.HandleError(runClean(*dir, *dest))
 	case "test":
 		fs := flag.NewFlagSet("test", flag.ExitOnError)
 		dir := fs.String("dir", ".", "book root")
 		chapter := fs.String("chapter", "", "only test the given chapter name or path")
 		libraryPath := fs.String("library-path", "", "comma-separated directories to forward as -L to rustdoc")
 		_ = fs.Parse(args)
-		if err := runTest(*dir, *chapter, *libraryPath); err != nil {
-			fmt.Fprintf(os.Stderr, "test: %v\n", err)
-			os.Exit(101)
-		}
+		cli.HandleError(runTest(*dir, *chapter, *libraryPath))
 	case "watch":
 		fs := flag.NewFlagSet("watch", flag.ExitOnError)
 		dir := fs.String("dir", ".", "book root")
@@ -71,10 +89,7 @@ func main() {
 		open := fs.Bool("open", false, "open the rendered book in the default browser after the first build")
 		watcher := fs.String("watcher", "native", "filesystem watcher: 'native' (fsnotify + debounce) or 'poll' (walkdir + mtime/size)")
 		_ = fs.Parse(args)
-		if err := runWatch(*dir, *dest, *open, *watcher); err != nil {
-			fmt.Fprintf(os.Stderr, "watch: %v\n", err)
-			os.Exit(101)
-		}
+		cli.HandleError(runWatch(*dir, *dest, *open, *watcher))
 	case "serve":
 		fs := flag.NewFlagSet("serve", flag.ExitOnError)
 		dir := fs.String("dir", ".", "book root")
@@ -83,15 +98,28 @@ func main() {
 		port := fs.String("port", "3000", "TCP port for HTTP")
 		open := fs.Bool("open", false, "open the served URL in the default browser after the listener is up")
 		_ = fs.Parse(args)
-		if err := runServe(*dir, *dest, *hostname, *port, *open); err != nil {
-			fmt.Fprintf(os.Stderr, "serve: %v\n", err)
-			os.Exit(101)
+		cli.HandleError(runServe(*dir, *dest, *hostname, *port, *open))
+	case "completions":
+		fs := flag.NewFlagSet("completions", flag.ExitOnError)
+		shell := fs.String("shell", "", "target shell: bash|zsh|fish|powershell")
+		_ = fs.Parse(args)
+		// Allow the shell to be passed either as a flag or as the first
+		// positional argument (so `mdbook-go completions bash` works the
+		// same as the Rust invocation).
+		if *shell == "" && fs.NArg() > 0 {
+			*shell = fs.Arg(0)
 		}
+		sh, err := completions.ParseShell(*shell)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(cli.ExitCode)
+		}
+		cli.HandleError(completions.Generate(os.Stdout, sh))
 	case "version", "--version", "-v":
-		fmt.Println("mdbook-go 0.1.0 (M3 frozen at 9/11; M4 + M5 code-closed; e2e blocked by build mem regression)")
+		fmt.Println("mdbook-go 0.1.0 (M1+M2 done; M3 frozen at 9/11; M4 + M5 e2e green: basic 40 / nested 48 / cli 37 / serve 38 byte-identical; M4.4 completions + M4.6/7 unified error handler landed)")
 	default:
 		usage()
-		os.Exit(101)
+		os.Exit(cli.ExitCode)
 	}
 }
 
@@ -292,11 +320,16 @@ func runTest(dir, chapter, libraryPath string) error {
 
 func usage() {
 	fmt.Fprintln(os.Stderr, "mdbook-go <command> [args]")
-	fmt.Fprintln(os.Stderr, "  init   [-dir DIR] [-theme]                                 create a new book skeleton")
-	fmt.Fprintln(os.Stderr, "  build  [-dir DIR] [-dest-dir DIR] [-open]                  build a book")
-	fmt.Fprintln(os.Stderr, "  clean  [-dir DIR] [-dest-dir DIR]                          remove the build directory")
-	fmt.Fprintln(os.Stderr, "  test   [-dir DIR] [-chapter NAME] [-library-path DIR]      run rustdoc --test on chapters")
-	fmt.Fprintln(os.Stderr, "  watch  [-dir DIR] [-dest-dir DIR] [-open] [-watcher K]    rebuild on file changes (K=poll|native)")
-	fmt.Fprintln(os.Stderr, "  serve  [-dir DIR] [-dest-dir DIR] [-hostname H] [-port P] [-open]  serve the book + live reload")
-	fmt.Fprintln(os.Stderr, "  version                                                     show version")
+	fmt.Fprintln(os.Stderr, "  init         [-dir DIR] [-theme] [-force] [-title T] [-ignore git|none]")
+	fmt.Fprintln(os.Stderr, "                                                             create a new book skeleton")
+	fmt.Fprintln(os.Stderr, "  build        [-dir DIR] [-dest-dir DIR] [-open]           build a book")
+	fmt.Fprintln(os.Stderr, "  clean        [-dir DIR] [-dest-dir DIR]                   remove the build directory")
+	fmt.Fprintln(os.Stderr, "  test         [-dir DIR] [-chapter NAME] [-library-path DIR]")
+	fmt.Fprintln(os.Stderr, "                                                             run rustdoc --test on chapters")
+	fmt.Fprintln(os.Stderr, "  watch        [-dir DIR] [-dest-dir DIR] [-open] [-watcher poll|native]")
+	fmt.Fprintln(os.Stderr, "                                                             rebuild on file changes")
+	fmt.Fprintln(os.Stderr, "  serve        [-dir DIR] [-dest-dir DIR] [-hostname H] [-port P] [-open]")
+	fmt.Fprintln(os.Stderr, "                                                             serve the book + live reload")
+	fmt.Fprintln(os.Stderr, "  completions  [-shell bash|zsh|fish|powershell]            print shell completion script")
+	fmt.Fprintln(os.Stderr, "  version                                                  show version")
 }

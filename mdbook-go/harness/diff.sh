@@ -19,8 +19,12 @@ GO_BIN="$ROOT/bin/mdbook-go"
 # Fixtures expected to differ, as "name # reason".
 # - external-plugin: M3 外部插件链路已冻结（见 internal/plugin/cmd.go 顶部注释与
 #   doc/plan/progress.md 的 M3 段落），代码保留、不跑端到端 diff。
+# - ts-markdown-basic_markdown: goldmark 把跨两行的 HTML 起始标签视为 HTML 块，
+#   pulldown-cmark 视为段内 inline HTML。这是已知解析器差异，登记在
+#   MIGRATION.md 的 "Markdown / HTML differences" 一节。
 SKIP=(
   "external-plugin # M3 external-plugin frozen, see doc/plan/progress.md"
+  "ts-markdown-basic_markdown # goldmark vs pulldown-cmark: HTML block boundary, see MIGRATION.md"
 )
 
 if [[ $# -gt 0 ]]; then

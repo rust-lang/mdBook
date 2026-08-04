@@ -156,8 +156,20 @@ func Parse(source string) (*Summary, error) {
 		}
 
 		if m := bareLinkRe.FindStringSubmatch(raw); m != nil {
+			level := leadingSpaces(raw)
+			// A bare link indented deeper than the innermost open list
+			// item is a continuation paragraph of that list item, not a
+			// new chapter. Rust's mdbook-summary uses pulldown-cmark
+			// events; pulldown-cmark parses `[X](y)` inside a list item
+			// as plain text inside that item's paragraph and the link is
+			// discarded. Discarding here matches the
+			// `tests/testsuite/toc/basic_toc` SUMMARY.md, which has a
+			// malformed deeper-indented entry.
+			if len(stack) > 0 && level > stack[len(stack)-1].Level {
+				continue
+			}
 			stack = nil
-			item := SummaryItem{Link: &Link{Name: m[1], Location: strings.TrimPrefix(m[2], "./"), Level: leadingSpaces(raw)}}
+			item := SummaryItem{Link: &Link{Name: m[1], Location: strings.TrimPrefix(m[2], "./"), Level: level}}
 			if inNumbered {
 				sum.SuffixChapters = append(sum.SuffixChapters, item)
 			} else {

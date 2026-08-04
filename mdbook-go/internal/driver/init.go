@@ -8,20 +8,53 @@ import (
 	"mdbook-go/internal/theme"
 )
 
-// Init creates a fresh book skeleton at root. The optional copyTheme flag
-// controls whether the default theme is copied under theme/.
+// InitOptions configures a single Init call. It is the Go analogue of the
+// clap arguments on src/cmd/init.rs::make_subcommand.
 //
-// When copyTheme is true, this calls into internal/theme.Copy which writes
-// the embedded default theme (book.js, css/, fonts/, index.hbs, etc.) into
-// <root>/theme/. The destination directory is created if it does not exist;
-// existing files are overwritten. This mirrors
-// `crates/mdbook/src/cmd/init.rs::execute` --theme without the interactive
-// confirmation prompt (--force equivalents for M4.1 are not yet wired up).
-func Init(root string, copyTheme bool) error {
+// The zero value is meaningful: an empty Title produces the Rust-equivalent
+// default "My Book", an empty Ignore produces a .gitignore, and Theme=false
+// skips theme copy. Callers that want strict Rust parity should set Title
+// explicitly when Force is true (Rust emits a `title = ""` line in that case;
+// we instead keep "My Book" so the resulting book.toml stays valid).
+type InitOptions struct {
+	// Title is the book title written to book.toml. "" defaults to
+	// "My Book" so the generated config is usable without further edits.
+	Title string
+	// Theme copies the embedded default theme into <root>/theme/.
+	Theme bool
+	// Force skips interactive confirmation prompts. The M4.1 Go port
+	// does not prompt for anything yet, so Force is currently unused
+	// beyond plumbing; it is accepted so the CLI surface matches Rust.
+	Force bool
+	// Ignore controls whether a .gitignore file is created. Accepted
+	// values: "git" (write a gitignore, the default) or "none" (skip).
+	// Empty string is treated as "git" for compatibility with the
+	// M1-era behaviour.
+	Ignore string
+}
+
+// Init creates a fresh book skeleton at root. It mirrors
+// `crates/mdbook/src/cmd/init.rs::execute` end-to-end:
+//
+//   - <root>/src/                directory
+//   - <root>/book.toml           minimal config (with the chosen title)
+//   - <root>/src/SUMMARY.md      two-chapter skeleton
+//   - <root>/src/intro.md        intro chapter
+//   - <root>/src/chapter_1.md    first numbered chapter with a Rust code block
+//   - <root>/.gitignore          "book/\n"  (skipped when Ignore == "none")
+//   - <root>/theme/              embedded default theme (only when opts.Theme)
+func Init(root string, opts InitOptions) error {
 	if err := os.MkdirAll(filepath.Join(root, "src"), 0o755); err != nil {
 		return err
 	}
-	bookToml := "[book]\ntitle = \"My Book\"\nauthors = []\nlanguage = \"en\"\nsrc = \"src\"\n\n[build]\nbuild-dir = \"book\"\ncreate-missing = true\n"
+	title := opts.Title
+	if title == "" {
+		title = "My Book"
+	}
+	bookToml := fmt.Sprintf(
+		"[book]\ntitle = %q\nauthors = []\nlanguage = \"en\"\nsrc = \"src\"\n\n[build]\nbuild-dir = \"book\"\ncreate-missing = true\n",
+		title,
+	)
 	if err := os.WriteFile(filepath.Join(root, "book.toml"), []byte(bookToml), 0o644); err != nil {
 		return err
 	}
@@ -37,11 +70,13 @@ func Init(root string, copyTheme bool) error {
 	if err := os.WriteFile(filepath.Join(root, "src", "chapter_1.md"), []byte(c1), 0o644); err != nil {
 		return err
 	}
-	gitignore := "book/\n"
-	if err := os.WriteFile(filepath.Join(root, ".gitignore"), []byte(gitignore), 0o644); err != nil {
-		return err
+	if opts.Ignore != "none" {
+		gitignore := "book/\n"
+		if err := os.WriteFile(filepath.Join(root, ".gitignore"), []byte(gitignore), 0o644); err != nil {
+			return err
+		}
 	}
-	if copyTheme {
+	if opts.Theme {
 		themeDir := filepath.Join(root, "theme")
 		if err := os.MkdirAll(themeDir, 0o755); err != nil {
 			return err
