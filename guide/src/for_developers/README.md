@@ -9,7 +9,7 @@ the book or render it in a different format.
 The *For Developers* chapters are here to show you the more advanced usage of
 `mdbook`.
 
-The two main ways a developer can hook into the book's build process is via,
+The two main ways a developer can hook into the book's build process are:
 
 - [Preprocessors](preprocessors.md)
 - [Alternative Backends](backends.md)
