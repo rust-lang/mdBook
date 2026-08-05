@@ -84,7 +84,7 @@ Now your theme will be used instead of the default theme.
 If you think the default theme doesn't look quite right for a specific language,
 or could be improved, feel free to [submit a new
 issue](https://github.com/rust-lang/mdBook/issues) explaining what you
-have in mind and I will take a look at it.
+have in mind and the team will take a look at it.
 
 You could also create a pull-request with the proposed improvements.
 
