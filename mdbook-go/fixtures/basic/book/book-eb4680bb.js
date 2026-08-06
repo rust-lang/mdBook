@@ -334,6 +334,8 @@ aria-label="Show hidden lines"></button>';
         ayuHighlight: document.querySelector('#mdbook-ayu-highlight-css'),
         tomorrowNight: document.querySelector('#mdbook-tomorrow-night-css'),
         highlight: document.querySelector('#mdbook-highlight-css'),
+        githubMarkdownLight: document.querySelector('#mdbook-github-markdown-light-css'),
+        githubMarkdownDark: document.querySelector('#mdbook-github-markdown-dark-css'),
     };
 
     function showThemes() {
@@ -399,17 +401,23 @@ aria-label="Show hidden lines"></button>';
             stylesheets.ayuHighlight.disabled = true;
             stylesheets.tomorrowNight.disabled = false;
             stylesheets.highlight.disabled = true;
+            stylesheets.githubMarkdownLight.disabled = true;
+            stylesheets.githubMarkdownDark.disabled = false;
 
             ace_theme = 'ace/theme/tomorrow_night';
         } else if (theme === 'ayu') {
             stylesheets.ayuHighlight.disabled = false;
             stylesheets.tomorrowNight.disabled = true;
             stylesheets.highlight.disabled = true;
+            stylesheets.githubMarkdownLight.disabled = true;
+            stylesheets.githubMarkdownDark.disabled = false;
             ace_theme = 'ace/theme/tomorrow_night';
         } else {
             stylesheets.ayuHighlight.disabled = true;
             stylesheets.tomorrowNight.disabled = true;
             stylesheets.highlight.disabled = false;
+            stylesheets.githubMarkdownLight.disabled = false;
+            stylesheets.githubMarkdownDark.disabled = true;
             ace_theme = 'ace/theme/dawn';
         }
 

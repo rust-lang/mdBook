@@ -82,7 +82,6 @@ func TestIndexGolden(t *testing.T) {
 		"css/variables.css":  "css/variables-8adf115d.css",
 		"css/general.css":    "css/general-e96d0476.css",
 		"css/chrome.css":     "css/chrome-d279d366.css",
-		"css/print.css":      "css/print-9e4910d8.css",
 		"fonts/fonts.css":    "fonts/fonts-9644e21d.css",
 		"highlight.css":      "highlight-493f70e1.css",
 		"tomorrow-night.css": "tomorrow-night-4c0ae647.css",
@@ -129,7 +128,7 @@ func TestTOCGolden(t *testing.T) {
 	r := registry(t, "toc", themeFile(t, "toc.html.hbs"))
 	resources := map[string]string{
 		"css/variables.css": "css/variables-8adf115d.css", "css/general.css": "css/general-e96d0476.css",
-		"css/chrome.css": "css/chrome-d279d366.css", "css/print.css": "css/print-9e4910d8.css",
+		"css/chrome.css": "css/chrome-d279d366.css",
 		"fonts/fonts.css": "fonts/fonts-9644e21d.css",
 	}
 	r.RegisterHelper("resource", func(_ *Context, p []any) (string, error) { return resources[p[0].(string)], nil })

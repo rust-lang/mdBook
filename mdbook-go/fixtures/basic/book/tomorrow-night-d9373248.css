@@ -1,3 +1,39 @@
+/* ============================================================================
+ * mdbook-tomorrow-night-css (id="mdbook-tomorrow-night-css")
+ *
+ * Dark syntax-highlighting palette for fenced code blocks inside
+ * <main class="markdown-body">. Port of the "Tomorrow Night" theme
+ * (Chris Kempson), themed for the mdBook "coal" and "navy" skins.
+ *
+ * Targets only code emitted by theme/js/highlight.js:
+ *   <pre><code class="hljs language-xxx">
+ *     <span class="hljs-keyword">...</span>
+ *     ...
+ *   </code></pre>
+ * Nothing here touches the sidebar / menu / search / fonts / theme colors.
+ *
+ * Toggled by theme/js/book.js set_theme():
+ *   coal / navy           → ENABLED
+ *   light / rust / default → disabled (highlight.css is on)
+ *   ayu                   → disabled (ayu-highlight.css is on)
+ *
+ * Palette tokens (background #1d1f21 / foreground #c5c8c6):
+ *   comment       #969896  (Tomorrow Comment / grey)
+ *   red           #cc6666  (variable / attribute / tag / regex)
+ *   orange        #de935f  (number / preprocessor / literal / constant)
+ *   yellow        #f0c674  (Ruby class title / CSS rule attribute)
+ *   green         #b5bd68  (string / value / header / name)
+ *   aqua          #8abeb7  (title / section / CSS hex color)
+ *   blue          #81a2be  (function / python decorator / JS title)
+ *   purple        #b294bb  (keyword / JS function)
+ *   addition      #718c00
+ *   deletion      #c82829
+ *
+ * Sources:
+ *   https://github.com/chriskempson/tomorrow-theme
+ *   https://github.com/jmblog/color-themes-for-highlightjs
+ * ========================================================================== */
+
 /* Tomorrow Night Theme */
 /* https://github.com/jmblog/color-themes-for-highlightjs */
 /* Original theme - https://github.com/chriskempson/tomorrow-theme */

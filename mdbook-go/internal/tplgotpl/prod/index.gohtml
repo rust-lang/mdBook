@@ -27,15 +27,15 @@
         <link rel="stylesheet" href="{{.Resource "css/variables.css"}}">
         <link rel="stylesheet" href="{{.Resource "css/general.css"}}">
         <link rel="stylesheet" href="{{.Resource "css/chrome.css"}}">
-        {{if .PrintEnable}}
-        <link rel="stylesheet" href="{{.Resource "css/print.css"}}" media="print">
-        {{end}}
         <!-- Fonts -->
         <link rel="stylesheet" href="{{.Resource "fonts/fonts.css"}}">
         <!-- Highlight.js Stylesheets -->
         <link rel="stylesheet" id="mdbook-highlight-css" href="{{.Resource "highlight.css"}}">
         <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="{{.Resource "tomorrow-night.css"}}">
         <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="{{.Resource "ayu-highlight.css"}}">
+        <!-- GitHub markdown stylesheets (chapter body via .markdown-body) -->
+        <link rel="stylesheet" id="mdbook-github-markdown-light-css" href="{{.Resource "css/github-markdown-light.css"}}">
+        <link rel="stylesheet" id="mdbook-github-markdown-dark-css" href="{{.Resource "css/github-markdown-dark.css"}}" disabled>
         <!-- Custom theme stylesheets -->
         {{range .AdditionalCSS}}
         <link rel="stylesheet" href="{{$.Resource .}}">
@@ -188,7 +188,7 @@
                     });
                 </script>
                 <div id="mdbook-content" class="content">
-                    <main>
+                    <main class="markdown-body">
                         {{.Content}}
                     </main>
                     <nav class="nav-wrapper" aria-label="Page navigation">

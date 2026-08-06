@@ -21,7 +21,6 @@ type Theme struct {
 
 	ChromeCSS    []byte
 	GeneralCSS   []byte
-	PrintCSS     []byte
 	VariablesCSS []byte
 
 	// FontsCSS is nil unless the user supplied theme/fonts/fonts.css. When it
@@ -40,6 +39,12 @@ type Theme struct {
 	AyuHighlightCSS  []byte
 	HighlightJS      []byte
 	ClipboardJS      []byte
+
+	// GitHubMarkdownCSS variants back the chapter body styling via .markdown-body
+	// (a separately generated stylesheet that replaces the legacy chrome CSS for
+	// the article region). Emitted unconditionally so the toggle works.
+	GitHubMarkdownLightCSS []byte
+	GitHubMarkdownDarkCSS  []byte
 }
 
 // Bundled font assets, in the same order as theme/fonts.rs.
@@ -58,15 +63,8 @@ var (
 		"fonts/source-code-pro-v11-all-charsets-500.woff2",
 		themedata.MustRead("fonts/source-code-pro-v11-all-charsets-500.woff2"),
 	}
-	// PlaygroundEditor lists the Ace editor assets, emitted only when the
-	// playground is editable.
-	PlaygroundEditor = []NamedAsset{
-		{"editor.js", themedata.MustRead("playground_editor/editor.js")},
-		{"ace.js", themedata.MustRead("playground_editor/ace.js")},
-		{"mode-rust.js", themedata.MustRead("playground_editor/mode-rust.js")},
-		{"theme-dawn.js", themedata.MustRead("playground_editor/theme-dawn.js")},
-		{"theme-tomorrow_night.js", themedata.MustRead("playground_editor/theme-tomorrow_night.js")},
-	}
+	// PlaygroundEditor (Ace editor bundle) was removed — the editable code-block
+	// feature is not currently used. If reintroduced, restore the original list.
 	// SearcherJS, MarkJS and ElasticlunrJS back the search UI.
 	SearcherJS    = themedata.MustRead("searcher/searcher.js")
 	MarkJS        = themedata.MustRead("searcher/mark.min.js")
@@ -103,7 +101,6 @@ func Default() *Theme {
 		TocHTML:          themedata.MustRead("templates/toc.html.hbs"),
 		ChromeCSS:        themedata.MustRead("css/chrome.css"),
 		GeneralCSS:       themedata.MustRead("css/general.css"),
-		PrintCSS:         themedata.MustRead("css/print.css"),
 		VariablesCSS:     themedata.MustRead("css/variables.css"),
 		FaviconPNG:       themedata.MustRead("images/favicon.png"),
 		FaviconSVG:       themedata.MustRead("images/favicon.svg"),
@@ -113,6 +110,8 @@ func Default() *Theme {
 		AyuHighlightCSS:  themedata.MustRead("css/ayu-highlight.css"),
 		HighlightJS:      themedata.MustRead("js/highlight.js"),
 		ClipboardJS:      themedata.MustRead("js/clipboard.min.js"),
+		GitHubMarkdownLightCSS: themedata.MustRead("css/github-markdown-light.css"),
+		GitHubMarkdownDarkCSS:  themedata.MustRead("css/github-markdown-dark.css"),
 	}
 }
 
@@ -138,7 +137,6 @@ func New(themeDir string) *Theme {
 		{"book.js", &t.JS},
 		{"css/chrome.css", &t.ChromeCSS},
 		{"css/general.css", &t.GeneralCSS},
-		{"css/print.css", &t.PrintCSS},
 		{"css/variables.css", &t.VariablesCSS},
 		{"highlight.js", &t.HighlightJS},
 		{"clipboard.min.js", &t.ClipboardJS},
@@ -191,7 +189,10 @@ func loadInto(path string, dest *[]byte) bool {
 }
 
 // Copy writes the default theme files into themeDir, mirroring
-// Theme::copy_theme. printEnable controls whether css/print.css is written.
+// Theme::copy_theme.
+//
+// The printEnable parameter is retained for API compatibility but currently
+// has no effect (css/print.css is no longer shipped).
 func Copy(themeDir string, printEnable bool) error {
 	write := func(rel string, data []byte) error {
 		path := filepath.Join(themeDir, filepath.FromSlash(rel))
@@ -210,9 +211,6 @@ func Copy(themeDir string, printEnable bool) error {
 		{"css/general.css", themedata.MustRead("css/general.css")},
 		{"css/chrome.css", themedata.MustRead("css/chrome.css")},
 		{"css/variables.css", themedata.MustRead("css/variables.css")},
-	}
-	if printEnable {
-		files = append(files, NamedAsset{"css/print.css", themedata.MustRead("css/print.css")})
 	}
 	files = append(files, NamedAsset{"fonts/fonts.css", FontsCSSDefault})
 	files = append(files, FontLicenses...)

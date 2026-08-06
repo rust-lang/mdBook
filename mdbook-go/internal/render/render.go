@@ -238,11 +238,6 @@ func buildTocJS(data map[string]any, cfg *config.HtmlConfig, b *book.Book) (stri
 	if _, ok := data["no_section_label"]; ok {
 		noSectionLabel = asBool(data, "no_section_label")
 	}
-	pathToRoot := utils.PathToRoot("toc.html")
-	if v, ok := data["path_to_root"].(string); ok {
-		pathToRoot = v
-	}
-
 	env := tplgotpl.Env{
 		Chapters:       chapters,
 		FoldEnable:     foldEnable,
@@ -257,8 +252,6 @@ func buildTocJS(data map[string]any, cfg *config.HtmlConfig, b *book.Book) (stri
 	out.WriteString(escapeForJSSingleQuoted(sidebarHTML))
 	out.WriteString("';\n")
 	out.WriteString(tocJSMiddle)
-	out.WriteString(pathToRoot)
-	out.WriteString("' + href;\n")
 	out.WriteString(tocJSAfterClass)
 
 	if cfg.SidebarHeaderNav {
@@ -295,9 +288,9 @@ const tocJSMiddle = `        // Set the current, active page, and reveal it if i
             const link = links[i];
             const href = link.getAttribute('href');
             if (href && !href.startsWith('#') && !/^(?:[a-z+]+:)?\/\//.test(href)) {
-                link.href = '
+                link.href = path_to_root + href;`
 
-const tocJSAfterClass = `;
+const tocJSAfterClass = `
             }
             // The 'index' page is supposed to alias the first chapter in the book.
             // Check both with and without the '.html' suffix to be robust against pretty URLs

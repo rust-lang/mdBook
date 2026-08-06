@@ -62,9 +62,6 @@ func New(t *theme.Theme, cfg *config.HtmlConfig, root string) (*Files, error) {
 	f.AddBuiltin("book.js", t.JS)
 	f.AddBuiltin("css/general.css", t.GeneralCSS)
 	f.AddBuiltin("css/chrome.css", t.ChromeCSS)
-	if cfg.Print.Enable {
-		f.AddBuiltin("css/print.css", t.PrintCSS)
-	}
 	f.AddBuiltin("css/variables.css", t.VariablesCSS)
 	if t.FaviconPNG != nil {
 		f.AddBuiltin("favicon.png", t.FaviconPNG)
@@ -77,6 +74,8 @@ func New(t *theme.Theme, cfg *config.HtmlConfig, root string) (*Files, error) {
 	f.AddBuiltin("ayu-highlight.css", t.AyuHighlightCSS)
 	f.AddBuiltin("highlight.js", t.HighlightJS)
 	f.AddBuiltin("clipboard.min.js", t.ClipboardJS)
+	f.AddBuiltin("css/github-markdown-light.css", t.GitHubMarkdownLightCSS)
+	f.AddBuiltin("css/github-markdown-dark.css", t.GitHubMarkdownDarkCSS)
 
 	if t.FontsCSS == nil {
 		f.AddBuiltin("fonts/fonts.css", theme.FontsCSSDefault)
@@ -89,12 +88,6 @@ func New(t *theme.Theme, cfg *config.HtmlConfig, root string) (*Files, error) {
 		f.AddBuiltin(theme.SourceCodePro.Name, theme.SourceCodePro.Data)
 	} else if len(t.FontsCSS) > 0 {
 		f.AddBuiltin("fonts/fonts.css", t.FontsCSS)
-	}
-
-	if cfg.Playground.Editable && cfg.Playground.CopyJS {
-		for _, asset := range theme.PlaygroundEditor {
-			f.AddBuiltin(asset.Name, asset.Data)
-		}
 	}
 
 	for _, custom := range append(append([]string{}, cfg.AdditionalCSS...), cfg.AdditionalJS...) {

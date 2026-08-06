@@ -17,7 +17,7 @@ import (
 	"io/fs"
 )
 
-//go:embed all:css all:fonts all:images all:js all:playground_editor all:searcher all:templates
+//go:embed all:css all:fonts all:images all:js all:searcher all:templates
 var files embed.FS
 
 // FS exposes the embedded front-end tree.

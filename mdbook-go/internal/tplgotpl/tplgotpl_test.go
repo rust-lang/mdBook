@@ -105,7 +105,6 @@ func TestTocHTML_Comparison(t *testing.T) {
 		"css/variables.css": "variables-8adf115d.css",
 		"css/general.css":    "general-e96d0476.css",
 		"css/chrome.css":     "chrome-d279d366.css",
-		"css/print.css":      "print-9e4910d8.css",
 		"fonts/fonts.css":    "fonts-9644e21d.css",
 	}
 	data := map[string]any{

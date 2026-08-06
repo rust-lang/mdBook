@@ -69,6 +69,11 @@ type RenderData struct {
 	Previous *Nav
 	Next     *Nav
 
+	// Content is the rendered chapter HTML body. The .gohtml template renders
+	// it inside <main> via {{.Content}} (the hbs-style data map calls it
+	// "content"; this field is the typed RenderData view).
+	Content template.HTML
+
 	// Git integration.
 	GitRepositoryURL       string
 	GitRepositoryEditURL   string
@@ -189,6 +194,13 @@ func BuildRenderData(data map[string]any, noSectionLabel bool) RenderData {
 	}
 	if v, ok := data["fragment_map"]; ok {
 		out.FragmentMap = template.JS(asStringFromAny(v))
+	}
+	if v, ok := data["content"]; ok {
+		if h, ok := v.(template.HTML); ok {
+			out.Content = h
+		} else {
+			out.Content = template.HTML(asStringFromAny(v))
+		}
 	}
 	if v, ok := data["previous"]; ok {
 		if m, ok := v.(map[string]any); ok {
