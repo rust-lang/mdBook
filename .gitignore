@@ -26,3 +26,6 @@ package.json
 # mdbook-go build outputs (cross-build, in-source build)
 mdbook-go/bin/
 mdbook-go/dist/
+
+.claude/
+tmp/

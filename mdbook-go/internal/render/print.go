@@ -3,14 +3,15 @@ package render
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
 
-	"mdbook-go/internal/hbs"
 	"mdbook-go/internal/html"
+	"mdbook-go/internal/tplgotpl"
 	"mdbook-go/internal/utils"
 )
 
@@ -23,9 +24,7 @@ const printSeparator = `<div style="break-before: page; page-break-before: alway
 // crates/mdbook-html/src/html/print.rs.
 func renderPrintContent(trees []*chapterTree) string {
 	ids := utils.NewIDSet()
-	// remap maps a chapter's html path to its old-id -> new-id table.
 	remap := make(map[string]map[string]string, len(trees))
-	// rootIDs maps a chapter's html path to the anchor its title occupies.
 	rootIDs := make(map[string]string, len(trees))
 
 	for _, item := range trees {
@@ -44,8 +43,6 @@ func renderPrintContent(trees []*chapterTree) string {
 		}
 		remap[path] = table
 
-		// Every chapter needs a heading to link to; synthesise one when the
-		// chapter does not open with an <h1>.
 		if id, ok := firstHeadingID(item.tree); ok {
 			rootIDs[path] = id
 		} else {
@@ -66,9 +63,6 @@ func renderPrintContent(trees []*chapterTree) string {
 		rewritePrintLinks(item.tree, utils.ToURLPath(item.chapter.HTMLPath()), remap, rootIDs)
 	}
 
-	// Chapters are serialized into one buffer so the pretty printer sees the
-	// separator that precedes them and puts each chapter's first block element
-	// on a fresh line.
 	var out strings.Builder
 	for _, item := range trees {
 		if out.Len() > 0 {
@@ -79,7 +73,6 @@ func renderPrintContent(trees []*chapterTree) string {
 	return out.String()
 }
 
-// firstHeadingID returns the id of the chapter's first h1, if it has one.
 func firstHeadingID(tree *html.Node) (string, bool) {
 	for _, el := range tree.Elements(func(name string) bool { return name == "h1" }) {
 		if id, ok := el.El.Attr("id"); ok {
@@ -89,11 +82,8 @@ func firstHeadingID(tree *html.Node) (string, bool) {
 	return "", false
 }
 
-// linkParts splits a link into scheme, path and anchor.
 var linkParts = regexp.MustCompile(`^(?P<scheme>[a-z][a-z0-9+.-]*:)?(?P<path>[^#]+)?(?:#(?P<anchor>.*))?$`)
 
-// rewritePrintLinks turns links that point at another chapter into in-page
-// anchors, and leaves external links alone.
 func rewritePrintLinks(tree *html.Node, selfPath string, remap map[string]map[string]string, rootIDs map[string]string) {
 	rewrite := func(el *html.Element, attr string) {
 		value, ok := el.Attr(attr)
@@ -102,12 +92,10 @@ func rewritePrintLinks(tree *html.Node, selfPath string, remap map[string]map[st
 		}
 		m := linkParts.FindStringSubmatch(value)
 		if m == nil || m[1] != "" {
-			// Absolute URL: leave untouched.
 			return
 		}
 		target, anchor := m[2], m[3]
 		if target == "" {
-			// Same-page anchor: remap into the (possibly renamed) id.
 			if renamed, ok := remap[selfPath][anchor]; ok {
 				el.SetAttr(attr, "#"+renamed)
 			}
@@ -116,8 +104,6 @@ func rewritePrintLinks(tree *html.Node, selfPath string, remap map[string]map[st
 		resolved := utils.NormalizePath(filepath.ToSlash(filepath.Join(filepath.Dir(selfPath), target)))
 		table, isChapter := remap[resolved]
 		if !isChapter {
-			// Not a chapter: keep the relative path, which still resolves from
-			// the print page at the book root.
 			el.SetAttr(attr, resolved+anchorSuffix(anchor))
 			return
 		}
@@ -149,9 +135,8 @@ func anchorSuffix(anchor string) string {
 	return "#" + anchor
 }
 
-// emitRedirects writes one small HTML page per configured redirect. Ported from
-// emit_redirects in crates/mdbook-html/src/html_handlebars/hbs_renderer.rs.
-func emitRedirects(destination string, registry *hbs.Registry, redirects map[string]string) error {
+// emitRedirects writes one small HTML page per configured redirect.
+func emitRedirects(destination string, registry *tplgotpl.Registry, redirects map[string]string) error {
 	if len(redirects) == 0 {
 		return nil
 	}
@@ -160,8 +145,6 @@ func emitRedirects(destination string, registry *hbs.Registry, redirects map[str
 		entry := combined[original]
 		target := filepath.Join(destination, filepath.FromSlash(strings.TrimPrefix(original, "/")))
 		if _, err := os.Stat(target); err == nil {
-			// A real page already lives here; the in-page fragment mapper
-			// handles those redirects instead.
 			continue
 		}
 		if entry.destination == "" {
@@ -172,8 +155,8 @@ func emitRedirects(destination string, registry *hbs.Registry, redirects map[str
 			return err
 		}
 		page, err := registry.Render("redirect", map[string]any{
-			"url":          entry.destination,
-			"fragment_map": string(fragmentJSON),
+			"url":          template.URL(entry.destination),
+			"fragment_map": template.JS(string(fragmentJSON)),
 		})
 		if err != nil {
 			return err
@@ -185,14 +168,11 @@ func emitRedirects(destination string, registry *hbs.Registry, redirects map[str
 	return nil
 }
 
-// redirectEntry groups a page's default destination with its per-fragment ones.
 type redirectEntry struct {
 	destination string
 	fragments   map[string]string
 }
 
-// combineFragmentRedirects groups `page.html` and `page.html#frag` entries so
-// each source page is emitted once.
 func combineFragmentRedirects(redirects map[string]string) map[string]*redirectEntry {
 	combined := map[string]*redirectEntry{}
 	get := func(key string) *redirectEntry {

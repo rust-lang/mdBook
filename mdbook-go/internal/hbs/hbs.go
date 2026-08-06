@@ -1,4 +1,18 @@
 // Package hbs implements the small Handlebars subset used by mdBook's theme.
+//
+// DEPRECATED as of 2026-08-06: the production renderer was switched to
+// internal/tplgotpl (a thin html/template wrapper that mirrors this engine's
+// surface). The package is kept in source for two reasons:
+//
+//  1. Rollback. If the tgotpl path turns out to be unworkable in production,
+//     the render package can be reverted to this engine in a single change
+//     (replace tgotpl.Registry with hbs.Registry in render/render.go,
+//     print.go, and toc.go).
+//  2. Regression coverage. internal/hbs/hbs_golden_test.go runs a
+//     byte-exact golden test against the original mdBook hbs golden, which
+//     is still considered the authoritative rendering of the canonical theme.
+//
+// No production code path imports this package after the 2026-08-06 switch.
 package hbs
 
 import (

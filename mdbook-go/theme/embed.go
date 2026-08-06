@@ -21,7 +21,9 @@ import (
 var files embed.FS
 
 // FS exposes the embedded front-end tree.
-func FS() fs.FS { return files }
+func FS() fs.FS {
+	return files
+}
 
 // MustRead returns the contents of an embedded file, panicking when the file is
 // missing. Every call site uses a path that is present at compile time.

@@ -10,17 +10,27 @@
 // The HTTP and reload layers are split into two files: serve.go (this
 // file) hosts the listener and static file handler; reload.go implements
 // the WebSocket broadcaster.
+//
+// Note: the static handler is hand-rolled rather than using
+// http.FileServer, because Go stdlib's FileServer hard-codes a 301
+// redirect for any URL ending in `/index.html`. That conflicts with
+// mdBook's chapter URLs (which may literally end in `index.html`), and
+// the Rust port does not exhibit the issue. See staticHandler below.
 package serve
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
+	"mime"
 	"net"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -134,34 +144,90 @@ func (s *Server) Reload() {
 
 // staticHandler returns an http.Handler that serves files from root and
 // falls back to notFoundPath for any URL that does not match an existing
-// file. This mirrors the axum `ServeDir::new(&build_dir).not_found_service
-// (ServeFile::new(build_dir.join(file_404)))` chain in src/cmd/serve.rs.
+// file. This is hand-rolled (not http.FileServer) to match axum's
+// `ServeDir::new(&build_dir).not_found_service(ServeFile::new(...))`
+// behaviour used by src/cmd/serve.rs.
+//
+// Why hand-rolled: Go stdlib's http.FileServer calls serveFile, which
+// hard-codes a 301 redirect for any URL ending in `/index.html`
+// (see net/http/fs.go:679-688). That breaks mdBook, where the canonical
+// URL of a chapter may literally be `index.html` (e.g. README.md →
+// index.html). We bypass the redirect by going straight to os.Open +
+// http.ServeContent, which streams the file without any redirect.
 func staticHandler(root, notFoundPath string, logger *log.Logger) http.Handler {
-	fs := http.FileServer(http.Dir(root))
+	absRoot, err := filepath.Abs(root)
+	if err != nil {
+		// Fall back to the raw root; subsequent os.Open calls will fail
+		// with a descriptive error if absRoot was needed for correctness.
+		absRoot = root
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Normalise the path and check existence; the net/http file
-		// server would otherwise 404 with its own body, which differs
-		// from the Rust build's 404.html content.
-		upath := r.URL.Path
-		if !strings.HasPrefix(upath, "/") {
-			upath = "/" + upath
-		}
-		clean := filepath.FromSlash(filepath.Clean(upath))
-		full := filepath.Join(root, clean)
-		if info, err := os.Stat(full); err == nil && !info.IsDir() {
-			fs.ServeHTTP(w, r)
+		rel, ok := resolveStaticPath(r.URL.Path)
+		if !ok {
+			serveNotFound(w, absRoot, notFoundPath, logger)
 			return
 		}
-		// Fallback: serve the configured 404 file with a 404 status.
-		// The body is the file content; the status is what we set here.
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.WriteHeader(http.StatusNotFound)
-		body, err := os.ReadFile(filepath.Join(root, notFoundPath))
+		full := filepath.Join(absRoot, filepath.FromSlash(rel))
+		info, err := os.Stat(full)
+		if err != nil || info.IsDir() {
+			serveNotFound(w, absRoot, notFoundPath, logger)
+			return
+		}
+		f, err := os.Open(full)
 		if err != nil {
-			logger.Printf("serve: 404 fallback %s unreadable: %v", notFoundPath, err)
-			_, _ = w.Write([]byte("Not Found"))
+			serveNotFound(w, absRoot, notFoundPath, logger)
 			return
 		}
-		_, _ = w.Write(body)
+		defer f.Close()
+		if ctype := mime.TypeByExtension(filepath.Ext(full)); ctype != "" {
+			w.Header().Set("Content-Type", ctype)
+		}
+		w.Header().Set("Content-Length", strconv.FormatInt(info.Size(), 10))
+		w.Header().Set("Last-Modified", info.ModTime().UTC().Format(http.TimeFormat))
+		w.WriteHeader(http.StatusOK)
+		_, _ = io.Copy(w, f)
 	})
+}
+
+// resolveStaticPath maps a URL path to a relative path inside the build
+// directory. It mirrors the directory-handling rules of axum's ServeDir:
+//   - "/"  → "index.html"
+//   - "/foo/"  → "foo/index.html"
+//   - "/foo.html" → "foo.html"
+//   - "/foo/bar" → "foo/bar" (only served if it exists as a file)
+//
+// Returns ("", false) for malformed paths (those containing null bytes or
+// that fail to clean). The caller treats false as 404.
+func resolveStaticPath(upath string) (string, bool) {
+	if !strings.HasPrefix(upath, "/") {
+		upath = "/" + upath
+	}
+	// path.Clean always uses forward slash; URL paths are slash-separated.
+	clean := path.Clean(upath)
+	if clean == "/" {
+		return "index.html", true
+	}
+	rel := strings.TrimPrefix(clean, "/")
+	if rel == "" || strings.Contains(rel, "\x00") {
+		return "", false
+	}
+	return rel, true
+}
+
+// serveNotFound writes the configured 404 file's body with a 404 status.
+// On any failure (file missing, read error), falls back to a plain
+// "Not Found" response so the client always gets a body.
+func serveNotFound(w http.ResponseWriter, absRoot, notFoundPath string, logger *log.Logger) {
+	body, err := os.ReadFile(filepath.Join(absRoot, filepath.FromSlash(notFoundPath)))
+	if err != nil {
+		if logger != nil {
+			logger.Printf("serve: 404 fallback %s unreadable: %v", notFoundPath, err)
+		}
+		http.Error(w, "Not Found", http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Content-Length", strconv.Itoa(len(body)))
+	w.WriteHeader(http.StatusNotFound)
+	_, _ = w.Write(body)
 }

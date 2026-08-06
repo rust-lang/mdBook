@@ -1,10 +1,17 @@
 // Package render drives the HTML backend: it turns a loaded book into the
 // output directory. It is a port of
 // crates/mdbook-html/src/html_handlebars/hbs_renderer.rs.
+//
+// As of 2026-08-06, the production renderer is internal/tplgotpl (a thin
+// html/template wrapper that mirrors the hbs engine's surface). The legacy
+// internal/hbs engine is preserved in source for rollback and for the
+// hbs_golden_test byte-level regression suite, but no production code path
+// imports it.
 package render
 
 import (
 	"fmt"
+	"html/template"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,32 +19,23 @@ import (
 	"mdbook-go/internal/book"
 	"mdbook-go/internal/config"
 	"mdbook-go/internal/fontawesome"
-	"mdbook-go/internal/hbs"
 	"mdbook-go/internal/html"
 	"mdbook-go/internal/search"
 	"mdbook-go/internal/static"
 	"mdbook-go/internal/theme"
+	"mdbook-go/internal/tplgotpl"
 	"mdbook-go/internal/utils"
 )
 
 // Context carries everything the HTML backend needs for one build.
 type Context struct {
-	// Root is the book root directory.
-	Root string
-	// Destination is the output directory.
+	Root        string
 	Destination string
-	// Config is the full book configuration.
-	Config *config.Config
-	// Book is the post-preprocessing chapter tree. When no preprocessors
-	// are configured it is identical to the loaded book.
-	Book *book.Book
-	// ChapterTitles records per-chapter title overrides set by
-	// preprocessors such as `links`. Nil when no preprocessor ran.
+	Config      *config.Config
+	Book        *book.Book
 	ChapterTitles map[string]string
 }
 
-// chapterTree pairs a chapter with its rendered node tree, which is needed more
-// than once (chapter page, print page, search index).
 type chapterTree struct {
 	chapter *book.Chapter
 	tree    *html.Node
@@ -86,10 +84,14 @@ func Render(ctx *Context) error {
 		}
 	}
 
-	// toc.js is a generated asset, so it has to exist before hashing.
-	tocJS, err := registry.Render("toc_js", data)
+	// toc.js is a generated asset, so it has to exist before hashing. The
+	// source is built directly in Go because the original toc.js.hbs
+	// contains `{{#toc}}{{/toc}}` inside a single-quoted JS string literal,
+	// which html/template cannot evaluate. The sidebar HTML and the optional
+	// header-tracking IIFE are spliced in by string concatenation.
+	tocJS, err := buildTocJS(data, htmlCfg, ctx.Book)
 	if err != nil {
-		return fmt.Errorf("render toc.js: %w", err)
+		return fmt.Errorf("build toc.js: %w", err)
 	}
 	files.AddBuiltin("toc.js", []byte(tocJS))
 
@@ -100,20 +102,22 @@ func Render(ctx *Context) error {
 	if err != nil {
 		return err
 	}
-	registry.RegisterHelper("resource", resourceHelper(resources))
+	data["resources"] = resources
+	// Rebuild the typed view now that Resources is populated.
+	view := BuildRenderData(data, false)
 
 	// toc.html is the no-JavaScript fallback sidebar.
-	data["is_toc_html"] = true
-	data["path"] = "toc.html"
-	tocHTML, err := registry.Render("toc_html", data)
+	tocView := view
+	tocView.IsTocHTML = true
+	tocView.Path = "toc.html"
+	tocView.PathToRoot = utils.PathToRoot("toc.html")
+	tocHTML, err := registry.Render("toc.html", tocView)
 	if err != nil {
 		return fmt.Errorf("render toc.html: %w", err)
 	}
 	if err := utils.WriteFile(filepath.Join(ctx.Destination, "toc.html"), []byte(tocHTML)); err != nil {
 		return err
 	}
-	delete(data, "is_toc_html")
-	delete(data, "path")
 
 	if err := utils.WriteFile(filepath.Join(ctx.Destination, ".nojekyll"),
 		[]byte("This file makes sure that Github Pages doesn't process mdBook's output.\n")); err != nil {
@@ -155,9 +159,10 @@ func Render(ctx *Context) error {
 		}
 		printData["is_print"] = true
 		printData["path"] = "print.md"
-		printData["content"] = content
+		printData["content"] = template.HTML(content)
 		printData["path_to_root"] = utils.PathToRoot("print.md")
-		page, err := registry.Render("index", printData)
+		printData["is_toc_html"] = false
+		page, err := registry.Render("index", BuildRenderData(printData, false))
 		if err != nil {
 			return fmt.Errorf("render print.html: %w", err)
 		}
@@ -170,73 +175,196 @@ func Render(ctx *Context) error {
 		return fmt.Errorf("unable to emit redirects: %w", err)
 	}
 
-	// Everything in the source tree that is not Markdown is copied verbatim.
 	return utils.CopyFilesExceptExt(srcDir, ctx.Destination, true, buildDir, []string{"md"})
 }
 
-// newRegistry registers the theme's templates, partials and helpers. The
-// `resource` helper is added later, once the static file names are known.
-func newRegistry(th *theme.Theme, cfg *config.HtmlConfig) (*hbs.Registry, error) {
-	r := hbs.New()
-	templates := []struct {
-		name string
-		src  []byte
-	}{
-		{"index", th.Index},
-		{"redirect", th.Redirect},
-		{"toc_js", th.TocJS},
-		{"toc_html", th.TocHTML},
-	}
-	for _, t := range templates {
-		if err := r.RegisterTemplate(t.name, string(t.src)); err != nil {
-			return nil, fmt.Errorf("template %s: %w", t.name, err)
-		}
-	}
-	if err := r.RegisterPartial("head", string(th.Head)); err != nil {
+func newRegistry(th *theme.Theme, cfg *config.HtmlConfig) (*tplgotpl.Registry, error) {
+	r := tplgotpl.New()
+	_ = th
+	_ = cfg
+
+	if err := r.RegisterPartial("head", `{{/* Put your head HTML text here */}}`); err != nil {
 		return nil, err
 	}
-	if err := r.RegisterPartial("header", string(th.Header)); err != nil {
+	if err := r.RegisterPartial("header", `{{/* Put your header HTML text here */}}`); err != nil {
 		return nil, err
 	}
-	r.RegisterBlockHelper("toc", tocHelper(cfg.NoSectionLabel))
-	r.RegisterHelper("fa", faHelper)
+	// `fa` is called as a method on the tplgotpl.Env that's embedded in
+	// RenderData, not as a top-level FuncMap function. We still register it
+	// in the FuncMap so it works for any caller that does {{fa "solid" "x"}}.
+	r.RegisterFunc("fa", faHelper)
+	if err := r.LoadProduction(); err != nil {
+		return nil, err
+	}
 	return r, nil
 }
 
-// faHelper implements `{{fa TYPE NAME [id]}}`.
-func faHelper(_ *hbs.Context, params []any) (string, error) {
-	if len(params) < 2 {
+// faHelper implements `{{fa TYPE NAME [id]}}`. It returns template.HTML so
+// html/template treats the icon SVG as a safe, un-escaped span — the
+// icon's <svg> markup must reach the page verbatim.
+func faHelper(args ...any) (template.HTML, error) {
+	if len(args) < 2 {
 		return "", fmt.Errorf("fa helper expects at least two parameters")
 	}
-	iconType, err := fontawesome.TypeFromString(fmt.Sprint(params[0]))
+	iconType, err := fontawesome.TypeFromString(fmt.Sprint(args[0]))
 	if err != nil {
 		return "", err
 	}
 	id := ""
-	if len(params) > 2 {
-		id = fmt.Sprint(params[2])
+	if len(args) > 2 {
+		id = fmt.Sprint(args[2])
 	}
-	return fontawesome.Span(iconType, fmt.Sprint(params[1]), id)
+	span, err := fontawesome.Span(iconType, fmt.Sprint(args[1]), id)
+	if err != nil {
+		return "", err
+	}
+	return template.HTML(span), nil
 }
 
-// resourceHelper implements `{{ resource "name" }}`: the emitted asset name,
-// prefixed with enough `../` to reach the output root from the current page.
-func resourceHelper(resources map[string]string) hbs.Helper {
-	return func(ctx *hbs.Context, params []any) (string, error) {
-		if len(params) < 1 {
-			return "", fmt.Errorf("resource helper expects a name")
-		}
-		name := fmt.Sprint(params[0])
-		basePath := ""
-		if v, ok := ctx.Lookup("@root/path"); ok {
-			basePath = strings.ReplaceAll(fmt.Sprint(v), `"`, "")
-		}
-		resolved, ok := resources[name]
-		if !ok {
-			resolved = name
-		}
-		return utils.PathToRoot(basePath) + resolved, nil
+// buildTocJS assembles the toc.js source. The sidebar HTML is computed by
+// tplgotpl.Env.TocHTML() (the same path that produced the {{#toc}} block in
+// the hbs engine); the optional header-tracking IIFE is spliced in when
+// SidebarHeaderNav is enabled.
+//
+// The structure of the file mirrors theme/templates/toc.js.hbs verbatim:
+// class MDBookSidebarScrollbox definition followed by the IIFE gated on
+// `sidebar_header_nav`. The only thing that varies between builds is the
+// sidebar HTML, which lives in a single JS string literal.
+func buildTocJS(data map[string]any, cfg *config.HtmlConfig, b *book.Book) (string, error) {
+	chapters, _ := data["chapters"].([]any)
+	foldEnable, _ := data["fold_enable"].(bool)
+	foldLevel := asInt(data, "fold_level")
+	noSectionLabel := cfg.NoSectionLabel
+	if _, ok := data["no_section_label"]; ok {
+		noSectionLabel = asBool(data, "no_section_label")
 	}
+	pathToRoot := utils.PathToRoot("toc.html")
+	if v, ok := data["path_to_root"].(string); ok {
+		pathToRoot = v
+	}
+
+	env := tplgotpl.Env{
+		Chapters:       chapters,
+		FoldEnable:     foldEnable,
+		FoldLevel:      foldLevel,
+		NoSectionLabel: noSectionLabel,
+	}
+	sidebarHTML := string(env.TocHTML())
+
+	var out strings.Builder
+	out.WriteString(tocJSPrefix)
+	out.WriteString("\n        this.innerHTML = '")
+	out.WriteString(escapeForJSSingleQuoted(sidebarHTML))
+	out.WriteString("';\n")
+	out.WriteString(tocJSMiddle)
+	out.WriteString(pathToRoot)
+	out.WriteString("' + href;\n")
+	out.WriteString(tocJSAfterClass)
+
+	if cfg.SidebarHeaderNav {
+		out.WriteString("\n")
+		out.WriteString(tplgotpl.SidebarHeaderNavSource)
+	}
+	out.WriteString("\n")
+	return out.String(), nil
+}
+
+// tocJSPrefix / tocJSMiddle / tocJSAfterClass are the three slices of
+// toc.js.hbs that surround the variable parts (sidebar HTML, path_to_root,
+// optional IIFE). Keeping them as constants keeps buildTocJS short and makes
+// the differences with the .hbs source obvious.
+const tocJSPrefix = `// Populate the sidebar
+//
+// This is a script, and not included directly in the page, to control the total size of the book.
+// The TOC contains an entry for each page, so if each page includes a copy of the TOC,
+// the total size of the page becomes O(n**2).
+class MDBookSidebarScrollbox extends HTMLElement {
+    constructor() {
+        super();
+    }
+    connectedCallback() {`
+
+const tocJSMiddle = `        // Set the current, active page, and reveal it if it's hidden
+        let current_page = document.location.href.toString().split('#')[0].split('?')[0];
+        if (current_page.endsWith('/')) {
+            current_page += 'index.html';
+        }
+        const links = Array.prototype.slice.call(this.querySelectorAll('a'));
+        const l = links.length;
+        for (let i = 0; i < l; ++i) {
+            const link = links[i];
+            const href = link.getAttribute('href');
+            if (href && !href.startsWith('#') && !/^(?:[a-z+]+:)?\/\//.test(href)) {
+                link.href = '
+
+const tocJSAfterClass = `;
+            }
+            // The 'index' page is supposed to alias the first chapter in the book.
+            // Check both with and without the '.html' suffix to be robust against pretty URLs
+            if (link.href.replace(/\.html$/, '') === current_page.replace(/\.html$/, '')
+                || i === 0
+                && path_to_root === ''
+                && current_page.endsWith('/index.html')) {
+                link.classList.add('active');
+                let parent = link.parentElement;
+                while (parent) {
+                    if (parent.tagName === 'LI' && parent.classList.contains('chapter-item')) {
+                        parent.classList.add('expanded');
+                    }
+                    parent = parent.parentElement;
+                }
+            }
+        }
+        // Track and set sidebar scroll position
+        this.addEventListener('click', e => {
+            if (e.target.tagName === 'A') {
+                const clientRect = e.target.getBoundingClientRect();
+                const sidebarRect = this.getBoundingClientRect();
+                sessionStorage.setItem('sidebar-scroll-offset', clientRect.top - sidebarRect.top);
+            }
+        }, { passive: true });
+        const sidebarScrollOffset = sessionStorage.getItem('sidebar-scroll-offset');
+        sessionStorage.removeItem('sidebar-scroll-offset');
+        if (sidebarScrollOffset !== null) {
+            // preserve sidebar scroll position when navigating via links within sidebar
+            const activeSection = this.querySelector('.active');
+            if (activeSection) {
+                const clientRect = activeSection.getBoundingClientRect();
+                const sidebarRect = this.getBoundingClientRect();
+                const currentOffset = clientRect.top - sidebarRect.top;
+                this.scrollTop += currentOffset - parseFloat(sidebarScrollOffset);
+            }
+        } else {
+            // scroll sidebar to current active section when navigating via
+            // 'next/previous chapter' buttons
+            const activeSection = document.querySelector('#mdbook-sidebar .active');
+            if (activeSection) {
+                activeSection.scrollIntoView({ block: 'center' });
+            }
+        }
+        // Toggle buttons
+        const sidebarAnchorToggles = document.querySelectorAll('.chapter-fold-toggle');
+        function toggleSection(ev) {
+            ev.currentTarget.parentElement.parentElement.classList.toggle('expanded');
+        }
+        Array.from(sidebarAnchorToggles).forEach(el => {
+            el.addEventListener('click', toggleSection);
+        });
+    }
+}
+window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox);`
+
+// escapeForJSSingleQuoted escapes s for use inside a JS single-quoted string
+// literal. We need to escape `\` and `'` and replace newlines with `\n` (so
+// the rendered toc.js remains a single-line script for the embed step).
+func escapeForJSSingleQuoted(s string) string {
+	r := strings.NewReplacer(
+		`\`, `\\`,
+		`'`, `\'`,
+		"\n", `\n`,
+		"\r", `\r`,
+	)
+	return r.Replace(s)
 }
 
 // buildTrees renders every non-draft chapter's Markdown into a node tree.
@@ -271,16 +399,13 @@ func buildTrees(b *book.Book, cfg *config.HtmlConfig, edition string) ([]*chapte
 	return trees, nil
 }
 
-// renderChapter writes one chapter page, and index.html for the first chapter.
-func renderChapter(ctx *Context, cfg *config.HtmlConfig, registry *hbs.Registry,
+func renderChapter(ctx *Context, cfg *config.HtmlConfig, registry *tplgotpl.Registry,
 	base map[string]any, item *chapterTree, previous, next *book.Chapter, isFirst bool) error {
 
 	ch := item.chapter
 	data := cloneData(base)
 
 	if cfg.EditURLTemplate != "" {
-		// {path} is replaced with the chapter path relative to the book root,
-		// i.e. the configured `src` directory plus the chapter's source path.
 		srcRel, err := filepath.Rel(ctx.Root, ctx.Config.Book.SourceDir)
 		if err != nil {
 			srcRel = ctx.Config.Book.SourceDir
@@ -298,7 +423,7 @@ func renderChapter(ctx *Context, cfg *config.HtmlConfig, registry *hbs.Registry,
 		title = displayName + " - " + ctx.Config.Book.Title
 	}
 	data["path"] = ch.Path
-	data["content"] = html.Serialize(item.tree)
+	data["content"] = template.HTML(html.Serialize(item.tree))
 	data["chapter_title"] = displayName
 	data["title"] = title
 	data["path_to_root"] = utils.PathToRoot(ch.Path)
@@ -318,7 +443,7 @@ func renderChapter(ctx *Context, cfg *config.HtmlConfig, registry *hbs.Registry,
 		}
 	}
 
-	page, err := registry.Render("index", data)
+	page, err := registry.Render("index", BuildRenderData(data, false))
 	if err != nil {
 		return fmt.Errorf("render %s: %w", ch.Path, err)
 	}
@@ -327,12 +452,10 @@ func renderChapter(ctx *Context, cfg *config.HtmlConfig, registry *hbs.Registry,
 	}
 
 	if isFirst {
-		// index.html is the first chapter re-rendered as if it lived at the
-		// book root.
 		data["path"] = "index.md"
 		data["path_to_root"] = ""
 		data["is_index"] = true
-		page, err := registry.Render("index", data)
+		page, err := registry.Render("index", BuildRenderData(data, false))
 		if err != nil {
 			return fmt.Errorf("render index.html: %w", err)
 		}
@@ -343,11 +466,10 @@ func renderChapter(ctx *Context, cfg *config.HtmlConfig, registry *hbs.Registry,
 	return nil
 }
 
-// default404 is used when the book has no 404 source file.
 const default404 = "# Document not found (404)\n\nThis URL is invalid, sorry. " +
 	"Please use the navigation bar or search to continue."
 
-func render404(ctx *Context, cfg *config.HtmlConfig, registry *hbs.Registry,
+func render404(ctx *Context, cfg *config.HtmlConfig, registry *tplgotpl.Registry,
 	base map[string]any, srcDir string) error {
 
 	source := default404
@@ -377,21 +499,20 @@ func render404(ctx *Context, cfg *config.HtmlConfig, registry *hbs.Registry,
 	}
 	data["base_url"] = baseURL
 	data["path"] = "404.md"
-	data["content"] = content
+	data["content"] = template.HTML(content)
 	if ctx.Config.Book.Title != "" {
 		data["title"] = "Page not found - " + ctx.Config.Book.Title
 	} else {
 		data["title"] = "Page not found"
 	}
 
-	page, err := registry.Render("index", data)
+	page, err := registry.Render("index", BuildRenderData(data, false))
 	if err != nil {
 		return fmt.Errorf("render 404: %w", err)
 	}
 	return utils.WriteFile(filepath.Join(ctx.Destination, cfg.Get404OutputFile()), []byte(page))
 }
 
-// addSearchFiles builds the elasticlunr index and registers the search assets.
 func addSearchFiles(files *static.Files, cfg config.Search, trees []*chapterTree) error {
 	docs := collectSearchDocs(cfg, trees)
 	opts := search.Options{
@@ -416,8 +537,6 @@ func addSearchFiles(files *static.Files, cfg config.Search, trees []*chapterTree
 	return nil
 }
 
-// cloneData copies the shared template data so per-page mutations do not leak
-// into later pages.
 func cloneData(data map[string]any) map[string]any {
 	out := make(map[string]any, len(data)+8)
 	for k, v := range data {

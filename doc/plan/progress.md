@@ -15,6 +15,8 @@
 
 ## 全量任务分解
 
+> ⚠️ **回归基线与删除 rust 前置条件**：见 [`testing.md`](testing.md)（2026-08-05 v0.2 后第一轮扫描：25 PASS / 5 DIFF / 6 SKIP / 12 BUILD_FAIL；删除 rust 前必须修完 5 处 silent validation gap + 3 处 functional gap）。
+
 ### M1：核心加载器 + 最小 build
 
 - [x] M1.1 创建 `mdbook-go/` 目录与 `go.mod`
