@@ -72,7 +72,7 @@ Implemented:
   admonitions, smart punctuation, math, playground, hide-lines,
   font awesome.
 - Title IDs and dedup; `.md` → `.html` link rewriting.
-- `index.html`, per-chapter pages, `toc.html`, `toc.js`, `print.html`,
+- `index.html`, per-chapter pages, `toc.html`, `toc.js`,
   `404.html`, redirects, `.nojekyll`.
 - Static asset collection, SHA-256 fingerprinting, `{{ resource }}`
   rewriting (CSS/JS/font/icons).

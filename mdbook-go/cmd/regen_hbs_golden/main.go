@@ -36,7 +36,7 @@ func main() {
 	data := map[string]any{
 		"language": "en", "text_direction": "ltr", "book_title": "Basic Fixture",
 		"description": "", "favicon_png": "favicon.png", "favicon_svg": "favicon.svg",
-		"default_theme": "light", "preferred_dark_theme": "navy", "print_enable": true,
+		"default_theme": "light", "preferred_dark_theme": "navy",
 		"fold_enable": false, "fold_level": 0, "search_enabled": true, "search_js": true,
 		"playground_copyable": true, "sidebar_header_nav": false,
 		"chapters": []any{

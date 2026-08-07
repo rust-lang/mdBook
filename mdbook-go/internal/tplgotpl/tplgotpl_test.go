@@ -112,7 +112,6 @@ func TestTocHTML_Comparison(t *testing.T) {
 		"default_theme":    "light",
 		"text_direction":   "ltr",
 		"base_url":         "",
-		"print_enable":     true,
 		"additional_css":   []any{"theme-overrides.css"},
 		"path":             "toc.html",
 		"chapters":         sampleChapters(),
@@ -154,7 +153,6 @@ func TestTocHTML_Comparison(t *testing.T) {
 		DefaultTheme:  "light",
 		TextDirection: "ltr",
 		BaseURL:       "",
-		PrintEnable:   true,
 		AdditionalCSS: []string{"theme-overrides.css"},
 	})
 	if err != nil {
@@ -173,7 +171,6 @@ type tocData struct {
 	DefaultTheme  string
 	TextDirection string
 	BaseURL       string
-	PrintEnable   bool
 	AdditionalCSS []string
 }
 

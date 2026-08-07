@@ -137,8 +137,8 @@ func runBuild(dir, dest string, openAfter bool) error {
 	if openAfter {
 		// The Rust version opens <build_dir>/html/index.html. Our default
 		// build directory is the user's build-dir, where the index lives
-		// directly as index.html (M2 outputs it alongside print.html,
-		// 404.html, etc.).
+		// directly as index.html (M2 outputs it alongside the per-chapter
+		// pages, 404.html, etc.).
 		index := filepath.Join(m.BuildDir(), "index.html")
 		if err := driver.Open(index); err != nil {
 			return err

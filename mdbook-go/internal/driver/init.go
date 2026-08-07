@@ -81,10 +81,7 @@ func Init(root string, opts InitOptions) error {
 		if err := os.MkdirAll(themeDir, 0o755); err != nil {
 			return err
 		}
-		// printEnable=true matches Rust's `MDBook::init(...).copy_theme(true)`,
-		// which is the default in src/cmd/init.rs when --theme is given. It
-		// controls whether css/print.css is written into the theme dir.
-		if err := theme.Copy(themeDir, true); err != nil {
+		if err := theme.Copy(themeDir); err != nil {
 			return fmt.Errorf("copy theme: %w", err)
 		}
 	}

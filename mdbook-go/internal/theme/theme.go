@@ -190,10 +190,7 @@ func loadInto(path string, dest *[]byte) bool {
 
 // Copy writes the default theme files into themeDir, mirroring
 // Theme::copy_theme.
-//
-// The printEnable parameter is retained for API compatibility but currently
-// has no effect (css/print.css is no longer shipped).
-func Copy(themeDir string, printEnable bool) error {
+func Copy(themeDir string) error {
 	write := func(rel string, data []byte) error {
 		path := filepath.Join(themeDir, filepath.FromSlash(rel))
 		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {

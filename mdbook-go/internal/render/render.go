@@ -148,28 +148,6 @@ func Render(ctx *Context) error {
 		}
 	}
 
-	if htmlCfg.Print.Enable {
-		content := renderPrintContent(trees)
-		printData := cloneData(data)
-		if ctx.Config.Book.Title != "" {
-			printData["title"] = ctx.Config.Book.Title
-		} else {
-			delete(printData, "title")
-		}
-		printData["is_print"] = true
-		printData["path"] = "print.md"
-		printData["content"] = template.HTML(content)
-		printData["path_to_root"] = utils.PathToRoot("print.md")
-		printData["is_toc_html"] = false
-		page, err := registry.Render("index", BuildRenderData(printData, false))
-		if err != nil {
-			return fmt.Errorf("render print.html: %w", err)
-		}
-		if err := utils.WriteFile(filepath.Join(ctx.Destination, "print.html"), []byte(page)); err != nil {
-			return err
-		}
-	}
-
 	if err := emitRedirects(ctx.Destination, registry, htmlCfg.Redirect); err != nil {
 		return fmt.Errorf("unable to emit redirects: %w", err)
 	}

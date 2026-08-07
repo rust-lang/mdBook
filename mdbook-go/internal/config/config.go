@@ -62,7 +62,6 @@ type HtmlConfig struct {
 	Fold       Fold       `toml:"fold"`
 	Playground Playground `toml:"playground"`
 	Code       Code       `toml:"code"`
-	Print      Print      `toml:"print"`
 
 	NoSectionLabel bool    `toml:"no-section-label"`
 	Search         *Search `toml:"search"`

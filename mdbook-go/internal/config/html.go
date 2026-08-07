@@ -13,12 +13,6 @@ type Fold struct {
 	Level  uint8 `toml:"level"`
 }
 
-// Print is [output.html.print].
-type Print struct {
-	Enable    bool `toml:"enable"`
-	PageBreak bool `toml:"page-break"`
-}
-
 // Code is [output.html.code].
 type Code struct {
 	// HideLines maps a language to the prefix marking a hidden line.
@@ -31,9 +25,6 @@ type Code struct {
 func DefaultPlayground() Playground {
 	return Playground{Editable: false, Copyable: true, CopyJS: true, LineNumbers: false, Runnable: true}
 }
-
-// DefaultPrint returns the Rust defaults for [output.html.print].
-func DefaultPrint() Print { return Print{Enable: true, PageBreak: true} }
 
 // DefaultSearch returns the Rust defaults for [output.html.search].
 func DefaultSearch() Search {
@@ -63,7 +54,6 @@ func DefaultHTML() *HtmlConfig {
 		Fold:             Fold{},
 		Playground:       DefaultPlayground(),
 		Code:             Code{HideLines: map[string]string{}},
-		Print:            DefaultPrint(),
 		NoSectionLabel:   false,
 		Redirect:         map[string]string{},
 		HashFiles:        true,

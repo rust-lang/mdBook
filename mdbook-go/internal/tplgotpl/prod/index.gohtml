@@ -4,9 +4,6 @@
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
         <title>{{.Title}}</title>
-        {{if .IsPrint}}
-        <meta name="robots" content="noindex">
-        {{end}}
         {{if .BaseURL}}
         <base href="{{.BaseURL}}">
         {{end}}
@@ -145,11 +142,6 @@
                     </div>
                     <h1 class="menu-title">{{.BookTitle}}</h1>
                     <div class="right-buttons">
-                        {{if .PrintEnable}}
-                        <a href="{{.PathToRoot}}print.html" title="Print this book" aria-label="Print this book">
-                            打印
-                        </a>
-                        {{end}}
                         {{if .GitRepositoryURL}}
                         <a href="{{.GitRepositoryURL}}" title="Git repository" aria-label="Git repository">
                         </a>
@@ -281,24 +273,6 @@
 
         {{range .AdditionalJS}}
         <script src="{{$.Resource .}}"></script>
-        {{end}}
-
-        {{if .IsPrint}}
-        {{if .MathJaxSupport}}
-        <script>
-        window.addEventListener('load', function() {
-            MathJax.Hub.Register.StartupHook('End', function() {
-                window.setTimeout(window.print, 100);
-            });
-        });
-        </script>
-        {{else}}
-        <script>
-        window.addEventListener('load', function() {
-            window.setTimeout(window.print, 100);
-        });
-        </script>
-        {{end}}
         {{end}}
 
         {{if .FragmentMap}}

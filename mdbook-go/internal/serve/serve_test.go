@@ -13,7 +13,7 @@ import (
 // TestStaticHandler exercises the file-serving rules implemented in
 // staticHandler. It reuses the pre-built fixture under
 // mdbook-go/fixtures/serve/book, which contains index.html, intro.html,
-// print.html, 404.html, and the full hashed asset set.
+// 404.html, and the full hashed asset set.
 //
 // The cases cover both the original bug (URLs ending in /index.html must
 // serve directly, not 301 to ./) and the surrounding behaviours we want
@@ -59,12 +59,6 @@ func TestStaticHandler(t *testing.T) {
 			wantBodyHas: "intro",
 		},
 		{
-			name:        "print page",
-			path:        "/print.html",
-			wantStatus:  http.StatusOK,
-			wantBodyHas: "mdBook",
-		},
-		{
 			name:        "trailing slash on directory falls back to index.html",
 			path:        "/",
 			wantStatus:  http.StatusOK,
@@ -78,7 +72,7 @@ func TestStaticHandler(t *testing.T) {
 		},
 		{
 			name:        "nested CSS (hashed)",
-			path:        "/css/chrome-3d05a557.css",
+			path:        "/css/chrome-2b282e04.css",
 			wantStatus:  http.StatusOK,
 			wantBodyHas: "chrome",
 		},
@@ -126,9 +120,7 @@ func TestStaticHandler_NoRedirectOnIndex(t *testing.T) {
 		return http.ErrUseLastResponse
 	}
 
-	for _, path := range []string{"/index.html", "/print.html"} {
-		// (print.html is not index.html but worth confirming the same
-		// straight-200 behaviour applies to .html files in general.)
+	for _, path := range []string{"/index.html"} {
 		t.Run(path, func(t *testing.T) {
 			resp, err := client.Get(srv.URL + path)
 			if err != nil {

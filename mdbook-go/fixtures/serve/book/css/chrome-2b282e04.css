@@ -361,11 +361,6 @@ mark.fade-out {
     background-color: var(--bg);
 }
 
-#fa-spin {
-    animation: rotating 2s linear infinite;
-    display: inline-block;
-}
-
 @keyframes rotating {
     from {
         transform: rotate(0deg);

@@ -35,7 +35,6 @@ type RenderData struct {
 	PathToRoot    string
 
 	// Page flags.
-	IsPrint   bool
 	IsIndex   bool
 	IsTocHTML bool
 	BaseURL   string
@@ -47,7 +46,6 @@ type RenderData struct {
 	PlaygroundJS           bool
 	PlaygroundLineNumbers  bool
 	PlaygroundCopyable     bool
-	PrintEnable            bool
 	FoldEnable             bool
 	FoldLevel              int
 
@@ -128,7 +126,6 @@ func makeData(ctx *Context, cfg *config.HtmlConfig, th *theme.Theme) map[string]
 	if cfg.Playground.Copyable {
 		data["playground_copyable"] = true
 	}
-	data["print_enable"] = cfg.Print.Enable
 	data["fold_enable"] = cfg.Fold.Enable
 	data["fold_level"] = int(cfg.Fold.Level)
 	data["sidebar_header_nav"] = cfg.SidebarHeaderNav
@@ -171,11 +168,8 @@ func BuildRenderData(data map[string]any, noSectionLabel bool) RenderData {
 		PlaygroundJS:           asBool(data, "playground_js"),
 		PlaygroundLineNumbers:  asBool(data, "playground_line_numbers"),
 		PlaygroundCopyable:     asBool(data, "playground_copyable"),
-		PrintEnable:            asBool(data, "print_enable"),
-		FoldEnable:             asBool(data, "fold_enable"),
-		FoldLevel:              asInt(data, "fold_level"),
-		IsPrint:                asBool(data, "is_print"),
 		IsIndex:                asBool(data, "is_index"),
+		FoldLevel:              asInt(data, "fold_level"),
 		IsTocHTML:              asBool(data, "is_toc_html"),
 		GitRepositoryURL:       asString(data, "git_repository_url"),
 		GitRepositoryEditURL:   asString(data, "git_repository_edit_url"),
