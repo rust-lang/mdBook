@@ -92,8 +92,8 @@ fall out of the regeneration pass in §3.6).
 
 | File | Change |
 |------|--------|
-| `README.md:34,36,59` | drop the `fontawesome/` row from the directory-tree bullet list and the reference to `internal/fontawesome` in the test-coverage bullet |
-| `MIGRATION.md:140-149` | drop the "Font Awesome helper" subsection in its entirety (it's the contract this spec fulfils) |
+| `README.md:36,59` | drop the `fontawesome/` row from the directory-tree bullet list and the reference to `internal/fontawesome` in the test-coverage bullet |
+| `MIGRATION.md:141-149` | drop the "Font Awesome" subsection in its entirety (it's the contract this spec fulfils) |
 
 ### 3.6 Fixture regeneration
 
@@ -156,10 +156,12 @@ slot, prev/next links) is unchanged.
    - `<main class="markdown-body">` with the rendered Markdown body.
    - Menu-bar buttons present with `title=` / `aria-label=` and no `<span class="fa-svg">`.
    - The 5 `<template id="fa-X"></template>` blocks present with empty bodies.
-5. **Rust testsuite regression.** Per the existing 8-gap block-list in
-   `doc/plan/testing.md`, fontawesome fixture is **not** in scope until the
-   larger Rust-testsuite harness is unblocked. Calling that out so it isn't
-   silently re-enabled.
+5. **Rust testsuite regression.** Per the existing 8-gap block-list referenced
+   in memory `[[mdbook-go-deleting-rust-blockers]]` (A5 entries, §"C 类"), the
+   fontawesome fixture is **not** in scope for this spec — the larger
+   Rust-testsuite harness is still blocked by unrelated A/B gaps. We are
+   removing the production wiring here; the rust-side fixture can be unskipped
+   later in a separate workstream.
 
 ## 7. Acceptance criteria
 
@@ -177,7 +179,11 @@ slot, prev/next links) is unchanged.
 
 - Building a generic theme-asset pipeline for user-supplied icons. If the user
   later wants icons they'll add them per-template — by editing the theme.
-- Backporting this removal to the hbs production engine. The hbs engine is
-  already off the production hot path per the comment in `render.go:1-9`.
-- Refreshing the 18 affected golden files beyond what the regeneration
-  produces. Any "extra" cleanup of those is a separate concern.
+- Re-introducing the hbs engine as the production renderer. The hbs engine is
+  off the production hot path (see comment in `internal/render/render.go:1-9`).
+  We still touch `theme/templates/index.hbs` and `fixtures/cli/expected/init/theme/index.hbs`
+  because the hbs engine's byte-level regression test depends on them, but
+  this is not "promoting hbs back" — it is keeping the regression fixture
+  honest.
+- Refreshing the affected golden files beyond what the regeneration
+  produces. Any extra cleanup of those is a separate concern.
