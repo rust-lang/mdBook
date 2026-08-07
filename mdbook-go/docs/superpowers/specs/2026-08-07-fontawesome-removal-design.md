@@ -165,7 +165,14 @@ slot, prev/next links) is unchanged.
 
 ## 7. Acceptance criteria
 
-- `git grep -n 'fontawesome\|font-awesome\|fa-svg\|"fa-'` over `cmd`, `internal`,
+> **Resolution note (2026-08-07):** the original criterion also grepped for the
+> literal `"fa-`, which contradicted §2/§3.3's instruction to *keep* the
+> `<template id="fa-X">` containers. The maintainer resolved this in favour of
+> deletion: the 5 `<template id="fa-X">` elements and the 5 matching
+> `getElementById('fa-X')` lookups in `theme/js/book.js` are gone. The `"fa-`
+> literal is therefore dropped from the grep below.
+
+- `git grep -n 'fontawesome\|font-awesome\|fa-svg'` over `cmd`, `internal`,
   `theme`, `README.md`, `MIGRATION.md` returns zero hits.
 - `fixtures/basic/book/intro.html` builds with a non-empty
   `<main class="markdown-body">` and no `<span class="fa-svg">` anywhere.

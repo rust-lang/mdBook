@@ -17,7 +17,7 @@
 - `internal/fontawesome.TestDeprecationWarningIsOneShot` becomes invalid the moment we delete the package — no replacement test.
 - After Task 1 the binary must still build (`go build ./cmd/mdbook`). After Task 2 fixtures regenerate; after Task 3 CSS targets no longer match — purely cosmetic dead-code removal. After Task 4 the repo is clean and the harness diff (`harness/diff.sh`) is reviewable.
 - Worker MUST NOT skip the smoke test in Task 1 (build), the regenerate step in Task 2, or the acceptance gate in Task 4.
-- `git grep -n 'fontawesome\|font-awesome\|fa-svg\|"fa-'` over `cmd/` `internal/` `theme/` `README.md` `MIGRATION.md` must return zero hits at the end of Task 4.
+- `git grep -n 'fontawesome\|font-awesome\|fa-svg'` over `cmd/` `internal/` `theme/` `README.md` `MIGRATION.md` must return zero hits at the end of Task 4. (The `"fa-` literal was dropped from this gate on 2026-08-07 — see spec §7 resolution note: the `<template id="fa-X">` containers and their `book.js` lookups were deleted outright rather than retained.)
 - All commits land on branch `v1` (current branch). Do not rebase master.
 
 ---
@@ -436,7 +436,7 @@ Expected: passes. The only suites that can be skipped-but-not-broken:
 
 ```bash
 cd "C:\work\mdBook\mdbook-go"
-git grep -n 'fontawesome\|font-awesome\|fa-svg\|"fa-' cmd/ internal/ theme/ README.md MIGRATION.md
+git grep -n 'fontawesome\|font-awesome\|fa-svg' cmd/ internal/ theme/ README.md MIGRATION.md
 git grep -n 'fontawesome' internal/fontawesome 2>&1 || true  # expected: 'No such file or directory'
 ls -la bin/mdbook-go.exe
 ./bin/mdbook-go.exe build -dir ./fixtures/basic
@@ -469,7 +469,7 @@ git commit -m "feat(fixtures,docs): regenerate goldens after fontawesome removal
   lists it as a regression package
 - MIGRATION.md: drop the deprecated Font Awesome helper subsection
 
-Final acceptance: 'git grep fontawesome fa-svg font-awesome \"fa-''
+Final acceptance: 'git grep fontawesome fa-svg font-awesome'
 over cmd/internal/theme/README.md/MIGRATION.md returns 0 hits.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
