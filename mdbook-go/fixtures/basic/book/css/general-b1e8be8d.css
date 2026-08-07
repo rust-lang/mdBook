@@ -285,13 +285,6 @@ sup {
     font-style: italic;
 }
 
-.fa-svg svg {
-    width: 1em;
-    height: 1em;
-    fill: currentColor;
-    margin-bottom: -0.1em;
-}
-
 dt {
     font-weight: bold;
     margin-top: 0.5em;
@@ -402,12 +395,6 @@ dd > p {
     align-items: center;
     /* Remove default large margins for a more compact display. */
     margin: 2px 0 8px 0;
-}
-
-.blockquote-tag-title .fa-svg {
-    fill: currentColor;
-    /* Add some space between the icon and the text. */
-    margin-right: 8px;
 }
 
 /* All this code is to handle the "zoomable" images feature. */
