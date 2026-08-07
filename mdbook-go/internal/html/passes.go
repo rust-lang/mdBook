@@ -3,7 +3,6 @@ package html
 import (
 	"strings"
 
-	"mdbook-go/internal/fontawesome"
 	"mdbook-go/internal/utils"
 )
 
@@ -137,50 +136,6 @@ func setCodeChildren(code *Node, children []*Node) {
 	code.Children = nil
 	for _, c := range children {
 		code.Append(c)
-	}
-}
-
-// convertFontAwesome replaces empty `<i class="fa-…">` elements with the inline
-// SVG span mdBook emits. Ported from convert_fontawesome in
-// crates/mdbook-html/src/html/tree.rs.
-func (b *builder) convertFontAwesome() {
-	for _, node := range b.root.Elements(func(name string) bool { return name == "i" }) {
-		if len(node.Children) != 0 {
-			continue
-		}
-		class, ok := node.El.Attr("class")
-		if !ok {
-			continue
-		}
-		iconType, name := fontawesome.Regular, ""
-		var extra []string
-		for _, c := range strings.Fields(class) {
-			switch c {
-			case "fa", "fa-regular":
-				iconType = fontawesome.Regular
-			case "fas", "fa-solid":
-				iconType = fontawesome.Solid
-			case "fab", "fa-brands":
-				iconType = fontawesome.Brands
-			default:
-				if n, found := strings.CutPrefix(c, "fa-"); found && name == "" {
-					name = n
-				} else {
-					extra = append(extra, c)
-				}
-			}
-		}
-		if name == "" {
-			continue
-		}
-		svg, err := fontawesome.SVG(iconType, name)
-		if err != nil {
-			continue
-		}
-		span := NewElement("span")
-		span.El.SetAttr("class", strings.Join(append([]string{"fa-svg"}, extra...), " "))
-		span.Append(NewRawData(svg))
-		node.Parent.replaceChild(node, span)
 	}
 }
 

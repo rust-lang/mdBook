@@ -1,13 +1,10 @@
 package tplgotpl
 
 import (
-	"fmt"
 	"html/template"
 	"path/filepath"
 	"strconv"
 	"strings"
-
-	"mdbook-go/internal/fontawesome"
 )
 
 // Env carries the per-build state that the template helpers need. It mirrors
@@ -66,28 +63,6 @@ func (e *Env) Resource(name string) string {
 // `{{#toc}}…{{/toc}}`, which html/template does not support.
 func (e *Env) TocHTML() template.HTML {
 	return template.HTML(renderTocSidebar(e.Chapters, e.FoldEnable, e.FoldLevel, e.NoSectionLabel, e.IsTocHTML))
-}
-
-// FA implements `{{fa TYPE NAME [id]}}`. Returns a template.HTML span
-// containing the Font Awesome icon. The original hbs engine did not HTML-escape
-// helper output, so wrapping as template.HTML is correct here.
-func (e *Env) FA(iconType, name string, id ...string) (template.HTML, error) {
-	if iconType == "" || name == "" {
-		return "", fmt.Errorf("tplgotpl: fa requires icon type and name, got %q/%q", iconType, name)
-	}
-	ft, err := fontawesome.TypeFromString(iconType)
-	if err != nil {
-		return "", err
-	}
-	iid := ""
-	if len(id) > 0 {
-		iid = id[0]
-	}
-	span, err := fontawesome.Span(ft, name, iid)
-	if err != nil {
-		return "", err
-	}
-	return template.HTML(span), nil
 }
 
 // SidebarHeaderNavJS returns the literal JS block that the original hbs

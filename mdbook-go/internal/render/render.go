@@ -18,7 +18,6 @@ import (
 
 	"mdbook-go/internal/book"
 	"mdbook-go/internal/config"
-	"mdbook-go/internal/fontawesome"
 	"mdbook-go/internal/html"
 	"mdbook-go/internal/search"
 	"mdbook-go/internal/static"
@@ -189,36 +188,10 @@ func newRegistry(th *theme.Theme, cfg *config.HtmlConfig) (*tplgotpl.Registry, e
 	if err := r.RegisterPartial("header", `{{/* Put your header HTML text here */}}`); err != nil {
 		return nil, err
 	}
-	// `fa` is called as a method on the tplgotpl.Env that's embedded in
-	// RenderData, not as a top-level FuncMap function. We still register it
-	// in the FuncMap so it works for any caller that does {{fa "solid" "x"}}.
-	r.RegisterFunc("fa", faHelper)
 	if err := r.LoadProduction(); err != nil {
 		return nil, err
 	}
 	return r, nil
-}
-
-// faHelper implements `{{fa TYPE NAME [id]}}`. It returns template.HTML so
-// html/template treats the icon SVG as a safe, un-escaped span — the
-// icon's <svg> markup must reach the page verbatim.
-func faHelper(args ...any) (template.HTML, error) {
-	if len(args) < 2 {
-		return "", fmt.Errorf("fa helper expects at least two parameters")
-	}
-	iconType, err := fontawesome.TypeFromString(fmt.Sprint(args[0]))
-	if err != nil {
-		return "", err
-	}
-	id := ""
-	if len(args) > 2 {
-		id = fmt.Sprint(args[2])
-	}
-	span, err := fontawesome.Span(iconType, fmt.Sprint(args[1]), id)
-	if err != nil {
-		return "", err
-	}
-	return template.HTML(span), nil
 }
 
 // buildTocJS assembles the toc.js source. The sidebar HTML is computed by

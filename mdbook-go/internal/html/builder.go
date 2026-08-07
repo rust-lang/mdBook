@@ -104,7 +104,6 @@ func BuildTree(source string, opts Options) (*Node, error) {
 	b.collectFootnoteDefs()
 	b.addHeaderLinks()
 	b.updateCodeBlocks()
-	b.convertFontAwesome()
 	return b.root, nil
 }
 
