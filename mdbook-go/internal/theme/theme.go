@@ -63,8 +63,6 @@ var (
 		"fonts/source-code-pro-v11-all-charsets-500.woff2",
 		themedata.MustRead("fonts/source-code-pro-v11-all-charsets-500.woff2"),
 	}
-	// PlaygroundEditor (Ace editor bundle) was removed — the editable code-block
-	// feature is not currently used. If reintroduced, restore the original list.
 	// SearcherJS, MarkJS and ElasticlunrJS back the search UI.
 	SearcherJS    = themedata.MustRead("searcher/searcher.js")
 	MarkJS        = themedata.MustRead("searcher/mark.min.js")

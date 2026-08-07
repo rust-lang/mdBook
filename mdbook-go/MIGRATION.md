@@ -87,8 +87,8 @@ Top-level flags in Rust mdBook that are **not** yet implemented in Go:
 
 `book.toml` parses identically to Rust. The `[book]`, `[build]`, `[output.*]`,
 and `[preprocessor.*]` tables work; dynamic fields (`output.html.theme`,
-`output.html.playground.edit-url-path`, etc.) round-trip through the
-preprocessor protocol wire format described in `internal/plugin/protocol.go`.
+etc.) round-trip through the preprocessor protocol wire format described in
+`internal/plugin/protocol.go`.
 
 Environment variable overrides (`MDBOOK_BOOK__TITLE`, `MDBOOK_BUILD__BUILD_DIR`,
 …) follow Rust's `MDBOOK_<TABLE>__<KEY>` convention with double-underscore
@@ -104,7 +104,7 @@ way Rust does. See `internal/plugin/protocol.go` for the field mapping.
 
 Built-in preprocessors in scope:
 
-- `links` — `{{#include}}`, `{{#rustdoc_include}}`, `{{#playground}}`,
+- `links` — `{{#include}}`, `{{#rustdoc_include}}`,
   `{{#title}}`, `\{{#…}}` escape. Line ranges and anchor syntax
   match Rust; nested includes respect `max-link-nested-depth = 10`.
 - `index` — `README.md` → `index.md` rewrite, case-insensitive.

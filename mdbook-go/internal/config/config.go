@@ -36,15 +36,6 @@ type RustConfig struct {
 	Description string `toml:"description"`
 }
 
-// Playground is the [output.html.playground] section.
-type Playground struct {
-	Editable    bool `toml:"editable"`
-	LineNumbers bool `toml:"line-numbers"`
-	CopyJS      bool `toml:"copy-js"`
-	Copyable    bool `toml:"copyable"`
-	Runnable    bool `toml:"runnable"`
-}
-
 // HtmlConfig is the [output.html] section. Field defaults are supplied by
 // DefaultHTML rather than the Go zero value, because most of the Rust booleans
 // default to true.
@@ -60,7 +51,6 @@ type HtmlConfig struct {
 	AdditionalJS       []string `toml:"additional-js"`
 
 	Fold       Fold       `toml:"fold"`
-	Playground Playground `toml:"playground"`
 	Code       Code       `toml:"code"`
 
 	NoSectionLabel bool    `toml:"no-section-label"`

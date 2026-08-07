@@ -66,7 +66,7 @@ func TestStaticHandler(t *testing.T) {
 		},
 		{
 			name:        "hashed JS asset",
-			path:        "/book-92810426.js",
+			path:        "/book-1112d98a.js",
 			wantStatus:  http.StatusOK,
 			wantBodyHas: "mdbook",
 		},

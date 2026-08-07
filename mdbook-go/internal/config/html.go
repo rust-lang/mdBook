@@ -19,13 +19,6 @@ type Code struct {
 	HideLines map[string]string `toml:"hidelines"`
 }
 
-// DefaultPlayground returns the Rust defaults for [output.html.playground]
-// (config.rs: editable false, copyable true, copy-js true, line-numbers false,
-// runnable true).
-func DefaultPlayground() Playground {
-	return Playground{Editable: false, Copyable: true, CopyJS: true, LineNumbers: false, Runnable: true}
-}
-
 // DefaultSearch returns the Rust defaults for [output.html.search].
 func DefaultSearch() Search {
 	return Search{
@@ -52,7 +45,6 @@ func DefaultHTML() *HtmlConfig {
 		Admonitions:      true,
 		MathJaxSupport:   false,
 		Fold:             Fold{},
-		Playground:       DefaultPlayground(),
 		Code:             Code{HideLines: map[string]string{}},
 		NoSectionLabel:   false,
 		Redirect:         map[string]string{},

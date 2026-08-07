@@ -38,7 +38,7 @@ func main() {
 		"description": "", "favicon_png": "favicon.png", "favicon_svg": "favicon.svg",
 		"default_theme": "light", "preferred_dark_theme": "navy",
 		"fold_enable": false, "fold_level": 0, "search_enabled": true, "search_js": true,
-		"playground_copyable": true, "sidebar_header_nav": false,
+		"sidebar_header_nav": false,
 		"chapters": []any{
 			map[string]any{"section": "", "has_sub_items": "false", "name": "Introduction", "path": "intro.md"},
 			map[string]any{"part": "Chapter 1"},

@@ -43,9 +43,6 @@ type RenderData struct {
 	SearchEnabled          bool
 	SearchJS               bool
 	MathJaxSupport         bool
-	PlaygroundJS           bool
-	PlaygroundLineNumbers  bool
-	PlaygroundCopyable     bool
 	FoldEnable             bool
 	FoldLevel              int
 
@@ -117,15 +114,6 @@ func makeData(ctx *Context, cfg *config.HtmlConfig, th *theme.Theme) map[string]
 	if len(cfg.AdditionalJS) > 0 {
 		data["additional_js"] = relativeToRoot(ctx.Root, cfg.AdditionalJS)
 	}
-	if cfg.Playground.Editable && cfg.Playground.CopyJS {
-		data["playground_js"] = true
-		if cfg.Playground.LineNumbers {
-			data["playground_line_numbers"] = true
-		}
-	}
-	if cfg.Playground.Copyable {
-		data["playground_copyable"] = true
-	}
 	data["fold_enable"] = cfg.Fold.Enable
 	data["fold_level"] = int(cfg.Fold.Level)
 	data["sidebar_header_nav"] = cfg.SidebarHeaderNav
@@ -165,9 +153,6 @@ func BuildRenderData(data map[string]any, noSectionLabel bool) RenderData {
 		SearchEnabled:          asBool(data, "search_enabled"),
 		SearchJS:               asBool(data, "search_js"),
 		MathJaxSupport:         asBool(data, "mathjax_support"),
-		PlaygroundJS:           asBool(data, "playground_js"),
-		PlaygroundLineNumbers:  asBool(data, "playground_line_numbers"),
-		PlaygroundCopyable:     asBool(data, "playground_copyable"),
 		IsIndex:                asBool(data, "is_index"),
 		FoldLevel:              asInt(data, "fold_level"),
 		IsTocHTML:              asBool(data, "is_toc_html"),

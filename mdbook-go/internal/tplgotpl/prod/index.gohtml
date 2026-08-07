@@ -241,26 +241,6 @@
         </script>
         {{end}}
 
-        {{if .PlaygroundLineNumbers}}
-        <script>
-            window.playground_line_numbers = true;
-        </script>
-        {{end}}
-
-        {{if .PlaygroundCopyable}}
-        <script>
-            window.playground_copyable = true;
-        </script>
-        {{end}}
-
-        {{if .PlaygroundJS}}
-        <script src="{{.Resource "ace.js"}}"></script>
-        <script src="{{.Resource "mode-rust.js"}}"></script>
-        <script src="{{.Resource "editor.js"}}"></script>
-        <script src="{{.Resource "theme-dawn.js"}}"></script>
-        <script src="{{.Resource "theme-tomorrow_night.js"}}"></script>
-        {{end}}
-
         {{if .SearchJS}}
         <script src="{{.Resource "elasticlunr.min.js"}}"></script>
         <script src="{{.Resource "mark.min.js"}}"></script>

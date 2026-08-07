@@ -69,8 +69,7 @@ Implemented:
 - Disk loader with UTF-8 BOM stripping.
 - `goldmark` driven Markdown → mdBook node tree → HTML, with extensions
   for tables, footnotes, task lists, strikethrough, definition lists,
-  admonitions, smart punctuation, math, playground, hide-lines,
-  font awesome.
+  admonitions, smart punctuation, math, hide-lines, font awesome.
 - Title IDs and dedup; `.md` → `.html` link rewriting.
 - `index.html`, per-chapter pages, `toc.html`, `toc.js`,
   `404.html`, redirects, `.nojekyll`.

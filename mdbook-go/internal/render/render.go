@@ -324,13 +324,6 @@ func buildTrees(b *book.Book, cfg *config.HtmlConfig, edition string) ([]*chapte
 			DefinitionLists:  cfg.DefinitionLists,
 			Admonitions:      cfg.Admonitions,
 			MathJax:          cfg.MathJaxSupport,
-			Playground: html.PlaygroundOptions{
-				Editable:    cfg.Playground.Editable,
-				CopyJS:      cfg.Playground.CopyJS,
-				Copyable:    cfg.Playground.Copyable,
-				LineNumbers: cfg.Playground.LineNumbers,
-				Runnable:    cfg.Playground.Runnable,
-			},
 			HideLines: cfg.Code.HideLines,
 			Edition:   edition,
 		}
