@@ -77,7 +77,6 @@ class MDBookSidebarScrollbox extends HTMLElement {
 }
 window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox);
 
-
 // ---------------------------------------------------------------------------
 // Support for dynamically adding headers to the sidebar.
 
@@ -174,29 +173,10 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
             if (data === null) {
                 data = document.createElement('div');
                 data.id = id;
-                data.style.cssText = `
-                    position: fixed;
-                    top: 50px;
-                    right: 10px;
-                    background-color: 0xeeeeee;
-                    z-index: 9999;
-                    pointer-events: none;
-                `;
+                data.style.cssText = 'position: fixed; top: 50px; right: 10px; background-color: 0xeeeeee; z-index: 9999; pointer-events: none;';
                 document.body.appendChild(data);
             }
-            data.innerHTML = `
-                <table>
-                  <tr><td>documentHeight</td><td>${documentHeight.toFixed(1)}</td></tr>
-                  <tr><td>windowHeight</td><td>${windowHeight.toFixed(1)}</td></tr>
-                  <tr><td>scrollTop</td><td>${scrollTop.toFixed(1)}</td></tr>
-                  <tr><td>pixelsAbove</td><td>${pixelsAbove.toFixed(1)}</td></tr>
-                  <tr><td>pixelsBelow</td><td>${pixelsBelow.toFixed(1)}</td></tr>
-                  <tr><td>bottomAdd</td><td>${bottomAdd.toFixed(1)}</td></tr>
-                  <tr><td>adjustedBottomAdd</td><td>${adjustedBottomAdd.toFixed(1)}</td></tr>
-                  <tr><td>scrollingDown</td><td>${scrollingDown}</td></tr>
-                  <tr><td>threshold</td><td>${threshold.toFixed(1)}</td></tr>
-                </table>
-            `;
+            data.innerHTML = '<table><tr><td>documentHeight</td><td>' + documentHeight.toFixed(1) + '</td></tr><tr><td>windowHeight</td><td>' + windowHeight.toFixed(1) + '</td></tr><tr><td>scrollTop</td><td>' + scrollTop.toFixed(1) + '</td></tr><tr><td>pixelsAbove</td><td>' + pixelsAbove.toFixed(1) + '</td></tr><tr><td>pixelsBelow</td><td>' + pixelsBelow.toFixed(1) + '</td></tr><tr><td>bottomAdd</td><td>' + bottomAdd.toFixed(1) + '</td></tr><tr><td>adjustedBottomAdd</td><td>' + adjustedBottomAdd.toFixed(1) + '</td></tr><tr><td>scrollingDown</td><td>' + scrollingDown + '</td></tr><tr><td>threshold</td><td>' + threshold.toFixed(1) + '</td></tr></table>';
             drawDebugLine();
         }
 
@@ -214,16 +194,7 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
         }
         const line = document.createElement('div');
         line.id = id;
-        line.style.cssText = `
-            position: fixed;
-            top: ${threshold}px;
-            left: 0;
-            width: 100vw;
-            height: 2px;
-            background-color: red;
-            z-index: 9999;
-            pointer-events: none;
-        `;
+        line.style.cssText = 'position: fixed; top: ' + threshold + 'px; left: 0; width: 100vw; height: 2px; background-color: red; z-index: 9999; pointer-events: none;';
         document.body.appendChild(line);
     }
 
@@ -235,11 +206,8 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
 
     window.mdbookEnableThresholdDebug = mdbookEnableThresholdDebug;
 
-    // Updates which headers in the sidebar should be expanded. If the current
-    // header is inside a collapsed group, then it, and all its parents should
-    // be expanded.
+    // Updates which headers in the sidebar should be expanded.
     function updateHeaderExpanded(currentA) {
-        // Add expanded to all header-item li ancestors.
         let current = currentA.parentElement;
         while (current) {
             if (current.tagName === 'LI' && current.classList.contains('header-item')) {
@@ -250,14 +218,10 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
     }
 
     // Updates which header is marked as the "current" header in the sidebar.
-    // This is done with a virtual Y threshold, where headers at or below
-    // that line will be considered the current one.
     function updateCurrentHeader() {
         if (!headers || !headers.length) {
             return;
         }
-
-        // Reset the classes, which will be rebuilt below.
         const els = document.getElementsByClassName('current-header');
         for (const el of els) {
             el.classList.remove('current-header');
@@ -265,8 +229,6 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
         for (const toggle of headerToggles) {
             toggle.classList.remove('expanded');
         }
-
-        // Find the last header that is above the threshold.
         let lastHeader = null;
         for (const header of headers) {
             const rect = header.getBoundingClientRect();
@@ -284,21 +246,16 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
                 return;
             }
         }
-
-        // Get the anchor in the summary.
         const href = '#' + lastHeader.id;
         const a = [...document.querySelectorAll('.header-in-summary')]
             .find(element => element.getAttribute('href') === href);
         if (!a) {
             return;
         }
-
         a.classList.add('current-header');
-
         updateHeaderExpanded(a);
     }
 
-    // Updates which header is "current" based on the threshold line.
     function reloadCurrentHeader() {
         if (disableScroll) {
             return;
@@ -307,22 +264,13 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
         updateCurrentHeader();
     }
 
-
-    // When clicking on a header in the sidebar, this adjusts the threshold so
-    // that it is located next to the header. This is so that header becomes
-    // "current".
     function headerThresholdClick(event) {
-        // See disableScroll description why this is done.
         disableScroll = true;
         setTimeout(() => {
             disableScroll = false;
         }, 100);
-        // requestAnimationFrame is used to delay the update of the "current"
-        // header until after the scroll is done, and the header is in the new
-        // position.
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-                // Closest is needed because if it has child elements like <code>.
                 const a = event.target.closest('a');
                 const href = a.getAttribute('href');
                 const targetId = href.substring(1);
@@ -335,8 +283,6 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
         });
     }
 
-    // Takes the nodes from the given head and copies them over to the
-    // destination, along with some filtering.
     function filterHeader(source, dest) {
         const clone = source.cloneNode(true);
         clone.querySelectorAll('mark').forEach(mark => {
@@ -345,25 +291,18 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
         dest.append(...clone.childNodes);
     }
 
-    // Scans page for headers and adds them to the sidebar.
     document.addEventListener('DOMContentLoaded', function() {
         const activeSection = document.querySelector('#mdbook-sidebar .active');
         if (activeSection === null) {
             return;
         }
-
         const main = document.getElementsByTagName('main')[0];
         headers = Array.from(main.querySelectorAll('h2, h3, h4, h5, h6'))
             .filter(h => h.id !== '' && h.children.length && h.children[0].tagName === 'A');
-
         if (headers.length === 0) {
             return;
         }
-
-        // Build a tree of headers in the sidebar.
-
         const stack = [];
-
         const firstLevel = parseInt(headers[0].tagName.charAt(1));
         for (let i = 1; i < firstLevel; i++) {
             const ol = document.createElement('ol');
@@ -373,25 +312,17 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
             }
             stack.push({level: i + 1, ol: ol});
         }
-
-        // The level where it will start folding deeply nested headers.
         const foldLevel = 3;
-
         for (let i = 0; i < headers.length; i++) {
             const header = headers[i];
             const level = parseInt(header.tagName.charAt(1));
-
             const currentLevel = stack[stack.length - 1].level;
             if (level > currentLevel) {
-                // Begin nesting to this level.
                 for (let nextLevel = currentLevel + 1; nextLevel <= level; nextLevel++) {
                     const ol = document.createElement('ol');
                     ol.classList.add('section');
                     const last = stack[stack.length - 1];
                     const lastChild = last.ol.lastChild;
-                    // Handle the case where jumping more than one nesting
-                    // level, which doesn't have a list item to place this new
-                    // list inside of.
                     if (lastChild) {
                         lastChild.appendChild(ol);
                     } else {
@@ -404,7 +335,6 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
                     stack.pop();
                 }
             }
-
             const li = document.createElement('li');
             li.classList.add('header-item');
             li.classList.add('expanded');
@@ -437,11 +367,9 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
                 }
             }
             li.appendChild(span);
-
             const currentParent = stack[stack.length - 1];
             currentParent.ol.appendChild(li);
         }
-
         const onThisPage = document.createElement('div');
         onThisPage.classList.add('on-this-page');
         onThisPage.append(stack[0].ol);

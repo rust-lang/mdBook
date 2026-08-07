@@ -103,14 +103,6 @@ func TestIndexGolden(t *testing.T) {
 		}
 		return hashed, nil
 	})
-	faRE := regexp.MustCompile(`<span class=fa-svg(?: id="([^"]+)")?><svg[^\n]*?</svg></span>`)
-	icons := faRE.FindAllString(want, -1)
-	calls := 0
-	r.RegisterHelper("fa", func(_ *Context, _ []any) (string, error) {
-		out := icons[calls]
-		calls++
-		return out, nil
-	})
 	got, err := r.Render("index", basicData())
 	if err != nil {
 		t.Fatal(err)

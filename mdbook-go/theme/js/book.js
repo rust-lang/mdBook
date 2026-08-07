@@ -224,7 +224,6 @@ function mdbook_something_else_has_focus(e) {
         buttons.className = 'buttons';
         buttons.innerHTML = '<button title="Show hidden lines" \
 aria-label="Show hidden lines"></button>';
-        buttons.firstChild.innerHTML = document.getElementById('fa-eye').innerHTML;
 
         // add expand button
         const pre_block = block.parentNode;
@@ -232,13 +231,11 @@ aria-label="Show hidden lines"></button>';
 
         buttons.firstChild.addEventListener('click', function(e) {
             if (this.title === 'Show hidden lines') {
-                this.innerHTML = document.getElementById('fa-eye-slash').innerHTML;
                 this.title = 'Hide lines';
                 this.setAttribute('aria-label', e.target.title);
 
                 block.classList.remove('hide-boring');
             } else if (this.title === 'Hide lines') {
-                this.innerHTML = document.getElementById('fa-eye').innerHTML;
                 this.title = 'Show hidden lines';
                 this.setAttribute('aria-label', e.target.title);
 
@@ -284,7 +281,7 @@ aria-label="Show hidden lines"></button>';
         runCodeButton.hidden = true;
         runCodeButton.title = 'Run this code';
         runCodeButton.setAttribute('aria-label', runCodeButton.title);
-        runCodeButton.innerHTML = document.getElementById('fa-play').innerHTML;
+        runCodeButton.innerHTML = '';
 
         buttons.insertBefore(runCodeButton, buttons.firstChild);
         runCodeButton.addEventListener('click', () => {
@@ -307,8 +304,6 @@ aria-label="Show hidden lines"></button>';
             undoChangesButton.className = 'reset-button';
             undoChangesButton.title = 'Undo changes';
             undoChangesButton.setAttribute('aria-label', undoChangesButton.title);
-            undoChangesButton.innerHTML +=
-                document.getElementById('fa-clock-rotate-left').innerHTML;
 
             buttons.insertBefore(undoChangesButton, buttons.firstChild);
 

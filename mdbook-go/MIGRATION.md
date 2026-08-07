@@ -138,16 +138,6 @@ Each difference is registered in `internal/html/markdown_golden_test.go`
 under `knownDeviations`. None affect the `basic` / `nested` /
 `cli` / `serve` fixtures used for byte-equivalence validation.
 
-4. **Font Awesome** — *deprecated*. The Go port embeds only 15 of the
-   icons in Font Awesome Free 6.2.0; growing the table to full parity
-   costs ~700 KB of binary size for a feature the upstream maintainers
-   are phasing out. The `{{fa ...}}` handlebars helper continues to
-   work for the embedded icons but emits a one-shot stderr warning on
-   first use, pointing users at the package doc comment
-   (`internal/fontawesome/fontawesome.go`). Affected fixture:
-   `tests/testsuite/rendering/fontawesome`. Migrate by embedding the
-   SVG directly in your theme or via `<img>`.
-
 ## Shell completions
 
 Generate a script for your shell and source it once:

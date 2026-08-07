@@ -72,13 +72,13 @@ func TestStaticHandler(t *testing.T) {
 		},
 		{
 			name:        "hashed JS asset",
-			path:        "/book-609e4cb8.js",
+			path:        "/book-92810426.js",
 			wantStatus:  http.StatusOK,
 			wantBodyHas: "mdbook",
 		},
 		{
 			name:        "nested CSS (hashed)",
-			path:        "/css/chrome-d279d366.css",
+			path:        "/css/chrome-3d05a557.css",
 			wantStatus:  http.StatusOK,
 			wantBodyHas: "chrome",
 		},

@@ -68,7 +68,7 @@
 
     --overlay-bg: rgba(33, 40, 48, 0.4);
 
-    --blockquote-note-color: #74b9ff;
+    /*--blockquote-note-color: #74b9ff;*/
     --blockquote-tip-color: #09ca09;
     --blockquote-important-color: #d3abff;
     --blockquote-warning-color: #f0b72f;

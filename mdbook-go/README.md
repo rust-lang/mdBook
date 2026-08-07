@@ -33,7 +33,6 @@ mdbook-go/
 │   ├── utils/         HTML escape, path_to_root, slug, dedup id, file copy
 │   ├── theme/         in-tree + on-disk theme resolution
 │   ├── hbs/           Handlebars subset engine (standalone whitespace, helpers)
-│   ├── fontawesome/   Font Awesome icon SVGs
 │   ├── html/          goldmark → mdBook node tree → HTML serialization
 │   ├── static/        static asset hashing + {{ resource }} rewrite
 │   ├── search/        elasticlunr-compatible searchindex.js
@@ -56,8 +55,8 @@ Verified:
   (multi-level nesting, tables, footnotes, admonitions, task lists,
   `additional-css`, `fold`, draft chapters, part titles, separators,
   prefix / numbered / suffix zones, redirects).
-- `internal/hbs`, `internal/fontawesome`, `internal/search`,
-  `internal/html` golden tests pass against Rust output / Rust fixtures.
+- `internal/hbs`, `internal/search`, `internal/html` golden tests pass
+  against Rust output / Rust fixtures.
 
 Implemented:
 
