@@ -1,0 +1,140 @@
+/* ============================================================================
+ * mdbook-tomorrow-night-css (id="mdbook-tomorrow-night-css")
+ *
+ * Dark syntax-highlighting palette for fenced code blocks inside
+ * <main class="markdown-body">. Port of the "Tomorrow Night" theme
+ * (Chris Kempson), themed for the mdBook "coal" and "navy" skins.
+ *
+ * Targets only code emitted by theme/js/highlight.js:
+ *   <pre><code class="hljs language-xxx">
+ *     <span class="hljs-keyword">...</span>
+ *     ...
+ *   </code></pre>
+ * Nothing here touches the sidebar / menu / search / fonts / theme colors.
+ *
+ * Toggled by theme/js/book.js set_theme():
+ *   coal / navy           → ENABLED
+ *   light / rust / default → disabled (highlight.css is on)
+ *   ayu                   → disabled (ayu-highlight.css is on)
+ *
+ * Palette tokens (background #1d1f21 / foreground #c5c8c6):
+ *   comment       #969896  (Tomorrow Comment / grey)
+ *   red           #cc6666  (variable / attribute / tag / regex)
+ *   orange        #de935f  (number / preprocessor / literal / constant)
+ *   yellow        #f0c674  (Ruby class title / CSS rule attribute)
+ *   green         #b5bd68  (string / value / header / name)
+ *   aqua          #8abeb7  (title / section / CSS hex color)
+ *   blue          #81a2be  (function / python decorator / JS title)
+ *   purple        #b294bb  (keyword / JS function)
+ *   addition      #718c00
+ *   deletion      #c82829
+ *
+ * Sources:
+ *   https://github.com/chriskempson/tomorrow-theme
+ *   https://github.com/jmblog/color-themes-for-highlightjs
+ * ========================================================================== */
+
+/* Tomorrow Night Theme */
+/* https://github.com/jmblog/color-themes-for-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+/* https://github.com/jmblog/color-themes-for-highlightjs */
+
+/* Tomorrow Comment */
+.hljs-comment {
+  color: #969896;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-attribute,
+.hljs-attr,
+.hljs-tag,
+.hljs-regexp,
+.ruby .hljs-constant,
+.xml .hljs-tag .hljs-title,
+.xml .hljs-pi,
+.xml .hljs-doctype,
+.html .hljs-doctype,
+.css .hljs-id,
+.css .hljs-class,
+.css .hljs-pseudo {
+  color: #cc6666;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-preprocessor,
+.hljs-pragma,
+.hljs-built_in,
+.hljs-literal,
+.hljs-params,
+.hljs-constant {
+  color: #de935f;
+}
+
+/* Tomorrow Yellow */
+.ruby .hljs-class .hljs-title,
+.css .hljs-rule .hljs-attribute {
+  color: #f0c674;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-value,
+.hljs-inheritance,
+.hljs-header,
+.hljs-name,
+.ruby .hljs-symbol,
+.xml .hljs-cdata {
+  color: #b5bd68;
+}
+
+/* Tomorrow Aqua */
+.hljs-title,
+.hljs-section,
+.css .hljs-hexcolor {
+  color: #8abeb7;
+}
+
+/* Tomorrow Blue */
+.hljs-function,
+.python .hljs-decorator,
+.python .hljs-title,
+.ruby .hljs-function .hljs-title,
+.ruby .hljs-title .hljs-keyword,
+.perl .hljs-sub,
+.javascript .hljs-title,
+.coffeescript .hljs-title {
+  color: #81a2be;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.javascript .hljs-function {
+  color: #b294bb;
+}
+
+.hljs {
+  display: block;
+  overflow-x: auto;
+  background: #1d1f21;
+  color: #c5c8c6;
+}
+
+.coffeescript .javascript,
+.javascript .xml,
+.tex .hljs-formula,
+.xml .javascript,
+.xml .vbscript,
+.xml .css,
+.xml .hljs-cdata {
+  opacity: 0.5;
+}
+
+.hljs-addition {
+  color: #718c00;
+}
+
+.hljs-deletion {
+  color: #c82829;
+}
