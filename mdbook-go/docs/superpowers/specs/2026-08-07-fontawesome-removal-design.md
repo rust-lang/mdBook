@@ -24,9 +24,13 @@ catch-all upstream-port feature.
   happens to contain `<i class="fa-X">`. The replaceable form was a tiny niche
   feature; the markdown source will now pass through to the output unchanged
   (goldmark leaves raw `<i>` elements alone).
-- We are **not** deleting `book.js` or its use of `<template id="fa-X">`
-  elements. Those `<template>` containers stay in the page with empty bodies so
-  the JS `innerHTML` reads work against the same ids they read against today.
+- We are **not** keeping `<template id="fa-X">` containers or `book.js`'s
+  `getElementById('fa-X').innerHTML` lookups. Both were deleted outright
+  (Option B, see §7 resolution note). The rendered page carries no
+  `fa-svg` icons, no `<i class="fa-…">` rewrites, no template containers,
+  and no JS hook reading them. Buttons that used to be wired via those
+  templates render with empty bodies and rely on their `title`/`aria-label`
+  attributes alone for affordance.
 
 ## 3. Scope of deletion
 
@@ -51,15 +55,17 @@ catch-all upstream-port feature.
 | `internal/html/passes.go:143-185` | drop `convertFontAwesome` (the `<i class="fa-X">`-rewrite pass) |
 | `internal/html/builder.go:107` | drop the `b.convertFontAwesome()` call site |
 
-### 3.3 Templates: replace `{{fa ...}}` with empty output, keep `<template id="fa-X">` containers
+### 3.3 Templates: drop `{{fa ...}}` calls AND `<template id="fa-X">` containers
 
-`book.js` calls `document.getElementById('fa-eye')` / `'fa-eye-slash'` /
-`'fa-copy'` / `'fa-play'` / `'fa-clock-rotate-left'` and assigns `.innerHTML`
-to dynamically-injected buttons (block collapse/expand toggle, code copy button,
-playground run button, history reset button). The `id` attributes must survive.
-We strip just the inner markup.
+`book.js` used to call `document.getElementById('fa-eye')` /
+`'fa-eye-slash'` / `'fa-copy'` / `'fa-play'` / `'fa-clock-rotate-left'` and
+assign `.innerHTML` to dynamically-injected buttons (block collapse/expand
+toggle, code copy button, playground run button, history reset button). Both
+the 5 `<template id="fa-X">` containers and the matching 5 `book.js` lookups
+were deleted outright (Option B, see §7 resolution note). The page now carries
+zero icon-system artifacts downstream of `{{fa ...}}`.
 
-Three templates carry this pattern; all three get the same surgery:
+Three templates carried this pattern; all three get the same surgery:
 
 - `internal/tplgotpl/prod/index.gohtml` (production renderer)
 - `theme/templates/index.hbs` (hbs engine source — `index.gohtml` was
@@ -74,8 +80,12 @@ In each template:
   empty output. Surrounding `<label>` / `<button>` / `<a>` elements keep their
   `title=` and `aria-label=` so screen readers and tooltips still describe the
   action.
-- 5 `<template id="fa-X">{{fa ...}}</template>` blocks → `<template id="fa-X"></template>`.
-  id retained, body zeroed.
+- 5 `<template id="fa-X">…</template>` blocks → **deleted**. The matching
+  `getElementById('fa-X').innerHTML` lines in `theme/js/book.js` were deleted
+  in the same change, so no orphan JS lookup remains.
+  (Originally the spec called for `id` retention so JS lookups would still
+  return empty strings; that compromise was rejected in favour of outright
+  deletion — see §7 resolution note.)
 
 ### 3.4 CSS: drop the dead `.fa-svg*` selectors
 
@@ -119,13 +129,16 @@ Markdown source ─▶ goldmark ─▶ builder.buildTree
                             registry.Render("index", data)
                                  │
                                  ▼ {{fa ...}} now expands to ""
-                            page HTML ─▶ <template id="fa-X"></template> with empty body
+                            page HTML ─▶ no icon-system artifacts reach the page
 ```
 
-There is no helper, no lookup, no SVG payload. Output `<main class="markdown-body">`
-content is identical to today's output *minus* the SVG bodies in chrome; the
-surrounding chrome structure (button positions, theme toggle list, search-bar
-slot, prev/next links) is unchanged.
+There is no helper, no lookup, no SVG payload, and **no** `<template
+id="fa-X">` containers anywhere in the output either — they were deleted
+outright (Option B), so no icon-system symbol reaches the rendered HTML.
+Output `<main class="markdown-body">` content is identical to the previous
+output *minus* the SVG bodies in chrome; the surrounding chrome structure
+(button positions, theme toggle list, search-bar slot, prev/next links) is
+unchanged.
 
 ## 5. Failure modes
 
@@ -134,7 +147,7 @@ slot, prev/next links) is unchanged.
 | Markdown contains `<i class="fa-bars"></i>` (the path `convertFontAwesome` used to rewrite) | goldmark emits the `<i>` raw — the user gets an empty inline box. Acceptable: this was never a documented public API; the deprecation notice already steered users to `<img>`/theme-embed. |
 | Markdown contains `{{fa "..." "..."}}` (Handlebars-style; would-be-handled by the helper) | Not applicable — mdbook-go is not a Handlebars engine. The text reaches the page literal. No regression vs. today. |
 | User-built theme templates reference `{{fa "..." "..."}}` | The template helper no longer exists. `html/template` will execute the call site as a no-op (it's just a missing-FuncMap name), the call returns the empty string, and the surrounding HTML renders around it. Same effect as deleting the helper. |
-| `book.js` still calls `getElementById('fa-X').innerHTML` | The `<template id="fa-X">` elements remain with empty bodies, so `.innerHTML === ""`. The dynamically-injected buttons render textless but functional. |
+| `book.js` still calls `getElementById('fa-X').innerHTML` | Not applicable — those calls were deleted in the same change (Option B). If a *future* patch reintroduces them, `<template id="fa-X">` would resolve to `null` and the `.innerHTML =` assignment would throw a `TypeError`; the surrounding button-creation code path would have to be guarded or the matching containers re-added. |
 
 ## 6. Testing strategy
 
@@ -155,7 +168,8 @@ slot, prev/next links) is unchanged.
    - `<title>Introduction - Basic Fixture</title>` present.
    - `<main class="markdown-body">` with the rendered Markdown body.
    - Menu-bar buttons present with `title=` / `aria-label=` and no `<span class="fa-svg">`.
-   - The 5 `<template id="fa-X"></template>` blocks present with empty bodies.
+   - **Zero** `<template id="fa-X">` blocks anywhere in the page
+     (deletions per Option B, see §7 resolution note).
 5. **Rust testsuite regression.** Per the existing 8-gap block-list referenced
    in memory `[[mdbook-go-deleting-rust-blockers]]` (A5 entries, §"C 类"), the
    fontawesome fixture is **not** in scope for this spec — the larger
@@ -166,11 +180,16 @@ slot, prev/next links) is unchanged.
 ## 7. Acceptance criteria
 
 > **Resolution note (2026-08-07):** the original criterion also grepped for the
-> literal `"fa-`, which contradicted §2/§3.3's instruction to *keep* the
-> `<template id="fa-X">` containers. The maintainer resolved this in favour of
-> deletion: the 5 `<template id="fa-X">` elements and the 5 matching
-> `getElementById('fa-X')` lookups in `theme/js/book.js` are gone. The `"fa-`
-> literal is therefore dropped from the grep below.
+> literal `"fa-`, which contradicted §2/§3.3's original instruction to *keep*
+> the `<template id="fa-X">` containers. The maintainer resolved this in
+> favour of **Option B — deletion**: the 5 `<template id="fa-X">` elements and
+> the 5 matching `getElementById('fa-X')` lookups in `theme/js/book.js` are
+> gone. The `"fa-` literal is therefore dropped from the grep below.
+>
+> §2, §3.3, §4, §5, and §6 have all been rewritten to describe the actual
+> final state (templates + book.js lookups both deleted outright), so readers
+> reaching this spec today will not be misled by the original "retain the
+> ids" wording.
 
 - `git grep -n 'fontawesome\|font-awesome\|fa-svg'` over `cmd`, `internal`,
   `theme`, `README.md`, `MIGRATION.md` returns zero hits.

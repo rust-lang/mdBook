@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Spec §3.1–§3.6 are the source of truth — when this plan disagrees with the spec, the spec wins.
-- `book.js` references 5 `getElementById('fa-X').innerHTML` call sites (`internal/search`/`book.js:227,235,241,287,311`). The `id="fa-X"` attributes must remain; only the *inner* markup changes. Plan handles this in Task 2.
+- `book.js` previously referenced 5 `getElementById('fa-X').innerHTML` call sites (`theme/js/book.js`). Under the resolved Option B (see spec §7 resolution note) the 5 `<template id="fa-X">` containers in the three templates AND the 5 matching `book.js` lookup lines were **deleted outright**, not retained with empty bodies. Plan Task 2 below reflects that.
 - `internal/fontawesome.TestDeprecationWarningIsOneShot` becomes invalid the moment we delete the package — no replacement test.
 - After Task 1 the binary must still build (`go build ./cmd/mdbook`). After Task 2 fixtures regenerate; after Task 3 CSS targets no longer match — purely cosmetic dead-code removal. After Task 4 the repo is clean and the harness diff (`harness/diff.sh`) is reviewable.
 - Worker MUST NOT skip the smoke test in Task 1 (build), the regenerate step in Task 2, or the acceptance gate in Task 4.
@@ -33,9 +33,9 @@
 | `internal/tplgotpl/helpers.go` | drop import + `Env.FA` | T1 |
 | `internal/html/passes.go` | drop import + `convertFontAwesome` | T1 |
 | `internal/html/builder.go` | drop `b.convertFontAwesome()` call | T1 |
-| `internal/tplgotpl/prod/index.gohtml` | replace 18 `{{fa …}}` calls + 5 `<template id="fa-X">` bodies | T2 |
+| `internal/tplgotpl/prod/index.gohtml` | delete 18 `{{fa …}}` calls + 5 `<template id="fa-X">` containers (and matching `book.js` lookups) | T2 |
 | `theme/templates/index.hbs` | same as above | T2 |
-| `fixtures/cli/expected/init/theme/index.hbs` | same as above | T2 |
+| `fixtures/cli/expected/init/theme/index.hbs` | same as above (regenerated to track the production template) | T2 |
 | `theme/css/chrome.css` | drop `.fa-svg`/`.fa-svg:hover` rules | T3 |
 | `theme/css/general.css` | drop `.fa-svg svg` + `.blockquote-tag-title .fa-svg` rules | T3 |
 | `README.md` | drop `fontawesome/` row + the `fontawesome` mention in line 59 | T4 |
@@ -138,14 +138,15 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 ---
 
-## Task 2: Strip `{{fa …}}` from the 3 templates, keep `<template id="fa-X">` ids
+## Task 2: Delete `{{fa …}}` calls AND `<template id="fa-X">` containers, delete matching `book.js` lookups
 
 **Files:**
-- Modify: `internal/tplgotpl/prod/index.gohtml` (18 inline `{{fa …}}` calls + 5 `<template id="fa-X">` bodies)
+- Modify: `internal/tplgotpl/prod/index.gohtml` (18 inline `{{fa …}}` calls + 5 `<template id="fa-X">` containers)
 - Modify: `theme/templates/index.hbs` (same surgery)
-- Modify: `fixtures/cli/expected/init/theme/index.hbs` (same surgery — this is what `mdbook init` writes into a new user's project)
+- Modify: `fixtures/cli/expected/init/theme/index.hbs` (same surgery — regenerated to track the production template)
+- Modify: `theme/js/book.js` (delete the 5 `getElementById('fa-X').innerHTML = ...` lines)
 
-**Interfaces:** None — pure template rewrites. The 5 `<template id="fa-X">` containers MUST keep their `id` attribute exactly as today because `book.js:227,235,241,287,311` reads `.innerHTML` from them.
+**Interfaces:** None — pure template / JS deletions per Option B (see spec §7 resolution note). The 5 `<template id="fa-X">` containers are deleted outright, **not** retained with empty bodies; the matching `book.js` lookup lines are deleted in the same change so no orphan JS reference remains.
 
 - [ ] **Step 1: Edit `internal/tplgotpl/prod/index.gohtml`**
 
@@ -164,17 +165,17 @@ For each of the 18 lines below, replace the `{{fa …}}` token with an empty str
 | 200, 207, 223, 230 | `{{fa "solid" "angle-left"}}` | `‹` |
 | 209, 232 | `{{fa "solid" "angle-left"}}` | `‹` |
 
-For the 5 `<template id="fa-X">…</template>` blocks (lines 238–242), keep the line structure but zero the inner:
+For the 5 `<template id="fa-X">…</template>` blocks (lines 238–242), **delete** the entire lines (Option B; no id retained, no body zeroed):
 
 | Line | Find | Replace with |
 |---|---|---|
-| 238 | `<template id=fa-eye>{{fa "solid" "eye"}}</template>` | `<template id="fa-eye"></template>` |
-| 239 | `<template id=fa-eye-slash>{{fa "solid" "eye-slash"}}</template>` | `<template id=fa-eye-slash"></template>` ← confirm bracket; the find string above closes one quote; replace exactly the line as-is, ending with `</template>` and starting with the template open tag |
-| 240 | `<template id=fa-copy>{{fa "regular" "copy"}}</template>` | `<template id=fa-copy"></template>` |
-| 241 | `<template id=fa-play>{{fa "solid" "play"}}</template>` | `<template id=fa-play"></template>` |
-| 242 | `<template id=fa-clock-rotate-left>{{fa "solid" "clock-rotate-left"}}</template>` | `<template id=fa-clock-rotate-left"></template>` |
+| 238 | `<template id=fa-eye>{{fa "solid" "eye"}}</template>` | *(line deleted)* |
+| 239 | `<template id=fa-eye-slash>{{fa "solid" "eye-slash"}}</template>` | *(line deleted)* |
+| 240 | `<template id=fa-copy>{{fa "regular" "copy"}}</template>` | *(line deleted)* |
+| 241 | `<template id=fa-play>{{fa "solid" "play"}}</template>` | *(line deleted)* |
+| 242 | `<template id=fa-clock-rotate-left>{{fa "solid" "clock-rotate-left"}}</template>` | *(line deleted)* |
 
-(The above replace-with lines are illustrative — read the source first and construct the exact new lines, then commit per-tool edits. Use the Edit tool with `old_string` = full current line and `new_string` = full new line.)
+(The replace-with values above are illustrative — under Option B each entire `<template id="fa-X">…</template>` line is removed wholesale. Use the Edit tool with `old_string` = the full current `<template id="fa-X">…</template>` line plus its trailing newline, and `new_string` = empty string, to remove each line entirely.)
 
 Verify after the edit:
 ```bash
@@ -182,25 +183,27 @@ cd "C:\work\mdBook\mdbook-go"
 grep -n '{{fa' internal/tplgotpl/prod/index.gohtml
 grep -n 'id=fa-' internal/tplgotpl/prod/index.gohtml
 ```
-Expected: first command emits no matches; second command emits 5 lines (one per template id).
+Expected: **both** commands emit no matches. (Under the original retain-the-ids design the second grep emitted 5 hits; under Option B those 5 lines are deleted entirely, and the matching `theme/js/book.js` lookups are gone too.)
 
 - [ ] **Step 2: Mirror the change in `theme/templates/index.hbs`**
 
-Apply the same line-by-line replacement to lines 268–272 (the `<template id="fa-X">` blocks) and the equivalent `{{fa …}}` call sites between lines 158–242 of `theme/templates/index.hbs`. Run:
+Apply the same deletions: strip every `{{fa …}}` call site (down to an empty string or a Unicode `'‹' / '›'` arrow for the prev/next nav) and delete each `<template id="fa-X">…</template>` line entirely. Run:
 ```bash
 cd "C:\work\mdBook\mdbook-go"
 grep -nc '{{fa' theme/templates/index.hbs
+grep -c  'id=fa-' theme/templates/index.hbs
 ```
-Expected: 0.
+Expected: **both** commands emit `0`.
 
 - [ ] **Step 3: Mirror the change in `fixtures/cli/expected/init/theme/index.hbs`**
 
-Apply the same surgery; this file is the scaffold that `mdbook init` writes into a fresh book project, so it must stay consistent with what `prod/index.gohtml` does. Run:
+Apply the same deletions; this file is the scaffold that `mdbook init` writes into a fresh book project, so it must stay consistent with what `prod/index.gohtml` does. Run:
 ```bash
 cd "C:\work\mdBook\mdbook-go"
 grep -nc '{{fa' fixtures/cli/expected/init/theme/index.hbs
+grep -c  'id=fa-' fixtures/cli/expected/init/theme/index.hbs
 ```
-Expected: 0.
+Expected: **both** commands emit `0` (Option B — same as `internal/tplgotpl/prod/index.gohtml`).
 
 - [ ] **Step 4: Build binary, regen `fixtures/basic/book/`, smoke-check**
 
@@ -219,7 +222,7 @@ grep -c 'class="markdown-body"' fixtures/basic/book/intro.html
 
 Expected output:
 - `0` (no more `<span class=fa-svg>` in chrome)
-- `>=1` (the 5 `<template id="fa-X">` containers survived)
+- `0` (the 5 `<template id="fa-X">` containers are deleted outright under Option B — no longer present)
 - `1` (the `<main class="markdown-body">` marker from Task 1's smoke test)
 
 - [ ] **Step 5: Spot-check the angular-nav Unicode arrows**
@@ -234,20 +237,22 @@ Expected: at least 2 lines (the wide-nav + mobile-nav arrow slots). If 0 hits, T
 
 ```bash
 cd "C:\work\mdBook\mdbook-go"
-git add internal/tplgotpl/prod/index.gohtml theme/templates/index.hbs fixtures/cli/expected/init/theme/index.hbs
+git add internal/tplgotpl/prod/index.gohtml theme/templates/index.hbs fixtures/cli/expected/init/theme/index.hbs theme/js/book.js
 git add fixtures/basic/book/  # the regenerated intro.html etc. (only commit these — defer serve/ts-toc/hbs goldens to Task 4)
-git commit -m "feat(templates): drop {{fa ...}} chrome, empty fa-X templates
+git commit -m "feat(templates): drop {{fa ...}} chrome, delete fa-X templates
 
 The hbs engine (theme/templates/index.hbs) and the mdbook init
 scaffold (fixtures/cli/expected/init/theme/index.hbs) get the same
 surgery as internal/tplgotpl/prod/index.gohtml.
 
 - 18 inline {{fa ...}} calls → empty (or Unicode '‹' / '›' for prev/next)
-- 5 <template id=\"fa-X\"> bodies → empty (ids retained for book.js)
+- 5 <template id=\"fa-X\">…</template> lines → deleted outright
+- 5 matching book.js getElementById('fa-X').innerHTML calls → deleted
 
-book.js:227,235,241,287,311 keep working: their document.getElementById()
-reads return ''. The block-collapse, code-copy, playground-run, and
-history-reset buttons become textless but functional.
+No orphan JS reference remains: the matching book.js lines were removed
+in the same change so document.getElementById('fa-X') is no longer
+called anywhere in the chrome JS. Surrounding buttons render with
+empty body but their title/aria-label still describe the action.
 
 fixtures/basic/book/intro.html regenerated and shipped with this commit;
 remaining fixtures (serve, ts-toc, hbs testdata) regenerate in Task 4.
@@ -489,7 +494,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
    - §3.5 (docs) → Task 4
    - §3.6 (fixture regen) → Task 2 (basic, smoke gate) + Task 4 (serve/ts-toc/hbs golden + final acceptance)
    - §4 (data flow) → this plan doesn't enforce new data flow, only enforces that the old one is gone. Covered by the spec; no implementation task needed beyond Tasks 1–4.
-   - §5 (failure modes) → Task 2's `book.js` empty innerHTML behaviour is exercised in the smoke step; the `<i class="fa-…">` markdown case is left as "acceptable per spec" with no mitigation by design.
+   - §5 (failure modes) → Task 2's button / code-copy / playground / history behaviour is exercised in the smoke step (no `<template id="fa-X">` containers and no `getElementById('fa-X')` lookups remain, so the row applies only to future regressions — see spec §7 resolution note). The `<i class="fa-…">` markdown case is left as "acceptable per spec" with no mitigation by design.
    - §6 (testing) → Steps 1/2/3/4 in Task 4 plus the per-task build smoke checks.
    - §7 (acceptance) → Task 4 Step 7.
    - §8 (out of scope) → not implemented (correctly).
