@@ -66,7 +66,7 @@ func Render(ctx *Context) error {
 	}
 
 	data := makeData(ctx, htmlCfg, th)
-	trees, err := buildTrees(ctx.Book, htmlCfg, ctx.Config.Rust.Edition)
+	trees, err := buildTrees(ctx.Book, htmlCfg)
 	if err != nil {
 		return err
 	}
@@ -312,7 +312,7 @@ func escapeForJSSingleQuoted(s string) string {
 }
 
 // buildTrees renders every non-draft chapter's Markdown into a node tree.
-func buildTrees(b *book.Book, cfg *config.HtmlConfig, edition string) ([]*chapterTree, error) {
+func buildTrees(b *book.Book, cfg *config.HtmlConfig) ([]*chapterTree, error) {
 	var trees []*chapterTree
 	for _, ch := range b.Chapters() {
 		if ch.IsDraft() {
@@ -325,7 +325,6 @@ func buildTrees(b *book.Book, cfg *config.HtmlConfig, edition string) ([]*chapte
 			Admonitions:      cfg.Admonitions,
 			MathJax:          cfg.MathJaxSupport,
 			HideLines: cfg.Code.HideLines,
-			Edition:   edition,
 		}
 		tree, err := html.BuildTree(ch.Content, opts)
 		if err != nil {
@@ -423,7 +422,6 @@ func render404(ctx *Context, cfg *config.HtmlConfig, registry *tplgotpl.Registry
 		SmartPunctuation: cfg.SmartPunctuation,
 		DefinitionLists:  cfg.DefinitionLists,
 		Admonitions:      cfg.Admonitions,
-		Edition:          ctx.Config.Rust.Edition,
 	})
 	if err != nil {
 		return err

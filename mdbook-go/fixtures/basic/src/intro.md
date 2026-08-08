@@ -5,3 +5,7 @@ load a book and render chapters.
 
 - Item one
 - Item two
+
+```yaml
+{{#include test.yaml}}
+```

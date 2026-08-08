@@ -72,29 +72,6 @@ func hideLinesWithPrefix(content, prefix string) []*Node {
 	return out
 }
 
-// rustHeader matches the run of inner attributes at the top of a Rust snippet.
-var rustHeader = regexp.MustCompile(`^((?:[ \t]*#!\[[^\n]*(?:\r?\n)?|[ \t]*(?:\r?\n))*)`)
-
-// partitionRustSource splits leading `#![...]` inner attributes from the rest
-// of the snippet.
-func partitionRustSource(s string) (attrs, rest string) {
-	m := rustHeader.FindStringSubmatch(s)
-	if m == nil || strings.TrimSpace(m[1]) == "" {
-		return "", s
-	}
-	return s[:len(m[1])], s[len(m[1]):]
-}
-
-// wrapRustMain synthesises a hidden `fn main` wrapper for playground snippets
-// that do not define one, matching wrap_rust_main.
-func wrapRustMain(text string) (string, bool) {
-	if strings.Contains(text, "fn main") || strings.Contains(text, "quick_main!") {
-		return "", false
-	}
-	attrs, code := partitionRustSource(text)
-	newline := "\n"
-	if code == "" || strings.HasSuffix(code, "\n") {
-		newline = ""
-	}
-	return "# #![allow(unused)]\n" + attrs + "# fn main() {\n" + code + newline + "# }", true
-}
+// partitionRustSource and rustHeader were removed along with the Rust
+// playground feature: their only consumer was wrapRustMain, which fed Rust
+// snippets into the playground iframe.

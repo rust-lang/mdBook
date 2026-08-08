@@ -43,9 +43,11 @@ func (b *builder) addHeaderLinks() {
 	}
 }
 
-// updateCodeBlocks applies the Rust playground treatment and then the hidden
-// line markup to every code block. Ported from update_code_blocks in
-// crates/mdbook-html/src/html/tree.rs.
+// updateCodeBlocks applies the hidden-line markup to every code block. The
+// Rust playground treatment (Runnable / Editable / CopyJS) was removed; what
+// remains is just the rust-specific `hide lines` pass and the configurable
+// `hidelines=<prefix>` pass. Ported from update_code_blocks in
+// crates/mdbook-html/src/html/tree.rs (minus the playground branch).
 func (b *builder) updateCodeBlocks() {
 	for _, code := range b.root.Elements(func(name string) bool { return name == "code" }) {
 		class, _ := code.El.Attr("class")
@@ -67,53 +69,12 @@ func (b *builder) updateCodeBlocks() {
 			}
 		}
 
-		isEditable := hasClass(classes, "editable")
-		isPlayground := hasClass(classes, "language-rust") &&
-			((!hasClass(classes, "ignore") &&
-				!hasClass(classes, "noplayground") &&
-				!hasClass(classes, "noplaypen") &&
-				b.opts.Playground.Runnable) ||
-				hasClass(classes, "mdbook-runnable"))
-
-		if isPlayground {
-			if !hasEditionClass(classes) && b.opts.Edition != "" {
-				class = strings.TrimSpace(class + " edition" + b.opts.Edition)
-				code.El.SetAttr("class", class)
-			}
-			if !(b.opts.Playground.Editable && isEditable) {
-				if wrapped, ok := wrapRustMain(codeText(code)); ok {
-					setCodeText(code, wrapped)
-				}
-			}
-			if code.Parent != nil && code.Parent.Kind == KindElement && code.Parent.El.Name == "pre" {
-				code.Parent.El.SetAttr("class", "playground")
-			}
-		}
-
 		if language == "rust" {
 			setCodeChildren(code, hideLinesRust(codeText(code)))
 		} else if hasPrefix {
 			setCodeChildren(code, hideLinesWithPrefix(codeText(code), hidelinesPrefix))
 		}
 	}
-}
-
-func hasClass(classes []string, want string) bool {
-	for _, c := range classes {
-		if c == want {
-			return true
-		}
-	}
-	return false
-}
-
-func hasEditionClass(classes []string) bool {
-	for _, c := range classes {
-		if strings.HasPrefix(c, "edition") {
-			return true
-		}
-	}
-	return false
 }
 
 // codeText concatenates the text children of a <code> element.

@@ -19,9 +19,10 @@ import (
 //	{{#include FILE[:START[:END]]}}     // include file or line range
 //	{{#include FILE:ANCHOR}}             // include file between anchor lines
 //	{{#rustdoc_include FILE:RANGE}}      // like include but hides lines behind #
-//	{{#playground FILE [attrs...]}}      // embed file as a Rust playground block
 //	{{#title NEW TITLE}}                 // override the chapter title
 //	\{{#anything}}                       // escaped, dropped back to text
+//
+// ({{#playground FILE}} was removed along with the Rust playground feature.)
 //
 // {{#title}} updates ctx.ChapterTitles for the chapter so the renderer can use
 // it; the chapter's `name` field is left untouched.
@@ -178,9 +179,6 @@ func linkFromMatch(s string, m []string) (link, bool) {
 	case "rustdoc_include":
 		path, r := parseInclude(parts[0])
 		return link{text: m[0], kind: rustdocIncludeLink{path: path, rng: r}}, true
-	case "playground", "playpen":
-		attrs := parts[1:]
-		return link{text: m[0], kind: playgroundLink{path: parts[0], attrs: attrs}}, true
 	}
 	return link{}, false
 }
@@ -240,28 +238,8 @@ func (r rustdocIncludeLink) nestedBase(baseDir string) string {
 	return filepath.Clean(dir)
 }
 
-type playgroundLink struct {
-	path  string
-	attrs []string
-}
-
-func (p playgroundLink) render(baseDir string, _ *string) (string, error) {
-	full := filepath.Join(baseDir, filepath.FromSlash(p.path))
-	data, err := os.ReadFile(full)
-	if err != nil {
-		return "", fmt.Errorf("playground %s: %w", full, err)
-	}
-	contents := string(data)
-	if !strings.HasSuffix(contents, "\n") {
-		contents += "\n"
-	}
-	header := "rust"
-	if len(p.attrs) > 0 {
-		header = "rust," + strings.Join(p.attrs, ",")
-	}
-	return "```" + header + "\n" + contents + "```\n", nil
-}
-func (playgroundLink) nestedBase(string) string { return "" }
+// playgroundLink (the {{#playground FILE}} handler) was removed along with
+// the Rust playground feature; nothing produces these link kinds any more.
 
 // lineRange matches Rust's RangeOrAnchor.
 type lineRange struct {
@@ -322,10 +300,10 @@ func (r lineRange) apply(s string) string {
 }
 
 // applyRustdoc emits the file with out-of-range lines replaced by `#` so the
-// playground still receives them but the reader only sees the selected
-// portion. Anchor mode mirrors Rust's take_rustdoc_include_anchored_lines:
-// lines outside the anchor block are dropped entirely, and ANCHOR/ANCHOR_END
-// markers themselves are dropped (not emitted with a `# ` prefix).
+// reader only sees the selected portion. Anchor mode mirrors Rust's
+// take_rustdoc_include_anchored_lines: lines outside the anchor block are
+// dropped entirely, and ANCHOR/ANCHOR_END markers themselves are dropped
+// (not emitted with a `# ` prefix).
 func (r lineRange) applyRustdoc(s string) string {
 	lines := splitLinesLikeRust(s)
 	if r.anchor == nil {
@@ -358,7 +336,7 @@ func (r lineRange) applyRustdoc(s string) string {
 //   - Inside the block: ANCHOR_END lines drop and transition out,
 //     ANCHOR_START lines (any name) drop, and ordinary lines are
 //     emitted as-is (no `# ` prefix) so they become the visible
-//     portion of the playground snippet.
+//     portion of the snippet.
 	startPat := "ANCHOR: " + *r.anchor
 	endPat := "ANCHOR_END: " + *r.anchor
 	var out strings.Builder

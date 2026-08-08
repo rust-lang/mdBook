@@ -12,15 +12,15 @@ import (
 // port.
 const goldenRoot = "../../../tests/testsuite/markdown"
 
-// defaultOptions mirrors the Rust defaults for [output.html] plus an unset Rust
-// edition, which is the configuration those fixtures are rendered with.
+// defaultOptions mirrors the Rust defaults for [output.html] — the
+// configuration those fixtures are rendered with.
 func defaultOptions(path string) Options {
 	return Options{
 		Path:             path,
 		SmartPunctuation: true,
 		DefinitionLists:  true,
 		Admonitions:      true,
-		Playground:       PlaygroundOptions{Runnable: true, Copyable: true, CopyJS: true},
+		Playground:       PlaygroundOptions{Copyable: true},
 	}
 }
 

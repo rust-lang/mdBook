@@ -1,0 +1,4 @@
+appVersion: app/v1
+kind: Deployment
+metadata:
+  name: test

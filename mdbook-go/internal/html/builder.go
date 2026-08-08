@@ -14,13 +14,13 @@ import (
 	"github.com/yuin/goldmark/text"
 )
 
-// PlaygroundOptions mirrors [output.html.playground].
+// PlaygroundOptions mirrors the non-playground subset of
+// [output.html.playground]. The Rust playground feature (Runnable / Editable
+// / CopyJS) was removed — those fields had no remaining readers; only the
+// code-block chrome knobs (Copyable / LineNumbers) survive.
 type PlaygroundOptions struct {
-	Editable    bool
-	CopyJS      bool
 	Copyable    bool
 	LineNumbers bool
-	Runnable    bool
 }
 
 // Options controls how a chapter's Markdown is turned into HTML. It is the Go
@@ -37,8 +37,6 @@ type Options struct {
 	Playground PlaygroundOptions
 	// HideLines maps a language to the prefix that marks a hidden line.
 	HideLines map[string]string
-	// Edition is the Rust edition applied to playground blocks.
-	Edition string
 }
 
 // builder turns a goldmark AST into the mdBook node tree.
