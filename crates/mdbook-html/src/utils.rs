@@ -73,6 +73,8 @@ pub(crate) fn unique_id(id: &str, used: &mut HashSet<String>) -> String {
 }
 
 /// Generates an HTML id from the given text.
+///
+/// Falls back to `section` when no valid ID characters remain.
 pub(crate) fn id_from_content(content: &str) -> String {
     // This is intended to be close to how header ID generation is done in
     // other sites and tools, but is not 100% the same. Not all sites and
@@ -83,7 +85,7 @@ pub(crate) fn id_from_content(content: &str) -> String {
     // - https://pandoc.org/MANUAL.html#extension-auto_identifiers
     // - https://kramdown.gettalong.org/converter/html#auto-ids
     // - https://docs.rs/comrak/latest/comrak/options/struct.Extension.html#structfield.header_ids
-    content
+    let id = content
         .trim()
         .to_lowercase()
         .chars()
@@ -96,7 +98,13 @@ pub(crate) fn id_from_content(content: &str) -> String {
                 None
             }
         })
-        .collect()
+        .collect::<String>();
+
+    if id.is_empty() {
+        "section".to_owned()
+    } else {
+        id
+    }
 }
 
 #[cfg(test)]
@@ -128,7 +136,9 @@ mod tests {
         assert_eq!(id_from_content("中文"), "中文");
         assert_eq!(id_from_content("にほんご"), "にほんご");
         assert_eq!(id_from_content("한국어"), "한국어");
-        assert_eq!(id_from_content(""), "");
+        assert_eq!(id_from_content(""), "section");
+        assert_eq!(id_from_content("   "), "section");
+        assert_eq!(id_from_content("!.():"), "section");
         assert_eq!(id_from_content("中文標題 CJK title"), "中文標題-cjk-title");
         assert_eq!(id_from_content("Über"), "über");
     }

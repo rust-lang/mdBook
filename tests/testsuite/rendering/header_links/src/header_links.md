@@ -2,9 +2,11 @@
 
 ## Foo^bar
 
-###
+### !.():
 
 ####
+
+##### !!! {#explicit-punctuation}
 
 ## Hï
 
