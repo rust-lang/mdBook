@@ -1,0 +1,14 @@
+package:
+  root: src
+  build-dir: book
+  title: basic_readme
+
+chapters:
+  prefix:
+    - name: Intro
+      path: README.md
+  numbered:
+    - name: First
+      path: first/README
+    - name: Second
+      path: second/Readme.md

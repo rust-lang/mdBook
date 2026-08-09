@@ -1,0 +1,52 @@
+package:
+  title: Nested Fixture
+  description: Exercises multi-level nesting, tables, footnotes and admonitions.
+  language: en
+  root: src
+
+build:
+  build-dir: book
+  create-missing: true
+
+output:
+  html:
+    git-repository-url: https://github.com/example/nested
+    edit-url-template: https://github.com/example/nested/edit/main/{path}
+    additional-css:
+      - extra.css
+    fold:
+      enable: true
+      level: 1
+    redirect:
+      "/old-guide.html": guide/intro.html
+      "/moved.html": reference.html
+      "/moved.html#anchor": guide/advanced/deep.html#deep-dive
+
+chapters:
+  prefix:
+    - name: Preface
+      path: preface.md
+  numbered:
+    - part: Guide
+    - name: Introduction
+      path: guide/intro.md
+      children:
+        - name: Basics
+          path: guide/basics.md
+          children:
+            - name: Deep Dive
+              path: guide/advanced/deep.md
+              children:
+                - name: Deeper Still
+                  path: guide/advanced/deeper.md
+        - name: Unwritten Draft
+          path: ""
+    - name: Reference
+      path: reference.md
+    - separator: true
+    - part: Appendix
+    - name: Tables And Footnotes
+      path: tables.md
+  suffix:
+    - name: Afterword
+      path: afterword.md

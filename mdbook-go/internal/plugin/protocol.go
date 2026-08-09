@@ -9,8 +9,7 @@ package plugin
 import (
 	"encoding/json"
 
-	"mdbook-go/internal/book"
-	"mdbook-go/internal/config"
+	"mdbook-go/internal/model"
 )
 
 // WireBook is the externally visible form of a book. It is serialised as the
@@ -106,22 +105,19 @@ type WireSectionNum []uint32
 // `preprocessor` maps stay as raw JSON so nested tables remain opaque to
 // plugins.
 type WireConfig struct {
-	Book         BookConfig     `json:"book"`
+	Package      PackageConfig  `json:"book"`
 	Build        BuildConfig    `json:"build"`
-	Rust         RustConfig     `json:"rust"`
 	Output       map[string]any `json:"output"`
 	Preprocessor map[string]any `json:"preprocessor"`
 }
 
-// BookConfig mirrors mdbook-core's BookConfig.
-type BookConfig struct {
-	Title         string   `json:"title"`
-	Authors       []string `json:"authors"`
-	Description   string   `json:"description"`
-	Language      string   `json:"language"`
-	TextDirection string   `json:"text-direction"`
-	Multilingual  bool     `json:"multilingual"`
-	Src           string   `json:"src"`
+// PackageConfig mirrors mdbook-core's BookConfig.
+type PackageConfig struct {
+	Title         string `json:"title"`
+	Description   string `json:"description"`
+	Language      string `json:"language"`
+	TextDirection string `json:"text-direction"`
+	Root          string `json:"src"`
 }
 
 // BuildConfig mirrors mdbook-core's BuildConfig.
@@ -130,12 +126,6 @@ type BuildConfig struct {
 	ExtraWatchDirs          []string `json:"extra-watch-dirs"`
 	CreateMissing           bool     `json:"create-missing"`
 	UseDefaultPreprocessors bool     `json:"use-default-preprocessors"`
-}
-
-// RustConfig mirrors mdbook-core's RustConfig.
-type RustConfig struct {
-	Edition     string `json:"edition"`
-	Description string `json:"description"`
 }
 
 // WirePreprocessorContext is the JSON handed to an external preprocessor on
@@ -168,7 +158,7 @@ type WireRenderContext struct {
 const MdbookVersion = "0.1.0-m3"
 
 // ToWireBook converts the internal book model into the wire representation.
-func ToWireBook(b *book.Book) WireBook {
+func ToWireBook(b *model.Book) WireBook {
 	if b == nil {
 		return WireBook{}
 	}
@@ -179,7 +169,7 @@ func ToWireBook(b *book.Book) WireBook {
 	return out
 }
 
-func toWireItem(it book.BookItem) WireBookItem {
+func toWireItem(it model.BookItem) WireBookItem {
 	switch {
 	case it.Chapter != nil:
 		return WireBookItem{Chapter: toWireChapter(it.Chapter)}
@@ -191,7 +181,7 @@ func toWireItem(it book.BookItem) WireBookItem {
 	}
 }
 
-func toWireChapter(c *book.Chapter) *WireChapter {
+func toWireChapter(c *model.Chapter) *WireChapter {
 	wc := &WireChapter{
 		Name:        c.Name,
 		Content:     c.Content,
@@ -222,27 +212,27 @@ func toWireChapter(c *book.Chapter) *WireChapter {
 
 // FromWireBook turns a wire representation back into the internal model. It
 // is used after an external preprocessor has returned its modified book.
-func FromWireBook(w WireBook) *book.Book {
-	out := book.NewBook()
+func FromWireBook(w WireBook) *model.Book {
+	out := model.NewBook()
 	for _, it := range w.Items {
 		out.Items = append(out.Items, fromWireItem(it))
 	}
 	return out
 }
 
-func fromWireItem(it WireBookItem) book.BookItem {
+func fromWireItem(it WireBookItem) model.BookItem {
 	switch {
 	case it.Chapter != nil:
-		return book.BookItem{Chapter: fromWireChapter(it.Chapter)}
+		return model.BookItem{Chapter: fromWireChapter(it.Chapter)}
 	case it.PartTitle != nil:
-		return book.BookItem{PartTitle: &book.PartTitle{Name: *it.PartTitle}}
+		return model.BookItem{PartTitle: &model.PartTitle{Name: *it.PartTitle}}
 	default:
-		return book.BookItem{Separator: &book.Separator{}}
+		return model.BookItem{Separator: &model.Separator{}}
 	}
 }
 
-func fromWireChapter(wc *WireChapter) *book.Chapter {
-	c := book.NewChapter(wc.Name, "")
+func fromWireChapter(wc *WireChapter) *model.Chapter {
+	c := model.NewChapter(wc.Name, "")
 	c.Content = wc.Content
 	c.ParentNames = append([]string(nil), wc.ParentNames...)
 	if wc.Path != nil {
@@ -252,7 +242,7 @@ func fromWireChapter(wc *WireChapter) *book.Chapter {
 		c.SourcePath = *wc.SourcePath
 	}
 	if wc.Number != nil {
-		sn := make(book.SectionNumber, 0, len(*wc.Number))
+		sn := make(model.SectionNumber, 0, len(*wc.Number))
 		for _, v := range *wc.Number {
 			sn = append(sn, uint(v))
 		}
@@ -265,29 +255,23 @@ func fromWireChapter(wc *WireChapter) *book.Chapter {
 }
 
 // ToWireConfig converts the internal config to the wire shape.
-func ToWireConfig(c *config.Config) WireConfig {
+func ToWireConfig(c *model.Config) WireConfig {
 	if c == nil {
 		return WireConfig{}
 	}
 	return WireConfig{
-		Book: BookConfig{
-			Title:         c.Book.Title,
-			Authors:       c.Book.Authors,
-			Description:   c.Book.Description,
-			Language:      c.Book.Language,
-			TextDirection: c.Book.TextDirection,
-			Multilingual:  c.Book.Multilingual,
-			Src:           c.Book.SourceDir,
+		Package: PackageConfig{
+			Title:         c.Package.Title,
+			Description:   c.Package.Description,
+			Language:      c.Package.Language,
+			TextDirection: c.Package.TextDirection,
+			Root:          c.Package.Root,
 		},
 		Build: BuildConfig{
 			BuildDir:                c.Build.BuildDir,
 			ExtraWatchDirs:          c.Build.ExtraWatchDirs,
 			CreateMissing:           c.Build.CreateMissing,
 			UseDefaultPreprocessors: c.Build.UseDefaultPreprocessors,
-		},
-		Rust: RustConfig{
-			Edition:     c.Rust.Edition,
-			Description: c.Rust.Description,
 		},
 		Output:       c.Output,
 		Preprocessor: c.Preprocessor,

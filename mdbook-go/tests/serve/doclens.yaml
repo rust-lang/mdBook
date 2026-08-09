@@ -1,0 +1,20 @@
+package:
+  title: Serve Fixture
+  language: en
+  root: src
+
+build:
+  build-dir: book
+  create-missing: true
+  extra-watch-dirs:
+    - examples
+
+output:
+  html:
+    additional-css:
+      - theme-overrides.css
+
+chapters:
+  prefix:
+    - name: Introduction
+      path: intro.md

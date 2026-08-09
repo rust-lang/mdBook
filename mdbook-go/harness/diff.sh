@@ -31,7 +31,7 @@ if [[ $# -gt 0 ]]; then
   FIXTURES=("$@")
 else
   FIXTURES=()
-  for dir in "$ROOT"/fixtures/*/; do
+  for dir in "$ROOT"/tests/*/; do
     FIXTURES+=("$(basename "$dir")")
   done
 fi
@@ -42,14 +42,14 @@ if [[ ! -x "$RUST_BIN" ]]; then
 fi
 
 echo "=== building Go binary ===" >&2
-(cd "$ROOT" && go build -o "$GO_BIN" ./cmd/mdbook)
+(cd "$ROOT" && go build -o "$GO_BIN" ./cmd/doclens)
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
 failed=0
 for fixture in "${FIXTURES[@]}"; do
-  fixture_dir="$ROOT/fixtures/$fixture"
+  fixture_dir="$ROOT/tests/$fixture"
   if [[ ! -d "$fixture_dir" ]]; then
     echo "unknown fixture: $fixture" >&2
     exit 2
@@ -69,7 +69,7 @@ for fixture in "${FIXTURES[@]}"; do
   mkdir -p "$rust_out" "$go_out"
 
   "$RUST_BIN" build "$fixture_dir" --dest-dir "$rust_out" >/dev/null 2>&1
-  "$GO_BIN" build -dir "$fixture_dir" -dest-dir "$go_out" >/dev/null
+  "$GO_BIN" build --dir "$fixture_dir" --dest-dir "$go_out" >/dev/null
 
   if diff -r "$rust_out" "$go_out" >"$TMP/$fixture.diff" 2>&1; then
     count="$(find "$go_out" -type f | wc -l | tr -d ' ')"

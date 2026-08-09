@@ -1,0 +1,16 @@
+package:
+  title: passing_tests
+  root: src
+
+build:
+  build-dir: book
+
+chapters:
+  prefix:
+    - name: Intro
+      path: intro.md
+  numbered:
+    - name: Passing 1
+      path: passing1.md
+    - name: Passing 2
+      path: passing2.md

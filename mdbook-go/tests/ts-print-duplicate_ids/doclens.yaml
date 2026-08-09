@@ -1,0 +1,11 @@
+package:
+  root: src
+  build-dir: book
+  title: duplicate_ids
+
+chapters:
+  numbered:
+    - name: Chapter 1
+      path: chapter_1.md
+    - name: Chapter 2
+      path: chapter_2.md

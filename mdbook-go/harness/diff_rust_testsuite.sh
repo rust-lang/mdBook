@@ -22,7 +22,7 @@ GO_BIN="$ROOT/bin/mdbook-go"
 
 if [[ ! -x "$GO_BIN" ]]; then
   echo "building Go binary first" >&2
-  (cd "$ROOT" && go build -o "$GO_BIN" ./cmd/mdbook)
+  (cd "$ROOT" && go build -o "$GO_BIN" ./cmd/doclens)
 fi
 
 if [[ $# -gt 0 ]]; then
@@ -120,7 +120,7 @@ for dir in "${BUILDABLE[@]}"; do
     continue
   fi
 
-  if ! "$GO_BIN" build -dir "$dir" -dest-dir "$go_out" >"$go_log" 2>&1; then
+  if ! "$GO_BIN" build --dir "$dir" --dest-dir "$go_out" >"$go_log" 2>&1; then
     err="$(grep -E '^ERROR|^WARN' "$go_log" | head -1)"
     echo -e "BUILD_FAIL\t$short\tGo build failed: ${err:-$(head -1 "$go_log")}" >> "$results_file"
     skip=$((skip+1))

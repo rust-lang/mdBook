@@ -1,0 +1,27 @@
+package:
+  title: basic_markdown
+  root: src
+
+build:
+  build-dir: book
+
+chapters:
+  numbered:
+    - name: Blank
+      path: blank.md
+    - name: Blockquotes
+      path: blockquotes.md
+    - name: Code blocks
+      path: code-blocks.md
+    - name: Lists
+      path: lists.md
+    - name: Inlines
+      path: inlines.md
+    - name: Links
+      path: links.md
+    - name: Images
+      path: images.md
+    - name: HTML
+      path: html.md
+    - name: SVG
+      path: svg.md

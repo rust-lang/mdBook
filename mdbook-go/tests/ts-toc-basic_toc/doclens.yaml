@@ -1,0 +1,37 @@
+package:
+  root: src
+  build-dir: book
+  title: basic_toc
+
+chapters:
+  prefix:
+    - name: Prefix 1
+      path: prefix1.md
+    - name: Prefix 2
+      path: prefix2.md
+  numbered:
+    - name: With Readme
+      path: README.md
+      children:
+        - name: Nested Index
+          path: nested/index.md
+        - name: Nested two
+          path: nested/two.md
+    - name: Draft
+      path: ""
+    - separator: true
+    - part: Deep Nest
+    - name: Deep Nest 1
+      path: deep/index.md
+      children:
+        - name: Deep Nest 2
+          path: deep/a/index.md
+          children:
+            - name: Deep Nest 3
+              path: deep/a/b/index.md
+    - separator: true
+  suffix:
+    - name: Suffix 1
+      path: suffix1.md
+    - name: Suffix 2
+      path: suffix2.md

@@ -1,0 +1,262 @@
+<!DOCTYPE HTML>
+<html lang="{{.Language}}" class="{{.DefaultTheme}} sidebar-visible" dir="{{.TextDirection}}">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>{{.Title}}</title>
+        {{if .BaseURL}}
+        <base href="{{.BaseURL}}">
+        {{end}}
+
+        <!-- Custom HTML head -->
+        {{template "head" .}}
+
+        <meta name="description" content="{{.Description}}">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="stylesheet" href="{{.Resource "css/variables.css"}}">
+        <link rel="stylesheet" href="{{.Resource "css/general.css"}}">
+        <link rel="stylesheet" href="{{.Resource "css/chrome.css"}}">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="{{.Resource "highlight.css"}}">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="{{.Resource "tomorrow-night.css"}}">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="{{.Resource "ayu-highlight.css"}}">
+        <!-- GitHub markdown stylesheets (chapter body via .markdown-body) -->
+        <link rel="stylesheet" id="mdbook-github-markdown-light-css" href="{{.Resource "css/github-markdown-light.css"}}">
+        <link rel="stylesheet" id="mdbook-github-markdown-dark-css" href="{{.Resource "css/github-markdown-dark.css"}}" disabled>
+        <!-- Custom theme stylesheets -->
+        {{range .AdditionalCSS}}
+        <link rel="stylesheet" href="{{$.Resource .}}">
+        {{end}}
+
+        {{if .MathJaxSupport}}
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        {{end}}
+        <script>
+            const path_to_root = "{{.PathToRoot}}";
+            const default_light_theme = "{{.DefaultTheme}}";
+            const default_dark_theme = "{{.PreferredDarkTheme}}";
+            {{if .SearchJS}}
+            window.path_to_searchindex_js = "{{.Resource "searchindex.js"}}";
+            {{end}}
+        </script>
+        <script src="{{.Resource "toc.js"}}"></script>
+        {{if eq .NavMode "vim"}}
+        <script src="{{.Resource "nav-vim.js"}}"></script>
+        {{else}}
+        <script src="{{.Resource "nav-normal.js"}}"></script>
+        {{end}}
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                {{if .SearchEnabled}}
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                {{end}}
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('{{.DefaultTheme}}')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="{{.PathToRoot}}toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+            <div class="page">
+                {{template "header" .}}
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme">
+                        </button>
+                        {{if .SearchEnabled}}
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            搜索
+                        </button>
+                        {{end}}
+                    </div>
+                    <h1 class="menu-title">{{.BookTitle}}</h1>
+                    <div class="right-buttons">
+                        {{if .GitRepositoryURL}}
+                        <a href="{{.GitRepositoryURL}}" title="Git repository" aria-label="Git repository">
+                        </a>
+                        {{end}}
+                        {{if .GitRepositoryEditURL}}
+                        <a href="{{.GitRepositoryEditURL}}" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                        </a>
+                        {{end}}
+                    </div>
+                </div>
+                {{if .SearchEnabled}}
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+                {{end}}
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+                <div id="mdbook-content" class="content">
+                    <main class="markdown-body">
+                        {{.Content}}
+                    </main>
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        {{if .Previous}}
+                            <a rel="prev" href="{{$.PathToRoot}}{{.Previous.Link}}" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                {{if eq $.TextDirection "rtl"}}
+                                ›
+                                {{else}}
+                                ‹
+                                {{end}}
+                            </a>
+                        {{end}}
+                        {{if .Next}}
+                            <a rel="next prefetch" href="{{$.PathToRoot}}{{.Next.Link}}" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                {{if eq $.TextDirection "rtl"}}
+                                ‹
+                                {{else}}
+                                ›
+                                {{end}}
+                            </a>
+                        {{end}}
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                {{if .Previous}}
+                    <a rel="prev" href="{{$.PathToRoot}}{{.Previous.Link}}" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        {{if eq $.TextDirection "rtl"}}
+                        ›
+                        {{else}}
+                        ‹
+                        {{end}}
+                    </a>
+                {{end}}
+                {{if .Next}}
+                    <a rel="next prefetch" href="{{$.PathToRoot}}{{.Next.Link}}" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        {{if eq $.TextDirection "rtl"}}
+                        ‹
+                        {{else}}
+                        ›
+                        {{end}}
+                    </a>
+                {{end}}
+            </nav>
+        </div>
+
+        {{if .LiveReloadEndpoint}}
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "{{.LiveReloadEndpoint}}";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        {{end}}
+
+        {{if .SearchJS}}
+        <script src="{{.Resource "elasticlunr.min.js"}}"></script>
+        <script src="{{.Resource "mark.min.js"}}"></script>
+        <script src="{{.Resource "searcher.js"}}"></script>
+        {{end}}
+
+        <script src="{{.Resource "clipboard.min.js"}}"></script>
+        <script src="{{.Resource "highlight.min.js"}}"></script>
+        <script src="{{.Resource "book.js"}}"></script>
+
+        {{range .AdditionalJS}}
+        <script src="{{$.Resource .}}"></script>
+        {{end}}
+
+        {{if .FragmentMap}}
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const fragmentMap =
+                    {{.FragmentMap}}
+                ;
+                const target = fragmentMap[window.location.hash];
+                if (target) {
+                    let url = new URL(target, window.location.href);
+                    window.location.replace(url.href);
+                }
+            });
+        </script>
+        {{end}}
+    </div>
+    </body>
+</html>

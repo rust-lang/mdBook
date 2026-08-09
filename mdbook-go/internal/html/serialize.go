@@ -3,7 +3,6 @@ package html
 import (
 	"strings"
 
-	"mdbook-go/internal/utils"
 )
 
 // Serialize writes the tree as HTML. It is a port of
@@ -30,7 +29,7 @@ func serializeNode(n *Node, b *strings.Builder) {
 	case KindElement:
 		serializeStart(n.El, b)
 	case KindText:
-		b.WriteString(utils.EscapeHTML(n.Text))
+		b.WriteString(EscapeHTML(n.Text))
 	case KindComment:
 		b.WriteString("<!--")
 		b.WriteString(n.Text)
@@ -81,7 +80,7 @@ func serializeStart(el *Element, b *strings.Builder) {
 		}
 		b.WriteString(attr.Name)
 		b.WriteString("=\"")
-		b.WriteString(utils.EscapeHTMLAttribute(attr.Value))
+		b.WriteString(EscapeHTMLAttribute(attr.Value))
 		b.WriteByte('"')
 	}
 	if el.SelfClosing {

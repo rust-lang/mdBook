@@ -1,0 +1,23 @@
+[book]
+title = "Nested Fixture"
+description = "Exercises multi-level nesting, tables, footnotes and admonitions."
+language = "en"
+src = "src"
+
+[build]
+build-dir = "book"
+create-missing = true
+
+[output.html]
+git-repository-url = "https://github.com/example/nested"
+edit-url-template = "https://github.com/example/nested/edit/main/{path}"
+additional-css = ["extra.css"]
+
+[output.html.fold]
+enable = true
+level = 1
+
+[output.html.redirect]
+"/old-guide.html" = "guide/intro.html"
+"/moved.html" = "reference.html"
+"/moved.html#anchor" = "guide/advanced/deep.html#deep-dive"

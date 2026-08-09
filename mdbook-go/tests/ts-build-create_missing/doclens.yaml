@@ -1,0 +1,9 @@
+package:
+  root: src
+  build-dir: book
+  title: create_missing
+
+chapters:
+  numbered:
+    - name: Chapter 1
+      path: chapter_1.md

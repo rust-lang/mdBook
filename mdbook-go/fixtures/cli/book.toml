@@ -1,9 +1,0 @@
-[book]
-title = "CLI Fixture"
-authors = ["mdbook-go"]
-language = "en"
-src = "src"
-
-[build]
-build-dir = "book"
-create-missing = true

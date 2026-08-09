@@ -1,0 +1,117 @@
+/* ============================================================================
+ * mdbook-highlight-css (id="mdbook-highlight-css")
+ *
+ * Light syntax-highlighting palette for fenced code blocks inside
+ * <main class="markdown-body">. Authored against Base16 Atelier Dune Light
+ * (Bram de Haan → Chris Kempson); an increased-contrast variant.
+ *
+ * Targets only code emitted by theme/js/highlight.js:
+ *   <pre><code class="hljs language-xxx">
+ *     <span class="hljs-keyword">...</span>  ←
+ *     <span class="hljs-string">...</span>
+ *     ...
+ *   </code></pre>
+ * Every `.hljs-*` selector here is a token class set by highlight.js.
+ * Nothing here touches the sidebar / menu / search / fonts / theme colors.
+ *
+ * Toggled by theme/js/book.js set_theme():
+ *   light / rust / default → ENABLED
+ *   coal  / navy  / ayu    → disabled (the matching dark stylesheet is on)
+ *
+ * Palette tokens (background #f6f7f6 / foreground #000):
+ *   comment       #575757  (grey)
+ *   red           #d70025  (variable / attribute / tag / name / regex ...)
+ *   orange        #b21e00  (number / meta / literal / type / params)
+ *   green         #008200  (string / symbol / bullet)
+ *   blue          #0030f2  (title / section)
+ *   purple        #9d00ec  (keyword / selector-tag)
+ *   addition fg   #22863a / bg #f0fff4
+ *   deletion fg   #b31d28 / bg #ffeef0
+ *
+ * Source: https://github.com/chriskempson/base16
+ *         http://atelierbram.github.io/syntax-highlighting/atelier-schemes/dune
+ * ========================================================================== */
+
+/*
+ * An increased contrast highlighting scheme loosely based on the
+ * "Base16 Atelier Dune Light" theme by Bram de Haan
+ * (http://atelierbram.github.io/syntax-highlighting/atelier-schemes/dune)
+ * Original Base16 color scheme by Chris Kempson
+ * (https://github.com/chriskempson/base16)
+ */
+
+/* Comment */
+.hljs-comment,
+.hljs-quote {
+  color: #575757;
+}
+
+/* Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-attribute,
+.hljs-attr,
+.hljs-tag,
+.hljs-name,
+.hljs-regexp,
+.hljs-link,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class {
+  color: #d70025;
+}
+
+/* Orange */
+.hljs-number,
+.hljs-meta,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params {
+  color: #b21e00;
+}
+
+/* Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet {
+  color: #008200;
+}
+
+/* Blue */
+.hljs-title,
+.hljs-section {
+  color: #0030f2;
+}
+
+/* Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+  color: #9d00ec;
+}
+
+.hljs {
+  display: block;
+  overflow-x: auto;
+  background: #f6f7f6;
+  color: #000;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
+}
+
+.hljs-addition {
+  color: #22863a;
+  background-color: #f0fff4;
+}
+
+.hljs-deletion {
+  color: #b31d28;
+  background-color: #ffeef0;
+}

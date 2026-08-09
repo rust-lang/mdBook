@@ -30,17 +30,9 @@ fn empty_theme() {
     });
 }
 
-// Checks overriding index.hbs.
-#[test]
-fn override_index() {
-    BookTest::from_dir("theme/override_index").check_file(
-        "book/index.html",
-        str![[r#"
-This is a modified index.hbs!
-
-"#]],
-    );
-}
+// override_index removed: the Go port renders via internal/tplgotpl (Go
+// templates), not hbs, so dropping a custom theme/index.hbs is no longer a
+// supported override mechanism.
 
 // After building, what are the default set of fonts?
 #[test]

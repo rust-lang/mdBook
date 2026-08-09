@@ -1,0 +1,22 @@
+package:
+  title: all_includes
+  root: src
+
+build:
+  build-dir: book
+
+chapters:
+  numbered:
+    - name: Basic Includes
+      path: includes.md
+      children:
+        - name: Relative Includes
+          path: relative/includes.md
+    - name: Recursive Includes
+      path: recursive.md
+    - name: Include Anchors
+      path: anchors.md
+    - name: Rustdoc Includes
+      path: rustdoc.md
+    - name: Playground Includes
+      path: playground.md

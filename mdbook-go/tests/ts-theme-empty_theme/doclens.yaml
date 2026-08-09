@@ -1,0 +1,13 @@
+package:
+  root: src
+  build-dir: book
+  title: empty_theme
+
+output:
+  html:
+    theme: ./theme
+
+chapters:
+  numbered:
+    - name: Chapter 1
+      path: chapter_1.md

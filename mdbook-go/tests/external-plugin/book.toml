@@ -1,0 +1,27 @@
+[book]
+title = "External Plugin Fixture"
+language = "en"
+src = "src"
+
+[build]
+build-dir = "book"
+create-missing = true
+
+# An external preprocessor that prepends a banner line to every chapter's
+# Markdown content. It speaks the JSON-tuple protocol on stdin/stdout and
+# honours `supports <renderer>` via the exit code.
+[preprocessor.banner]
+command = "node scripts/banner.js"
+
+# A second external preprocessor that exercises `before` / `after` topological
+# ordering and the `renderers` whitelist. It appends a footer to every chapter
+# and only runs for the html backend.
+[preprocessor.footer]
+command = "node scripts/footer.js"
+renderers = ["html"]
+after = ["banner"]
+
+# A third preprocessor that returns exit 1 for `supports not-html` so the
+# `renderers` whitelist test (vs. supports probe) is covered.
+[preprocessor.noisy]
+command = "node scripts/noisy.js"

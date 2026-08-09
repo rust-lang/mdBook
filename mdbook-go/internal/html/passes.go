@@ -2,8 +2,6 @@ package html
 
 import (
 	"strings"
-
-	"mdbook-go/internal/utils"
 )
 
 // addHeaderLinks gives every heading (and definition term) a unique id and
@@ -11,7 +9,7 @@ import (
 // from literal HTML in the source are left alone. Ported from add_header_links
 // in crates/mdbook-html/src/html/tree.rs.
 func (b *builder) addHeaderLinks() {
-	ids := utils.NewIDSet()
+	ids := NewIDSet()
 	headings := b.root.Elements(func(name string) bool {
 		switch name {
 		case "h1", "h2", "h3", "h4", "h5", "h6", "dt":
@@ -27,7 +25,7 @@ func (b *builder) addHeaderLinks() {
 		if id, ok := heading.El.Attr("id"); ok {
 			href = "#" + id
 		} else {
-			id := ids.Unique(utils.IDFromContent(heading.TextContent()))
+			id := ids.Unique(IDFromContent(heading.TextContent()))
 			heading.El.SetAttr("id", id)
 			href = "#" + id
 		}
@@ -43,11 +41,11 @@ func (b *builder) addHeaderLinks() {
 	}
 }
 
-// updateCodeBlocks applies the hidden-line markup to every code block. The
-// Rust playground treatment (Runnable / Editable / CopyJS) was removed; what
-// remains is just the rust-specific `hide lines` pass and the configurable
-// `hidelines=<prefix>` pass. Ported from update_code_blocks in
-// crates/mdbook-html/src/html/tree.rs (minus the playground branch).
+// updateCodeBlocks applies the configurable `hidelines=<prefix>` hidden-line
+// markup to every code block. The rust-specific `hide lines` pass (and the
+// playground treatment before it) was removed with the other Rust leftovers.
+// Ported from update_code_blocks in crates/mdbook-html/src/html/tree.rs
+// (minus the playground and rust branches).
 func (b *builder) updateCodeBlocks() {
 	for _, code := range b.root.Elements(func(name string) bool { return name == "code" }) {
 		class, _ := code.El.Attr("class")
@@ -69,9 +67,7 @@ func (b *builder) updateCodeBlocks() {
 			}
 		}
 
-		if language == "rust" {
-			setCodeChildren(code, hideLinesRust(codeText(code)))
-		} else if hasPrefix {
+		if hasPrefix {
 			setCodeChildren(code, hideLinesWithPrefix(codeText(code), hidelinesPrefix))
 		}
 	}

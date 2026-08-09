@@ -1,0 +1,220 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        
+        <meta charset="UTF-8">
+        <title>Deeper Still - Nested Fixture</title>
+        
+
+        
+        
+
+        <meta name="description" content="Exercises multi-level nesting, tables, footnotes and admonitions.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="stylesheet" href="../../css/variables-d34e1ada.css">
+        <link rel="stylesheet" href="../../css/general-c87629ab.css">
+        <link rel="stylesheet" href="../../css/chrome-2b282e04.css">
+        
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../highlight-7597ad33.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../tomorrow-night-d9373248.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../ayu-highlight-1b86a52b.css">
+        
+        <link rel="stylesheet" id="mdbook-github-markdown-light-css" href="../../css/github-markdown-light-797519c9.css">
+        <link rel="stylesheet" id="mdbook-github-markdown-dark-css" href="../../css/github-markdown-dark-30ff62d8.css" disabled>
+        
+        
+        <link rel="stylesheet" href="../../extra-4e0fe2df.css">
+        
+
+        
+        <script>
+            const path_to_root = "..\/..\/";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            
+            window.path_to_searchindex_js = "..\/..\/searchindex-febadf98.js";
+            
+        </script>
+        <script src="../../toc-4d2fb785.js"></script>
+        
+        <script src="../../nav-vim-90327dbf.js"></script>
+        
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+            <div class="page">
+                
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme">
+                        </button>
+                        
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            搜索
+                        </button>
+                        
+                    </div>
+                    <h1 class="menu-title">Nested Fixture</h1>
+                    <div class="right-buttons">
+                        
+                        <a href="https://github.com/example/nested" title="Git repository" aria-label="Git repository">
+                        </a>
+                        
+                        
+                        <a href="https://github.com/example/nested/edit/main/src/guide/advanced/deeper.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                        </a>
+                        
+                    </div>
+                </div>
+                
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+                <div id="mdbook-content" class="content">
+                    <main class="markdown-body">
+                        <h1 id="deeper-still"><a class="header" href="#deeper-still">Deeper Still</a></h1>
+<p>Four levels of nesting, in a subdirectory, so <code>path_to_root</code> is <code>../../</code>.</p>
+<p>Back to <a href="../../preface.html">the preface</a>.</p>
+
+                    </main>
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        
+                            <a rel="prev" href="../../guide/advanced/deep.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                
+                                ‹
+                                
+                            </a>
+                        
+                        
+                            <a rel="next prefetch" href="../../reference.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                
+                                ›
+                                
+                            </a>
+                        
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../../guide/advanced/deep.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        
+                        ‹
+                        
+                    </a>
+                
+                
+                    <a rel="next prefetch" href="../../reference.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        
+                        ›
+                        
+                    </a>
+                
+            </nav>
+        </div>
+
+        
+
+        
+        <script src="../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../mark-09e88c2c.min.js"></script>
+        <script src="../../searcher-664dc21f.js"></script>
+        
+
+        <script src="../../clipboard-1626706a.min.js"></script>
+        <script src="../../highlight-abc7f01d.min.js"></script>
+        <script src="../../book-8fa2ce42.js"></script>
+
+        
+
+        
+    </div>
+    </body>
+</html>

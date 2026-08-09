@@ -1,9 +1,0 @@
-[book]
-title = "My Book"
-authors = []
-language = "en"
-src = "src"
-
-[build]
-build-dir = "book"
-create-missing = true

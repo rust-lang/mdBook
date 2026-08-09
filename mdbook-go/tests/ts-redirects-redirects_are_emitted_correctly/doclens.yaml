@@ -1,0 +1,18 @@
+package:
+  root: src
+  build-dir: book
+  title: redirects_are_emitted_correctly
+
+output:
+  html:
+    redirect:
+      "/overview.html": index.html
+      "/overview.html#old": index.html#new
+      "/nested/page.html": https://rust-lang.org/
+
+chapters:
+  numbered:
+    - name: Chapter 1
+      path: chapter_1.md
+    - name: Chapter 2
+      path: chapter_2.md

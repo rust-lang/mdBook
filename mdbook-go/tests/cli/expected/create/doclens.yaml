@@ -1,0 +1,16 @@
+package:
+  title: "My Book"
+  language: en
+  root: docs
+
+build:
+  build-dir: .doclens
+  create-missing: true
+
+chapters:
+  prefix:
+    - name: Introduction
+      path: intro.md
+  numbered:
+    - name: Chapter 1
+      path: chapter_1.md

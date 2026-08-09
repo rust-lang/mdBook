@@ -20,7 +20,6 @@ func defaultOptions(path string) Options {
 		SmartPunctuation: true,
 		DefinitionLists:  true,
 		Admonitions:      true,
-		Playground:       PlaygroundOptions{Copyable: true},
 	}
 }
 
@@ -36,6 +35,13 @@ var knownDeviations = map[string]string{
 	// An opening tag split across two lines is HTML block type 7 in goldmark
 	// but falls back to a paragraph with inline HTML in pulldown-cmark.
 	"basic_markdown/html": "multi-line open tag is treated as an HTML block",
+	// The Rust oracle renders rust blocks with the last line glued to
+	// </code></pre> — a side effect of its rust hide-lines pass rebuilding
+	// the code children without a trailing newline. The Go port removed that
+	// pass (Rust leftovers cleanup), so rust blocks now keep their trailing
+	// newline like every other language.
+	"basic_markdown/code-blocks": "rust hide-lines pass removed; rust blocks keep the trailing newline",
+	"basic_markdown/blockquotes": "rust hide-lines pass removed; rust blocks keep the trailing newline",
 }
 
 func TestMarkdownGolden(t *testing.T) {

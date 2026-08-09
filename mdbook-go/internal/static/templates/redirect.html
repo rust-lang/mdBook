@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Redirecting...</title>
+    <meta http-equiv="refresh" content="0; URL={{.URL}}">
+    <link rel="canonical" href="{{.URL}}">
+  </head>
+  <body>
+      <p>Redirecting to... <a href="{{.URL}}">{{.URL}}</a>.</p>
+
+<script>
+    {{.Comment1}}
+    document.addEventListener('DOMContentLoaded', function() {
+        const fragmentMap =
+            {{.FragmentMap}}
+        ;
+        const fragment = window.location.hash;
+        if (fragment) {
+            let redirectUrl = {{.URLJS}};
+            const target = fragmentMap[fragment];
+            if (target) {
+                let url = new URL(target, window.location.href);
+                redirectUrl = url.href;
+            } else {
+                let url = new URL(redirectUrl, window.location.href);
+                url.hash = window.location.hash;
+                redirectUrl = url.href;
+            }
+            window.location.replace(redirectUrl);
+        }
+        {{.Comment2}}
+    });
+</script>
+  </body>
+</html>

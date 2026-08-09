@@ -1,0 +1,10 @@
+package:
+  root: src
+
+build:
+  build-dir: book
+
+chapters:
+  numbered:
+    - name: Chapter 1
+      path: chapter_1.md

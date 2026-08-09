@@ -1,0 +1,9 @@
+package:
+  root: src
+  build-dir: book
+  title: custom_fonts_css
+
+chapters:
+  numbered:
+    - name: Intro
+      path: index.md

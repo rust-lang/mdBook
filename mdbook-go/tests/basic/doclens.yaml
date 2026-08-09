@@ -1,0 +1,25 @@
+package:
+  title: Basic Fixture
+  language: en
+  root: src
+
+build:
+  build-dir: book
+  create-missing: true
+
+chapters:
+  prefix:
+    - name: Introduction
+      path: intro.md
+  numbered:
+    - part: Chapter 1
+    - name: Chapter 1
+      path: chapter_1.md
+      children:
+        - name: Section 1.1
+          path: section_1_1.md
+    - name: Chapter 2
+      path: chapter_2.md
+    - part: Drafts
+    - name: Unwritten
+      path: ""

@@ -1,7 +1,7 @@
 package plugin
 
 import (
-	"mdbook-go/internal/book"
+	"mdbook-go/internal/model"
 )
 
 // Preprocessor mirrors crates/mdbook-preprocessor/src/lib.rs::Preprocessor.
@@ -9,11 +9,11 @@ import (
 // Implementations can be in-process (LinkPreprocessor, IndexPreprocessor) or
 // out-of-process command shells (CmdPreprocessor).
 type Preprocessor interface {
-	// Name returns the registered name as it appears in book.toml.
+	// Name returns the registered name as it appears in doclens.yaml.
 	Name() string
 
 	// Run transforms the book according to the preprocessor's semantics.
-	Run(ctx *PreprocessorContext, b *book.Book) (*book.Book, error)
+	Run(ctx *PreprocessorContext, b *model.Book) (*model.Book, error)
 
 	// SupportsRenderer reports whether the preprocessor is compatible with a
 	// given renderer name. Built-in preprocessors default to true; custom
@@ -37,13 +37,12 @@ type PreprocessorContext struct {
 	ChapterTitles map[string]string
 }
 
-// PreprocessorConfig is the read-only subset of *config.Config that
+// PreprocessorConfig is the read-only subset of *model.Config that
 // preprocessors are likely to inspect. It keeps the protocol decoupled from
 // the typed config package so other callers (e.g. tests) can supply their own.
 type PreprocessorConfig struct {
-	Book         BookConfig
+	Package      PackageConfig
 	Build        BuildConfig
-	Rust         RustConfig
 	Output       map[string]any
 	Preprocessor map[string]any
 }
@@ -52,9 +51,8 @@ type PreprocessorConfig struct {
 // (typically the value that came in over the wire).
 func NewPreprocessorConfig(wc WireConfig) *PreprocessorConfig {
 	return &PreprocessorConfig{
-		Book:         wc.Book,
+		Package:      wc.Package,
 		Build:        wc.Build,
-		Rust:         wc.Rust,
 		Output:       wc.Output,
 		Preprocessor: wc.Preprocessor,
 	}
@@ -72,7 +70,7 @@ type RenderContext struct {
 	// Root is the book root.
 	Root string
 	// Book is the post-preprocessing book.
-	Book *book.Book
+	Book *model.Book
 	// Config is the effective book configuration.
 	Config *PreprocessorConfig
 	// Destination is the directory the renderer must write to.
@@ -116,9 +114,8 @@ func WirePreprocessorConfig(c *PreprocessorConfig) WireConfig {
 		return WireConfig{}
 	}
 	return WireConfig{
-		Book:         c.Book,
+		Package:      c.Package,
 		Build:        c.Build,
-		Rust:         c.Rust,
 		Output:       c.Output,
 		Preprocessor: c.Preprocessor,
 	}

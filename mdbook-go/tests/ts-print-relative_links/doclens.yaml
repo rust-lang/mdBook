@@ -1,0 +1,14 @@
+package:
+  root: src
+  build-dir: book
+  title: relative_links
+
+chapters:
+  numbered:
+    - name: First Chapter
+      path: first/index.md
+      children:
+        - name: First Nested
+          path: first/nested.md
+    - name: Second Chapter
+      path: second/nested.md
