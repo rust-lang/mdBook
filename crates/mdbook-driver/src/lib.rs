@@ -78,6 +78,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use tracing::{error, warn};
 
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
+
 /// Creates a [`Command`] for command renderers and preprocessors.
 fn compose_command(cmd: &str, root: &Path) -> Result<Command> {
     let mut words = Shlex::new(cmd);
@@ -101,6 +104,59 @@ fn compose_command(cmd: &str, root: &Path) -> Result<Command> {
     }
 
     Ok(cmd)
+}
+
+/// Returns whether a command is definitely unavailable on Unix.
+///
+/// Checking before spawning avoids relying on `execvp`'s error reporting. If
+/// `PATH` contains an inaccessible directory, a missing executable can be
+/// reported as `PermissionDenied` instead of `NotFound`, which prevents
+/// optional extensions from being skipped.
+#[cfg(unix)]
+fn command_is_missing(command: &Command) -> bool {
+    fn is_executable(path: &Path) -> std::io::Result<bool> {
+        let metadata = std::fs::metadata(path)?;
+        Ok(metadata.is_file() && metadata.permissions().mode() & 0o111 != 0)
+    }
+
+    let program = Path::new(command.get_program());
+    let current_dir = command.get_current_dir();
+    let resolve = |path: &Path| match (path.is_absolute(), current_dir) {
+        (true, _) | (false, None) => path.to_path_buf(),
+        (false, Some(current_dir)) => current_dir.join(path),
+    };
+
+    if program.components().count() > 1 {
+        return matches!(
+            is_executable(&resolve(program)),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound
+        );
+    }
+
+    let Some(path) = std::env::var_os("PATH") else {
+        // Without PATH, execvp uses an implementation-defined default search
+        // path, so let spawn report the result instead of guessing.
+        return false;
+    };
+
+    for directory in std::env::split_paths(&path) {
+        match is_executable(&resolve(&directory).join(program)) {
+            Ok(_) => return false,
+            Err(error)
+                if matches!(
+                    error.kind(),
+                    std::io::ErrorKind::NotFound | std::io::ErrorKind::PermissionDenied
+                ) => {}
+            Err(_) => return false,
+        }
+    }
+
+    true
+}
+
+#[cfg(not(unix))]
+fn command_is_missing(_command: &Command) -> bool {
+    false
 }
 
 /// Handles a failure for a preprocessor or renderer.
