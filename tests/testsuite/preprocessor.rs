@@ -196,6 +196,30 @@ fn missing_optional_not_fatal() {
     });
 }
 
+// Optional missing is not an error even if an inaccessible PATH entry makes
+// execvp report PermissionDenied instead of NotFound.
+#[cfg(unix)]
+#[test]
+fn missing_optional_with_inaccessible_path_not_fatal() {
+    use std::os::unix::fs::PermissionsExt;
+
+    BookTest::from_dir("preprocessor/missing_optional_not_fatal").run("build", |cmd| {
+        let inaccessible = cmd.dir.join("inaccessible-path");
+        std::fs::create_dir(&inaccessible).unwrap();
+        std::fs::set_permissions(&inaccessible, std::fs::Permissions::from_mode(0o600)).unwrap();
+
+        cmd.env("PATH", inaccessible.to_string_lossy().into_owned())
+            .expect_stdout(str![[""]])
+            .expect_stderr(str![[r#"
+ INFO Book building has started
+ WARN The command `trduyvbhijnorgevfuhn` for preprocessor `missing` was not found, but is marked as optional.
+ INFO Running the html backend
+ INFO HTML book written to `[ROOT]/book`
+
+"#]]);
+    });
+}
+
 // with_preprocessor of an existing name.
 #[test]
 fn with_preprocessor_same_name() {
