@@ -643,6 +643,12 @@ html:not(.js) .sidebar-resize-handle {
     transform: rotate(90deg);
 }
 
+/* In RTL, the `❱` glyph is bidi-mirrored so it points left, and rotating it by
+   90deg would make it point up instead of down. Rotate the other way. */
+[dir=rtl] .chapter li.expanded > span > .chapter-fold-toggle div {
+    transform: rotate(-90deg);
+}
+
 .chapter a.current-header {
     color: var(--sidebar-active);
 }
