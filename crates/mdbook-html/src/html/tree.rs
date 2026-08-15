@@ -422,6 +422,8 @@ where
                 let mut code = Element::new("code");
                 match kind {
                     CodeBlockKind::Fenced(info) => {
+                        // Rustdoc treats everything from an opening paren as a comment.
+                        let info = info.split('(').next().unwrap_or_default();
                         let mut infos =
                             info.split([' ', '\t', ',']).filter(|info| !info.is_empty());
                         if let Some(lang) = infos.next() {

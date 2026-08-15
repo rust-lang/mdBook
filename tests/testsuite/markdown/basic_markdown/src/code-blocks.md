@@ -29,3 +29,7 @@ fn main() {
     println!("hello");
 }
 ```
+
+```rust,ignore (requires next solver)
+let x = 1;
+```
