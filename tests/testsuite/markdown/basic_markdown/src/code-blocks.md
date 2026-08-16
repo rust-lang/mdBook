@@ -33,3 +33,7 @@ fn main() {
 ```rust,ignore (requires next solver)
 let x = 1;
 ```
+
+```rust (why this is ignored),ignore
+let y = 2;
+```
