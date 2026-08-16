@@ -26,7 +26,7 @@ jobs:
             rust: stable
             target: x86_64-unknown-linux-musl
           - name: stable x86_64 macos
-            os: macos-15-intel
+            os: macos-latest
             rust: stable
             target: x86_64-apple-darwin
           - name: stable aarch64 macos
