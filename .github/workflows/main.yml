@@ -26,7 +26,7 @@ jobs:
             rust: stable
             target: x86_64-unknown-linux-musl
           - name: stable x86_64 macos
-            os: macos-latest
+            os: macos-15-intel
             rust: stable
             target: x86_64-apple-darwin
           - name: stable aarch64 macos
@@ -37,6 +37,10 @@ jobs:
             os: windows-latest
             rust: stable
             target: x86_64-pc-windows-msvc
+          - name: stable windows-arm64-msvc
+            os: windows-11-arm
+            rust: stable
+            target: aarch64-pc-windows-msvc
           - name: msrv
             os: ubuntu-22.04
             # sync MSRV with docs: guide/src/guide/installation.md and Cargo.toml
