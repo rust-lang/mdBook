@@ -37,6 +37,10 @@ jobs:
             os: windows-latest
             rust: stable
             target: x86_64-pc-windows-msvc
+          - name: stable windows-arm64-msvc
+            os: windows-11-arm
+            rust: stable
+            target: aarch64-pc-windows-msvc
           - name: msrv
             os: ubuntu-22.04
             # sync MSRV with docs: guide/src/guide/installation.md and Cargo.toml

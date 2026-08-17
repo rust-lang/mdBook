@@ -28,6 +28,8 @@ jobs:
             os: macos-latest
           - target: x86_64-pc-windows-msvc
             os: windows-latest
+          - target: aarch64-pc-windows-msvc
+            os: windows-11-arm
     name: Deploy ${{ matrix.target }}
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
