@@ -117,7 +117,7 @@ impl HelperDef for RenderToc {
             let path_exists = match item.get("path") {
                 Some(path) if !path.is_empty() => {
                     out.write("<a href=\"")?;
-                    let tmp = Path::new(path).with_extension("html").to_url_path();
+                    let tmp = Path::new(path).with_extension("html").to_encoded_url_path();
 
                     // Add link
                     out.write(&tmp)?;

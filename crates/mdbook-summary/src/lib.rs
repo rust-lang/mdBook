@@ -7,6 +7,7 @@
 use anyhow::{Context, Error, Result, bail};
 pub use mdbook_core::book::SectionNumber;
 use memchr::Memchr;
+use percent_encoding::percent_decode_str;
 use pulldown_cmark::{DefaultBrokenLinkCallback, Event, HeadingLevel, Tag, TagEnd};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -379,7 +380,11 @@ impl<'a> SummaryParser<'a> {
 
     /// Finishes parsing a link once the `Event::Start(Tag::Link(..))` has been opened.
     fn parse_link(&mut self, href: String) -> Link {
-        let href = href.replace("%20", " ");
+        let decoded_href = percent_decode_str(&href)
+            .decode_utf8()
+            .ok()
+            .map(|href| href.into_owned());
+        let href = decoded_href.unwrap_or(href);
         let link_content = collect_events!(self.stream, end TagEnd::Link);
         let name = stringify_events(link_content);
 
@@ -997,8 +1002,11 @@ mod tests {
     }
 
     #[test]
-    fn allow_space_in_link_destination() {
-        let src = "- [test1](./test%20link1.md)\n- [test2](<./test link2.md>)";
+    fn allow_percent_encoding_in_link_destination() {
+        let src = "- [test1](./test%20link1.md)\n\
+                   - [test2](<./test link2.md>)\n\
+                   - [test3](./question%3F.md)\n\
+                   - [test4](./spati%C3%ABring.md)";
         let should_be = vec![
             SummaryItem::Link(Link {
                 name: String::from("test1"),
@@ -1010,6 +1018,18 @@ mod tests {
                 name: String::from("test2"),
                 location: Some(PathBuf::from("./test link2.md")),
                 number: Some(SectionNumber::new([2])),
+                nested_items: Vec::new(),
+            }),
+            SummaryItem::Link(Link {
+                name: String::from("test3"),
+                location: Some(PathBuf::from("./question?.md")),
+                number: Some(SectionNumber::new([3])),
+                nested_items: Vec::new(),
+            }),
+            SummaryItem::Link(Link {
+                name: String::from("test4"),
+                location: Some(PathBuf::from("./spatiëring.md")),
+                number: Some(SectionNumber::new([4])),
                 nested_items: Vec::new(),
             }),
         ];

@@ -19,6 +19,7 @@ indexmap.workspace = true
 mdbook-core.workspace = true
 mdbook-markdown.workspace = true
 mdbook-renderer.workspace = true
+percent-encoding.workspace = true
 pulldown-cmark.workspace = true
 regex.workspace = true
 serde.workspace = true

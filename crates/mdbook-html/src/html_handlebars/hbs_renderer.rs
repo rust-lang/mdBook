@@ -105,7 +105,7 @@ impl HtmlHandlebars {
                 .as_ref()
                 .unwrap()
                 .with_extension("html")
-                .to_url_path();
+                .to_encoded_url_path();
             let obj = json!( {
                 "title": ch.name,
                 "link": path,
@@ -675,7 +675,7 @@ fn collect_redirects_for_path(
     path: &Path,
     redirects: &HashMap<String, String>,
 ) -> Result<BTreeMap<String, String>> {
-    let path = format!("/{}", path.to_url_path());
+    let path = format!("/{}", path.to_encoded_url_path());
     if redirects.contains_key(&path) {
         bail!(
             "redirect found for existing chapter at `{path}`\n\

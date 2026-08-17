@@ -1,7 +1,21 @@
 //! Utilities for processing HTML.
 
+use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
 use std::collections::HashSet;
 use std::path::{Component, Path, PathBuf};
+
+const URL_PATH_ENCODE_SET: &AsciiSet = &CONTROLS
+    .add(b' ')
+    .add(b'"')
+    .add(b'#')
+    .add(b'%')
+    .add(b'<')
+    .add(b'>')
+    .add(b'?')
+    .add(b'^')
+    .add(b'`')
+    .add(b'{')
+    .add(b'}');
 
 /// Utility function to normalize path elements like `..`.
 pub(crate) fn normalize_path(path: &Path) -> PathBuf {
@@ -41,6 +55,8 @@ pub(crate) fn normalize_path(path: &Path) -> PathBuf {
 /// Helper trait for converting a [`Path`] to a string suitable for an HTML path.
 pub(crate) trait ToUrlPath {
     fn to_url_path(&self) -> String;
+
+    fn to_encoded_url_path(&self) -> String;
 }
 
 impl ToUrlPath for Path {
@@ -48,6 +64,10 @@ impl ToUrlPath for Path {
         // We're generally assuming that all paths we deal with are utf-8.
         // The replace here is to handle Windows paths.
         self.to_str().unwrap().replace('\\', "/")
+    }
+
+    fn to_encoded_url_path(&self) -> String {
+        utf8_percent_encode(&self.to_url_path(), URL_PATH_ENCODE_SET).to_string()
     }
 }
 
@@ -111,6 +131,14 @@ mod tests {
         assert_eq!(unique_id("Über", &mut id_counter), "Über");
         assert_eq!(unique_id("Über", &mut id_counter), "Über-1");
         assert_eq!(unique_id("Über", &mut id_counter), "Über-2");
+    }
+
+    #[test]
+    fn percent_encodes_url_paths() {
+        assert_eq!(
+            Path::new("nested/spatiëring ?#%^.html").to_encoded_url_path(),
+            "nested/spati%C3%ABring%20%3F%23%25%5E.html"
+        );
     }
 
     #[test]
