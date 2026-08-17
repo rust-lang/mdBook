@@ -379,14 +379,13 @@ impl<'a> SummaryParser<'a> {
 
     /// Finishes parsing a link once the `Event::Start(Tag::Link(..))` has been opened.
     fn parse_link(&mut self, href: String) -> Link {
-        let href = href.replace("%20", " ");
         let link_content = collect_events!(self.stream, end TagEnd::Link);
         let name = stringify_events(link_content);
 
         let path = if href.is_empty() {
             None
         } else {
-            Some(PathBuf::from(href))
+            Some(PathBuf::from(href.replace("%20", " ")))
         };
 
         Link {
