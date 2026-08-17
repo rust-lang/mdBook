@@ -20,11 +20,11 @@ Here is a list of the properties that are exposed:
 - ***language*** Language of the book in the form `en`, as specified in `book.toml` (if not specified, defaults to `en`). To use in <code
   class="language-html">\<html lang=\"{{ language }}\"></code> for example.
 - ***title*** Title used for the current page. This is identical to `{{ chapter_title }} - {{ book_title }}` unless `book_title` is not set in which case it just defaults to the `chapter_title`.
-- ***book_title*** Title of the book, as specified in `book.toml`
-- ***chapter_title*** Title of the current chapter, as listed in `SUMMARY.md`
+- ***book_title*** Title of the book, as specified in `book.toml`.
+- ***chapter_title*** Title of the current chapter, as listed in `SUMMARY.md`.
 
 - ***path*** Relative path to the original markdown file from the source
-  directory
+  directory.
 - ***content*** This is the rendered markdown.
 - ***path_to_root*** This is a path containing exclusively `../`'s that points
   to the root of the book from the current file. Since the original directory
