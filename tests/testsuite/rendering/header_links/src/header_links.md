@@ -6,6 +6,10 @@
 
 ####
 
+### !.():
+
+##### !!! {#explicit-punctuation}
+
 ## Hï
 
 ## Repeat

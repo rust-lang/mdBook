@@ -164,5 +164,9 @@ mod tests {
             unique_id(&id_from_content("***"), &mut id_counter),
             "section-2"
         );
+        assert_eq!(
+            unique_id(&id_from_content("   "), &mut id_counter),
+            "section-3"
+        );
     }
 }
