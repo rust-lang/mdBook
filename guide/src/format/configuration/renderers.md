@@ -14,7 +14,7 @@ See the [Third Party Plugins] wiki page for a list of available backends.
 
 For information on how to create a new backend, see the [Backends for Developers] chapter.
 
-[Third Party Plugins]: https://github.com/rust-lang/mdBook/wiki/Third-party-plugins
+[Third Party Plugins]: https://github.com/rust-lang/mdBook/wiki/Third-party-plugins#backends
 [Backends for Developers]: ../../for_developers/backends.md
 
 ## Output tables
