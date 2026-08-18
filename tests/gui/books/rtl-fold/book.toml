@@ -1,0 +1,7 @@
+[book]
+title = "rtl-fold"
+text-direction = "rtl"
+
+[output.html.fold]
+enable = true
+level = 0
