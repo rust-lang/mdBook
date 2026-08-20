@@ -238,3 +238,10 @@ Instructions for mdBook maintainers to publish a new release:
         --title v$MDBOOK_VERS \
         --notes "See https://github.com/rust-lang/mdBook/blob/master/CHANGELOG.md#mdbook-${MDBOOK_VERS//.} for a complete list of changes."
    ```
+
+## LLM policy
+
+mdBook follows the same [LLM usage policy] as `rust-lang/rust`. Please read it before using LLM
+assistance when participating in `rust-lang/mdBook`.
+
+[LLM usage policy]: https://forge.rust-lang.org/policies/llm-usage.html
