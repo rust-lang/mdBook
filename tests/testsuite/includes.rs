@@ -24,13 +24,13 @@ fn include() {
         );
 }
 
-// Basic test for mutlines #include.
+// Basic test for multiline includes.
 #[test]
-fn include_multilines() {
+fn multiline_include() {
     BookTest::from_dir("includes/all_includes").check_main_file(
-        "book/multilines.html",
+        "book/multiline.html",
         str![[r##"
-<h1 id="multilines-include"><a class="header" href="#multilines-include">Multilines include</a></h1>
+<h1 id="multiline-includes"><a class="header" href="#multiline-includes">Multiline Includes</a></h1>
 <p>Simple inclusion</p>
 <pre class="playground"><code class="language-rust">pub fn main() {
     println!("Hello, World")
