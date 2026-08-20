@@ -98,6 +98,19 @@ Like formatting your code with `rustfmt`, running clippy regularly and before yo
     cargo clippy
     ```
 
+### Finding typos with `typos-cli`
+
+[`typos`](https://github.com/crate-ci/typos) checks the repository for spelling mistakes and runs as part of CI. Its configuration and excluded files are listed in `typos.toml`.
+
+1. Install `typos-cli`:
+    ```
+    cargo install typos-cli
+    ```
+2. Run it from the repository root:
+    ```
+    typos
+    ```
+
 ## Change requirements
 
 Please consider the following when making a change:
