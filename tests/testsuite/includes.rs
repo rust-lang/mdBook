@@ -25,13 +25,19 @@ fn include() {
         );
 }
 
-// Basic test for multiline includes.
+// Tests for multiline includes.
+// Additional testing for gh issues #619, #1127, #1564, #1626, and #2521.
 #[test]
 fn multiline_include() {
-    BookTest::from_dir("includes/all_includes").check_main_file(
-        "book/multiline.html",
-        file!["includes/all_includes/expected/multiline.html"],
-    );
+    BookTest::from_dir("includes/all_includes")
+        .check_main_file(
+            "book/multiline.html",
+            file!["includes/all_includes/expected/multiline.html"],
+        )
+        .check_main_file(
+            "book/multiline/issues.html",
+            file!["includes/all_includes/expected/multiline-issues.html"],
+        );
 }
 
 // Checks for anchored includes.

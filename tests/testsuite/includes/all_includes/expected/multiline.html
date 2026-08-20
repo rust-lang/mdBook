@@ -1,12 +1,54 @@
 <h1 id="multiline-includes"><a class="header" href="#multiline-includes">Multiline Includes</a></h1>
+<h2 id="unindented"><a class="header" href="#unindented">Unindented</a></h2>
 <p>Simple inclusion</p>
 <pre class="playground"><code class="language-rust">pub fn main() {
     println!("Hello, World")
 }</code></pre>
+<h2 id="blockquote"><a class="header" href="#blockquote">Blockquote</a></h2>
 <blockquote>
 <p>Quoted inclusion</p>
 <pre class="playground"><code class="language-rust">pub fn main() {
     println!("Hello, World")
 }</code></pre>
 </blockquote>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Inclusion in an admonition</p>
+<pre class="playground"><code class="language-rust">pub fn main() {
+    println!("Hello, World")
+}</code></pre>
+</blockquote>
+<blockquote>
+<p>Multiple levels</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<pre class="playground"><code class="language-rust">pub fn main() {
+    println!("Hello, World")
+}</code></pre>
+</blockquote>
+</blockquote>
+<h2 id="unordered-list"><a class="header" href="#unordered-list">Unordered List</a></h2>
+<ul>
+<li>Indented once:
+<pre class="playground"><code class="language-rust">pub fn main() {
+    println!("Hello, World")
+}</code></pre>
+<ul>
+<li>Indented twice:
+<pre class="playground"><code class="language-rust">pub fn main() {
+    println!("Hello, World")
+}</code></pre>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="ordered-list"><a class="header" href="#ordered-list">Ordered List</a></h2>
+<ol>
+<li>First, write a Hello, World program:
+<pre class="playground"><code class="language-rust">pub fn main() {
+    println!("Hello, World")
+}</code></pre>
+</li>
+<li>Then, learn rest of Rust.</li>
+</ol>
 <p>end</p>

@@ -1,0 +1,109 @@
+<h1 id="multiline-include-issues"><a class="header" href="#multiline-include-issues">Multiline Include Issues</a></h1>
+<h2 id="619"><a class="header" href="#619">619</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>1
+2
+<span class="boring">3
+</span><span class="boring">4
+</span><span class="boring">5
+</span><span class="boring">6
+</span><span class="boring">7
+</span><span class="boring">8
+</span><span class="boring">9
+</span><span class="boring">10
+</span>11
+12
+<span class="boring">}</span></code></pre>
+<h2 id="1127"><a class="header" href="#1127">1127</a></h2>
+<h3 id="blockquote-with-included-code-inside"><a class="header" href="#blockquote-with-included-code-inside">Blockquote with included code inside</a></h3>
+<p>Lorum ipsum dolor sit amet.</p>
+<blockquote>
+<p>But do included code blocks…?</p>
+<pre class="playground"><code class="language-rust">fn main() {
+    println!("This is a file!");
+}</code></pre>
+<p>By Quote Author</p>
+</blockquote>
+<h2 id="1564"><a class="header" href="#1564">1564</a></h2>
+<h3 id="samplemd"><a class="header" href="#samplemd">sample.md</a></h3>
+<ul>
+<li>
+<p>Example without including files.</p>
+<pre class="playground"><code class="language-rust">struct MyStruct;
+
+impl MyStruct {
+    pub fn myfn() -&gt; () {
+        println!("MyStruct#myfn()");
+    }
+}
+
+pub fn main() -&gt; () {
+    println!("main()");
+}</code></pre>
+</li>
+<li>
+<p>Example using including files.</p>
+<pre class="playground"><code class="language-rust">struct MyStruct;
+
+impl MyStruct {
+    pub fn myfn() -&gt; () {
+        println!("MyStruct#myfn()");
+    }
+}
+
+pub fn main() -&gt; () {
+    println!("main()");
+}</code></pre>
+</li>
+</ul>
+<h2 id="1626"><a class="header" href="#1626">1626</a></h2>
+<h3 id="exercises"><a class="header" href="#exercises">Exercises</a></h3>
+<ol>
+<li>In the the code below:
+<pre><code class="language-haskell">instance Eq (NonEmpty a) where
+  eq (NonEmpty x xs) (NonEmpty y ys) = x == y &amp;&amp; xs == ys    
+</code></pre>
+we …</li>
+</ol>
+<h2 id="2521"><a class="header" href="#2521">2521</a></h2>
+<h3 id="chapter-1"><a class="header" href="#chapter-1">Chapter 1</a></h3>
+<ul>
+<li>This is demo
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub fn linear_search&lt;T: PartialEq&gt;(arr: &amp;[T], value: &amp;T) -&gt; Option&lt;usize&gt; {
+    let mut i = 0;
+    while i &lt; arr.len() {
+        if &amp;arr[i] == value {
+            return Some(i);
+        }
+        i += 1;
+    }
+    None
+}
+
+#[test]
+fn test_linear_search() {
+    let arr = [1, 3, 5, 7, 9, 11, 15];
+    assert_eq!(linear_search(&amp;arr, &amp;1), Some(0));
+    assert_eq!(linear_search(&amp;arr, &amp;3), Some(1));
+    assert_eq!(linear_search(&amp;arr, &amp;5), Some(2));
+    assert_eq!(linear_search(&amp;arr, &amp;11), Some(5));
+    assert_eq!(linear_search(&amp;arr, &amp;15), Some(6));
+    assert_eq!(linear_search(&amp;arr, &amp;0), None);
+    assert_eq!(linear_search(&amp;arr, &amp;-1), None);
+    assert_eq!(linear_search(&amp;arr, &amp;-3), None);
+
+    let arr1 = [1.5, 77.8, -5.3, 1.3, -9.0, 2.5, 5.3];
+    assert_eq!(linear_search(&amp;arr1, &amp;1.5), Some(0));
+    assert_eq!(linear_search(&amp;arr1, &amp;-5.3), Some(2));
+    assert_eq!(linear_search(&amp;arr1, &amp;2.5), Some(5));
+    assert_eq!(linear_search(&amp;arr1, &amp;-9.0), Some(4));
+    assert_eq!(linear_search(&amp;arr1, &amp;0.0), None);
+    assert_eq!(linear_search(&amp;arr1, &amp;1.4), None);
+}
+<span class="boring">}</span></code></pre>
+</li>
+<li>Hello World</li>
+</ul>
