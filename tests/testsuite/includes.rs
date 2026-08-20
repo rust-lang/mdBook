@@ -1,6 +1,7 @@
 //! Tests for include preprocessor.
 
 use crate::prelude::*;
+use snapbox::file;
 
 // Basic test for #include.
 #[test]
@@ -29,20 +30,7 @@ fn include() {
 fn multiline_include() {
     BookTest::from_dir("includes/all_includes").check_main_file(
         "book/multiline.html",
-        str![[r##"
-<h1 id="multiline-includes"><a class="header" href="#multiline-includes">Multiline Includes</a></h1>
-<p>Simple inclusion</p>
-<pre class="playground"><code class="language-rust">pub fn main() {
-    println!("Hello, World")
-}</code></pre>
-<blockquote>
-<p>Quoted inclusion</p>
-<pre class="playground"><code class="language-rust">pub fn main() {
-    println!("Hello, World")
-}</code></pre>
-</blockquote>
-<p>end</p>
-"##]],
+        file!["includes/all_includes/expected/multiline.html"],
     );
 }
 
