@@ -11,6 +11,17 @@ store-value: (sidebar_storage_value, "mdbook-sidebar")
 store-value: (sidebar_storage_hidden_value, "hidden")
 store-value: (sidebar_storage_displayed_value, "visible")
 
+focus: "#mdbook-sidebar-toggle"
+assert-document-property: {"activeElement"."id": "mdbook-sidebar-toggle"}
+press-key: 'Enter'
+wait-for-css: ("#mdbook-sidebar", {"display": "none"})
+assert-local-storage: {|sidebar_storage_value|: |sidebar_storage_hidden_value|}
+press-key: 'Enter'
+wait-for-css-false: ("#mdbook-sidebar", {"display": "none"})
+// `transform` is 0.3s so we need to wait a bit (0.5s) to ensure the animation is done.
+wait-for: 5000
+assert-local-storage: {|sidebar_storage_value|: |sidebar_storage_displayed_value|}
+
 define-function: (
     "hide-sidebar",
     [],
