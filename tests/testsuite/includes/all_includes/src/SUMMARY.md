@@ -6,3 +6,5 @@
 - [Include Anchors](./anchors.md)
 - [Rustdoc Includes](./rustdoc.md)
 - [Playground Includes](./playground.md)
+- [Multiline Includes](./multiline.md)
+    - [Multiline Include Issues](./multiline/issues.md)

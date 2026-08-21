@@ -1,6 +1,7 @@
 //! Tests for include preprocessor.
 
 use crate::prelude::*;
+use snapbox::file;
 
 // Basic test for #include.
 #[test]
@@ -21,6 +22,21 @@ fn include() {
 <h2 id="sample"><a class="header" href="#sample">Sample</a></h2>
 <p>This is a sample include.</p>
 "##]],
+        );
+}
+
+// Tests for multiline includes.
+// Additional testing for gh issues #619, #1127, #1564, #1626, and #2521.
+#[test]
+fn multiline_include() {
+    BookTest::from_dir("includes/all_includes")
+        .check_main_file(
+            "book/multiline.html",
+            file!["includes/all_includes/expected/multiline.html"],
+        )
+        .check_main_file(
+            "book/multiline/issues.html",
+            file!["includes/all_includes/expected/multiline-issues.html"],
         );
 }
 
