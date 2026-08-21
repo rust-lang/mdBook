@@ -261,22 +261,89 @@ fn parse_range_or_anchor(parts: Option<&str>) -> RangeOrAnchor {
     }
 }
 
-fn parse_include_path(path: &str) -> LinkType<'static> {
-    let mut parts = path.splitn(2, ':');
+fn parse_quoted_path(input: &str) -> Option<(PathBuf, &str)> {
+    let input = input.trim_start();
+    let after_quote = input.strip_prefix('"')?;
+    let mut path = String::new();
+    let mut chars = after_quote.char_indices();
+    let mut closed = false;
+    let mut end_index = 0;
 
-    let path = parts.next().unwrap().into();
-    let range_or_anchor = parse_range_or_anchor(parts.next());
+    while let Some((idx, ch)) = chars.next() {
+        if ch == '\\' {
+            if let Some((_, next_ch)) = chars.next() {
+                path.push(next_ch);
+            }
+        } else if ch == '"' {
+            closed = true;
+            end_index = idx + 1;
+            break;
+        } else {
+            path.push(ch);
+        }
+    }
 
-    LinkType::Include(path, range_or_anchor)
+    if closed {
+        Some((PathBuf::from(path), &after_quote[end_index..]))
+    } else {
+        None
+    }
 }
 
-fn parse_rustdoc_include_path(path: &str) -> LinkType<'static> {
-    let mut parts = path.splitn(2, ':');
+fn parse_include_path(path: &str) -> Option<LinkType<'static>> {
+    let trimmed = path.trim();
+    if trimmed.starts_with('"') {
+        let (path, after) = parse_quoted_path(trimmed)?;
+        let after = after.trim_start();
+        let range_or_anchor = if let Some(range_part) = after.strip_prefix(':') {
+            parse_range_or_anchor(Some(range_part))
+        } else {
+            parse_range_or_anchor(None)
+        };
+        Some(LinkType::Include(path, range_or_anchor))
+    } else {
+        let mut path_props = trimmed.split_whitespace();
+        let file_arg = path_props.next()?;
+        let mut parts = file_arg.splitn(2, ':');
+        let path = parts.next().unwrap().into();
+        let range_or_anchor = parse_range_or_anchor(parts.next());
+        Some(LinkType::Include(path, range_or_anchor))
+    }
+}
 
-    let path = parts.next().unwrap().into();
-    let range_or_anchor = parse_range_or_anchor(parts.next());
+fn parse_rustdoc_include_path(path: &str) -> Option<LinkType<'static>> {
+    let trimmed = path.trim();
+    if trimmed.starts_with('"') {
+        let (path, after) = parse_quoted_path(trimmed)?;
+        let after = after.trim_start();
+        let range_or_anchor = if let Some(range_part) = after.strip_prefix(':') {
+            parse_range_or_anchor(Some(range_part))
+        } else {
+            parse_range_or_anchor(None)
+        };
+        Some(LinkType::RustdocInclude(path, range_or_anchor))
+    } else {
+        let mut path_props = trimmed.split_whitespace();
+        let file_arg = path_props.next()?;
+        let mut parts = file_arg.splitn(2, ':');
+        let path = parts.next().unwrap().into();
+        let range_or_anchor = parse_range_or_anchor(parts.next());
+        Some(LinkType::RustdocInclude(path, range_or_anchor))
+    }
+}
 
-    LinkType::RustdocInclude(path, range_or_anchor)
+fn parse_playground_args(rest: &str) -> Option<(PathBuf, Vec<&str>)> {
+    let trimmed = rest.trim_start();
+    if trimmed.starts_with('"') {
+        let (path, after) = parse_quoted_path(trimmed)?;
+        let props: Vec<&str> = after.split_whitespace().collect();
+        Some((path, props))
+    } else {
+        let mut path_props = trimmed.split_whitespace();
+        let file_arg = path_props.next()?;
+        let props: Vec<&str> = path_props.collect();
+        Some((file_arg.into(), props))
+    }
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -293,25 +360,24 @@ impl<'a> Link<'a> {
             (_, Some(typ), Some(title)) if typ.as_str() == "title" => {
                 Some(LinkType::Title(title.as_str()))
             }
-            (_, Some(typ), Some(rest)) => {
-                let mut path_props = rest.as_str().split_whitespace();
-                let file_arg = path_props.next();
-                let props: Vec<&str> = path_props.collect();
-
-                match (typ.as_str(), file_arg) {
-                    ("include", Some(pth)) => Some(parse_include_path(pth)),
-                    ("playground", Some(pth)) => Some(LinkType::Playground(pth.into(), props)),
-                    ("playpen", Some(pth)) => {
-                        warn!(
-                            "the {{{{#playpen}}}} expression has been \
-                            renamed to {{{{#playground}}}}, \
-                            please update your book to use the new name"
-                        );
-                        Some(LinkType::Playground(pth.into(), props))
-                    }
-                    ("rustdoc_include", Some(pth)) => Some(parse_rustdoc_include_path(pth)),
-                    _ => None,
-                }
+            (_, Some(typ), Some(rest)) if typ.as_str() == "include" => {
+                parse_include_path(rest.as_str())
+            }
+            (_, Some(typ), Some(rest)) if typ.as_str() == "rustdoc_include" => {
+                parse_rustdoc_include_path(rest.as_str())
+            }
+            (_, Some(typ), Some(rest)) if typ.as_str() == "playground" => {
+                parse_playground_args(rest.as_str())
+                    .map(|(path, props)| LinkType::Playground(path, props))
+            }
+            (_, Some(typ), Some(rest)) if typ.as_str() == "playpen" => {
+                warn!(
+                    "the {{#playpen}} expression has been \
+                    renamed to {{#playground}}, \
+                    please update your book to use the new name"
+                );
+                parse_playground_args(rest.as_str())
+                    .map(|(path, props)| LinkType::Playground(path, props))
             }
             (Some(mat), None, None) if mat.as_str().starts_with(ESCAPE_CHAR) => {
                 Some(LinkType::Escaped)
@@ -653,6 +719,121 @@ mod tests {
     }
 
     #[test]
+    fn test_find_links_with_space_in_path() {
+        let s = "Some random text with {{#include \"fila a.md\"}}...";
+        let res = find_links(s).collect::<Vec<_>>();
+        assert_eq!(
+            res,
+            vec![Link {
+                start_index: 22,
+                end_index: 46,
+                link_type: LinkType::Include(
+                    PathBuf::from("fila a.md"),
+                    RangeOrAnchor::Range(LineRange::from(..)),
+                ),
+                link_text: "{{#include \"fila a.md\"}}",
+            }]
+        );
+    }
+
+    #[test]
+    fn test_find_links_with_space_in_path_and_range() {
+        let s = "Some random text with {{#include \"fila a.md\":1:2}}...";
+        let res = find_links(s).collect::<Vec<_>>();
+        assert_eq!(
+            res,
+            vec![Link {
+                start_index: 22,
+                end_index: 50,
+                link_type: LinkType::Include(
+                    PathBuf::from("fila a.md"),
+                    RangeOrAnchor::Range(LineRange::from(0..2)),
+                ),
+                link_text: "{{#include \"fila a.md\":1:2}}",
+            }]
+        );
+    }
+
+    #[test]
+    fn test_find_links_rustdoc_include_with_space_in_path() {
+        let s = "Some random text with {{#rustdoc_include \"fila a.rs\"}}...";
+        let res = find_links(s).collect::<Vec<_>>();
+        assert_eq!(
+            res,
+            vec![Link {
+                start_index: 22,
+                end_index: 54,
+                link_type: LinkType::RustdocInclude(
+                    PathBuf::from("fila a.rs"),
+                    RangeOrAnchor::Range(LineRange::from(..)),
+                ),
+                link_text: "{{#rustdoc_include \"fila a.rs\"}}",
+            }]
+        );
+    }
+
+    #[test]
+    fn test_find_links_rustdoc_include_with_space_in_path_and_range() {
+        let s = "Some random text with {{#rustdoc_include \"fila a.rs\":1:5}}...";
+        let res = find_links(s).collect::<Vec<_>>();
+        assert_eq!(
+            res,
+            vec![Link {
+                start_index: 22,
+                end_index: 58,
+                link_type: LinkType::RustdocInclude(
+                    PathBuf::from("fila a.rs"),
+                    RangeOrAnchor::Range(LineRange::from(0..5)),
+                ),
+                link_text: "{{#rustdoc_include \"fila a.rs\":1:5}}",
+            }]
+        );
+    }
+
+    #[test]
+    fn test_find_links_playground_with_space_in_path() {
+        let s = "Some random text with {{#playground \"fila a.rs\" editable no_run}}...";
+        let res = find_links(s).collect::<Vec<_>>();
+        assert_eq!(
+            res,
+            vec![Link {
+                start_index: 22,
+                end_index: 65,
+                link_type: LinkType::Playground(
+                    PathBuf::from("fila a.rs"),
+                    vec!["editable", "no_run"],
+                ),
+                link_text: "{{#playground \"fila a.rs\" editable no_run}}",
+            }]
+        );
+    }
+
+    #[test]
+    fn test_find_links_unclosed_quote() {
+        let s = "Some random text with {{#include \"unclosed.md}}...";
+        let res = find_links(s).collect::<Vec<_>>();
+        assert_eq!(res, vec![]);
+    }
+
+    #[test]
+    fn test_find_links_with_escaped_quotes_in_path() {
+        let s = "Some random text with {{#include \"file \\\"name\\\".md\"}}...";
+        let res = find_links(s).collect::<Vec<_>>();
+        assert_eq!(
+            res,
+            vec![Link {
+                start_index: 22,
+                end_index: 53,
+                link_type: LinkType::Include(
+                    PathBuf::from("file \"name\".md"),
+                    RangeOrAnchor::Range(LineRange::from(..)),
+                ),
+                link_text: "{{#include \"file \\\"name\\\".md\"}}",
+            }]
+        );
+    }
+
+    #[test]
     fn test_find_links_with_anchor() {
         let s = "Some random text with {{#include file.rs:anchor}}...";
         let res = find_links(s).collect::<Vec<_>>();
@@ -764,7 +945,7 @@ mod tests {
 
     #[test]
     fn parse_without_colon_includes_all() {
-        let link_type = parse_include_path("arbitrary");
+        let link_type = parse_include_path("arbitrary").unwrap();
         assert_eq!(
             link_type,
             LinkType::Include(
@@ -776,7 +957,7 @@ mod tests {
 
     #[test]
     fn parse_with_nothing_after_colon_includes_all() {
-        let link_type = parse_include_path("arbitrary:");
+        let link_type = parse_include_path("arbitrary:").unwrap();
         assert_eq!(
             link_type,
             LinkType::Include(
@@ -788,7 +969,7 @@ mod tests {
 
     #[test]
     fn parse_with_two_colons_includes_all() {
-        let link_type = parse_include_path("arbitrary::");
+        let link_type = parse_include_path("arbitrary::").unwrap();
         assert_eq!(
             link_type,
             LinkType::Include(
@@ -800,7 +981,7 @@ mod tests {
 
     #[test]
     fn parse_with_garbage_after_two_colons_includes_all() {
-        let link_type = parse_include_path("arbitrary::NaN");
+        let link_type = parse_include_path("arbitrary::NaN").unwrap();
         assert_eq!(
             link_type,
             LinkType::Include(
@@ -812,7 +993,7 @@ mod tests {
 
     #[test]
     fn parse_with_one_number_after_colon_only_that_line() {
-        let link_type = parse_include_path("arbitrary:5");
+        let link_type = parse_include_path("arbitrary:5").unwrap();
         assert_eq!(
             link_type,
             LinkType::Include(
@@ -824,7 +1005,7 @@ mod tests {
 
     #[test]
     fn parse_with_one_based_start_becomes_zero_based() {
-        let link_type = parse_include_path("arbitrary:1");
+        let link_type = parse_include_path("arbitrary:1").unwrap();
         assert_eq!(
             link_type,
             LinkType::Include(
@@ -836,7 +1017,7 @@ mod tests {
 
     #[test]
     fn parse_with_zero_based_start_stays_zero_based_but_is_probably_an_error() {
-        let link_type = parse_include_path("arbitrary:0");
+        let link_type = parse_include_path("arbitrary:0").unwrap();
         assert_eq!(
             link_type,
             LinkType::Include(
@@ -848,7 +1029,7 @@ mod tests {
 
     #[test]
     fn parse_start_only_range() {
-        let link_type = parse_include_path("arbitrary:5:");
+        let link_type = parse_include_path("arbitrary:5:").unwrap();
         assert_eq!(
             link_type,
             LinkType::Include(
@@ -860,7 +1041,7 @@ mod tests {
 
     #[test]
     fn parse_start_with_garbage_interpreted_as_start_only_range() {
-        let link_type = parse_include_path("arbitrary:5:NaN");
+        let link_type = parse_include_path("arbitrary:5:NaN").unwrap();
         assert_eq!(
             link_type,
             LinkType::Include(
@@ -872,7 +1053,7 @@ mod tests {
 
     #[test]
     fn parse_end_only_range() {
-        let link_type = parse_include_path("arbitrary::5");
+        let link_type = parse_include_path("arbitrary::5").unwrap();
         assert_eq!(
             link_type,
             LinkType::Include(
@@ -884,7 +1065,7 @@ mod tests {
 
     #[test]
     fn parse_start_and_end_range() {
-        let link_type = parse_include_path("arbitrary:5:10");
+        let link_type = parse_include_path("arbitrary:5:10").unwrap();
         assert_eq!(
             link_type,
             LinkType::Include(
@@ -896,7 +1077,7 @@ mod tests {
 
     #[test]
     fn parse_with_negative_interpreted_as_anchor() {
-        let link_type = parse_include_path("arbitrary:-5");
+        let link_type = parse_include_path("arbitrary:-5").unwrap();
         assert_eq!(
             link_type,
             LinkType::Include(
@@ -908,7 +1089,7 @@ mod tests {
 
     #[test]
     fn parse_with_floating_point_interpreted_as_anchor() {
-        let link_type = parse_include_path("arbitrary:-5.7");
+        let link_type = parse_include_path("arbitrary:-5.7").unwrap();
         assert_eq!(
             link_type,
             LinkType::Include(
@@ -920,7 +1101,7 @@ mod tests {
 
     #[test]
     fn parse_with_anchor_followed_by_colon() {
-        let link_type = parse_include_path("arbitrary:some-anchor:this-gets-ignored");
+        let link_type = parse_include_path("arbitrary:some-anchor:this-gets-ignored").unwrap();
         assert_eq!(
             link_type,
             LinkType::Include(
@@ -932,7 +1113,7 @@ mod tests {
 
     #[test]
     fn parse_with_more_than_three_colons_ignores_everything_after_third_colon() {
-        let link_type = parse_include_path("arbitrary:5:10:17:anything:");
+        let link_type = parse_include_path("arbitrary:5:10:17:anything:").unwrap();
         assert_eq!(
             link_type,
             LinkType::Include(
@@ -940,5 +1121,58 @@ mod tests {
                 RangeOrAnchor::Range(LineRange::from(4..10))
             )
         );
+    }
+
+    #[test]
+    fn parse_quoted_path_without_colon_includes_all() {
+        let link_type = parse_include_path(r#""arbitrary file name.md""#).unwrap();
+        assert_eq!(
+            link_type,
+            LinkType::Include(
+                PathBuf::from("arbitrary file name.md"),
+                RangeOrAnchor::Range(LineRange::from(RangeFull))
+            )
+        );
+    }
+
+    #[test]
+    fn parse_quoted_path_with_range() {
+        let link_type = parse_include_path(r#""arbitrary file name.md":5:10"#).unwrap();
+        assert_eq!(
+            link_type,
+            LinkType::Include(
+                PathBuf::from("arbitrary file name.md"),
+                RangeOrAnchor::Range(LineRange::from(4..10))
+            )
+        );
+    }
+
+    #[test]
+    fn parse_quoted_path_with_anchor() {
+        let link_type = parse_include_path(r#""arbitrary file name.md":some-anchor"#).unwrap();
+        assert_eq!(
+            link_type,
+            LinkType::Include(
+                PathBuf::from("arbitrary file name.md"),
+                RangeOrAnchor::Anchor("some-anchor".to_string())
+            )
+        );
+    }
+
+    #[test]
+    fn parse_quoted_path_with_escapes() {
+        let link_type = parse_include_path(r#""file \"name\".md""#).unwrap();
+        assert_eq!(
+            link_type,
+            LinkType::Include(
+                PathBuf::from("file \"name\".md"),
+                RangeOrAnchor::Range(LineRange::from(RangeFull))
+            )
+        );
+    }
+
+    #[test]
+    fn parse_quoted_path_unclosed_returns_none() {
+        assert_eq!(parse_include_path(r#""unclosed.md"#), None);
     }
 }
