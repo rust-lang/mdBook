@@ -336,10 +336,17 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
         });
     }
 
-    // Takes the nodes from the given head and copies them over to the
-    // destination, along with some filtering.
+    // Takes the rendered content of the given heading and copies it over to
+    // the destination, along with some filtering.
     function filterHeader(source, dest) {
         const clone = source.cloneNode(true);
+        // Unwrap the injected permalink anchor (`<a class="header">`), keeping
+        // its children. When the heading itself is a link, the browser hoists
+        // that link out as a sibling of the (now empty) permalink anchor, so
+        // unwrapping here lets the actual heading text come through.
+        clone.querySelectorAll('a.header').forEach(headerLink => {
+            headerLink.replaceWith(...headerLink.childNodes);
+        });
         clone.querySelectorAll('mark').forEach(mark => {
             mark.replaceWith(...mark.childNodes);
         });
@@ -418,7 +425,7 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
             span.appendChild(a);
             a.href = '#' + header.id;
             a.classList.add('header-in-summary');
-            filterHeader(header.children[0], a);
+            filterHeader(header, a);
             a.addEventListener('click', headerThresholdClick);
             const nextHeader = headers[i + 1];
             if (nextHeader !== undefined) {
