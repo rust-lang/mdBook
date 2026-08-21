@@ -422,6 +422,7 @@ where
                 let mut code = Element::new("code");
                 match kind {
                     CodeBlockKind::Fenced(info) => {
+                        let info = strip_infostring_comments(&info);
                         let mut infos =
                             info.split([' ', '\t', ',']).filter(|info| !info.is_empty());
                         if let Some(lang) = infos.next() {
@@ -1105,6 +1106,33 @@ where
     }
 }
 
+/// Removes rustdoc-style `(comment)` runs from a code block infostring.
+///
+/// Rustdoc's grammar is `comment = OPEN_PAREN *<all characters except closing
+/// parentheses> CLOSE_PAREN`, and a lang-string may interleave comments with
+/// tokens, so `rust (why),ignore` keeps both `rust` and `ignore`. An unclosed
+/// paren runs to the end, matching rustdoc's own recovery.
+fn strip_infostring_comments(info: &str) -> Cow<'_, str> {
+    if !info.contains('(') {
+        return Cow::Borrowed(info);
+    }
+    let mut out = String::with_capacity(info.len());
+    let mut depth = 0usize;
+    for ch in info.chars() {
+        match ch {
+            '(' => depth += 1,
+            ')' => depth = depth.saturating_sub(1),
+            // Keep a separator so tokens either side of a comment stay distinct.
+            _ if depth == 0 => out.push(ch),
+            _ => {}
+        }
+        if ch == ')' && depth == 0 {
+            out.push(' ');
+        }
+    }
+    Cow::Owned(out)
+}
+
 /// Traverse the given node, emitting any plain text into the output.
 ///
 /// This is used to generate the `id` of a header.
@@ -1186,4 +1214,48 @@ pub(crate) fn is_void_element(name: &str) -> bool {
             | "track"
             | "wbr"
     )
+}
+
+#[cfg(test)]
+mod strip_infostring_comments_tests {
+    use super::strip_infostring_comments;
+
+    #[test]
+    fn drops_comments_and_keeps_surrounding_tokens() {
+        // A comment in the middle must not truncate what follows.
+        assert_eq!(
+            strip_infostring_comments("rust (comment),ignore")
+                .split([' ', '\t', ','])
+                .filter(|s| !s.is_empty())
+                .collect::<Vec<_>>(),
+            vec!["rust", "ignore"]
+        );
+        assert_eq!(
+            strip_infostring_comments("rust,ignore (requires next solver)")
+                .split([' ', '\t', ','])
+                .filter(|s| !s.is_empty())
+                .collect::<Vec<_>>(),
+            vec!["rust", "ignore"]
+        );
+        assert_eq!(
+            strip_infostring_comments("rust (a) (b) ignore")
+                .split([' ', '\t', ','])
+                .filter(|s| !s.is_empty())
+                .collect::<Vec<_>>(),
+            vec!["rust", "ignore"]
+        );
+        // An unclosed paren runs to the end, as in rustdoc.
+        assert_eq!(
+            strip_infostring_comments("rust (unclosed")
+                .split([' ', '\t', ','])
+                .filter(|s| !s.is_empty())
+                .collect::<Vec<_>>(),
+            vec!["rust"]
+        );
+        // Untouched when there is nothing to strip.
+        assert!(matches!(
+            strip_infostring_comments("rust,ignore"),
+            std::borrow::Cow::Borrowed("rust,ignore")
+        ));
+    }
 }
