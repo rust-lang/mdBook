@@ -83,8 +83,15 @@ impl HtmlHandlebars {
         ctx.data.insert("content".to_owned(), json!(content));
         ctx.data.insert("chapter_title".to_owned(), json!(ch.name));
         ctx.data.insert("title".to_owned(), json!(title));
+        // With `site-url` configured, every page roots its chrome, navigation,
+        // sidebar (via `toc.js`) and asset links at the absolute site URL
+        // instead of a depth-relative prefix.
+        let path_to_root = match &ctx.html_config.site_url {
+            Some(site_url) => site_url.clone(),
+            None => fs::path_to_root(path),
+        };
         ctx.data
-            .insert("path_to_root".to_owned(), json!(fs::path_to_root(path)));
+            .insert("path_to_root".to_owned(), json!(path_to_root));
         if let Some(ref section) = ch.number {
             ctx.data
                 .insert("section".to_owned(), json!(section.to_string()));
@@ -125,7 +132,12 @@ impl HtmlHandlebars {
 
         if prev_ch.is_none() {
             ctx.data.insert("path".to_owned(), json!("index.md"));
-            ctx.data.insert("path_to_root".to_owned(), json!(""));
+            let index_root = match &ctx.html_config.site_url {
+                Some(site_url) => site_url.clone(),
+                None => String::new(),
+            };
+            ctx.data
+                .insert("path_to_root".to_owned(), json!(index_root));
             ctx.data.insert("is_index".to_owned(), json!(true));
             let rendered_index = ctx.handlebars.render("index", &ctx.data)?;
             debug!("Creating index.html from {}", ctx_path);
@@ -201,8 +213,9 @@ impl HtmlHandlebars {
         handlebars: &Handlebars<'_>,
         data: &mut serde_json::Map<String, serde_json::Value>,
         chapter_trees: Vec<ChapterTree<'_>>,
+        site_url: Option<&str>,
     ) -> Result<String> {
-        let print_content = crate::html::render_print_page(chapter_trees);
+        let print_content = crate::html::render_print_page(chapter_trees, site_url);
 
         if let Some(ref title) = ctx.config.book.title {
             data.insert("title".to_owned(), json!(title));
@@ -214,10 +227,13 @@ impl HtmlHandlebars {
         data.insert("is_print".to_owned(), json!(true));
         data.insert("path".to_owned(), json!("print.md"));
         data.insert("content".to_owned(), json!(print_content));
-        data.insert(
-            "path_to_root".to_owned(),
-            json!(fs::path_to_root(Path::new("print.md"))),
-        );
+        // Root the print page chrome, assets and sidebar at the absolute site
+        // URL when configured, matching the per-chapter behaviour.
+        let path_to_root = match site_url {
+            Some(site_url) => site_url.to_owned(),
+            None => fs::path_to_root(Path::new("print.md")),
+        };
+        data.insert("path_to_root".to_owned(), json!(path_to_root));
 
         debug!("Render template");
         let rendered = handlebars.render("index", &data)?;
@@ -396,9 +412,17 @@ impl Renderer for HtmlHandlebars {
         {
             data.insert("is_toc_html".to_owned(), json!(true));
             data.insert("path".to_owned(), json!("toc.html"));
+            // The no-JS sidebar fallback iframe contains only root-relative
+            // chapter links; a `<base href>` of the site URL resolves them (and
+            // the iframe's own assets) absolutely. Scoped to this render so it
+            // does not leak into the per-chapter `data` clones below.
+            if let Some(site_url) = &html_config.site_url {
+                data.insert("base_url".to_owned(), json!(site_url));
+            }
             let rendered_toc = handlebars.render("toc_html", &data)?;
             fs::write(destination.join("toc.html"), rendered_toc)?;
             debug!("Creating toc.html ✓");
+            data.remove("base_url");
             data.remove("path");
             data.remove("is_toc_html");
         }
@@ -433,8 +457,13 @@ impl Renderer for HtmlHandlebars {
 
         // Render the print version.
         if html_config.print.enable {
-            let print_rendered =
-                self.render_print_page(ctx, &handlebars, &mut data, chapter_trees)?;
+            let print_rendered = self.render_print_page(
+                ctx,
+                &handlebars,
+                &mut data,
+                chapter_trees,
+                html_config.site_url.as_deref(),
+            )?;
 
             fs::write(destination.join("print.html"), print_rendered)?;
             debug!("Creating print.html ✓");

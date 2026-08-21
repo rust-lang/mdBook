@@ -322,3 +322,98 @@ HTML tags must be closed before exiting a markdown element.
             str![[r##"<h3 id="option"><a class="header" href="#option">Option<t></t></a></h3>"##]],
         );
 }
+
+// The following tests cover the `output.html.site-url` feature, which makes
+// every generated link absolute (rooted at `site-url`) so a book served from a
+// subdirectory resolves cross-chapter, asset, and sidebar links regardless of
+// the page's own depth. See https://github.com/rust-lang/mdBook/pull/1802.
+
+// Root-relative `./` links written in chapter content are anchored to the site
+// URL, while links with a scheme (e.g. `https`) are left untouched.
+#[test]
+fn site_url_rewrites_content_links() {
+    BookTest::from_dir("rendering/site_url")
+        .check_file_contains(
+            "book/nested/deep.html",
+            "<a href=\"https://example.com/docs/other.html\">other chapter</a>",
+        )
+        .check_file_contains(
+            "book/index.html",
+            "<a href=\"https://example.com/docs/nested/deep.html\">deep chapter</a>",
+        )
+        .check_file_contains(
+            "book/index.html",
+            "<a href=\"https://rust-lang.org\">external link</a>",
+        );
+}
+
+// `path_to_root` (used by the page chrome, prev/next navigation, and the
+// JavaScript sidebar in `toc.js`) becomes the absolute site URL on every page,
+// independent of how deeply the page is nested.
+#[test]
+fn site_url_sets_absolute_path_to_root() {
+    BookTest::from_dir("rendering/site_url").check_file_contains(
+        "book/nested/deep.html",
+        "const path_to_root = \"https://example.com/docs/\";",
+    );
+}
+
+// Static assets resolved through the `{{resource}}` helper are emitted with the
+// absolute site URL rather than a depth-relative `../` prefix.
+#[test]
+fn site_url_makes_assets_absolute() {
+    BookTest::from_dir("rendering/site_url").check_file_contains(
+        "book/nested/deep.html",
+        "<link rel=\"stylesheet\" href=\"https://example.com/docs/css/general",
+    );
+}
+
+// The no-JS sidebar fallback (`toc.html`, loaded in an iframe) carries a
+// `<base href>` of the site URL so its root-relative chapter links resolve
+// absolutely.
+#[test]
+fn site_url_sets_toc_html_base() {
+    BookTest::from_dir("rendering/site_url")
+        .check_file_contains("book/toc.html", "<base href=\"https://example.com/docs/\">");
+}
+
+// The `<base href>` from `toc.html` must not leak onto regular chapter pages,
+// which would break their page-relative content links.
+#[test]
+fn site_url_no_base_href_on_chapter_pages() {
+    BookTest::from_dir("rendering/site_url")
+        .check_file_doesnt_contain("book/nested/deep.html", "<base href")
+        .check_file_doesnt_contain("book/index.html", "<base href");
+}
+
+// Without `site-url`, links and assets stay depth-relative and no `<base href>`
+// is emitted: the feature is strictly opt-in.
+#[test]
+fn site_url_absent_keeps_links_relative() {
+    BookTest::init(|_| {})
+        .check_file_contains("book/index.html", "const path_to_root = \"\";")
+        .check_file_doesnt_contain("book/index.html", "<base href")
+        .check_file_doesnt_contain("book/toc.html", "<base href");
+}
+
+// The print page roots its chrome, assets and sidebar at the site URL, while
+// cross-chapter references between chapters present on the page are folded into
+// intra-page anchors so the consolidated page stays self-contained.
+#[test]
+fn site_url_print_page() {
+    BookTest::from_dir("rendering/site_url")
+        .check_file_contains(
+            "book/print.html",
+            "const path_to_root = \"https://example.com/docs/\";",
+        )
+        .check_file_contains(
+            "book/print.html",
+            "<link rel=\"stylesheet\" href=\"https://example.com/docs/css/general",
+        )
+        .check_file_contains("book/print.html", "<a href=\"#deep\">deep chapter</a>")
+        .check_file_contains("book/print.html", "<a href=\"#other\">other chapter</a>")
+        .check_file_contains(
+            "book/print.html",
+            "<a href=\"https://rust-lang.org\">external link</a>",
+        );
+}
