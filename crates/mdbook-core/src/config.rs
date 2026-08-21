@@ -635,12 +635,23 @@ impl Default for Playground {
 }
 
 /// Configuration for tweaking how the HTML renderer handles code blocks.
-#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct Code {
+    /// Enable or disable the default line hiding with '#' for rust. Default: `true`.
+    pub default_hidelines: bool,
     /// A prefix string to hide lines per language (one or more chars).
     pub hidelines: HashMap<String, String>,
+}
+
+impl Default for Code {
+    fn default() -> Code {
+        Code {
+            default_hidelines: true,
+            hidelines: HashMap::<String, String>::default(),
+        }
+    }
 }
 
 /// Configuration of the search functionality of the HTML renderer.
