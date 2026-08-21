@@ -132,7 +132,7 @@ fn partition_rust_source(s: &str) -> (&str, &str) {
         r"^(?mx)
         (
             (?:
-                ^[ \t]*\#!\[.* (?:\r?\n)?
+                ^[ \t]*(?:\#\x20)?[ \t]*\#!\[.* (?:\r?\n)?
                 |
                 ^\s* (?:\r?\n)?
             )*
@@ -153,6 +153,36 @@ fn partition_rust_source(s: &str) -> (&str, &str) {
         None => 0,
     };
     s.split_at(split_idx)
+}
+
+#[test]
+fn wrap_rust_main_basic() {
+    // Code without fn main gets wrapped
+    assert_eq!(
+        wrap_rust_main("let x = 1;"),
+        Some("# #![allow(unused)]\n# fn main() {\nlet x = 1;\n# }".to_string())
+    );
+}
+
+#[test]
+fn wrap_rust_main_with_feature_attr() {
+    // Crate-level attributes should be placed before fn main (issue #2640)
+    // Without hidden prefix:
+    assert_eq!(
+        wrap_rust_main("#![feature(rustc_attrs)]\n#[rustc_on_unimplemented = \"oh no\"]\npub trait Foo {}"),
+        Some("# #![allow(unused)]\n#![feature(rustc_attrs)]\n# fn main() {\n#[rustc_on_unimplemented = \"oh no\"]\npub trait Foo {}\n# }".to_string())
+    );
+    // With hidden line prefix `# ` (the actual input from markdown):
+    assert_eq!(
+        wrap_rust_main("# #![feature(rustc_attrs)]\n#[rustc_on_unimplemented = \"oh no\"]\npub trait Foo {}"),
+        Some("# #![allow(unused)]\n# #![feature(rustc_attrs)]\n# fn main() {\n#[rustc_on_unimplemented = \"oh no\"]\npub trait Foo {}\n# }".to_string())
+    );
+}
+
+#[test]
+fn wrap_rust_main_already_has_main() {
+    // Code with fn main should not be wrapped
+    assert_eq!(wrap_rust_main("fn main() {}"), None);
 }
 
 #[test]
@@ -189,5 +219,10 @@ fn it_partitions_rust_source() {
     assert_eq!(
         partition_rust_source("    // Example"),
         ("", "    // Example")
+    );
+    // Hidden line prefix with crate attribute (issue #2640)
+    assert_eq!(
+        partition_rust_source("# #![feature(rustc_attrs)]\n#[foo]\npub trait Foo {}"),
+        ("# #![feature(rustc_attrs)]\n", "#[foo]\npub trait Foo {}")
     );
 }
