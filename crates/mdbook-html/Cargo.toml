@@ -23,6 +23,7 @@ pulldown-cmark.workspace = true
 regex.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+serde_yml = { version = "0.0.12", optional = true }
 sha2.workspace = true
 tracing.workspace = true
 
@@ -35,3 +36,4 @@ workspace = true
 
 [features]
 search = ["dep:elasticlunr-rs"]
+frontmatter = ["dep:serde_yml"]
