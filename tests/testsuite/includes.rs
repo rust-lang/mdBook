@@ -99,6 +99,13 @@ fn playground_include() {
 </span><span class="boring">   // You can even hide lines! :D
 </span><span class="boring">  println!("I am hidden! Expand the code snippet to see me");
 </span>}</code></pre>
+<h2 id="editable-playground"><a class="header" href="#editable-playground">Editable Playground</a></h2>
+<pre class="playground"><code class="language-rust editable">fn main() {
+    println!("Hello World!");
+<span class="boring">
+</span><span class="boring">   // You can even hide lines! :D
+</span><span class="boring">  println!("I am hidden! Expand the code snippet to see me");
+</span>}</code></pre>
 "##]]);
 }
 
