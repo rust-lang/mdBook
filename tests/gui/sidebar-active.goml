@@ -15,3 +15,10 @@ assert-text: (".sidebar-scrollbox a.active", "Prefix 1")
 go-to: |DOC_PATH| + "all-summary/part-1/chapter-1.html?highlight=test"
 
 assert-text: (".sidebar-scrollbox a.active", "3. P1 C1")
+
+// When a chapter (like `README.md`) generates the index page, only that chapter
+// should be highlighted, not the first chapter of the summary.
+go-to: |DOC_PATH| + "index-chapter/index.html"
+
+assert-count: (".sidebar-scrollbox a.active", 1)
+assert-text: (".sidebar-scrollbox a.active", "1. Introduction")

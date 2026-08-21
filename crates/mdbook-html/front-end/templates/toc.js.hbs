@@ -16,6 +16,9 @@ class MDBookSidebarScrollbox extends HTMLElement {
         }
         const links = Array.prototype.slice.call(this.querySelectorAll('a'));
         const l = links.length;
+        // Whether or not a chapter (like `README.md`) generates the index page itself.
+        // If it does, then the first chapter must not be treated as the index alias.
+        const has_index_chapter = links.some(link => link.getAttribute('href') === 'index.html');
         for (let i = 0; i < l; ++i) {
             const link = links[i];
             const href = link.getAttribute('href');
@@ -26,6 +29,7 @@ class MDBookSidebarScrollbox extends HTMLElement {
             // Check both with and without the '.html' suffix to be robust against pretty URLs
             if (link.href.replace(/\.html$/, '') === current_page.replace(/\.html$/, '')
                 || i === 0
+                && !has_index_chapter
                 && path_to_root === ''
                 && current_page.endsWith('/index.html')) {
                 link.classList.add('active');
