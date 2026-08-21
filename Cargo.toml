@@ -96,7 +96,6 @@ mdbook-driver.workspace = true
 mdbook-html.workspace = true
 opener.workspace = true
 tracing.workspace = true
-tracing-subscriber.workspace = true
 
 # Watch feature
 ignore = { workspace = true, optional = true }

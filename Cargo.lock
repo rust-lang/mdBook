@@ -1009,7 +1009,6 @@ dependencies = [
  "tokio",
  "tower-http",
  "tracing",
- "tracing-subscriber",
  "walkdir",
 ]
 
@@ -1028,6 +1027,7 @@ dependencies = [
  "tempfile",
  "toml",
  "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
