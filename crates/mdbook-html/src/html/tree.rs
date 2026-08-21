@@ -567,17 +567,18 @@ where
                 let alt = self.text_for_img_alt();
                 img.insert_attr("alt", alt.to_tendril());
 
-                // If the image is not being rendered inside a link, we can enable the "zoom-in"
-                // feature.
-                if !self
-                    .tag_stack
-                    .iter()
-                    .filter_map(|node_id| {
-                        self.tree
-                            .get(*node_id)
-                            .and_then(|el| el.value().as_element())
-                    })
-                    .any(|el| *el.name.local == *"a")
+                if self.options.config.zoomable_images_support
+                    // If the image is not being rendered inside a link, we can enable the "zoom-in"
+                    // feature.
+                    && !self
+                        .tag_stack
+                        .iter()
+                        .filter_map(|node_id| {
+                            self.tree
+                                .get(*node_id)
+                                .and_then(|el| el.value().as_element())
+                        })
+                        .any(|el| *el.name.local == *"a")
                 {
                     let mut label = Element::new("label");
                     label.insert_attr("class", "checkbox-label".to_tendril());

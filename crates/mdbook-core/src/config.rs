@@ -518,6 +518,8 @@ pub struct HtmlConfig {
     /// If enabled, the sidebar includes navigation for headers on the current
     /// page. Default is `true`.
     pub sidebar_header_nav: bool,
+    /// Should zoomable images feature be enabled?
+    pub zoomable_images_support: bool,
 }
 
 impl Default for HtmlConfig {
@@ -548,6 +550,7 @@ impl Default for HtmlConfig {
             redirect: HashMap::new(),
             hash_files: true,
             sidebar_header_nav: true,
+            zoomable_images_support: true,
         }
     }
 }

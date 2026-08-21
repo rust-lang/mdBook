@@ -342,3 +342,22 @@ preprocessor saw custom config
         // No HTML output
         .check_file_list("book", str![[""]]);
 }
+
+// Check that the `zoomable-images-support` setting is working as expected.
+#[test]
+fn zoomable_images() {
+    const ZOOMABLE_IMG_MARKER: &str = "<input class=\"checkbox-img\" type=\"checkbox\">";
+    // By default, `zoomable-images-support` is enabled, so the zoomable images feature "marker"
+    // (the extra HTML generated for the feature to work) should be present in the generated book.
+    BookTest::from_dir("config/empty")
+        .run("build", |_cmd| {})
+        .check_file_contains("book/index.html", ZOOMABLE_IMG_MARKER);
+    // Now we disable it, so the marker shouldn't be present in the generated book anymore.
+    BookTest::from_dir("config/empty")
+        .change_file(
+            "book.toml",
+            "[output.html]\nzoomable-images-support = false",
+        )
+        .run("build", |_cmd| {})
+        .check_file_doesnt_contain("book/index.html", ZOOMABLE_IMG_MARKER);
+}
