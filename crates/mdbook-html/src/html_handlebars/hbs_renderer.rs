@@ -7,7 +7,7 @@ use crate::utils::ToUrlPath;
 use anyhow::{Context, Result, bail};
 use handlebars::Handlebars;
 use mdbook_core::book::{Book, BookItem, Chapter};
-use mdbook_core::config::{BookConfig, Config, HtmlConfig};
+use mdbook_core::config::{BookConfig, BuiltinTheme, Config, HtmlConfig};
 use mdbook_core::utils::fs;
 use mdbook_renderer::{RenderContext, Renderer};
 use serde_json::json;
@@ -491,16 +491,14 @@ fn make_data(
         );
     }
 
-    let default_theme = match html_config.default_theme {
-        Some(ref theme) => theme.to_lowercase(),
-        None => "light".to_string(),
-    };
+    data.insert("builtin_themes".to_owned(), json!(BuiltinTheme::ALL));
+
+    let default_theme = html_config.default_theme.unwrap_or(BuiltinTheme::Light);
     data.insert("default_theme".to_owned(), json!(default_theme));
 
-    let preferred_dark_theme = match html_config.preferred_dark_theme {
-        Some(ref theme) => theme.to_lowercase(),
-        None => "navy".to_string(),
-    };
+    let preferred_dark_theme = html_config
+        .preferred_dark_theme
+        .unwrap_or(BuiltinTheme::Navy);
     data.insert(
         "preferred_dark_theme".to_owned(),
         json!(preferred_dark_theme),

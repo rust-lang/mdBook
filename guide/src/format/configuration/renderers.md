@@ -118,12 +118,14 @@ The following configuration options are available:
 - **theme:** mdBook comes with a default theme and all the resource files needed
   for it. But if this option is set, mdBook will selectively overwrite the theme
   files with the ones found in the specified folder.
-- **default-theme:** The theme color scheme to select by default in the
-  'Change Theme' dropdown. Defaults to `light`.
-- **preferred-dark-theme:** The default dark theme. This theme will be used if
-  the browser requests the dark version of the site via the
+- **default-theme:** The built-in theme to select by default in the
+  'Change Theme' dropdown. Accepted values are `light`, `rust`, `coal`, `navy`,
+  and `ayu`. Defaults to `light`.
+- **preferred-dark-theme:** The built-in theme to use when the browser requests
+  the dark version of the site via the
   [`prefers-color-scheme`](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)
-  CSS media query. Defaults to `navy`.
+  CSS media query. Accepted values are `light`, `rust`, `coal`, `navy`, and
+  `ayu`. Defaults to `navy`.
 - **smart-punctuation:** Converts quotes to curly quotes, `...` to `…`, `--` to en-dash, and `---` to em-dash.
   See [Smart Punctuation](../markdown.md#smart-punctuation).
   Defaults to `true`.
