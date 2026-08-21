@@ -159,6 +159,12 @@ The following configuration options are available:
   navigation links and script/css imports in the 404 file work correctly, even when accessing
   urls in subdirectories. Defaults to `/`. If `site-url` is set,
   make sure to use document relative links for your assets, meaning they should not start with `/`.
+- **canonical-site-url:** Set the canonical URL for the book, which is used by
+  search engines to determine the primary URL for the content. Use this when
+  your site is deployed at multiple URLs. For example, when you have site
+  deployments for a range of versions, you can point all of them to the URL for
+  the latest version. Without this, your content may be penalized for
+  duplication, and visitors may be directed to an outdated version of the book.
 - **cname:** The DNS subdomain or apex domain at which your book will be hosted.
   This string will be written to a file named CNAME in the root of your site, as
   required by GitHub Pages (see [*Managing a custom domain for your GitHub Pages
