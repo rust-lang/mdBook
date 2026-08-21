@@ -38,6 +38,7 @@
     - [Preprocessors](for_developers/preprocessors.md)
     - [Alternative backends](for_developers/backends.md)
 
+- [FAQ](faq.md)
 -----------
 
 [Contributors](misc/contributors.md)
