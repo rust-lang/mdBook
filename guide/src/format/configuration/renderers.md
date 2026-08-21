@@ -322,6 +322,18 @@ This will generate an HTML page which will automatically redirect to the given l
 
 When fragment redirects are specified, the page must use JavaScript to redirect to the correct location. This is useful if you rename or move a section header. Fragment redirects work with existing pages and deleted pages.
 
+### `.mdbookignore`
+
+You can use a `.mdbookignore` file to exclude files from the build process.  
+The file is placed in the `src` directory of your book and has the format known  
+from [`.gitignore`](https://git-scm.com/docs/gitignore) files.
+
+For example:
+```
+*.rs
+/target/
+```
+
 ## Markdown renderer
 
 The Markdown renderer will run preprocessors and then output the resulting
