@@ -143,6 +143,10 @@
                 <div id="mdbook-menu-bar-hover-placeholder"></div>
                 <div id="mdbook-menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
+                        {{#if fold_enable}}
+                        <button id="mdbook-collapse-all" class="icon-button" type="button" title="Collapse/Expand all chapters" aria-label="Collapse/Expand all chapters">
+                        </button>
+                        {{/if}}
                         <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
                             {{fa "solid" "bars"}}
                         </label>
@@ -274,6 +278,10 @@
         <template id=fa-copy>{{fa "regular" "copy"}}</template>
         <template id=fa-play>{{fa "solid" "play"}}</template>
         <template id=fa-clock-rotate-left>{{fa "solid" "clock-rotate-left"}}</template>
+        {{#if fold_enable}}
+        <template id=fa-square-minus>{{fa "regular" "square-minus"}}</template>
+        <template id=fa-square-plus>{{fa "regular" "square-plus"}}</template>
+        {{/if}}
 
         {{#if live_reload_endpoint}}
         <!-- Livereload script (if served using the cli tool) -->

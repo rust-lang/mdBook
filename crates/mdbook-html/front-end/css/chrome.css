@@ -94,6 +94,9 @@ html.sidebar-visible #mdbook-menu-bar {
 html:not(.js) .left-buttons button {
     display: none;
 }
+#mdbook-sidebar-toggle-anchor:not(:checked) ~ .page-wrapper #mdbook-collapse-all {
+    display: none;
+}
 
 .menu-title {
     display: inline-block;
