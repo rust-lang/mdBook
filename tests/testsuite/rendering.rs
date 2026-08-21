@@ -322,3 +322,18 @@ HTML tags must be closed before exiting a markdown element.
             str![[r##"<h3 id="option"><a class="header" href="#option">Option<t></t></a></h3>"##]],
         );
 }
+
+#[test]
+fn including_files_from_parent_directories_works() {
+    let mut test =
+        BookTest::from_dir("rendering/including_files_from_parent_directories_works/parent");
+    test.check_main_file(
+        "book/index.html",
+        str![[r##"<h1 id="test"><a class="header" href="#test">Test!</a></h1>"##]],
+    );
+
+    assert!(
+        !std::fs::exists(test.dir.join("../test.html")).unwrap(),
+        "test.html was rendered outside build directory"
+    );
+}
