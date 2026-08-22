@@ -11,6 +11,7 @@ pub fn make_subcommand() -> Command {
         .arg_dest_dir()
         .arg_root_dir()
         .arg_open()
+        .arg_copy_exclude_extensions()
 }
 
 // Build command implementation
@@ -19,6 +20,20 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let mut book = MDBook::load(book_dir)?;
 
     set_dest_dir(args, &mut book);
+
+    // Apply CLI copy-exclude-extensions to config
+    if let Some(exts) = args.get_one::<String>("copy-exclude-extensions") {
+        let additional_exts: Vec<String> = exts
+            .split(',')
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect();
+
+        if let Ok(Some(mut html_config)) = book.config.get::<mdbook_core::config::HtmlConfig>("output.html") {
+            html_config.copy_exclude_extensions.extend(additional_exts);
+            book.config.set("output.html", html_config)?;
+        }
+    }
 
     book.build()?;
 

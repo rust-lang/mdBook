@@ -444,7 +444,12 @@ impl Renderer for HtmlHandlebars {
             .context("Unable to emit redirects")?;
 
         // Copy all remaining files, avoid a recursive copy from/to the book build dir
-        fs::copy_files_except_ext(&src_dir, destination, true, Some(&build_dir), &["md"])?;
+        let exclude_exts: Vec<&str> = html_config
+            .copy_exclude_extensions
+            .iter()
+            .map(|s| s.as_str())
+            .collect();
+        fs::copy_files_except_ext(&src_dir, destination, true, Some(&build_dir), &exclude_exts)?;
 
         info!("HTML book written to `{}`", destination.display());
 
