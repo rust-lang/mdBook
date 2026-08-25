@@ -33,19 +33,14 @@ pub fn make_subcommand() -> Command {
 
 // test command implementation
 pub fn execute(args: &ArgMatches) -> Result<()> {
-    let library_paths: Vec<&str> = args
-        .get_many("library-path")
-        .map(|it| it.map(String::as_str).collect())
-        .unwrap_or_default();
-
     let chapter: Option<&str> = args.get_one::<String>("chapter").map(|s| s.as_str());
 
     let book_dir = get_book_dir(args);
     let mut book = MDBook::load(book_dir)?;
 
     match chapter {
-        Some(_) => book.test_chapter(library_paths, chapter),
-        None => book.test(library_paths),
+        Some(_) => book.test_chapter(chapter),
+        None => book.test(),
     }?;
 
     Ok(())
