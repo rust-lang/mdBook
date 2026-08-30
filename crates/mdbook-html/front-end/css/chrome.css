@@ -183,12 +183,12 @@ html:not(.js) .left-buttons button {
 /* Only Firefox supports flow-relative values */
 .next {
     float: right;
-    right: var(--page-padding);
+    right: 0;
 }
 [dir=rtl] .next {
     float: left;
     right: unset;
-    left: var(--page-padding);
+    left: 0;
 }
 
 @media only screen and (max-width: 1080px) {
