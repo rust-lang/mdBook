@@ -1,0 +1,5 @@
+[book]
+title = "site_url"
+
+[output.html]
+site-url = "https://example.com/docs/"
