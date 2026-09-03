@@ -62,7 +62,7 @@ fn remove_emphasis(num_removed_items: &mut usize, chapter: &mut Chapter) -> Resu
 }
 // ANCHOR_END: remove_emphasis
 
-pub fn handle_preprocessing() -> Result<()> {
+fn handle_preprocessing() -> Result<()> {
     let pre = RemoveEmphasis;
     let (ctx, book) = mdbook_preprocessor::parse_input(io::stdin())?;
 

@@ -82,7 +82,6 @@ edition.workspace = true
 exclude = ["/guide/*"]
 keywords = ["book", "gitbook", "rustbook", "markdown"]
 license.workspace = true
-readme = "README.md"
 repository.workspace = true
 description = "Creates a book from markdown files"
 rust-version.workspace = true

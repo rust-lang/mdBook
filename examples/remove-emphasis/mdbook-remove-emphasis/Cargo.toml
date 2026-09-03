@@ -14,3 +14,6 @@ serde_json.workspace = true
 name = "mdbook-remove-emphasis"
 # This is tested through a separate test from the main package.
 test = false
+
+[lints]
+workspace = true
