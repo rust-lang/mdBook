@@ -21,8 +21,7 @@ define-function: (
     "assert-logo-src",
     [prefix],
     block {
-        store-attribute: (".sidebar-book-logo img", {"src": logo_src})
-        assert: |logo_src| == |prefix| + "logo.svg"
+        assert-attribute: (".sidebar-book-logo img", {"src": |prefix| + "logo.svg"})
         assert-find-text-false: "sidebar-logo test logo"
     },
 )
@@ -58,7 +57,6 @@ wait-for-text: (".header", "Chapter 2")
 call-function: ("assert-logo", {})
 call-function: ("assert-logo-src", {"prefix": ""})
 call-function: ("assert-logo-position", {})
-
 
 click: ".chapter a[href='nested/chapter_nested.html']"
 wait-for-text: (".header", "Nested Chapter")

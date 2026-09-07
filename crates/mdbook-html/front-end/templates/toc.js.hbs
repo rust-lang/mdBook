@@ -10,8 +10,8 @@ class MDBookSidebarScrollbox extends HTMLElement {
     connectedCallback() {
 {{#if book_logo }}
         this.innerHTML =
-            '<div id="sidebar-book-logo" class="sidebar-book-logo"><img src="' + path_to_root +
-            '{{ book_logo }}" alt="{{ book_title }}" logo>' +
+            '<div id="sidebar-book-logo" class="sidebar-book-logo">' +
+            '<img src="' + path_to_root + '{{ book_logo }}" alt="{{ book_title }}" logo>' +
             '<h2 class="sidebar-logo-title">{{ book_title }}</h2></div>{{#toc}}{{/toc}}';
 {{else}}
         this.innerHTML = '{{#toc}}{{/toc}}';
