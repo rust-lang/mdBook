@@ -303,6 +303,26 @@ impl Config {
 
         Ok(())
     }
+
+    /// The config can load properly with valid, but wrong values, for instance wrong paths.
+    /// This is the place to check for such config variables.
+    pub fn check<P: Into<PathBuf>>(&self, book_root: P) -> Result<()> {
+        // Make sure the `logo` path exists when provided.
+        if let Some(logo_cfg) = self.book.logo.clone() {
+            let logo_path = if logo_cfg.is_absolute() {
+                logo_cfg
+            } else {
+                book_root.into().join(&self.book.src).join(logo_cfg)
+            };
+            if !logo_path.exists() {
+                bail!(
+                    "invalid value for `logo`: {} does not exist",
+                    logo_path.to_str().unwrap_or(&logo_path.to_string_lossy())
+                );
+            }
+        }
+        Result::Ok(())
+    }
 }
 
 fn parse_env(key: &str) -> Option<String> {
