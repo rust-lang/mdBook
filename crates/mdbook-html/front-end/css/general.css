@@ -300,8 +300,12 @@ dt {
 
 /* This uses a CSS counter to add numbers to definitions, but only if there is
  more than one definition. */
-dl, dt {
+dl {
     counter-reset: dd-counter;
+}
+
+dt {
+    counter-set: dd-counter;
 }
 
 /* When there is more than one definition, increment the counter. The first
