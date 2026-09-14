@@ -11,6 +11,22 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use tracing::debug;
 
+/// Normalize path separators to `/` for cross-platform hash map lookups.
+///
+/// The `{{ resource "name" }}` directive in templates uses `/` as the
+/// separator, but `Path::join` on Windows produces `\`. This function
+/// ensures consistent keys regardless of OS.
+fn normalize_path(path: &str) -> Cow<'_, str> {
+    #[cfg(windows)]
+    {
+        Cow::Owned(path.replace('\\', "/"))
+    }
+    #[cfg(not(windows))]
+    {
+        Cow::Borrowed(path)
+    }
+}
+
 /// Map static files to their final names and contents.
 ///
 /// It performs [fingerprinting], if you call the `hash_files` method.
@@ -102,24 +118,25 @@ impl StaticFiles {
         for custom_file in custom_files {
             let input_location = root.join(custom_file);
 
+            let filename = custom_file
+                .to_str()
+                .with_context(|| "resource file names must be valid utf8")?;
+            let normalized = normalize_path(filename);
             this.static_files.push(StaticFile::Additional {
                 input_location,
-                filename: custom_file
-                    .to_str()
-                    .with_context(|| "resource file names must be valid utf8")?
-                    .to_owned(),
+                filename: normalized.into_owned(),
             });
         }
 
         for input_location in theme.font_files.iter().cloned() {
-            let filename = Path::new("fonts")
-                .join(input_location.file_name().unwrap())
+            let font_path = Path::new("fonts").join(input_location.file_name().unwrap());
+            let filename = font_path
                 .to_str()
-                .with_context(|| "resource file names must be valid utf8")?
-                .to_owned();
+                .with_context(|| "resource file names must be valid utf8")?;
+            let normalized = normalize_path(filename);
             this.static_files.push(StaticFile::Additional {
                 input_location,
-                filename,
+                filename: normalized.into_owned(),
             });
         }
 
@@ -206,7 +223,11 @@ impl StaticFiles {
                     .expect("capture 1 in resource regex")
                     .as_bytes();
                 let name = std::str::from_utf8(name).expect("resource name with invalid utf8");
-                let resource_filename = hash_map.get(name).map(|s| &s[..]).unwrap_or(name);
+                let normalized_name = normalize_path(name);
+                let resource_filename = hash_map
+                    .get(normalized_name.as_ref())
+                    .map(|s| &s[..])
+                    .unwrap_or(name);
                 let path_to_root = fs::path_to_root(filename);
                 format!("{}{}", path_to_root, resource_filename)
                     .as_bytes()
@@ -316,5 +337,35 @@ mod tests {
         // book.js winds up empty
         let book_js_content = fs::read_to_string(temp_dir.path().join("book-e3b0c442.js")).unwrap();
         assert_eq!("", book_js_content);
+    }
+
+    #[test]
+    fn test_normalize_path_forward_slashes_unchanged() {
+        assert_eq!(
+            normalize_path("css/general.css").into_owned(),
+            "css/general.css"
+        );
+        assert_eq!(normalize_path("book.js").into_owned(), "book.js");
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn test_normalize_path_windows_separators() {
+        assert_eq!(
+            normalize_path("css\\general.css").into_owned(),
+            "css/general.css"
+        );
+        assert_eq!(
+            normalize_path("css/general.css").into_owned(),
+            "css/general.css"
+        );
+        assert_eq!(
+            normalize_path("fonts\\OpenSans\\font.woff2").into_owned(),
+            "fonts/OpenSans/font.woff2"
+        );
+        assert_eq!(
+            normalize_path("fonts/OpenSans/font.woff2").into_owned(),
+            "fonts/OpenSans/font.woff2"
+        );
     }
 }
