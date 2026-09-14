@@ -11,6 +11,63 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use tracing::debug;
 
+/// Returns the directory component of a forward-slash path (no trailing slash).
+/// Returns `""` for paths with no directory component.
+fn url_parent_dir(path: &str) -> &str {
+    match path.rfind('/') {
+        Some(i) => &path[..i],
+        None => "",
+    }
+}
+
+/// Normalizes a slash-separated path by resolving `.` and `..` components.
+fn normalize_url_path(path: &str) -> String {
+    let mut parts: Vec<&str> = Vec::new();
+    for component in path.split('/') {
+        match component {
+            "" | "." => {}
+            ".." => {
+                parts.pop();
+            }
+            c => parts.push(c),
+        }
+    }
+    parts.join("/")
+}
+
+/// Expresses `target` as a path relative to `from_dir`.
+/// Both are root-relative slash-separated paths.
+fn make_url_relative(from_dir: &str, target: &str) -> String {
+    let from: Vec<&str> = from_dir.split('/').filter(|s| !s.is_empty()).collect();
+    let to: Vec<&str> = target.split('/').filter(|s| !s.is_empty()).collect();
+    let common = from
+        .iter()
+        .zip(to.iter())
+        .take_while(|(a, b)| a == b)
+        .count();
+    let ups = from.len() - common;
+    let mut parts: Vec<&str> = Vec::new();
+    for _ in 0..ups {
+        parts.push("..");
+    }
+    parts.extend_from_slice(&to[common..]);
+    if parts.is_empty() {
+        ".".to_string()
+    } else {
+        parts.join("/")
+    }
+}
+
+/// Returns `true` if a CSS `url()` value is absolute and should not be rewritten.
+fn is_css_url_absolute(url: &str) -> bool {
+    url.starts_with("http://")
+        || url.starts_with("https://")
+        || url.starts_with("data:")
+        || url.starts_with("//")
+        || url.starts_with('/')
+        || url.starts_with('#')
+}
+
 /// Map static files to their final names and contents.
 ///
 /// It performs [fingerprinting], if you call the `hash_files` method.
@@ -104,19 +161,23 @@ impl StaticFiles {
 
             this.static_files.push(StaticFile::Additional {
                 input_location,
+                // Always use forward slashes for consistent hash_map keys across platforms.
                 filename: custom_file
                     .to_str()
                     .with_context(|| "resource file names must be valid utf8")?
-                    .to_owned(),
+                    .replace('\\', "/"),
             });
         }
 
         for input_location in theme.font_files.iter().cloned() {
-            let filename = Path::new("fonts")
-                .join(input_location.file_name().unwrap())
-                .to_str()
-                .with_context(|| "resource file names must be valid utf8")?
-                .to_owned();
+            let filename = format!(
+                "fonts/{}",
+                input_location
+                    .file_name()
+                    .unwrap()
+                    .to_str()
+                    .with_context(|| "resource file names must be valid utf8")?
+            );
             this.static_files.push(StaticFile::Additional {
                 input_location,
                 filename,
@@ -195,12 +256,19 @@ impl StaticFiles {
         // The `{{ resource "name" }}` directive in static resources look like
         // handlebars syntax, even if they technically aren't.
         static_regex!(RESOURCE, bytes, r#"\{\{ resource "([^"]+)" \}\}"#);
+        // CSS url() with double-quoted, single-quoted, or unquoted paths.
+        // Capture groups: 1=double-quoted path, 2=single-quoted path, 3=unquoted path.
+        static_regex!(
+            CSS_URL,
+            bytes,
+            r#"url\(\s*(?:"([^"]*?)"|'([^']*?)'|([^'"\s()]+))\s*\)"#
+        );
         fn replace_all<'a>(
             hash_map: &HashMap<String, String>,
             data: &'a [u8],
             filename: &str,
         ) -> Cow<'a, [u8]> {
-            RESOURCE.replace_all(data, move |captures: &Captures<'_>| {
+            let data = RESOURCE.replace_all(data, move |captures: &Captures<'_>| {
                 let name = captures
                     .get(1)
                     .expect("capture 1 in resource regex")
@@ -211,7 +279,53 @@ impl StaticFiles {
                 format!("{}{}", path_to_root, resource_filename)
                     .as_bytes()
                     .to_owned()
-            })
+            });
+            // Convert to owned to break the borrow chain before the second pass.
+            let data = data.into_owned();
+            let css_dir = url_parent_dir(filename);
+            let data = CSS_URL.replace_all(&data, move |captures: &Captures<'_>| {
+                let (url_bytes, quote) = if let Some(m) = captures.get(1) {
+                    (m.as_bytes(), "\"")
+                } else if let Some(m) = captures.get(2) {
+                    (m.as_bytes(), "'")
+                } else {
+                    (
+                        captures
+                            .get(3)
+                            .expect("capture group 3 in CSS url regex")
+                            .as_bytes(),
+                        "",
+                    )
+                };
+                let url_str = match std::str::from_utf8(url_bytes) {
+                    Ok(s) => s,
+                    Err(_) => return captures[0].to_owned(),
+                };
+                if is_css_url_absolute(url_str) {
+                    return captures[0].to_owned();
+                }
+                // Resolve the URL relative to the CSS file's directory to get
+                // the root-relative path for hash_map lookup.
+                let resolved = if css_dir.is_empty() {
+                    normalize_url_path(url_str)
+                } else {
+                    normalize_url_path(&format!("{}/{}", css_dir, url_str))
+                };
+                if let Some(hashed) = hash_map.get(&resolved) {
+                    // Express the hashed path relative to the CSS file's directory.
+                    let relative = if css_dir.is_empty() {
+                        hashed.clone()
+                    } else {
+                        make_url_relative(css_dir, hashed)
+                    };
+                    format!("url({quote}{relative}{quote})")
+                        .as_bytes()
+                        .to_owned()
+                } else {
+                    captures[0].to_owned()
+                }
+            });
+            Cow::Owned(data.into_owned())
         }
         for static_file in &self.static_files {
             match static_file {
@@ -316,5 +430,247 @@ mod tests {
         // book.js winds up empty
         let book_js_content = fs::read_to_string(temp_dir.path().join("book-e3b0c442.js")).unwrap();
         assert_eq!("", book_js_content);
+    }
+
+    // ── helper ──────────────────────────────────────────────────────────────
+    /// Sets up a temp dir with a theme font at `theme/fonts/test-font.woff2`
+    /// and returns (temp_dir, theme).
+    fn setup_theme_with_font() -> (TempDir, Theme) {
+        let temp_dir = TempDir::with_prefix("mdbook-").unwrap();
+        let theme_dir = temp_dir.path().join("theme");
+        fs::create_dir_all(theme_dir.join("fonts")).unwrap();
+        fs::write(theme_dir.join("fonts/test-font.woff2"), b"font-data").unwrap();
+        let theme = Theme::new(&theme_dir);
+        (temp_dir, theme)
+    }
+
+    /// Reads the content of the single CSS file whose name starts with `prefix`
+    /// inside `dir`.  Panics if none or more than one is found.
+    fn read_hashed_css(dir: &Path, prefix: &str) -> String {
+        let matches: Vec<_> = std::fs::read_dir(dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.file_name().to_string_lossy().to_string())
+            .filter(|name| name.starts_with(prefix) && name.ends_with(".css"))
+            .collect();
+        assert_eq!(
+            matches.len(),
+            1,
+            "expected exactly one {prefix}*.css, got {matches:?}"
+        );
+        fs::read_to_string(dir.join(&matches[0])).unwrap()
+    }
+
+    // ── unit tests for URL helper functions ─────────────────────────────────
+
+    #[test]
+    fn test_url_parent_dir() {
+        assert_eq!(url_parent_dir("css/custom.css"), "css");
+        assert_eq!(url_parent_dir("a/b/c.css"), "a/b");
+        assert_eq!(url_parent_dir("custom.css"), "");
+        assert_eq!(url_parent_dir(""), "");
+    }
+
+    #[test]
+    fn test_normalize_url_path() {
+        assert_eq!(normalize_url_path("fonts/test.woff2"), "fonts/test.woff2");
+        assert_eq!(
+            normalize_url_path("css/../fonts/test.woff2"),
+            "fonts/test.woff2"
+        );
+        assert_eq!(normalize_url_path("a/b/../../c"), "c");
+        assert_eq!(normalize_url_path("./fonts/test.woff2"), "fonts/test.woff2");
+        assert_eq!(normalize_url_path("fonts//test.woff2"), "fonts/test.woff2");
+    }
+
+    #[test]
+    fn test_make_url_relative() {
+        // CSS in css/, font in fonts/ → go up one, then into fonts/
+        assert_eq!(
+            make_url_relative("css", "fonts/test-abc.woff2"),
+            "../fonts/test-abc.woff2"
+        );
+        // CSS in fonts/, font also in fonts/ → same directory
+        assert_eq!(
+            make_url_relative("fonts", "fonts/test-abc.woff2"),
+            "test-abc.woff2"
+        );
+        // CSS in a/b/, font in a/c/ → sibling directory
+        assert_eq!(make_url_relative("a/b", "a/c/d.woff2"), "../c/d.woff2");
+        // Same directory, different file
+        assert_eq!(make_url_relative("css", "css/other.css"), "other.css");
+    }
+
+    // ── integration tests for CSS url() rewriting ────────────────────────────
+
+    /// Regression test for https://github.com/rust-lang/mdBook/issues/2958:
+    /// a root-level CSS with a double-quoted url() reference to a custom font.
+    #[test]
+    fn test_css_url_double_quoted() {
+        let (temp_dir, theme) = setup_theme_with_font();
+
+        let custom_css = Path::new("custom.css");
+        fs::write(
+            temp_dir.path().join(custom_css),
+            br#"@font-face { src: url("fonts/test-font.woff2") format("woff2"); }"#,
+        )
+        .unwrap();
+
+        let mut html_config = HtmlConfig::default();
+        html_config.additional_css.push(custom_css.to_owned());
+
+        let mut sf = StaticFiles::new(&theme, &html_config, temp_dir.path()).unwrap();
+        sf.hash_files().unwrap();
+        sf.write_files(temp_dir.path()).unwrap();
+
+        let content = read_hashed_css(temp_dir.path(), "custom-");
+        assert!(
+            content.contains("url(\"fonts/test-font-"),
+            "url not rewritten: {content}"
+        );
+        assert!(!content.contains("url(\"fonts/test-font.woff2\")"));
+    }
+
+    /// Single-quoted `url('…')` references are rewritten.
+    #[test]
+    fn test_css_url_single_quoted() {
+        let (temp_dir, theme) = setup_theme_with_font();
+
+        let custom_css = Path::new("custom.css");
+        fs::write(
+            temp_dir.path().join(custom_css),
+            br#"@font-face { src: url('fonts/test-font.woff2') format('woff2'); }"#,
+        )
+        .unwrap();
+
+        let mut html_config = HtmlConfig::default();
+        html_config.additional_css.push(custom_css.to_owned());
+
+        let mut sf = StaticFiles::new(&theme, &html_config, temp_dir.path()).unwrap();
+        sf.hash_files().unwrap();
+        sf.write_files(temp_dir.path()).unwrap();
+
+        let content = read_hashed_css(temp_dir.path(), "custom-");
+        assert!(
+            content.contains("url('fonts/test-font-"),
+            "url not rewritten: {content}"
+        );
+        assert!(!content.contains("url('fonts/test-font.woff2')"));
+    }
+
+    /// Unquoted `url(…)` references are rewritten.
+    #[test]
+    fn test_css_url_unquoted() {
+        let (temp_dir, theme) = setup_theme_with_font();
+
+        let custom_css = Path::new("custom.css");
+        fs::write(
+            temp_dir.path().join(custom_css),
+            b"@font-face { src: url(fonts/test-font.woff2); }",
+        )
+        .unwrap();
+
+        let mut html_config = HtmlConfig::default();
+        html_config.additional_css.push(custom_css.to_owned());
+
+        let mut sf = StaticFiles::new(&theme, &html_config, temp_dir.path()).unwrap();
+        sf.hash_files().unwrap();
+        sf.write_files(temp_dir.path()).unwrap();
+
+        let content = read_hashed_css(temp_dir.path(), "custom-");
+        assert!(
+            content.contains("url(fonts/test-font-"),
+            "url not rewritten: {content}"
+        );
+        assert!(!content.contains("url(fonts/test-font.woff2)"));
+    }
+
+    /// A CSS file in a subdirectory uses a path relative to itself (`../fonts/…`).
+    /// The rewritten URL must also be relative to the CSS file's location.
+    #[test]
+    fn test_css_url_subdirectory() {
+        let (temp_dir, theme) = setup_theme_with_font();
+
+        let custom_css = Path::new("css/custom.css");
+        fs::create_dir_all(temp_dir.path().join("css")).unwrap();
+        // Correct relative path from css/ to fonts/ is ../fonts/
+        fs::write(
+            temp_dir.path().join(custom_css),
+            br#"@font-face { src: url("../fonts/test-font.woff2") format("woff2"); }"#,
+        )
+        .unwrap();
+
+        let mut html_config = HtmlConfig::default();
+        html_config.additional_css.push(custom_css.to_owned());
+
+        let mut sf = StaticFiles::new(&theme, &html_config, temp_dir.path()).unwrap();
+        sf.hash_files().unwrap();
+        sf.write_files(temp_dir.path()).unwrap();
+
+        let content = read_hashed_css(&temp_dir.path().join("css"), "custom-");
+        // The rewritten URL must still be relative to css/, so ../fonts/test-font-<hash>.woff2
+        assert!(
+            content.contains("url(\"../fonts/test-font-"),
+            "url not rewritten: {content}"
+        );
+        assert!(!content.contains("url(\"../fonts/test-font.woff2\")"));
+    }
+
+    /// Absolute URLs (`https://`, `data:`, `//`, `/`) are left untouched.
+    #[test]
+    fn test_css_url_absolute_unchanged() {
+        let (temp_dir, theme) = setup_theme_with_font();
+
+        let css_content = concat!(
+            r#"@import url("https://fonts.googleapis.com/css2?family=Test");"#,
+            "\n",
+            r#"div { background: url("//cdn.example.com/img.png"); }"#,
+            "\n",
+            r#"div { background: url("/absolute/path.png"); }"#,
+            "\n",
+            r#"div { background: url("data:image/png;base64,abc"); }"#,
+        );
+
+        let custom_css = Path::new("custom.css");
+        fs::write(temp_dir.path().join(custom_css), css_content.as_bytes()).unwrap();
+
+        let mut html_config = HtmlConfig::default();
+        html_config.additional_css.push(custom_css.to_owned());
+
+        let mut sf = StaticFiles::new(&theme, &html_config, temp_dir.path()).unwrap();
+        sf.hash_files().unwrap();
+        sf.write_files(temp_dir.path()).unwrap();
+
+        let content = read_hashed_css(temp_dir.path(), "custom-");
+        assert!(content.contains("url(\"https://fonts.googleapis.com/css2?family=Test\")"));
+        assert!(content.contains("url(\"//cdn.example.com/img.png\")"));
+        assert!(content.contains("url(\"/absolute/path.png\")"));
+        assert!(content.contains("url(\"data:image/png;base64,abc\")"));
+    }
+
+    /// A `url()` path that is not a hashed asset (not in the hash map) is left untouched.
+    #[test]
+    fn test_css_url_unknown_path_unchanged() {
+        let (temp_dir, theme) = setup_theme_with_font();
+
+        let custom_css = Path::new("custom.css");
+        fs::write(
+            temp_dir.path().join(custom_css),
+            br#"div { background: url("images/bg.png"); }"#,
+        )
+        .unwrap();
+
+        let mut html_config = HtmlConfig::default();
+        html_config.additional_css.push(custom_css.to_owned());
+
+        let mut sf = StaticFiles::new(&theme, &html_config, temp_dir.path()).unwrap();
+        sf.hash_files().unwrap();
+        sf.write_files(temp_dir.path()).unwrap();
+
+        let content = read_hashed_css(temp_dir.path(), "custom-");
+        assert!(
+            content.contains("url(\"images/bg.png\")"),
+            "should be unchanged: {content}"
+        );
     }
 }
