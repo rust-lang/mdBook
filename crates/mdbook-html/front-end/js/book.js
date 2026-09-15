@@ -42,7 +42,7 @@ function mdbook_something_else_has_focus(e) {
         ]);
     }
 
-    const playgrounds = Array.from(document.querySelectorAll('.playground'));
+    const playgrounds = Array.from(document.querySelectorAll('pre.playground'));
     if (playgrounds.length > 0) {
         fetch_with_timeout('https://play.rust-lang.org/meta/crates', {
             headers: {
@@ -270,7 +270,7 @@ aria-label="Show hidden lines"></button>';
     }
 
     // Process playground code blocks
-    Array.from(document.querySelectorAll('.playground')).forEach(function(pre_block) {
+    Array.from(document.querySelectorAll('pre.playground')).forEach(function(pre_block) {
         // Add play button
         let buttons = pre_block.querySelector('.buttons');
         if (!buttons) {
