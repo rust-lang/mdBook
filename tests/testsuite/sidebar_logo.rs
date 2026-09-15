@@ -19,8 +19,18 @@ fn outside_src_dir() {
 }
 
 #[test]
+#[cfg(not(target_os = "windows"))]
 fn abs_path() {
-    BookTest::from_dir("sidebar/logo/absolute").run("build", |cmd| {
+    BookTest::from_dir("sidebar/logo/absolute_unix").run("build", |cmd| {
+        cmd.expect_failure();
+        cmd.expect_stderr("ERROR invalid value for `logo`: should live under `src/`\n");
+    });
+}
+
+#[test]
+#[cfg(target_os = "windows")]
+fn abs_path() {
+    BookTest::from_dir("sidebar/logo/absolute_windows").run("build", |cmd| {
         cmd.expect_failure();
         cmd.expect_stderr("ERROR invalid value for `logo`: should live under `src/`\n");
     });
