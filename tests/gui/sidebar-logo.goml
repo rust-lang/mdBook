@@ -79,9 +79,9 @@ call-function: ("assert-logo-position", {})
 
 // Large images checks
 call-function: ("load", {"path": "sidebar-logo-large/index.html"})
-store-attribute : (".sidebar-book-logo img", {"width": logo_width})
+store-property : (".sidebar-book-logo img", {"width": logo_width})
 assert: |logo_width| <= 200
 
 call-function: ("load", {"path": "sidebar-logo-tall/index.html"})
-store-attribute : (".sidebar-book-logo img", {"height": logo_height})
+store-property : (".sidebar-book-logo img", {"height": logo_height})
 assert: |logo_height| <= 200
