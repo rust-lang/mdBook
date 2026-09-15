@@ -507,12 +507,12 @@ html:not(.sidebar-resizing) .sidebar {
 }
 .sidebar .sidebar-scrollbox .sidebar-book-logo img {
     display: block;
-    height: auto;
+    max-height: 8rem;
     width: 20%;
 }
 .sidebar .sidebar-scrollbox .sidebar-book-logo h2 {
     margin: 0;
-    max-width: 70%;
+    width: 70%;
     overflow-wrap: anywhere;
     text-wrap: balance;
 }
