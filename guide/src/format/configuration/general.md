@@ -49,8 +49,7 @@ This is general information about your book.
   This is also used to derive the direction of text (RTL, LTR) within the book.
 - **text-direction**: The direction of text in the book: Left-to-right (LTR) or Right-to-left (RTL). Possible values: `ltr`, `rtl`.
   When not specified, the text direction is derived from the book's `language` attribute.
-- **logo:** Path to a logo to displayed at the top of the navigation bar. If this
-  is given as a relative path, its base directory is the source directory.
+- **logo:** Path to a logo to displayed at the top of the navigation bar, relative to `<book_root>/<src>/`.
 
 **book.toml**
 
@@ -62,7 +61,7 @@ description = "The example book covers examples."
 src = "my-src"  # the source files will be found in `root/my-src` instead of `root/src`
 language = "en"
 text-direction = "ltr"
-logo = "static/logo.svg"
+logo = "static/logo.svg"  # logo lives at `root/my-src/static/logo.svg`
 ```
 
 ### Rust options

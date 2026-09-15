@@ -3,10 +3,21 @@
 // - test if the logo is displayed when provided
 // - test it is displayed above the toc
 // - test if works in nested files (level 0, 1 and n > 1)
+// - large pictures are properly displayed
 
-go-to: |DOC_PATH| + "sidebar-logo/index.html"
-set-window-size: (1100, 600)
-reload:
+define-function: (
+    "load",
+    [path],
+    block {
+    go-to: |DOC_PATH| + |path|
+    set-window-size: (1100, 600)
+    reload:
+    // Wait for the TOC to be populated by JavaScript
+    wait-for: "mdbook-sidebar-scrollbox"
+    wait-for: "ol.chapter"
+    wait-for: "#sidebar-book-logo"
+    },
+)
 
 define-function: (
     "assert-logo",
@@ -36,11 +47,7 @@ define-function: (
     },
 )
 
-// Wait for the TOC to be populated by JavaScript
-assert-find-text: "Deeper"
-wait-for: "mdbook-sidebar-scrollbox"
-wait-for: "ol.chapter"
-wait-for: "#sidebar-book-logo"
+call-function: ("load", {"path": "sidebar-logo/index.html"})
 
 // The sidebar-book-logo should exist when logo is provided
 call-function: ("assert-logo", {})
@@ -69,3 +76,12 @@ wait-for-text: (".header", "Deeper Chapter")
 call-function: ("assert-logo", {})
 call-function: ("assert-logo-src", {"prefix": "../../"})
 call-function: ("assert-logo-position", {})
+
+// Large images checks
+call-function: ("load", {"path": "sidebar-logo-large/index.html"})
+store-attribute : (".sidebar-book-logo img", {"width": logo_width})
+assert: |logo_width| <= 200
+
+call-function: ("load", {"path": "sidebar-logo-tall/index.html"})
+store-attribute : (".sidebar-book-logo img", {"height": logo_height})
+assert: |logo_height| <= 200
