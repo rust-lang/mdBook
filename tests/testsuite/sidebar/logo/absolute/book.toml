@@ -2,4 +2,4 @@
 title = "outside"
 authors = ["Chocorean"]
 language = "en"
-logo = "../logo.svg"
+logo = "/absolute/path/logo.svg"
