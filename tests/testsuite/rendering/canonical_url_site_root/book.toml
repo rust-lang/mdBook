@@ -1,0 +1,6 @@
+[book]
+title = "canonical_url_site_root test"
+
+[output.html]
+# A book served at the root of a site, without a trailing slash.
+canonical-site-url = "https://example.com"
