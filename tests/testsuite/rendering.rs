@@ -270,9 +270,9 @@ fn unclosed_html_tags() {
             cmd.expect_stderr(str![[r#"
  INFO Book building has started
  INFO Running the html backend
- WARN unclosed HTML tag `<i>` found in `chapter_1.md`
- WARN unclosed HTML tag `<span>` found in `chapter_1.md`
- WARN unclosed HTML tag `<div>` found in `chapter_1.md`
+ WARN unclosed HTML tag `<i>` (opened at line 1) found in `chapter_1.md` at end of document (line 1)
+ WARN unclosed HTML tag `<span>` (opened at line 1) found in `chapter_1.md` at end of document (line 1)
+ WARN unclosed HTML tag `<div>` (opened at line 1) found in `chapter_1.md` at end of document (line 1)
  INFO HTML book written to `[ROOT]/book`
 
 "#]]);
@@ -294,12 +294,32 @@ fn unbalanced_html_tags() {
  INFO Running the html backend
  WARN unexpected HTML end tag `</div>` found in `chapter_1.md`
 Check that the HTML tags are properly balanced.
- WARN unclosed HTML tag `<div>` found in `chapter_1.md`
+ WARN unclosed HTML tag `<div>` (opened at line 1) found in `chapter_1.md` at end of document (line 1)
  INFO HTML book written to `[ROOT]/book`
 
 "#]]);
         })
         .check_main_file("book/chapter_1.html", str!["<div>x<span>foo</span></div>"]);
+}
+
+// Unclosed HTML tags report source line numbers.
+#[test]
+fn unclosed_html_tags_line_numbers() {
+    BookTest::init(|_| {})
+        .change_file(
+            "src/chapter_1.md",
+            "Intro line\n\n<div class=\"note\">\n  <span>inner\n",
+        )
+        .run("build", |cmd| {
+            cmd.expect_stderr(str![[r#"
+ INFO Book building has started
+ INFO Running the html backend
+ WARN unclosed HTML tag `<span>` (opened at line 3) found in `chapter_1.md` at end of document (line 5)
+ WARN unclosed HTML tag `<div>` (opened at line 3) found in `chapter_1.md` at end of document (line 5)
+ INFO HTML book written to `[ROOT]/book`
+
+"#]]);
+        });
 }
 
 // Test for bug with unbalanced HTML handling in the heading.
@@ -311,7 +331,7 @@ fn heading_with_unbalanced_html() {
             cmd.expect_stderr(str![[r#"
  INFO Book building has started
  INFO Running the html backend
- WARN unclosed HTML tag `<t>` found in `chapter_1.md` while exiting Heading(H3)
+ WARN unclosed HTML tag `<t>` (opened at line 1) found in `chapter_1.md` while exiting Heading(H3) at line 1
 HTML tags must be closed before exiting a markdown element.
  INFO HTML book written to `[ROOT]/book`
 
