@@ -16,14 +16,26 @@ use tracing::debug;
 /// The `{{ resource "name" }}` directive in templates uses `/` as the
 /// separator, but `Path::join` on Windows produces `\`. This function
 /// ensures consistent keys regardless of OS.
-fn normalize_path(path: &str) -> Cow<'_, str> {
-    #[cfg(windows)]
-    {
-        Cow::Owned(path.replace('\\', "/"))
+#[derive(Hash, PartialEq, Eq, Clone)]
+struct SlashPath<'a>(Cow<'a, str>);
+
+impl<'a> SlashPath<'a> {
+    fn new(path: &'a str) -> SlashPath<'a> {
+        #[cfg(windows)]
+        {
+            Self(Cow::Owned(path.replace('\\', "/")))
+        }
+        #[cfg(not(windows))]
+        {
+            Self(Cow::Borrowed(path))
+        }
     }
-    #[cfg(not(windows))]
-    {
-        Cow::Borrowed(path)
+
+    fn to_owned(self) -> SlashPath<'static> {
+        match self.0 {
+            Cow::Owned(s) => SlashPath(Cow::Owned(s)),
+            Cow::Borrowed(s) => SlashPath(Cow::Owned(s.to_owned())),
+        }
     }
 }
 
@@ -37,7 +49,7 @@ fn normalize_path(path: &str) -> Cow<'_, str> {
 /// [fingerprinting]: https://guides.rubyonrails.org/asset_pipeline.html#fingerprinting-versioning-with-digest-based-urls
 pub(super) struct StaticFiles {
     static_files: Vec<StaticFile>,
-    hash_map: HashMap<String, String>,
+    hash_map: HashMap<SlashPath<'static>, String>,
 }
 
 enum StaticFile {
@@ -120,11 +132,11 @@ impl StaticFiles {
 
             let filename = custom_file
                 .to_str()
-                .with_context(|| "resource file names must be valid utf8")?;
-            let normalized = normalize_path(filename);
+                .with_context(|| "resource file names must be valid utf8")?
+                .to_owned();
             this.static_files.push(StaticFile::Additional {
                 input_location,
-                filename: normalized.into_owned(),
+                filename,
             });
         }
 
@@ -132,11 +144,11 @@ impl StaticFiles {
             let font_path = Path::new("fonts").join(input_location.file_name().unwrap());
             let filename = font_path
                 .to_str()
-                .with_context(|| "resource file names must be valid utf8")?;
-            let normalized = normalize_path(filename);
+                .with_context(|| "resource file names must be valid utf8")?
+                .to_owned();
             this.static_files.push(StaticFile::Additional {
                 input_location,
-                filename: normalized.into_owned(),
+                filename,
             });
         }
 
@@ -167,7 +179,8 @@ impl StaticFiles {
                         if name != "" && suffix != "" && suffix != "txt" {
                             let hex = hex::encode(&Sha256::digest(data)[..4]);
                             let new_filename = format!("{}-{}.{}", name, hex, suffix);
-                            self.hash_map.insert(filename.clone(), new_filename.clone());
+                            self.hash_map
+                                .insert(SlashPath::new(filename).to_owned(), new_filename.clone());
                             *filename = new_filename;
                         }
                     }
@@ -197,7 +210,8 @@ impl StaticFiles {
                             }
                             let hex = hex::encode(&digest.finalize()[..4]);
                             let new_filename = format!("{}-{}.{}", name, hex, suffix);
-                            self.hash_map.insert(filename.clone(), new_filename.clone());
+                            self.hash_map
+                                .insert(SlashPath::new(filename).to_owned(), new_filename.clone());
                             *filename = new_filename;
                         }
                     }
@@ -213,7 +227,7 @@ impl StaticFiles {
         // handlebars syntax, even if they technically aren't.
         static_regex!(RESOURCE, bytes, r#"\{\{ resource "([^"]+)" \}\}"#);
         fn replace_all<'a>(
-            hash_map: &HashMap<String, String>,
+            hash_map: &HashMap<SlashPath<'_>, String>,
             data: &'a [u8],
             filename: &str,
         ) -> Cow<'a, [u8]> {
@@ -223,9 +237,8 @@ impl StaticFiles {
                     .expect("capture 1 in resource regex")
                     .as_bytes();
                 let name = std::str::from_utf8(name).expect("resource name with invalid utf8");
-                let normalized_name = normalize_path(name);
                 let resource_filename = hash_map
-                    .get(normalized_name.as_ref())
+                    .get(&SlashPath::new(name))
                     .map(|s| &s[..])
                     .unwrap_or(name);
                 let path_to_root = fs::path_to_root(filename);
@@ -277,7 +290,11 @@ impl StaticFiles {
                 }
             }
         }
-        let hash_map = self.hash_map;
+        let hash_map = self
+            .hash_map
+            .into_iter()
+            .map(|(key, value)| (key.0.into_owned(), value))
+            .collect();
         Ok(ResourceHelper { hash_map })
     }
 }
@@ -341,31 +358,38 @@ mod tests {
 
     #[test]
     fn test_normalize_path_forward_slashes_unchanged() {
-        assert_eq!(
-            normalize_path("css/general.css").into_owned(),
-            "css/general.css"
-        );
-        assert_eq!(normalize_path("book.js").into_owned(), "book.js");
+        assert_eq!(SlashPath::new("css/general.css").0, "css/general.css");
+        assert_eq!(SlashPath::new("book.js").0, "book.js");
     }
 
     #[test]
     #[cfg(windows)]
     fn test_normalize_path_windows_separators() {
+        assert_eq!(SlashPath::new("css\\general.css").0, "css/general.css");
+        assert_eq!(SlashPath::new("css/general.css").0, "css/general.css");
         assert_eq!(
-            normalize_path("css\\general.css").into_owned(),
-            "css/general.css"
-        );
-        assert_eq!(
-            normalize_path("css/general.css").into_owned(),
-            "css/general.css"
-        );
-        assert_eq!(
-            normalize_path("fonts\\OpenSans\\font.woff2").into_owned(),
+            SlashPath::new("fonts\\OpenSans\\font.woff2").0,
             "fonts/OpenSans/font.woff2"
         );
         assert_eq!(
-            normalize_path("fonts/OpenSans/font.woff2").into_owned(),
+            SlashPath::new("fonts/OpenSans/font.woff2").0,
             "fonts/OpenSans/font.woff2"
+        );
+    }
+
+    #[test]
+    fn static_paths_should_only_contain_slashes() {
+        let mut static_files =
+            StaticFiles::new(&Theme::default(), &HtmlConfig::default(), &Path::new(".")).unwrap();
+        // Needed to populate `hash_map`.
+        static_files.hash_files().unwrap();
+
+        assert!(!static_files.hash_map.is_empty());
+        assert!(
+            static_files
+                .hash_map
+                .keys()
+                .all(|path| !path.0.contains('\\'))
         );
     }
 }
