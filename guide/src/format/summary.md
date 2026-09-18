@@ -90,6 +90,18 @@ to be ignored at best, or may cause an error when attempting to build the book.
    ```
   
 
+### Reserved file names
+
+A few source file names are reserved for files mdBook generates itself, and
+cannot be used as chapter paths:
+
+- `print.md`: the printable single-page view (`print.html`) is generated from
+  the book's chapters. Referencing `print.md` from `SUMMARY.md` causes the
+  build to fail with `print.md is reserved for internal use`.
+- `toc.md`: the no-JavaScript table of contents (`toc.html`) is generated from
+  `SUMMARY.md`. Referencing `toc.md` from `SUMMARY.md` causes the build to
+  fail with `toc.md is reserved for internal use`.
+
 ### Example
 
 Below is the markdown source for the `SUMMARY.md` for this guide, with the resulting table
