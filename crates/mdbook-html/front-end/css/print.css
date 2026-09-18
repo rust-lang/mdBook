@@ -1,4 +1,26 @@
 
+/* Always use the light content palette when printing, regardless of the
+   selected screen theme. */
+html:root {
+    --bg: hsl(0, 0%, 100%);
+    --fg: hsl(0, 0%, 0%);
+    --inline-code-color: #301900;
+    --theme-popup-border: #cccccc;
+    --theme-hover: #e6e6e6;
+    --quote-bg: hsl(197, 37%, 96%);
+    --quote-border: hsl(197, 37%, 91%);
+    --table-border-color: hsl(0, 0%, 95%);
+    --table-header-bg: hsl(0, 0%, 80%);
+    --table-alternate-bg: hsl(0, 0%, 97%);
+    --color-scheme: light;
+    --footnote-highlight: #7e7eff;
+    --blockquote-note-color: #0969da;
+    --blockquote-tip-color: #008000;
+    --blockquote-important-color: #8250df;
+    --blockquote-warning-color: #9a6700;
+    --blockquote-caution-color: #b52731;
+}
+
 #mdbook-sidebar,
 #mdbook-menu-bar,
 .nav-chapters,
