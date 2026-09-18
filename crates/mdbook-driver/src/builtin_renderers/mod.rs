@@ -47,13 +47,23 @@ impl Renderer for CmdRenderer {
         let _ = fs::create_dir_all(&ctx.destination);
 
         let mut cmd = crate::compose_command(&self.cmd, &ctx.root)?;
-        let mut child = match cmd
-            .stdin(Stdio::piped())
+        cmd.stdin(Stdio::piped())
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
-            .current_dir(&ctx.destination)
-            .spawn()
-        {
+            .current_dir(&ctx.destination);
+
+        if optional && crate::command_is_missing(&cmd) {
+            return crate::handle_command_error(
+                std::io::ErrorKind::NotFound.into(),
+                true,
+                "output",
+                "backend",
+                &self.name,
+                &self.cmd,
+            );
+        }
+
+        let mut child = match cmd.spawn() {
             Ok(c) => c,
             Err(e) => {
                 return crate::handle_command_error(

@@ -103,6 +103,116 @@ fn compose_command(cmd: &str, root: &Path) -> Result<Command> {
     Ok(cmd)
 }
 
+/// Returns whether a command is definitely unavailable.
+///
+/// Checking before spawning avoids relying on `execvp`'s error reporting. If
+/// `PATH` contains an inaccessible directory, a missing executable can be
+/// reported as `PermissionDenied` instead of `NotFound`, which prevents
+/// optional extensions from being skipped. The same preflight is used on all
+/// platforms, while accounting for each platform's command-search rules.
+fn command_is_missing(command: &Command) -> bool {
+    let program = Path::new(command.get_program());
+    let current_dir = command.get_current_dir();
+    let resolve = |path: &Path| match (path.is_absolute(), current_dir) {
+        (true, _) | (false, None) => path.to_path_buf(),
+        (false, Some(current_dir)) => current_dir.join(path),
+    };
+
+    if program.components().count() > 1 {
+        return command_candidates(resolve(program))
+            .into_iter()
+            .all(|path| command_path_is_missing(&path));
+    }
+
+    let Some(directories) = command_search_directories() else {
+        // Without PATH on Unix, execvp uses an implementation-defined default
+        // search path, so let spawn report the result instead of guessing.
+        return false;
+    };
+
+    let mut checked_candidate = false;
+    for directory in directories {
+        for candidate in command_candidates(resolve(&directory).join(program)) {
+            checked_candidate = true;
+            if !command_path_is_missing_or_inaccessible(&candidate) {
+                return false;
+            }
+        }
+    }
+
+    checked_candidate
+}
+
+/// Returns the places `Command` searches for a bare program name.
+///
+/// `compose_command` does not override a child process's environment, so the
+/// current process's `PATH` is also the child's `PATH` here.
+#[cfg(not(windows))]
+fn command_search_directories() -> Option<Vec<PathBuf>> {
+    let path = std::env::var_os("PATH")?;
+    let directories: Vec<_> = std::env::split_paths(&path).collect();
+    (!directories.is_empty()).then_some(directories)
+}
+
+/// Mirrors the documented Windows search order used by [`Command`].
+#[cfg(windows)]
+fn command_search_directories() -> Option<Vec<PathBuf>> {
+    let executable = std::env::current_exe().ok()?;
+    let executable_directory = executable.parent()?.to_path_buf();
+    let windows_directory = std::env::var_os("SystemRoot")
+        .or_else(|| std::env::var_os("WINDIR"))
+        .map(PathBuf::from)?;
+
+    let mut directories = vec![
+        executable_directory,
+        windows_directory.join("System32"),
+        windows_directory,
+    ];
+    if let Some(path) = std::env::var_os("PATH") {
+        directories.extend(
+            std::env::split_paths(&path).filter(|directory| !directory.as_os_str().is_empty()),
+        );
+    }
+    Some(directories)
+}
+
+/// Returns the filenames [`Command`] will try for a command path.
+#[cfg(not(windows))]
+fn command_candidates(path: PathBuf) -> Vec<PathBuf> {
+    vec![path]
+}
+
+/// On Windows, `Command` permits omitting an `.exe` extension.
+#[cfg(windows)]
+fn command_candidates(path: PathBuf) -> Vec<PathBuf> {
+    if path.extension().is_some() {
+        vec![path]
+    } else {
+        vec![path.with_extension("exe")]
+    }
+}
+
+/// A direct command path is missing only when it cannot be found.
+fn command_path_is_missing(path: &Path) -> bool {
+    matches!(
+        std::fs::metadata(path),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound
+    )
+}
+
+/// A `PATH` entry that cannot be searched is equivalent to no usable command
+/// at that entry. Other filesystem errors still go through `spawn` unchanged.
+fn command_path_is_missing_or_inaccessible(path: &Path) -> bool {
+    matches!(
+        std::fs::metadata(path),
+        Err(error)
+            if matches!(
+                error.kind(),
+                std::io::ErrorKind::NotFound | std::io::ErrorKind::PermissionDenied
+            )
+    )
+}
+
 /// Handles a failure for a preprocessor or renderer.
 fn handle_command_error(
     error: std::io::Error,
@@ -128,4 +238,34 @@ fn handle_command_error(
         }
     }
     Err(error).with_context(|| format!("Unable to run the {what} `{name}`"))?
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[cfg(unix)]
+    #[test]
+    fn non_executable_direct_command_is_not_considered_missing() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let temporary_directory = tempfile::tempdir().unwrap();
+        let command_path = temporary_directory.path().join("command");
+        std::fs::write(&command_path, b"").unwrap();
+        std::fs::set_permissions(&command_path, std::fs::Permissions::from_mode(0o600)).unwrap();
+
+        let command = Command::new(command_path);
+        assert!(!command_is_missing(&command));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn extensionless_windows_command_is_not_considered_missing_when_exe_exists() {
+        let temporary_directory = tempfile::tempdir().unwrap();
+        let executable = temporary_directory.path().join("renderer.exe");
+        std::fs::write(&executable, b"").unwrap();
+
+        let command = Command::new(temporary_directory.path().join("renderer"));
+        assert!(!command_is_missing(&command));
+    }
 }
