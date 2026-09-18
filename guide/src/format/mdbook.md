@@ -71,6 +71,51 @@ nothidden():
 ```
 ~~~
 
+## Console code blocks
+
+Console code blocks (annotated with `console`) provide special copy behavior to make it easier to copy commands into your terminal.
+Console examples often include shell prompts (`$ ` or `# `) followed by commands, along with the output from running those commands.
+
+When you click the copy button (<i class="fa fa-copy"></i>) on a console code block, mdBook will:
+
+- Only copy lines that begin with `$ ` or `# ` (the actual commands)
+- Strip the prompt prefix from those lines
+- Skip lines without prompts (command output)
+
+This allows you to paste commands directly into your terminal without manually removing prompts or cleaning up output. Example:
+
+~~~markdown
+```console
+$ echo "Hello, World!"
+Hello, World!
+$ ls -la
+total 64
+drwxr-xr-x  5 user  staff  160 Jan 1 12:00 .
+```
+~~~
+
+The code block above will render with both commands and output visible:
+
+```console
+$ echo "Hello, World!"
+Hello, World!
+$ ls -la
+total 64
+drwxr-xr-x  5 user  staff  160 Jan 1 12:00 .
+```
+
+However, when copied, it will only include the commands without the prompts:
+
+```text
+echo "Hello, World!"
+ls -la
+```
+
+This makes it easy to copy and paste multi-line commands directly into your terminal.
+
+See also the other supported languages with
+[syntax highlighting](/format/theme/syntax-highlighting.html).
+
 ## Rust playground
 
 Rust language code blocks will automatically get a play button (<i class="fas fa-play"></i>) which will execute the code and display the output just below the code block.
