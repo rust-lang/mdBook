@@ -121,3 +121,56 @@ fn iterate_over_nested_book_items() {
 
     assert_eq!(chapter_names, should_be);
 }
+
+#[test]
+fn chapters_mut_thin_visits_nested_chapters() {
+    let items = vec![BookItem::Chapter(Chapter {
+        name: String::from("Chapter 1"),
+        content: String::from("# Chapter 1"),
+        number: None,
+        path: Some(PathBuf::from("Chapter_1/index.md")),
+        source_path: Some(PathBuf::from("Chapter_1/index.md")),
+        parent_names: Vec::new(),
+        sub_items: vec![
+            BookItem::Chapter(Chapter::new(
+                "Hello World",
+                String::from("hello"),
+                "Chapter_1/hello.md",
+                Vec::new(),
+            )),
+            BookItem::Chapter(Chapter::new(
+                "Goodbye World",
+                String::from("goodbye"),
+                "Chapter_1/goodbye.md",
+                Vec::new(),
+            )),
+        ],
+    })];
+    let mut book = Book::new_with_items(items);
+
+    let mut chapters = book.chapters_mut_thin();
+    assert_eq!(chapters.len(), 3);
+
+    chapters[0].name.push_str(" updated");
+    chapters[1].content.push_str(" world");
+
+    drop(chapters);
+
+    let chapter_names: Vec<_> = book
+        .iter()
+        .filter_map(|item| match item {
+            BookItem::Chapter(chapter) => Some(chapter.name.clone()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(chapter_names[0], "Chapter 1 updated");
+
+    let chapter_contents: Vec<_> = book
+        .iter()
+        .filter_map(|item| match item {
+            BookItem::Chapter(chapter) => Some(chapter.content.clone()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(chapter_contents[1], "hello world");
+}
