@@ -3,10 +3,17 @@
 set-window-size: (1400, 800)
 go-to: |DOC_PATH| + "heading-nav/markup.html"
 
-assert-count: (".header-item", 4)
+assert-count: (".header-item", 5)
 assert-count: (".current-header", 1)
 assert-text: (".current-header", "Heading with code or italic or bold or strike")
 assert-property: (".current-header", {"innerHTML": "Heading with <code>code</code> or <em>italic</em> or <strong>bold</strong> or <del>strike</del>"})
+
+// A heading that contains a link should keep its text (and the link) in the sidebar.
+assert-text: ("a.header-in-summary[href='#heading-with-a-link']", "Heading with a link")
+assert-property: ("a.header-in-summary[href='#heading-with-a-link']", {"innerHTML": "Heading with a <a href=\"../index.html\">link</a>"})
+
+// A heading whose entire content is a link should still show its text.
+assert-text: ("a.header-in-summary[href='#link-only']", "link-only")
 
 // Clicking the custom one should work and should make it current.
 click: "a.header-in-summary[href='#custom-id']"
