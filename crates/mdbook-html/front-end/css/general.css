@@ -24,11 +24,13 @@ code {
     font-family: var(--mono-font) !important;
     font-size: var(--code-font-size);
     direction: ltr !important;
+    text-autospace: no-autospace;
 }
 
 /* make long words/inline code not x overflow */
 main {
     overflow-wrap: break-word;
+    text-autospace: normal;
 }
 
 /* make wide tables scroll if they overflow */
