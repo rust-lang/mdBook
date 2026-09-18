@@ -188,6 +188,7 @@ fn backends_receive_render_context_via_stdin() {
       "authors": [],
       "description": null,
       "language": "en",
+      "logo": null,
       "text-direction": null,
       "title": null
     },

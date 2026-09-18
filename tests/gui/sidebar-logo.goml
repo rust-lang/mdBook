@@ -1,0 +1,87 @@
+// This GUI test checks that the logo is displayed when configured
+// Test cases:
+// - test if the logo is displayed when provided
+// - test it is displayed above the toc
+// - test if works in nested files (level 0, 1 and n > 1)
+// - large pictures are properly displayed
+
+define-function: (
+    "load",
+    [path],
+    block {
+    go-to: |DOC_PATH| + |path|
+    set-window-size: (1100, 600)
+    reload:
+    // Wait for the TOC to be populated by JavaScript
+    wait-for: "mdbook-sidebar-scrollbox"
+    wait-for: "ol.chapter"
+    wait-for: "#sidebar-book-logo"
+    },
+)
+
+define-function: (
+    "assert-logo",
+    [],
+    block {
+        assert-css: ("#sidebar-book-logo", {"display": "flex"})
+        assert-css: ("#sidebar-book-logo img", {"display": "block"})
+    },
+)
+
+define-function: (
+    "assert-logo-src",
+    [prefix],
+    block {
+        assert-attribute: (".sidebar-book-logo img", {"src": |prefix| + "logo.svg"})
+        assert-find-text-false: "sidebar-logo test logo"
+    },
+)
+
+define-function: (
+    "assert-logo-position",
+    [],
+    block {
+        store-position: ("#sidebar-book-logo img", {"y": logo_y})
+        store-position: ("ol.chapter", {"y": chapter_y})
+        assert: |logo_y| < |chapter_y|
+    },
+)
+
+call-function: ("load", {"path": "sidebar-logo/index.html"})
+
+// The sidebar-book-logo should exist when logo is provided
+call-function: ("assert-logo", {})
+
+// Logo image should have the correct src path and loaded
+call-function: ("assert-logo-src", {"prefix": ""})
+
+// Logo should be above the TOC
+call-function: ("assert-logo-position", {})
+
+// Test on chapter_2, nested, and deeper
+click: ".chapter a[href='chapter_2.html']"
+wait-for-text: (".header", "Chapter 2")
+call-function: ("assert-logo", {})
+call-function: ("assert-logo-src", {"prefix": ""})
+call-function: ("assert-logo-position", {})
+
+click: ".chapter a[href='nested/chapter_nested.html']"
+wait-for-text: (".header", "Nested Chapter")
+call-function: ("assert-logo", {})
+call-function: ("assert-logo-src", {"prefix": "../"})
+call-function: ("assert-logo-position", {})
+
+click: ".chapter a[href='../nested/again/chapter_nested.html']"
+wait-for-text: (".header", "Deeper Chapter")
+call-function: ("assert-logo", {})
+call-function: ("assert-logo-src", {"prefix": "../../"})
+call-function: ("assert-logo-position", {})
+
+// Large images checks
+call-function: ("load", {"path": "sidebar-logo-large/index.html"})
+store-property : (".sidebar-book-logo img", {"width": logo_width})
+assert: |logo_width| <= 200
+
+call-function: ("load", {"path": "sidebar-logo-tall/index.html"})
+store-property : (".sidebar-book-logo img", {"height": logo_height})
+assert: |logo_height| <= 200

@@ -45,11 +45,11 @@
 
 use crate::static_regex;
 use crate::utils::{TomlExt, fs, log_backtrace};
-use anyhow::{Context, Error, Result, bail};
+use anyhow::{Context, Error, Result, anyhow, bail};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use std::env;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
 use toml::Value;
 use toml::value::Table;
@@ -303,6 +303,31 @@ impl Config {
 
         Ok(())
     }
+
+    /// The config can load properly with valid, but wrong values, for instance wrong paths.
+    /// This is the place to check for such config variables.
+    pub fn check<P: Into<PathBuf>>(&self, book_root: P) -> Result<()> {
+        if let Some(logo_path) = self.book.get_logo_absolute_path(book_root) {
+            // Forbid absolute paths and parent directory references in the config file
+            if let Some(logo_path) = &self.book.logo {
+                if logo_path.is_absolute()
+                    || logo_path.components().any(|c| c == Component::ParentDir)
+                {
+                    return Result::Err(anyhow!(
+                        "invalid value for `logo`: should live under `{}/`",
+                        self.book.src.to_string_lossy()
+                    ));
+                }
+            }
+            if !logo_path.exists() {
+                return Result::Err(anyhow!(
+                    "invalid value for `logo`: {} does not exist",
+                    logo_path.to_str().unwrap_or(&logo_path.to_string_lossy()),
+                ));
+            }
+        }
+        Result::Ok(())
+    }
 }
 
 fn parse_env(key: &str) -> Option<String> {
@@ -330,6 +355,9 @@ pub struct BookConfig {
     /// The direction of text in the book: Left-to-right (LTR) or Right-to-left (RTL).
     /// When not specified, the text direction is derived from [`BookConfig::language`].
     pub text_direction: Option<TextDirection>,
+    /// A logo to be displayed on top of the navigation bar. The path is relative to the source
+    /// path
+    pub logo: Option<PathBuf>,
 }
 
 /// Helper for serde serialization.
@@ -346,6 +374,7 @@ impl Default for BookConfig {
             src: PathBuf::from("src"),
             language: Some(String::from("en")),
             text_direction: None,
+            logo: None,
         }
     }
 }
@@ -358,6 +387,19 @@ impl BookConfig {
             direction
         } else {
             TextDirection::from_lang_code(self.language.as_deref().unwrap_or_default())
+        }
+    }
+
+    /// Compute the absolute path of the book's logo, if provided, and canonicalize it
+    pub fn get_logo_absolute_path<P: Into<PathBuf>>(&self, book_root: P) -> Option<PathBuf> {
+        if let Some(logo_cfg) = self.logo.clone() {
+            Some(if logo_cfg.is_absolute() {
+                logo_cfg
+            } else {
+                book_root.into().join(&self.src).join(logo_cfg)
+            })
+        } else {
+            None
         }
     }
 }
@@ -782,6 +824,7 @@ mod tests {
         description = "A completely useless book"
         src = "source"
         language = "ja"
+        logo = "images/logo.svg"
 
         [build]
         build-dir = "outputs"
@@ -819,6 +862,7 @@ mod tests {
             src: PathBuf::from("source"),
             language: Some(String::from("ja")),
             text_direction: None,
+            logo: Some(PathBuf::from("images/logo.svg")),
         };
         let build_should_be = BuildConfig {
             build_dir: PathBuf::from("outputs"),

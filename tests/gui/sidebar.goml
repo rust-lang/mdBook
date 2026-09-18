@@ -67,3 +67,6 @@ assert-local-storage: {|sidebar_storage_value|: |sidebar_storage_displayed_value
 // But the sidebar should be hidden anyway.
 assert-css: ("#mdbook-sidebar", {"display": "none"})
 assert-position: ("#mdbook-page-wrapper", {"x": 0})
+
+// The logo should not be displayed in the sidebar.
+assert-false: "#sidebar-book-logo"
