@@ -16,6 +16,16 @@ To make it easier to run, put the path to the binary into your `PATH`.
 
 [releases]: https://github.com/rust-lang/mdBook/releases
 
+## Install using a package manager
+
+On macOS (and Linux), you can install mdBook with [Homebrew]:
+
+```sh
+brew install mdbook
+```
+
+[Homebrew]: https://formulae.brew.sh/formula/mdbook
+
 ## Build from source using Rust
 
 To build the `mdbook` executable from source, you will first need to install Rust and Cargo.
