@@ -84,7 +84,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Spell check repository
-        uses: crate-ci/typos@v1
+        uses: crate-ci/typos@v1.50.3
 
   gui:
     name: GUI tests
