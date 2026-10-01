@@ -24,6 +24,41 @@ fn edit_url_template_explicit_src() {
     );
 }
 
+// Checks that a citation file is copied verbatim into the output and that a
+// download button is rendered in the menu bar.
+#[test]
+fn citation_file() {
+    let mut test = BookTest::from_dir("rendering/citation");
+    test.check_file_contains(
+        "book/index.html",
+        "<a href=\"citations.bib\" title=\"Download citation file\" \
+         aria-label=\"Download citation file\" download=\"citations.bib\">",
+    );
+    // The file must be copied verbatim, without being parsed.
+    assert_eq!(
+        read_to_string(test.dir.join("book/citations.bib")),
+        "@article{mdbook2020,\n  author = {mdBook Team},\n  \
+         title = {The mdBook User Guide \\& Documentation},\n  \
+         year = {2020}\n}\n",
+    );
+}
+
+// Checks that a missing citation file fails the build with a helpful error.
+#[test]
+fn citation_file_missing() {
+    BookTest::init(|_| {})
+        .change_file("book.toml", "output.html.citation = \"missing.bib\"")
+        .run("build", |cmd| {
+            cmd.expect_failure().expect_stderr(str![[r#"
+ INFO Book building has started
+ INFO Running the html backend
+ERROR Rendering failed
+[TAB]Caused by: citation file `[ROOT]/missing.bib` does not exist
+
+"#]]);
+        });
+}
+
 // Checks that index.html is generated correctly, even when the first few
 // chapters are drafts.
 #[test]

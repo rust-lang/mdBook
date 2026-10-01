@@ -485,6 +485,9 @@ pub struct HtmlConfig {
     /// FontAwesome icon class to use for the Git repository link.
     /// Defaults to `fa-github` if `None`.
     pub git_repository_icon: Option<String>,
+    /// Path to a citation file, copied into the HTML output.
+    /// When set, a download button is shown in the menu bar.
+    pub citation: Option<PathBuf>,
     /// Input path for the 404 file, defaults to 404.md, set to "" to disable 404 file output
     pub input_404: Option<String>,
     /// Absolute url to site, used to emit correct paths for the 404 page, which might be accessed in a deeply nested directory
@@ -544,6 +547,7 @@ impl Default for HtmlConfig {
             search: None,
             git_repository_url: None,
             git_repository_icon: None,
+            citation: None,
             input_404: None,
             site_url: None,
             canonical_site_url: None,

@@ -552,6 +552,18 @@ fn make_data(
         data.insert("additional_js".to_owned(), json!(js));
     }
 
+    if let Some(ref citation) = html_config.citation {
+        data.insert(
+            "citation".to_owned(),
+            json!(citation.to_str().expect("Could not convert to str")),
+        );
+        let citation_filename = citation
+            .file_name()
+            .and_then(|n| n.to_str())
+            .expect("Could not convert to str");
+        data.insert("citation_filename".to_owned(), json!(citation_filename));
+    }
+
     if html_config.playground.editable && html_config.playground.copy_js {
         data.insert("playground_js".to_owned(), json!(true));
         if html_config.playground.line_numbers {
