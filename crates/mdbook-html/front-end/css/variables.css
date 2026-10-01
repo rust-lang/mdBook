@@ -301,6 +301,8 @@
     --searchresults-li-bg: #dec2a2;
     --search-mark-bg: #e69f67;
 
+    --color-scheme: light;
+
     /* Same as `--icons` */
     --copy-button-filter: invert(51%) sepia(10%) saturate(393%) hue-rotate(198deg) brightness(86%) contrast(87%);
     /* Same as `--sidebar-active` */
