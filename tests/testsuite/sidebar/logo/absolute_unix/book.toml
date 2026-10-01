@@ -1,0 +1,5 @@
+[book]
+title = "outside"
+authors = ["Chocorean"]
+language = "en"
+logo = "/absolute/path/logo.svg"

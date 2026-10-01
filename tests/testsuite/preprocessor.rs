@@ -362,6 +362,7 @@ fn extension_compatibility() {
           "authors": [],
           "description": null,
           "language": "en",
+          "logo": null,
           "text-direction": null,
           "title": "extension_compatibility"
         },

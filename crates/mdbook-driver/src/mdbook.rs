@@ -57,6 +57,7 @@ impl MDBook {
         };
 
         config.update_from_env()?;
+        config.check(book_root.clone())?;
 
         if tracing::enabled!(tracing::Level::TRACE) {
             for line in format!("Config: {config:#?}").lines() {

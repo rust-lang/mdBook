@@ -176,7 +176,7 @@ ERROR Invalid configuration file
   |
 3 | foo = 123
   | ^^^
-unknown field `foo`, expected one of `title`, `authors`, `description`, `src`, `language`, `text-direction`
+unknown field `foo`, expected one of `title`, `authors`, `description`, `src`, `language`, `text-direction`, `logo`
 
 
 "#]]);
@@ -232,7 +232,7 @@ fn env_invalid_value() {
                 .expect_failure()
                 .expect_stdout(str![[""]])
                 .expect_stderr(str![[r#"
-ERROR unknown field `titlez`, expected one of `title`, `authors`, `description`, `src`, `language`, `text-direction`
+ERROR unknown field `titlez`, expected one of `title`, `authors`, `description`, `src`, `language`, `text-direction`, `logo`
 
 
 "#]]);

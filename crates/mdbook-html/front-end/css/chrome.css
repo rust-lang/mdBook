@@ -498,6 +498,25 @@ html:not(.sidebar-resizing) .sidebar {
     right: 0;
     padding: 10px 10px;
 }
+.sidebar .sidebar-scrollbox .sidebar-book-logo {
+    align-items: center;
+    column-gap: 20px;
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+.sidebar .sidebar-scrollbox .sidebar-book-logo img {
+    display: block;
+    max-height: 8rem;
+    width: 20%;
+}
+.sidebar .sidebar-scrollbox .sidebar-book-logo h2 {
+    margin: 0;
+    width: 70%;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+}
+
 .sidebar .sidebar-resize-handle {
     position: absolute;
     cursor: col-resize;

@@ -20,6 +20,7 @@ mod renderer;
 mod rendering;
 #[cfg(feature = "search")]
 mod search;
+mod sidebar_logo;
 mod test;
 mod theme;
 mod toc;
