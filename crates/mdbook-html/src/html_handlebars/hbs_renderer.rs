@@ -524,6 +524,10 @@ fn make_data(
         json!(preferred_dark_theme),
     );
 
+    if html_config.math {
+        data.insert("math".to_owned(), json!(true));
+    }
+
     if html_config.mathjax_support {
         data.insert("mathjax_support".to_owned(), json!(true));
     }
