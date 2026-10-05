@@ -1051,6 +1051,8 @@ name = "mdbook-core"
 version = "0.5.4"
 dependencies = [
  "anyhow",
+ "ignore",
+ "pathdiff",
  "regex",
  "serde",
  "serde_json",
@@ -1092,6 +1094,7 @@ dependencies = [
  "handlebars",
  "hex",
  "html5ever 0.39.0",
+ "ignore",
  "indexmap",
  "mdbook-core",
  "mdbook-markdown",
