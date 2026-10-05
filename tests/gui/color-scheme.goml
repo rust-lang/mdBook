@@ -1,0 +1,39 @@
+// This GUI test checks help popup.
+
+go-to: |DOC_PATH| + "basic/chapter_2.html"
+
+define-function: (
+    "change-theme",
+    [theme],
+    block {
+        store-css: ("#mdbook-theme-list", {"display": theme_list_display})
+        if: (|theme_list_display| != "block", block {
+            click: "#mdbook-theme-toggle"
+            wait-for-css: ("#mdbook-theme-list", {"display": "block"})
+        })
+        click: "#mdbook-theme-list #mdbook-theme-" + |theme|
+        wait-for: "#mdbook-theme-list #mdbook-theme-" + |theme| + ".theme-selected"
+    },
+)
+
+define-function: (
+    "check-scheme-applied",
+    [theme, background_color],
+    block {
+        call-function: ("change-theme", {"theme": |theme|})
+        assert-css: ("#mdbook-content main", {"background-color": |background_color|})
+        store-value: (themes_checked, |themes_checked| + 1)
+    }
+)
+
+store-value: (themes_checked, 1) // It's one to take into account the "auto" theme.
+
+call-function: ("check-scheme-applied", {"theme": "light", "background_color": "white"})
+call-function: ("check-scheme-applied", {"theme": "rust", "background_color": "white"})
+call-function: ("check-scheme-applied", {"theme": "coal", "background_color": "black"})
+call-function: ("check-scheme-applied", {"theme": "navy", "background_color": "black"})
+call-function: ("check-scheme-applied", {"theme": "ayu", "background_color": "black"})
+
+// We confirm that the we checked all themes. If other themes are added later on, this test will
+// fail.
+assert-count: ("#mdbook-theme-list .theme", |themes_checked|)
