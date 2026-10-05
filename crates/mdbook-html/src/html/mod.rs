@@ -72,8 +72,8 @@ pub(crate) fn render_markdown(text: &str, options: &HtmlRenderOptions<'_>) -> St
 
 /// Renders markdown to a [`Tree`].
 fn build_tree(text: &str, options: &HtmlRenderOptions<'_>) -> Tree<Node> {
-    let events = new_cmark_parser(text, &options.markdown_options);
-    tree::MarkdownTreeBuilder::build(options, events)
+    let events = new_cmark_parser(text, &options.markdown_options).into_offset_iter();
+    tree::MarkdownTreeBuilder::build(options, text, events)
 }
 
 /// The parsed chapter, and some information about the chapter.
