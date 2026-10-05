@@ -279,7 +279,7 @@ fn env_entire_book_table() {
         .check_file_contains("book/index.html", "<title>Chapter 1</title>")
         .check_file_contains(
             "book/index.html",
-            r#"<meta name="description" content="custom description">"#,
+            r#"<meta name="description" property="og:description" content="custom description">"#,
         );
 }
 
