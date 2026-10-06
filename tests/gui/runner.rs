@@ -9,8 +9,34 @@ use std::fs::read_to_string;
 use std::path::Path;
 use std::process::{Command, Output};
 
+/// On Windows, `npm` and `npx` are batch files (`npm.cmd`), which `Command`
+/// will not find by their bare names.
+fn npm_command(name: &str) -> Command {
+    if cfg!(windows) {
+        Command::new(format!("{name}.cmd"))
+    } else {
+        Command::new(name)
+    }
+}
+
+/// Converts a directory to a `file://` URL ending in `/`.
+///
+/// This uses the form browsers report on Windows (`file:///C:/foo/`).
+fn dir_to_file_url(dir: &Path) -> String {
+    let path = dir.display().to_string().replace('\\', "/");
+    let mut uri = if path.starts_with('/') {
+        format!("file://{path}")
+    } else {
+        format!("file:///{path}")
+    };
+    if !uri.ends_with('/') {
+        uri.push('/');
+    }
+    uri
+}
+
 fn get_available_browser_ui_test_version_inner(global: bool) -> Option<String> {
-    let mut command = Command::new("npm");
+    let mut command = npm_command("npm");
     command
         .arg("list")
         .arg("--parseable")
@@ -23,7 +49,8 @@ fn get_available_browser_ui_test_version_inner(global: bool) -> Option<String> {
     let lines = String::from_utf8_lossy(&stdout);
     lines
         .lines()
-        .find_map(|l| l.split(':').nth(1)?.strip_prefix("browser-ui-test@"))
+        // Take the last field, since Windows paths have a `:` after the drive.
+        .find_map(|l| l.rsplit(':').next()?.strip_prefix("browser-ui-test@"))
         .map(std::borrow::ToOwned::to_owned)
 }
 
@@ -107,11 +134,8 @@ fn check_status(cmd: &Command, output: &Output) {
 }
 
 fn run_browser_ui_test(out_dir: &Path) {
-    let mut command = Command::new("npx");
-    let mut doc_path = format!("file://{}", out_dir.display());
-    if !doc_path.ends_with('/') {
-        doc_path.push('/');
-    }
+    let mut command = npm_command("npx");
+    let doc_path = dir_to_file_url(out_dir);
     command
         .arg("browser-ui-test")
         .args(["--variable", "DOC_PATH", doc_path.as_str()])
