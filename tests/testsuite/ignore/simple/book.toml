@@ -1,0 +1,5 @@
+[book]
+title = "ignore"
+
+[build]
+ignore = ["ignored_file"]

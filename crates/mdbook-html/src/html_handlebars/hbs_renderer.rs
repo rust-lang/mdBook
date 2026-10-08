@@ -6,6 +6,7 @@ use crate::theme::Theme;
 use crate::utils::ToUrlPath;
 use anyhow::{Context, Result, bail};
 use handlebars::Handlebars;
+use ignore::gitignore::GitignoreBuilder;
 use mdbook_core::book::{Book, BookItem, Chapter};
 use mdbook_core::config::{BookConfig, BuiltinTheme, Config, HtmlConfig};
 use mdbook_core::utils::fs;
@@ -464,7 +465,22 @@ impl Renderer for HtmlHandlebars {
             .context("Unable to emit redirects")?;
 
         // Copy all remaining files, avoid a recursive copy from/to the book build dir
-        fs::copy_files_except_ext(&src_dir, destination, true, Some(&build_dir), &["md"])?;
+        let mut builder = GitignoreBuilder::new(&src_dir);
+        builder.add_line(None, "*.md")?;
+        for rule in &ctx.config.build.ignore {
+            builder
+                .add_line(None, rule)
+                .expect(&format!("Rule `{rule}` is not a valid glob"));
+        }
+        let ignore = builder.build()?;
+
+        fs::copy_files_except_ignored(
+            &src_dir,
+            destination,
+            true,
+            Some(&build_dir),
+            Some(&ignore),
+        )?;
 
         info!("HTML book written to `{}`", destination.display());
 

@@ -8,6 +8,7 @@ mod book_test;
 mod build;
 mod cli;
 mod config;
+mod ignore;
 mod includes;
 mod index;
 mod init;
