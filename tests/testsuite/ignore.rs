@@ -1,6 +1,6 @@
 use crate::prelude::BookTest;
 
-// Simple smoke test that mdbookignore works.
+// Simple smoke test that ignore works.
 #[test]
 fn ignore_file_is_respected() {
     let mut test = BookTest::from_dir("ignore/simple");
