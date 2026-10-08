@@ -466,13 +466,12 @@ impl Renderer for HtmlHandlebars {
 
         // Copy all remaining files, avoid a recursive copy from/to the book build dir
         let mut builder = GitignoreBuilder::new(&src_dir);
-        let mdbook_ignore = src_dir.join(".mdbookignore");
-        if mdbook_ignore.exists()
-            && let Some(err) = builder.add(mdbook_ignore)
-        {
-            bail!("Unable to load '.mdbookignore' file: {}", err);
-        }
         builder.add_line(None, "*.md")?;
+        for rule in &ctx.config.build.ignore {
+            builder
+                .add_line(None, rule)
+                .expect(&format!("Rule `{rule}` is not a valid glob"));
+        }
         let ignore = builder.build()?;
 
         fs::copy_files_except_ignored(

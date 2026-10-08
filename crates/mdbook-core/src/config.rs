@@ -402,6 +402,8 @@ pub struct BuildConfig {
     pub use_default_preprocessors: bool,
     /// Extra directories to trigger rebuild when watching/serving
     pub extra_watch_dirs: Vec<PathBuf>,
+    /// Ignore globs: all matching files under src/ will not be copied to the output
+    pub ignore: Vec<String>,
 }
 
 impl Default for BuildConfig {
@@ -411,6 +413,7 @@ impl Default for BuildConfig {
             create_missing: true,
             use_default_preprocessors: true,
             extra_watch_dirs: Vec::new(),
+            ignore: Vec::new(),
         }
     }
 }
@@ -825,6 +828,7 @@ mod tests {
             create_missing: false,
             use_default_preprocessors: true,
             extra_watch_dirs: Vec::new(),
+            ignore: Vec::new(),
         };
         let rust_should_be = RustConfig { edition: None };
         let playground_should_be = Playground {

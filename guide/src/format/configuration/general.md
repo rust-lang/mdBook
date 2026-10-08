@@ -92,6 +92,7 @@ build-dir = "book"                # the directory where the output is placed
 create-missing = true             # whether or not to create missing pages
 use-default-preprocessors = true  # use the default preprocessors
 extra-watch-dirs = []             # directories to watch for triggering builds
+ignore = []                       # directory globs to ignore when building
 ```
 
 - **build-dir:** The directory to put the rendered book in. By default this is
@@ -116,3 +117,7 @@ extra-watch-dirs = []             # directories to watch for triggering builds
 - **extra-watch-dirs**: A list of paths to directories that will be watched in
   the `watch` and `serve` commands. Changes to files under these directories will
   trigger rebuilds. Useful if your book depends on files outside its `src` directory.
+- **ignore**: A list of directory globs that will be ignored when copying files from
+  the source directory to the book's output directory. All globs will be interpreted
+  after preppending the source directory specified in the `[book]` config (`src/` by default).
+  `mdbook` will panic if a glob is invalid.
