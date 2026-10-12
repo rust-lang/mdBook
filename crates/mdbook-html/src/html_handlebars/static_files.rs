@@ -140,6 +140,24 @@ impl StaticFiles {
             });
         }
 
+        if let Some(citation) = &html_config.citation {
+            let input_location = root.join(citation);
+            if !input_location.exists() {
+                anyhow::bail!(
+                    "citation file `{}` does not exist",
+                    input_location.display()
+                );
+            }
+
+            this.static_files.push(StaticFile::Additional {
+                input_location,
+                filename: citation
+                    .to_str()
+                    .with_context(|| "resource file names must be valid utf8")?
+                    .to_owned(),
+            });
+        }
+
         for input_location in theme.font_files.iter().cloned() {
             let font_path = Path::new("fonts").join(input_location.file_name().unwrap());
             let filename = font_path
