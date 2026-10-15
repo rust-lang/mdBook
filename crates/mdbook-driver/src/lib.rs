@@ -103,13 +103,9 @@ fn compose_command(cmd: &str, root: &Path) -> Result<Command> {
     Ok(cmd)
 }
 
-/// Returns whether a command is definitely unavailable.
-///
-/// Checking before spawning avoids relying on `execvp`'s error reporting. If
-/// `PATH` contains an inaccessible directory, a missing executable can be
-/// reported as `PermissionDenied` instead of `NotFound`, which prevents
-/// optional extensions from being skipped. The same preflight is used on all
-/// platforms, while accounting for each platform's command-search rules.
+/// Checks whether command lookup failed because no candidate exists.
+/// Called only after spawning reports a permission error, since an
+/// inaccessible PATH directory can mask a missing executable.
 fn command_is_missing(command: &Command) -> bool {
     let program = Path::new(command.get_program());
     let current_dir = command.get_current_dir();
@@ -216,13 +212,16 @@ fn command_path_is_missing_or_inaccessible(path: &Path) -> bool {
 /// Handles a failure for a preprocessor or renderer.
 fn handle_command_error(
     error: std::io::Error,
+    command: &Command,
     optional: bool,
     key: &str,
     what: &str,
     name: &str,
     cmd: &str,
 ) -> Result<()> {
-    if let std::io::ErrorKind::NotFound = error.kind() {
+    if error.kind() == std::io::ErrorKind::NotFound
+        || (error.kind() == std::io::ErrorKind::PermissionDenied && command_is_missing(command))
+    {
         if optional {
             warn!(
                 "The command `{cmd}` for {what} `{name}` was not found, \

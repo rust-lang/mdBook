@@ -52,22 +52,11 @@ impl Renderer for CmdRenderer {
             .stderr(Stdio::inherit())
             .current_dir(&ctx.destination);
 
-        if optional && crate::command_is_missing(&cmd) {
-            return crate::handle_command_error(
-                std::io::ErrorKind::NotFound.into(),
-                true,
-                "output",
-                "backend",
-                &self.name,
-                &self.cmd,
-            );
-        }
-
         let mut child = match cmd.spawn() {
             Ok(c) => c,
             Err(e) => {
                 return crate::handle_command_error(
-                    e, optional, "output", "backend", &self.name, &self.cmd,
+                    e, &cmd, optional, "output", "backend", &self.name, &self.cmd,
                 );
             }
         };

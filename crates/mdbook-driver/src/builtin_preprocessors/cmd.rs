@@ -66,23 +66,12 @@ impl Preprocessor for CmdPreprocessor {
             .stderr(Stdio::inherit())
             .current_dir(&self.root);
 
-        if self.optional && crate::command_is_missing(&cmd) {
-            crate::handle_command_error(
-                std::io::ErrorKind::NotFound.into(),
-                true,
-                "preprocessor",
-                "preprocessor",
-                &self.name,
-                &self.cmd,
-            )?;
-            return Ok(book);
-        }
-
         let mut child = match cmd.spawn() {
             Ok(c) => c,
             Err(e) => {
                 crate::handle_command_error(
                     e,
+                    &cmd,
                     self.optional,
                     "preprocessor",
                     "preprocessor",
@@ -137,23 +126,12 @@ impl Preprocessor for CmdPreprocessor {
             .stderr(Stdio::inherit())
             .current_dir(&self.root);
 
-        if self.optional && crate::command_is_missing(&cmd) {
-            crate::handle_command_error(
-                std::io::ErrorKind::NotFound.into(),
-                true,
-                "preprocessor",
-                "preprocessor",
-                &self.name,
-                &self.cmd,
-            )?;
-            return Ok(false);
-        }
-
         match cmd.status() {
             Ok(status) => Ok(status.code() == Some(0)),
             Err(e) => {
                 crate::handle_command_error(
                     e,
+                    &cmd,
                     self.optional,
                     "preprocessor",
                     "preprocessor",
