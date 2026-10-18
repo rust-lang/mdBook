@@ -7,9 +7,7 @@ use crate::prelude::*;
 fn passing_tests() {
     BookTest::from_dir("test/passing_tests").run("test", |cmd| {
         cmd.expect_stdout(str![[""]]).expect_stderr(str![[r#"
- INFO Testing chapter 'Intro': "intro.md"
- INFO Testing chapter 'Passing 1': "passing1.md"
- INFO Testing chapter 'Passing 2': "passing2.md"
+ INFO Testing all chapters...
 
 "#]]);
     });
@@ -27,9 +25,9 @@ fn failing_tests() {
             // still includes a little bit of output, so if that is a problem,
             // add more redactions.
             .expect_stderr(str![[r#"
- INFO Testing chapter 'Failing Tests': "failing.md"
+ INFO Testing all chapters...
 ERROR rustdoc returned an error:
-
+args: ["--test"] "failing.md"
 --- stdout
 
 ...
@@ -37,17 +35,46 @@ test failing.md - Failing_Tests (line 3) ... FAILED
 ...
 thread [..] panicked at failing.md:3:1:
 fail
-...
- INFO Testing chapter 'Failing Include': "failing_include.md"
-ERROR rustdoc returned an error:
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 
+
+
+failures:
+    failing.md - Failing_Tests (line 3)
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.32s
+
+
+--- stderr
+
+ERROR rustdoc returned an error:
+args: ["--test"] "failing_include.md"
 --- stdout
-...
+
+running 1 test
 test failing_include.md - Failing_Include (line 3) ... FAILED
-...
-thread [..] panicked at failing_include.md:3:1:
+
+failures:
+
+---- failing_include.md - Failing_Include (line 3) stdout ----
+Test executable failed ([EXIT_STATUS]: 101).
+
+stderr:
+
+thread 'main' (108683) panicked at failing_include.md:3:1:
 failing!
-...
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+
+failures:
+    failing_include.md - Failing_Include (line 3)
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.30s
+
+
+--- stderr
+
 ERROR One or more tests failed
 
 "#]]);
@@ -62,14 +89,14 @@ fn test_individual_chapter() {
         cmd.args(&["Passing 1"])
             .expect_stdout(str![[""]])
             .expect_stderr(str![[r#"
- INFO Testing chapter 'Passing 1': "passing1.md"
+ INFO Testing chapter '"Passing 1"'
 
 "#]]);
     })
     // Can also be a source path.
     .run("test -c passing2.md", |cmd| {
         cmd.expect_stdout(str![[""]]).expect_stderr(str![[r#"
- INFO Testing chapter 'Passing 2': "passing2.md"
+ INFO Testing chapter '"Passing 2"'
 
 "#]]);
     });
