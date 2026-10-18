@@ -319,8 +319,12 @@ impl MDBook {
         };
 
         if color_output {
-            rustdoc_args.push(OsString::from("--color"));
-            rustdoc_args.push(OsString::from("always"));
+            if let Some(idx) = rustdoc_args.iter().position(|s| s == "--color") {
+                rustdoc_args[idx + 1] = OsString::from("always");
+            } else {
+                rustdoc_args.push(OsString::from("--color"));
+                rustdoc_args.push(OsString::from("always"));
+            }
         }
 
         rustdoc_args.extend(library_args);
