@@ -5,20 +5,20 @@ use crate::builtin_renderers::{CmdRenderer, MarkdownRenderer};
 use crate::init::BookBuilder;
 use crate::load::{load_book, load_book_from_disk};
 use anyhow::{Context, Error, Result, bail};
+use cargo_metadata::camino::Utf8PathBuf;
 use indexmap::IndexMap;
-use mdbook_core::book::{Book, BookItem, BookItems};
+use mdbook_core::book::{Book, BookItem, BookItems, Chapter};
 use mdbook_core::config::{Config, RustEdition};
 use mdbook_core::utils::fs;
 use mdbook_html::HtmlHandlebars;
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use mdbook_renderer::{RenderContext, Renderer};
 use mdbook_summary::Summary;
+use regex::Regex;
 use serde::Deserialize;
-use std::ffi::OsString;
-use std::io::IsTerminal;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use tempfile::Builder as TempFileBuilder;
+use tempfile::TempDir;
 use topological_sort::TopologicalSort;
 use tracing::{debug, info, trace, warn};
 
@@ -264,40 +264,108 @@ impl MDBook {
         let chapters = book
             .iter()
             .filter_map(get_chapter)
-            .map(|(chapter, path)| {
-                (
-                    path.clone(),
-                    chapter.content.clone(),
-                )
-            })
+            .map(|(chapter, path)| (path.clone(), chapter.name.clone(), chapter.content.clone()))
             .collect::<Vec<_>>();
 
         let temp = TempDir::new()?;
 
-        for (name, content) in chapters.clone() {
+        for (name, _name, content) in chapters.clone() {
             if let Some(parent) = name.parent() {
                 fs::create_dir_all(parent)?;
             }
             fs::write(temp.path().join(name), content)?;
         }
 
+        let rustdoc_args = if self.root.join("Cargo.toml").exists() {
+            self.invoke_cargo()
+                .with_context(|| "failed to execute `cargo`")?
+        } else {
+            let mut args = vec!["--test".to_string()];
+            if let Some(edition) = self.config.rust.edition {
+                args.push("--edition".to_string());
+                match edition {
+                    RustEdition::E2015 => {
+                        args.push("2015".to_string());
+                    }
+                    RustEdition::E2018 => {
+                        args.push("2018".to_string());
+                    }
+                    RustEdition::E2021 => {
+                        args.push("2021".to_string());
+                    }
+                    RustEdition::E2024 => {
+                        args.push("2024".to_string());
+                    }
+                    _ => panic!("RustEdition {edition:?} not covered"),
+                }
+            }
+            args
+        };
+
+        let mut chapter_found = false;
+        let mut failed = false;
+
+        if filter.is_none() {
+            info!("Testing all chapters...");
+            chapter_found = true;
+        }
+
+        for (path, name, _content) in chapters {
+            if let Some(needle) = filter {
+                if name.contains(needle) || path.to_string_lossy().contains(needle) {
+                    info!("Testing chapter '{:?}'", name);
+                    chapter_found = true;
+                }
+            }
+            let mut rustdoc = Command::new("rustdoc");
+            rustdoc
+                .current_dir(temp.path())
+                .args(&rustdoc_args)
+                .arg(&path);
+            debug!(
+                "running rustdoc with args `{:?} {:?}` within `{:?}`...",
+                rustdoc_args,
+                path,
+                temp.path()
+            );
+            let output = rustdoc
+                .output()
+                .with_context(|| "failed to execute `rustdoc`")?;
+            if !output.status.success() {
+                failed = true;
+                eprintln!(
+                    "ERROR rustdoc returned an error:\n\
+                    args: {:?} {:?}\
+                    \n--- stdout\n{}\n--- stderr\n{}",
+                    rustdoc_args,
+                    path,
+                    String::from_utf8_lossy(&output.stdout),
+                    String::from_utf8_lossy(&output.stderr)
+                );
+            }
+        }
+
+        if failed {
+            bail!("One or more tests failed");
+        }
+
+        if !chapter_found {
+            bail!("Chapter not found: {}", filter.expect("logic error"));
+        }
+
+        Ok(())
+    }
+
+    fn invoke_cargo(&self) -> Option<Vec<String>> {
         let mut cargo = Command::new("cargo");
         cargo
             .current_dir(&self.root)
             .arg("test")
             .arg("--doc")
             .args(["--message-format=json", "--config", "build.rustdoc='echo'"]);
-        if let Some(name) = filter {
-            info!("Testing chapter '{}': {:?}", name, rustify(name));
-            cargo.arg(rustify(name));
-        } else {
-            info!("Testing all chapters...")
-        }
 
         debug!("running {:?}", cargo);
-        let output = cargo
-            .output()
-            .with_context(|| "failed to execute `cargo`")?;
+        let output = cargo.output().ok()?;
 
         if !output.status.success() {
             // failed = true;
@@ -307,60 +375,46 @@ impl MDBook {
                 String::from_utf8_lossy(&output.stdout),
                 String::from_utf8_lossy(&output.stderr)
             );
-        } else {
-            let input = String::from_utf8_lossy(&output.stdout);
-            let lines = input.lines();
-            let mut rustdoc_args = String::new();
-            let mut target_src_path = Utf8PathBuf::new();
-            for line in lines {
-                let is_rustdoc_args = line.contains("--crate-type lib");
-                let is_json_compiler_artifact: Result<Vec<cargo_metadata::Message>, std::io::Error> = cargo_metadata::Message::parse_stream(line.as_bytes()).collect();
-                match is_json_compiler_artifact {
-                    Ok(message) => {
-                        match message.get(0) {
-                            Some(&cargo_metadata::Message::CompilerArtifact(ref artifact)) => {
-                                if is_rustdoc_args {
-                                    panic!("wrong output of cargo: {:?} {}", message[0], line);
-                                }
-                                if artifact.manifest_path == self.root.join("Cargo.toml") {
-                                    target_src_path = artifact.target.src_path.clone();
-                                }
-                            }
-                            Some(&cargo_metadata::Message::TextLine(_)) if is_rustdoc_args => {
-                                rustdoc_args = line.to_string();
-                            }
-                            _ => {}
-                        }
-                    }
-                    Err(_) => {}
-                }
-            }
-            let cfg_regexp = Regex::new(r##"--check-cfg cfg\((\w*), (\S*)\)"##).expect("wrong regexp");
-            let rustdoc_args = cfg_regexp.replace_all(&rustdoc_args, "--check-cfg cfg($1,$2)").replace("--error-format json", "--error-format human");
-            let args: Vec<_> = rustdoc_args.split(" ").filter(|arg| !target_src_path.ends_with(Path::new(arg))).collect();
-            for (name, _chapter) in chapters {
-                let mut rustdoc = Command::new("rustdoc");
-                rustdoc.current_dir(temp.path())
-                    .args(&args)
-                    .arg(&name);
-                debug!("running rustdoc with args `{:?} {:?}` within `{:?}`...", args, name, temp.path());
-                let output = rustdoc.output().with_context(|| "failed to execute `rustdoc`")?;
-                if !output.status.success() {
-                    eprintln!(
-                        "ERROR rustdoc returned an error:\n\
-                        args: {:?} {:?}\
-                        \n--- stdout\n{}\n--- stderr\n{}",
-                        args,
-                        name,
-                        String::from_utf8_lossy(&output.stdout),
-                        String::from_utf8_lossy(&output.stderr)
-                    );
-                } else {
-                }
-            }
+
+            return None;
         }
 
-        Ok(())
+        let input = String::from_utf8_lossy(&output.stdout);
+        let lines = input.lines();
+        let mut rustdoc_args = String::new();
+        let mut target_src_path = Utf8PathBuf::new();
+        for line in lines {
+            let is_rustdoc_args = line.contains("--crate-type lib");
+            let is_json_compiler_artifact: Result<Vec<cargo_metadata::Message>, std::io::Error> =
+                cargo_metadata::Message::parse_stream(line.as_bytes()).collect();
+            match is_json_compiler_artifact {
+                Ok(message) => match message.get(0) {
+                    Some(&cargo_metadata::Message::CompilerArtifact(ref artifact)) => {
+                        if is_rustdoc_args {
+                            panic!("wrong output of cargo: {:?} {}", message[0], line);
+                        }
+                        if artifact.manifest_path == self.root.join("Cargo.toml") {
+                            target_src_path = artifact.target.src_path.clone();
+                        }
+                    }
+                    Some(&cargo_metadata::Message::TextLine(_)) if is_rustdoc_args => {
+                        rustdoc_args = line.to_string();
+                    }
+                    _ => {}
+                },
+                Err(_) => {}
+            }
+        }
+        let cfg_regexp = Regex::new(r##"--check-cfg cfg\((\w*), (\S*)\)"##).expect("wrong regexp");
+        let rustdoc_args = cfg_regexp
+            .replace_all(&rustdoc_args, "--check-cfg cfg($1,$2)")
+            .replace("--error-format json", "--error-format human");
+        let result = rustdoc_args
+            .split(" ")
+            .filter(|arg| !target_src_path.ends_with(Path::new(arg)))
+            .map(|arg| arg.to_string())
+            .collect();
+        Some(result)
     }
 
     /// The logic for determining where a backend should put its build

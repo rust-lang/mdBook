@@ -462,7 +462,7 @@ impl Default for BuildConfig {
 #[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct RustConfig {
-    /// Rust edition used in playground
+    /// DEPRECATED
     pub edition: Option<RustEdition>,
 }
 
