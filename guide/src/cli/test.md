@@ -12,21 +12,34 @@ the moment, only Rust tests are supported.
 
 rustdoc doesn't test code blocks which contain the `ignore` attribute:
 
+````text
     ```rust,ignore
     fn main() {}
     ```
+````
 
 rustdoc also doesn't test code blocks which specify a language other than Rust:
 
+````text
     ```markdown
     **Foo**: _bar_
     ```
+````
 
 rustdoc *does* test code blocks which have no language specified:
 
+````text
     ```
     This is going to cause an error!
     ```
+````
+
+#### Declaring dependencies
+
+In the book's root directory, you may place a `Cargo.toml` manifest declaring
+properies such as Rust edition and external dependencies. Remember to add an empty
+`src/lib.rs` file to keep the structure same as in a Rust library. You may add your own
+helper code to the `src/lib.rs` file and refer to it in your snippets.
 
 #### Specify a directory
 
@@ -37,24 +50,14 @@ instead of the current working directory.
 mdbook test path/to/book
 ```
 
-#### `--library-path`
+#### `--library-path` (DEPRECATED)
 
-The `--library-path` (`-L`) option allows you to add directories to the library
-search path used by `rustdoc` when it builds and tests the examples. Multiple
-directories can be specified with multiple options (`-L foo -L bar`) or with a
-comma-delimited list (`-L foo,bar`). The path should point to the Cargo
-[build cache](https://doc.rust-lang.org/cargo/guide/build-cache.html) `deps` directory that
-contains the build output of your project. For example, if your Rust project's book is in a directory
-named `my-book`, the following command would include the crate's dependencies when running `test`:
-
-```shell
-mdbook test my-book -L target/debug/deps/
-```
-
-See the `rustdoc` command-line [documentation](https://doc.rust-lang.org/rustdoc/command-line-arguments.html#-l--library-path-where-to-look-for-dependencies)
-for more information.
+The `--library-path` (`-L`) option allowed you to add directories to the library
+search path used by `rustdoc` when it builds and tests the examples. It is now
+deprecated.
 
 #### `--chapter`
 
 The `--chapter` (`-c`) option allows you to test a specific chapter of the
-book using the chapter name or the relative path to the chapter.
+book using the chapter name, or matching against it or against the path
+to the chapter.

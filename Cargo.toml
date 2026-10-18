@@ -1,6 +1,7 @@
 [workspace]
 members = [
     ".",
+    "guide",
     "crates/*",
     "examples/remove-emphasis/mdbook-remove-emphasis", "guide/guide-helper",
 ]

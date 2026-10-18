@@ -4,3 +4,13 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
+mdbook-core.workspace = true
+mdbook-renderer.workspace = true
+mdbook-preprocessor.workspace = true
+pulldown-cmark.workspace = true
+pulldown-cmark-to-cmark = "22.0"
+serde = { version = "1.0", features = ["derive"] }
+clap.workspace = true
+anyhow.workspace = true
+semver.workspace = true
+serde_json.workspace = true
