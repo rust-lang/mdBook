@@ -298,6 +298,7 @@ impl MDBook {
         } else {
             let mut args = vec![OsString::from("--test")];
             if let Some(edition) = self.config.rust.edition {
+                eprintln!("warning: using DEPRECATED rust.edition config value");
                 args.push(OsString::from("--edition"));
                 match edition {
                     RustEdition::E2015 => {
