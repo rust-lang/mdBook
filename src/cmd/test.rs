@@ -43,8 +43,10 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let mut book = MDBook::load(book_dir)?;
 
     if !library_paths.is_empty() {
-        eprintln!("warning: using deprecated library-path argument. Specify your dependencies\
-        in a Cargo manifest instead.")
+        eprintln!(
+            "warning: using deprecated library-path argument. Specify your dependencies\
+        in a Cargo manifest instead."
+        )
     }
 
     match chapter {

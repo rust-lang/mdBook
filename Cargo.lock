@@ -1116,22 +1116,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mdbook-guide"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "mdbook-core",
- "mdbook-preprocessor",
- "mdbook-renderer",
- "pulldown-cmark",
- "pulldown-cmark-to-cmark",
- "semver",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "mdbook-html"
 version = "0.5.4"
 dependencies = [

@@ -37,7 +37,7 @@ rustdoc *does* test code blocks which have no language specified:
 #### Declaring dependencies
 
 In the book's root directory, you may place a `Cargo.toml` manifest declaring
-properies such as Rust edition and external dependencies. Remember to add an empty
+properties such as Rust edition and external dependencies. Remember to add an empty
 `src/lib.rs` file to keep the structure same as in a Rust library. You may add your own
 helper code to the `src/lib.rs` file and refer to it in your snippets.
 

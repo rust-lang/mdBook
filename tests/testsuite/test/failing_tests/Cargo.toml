@@ -1,0 +1,3 @@
+[package]
+name = "failing_tests"
+edition = "2024"
