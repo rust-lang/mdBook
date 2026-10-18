@@ -16,6 +16,8 @@ use mdbook_renderer::{RenderContext, Renderer};
 use mdbook_summary::Summary;
 use regex::Regex;
 use serde::Deserialize;
+use std::ffi::OsString;
+use std::io::IsTerminal;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::TempDir;
@@ -226,14 +228,14 @@ impl MDBook {
     }
 
     /// Run `rustdoc` tests on the book.
-    pub fn test(&mut self) -> Result<()> {
+    pub fn test(&mut self, library_paths: Vec<&str>) -> Result<()> {
         // test_chapter with chapter:None will run all tests.
-        self.test_chapter(None)
+        self.test_chapter(library_paths, None)
     }
 
     /// Run `rustdoc` tests on a specific chapter of the book.
     /// If `chapter` is `None`, all tests will be run.
-    pub fn test_chapter(&mut self, filter: Option<&str>) -> Result<()> {
+    pub fn test_chapter(&mut self, library_paths: Vec<&str>, filter: Option<&str>) -> Result<()> {
         struct TestRenderer;
         impl Renderer for TestRenderer {
             // FIXME: Is "test" the proper renderer name to use here?
@@ -245,6 +247,20 @@ impl MDBook {
                 Ok(())
             }
         }
+
+        let cwd = std::env::current_dir()?;
+        let library_args: Vec<OsString> = library_paths
+            .into_iter()
+            .flat_map(|path| {
+                let path = Path::new(path);
+                let path = if path.is_relative() {
+                    cwd.join(path).into_os_string()
+                } else {
+                    path.to_path_buf().into_os_string()
+                };
+                [OsString::from("-L"), path]
+            })
+            .collect();
 
         let (book, _) = self.preprocess_book(&TestRenderer)?;
 
@@ -276,25 +292,25 @@ impl MDBook {
             fs::write(temp.path().join(name), content)?;
         }
 
-        let rustdoc_args = if self.root.join("Cargo.toml").exists() {
+        let mut rustdoc_args = if self.root.join("Cargo.toml").exists() {
             self.invoke_cargo()
                 .with_context(|| "failed to execute `cargo`")?
         } else {
-            let mut args = vec!["--test".to_string()];
+            let mut args = vec![OsString::from("--test")];
             if let Some(edition) = self.config.rust.edition {
-                args.push("--edition".to_string());
+                args.push(OsString::from("--edition"));
                 match edition {
                     RustEdition::E2015 => {
-                        args.push("2015".to_string());
+                        args.push(OsString::from("2015"));
                     }
                     RustEdition::E2018 => {
-                        args.push("2018".to_string());
+                        args.push(OsString::from("2018"));
                     }
                     RustEdition::E2021 => {
-                        args.push("2021".to_string());
+                        args.push(OsString::from("2021"));
                     }
                     RustEdition::E2024 => {
-                        args.push("2024".to_string());
+                        args.push(OsString::from("2024"));
                     }
                     _ => panic!("RustEdition {edition:?} not covered"),
                 }
@@ -306,6 +322,9 @@ impl MDBook {
             rustdoc_args.push(OsString::from("--color"));
             rustdoc_args.push(OsString::from("always"));
         }
+
+        rustdoc_args.extend(library_args);
+
         let mut chapter_found = false;
         let mut failed = false;
 
@@ -360,7 +379,7 @@ impl MDBook {
         Ok(())
     }
 
-    fn invoke_cargo(&self) -> Option<Vec<String>> {
+    fn invoke_cargo(&self) -> Option<Vec<OsString>> {
         let mut cargo = Command::new("cargo");
         cargo
             .current_dir(&self.root)
@@ -393,7 +412,7 @@ impl MDBook {
                 cargo_metadata::Message::parse_stream(line.as_bytes()).collect();
             match is_json_compiler_artifact {
                 Ok(message) => match message.get(0) {
-                    Some(&cargo_metadata::Message::CompilerArtifact(ref artifact)) => {
+                    Some(cargo_metadata::Message::CompilerArtifact(artifact)) => {
                         if is_rustdoc_args {
                             panic!("wrong output of cargo: {:?} {}", message[0], line);
                         }
@@ -401,7 +420,7 @@ impl MDBook {
                             target_src_path = artifact.target.src_path.clone();
                         }
                     }
-                    Some(&cargo_metadata::Message::TextLine(_)) if is_rustdoc_args => {
+                    Some(cargo_metadata::Message::TextLine(_)) if is_rustdoc_args => {
                         rustdoc_args = line.to_string();
                     }
                     _ => {}
@@ -416,7 +435,7 @@ impl MDBook {
         let result = rustdoc_args
             .split(" ")
             .filter(|arg| !target_src_path.ends_with(Path::new(arg)))
-            .map(|arg| arg.to_string())
+            .map(|arg| OsString::from(arg))
             .collect();
         Some(result)
     }
