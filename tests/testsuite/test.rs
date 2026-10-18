@@ -30,9 +30,16 @@ ERROR rustdoc returned an error:
 args: ["--test"] "failing.md"
 --- stdout
 
-...
+running 1 test
 test failing.md - Failing_Tests (line 3) ... FAILED
-...
+
+failures:
+
+---- failing.md - Failing_Tests (line 3) stdout ----
+Test executable failed ([EXIT_STATUS]: 101).
+
+stderr:
+
 thread [..] panicked at failing.md:3:1:
 fail
 note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
@@ -42,7 +49,7 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 failures:
     failing.md - Failing_Tests (line 3)
 
-test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.32s
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in [..]
 
 
 --- stderr
@@ -61,7 +68,7 @@ Test executable failed ([EXIT_STATUS]: 101).
 
 stderr:
 
-thread 'main' (108683) panicked at failing_include.md:3:1:
+thread [..] panicked at failing_include.md:3:1:
 failing!
 note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 
@@ -70,7 +77,7 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 failures:
     failing_include.md - Failing_Include (line 3)
 
-test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.30s
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in [..]
 
 
 --- stderr
