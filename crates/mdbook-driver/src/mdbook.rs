@@ -248,7 +248,7 @@ impl MDBook {
 
         let (book, _) = self.preprocess_book(&TestRenderer)?;
 
-        // let color_output = std::io::stderr().is_terminal();
+        let color_output = std::io::stderr().is_terminal();
 
         fn get_chapter(item: &BookItem) -> Option<(&Chapter, &PathBuf)> {
             if let BookItem::Chapter(ref ch) = *item {
@@ -302,6 +302,10 @@ impl MDBook {
             args
         };
 
+        if color_output {
+            rustdoc_args.push(OsString::from("--color"));
+            rustdoc_args.push(OsString::from("always"));
+        }
         let mut chapter_found = false;
         let mut failed = false;
 
