@@ -868,3 +868,164 @@ aria-label="Show hidden lines"></button>';
         document.addEventListener('scroll', updateBorder, { passive: true });
     })();
 })();
+
+(function quickJump() {
+    const wrapper = document.getElementById('mdbook-quickjump');
+    const input = document.getElementById('mdbook-quickjump-input');
+    const results = document.getElementById('mdbook-quickjump-results');
+    const results_outer = document.getElementById('mdbook-quickjump-results-outer');
+
+    if (!wrapper || !input || !results || !results_outer) {
+        return;
+    }
+
+    let pages = null;
+    let selected = -1;
+
+    function collectPages() {
+        if (pages !== null) {
+            return pages;
+        }
+        const seen = new Set();
+        pages = [];
+        document.querySelectorAll('#mdbook-sidebar a[href]').forEach(link => {
+            if (link.classList.contains('chapter-fold-toggle')
+                || link.classList.contains('header-in-summary')) {
+                return;
+            }
+            const url = link.href;
+            if (url.startsWith('#') || seen.has(url)
+                || link.hostname !== window.location.hostname) {
+                return;
+            }
+            const name = link.textContent.trim();
+            if (name === '') {
+                return;
+            }
+            seen.add(url);
+            let path = '';
+            try {
+                path = decodeURIComponent(new URL(url).pathname).replace(/^\//, '');
+            } catch {
+                path = link.getAttribute('href') || '';
+            }
+            pages.push({ name, path, url });
+        });
+        return pages;
+    }
+
+    function render(matches) {
+        selected = -1;
+        results.textContent = '';
+        if (matches.length === 0) {
+            results_outer.classList.add('hidden');
+            return;
+        }
+        matches.forEach(match => {
+            const li = document.createElement('li');
+            li.setAttribute('role', 'option');
+            li.dataset.url = match.url;
+            const title = document.createElement('span');
+            title.className = 'quickjump-title';
+            title.textContent = match.name;
+            const path = document.createElement('span');
+            path.className = 'quickjump-path';
+            path.textContent = match.path;
+            li.append(title, path);
+            li.addEventListener('mousedown', e => {
+                e.preventDefault();
+                window.location.assign(match.url);
+            });
+            results.appendChild(li);
+        });
+        results_outer.classList.remove('hidden');
+        updateSelection(0);
+    }
+
+    function updateSelection(index) {
+        const items = Array.from(results.children);
+        items.forEach(item => item.classList.remove('focus'));
+        if (items.length === 0) {
+            selected = -1;
+            return;
+        }
+        selected = (index + items.length) % items.length;
+        const item = items[selected];
+        item.classList.add('focus');
+        item.scrollIntoView({ block: 'nearest' });
+    }
+
+    function doSearch() {
+        const query = input.value.trim().toLowerCase();
+        if (query === '') {
+            results.textContent = '';
+            results_outer.classList.add('hidden');
+            selected = -1;
+            return;
+        }
+        const matches = collectPages().filter(page => {
+            return page.name.toLowerCase().includes(query)
+                || page.path.toLowerCase().includes(query);
+        });
+        render(matches);
+    }
+
+    function open() {
+        wrapper.classList.remove('hidden');
+        input.value = '';
+        input.focus();
+        doSearch();
+    }
+
+    function close() {
+        wrapper.classList.add('hidden');
+        input.value = '';
+        results.textContent = '';
+        results_outer.classList.add('hidden');
+        selected = -1;
+    }
+
+    function navigate() {
+        const items = Array.from(results.children);
+        if (selected < 0 || selected >= items.length) {
+            return;
+        }
+        window.location.assign(items[selected].dataset.url);
+    }
+
+    input.addEventListener('input', doSearch, false);
+
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            close();
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            updateSelection(selected + 1);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            updateSelection(selected - 1);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            navigate();
+        }
+    }, false);
+
+    document.addEventListener('keydown', e => {
+        if ((e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey
+            && /^k$/i.test(e.key) && !mdbook_something_else_has_focus(e)) {
+            e.preventDefault();
+            open();
+        } else if (e.key === 'Escape' && !wrapper.classList.contains('hidden')) {
+            e.preventDefault();
+            close();
+        }
+    }, false);
+
+    document.addEventListener('click', e => {
+        if (!wrapper.classList.contains('hidden') && !wrapper.contains(e.target)) {
+            close();
+        }
+    }, false);
+})();

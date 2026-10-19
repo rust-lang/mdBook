@@ -23,6 +23,9 @@ The **arrow buttons** at the bottom of the page can be used to navigate to the p
 
 The **left and right arrow keys** on the keyboard can be used to navigate to the previous or the next chapter.
 
+Pressing <kbd>Cmd</kbd>+<kbd>K</kbd> (macOS) or <kbd>Ctrl</kbd>+<kbd>K</kbd> (other platforms) opens a quick jump box.
+Typing a chapter title or file name will filter the chapters, and pressing <kbd>Enter</kbd> will open the highlighted chapter.
+
 ## Top menu bar
 
 The menu bar at the top of the page provides some icons for interacting with the book.
