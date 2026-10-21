@@ -1,0 +1,5 @@
+[package]
+name = "passing_tests"
+edition = "2024"
+
+[workspace]
