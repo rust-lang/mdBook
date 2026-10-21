@@ -90,9 +90,9 @@ fn tasklists() {
         str![[r##"
 <h2 id="tasklisks"><a class="header" href="#tasklisks">Tasklisks</a></h2>
 <ul>
-<li><input disabled="" type="checkbox" checked=""> Apples</li>
-<li><input disabled="" type="checkbox" checked=""> Broccoli</li>
-<li><input disabled="" type="checkbox"> Carrots</li>
+<li><input disabled="" type="checkbox" aria-hidden="true" checked=""> Apples</li>
+<li><input disabled="" type="checkbox" aria-hidden="true" checked=""> Broccoli</li>
+<li><input disabled="" type="checkbox" aria-hidden="true"> Carrots</li>
 </ul>
 "##]],
     );
