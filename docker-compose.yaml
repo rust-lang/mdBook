@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+
+  ####
+  #### 1. Place this file in a folder where the **/*.md files exist
+  #### 2. Adjust the port number to one available locally
+  #### 3. Adjust the volume path to point to the container's /src dir
+  ####
+  mdbook:
+    image: rust-lang/mdbook
+    container_name: rustlang-mdbook
+    platform: linux/amd64
+    build:
+      context: .
+      args:
+        BASE_IMAGE: rustlang/rust:nightly-buster-slim
+    ports:
+      - 3000:3000
+    volumes:
+      - ./test_book/src:/src
+
