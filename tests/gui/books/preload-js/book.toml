@@ -1,0 +1,8 @@
+[book]
+title = "preload-js"
+
+[output.html]
+preload-js = ["hljs-example.js", "mode-example.js"]
+
+[output.html.playground]
+editable = true
