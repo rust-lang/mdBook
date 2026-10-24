@@ -42,3 +42,18 @@ fn readme_to_index() {
     assert!(test.dir.join("book/index.html").exists());
     assert!(!test.dir.join("book/README.html").exists());
 }
+
+#[test]
+fn index_rewrite() {
+    let mut test = BookTest::from_dir("index/readme-links");
+    test.build();
+    test.check_file_contains("book/index.html", "top-level index");
+    test.check_file_contains(
+        "book/chapter1/index.html",
+        "<p>readme (soon to be chapter1 index!)</p>",
+    );
+    test.check_file_contains("book/chapter1/other.html", "link to readme");
+    test.check_file_contains("book/chapter1/other.html", "href=\"index.html\"");
+    assert!(test.dir.join("book/chapter1/index.html").exists());
+    assert!(test.dir.join("book/chapter1/other.html").exists());
+}

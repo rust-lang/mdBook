@@ -80,20 +80,45 @@ fn is_readme_file<P: AsRef<Path>>(path: P) -> bool {
     )
 }
 
+/// Replace mentions of `README.md` (case insensitive) into `index.md` in markdown links.
 fn convert_links_to_readme_files(s: &str) -> String {
-    static README_LINK: Lazy<Regex> = Lazy::new(|| {
-        Regex::new(r"(?i)(?P<before>\[.+\]\([^:]*)readme(?P<after>\.md(?:.{0}|#.*)\))").unwrap()
-    });
+    const README_MD: &str = "readme.md";
+    let mut out = String::with_capacity(s.len());
+    let mut cursor = 0;
 
-    README_LINK
-        .replace_all(s, |caps: &regex::Captures<'_>| {
-            format!(
-                "{before}index{after}",
-                before = &caps["before"],
-                after = &caps["after"],
-            )
-        })
-        .to_string()
+    while let Some(open_rel) = s[cursor..].find("](") {
+        let target_start = cursor + open_rel + 2;
+        let Some(close_rel) = s[target_start..].find(')') else {
+            break;
+        };
+        let target_end = target_start + close_rel;
+
+        out.push_str(&s[cursor..target_start]);
+        let target = &s[target_start..target_end];
+        let lower = target.to_ascii_lowercase();
+
+        if let Some(pos) = lower.find(README_MD) {
+            let before = &target[..pos];
+            let after = &target[pos + README_MD.len()..];
+            // from the previous regex:
+            // ignore if `:` (URLs), or if there is something after `readme.md` other than a chapter link
+            if !before.contains(':') && (after.is_empty() || after.starts_with('#')) {
+                out.push_str(before);
+                out.push_str("index.md");
+                out.push_str(after);
+            } else {
+                out.push_str(target);
+            }
+        } else {
+            out.push_str(target);
+        }
+
+        out.push(')');
+        cursor = target_end + 1;
+    }
+
+    out.push_str(&s[cursor..]);
+    out
 }
 
 #[cfg(test)]
@@ -172,6 +197,9 @@ mod tests {
         );
 
         let content = "[link](https://some.domain/README.md)";
+        assert_eq!(convert_links_to_readme_files(&content), content);
+
+        let content = "[link](index.md Epilogue";
         assert_eq!(convert_links_to_readme_files(&content), content);
     }
 }
