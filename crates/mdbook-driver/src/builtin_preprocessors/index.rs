@@ -95,7 +95,7 @@ fn convert_links_to_readme_files(s: &str) -> String {
 
         out.push_str(&s[cursor..target_start]);
         let target = &s[target_start..target_end];
-        let lower = target.to_ascii_lowercase();
+        let lower = target.to_lowercase();
 
         if let Some(pos) = lower.find(README_MD) {
             let before = &target[..pos];
