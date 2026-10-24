@@ -1,1 +1,0 @@
-assert!($TEST_STATUS);

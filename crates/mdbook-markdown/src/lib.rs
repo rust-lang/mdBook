@@ -1,0 +1,61 @@
+//! Markdown processing used in mdBook.
+//!
+//! This crate provides functions for processing Markdown in the same way as
+//! [mdBook](https://rust-lang.github.io/mdBook/). The [`pulldown_cmark`]
+//! crate is used as the underlying parser. This crate re-exports
+//! [`pulldown_cmark`] so that you can access its types.
+
+use pulldown_cmark::{Options, Parser};
+
+#[doc(inline)]
+pub use pulldown_cmark;
+
+/// Options for parsing markdown.
+#[non_exhaustive]
+pub struct MarkdownOptions {
+    /// Enables smart punctuation.
+    ///
+    /// Converts quotes to curly quotes, `...` to `…`, `--` to en-dash, and
+    /// `---` to em-dash.
+    ///
+    /// This is `true` by default.
+    pub smart_punctuation: bool,
+    /// Enables definition lists.
+    ///
+    /// This is `true` by default.
+    pub definition_lists: bool,
+    /// Enables admonitions.
+    ///
+    /// This is `true` by default.
+    pub admonitions: bool,
+}
+
+impl Default for MarkdownOptions {
+    fn default() -> MarkdownOptions {
+        MarkdownOptions {
+            smart_punctuation: true,
+            definition_lists: true,
+            admonitions: true,
+        }
+    }
+}
+
+/// Creates a new pulldown-cmark parser of the given text.
+pub fn new_cmark_parser<'text>(text: &'text str, options: &MarkdownOptions) -> Parser<'text> {
+    let mut opts = Options::empty();
+    opts.insert(Options::ENABLE_TABLES);
+    opts.insert(Options::ENABLE_FOOTNOTES);
+    opts.insert(Options::ENABLE_STRIKETHROUGH);
+    opts.insert(Options::ENABLE_TASKLISTS);
+    opts.insert(Options::ENABLE_HEADING_ATTRIBUTES);
+    if options.smart_punctuation {
+        opts.insert(Options::ENABLE_SMART_PUNCTUATION);
+    }
+    if options.definition_lists {
+        opts.insert(Options::ENABLE_DEFINITION_LIST);
+    }
+    if options.admonitions {
+        opts.insert(Options::ENABLE_GFM);
+    }
+    Parser::new_ext(text, opts)
+}

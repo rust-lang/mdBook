@@ -1,0 +1,63 @@
+<svg width="740px" height="398px" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .fg { fill: #AAAAAA }
+    .bg { background: #000000 }
+    .container {
+      padding: 0 10px;
+      line-height: 18px;
+    }
+    tspan {
+      font: 14px SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
+      white-space: pre;
+      line-height: 18px;
+    }
+  </style>
+
+  <rect width="100%" height="100%" y="0" rx="4.5" class="bg" />
+
+  <text xml:space="preserve" class="container fg">
+    <tspan x="10px" y="28px"><tspan>Creates a book from markdown files</tspan>
+</tspan>
+    <tspan x="10px" y="46px">
+</tspan>
+    <tspan x="10px" y="64px"><tspan>Usage: mdbook[EXE] [COMMAND]</tspan>
+</tspan>
+    <tspan x="10px" y="82px">
+</tspan>
+    <tspan x="10px" y="100px"><tspan>Commands:</tspan>
+</tspan>
+    <tspan x="10px" y="118px"><tspan>  init         Creates the boilerplate structure and files for a new book</tspan>
+</tspan>
+    <tspan x="10px" y="136px"><tspan>  build        Builds a book from its markdown files</tspan>
+</tspan>
+    <tspan x="10px" y="154px"><tspan>  test         Tests that a book's Rust code samples compile</tspan>
+</tspan>
+    <tspan x="10px" y="172px"><tspan>  clean        Deletes a built book</tspan>
+</tspan>
+    <tspan x="10px" y="190px"><tspan>  completions  Generate shell completions for your shell to stdout</tspan>
+</tspan>
+    <tspan x="10px" y="208px"><tspan>  watch        Watches a book's files and rebuilds it on changes</tspan>
+</tspan>
+    <tspan x="10px" y="226px"><tspan>  serve        Serves a book at http://localhost:3000, and rebuilds it on changes</tspan>
+</tspan>
+    <tspan x="10px" y="244px"><tspan>  help         Print this message or the help of the given subcommand(s)</tspan>
+</tspan>
+    <tspan x="10px" y="262px">
+</tspan>
+    <tspan x="10px" y="280px"><tspan>Options:</tspan>
+</tspan>
+    <tspan x="10px" y="298px"><tspan>  -h, --help     Print help</tspan>
+</tspan>
+    <tspan x="10px" y="316px"><tspan>  -V, --version  Print version</tspan>
+</tspan>
+    <tspan x="10px" y="334px">
+</tspan>
+    <tspan x="10px" y="352px"><tspan>For more information about a specific command, try `mdbook &lt;command&gt; --help`</tspan>
+</tspan>
+    <tspan x="10px" y="370px"><tspan>The source code for mdBook is available at: https://github.com/rust-lang/mdBook</tspan>
+</tspan>
+    <tspan x="10px" y="388px">
+</tspan>
+  </text>
+
+</svg>

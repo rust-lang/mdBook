@@ -1,3 +1,0 @@
-sign-commit = true
-push-remote = "origin"
-tag-prefix = "v"

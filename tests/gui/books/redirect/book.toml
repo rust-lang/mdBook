@@ -1,0 +1,28 @@
+[book]
+title = "redirect"
+
+[output.html.redirect]
+"/inner/old.html" = "../new-chapter.html"
+
+# This is a source without a fragment, and one with a fragment that goes to
+# the same place. The redirect with the fragment is not necessary, since that
+# is the default behavior.
+"/pointless-fragment.html" = "new-chapter.html"
+"/pointless-fragment.html#foo" = "new-chapter.html#foo"
+
+"/rename-page-and-fragment.html" = "new-chapter.html"
+"/rename-page-and-fragment.html#orig" = "new-chapter.html#new"
+
+"/rename-page-fragment-elsewhere.html" = "new-chapter.html"
+"/rename-page-fragment-elsewhere.html#orig" = "other-chapter.html#new"
+
+# Rename fragment on an existing page.
+"/new-chapter.html#orig" = "new-chapter.html#new"
+# Rename fragment on an existing page to another page.
+"/new-chapter.html#orig-new-chapter" = "other-chapter.html#new"
+
+"/full-url-with-fragment.html" = "https://www.rust-lang.org/#fragment"
+
+"/full-url-with-fragment-map.html" = "https://www.rust-lang.org/"
+"/full-url-with-fragment-map.html#a" = "https://www.rust-lang.org/#new1"
+"/full-url-with-fragment-map.html#b" = "https://www.rust-lang.org/#new2"

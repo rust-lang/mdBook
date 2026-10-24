@@ -1,0 +1,5 @@
+[book]
+title = "playground"
+
+[output.html.playground]
+editable = true

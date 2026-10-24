@@ -7,13 +7,22 @@ If you have come here to learn how to contribute to mdBook, we have some tips fo
 First of all, don't hesitate to ask questions!
 Use the [issue tracker](https://github.com/rust-lang/mdBook/issues), no question is too simple.
 
-### Issues to work on
+## Issue assignment
 
-Any issue is up for the grabbing, but if you are starting out, you might be interested in the
+**:warning: Important :warning:**
+
+Before working on pull request, please ping us on the corresponding issue.
+The current PR backlog is beyond what we can process at this time.
+Only issues that have an [`E-Help-wanted`](https://github.com/rust-lang/mdBook/labels/E-Help-wanted) or [`Feature accepted`](https://github.com/rust-lang/mdBook/labels/Feature%20accepted) label will likely receive reviews.
+If there isn't already an open issue for what you want to work on, please open one first to see if it is something we would be available to review.
+
+## Issues to work on
+
+If you are starting out, you might be interested in the
 [E-Easy issues](https://github.com/rust-lang/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AE-Easy).
 Those are issues that are considered more straightforward for beginners to Rust or the codebase itself.
-These issues can be a good launching pad for more involved issues. Easy tasks for a first time contribution
-include documentation improvements, new tests, examples, updating dependencies, etc.
+These issues can be a good launching pad for more involved issues.
+Easy tasks for a first time contribution include documentation improvements, new tests, examples, updating dependencies, etc.
 
 If you come from a web development background, you might be interested in issues related to web technologies tagged
 [A-JavaScript](https://github.com/rust-lang/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AA-JavaScript),
@@ -21,18 +30,18 @@ If you come from a web development background, you might be interested in issues
 [A-HTML](https://github.com/rust-lang/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AA-HTML) or
 [A-Mobile](https://github.com/rust-lang/mdBook/issues?q=is%3Aopen+is%3Aissue+label%3AA-Mobile).
 
-When you decide you want to work on a specific issue, ping us on that issue so that we can assign it to you.
+When you decide you want to work on a specific issue, and it isn't already assigned to someone else, assign the issue to yourself by leaving a comment with the text `@rustbot claim`.
 Again, do not hesitate to ask questions. We will gladly mentor anyone that want to tackle an issue.
 
 Issues on the issue tracker are categorized with the following labels:
 
 - **A**-prefixed labels state which area of the project an issue relates to.
 - **E**-prefixed labels show an estimate of the experience necessary to fix the issue.
-- **M**-prefixed labels are meta-issues used for questions, discussions, or tracking issues
+- **M**-prefixed labels are meta-issues regarding the management of the mdBook project itself
 - **S**-prefixed labels show the status of the issue
-- **T**-prefixed labels show the type of issue
+- **C**-prefixed labels show the category of issue
 
-### Building mdBook
+## Building mdBook
 
 mdBook builds on stable Rust, if you want to build mdBook from source, here are the steps to follow:
 
@@ -47,11 +56,11 @@ mdBook builds on stable Rust, if you want to build mdBook from source, here are 
 
 The resulting binary can be found in `mdBook/target/debug/` under the name `mdbook` or `mdbook.exe`.
 
-### Code Quality
+## Code quality
 
 We love code quality and Rust has some excellent tools to assist you with contributions.
 
-#### Formatting Code with rustfmt
+### Formatting code with rustfmt
 
 Before you make your Pull Request to the project, please run it through the `rustfmt` utility.
 This will ensure we have good quality source code that is better for us all to maintain.
@@ -59,7 +68,7 @@ This will ensure we have good quality source code that is better for us all to m
 [rustfmt](https://github.com/rust-lang/rustfmt) has a lot more information on the project.
 The quick guide is
 
-1. Install it
+1. Install it (`rustfmt` is usually installed by default via [rustup](https://rustup.rs/)):
     ```
     rustup component add rustfmt
     ```
@@ -71,18 +80,14 @@ The quick guide is
    ```
    cargo fmt
    ```
-   When run through `cargo` it will format all bin and lib files in the current crate.
+   When run through `cargo` it will format all bin and lib files in the current package.
 
 For more information, such as running it from your favourite editor, please see the `rustfmt` project. [rustfmt](https://github.com/rust-lang/rustfmt)
 
+### Finding issues with clippy
 
-#### Finding Issues with Clippy
-
-Clippy is a code analyser/linter detecting mistakes, and therefore helps to improve your code.
-Like formatting your code with `rustfmt`, running clippy regularly and before your Pull Request will
-help us maintain awesome code.
-
-The best documentation can be found over at [rust-clippy](https://github.com/rust-lang/rust-clippy)
+[Clippy](https://doc.rust-lang.org/clippy/) is a code analyser/linter detecting mistakes, and therefore helps to improve your code.
+Like formatting your code with `rustfmt`, running clippy regularly and before your Pull Request will help us maintain awesome code.
 
 1. To install
     ```
@@ -93,16 +98,88 @@ The best documentation can be found over at [rust-clippy](https://github.com/rus
     cargo clippy
     ```
 
-Clippy has an ever growing list of checks, that are managed in [lint files](https://rust-lang.github.io/rust-clippy/master/index.html).
+### Finding typos with `typos-cli`
 
-### Making a pull-request
+[`typos`](https://github.com/crate-ci/typos) checks the repository for spelling mistakes and runs as part of CI. Its configuration and excluded files are listed in `typos.toml`.
+
+1. Install `typos-cli`:
+    ```
+    cargo install typos-cli
+    ```
+2. Run it from the repository root:
+    ```
+    typos
+    ```
+
+### Auditing dependencies with `cargo audit`
+
+[`cargo audit`](https://github.com/rustsec/cargo-audit) is a tool that checks the repository for known vulnerabilities in the dependencies.
+
+1. Install `cargo audit`:
+    ```
+    cargo install cargo-audit
+    ```
+2. Run it from the repository root:
+    ```
+    cargo audit
+    ```
+
+## Change requirements
+
+Please consider the following when making a change:
+
+* Almost all changes that modify the Rust code must be accompanied with a test.
+
+* Almost all features and changes must update the documentation.
+  mdBook has the [mdBook Guide](https://rust-lang.github.io/mdBook/) whose source is at <https://github.com/rust-lang/mdBook/tree/main/guide>.
+
+* Almost all Rust items should be documented with doc comments.
+  See the [Rustdoc Book](https://doc.rust-lang.org/rustdoc/) for more information on writing doc comments.
+
+* Breaking the API can only be done in major SemVer releases.
+  These are done very infrequently, so it is preferred to avoid these when possible.
+  See [SemVer Compatibility](https://doc.rust-lang.org/cargo/reference/semver.html) for more information on what a SemVer breaking change is.
+
+  (Note: At this time, some SemVer breaking changes are inevitable due to the current code structure.
+  An example is adding new fields to the config structures.
+  These are intended to be fixed in the next major release.)
+
+* Similarly, the CLI interface is considered to be stable.
+  Care should be taken to avoid breaking existing workflows.
+
+* Check out the [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/) for guidelines on designing the API.
+
+## Tests
+
+The main test harness is described in the [testsuite documentation](tests/testsuite/README.md). There are several different commands to run different kinds of tests:
+
+- `cargo test --workspace` — This runs all of the unit and integration tests, except for the GUI tests.
+- `cargo test --test gui` — This runs the [GUI test harness](#browser-compatibility-and-testing). This does not get run automatically due to its extra requirements.
+- `npm run lint` — [Checks the `.js` files](#checking-changes-in-js-files)
+- `cargo test --workspace --no-default-features` — Testing without default features helps check that all feature checks are implemented correctly.
+- `cargo clippy --workspace --all-targets --no-deps -- -D warnings` — This makes sure that there are no clippy warnings.
+- `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --document-private-items --no-deps` — This verifies that there aren't any rustdoc warnings.
+- `cargo fmt --check` — Verifies that everything is formatted correctly.
+- `cargo +stable semver-checks` — Verifies that no SemVer breaking changes have been made. You must install [`cargo-semver-checks`](https://crates.io/crates/cargo-semver-checks) first.
+
+To help simplify running all these commands, you can run the following cargo command:
+
+```sh
+cargo xtask test-all
+```
+
+It is useful to run all tests before submitting a PR. While developing I recommend to run some subset of that command based on what you are working on. There are individual arguments for each one. For example:
+
+```sh
+cargo xtask test-workspace clippy doc eslint fmt gui semver-checks
+```
+
+While developing, remove any of those arguments that are not relevant to what you are changing, or are really slow.
+
+## Making a pull-request
 
 When you feel comfortable that your changes could be integrated into mdBook, you can create a pull-request on GitHub.
 One of the core maintainers will then approve the changes or request some changes before it gets merged.
-
-If you want to make your pull-request even better, you might want to run [Clippy](https://github.com/Manishearth/rust-clippy)
-and [rustfmt](https://github.com/rust-lang/rustfmt) on the code first.
-This is not a requirement though and will never block a pull-request from being merged.
 
 That's it, happy contributions! :tada: :tada: :tada:
 
@@ -113,8 +190,43 @@ We generally strive to keep mdBook compatible with a relatively recent browser o
 That is, supporting Chrome, Safari, Firefox, Edge on Windows, macOS, Linux, iOS, and Android.
 If possible, do your best to avoid breaking older browser releases.
 
-Any change to the HTML or styling is encouraged to manually check on as many browsers and platforms that you can.
-Unfortunately at this time we don't have any automated UI or browser testing, so your assistance in testing is appreciated.
+GUI tests are checked with the GUI testsuite. To run it, you need to install `npm` first. Then run:
+
+```
+cargo test --test gui
+```
+
+If you want to only run some tests, you can filter them by passing (part of) their name:
+
+```
+cargo test --test gui -- search
+```
+
+The first time, it'll fail and ask you to install the `browser-ui-test` package. Install it with the provided
+command then re-run the tests.
+
+If you want to disable the headless mode, use the `--disable-headless-test` option:
+
+```
+cargo test --test gui -- --disable-headless-test
+```
+
+The GUI tests are in the directory `tests/gui` in text files with the `.goml` extension. The books that the tests use are located in the `tests/gui/books` directory. These tests are run using a `node.js` framework called `browser-ui-test`. You can find documentation for this language on its [repository](https://github.com/GuillaumeGomez/browser-UI-test/blob/main/goml-script.md).
+
+### Checking changes in `.js` files
+
+The `.js` files source code is checked using [`eslint`](https://eslint.org/). This is a linter (just like `clippy` in Rust)
+for the Javascript language. You can install it with `npm` by running the following command:
+
+```
+npm install
+```
+
+Then you can run it using:
+
+```
+npm run lint
+```
 
 ## Updating highlight.js
 
@@ -123,8 +235,39 @@ The following are instructions for updating [highlight.js](https://highlightjs.o
 1. Clone the repository at <https://github.com/highlightjs/highlight.js>
 1. Check out a tagged release (like `10.1.1`).
 1. Run `npm install`
-1. Run `node tools/build.js :common apache armasm coffeescript d handlebars haskell http julia nginx properties r scala x86asm yaml`
+1. Run `node tools/build.js :common apache armasm coffeescript d handlebars haskell http julia nginx nim nix properties r scala x86asm yaml`
 1. Compare the language list that it spits out to the one in [`syntax-highlighting.md`](https://github.com/camelid/mdBook/blob/master/guide/src/format/theme/syntax-highlighting.md). If any are missing, add them to the list and rebuild (and update these docs). If any are added to the common set, add them to `syntax-highlighting.md`.
-1. Copy `build/highlight.min.js` to mdbook's directory [`highlight.js`](https://github.com/rust-lang/mdBook/blob/master/src/theme/highlight.js).
+1. Copy `build/highlight.min.js` to mdbook's directory [`highlight.js`](https://github.com/rust-lang/mdBook/blob/main/src/theme/highlight.js).
 1. Be sure to check the highlight.js [CHANGES](https://github.com/highlightjs/highlight.js/blob/main/CHANGES.md) for any breaking changes. Breaking changes that would affect users will need to wait until the next major release.
-1. Build mdbook with the new file and build some books with the new version and compare the output with a variety of languages to see if anything changes. The [test_book](https://github.com/rust-lang/mdBook/tree/master/test_book) contains a chapter with many languages to examine.
+1. Build mdbook with the new file and build some books with the new version and compare the output with a variety of languages to see if anything changes. The [syntax GUI test](https://github.com/rust-lang/mdBook/tree/main/tests/gui/books/highlighting) contains a chapter with many languages to examine. Update the test (`highlighting.goml`) to add any new languages.
+
+## Publishing new releases
+
+Instructions for mdBook maintainers to publish a new release:
+
+1. Create a PR that bumps the version and updates the changelog:
+    1. `git fetch upstream`
+    2. `git checkout -B bump-version upstream/main && git branch --set-upstream-to=origin/bump-version`
+    3. `cargo xtask bump <BUMP>`
+       - This will update the version of all the crates.
+       - `cargo set-version` must first be installed with `cargo install cargo-edit`.
+       - Replace `<BUMP>` with the kind of bump (patch, alpha, etc.)
+    4. `cargo xtask changelog`
+       - This will update `CHANGELOG.md` to add a list of all changes at the top. You will need to move those into the appropriate categories. Most changes that are generally not relevant to a user should be removed. Rewrite the descriptions so that a user can reasonably figure out what it means.
+    5. `git add --update  .`
+    6. `git commit`
+    7. `git push`
+2. After the PR has been merged, create a release in GitHub. This can either be done in the GitHub web UI, or on the command-line:
+   ```bash
+   MDBOOK_VERS="`cargo read-manifest | jq -r .version`" ; \
+    gh release create -R rust-lang/mdbook v$MDBOOK_VERS \
+        --title v$MDBOOK_VERS \
+        --notes "See https://github.com/rust-lang/mdBook/blob/main/CHANGELOG.md#mdbook-${MDBOOK_VERS//.} for a complete list of changes."
+   ```
+
+## LLM policy
+
+mdBook follows the same [LLM usage policy] as `rust-lang/rust`. Please read it before using LLM
+assistance when participating in `rust-lang/mdBook`.
+
+[LLM usage policy]: https://forge.rust-lang.org/policies/llm-usage.html

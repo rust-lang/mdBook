@@ -1,0 +1,15 @@
+// This GUI test checks the sidebar highlight when a chapter generates the index page.
+
+// When a chapter (like `README.md`) generates the index page, only that chapter
+// should be highlighted, not the first chapter of the summary.
+go-to: |DOC_PATH| + "index-chapter/index.html"
+
+assert-count: (".sidebar-scrollbox a.active", 1)
+assert-text: (".sidebar-scrollbox a.active", "1. Introduction")
+
+// The first chapter of the summary is still highlighted when it is the page
+// being viewed.
+go-to: |DOC_PATH| + "index-chapter/prefix-1.html"
+
+assert-count: (".sidebar-scrollbox a.active", 1)
+assert-text: (".sidebar-scrollbox a.active", "Prefix 1")

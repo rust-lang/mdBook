@@ -1,0 +1,5 @@
+[book]
+title = "playground_on_rust_code"
+
+[output.html.playground]
+runnable = false

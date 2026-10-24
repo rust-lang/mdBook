@@ -1,4 +1,4 @@
-# Syntax Highlighting
+# Syntax highlighting
 
 mdBook uses [Highlight.js](https://highlightjs.org) with a custom theme
 for syntax highlighting.
@@ -44,6 +44,8 @@ your own `highlight.js` file:
 - makefile
 - markdown
 - nginx
+- nim
+- nix
 - objectivec
 - perl
 - php
@@ -77,44 +79,12 @@ the `theme` folder of your book.
 
 Now your theme will be used instead of the default theme.
 
-## Hiding code lines
-
-There is a feature in mdBook that lets you hide code lines by prepending them
-with a `#`.
-
-
-```bash
-# fn main() {
-    let x = 5;
-    let y = 6;
-
-    println!("{}", x + y);
-# }
-```
-
-Will render as
-
-```rust
-# fn main() {
-    let x = 5;
-    let y = 7;
-
-    println!("{}", x + y);
-# }
-```
-
-**At the moment, this only works for code examples that are annotated with
-`rust`. Because it would collide with semantics of some programming languages.
-In the future, we want to make this configurable through the `book.toml` so that
-everyone can benefit from it.**
-
-
 ## Improve default theme
 
 If you think the default theme doesn't look quite right for a specific language,
 or could be improved, feel free to [submit a new
 issue](https://github.com/rust-lang/mdBook/issues) explaining what you
-have in mind and I will take a look at it.
+have in mind and the team will take a look at it.
 
 You could also create a pull-request with the proposed improvements.
 

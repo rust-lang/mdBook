@@ -3,56 +3,52 @@ on:
   release:
     types: [created]
 
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: write
+
 jobs:
   release:
-    name: Deploy Release
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        target:
-          - aarch64-unknown-linux-musl
-          - x86_64-unknown-linux-gnu
-          - x86_64-unknown-linux-musl
-          - x86_64-apple-darwin
-          - x86_64-pc-windows-msvc
         include:
           - target: aarch64-unknown-linux-musl
-            os: ubuntu-latest
+            os: ubuntu-22.04
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-24.04-arm
           - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
+            os: ubuntu-22.04
           - target: x86_64-unknown-linux-musl
-            os: ubuntu-latest
+            os: ubuntu-22.04
           - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: aarch64-apple-darwin
             os: macos-latest
           - target: x86_64-pc-windows-msvc
             os: windows-latest
+          - target: aarch64-pc-windows-msvc
+            os: windows-11-arm
+    name: Deploy ${{ matrix.target }}
     steps:
-    - uses: actions/checkout@master
-    - name: Install hub
-      run: ci/install-hub.sh ${{ matrix.os }}
-      shell: bash
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
     - name: Install Rust
       run: ci/install-rust.sh stable ${{ matrix.target }}
-      shell: bash
-    - name: Build and deploy artifacts
+    - name: Build asset
+      run: ci/make-release-asset.sh ${{ matrix.os }} ${{ matrix.target }}
+    - name: Update release with new asset
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: ci/make-release.sh ${{ matrix.os }} ${{ matrix.target }}
-      shell: bash
+      run: gh release upload $MDBOOK_TAG $MDBOOK_ASSET
   pages:
     name: GitHub Pages
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
     - name: Install Rust (rustup)
       run: rustup update stable --no-self-update && rustup default stable
-    - name: Build book
-      run: cargo run -- build guide
-    - name: Deploy to GitHub
-      env:
-        GITHUB_DEPLOY_KEY: ${{ secrets.GITHUB_DEPLOY_KEY }}
-      run: |
-        touch guide/book/.nojekyll
-        curl -LsSf https://raw.githubusercontent.com/rust-lang/simpleinfra/master/setup-deploy-keys/src/deploy.rs | rustc - -o /tmp/deploy
-        cd guide/book
-        /tmp/deploy
+    - name: Deploy the User Guide to GitHub Pages using the gh-pages branch
+      run: ci/publish-guide.sh

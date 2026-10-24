@@ -1,0 +1,5 @@
+[book]
+title = "invalid_default_theme"
+
+[output.html]
+default-theme = "does-not-exist"

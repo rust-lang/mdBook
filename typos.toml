@@ -1,0 +1,16 @@
+[files]
+extend-exclude = [
+    "test_book/",
+    "*.css",
+    "*.svg",
+    "*.min.js",
+    "tests/",
+    "crates/mdbook-html/front-end/js/highlight.js",
+    "crates/mdbook-html/front-end/playground_editor/ace.js",
+]
+
+[type.changelog]
+extend-glob = ["CHANGELOG.md"]
+extend-ignore-re = [
+    '[0-9a-f]{7}\.\.\.[0-9a-f]{7}',
+]

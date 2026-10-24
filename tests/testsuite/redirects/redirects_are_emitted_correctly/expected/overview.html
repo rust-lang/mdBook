@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Redirecting...</title>
+    <meta http-equiv="refresh" content="0; URL=index.html">
+    <link rel="canonical" href="index.html">
+  </head>
+  <body>
+      <p>Redirecting to... <a href="index.html">index.html</a>.</p>
+
+<script>
+    // This handles redirects that involve fragments.
+    document.addEventListener('DOMContentLoaded', function() {
+        const fragmentMap =
+            {"#old":"index.html#new"}
+        ;
+        const fragment = window.location.hash;
+        if (fragment) {
+            let redirectUrl = "index.html";
+            const target = fragmentMap[fragment];
+            if (target) {
+                let url = new URL(target, window.location.href);
+                redirectUrl = url.href;
+            } else {
+                let url = new URL(redirectUrl, window.location.href);
+                url.hash = window.location.hash;
+                redirectUrl = url.href;
+            }
+            window.location.replace(redirectUrl);
+        }
+        // else redirect handled by http-equiv
+    });
+</script>
+  </body>
+</html>

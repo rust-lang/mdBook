@@ -1,0 +1,6 @@
+[book]
+title = "disable_search_chapter"
+
+[output.html.search.chapter]
+"second" = { enable = false }
+"first/disable_me.md" = { enable = false }

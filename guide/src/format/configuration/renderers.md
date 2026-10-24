@@ -4,9 +4,9 @@ Renderers (also called "backends") are responsible for creating the output of th
 
 The following backends are built-in:
 
-* [`html`](#html-renderer-options) — This renders the book to HTML.
+* [`html`](#html-renderer-options) --- This renders the book to HTML.
   This is enabled by default if no other `[output]` tables are defined in `book.toml`.
-* [`markdown`](#markdown-renderer) — This outputs the book as markdown after running the preprocessors.
+* [`markdown`](#markdown-renderer) --- This outputs the book as markdown after running the preprocessors.
   This is useful for debugging preprocessors.
 
 The community has developed several backends.
@@ -14,7 +14,7 @@ See the [Third Party Plugins] wiki page for a list of available backends.
 
 For information on how to create a new backend, see the [Backends for Developers] chapter.
 
-[Third Party Plugins]: https://github.com/rust-lang/mdBook/wiki/Third-party-plugins
+[Third Party Plugins]: https://github.com/rust-lang/mdBook/wiki/Third-party-plugins#backends
 [Backends for Developers]: ../../for_developers/backends.md
 
 ## Output tables
@@ -97,18 +97,21 @@ description = "The example book covers examples."
 theme = "my-theme"
 default-theme = "light"
 preferred-dark-theme = "navy"
-curly-quotes = true
+smart-punctuation = true
+definition-lists = true
+admonitions = true
 mathjax-support = false
-copy-fonts = true
 additional-css = ["custom.css", "custom2.css"]
 additional-js = ["custom.js"]
 no-section-label = false
 git-repository-url = "https://github.com/rust-lang/mdBook"
-git-repository-icon = "fa-github"
-edit-url-template = "https://github.com/rust-lang/mdBook/edit/master/guide/{path}"
+git-repository-icon = "fab-github"
+edit-url-template = "https://github.com/rust-lang/mdBook/edit/main/guide/{path}"
 site-url = "/example-book/"
 cname = "myproject.rs"
 input-404 = "not-found.md"
+sidebar-header-nav = true
+zoomable-images = true
 ```
 
 The following configuration options are available:
@@ -116,19 +119,21 @@ The following configuration options are available:
 - **theme:** mdBook comes with a default theme and all the resource files needed
   for it. But if this option is set, mdBook will selectively overwrite the theme
   files with the ones found in the specified folder.
-- **default-theme:** The theme color scheme to select by default in the
-  'Change Theme' dropdown. Defaults to `light`.
-- **preferred-dark-theme:** The default dark theme. This theme will be used if
-  the browser requests the dark version of the site via the
-  ['prefers-color-scheme'](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)
-  CSS media query. Defaults to `navy`.
-- **curly-quotes:** Convert straight quotes to curly quotes, except for those
-  that occur in code blocks and code spans. Defaults to `false`.
+- **default-theme:** The built-in theme to select by default in the
+  'Change Theme' dropdown. Accepted values are `light`, `rust`, `coal`, `navy`,
+  and `ayu`. Defaults to `light`.
+- **preferred-dark-theme:** The built-in theme to use when the browser requests
+  the dark version of the site via the
+  [`prefers-color-scheme`](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)
+  CSS media query. Accepted values are `light`, `rust`, `coal`, `navy`, and
+  `ayu`. Defaults to `navy`.
+- **smart-punctuation:** Converts quotes to curly quotes, `...` to `…`, `--` to en-dash, and `---` to em-dash.
+  See [Smart Punctuation](../markdown.md#smart-punctuation).
+  Defaults to `true`.
+- **definition-lists:** Enables [definition lists](../markdown.md#definition-lists). Defaults to `true`.
+- **admonitions:** Enables [admonitions](../markdown.md#admonitions). Defaults to `true`.
 - **mathjax-support:** Adds support for [MathJax](../mathjax.md). Defaults to
   `false`.
-- **copy-fonts:** Copies fonts.css and respective font files to the output directory and use them in the default theme. Defaults to `true`.
-- **google-analytics:** This field has been deprecated and will be removed in a future release.
-  Use the `theme/head.hbs` file to add the appropriate Google Analytics code instead.
 - **additional-css:** If you need to slightly change the appearance of your book
   without overwriting the whole style, you can specify a set of stylesheets that
   will be loaded after the default ones where you can surgically change the
@@ -141,15 +146,13 @@ The following configuration options are available:
   those labels. Defaults to `false`.
 - **git-repository-url:**  A url to the git repository for the book. If provided
   an icon link will be output in the menu bar of the book.
-- **git-repository-icon:** The FontAwesome icon class to use for the git
-  repository link. Defaults to `fa-github` which looks like <i class="fa fa-github"></i>.
-  If you are not using GitHub, another option to consider is `fa-code-fork` which looks like <i class="fa fa-code-fork"></i>.
+- **git-repository-icon:** The Font Awesome icon class to use for the git repository link. Defaults to `fab-github` which looks like <i class="fab fa-github"></i>. If you are not using GitHub, another option to consider is `fas-code-fork` which looks like <i class="fas fa-code-fork"></i>. The start of the string should be `fa-` for regular icons, `fas-` for solid icons, or `fab-` for brand icons. See the [free icon set](https://fontawesome.com/v6/search) for the available icons.
 - **edit-url-template:** Edit url template, when provided shows a
-  "Suggest an edit" button (which looks like <i class="fa fa-edit"></i>) for directly jumping to editing the currently
+  "Suggest an edit" button (which looks like <i class="fas fa-pencil"></i>) for directly jumping to editing the currently
   viewed page. For e.g. GitHub projects set this to
-  `https://github.com/<owner>/<repo>/edit/master/{path}` or for
+  `https://github.com/<owner>/<repo>/edit/<branch>/{path}` or for
   Bitbucket projects set it to
-  `https://bitbucket.org/<owner>/<repo>/src/master/{path}?mode=edit`
+  `https://bitbucket.org/<owner>/<repo>/src/<branch>/{path}?mode=edit`
   where {path} will be replaced with the full path of the file in the
   repository.
 - **input-404:** The name of the markdown file used for missing files.
@@ -159,17 +162,31 @@ The following configuration options are available:
   navigation links and script/css imports in the 404 file work correctly, even when accessing
   urls in subdirectories. Defaults to `/`. If `site-url` is set,
   make sure to use document relative links for your assets, meaning they should not start with `/`.
+- **canonical-site-url:** Set the canonical URL for the book, which is used by
+  search engines to determine the primary URL for the content. Use this when
+  your site is deployed at multiple URLs. For example, when you have site
+  deployments for a range of versions, you can point all of them to the URL for
+  the latest version. Without this, your content may be penalized for
+  duplication, and visitors may be directed to an outdated version of the book.
 - **cname:** The DNS subdomain or apex domain at which your book will be hosted.
   This string will be written to a file named CNAME in the root of your site, as
   required by GitHub Pages (see [*Managing a custom domain for your GitHub Pages
   site*][custom domain]).
+- **hash-files:** Include a cryptographic "fingerprint" of the files' contents in static asset filenames,
+  so that if the contents of the file are changed, the name of the file will also change.
+  For example, `css/chrome.css` may become `css/chrome-9b8f428e.css`.
+  Chapter HTML files are not renamed.
+  Static CSS and JS files can reference each other using `{{ resource "filename" }}` directives.
+  Defaults to `true`.
+- **sidebar-header-nav:** If `true`, the sidebar will contain navigation for headers on the current page. Default is `true`.
+- **zoomable-images:** If `true`, when clicking on images, it will open a modal with an expanded view of the image. Default is `true`.
 
 [custom domain]: https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site
 
 ### `[output.html.print]`
 
 The `[output.html.print]` table provides options for controlling the printable output.
-By default, mdBook will include an icon on the top right of the book (which looks like <i class="fa fa-print"></i>) that will print the book as a single page.
+By default, mdBook will include an icon on the top right of the book (which looks like <i class="fas fa-print"></i>) that will print the book as a single page.
 
 ```toml
 [output.html.print]
@@ -179,7 +196,7 @@ page-break = true # insert page-break after each chapter
 
 - **enable:** Enable print support. When `false`, all print support will not be
   rendered. Defaults to `true`.
-- **page-break** Insert page breaks between chapters. Defaults to `true`.
+- **page-break:** Insert page breaks between chapters. Defaults to `true`.
 
 ### `[output.html.fold]`
 
@@ -215,10 +232,24 @@ runnable = true          # displays a run button for rust code
 - **copyable:** Display the copy button on code snippets. Defaults to `true`.
 - **copy-js:** Copy JavaScript files for the editor to the output directory.
   Defaults to `true`.
-- **line-numbers** Display line numbers on editable sections of code. Requires both `editable` and `copy-js` to be `true`. Defaults to `false`.
-- **runnable** Displays a run button for rust code snippets. Changing this to `false` will disable the run in playground feature globally. Defaults to `true`.
+- **line-numbers:** Display line numbers on editable sections of code. Requires both `editable` and `copy-js` to be `true`. Defaults to `false`.
+- **runnable:** Displays a run button for rust code snippets. Changing this to `false` will disable the run in playground feature globally. Defaults to `true`.
 
 [Ace]: https://ace.c9.io/
+
+### `[output.html.code]`
+
+The `[output.html.code]` table provides options for controlling code blocks.
+
+```toml
+[output.html.code]
+# A prefix string per language (one or more chars).
+# Any line starting with whitespace+prefix is hidden.
+hidelines = { python = "~" }
+```
+
+- **hidelines:** A table that defines how [hidden code lines](../mdbook.md#hiding-code-lines) work for each language.
+  The key is the language and the value is a string that will cause code lines starting with that prefix to be hidden.
 
 ### `[output.html.search]`
 
@@ -262,6 +293,20 @@ copy-js = true           # include Javascript code for search
 - **copy-js:** Copy JavaScript files for the search implementation to the output
   directory. Defaults to `true`.
 
+#### `[output.html.search.chapter]`
+
+The [`output.html.search.chapter`] table provides the ability to modify search settings per chapter or directory. Each key is the path to the chapter source file or directory, and the value is a table of settings to apply to that path. This will merge recursively, with more specific paths taking precedence.
+
+```toml
+[output.html.search.chapter]
+# Disables search indexing for all chapters in the `appendix` directory.
+"appendix" = { enable = false }
+# Enables search indexing for just this one appendix chapter.
+"appendix/glossary.md" = { enable = true }
+```
+
+- **enable:** Enables or disables search indexing for the given chapters. Defaults to `true`. This does not override the overall `output.html.search.enable` setting; that must be `true` for any search functionality to be enabled. Be cautious when disabling indexing for chapters because that can potentially lead to user confusion when they search for terms and expect them to be found. This should only be used in exceptional circumstances where keeping the chapter in the index will cause issues with the quality of the search results.
+
 ### `[output.html.redirect]`
 
 The `[output.html.redirect]` table provides a way to add redirects.
@@ -271,15 +316,23 @@ This is useful when you move, rename, or remove a page to ensure that links to t
 [output.html.redirect]
 "/appendices/bibliography.html" = "https://rustc-dev-guide.rust-lang.org/appendix/bibliography.html"
 "/other-installation-methods.html" = "../infra/other-installation-methods.html"
+
+# Fragment redirects also work.
+"/some-existing-page.html#old-fragment" = "some-existing-page.html#new-fragment"
+
+# Fragment redirects also work for deleted pages.
+"/old-page.html" = "new-page.html"
+"/old-page.html#old-fragment" = "new-page.html#new-fragment"
 ```
 
 The table contains key-value pairs where the key is where the redirect file needs to be created, as an absolute path from the build directory, (e.g. `/appendices/bibliography.html`).
 The value can be any valid URI the browser should navigate to (e.g. `https://rust-lang.org/`, `/overview.html`, or `../bibliography.html`).
 
 This will generate an HTML page which will automatically redirect to the given location.
-Note that the source location does not support `#` anchor redirects.
 
-## Markdown Renderer
+When fragment redirects are specified, the page must use JavaScript to redirect to the correct location. This is useful if you rename or move a section header. Fragment redirects work with existing pages and deleted pages.
+
+## Markdown renderer
 
 The Markdown renderer will run preprocessors and then output the resulting
 Markdown. This is mostly useful for debugging preprocessors, especially in

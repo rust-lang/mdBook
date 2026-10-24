@@ -2,11 +2,12 @@
 
 ## Hiding code lines
 
-There is a feature in mdBook that lets you hide code lines by prepending them
-with a `#` [like you would with Rustdoc][rustdoc-hide].
-This currently only works with Rust language code blocks.
+There is a feature in mdBook that lets you hide code lines by prepending them with a specific prefix.
 
-[rustdoc-hide]: https://doc.rust-lang.org/stable/rustdoc/documentation-tests.html#hiding-portions-of-the-example
+For the Rust language, you can prefix lines with `# ` (`#` followed by a space) to hide them [like you would with Rustdoc][rustdoc-hide].
+This prefix can be escaped with `##` to prevent the hiding of a line that should begin with the literal string `# ` (see [Rustdoc's docs][rustdoc-hide] for more details).
+
+[rustdoc-hide]: https://doc.rust-lang.org/stable/rustdoc/write-documentation/documentation-tests.html#hiding-portions-of-the-example
 
 ```bash
 # fn main() {
@@ -28,11 +29,51 @@ Will render as
 # }
 ```
 
-The code block has an eyeball icon (<i class="fa fa-eye"></i>) which will toggle the visibility of the hidden lines.
+When you tap or hover the mouse over the code block, there will be an eyeball icon (<i class="fa fa-eye"></i>) which will toggle the visibility of the hidden lines.
 
-## Rust Playground
+By default, this only works for code examples that are annotated with `rust`.
+However, you can define custom prefixes for other languages by adding a new line-hiding prefix in your `book.toml` with the language name and prefix character(s):
 
-Rust language code blocks will automatically get a play button (<i class="fa fa-play"></i>) which will execute the code and display the output just below the code block.
+```toml
+[output.html.code.hidelines]
+python = "~"
+```
+
+The prefix will hide any lines that begin with the given prefix. With the python prefix shown above, this:
+
+```bash
+~hidden()
+nothidden():
+~    hidden()
+    ~hidden()
+    nothidden()
+```
+
+will render as
+
+```python
+~hidden()
+nothidden():
+~    hidden()
+    ~hidden()
+    nothidden()
+```
+
+This behavior can be overridden locally with a different prefix. This has the same effect as above:
+
+~~~markdown
+```python,hidelines=!!!
+!!!hidden()
+nothidden():
+!!!    hidden()
+    !!!hidden()
+    nothidden()
+```
+~~~
+
+## Rust playground
+
+Rust language code blocks will automatically get a play button (<i class="fas fa-play"></i>) which will execute the code and display the output just below the code block.
 This works by sending the code to the [Rust Playground].
 
 ```rust
@@ -72,16 +113,16 @@ panic!("oops!");
 These are particularly important when using [`mdbook test`] to test Rust examples.
 These use the same attributes as [rustdoc attributes], with a few additions:
 
-* `editable` — Enables the [editor].
-* `noplayground` — Removes the play button, but will still be tested.
-* `mdbook-runnable` — Forces the play button to be displayed.
+* `editable` --- Enables the [editor].
+* `noplayground` --- Removes the play button, but will still be tested.
+* `mdbook-runnable` --- Forces the play button to be displayed.
   This is intended to be combined with the `ignore` attribute for examples that should not be tested, but you want to allow the reader to run.
-* `ignore` — Will not be tested and no play button is shown, but it is still highlighted as Rust syntax.
-* `should_panic` — When executed, it should produce a panic.
-* `no_run` — The code is compiled when tested, but it is not run.
+* `ignore` --- Will not be tested and no play button is shown, but it is still highlighted as Rust syntax.
+* `should_panic` --- When executed, it should produce a panic.
+* `no_run` --- The code is compiled when tested, but it is not run.
   The play button is also not shown.
-* `compile_fail` — The code should fail to compile.
-* `edition2015`, `edition2018`, `edition2021` — Forces the use of a specific Rust edition.
+* `compile_fail` --- The code should fail to compile.
+* `edition2015`, `edition2018`, `edition2021`, `edition2024` --- Forces the use of a specific Rust edition.
   See [`rust.edition`] to set this globally.
 
 [`mdbook test`]: ../cli/test.md
@@ -98,6 +139,24 @@ With the following syntax, you can include files into your book:
 ```
 
 The path to the file has to be relative from the current source file.
+
+If the file name contains spaces, wrap the path in double quotes:
+
+```hbs
+\{{#include "file with spaces.rs"}}
+```
+
+Range and anchor syntax works the same after the closing quote:
+
+```hbs
+\{{#include "file with spaces.rs":2:10}}
+\{{#include "file with spaces.rs":my_anchor}}
+```
+
+Inside quotes only `\"` and `\\` are treated as escape sequences; any
+other backslash is kept as a literal path character (useful for
+Windows-style paths). An unclosed quote is an error. Quoted paths work
+for `rustdoc_include` as well.
 
 mdBook will interpret included files as Markdown. Since the include command
 is usually used for inserting code snippets and examples, you will often
@@ -274,3 +333,42 @@ contents (sidebar) by including a `\{{#title ...}}` near the top of the page.
 ```hbs
 \{{#title My Title}}
 ```
+
+## HTML classes provided by mdBook
+
+<img class="right" src="images/rust-logo-blk.svg" alt="The Rust logo">
+
+### `class="left"` and `"right"`
+
+These classes are provided by default, for inline HTML to float images.
+
+```html
+<img class="right" src="images/rust-logo-blk.svg" alt="The Rust logo">
+```
+
+### `class="hidden"`
+
+HTML tags with class `hidden` will not be shown.
+
+```html
+<div class="hidden">This will not be seen.</div>
+```
+
+<div class="hidden">This will not be seen.</div>
+
+## Font-Awesome icons
+
+mdBook includes a copy of version 6 of [Font Awesome Free's](https://fontawesome.com)
+MIT-licensed SVG files. It emulates the `<i>` syntax, but converts the results
+to inline SVG. Only the regular, solid, and brands icons are included; paid
+features like the light icons are not.
+
+For example, given this HTML syntax:
+
+```hbs
+The result looks like this: <i class="fa-solid fa-print"></i>
+```
+
+The result looks like this: <i class="fa-solid fa-print"></i>
+
+See the [free icon set](https://fontawesome.com/v6/search) for the available icons.

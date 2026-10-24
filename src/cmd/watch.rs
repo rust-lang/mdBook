@@ -1,34 +1,36 @@
+use super::command_prelude::*;
 use crate::{get_book_dir, open};
-use clap::{arg, App, Arg, ArgMatches};
-use mdbook::errors::Result;
-use mdbook::utils;
-use mdbook::MDBook;
-use notify::Watcher;
+use anyhow::Result;
+use mdbook_driver::MDBook;
 use std::path::{Path, PathBuf};
-use std::sync::mpsc::channel;
-use std::thread::sleep;
-use std::time::Duration;
+use tracing::error;
+
+mod native;
+mod poller;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'help>() -> App<'help> {
-    App::new("watch")
+pub fn make_subcommand() -> Command {
+    Command::new("watch")
         .about("Watches a book's files and rebuilds it on changes")
-        .arg(
-            Arg::new("dest-dir")
-                .short('d')
-                .long("dest-dir")
-                .value_name("dest-dir")
-                .help(
-                    "Output directory for the book{n}\
-                    Relative paths are interpreted relative to the book's root directory.{n}\
-                    If omitted, mdBook uses build.build-dir from book.toml or defaults to `./book`.",
-                ),
-        )
-        .arg(arg!([dir]
-            "Root directory for the book{n}\
-            (Defaults to the Current Directory when omitted)"
-        ))
-        .arg(arg!(-o --open "Opens the compiled book in a web browser"))
+        .arg_dest_dir()
+        .arg_root_dir()
+        .arg_open()
+        .arg_watcher()
+}
+
+pub enum WatcherKind {
+    Poll,
+    Native,
+}
+
+impl WatcherKind {
+    pub fn from_str(s: &str) -> WatcherKind {
+        match s {
+            "poll" => WatcherKind::Poll,
+            "native" => WatcherKind::Native,
+            _ => panic!("unsupported watcher {s}"),
+        }
+    }
 }
 
 // Watch command implementation
@@ -37,13 +39,11 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let mut book = MDBook::load(&book_dir)?;
 
     let update_config = |book: &mut MDBook| {
-        if let Some(dest_dir) = args.value_of("dest-dir") {
-            book.config.build.build_dir = dest_dir.into();
-        }
+        set_dest_dir(args, book);
     };
     update_config(&mut book);
 
-    if args.is_present("open") {
+    if args.get_flag("open") {
         book.build()?;
         let path = book.build_dir_for("html").join("index.html");
         if !path.exists() {
@@ -53,42 +53,21 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         open(path);
     }
 
-    trigger_on_change(&book, |paths, book_dir| {
-        info!("Files changed: {:?}\nBuilding book...\n", paths);
-        let result = MDBook::load(&book_dir).and_then(|mut b| {
-            update_config(&mut b);
-            b.build()
-        });
-
-        if let Err(e) = result {
-            error!("Unable to build the book");
-            utils::log_backtrace(&e);
-        }
-    });
+    let watcher = WatcherKind::from_str(args.get_one::<String>("watcher").unwrap());
+    rebuild_on_change(watcher, &book_dir, &update_config, &|| {});
 
     Ok(())
 }
 
-fn remove_ignored_files(book_root: &Path, paths: &[PathBuf]) -> Vec<PathBuf> {
-    if paths.is_empty() {
-        return vec![];
-    }
-
-    match find_gitignore(book_root) {
-        Some(gitignore_path) => {
-            match gitignore::File::new(gitignore_path.as_path()) {
-                Ok(exclusion_checker) => filter_ignored_files(exclusion_checker, paths),
-                Err(_) => {
-                    // We're unable to read the .gitignore file, so we'll silently allow everything.
-                    // Please see discussion: https://github.com/rust-lang/mdBook/pull/1051
-                    paths.iter().map(|path| path.to_path_buf()).collect()
-                }
-            }
-        }
-        None => {
-            // There is no .gitignore file.
-            paths.iter().map(|path| path.to_path_buf()).collect()
-        }
+pub fn rebuild_on_change(
+    kind: WatcherKind,
+    book_dir: &Path,
+    update_config: &dyn Fn(&mut MDBook),
+    post_build: &dyn Fn(),
+) {
+    match kind {
+        WatcherKind::Poll => self::poller::rebuild_on_change(book_dir, update_config, post_build),
+        WatcherKind::Native => self::native::rebuild_on_change(book_dir, update_config, post_build),
     }
 }
 
@@ -97,79 +76,4 @@ fn find_gitignore(book_root: &Path) -> Option<PathBuf> {
         .ancestors()
         .map(|p| p.join(".gitignore"))
         .find(|p| p.exists())
-}
-
-fn filter_ignored_files(exclusion_checker: gitignore::File, paths: &[PathBuf]) -> Vec<PathBuf> {
-    paths
-        .iter()
-        .filter(|path| match exclusion_checker.is_excluded(path) {
-            Ok(exclude) => !exclude,
-            Err(error) => {
-                warn!(
-                    "Unable to determine if {:?} is excluded: {:?}. Including it.",
-                    &path, error
-                );
-                true
-            }
-        })
-        .map(|path| path.to_path_buf())
-        .collect()
-}
-
-/// Calls the closure when a book source file is changed, blocking indefinitely.
-pub fn trigger_on_change<F>(book: &MDBook, closure: F)
-where
-    F: Fn(Vec<PathBuf>, &Path),
-{
-    use notify::DebouncedEvent::*;
-    use notify::RecursiveMode::*;
-
-    // Create a channel to receive the events.
-    let (tx, rx) = channel();
-
-    let mut watcher = match notify::watcher(tx, Duration::from_secs(1)) {
-        Ok(w) => w,
-        Err(e) => {
-            error!("Error while trying to watch the files:\n\n\t{:?}", e);
-            std::process::exit(1)
-        }
-    };
-
-    // Add the source directory to the watcher
-    if let Err(e) = watcher.watch(book.source_dir(), Recursive) {
-        error!("Error while watching {:?}:\n    {:?}", book.source_dir(), e);
-        std::process::exit(1);
-    };
-
-    let _ = watcher.watch(book.theme_dir(), Recursive);
-
-    // Add the book.toml file to the watcher if it exists
-    let _ = watcher.watch(book.root.join("book.toml"), NonRecursive);
-
-    info!("Listening for changes...");
-
-    loop {
-        let first_event = rx.recv().unwrap();
-        sleep(Duration::from_millis(50));
-        let other_events = rx.try_iter();
-
-        let all_events = std::iter::once(first_event).chain(other_events);
-
-        let paths = all_events
-            .filter_map(|event| {
-                debug!("Received filesystem event: {:?}", event);
-
-                match event {
-                    Create(path) | Write(path) | Remove(path) | Rename(_, path) => Some(path),
-                    _ => None,
-                }
-            })
-            .collect::<Vec<_>>();
-
-        let paths = remove_ignored_files(&book.root, &paths[..]);
-
-        if !paths.is_empty() {
-            closure(paths, &book.root);
-        }
-    }
 }

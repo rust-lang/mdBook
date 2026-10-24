@@ -1,0 +1,5 @@
+[book]
+title = "hidelines"
+
+[output.html.code.hidelines]
+python = "~"
