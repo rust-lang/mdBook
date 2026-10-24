@@ -19,6 +19,7 @@ use pulldown_cmark::{Alignment, CodeBlockKind, CowStr, Event, LinkType, Tag, Tag
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::ops::Deref;
+use std::path::Path;
 use tracing::{trace, warn};
 
 /// Helper to create a [`QualName`].
@@ -1168,7 +1169,18 @@ fn fix_link<'a>(link: CowStr<'a>) -> CowStr<'a> {
 
     // This is a relative link, adjust it as necessary.
     if let Some(caps) = MD_LINK.captures(&link) {
-        let mut fixed_link = String::from(&caps["link"]);
+        let link = String::from(&caps["link"]);
+        // If the link ends with "readme" (case-insensitive), we replace it with "index" since
+        // the "README" file is renamed into "index.html".
+        let mut fixed_link = if let Some(filename) = Path::new(&link).file_name()
+            && filename.to_ascii_lowercase() == "readme"
+        {
+            let mut sub = link[..(link.len() - 6)].to_owned();
+            sub.push_str("index");
+            sub
+        } else {
+            link
+        };
         fixed_link.push_str(".html");
         if let Some(anchor) = caps.name("anchor") {
             fixed_link.push_str(anchor.as_str());
@@ -1220,6 +1232,7 @@ pub(crate) fn is_void_element(name: &str) -> bool {
 #[cfg(test)]
 mod strip_infostring_comments_tests {
     use super::strip_infostring_comments;
+    use crate::html::tree::fix_link;
 
     #[test]
     fn drops_comments_and_keeps_surrounding_tokens() {
@@ -1258,5 +1271,23 @@ mod strip_infostring_comments_tests {
             strip_infostring_comments("rust,ignore"),
             std::borrow::Cow::Borrowed("rust,ignore")
         ));
+    }
+
+    #[test]
+    #[cfg(target_os = "windows")]
+    fn test_fix_links() {
+        assert_eq!(
+            "chapter\\\\index.html".to_owned(),
+            fix_link("chapter\\\\README.md".into()).to_string()
+        )
+    }
+
+    #[test]
+    fn test_fix_links_empty_end() {
+        assert_eq!("".to_owned(), fix_link("".into()).to_string());
+        assert_eq!(
+            "chapter/".to_owned(),
+            fix_link("chapter/".into()).to_string()
+        )
     }
 }
