@@ -700,6 +700,9 @@ pub struct Search {
     pub enable: bool,
     /// Maximum number of visible results. Default: `30`.
     pub limit_results: u32,
+    /// Maximum number of chapter/file-name matches shown before the search
+    /// results. Default: `20`.
+    pub limit_chapter_results: u32,
     /// The number of words used for a search result teaser. Default: `30`.
     pub teaser_word_count: u32,
     /// Define the logical link between multiple search words.
@@ -736,6 +739,7 @@ impl Default for Search {
         Search {
             enable: true,
             limit_results: 30,
+            limit_chapter_results: 20,
             teaser_word_count: 30,
             use_boolean_and: false,
             boost_title: 2,

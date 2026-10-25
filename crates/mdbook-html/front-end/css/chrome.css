@@ -442,52 +442,29 @@ ul#mdbook-searchresults span.teaser em {
     font-style: normal;
 }
 
-/* Quick jump */
-
-#mdbook-quickjump {
-    margin-inline-start: auto;
-    margin-inline-end: auto;
-    max-width: var(--content-max-width);
+/* Chapter-navigation matches displayed inside the full-text search results. */
+ul#mdbook-searchresults li.search-chapter a {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    column-gap: 10px;
 }
-
-#mdbook-quickjump-input {
-    width: 100%;
-    margin-block-start: var(--searchbar-margin-block-start);
-    padding: 10px 16px;
-    transition: box-shadow 300ms ease-in-out;
-    border: 1px solid var(--searchbar-border-color);
-    border-radius: 3px;
-    background-color: var(--searchbar-bg);
-    color: var(--searchbar-fg);
+ul#mdbook-searchresults li.search-chapter .chapter-title {
+    flex: 1 1 auto;
+    font-weight: bold;
 }
-#mdbook-quickjump-input:focus {
-    box-shadow: 0 0 3px var(--searchbar-shadow-color);
-}
-
-#mdbook-quickjump-results-outer {
-    margin-inline-start: auto;
-    margin-inline-end: auto;
-    max-width: var(--content-max-width);
-    border-block-end: 1px dashed var(--searchresults-border-color);
-}
-
-ul#mdbook-quickjump-results {
-    list-style: none;
-    padding-inline-start: 20px;
-}
-ul#mdbook-quickjump-results li {
-    margin: 8px 0;
-    padding: 4px 6px;
-    border-radius: 2px;
-    cursor: pointer;
-}
-ul#mdbook-quickjump-results li.focus {
-    background-color: var(--searchresults-li-bg);
-}
-ul#mdbook-quickjump-results .quickjump-path {
-    display: block;
+ul#mdbook-searchresults li.search-chapter .chapter-path {
+    flex: 0 0 auto;
     font-size: 0.8em;
     color: var(--searchresults-header-fg);
+}
+ul#mdbook-searchresults li.search-chapter .chapter-excerpt {
+    flex-basis: 100%;
+    margin-block-start: 5px;
+    margin-inline-start: 20px;
+    font-size: 0.8em;
+    color: var(--fg);
 }
 
 /* Sidebar */

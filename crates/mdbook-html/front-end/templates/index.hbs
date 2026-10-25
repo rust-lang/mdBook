@@ -74,7 +74,6 @@
                 {{#if search_enabled}}
                 <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
                 {{/if}}
-                <p>Press <kbd>⌘</kbd>+<kbd>K</kbd> or <kbd>Ctrl</kbd>+<kbd>K</kbd> to jump to a chapter</p>
                 <p>Press <kbd>?</kbd> to show this help</p>
                 <p>Press <kbd>Esc</kbd> to hide this help</p>
             </div>
@@ -205,17 +204,6 @@
                     </div>
                 </div>
                 {{/if}}
-
-                <div id="mdbook-quickjump" class="hidden">
-                    <div class="quickjump-outer">
-                        <div class="quickjump-wrapper">
-                            <input type="search" id="mdbook-quickjump-input" placeholder="Jump to a chapter ..." aria-label="Jump to a chapter" aria-controls="mdbook-quickjump-results-outer" autocomplete="off">
-                        </div>
-                    </div>
-                    <div id="mdbook-quickjump-results-outer" class="quickjump-results-outer hidden">
-                        <ul id="mdbook-quickjump-results" role="listbox" aria-label="Chapters"></ul>
-                    </div>
-                </div>
 
                 <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
                 <script>

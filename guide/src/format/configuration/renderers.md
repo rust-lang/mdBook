@@ -262,6 +262,7 @@ mdBook must be compiled with the `search` feature enabled (on by default).
 [output.html.search]
 enable = true            # enables the search feature
 limit-results = 30       # maximum number of search results
+limit-chapter-results = 20 # maximum number of chapter/file-name matches shown before search results
 teaser-word-count = 30   # number of words used for a search result teaser
 use-boolean-and = true   # multiple search terms must all match
 boost-title = 2          # ranking boost factor for matches in headers
@@ -274,6 +275,8 @@ copy-js = true           # include Javascript code for search
 
 - **enable:** Enables the search feature. Defaults to `true`.
 - **limit-results:** The maximum number of search results. Defaults to `30`.
+- **limit-chapter-results:** The maximum number of chapter/file-name matches
+  shown before the search results. Defaults to `20`.
 - **teaser-word-count:** The number of words used for a search result teaser.
   Defaults to `30`.
 - **use-boolean-and:** Define the logical link between multiple search words. If
