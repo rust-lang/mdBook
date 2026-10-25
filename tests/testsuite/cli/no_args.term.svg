@@ -30,7 +30,7 @@
 </tspan>
     <tspan x="10px" y="136px"><tspan>  build        Builds a book from its markdown files</tspan>
 </tspan>
-    <tspan x="10px" y="154px"><tspan>  test         Tests that a book's Rust code samples compile</tspan>
+    <tspan x="10px" y="154px"><tspan>  test         Compiles and runs a book's Rust code samples</tspan>
 </tspan>
     <tspan x="10px" y="172px"><tspan>  clean        Deletes a built book</tspan>
 </tspan>
