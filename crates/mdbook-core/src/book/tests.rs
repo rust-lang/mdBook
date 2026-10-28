@@ -66,11 +66,7 @@ fn for_each_mut_visits_all_items() {
     let num_items = book.iter().count();
     let mut visited = 0;
 
-    book.for_each_mut(|_| {
-        visited += 1;
-        Ok(())
-    })
-    .unwrap();
+    book.for_each_mut(|_| visited += 1);
 
     assert_eq!(visited, num_items);
 }
