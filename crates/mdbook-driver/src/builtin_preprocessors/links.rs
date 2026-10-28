@@ -49,7 +49,13 @@ impl Preprocessor for LinkPreprocessor {
     fn run(&self, ctx: &PreprocessorContext, mut book: Book) -> Result<Book> {
         let src_dir = ctx.root.join(&ctx.config.book.src);
 
+        let mut result = Ok(());
         book.for_each_mut(|section: &mut BookItem| {
+            // Short circuit if there already is an error.
+            if result.is_err() {
+                return;
+            }
+
             if let BookItem::Chapter(ref mut ch) = *section {
                 if let Some(ref chapter_path) = ch.path {
                     let base = chapter_path
@@ -59,7 +65,13 @@ impl Preprocessor for LinkPreprocessor {
 
                     let mut chapter_title = ch.name.clone();
                     let content =
-                        replace_all(&ch.content, base, chapter_path, 0, &mut chapter_title)?;
+                        match replace_all(&ch.content, base, chapter_path, 0, &mut chapter_title) {
+                            Ok(content) => content,
+                            Err(err) => {
+                                result = Err(err);
+                                return;
+                            }
+                        };
                     ch.content = content;
                     if chapter_title != ch.name {
                         ctx.chapter_titles
@@ -68,8 +80,10 @@ impl Preprocessor for LinkPreprocessor {
                     }
                 }
             }
-            Ok(())
-        })?;
+        });
+
+        // Return possible error.
+        result?;
 
         Ok(book)
     }

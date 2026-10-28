@@ -41,8 +41,7 @@ impl Preprocessor for IndexPreprocessor {
                     }
                 }
             }
-            Ok(())
-        })?;
+        });
 
         Ok(book)
     }

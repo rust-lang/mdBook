@@ -1,6 +1,5 @@
 //! A tree structure representing a book.
 
-use crate::errors::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use std::fmt::{self, Display, Formatter};
@@ -63,11 +62,11 @@ impl Book {
     /// Unlike the `iter()` method, this requires a closure instead of returning
     /// an iterator. This is because using iterators can possibly allow you
     /// to have iterator invalidation errors.
-    pub fn for_each_mut<F>(&mut self, mut func: F) -> Result<()>
+    pub fn for_each_mut<F>(&mut self, mut func: F)
     where
-        F: FnMut(&mut BookItem) -> Result<()>,
+        F: FnMut(&mut BookItem),
     {
-        for_each_mut(&mut func, &mut self.items)
+        for_each_mut(&mut func, &mut self.items);
     }
 
     /// Recursively apply a closure to each non-draft chapter in the book,
@@ -79,16 +78,15 @@ impl Book {
         for_each_mut(
             &mut |item| {
                 let BookItem::Chapter(ch) = item else {
-                    return Ok(());
+                    return;
                 };
-                if !ch.is_draft_chapter() {
-                    func(ch);
+                if ch.is_draft_chapter() {
+                    return;
                 }
-                Ok(())
+                func(ch)
             },
             &mut self.items,
-        )
-        .expect("closure is infallible");
+        );
     }
 
     /// Append a `BookItem` to the `Book`.
@@ -98,19 +96,18 @@ impl Book {
     }
 }
 
-fn for_each_mut<'a, F, I>(func: &mut F, items: I) -> Result<()>
+fn for_each_mut<'a, F, I>(func: &mut F, items: I)
 where
-    F: FnMut(&mut BookItem) -> Result<()>,
+    F: FnMut(&mut BookItem),
     I: IntoIterator<Item = &'a mut BookItem>,
 {
     for item in items {
         if let BookItem::Chapter(ch) = item {
-            for_each_mut(func, &mut ch.sub_items)?;
+            for_each_mut(func, &mut ch.sub_items);
         }
 
-        func(item)?;
+        func(item);
     }
-    Ok(())
 }
 
 /// Enum representing any type of item which can be added to a book.
