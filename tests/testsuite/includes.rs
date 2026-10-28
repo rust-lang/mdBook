@@ -152,3 +152,72 @@ ERROR Error updating "{{#include "unclosed.md}}"
 "#]]);
         });
 }
+
+// Checks that an include of a missing file fails the build.
+#[test]
+fn missing_include() {
+    BookTest::init(|_| {})
+        .change_file("src/chapter_1.md", "{{#include missing.md}}")
+        .run("build", |cmd| {
+            cmd.expect_failure().expect_stderr(str![[r#"
+ INFO Book building has started
+ERROR Error updating "{{#include missing.md}}"
+[TAB]Caused by: Could not read file for link {{#include missing.md}} ([ROOT]/src/missing.md)
+[TAB]Caused by: failed to read `[ROOT]/src/missing.md`
+[TAB]Caused by: [NOT_FOUND]
+
+"#]]);
+        });
+}
+
+// Checks that a missing file in a nested include fails the build.
+#[test]
+fn missing_nested_include() {
+    BookTest::init(|_| {})
+        .change_file("src/chapter_1.md", "{{#include nested.md}}")
+        .change_file("src/nested.md", "{{#include missing.md}}")
+        .run("build", |cmd| {
+            cmd.expect_failure().expect_stderr(str![[r#"
+ INFO Book building has started
+ERROR Error updating "{{#include missing.md}}"
+[TAB]Caused by: Could not read file for link {{#include missing.md}} ([ROOT]/src/missing.md)
+[TAB]Caused by: failed to read `[ROOT]/src/missing.md`
+[TAB]Caused by: [NOT_FOUND]
+
+"#]]);
+        });
+}
+
+// Checks that a `{{#rustdoc_include}}` of a missing file fails the build.
+#[test]
+fn missing_rustdoc_include() {
+    BookTest::init(|_| {})
+        .change_file("src/chapter_1.md", "{{#rustdoc_include missing.rs}}")
+        .run("build", |cmd| {
+            cmd.expect_failure().expect_stderr(str![[r#"
+ INFO Book building has started
+ERROR Error updating "{{#rustdoc_include missing.rs}}"
+[TAB]Caused by: Could not read file for link {{#rustdoc_include missing.rs}} ([ROOT]/src/missing.rs)
+[TAB]Caused by: failed to read `[ROOT]/src/missing.rs`
+[TAB]Caused by: [NOT_FOUND]
+
+"#]]);
+        });
+}
+
+// Checks that a `{{#playground}}` of a missing file fails the build.
+#[test]
+fn missing_playground() {
+    BookTest::init(|_| {})
+        .change_file("src/chapter_1.md", "{{#playground missing.rs}}")
+        .run("build", |cmd| {
+            cmd.expect_failure().expect_stderr(str![[r#"
+ INFO Book building has started
+ERROR Error updating "{{#playground missing.rs}}"
+[TAB]Caused by: Could not read file for link {{#playground missing.rs}} ([ROOT]/src/missing.rs)
+[TAB]Caused by: failed to read `[ROOT]/src/missing.rs`
+[TAB]Caused by: [NOT_FOUND]
+
+"#]]);
+        });
+}
