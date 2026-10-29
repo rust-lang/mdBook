@@ -457,7 +457,7 @@ impl Default for BuildConfig {
     }
 }
 
-/// Configuration for the Rust compiler(e.g., for playground)
+/// Configuration for the Rust compiler (e.g., for playground)
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
