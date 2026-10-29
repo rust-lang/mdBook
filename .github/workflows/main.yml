@@ -5,85 +5,171 @@ on:
 
 jobs:
   test:
-    name: Test
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        build: [stable, beta, nightly, macos, windows, msrv]
         include:
-          - build: stable
+          - name: stable linux
             os: ubuntu-latest
             rust: stable
-          - build: beta
+            target: x86_64-unknown-linux-gnu
+          - name: beta linux
             os: ubuntu-latest
             rust: beta
-          - build: nightly
+            target: x86_64-unknown-linux-gnu
+          - name: nightly linux
             os: ubuntu-latest
             rust: nightly
-          - build: macos
+            target: x86_64-unknown-linux-gnu
+          - name: stable x86_64-unknown-linux-musl
+            os: ubuntu-22.04
+            rust: stable
+            target: x86_64-unknown-linux-musl
+          - name: stable aarch64-unknown-linux-gnu
+            os: ubuntu-24.04-arm
+            rust: stable
+            target: aarch64-unknown-linux-gnu
+          - name: stable x86_64 macos
             os: macos-latest
             rust: stable
-          - build: windows
+            target: x86_64-apple-darwin
+          - name: stable aarch64 macos
+            os: macos-latest
+            rust: stable
+            target: aarch64-apple-darwin
+          - name: stable windows-msvc
             os: windows-latest
             rust: stable
-          - build: msrv
-            os: ubuntu-20.04
+            target: x86_64-pc-windows-msvc
+          - name: stable windows-arm64-msvc
+            os: windows-11-arm
+            rust: stable
+            target: aarch64-pc-windows-msvc
+          - name: msrv
+            os: ubuntu-22.04
             # sync MSRV with docs: guide/src/guide/installation.md and Cargo.toml
-            rust: 1.66.0
+            rust: 1.88.0
+            target: x86_64-unknown-linux-gnu
+    name: ${{ matrix.name }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
     - name: Install Rust
-      run: bash ci/install-rust.sh ${{ matrix.rust }}
+      run: bash ci/install-rust.sh ${{ matrix.rust }} ${{ matrix.target }}
     - name: Build and run tests
-      run: cargo test --locked
+      run: cargo test --workspace --locked --target ${{ matrix.target }}
     - name: Test no default
-      run: cargo test --no-default-features
+      run: cargo test --workspace --no-default-features --target ${{ matrix.target }}
+
+  aarch64-cross-builds:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v7
+    - name: Install Rust
+      run: bash ci/install-rust.sh stable aarch64-unknown-linux-musl
+    - name: Build
+      run: cargo build --locked --target aarch64-unknown-linux-musl
 
   rustfmt:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
     - name: Install Rust
       run: rustup update stable && rustup default stable && rustup component add rustfmt
     - run: cargo fmt --check
 
-  # These success/failure jobs are here to consolidate the total
-  # success/failure state of all other jobs. These jobs are then included in
-  # the GitHub branch protection rule which prevents merges unless all other
-  # jobs are passing. This makes it easier to manage the list of jobs via this
-  # yml file and to prevent accidentally adding new jobs without also updating
-  # the branch protections.
-  #
-  # Unfortunately this requires two jobs because the branch protection
-  # considers skipped jobs as successful. The status check functions like
-  # success() can only be in an `if` condition.
-  #
-  # Beware that success() is false if any dependent job is skipped. See
-  # https://github.com/orgs/community/discussions/45058. This means there
-  # cannot be optional jobs. One workaround is to check for all other
-  # statuses:
-  #     (contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') || contains(needs.*.result, 'failure'))
-  # but that is a mess.
+  spelling:
+    name: Spell Check with Typos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Spell check repository
+        uses: crate-ci/typos@v1.50.3
+
+  gui:
+    name: GUI tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Rust
+        run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
+      - name: Install npm
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Install browser-ui-test
+        run: npm install
+      - name: Run eslint
+        run: npm run lint
+      - name: Build and run tests (+ GUI)
+        run: cargo test --locked --target x86_64-unknown-linux-gnu --test gui
+
+  # Ensure there are no clippy warnings
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Rust
+        run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
+      - run: rustup component add clippy
+      - run: cargo clippy --workspace --all-targets --no-deps -- -D warnings
+
+  docs:
+    name: Check API docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Rust
+        run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
+      - name: Ensure intradoc links are valid
+        run: cargo doc --workspace --document-private-items --no-deps
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  check-version-bump:
+    name: Check version bump
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: rustup update stable && rustup default stable
+      - name: Install cargo-semver-checks
+        run: |
+          mkdir installed-bins
+          curl -Lf https://github.com/obi1kenobi/cargo-semver-checks/releases/download/v0.51.0/cargo-semver-checks-x86_64-unknown-linux-gnu.tar.gz \
+            | tar -xz --directory=./installed-bins
+          echo `pwd`/installed-bins >> $GITHUB_PATH
+      - run: cargo semver-checks --workspace
+
+  audit:
+    name: Check crates audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install cargo audit
+        run: rustup update stable && rustup default stable && cargo install cargo-audit --locked
+      - name: Run cargo audit
+        run: cargo audit
+
+  # The success job is here to consolidate the total success/failure state of
+  # all other jobs. This job is then included in the GitHub branch protection
+  # rule which prevents merges unless all other jobs are passing. This makes
+  # it easier to manage the list of jobs via this yml file and to prevent
+  # accidentally adding new jobs without also updating the branch protections.
   success:
     name: Success gate
-    runs-on: ubuntu-latest
+    if: always()
     needs:
       - test
       - rustfmt
-    if: "success()"
-    steps:
-      - name: mark the job as a success
-        run: echo success
-  failure:
-    name: Failure gate
+      - spelling
+      - aarch64-cross-builds
+      - gui
+      - clippy
+      - docs
+      - check-version-bump
+      - audit
     runs-on: ubuntu-latest
-    needs:
-      - test
-      - rustfmt
-    if: "!success()"
     steps:
-      - name: mark the job as a failure
-        run: |
-          echo One or more jobs failed
-          exit 1
+      - run: jq --exit-status 'all(.result == "success")' <<< '${{ toJson(needs) }}'
+      - name: Done
+        run: exit 0

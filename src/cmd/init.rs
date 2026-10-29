@@ -1,11 +1,12 @@
 use crate::get_book_dir;
-use clap::{arg, ArgMatches, Command as ClapCommand};
-use mdbook::config;
-use mdbook::errors::Result;
-use mdbook::MDBook;
+use anyhow::Result;
+use clap::{ArgMatches, Command as ClapCommand, arg};
+use mdbook_core::config;
+use mdbook_driver::MDBook;
 use std::io;
 use std::io::Write;
 use std::process::Command;
+use tracing::debug;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> ClapCommand {
@@ -40,7 +41,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         // Skip this if `--force` is present
         if !args.get_flag("force") && theme_dir.exists() {
             println!("This could potentially overwrite files already present in that directory.");
-            print!("\nAre you sure you want to continue? (y/n) ");
+            print!("\nAre you sure you want to continue? (y/N) ");
 
             // Read answer from user and exit if it's not 'yes'
             if confirm() {
@@ -57,7 +58,7 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
             _ => builder.create_gitignore(false),
         };
     } else if !args.get_flag("force") {
-        println!("\nDo you want a .gitignore to be created? (y/n)");
+        println!("\nDo you want a .gitignore to be created? (y/N)");
         if confirm() {
             builder.create_gitignore(true);
         }
@@ -74,9 +75,9 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     if let Some(author) = get_author_name() {
         debug!("Obtained user name from gitconfig: {:?}", author);
         config.book.authors.push(author);
-        builder.with_config(config);
     }
 
+    builder.with_config(config);
     builder.build()?;
     println!("\nAll done, no errors...");
 

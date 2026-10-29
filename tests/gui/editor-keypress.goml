@@ -1,0 +1,24 @@
+// Tests for global keypress handlers when ACE editor is in focus.
+// See https://github.com/rust-lang/mdBook/issues/3064
+
+go-to: |DOC_PATH| + "editor/chapter_1.html"
+
+click: ".ace_editor"
+press-key: "s"
+// Wait briefly to allow any event handlers triggered by the keypress to run.
+// Otherwise there is a race here since the wrapper is already display:none.
+wait-for: 200
+wait-for-css: ("#mdbook-search-wrapper", {"display": "none"})
+
+// ? inside ACE editor shouldn't show global help popup.
+press-key: "?"
+wait-for: 200
+wait-for-css: ("#mdbook-help-container", {"display": "none"})
+
+// Make sure arrow keys don"t navigate.
+press-key: "ArrowRight"
+wait-for: 200
+assert-window-property: ({"location": |DOC_PATH| + "editor/chapter_1.html"})
+press-key: "ArrowLeft"
+wait-for: 200
+assert-window-property: ({"location": |DOC_PATH| + "editor/chapter_1.html"})

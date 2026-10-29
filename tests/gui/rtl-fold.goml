@@ -1,0 +1,17 @@
+// Tests that the fold chevron rotates the correct way with RTL text direction.
+
+set-window-size: (1400, 800)
+go-to: |DOC_PATH| + "rtl-fold/index.html"
+assert-attribute: ("html", {"dir": "rtl"})
+
+store-value: (chevron, ".chapter li > span > .chapter-fold-toggle div")
+
+// The current chapter starts expanded, and its chevron must point down (and
+// not up like it used to).
+assert-css: (|chevron|, {"transform": "matrix(0, -1, 1, 0, 0, 0)"})
+
+// Once collapsed, the chevron is not rotated: the `❱` glyph is mirrored by the
+// RTL bidi algorithm, so it already points towards the start of the line.
+click: ".chapter .chapter-fold-toggle"
+// `transform` is a 0.5s transition, so wait for it to settle.
+wait-for-css: (|chevron|, {"transform": "none"})

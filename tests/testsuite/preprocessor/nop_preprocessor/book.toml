@@ -1,0 +1,2 @@
+[preprocessor.nop-preprocessor]
+command = "cargo run --quiet --example nop-preprocessor --"

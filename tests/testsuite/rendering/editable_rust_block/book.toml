@@ -1,0 +1,5 @@
+[book]
+title = "editable_rust_block"
+
+[output.html.playground]
+editable = true

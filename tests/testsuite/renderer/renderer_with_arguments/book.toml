@@ -1,0 +1,3 @@
+[output.arguments]
+command = "./arguments arg1 arg2"
+

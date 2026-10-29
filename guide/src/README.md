@@ -1,5 +1,22 @@
 # Introduction
 
+<style>
+    .mdbook-version {
+        position: absolute;
+        right: 20px;
+        top: 60px;
+        background-color: var(--theme-popup-bg);
+        border-radius: 8px;
+        padding: 2px 5px 2px 5px;
+        border: 1px solid var(--theme-popup-border);
+        font-size: 0.9em;
+    }
+</style>
+
+<div class="mdbook-version">
+Version: {{ mdbook-version }}
+</div>
+
 **mdBook** is a command line tool to create books with Markdown.
 It is ideal for creating product or API documentation, tutorials, course materials or anything that requires a clean,
 easily navigable and customizable presentation.
@@ -32,7 +49,7 @@ mdBook is free and open source. You can find the source code on
 [GitHub](https://github.com/rust-lang/mdBook) and issues and feature requests can be posted on
 the [GitHub issue tracker](https://github.com/rust-lang/mdBook/issues). mdBook relies on the community to fix bugs and
 add features: if you'd like to contribute, please read
-the [CONTRIBUTING](https://github.com/rust-lang/mdBook/blob/master/CONTRIBUTING.md) guide and consider opening
+the [CONTRIBUTING](https://github.com/rust-lang/mdBook/blob/main/CONTRIBUTING.md) guide and consider opening
 a [pull request](https://github.com/rust-lang/mdBook/pulls).
 
 ## License

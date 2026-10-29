@@ -1,0 +1,3 @@
+[output.cat-to-file]
+command = "./cat-to-file"
+

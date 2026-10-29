@@ -4,6 +4,12 @@
 # Allows @rustbot ready, review, author, or blocked
 [shortcut]
 
+# Closes/reopens PRs created by the GitHub Actions bot so that checks will run.
+[bot-pull-requests]
+
+# When rebasing, this will add a diff link in a comment.
+[range-diff]
+
 [relabel]
 allow-unauthenticated = [
     # For Issue areas
@@ -21,3 +27,16 @@ allow-unauthenticated = [
 
 [autolabel."S-waiting-on-review"]
 new_pr = true
+
+[merge-conflicts]
+remove = []
+add = ["S-waiting-on-author"]
+unless = ["S-blocked", "S-waiting-on-review"]
+
+[review-submitted]
+reviewed_label = "S-waiting-on-author"
+review_labels = ["S-waiting-on-review"]
+
+[review-requested]
+remove_labels = ["S-waiting-on-author"]
+add_labels = ["S-waiting-on-review"]

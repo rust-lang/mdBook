@@ -1,0 +1,5 @@
+[book]
+title = "redirect_removed_with_fragments_only"
+
+[output.html.redirect]
+"/old-file.html#foo" = "chapter_1.html"

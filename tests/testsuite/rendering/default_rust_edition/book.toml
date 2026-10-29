@@ -1,0 +1,5 @@
+[book]
+title = "default_rust_edition"
+
+[rust]
+edition = "2021"

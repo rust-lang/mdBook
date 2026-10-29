@@ -1,0 +1,6 @@
+[book]
+title = "canonical_url test"
+
+[output.html]
+# trailing slash is not necessary or recommended, but tested here
+canonical-site-url = "https://example.com/test/"

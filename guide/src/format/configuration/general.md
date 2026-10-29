@@ -1,4 +1,4 @@
-# General Configuration
+# General configuration
 
 You can configure the parameters for your book in the ***book.toml*** file.
 
@@ -46,8 +46,13 @@ This is general information about your book.
   `src` directly under the root folder. But this is configurable with the `src`
   key in the configuration file.
 - **language:** The main language of the book, which is used as a language attribute `<html lang="en">` for example.
+  This is also used to derive the direction of text (RTL, LTR) within the book.
+- **text-direction**: The direction of text in the book: Left-to-right (LTR) or Right-to-left (RTL). Possible values: `ltr`, `rtl`.
+  When not specified, the text direction is derived from the book's `language` attribute.
+- **logo:** Path to a logo to displayed at the top of the navigation bar, relative to `<book_root>/<src>/`.
 
 **book.toml**
+
 ```toml
 [book]
 title = "Example book"
@@ -55,6 +60,8 @@ authors = ["John Doe", "Jane Doe"]
 description = "The example book covers examples."
 src = "my-src"  # the source files will be found in `root/my-src` instead of `root/src`
 language = "en"
+text-direction = "ltr"
+logo = "static/logo.svg"  # logo lives at `root/my-src/static/logo.svg`
 ```
 
 ### Rust options
@@ -68,8 +75,8 @@ edition = "2015"   # the default edition for code blocks
 ```
 
 - **edition**: Rust edition to use by default for the code snippets. Default
-  is "2015". Individual code blocks can be controlled with the `edition2015`, 
-  `edition2018` or `edition2021` annotations, such as:
+  is `"2015"`. Individual code blocks can be controlled with the `edition2015`,
+  `edition2018`, `edition2021` or `edition2024` annotations, such as:
 
   ~~~text
   ```rust,edition2015

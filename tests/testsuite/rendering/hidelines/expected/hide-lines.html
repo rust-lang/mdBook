@@ -1,0 +1,23 @@
+<h1 id="hide-lines"><a class="header" href="#hide-lines">Hide Lines</a></h1>
+<pre><code class="language-python"><span class="boring">hidden()
+</span>nothidden():
+<span class="boring">    hidden()
+</span><span class="boring">    hidden()
+</span>    nothidden()
+</code></pre>
+<pre><code class="language-python hidelines=!!!"><span class="boring">hidden()
+</span>nothidden():
+<span class="boring">    hidden()
+</span><span class="boring">    hidden()
+</span>    nothidden()
+</code></pre>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span>#![allow(something)]
+<span class="boring">fn main() {
+</span><span class="boring">
+</span>#hidden();
+<span class="boring">hidden();
+</span># not_hidden();
+#[not_hidden]
+not_hidden();
+<span class="boring">}</span></code></pre>

@@ -1,0 +1,20 @@
+// Tests the keypress handler when there is a shadow-dom element.
+// See https://github.com/rust-lang/mdBook/issues/2507
+
+go-to: |DOC_PATH| + "shadow-dom/chapter_1.html"
+
+// Open the shadow-dom generated element.
+press-key: 'x'
+wait-for: '#shadow-input-host'
+// See what happens when the s key is pressed.
+press-key: 's'
+wait-for: 200
+wait-for-css: ("#mdbook-search-wrapper", {"display": "none"})
+
+// Also try the global key handlers.
+reload:
+press-key: 'x'
+wait-for: '#shadow-input-host'
+press-key: '?'
+wait-for: 200
+wait-for-css: ("#mdbook-help-container", {"display": "none"})

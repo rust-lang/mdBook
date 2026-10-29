@@ -1,0 +1,3 @@
+// Tests when chapter folding is enabled.
+
+go-to: |DOC_PATH| + "heading-nav-folded/index.html"
