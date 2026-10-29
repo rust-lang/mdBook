@@ -1,0 +1,11 @@
+# Configuration for `cargo audit`, see
+# https://github.com/rustsec/rustsec/blob/main/cargo-audit/README.md
+
+[advisories]
+ignore = [
+	# pulldown-cmark@0.13.4 has exponential event growth with `ENABLE_WIKILINKS`
+	# Solution is to update to 0.13.5, but
+	# - the version of pulldown-cmark used in mdbook is part of the public API
+	# - mdbook doesn't enable the `ENABLE_WIKILINKS` option
+	'RUSTSEC-2026-0414',
+]
