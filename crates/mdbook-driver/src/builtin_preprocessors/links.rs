@@ -49,7 +49,13 @@ impl Preprocessor for LinkPreprocessor {
     fn run(&self, ctx: &PreprocessorContext, mut book: Book) -> Result<Book> {
         let src_dir = ctx.root.join(&ctx.config.book.src);
 
+        let mut result = Ok(());
         book.for_each_mut(|section: &mut BookItem| {
+            // Short circuit if there already is an error.
+            if result.is_err() {
+                return;
+            }
+
             if let BookItem::Chapter(ref mut ch) = *section {
                 if let Some(ref chapter_path) = ch.path {
                     let base = chapter_path
@@ -59,7 +65,13 @@ impl Preprocessor for LinkPreprocessor {
 
                     let mut chapter_title = ch.name.clone();
                     let content =
-                        replace_all(&ch.content, base, chapter_path, 0, &mut chapter_title);
+                        match replace_all(&ch.content, base, chapter_path, 0, &mut chapter_title) {
+                            Ok(content) => content,
+                            Err(err) => {
+                                result = Err(err);
+                                return;
+                            }
+                        };
                     ch.content = content;
                     if chapter_title != ch.name {
                         ctx.chapter_titles
@@ -69,6 +81,9 @@ impl Preprocessor for LinkPreprocessor {
                 }
             }
         });
+
+        // Return possible error.
+        result?;
 
         Ok(book)
     }
@@ -80,7 +95,7 @@ fn replace_all<P1, P2>(
     source: P2,
     depth: usize,
     chapter_title: &mut String,
-) -> String
+) -> Result<String>
 where
     P1: AsRef<Path>,
     P2: AsRef<Path>,
@@ -96,51 +111,39 @@ where
     for link in find_links(s) {
         replaced.push_str(&s[previous_end_index..link.start_index]);
 
-        match link.render_with_path(path, chapter_title) {
-            Ok(new_content) => {
-                if depth < MAX_LINK_NESTED_DEPTH {
-                    // use split('\n') instead of lines because we DON'T
-                    // want the last \n to be removed
-                    // Otherwise includes starting a new line would be prefixed
-                    // by the preceding line
-                    let prefix = replaced.split('\n').last().unwrap_or("");
-                    let raw_new_content = if let Some(rel_path) = link.link_type.relative_path(path)
-                    {
-                        replace_all(&new_content, rel_path, source, depth + 1, chapter_title)
-                    } else {
-                        new_content
-                    };
-                    // use lines instead of split('\n') because we DO
-                    // want the last \n to be removed
-                    // Otherwise inlined includes would fail
-                    let prefixed_new_content = raw_new_content
-                        .lines()
-                        .collect::<Vec<_>>()
-                        .join(&format!("\n{prefix}"));
-                    replaced.push_str(&prefixed_new_content);
-                } else {
-                    error!(
-                        "Stack depth exceeded in {}. Check for cyclic includes",
-                        source.display()
-                    );
-                }
-                previous_end_index = link.end_index;
-            }
-            Err(e) => {
-                error!("Error updating \"{}\", {}", link.link_text, e);
-                for cause in e.chain().skip(1) {
-                    warn!("Caused By: {}", cause);
-                }
-
-                // This should make sure we include the raw `{{# ... }}` snippet
-                // in the page content if there are any errors.
-                previous_end_index = link.start_index;
-            }
+        let new_content = link
+            .render_with_path(path, chapter_title)
+            .context(format!("Error updating \"{}\"", link.link_text))?;
+        if depth < MAX_LINK_NESTED_DEPTH {
+            // use split('\n') instead of lines because we DON'T
+            // want the last \n to be removed
+            // Otherwise includes starting a new line would be prefixed
+            // by the preceding line
+            let prefix = replaced.split('\n').last().unwrap_or("");
+            let raw_new_content = if let Some(rel_path) = link.link_type.relative_path(path) {
+                replace_all(&new_content, rel_path, source, depth + 1, chapter_title)?
+            } else {
+                new_content
+            };
+            // use lines instead of split('\n') because we DO
+            // want the last \n to be removed
+            // Otherwise inlined includes would fail
+            let prefixed_new_content = raw_new_content
+                .lines()
+                .collect::<Vec<_>>()
+                .join(&format!("\n{prefix}"));
+            replaced.push_str(&prefixed_new_content);
+        } else {
+            error!(
+                "Stack depth exceeded in {}. Check for cyclic includes",
+                source.display()
+            );
         }
+        previous_end_index = link.end_index;
     }
 
     replaced.push_str(&s[previous_end_index..]);
-    replaced
+    Ok(replaced)
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -521,7 +524,10 @@ mod tests {
         {{#include file.rs}} << an escaped link!
         ```";
         let mut chapter_title = "test_replace_all_escaped".to_owned();
-        assert_eq!(replace_all(start, "", "", 0, &mut chapter_title), end);
+        assert_eq!(
+            replace_all(start, "", "", 0, &mut chapter_title).unwrap(),
+            end
+        );
     }
 
     #[test]
@@ -533,7 +539,10 @@ mod tests {
         # My Chapter
         ";
         let mut chapter_title = "test_set_chapter_title".to_owned();
-        assert_eq!(replace_all(start, "", "", 0, &mut chapter_title), end);
+        assert_eq!(
+            replace_all(start, "", "", 0, &mut chapter_title).unwrap(),
+            end
+        );
         assert_eq!(chapter_title, "My Title");
     }
 
@@ -1237,7 +1246,7 @@ mod tests {
         let start = "Some text with {{#include \"unclosed.md}} here.";
         let mut chapter_title = "test".to_owned();
         let res = replace_all(start, "", "", 0, &mut chapter_title);
-        assert_eq!(res, start);
+        assert!(res.is_err());
     }
 
     #[test]
