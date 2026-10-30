@@ -183,6 +183,11 @@
                             {{fa "solid" "pencil" "git-edit-button"}}
                         </a>
                         {{/if}}
+                        {{#if citation}}
+                        <a href="{{ resource citation }}" title="Download citation file" aria-label="Download citation file" download="{{ citation_filename }}">
+                            {{fa "solid" "quote-left" "citation-download-button"}}
+                        </a>
+                        {{/if}}
 
                     </div>
                 </div>
