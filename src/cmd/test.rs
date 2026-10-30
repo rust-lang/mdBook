@@ -8,7 +8,7 @@ use mdbook_driver::MDBook;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("test")
-        .about("Tests that a book's Rust code samples compile")
+        .about("Compiles and runs a book's Rust code samples")
         .arg_root_dir()
         .arg(
             Arg::new("chapter")
