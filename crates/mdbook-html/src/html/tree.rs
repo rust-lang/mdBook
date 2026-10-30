@@ -353,6 +353,8 @@ where
                     let mut input = Element::new("input");
                     input.insert_attr("disabled", "".into());
                     input.insert_attr("type", "checkbox".into());
+                    // Disabled and purely presentational, so hide it from assistive tech.
+                    input.insert_attr("aria-hidden", "true".into());
                     if checked {
                         input.insert_attr("checked", "".into());
                     }
@@ -1289,5 +1291,25 @@ mod strip_infostring_comments_tests {
             "chapter/".to_owned(),
             fix_link("chapter/".into()).to_string()
         )
+    }
+}
+
+#[cfg(test)]
+mod task_list_marker_tests {
+    use super::super::{HtmlRenderOptions, render_markdown};
+    use mdbook_core::config::HtmlConfig;
+    use std::path::Path;
+
+    fn render(text: &str) -> String {
+        let config = HtmlConfig::default();
+        let options = HtmlRenderOptions::new(Path::new("chapter.md"), &config, None);
+        render_markdown(text, &options)
+    }
+
+    #[test]
+    fn checkbox_is_hidden_from_assistive_tech() {
+        let html = render("- [ ] todo\n- [x] done\n");
+        assert_eq!(html.matches(r#"aria-hidden="true""#).count(), 2);
+        assert!(html.contains("checked"));
     }
 }
