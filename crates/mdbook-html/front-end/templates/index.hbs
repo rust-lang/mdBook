@@ -307,9 +307,18 @@
         </script>
         {{/if}}
 
+        <script src="{{ resource "highlight.js" }}"></script>
+
         {{#if playground_js}}
         <script src="{{ resource "ace.js" }}"></script>
         <script src="{{ resource "mode-rust.js" }}"></script>
+        {{/if}}
+
+        {{#each preload_js}}
+        <script src="{{ resource this}}"></script>
+        {{/each}}
+
+        {{#if playground_js}}
         <script src="{{ resource "editor.js" }}"></script>
         <script src="{{ resource "theme-dawn.js" }}"></script>
         <script src="{{ resource "theme-tomorrow_night.js" }}"></script>
@@ -322,7 +331,6 @@
         {{/if}}
 
         <script src="{{ resource "clipboard.min.js" }}"></script>
-        <script src="{{ resource "highlight.js" }}"></script>
         <script src="{{ resource "book.js" }}"></script>
 
         <!-- Custom JS scripts -->
