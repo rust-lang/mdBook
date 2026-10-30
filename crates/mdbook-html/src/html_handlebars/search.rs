@@ -215,6 +215,7 @@ fn write_to_json(index: Index, search_config: &Search, doc_urls: Vec<String>) ->
     #[derive(Serialize)]
     struct ResultsOptions {
         limit_results: u32,
+        limit_chapter_results: u32,
         teaser_word_count: u32,
     }
 
@@ -252,6 +253,7 @@ fn write_to_json(index: Index, search_config: &Search, doc_urls: Vec<String>) ->
 
     let results_options = ResultsOptions {
         limit_results: search_config.limit_results,
+        limit_chapter_results: search_config.limit_chapter_results,
         teaser_word_count: search_config.teaser_word_count,
     };
 

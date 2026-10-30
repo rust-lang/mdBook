@@ -868,3 +868,45 @@ aria-label="Show hidden lines"></button>';
         document.addEventListener('scroll', updateBorder, { passive: true });
     })();
 })();
+
+(function pageIndex() {
+    let pages = null;
+
+    function collectPages() {
+        if (pages !== null) {
+            return pages;
+        }
+        const seen = new Set();
+        pages = [];
+        document.querySelectorAll('#mdbook-sidebar a[href]').forEach(link => {
+            if (link.classList.contains('chapter-fold-toggle')
+                || link.classList.contains('header-in-summary')) {
+                return;
+            }
+            const url = link.href;
+            if (url.startsWith('#') || seen.has(url)
+                || link.hostname !== window.location.hostname) {
+                return;
+            }
+            const name = link.textContent.trim();
+            if (name === '') {
+                return;
+            }
+            seen.add(url);
+            // `toc.js` prefixes the book-root-relative href with `path_to_root`,
+            // so removing that prefix gives a path that matches the search
+            // index's `doc_urls` entries.
+            let path = link.getAttribute('href') || '';
+            if (typeof path_to_root === 'string' && path_to_root !== ''
+                && path.startsWith(path_to_root)) {
+                path = path.slice(path_to_root.length);
+            }
+            pages.push({ name, path, url });
+        });
+        return pages;
+    }
+
+    // Expose the page list so that the full-text search can render chapter
+    // navigation matches above the indexed results.
+    window.mdbook_chapter_pages = collectPages;
+})();
