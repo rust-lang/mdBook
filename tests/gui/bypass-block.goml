@@ -1,0 +1,16 @@
+// This GUI test checks the bypass-repetitive-content accessibility feature.
+
+go-to: |DOC_PATH| + "basic/index.html"
+wait-for: "#bypass-block"
+
+// Bypass block should be hidden (the % gets expanded to the px value)
+assert-css: ("#bypass-block", { "top": "-1000px" })
+
+// Focusing the block should display it
+focus: "#bypass-block"
+assert-css: ("#bypass-block", { "top": "0px" })
+
+// Following the block's anchor should lead to main content and hide it again
+press-key: "Enter"
+assert-document-property: {"location"."hash": "#mdbook-content"}
+assert-css: ("#bypass-block", { "top": "-1000px" })
