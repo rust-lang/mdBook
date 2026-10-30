@@ -25,7 +25,7 @@ extra backslash to work. Hopefully this limitation will be lifted soon.
 Inline equations are delimited by `\\(` and `\\)`. So for example, to render the
 following inline equation \\( \int x dx = \frac{x^2}{2} + C \\) you would write
 the following:
-```
+```math
 \\( \int x dx = \frac{x^2}{2} + C \\)
 ```
 

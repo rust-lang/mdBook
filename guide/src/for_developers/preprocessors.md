@@ -36,7 +36,7 @@ be adapted for other preprocessors.
 <details>
 <summary>Example no-op preprocessor</summary>
 
-```rust
+```rust,no_run
 // nop-preprocessors.rs
 
 {{#include ../../../examples/nop-preprocessor.rs}}
@@ -65,7 +65,7 @@ The [`mdbook-markdown`] crate exposes the [`pulldown-cmark`][pc] crate used by m
 The following code block shows how to remove all emphasis from markdown,
 without accidentally breaking the document.
 
-```rust
+```rust,no_run
 {{#rustdoc_include ../../../examples/remove-emphasis/mdbook-remove-emphasis/src/main.rs:remove_emphasis}}
 ```
 
