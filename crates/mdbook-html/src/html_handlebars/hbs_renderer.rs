@@ -572,6 +572,17 @@ fn make_data(
         data.insert("additional_js".to_owned(), json!(js));
     }
 
+    if !html_config.preload_js.is_empty() {
+        let mut js = Vec::new();
+        for script in &html_config.preload_js {
+            match script.strip_prefix(root) {
+                Ok(p) => js.push(p.to_str().expect("Could not convert to str")),
+                Err(_) => js.push(script.to_str().expect("Could not convert to str")),
+            }
+        }
+        data.insert("preload_js".to_owned(), json!(js));
+    }
+
     if html_config.playground.editable && html_config.playground.copy_js {
         data.insert("playground_js".to_owned(), json!(true));
         if html_config.playground.line_numbers {

@@ -1,0 +1,11 @@
+// Test for preload-js
+
+go-to: |DOC_PATH| + "preload-js/chapter_1.html"
+
+// Check hljs
+assert-count: ("code.language-example span.hljs-keyword", 1)
+assert: "//span[@class='hljs-keyword' and text()='print']"
+
+// Check ACE
+wait-for-count: (".ace_editor .ace_keyword", 1)
+wait-for: "//*[@class='ace_keyword' and text()='print']"

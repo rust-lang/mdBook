@@ -125,7 +125,8 @@ impl StaticFiles {
         let custom_files = html_config
             .additional_css
             .iter()
-            .chain(html_config.additional_js.iter());
+            .chain(html_config.additional_js.iter())
+            .chain(html_config.preload_js.iter());
 
         for custom_file in custom_files {
             let input_location = root.join(custom_file);

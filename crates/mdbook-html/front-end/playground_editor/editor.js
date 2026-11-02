@@ -5,6 +5,13 @@ window.editors = [];
         return;
     }
 
+    function playground_mode(editable) {
+        const cls = Array.from(editable.classList)
+            .find(c => c.startsWith("language-"));
+        return cls ? "ace/mode/" + cls.slice("language-".length)
+                   : "ace/mode/rust";
+    }
+
     Array.from(document.querySelectorAll('.editable')).forEach(function(editable) {
         let display_line_numbers = window.playground_line_numbers || false;
 
@@ -20,7 +27,7 @@ window.editors = [];
 
         editor.$blockScrolling = Infinity;
 
-        editor.getSession().setMode("ace/mode/rust");
+        editor.getSession().setMode(playground_mode(editable));
 
         editor.originalCode = editor.getValue();
 
