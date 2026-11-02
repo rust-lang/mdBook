@@ -42,8 +42,9 @@ jobs:
       env:
         TARGET: ${{ matrix.target }}
     - name: Build asset
-      run: ci/make-release-asset.sh ${{ matrix.os }} ${TARGET}
+      run: ci/make-release-asset.sh ${OS} ${TARGET}
       env:
+        OS: ${{ matrix.os }}
         TARGET: ${{ matrix.target }}
     - name: Update release with new asset
       env:
