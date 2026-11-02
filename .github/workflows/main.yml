@@ -52,7 +52,7 @@ jobs:
             target: x86_64-unknown-linux-gnu
     name: ${{ matrix.name }}
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
     - name: Install Rust
       run: bash ci/install-rust.sh ${{ matrix.rust }} ${{ matrix.target }}
     - name: Build and run tests
@@ -63,7 +63,7 @@ jobs:
   aarch64-cross-builds:
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
     - name: Install Rust
       run: bash ci/install-rust.sh stable aarch64-unknown-linux-musl
     - name: Build
@@ -73,7 +73,7 @@ jobs:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
     - name: Install Rust
       run: rustup update stable && rustup default stable && rustup component add rustfmt
     - run: cargo fmt --check
@@ -82,7 +82,7 @@ jobs:
     name: Spell Check with Typos
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Spell check repository
         uses: crate-ci/typos@v1.50.3
 
@@ -90,7 +90,7 @@ jobs:
     name: GUI tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install Rust
         run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
       - name: Install npm
@@ -108,7 +108,7 @@ jobs:
   clippy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install Rust
         run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
       - run: rustup component add clippy
@@ -118,7 +118,7 @@ jobs:
     name: Check API docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install Rust
         run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
       - name: Ensure intradoc links are valid
@@ -130,7 +130,7 @@ jobs:
     name: Check version bump
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: rustup update stable && rustup default stable
       - name: Install cargo-semver-checks
         run: |
@@ -144,7 +144,7 @@ jobs:
     name: Check crates audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install cargo audit
         run: rustup update stable && rustup default stable && cargo install cargo-audit --locked
       - name: Run cargo audit
