@@ -56,9 +56,10 @@ jobs:
       with:
         persist-credentials: false
     - name: Install Rust
-      run: ci/install-rust.sh ${{ matrix.rust }} ${TARGET}
+      run: ci/install-rust.sh ${RUST} ${TARGET}
       shell: bash
       env:
+        RUST: ${{ matrix.rust }}
         TARGET: ${{ matrix.target }}
     - name: Build and run tests
       run: cargo test --workspace --locked --target ${TARGET}
