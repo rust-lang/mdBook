@@ -4,6 +4,8 @@ on:
     - cron: '0 0 1 * *'
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   update:
     name: Update dependencies

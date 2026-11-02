@@ -3,6 +3,8 @@ on:
   pull_request:
   merge_group:
 
+permissions: {}
+
 jobs:
   test:
     runs-on: ${{ matrix.os }}

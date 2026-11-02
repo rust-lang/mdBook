@@ -8,8 +8,7 @@ defaults:
   run:
     shell: bash
 
-permissions:
-  contents: write
+permissions: {}
 
 jobs:
   publish:
