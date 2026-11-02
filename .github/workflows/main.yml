@@ -195,6 +195,8 @@ jobs:
       - audit
     runs-on: ubuntu-latest
     steps:
-      - run: jq --exit-status 'all(.result == "success")' <<< '${{ toJson(needs) }}'
+      - run: jq --exit-status 'all(.result == "success")' <<< "${JSON_NEEDS}"
+        env:
+          JSON_NEEDS: ${{ toJson(needs) }}
       - name: Done
         run: exit 0
