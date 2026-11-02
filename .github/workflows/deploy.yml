@@ -11,6 +11,8 @@ permissions: {}
 
 jobs:
   release:
+    permissions:
+      contents: write # Required by `gh release upload`
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -52,10 +54,12 @@ jobs:
   pages:
     name: GitHub Pages
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # The `publish-guide.sh` script requires this for `git push`
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       with:
-        persist-credentials: false
+        persist-credentials: true # The `publish-guide.sh` script requires this for `git push`
     - name: Install Rust (rustup)
       run: rustup update stable --no-self-update && rustup default stable
     - name: Deploy the User Guide to GitHub Pages using the gh-pages branch
