@@ -56,11 +56,20 @@ jobs:
       with:
         persist-credentials: false
     - name: Install Rust
-      run: bash ci/install-rust.sh ${{ matrix.rust }} ${{ matrix.target }}
+      run: ci/install-rust.sh ${{ matrix.rust }} ${TARGET}
+      shell: bash
+      env:
+        TARGET: ${{ matrix.target }}
     - name: Build and run tests
-      run: cargo test --workspace --locked --target ${{ matrix.target }}
+      run: cargo test --workspace --locked --target ${TARGET}
+      shell: bash
+      env:
+        TARGET: ${{ matrix.target }}
     - name: Test no default
-      run: cargo test --workspace --no-default-features --target ${{ matrix.target }}
+      run: cargo test --workspace --no-default-features --target ${TARGET}
+      shell: bash
+      env:
+        TARGET: ${{ matrix.target }}
 
   aarch64-cross-builds:
     runs-on: ubuntu-22.04

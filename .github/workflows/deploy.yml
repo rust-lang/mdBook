@@ -38,9 +38,13 @@ jobs:
       with:
         persist-credentials: false
     - name: Install Rust
-      run: ci/install-rust.sh stable ${{ matrix.target }}
+      run: ci/install-rust.sh stable ${TARGET}
+      env:
+        TARGET: ${{ matrix.target }}
     - name: Build asset
-      run: ci/make-release-asset.sh ${{ matrix.os }} ${{ matrix.target }}
+      run: ci/make-release-asset.sh ${{ matrix.os }} ${TARGET}
+      env:
+        TARGET: ${{ matrix.target }}
     - name: Update release with new asset
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
