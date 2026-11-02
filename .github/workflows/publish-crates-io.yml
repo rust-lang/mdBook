@@ -15,8 +15,7 @@ jobs:
     name: Publish to crates.io
     runs-on: ubuntu-latest
     permissions:
-      # Required for OIDC token exchange
-      id-token: write
+      id-token: write # Required for OIDC token exchange
     environment: publish
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
