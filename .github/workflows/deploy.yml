@@ -33,14 +33,16 @@ jobs:
           - target: aarch64-pc-windows-msvc
             os: windows-11-arm
     name: Deploy ${{ matrix.target }}
+    env:
+      TARGET: ${{ matrix.target }}
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       with:
         persist-credentials: false
     - name: Install Rust
-      run: ci/install-rust.sh stable ${{ matrix.target }}
+      run: ci/install-rust.sh stable ${TARGET}
     - name: Build asset
-      run: ci/make-release-asset.sh ${{ matrix.os }} ${{ matrix.target }}
+      run: ci/make-release-asset.sh ${{ matrix.os }} ${TARGET}
     - name: Update release with new asset
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
