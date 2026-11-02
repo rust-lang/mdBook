@@ -42,7 +42,9 @@ jobs:
     - name: Install Rust
       run: ci/install-rust.sh stable ${TARGET}
     - name: Build asset
-      run: ci/make-release-asset.sh ${{ matrix.os }} ${TARGET}
+      run: ci/make-release-asset.sh ${OS} ${TARGET}
+      env:
+        OS: ${{ matrix.os }}
     - name: Update release with new asset
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
