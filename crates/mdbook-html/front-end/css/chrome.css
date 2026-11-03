@@ -796,7 +796,7 @@ html:not(.js) .sidebar-resize-handle {
 }
 
 /* Skip navigation link for keyboard users (WCAG 2.4.1) */
-#bypass-block {
+.bypass-block {
     position: absolute;
     left: 0;
     top: -100%;
@@ -810,6 +810,6 @@ html:not(.js) .sidebar-resize-handle {
     outline: 2px solid var(--sidebar-active);
 }
 
-#bypass-block:focus {
+.bypass-block:focus {
     top: 0;
 }

@@ -1,16 +1,19 @@
-// This GUI test checks the bypass-repetitive-content accessibility feature.
-
+// This GUI test checks the bypass-repetitive-content accessibility feature. (WCAG 2.4.1)
+set-timeout: 1000
 go-to: |DOC_PATH| + "basic/index.html"
-wait-for: "#bypass-block"
 
-// Bypass block should be hidden (the % gets expanded to the px value)
-assert-css: ("#bypass-block", { "top": "-1000px" })
+// The skip link should be hidden initially (positioned off-screen above viewport)
+store-position: (".bypass-block", {"y": y_before})
+store-size: (".bypass-block", {"height": height_before})
+assert: |y_before| + |height_before| < 0
 
-// Focusing the block should display it
-focus: "#bypass-block"
-assert-css: ("#bypass-block", { "top": "0px" })
+// The skip link should be the first focusable element when pressing Tab
+press-key: "Tab"
+wait-for: ".bypass-block:focus"
 
-// Following the block's anchor should lead to main content and hide it again
+// When focused, the link should be visible (top: 0px)
+assert-css: (".bypass-block:focus", {"top": "0px"})
+
+// Pressing Enter on the skip link should move focus to main content
 press-key: "Enter"
-assert-document-property: {"location"."hash": "#mdbook-content"}
-assert-css: ("#bypass-block", { "top": "-1000px" })
+wait-for: "#mdbook-content:focus"
