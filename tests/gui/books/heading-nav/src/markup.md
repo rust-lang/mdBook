@@ -10,6 +10,10 @@ Basic markup should be copied.
 
 Probably not super-wise to have headings with links, but at least they shouldn't explode.
 
+## [link-only](../index.html)
+
+A heading whose entire content is a link should still show its text in the sidebar.
+
 ## Heading with a custom id { #custom-id .custom-class }
 
 Make sure navigation works on a custom id.
