@@ -73,7 +73,13 @@ class MDBookSidebarScrollbox extends HTMLElement {
             // 'next/previous chapter' buttons
             const activeSection = document.querySelector('#mdbook-sidebar .active');
             if (activeSection) {
-                activeSection.scrollIntoView({ block: 'center' });
+                // Avoid `scrollIntoView`, which can change Chromium's tab
+                // navigation starting point and skip the bypass link.
+                const activeRect = activeSection.getBoundingClientRect();
+                const sidebarRect = this.getBoundingClientRect();
+                const currentOffset = activeRect.top - sidebarRect.top;
+                const targetOffset = (this.clientHeight - activeRect.height) / 2;
+                this.scrollTop += currentOffset - targetOffset;
             }
         }
         // Toggle buttons
