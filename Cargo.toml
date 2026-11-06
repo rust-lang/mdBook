@@ -49,7 +49,7 @@ mdbook-summary = { path = "crates/mdbook-summary", version = "0.5.4" }
 memchr = "2.8.3"
 notify = "8.2.0"
 notify-debouncer-mini = "0.7.0"
-opener = "0.8.5"
+opener = "0.9.0"
 pathdiff = "0.2.3"
 pulldown-cmark = { version = "0.13.5", default-features = false, features = ["html"] } # Do not update, part of the public api.
 regex = "1.13.1"
