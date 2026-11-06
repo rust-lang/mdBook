@@ -31,7 +31,7 @@ a [`RenderContext::from_json()`] constructor which will load a `RenderContext`.
 
 This is all the boilerplate necessary for our backend to load the book.
 
-```rust
+```rust,no_run
 // src/main.rs
 use std::io;
 use mdbook_renderer::RenderContext;
@@ -59,7 +59,11 @@ Because the `RenderContext` contains a [`Book`] field (`book`), and a `Book` has
 the [`Book::iter()`] method for iterating over all items in a `Book`, this step
 turns out to be just as easy as the first.
 
-```rust
+```rust,no_run
+use std::io;
+
+use mdbook_core::book::{BookItem, Chapter};
+use mdbook_renderer::RenderContext;
 
 fn main() {
     let mut stdin = io::stdin();
@@ -173,16 +177,16 @@ which will encapsulate all configuration for this backend.
 
 First add `serde` and `serde_derive` to your `Cargo.toml`,
 
-```
+```sh
 $ cargo add serde serde_derive
 ```
 
 And then you can create the config struct,
 
 ```rust
-use serde_derive::{Serialize, Deserialize};
+use serde::{Serialize, Deserialize};
 
-...
+// ...
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]

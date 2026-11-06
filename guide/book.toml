@@ -6,7 +6,6 @@ language = "en"
 logo = "images/logo.svg"
 
 [rust]
-edition = "2018"
 
 [output.html]
 smart-punctuation = true
