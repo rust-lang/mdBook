@@ -1,0 +1,10 @@
+[book]
+title = "custom-playground"
+
+[output.html]
+preload-js     = ["hljs-example.js", "mode-example.js"]
+additional-js  = ["example-init.js"]
+additional-css = ["example.css"]
+
+[output.html.playground]
+editable = true

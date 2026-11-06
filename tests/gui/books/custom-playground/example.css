@@ -1,0 +1,13 @@
+pre.playground > .buttons {
+    visibility: visible;
+    opacity: 1;
+}
+
+pre.example-result {
+    margin-top: 0.25em;
+    border-left: 4px solid var(--quote-border);
+}
+
+pre.example-result > code {
+    white-space: pre-wrap;
+}
