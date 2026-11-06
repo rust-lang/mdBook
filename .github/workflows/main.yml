@@ -3,6 +3,8 @@ on:
   pull_request:
   merge_group:
 
+permissions: {}
+
 jobs:
   test:
     runs-on: ${{ matrix.os }}
@@ -52,18 +54,32 @@ jobs:
             target: x86_64-unknown-linux-gnu
     name: ${{ matrix.name }}
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
     - name: Install Rust
-      run: bash ci/install-rust.sh ${{ matrix.rust }} ${{ matrix.target }}
+      run: ci/install-rust.sh ${RUST} ${TARGET}
+      shell: bash
+      env:
+        RUST: ${{ matrix.rust }}
+        TARGET: ${{ matrix.target }}
     - name: Build and run tests
-      run: cargo test --workspace --locked --target ${{ matrix.target }}
+      run: cargo test --workspace --locked --target ${TARGET}
+      shell: bash
+      env:
+        TARGET: ${{ matrix.target }}
     - name: Test no default
-      run: cargo test --workspace --no-default-features --target ${{ matrix.target }}
+      run: cargo test --workspace --no-default-features --target ${TARGET}
+      shell: bash
+      env:
+        TARGET: ${{ matrix.target }}
 
   aarch64-cross-builds:
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
     - name: Install Rust
       run: bash ci/install-rust.sh stable aarch64-unknown-linux-musl
     - name: Build
@@ -73,7 +89,9 @@ jobs:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
     - name: Install Rust
       run: rustup update stable && rustup default stable && rustup component add rustfmt
     - run: cargo fmt --check
@@ -82,19 +100,23 @@ jobs:
     name: Spell Check with Typos
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Spell check repository
-        uses: crate-ci/typos@v1.50.3
+        uses: crate-ci/typos@00f422f3b19c57bc6338715ebfe3316d38768461 # v1.50.3
 
   gui:
     name: GUI tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Install Rust
         run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
       - name: Install npm
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
       - name: Install browser-ui-test
@@ -108,7 +130,9 @@ jobs:
   clippy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Install Rust
         run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
       - run: rustup component add clippy
@@ -118,7 +142,9 @@ jobs:
     name: Check API docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Install Rust
         run: bash ci/install-rust.sh stable x86_64-unknown-linux-gnu
       - name: Ensure intradoc links are valid
@@ -130,7 +156,9 @@ jobs:
     name: Check version bump
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - run: rustup update stable && rustup default stable
       - name: Install cargo-semver-checks
         run: |
@@ -144,7 +172,9 @@ jobs:
     name: Check crates audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Install cargo audit
         run: rustup update stable && rustup default stable && cargo install cargo-audit --locked
       - name: Run cargo audit
@@ -170,6 +200,8 @@ jobs:
       - audit
     runs-on: ubuntu-latest
     steps:
-      - run: jq --exit-status 'all(.result == "success")' <<< '${{ toJson(needs) }}'
+      - run: jq --exit-status 'all(.result == "success")' <<< "${JSON_NEEDS}"
+        env:
+          JSON_NEEDS: ${{ toJson(needs) }}
       - name: Done
         run: exit 0
