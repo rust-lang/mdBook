@@ -36,7 +36,7 @@ futures-util = "0.3.33"
 glob = "0.3.4"
 handlebars = "6.4.3"
 hex = "0.4.3"
-html5ever = "0.39.0"
+html5ever = "0.40.0"
 indexmap = "2.14.0"
 ignore = "0.4.31"
 mdbook-core = { path = "crates/mdbook-core", version = "0.5.4" }
