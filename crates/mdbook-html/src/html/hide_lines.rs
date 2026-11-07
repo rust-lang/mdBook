@@ -134,7 +134,7 @@ fn partition_rust_source(s: &str) -> (&str, &str) {
             (?:
                 ^[ \t]*\#!\[.* (?:\r?\n)?
                 |
-                ^\s* (?:\r?\n)?
+                ^[^\S\r\n]*\r?\n
             )*
         )"
     );
@@ -171,6 +171,11 @@ fn it_partitions_rust_source() {
         partition_rust_source("#![allow(foo)]\n"),
         ("#![allow(foo)]\n", "")
     );
+    // Indentation of the first code line is not part of the attributes.
+    assert_eq!(
+        partition_rust_source("#![allow(a)]\n    let x = 1;"),
+        ("#![allow(a)]\n", "    let x = 1;")
+    );
     assert_eq!(
         partition_rust_source("#![allow(foo)]\nlet x = 1;"),
         ("#![allow(foo)]\n", "let x = 1;")
@@ -185,6 +190,12 @@ fn it_partitions_rust_source() {
         let x = 1;"
         ),
         ("\n#![allow(foo)]\n\n#![allow(bar)]\n\n", "let x = 1;")
+    );
+    // A blank line made of non-ASCII whitespace (U+0085) still belongs to the
+    // header, so the second inner attribute stays with the first.
+    assert_eq!(
+        partition_rust_source("#![allow(a)]\n\u{85}\n#![allow(b)]\nlet x = 1;"),
+        ("#![allow(a)]\n\u{85}\n#![allow(b)]\n", "let x = 1;")
     );
     assert_eq!(
         partition_rust_source("    // Example"),
