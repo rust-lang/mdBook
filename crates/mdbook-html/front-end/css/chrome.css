@@ -794,3 +794,22 @@ html:not(.js) .sidebar-resize-handle {
     /* mdbook's margin for h2 is way too large. */
     margin: 10px;
 }
+
+/* Skip navigation link for keyboard users (WCAG 2.4.1) */
+#bypass-block {
+    position: absolute;
+    left: 0;
+    top: -100%;
+    z-index: 1000;
+    padding: 0.5rem 1rem;
+    background-color: var(--theme-popup-bg);
+    color: var(--sidebar-active);
+    text-decoration: none;
+    font-weight: 500;
+    border-bottom-right-radius: 4px;
+    outline: 2px solid var(--sidebar-active);
+}
+
+#bypass-block:focus {
+    top: 0;
+}
