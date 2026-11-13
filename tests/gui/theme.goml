@@ -1,7 +1,5 @@
 // Basic theme switcher test.
 
-debug: true
-
 go-to: |DOC_PATH| + "all-summary/index.html"
 
 // TODO: Dark mode is automatic, how to check that here?
