@@ -58,7 +58,7 @@ Lorum ipsum dolor sit amet.
 
 ### Exercises
 
-1. In the the code below:
+1. In the code below:
     ```haskell
     {{#include Solutions.purs:eqNonEmpty}}
     ```
