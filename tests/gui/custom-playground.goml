@@ -1,0 +1,13 @@
+// Tests the example from the custom playground guide.
+
+go-to: |DOC_PATH| + "custom-playground/chapter_1.html"
+
+// The example blocks become playgrounds, and the Rust one keeps its buttons.
+assert-count: ("pre.playground > .buttons > .play-button", 3)
+assert-count: ("pre.playground > .buttons > .reset-button", 1)
+
+click: "//h2[@id='editable']/following-sibling::pre[1]//button[contains(@class, 'play-button')]"
+wait-for: "//pre[contains(@class, 'example-result')]/code[text()='ran: print a']"
+
+click: "//h2[@id='runnable']/following-sibling::pre[1]//button[contains(@class, 'play-button')]"
+wait-for: "//pre[contains(@class, 'example-result')]/code[text()='ran: print b']"
