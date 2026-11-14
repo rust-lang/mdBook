@@ -141,6 +141,17 @@ fn check_link_target_fallback() {
     );
 }
 
+/// The "on this page" feature should skip the first heading if it matches
+/// the active sidebar link text, to avoid duplicating the chapter title
+/// when a chapter starts with an h2+ heading.
+/// See <https://github.com/rust-lang/mdBook/issues/2995>.
+#[test]
+fn toc_js_deduplicates_first_heading() {
+    BookTest::from_dir("toc/basic_toc")
+        .check_file_contains("book/toc*.js", "activeSection.textContent.trim() === headers[0].textContent.trim()")
+        .check_file_contains("book/toc*.js", "headers.shift()");
+}
+
 // Checks formatting of summary names with inline elements.
 #[test]
 fn summary_with_markdown_formatting() {
