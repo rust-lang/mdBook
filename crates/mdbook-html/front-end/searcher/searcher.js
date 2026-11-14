@@ -357,7 +357,7 @@ window.search = window.search || {};
         if (e.altKey ||
             e.ctrlKey ||
             e.metaKey ||
-            e.shiftKey ||
+            (e.shiftKey && e.key !== '/') ||
             e.target.type === 'textarea' ||
             e.target.type === 'text' ||
             !hasFocus() && mdbook_something_else_has_focus(e)
