@@ -442,6 +442,31 @@ ul#mdbook-searchresults span.teaser em {
     font-style: normal;
 }
 
+/* Chapter-navigation matches displayed inside the full-text search results. */
+ul#mdbook-searchresults li.search-chapter a {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    column-gap: 10px;
+}
+ul#mdbook-searchresults li.search-chapter .chapter-title {
+    flex: 1 1 auto;
+    font-weight: bold;
+}
+ul#mdbook-searchresults li.search-chapter .chapter-path {
+    flex: 0 0 auto;
+    font-size: 0.8em;
+    color: var(--searchresults-header-fg);
+}
+ul#mdbook-searchresults li.search-chapter .chapter-excerpt {
+    flex-basis: 100%;
+    margin-block-start: 5px;
+    margin-inline-start: 20px;
+    font-size: 0.8em;
+    color: var(--fg);
+}
+
 /* Sidebar */
 
 .sidebar {

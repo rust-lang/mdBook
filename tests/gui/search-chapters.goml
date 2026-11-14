@@ -1,0 +1,48 @@
+// This tests that full-text search results are preceded by chapter navigation
+// matches, making it possible to jump to a chapter by title or file name with
+// the up/down arrow keys and Enter.
+
+fail-on-js-error: true
+go-to: |DOC_PATH| + "search/chapter_1.html"
+
+// The search box is hidden by default.
+assert-css: ("#mdbook-search-wrapper", {"display": "none"})
+
+// Open search with `s`.
+press-key: "s"
+wait-for-css: ("#mdbook-search-wrapper", {"display": "block"})
+assert: "#mdbook-searchbar:focus"
+
+// Search by chapter title; chapter matches should come before other results.
+write: "Chapter"
+wait-for: "#mdbook-searchresults li.search-chapter"
+assert-count: ("#mdbook-searchresults li.search-chapter", 2)
+assert-text: ("#mdbook-searchresults li.search-chapter .chapter-title", "1. Chapter 1")
+assert-text: ("#mdbook-searchresults li.search-chapter .chapter-excerpt", "extraordinary refrigerator philosophical thunderstorm kaleidoscope")
+
+// Move down to the second chapter and open it.
+press-key: "ArrowDown"
+wait-for-text: ("#mdbook-searchresults li.focus .chapter-title", "1. Chapter 1")
+press-key: "ArrowDown"
+wait-for-text: ("#mdbook-searchresults li.focus .chapter-title", "2. Chapter 2")
+press-key: "Enter"
+wait-for-text: ("title", "Chapter 2 - search")
+wait-for: 200
+
+// Search by file name works the same way.
+press-key: "s"
+wait-for-css: ("#mdbook-search-wrapper", {"display": "block"})
+write: "chapter_1"
+wait-for: "#mdbook-searchresults li.search-chapter"
+assert-count: ("#mdbook-searchresults li.search-chapter", 1)
+assert-text: ("#mdbook-searchresults li.search-chapter .chapter-title", "1. Chapter 1")
+assert-text: ("#mdbook-searchresults li.search-chapter .chapter-excerpt", "extraordinary refrigerator philosophical thunderstorm kaleidoscope")
+press-key: "Enter"
+wait-for-text: ("title", "Chapter 1 - search")
+wait-for: 200
+
+// Escape closes the search box again.
+press-key: "s"
+wait-for-css: ("#mdbook-search-wrapper", {"display": "block"})
+press-key: "Escape"
+wait-for-css: ("#mdbook-search-wrapper", {"display": "none"})

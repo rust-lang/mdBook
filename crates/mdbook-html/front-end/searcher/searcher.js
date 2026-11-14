@@ -51,6 +51,7 @@ window.search = window.search || {};
         results_options = {
             teaser_word_count: 30,
             limit_results: 30,
+            limit_chapter_results: 20,
         },
         teaser_count = 0;
 
@@ -128,7 +129,19 @@ window.search = window.search || {};
         };
     })();
 
-    function formatSearchMetric(count, searchterm) {
+    function formatSearchMetric(count, searchterm, chapter_count = 0) {
+        if (chapter_count > 0) {
+            const chapters = chapter_count === 1
+                ? '1 chapter'
+                : chapter_count + ' chapters';
+            if (count === 0) {
+                return chapters + ' matching \'' + searchterm + '\':';
+            }
+            const search = count === 1
+                ? '1 search result'
+                : count + ' search results';
+            return chapters + ' and ' + search + ' for \'' + searchterm + '\':';
+        }
         if (count === 1) {
             return count + ' search result for \'' + searchterm + '\':';
         } else if (count === 0) {
@@ -136,6 +149,80 @@ window.search = window.search || {};
         } else {
             return count + ' search results for \'' + searchterm + '\':';
         }
+    }
+
+    function getChapterMatches(searchterm) {
+        const query = searchterm.trim().toLowerCase();
+        if (query === '') {
+            return [];
+        }
+        const pages = window.mdbook_chapter_pages
+            && typeof window.mdbook_chapter_pages === 'function'
+            ? window.mdbook_chapter_pages()
+            : [];
+        const matches = pages.filter(page => {
+            return page.name.toLowerCase().includes(query)
+                || page.path.toLowerCase().includes(query);
+        });
+        const limit = typeof results_options.limit_chapter_results === 'number'
+            ? results_options.limit_chapter_results
+            : 20;
+        return matches.slice(0, limit);
+    }
+
+    // Returns a short excerpt from the beginning of a chapter's body so that
+    // a chapter-name or file-name match also shows some preview text.
+    function getChapterExcerpt(page) {
+        if (searchindex === null || !searchindex.documentStore) {
+            return '';
+        }
+        const documentStore = searchindex.documentStore;
+        // `doc_urls` entries are relative to the book root, while `page.url`
+        // is an absolute URL. Resolve both against the book root so they can be
+        // compared no matter how the book is hosted.
+        let book_root;
+        let page_url;
+        try {
+            book_root = new URL(
+                typeof path_to_root === 'string' ? path_to_root : '',
+                window.location.href);
+            page_url = new URL(page.url);
+        } catch {
+            return '';
+        }
+        // Prefer the document whose url (without its section anchor) matches
+        // the chapter page; this is the chapter's main section.
+        for (let i = 0; i < doc_urls.length; i++) {
+            let doc_url;
+            try {
+                doc_url = new URL(doc_urls[i].split('#')[0], book_root);
+            } catch {
+                continue;
+            }
+            if (doc_url.pathname.replace(/\/$/, '')
+                !== page_url.pathname.replace(/\/$/, '')) {
+                continue;
+            }
+            const doc = documentStore.getDoc(String(i));
+            if (!doc || !doc.body) {
+                continue;
+            }
+            const body = doc.body.trim().replace(/\s+/g, ' ');
+            const max_length = Math.min(120, body.length);
+            if (max_length === 0) {
+                continue;
+            }
+            if (body.length <= max_length) {
+                return escapeHTML(body);
+            }
+            let cut = body.slice(0, max_length);
+            const last_space = cut.lastIndexOf(' ');
+            if (last_space > 0) {
+                cut = cut.slice(0, last_space);
+            }
+            return escapeHTML(cut) + '…';
+        }
+        return '';
     }
 
     function formatSearchResult(result, searchterms) {
@@ -300,6 +387,17 @@ window.search = window.search || {};
 
         // Exported functions
         config.hasFocus = hasFocus;
+        config.close = function() {
+            const searchterm = searchbar.value;
+            searchbar.classList.remove('active');
+            setSearchUrlParameters('', 'replace');
+            if (hasFocus()) {
+                unfocusSearchbar();
+            }
+            showSearch(false);
+            marker.unmark();
+            return searchterm;
+        };
     }
 
     initSearchInteractions(window.search);
@@ -536,12 +634,39 @@ window.search = window.search || {};
         const results = searchindex.search(searchterm, search_options);
         const resultcount = Math.min(results.length, results_options.limit_results);
 
+        // Chapters and file names matching the search term are displayed before
+        // the full-text results so that they are easy to jump to.
+        const chapter_matches = getChapterMatches(searchterm);
+
         // Display search metrics
-        searchresults_header.innerText = formatSearchMetric(resultcount, searchterm);
+        searchresults_header.innerText = formatSearchMetric(
+            resultcount, searchterm, chapter_matches.length);
 
         // Clear and insert results
         const searchterms = searchterm.split(' ');
         removeChildren(searchresults);
+        for (const match of chapter_matches) {
+            const resultElem = document.createElement('li');
+            resultElem.classList.add('search-chapter');
+            const a = document.createElement('a');
+            a.href = match.url;
+            const title = document.createElement('span');
+            title.className = 'chapter-title';
+            title.textContent = match.name;
+            const path = document.createElement('span');
+            path.className = 'chapter-path';
+            path.textContent = match.path;
+            a.append(title, path);
+            const excerpt = getChapterExcerpt(match);
+            if (excerpt !== '') {
+                const excerptElem = document.createElement('span');
+                excerptElem.className = 'chapter-excerpt';
+                excerptElem.innerHTML = excerpt;
+                a.appendChild(excerptElem);
+            }
+            resultElem.appendChild(a);
+            searchresults.appendChild(resultElem);
+        }
         for (let i = 0; i < resultcount ; i++) {
             const resultElem = document.createElement('li');
             resultElem.innerHTML = formatSearchResult(results[i], searchterms);
