@@ -1,19 +1,20 @@
 {
-    schedule: ['before 5am on the first day of the month'],
-    // Raise from default of 2 to reduce trickle.
+    schedule: [
+        'before 5am on the first day of the month',
+    ],
     prHourlyLimit: 6,
-    dependencyDashboard: true,
-    // Creates PRs if this renovate config file needs updating.
+    dependencyDashboard: {
+        enabled: true,
+    },
     configMigration: true,
     ignorePaths: [
         'guide/src/for_developers/mdbook-wordcount/',
     ],
     customManagers: [
-        // Custom manager to extract the version of cargo-semver-checks from the workflow.
         {
             customType: 'regex',
             managerFilePatterns: [
-               '/^.github.workflows.main.yml$/',
+                '/^.github.workflows.main.yml$/',
             ],
             matchStrings: [
                 'cargo-semver-checks.releases.download.v(?<currentValue>\\d+\\.\\d+(\\.\\d+)?)',
@@ -24,35 +25,43 @@
         },
     ],
     packageRules: [
-        // The next two rules disable compatible dependency updates. I wasn't
-        // able to get Renovate to be able to update Cargo.toml for compatible
-        // updates only, update all transitive dependencies, and do that all
-        // in a single PR. Instead, the `update-dependencies.sh` will handle
-        // that.
         {
-            matchManagers: ['cargo'],
-            matchUpdateTypes: ['patch'],
+            matchManagers: [
+                'cargo',
+            ],
+            matchUpdateTypes: [
+                'patch',
+            ],
             enabled: false,
         },
         {
-            matchManagers: ['cargo'],
+            matchManagers: [
+                'cargo',
+            ],
             matchCurrentVersion: '>=1.0.0',
-            matchUpdateTypes: ['minor'],
+            matchUpdateTypes: [
+                'minor',
+            ],
             enabled: false,
         },
-        // Allow minor updates for pre-1.0 dependencies (semver-breaking)
         {
-            matchManagers: ['cargo'],
+            matchManagers: [
+                'cargo',
+            ],
             matchCurrentVersion: '<1.0.0',
-            matchUpdateTypes: ['minor'],
+            matchUpdateTypes: [
+                'minor',
+            ],
         },
-        // Allow major updates for stable dependencies (semver-breaking)
         {
-            matchManagers: ['cargo'],
+            matchManagers: [
+                'cargo',
+            ],
             matchCurrentVersion: '>=1.0.0',
-            matchUpdateTypes: ['major'],
+            matchUpdateTypes: [
+                'major',
+            ],
         },
-        // Update cargo-semver-checks when a new version is available.
         {
             commitMessageTopic: 'cargo-semver-checks',
             matchManagers: [
@@ -67,5 +76,5 @@
             ],
             internalChecksFilter: 'strict',
         },
-    ]
+    ],
 }
