@@ -146,8 +146,8 @@ fn unclosed_quote() {
         .run("build", |cmd| {
             cmd.expect_failure().expect_stderr(str![[r#"
  INFO Book building has started
-ERROR Error updating "{{#include "unclosed.md}}"
-[TAB]Caused by: unclosed quote in path
+ERROR Error updating "{{#include "unclosed.md}}" in chapter_1.md, unclosed quote in path
+ERROR One or more include links could not be resolved
 
 "#]]);
         });
@@ -161,10 +161,10 @@ fn missing_include() {
         .run("build", |cmd| {
             cmd.expect_failure().expect_stderr(str![[r#"
  INFO Book building has started
-ERROR Error updating "{{#include missing.md}}"
-[TAB]Caused by: Could not read file for link {{#include missing.md}} ([ROOT]/src/missing.md)
-[TAB]Caused by: failed to read `[ROOT]/src/missing.md`
-[TAB]Caused by: [NOT_FOUND]
+ERROR Error updating "{{#include missing.md}}" in chapter_1.md, Could not read file for link {{#include missing.md}} ([ROOT]/src/missing.md)
+ WARN Caused By: failed to read `[ROOT]/src/missing.md`
+ WARN Caused By: [NOT_FOUND]
+ERROR One or more include links could not be resolved
 
 "#]]);
         });
@@ -179,10 +179,11 @@ fn missing_nested_include() {
         .run("build", |cmd| {
             cmd.expect_failure().expect_stderr(str![[r#"
  INFO Book building has started
-ERROR Error updating "{{#include missing.md}}"
-[TAB]Caused by: Could not read file for link {{#include missing.md}} ([ROOT]/src/missing.md)
-[TAB]Caused by: failed to read `[ROOT]/src/missing.md`
-[TAB]Caused by: [NOT_FOUND]
+ERROR Error updating "{{#include missing.md}}" in nested.md, Could not read file for link {{#include missing.md}} ([ROOT]/src/missing.md)
+ WARN Caused By: failed to read `[ROOT]/src/missing.md`
+ WARN Caused By: [NOT_FOUND]
+ WARN Included from "{{#include nested.md}}" in chapter_1.md
+ERROR One or more include links could not be resolved
 
 "#]]);
         });
@@ -196,10 +197,10 @@ fn missing_rustdoc_include() {
         .run("build", |cmd| {
             cmd.expect_failure().expect_stderr(str![[r#"
  INFO Book building has started
-ERROR Error updating "{{#rustdoc_include missing.rs}}"
-[TAB]Caused by: Could not read file for link {{#rustdoc_include missing.rs}} ([ROOT]/src/missing.rs)
-[TAB]Caused by: failed to read `[ROOT]/src/missing.rs`
-[TAB]Caused by: [NOT_FOUND]
+ERROR Error updating "{{#rustdoc_include missing.rs}}" in chapter_1.md, Could not read file for link {{#rustdoc_include missing.rs}} ([ROOT]/src/missing.rs)
+ WARN Caused By: failed to read `[ROOT]/src/missing.rs`
+ WARN Caused By: [NOT_FOUND]
+ERROR One or more include links could not be resolved
 
 "#]]);
         });
@@ -213,10 +214,10 @@ fn missing_playground() {
         .run("build", |cmd| {
             cmd.expect_failure().expect_stderr(str![[r#"
  INFO Book building has started
-ERROR Error updating "{{#playground missing.rs}}"
-[TAB]Caused by: Could not read file for link {{#playground missing.rs}} ([ROOT]/src/missing.rs)
-[TAB]Caused by: failed to read `[ROOT]/src/missing.rs`
-[TAB]Caused by: [NOT_FOUND]
+ERROR Error updating "{{#playground missing.rs}}" in chapter_1.md, Could not read file for link {{#playground missing.rs}} ([ROOT]/src/missing.rs)
+ WARN Caused By: failed to read `[ROOT]/src/missing.rs`
+ WARN Caused By: [NOT_FOUND]
+ERROR One or more include links could not be resolved
 
 "#]]);
         });
