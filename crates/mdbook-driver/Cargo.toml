@@ -8,6 +8,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+cargo_metadata = "0.23"
 anyhow.workspace = true
 indexmap.workspace = true
 mdbook-core.workspace = true

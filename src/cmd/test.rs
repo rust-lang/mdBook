@@ -25,7 +25,7 @@ pub fn make_subcommand() -> Command {
                 .value_parser(NonEmptyStringValueParser::new())
                 .action(ArgAction::Append)
                 .help(
-                    "A comma-separated list of directories to add to the crate \
+                    "[DEPRECATED] A comma-separated list of directories to add to the crate \
                     search path when building tests",
                 ),
         )
@@ -37,11 +37,17 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         .get_many("library-path")
         .map(|it| it.map(String::as_str).collect())
         .unwrap_or_default();
-
     let chapter: Option<&str> = args.get_one::<String>("chapter").map(|s| s.as_str());
 
     let book_dir = get_book_dir(args);
     let mut book = MDBook::load(book_dir)?;
+
+    if !library_paths.is_empty() {
+        eprintln!(
+            "warning: using deprecated library-path argument. Specify your dependencies\
+        in a Cargo manifest instead."
+        )
+    }
 
     match chapter {
         Some(_) => book.test_chapter(library_paths, chapter),

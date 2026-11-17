@@ -5,20 +5,22 @@ use crate::builtin_renderers::{CmdRenderer, MarkdownRenderer};
 use crate::init::BookBuilder;
 use crate::load::{load_book, load_book_from_disk};
 use anyhow::{Context, Error, Result, bail};
+use cargo_metadata::camino::Utf8PathBuf;
 use indexmap::IndexMap;
-use mdbook_core::book::{Book, BookItem, BookItems};
+use mdbook_core::book::{Book, BookItem, BookItems, Chapter};
 use mdbook_core::config::{Config, RustEdition};
 use mdbook_core::utils::fs;
 use mdbook_html::HtmlHandlebars;
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 use mdbook_renderer::{RenderContext, Renderer};
 use mdbook_summary::Summary;
+use regex::Regex;
 use serde::Deserialize;
 use std::ffi::OsString;
 use std::io::IsTerminal;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use tempfile::Builder as TempFileBuilder;
+use tempfile::TempDir;
 use topological_sort::TopologicalSort;
 use tracing::{debug, info, trace, warn};
 
@@ -225,15 +227,27 @@ impl MDBook {
         self
     }
 
-    /// Run `rustdoc` tests on the book, linking against the provided libraries.
+    /// Run `rustdoc` tests on the book.
     pub fn test(&mut self, library_paths: Vec<&str>) -> Result<()> {
         // test_chapter with chapter:None will run all tests.
         self.test_chapter(library_paths, None)
     }
 
-    /// Run `rustdoc` tests on a specific chapter of the book, linking against the provided libraries.
+    /// Run `rustdoc` tests on a specific chapter of the book.
     /// If `chapter` is `None`, all tests will be run.
-    pub fn test_chapter(&mut self, library_paths: Vec<&str>, chapter: Option<&str>) -> Result<()> {
+    pub fn test_chapter(&mut self, library_paths: Vec<&str>, filter: Option<&str>) -> Result<()> {
+        struct TestRenderer;
+        impl Renderer for TestRenderer {
+            // FIXME: Is "test" the proper renderer name to use here?
+            fn name(&self) -> &str {
+                "test"
+            }
+
+            fn render(&self, _: &RenderContext) -> Result<()> {
+                Ok(())
+            }
+        }
+
         let cwd = std::env::current_dir()?;
         let library_args: Vec<OsString> = library_paths
             .into_iter()
@@ -248,101 +262,187 @@ impl MDBook {
             })
             .collect();
 
-        let temp_dir = TempFileBuilder::new().prefix("mdbook-").tempdir()?;
-
-        let mut chapter_found = false;
-
-        struct TestRenderer;
-        impl Renderer for TestRenderer {
-            // FIXME: Is "test" the proper renderer name to use here?
-            fn name(&self) -> &str {
-                "test"
-            }
-
-            fn render(&self, _: &RenderContext) -> Result<()> {
-                Ok(())
-            }
-        }
-
         let (book, _) = self.preprocess_book(&TestRenderer)?;
 
         let color_output = std::io::stderr().is_terminal();
-        let mut failed = false;
-        for item in book.iter() {
+
+        fn get_chapter(item: &BookItem) -> Option<(&Chapter, &PathBuf)> {
             if let BookItem::Chapter(ref ch) = *item {
-                let chapter_path = match ch.path {
-                    Some(ref path) if !path.as_os_str().is_empty() => path,
-                    _ => continue,
-                };
-
-                if let Some(chapter) = chapter {
-                    if ch.name != chapter && chapter_path.to_str() != Some(chapter) {
-                        if chapter == "?" {
-                            info!("Skipping chapter '{}'...", ch.name);
-                        }
-                        continue;
-                    }
+                match ch.path {
+                    Some(ref path) if !path.as_os_str().is_empty() => Some((ch, path)),
+                    _ => None,
                 }
-                chapter_found = true;
-                info!("Testing chapter '{}': {:?}", ch.name, chapter_path);
-
-                // write preprocessed file to tempdir
-                let path = temp_dir.path().join(chapter_path);
-                fs::write(&path, &ch.content)?;
-
-                let mut cmd = Command::new("rustdoc");
-                cmd.current_dir(temp_dir.path())
-                    .arg(chapter_path)
-                    .arg("--test")
-                    .args(&library_args);
-
-                if let Some(edition) = self.config.rust.edition {
-                    match edition {
-                        RustEdition::E2015 => {
-                            cmd.args(["--edition", "2015"]);
-                        }
-                        RustEdition::E2018 => {
-                            cmd.args(["--edition", "2018"]);
-                        }
-                        RustEdition::E2021 => {
-                            cmd.args(["--edition", "2021"]);
-                        }
-                        RustEdition::E2024 => {
-                            cmd.args(["--edition", "2024"]);
-                        }
-                        _ => panic!("RustEdition {edition:?} not covered"),
-                    }
-                }
-
-                if color_output {
-                    cmd.args(["--color", "always"]);
-                }
-
-                debug!("running {:?}", cmd);
-                let output = cmd
-                    .output()
-                    .with_context(|| "failed to execute `rustdoc`")?;
-
-                if !output.status.success() {
-                    failed = true;
-                    eprintln!(
-                        "ERROR rustdoc returned an error:\n\
-                        \n--- stdout\n{}\n--- stderr\n{}",
-                        String::from_utf8_lossy(&output.stdout),
-                        String::from_utf8_lossy(&output.stderr)
-                    );
-                }
+            } else {
+                None
             }
         }
+
+        let chapters = book
+            .iter()
+            .filter_map(get_chapter)
+            .map(|(chapter, path)| (path.clone(), chapter.name.clone(), chapter.content.clone()))
+            .collect::<Vec<_>>();
+
+        let temp = TempDir::new()?;
+
+        for (name, _name, content) in chapters.clone() {
+            if let Some(parent) = name.parent() {
+                fs::create_dir_all(parent)?;
+            }
+            fs::write(temp.path().join(name), content)?;
+        }
+
+        let mut rustdoc_args = if self.root.join("Cargo.toml").exists() {
+            self.invoke_cargo()
+                .with_context(|| "failed to execute `cargo`")?
+        } else {
+            let mut args = vec![OsString::from("--test")];
+            if let Some(edition) = self.config.rust.edition {
+                eprintln!("warning: using DEPRECATED rust.edition config value");
+                args.push(OsString::from("--edition"));
+                match edition {
+                    RustEdition::E2015 => {
+                        args.push(OsString::from("2015"));
+                    }
+                    RustEdition::E2018 => {
+                        args.push(OsString::from("2018"));
+                    }
+                    RustEdition::E2021 => {
+                        args.push(OsString::from("2021"));
+                    }
+                    RustEdition::E2024 => {
+                        args.push(OsString::from("2024"));
+                    }
+                    _ => panic!("RustEdition {edition:?} not covered"),
+                }
+            }
+            args
+        };
+
+        if color_output {
+            if let Some(idx) = rustdoc_args.iter().position(|s| s == "--color") {
+                rustdoc_args[idx + 1] = OsString::from("always");
+            } else {
+                rustdoc_args.push(OsString::from("--color"));
+                rustdoc_args.push(OsString::from("always"));
+            }
+        }
+
+        rustdoc_args.extend(library_args);
+
+        let mut chapter_found = false;
+        let mut failed = false;
+
+        if filter.is_none() {
+            info!("Testing all chapters...");
+            chapter_found = true;
+        }
+
+        for (path, name, _content) in chapters {
+            if let Some(needle) = filter {
+                if name.contains(needle) || path.to_string_lossy().contains(needle) {
+                    info!("Testing chapter '{:?}'", name);
+                    chapter_found = true;
+                }
+            }
+            let mut rustdoc = Command::new("rustdoc");
+            rustdoc
+                .current_dir(temp.path())
+                .args(&rustdoc_args)
+                .arg(&path);
+            debug!(
+                "running rustdoc with args `{:?} {:?}` within `{:?}`...",
+                rustdoc_args,
+                path,
+                temp.path()
+            );
+            let output = rustdoc
+                .output()
+                .with_context(|| "failed to execute `rustdoc`")?;
+            if !output.status.success() {
+                failed = true;
+                eprintln!(
+                    "ERROR rustdoc returned an error:\n\
+                    args: {:?} {:?}\
+                    \n--- stdout\n{}\n--- stderr\n{}",
+                    rustdoc_args,
+                    path,
+                    String::from_utf8_lossy(&output.stdout),
+                    String::from_utf8_lossy(&output.stderr)
+                );
+            }
+        }
+
         if failed {
             bail!("One or more tests failed");
         }
-        if let Some(chapter) = chapter {
-            if !chapter_found {
-                bail!("Chapter not found: {}", chapter);
+
+        if !chapter_found {
+            bail!("Chapter not found: {}", filter.expect("logic error"));
+        }
+
+        Ok(())
+    }
+
+    fn invoke_cargo(&self) -> Option<Vec<OsString>> {
+        let mut cargo = Command::new("cargo");
+        cargo
+            .current_dir(&self.root)
+            .arg("test")
+            .arg("--doc")
+            .args(["--message-format=json", "--config", "build.rustdoc='echo'"]);
+
+        debug!("running {:?}", cargo);
+        let output = cargo.output().ok()?;
+
+        if !output.status.success() {
+            // failed = true;
+            eprintln!(
+                "ERROR cargo returned an error:\n\
+                \n--- stdout\n{}\n--- stderr\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+
+            return None;
+        }
+
+        let input = String::from_utf8_lossy(&output.stdout);
+        let lines = input.lines();
+        let mut rustdoc_args = String::new();
+        let mut target_src_path = Utf8PathBuf::new();
+        for line in lines {
+            let is_rustdoc_args = line.contains("--crate-type lib");
+            let is_json_compiler_artifact: Result<Vec<cargo_metadata::Message>, std::io::Error> =
+                cargo_metadata::Message::parse_stream(line.as_bytes()).collect();
+            match is_json_compiler_artifact {
+                Ok(message) => match message.get(0) {
+                    Some(cargo_metadata::Message::CompilerArtifact(artifact)) => {
+                        if is_rustdoc_args {
+                            panic!("wrong output of cargo: {:?} {}", message[0], line);
+                        }
+                        if artifact.manifest_path == self.root.join("Cargo.toml") {
+                            target_src_path = artifact.target.src_path.clone();
+                        }
+                    }
+                    Some(cargo_metadata::Message::TextLine(_)) if is_rustdoc_args => {
+                        rustdoc_args = line.to_string();
+                    }
+                    _ => {}
+                },
+                Err(_) => {}
             }
         }
-        Ok(())
+        let cfg_regexp = Regex::new(r##"--check-cfg cfg\((\w*), (\S*)\)"##).expect("wrong regexp");
+        let rustdoc_args = cfg_regexp
+            .replace_all(&rustdoc_args, "--check-cfg cfg($1,$2)")
+            .replace("--error-format json", "--error-format human");
+        let result = rustdoc_args
+            .split(" ")
+            .filter(|arg| !target_src_path.ends_with(Path::new(arg)))
+            .map(|arg| OsString::from(arg))
+            .collect();
+        Some(result)
     }
 
     /// The logic for determining where a backend should put its build
