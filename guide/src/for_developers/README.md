@@ -31,7 +31,7 @@ The process of rendering a book project goes through several steps.
 
 The `mdbook` binary is just a wrapper around the underlying mdBook crates,
 exposing their functionality as a command-line program. If you want to
-programmatically drive mdBook, you can use the [`mdbook-driver`] crate.
+programmatically drive mdBook, you can use the [`mdbook-driver`](https://crates.io/crates/mdbook-driver) crate.
 This can be used to add your own functionality or tweak the build process.
 
 The easiest way to find out how to use the `mdbook-driver` crate is by looking at the

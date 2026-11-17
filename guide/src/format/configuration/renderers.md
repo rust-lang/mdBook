@@ -299,7 +299,7 @@ copy-js = true           # include Javascript code for search
 
 #### `[output.html.search.chapter]`
 
-The [`output.html.search.chapter`] table provides the ability to modify search settings per chapter or directory. Each key is the path to the chapter source file or directory, and the value is a table of settings to apply to that path. This will merge recursively, with more specific paths taking precedence.
+The `[output.html.search.chapter]` table provides the ability to modify search settings per chapter or directory. Each key is the path to the chapter source file or directory, and the value is a table of settings to apply to that path. This will merge recursively, with more specific paths taking precedence.
 
 ```toml
 [output.html.search.chapter]
