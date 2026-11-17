@@ -93,6 +93,22 @@ Check out the [Markdown chapter](../format/markdown.md) for more information on 
 All other files in the `src` directory will be included in the output.
 So if you have images or other static files, just include them somewhere in the `src` directory.
 
+### Reserved file names
+
+A few file names in the `src` directory are reserved by mdBook for files it
+generates itself. You cannot use them as the source path for a chapter in
+`SUMMARY.md`, and the HTML renderer will refuse to build the book if it finds
+them.
+
+- `print.md` / `print.html`: `print.html` is the single-page printable view of
+  the whole book, used when a reader clicks the printer icon. It is generated
+  from the book's chapters, so `src/print.md` is rejected with an error.
+  See [`[output.html.print]`](../format/configuration/renderers.md#outputhtmlprint)
+  for the related configuration.
+- `toc.md` / `toc.html`: `toc.html` is the no-JavaScript table of contents
+  fallback used by readers and crawlers that don't run JavaScript. It is
+  generated from `SUMMARY.md`, so `src/toc.md` is rejected with an error.
+
 ## Publishing a book
 
 Once you've written your book, you may want to host it somewhere for others to view.
