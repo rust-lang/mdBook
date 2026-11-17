@@ -1,0 +1,6 @@
+[book]
+title = "citation"
+
+[output.html]
+citation = "citations.bib"
+hash-files = false
