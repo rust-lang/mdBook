@@ -17,6 +17,25 @@ fn playground_on_rust_code() {
     );
 }
 
+// Verifies that hidden crate-level attributes (like #![feature(...)]) are
+// properly wrapped when fn main is generated. The attributes should appear
+// before fn main, not inside it. (issue #2640)
+#[test]
+fn playground_hidden_feature_attr() {
+    BookTest::from_dir("playground/playground_hidden_feature_attr").check_main_file(
+        "book/feature-attr.html",
+        str![[r##"
+<h1 id="feature-attr"><a class="header" href="#feature-attr">Feature Attr</a></h1>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">#![feature(rustc_attrs)]
+</span><span class="boring">fn main() {
+</span>#[rustc_on_unimplemented = "oh no"]
+pub trait Foo {}
+<span class="boring">}</span></code></pre>
+"##]],
+    );
+}
+
 // When the playground is disabled, there should be no playground class.
 #[test]
 fn disabled_playground() {
