@@ -97,3 +97,17 @@ It would also be possible, though redundant, to specify both of the above in the
 
 Preprocessors having the same priority specified through `before` and `after` are sorted by name.
 Any infinite loops will be detected and produce an error.
+
+## Only warn on link errors
+
+By default, the build fails if the `links` preprocessor cannot resolve included files, for example if the target file is missing.
+This can happen for includes like `{{#include}}`, `{{#rustdoc_include}}`, or `{{#playground}}`, but not for ordinary Markdown links.
+
+To only log these errors and continue the build with unresolved links, set:
+
+```toml
+[preprocessor.links]
+warn-on-link-error = true
+```
+
+See [Including files] for more details.
