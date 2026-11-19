@@ -47,6 +47,13 @@ impl Preprocessor for LinkPreprocessor {
     }
 
     fn run(&self, ctx: &PreprocessorContext, mut book: Book) -> Result<Book> {
+        let config_key = format!("preprocessor.{}.warn-on-link-error", Self::NAME);
+        let warn_on_link_error = ctx
+            .config
+            .get(&config_key)
+            .with_context(|| format!("expected bool for `{config_key}`"))?
+            .unwrap_or(false);
+
         let src_dir = ctx.root.join(&ctx.config.book.src);
 
         let mut failed = false;
@@ -75,7 +82,11 @@ impl Preprocessor for LinkPreprocessor {
         });
 
         if failed {
-            anyhow::bail!("One or more include links could not be resolved");
+            let msg = "One or more include links could not be resolved, see earlier log entries for details";
+            if !warn_on_link_error {
+                anyhow::bail!("{msg} (set `{config_key} = true` to only warn)");
+            }
+            warn!("{msg}");
         }
 
         Ok(book)
