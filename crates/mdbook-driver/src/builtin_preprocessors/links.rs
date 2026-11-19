@@ -59,15 +59,12 @@ impl Preprocessor for LinkPreprocessor {
                         .expect("All book items have a parent");
 
                     let mut chapter_title = ch.name.clone();
-                    let content = replace_all(
-                        &ch.content,
-                        base,
-                        chapter_path,
-                        0,
-                        &mut chapter_title,
-                        &mut failed,
-                    );
-                    ch.content = content;
+                    ch.content =
+                        replace_all(&ch.content, base, chapter_path, 0, &mut chapter_title)
+                            .unwrap_or_else(|err| {
+                                failed = true;
+                                err.content
+                            });
                     if chapter_title != ch.name {
                         ctx.chapter_titles
                             .borrow_mut()
@@ -85,14 +82,19 @@ impl Preprocessor for LinkPreprocessor {
     }
 }
 
+/// Indicates an error resolving a link, contains the partially resolved content.
+#[derive(Debug)]
+struct ReplaceError {
+    content: String,
+}
+
 fn replace_all<P1, P2>(
     s: &str,
     path: P1,
     source: P2,
     depth: usize,
     chapter_title: &mut String,
-    failed: &mut bool,
-) -> String
+) -> std::result::Result<String, ReplaceError>
 where
     P1: AsRef<Path>,
     P2: AsRef<Path>,
@@ -104,6 +106,7 @@ where
     let source = source.as_ref();
     let mut previous_end_index = 0;
     let mut replaced = String::new();
+    let mut failed = false;
 
     for link in find_links(s) {
         replaced.push_str(&s[previous_end_index..link.start_index]);
@@ -118,25 +121,23 @@ where
                     let prefix = replaced.split('\n').last().unwrap_or("");
                     let raw_new_content = if let Some(file) = link.link_type.included_file() {
                         // use the included file as the source
-                        let mut nested_failed = false;
-                        let content = replace_all(
+                        replace_all(
                             &new_content,
                             return_relative_path(path, file),
                             source.with_file_name(file), // with_file_name to stay relative to source dir
                             depth + 1,
                             chapter_title,
-                            &mut nested_failed,
-                        );
-                        // Trace the errors in the included file back to this file.
-                        if nested_failed {
-                            *failed = true;
+                        )
+                        .unwrap_or_else(|err| {
+                            // Trace the errors in the included file back to this file.
                             warn!(
                                 "Included from \"{}\" in {}",
                                 link.link_text,
                                 source.display()
                             );
-                        }
-                        content
+                            failed = true;
+                            err.content
+                        })
                     } else {
                         new_content
                     };
@@ -166,7 +167,7 @@ where
                 for cause in e.chain().skip(1) {
                     warn!("Caused By: {}", cause);
                 }
-                *failed = true;
+                failed = true;
 
                 // This should make sure we include the raw `{{# ... }}` snippet
                 // in the page content if there are any errors.
@@ -176,7 +177,11 @@ where
     }
 
     replaced.push_str(&s[previous_end_index..]);
-    replaced
+    if failed {
+        Err(ReplaceError { content: replaced })
+    } else {
+        Ok(replaced)
+    }
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -557,7 +562,7 @@ mod tests {
         ```";
         let mut chapter_title = "test_replace_all_escaped".to_owned();
         assert_eq!(
-            replace_all(start, "", "", 0, &mut chapter_title, &mut false),
+            replace_all(start, "", "", 0, &mut chapter_title).unwrap(),
             end
         );
     }
@@ -572,7 +577,7 @@ mod tests {
         ";
         let mut chapter_title = "test_set_chapter_title".to_owned();
         assert_eq!(
-            replace_all(start, "", "", 0, &mut chapter_title, &mut false),
+            replace_all(start, "", "", 0, &mut chapter_title).unwrap(),
             end
         );
         assert_eq!(chapter_title, "My Title");
@@ -1277,10 +1282,8 @@ mod tests {
     fn test_replace_all_unclosed_quote() {
         let start = "Some text with {{#include \"unclosed.md}} here.";
         let mut chapter_title = "test".to_owned();
-        let mut failed = false;
-        let res = replace_all(start, "", "", 0, &mut chapter_title, &mut failed);
-        assert_eq!(res, start);
-        assert!(failed);
+        let err = replace_all(start, "", "", 0, &mut chapter_title).unwrap_err();
+        assert_eq!(err.content, start);
     }
 
     #[test]
