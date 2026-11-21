@@ -208,6 +208,33 @@ unknown field `title`, expected `edition`
         });
 }
 
+// An invalid key in the output.html table.
+#[test]
+fn bad_config_in_html_table() {
+    BookTest::init(|_| {})
+        .change_file(
+            "book.toml",
+            "[book]\n\
+             title = \"bad-config\"\n\
+             \n\
+             [output.html]\n\
+             foo = 123\n",
+        )
+        .run("build", |cmd| {
+            cmd.expect_failure()
+                .expect_stdout(str![[""]])
+                .expect_stderr(str![[r#"
+ INFO Book building has started
+ INFO Running the html backend
+ERROR Rendering failed
+[TAB]Caused by: Failed to deserialize `output.html`
+[TAB]Caused by: unknown field `foo`, expected one of [..]
+
+
+"#]]);
+        });
+}
+
 // An invalid top-level key in the environment.
 #[test]
 fn env_invalid_config_key() {

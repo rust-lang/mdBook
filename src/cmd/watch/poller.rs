@@ -134,7 +134,7 @@ impl Watcher {
                 .iter()
                 .map(|path| book.root.join(path)),
         );
-        if let Some(html_config) = book.config.html_config() {
+        if let Ok(Some(html_config)) = book.config.html_config() {
             root_paths.extend(
                 html_config
                     .additional_css

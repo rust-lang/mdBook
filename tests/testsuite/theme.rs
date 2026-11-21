@@ -180,14 +180,14 @@ book/fonts/myfont-[..].woff
 #[test]
 fn invalid_default_theme() {
     BookTest::from_dir("theme/invalid_default_theme").run("build", |cmd| {
-        cmd.expect_stderr(str![[r#"
+        cmd.expect_failure().expect_stderr(str![[r#"
  INFO Book building has started
  INFO Running the html backend
-ERROR Failed to deserialize `output.html`
+ERROR Rendering failed
+[TAB]Caused by: Failed to deserialize `output.html`
 [TAB]Caused by: unknown variant `does-not-exist`, expected one of `ayu`, `coal`, `light`, `navy`, `rust`, `max`
 in `preferred-dark-theme`
 
- INFO HTML book written to `[ROOT]/book`
 
 "#]]);
     });
@@ -196,14 +196,14 @@ in `preferred-dark-theme`
 #[test]
 fn invalid_preferred_dark_theme() {
     BookTest::from_dir("theme/invalid_preferred_dark_theme").run("build", |cmd| {
-        cmd.expect_stderr(str![[r#"
+        cmd.expect_failure().expect_stderr(str![[r#"
  INFO Book building has started
  INFO Running the html backend
-ERROR Failed to deserialize `output.html`
+ERROR Rendering failed
+[TAB]Caused by: Failed to deserialize `output.html`
 [TAB]Caused by: unknown variant `does-not-exist`, expected one of `ayu`, `coal`, `light`, `navy`, `rust`, `max`
 in `default-theme`
 
- INFO HTML book written to `[ROOT]/book`
 
 "#]]);
     });

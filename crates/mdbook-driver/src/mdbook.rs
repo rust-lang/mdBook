@@ -388,6 +388,8 @@ impl MDBook {
     pub fn theme_dir(&self) -> PathBuf {
         self.config
             .html_config()
+            .ok()
+            .flatten()
             .unwrap_or_default()
             .theme_dir(&self.root)
     }

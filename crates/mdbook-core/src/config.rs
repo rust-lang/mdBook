@@ -44,7 +44,7 @@
 //! ```
 
 use crate::static_regex;
-use crate::utils::{TomlExt, fs, log_backtrace};
+use crate::utils::{TomlExt, fs};
 use anyhow::{Context, Error, Result, anyhow, bail};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
@@ -247,15 +247,8 @@ impl Config {
     /// This is for compatibility only. It will be removed completely once the
     /// HTML renderer is refactored to be less coupled to `mdbook` internals.
     #[doc(hidden)]
-    pub fn html_config(&self) -> Option<HtmlConfig> {
-        match self.get("output.html") {
-            Ok(Some(config)) => Some(config),
-            Ok(None) => None,
-            Err(e) => {
-                log_backtrace(&e);
-                None
-            }
-        }
+    pub fn html_config(&self) -> Result<Option<HtmlConfig>> {
+        self.get("output.html")
     }
 
     /// Set a config key, clobbering any existing values along the way.
@@ -910,7 +903,7 @@ mod tests {
         assert_eq!(got.book, book_should_be);
         assert_eq!(got.build, build_should_be);
         assert_eq!(got.rust, rust_should_be);
-        assert_eq!(got.html_config().unwrap(), html_should_be);
+        assert_eq!(got.html_config().unwrap().unwrap(), html_should_be);
     }
 
     #[test]
@@ -922,7 +915,7 @@ mod tests {
         "#;
 
         let got = Config::from_str(src).unwrap();
-        let html_config = got.html_config().unwrap();
+        let html_config = got.html_config().unwrap().unwrap();
 
         assert_eq!(html_config.default_theme, Some(BuiltinTheme::Rust));
         assert_eq!(html_config.preferred_dark_theme, Some(BuiltinTheme::Coal));
@@ -946,7 +939,7 @@ mod tests {
         "#;
 
         let got = Config::from_str(src).unwrap();
-        assert_eq!(got.html_config(), None);
+        assert!(got.html_config().is_err());
     }
 
     #[test]
@@ -957,7 +950,7 @@ mod tests {
         "#;
 
         let got = Config::from_str(src).unwrap();
-        assert_eq!(got.html_config(), None);
+        assert!(got.html_config().is_err());
     }
 
     #[test]
@@ -973,7 +966,7 @@ mod tests {
         "#;
 
         let got = Config::from_str(src).unwrap();
-        assert!(!got.html_config().unwrap().playground.runnable);
+        assert!(!got.html_config().unwrap().unwrap().playground.runnable);
     }
 
     #[test]
@@ -1136,7 +1129,7 @@ mod tests {
         "#;
 
         let got = Config::from_str(src).unwrap();
-        let html_config = got.html_config().unwrap();
+        let html_config = got.html_config().unwrap().unwrap();
         assert_eq!(html_config.input_404, None);
         assert_eq!(html_config.get_404_output_file(), "404.html");
     }
@@ -1149,7 +1142,7 @@ mod tests {
         "#;
 
         let got = Config::from_str(src).unwrap();
-        let html_config = got.html_config().unwrap();
+        let html_config = got.html_config().unwrap().unwrap();
         assert_eq!(html_config.input_404, Some("missing.md".to_string()));
         assert_eq!(html_config.get_404_output_file(), "missing.html");
     }
@@ -1294,7 +1287,7 @@ mod tests {
         enable = false
         "#;
         let got = Config::from_str(src).unwrap();
-        let html_config = got.html_config().unwrap();
+        let html_config = got.html_config().unwrap().unwrap();
         assert!(!html_config.print.enable);
         assert!(html_config.print.page_break);
         let src = r#"
@@ -1302,7 +1295,7 @@ mod tests {
         page-break = false
         "#;
         let got = Config::from_str(src).unwrap();
-        let html_config = got.html_config().unwrap();
+        let html_config = got.html_config().unwrap().unwrap();
         assert!(html_config.print.enable);
         assert!(!html_config.print.page_break);
     }
