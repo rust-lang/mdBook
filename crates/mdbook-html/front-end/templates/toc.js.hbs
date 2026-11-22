@@ -353,12 +353,12 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
         });
     }
 
-    // Takes the nodes from the given head and copies them over to the
+    // Takes the nodes from the given header and copies them over to the
     // destination, along with some filtering.
     function filterHeader(source, dest) {
         const clone = source.cloneNode(true);
-        clone.querySelectorAll('mark').forEach(mark => {
-            mark.replaceWith(...mark.childNodes);
+        clone.querySelectorAll('mark, a').forEach(el => {
+            el.replaceWith(...el.childNodes);
         });
         dest.append(...clone.childNodes);
     }
@@ -435,7 +435,7 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
             span.appendChild(a);
             a.href = '#' + header.id;
             a.classList.add('header-in-summary');
-            filterHeader(header.children[0], a);
+            filterHeader(header, a);
             a.addEventListener('click', headerThresholdClick);
             const nextHeader = headers[i + 1];
             if (nextHeader !== undefined) {

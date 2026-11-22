@@ -3,10 +3,14 @@
 set-window-size: (1400, 800)
 go-to: |DOC_PATH| + "heading-nav/markup.html"
 
-assert-count: (".header-item", 4)
+assert-count: (".header-item", 5)
 assert-count: (".current-header", 1)
 assert-text: (".current-header", "Heading with code or italic or bold or strike")
 assert-property: (".current-header", {"innerHTML": "Heading with <code>code</code> or <em>italic</em> or <strong>bold</strong> or <del>strike</del>"})
+
+// Headings containing links should preserve link text, markup, and trailing text without nested <a> tags.
+assert-property: ("a.header-in-summary[href='#heading-with-a-link']", {"innerHTML": "Heading with a link"})
+assert-property: ("a.header-in-summary[href='#heading-with-a-code-link-and-trailing-text']", {"innerHTML": "Heading with a <code>code</code> link and trailing text"})
 
 // Clicking the custom one should work and should make it current.
 click: "a.header-in-summary[href='#custom-id']"
