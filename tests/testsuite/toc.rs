@@ -189,3 +189,31 @@ fn summary_with_markdown_formatting() {
 "#]],
         );
 }
+
+#[test]
+fn toc_html_and_iframe_have_titles() {
+    let mut test = BookTest::init(|_| {});
+    test.change_file("book.toml", "[book]\ntitle = \"Demo\"\n");
+    test.build();
+
+    let toc = Document::from(read_to_string(test.dir.join("book/toc.html")).as_str());
+    let toc_title = toc.find(Name("title")).next().expect("toc.html <title>");
+    assert_eq!(toc_title.text(), "Table of contents - Demo");
+
+    let chapter_html = read_to_string(test.dir.join("book/chapter_1.html"));
+    assert!(
+        chapter_html.contains(
+            r#"<iframe class="sidebar-iframe-outer" src="toc.html" title="Table of contents"></iframe>"#
+        ),
+        "expected sidebar iframe with title attribute in chapter_1.html"
+    );
+
+    // Without a book title, toc.html should still have a fallback title.
+    let mut untitled = BookTest::init(|_| {});
+    untitled.change_file("book.toml", "[book]\n");
+    untitled.build();
+
+    let toc = Document::from(read_to_string(untitled.dir.join("book/toc.html")).as_str());
+    let toc_title = toc.find(Name("title")).next().expect("toc.html <title>");
+    assert_eq!(toc_title.text(), "Table of contents");
+}
