@@ -108,7 +108,7 @@ impl BookBuilder {
     fn copy_across_theme(&self) -> Result<()> {
         debug!("Copying theme");
 
-        let html_config = self.config.html_config().unwrap_or_default();
+        let html_config = self.config.html_config()?.unwrap_or_default();
         Theme::copy_theme(&html_config, &self.root)?;
         Ok(())
     }
