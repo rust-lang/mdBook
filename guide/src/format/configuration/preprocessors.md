@@ -100,8 +100,11 @@ Any infinite loops will be detected and produce an error.
 
 ## Only warn on link errors
 
-By default, the build fails if the `links` preprocessor cannot resolve included files, for example if the target file is missing.
-This can happen for includes like `{{#include}}`, `{{#rustdoc_include}}`, or `{{#playground}}`, but not for ordinary Markdown links.
+By default, the build fails if the `links` preprocessor cannot resolve included
+files, for example if the target file is missing or includes are nested too
+deeply (e.g. a recursive include). This can happen for includes like
+`{{#include}}`, `{{#rustdoc_include}}`, or `{{#playground}}`, but not for
+ordinary Markdown links.
 
 To only log these errors and continue the build with unresolved links, set:
 
