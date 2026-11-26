@@ -10,6 +10,10 @@ Basic markup should be copied.
 
 Probably not super-wise to have headings with links, but at least they shouldn't explode.
 
+## Heading with a [`code` link](../index.html) and trailing text
+
+Formatting inside links and text after links should also be preserved.
+
 ## Heading with a custom id { #custom-id .custom-class }
 
 Make sure navigation works on a custom id.
