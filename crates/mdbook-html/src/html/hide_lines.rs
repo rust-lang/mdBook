@@ -11,6 +11,7 @@ pub(crate) fn hide_lines(
     tree: &mut Tree<Node>,
     code_id: NodeId,
     hidelines: &HashMap<String, String>,
+    default_hidelines: bool,
 ) {
     let mut node = tree.get_mut(code_id).unwrap();
     let el = node.value().as_element().unwrap();
@@ -31,7 +32,7 @@ pub(crate) fn hide_lines(
     if let Some(mut child) = node.first_child()
         && let Node::Text(text) = child.value()
     {
-        if language == "rust" {
+        if language == "rust" && default_hidelines {
             let new_nodes = hide_lines_rust(text);
             child.detach();
             let root = tree.extend_tree(new_nodes);
