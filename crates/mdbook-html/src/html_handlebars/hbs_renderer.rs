@@ -236,7 +236,7 @@ impl HtmlHandlebars {
         handlebars.register_helper(
             "toc",
             Box::new(helpers::toc::RenderToc {
-                no_section_label: html_config.no_section_label,
+                chapter_numbering: html_config.chapter_numbering,
             }),
         );
         handlebars.register_helper("fa", Box::new(helpers::fontawesome::fa_helper));

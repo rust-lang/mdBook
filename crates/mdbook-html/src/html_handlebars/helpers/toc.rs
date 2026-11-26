@@ -9,7 +9,7 @@ use std::{cmp::Ordering, collections::BTreeMap};
 // Handlebars helper to construct TOC
 #[derive(Clone, Copy)]
 pub(crate) struct RenderToc {
-    pub no_section_label: bool,
+    pub chapter_numbering: bool,
 }
 
 impl HelperDef for RenderToc {
@@ -134,7 +134,7 @@ impl HelperDef for RenderToc {
                 }
             };
 
-            if !self.no_section_label {
+            if self.chapter_numbering {
                 // Section does not necessarily exist
                 if let Some(section) = item.get("section") {
                     out.write("<strong aria-hidden=\"true\">")?;
