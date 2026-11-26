@@ -61,18 +61,17 @@ impl Preprocessor for CmdPreprocessor {
 
     fn run(&self, ctx: &PreprocessorContext, book: Book) -> Result<Book> {
         let mut cmd = crate::compose_command(&self.cmd, &ctx.root)?;
-
-        let mut child = match cmd
-            .stdin(Stdio::piped())
+        cmd.stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit())
-            .current_dir(&self.root)
-            .spawn()
-        {
+            .current_dir(&self.root);
+
+        let mut child = match cmd.spawn() {
             Ok(c) => c,
             Err(e) => {
                 crate::handle_command_error(
                     e,
+                    &cmd,
                     self.optional,
                     "preprocessor",
                     "preprocessor",
@@ -120,20 +119,19 @@ impl Preprocessor for CmdPreprocessor {
         );
 
         let mut cmd = crate::compose_command(&self.cmd, &self.root)?;
-
-        match cmd
-            .arg("supports")
+        cmd.arg("supports")
             .arg(renderer)
             .stdin(Stdio::null())
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
-            .current_dir(&self.root)
-            .status()
-        {
+            .current_dir(&self.root);
+
+        match cmd.status() {
             Ok(status) => Ok(status.code() == Some(0)),
             Err(e) => {
                 crate::handle_command_error(
                     e,
+                    &cmd,
                     self.optional,
                     "preprocessor",
                     "preprocessor",
