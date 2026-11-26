@@ -168,10 +168,17 @@ where
                         .join(&format!("\n{prefix}"));
                     replaced.push_str(&prefixed_new_content);
                 } else {
-                    error!(
-                        "Stack depth exceeded in {}. Check for cyclic includes",
+                    let msg = format!(
+                        "Stack depth exceeded for \"{}\" in \"{}\". Check for cyclic includes",
+                        link.link_text,
                         source.display()
                     );
+                    if warn_on_link_error {
+                        warn!("{msg}")
+                    } else {
+                        error!("{msg}")
+                    }
+                    failed = true;
                 }
                 previous_end_index = link.end_index;
             }

@@ -58,21 +58,69 @@ fn anchored_include() {
     );
 }
 
-// Checks behavior of recursive include.
+// Checks that a recursive include fails the build.
 #[test]
 fn recursive_include() {
-    BookTest::from_dir("includes/all_includes")
+    BookTest::init(|_| {})
+        .change_file(
+            "src/chapter_1.md",
+            "Around the world, around the world\n{{#include chapter_1.md}}",
+        )
+        .run("build", |cmd| {
+            cmd.expect_failure().expect_stderr(str![[r#"
+ INFO Book building has started
+ERROR Stack depth exceeded for "{{#include chapter_1.md}}" in "chapter_1.md". Check for cyclic includes
+ WARN Included from "{{#include chapter_1.md}}" in "chapter_1.md"
+ WARN Included from "{{#include chapter_1.md}}" in "chapter_1.md"
+ WARN Included from "{{#include chapter_1.md}}" in "chapter_1.md"
+ WARN Included from "{{#include chapter_1.md}}" in "chapter_1.md"
+ WARN Included from "{{#include chapter_1.md}}" in "chapter_1.md"
+ WARN Included from "{{#include chapter_1.md}}" in "chapter_1.md"
+ WARN Included from "{{#include chapter_1.md}}" in "chapter_1.md"
+ WARN Included from "{{#include chapter_1.md}}" in "chapter_1.md"
+ WARN Included from "{{#include chapter_1.md}}" in "chapter_1.md"
+ WARN Included from "{{#include chapter_1.md}}" in "chapter_1.md"
+ERROR One or more include links could not be resolved, see earlier log entries for details (set `preprocessor.links.warn-on-link-error = true` to only warn)
+
+"#]]);
+        });
+}
+
+// Checks that `warn-on-link-error` only warns about a recursive include and
+// keeps the content expanded up to the depth limit.
+#[test]
+fn recursive_include_warn_on_link_error() {
+    BookTest::init(|_| {})
+        .change_file(
+            "book.toml",
+            "[preprocessor.links]\nwarn-on-link-error = true",
+        )
+        .change_file(
+            "src/chapter_1.md",
+            "Around the world, around the world\n{{#include chapter_1.md}}",
+        )
         .run("build", |cmd| {
             cmd.expect_stderr(str![[r#"
  INFO Book building has started
-ERROR Stack depth exceeded in recursive.md. Check for cyclic includes
+ WARN Stack depth exceeded for "{{#include chapter_1.md}}" in "chapter_1.md". Check for cyclic includes
+ WARN Included from "{{#include chapter_1.md}}" in "chapter_1.md"
+ WARN Included from "{{#include chapter_1.md}}" in "chapter_1.md"
+ WARN Included from "{{#include chapter_1.md}}" in "chapter_1.md"
+ WARN Included from "{{#include chapter_1.md}}" in "chapter_1.md"
+ WARN Included from "{{#include chapter_1.md}}" in "chapter_1.md"
+ WARN Included from "{{#include chapter_1.md}}" in "chapter_1.md"
+ WARN Included from "{{#include chapter_1.md}}" in "chapter_1.md"
+ WARN Included from "{{#include chapter_1.md}}" in "chapter_1.md"
+ WARN Included from "{{#include chapter_1.md}}" in "chapter_1.md"
+ WARN Included from "{{#include chapter_1.md}}" in "chapter_1.md"
+ WARN One or more include links could not be resolved, see earlier log entries for details
  INFO Running the html backend
  INFO HTML book written to `[ROOT]/book`
 
 "#]]);
         })
         .check_main_file(
-            "book/recursive.html",
+            "book/chapter_1.html",
             str![[r#"
 <p>Around the world, around the world
 Around the world, around the world
