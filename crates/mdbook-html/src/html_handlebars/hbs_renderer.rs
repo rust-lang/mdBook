@@ -572,6 +572,17 @@ fn make_data(
         data.insert("additional_js".to_owned(), json!(js));
     }
 
+    if let Some(ref citation) = html_config.citation {
+        data.insert(
+            "citation".to_owned(),
+            json!(citation.to_str().expect("Could not convert to str")),
+        );
+        let citation_filename = citation
+            .file_name()
+            .and_then(|n| n.to_str())
+            .expect("Could not convert to str");
+        data.insert("citation_filename".to_owned(), json!(citation_filename));
+    }
     if !html_config.preload_js.is_empty() {
         let mut js = Vec::new();
         for script in &html_config.preload_js {
